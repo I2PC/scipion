@@ -629,8 +629,11 @@ class Project(object):
                     
                     if pointedId in outputDict:
                         parentNode = outputDict[pointedId]
-                        parentNode.addChild(node)
-                        return True
+                        if parentNode is node:
+                            print "WARNING: Found a cyclic dependence from node %s to itself, problably a bug. " % pointedId
+                        else:
+                            parentNode.addChild(node)
+                            return True
                 return False
                 
             for r in runs:

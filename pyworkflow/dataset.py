@@ -23,7 +23,12 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+
+import os
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.mapper.sqlite import SqliteDb, SqliteFlatDb
+from pyworkflow.mapper.sqlite_db import SqliteDb
+
 """
 This modules implements a DataSet, a container of several Tables.
 This will serve as an abstraction layer from where the data will be taken.
@@ -73,6 +78,7 @@ class DataSet(object):
         if not tableName in self._tables:
             raise Exception("DataSet: table '%s' not found.\n   Current tables: %s" % 
                             (tableName, self._tables))
+            
         table = self._loadTable(tableName)
         self._tableName = tableName
         
@@ -273,7 +279,6 @@ class SqliteDataSet(DataSet):
     
     def __init__(self, filename):
         self._dbName = filename
-        from pyworkflow.mapper.sqlite import SqliteDb, SqliteFlatDb
         db = SqliteDb()
         db._createConnection(filename, 1000)
         # Tables should be at pairs:
@@ -303,6 +308,7 @@ class SqliteDataSet(DataSet):
         
     def _loadTable(self, tableName):
         """ Load information from tables PREFIX_Classes, PREFIX_Objects. """
+        
         tableName = self.tablePrefixes[tableName]
         
         BASIC_COLUMNS = [Column('id', int, renderType=COL_RENDER_ID), 
@@ -312,7 +318,6 @@ class SqliteDataSet(DataSet):
                          Column('creation', str)]
         # Load columns from PREFIX_Classes table
         columns = list(BASIC_COLUMNS)
-        from pyworkflow.mapper.sqlite_db import SqliteDb
         db = SqliteDb()
         db._createConnection(self._dbName, 1000)
         db.executeCommand("SELECT * FROM %sClasses;" % tableName)
@@ -363,14 +368,15 @@ class SqliteDataSet(DataSet):
                 if k in imgCols:
                     colName = imgCols[k]
                     index = rowDict[colName]
-                    import os
+                    
                     filename = os.path.join(self.projectPath, rowDict[k])
                     print "FILENAME: ", filename
                     if not checkedImgCols.get(colName, False):
-                        x, y, z, n = ih.getDimensions((index, filename))
-                        if z > 1:
-                            table.getColumn(k).setRenderType(COL_RENDER_VOLUME)
-                        checkedImgCols[colName] = True
+                        if os.path.exists(filename):
+                            x, y, z, n = ih.getDimensions((index, filename))
+                            if z > 1:
+                                table.getColumn(k).setRenderType(COL_RENDER_VOLUME)
+                            checkedImgCols[colName] = True
                     if index:
                         rowDict[k] = '%06d@%s' % (index, filename)
             table.addRow(row['id'], **rowDict)

@@ -28,9 +28,12 @@ This module contains several conversion utilities
 """
 
 import os
+import PIL
+
 from constants import NO_INDEX
 import xmipp
 from constants import *
+from pyworkflow.utils.path import getExt
 
 # TODO: remove dependency from Xmipp
 DT_FLOAT = xmipp.DT_FLOAT
@@ -59,7 +62,7 @@ class ImageHandler(object):
         if isinstance(location, tuple):
             outLocation = location
         
-        elif isinstance(location, str):
+        elif isinstance(location, basestring):
             outLocation = (NO_INDEX, location)
             
         elif hasattr(location, 'getLocation'): #this include Image and subclasses
@@ -104,9 +107,21 @@ class ImageHandler(object):
             n is the number of elements if stack.
         """
         location = self._convertToLocation(locationObj)
-        self._img.read(location, xmipp.HEADER)
+        fn = location[1]
         
-        return self._img.getDimensions()
+        if not os.path.exists(fn):
+            return None
+        else:
+            ext = getExt(fn).lower()
+            if ext == '.png' or ext == '.jpg':
+                print "reading image with PIL"
+                im = PIL.Image.open(fn)
+                x, y = im.size # (width,height) tuple
+                return x, y, 1, 1
+            else:
+                print "reading image with XMIPP"
+                self._img.read(location, xmipp.HEADER)
+                return self._img.getDimensions()
     
     def read(self, inputObj):
         """ Create a new Image class from inputObj 

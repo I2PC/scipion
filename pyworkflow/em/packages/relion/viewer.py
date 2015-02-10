@@ -134,7 +134,7 @@ Examples:
         
         group = form.addGroup('Particles')
         if self.protocol.IS_CLASSIFY:
-            group.addParam('showImagesInClasses', BooleanParam, default=True,
+            group.addParam('showImagesInClasses', LabelParam, default=True,
                           label='Particles assigned to each Class', important=True,
                           help='Display the classes and the images associated.')
             changesLabel = 'Changes in Offset, Angles and Classes'
@@ -146,7 +146,7 @@ Examples:
             group = form.addGroup('3D')
             
             if self.protocol.IS_CLASSIFY:
-                group.addParam('showClasses3D', EnumParam, default=CLASSES_ALL,
+                group.addParam('showClasses3D', BooleanParam, default=CLASSES_ALL,
                                choices=['all', 'selection'], 
                                display=EnumParam.DISPLAY_LIST,
                                label='CLASS 3D to visualize',
@@ -175,10 +175,10 @@ Examples:
                           label='Spheres size',
                           help='')
             group = form.addGroup('Resolution')
-            group.addParam('resolutionPlotsSSNR', BooleanParam, default=True,
+            group.addParam('resolutionPlotsSSNR', LabelParam, default=True,
                           label='Display SSNR plots?',
                           help='Display signal to noise ratio plots (SSNR) ')
-            group.addParam('resolutionPlotsFSC', BooleanParam, default=True,
+            group.addParam('resolutionPlotsFSC', LabelParam, default=True,
                           label='Display resolution plots (FSC) ?',
                           help='')
             group.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
@@ -190,10 +190,10 @@ Examples:
         
         
         form.addSection('Overall')      
-        form.addParam('showPMax', BooleanParam, default=True, 
+        form.addParam('showPMax', LabelParam, default=True,
                       label="Show average PMax?", 
                       help='Average (per class) of the maximum value\n of normalized probability function')      
-        form.addParam('showChanges', BooleanParam, default=True,
+        form.addParam('showChanges', LabelParam, default=True,
                       label=changesLabel,
                       help='Visualize changes in orientation, offset and\n number images assigned to each class')
                                               
