@@ -24,6 +24,11 @@
 # *
 # **************************************************************************
 
-# WEBSERVICES IMPORT
-from pyworkflow.web.webservers.myfirstmap.views import *
-from pyworkflow.web.webservers.desktop.views import *
+import os
+from django.conf.urls import url
+
+urls = [
+#     url(r'^desktop/', 'app.views_desktop.desktop'),
+    url(r'^download_form/', 'app.views_webtools.download_form'),
+    url(r'^doDownload/', 'app.views_webtools.doDownload'),
+]

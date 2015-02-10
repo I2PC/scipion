@@ -96,7 +96,7 @@ STATIC_ROOT = 'static'
 STATIC_URL = ABSOLUTE_URL+'/static/'
 
 # Additional locations of static files
-WS_ROOT = os.path.join(pw.HOME, 'web', 'webservers')
+WS_ROOT = os.path.join(pw.HOME, 'web', 'webtools')
 serviceFolders = [os.path.join(WS_ROOT, f) for f in os.listdir(WS_ROOT) if os.path.isdir(os.path.join(WS_ROOT, f))]
 staticDirs = [os.path.join(pw.HOME, 'web', 'pages')] + serviceFolders
 

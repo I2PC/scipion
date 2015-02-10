@@ -23,3 +23,5 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+
+from urls import urls

@@ -1,16 +1,17 @@
-import os
+import os, sys
 import pyworkflow as pw
 from django.conf.urls import patterns, include, url
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 from django.conf import settings
+from pyworkflow.web.pages.settings import WS_ROOT, serviceFolders
 
 #===============================================================================
 # URL ASSOCIATION
 #===============================================================================
 
-urls = ['',
+mainUrls = ['',
     # To serve different static files
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
@@ -97,20 +98,6 @@ urls = ['',
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     url(r'^get_file/$', 'app.views_util.get_file'),
     
-    # MYFIRSTMAP
-    url(r'^service_projects/', 'app.views_webserver.service_projects'),
-    url(r'^check_project_id/$', 'app.views_webserver.check_project_id'),
-    url(r'^create_service_project/$', 'app.views_webserver.create_service_project'),
-    url(r'^get_testdata/$', 'app.views_webserver.get_testdata'),
-    url(r'^service_content/$', 'app.views_webserver.service_content'),
-    (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': os.path.join(pw.HOME, 'web', 'webservers', 'myfirstmap', 'resources')}),
-   
-    # DESKTOP
-#     url(r'^desktop/', 'app.views_desktop.desktop'),
-    url(r'^download_form/', 'app.views_webserver.download_form'),
-    url(r'^doDownload/', 'app.views_webserver.doDownload'),
-    
-
 #===============================================================================
 # OLD     
 #===============================================================================
@@ -126,8 +113,16 @@ urls = ['',
 
 ]
 
+# Load URLS for webtools
+from pyworkflow.utils.reflection import getModules
+toolModules = getModules(WS_ROOT)
+
+for tm in toolModules.values():
+    mainUrls += tm.urls
+ 
+
 # handler404 = "app.views_util.error"
 # handler500 = "app.views_util.error"
 
-urlpatterns = patterns(*urls)
+urlpatterns = patterns(*mainUrls)
 

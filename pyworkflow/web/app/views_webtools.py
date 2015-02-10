@@ -23,3 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+
+# WEBSERVICES IMPORT
+from pyworkflow.web.webtools.myfirstmap.views import *
+from pyworkflow.web.webtools.desktop.views import *
