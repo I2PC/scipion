@@ -33,7 +33,7 @@ import Tkinter as tk
 from Tkinter import *
 
 from pyworkflow.em import ProtUserSubSet, Class2D, Particle, SetOfClasses2D
-from pyworkflow.protocol.params import IntParam, FloatParam, BooleanParam
+from pyworkflow.protocol.params import IntParam, FloatParam, LabelParam
 from pyworkflow.protocol.constants import STATUS_FINISHED
 from pyworkflow.utils.properties import Icon
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
@@ -59,13 +59,13 @@ class SpiderViewerClassify(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         group1 = form.addGroup('Dendogram')
-        group1.addParam('doShowDendrogram', BooleanParam, label="Show dendrogram?", default=True,
+        group1.addParam('doShowDendrogram', LabelParam, label="Show dendrogram?", default=True,
                       help='')
         group1.addParam('minHeight', FloatParam, default=0.5,
                       label='Minimum height',
                       help='The dendrogram will be show until that height')
         self.groupClass = form.addGroup('Classes')
-        self.groupClass.addParam('doShowClasses', BooleanParam, label="Visualize class averages?", default=True, 
+        self.groupClass.addParam('doShowClasses', LabelParam, label="Visualize class averages?", default=True,
                       help='')
 
     def _getVisualizeDict(self):

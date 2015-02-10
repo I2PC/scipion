@@ -59,10 +59,10 @@ class XmippProtRotSpectra(KendersomBaseClassify):
                       help='Select how to find the center of rotation.')
         
         line = form.addLine('Rotational harmonics radius (px)')
-        line.addParam('spectraInnerRadius', IntParam, 
+        line.addParam('spectraInnerRadius', IntParam, default=5,
                       label='Inner',
                       help='A percentage of the image radius')
-        line.addParam('spectraOuterRadius', IntParam, 
+        line.addParam('spectraOuterRadius', IntParam, default=43,
                       label='Outer',
                       help='A percentage of the image radius')
         

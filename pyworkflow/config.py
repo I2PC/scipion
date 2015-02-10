@@ -227,15 +227,49 @@ class ProjectSettings(OrderedObject):
                      'To solve it, delete %s and run again.' % (e, SCIPION_MENU))
 
     def addHosts(self, hostConf=None):
-        #TODO: parse several hosts and include in the settings
-        host = HostConfig()
-        host.label.set('localhost')
-        host.hostName.set('localhost')
-        host.hostPath.set(pw.SCIPION_USER_DATA)
-        #TODO: parse the host conf specific for each host
-        host.addQueueSystem(hostConf)
-        self.addHost(host)
-        
+        # Read from users' config file.
+        cp = ConfigParser()
+        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+        HOSTS_CONFIG = hostConf or os.environ['SCIPION_HOSTS']
+
+        try:
+            assert cp.read(HOSTS_CONFIG) != [], 'Missing file %s' % HOSTS_CONFIG
+
+            for hostName in cp.sections():
+                host = HostConfig()
+                host.label.set(hostName)
+                host.hostName.set(hostName)
+                host.hostPath.set(pw.SCIPION_USER_DATA)
+
+                # Helper functions (to write less)
+                def get(var): return cp.get(hostName, var).replace('%_(', '%(')
+                def isOn(var): return str(var).lower() in ['true', 'yes', '1']
+
+                host.mpiCommand.set(get('PARALLEL_COMMAND'))
+                host.queueSystem = QueueSystemConfig()
+                host.queueSystem.name.set(get('NAME'))
+                host.queueSystem.mandatory.set(isOn(get('MANDATORY')))
+                host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
+                host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
+                host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
+                host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
+
+                host.queueSystem.queues = List()
+                for qName, values in json.loads(get('QUEUES')).iteritems():
+                    queue = QueueConfig()
+                    queue.maxCores.set(values['MAX_CORES'])
+                    queue.allowMPI.set(isOn(values['ALLOW_MPI']))
+                    queue.allowThreads.set(isOn(values['ALLOW_THREADS']))
+                    host.queueSystem.queues.append(queue)
+
+                self.addHost(host)
+                # TODO: check with JoseMi that this is ok, and find out
+                # the exact meaning of hosts and queues.
+        except Exception as e:
+            sys.exit('Failed to read settings. The reported error was:\n  %s\n'
+                     'To solve it, delete %s and run again.' % (e, HOSTS_CONFIG))
+
+
     def addMenus(self, menusConf=None):
         """ Add the menu to project windows. """
         #TODO: read this from a .conf file
