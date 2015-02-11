@@ -29,7 +29,7 @@ from glob import glob
 
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
-from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
+from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
 import atsas
 from pyworkflow.utils.path import createLink
 

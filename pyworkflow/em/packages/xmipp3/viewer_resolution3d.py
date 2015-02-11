@@ -26,6 +26,7 @@
 
 import pyworkflow.gui as gui
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.protocol.params import LabelParam
 from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
 from protocol_resolution3d import *
@@ -47,11 +48,11 @@ class XmippResolution3DViewer(ProtocolViewer):
     
     def _defineParams(self, form):
         form.addSection(label='Results')
-        form.addParam('doShowFsc', BooleanParam, default=True, 
+        form.addParam('doShowFsc', LabelParam,
                       label="Display Fourier Shell Correlation?")
-        form.addParam('doShowDpr', BooleanParam, default=True, 
+        form.addParam('doShowDpr', LabelParam,
                       label="Display Differential Phase Residual?")
-        form.addParam('doShowStructureFactor', BooleanParam, default=True, 
+        form.addParam('doShowStructureFactor', LabelParam,
                       label="Display Structure factor?")
 
     def _getVisualizeDict(self):

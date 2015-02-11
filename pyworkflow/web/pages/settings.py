@@ -96,13 +96,32 @@ STATIC_ROOT = 'static'
 STATIC_URL = ABSOLUTE_URL+'/static/'
 
 # Additional locations of static files
-STATICFILES_DIRS = (
-      os.path.join(pw.HOME, 'web', 'pages','resources'),
-    
-    # Put strings here, like "/home/html/static" or "C:/www/django/static".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
+WS_ROOT = os.path.join(pw.HOME, 'web', 'webtools')
+serviceFolders = [os.path.join(WS_ROOT, f) for f in os.listdir(WS_ROOT) if os.path.isdir(os.path.join(WS_ROOT, f))]
+staticDirs = [os.path.join(pw.HOME, 'web', 'pages')] + serviceFolders
+
+# Put strings here, like "/home/html/static" or "C:/www/django/static".
+# Always use forward slashes, even on Windows.
+# Don't forget to use absolute paths, not relative paths.
+STATICFILES_DIRS = tuple([os.path.join(d, 'resources') for d in staticDirs])        
+
+# STATICFILES_DIRS = (
+#       os.path.join(pw.HOME, 'web', 'pages', 'resources'),
+#       os.path.join(pw.HOME, 'web', 'webservices', 'myfirstmap', 'resources'),
+#       os.path.join(pw.HOME, 'web', 'webservices', 'desktop', 'resources'),
+# )
+
+# Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+# Always use forward slashes, even on Windows.
+# Don't forget to use absolute paths, not relative paths.
+templateDirs = [os.path.join(DIRECTORY_PROJECT)] + serviceFolders
+TEMPLATE_DIRS = tuple([os.path.join(d, 'templates') for d in templateDirs])        
+
+# TEMPLATE_DIRS = (
+#     os.path.join(DIRECTORY_PROJECT, 'templates'),
+#     os.path.join(pw.HOME, 'web', 'webservices', 'myfirstmap', 'templates'),
+#     os.path.join(pw.HOME, 'web', 'webservices', 'desktop', 'templates'),
+# )
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -138,16 +157,8 @@ SESSION_ENGINE = (
    
 ROOT_URLCONF = 'pages.urls'
 
-
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'pages.wsgi.application'
-
-TEMPLATE_DIRS = (
-    os.path.join(DIRECTORY_PROJECT, 'templates'),
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -160,7 +171,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     # 'gunicorn',
     'app',
-)
+)   
 
 try:
     import imp

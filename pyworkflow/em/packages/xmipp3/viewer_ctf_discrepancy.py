@@ -29,7 +29,7 @@ from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from pyworkflow.em import data
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.em.viewer import ObjectView, MODE, MODE_MD, ORDER, VISIBLE
-from pyworkflow.protocol.params import FloatParam, IntParam, HiddenBooleanParam
+from pyworkflow.protocol.params import FloatParam, IntParam, LabelParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 from pyworkflow.utils.path import cleanPath
 import numpy as np
@@ -58,14 +58,14 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         form.addParam('resolutionThreshold', FloatParam, default=999999.,
                       label='Resolution threshold (A)',
                       help='Select only CTF consistent at this resolution (in A).')
-        form.addParam('visualizePairs', HiddenBooleanParam, default=False,
+        form.addParam('visualizePairs', LabelParam,
                       label="Visualize comparison table.",
                       help="List with resolution at which the CTF estimated by a pair of methods"
                            " is no longer equivalent."  )
-        form.addParam('visualizeAverage', HiddenBooleanParam, default=False,
+        form.addParam('visualizeAverage', LabelParam,
                       label="Visualize average table.",
                       help="Show a table with the averaged CTFs."  )     
-        form.addParam('visualizeMatrix', HiddenBooleanParam, default=False,
+        form.addParam('visualizeMatrix', LabelParam,
                       label="Visualize comparison matrix.",
                       help="Number of micrographs that have a CTF estimation"
                            " -given by two methods- that are equivalent at resolution=threshold")

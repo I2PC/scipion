@@ -28,6 +28,7 @@ from itertools import izip
 import pyworkflow.tests as tests
 from pyworkflow.em.data import SetOfCoordinates, SetOfMicrographs
 from pyworkflow.em.protocol import ProtImportMicrographs, ProtImportParticles
+from pyworkflow.em.constants import ALIGN_2D
 
 
 
@@ -107,6 +108,7 @@ class TestEmxBase(tests.BaseTest):
         protEmxImport = self.newProtocol(ProtImportParticles,
                                          objLabel='emx: import alignment',
                                          importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                         alignType=0,#ALIGN2D
                                          emxFile=emxFn,
                                          samplingRate=1.,
                                          amplitudeContrast=2.,

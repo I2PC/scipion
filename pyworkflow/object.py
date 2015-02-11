@@ -77,8 +77,10 @@ class Object(object):
             value = defaultValue
         elif callable(attr):
             value = attr()
-        else:
+        elif isinstance(attr, Object):
             value = attr.get()
+        else:
+            value = attr # behave well for non-Object attributes
         return value
     
     def setAttributeValue(self, attrName, value):

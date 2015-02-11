@@ -28,7 +28,7 @@ This module implement the wrappers around Xmipp NMA protocol
 visualization program.
 """
 
-from pyworkflow.protocol.params import BooleanParam, IntParam
+from pyworkflow.protocol.params import LabelParam, IntParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.viewer import ObjectView, VmdView
 from protocol_nma import XmippProtNMA
@@ -53,18 +53,18 @@ class XmippNMAViewer(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization')
   
-        form.addParam('displayModes', BooleanParam, default=False, 
+        form.addParam('displayModes', LabelParam,
                       label="Display output Normal Modes?", important=True)
-        form.addParam('displayMaxDistanceProfile', BooleanParam, default=False, 
+        form.addParam('displayMaxDistanceProfile', LabelParam,
                       label="Plot max distance profile?",
                       help="TODO: ADD HELP ABOUT MAX DISTANCE") 
         
         group = form.addGroup('Single mode')  
         group.addParam('modeNumber', IntParam, default=7,
               label='Mode number')
-        group.addParam('displayVmd', BooleanParam, default=False,
+        group.addParam('displayVmd', LabelParam,
                        label='Display mode animation with VMD?') 
-        group.addParam('displayDistanceProfile', BooleanParam, default=False, 
+        group.addParam('displayDistanceProfile', LabelParam, default=False,
                       label="Plot mode distance profile?")
         
     def _getVisualizeDict(self):

@@ -115,6 +115,8 @@ class PreWhiteningDialog(dialog.Dialog):
         # have diffent path (if/else) in the original ResMap code
         if n > subVolLPF:
             dataSize = results['cubeSize']
+            dataSpect = results['dataSpect']
+            data = results['cubeInside']
             preWhiteningResult = preWhitenCube( n = dataSize,
                                         vxSize        = vxSize,
                                         elbowAngstrom = newElbowAngstrom,
@@ -124,6 +126,8 @@ class PreWhiteningDialog(dialog.Dialog):
                                         dataBGSpect   = results['dataBGSpect'])
         else:
             dataSize = n
+            dataSpect = results['dataPowerSpectrum']
+            data = results['data']
             if splitVolume == False:
                 preWhiteningResult = preWhitenVolumeSoftBG( n = n,
                                         vxSize        = vxSize,
@@ -151,13 +155,13 @@ class PreWhiteningDialog(dialog.Dialog):
                                  instructions = INSTRUCTIONS,
                                  elbowAngstrom = newElbowAngstrom,
                                  rampWeight    = newRampWeight,
-                                 dataSpect     = results['dataPowerSpectrum'],
+                                 dataSpect     = dataSpect,
                                  dataBGSpect   = results['dataBGSpect'],
                                  peval         = preWhiteningResult['peval'],
                                  dataPWSpect   = preWhiteningResult['dataPWSpect'],
                                  dataPWBGSpect = preWhiteningResult['dataPWBGSpect'],
                                  vxSize        = vxSize,
-                                 dataSlice     = results['data'][int(dataSize/2),:,:],
+                                 dataSlice     = data[int(dataSize/2),:,:],
                                  dataPWSlice   = dataPW[int(dataSize/2),:,:]
                                 )
         

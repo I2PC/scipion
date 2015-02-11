@@ -30,7 +30,7 @@ form definition, we have separated in this sub-module.
 """
 
 
-from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
+from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, IntParam, 
                                         FloatParam, StringParam, Positive, GE,
                                         EnumParam, NumericListParam, TextParam,
@@ -64,7 +64,7 @@ def _defineProjectionMatchingParams(self, form):
                  label='Number of iterations',
                  help='Number of iterations to perform.')
     form.addParam('cleanUpFiles', BooleanParam, default=False,
-                 label="Clean up intermediate files?",  expertLevel=LEVEL_EXPERT,
+                 label="Clean up intermediate files?",  expertLevel=LEVEL_ADVANCED,
                  help='Save disc space by cleaning up intermediate files. \n '
                       'Be careful, many options of the visualization protocol will not work anymore, \n '
                       'since all class averages, selfiles etc will be deleted. ')
@@ -112,7 +112,7 @@ def _defineProjectionMatchingParams(self, form):
                        'Use values larger than one to pad the images.')        
     
     groupCTF.addParam('wienerConstant', FloatParam, default=-1, condition='doCTFCorrection',
-                 label='Wiener constant',  expertLevel=LEVEL_EXPERT,
+                 label='Wiener constant',  expertLevel=LEVEL_ADVANCED,
                  help='Term that will be added to the denominator of the Wiener filter. \n '
                        'In theory, this value is the inverse of the signal-to-noise ratio \n '
                        'If a negative value is taken, the program will use a default value as in FREALIGN \n '
@@ -207,7 +207,7 @@ def _defineProjectionMatchingParams(self, form):
     """)        
     
     form.addParam('perturbProjectionDirections', NumericListParam, default='0', 
-                 label='Perturb projection directions?', expertLevel=LEVEL_EXPERT,
+                 label='Perturb projection directions?', expertLevel=LEVEL_ADVANCED,
                  help=""" If set to 1, this option will result to a Gaussian perturbation to the 
     evenly sampled projection directions of the reference library. 
     This may serve to decrease the effects of model bias.
@@ -223,12 +223,12 @@ def _defineProjectionMatchingParams(self, form):
     
     # Changed from String to Int 
     form.addParam('projectionMethod', EnumParam, choices=['fourier', 'real_space'], 
-                 default=xmipp3.PROJECT_REALSPACE, expertLevel=LEVEL_EXPERT, 
+                 default=xmipp3.PROJECT_REALSPACE, expertLevel=LEVEL_ADVANCED, 
                  label="Projection method", display=EnumParam.DISPLAY_COMBO,
                  help='select projection method, by default Fourier with padding 1 and interpolation bspline')        
     
     
-    form.addParam('paddingAngularProjection', FloatParam, default=1, expertLevel=LEVEL_EXPERT,  
+    form.addParam('paddingAngularProjection', FloatParam, default=1, expertLevel=LEVEL_ADVANCED,  
                  condition='projectionMethod == %d' % xmipp3.PROJECT_FOURIER,
                  label='Padding factor for projection', validators=[GE(1)],
                  help="""Increase the padding factor will improve projection quality but 
@@ -236,14 +236,14 @@ def _defineProjectionMatchingParams(self, form):
     """)       
     # Changed from String to Int 
     form.addParam('kernelAngularProjection', EnumParam, choices=['neareast', 'linear', 'bspline'],
-                 default=xmipp3.KERNEL_BSPLINE, expertLevel=LEVEL_EXPERT,  
+                 default=xmipp3.KERNEL_BSPLINE, expertLevel=LEVEL_ADVANCED,  
                  condition='projectionMethod == %d' % xmipp3.PROJECT_FOURIER,
                  label='Interpolation kernel for projection', 
                  help=""" Interpolation kernel for the generation of projections.
     """)
     
     form.addParam('maxChangeOffset', NumericListParam, default='1000 10 5', 
-                 label='Maximum change in origin offset', expertLevel=LEVEL_EXPERT,
+                 label='Maximum change in origin offset', expertLevel=LEVEL_ADVANCED,
                  help=""" If set to 1, this option will result to a Gaussian perturbation to the 
     evenly sampled projection directions of the reference library. 
     This may serve to decrease the effects of model bias.
@@ -273,7 +273,7 @@ def _defineProjectionMatchingParams(self, form):
     
     """)  
     form.addParam('search5DStep', NumericListParam, default='2', 
-                 label='Step size for 5D translational search', expertLevel=LEVEL_EXPERT,
+                 label='Step size for 5D translational search', expertLevel=LEVEL_ADVANCED,
                  help="""" Provide a sequence of numbers (for instance, "2 2 1 1" specifies 4 iterations,
     the first two set the value to 2, then two with 1 pixel.
     An alternative compact notation is ("2x2 2x1", i.e.,
@@ -282,7 +282,7 @@ def _defineProjectionMatchingParams(self, form):
     *Note:* if there are more values than iterations the extra value are ignored
     """)          
     
-    form.addParam('doRestricSearchbyTiltAngle', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
+    form.addParam('doRestricSearchbyTiltAngle', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                  label="Restrict tilt angle search?", 
                  help ='Restrict tilt angle search \n ')             
     
@@ -299,7 +299,7 @@ def _defineProjectionMatchingParams(self, form):
     for a description of the symmetry groups format
     If no symmetry is present, give c1
     """)
-    form.addParam('symmetryGroupNeighbourhood', TextParam, default='', expertLevel=LEVEL_EXPERT,
+    form.addParam('symmetryGroupNeighbourhood', TextParam, default='', expertLevel=LEVEL_ADVANCED,
                  label='Symmetry group for Neighbourhood computations',
                  help=""" If you do not know what this is leave it blank.
     This symmetry will be using for compute neighboring points,
@@ -310,7 +310,7 @@ def _defineProjectionMatchingParams(self, form):
     """
     )
     form.addParam('onlyWinner', NumericListParam, default='0', 
-                 label='compute only closest neighbor', expertLevel=LEVEL_EXPERT,
+                 label='compute only closest neighbor', expertLevel=LEVEL_ADVANCED,
                  condition="symmetryGroupNeighbourhood != ''",
                  help="""This option is only relevant if symmetryGroupNeighbourhood !=''
     If set to 1 only one neighbor will be computed per sampling point
@@ -375,7 +375,7 @@ def _defineProjectionMatchingParams(self, form):
     """)
     
     form.addParam('doScale', BooleanParam, default=False,
-                 label="Perform scale search?",  expertLevel=LEVEL_EXPERT,
+                 label="Perform scale search?",  expertLevel=LEVEL_ADVANCED,
                  help=' If true perform scale refinement. (UNDER DEVELOPMENT!!!!) \n  ')
     
     form.addParam('scaleStep', NumericListParam, default=1, condition='doScale',
@@ -400,7 +400,7 @@ def _defineProjectionMatchingParams(self, form):
     """)  
     
     form.addParam('projMatchingExtra', StringParam, default='',
-                 label='Additional options for Projection_Matching', expertLevel=LEVEL_EXPERT,
+                 label='Additional options for Projection_Matching', expertLevel=LEVEL_ADVANCED,
                  help=""" For details see:
     [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Projection_matching][projection matching]] and
     [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Mpi_projection_matching][mpi projection matching]]
@@ -408,13 +408,13 @@ def _defineProjectionMatchingParams(self, form):
     the particle inner and outter radius)
     """)
     #DoSaveImagesAssignedToClasses    you can get this information in visualize
-    form.addSection(label='2D re-alignment of classes', expertLevel=LEVEL_EXPERT)
+    form.addSection(label='2D re-alignment of classes', expertLevel=LEVEL_ADVANCED)
     
     form.addParam('performAlign2D', BooleanParam, default=False,
-                 label='Perform 2D re-alignment', expertLevel=LEVEL_EXPERT)
+                 label='Perform 2D re-alignment', expertLevel=LEVEL_ADVANCED)
     
     form.addParam('doAlign2D', NumericListParam, default='0', condition='performAlign2D',
-                 label='Perform 2D re-alignment of classes?', expertLevel=LEVEL_EXPERT,
+                 label='Perform 2D re-alignment of classes?', expertLevel=LEVEL_ADVANCED,
                  help=""" After performing a 3D projection matching iteration, each of the
     subsets of images assigned to one of the library projections is
     re-aligned using a 2D-alignment protocol.
@@ -435,7 +435,7 @@ def _defineProjectionMatchingParams(self, form):
     """)
     
     form.addParam('align2DIterNr', NumericListParam, default='4', condition='performAlign2D',
-                 label='Number of align2d iterations:', expertLevel=LEVEL_EXPERT,
+                 label='Number of align2d iterations:', expertLevel=LEVEL_ADVANCED,
                  help=""" Use at least 3 iterations
     The number of align iteration may change in each projection matching iteration
     Ffor instance, "4 4 3 3 " 
@@ -451,7 +451,7 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addParam('align2dMaxChangeOffset', NumericListParam, default='2x1000 2x10', 
                  condition='performAlign2D',
-                 label='Maximum change in origin offset (+/- pixels)', expertLevel=LEVEL_EXPERT,
+                 label='Maximum change in origin offset (+/- pixels)', expertLevel=LEVEL_ADVANCED,
                  help="""Maximum change in shift  (+/- pixels)
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
@@ -465,7 +465,7 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addParam('align2dMaxChangeRot', NumericListParam, default='2x1000 2x20', 
                  condition='performAlign2D',
-                 label='Maximum change in rotation (+/- degrees)', expertLevel=LEVEL_EXPERT,
+                 label='Maximum change in rotation (+/- degrees)', expertLevel=LEVEL_ADVANCED,
                  help="""Maximum change in shift  (+/- pixels)
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
@@ -480,7 +480,7 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addSection(label='3D Reconstruction')
     
-    form.addParam('reconstructionMethod', EnumParam, expertLevel=LEVEL_EXPERT,
+    form.addParam('reconstructionMethod', EnumParam, expertLevel=LEVEL_ADVANCED,
                  choices=['fourier', 'art', 'wbp'],
                  default=xmipp3.RECONSTRUCT_FOURIER, display=EnumParam.DISPLAY_COMBO,
                  label='Reconstruction method', 
@@ -492,20 +492,20 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addParam('fourierMaxFrequencyOfInterest', DigFreqParam, default=0.25,
                  condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_FOURIER,
-                 label='Initial maximum frequency', expertLevel=LEVEL_EXPERT,
+                 label='Initial maximum frequency', expertLevel=LEVEL_ADVANCED,
                  help=""" This number is only used in the first iteration. 
     From then on, it will be set to resolution computed in the resolution section
     """)         
     form.addParam('fourierReconstructionExtraCommand', StringParam, default='',
                  condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_FOURIER,
-                 label='Additional parameters for fourier', expertLevel=LEVEL_EXPERT,
+                 label='Additional parameters for fourier', expertLevel=LEVEL_ADVANCED,
                  help=""" For details see:
     [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Fourier][fourier]]
     """)          
     
     form.addParam('artLambda', NumericListParam, default='0.2', 
                  condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_ART,
-                 label='Values of lambda for ART', expertLevel=LEVEL_EXPERT,
+                 label='Values of lambda for ART', expertLevel=LEVEL_ADVANCED,
                  help=""" *IMPORTANT:* ou must specify a value of lambda for each iteration even
     if ART has not been selected.
     *IMPORTANT:* NOte that we are using the WLS version of ART that 
@@ -524,26 +524,26 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addParam('artReconstructionExtraCommand', StringParam, default='-k 0.5 -n 10 ',
                  condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_ART,
-                 label='Additional parameters for ART', expertLevel=LEVEL_EXPERT,
+                 label='Additional parameters for ART', expertLevel=LEVEL_ADVANCED,
                  help=""" For details see:
     [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art][xmipp art]]
     """)          
     
     form.addParam('wbpReconstructionExtraCommand', StringParam, default='',
                  condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_WBP,
-                 label='Additional parameters for WBP', expertLevel=LEVEL_EXPERT,
+                 label='Additional parameters for WBP', expertLevel=LEVEL_ADVANCED,
                  help=""" For details see:
     [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp][xmipp wbp]]
     """)                  
     
     form.addParam('doComputeResolution', BooleanParam, default=True,
-                 label='Compute resolution?', expertLevel=LEVEL_EXPERT,
+                 label='Compute resolution?', expertLevel=LEVEL_ADVANCED,
                  help=""" For details see:
     [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution][xmipp resolution]].
     """)
     
     form.addParam('doSplitReferenceImages', NumericListParam, default='1',
-                 label='Split references averages?', expertLevel=LEVEL_EXPERT,
+                 label='Split references averages?', expertLevel=LEVEL_ADVANCED,
                  condition="doComputeResolution",
                  help="""In theory each reference average should be splited
     in two when computing the resolution. In this way each
@@ -628,7 +628,7 @@ def _defineProjectionMatchingParams(self, form):
     """)
     
     form.addParam('mpiJobSize', IntParam, default=2,
-                  label='MPI job size', expertLevel=LEVEL_EXPERT,
+                  label='MPI job size', expertLevel=LEVEL_ADVANCED,
                   help="""Minimum size of jobs in mpi processes.
     Set to 1 for large images (e.g. 500x500)
     and to 10 for small images (e.g. 100x100)
