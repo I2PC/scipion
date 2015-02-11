@@ -77,6 +77,8 @@ class ProtRelionBase(EMProtocol):
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
         if not self.doContinue:
             self.continueRun.set(None)
+        else:
+            self.referenceVolume.set(None)
     
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -181,6 +183,12 @@ class ProtRelionBase(EMProtocol):
                       help='It is recommended to strongly low-pass filter your initial reference map. '
                            'If it has not yet been low-pass filtered, it may be done internally using this option. ' 
                            'If set to 0, no low-pass filter will be applied to the initial reference(s).')
+        if self.IS_REFINE:
+            group.addParam('resolJoinHalves', FloatParam, default=40,
+                          label='Resolution join halves (A)', condition="not doContinue",
+                          help='Resolution (in Angstrom) up to which the two random half-reconstructions'
+                               ' will not be independent to prevent diverging orientations.') 
+
         
         form.addSection(label='CTF')
         form.addParam('doCTF', BooleanParam, default=True,
@@ -205,10 +213,6 @@ class ProtRelionBase(EMProtocol):
         form.addParam('doCtfManualGroups', BooleanParam, default=False,
                       label='Do manual grouping ctfs?',
                       help='Set this to Yes the CTFs will grouping manually.')
-        #, defocusRange=1000, numParticles=1
-        # form.addParam('numberOfGroups', IntParam, default=200,
-        #               label='Number of ctf groups', condition='doCtfManualGroups',
-        #               help='Number of ctf groups that will be create')
         form.addParam('defocusRange', FloatParam, default=1000,
                       label='defocus range for group creation (in Angstroms)', condition='doCtfManualGroups',
                       help='Particles will be grouped by defocus.'
@@ -282,7 +286,7 @@ class ProtRelionBase(EMProtocol):
                            'corresponding pixels in the reconstructed map are set to the average value of '
                            'these pixels. Thereby, for example, the higher density inside the virion may be '
                            'set to a constant. Note that this second mask should have one-values inside the '
-                           'virion and zero-values in the capsid and the solvent areas.') 
+                           'virion and zero-values in the capsid and the solvent areas.')
         
         # Change the Sampling section name depending if classify or refine 3D
         if self.IS_CLASSIFY:
@@ -348,7 +352,7 @@ class ProtRelionBase(EMProtocol):
                               help='In the automated procedure to increase the angular samplings,\n'
                                    'local angular searches of -6/+6 times the sampling rate will\n'
                                    'be used from this angular sampling rate onwards.')
-            
+                
                 form.addSection("Movies")
                 form.addParam('realignMovieFrames', BooleanParam, default=False,
                               label='Realign movie frames?',
@@ -395,7 +399,7 @@ class ProtRelionBase(EMProtocol):
                            'Oversampling factor for the Fourier transforms of the references.')
         
         
-        extraDefault = '' if self.IS_CLASSIFY and self.doContinue else '--low_resol_join_halves 40 '
+        extraDefault = '' if self.IS_CLASSIFY else ''
         form.addParam('extraParams', StringParam, default=extraDefault,
                       label='Additional parameters',
                       help='')
@@ -465,15 +469,11 @@ class ProtRelionBase(EMProtocol):
         continueRun = self.continueRun.get()
         continueRun._initialize()
         
-        continueIter = self._getContinueIter()
-        
         if self.IS_CLASSIFY:
-            itersToRun = continueIter + self.numberOfIterations.get()
-            self.numberOfIterations.set(itersToRun)
             self.copyAttributes(continueRun, 'regularisationParamT')
         self._setBasicArgs(args)
         
-        args['--continue'] = continueRun._getFileName('optimiser', iter=continueIter)
+        args['--continue'] = continueRun._getFileName('optimiser', iter=self._getContinueIter())
     
     def _setBasicArgs(self, args):
         """ Return a dictionary with basic arguments. """
@@ -489,7 +489,7 @@ class ProtRelionBase(EMProtocol):
             args['--dont_combine_weights_via_disc'] = ''
         if self.IS_CLASSIFY:
             args['--tau2_fudge'] = self.regularisationParamT.get()
-            args['--iter'] = self.numberOfIterations.get()
+            args['--iter'] = self._getnumberOfIters()
             
         self._setSamplingArgs(args)
         
@@ -515,8 +515,7 @@ class ProtRelionBase(EMProtocol):
             
         if self.solventMask.hasValue():
             args['--solvent_mask2'] = self.solventMask.get().getFileName() #FIXME: CHANGE BY LOCATION
- 
-   
+    
     #--------------------------- STEPS functions --------------------------------------------       
     def convertInputStep(self, particlesId):
         """ Create the input file in STAR format as expected by Relion.
@@ -540,10 +539,6 @@ class ProtRelionBase(EMProtocol):
         if not self.IS_CLASSIFY:
             if self.realignMovieFrames:
                 movieParticleSet = self.inputMovieParticles.get()
-                
-#                 parentProtocol = self.getMapper().getParent(movieParticleSet)
-#                 print "Proj", parentProtocol.getProject()
-                
                 
                 auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
                 auxMovieParticles.copyInfo(movieParticleSet)
@@ -617,7 +612,7 @@ class ProtRelionBase(EMProtocol):
         self._initialize()
         iterMsg = 'Iteration %d' % self._lastIter()
         if self.hasAttribute('numberOfIterations'):
-            iterMsg += '/%d' % self.numberOfIterations.get()
+            iterMsg += '/%d' % self._getnumberOfIters()
         summary = [iterMsg]
         
         if self.doContinue:
@@ -723,12 +718,17 @@ class ProtRelionBase(EMProtocol):
     
     def _getContinueIter(self):
         continueRun = self.continueRun.get()
-        
-        if self.continueIter.get() == 'last':
-            continueIter = continueRun._lastIter()
+        if self.doContinue:
+            if self.continueIter.get() == 'last':
+                continueIter = continueRun._lastIter()
+            else:
+                continueIter = int(self.continueIter.get())
         else:
-            continueIter = int(self.continueIter.get())
+            continueIter = 0
         return continueIter
+    
+    def _getnumberOfIters(self):
+        return self._getContinueIter() + self.numberOfIterations.get()
     
     def _postprocessImageRow(self, img, imgRow):
 #         from convert import locationToRelion
