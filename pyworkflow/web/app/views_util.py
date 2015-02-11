@@ -596,17 +596,21 @@ def get_slice(request):
     img.save(response, "PNG")
     return response
 
-def getImageXdim(request, imagePath):
-    return getImageDim(request, imagePath)[0]
-
 def getImageDim(request, imagePath):
     projectPath = request.session['projectPath']
-#     img = xmipp.Image()
-    imgFn = os.path.join(projectPath, imagePath)
+#     imgFn = os.path.join(projectPath, imagePath)
+    from pyworkflow.em.packages.xmipp3.convert import xmippToLocation
+    location = xmippToLocation(imagePath)
+    x, y, z, n = ImageHandler().getDimensions(location)
+    if x is None:
+        print "NOT EXIST PATH: ", location
+    else:
+        print "DIMENSIONS!!! (%s,%s,%s,%s)" % (x,y,z,n)
     
-    return ImageHandler().getDimensions(imgFn)
-#     img.read(str(imgFn), xmipp.HEADER)
-#     return img.getDimensions()
+    return x, y, z, n
+
+def getImageXdim(request, imagePath):
+    return getImageDim(request, imagePath)[0]
 
 def readDimensions(request, path, typeOfColumn):
     if (typeOfColumn == COL_RENDER_IMAGE or
