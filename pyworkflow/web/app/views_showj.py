@@ -217,15 +217,15 @@ def setRenderingOptions(request, dataset, table, inputParams):
             dataset.setNumberSlices(_imageDimensions[2])
         
         if _typeOfColumnToRender == sj.COL_RENDER_IMAGE or isVol:
-            is3D = inputParams[sj.MODE] == sj.MODE_VOL_ASTEX or inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA or inputParams[sj.MODE] == sj.MODE_VOL_JSMOL
+            is3D = inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA or inputParams[sj.MODE] == sj.MODE_VOL_JSMOL
             #Setting the _convert 
             _convert = isVol and (inputParams[sj.MODE] in [sj.MODE_GALLERY, sj.MODE_TABLE] or is3D)
             #Setting the _reslice 
             _reslice = isVol and inputParams[sj.MODE] in [sj.MODE_GALLERY, sj.MODE_TABLE]
             #Setting the _getStats 
             _getStats = isVol and is3D
-            #Setting the _dataType 
-            _dataType = xmipp.DT_FLOAT if isVol and inputParams[sj.MODE]==sj.MODE_VOL_ASTEX else xmipp.DT_UCHAR
+            #Setting the _dataType (replaced astex by chimera)
+            _dataType = xmipp.DT_FLOAT if isVol and inputParams[sj.MODE]==sj.MODE_VOL_CHIMERA else xmipp.DT_UCHAR
             #Setting the _imageVolName and _stats     
             
             # CONVERTION TO .mrc DONE HERE!
@@ -388,7 +388,7 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
 
     context = createContext(dataset, table, inputParams[sj.COLS_CONFIG], request, showjForm, inputParams)
 
-    if inputParams[sj.MODE]==sj.MODE_VOL_ASTEX or inputParams[sj.MODE]==sj.MODE_VOL_CHIMERA or inputParams[sj.MODE]==sj.MODE_VOL_JSMOL:
+    if inputParams[sj.MODE]==sj.MODE_VOL_CHIMERA or inputParams[sj.MODE]==sj.MODE_VOL_JSMOL:
         context.update(create_context_volume(request, inputParams, volPath, paramStats))
                
     elif inputParams[sj.MODE]==sj.MODE_GALLERY or inputParams[sj.MODE]==sj.MODE_TABLE or inputParams[sj.MODE]=='column':
@@ -506,12 +506,12 @@ def create_context_volume(request, inputParams, volPath, param_stats):
                'minStats':round(param_stats[2], 3) if param_stats != None else 1,
                'maxStats':round(param_stats[3], 3) if param_stats != None else 1 }
     
-    if inputParams[sj.MODE] == sj.MODE_VOL_ASTEX:
-        context.update(create_context_astex(request, inputParams[sj.VOL_TYPE], volPath))
+#     if inputParams[sj.MODE] == sj.MODE_VOL_ASTEX:
+#         context.update(create_context_astex(request, inputParams[sj.VOL_TYPE], volPath))
 
 #   'volType': 2, #0->byte, 1 ->Integer, 2-> Float
         
-    elif inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA:
+    if inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA:
         # Using the .vol file
         volPath = inputParams['volOld']
         volPath = os.path.join(request.session['projectPath'], volPath)
@@ -547,17 +547,17 @@ def jsmol(request):
     response['Content-Disposition'] = 'attachment; filename=%s' % filename
     return response
 
-def create_context_astex(request, typeVolume, volPath):
-
-    linkName = 'test_link_' + request.session._session_key + '.' + typeVolume
-    volLinkPath = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', linkName)
-    
-    cleanPath(volLinkPath)
-    createLink(volPath, volLinkPath)
-    volLink = os.path.join('/', django_settings.STATIC_ROOT, 'astex', 'tmp', linkName)
-    
-    return {"volLink":volLink, 
-            "jquery_ui_css": getResourceCss("jquery_ui")}
+# def create_context_astex(request, typeVolume, volPath):
+# 
+#     linkName = 'test_link_' + request.session._session_key + '.' + typeVolume
+#     volLinkPath = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', linkName)
+#     
+#     cleanPath(volLinkPath)
+#     createLink(volPath, volLinkPath)
+#     volLink = os.path.join('/', django_settings.STATIC_ROOT, 'astex', 'tmp', linkName)
+#     
+#     return {"volLink":volLink, 
+#             "jquery_ui_css": getResourceCss("jquery_ui")}
     
     
 def create_context_chimera(volPath, threshold=None):
