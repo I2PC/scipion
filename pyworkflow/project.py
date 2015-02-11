@@ -614,7 +614,7 @@ class Project(object):
             for r in runs:
                 n = g.createNode(r.strId())
                 n.run = r
-                n.label = r.getRunName()
+                n.setLabel(r.getRunName())
                 outputDict[r.getObjId()] = n
                 for _, attr in r.iterOutputAttributes(em.EMObject):
                     outputDict[attr.getObjId()] = n # mark this output as produced by r
