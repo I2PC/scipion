@@ -1009,6 +1009,7 @@ if int(env['java']):
 if not int(env['release']):
     AddXmippProgram('angular_commonline', ['XmippRecons'])
 AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
+AddXmippProgram('angular_continuous_assign2', ['XmippRecons'])
 AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
 AddXmippProgram('angular_distance', ['XmippRecons'])
 AddXmippProgram('angular_distribution_show', ['XmippInterface'])
@@ -1175,6 +1176,7 @@ SymLink('bin/xmipp_imagej', 'external/runImageJ')
 # MPI
 AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
+AddXmippMPIProgram('mpi_angular_continuous_assign2', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
