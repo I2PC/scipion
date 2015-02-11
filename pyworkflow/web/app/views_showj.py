@@ -155,6 +155,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
     """
     # Setting the _typeOfColumnToRender
     label = inputParams[sj.LABEL_SELECTED]
+    _imageVolNameOld = ""
 
     if not label:
         volPath = None

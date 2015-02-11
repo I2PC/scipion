@@ -87,8 +87,8 @@ class ImageHandler(object):
             fn = location.getLocation()[1]
         else:
             raise Exception('Can not match object %s to (index, location)' % type(location))
-        
-        return os.path.exists(fn)        
+
+        return os.path.exists(fn.replace(':mrc', ''))
         
     def convert(self, inputObj, outputObj, dataType=None):
         """ Convert from one image to another.
