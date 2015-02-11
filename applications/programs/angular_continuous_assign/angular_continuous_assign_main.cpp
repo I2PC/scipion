@@ -25,9 +25,4 @@
 
 #include <reconstruction/angular_continuous_assign.h>
 
-int main(int argc, char **argv)
-{
-    ProgAngularContinuousAssign prm;
-    prm.read(argc,argv);
-    return prm.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgAngularContinuousAssign)
