@@ -251,8 +251,6 @@ class ProjectSettings(OrderedObject):
                     host.queueSystem.queues.append(queue)
 
                 self.addHost(host)
-                # TODO: check with JoseMi that this is ok, and find out
-                # the exact meaning of hosts and queues.
         except Exception as e:
             sys.exit('Failed to read settings. The reported error was:\n  %s\n'
                      'To solve it, delete %s and run again.' % (e, HOSTS_CONFIG))
