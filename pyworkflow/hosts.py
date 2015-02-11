@@ -47,7 +47,7 @@ class HostMapper(SqliteMapper):
         for host in hostsList:
             if host.label == objLabel:
                 return host
-        return None  
+        return None
         
 class HostConfig(OrderedObject):
     """ Main store the configuration for execution hosts. """
@@ -115,43 +115,8 @@ class HostConfig(OrderedObject):
         
     def setQueueSystem(self, queueSystem):
         self.queueSystem = queueSystem    
-  
-    def addQueueSystem(self, queueConf=None):
-        # Read from users' config file.
-        cp = ConfigParser()
-        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-        SCIPION_CONFIG = queueConf or os.environ['SCIPION_CONFIG']
-        # Also mentioned in /scipion . Maybe we could do better.
-    
-        try:
-            assert cp.read(SCIPION_CONFIG) != [], 'Missing file %s' % SCIPION_CONFIG
-    
-            # Helper functions (to write less)
-            def get(var): return cp.get('HOSTS', var).replace('%_(', '%(')
-            def isOn(var): return var.lower() in ['true', 'yes', '1']
-    
-            self.mpiCommand.set(get('PARALLEL_COMMAND'))
-            self.queueSystem = QueueSystemConfig()
-            queueSys = self.queueSystem
-            #queueSys = QueueSystemConfig()
-            queueSys.name.set(get('NAME'))
-            queueSys.mandatory.set(isOn(get('MANDATORY')))
-            queueSys.submitCommand.set(get('SUBMIT_COMMAND'))
-            queueSys.submitTemplate.set(get('SUBMIT_TEMPLATE'))
-            queueSys.cancelCommand.set(get('CANCEL_COMMAND'))
-            queueSys.checkCommand.set(get('CHECK_COMMAND'))
-    
-            queue = QueueConfig()
-            queue.maxCores.set(get('MAX_CORES'))
-            queue.allowMPI.set(isOn(get('ALLOW_MPI')))
-            queue.allowThreads.set(isOn(get('ALLOW_THREADS')))
-        except Exception as e:
-            sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                     'To solve it, delete %s and run again.' % (e, SCIPION_CONFIG))
-    
-        queueSys.queues = List()
-        queueSys.queues.append(queue)      
-        
+
+
 class QueueSystemConfig(OrderedObject):
     def __init__(self, **args):
         OrderedObject.__init__(self, **args) 

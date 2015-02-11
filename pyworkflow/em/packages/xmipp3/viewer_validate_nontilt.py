@@ -27,6 +27,7 @@
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.viewer import DataView
 from pyworkflow.em import *
+from pyworkflow.protocol.params import LabelParam
 from pyworkflow.gui.form import FormWindow
 from protocol_validate_nontilt import *
 from plotter import XmippPlotter
@@ -50,9 +51,9 @@ class XmippValidateNonTiltViewer(ProtocolViewer):
 
         form.addParam('volForCurve', StringParam, default=1, 
                       label="Show info for volume")
-        form.addParam('doShowVolume', BooleanParam, default=True, 
+        form.addParam('doShowVolume', LabelParam,
                       label="Display the volume with quality parameter?")
-        form.addParam('doShowP', BooleanParam, default=True, 
+        form.addParam('doShowP', LabelParam,
                       label="Display the clustering tendency curve?")
         
     def _getVisualizeDict(self):

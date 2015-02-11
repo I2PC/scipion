@@ -66,6 +66,7 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 # Default values for configuration files.
 SCIPION_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
 SCIPION_MENU = os.path.expanduser('~/.config/scipion/menu.conf')
+SCIPION_HOSTS = os.path.expanduser('~/.config/scipion/hosts.conf')
 
 overwriteConfs = False  # regenerate config files?
 
@@ -108,6 +109,10 @@ try:
     if not exists(SCIPION_MENU) or overwriteConfs:
         sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_MENU)
         createConf(SCIPION_MENU, '%s/settings/menu.conf' % SCIPION_HOME)
+
+    if not exists(SCIPION_HOSTS) or overwriteConfs:
+        sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_HOSTS)
+        createConf(SCIPION_HOSTS, '%s/settings/hosts.conf' % SCIPION_HOME)
 
     config = ConfigParser()
     config.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
@@ -158,6 +163,7 @@ VARS = {
     'SCIPION_PYTHON': 'python',
     'SCIPION_CONFIG': SCIPION_CONFIG,
     'SCIPION_MENU': SCIPION_MENU,
+    'SCIPION_HOSTS': SCIPION_HOSTS,
     'PATH': PATH,
     'PYTHONPATH': PYTHONPATH,
     'LD_LIBRARY_PATH': LD_LIBRARY_PATH,
@@ -296,7 +302,7 @@ def main():
 
     # TODO(josemiguel): review and see if we really need it.
     elif mode == MODE_DBBROWSE:
-        browserArgs = " ".join(sys.argv[2:])
+        browserArgs = " ".join('"%s"' % x for x in sys.argv[2:])
         runApp('pw_browser.py', args=browserArgs)
 
     elif mode == MODE_VIEWER:

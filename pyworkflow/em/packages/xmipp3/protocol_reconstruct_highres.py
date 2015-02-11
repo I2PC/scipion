@@ -28,7 +28,7 @@ This sub-package contains wrapper around Projection Outliers Xmipp program
 """
 
 from pyworkflow.object import Float
-from pyworkflow.protocol.constants import LEVEL_EXPERT
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam
 from pyworkflow.utils.path import cleanPath, makePath, copyFile, moveFile
 from pyworkflow.em.protocol import ProtRefine3D
@@ -85,7 +85,7 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         form.addParam('nextMask', PointerParam, label="Mask", pointerClass='VolumeMask',
                       help='The mask values must be between 0 (remove these pixels) and 1 (let them pass).')
         # COSS: Falta un script de nextReference
-        form.addParam('nextRemove', BooleanParam, label="Remove reference to save space?", default=True, expertLevel=LEVEL_EXPERT, 
+        form.addParam('nextRemove', BooleanParam, label="Remove reference to save space?", default=True, expertLevel=LEVEL_ADVANCED, 
                       help='Remove reference volumes once they are not needed any more.')
 
         form.addSection(label='Angular assignment')

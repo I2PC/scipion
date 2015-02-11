@@ -30,7 +30,7 @@ from os.path import join, exists, basename
 
 from pyworkflow.object import Integer
 from pyworkflow.utils.path import copyFile, createLink, makePath
-from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, LEVEL_EXPERT
+from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, LEVEL_ADVANCED
 from pyworkflow.protocol.params import (StringParam, BooleanParam, IntParam, PointerParam,
                                         EnumParam, FloatParam, TextParam)
 from pyworkflow.em.protocol import EMProtocol
@@ -199,7 +199,7 @@ class ProtFrealignBase(EMProtocol):
                            '_Mode 3_: Simple search & Refine\n'
                            '_Mode 4_: Search, Refine, Randomise & extend to *RREC*\n')
         form.addParam('doMagRefinement', BooleanParam, default=False,
-                      label="Refine magnification?", expertLevel=LEVEL_EXPERT,
+                      label="Refine magnification?", expertLevel=LEVEL_ADVANCED,
                       help='Parameter *FMAG* in FREALIGN\n\n'
                            'Set _True or False_ to enable/disable magnification refinement')
         form.addParam('doDefRefinement', BooleanParam, default=False,
@@ -207,7 +207,7 @@ class ProtFrealignBase(EMProtocol):
                       help='Parameter *FDEF* in FREALIGN\n\n'
                            'Set _True of False_ to enable/disable defocus parameter refinement')
         form.addParam('doAstigRefinement', BooleanParam, default=False,
-                      label="Refine astigmatism?", expertLevel=LEVEL_EXPERT,
+                      label="Refine astigmatism?", expertLevel=LEVEL_ADVANCED,
                       help='Parameter *FASTIG* in FREALIGN\n\n'
                            'Set _True or False_ to enable/disable astigmatic angle refinement')
         form.addParam('doDefPartRefinement', BooleanParam, default=False,
@@ -219,7 +219,7 @@ class ProtFrealignBase(EMProtocol):
                            'change is constrained to be the same for all particles in one image\n')
         form.addParam('methodEwaldSphere', EnumParam, choices=['Disable', 'Simple', 'Reference-based', 'Simple with reversed handedness',
                                                                'Reference-based with reversed handedness'],
-                      default=EWA_DISABLE, expertLevel=LEVEL_EXPERT,
+                      default=EWA_DISABLE, expertLevel=LEVEL_ADVANCED,
                       label="Ewald sphere correction", display=EnumParam.DISPLAY_COMBO,
                       help='Parameter *IEWALD* in FREALIGN\n\n'
                            'The options available to Ewald correction are:\n'
@@ -240,7 +240,7 @@ class ProtFrealignBase(EMProtocol):
                       help='Parameter *FFILT* in FREALIGN\n\n'
                            'Apply single particle Wiener filter to final reconstruction.')
         form.addParam('doBfactor', BooleanParam, default=False,
-                      label="Calculate and apply Bfactor?", expertLevel=LEVEL_EXPERT,
+                      label="Calculate and apply Bfactor?", expertLevel=LEVEL_ADVANCED,
                       help='Parameter *FBFACT* in FREALIGN\n\n'
                            'Determine and apply B-factor to final reconstruction.')
         form.addParam('writeMatchProjections', BooleanParam, default=True,
@@ -395,7 +395,7 @@ class ProtFrealignBase(EMProtocol):
                            'Relative magnification of data set. The magnification feature allows\n'
                            'for manual variations of magnification between data sets.')
         form.addParam('targetScore', FloatParam, default='90.0',
-                      label='Target score:', expertLevel=LEVEL_EXPERT,
+                      label='Target score:', expertLevel=LEVEL_ADVANCED,
                       help='Parameter *TARGET* in FREALIGN\n\n'
                            'Target score (for resolution between RMAX1 and RMAX2)\n'
                            'during parameter search and refinement, above which the search and/or\n'
@@ -445,12 +445,12 @@ class ProtFrealignBase(EMProtocol):
                            'limit used also for the refinement, or a bit lower.\n'
                            'Resolution of the data included in the search/refine')
         form.addParam('defocusUncertainty', FloatParam, default='200.0',
-                      label='Defocus uncertainty (A):', expertLevel=LEVEL_EXPERT,
+                      label='Defocus uncertainty (A):', expertLevel=LEVEL_ADVANCED,
                       help='Parameter *DFSIG* in FREALIGN\n\n'
                            'This will restrain the change in defocus when refining defocus values\n'
                            'for individual particles.')
         form.addParam('Bfactor', FloatParam, default='0.0',
-                      label='B-factor to apply to particle:', expertLevel=LEVEL_EXPERT,
+                      label='B-factor to apply to particle:', expertLevel=LEVEL_ADVANCED,
                       help='Parameter *RBFACT* in FREALIGN\n\n'
                            'B-factor to apply to particle image projections before orientation\n'
                            'determination or refinement.  This allows inclusion of high resolution\n'

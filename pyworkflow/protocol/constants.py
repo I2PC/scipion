@@ -60,8 +60,7 @@ STEPS_PARALLEL = 1    # Execute steps in parallel, throught threads or mpi
          
 LEVEL_NORMAL = 0
 LEVEL_ADVANCED = 1
-LEVEL_EXPERT = 2
-LEVEL_CHOICES = ('Normal', 'Advanced', 'Expert')
+LEVEL_CHOICES = ('Normal', 'Advanced')
 
                 
                 

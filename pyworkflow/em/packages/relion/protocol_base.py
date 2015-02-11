@@ -33,7 +33,7 @@ from os.path import exists
 
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
                                         IntParam, EnumParam, StringParam)
-from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
+from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPath
 
 import pyworkflow.em.metadata as md
@@ -187,7 +187,7 @@ class ProtRelionBase(EMProtocol):
                            'If set to 0, no low-pass filter will be applied to the initial reference(s).')
         
         form.addParam('paddingFactor', FloatParam, default=3,
-                      condition='isClassify', expertLevel=LEVEL_EXPERT,
+                      condition='isClassify', expertLevel=LEVEL_ADVANCED,
                       label='Padding factor',
                       help='The padding factor used for oversampling of the Fourier transform. The default is 3x padding, '
                            'which is combined with nearest-neighbour interpolation. However, for large 3D maps, storing the '
@@ -201,7 +201,7 @@ class ProtRelionBase(EMProtocol):
         
         extraDefault = '' if self.IS_CLASSIFY else '--low_resol_join_halves 40 '
         form.addParam('extraParams', StringParam, default=extraDefault,
-                      expertLevel=LEVEL_EXPERT,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Additional parameters',
                       help='')
                
@@ -299,7 +299,7 @@ class ProtRelionBase(EMProtocol):
                            'In some cases, for example for non-empty icosahedral viruses, it is also useful ' 
                            'to use a second mask. Use <More options> and check <Solvent mask> parameter. ') 
         form.addParam('solventMask', PointerParam, pointerClass='Mask',
-                      expertLevel=LEVEL_EXPERT, allowsNull=True,
+                      expertLevel=LEVEL_ADVANCED, allowsNull=True,
                       label='Solvent mask (optional)',
                       help='For all white (value 1) pixels in this second mask the '
                            'corresponding pixels in the reconstructed map are set to the average value of '
@@ -323,11 +323,13 @@ class ProtRelionBase(EMProtocol):
                            'and vary slightly over the sphere.')
         else:
             form.addParam('inplaneAngularSamplingDeg', FloatParam, default=5,
-                          label='Angular sampling interval (deg)',
-                          help='There are only a few discrete angular samplings possible because '
-                           'we use the HealPix library to generate the sampling of the first '
-                           'two Euler angles on the sphere. The samplings are approximate numbers ' 
-                           'and vary slightly over the sphere.')           
+                          label='In-plane angular sampling (deg)',
+                          help='The sampling rate for the in-plane rotation angle (psi) in degrees.\n'
+                               'Using fine values will slow down the program. Recommended value for\n'
+                               'most 2D refinements: 5 degrees. \n\n'
+                               'If auto-sampling is used, this will be the value for the first \n'
+                               'iteration(s) only, and the sampling rate will be increased \n'
+                               'automatically after that.')
         form.addParam('offsetSearchRangePix', FloatParam, default=5,
                       condition='isClassify or not doContinue',
                       label='Offset search range (pix)',
@@ -573,6 +575,13 @@ class ProtRelionBase(EMProtocol):
     def _validate(self):
         errors = []
         if self.doContinue:
+            continueProtocol = self.continueRun.get()
+            if (continueProtocol is not None and
+                continueProtocol.getObjId() == self.getObjId()):
+                errors.append('In Scipion you must create a new Relion run')
+                errors.append('and select the continue option rather than')
+                errors.append('select continue from the same run.')
+                errors.append('') # add a new line
             errors += self._validateContinue()
         else:
             if self._getInputParticles().isOddX():

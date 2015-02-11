@@ -28,9 +28,12 @@ This module contains several conversion utilities
 """
 
 import os
+import PIL
+
 from constants import NO_INDEX
 import xmipp
 from constants import *
+from pyworkflow.utils.path import getExt
 
 # TODO: remove dependency from Xmipp
 DT_FLOAT = xmipp.DT_FLOAT
@@ -59,7 +62,7 @@ class ImageHandler(object):
         if isinstance(location, tuple):
             outLocation = location
         
-        elif isinstance(location, str):
+        elif isinstance(location, basestring):
             outLocation = (NO_INDEX, location)
             
         elif hasattr(location, 'getLocation'): #this include Image and subclasses
@@ -70,6 +73,22 @@ class ImageHandler(object):
             raise Exception('Can not convert object %s to (index, location)' % type(location))
         
         return outLocation
+    
+    def _existsLocation(self, location):
+        """ Return True if a given location exists. 
+        Location have the same meaning than in _convertToLocation.
+        """
+        if isinstance(location, tuple):
+            fn = location[1]
+        elif isinstance(location, basestring):
+            fn = location
+        elif hasattr(location, 'getLocation'): #this include Image and subclasses
+            # In this case inputLoc should be a subclass of Image
+            fn = location.getLocation()[1]
+        else:
+            raise Exception('Can not match object %s to (index, location)' % type(location))
+        
+        return os.path.exists(fn)        
         
     def convert(self, inputObj, outputObj, dataType=None):
         """ Convert from one image to another.
@@ -103,10 +122,20 @@ class ImageHandler(object):
             (x, y, z, n) where x, y, z are image dimensions (z=1 for 2D) and 
             n is the number of elements if stack.
         """
-        location = self._convertToLocation(locationObj)
-        self._img.read(location, xmipp.HEADER)
+        if not self._existsLocation(locationObj):
+            return None
         
-        return self._img.getDimensions()
+        location = self._convertToLocation(locationObj)
+        fn = location[1]
+
+        ext = getExt(fn).lower()
+        if ext == '.png' or ext == '.jpg':
+            im = PIL.Image.open(fn)
+            x, y = im.size # (width,height) tuple
+            return x, y, 1, 1
+        else:
+            self._img.read(location, xmipp.HEADER)
+            return self._img.getDimensions()
     
     def read(self, inputObj):
         """ Create a new Image class from inputObj 
@@ -147,3 +176,5 @@ class ImageHandler(object):
             return avgImage
         else:
             return None
+        
+        

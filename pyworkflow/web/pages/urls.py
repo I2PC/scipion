@@ -1,33 +1,28 @@
+import os, sys
+import pyworkflow as pw
 from django.conf.urls import patterns, include, url
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 from django.conf import settings
+from pyworkflow.web.pages.settings import WS_ROOT, serviceFolders
 
 #===============================================================================
 # URL ASSOCIATION
 #===============================================================================
 
-urlpatterns = patterns('',
-    
+mainUrls = ['',
     # To serve different static files
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
-                
+    
     url(r'^admin/', include(admin.site.urls)),
     # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
     
     # If no path given, load the projects view
 #     url(r'^$', 'app.views_project.projects'),
-    url(r'^$', 'app.views_project.service_projects'),
+    url(r'^$', 'app.views_project.projects'),
     
-    #SERVICE PROJECT 
-    url(r'^service_projects/', 'app.views_project.service_projects'),
-    url(r'^check_project_id/$', 'app.views_project.check_project_id'),
-    url(r'^create_service_project/$', 'app.views_project.create_service_project'),
-    url(r'^get_testdata/$', 'app.views_project.get_testdata'),
-    url(r'^service_content/$', 'app.views_project.service_content'),
-
     #PROJECT (CONTENT, RUNTABLE AND GRAPH)
     url(r'^projects/', 'app.views_project.projects'),
     url(r'^create_project/$', 'app.views_project.create_project'),
@@ -103,12 +98,6 @@ urlpatterns = patterns('',
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     url(r'^get_file/$', 'app.views_util.get_file'),
     
-    # DESKTOP
-#     url(r'^desktop/', 'app.views_desktop.desktop'),
-    url(r'^download_form/', 'app.views_desktop.download_form'),
-    url(r'^doDownload/', 'app.views_desktop.doDownload'),
-    
-
 #===============================================================================
 # OLD     
 #===============================================================================
@@ -122,7 +111,18 @@ urlpatterns = patterns('',
 #    url(r'^delete host/$', 'app.views_host.deleteHost'),
 #    url(r'^host_form/$', 'app.views_host.hostForm'),
 
-)
+]
+
+# Load URLS for webtools
+from pyworkflow.utils.reflection import getModules
+toolModules = getModules(WS_ROOT)
+
+for tm in toolModules.values():
+    mainUrls += tm.urls
+ 
 
 # handler404 = "app.views_util.error"
 # handler500 = "app.views_util.error"
+
+urlpatterns = patterns(*mainUrls)
+

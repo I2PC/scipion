@@ -29,7 +29,7 @@ This sub-package contains wrapper around Screen Classes Xmipp program
 """
 
 from pyworkflow.object import Float
-from pyworkflow.protocol.constants import LEVEL_EXPERT
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam
 from pyworkflow.em.protocol import ProtAnalysis2D
 from pyworkflow.em.data import Class2D, SetOfClasses2D
@@ -62,7 +62,7 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
                         'If no symmetry is present, give c1')
-        form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_EXPERT,
+        form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label='Angular sampling rate',
                       help='In degrees.'
                       ' This sampling defines how fine the projection gallery from the volume is explored.')

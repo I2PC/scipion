@@ -194,7 +194,7 @@ class ProtResMap(ProtAnalysis3D):
         
         if self.useSplitVolume:
             # Read the second splitted volume
-            data2 = MRC_Data(volumes[0],'ccp4')
+            data2 = MRC_Data(volumes[1],'ccp4')
             args.update({'inputFileName1': 'volume1.map',
                          'inputFileName2': 'volume2.map',
                          'data1': data1,

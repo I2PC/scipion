@@ -77,13 +77,13 @@ class Manager(object):
             projList.sort(key=lambda k: k.mTime, reverse=True)
         return projList
     
-    def createProject(self, projectName, confs={}, graphView=False):
+    def createProject(self, projectName, confs={}, runsView=0):
         """Create a new project.
         confs dict can contains customs .conf files 
         for: menus, protocols, or hosts
         """
         project = Project(self.getProjectPath(projectName))
-        project.create(confs, graphView)
+        project.create(confs, runsView)
         return project
     
     def loadProject(self, projId):

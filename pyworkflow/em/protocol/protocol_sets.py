@@ -35,7 +35,7 @@ import random
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (
     PointerParam, BooleanParam, MultiPointerParam, IntParam)
-from pyworkflow.protocol.constants import LEVEL_EXPERT
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
 
 class ProtSets(EMProtocol):
@@ -61,7 +61,7 @@ class ProtUnionSet(ProtSets):
                       help='Select two or more sets (of micrographs, particles, volumes, etc.) to be united.'
                            'If you select 3 sets with 100, 200, 200 elements, the final set will contain a '
                            'total of 500 elements.')
-        form.addParam('renumber', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
+        form.addParam('renumber', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Create new ids",
                       help='Make an automatic renumbering of the ids, so the new objects\n'
                            'are not associated to the old ones.')

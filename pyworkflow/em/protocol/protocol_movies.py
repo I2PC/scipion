@@ -32,7 +32,7 @@ In this module are protocol base classes related to EM Micrographs
 
 from os.path import join, basename, exists
 
-from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_EXPERT
+from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_ADVANCED
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow.utils.path import createLink, removeBaseExt, makePath, cleanPath, moveFile, getExt
 from pyworkflow.utils.properties import Message
@@ -66,7 +66,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select a set of previously imported movies.')
         form.addParam('cleanMovieData', BooleanParam, default=True,
-                      expertLevel=LEVEL_EXPERT,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Clean movie data?',
                       help='Movies take a lot of disk space.\n'
                            'So, by default, all protocols that work on\n'

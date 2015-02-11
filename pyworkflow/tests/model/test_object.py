@@ -189,23 +189,23 @@ class TestObject(BaseTest):
         """
         fnDefocusGroups=self.getOutputPath("SetOfDefocusGroups.sqlite")
         setOfDefocus = SetOfDefocusGroup(filename=fnDefocusGroups)
-        df = DefocusGroup()
-        df.setDefocusMin(2000.)
-        df.setDefocusMax(2500.)
-        df.setDefocusAvg(2100.)
-        setOfDefocus.append(df)
+        df1 = DefocusGroup()
+        df1.addCTF(CTFModel(defocusU=2000, defocusV=2000))
+        df1.addCTF(CTFModel(defocusU=2400, defocusV=2400))
+        # At this point defocus Avg should be 2200
+        self.assertAlmostEqual(df1.getDefocusAvg(), 2200.)
 
-        df.cleanObjId()
-        df.setDefocusMin(3000)
-        df.setDefocusMax(5500)
-        df.setDefocusAvg(5000)
-        setOfDefocus.append(df)
-        #setOfDefocus.write()
+        df2 = DefocusGroup()
+        df2.addCTF(CTFModel(defocusU=3000, defocusV=3000))
+        df2.addCTF(CTFModel(defocusU=5000, defocusV=5000))
+        self.assertAlmostEqual(df2.getDefocusAvg(), 4000.)
 
-        operations      = ['min', 'max'] #This should be an enum -> aggregation function
-        operationLabel  = '_defocusMin' #argument of aggregation function
-        groupByLabels   = ['_defocusMin'] # absolute minimum
-        print setOfDefocus.aggregate(operations, operationLabel, groupByLabels)
+        #TODO: create another test for aggregate
+        #operations      = ['min', 'max'] #This should be an enum -> aggregation function
+        #operationLabel  = '_defocusMin' #argument of aggregation function
+        #groupByLabels   = ['_defocusMin'] # absolute minimum
+        
+        #print setOfDefocus.aggregate(operations, operationLabel, groupByLabels)
     
     def test_formatString(self):
         """ Test that Scalar objects behave well

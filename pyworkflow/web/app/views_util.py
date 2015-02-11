@@ -40,6 +40,7 @@ from pyworkflow.project import Project
 from pyworkflow.utils import *
 from pyworkflow.gui import getImage, getPILImage
 from pyworkflow.dataset import COL_RENDER_IMAGE, COL_RENDER_VOLUME
+from pyworkflow.em.convert import ImageHandler
 
 iconDict = {
             'logo_scipion': 'scipion_logo_small_web.png',
@@ -303,9 +304,9 @@ def get_attributes(request):
         project = loadProject(projectName)
         objId = request.GET.get('objId', None)
         
-        obj = project.getProtocol(int(objId))
+        obj = project.getObject(int(objId))
         if obj is None:
-            obj = project.getProtocol(int(objId)).get()
+            obj = project.getObject(int(objId)).get()
             
         res = obj.getObjLabel() + "_-_" + obj.getObjComment()
         return HttpResponse(res, mimetype='application/javascript')
@@ -321,9 +322,9 @@ def set_attributes(request):
         projectName = request.session['projectName']
         project = loadProject(projectName)
 
-        obj = project.getProtocol(int(id))
+        obj = project.getObject(int(id))
         if obj is None:
-            obj = project.getProtocol(int(id)).get()
+            obj = project.getObject(int(id)).get()
                 
         obj.setObjLabel(label)
         obj.setObjComment(comment)
@@ -477,14 +478,14 @@ def get_image(request):
     applyTransformMatrix = 'applyTransformMatrix' in request.GET
     onlyShifts = 'onlyShifts' in request.GET
     wrap = 'wrap' in request.GET
-    
      
     matrix = request.GET.get('matrix',None)
         
     try:
         # PAJM: Como vamos a gestionar lsa imagen    
         if imagePath.endswith('png') or imagePath.endswith('gif'):
-            img = getImage(imagePath, tkImage=False)
+            imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+            img = getImage(imagePathTmp, tkImage=False)
         else:
             if '@' in imagePath:
                 parts = imagePath.split('@')
@@ -600,10 +601,12 @@ def getImageXdim(request, imagePath):
 
 def getImageDim(request, imagePath):
     projectPath = request.session['projectPath']
-    img = xmipp.Image()
+#     img = xmipp.Image()
     imgFn = os.path.join(projectPath, imagePath)
-    img.read(str(imgFn), xmipp.HEADER)
-    return img.getDimensions()
+    
+    return ImageHandler().getDimensions(imgFn)
+#     img.read(str(imgFn), xmipp.HEADER)
+#     return img.getDimensions()
 
 def readDimensions(request, path, typeOfColumn):
     if (typeOfColumn == COL_RENDER_IMAGE or
@@ -619,7 +622,8 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     imgFn = os.path.join(request.session['projectPath'], path)
     
     if not convert and not reslice and not getStats:
-        img.read(str(imgFn), xmipp.HEADER)
+#         img.read(str(imgFn), xmipp.HEADER)
+        pass
     else:
         img.read(str(imgFn))
     

@@ -89,7 +89,9 @@
 					<option value="{{htmlIdValue}}">{{htmlValue}}</option>
 				{% endfor %}
 				</select>
-			{% else %}			
+            {% elif paramGroup.getClassName == "LabelParam" %}
+                <!-- Nada -->
+			{% else %}
 				<input type="text" id="{{paramGroupName}}_input" data-objId="{{paramGroup.htmlIdValue}}" name="{{paramGroupName}}" value="{{paramGroup.htmlValue}}" >	
 			{% endif %}	
 		{% endif %}

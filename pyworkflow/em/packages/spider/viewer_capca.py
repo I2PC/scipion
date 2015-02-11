@@ -52,15 +52,15 @@ class SpiderViewerCAPCA(ProtocolViewer):
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        form.addParam('doShowEigenImages', BooleanParam, label="Show eigenimages?", default=True)
-        form.addParam('doShowReconsImages', BooleanParam, 
+        form.addParam('doShowEigenImages', LabelParam, label="Show eigenimages?", default=True)
+        form.addParam('doShowReconsImages', LabelParam,
                       label="Show reconstitued images?", default=True)
-        form.addParam('doShowHistogram', BooleanParam, 
+        form.addParam('doShowHistogram', LabelParam,
                       label="Show eigenvalue histogram?", default=True)
-        form.addParam('doShowPcaFile', BooleanParam, expertLevel=LEVEL_ADVANCED,
+        form.addParam('doShowPcaFile', LabelParam, expertLevel=LEVEL_ADVANCED,
                       label="Show IMC file?", default=True)        
                   
-        form.addParam('doShowFactorMaps', BooleanParam, #expertLevel=LEVEL_ADVANCED,
+        form.addParam('doShowFactorMaps', LabelParam, #expertLevel=LEVEL_ADVANCED,
                       label="Show factor maps?", default=True)        
         line = form.addLine('Factors')
         line.addParam('firstFactor', IntParam, #expertLevel=LEVEL_ADVANCED,

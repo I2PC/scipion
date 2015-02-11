@@ -29,6 +29,7 @@ This module implement the import/export of Micrographs and Particles to EMX
 
 from __future__ import print_function
 from os.path import join, dirname, basename, exists
+from pyworkflow.em.constants import ALIGN_NONE
 
 from pyworkflow.utils.path import createLink, makePath, cleanPath, replaceBaseExt
 from pyworkflow.em.convert import ImageHandler, NO_INDEX
@@ -70,7 +71,8 @@ def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=Non
     
     
 def importData(protocol, emxFile, outputDir, acquisition, 
-               samplingRate=None, copyOrLink=createLink):
+               samplingRate=None, copyOrLink=createLink,
+               alignType=ALIGN_NONE):
     """ Import objects into Scipion from a given EMX file. 
     Returns:
         a dictionary with key and values as outputs sets
@@ -82,7 +84,7 @@ def importData(protocol, emxFile, outputDir, acquisition,
     _micrographsFromEmx(protocol, emxData, emxFile, outputDir, acquisition, 
                         samplingRate, copyOrLink)
     _particlesFromEmx(protocol, emxData, emxFile, outputDir, acquisition,
-                      samplingRate, copyOrLink)
+                      samplingRate, copyOrLink, alignType)
 
 
 #---------------- Export related functions -------------------------------
@@ -373,7 +375,8 @@ def _particlesFromEmx(protocol
                       , outputDir
                       , acquisition
                       , samplingRate
-                      , copyOrLink):
+                      , copyOrLink
+                      , alignType):
     """ Create the output SetOfCoordinates or SetOfParticles given an EMXData object.
     Add CTF information to the particles if present.
     """    
@@ -394,10 +397,13 @@ def _particlesFromEmx(protocol
                 partSet.setHasCTF(True)
             if emxParticle.has('centerCoord__X'):
                 part.setCoordinate(Coordinate())
-            _particleFromEmx(emxParticle, part)
             if emxParticle.has('transformationMatrix__t11'):
-                #FIXME: Detect if the alignment is 2D or 3D
-                partSet.setAlignment3D()
+                _particleFromEmx(emxParticle, part)
+                #partSet.setAlignment3D()
+                partSet.setAlignment(alignType)
+            else:
+                partSet.setAlignment(alignType)
+
             if not samplingRate:
                 samplingRate = part.getSamplingRate()
             partSet.setSamplingRate(samplingRate) 
