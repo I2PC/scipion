@@ -767,9 +767,5 @@ class Project(object):
     
     def setReadOnly(self, value):
         self.settings.setReadOnly(value)
-            
 
-def isReadOnly():
-     """ Auxiliar method to keep a read-only mode for the environment. """
-     return 'SCIPION_READONLY' in os.environ
         
