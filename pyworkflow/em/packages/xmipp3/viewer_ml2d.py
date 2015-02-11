@@ -64,7 +64,7 @@ class XmippML2DViewer(ProtocolViewer):
                        label="Show all plots per iteration?",
                       help='Visualize several plots.')
         
-        group = form.addGroup('Iteration plots', condition='doShowPlots')
+        group = form.addGroup('Iteration plots')
         group.addParam('doShowLL', LabelParam,
                        label="Show Log-Likehood over iterations?",
                        help='The Log-Likelihood value should increase.')      
