@@ -35,14 +35,12 @@ from pyworkflow.gui.widgets import GradientFrame
 from viewprojects import ProjectsView
 from viewprotocols import ProtocolsView
 from viewdata import ProjectDataView
-from viewhosts import HostsView
 
 
 VIEW_PROJECTS = Message.VIEW_PROJECTS
 VIEW_PROTOCOLS = Message.VIEW_PROTOCOLS
 VIEW_DATA = Message.VIEW_DATA
-VIEW_HOSTS = Message.VIEW_HOSTS
-VIEW_LIST = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]  
+VIEW_LIST = [VIEW_PROTOCOLS, VIEW_DATA]
 
 
      
@@ -73,7 +71,6 @@ class ProjectBaseWindow(Window):
         self.viewFuncs = {VIEW_PROJECTS: ProjectsView,
                           VIEW_PROTOCOLS: ProtocolsView,
                           VIEW_DATA: ProjectDataView,
-                          VIEW_HOSTS: HostsView
                           }
         
     def createHeaderFrame(self, parent):
@@ -105,7 +102,7 @@ class ProjectBaseWindow(Window):
         return header
 
     def addViewList(self, header):
-        """Create the view selection frame (Protocols|Data|Hosts) in the header."""
+        """Create the view selection frame (Protocols|Data) in the header."""
 
         # This function is called from createHeaderFrame() in ProjectWindow
 

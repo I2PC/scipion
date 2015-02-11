@@ -861,7 +861,7 @@ class ProtocolsView(tk.Frame):
         self.runsGraphCanvas.drawGraph(self.runsGraph, layout, drawNode=self.createRunItem)
         
     def createRunItem(self, canvas, node):
-        nodeText = node.label
+        nodeText = node.getLabel()
         textColor = 'black'
         color = '#ADD8E6' #Lightblue
         

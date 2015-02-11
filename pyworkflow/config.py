@@ -131,18 +131,6 @@ class ProjectSettings(OrderedObject):
     def setReadOnly(self, value):
         self.readOnly.set(value)
 
-    def saveHost(self, host, commit=False):
-        """ Save a host for project settings.
-            If the hosts exists it is updated, else it is created.
-        params:
-            host: The host to update or create.
-        """
-        if not host in self.hostList:
-            self.addHost(host)
-        self.mapper.store(host)
-        if commit:
-            self.commit()
-
     def deleteHost(self, host, commit=False):
         """ Delete a host of project settings.
         params:
@@ -279,9 +267,10 @@ class ProjectSettings(OrderedObject):
         projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
+        projMenu.addSubMenu('Export tree graph', 'export_tree')
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
-    
+
         helpMenu = menu.addSubMenu('Help')
         helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
         helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
@@ -449,5 +438,3 @@ class NodeConfigList(List):
     def clear(self):
         List.clear(self)
         self._nodesDict = {}
-        
-        

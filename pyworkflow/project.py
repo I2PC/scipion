@@ -219,14 +219,6 @@ class Project(object):
                 #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
                 prot2 = getProtocolFromDb(dbPath, protocol.getObjId())
 
-                print "PROTOCOL from project.sqlite"
-                print "endtime = %s" % protocol.endTime.get()
-                print "status = %s" % protocol.getStatus()
-
-                print "PROTOCOL from run.db"
-                print "endtime = %s" % prot2.endTime.get()
-                print "status = %s" % prot2.getStatus()
-
                 # Copy is only working for db restored objects
                 protocol.setMapper(self.mapper)
                 protocol.copy(prot2, copyId=False)
@@ -623,7 +615,7 @@ class Project(object):
             for r in runs:
                 n = g.createNode(r.strId())
                 n.run = r
-                n.label = r.getRunName()
+                n.setLabel(r.getRunName())
                 outputDict[r.getObjId()] = n
                 for _, attr in r.iterOutputAttributes(em.EMObject):
                     outputDict[attr.getObjId()] = n # mark this output as produced by r
