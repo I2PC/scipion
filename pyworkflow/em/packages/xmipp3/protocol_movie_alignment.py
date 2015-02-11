@@ -32,7 +32,7 @@ In this module are protocol base classes related to EM Micrographs
 from os.path import join
 
 from pyworkflow.object import String
-from pyworkflow.protocol.params import IntParam, StringParam, BooleanParam, LEVEL_EXPERT, LEVEL_ADVANCED, EnumParam
+from pyworkflow.protocol.params import IntParam, StringParam, BooleanParam, LEVEL_ADVANCED, LEVEL_ADVANCED, EnumParam
 from pyworkflow.utils.path import moveFile
 import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtProcessMovies
@@ -86,7 +86,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                       help="GPU may have several cores. Set it to one if you do not know what we are talking about")
         group = form.addGroup('Optical Flow parameters',condition="alignMethod==%d or alignMethod==%d " % (AL_OPTICAL, AL_DOSEFGPUOPTICAL))
         group.addParam('winSize', IntParam, default=150,
-                      label="Window size", expertLevel=LEVEL_EXPERT,
+                      label="Window size", expertLevel=LEVEL_ADVANCED,
                       help="Window size (shifts are assumed to be constant within this window).")
         #---------------------------------- DosefGPU Params--------------------------------
         group = form.addGroup('DosefGPU parameters',condition="alignMethod==%d or alignMethod==%d " % (AL_DOSEFGPU, AL_DOSEFGPUOPTICAL))

@@ -102,7 +102,7 @@ class Message():
     LABEL_LOGS_SCIPION = 'Scipion Log'
     
     LABEL_RUNNAME = 'Run name'
-    LABEL_EXECUTION = 'Execution'
+    LABEL_EXECUTION = 'Run mode'
     LABEL_PARALLEL = 'Parallel'
     
     NO_INFO_SUMMARY = 'No summary information.'

@@ -34,7 +34,7 @@ import numpy as np
 
 from pyworkflow.utils.path import cleanPath, makePath, cleanPattern
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO)
-from pyworkflow.protocol.params import StringParam, BooleanParam
+from pyworkflow.protocol.params import StringParam, LabelParam
 from pyworkflow.em.data import SetOfParticles
 from pyworkflow.utils.process import runJob
 from pyworkflow.em.viewer import VmdView
@@ -67,12 +67,12 @@ class XmippDimredNMAViewer(ProtocolViewer):
                            'Type 1 2 3 to see the 3D plot of raw deformations 1, 2 and 3; etc.'
                            )
         
-        form.addParam('displayClustering', BooleanParam, default=False,
+        form.addParam('displayClustering', LabelParam,
                       label='Open clustering tool?',
                       help='Open a GUI to visualize the images as points'
                            'and select some of them to create new clusters.')
          
-        form.addParam('displayTrajectories', BooleanParam, default=False,
+        form.addParam('displayTrajectories', LabelParam,
                       label='Open trajectories tool?',
                       help='Open a GUI to visualize the images as points'
                            'to draw and ajust trajectories.')       

@@ -98,7 +98,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         form.addParam('setSize', BooleanParam, label='Set final size?', default=False)
         form.addParam('size', IntParam, label="Final size (px)", condition='setSize', allowsNull=True,
                       help='Final size in pixels. If no value is provided, protocol will estimate it.')
-        form.addParam('centerPdb', BooleanParam, label="Center PDB", default=True, expertLevel=LEVEL_EXPERT,
+        form.addParam('centerPdb', BooleanParam, label="Center PDB", default=True, expertLevel=LEVEL_ADVANCED,
                       help='Center PDB with the center of mass')
 
     def _insertAllSteps(self):

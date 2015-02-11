@@ -33,7 +33,7 @@ from pyworkflow.em import *
 from protocol_reconstruct_significant import XmippProtReconstructSignificant
 from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
-from pyworkflow.protocol.params import HiddenBooleanParam
+from pyworkflow.protocol.params import LabelParam
 from convert import readSetOfParticles
 import glob
 
@@ -53,9 +53,9 @@ class XmippReconstructSignificantViewer(ProtocolViewer):
         form.addSection(label='Visualization')
         form.addParam('volumeToVisualize', IntParam, default=0,
                       label="Volume to visualize")      
-        form.addParam('doShowAngles', HiddenBooleanParam, default=False,
+        form.addParam('doShowAngles', LabelParam, default=False,
                       label="Visualize Significant Angular assignment")      
-        form.addParam('doShowImagesSignificant', HiddenBooleanParam, default=False,
+        form.addParam('doShowImagesSignificant', LabelParam, default=False,
                       label="Visualize Optimal Angular assignment")
         if self.protocol.keepIntermediate:
             form.addParam('iterationToVisualize', IntParam, default=-1,

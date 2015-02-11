@@ -31,7 +31,7 @@ This sub-package contains wrapper around Screen Particles Xmipp program
 
 from pyworkflow.object import String
 from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
-                                        LEVEL_EXPERT, FloatParam)
+                                        LEVEL_ADVANCED, FloatParam)
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.utils.path import copyFile, replaceBaseExt
 
@@ -55,24 +55,24 @@ class XmippProtScreenParticles(ProtProcessParticles):
         
         form.addParam('autoParRejection', EnumParam, choices=['None', 'MaxZscore', 'Percentage'],
                       label="Automatic particle rejection based on Zscore", default=self.REJ_NONE,
-                      display=EnumParam.DISPLAY_COMBO, expertLevel=LEVEL_EXPERT,
+                      display=EnumParam.DISPLAY_COMBO, expertLevel=LEVEL_ADVANCED,
                       help='How to automatically reject particles. It can be none (no rejection), '
                       'maxZscore (reject a particle if its Zscore [a similarity index] is larger than this value), '
                       'Percentage (reject a given percentage in each one of the screening criteria). ')
         form.addParam('maxZscore', FloatParam, default=3, condition='autoParRejection==1',
-                      label='Maximum Zscore', expertLevel=LEVEL_EXPERT,
+                      label='Maximum Zscore', expertLevel=LEVEL_ADVANCED,
                       help='Maximum Zscore.', validators=[Positive])      
         form.addParam('percentage', IntParam, default=5, condition='autoParRejection==2',
-                      label='Percentage (%)', expertLevel=LEVEL_EXPERT,
+                      label='Percentage (%)', expertLevel=LEVEL_ADVANCED,
                       help='The worse percentage of particles according to metadata labels: ZScoreShape1, ZScoreShape2, ZScoreSNR1, ZScoreSNR2, ZScoreHistogram are automatically disabled. Therefore, the total number of disabled particles belongs to [percetage, 5*percentage]', validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])
 
         form.addParam('autoParRejectionSSNR', EnumParam, choices=['None', 'Percentage'],
                       label="Automatic particle rejection based on SSNR", default=self.REJ_NONE,
-                      display=EnumParam.DISPLAY_COMBO, expertLevel=LEVEL_EXPERT,
+                      display=EnumParam.DISPLAY_COMBO, expertLevel=LEVEL_ADVANCED,
                       help='How to automatically reject particles. It can be none (no rejection), '
                       'Percentage (reject a given percentage of the lowest SSNRs). ')
         form.addParam('percentageSSNR', IntParam, default=5, condition='autoParRejectionSSNR==1',
-                      label='Percentage (%)', expertLevel=LEVEL_EXPERT,
+                      label='Percentage (%)', expertLevel=LEVEL_ADVANCED,
                       help='The worse percentage of particles according to SSNR are automatically disabled.', 
                       validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])
         form.addParallelSection(threads=0, mpi=0)

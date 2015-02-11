@@ -29,7 +29,7 @@ This sub-package contains wrapper around Screen Particles Xmipp program
 
 from pyworkflow.object import String
 from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
-                                        LEVEL_EXPERT, FloatParam, PointerParam)
+                                        LEVEL_ADVANCED, FloatParam, PointerParam)
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.utils.path import copyFile, replaceBaseExt
 
@@ -57,14 +57,14 @@ class XmippProtDenoiseParticles(ProtProcessParticles):
         
         form.addSection(label='Basis construction')
         form.addParam('maxClasses', IntParam, default=128,
-                      label='Max. number of classes', expertLevel=LEVEL_EXPERT,
+                      label='Max. number of classes', expertLevel=LEVEL_ADVANCED,
                       help='Maximum number of classes.')
         form.addParam('maxPCABases', IntParam, default=200,
-                      label='Number of PCA bases', expertLevel=LEVEL_EXPERT,
+                      label='Number of PCA bases', expertLevel=LEVEL_ADVANCED,
                       help='Number of PCA bases.')
         form.addSection(label='Denoising')
         form.addParam('PCABases2Project', IntParam, default=200,
-                      label='Number of PCA bases on which to project', expertLevel=LEVEL_EXPERT,
+                      label='Number of PCA bases on which to project', expertLevel=LEVEL_ADVANCED,
                       help='Number of PCA bases on which to project.')
         
     def _getDefaultParallel(self):

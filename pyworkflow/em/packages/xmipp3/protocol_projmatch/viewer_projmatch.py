@@ -40,7 +40,7 @@ from protocol_projmatch import XmippProtProjMatch
 # from projmatch_initialize import createFilenameTemplates
 from pyworkflow.em.packages.xmipp3.convert import * # change this
 from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
-from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
+from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, IntParam, 
                                         FloatParam, StringParam, Positive, GE,
                                         EnumParam, NumericRangeParam, TextParam,
@@ -104,7 +104,7 @@ Examples:
                       label='references list',
                       help='')
         group.addParam('matrixWidth', FloatParam, default=-1, 
-                      expertLevel=LEVEL_EXPERT,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Width of projection galleries',
                       help='Usually a multiple of 2 is the right value. -1 => authomatic')
         group.addParam('showVolume', EnumParam, choices=['slices', 'chimera'], 

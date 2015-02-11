@@ -298,11 +298,14 @@ def _getObjectLabel(obj, mapper):
     if not len(label.strip()):
         labelList = [obj.getLastName()]
         parent = mapper.getParent(obj)
+        
 
         while not isinstance(parent, Protocol):
+            if parent is None:
+                return "Wrong object: %s, possible db corrupted!!!" % obj.getObjId()
             labelList.insert(0, parent.getLastName())
-            parent = mapper.getParent(parent)  
-        
+            parent = mapper.getParent(parent)
+
         labelList.insert(0, parent.getObjLabel())
         label = '->'.join(labelList)
         
@@ -1190,14 +1193,15 @@ class FormWindow(Window):
         r = 1 # Execution
         self._createHeaderLabel(runFrame, Message.LABEL_EXECUTION, bold=True, sticky='ne', row=r, pady=0)
         modeFrame = tk.Frame(runFrame, bg='white')
-        self._createHeaderLabel(modeFrame, "Mode", sticky='ne', row=0, pady=0, column=0)
-        runMode = self._createBoundCombo(modeFrame, Message.VAR_RUN_MODE, MODE_CHOICES, self._onRunModeChanged)   
-        runMode.grid(row=0, column=1, sticky='new', padx=(0, 5), pady=5)
+        #self._createHeaderLabel(modeFrame, "Mode", sticky='ne', row=0, pady=0, column=0)
+        runMode = self._createBoundOptions(modeFrame, Message.VAR_RUN_MODE, MODE_CHOICES, self.protocol.runMode.get(),
+                                           self._onRunModeChanged, bg='white')   
+        runMode.grid(row=0, column=0, sticky='new', padx=(0, 5), pady=5)
         btnHelp = IconButton(modeFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
                              command=self._createHelpCommand(Message.HELP_RUNMODE))
         btnHelp.grid(row=0, column=2, padx=(5, 0), pady=2, sticky='ne')
-        modeFrame.columnconfigure(0, minsize=60)
-        modeFrame.columnconfigure(1, weight=1)
+        #modeFrame.columnconfigure(0, minsize=60)
+        modeFrame.columnconfigure(0, weight=1)
         modeFrame.grid(row=r, column=1, sticky='new', columnspan=2)
         
         # Host
@@ -1206,25 +1210,47 @@ class FormWindow(Window):
         
         r = 2
         # Parallel
-        if self.protocol.allowThreads or self.protocol.allowMpi:
+        # some short notation
+        allowThreads = self.protocol.allowThreads # short notation
+        allowMpi = self.protocol.allowMpi # short notation
+        numberOfMpi = self.protocol.numberOfMpi.get() 
+        numberOfThreads = self.protocol.numberOfThreads.get() 
+        
+        if allowThreads or allowMpi:
             self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True, sticky='ne', row=r, pady=0)
             procFrame = tk.Frame(runFrame, bg='white')
             r2 = 0
             c2 = 0
             sticky = 'ne'
-            # THREADS
-            if self.protocol.allowThreads:
-                self._createHeaderLabel(procFrame, Message.LABEL_THREADS, sticky=sticky, row=r2, column=c2, pady=0)
-                entry = self._createBoundEntry(procFrame, Message.VAR_THREADS)
-                entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
-                # Modify values to be used in MPI entry
-                c2 += 2
-                sticky = 'nw'
-            # MPI
-            if self.protocol.allowMpi:
-                self._createHeaderLabel(procFrame, Message.LABEL_MPI, sticky=sticky, row=r2, column=c2, pady=0)
-                entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
-                entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
+            if self.protocol.stepsExecutionMode == STEPS_PARALLEL:
+                if allowThreads and allowMpi:
+                    if numberOfMpi > 1:
+                        procs = numberOfMpi
+                        value = 1 
+                    else:
+                        procs = numberOfThreads
+                        value = 0
+                    print "value: %d, numberOfMpi %d, numberOfThreads %d" % (value, numberOfMpi, numberOfThreads)
+                    procCombo = self._createBoundOptions(procFrame, 'stepsExecutionMode', ['Threads', 'MPI'], 
+                                                         value, self._setThreadsOrMpi, bg='white')
+                    procCombo.grid(row=0, column=0, sticky='nw', pady=5)
+                    procEntry = self._createBoundEntry(procFrame, Message.VAR_THREADS, func=self._setThreadsOrMpi, value=procs)
+                    procEntry.grid(row=0, column=1, padx=(0, 5), sticky='nw')
+                    
+            else:
+                # THREADS
+                if allowThreads:
+                    self._createHeaderLabel(procFrame, Message.LABEL_THREADS, sticky=sticky, row=r2, column=c2, pady=0)
+                    entry = self._createBoundEntry(procFrame, Message.VAR_THREADS)
+                    entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
+                    # Modify values to be used in MPI entry
+                    c2 += 2
+                    sticky = 'nw'
+                # MPI
+                if allowMpi:
+                    self._createHeaderLabel(procFrame, Message.LABEL_MPI, sticky=sticky, row=r2, column=c2, pady=0)
+                    entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
+                    entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
                 
             btnHelp = IconButton(procFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
                                  command=self._createHelpCommand(Message.HELP_MPI_THREADS))
@@ -1274,8 +1300,9 @@ class FormWindow(Window):
         expFrame = tk.Frame(paramsFrame)
         expLabel = tk.Label(expFrame, text=Message.LABEL_EXPERT, font=self.fontBold)
         expLabel.grid(row=0, column=0, sticky='nw', padx=5)
-        expCombo = self._createBoundCombo(expFrame, Message.VAR_EXPERT, LEVEL_CHOICES, 
-                                          self._onExpertLevelChanged) 
+        expCombo = self._createBoundOptions(expFrame, Message.VAR_EXPERT, LEVEL_CHOICES,
+                                            self.protocol.expertLevel.get(),
+                                            self._onExpertLevelChanged) 
         expCombo.grid(row=0, column=1, sticky='nw', pady=5)
         expFrame.grid(row=0, column=0, sticky='nw')
         
@@ -1343,9 +1370,11 @@ class FormWindow(Window):
             var.set(value)
         return tk.Entry(parent, font=self.font, width=width, textvariable=var)
     
-    def _createEnumBinding(self, paramName, choices, *callbacks):
+    def _createEnumBinding(self, paramName, choices, value=None, *callbacks):
         param = EnumParam(choices=choices)
         var = ComboVar(param)
+        if value is not None:
+            var.set(value)
         self._addVarBinding(paramName, var, None, *callbacks)
         return param, var
         
@@ -1356,11 +1385,15 @@ class FormWindow(Window):
         
         return combo
     
-    def _createBoundOptions(self, parent, paramName, choices, *callbacks, **args):
-        param, var = self._createEnumBinding(paramName, choices, *callbacks)
-        frame = tk.Frame(parent, **args)
+    def _createBoundOptions(self, parent, paramName, choices, value, *callbacks, **kwargs):
+        param, var = self._createEnumBinding(paramName, choices, value, *callbacks)
+        frame = tk.Frame(parent, **kwargs)
+        rbArgs = {}
+        if 'bg' in kwargs:
+            rbArgs['bg'] = kwargs['bg']
+            
         for i, opt in enumerate(param.choices):
-            rb = tk.Radiobutton(frame, text=opt, variable=var, value=opt)
+            rb = tk.Radiobutton(frame, text=opt, variable=var.tkVar, value=opt, **rbArgs)
             rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
         
         return frame
@@ -1571,6 +1604,19 @@ class FormWindow(Window):
         self.root.update_idletasks()
         for s in self._sections:
             s.adjustContent()
+            
+    def _setThreadsOrMpi(self, *args):
+        mode = self.widgetDict['stepsExecutionMode'].get()
+        try:
+            procs = int(self.widgetDict['numberOfThreads'].get())
+            if mode == 0: # threads mode
+                self.protocol.numberOfThreads.set(procs)
+                self.protocol.numberOfMpi.set(min(1, self.protocol.numberOfMpi.get())) # 0 or 1
+            else:
+                self.protocol.numberOfMpi.set(procs)
+                self.protocol.numberOfThreads.set(min(1, self.protocol.numberOfThreads.get())) # 0 or 1
+        except Exception:
+            pass            
         
     def _onRunModeChanged(self, paramName):
         self.setParamFromVar(paramName)
@@ -1603,7 +1649,8 @@ class FormWindow(Window):
                     param.set(value._parentObject)
                     param.setExtendedItemId(value.getObjId())
                 else:
-                    param.set(value)
+                    if isinstance(param, Object):
+                        param.set(value)
             except ValueError:
                 if len(var.get()):
                     print "Error setting param for: ", paramName, "value: '%s'" % var.get()
