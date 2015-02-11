@@ -102,13 +102,13 @@ function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
 		case "groel":
-			var url = "/service_content/?p=GroelTestData";
+			var url = "/content/?p=GroelTestData";
 			break;
 		case "bpv":
-			var url ="/service_content/?p=BpvTestData";
+			var url ="/content/?p=BpvTestData";
 			break;
 		case "ribosome":
-			var url ="/service_content/?p=RiboTestData";
+			var url ="/content/?p=RiboTestData";
 			break;
 	}
 	goWithSubDomainURL(url);
@@ -150,8 +150,8 @@ function createServProject(elm) {
 			
 			var msg = "<p>Your <strong>url to access </strong> to this <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
-			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "'>" +
-			"http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "</a>"+
+			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/myfirstmap/content/?p="+ projName+ "'>" +
+			"http://scipion.cnb.csic.es/myfirstmap/content/?p="+ projName+ "</a>"+
 			"</h3></p><br />" +
             "<p>Please <strong>save this url securely</strong> " +
 			"in order to access to this project in future sessions.</p><br />";
@@ -176,7 +176,7 @@ function goToProject(elm) {
 		url : URL,
 		success : function(result) {
 			if (result == 1) {
-				var URL2 = getSubDomainURL() + "/service_content/?p="+code;
+				var URL2 = getSubDomainURL() + "/content/?p="+code;
 				window.location.href = URL2;
 			} else {
 				var title = "Bad Access";

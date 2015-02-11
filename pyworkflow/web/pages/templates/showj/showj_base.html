@@ -2,6 +2,10 @@
 
 {% block title %} - {{msg.SHOWJ_TITLE}}{% endblock %}
 
+{% block header %}	
+	{% include "showj/showj_header.html" %}
+{% endblock %}
+
 {% block content_head %}
 <!-- CSS -->
 <link href="{{showj_css}}" rel="stylesheet" type="text/css">
