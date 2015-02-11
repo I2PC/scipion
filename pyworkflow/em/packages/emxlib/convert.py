@@ -60,6 +60,7 @@ def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=Non
         _particlesToEmx(emxData, inputSet, None, micSet)
         
     elif isinstance(inputSet, SetOfParticles):
+        print ("SetOfParticles-----------------------------------------")
         if inputSet.hasCoordinates():
             micSet = inputSet.getCoordinates().getMicrographs()
             _micrographsToEmx(emxData, micSet, emxDir, writeData=False)
@@ -111,7 +112,13 @@ def _samplingToEmx(emxObj, sampling):
     """ Write sampling rate info as expected by EMX. """
     emxObj.set('pixelSpacing__X', sampling)
     emxObj.set('pixelSpacing__Y', sampling)
-    
+
+def _alignmentToEmx(emxObj, transform):
+    matrix = transform.getMatrix()
+    for i in range(3):
+        for j in range(4):
+            emxObj.set('transformationMatrix__t%d%d' % (i+1, j+1),matrix[i, j])
+
 
 def _acquisitionToEmx(emxObj, acq):
     _dictToEmx(emxObj, {'acceleratingVoltage': acq.getVoltage(),
@@ -159,6 +166,7 @@ def _setupEmxParticle(emxData, coordinate, index, filename, micSet):
         #TODO: ADD foreign key
         _dictToEmx(emxParticle, {'centerCoord__X': coordinate.getX(), 
                                  'centerCoord__Y': coordinate.getY()})
+        #add alignment
 
     return emxParticle
            
@@ -172,7 +180,7 @@ def _particleToEmx(emxData, particle, micSet):
     if particle.hasCTF():
         _ctfToEmx(emxParticle, particle.getCTF())
     _samplingToEmx(emxParticle, particle.getSamplingRate())
-    
+    _alignmentToEmx(emxParticle, particle.getTransform())
     return emxParticle
 
 
@@ -213,6 +221,7 @@ def _particlesToEmx(emxData, partSet, stackFn=None, micSet=None):
 
     for i, particle in enumerate(partSet):
         if stackFn:
+            print ("stackFn-----------------------------------------")
             loc = particle.getLocation()
             newLoc = (i+1, stackFn)
             ih.convert(loc, newLoc)
