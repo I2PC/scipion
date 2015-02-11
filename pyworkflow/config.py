@@ -279,6 +279,7 @@ class ProjectSettings(OrderedObject):
         projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
+        projMenu.addSubMenu('Export tree graph', 'export_tree')
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
     
