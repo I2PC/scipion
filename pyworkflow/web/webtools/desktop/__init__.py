@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,3 +24,11 @@
 # *
 # **************************************************************************
 
+import os
+from django.conf.urls import url
+
+urls = [
+#     url(r'^desktop/', 'app.views_desktop.desktop'),
+    url(r'^download_form/', 'app.views_webtools.download_form'),
+    url(r'^doDownload/', 'app.views_webtools.doDownload'),
+]

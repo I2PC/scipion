@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,3 +24,4 @@
 # *
 # **************************************************************************
 
+from urls import urls

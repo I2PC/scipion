@@ -299,13 +299,13 @@ def _getObjectLabel(obj, mapper):
         labelList = [obj.getLastName()]
         parent = mapper.getParent(obj)
         
-        if parent is None:
-            return "Wrong object: %s, possible db corrupted!!!" % obj.getObjId() 
 
         while not isinstance(parent, Protocol):
+            if parent is None:
+                return "Wrong object: %s, possible db corrupted!!!" % obj.getObjId()
             labelList.insert(0, parent.getLastName())
-            parent = mapper.getParent(parent)  
-        
+            parent = mapper.getParent(parent)
+
         labelList.insert(0, parent.getObjLabel())
         label = '->'.join(labelList)
         
