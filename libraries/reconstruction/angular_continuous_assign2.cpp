@@ -242,8 +242,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		p(0)=Pstd/Istd;
 		p(1)=Pavg-Iavg;
 	}
-    p(2)=old_ShiftX;
-    p(3)=old_ShiftY;
+    p(2)=old_contShiftX;
+    p(3)=old_contShiftY;
     p(4)=old_scaleX;
     p(5)=old_scaleY;
     double cost=1e38;
