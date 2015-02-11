@@ -321,11 +321,13 @@ class ProtRelionBase(EMProtocol):
                            'and vary slightly over the sphere.')
         else:
             form.addParam('inplaneAngularSamplingDeg', FloatParam, default=5,
-                          label='Angular sampling interval (deg)',
-                          help='There are only a few discrete angular samplings possible because '
-                           'we use the HealPix library to generate the sampling of the first '
-                           'two Euler angles on the sphere. The samplings are approximate numbers ' 
-                           'and vary slightly over the sphere.')           
+                          label='In-plane angular sampling (deg)',
+                          help='The sampling rate for the in-plane rotation angle (psi) in degrees.\n'
+                               'Using fine values will slow down the program. Recommended value for\n'
+                               'most 2D refinements: 5 degrees. \n\n'
+                               'If auto-sampling is used, this will be the value for the first \n'
+                               'iteration(s) only, and the sampling rate will be increased \n'
+                               'automatically after that.')
         form.addParam('offsetSearchRangePix', FloatParam, default=5,
                       condition='isClassify or not doContinue',
                       label='Offset search range (pix)',
