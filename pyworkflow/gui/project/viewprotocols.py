@@ -861,7 +861,7 @@ class ProtocolsView(tk.Frame):
         self.runsGraphCanvas.drawGraph(self.runsGraph, layout, drawNode=self.createRunItem)
         
     def createRunItem(self, canvas, node):
-        nodeText = node.label
+        nodeText = node.getLabel()
         textColor = 'black'
         color = '#ADD8E6' #Lightblue
         
@@ -1120,9 +1120,11 @@ class ProtocolsView(tk.Frame):
             self._selection.clear()
             self._selection.append(prot.getObjId())
             self._updateSelection()
-            self._scheduleRunsUpdate()
             msg = ""
-            #self.outputViewer.refreshOutput()
+            
+        # Update runs list display, even in save we
+        # need to get the updated copy of the protocol
+        self._scheduleRunsUpdate()
 
         return msg
     
