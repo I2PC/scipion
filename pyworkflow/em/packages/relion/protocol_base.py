@@ -126,10 +126,6 @@ class ProtRelionBase(EMProtocol):
                       help='If you set to *Yes*, you should select a previous'
                       'run of type *%s* class and most of the input parameters'
                       'will be taken from it.' % self.getClassName())
-        form.addParam('verboseLevel', EnumParam, default=1,
-                      choices=['0 low','1 high'],
-                      label='Verbose Level',
-                      help='the higher the more verbose output')
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       condition='not doContinue',
                       important=True,
@@ -186,25 +182,6 @@ class ProtRelionBase(EMProtocol):
                            'If it has not yet been low-pass filtered, it may be done internally using this option. ' 
                            'If set to 0, no low-pass filter will be applied to the initial reference(s).')
         
-        form.addParam('paddingFactor', FloatParam, default=3,
-                      condition='isClassify', expertLevel=LEVEL_ADVANCED,
-                      label='Padding factor',
-                      help='The padding factor used for oversampling of the Fourier transform. The default is 3x padding, '
-                           'which is combined with nearest-neighbour interpolation. However, for large 3D maps, storing the '
-                           'entire 3x oversampled Fourier transform (as doubles) plus the real-space padded map in memory may ' 
-                           'be too much. Therefore, for large maps or in cases of many 3D references, in order to fit into memory ' 
-                           'one may need to use a smaller padding factor: e.g. 2, or (not recommended) 1. For padding factors smaller '
-                           'than 3, (slower) linear interpolation will be used.\n'
-                           'The approximate amount of memory (in Gb) required to store K maps of (size x size x size) voxels and a' 
-                           'padding factor (pad) may be calculated as: K*2*8*(size*pad)^3/1024/1024/1024\n' 
-                           '<Note>: also consider the use of threads if memory is an issue.')
-        
-        extraDefault = '' if self.IS_CLASSIFY else '--low_resol_join_halves 40 '
-        form.addParam('extraParams', StringParam, default=extraDefault,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Additional parameters',
-                      help='')
-               
         form.addSection(label='CTF')
         form.addParam('doCTF', BooleanParam, default=True,
                       label='Do CTF-amplitude correction?',
@@ -397,6 +374,33 @@ class ProtRelionBase(EMProtocol):
                               label='Stddev on the rotations (deg)',
                               help='A Gaussian prior with the specified standard deviation will be centered at the rotations determined for the corresponding particle where all movie-frames were averaged. For ribosomes, we used a value of 1 degree')
 
+        form.addSection('Additional')
+        form.addParam('memoryPreThreads', IntParam, default=2,
+                      label='Memory per Threads',
+                      help='Computer memory in Gigabytes that is avaliable for each thread. This will only'
+                           'affect some of the warnings about required computer memory.')
+        form.addParam('dontCombine', BooleanParam, default=False,
+                      label='Dont combine weights via disc?',
+                      help='Option *--dont_combine_weights_via_disc* in Relion.'
+                           'Send the large arrays of summed weights through the MPI network,'
+                           ' instead of writing large files to disc.')
+        form.addParam('verboseLevel', EnumParam, default=1,
+                      choices=['0 low','1 high'],
+                      label='Verbose Level',
+                      help='the higher the more verbose output')
+        form.addParam('paddingFactor', FloatParam, default=2,
+                      condition='isClassify',
+                      label='Padding factor',
+                      help='Option *--pad * in Relion'
+                           'Oversampling factor for the Fourier transforms of the references.')
+        
+        
+        extraDefault = '' if self.IS_CLASSIFY else '--low_resol_join_halves 40 '
+        form.addParam('extraParams', StringParam, default=extraDefault,
+                      label='Additional parameters',
+                      help='')
+
+        
         form.addParallelSection(threads=1, mpi=3)
     
     def addSymmetry(self, container):
@@ -439,6 +443,8 @@ class ProtRelionBase(EMProtocol):
                     })
         self._setMaskArgs(args)
         self._setCTFArgs(args)
+        args['--offset_range'] = self.offsetSearchRangePix.get()
+        args['--offset_step']  = self.offsetSearchStepPix.get() * 2
         
         if self.IS_CLASSIFY:
             if self.maskZero == MASK_FILL_ZERO:
@@ -451,7 +457,7 @@ class ProtRelionBase(EMProtocol):
                 args['--firstiter_cc']=''
             args['--ini_high'] = self.initialLowPassFilterA.get()
             args['--sym'] = self.symmetryGroup.get()
-            
+
         self._setBasicArgs(args)
         
     def _setContinueArgs(self, args):
@@ -478,14 +484,15 @@ class ProtRelionBase(EMProtocol):
                     })
 
         args['--verb'] = self.verboseLevel.get()
+        args['--memory_per_thread'] = self.memoryPreThreads.get()
+        if self.dontCombine:
+            args['--dont_combine_weights_via_disc'] = ''
         if self.IS_CLASSIFY:
             args['--tau2_fudge'] = self.regularisationParamT.get()
             args['--iter'] = self.numberOfIterations.get()
             
         self._setSamplingArgs(args)
-        if not self.doContinue:
-            args['--offset_range'] = self.offsetSearchRangePix.get()
-            args['--offset_step']  = self.offsetSearchStepPix.get() * 2
+        
                         
     def _setCTFArgs(self, args):        
         # CTF stuff
