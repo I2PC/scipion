@@ -138,14 +138,23 @@ class Graph(object):
             print " Childs: ", ','.join([c.getLabel() for c in node.getChilds()])
             
     def _escape(self, label):
-        return label.replace('.', '_').replace(' ', '_')
+        return label.replace('.', '_').replace(' ', '_').replace('-', '_').replace('___', '_')
     
-    def printDot(self):
+    def printDot(self, useId=True):
+        """ If useId is True, use the node id for label the graph.
+         If not, use the run name.
+        """
+        def getLabel(node):
+            if useId:
+                return node.getName()
+            else:
+                return node.getLabel()
+
         print "\ndigraph {"
         for node in self.getNodes():
             for child in node.getChilds():
-                nodeLabel = self._escape(node.getLabel())
-                childLabel = self._escape(child.getLabel())
+                nodeLabel = self._escape(getLabel(node))
+                childLabel = self._escape(getLabel(child))
                 print "   %s -> %s; " % (nodeLabel, childLabel)
         print "}"
         
