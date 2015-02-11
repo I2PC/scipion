@@ -395,7 +395,7 @@ class ProtRelionBase(EMProtocol):
                            'Oversampling factor for the Fourier transforms of the references.')
         
         
-        extraDefault = '' if self.IS_CLASSIFY else '--low_resol_join_halves 40 '
+        extraDefault = '' if self.IS_CLASSIFY and self.doContinue else '--low_resol_join_halves 40 '
         form.addParam('extraParams', StringParam, default=extraDefault,
                       label='Additional parameters',
                       help='')
@@ -457,7 +457,8 @@ class ProtRelionBase(EMProtocol):
                 args['--firstiter_cc']=''
             args['--ini_high'] = self.initialLowPassFilterA.get()
             args['--sym'] = self.symmetryGroup.get()
-
+        
+        args['--memory_per_thread'] = self.memoryPreThreads.get()
         self._setBasicArgs(args)
         
     def _setContinueArgs(self, args):
@@ -484,7 +485,6 @@ class ProtRelionBase(EMProtocol):
                     })
 
         args['--verb'] = self.verboseLevel.get()
-        args['--memory_per_thread'] = self.memoryPreThreads.get()
         if self.dontCombine:
             args['--dont_combine_weights_via_disc'] = ''
         if self.IS_CLASSIFY:
