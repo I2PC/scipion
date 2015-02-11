@@ -62,9 +62,9 @@ leads to objective and high-quality results.
     def _setSamplingArgs(self, args):
         """ Set sampling related params"""
         # Sampling stuff
-        args['--healpix_order'] = self.angularSamplingDeg.get()
         args['--auto_local_healpix_order'] = self.localSearchAutoSamplingDeg.get()
         if not self.doContinue:
+            args['--healpix_order'] = self.angularSamplingDeg.get()
             args['--auto_refine'] = ''
             args['--split_random_halves'] = ''
         

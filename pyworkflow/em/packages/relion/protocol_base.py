@@ -75,6 +75,8 @@ class ProtRelionBase(EMProtocol):
         self._createIterTemplates()
         
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
+        if not self.doContinue:
+            self.continueRun.set(None)
     
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -479,8 +481,9 @@ class ProtRelionBase(EMProtocol):
             args['--iter'] = self.numberOfIterations.get()
             
         self._setSamplingArgs(args)
-        args['--offset_range'] = self.offsetSearchRangePix.get()
-        args['--offset_step']  = self.offsetSearchStepPix.get() * 2
+        if not self.doContinue:
+            args['--offset_range'] = self.offsetSearchRangePix.get()
+            args['--offset_step']  = self.offsetSearchStepPix.get() * 2
                         
     def _setCTFArgs(self, args):        
         # CTF stuff
@@ -632,10 +635,9 @@ class ProtRelionBase(EMProtocol):
         return program
     
     def _getInputParticles(self):
-        if self.doContinue:
-            return self.continueRun.get().inputParticles.get()
-        else:
-            return self.inputParticles.get()
+        if self.doContinue and not self.inputParticles:
+            self.inputParticles.set(self.continueRun.get().inputParticles.get())
+        return self.inputParticles.get()
     
     def _getIterNumber(self, index):
         """ Return the list of iteration files, give the iterTemplate. """
