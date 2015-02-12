@@ -310,13 +310,15 @@ class ProtocolViewer(Protocol, Viewer):
 
     def createVolumesSqlite(self, files, path, samplingRate):
         from em import SetOfVolumes, Volume
+        from pyworkflow.mapper.sqlite_db import SqliteDb
         cleanPath(path)
+        SqliteDb.closeConnection(path)        
         volSet = SetOfVolumes(filename=path)
         volSet.setSamplingRate(samplingRate)
 
         for volFn in files:
-                    vol = Volume()
-                    vol.setFileName(volFn)
-                    volSet.append(vol)
+            vol = Volume()
+            vol.setFileName(volFn)
+            volSet.append(vol)
         volSet.write()
         return volSet
