@@ -183,7 +183,7 @@ class ProtRelionBase(EMProtocol):
                       help='It is recommended to strongly low-pass filter your initial reference map. '
                            'If it has not yet been low-pass filtered, it may be done internally using this option. ' 
                            'If set to 0, no low-pass filter will be applied to the initial reference(s).')
-        if self.IS_REFINE:
+        if not self.IS_CLASSIFY:
             group.addParam('resolJoinHalves', FloatParam, default=40,
                           label='Resolution join halves (A)', condition="not doContinue",
                           help='Resolution (in Angstrom) up to which the two random half-reconstructions'
