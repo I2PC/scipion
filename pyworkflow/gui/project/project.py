@@ -44,6 +44,7 @@ from pyworkflow.project import Project
 from pyworkflow.gui import Message
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.gui.plotter import Plotter
+from pyworkflow.gui.text import _open_cmd
 
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
 
@@ -56,6 +57,28 @@ class ProjectWindow(ProjectBaseWindow):
         self.projName = Message.LABEL_PROJECT + basename(path)
         self.projPath = path
         self.loadProject()
+
+        # TODO: put the menu part more nicely. From here:
+        self.menuList = SettingList()
+        menu = MenuConfig()
+
+        projMenu = menu.addSubMenu('Project')
+        projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
+        projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
+        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
+        projMenu.addSubMenu('Export tree graph', 'export_tree')
+        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
+
+        helpMenu = menu.addSubMenu('Help')
+        helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
+        helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
+
+        self.menuList.append(menu)
+        self.menuCfg = self.menuList.getItem()
+        # TODO: up to here
+
         self.icon = self.generalCfg.icon.get()
         self.selectedProtocol = None
         self.showGraph = False
@@ -90,7 +113,6 @@ class ProjectWindow(ProjectBaseWindow):
         self.project.load()
         self.settings = self.project.getSettings()
         self.generalCfg = self.settings.getConfig()
-        self.menuCfg = self.settings.getCurrentMenu()
         self.protCfg = self.settings.getCurrentProtocolMenu()
 
     #
@@ -141,13 +163,31 @@ class ProjectWindow(ProjectBaseWindow):
         else:
             print "\nexport SCIPION_TREE_NAME=0 # to use ids instead of names"
 
+
 class ProjectManagerWindow(ProjectBaseWindow):
     """ Windows to manage all projects. """
     def __init__(self, **args):
         # Load global configuration
         settings = ProjectSettings()
         settings.loadConfig()
-        self.menuCfg = settings.getCurrentMenu()
+
+        # TODO: put the menu part more nicely. From here:
+        menuList = SettingList()
+        menu = MenuConfig()
+
+        confMenu = menu.addSubMenu('Configuration')
+        confMenu.addSubMenu('General', 'general')
+        confMenu.addSubMenu('Hosts', 'hosts')
+        confMenu.addSubMenu('Protocols', 'protocols')
+
+        helpMenu = menu.addSubMenu('Help')
+        helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
+        helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
+
+        menuList.append(menu)
+        # TODO: up to here
+
+        self.menuCfg = menuList.getItem()
         self.generalCfg = settings.getConfig()
         
         ProjectBaseWindow.__init__(self, Message.LABEL_PROJECTS, minsize=(750, 500), **args)
@@ -159,33 +199,15 @@ class ProjectManagerWindow(ProjectBaseWindow):
     # The next functions are callbacks from the menu options.
     # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
     #
-    def onBrowseFiles(self):
-        # Project -> Browse files
-        subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
-                          'browser', 'dir', os.environ['SCIPION_USER_DATA']])
-        # I'd like to do something like
-        #   from pyworkflow.gui.browser import FileBrowserWindow
-        #   FileBrowserWindow("Browsing: " + path, path=path).show()
-        # but it doesn't work because the images are not shared by the
-        # Tk() instance or something like that.
+    def onGeneral(self):
+        # Config -> General
+        _open_cmd('%s/.config/scipion/scipion.conf' % os.environ['HOME'])
 
-    def onRemoveTemporaryFiles(self):
-        # Project -> Remove temporary files
-        tmpPath = os.environ['SCIPION_TMP']
-        n = 0
-        try:
-            for fname in os.listdir(tmpPath):
-                fpath = "%s/%s" % (tmpPath, fname)
-                if os.path.isfile(fpath):
-                    os.remove(fpath)
-                    n += 1
-                # TODO: think what to do with directories. Delete? Report?
-            self.showInfo("Deleted content of %s -- %d file(s)." % (tmpPath, n))
-        except Exception as e:
-            self.showError(str(e))
+    def onHosts(self):
+        # Config -> Hosts
+        _open_cmd('%s/.config/scipion/hosts.conf' % os.environ['HOME'])
 
-    def onCleanProject(self):
-        # Project -> Clean project
-        self.showInfo("I did nothing, because I don't know what I'm supposed "
-                      "to do here.")
-        # TODO: well, something, clearly.
+    # def onProtocols(self):
+    #     # Config -> General
+    #     _open_cmd('%s/.config/scipion/protocols.conf' % os.environ['HOME'])
+    # TODO: this last one needs us to change menu.conf -> protocols.conf first
