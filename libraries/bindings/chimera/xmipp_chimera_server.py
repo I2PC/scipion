@@ -51,6 +51,7 @@ class ChimeraServer:
                         print data
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
+                        #runCommand("volume #0 step 1")
                         runCommand("focus")
                     if msg == 'draw_angular_distribution':
                         angulardist = self.remote_conn.recv()
@@ -79,7 +80,7 @@ class ChimeraServer:
             
             
     def onAppQuit(self, trigger, extra, userdata):
-
+        print 'sended server exit'
         self.remote_conn.send('exit_server')
         self.listener.close()
         

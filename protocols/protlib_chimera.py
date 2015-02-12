@@ -38,6 +38,7 @@ from time import gmtime, strftime
 from datetime import datetime
 from os.path import exists
 from decimal import *
+import sys
 
 class XmippChimeraClient:
     
@@ -64,6 +65,7 @@ class XmippChimeraClient:
         #is port available?
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
+        
         printCmd('initVolumeData')
         self.initVolumeData()
         self.spheres_color = spheres_color
@@ -73,6 +75,7 @@ class XmippChimeraClient:
       
         printCmd('openVolumeOnServer')
         self.openVolumeOnServer(self.vol)
+        self.initListenThread()
     
     
     def loadAngularDist(self):
@@ -167,7 +170,6 @@ class XmippChimeraClient:
 class XmippProjectionExplorer(XmippChimeraClient):
     
     def __init__(self, volfile, port, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', size='default', padding_factor=1, max_freq=0.5, spline_degree=2):
-
         XmippChimeraClient.__init__(self, volfile, port,angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
         
         self.projection = Image()
@@ -175,10 +177,10 @@ class XmippProjectionExplorer(XmippChimeraClient):
         #0.5 ->  Niquiest frequency
         #2 -> bspline interpolation
         #print 'creating Fourier Projector'
+        
         self.fourierprojector = FourierProjector(self.image, padding_factor, max_freq, spline_degree)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
-
-        self.initListenThread()
+        
         if size == 'default':
             self.size = self.xdim if self.xdim > 128 else 128
         else:
@@ -202,8 +204,9 @@ class XmippProjectionExplorer(XmippChimeraClient):
         
     def exit(self):
         XmippChimeraClient.exit(self)
-        if not (self.iw is None):
+        if hasattr(self, "iw"):
             self.iw.root.destroy()
+        
             
             
     def answer(self, msg):
@@ -219,7 +222,8 @@ class XmippProjectionExplorer(XmippChimeraClient):
             
             
     def exitClient(self):
-        pass
+        if not self.listen:
+            sys.exit(0)
         
      
             
