@@ -383,7 +383,8 @@ Examples:
             for ref3d in self._refsList:
                 for prefix in prefixes:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    files.append(volFn)
+                    volFn1 = volFn.replace(':mrc', '')
+                    files.append(volFn1)
         print "files", files, path
         self.createVolumesSqlite(files, path, samplingRate)
         return [em.ObjectView(self._project.getName(), self.protocol.strId(), path)]
