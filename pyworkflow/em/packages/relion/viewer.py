@@ -370,10 +370,6 @@ Examples:
 #===============================================================================
 # ShowVolumes
 #===============================================================================
-
-
-
-
     def _createVolumesSqlite(self):
         """ Write an sqlite with all volumes selected for visualization. """
 
@@ -388,6 +384,7 @@ Examples:
                 for prefix in prefixes:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
                     files.append(volFn)
+        print "files", files, path
         self.createVolumesSqlite(files, path, samplingRate)
         return [em.ObjectView(self._project.getName(), self.protocol.strId(), path)]
     
