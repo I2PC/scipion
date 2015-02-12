@@ -384,8 +384,8 @@ def get_file(request):
     path = request.GET.get("path")
     filename = request.GET.get("filename", path)
     
-    print "path: ",path
-    print "filename: ",filename
+#     print "path: ",path
+#     print "filename: ",filename
 
     if not os.path.exists(path):
         return HttpResponseNotFound('Path not found: %s' % path)
@@ -572,8 +572,8 @@ def get_slice(request):
     if sliceNo is None:
         imgXmipp.readPreview(imagePath, int(imageDim))
     else:
-        print "CURRENT DIR: ", os.getcwd()
-        print "Exist path? ", os.path.exists(imagePath)
+#         print "CURRENT DIR: ", os.getcwd()
+#         print "Exist path? ", os.path.exists(imagePath)
         
         imgXmipp.readPreview(imagePath, int(imageDim), sliceNo)
         
@@ -596,17 +596,17 @@ def get_slice(request):
     img.save(response, "PNG")
     return response
 
-def getImageXdim(request, imagePath):
-    return getImageDim(request, imagePath)[0]
-
 def getImageDim(request, imagePath):
     projectPath = request.session['projectPath']
-#     img = xmipp.Image()
-    imgFn = os.path.join(projectPath, imagePath)
-    
-    return ImageHandler().getDimensions(imgFn)
-#     img.read(str(imgFn), xmipp.HEADER)
-#     return img.getDimensions()
+#     imgFn = os.path.join(projectPath, imagePath)
+    from pyworkflow.em.packages.xmipp3.convert import xmippToLocation
+    location = xmippToLocation(imagePath)
+    x, y, z, n = ImageHandler().getDimensions(location)
+    print "DIMENSIONS!!! (%s,%s,%s,%s)" % (x,y,z,n)
+    return x, y, z, n
+
+def getImageXdim(request, imagePath):
+    return getImageDim(request, imagePath)[0]
 
 def readDimensions(request, path, typeOfColumn):
     if (typeOfColumn == COL_RENDER_IMAGE or
