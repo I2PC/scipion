@@ -370,10 +370,6 @@ Examples:
 #===============================================================================
 # ShowVolumes
 #===============================================================================
-
-
-
-
     def _createVolumesSqlite(self):
         """ Write an sqlite with all volumes selected for visualization. """
 
@@ -472,7 +468,6 @@ Examples:
         else:
             return self.infoMessage("Please select only one class to display angular distribution",
                                     "Input selection") 
-        
     
     def _createAngDist2D(self, it):
         # Common variables to use
@@ -486,9 +481,10 @@ Examples:
                                  mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
         for ref3d in self._refsList:
             for prefix in prefixes:
-                mdAng = md.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
-                plot_title = '%s class %d' % (prefix, ref3d)
-                xplotter.plotMdAngularDistribution(plot_title, mdAng)
+                if exists(ref3d):
+                    mdAng = md.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
+                    plot_title = '%s class %d' % (prefix, ref3d)
+                    xplotter.plotMdAngularDistribution(plot_title, mdAng)
         
         return xplotter
                 
