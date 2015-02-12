@@ -34,6 +34,7 @@ It is composed by three panels:
 
 import os
 from os.path import basename
+from pyworkflow.utils.utils import envVarOn
 import subprocess
 
 import pyworkflow as pw
@@ -138,6 +139,14 @@ class ProjectWindow(ProjectBaseWindow):
                           selectButton='Import'
                           ).show()
 
+    def onExportTreeGraph(self):
+        runsGraph = self.project.getRunsGraph(refresh=True)
+        useId = not envVarOn('SCIPION_TREE_NAME')
+        runsGraph.printDot(useId=useId)
+        if useId:
+            print "\nexport SCIPION_TREE_NAME=1 # to use names instead of ids"
+        else:
+            print "\nexport SCIPION_TREE_NAME=0 # to use ids instead of names"
 
 
     def initListenThread(self):

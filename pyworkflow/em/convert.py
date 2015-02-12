@@ -87,8 +87,8 @@ class ImageHandler(object):
             fn = location.getLocation()[1]
         else:
             raise Exception('Can not match object %s to (index, location)' % type(location))
-        
-        return os.path.exists(fn)        
+
+        return os.path.exists(fn.replace(':mrc', ''))
         
     def convert(self, inputObj, outputObj, dataType=None):
         """ Convert from one image to another.
@@ -122,21 +122,30 @@ class ImageHandler(object):
             (x, y, z, n) where x, y, z are image dimensions (z=1 for 2D) and 
             n is the number of elements if stack.
         """
-        if not self._existsLocation(locationObj):
-            return None
         
-        location = self._convertToLocation(locationObj)
-        fn = location[1]
-
-        ext = getExt(fn).lower()
-        if ext == '.png' or ext == '.jpg':
-            im = PIL.Image.open(fn)
-            x, y = im.size # (width,height) tuple
-            return x, y, 1, 1
-        else:
-            self._img.read(location, xmipp.HEADER)
-            return self._img.getDimensions()
-    
+        if self._existsLocation(locationObj):
+            
+            location = self._convertToLocation(locationObj)
+            fn = location[1]
+            ext = getExt(fn).lower()
+            
+#             print "Extension %s" % ext
+            
+            if ext == '.png' or ext == '.jpg':
+#                 print "Reading with PIL"
+                im = PIL.Image.open(fn)
+                x, y = im.size # (width,height) tuple
+                return x, y, 1, 1
+            
+            else:
+#                 print "Reading with Xmipp"
+                self._img.read(location, xmipp.HEADER)
+                x, y, z, n = self._img.getDimensions()
+                return x, y, z, n
+        
+        else: 
+            return None, None, None, None
+        
     def read(self, inputObj):
         """ Create a new Image class from inputObj 
         (inputObj can be tuple, str or Image subclass). """

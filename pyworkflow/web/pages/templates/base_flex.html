@@ -38,7 +38,10 @@ $('#widget').draggable();
 
 <body>
 	<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer">
-		{% include "header.html" %}
+		
+		{% block header %}	
+			{% include "header.html" %}
+		{% endblock %}
 		
 		<aside class="west">
 			{% block sideLeft %}	
