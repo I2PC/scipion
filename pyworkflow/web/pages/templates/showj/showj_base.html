@@ -2,9 +2,6 @@
 
 {% block title %} - {{msg.SHOWJ_TITLE}}{% endblock %}
 
-{% block header %}	
-	{% include "showj/showj_header.html" %}
-{% endblock %}
 
 {% block content_head %}
 <!-- CSS -->
@@ -202,8 +199,8 @@ function setImageSize(refreshElement){
 {% block head %}  {% endblock %}
 {% endblock %}
 
-{% block content_header %}	
-	{% include "header.html" with projectNameHeader="showj"%} 
+{% block header %}	
+	{% include "showj/showj_header.html" %}
 {% endblock %}
 
 {% block menu %}
