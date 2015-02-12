@@ -383,7 +383,8 @@ Examples:
             for ref3d in self._refsList:
                 for prefix in prefixes:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    files.append(volFn)
+                    if exists(volFn.replace(':mrc', '')):
+                        files.append(volFn)
         self.createVolumesSqlite(files, path, samplingRate)
         return [em.ObjectView(self._project.getName(), self.protocol.strId(), path)]
     
@@ -438,8 +439,9 @@ Examples:
                         
         elif self.displayAngDist == ANGDIST_2DPLOT:
             for it in self._iterations:
-                views.append(self._createAngDist2D(it))
-                
+                plot = self._createAngDist2D(it)
+                if isinstance(plot, RelionPlotter):
+                    views.append(plot)
         return views
     
     def _createAngDistChimera(self, it):
@@ -477,16 +479,18 @@ Examples:
         gridsize = self._getGridSize(n)
         
         data_angularDist = self.protocol._getIterAngularDist(it)
-        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
-                                 mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
-        for ref3d in self._refsList:
-            for prefix in prefixes:
-                if exists(data_angularDist):
-                    mdAng = md.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
-                    plot_title = '%s class %d' % (prefix, ref3d)
-                    xplotter.plotMdAngularDistribution(plot_title, mdAng)
-        
-        return xplotter
+        if exists(data_angularDist):
+            xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
+                                     mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
+            for ref3d in self._refsList:
+                for prefix in prefixes:
+                        mdAng = md.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
+                        plot_title = '%s class %d' % (prefix, ref3d)
+                        xplotter.plotMdAngularDistribution(plot_title, mdAng)
+            
+            return xplotter
+        else:
+            return
                 
 #===============================================================================
 # plotSSNR              
@@ -519,7 +523,7 @@ Examples:
                 legendName = []
                 for it in self._iterations:
                     fn = self.protocol._getFileName(prefix + 'model', iter=it)
-                    if os.path.exists(fn):
+                    if exists(fn):
                         self._plotSSNR(a, blockName+fn)
                     legendName.append('iter %d' % it)
                 xplotter.showLegend(legendName)
@@ -561,7 +565,7 @@ Examples:
                 blockName = 'model_class_%d@' % ref3d
                 for it in self._iterations:
                     model_star = self.protocol._getFileName(prefix + 'model', iter=it)
-                    if os.path.exists(model_star):
+                    if exists(model_star):
                         self._plotFSC(a, blockName + model_star)
                         legends.append('iter %d' % it)
                 xplotter.showLegend(legends)
@@ -676,7 +680,7 @@ class PostprocessViewer(ProtocolViewer):
         a = xplotter.createSubPlot("GoldStandard FSC", 'Angstroms^-1', 'FSC', yformat=False)
         
         model_star = self.protocol._getExtraPath('postprocess.star')
-        if os.path.exists(model_star):
+        if exists(model_star):
             self._plotFSC(a, 'fsc@' + model_star)
         if threshold < self.maxfsc:
             a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
