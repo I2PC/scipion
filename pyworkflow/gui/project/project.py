@@ -33,13 +33,10 @@ It is composed by three panels:
 """
 
 import os
-from os.path import basename
 from pyworkflow.utils.utils import envVarOn
-import subprocess
 
-import pyworkflow as pw
 from pyworkflow.manager import Manager
-from pyworkflow.config import * # We need this to retrieve object from mapper
+from pyworkflow.config import MenuConfig, ProjectSettings, SettingList
 from pyworkflow.project import Project
 from pyworkflow.gui import Message
 from pyworkflow.gui.browser import FileBrowserWindow
@@ -54,7 +51,7 @@ class ProjectWindow(ProjectBaseWindow):
     """ Main window for working in a Project. """
     def __init__(self, path, master=None):
         # Load global configuration
-        self.projName = Message.LABEL_PROJECT + basename(path)
+        self.projName = Message.LABEL_PROJECT + os.path.basename(path)
         self.projPath = path
         self.loadProject()
 
