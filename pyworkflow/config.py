@@ -30,8 +30,6 @@ mainly for project GUI
 
 import sys
 import os
-from os.path import join, exists
-import time
 from ConfigParser import ConfigParser
 import json
 
