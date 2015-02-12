@@ -204,7 +204,6 @@ class ProjectManagerWindow(ProjectBaseWindow):
         # Config -> Hosts
         _open_cmd('%s/.config/scipion/hosts.conf' % os.environ['HOME'])
 
-    # def onProtocols(self):
-    #     # Config -> General
-    #     _open_cmd('%s/.config/scipion/protocols.conf' % os.environ['HOME'])
-    # TODO: this last one needs us to change menu.conf -> protocols.conf first
+    def onProtocols(self):
+        # Config -> Protocols
+        _open_cmd('%s/.config/scipion/protocols.conf' % os.environ['HOME'])

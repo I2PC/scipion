@@ -169,7 +169,7 @@ class ProjectSettings(OrderedObject):
         
     def addProtocols(self, protocolsConf=None):
         """ Read the protocol configuration from a .conf
-        file similar of the one in ~/.config/scipion/menu.conf,
+        file similar to the one in ~/.config/scipion/protocols.conf,
         which is the default one when no file is passed.
         """
     
@@ -184,11 +184,11 @@ class ProjectSettings(OrderedObject):
         # Read menus from users' config file.
         cp = ConfigParser()
         cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-        SCIPION_MENU = protocolsConf or os.environ['SCIPION_MENU']
+        SCIPION_PROTOCOLS = protocolsConf or os.environ['SCIPION_PROTOCOLS']
         # Also mentioned in /scipion . Maybe we could do better.
     
         try:
-            assert cp.read(SCIPION_MENU) != [], 'Missing file %s' % SCIPION_MENU
+            assert cp.read(SCIPION_PROTOCOLS) != [], 'Missing file %s' % SCIPION_PROTOCOLS
     
             # Populate the protocol menu from the config file.
             for menuName in cp.options('PROTOCOLS'):
@@ -199,7 +199,7 @@ class ProjectSettings(OrderedObject):
                 self.addProtocolMenu(menu)
         except Exception as e:
             sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                     'To solve it, delete %s and run again.' % (e, SCIPION_MENU))
+                     'To solve it, delete %s and run again.' % (e, SCIPION_PROTOCOLS))
 
     def addHosts(self, hostConf=None):
         # Read from users' config file.
