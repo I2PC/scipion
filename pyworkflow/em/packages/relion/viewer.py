@@ -481,7 +481,7 @@ Examples:
                                  mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
         for ref3d in self._refsList:
             for prefix in prefixes:
-                if exists(ref3d):
+                if exists(data_angularDist):
                     mdAng = md.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
                     plot_title = '%s class %d' % (prefix, ref3d)
                     xplotter.plotMdAngularDistribution(plot_title, mdAng)
