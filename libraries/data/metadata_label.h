@@ -98,6 +98,12 @@ enum MDLabel
     MDL_CRYSTAL_SHIFTZ, ///< Shift for the image in the Z axis (double) for crystals
     MDL_CRYSTAL_NOISE_SHIFT , ///< noise if center of unit cell (vector double)
 
+    MDL_CONTINUOUS_X, ///< X shift of continuous assignment
+    MDL_CONTINUOUS_Y, ///< Y shift of continuous assignment
+    MDL_CONTINUOUS_GRAY_A, ///< a value of continuous assignment
+    MDL_CONTINUOUS_GRAY_B, ///< b value of continuous assignment
+    MDL_CONTINUOUS_SCALE_X, ///< a value of continuous assignment
+    MDL_CONTINUOUS_SCALE_Y, ///< b value of continuous assignment
     MDL_CTF_INPUTPARAMS, ///< Parameters file for the CTF Model (std::string)
     MDL_CTF_MODEL, ///< Name for the CTF Model (std::string)
     MDL_CTF_MODEL2, ///< Name for another CTF model (std::string)
@@ -367,6 +373,7 @@ enum MDLabel
     MDL_VOLUME_SCORE3,/// < Score 3 for volumes
     MDL_VOLUME_SCORE4,/// < Score 4 for volumes
     MDL_WEIGHT, ///< Weight assigned to the image (double)
+    MDL_WEIGHT_CONTINUOUS2, ///< Weight due to angular continuous assignment
     MDL_WEIGHT_SIGNIFICANT, ///< Weight due to Angular significance
     MDL_WEIGHT_SSNR, ///< Weight due to SSNR
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
@@ -1364,6 +1371,12 @@ private:
         MDL::addLabelAlias(MDL_CTF_BG_SQRT_U, "CTFBG_Sqrt_U");//3.0
         MDL::addLabelAlias(MDL_CTF_BG_SQRT_V, "CTFBG_Sqrt_V");  //3.0
 
+        MDL::addLabel(MDL_CONTINUOUS_X, LABEL_DOUBLE, "continuousX");
+        MDL::addLabel(MDL_CONTINUOUS_Y, LABEL_DOUBLE, "continuousY");
+        MDL::addLabel(MDL_CONTINUOUS_GRAY_A, LABEL_DOUBLE, "continuousA");
+        MDL::addLabel(MDL_CONTINUOUS_GRAY_B, LABEL_DOUBLE, "continuousB");
+        MDL::addLabel(MDL_CONTINUOUS_SCALE_X, LABEL_DOUBLE, "continuousScaleX");
+        MDL::addLabel(MDL_CONTINUOUS_SCALE_Y, LABEL_DOUBLE, "continuousScaleY");
         MDL::addLabel(MDL_CTF_CA, LABEL_DOUBLE, "ctfChromaticAberration");
         MDL::addLabel(MDL_CTF_CONVERGENCE_CONE, LABEL_DOUBLE, "ctfConvergenceCone");
         MDL::addLabel(MDL_CTF_CRIT_NONASTIGMATICVALIDITY, LABEL_DOUBLE, "ctfCritNonAstigmaticValidty");
@@ -1692,6 +1705,7 @@ private:
         MDL::addLabel(MDL_VOLUME_SCORE4, LABEL_DOUBLE, "volScore4");
         MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight");
         MDL::addLabelAlias(MDL_WEIGHT, "Weight");
+        MDL::addLabel(MDL_WEIGHT_CONTINUOUS2, LABEL_DOUBLE, "weightContinuous2");
         MDL::addLabel(MDL_WEIGHT_SIGNIFICANT, LABEL_DOUBLE, "weightSignificant");
         MDL::addLabel(MDL_WEIGHT_SSNR, LABEL_DOUBLE, "weightSSNR");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");

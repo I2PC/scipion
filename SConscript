@@ -59,9 +59,9 @@ BASIC_INCS = ['external',
               join('external','jpeg-8c'), 
               join('external','sqlite-3.6.23'),
               join('external','sqliteExt'),
-              join('external','hdf5-1.8.10','src'), 
-              join('external','hdf5-1.8.10','c++'), 
-              join('external','hdf5-1.8.10','c++','src'),
+              join('external','hdf5-1.8.14','src'),
+              join('external','hdf5-1.8.14','c++'),
+              join('external','hdf5-1.8.14','c++','src'),
               join('external','alglib-3.8.0.cpp','src'),
               join('external','bilib')]
 PYTHON_DIR = join("external","python","Python-2.7.2")
@@ -79,10 +79,10 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.3')],
              'sqlite': {INCS: [join('external','sqlite-3.6.23')],
                         LIBS: ['sqlite3']
                         },
-             'hdf5': {INCS: [join('external','hdf5-1.8.10','src')],
+             'hdf5': {INCS: [join('external','hdf5-1.8.14','src')],
                       LIBS: ['hdf5']
                       },
-             'hdf5_cpp': {INCS: [join('external','hdf5-1.8.10','c++'), join('external','hdf5-1.8.10','c++','src')],
+             'hdf5_cpp': {INCS: [join('external','hdf5-1.8.14','c++'), join('external','hdf5-1.8.14','c++','src')],
                           LIBS: ['hdf5_cpp']
                           },
              'opencv': {INCS: [],
@@ -175,7 +175,7 @@ def getLibraryDict(name):
 FFTWDir = join("external", "fftw-3.3.3")
 TIFFDir = join("external", "tiff-3.9.4")
 JPEGDir = join("external", "jpeg-8c")
-HDF5Dir = join("external", "hdf5-1.8.10", "src")
+HDF5Dir = join("external", "hdf5-1.8.14", "src")
 
 FFTWLibs = ['fftw3', 'fftw3_threads']
 TIFFLibs = ['tiff']
@@ -1009,6 +1009,7 @@ if int(env['java']):
 if not int(env['release']):
     AddXmippProgram('angular_commonline', ['XmippRecons'])
 AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
+AddXmippProgram('angular_continuous_assign2', ['XmippRecons'])
 AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
 AddXmippProgram('angular_distance', ['XmippRecons'])
 AddXmippProgram('angular_distribution_show', ['XmippInterface'])
@@ -1175,6 +1176,7 @@ SymLink('bin/xmipp_imagej', 'external/runImageJ')
 # MPI
 AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
+AddXmippMPIProgram('mpi_angular_continuous_assign2', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])

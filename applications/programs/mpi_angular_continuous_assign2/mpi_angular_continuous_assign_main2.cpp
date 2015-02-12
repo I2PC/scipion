@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+ * Authors:  Carlos Oscar Sanchez Sorzano coss@cnb.csic.es
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -20,9 +20,13 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.csic.es'
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/angular_continuous_assign.h>
+#include <parallel/xmipp_mpi.h>
+#include <reconstruction/angular_continuous_assign2.h>
 
-RUN_XMIPP_PROGRAM(ProgAngularContinuousAssign)
+
+CREATE_MPI_METADATA_PROGRAM(ProgAngularContinuousAssign2, MpiProgAngularContinuousAssign2)
+
+RUN_XMIPP_PROGRAM(MpiProgAngularContinuousAssign2)
