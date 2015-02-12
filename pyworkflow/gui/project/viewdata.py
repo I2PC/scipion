@@ -321,8 +321,7 @@ class ProjectDataView(tk.Frame):
              then only case when False is from _automaticRefreshData where the
              refresh time is doubled each time to avoid refreshing too often.
         """        
-        print "In refreshData"
-        self._dataGraph = self.windows.project.getSourceGraph(True)   
+        self._dataGraph = self.windows.project.getSourceGraph(True)
         self._updateDataTree()
         self._updateDataGraph()
  
