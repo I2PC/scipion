@@ -98,18 +98,8 @@ mainUrls = ['',
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     url(r'^get_file/$', 'app.views_util.get_file'),
     
-#===============================================================================
-# OLD     
-#===============================================================================
-
     #TESTING
 #    url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
-
-    #HOST
-#    url(r'^view_hosts', 'app.views_host.viewHosts', name='view_hosts'),    
-#    url(r'^update_host', 'app.views_host.updateHost'),
-#    url(r'^delete host/$', 'app.views_host.deleteHost'),
-#    url(r'^host_form/$', 'app.views_host.hostForm'),
 
 ]
 

@@ -29,7 +29,6 @@ import os
 from os.path import join
 
 import Tkinter as tk
-import pyworkflow.gui as gui
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider, HotButton
 
@@ -65,7 +64,7 @@ class ResmapPrewhitenWizard(EmWizard):
 # Change default instructions message
 
 INSTRUCTIONS = """Please check that the green line
-is as straight as possible,
+is as flat as possible,
 at least in the high frequencies.
 
 If not, adjust the sliders below
@@ -76,7 +75,7 @@ the volume again.
 
 If you are satisfied please
 press OK to use that values.    
-    """    
+"""    
 
 class PreWhiteningDialog(dialog.Dialog):
     def __init__(self, form, workingDir, **kwargs):
