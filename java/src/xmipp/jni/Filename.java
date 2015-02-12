@@ -174,6 +174,9 @@ public class Filename {
 	private static boolean isFileType(String filename, String filetypes[]) {
                 if(filename == null)
                     return false;
+                if(filename.contains(":"))
+                    filename = filename.substring(0, filename.lastIndexOf(":"));
+                System.out.println(filename);
 		for (int i = 0; i < filetypes.length; i++) {
 			if (filename.toLowerCase().endsWith(filetypes[i])) {
 				return true;
