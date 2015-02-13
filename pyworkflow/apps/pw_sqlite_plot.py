@@ -66,7 +66,6 @@ if __name__ == '__main__':
                 value = getattr(obj, xcolumn)
             elif xcolumn == 'id':
                 id = int(obj.getObjId())
-                print id
                 xvalues.append(id)
 
     else:
@@ -83,9 +82,10 @@ if __name__ == '__main__':
                 yvalues.append(value.get())
 
         if bins:
-            plt.hist(yvalues, bins=int(bins), color=colors[i])
+            plt.hist(yvalues, bins=int(bins), color=colors[i], linestyle=lines[i])
         else:
-            plt.plot(xvalues, yvalues, colors[i])
+            marker = (markers[i] if not markers[i] == 'none' else None)
+            plt.plot(xvalues, yvalues, colors[i], marker=marker, linestyle=lines[i])
         i += 1
 
     plt.xlabel(xlabel)

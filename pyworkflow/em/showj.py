@@ -59,6 +59,7 @@ ORDER = 'order'
 VISIBLE = 'visible'
 ZOOM = 'zoom'
 SORT_BY = 'sortby'
+SAMPLINGRATE = 'sampling_rate'
 
 OBJCMDS = 'object_commands'
 OBJCMD_NMA_PLOTDIST = "'Plot distance profile'"
