@@ -200,6 +200,7 @@ double L1cost(double *x, void *_prm)
 }
 
 // Predict =================================================================
+//#define DEBUG
 void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     rowOut=rowIn;
@@ -234,7 +235,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     Matrix1D<double> p(9), steps(9);
     p(0)=old_grayA; // a in I'=a*I+b
     p(1)=old_grayB; // b in I'=a*I+b
-    if (optimizeGrayValues)
+    if (optimizeGrayValues && !rowIn.containsLabel(MDL_CONTINUOUS_GRAY_A))
 	{
         double Iavg, Istd, Pavg, Pstd;
         I().computeAvgStdev(Iavg,Istd);
@@ -242,10 +243,11 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		p(0)=Pstd/Istd;
 		p(1)=Pavg-Iavg;
 	}
-    p(2)=old_contShiftX;
-    p(3)=old_contShiftY;
+    p(2)=old_contShiftX+old_shiftX;
+    p(3)=old_contShiftY+old_shiftY;
     p(4)=old_scaleX;
     p(5)=old_scaleY;
+
     double cost=1e38;
     int iter;
     steps.initZeros();
@@ -259,12 +261,39 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     	steps(6)=steps(7)=steps(8)=1.;
     powellOptimizer(p, 1, 9, &L1cost, this, 0.01, cost, iter, steps, false);
 
+	I.read(fnImg);
     A(0,2)=p(2);
     A(1,2)=p(3);
     A(0,0)=1+p(4);
     A(1,1)=1+p(5);
-    cost=tranformImage(*projector, old_rot+p(6), old_tilt+p(7), old_psi+p(8), P, I(), Ifiltered(), Ip(), Ifilteredp(),
-    		E(),  mask2D, iMask2Dsum, p(0), p(1), A, BSPLINE3);
+
+    bool flip;
+    rowIn.getValue(MDL_FLIP,flip);
+    if (flip)
+    {
+    	// M*A*M
+    	A(0,1)*=-1;
+    	A(1,0)*=-1;
+    	A(0,2)*=-1;
+    }
+    applyGeometry(BSPLINE3,Ip(),I(),A,IS_NOT_INV,DONT_WRAP);
+
+    Ip.write(fnImgOut);
+    rowOut.setValue(MDL_IMAGE_ORIGINAL, fnImg);
+    rowOut.setValue(MDL_IMAGE, fnImgOut);
+    rowOut.setValue(MDL_ANGLE_ROT,  old_rot+p(6));
+    rowOut.setValue(MDL_ANGLE_TILT, old_tilt+p(7));
+    rowOut.setValue(MDL_ANGLE_PSI,  old_psi+p(8));
+    rowOut.setValue(MDL_SHIFT_X,    0.);
+    rowOut.setValue(MDL_SHIFT_Y,    0.);
+    rowOut.setValue(MDL_COST,       cost);
+    rowOut.setValue(MDL_CONTINUOUS_GRAY_A,p(0));
+    rowOut.setValue(MDL_CONTINUOUS_GRAY_B,p(1));
+    rowOut.setValue(MDL_CONTINUOUS_SCALE_X,p(4));
+    rowOut.setValue(MDL_CONTINUOUS_SCALE_Y,p(5));
+    rowOut.setValue(MDL_CONTINUOUS_X,old_shiftX+p(2));
+    rowOut.setValue(MDL_CONTINUOUS_Y,old_shiftY+p(3));
+
 #ifdef DEBUG
     Image<double> save;
     save()=P();
@@ -275,25 +304,13 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     Ifiltered.write("PPPexperimentalFiltered.xmp");
     Ifilteredp.write("PPPexperimentalFilteredp.xmp");
     E.write("PPPresidual.xmp");
+    std::cout << A << std::endl;
+    std::cout << fnImgOut << " rewritten\n";
     std::cout << "Press any key" << std::endl;
     char c; std::cin >> c;
 #endif
-
-    Ip.write(fnImgOut);
-    rowOut.setValue(MDL_ANGLE_ROT,  old_rot+p(6));
-    rowOut.setValue(MDL_ANGLE_TILT, old_tilt+p(7));
-    rowOut.setValue(MDL_ANGLE_PSI,  old_psi+p(8));
-    rowOut.setValue(MDL_SHIFT_X,    0.);
-    rowOut.setValue(MDL_SHIFT_Y,    0.);
-    rowOut.setValue(MDL_FLIP,       false);
-    rowOut.setValue(MDL_COST,       cost);
-    rowOut.setValue(MDL_CONTINUOUS_GRAY_A,p(0));
-    rowOut.setValue(MDL_CONTINUOUS_GRAY_B,p(1));
-    rowOut.setValue(MDL_CONTINUOUS_SCALE_X,p(4));
-    rowOut.setValue(MDL_CONTINUOUS_SCALE_Y,p(5));
-    rowOut.setValue(MDL_CONTINUOUS_X,old_shiftX+p(2));
-    rowOut.setValue(MDL_CONTINUOUS_Y,old_shiftY+p(3));
 }
+#undef DEBUG
 
 void ProgAngularContinuousAssign2::postProcess()
 {
@@ -312,5 +329,5 @@ void ProgAngularContinuousAssign2::postProcess()
 		ptrMdOut.getValue(MDL_COST,cost,__iter.objId);
 		ptrMdOut.setValue(MDL_WEIGHT_CONTINUOUS2,minCost/cost,__iter.objId);
 	}
-	ptrMdOut.write(fn_in);
+	ptrMdOut.write(fn_out.replaceExtension("xmd"));
 }
