@@ -42,7 +42,7 @@ import sys
 
 class XmippChimeraClient:
     
-    def __init__(self, volfile, port, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default'):
+    def __init__(self, volfile, port, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', voxelSize=None):
         
         if volfile is None:
             raise ValueError(volfile)
@@ -59,6 +59,7 @@ class XmippChimeraClient:
             
         self.volfile = volfile
         self.angulardistfile = angulardistfile
+        self.voxelSize = voxelSize
         
         self.address = ''
         self.port = port #6000
@@ -123,6 +124,8 @@ class XmippChimeraClient:
         
     def openVolumeOnServer(self, volume):
          self.send('open_volume', volume)
+         if not self.voxelSize is None:
+             self.send('voxelSize', self.voxelSize)
          if not self.angulardistfile is None:
              self.loadAngularDist()
              self.send('draw_angular_distribution', self.angulardist)
@@ -169,8 +172,8 @@ class XmippChimeraClient:
 
 class XmippProjectionExplorer(XmippChimeraClient):
     
-    def __init__(self, volfile, port, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', size='default', padding_factor=1, max_freq=0.5, spline_degree=2):
-        XmippChimeraClient.__init__(self, volfile, port,angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
+    def __init__(self, volfile, port, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', size='default', padding_factor=1, max_freq=0.5, spline_degree=2, voxelSize=None):
+        XmippChimeraClient.__init__(self, volfile, port,angulardistfile, spheres_color, spheres_distance, spheres_maxradius, voxelSize)
         
         self.projection = Image()
         self.projection.setDataType(DT_DOUBLE)

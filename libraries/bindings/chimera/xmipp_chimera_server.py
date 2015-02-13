@@ -53,6 +53,9 @@ class ChimeraServer:
                         self.volume = volume_from_grid_data(grid)
                         #runCommand("volume #0 step 1")
                         runCommand("focus")
+                    if msg == 'voxelSize':
+                        voxelSize = self.remote_conn.recv()
+                        runCommand("volume #0 voxelSize %s"%voxelSize)
                     if msg == 'draw_angular_distribution':
                         angulardist = self.remote_conn.recv()
                         for command in angulardist:

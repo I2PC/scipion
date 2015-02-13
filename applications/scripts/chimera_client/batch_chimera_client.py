@@ -20,16 +20,14 @@ class ScriptChimeraClient(XmippScript):
         self.addParamsLine(' --input <input>          : Volume to visualize')
         self.addParamsLine('   alias -i;')
         self.addParamsLine('[ --mode <mode=viewer>]             : Sets visualization mode')
-
         self.addParamsLine(' where <mode>')
         self.addParamsLine('  viewer         : Allows volume visualization')
         self.addParamsLine('  projector <size="default"> <padding_factor="1">  <max_freq="0.5"> <spline_degree="BSPLINE2">   : Allows volume visualization and projection. spline_degree can be: NEAREST, LINEAR, BSPLINE2, BSPLINE3 and BSPLINE4.')
         self.addParamsLine('   alias -m;')
-        
-        
         self.addParamsLine('[ --angulardist <angulardist=none>  <color=red> <spheres_distance="default"> <spheres_maxradius="default">]     : Volume angular distribution to visualize')
         self.addParamsLine('   alias -a;')
-        
+        self.addParamsLine('[ --samplingRate <samplingRate=none>]          : Volume sampling rate')
+        self.addParamsLine('   alias -s;')
         self.addExampleLine('Opens xmipp chimera client in projector mode:', False)
         self.addExampleLine('xmipp_chimera_client -i hand.vol --mode projector', False)
             
@@ -74,7 +72,10 @@ class ScriptChimeraClient(XmippScript):
                 spline_degree = BSPLINE4
 #            print spline_degree
 		              
-       
+        voxelSize = self.getParam('-s')
+        if voxelSize == 'none':
+        	voxelSize = None
+        	
 		
         port = self.getFreePort()
         if not port:
@@ -96,10 +97,10 @@ class ScriptChimeraClient(XmippScript):
         system(command)
         
         if isprojector:
-			XmippProjectionExplorer(volfile, port, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, size, padding_factor, max_freq, spline_degree)
+			XmippProjectionExplorer(volfile, port, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, size, padding_factor, max_freq, spline_degree, voxelSize)
 #			print 'created projection explorer'
         elif mode == 'viewer':
-			client = XmippChimeraClient(volfile, port, angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
+			client = XmippChimeraClient(volfile, port, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, voxelSize)
 			client.listen()
 #			print 'created chimera client'
 
