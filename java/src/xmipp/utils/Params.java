@@ -49,6 +49,7 @@ public class Params {
     public final static String NO_GEO = "dont_apply_geo";
     public final static String NO_WRAP = "dont_wrap";
     public final static String OBJECT_CMDS = "object_commands";
+    public final static String SAMPLINGRATE = "sampling_rate";
     
     
     
@@ -85,6 +86,7 @@ public class Params {
     public String[] sortby;
     private String block;
     public String[] objectCommands;
+    private float samplingRate;
     
     
     
@@ -153,6 +155,7 @@ public class Params {
         opt = new Option(OBJECT_CMDS, "");
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
+        options.addOption(SAMPLINGRATE, true, "");
 
     }
     
@@ -278,6 +281,10 @@ public class Params {
             
             if(cmdLine.hasOption(OBJECT_CMDS))
             	objectCommands = cmdLine.getOptionValues(OBJECT_CMDS);
+            
+            if (cmdLine.hasOption(SAMPLINGRATE)) {
+                samplingRate = Float.parseFloat(cmdLine.getOptionValue(SAMPLINGRATE));
+            }
            
            
         } catch (Exception ex) {
@@ -308,8 +315,11 @@ public class Params {
     public boolean isMask() {
         return cmdLine.hasOption("mask");
     }
-
    
+    public Float getSamplingRate()
+    {
+        return samplingRate;
+    }
     
     
    

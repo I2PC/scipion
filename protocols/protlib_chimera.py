@@ -38,10 +38,11 @@ from time import gmtime, strftime
 from datetime import datetime
 from os.path import exists
 from decimal import *
+import sys
 
 class XmippChimeraClient:
     
-    def __init__(self, volfile, port, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default'):
+    def __init__(self, volfile, port, angulardist=[], voxelSize=None):
         
         if volfile is None:
             raise ValueError(volfile)
@@ -49,30 +50,29 @@ class XmippChimeraClient:
             [index, file] = volfile.split('@'); 
         else :
             file = volfile 
-#        if not exists(file):
-#            raise ValueError(file)
-#        if not angulardistfile is None:
-#            if not(existsBlockInMetaDataFile(angulardistfile)):
-#                raise ValueError(angulardistfile)
-        
-            
+
         self.volfile = volfile
-        self.angulardistfile = angulardistfile
-        
+        self.voxelSize = voxelSize
         self.address = ''
         self.port = port #6000
         #is port available?
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
+        
         printCmd('initVolumeData')
-        self.initVolumeData()
-        self.spheres_color = spheres_color
-        self.spheres_distance = float(spheres_distance) if not spheres_distance == 'default' else 0.75 * max(self.xdim, self.ydim, self.zdim)
-#        print self.spheres_distance
-        self.spheres_maxradius = float(spheres_maxradius) if not spheres_maxradius == 'default' else 0.02 * self.spheres_distance
-      
+        self.initVolumeData()   
+        
+        if angulardist:
+            self.angulardistfile = angulardist[0]
+            self.spheres_color = angulardist[1]
+            spheres_distance = angulardist[2]
+            spheres_maxradius = angulardist[3]
+            self.spheres_distance = float(spheres_distance) if not spheres_distance == 'default' else 0.75 * max(self.xdim, self.ydim, self.zdim)
+            self.spheres_maxradius = float(spheres_maxradius) if not spheres_maxradius == 'default' else 0.02 * self.spheres_distance
+               
         printCmd('openVolumeOnServer')
         self.openVolumeOnServer(self.vol)
+        self.initListenThread()
     
     
     def loadAngularDist(self):
@@ -120,6 +120,8 @@ class XmippChimeraClient:
         
     def openVolumeOnServer(self, volume):
          self.send('open_volume', volume)
+         if not self.voxelSize is None:
+             self.send('voxelSize', self.voxelSize)
          if not self.angulardistfile is None:
              self.loadAngularDist()
              self.send('draw_angular_distribution', self.angulardist)
@@ -128,7 +130,7 @@ class XmippChimeraClient:
 
     def initListenThread(self):
             self.listen_thread = Thread(target=self.listen)
-            self.listen_thread.daemon = True
+            #self.listen_thread.daemon = True
             self.listen_thread.start()
          
     
@@ -166,19 +168,18 @@ class XmippChimeraClient:
 
 class XmippProjectionExplorer(XmippChimeraClient):
     
-    def __init__(self, volfile, port, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', size='default', padding_factor=1, max_freq=0.5, spline_degree=2):
-
-        XmippChimeraClient.__init__(self, volfile, port,angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
+    def __init__(self, volfile, port, angulardist=[], size='default', padding_factor=1, max_freq=0.5, spline_degree=2, voxelSize=None):
+        XmippChimeraClient.__init__(self, volfile, port, angulardist, voxelSize)
         
         self.projection = Image()
         self.projection.setDataType(DT_DOUBLE)
         #0.5 ->  Niquiest frequency
         #2 -> bspline interpolation
         #print 'creating Fourier Projector'
+        
         self.fourierprojector = FourierProjector(self.image, padding_factor, max_freq, spline_degree)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
-
-        self.initListenThread()
+        
         if size == 'default':
             self.size = self.xdim if self.xdim > 128 else 128
         else:
@@ -202,9 +203,9 @@ class XmippProjectionExplorer(XmippChimeraClient):
         
     def exit(self):
         XmippChimeraClient.exit(self)
-        if not (self.iw is None):
+        if hasattr(self, "iw"):
             self.iw.root.destroy()
-            
+        
             
     def answer(self, msg):
         XmippChimeraClient.answer(self, msg)
@@ -219,9 +220,13 @@ class XmippProjectionExplorer(XmippChimeraClient):
             
             
     def exitClient(self):
-        pass
-        
-     
+        if not self.listen:
+            sys.exit(0)
+    
+    def initListenThread(self):
+            self.listen_thread = Thread(target=self.listen)
+            self.listen_thread.daemon = True
+            self.listen_thread.start() 
             
 def printCmd(cmd):
         timeformat = "%S.%f" 

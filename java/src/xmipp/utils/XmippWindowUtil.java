@@ -240,8 +240,19 @@ public class XmippWindowUtil
             }).start();
         }
         
-        public static String executeCommand(String[] command, boolean wait) throws Exception {
-            System.out.println(Arrays.toString(command));
+    public static String executeCommand(String[] command, boolean wait) throws Exception {
+            //System.out.println(Arrays.toString(command));
+            Process p = Runtime.getRuntime().exec(command);
+            if(wait)
+            {
+                p.waitFor();
+                return readProcessOutput(p);
+            }
+            return null;
+    }
+    
+    public static String executeCommand(String command, boolean wait) throws Exception {
+            //System.out.println(Arrays.toString(command));
             Process p = Runtime.getRuntime().exec(command);
             if(wait)
             {
