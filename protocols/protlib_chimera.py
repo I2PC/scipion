@@ -42,7 +42,7 @@ import sys
 
 class XmippChimeraClient:
     
-    def __init__(self, volfile, port, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', voxelSize=None):
+    def __init__(self, volfile, port, angulardist=[], voxelSize=None):
         
         if volfile is None:
             raise ValueError(volfile)
@@ -50,17 +50,9 @@ class XmippChimeraClient:
             [index, file] = volfile.split('@'); 
         else :
             file = volfile 
-#        if not exists(file):
-#            raise ValueError(file)
-#        if not angulardistfile is None:
-#            if not(existsBlockInMetaDataFile(angulardistfile)):
-#                raise ValueError(angulardistfile)
-        
-            
+
         self.volfile = volfile
-        self.angulardistfile = angulardistfile
         self.voxelSize = voxelSize
-        
         self.address = ''
         self.port = port #6000
         #is port available?
@@ -68,12 +60,16 @@ class XmippChimeraClient:
         self.client = Client((self.address, self.port), authkey=self.authkey)
         
         printCmd('initVolumeData')
-        self.initVolumeData()
-        self.spheres_color = spheres_color
-        self.spheres_distance = float(spheres_distance) if not spheres_distance == 'default' else 0.75 * max(self.xdim, self.ydim, self.zdim)
-#        print self.spheres_distance
-        self.spheres_maxradius = float(spheres_maxradius) if not spheres_maxradius == 'default' else 0.02 * self.spheres_distance
-      
+        self.initVolumeData()   
+        
+        if angulardist:
+            self.angulardistfile = angulardist[0]
+            self.spheres_color = angulardist[1]
+            spheres_distance = angulardist[2]
+            spheres_maxradius = angulardist[3]
+            self.spheres_distance = float(spheres_distance) if not spheres_distance == 'default' else 0.75 * max(self.xdim, self.ydim, self.zdim)
+            self.spheres_maxradius = float(spheres_maxradius) if not spheres_maxradius == 'default' else 0.02 * self.spheres_distance
+               
         printCmd('openVolumeOnServer')
         self.openVolumeOnServer(self.vol)
         self.initListenThread()
@@ -134,7 +130,7 @@ class XmippChimeraClient:
 
     def initListenThread(self):
             self.listen_thread = Thread(target=self.listen)
-            self.listen_thread.daemon = True
+            #self.listen_thread.daemon = True
             self.listen_thread.start()
          
     
@@ -172,8 +168,8 @@ class XmippChimeraClient:
 
 class XmippProjectionExplorer(XmippChimeraClient):
     
-    def __init__(self, volfile, port, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', size='default', padding_factor=1, max_freq=0.5, spline_degree=2, voxelSize=None):
-        XmippChimeraClient.__init__(self, volfile, port,angulardistfile, spheres_color, spheres_distance, spheres_maxradius, voxelSize)
+    def __init__(self, volfile, port, angulardist=[], size='default', padding_factor=1, max_freq=0.5, spline_degree=2, voxelSize=None):
+        XmippChimeraClient.__init__(self, volfile, port, angulardist, voxelSize)
         
         self.projection = Image()
         self.projection.setDataType(DT_DOUBLE)
@@ -211,7 +207,6 @@ class XmippProjectionExplorer(XmippChimeraClient):
             self.iw.root.destroy()
         
             
-            
     def answer(self, msg):
         XmippChimeraClient.answer(self, msg)
         if msg == 'motion_stop':
@@ -227,8 +222,11 @@ class XmippProjectionExplorer(XmippChimeraClient):
     def exitClient(self):
         if not self.listen:
             sys.exit(0)
-        
-     
+    
+    def initListenThread(self):
+            self.listen_thread = Thread(target=self.listen)
+            self.listen_thread.daemon = True
+            self.listen_thread.start() 
             
 def printCmd(cmd):
         timeformat = "%S.%f" 

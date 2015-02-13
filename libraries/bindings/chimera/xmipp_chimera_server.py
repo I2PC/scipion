@@ -52,16 +52,19 @@ class ChimeraServer:
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
                         #runCommand("volume #0 step 1")
-                        runCommand("focus")
-                    if msg == 'voxelSize':
+                        
+                    elif msg == 'voxelSize':
                         voxelSize = self.remote_conn.recv()
-                        runCommand("volume #0 voxelSize %s"%voxelSize)
-                    if msg == 'draw_angular_distribution':
+                        cmd = "volume #0 voxelSize %s"%voxelSize
+                        runCommand(cmd)
+                        runCommand("focus")
+                    
+                    elif msg == 'draw_angular_distribution':
                         angulardist = self.remote_conn.recv()
                         for command in angulardist:
                             runCommand(command)
                     
-                    if msg == 'end':    
+                    elif msg == 'end':    
                         break
                     else:
                         sleep(0.01)

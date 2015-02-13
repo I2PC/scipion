@@ -28,6 +28,7 @@ class ScriptChimeraClient(XmippScript):
         self.addParamsLine('   alias -a;')
         self.addParamsLine('[ --samplingRate <samplingRate=none>]          : Volume sampling rate')
         self.addParamsLine('   alias -s;')
+        
         self.addExampleLine('Opens xmipp chimera client in projector mode:', False)
         self.addExampleLine('xmipp_chimera_client -i hand.vol --mode projector', False)
             
@@ -75,8 +76,8 @@ class ScriptChimeraClient(XmippScript):
         voxelSize = self.getParam('-s')
         if voxelSize == 'none':
         	voxelSize = None
-        	
-		
+        
+        
         port = self.getFreePort()
         if not port:
             print "ERROR: Port is not available\n"
@@ -97,11 +98,11 @@ class ScriptChimeraClient(XmippScript):
         system(command)
         
         if isprojector:
-			XmippProjectionExplorer(volfile, port, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, size, padding_factor, max_freq, spline_degree, voxelSize)
+			XmippProjectionExplorer(volfile, port, [angulardistfile, spheres_color, spheres_distance, spheres_maxradius], size, padding_factor, max_freq, spline_degree, voxelSize)
 #			print 'created projection explorer'
         elif mode == 'viewer':
-			client = XmippChimeraClient(volfile, port, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, voxelSize)
-			client.listen()
+			client = XmippChimeraClient(volfile, port, [angulardistfile, spheres_color, spheres_distance, spheres_maxradius], voxelSize)
+			
 #			print 'created chimera client'
 
     
