@@ -107,7 +107,9 @@ class ShowjForm(forms.Form):
                                                              required=False,
                                                              choices=tuple(zip(dataset.listTables(), dataset.listTables())))
             
+            # This rendarable columns cannot have to access to the extra params
             namesToRender, labelsToRender = tableLayoutConfiguration.getRenderableColumns()
+            
             if namesToRender:
                 labelChoices = tuple(zip(namesToRender, labelsToRender))
                 self.fields[sj.LABEL_SELECTED] = forms.ChoiceField(label=messagesForm.LABEL_LABEL_SELECTION,
