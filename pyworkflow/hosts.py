@@ -29,11 +29,14 @@ execution hosts.
 """
 
 import sys
-import os
+import json
 from ConfigParser import ConfigParser
+from collections import OrderedDict
 
+import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
+
 
 
 class HostMapper(SqliteMapper):
@@ -49,13 +52,13 @@ class HostMapper(SqliteMapper):
                 return host
         return None
         
-class HostConfig(OrderedObject):
+        
+class HostConfig():
     """ Main store the configuration for execution hosts. """
     
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args)
-        self.label = String()
-        self.hostName = String()
+    def __init__(self, **kwargs):
+        self.label = String(kwargs.get('label', None))
+        self.hostName = String(kwargs.get('hostName', None))
         self.userName = String()
         self.password = String()
         self.hostPath = String()
@@ -219,3 +222,49 @@ class QueueConfig(OrderedObject):
     
     def setMaxHours(self, maxHours):
         self.maxHours.set(maxHours)
+        
+        
+def loadHosts(hostsConfigFile):
+    """ Load several hosts from a configuration file. 
+    Return an OrderedDict where the keys are the hostname
+    and the values the configuration for each host.
+    """
+    # Read from users' config file.
+    cp = ConfigParser()
+    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    hosts = OrderedDict()
+    
+    try:
+        assert cp.read(hostsConfigFile) != [], 'Missing file %s' % hostsConfigFile
+
+        for hostName in cp.sections():
+            host = HostConfig(label=hostName, hostName=hostName)
+            host.setHostPath(pw.SCIPION_USER_DATA)
+
+            # Helper functions (to write less)
+            def get(var): return cp.get(hostName, var).replace('%_(', '%(')
+            def isOn(var): return str(var).lower() in ['true', 'yes', '1']
+
+            host.mpiCommand.set(get('PARALLEL_COMMAND'))
+            host.queueSystem = QueueSystemConfig()
+            host.queueSystem.name.set(get('NAME'))
+            host.queueSystem.mandatory.set(isOn(get('MANDATORY')))
+            host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
+            host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
+            host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
+            host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
+
+            host.queueSystem.queues = OrderedDict()
+            for qName, values in json.loads(get('QUEUES')).iteritems():
+                queue = QueueConfig()
+                queue.maxCores.set(values['MAX_CORES'])
+                queue.allowMPI.set(isOn(values['ALLOW_MPI']))
+                queue.allowThreads.set(isOn(values['ALLOW_THREADS']))
+                host.queueSystem.queues[qName] = queue
+                
+            hosts[hostName] = host
+
+            return hosts
+    except Exception as e:
+        sys.exit('Failed to read settings. The reported error was:\n  %s\n'
+                 'To solve it, delete %s and run again.' % (e, hostsConfigFile))    

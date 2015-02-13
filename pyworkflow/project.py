@@ -23,8 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.utils import prettyDict
-from pprint import PrettyPrinter
+from pyworkflow.utils.utils import startDebugger
 """
 This modules handles the Project management
 """
@@ -39,7 +38,7 @@ from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils import makeFilePath
 from pyworkflow.utils.graph import Graph
-from pyworkflow.hosts import HostMapper, HostConfig
+from pyworkflow.hosts import HostMapper, HostConfig, loadHosts
 import pyworkflow.protocol.launch as jobs
 from pyworkflow.em.constants import RELATION_TRANSFORM, RELATION_SOURCE
 
@@ -49,6 +48,8 @@ PROJECT_RUNS = 'Runs'
 PROJECT_TMP = 'Tmp'
 PROJECT_UPLOAD = 'Uploads'
 PROJECT_SETTINGS = 'settings.sqlite'
+PROJECT_CONFIG = '.config'
+PROJECT_CONFIG_HOSTS = 'hosts.conf'
 
 # Regex to get numbering suffix and automatically propose runName
 REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
@@ -64,22 +65,25 @@ class Project(object):
         self.name = path
         self.path = abspath(path)
         self.pathList = [] # Store all related paths
-        self.dbPath = self.addPath(PROJECT_DBNAME)
-        self.logsPath = self.addPath(PROJECT_LOGS)
-        self.runsPath = self.addPath(PROJECT_RUNS)
-        self.tmpPath = self.addPath(PROJECT_TMP)
-        self.uploadPath = self.addPath(PROJECT_UPLOAD)
-        self.settingsPath = self.addPath(PROJECT_SETTINGS)
+        self.dbPath = self.__addPath(PROJECT_DBNAME)
+        self.logsPath = self.__addPath(PROJECT_LOGS)
+        self.runsPath = self.__addPath(PROJECT_RUNS)
+        self.tmpPath = self.__addPath(PROJECT_TMP)
+        self.uploadPath = self.__addPath(PROJECT_UPLOAD)
+        self.settingsPath = self.__addPath(PROJECT_SETTINGS)
+        self.configPath = self.__addPath(PROJECT_CONFIG)
         self.runs = None
         self._runsGraph = None
         self._transformGraph = None
         self._sourceGraph = None
+        # Host configuration
+        self._hosts = None
         
     def getObjId(self):
         """ Return the unique id assigned to this project. """
         return os.path.basename(self.path)
     
-    def addPath(self, *paths):
+    def __addPath(self, *paths):
         """Store a path needed for the project"""
         p = self.getPath(*paths)
         self.pathList.append(p)
@@ -92,6 +96,16 @@ class Project(object):
     def getDbPath(self):
         """ Return the path to the sqlite db. """
         return self.dbPath
+    
+    def setDbPath(self, dbPath):
+        """ Set the project db path.
+        This function is used when running a protocol where
+        a project is loaded but using the protocol own sqlite file.
+        """
+        # First remove from pathList the old dbPath
+        self.pathList.remove(self.dbPath)
+        self.dbPath = abspath(dbPath)
+        self.pathList.append(self.dbPath)
     
     def getName(self):
         return self.name
@@ -117,30 +131,75 @@ class Project(object):
         classesDict.update(em.getObjects())
         return SqliteMapper(sqliteFn, classesDict)
     
-    def load(self):
-        """Load project data and settings
-        from the project dir.
-        """        
+    def load(self, dbPath=None, hosts=None, settings=None, chdir=True):
+        """ Load project data, configuration and settings.
+        Params:
+            dbPath: the path to the project database.
+                If None, use the project.sqlite in the project folder.
+            hosts: where to read the host configuration. 
+                If None, check if exists in .config/hosts.conf
+                or read from ~/.config/scipion/hosts.conf
+            settings: where to read the settings.
+                If None, use the settings.sqlite in project folder.
+        """
+        print "Project.load....."
+             
         if not exists(self.path):
             raise Exception("Cannot load project, path doesn't exist: %s" % self.path)
-        os.chdir(self.path) #Before doing nothing go to project dir
+        
+        if chdir:
+            os.chdir(self.path) #Before doing nothing go to project dir
+        
+        self._loadDb(dbPath)
+        
+        self._loadHosts(hosts)
+        
+        #FIXME: Handle settings argument here
+        
+        # It is possible that settings does not exists if 
+        # we are loading a project after a Project.setDbName,
+        # used when running protocols
+        if exists(self.settingsPath):
+            self.settings = loadSettings(self.settingsPath)
+        else:
+            self.settings = None
+            
+    #---- Helper functions to load different pieces of a project
+    def _loadDb(self, dbPath):
+        """ Load the mapper from the sqlite file in dbPath. """
+        if dbPath is not None:
+            self.setDbPath(dbPath)
+        
         if not exists(self.dbPath):
             raise Exception("Project database not found in '%s'" % join(self.path, self.dbPath))
         self.mapper = self.createMapper(self.dbPath)
-        self.settings = loadSettings(self.settingsPath)
         
-    def create(self, confs={}, runsView=1, readOnly=False):
+    def _loadHosts(self, hosts):
+        """ Loads hosts configuration from hosts file. """
+        # If the host file is not passed as argument...
+        if hosts is None:
+            # Try first to read it from the project file .config/hosts.conf
+            projHosts = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)
+            if exists(projHosts):
+                hostsFile = projHosts
+            else:
+                hostsFile = os.environ['SCIPION_HOSTS']
+        else:
+            hostsFile = hosts
+            
+        self._hosts = loadHosts(hostsFile)
+        
+        
+    def create(self, confs={}, runsView=1, readOnly=False, hosts=None):
         """Prepare all required paths and files to create a new project.
         Params:
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
         """
-        if isReadOnly():
-            raise Exception("Could not create new projects in READ-ONLY mode!!!")
         # Create project path if not exists
         makePath(self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
         self._cleanData()
-        print abspath(self.dbPath)
+        print "Creating project at: ", abspath(self.dbPath)
         # Create db throught the mapper
         self.mapper = self.createMapper(self.dbPath)
         self.mapper.commit()
@@ -156,12 +215,12 @@ class Project(object):
                 makeFilePath(p)
             else:
                 makePath(p)
+                
+        self._loadHosts(hosts)
         
     def _cleanData(self):
         """Clean all project data"""
-        # Read only mode
-        if not isReadOnly():
-            cleanPath(*self.pathList)      
+        cleanPath(*self.pathList)      
                 
     def launchProtocol(self, protocol, wait=False):
         """ In this function the action of launching a protocol
@@ -213,11 +272,10 @@ class Project(object):
                 
                 #TODO: when launching remote protocols, the db should be retrieved 
                 # in a different way.
-                dbPath = self.getPath(protocol.getDbPath())
-                if not exists(dbPath):
-                    return
+
                 #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
-                prot2 = getProtocolFromDb(dbPath, protocol.getObjId())
+                prot2 = getProtocolFromDb(self.path, protocol.getDbPath(), 
+                                          protocol.getObjId())
 
                 # Copy is only working for db restored objects
                 protocol.setMapper(self.mapper)
@@ -231,14 +289,13 @@ class Project(object):
             
             except Exception, ex:
                 print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
-                if tries == 0: # 3 tries have been failed
-                    import traceback
+                if tries == 3: # 3 tries have been failed
                     traceback.print_exc()
                     # If any problem happens, the protocol will be marked wih a status fail
                     protocol.setFailed(str(ex))
                     self.mapper.store(protocol)
                 else:
-                    time.sleep(1)
+                    time.sleep(0.5)
                     self._updateProtocol(protocol, tries+1)
         
     def stopProtocol(self, protocol):
@@ -535,18 +592,13 @@ class Project(object):
         give its value of 'hostname'
         """
         hostName = protocol.getHostName()
-        hostConfig = self.settings.getHostByLabel(hostName)
-        if hostConfig is None:
-            print ">>>>>>> Unexpected error: hostConfig is None"
-            print "         hostName: ", hostName
-            print "        Using 'localhost' instead"
-            hostConfig = self.settings.getHostByLabel('localhost')
-            protocol.setHostName('localhost')
+        if hostName in self._hosts:
+            hostConfig = self._hosts[hostName]
+        else:
+            hostConfig = self._hosts[self._hosts.keys()[0]]
+            print "PROJECT: Warning, protocol host '%s' not found." % hostName
+            print "         Using '%s' instead."
             
-        hostConfig.cleanObjId()
-        # Add the project name to the hostPath in remote execution host
-        hostRoot = hostConfig.getHostPath()
-        hostConfig.setHostPath(join(hostRoot, os.path.basename(self.path)))
         protocol.setHostConfig(hostConfig)
     
     def _storeProtocol(self, protocol):
@@ -559,6 +611,7 @@ class Project(object):
         """ Set the project and mapper to the protocol. """
         protocol.setProject(self)
         protocol.setMapper(self.mapper)
+        self._setHostConfig(protocol)
         
     def _setupProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
@@ -573,7 +626,6 @@ class Project(object):
             #print protocol.strId(), protocol.getProject().getName()
             #protocol.setName(name)
             protocol.setWorkingDir(self.getPath(PROJECT_RUNS, workingDir))
-            self._setHostConfig(protocol)
             # Update with changes
             self._storeProtocol(protocol)
             
