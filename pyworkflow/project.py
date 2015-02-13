@@ -23,24 +23,23 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.utils import startDebugger, prettyDict
 """
 This modules handles the Project management
 """
 
 import os
 import re
-from os.path import abspath
+import json
+import traceback
+import time
+from collections import OrderedDict
 
 import pyworkflow.em as em
-from pyworkflow.config import *
-from pyworkflow.protocol import *
+import pyworkflow.config as pwconfig
+import pyworkflow.protocol as pwprot
+import pyworkflow.object as pwobj
+import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import makeFilePath
-from pyworkflow.utils.graph import Graph
-from pyworkflow.hosts import HostMapper, HostConfig, loadHosts
-import pyworkflow.protocol.launch as jobs
-from pyworkflow.em.constants import RELATION_TRANSFORM, RELATION_SOURCE
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
@@ -50,6 +49,7 @@ PROJECT_UPLOAD = 'Uploads'
 PROJECT_SETTINGS = 'settings.sqlite'
 PROJECT_CONFIG = '.config'
 PROJECT_CONFIG_HOSTS = 'hosts.conf'
+PROJECT_CONFIG_PROTOCOLS = 'protocols.conf'
 
 # Regex to get numbering suffix and automatically propose runName
 REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
@@ -63,7 +63,7 @@ class Project(object):
         """Create a project associated with a given path"""
         # To create a Project, a path is required
         self.name = path
-        self.path = abspath(path)
+        self.path = os.path.abspath(path)
         self.pathList = [] # Store all related paths
         self.dbPath = self.__addPath(PROJECT_DBNAME)
         self.logsPath = self.__addPath(PROJECT_LOGS)
@@ -78,6 +78,7 @@ class Project(object):
         self._sourceGraph = None
         # Host configuration
         self._hosts = None
+        self._protocolViews = None
         
     def getObjId(self):
         """ Return the unique id assigned to this project. """
@@ -91,7 +92,7 @@ class Project(object):
         
     def getPath(self, *paths):
         """Return path from the project root"""
-        return join(*paths)
+        return os.path.join(*paths)
     
     def getDbPath(self):
         """ Return the path to the sqlite db. """
@@ -104,7 +105,7 @@ class Project(object):
         """
         # First remove from pathList the old dbPath
         self.pathList.remove(self.dbPath)
-        self.dbPath = abspath(dbPath)
+        self.dbPath = os.path.abspath(dbPath)
         self.pathList.append(self.dbPath)
     
     def getName(self):
@@ -126,12 +127,12 @@ class Project(object):
         all globas and update with data and protocols from em.
         """
         #TODO: REMOVE THE USE OF globals() here
-        classesDict = dict(globals())
+        classesDict = dict(pwobj.__dict__)
         classesDict.update(em.getProtocols())
         classesDict.update(em.getObjects())
         return SqliteMapper(sqliteFn, classesDict)
     
-    def load(self, dbPath=None, hosts=None, settings=None, chdir=True):
+    def load(self, dbPath=None, hosts=None, settings=None, chdir=True, protocolsConf=None):
         """ Load project data, configuration and settings.
         Params:
             dbPath: the path to the project database.
@@ -142,7 +143,7 @@ class Project(object):
             settings: where to read the settings.
                 If None, use the settings.sqlite in project folder.
         """
-        if not exists(self.path):
+        if not os.path.exists(self.path):
             raise Exception("Cannot load project, path doesn't exist: %s" % self.path)
         
         if chdir:
@@ -152,13 +153,15 @@ class Project(object):
         
         self._loadHosts(hosts)
         
+        self._loadProtocols(protocolsConf)
+        
         #FIXME: Handle settings argument here
         
         # It is possible that settings does not exists if 
         # we are loading a project after a Project.setDbName,
         # used when running protocols
-        if exists(self.settingsPath):
-            self.settings = loadSettings(self.settingsPath)
+        if os.path.exists(self.settingsPath):
+            self.settings = pwconfig.loadSettings(self.settingsPath)
         else:
             self.settings = None
             
@@ -168,28 +171,72 @@ class Project(object):
         if dbPath is not None:
             self.setDbPath(dbPath)
         
-        if not exists(self.dbPath):
-            raise Exception("Project database not found in '%s'" % join(self.path, self.dbPath))
+        if not os.path.exists(self.dbPath):
+            raise Exception("Project database not found in '%s'" % os.path.join(self.path, self.dbPath))
         self.mapper = self.createMapper(self.dbPath)
         
     def _loadHosts(self, hosts):
         """ Loads hosts configuration from hosts file. """
         # If the host file is not passed as argument...
         if hosts is None:
-            # Try first to read it from the project file .config/hosts.conf
+            # Try first to read it from the project file .pwconfig./hosts.conf
             projHosts = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)
-            if exists(projHosts):
+            if os.path.exists(projHosts):
                 hostsFile = projHosts
             else:
                 hostsFile = os.environ['SCIPION_HOSTS']
         else:
             hostsFile = hosts
             
-        self._hosts = loadHosts(hostsFile)
+        self._hosts = pwconfig.loadHostsConf(hostsFile)
+        
+    def _loadProtocols(self, protocolsConf):
+        """ Load protocol configuration from a .conf file. """
+        # If the host file is not passed as argument...
+        if protocolsConf is None:
+            # Try first to read it from the project file .config/hosts.conf
+            projProtConf = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
+            if os.path.exists(projProtConf):
+                protConf = projProtConf
+            else:
+                protConf = os.environ['SCIPION_PROTOCOLS']
+        else:
+            protConf = protocolsConf
+          
+        self._protocolViews = pwconfig.loadProtocolsConf(protConf)
+        
         
     def getHostNames(self):
         """ Return the list of host name in the project. """
         return self._hosts.keys()
+    
+    def getHostConfig(self, hostName):
+        if hostName in self._hosts:
+            hostKey = hostName
+        else:
+            hostKey = self._hosts.keys()[0]
+            print "PROJECT: Warning, protocol host '%s' not found." % hostName
+            print "         Using '%s' instead." % hostKey
+            
+        return self._hosts[hostKey]
+    
+    def getProtocolViews(self):
+        return self._protocolViews.keys()
+    
+    def getCurrentProtocolView(self):
+        """ Select the view that is currently selected.
+        Read from the settings the last selected view
+        and get the information from the self._protocolViews dict.
+        """
+        currentView = self.settings.getProtocolView()
+        if currentView in self._protocolViews:
+            viewKey = currentView
+        else:
+            viewKey = self._protocolViews.keys()[0]
+            print "PROJECT: Warning, protocol view '%s' not found." % currentView
+            print "         Using '%s' instead."  % viewKey
+        
+        return self._protocolViews[viewKey]          
         
     def create(self, confs={}, runsView=1, readOnly=False, hosts=None):
         """Prepare all required paths and files to create a new project.
@@ -197,28 +244,28 @@ class Project(object):
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
         """
         # Create project path if not exists
-        makePath(self.path)
+        pwutils.path.makePath(self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
         self._cleanData()
-        print "Creating project at: ", abspath(self.dbPath)
+        print "Creating project at: ", os.path.abspath(self.dbPath)
         # Create db throught the mapper
         self.mapper = self.createMapper(self.dbPath)
         self.mapper.commit()
         # Load settings from .conf files and write .sqlite
-        self.settings = ProjectSettings(confs)
+        self.settings = pwconfig.ProjectSettings(confs)
         self.settings.loadConfig(confs)
         self.settings.setRunsView(runsView)
         self.settings.setReadOnly(readOnly)
         self.settings.write(self.settingsPath)
         # Create other paths inside project
         for p in self.pathList:
-            makePath(p)
+            pwutils.path.makePath(p)
                 
         self._loadHosts(hosts)
         
     def _cleanData(self):
         """Clean all project data"""
-        cleanPath(*self.pathList)      
+        pwutils.path.cleanPath(*self.pathList)      
                 
     def launchProtocol(self, protocol, wait=False):
         """ In this function the action of launching a protocol
@@ -232,7 +279,7 @@ class Project(object):
         if not protocol.isInteractive():
             self._checkModificationAllowed([protocol], 'Cannot RE-LAUNCH protocol')
         
-        protocol.setStatus(STATUS_LAUNCHED)
+        protocol.setStatus(pwprot.STATUS_LAUNCHED)
         self._setupProtocol(protocol)
         
         #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
@@ -242,10 +289,10 @@ class Project(object):
         # Prepare a separate db for this run
         # NOTE: now we are simply copying the entire project db, this can be changed later
         # to only create a subset of the db need for the run
-        copyFile(self.dbPath, protocol.getDbPath())
+        pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
         
         # Launch the protocol, the jobId should be set after this call
-        jobs.launch(protocol, wait)
+        pwprot.launch.launch(protocol, wait)
         
         # Commit changes
         if wait: # This is only useful for launching tests...
@@ -268,7 +315,7 @@ class Project(object):
                 # in a different way.
 
                 #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
-                prot2 = getProtocolFromDb(self.path, protocol.getDbPath(), 
+                prot2 = pwprot.getProtocolFromDb(self.path, protocol.getDbPath(), 
                                           protocol.getObjId())
 
                 # Copy is only working for db restored objects
@@ -295,7 +342,7 @@ class Project(object):
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
         try:
-            jobs.stop(protocol)
+            pwprot.launch.stop(protocol)
         except Exception:
             raise
         finally:
@@ -363,7 +410,7 @@ class Project(object):
             wd = prot.workingDir.get()
             
             if wd.startswith(PROJECT_RUNS):
-                cleanPath(wd)
+                pwutils.path.cleanPath(wd)
             else:
                 print "Error path: ", wd 
       
@@ -423,7 +470,7 @@ class Project(object):
         """ Make a copy of the protocol, return a new one with copied values. """
         result = None
         
-        if isinstance(protocol, Protocol):
+        if isinstance(protocol, pwprot.Protocol):
             newProt = self.newProtocol(protocol.getClass())
             newProt.copyDefinitionAttributes(protocol)
             result = newProt
@@ -495,7 +542,7 @@ class Project(object):
                     # Get the matches between outputs/inputs of node and childNode
                     matches = self.__getIOMatches(node, childNode)
                     for oKey, iKey in matches:
-                        childDict[iKey] = '%s.%s%s' % (protId, Pointer.EXTENDED_ATTR, oKey)
+                        childDict[iKey] = '%s.%s%s' % (protId, pwobj.Pointer.EXTENDED_ATTR, oKey)
                       
         f = open(filename, 'w')  
         
@@ -558,7 +605,7 @@ class Project(object):
     def saveProtocol(self, protocol):
         self._checkModificationAllowed([protocol], 'Cannot SAVE protocol')
         
-        protocol.setStatus(STATUS_SAVED)
+        protocol.setStatus(pwprot.STATUS_SAVED)
         if protocol.hasObjId():
             self._storeProtocol(protocol)
         else:
@@ -567,7 +614,7 @@ class Project(object):
     def getProtocol(self, protId):
         protocol = self.mapper.selectById(protId)
         
-        if not isinstance(protocol, Protocol):
+        if not isinstance(protocol, pwprot.Protocol):
             raise Exception('>>> ERROR: Invalid protocol id: %d' % protId)
         
         self._setProtocolMapper(protocol)
@@ -586,13 +633,7 @@ class Project(object):
         give its value of 'hostname'
         """
         hostName = protocol.getHostName()
-        if hostName in self._hosts:
-            hostConfig = self._hosts[hostName]
-        else:
-            hostConfig = self._hosts[self._hosts.keys()[0]]
-            print "PROJECT: Warning, protocol host '%s' not found." % hostName
-            print "         Using '%s' instead."
-            
+        hostConfig = self.getHostConfig(hostName)
         protocol.setHostConfig(hostConfig)
     
     def _storeProtocol(self, protocol):
@@ -656,7 +697,7 @@ class Project(object):
         if refresh or self._runsGraph is None:
             outputDict = {} # Store the output dict
             runs = [r for r in self.getRuns(refresh=refresh) if not r.isChild()]
-            g = Graph(rootName='PROJECT')
+            g = pwutils.graph.Graph(rootName='PROJECT')
             
             for r in runs:
                 n = g.createNode(r.strId())
@@ -701,11 +742,11 @@ class Project(object):
             
         return self._runsGraph
     
-    def _getRelationGraph(self, relation=RELATION_SOURCE, refresh=False):
+    def _getRelationGraph(self, relation=em.RELATION_SOURCE, refresh=False):
         """ Retrieve objects produced as outputs and
         make a graph taking into account the SOURCE relation. """
         relations = self.mapper.getRelationsByName(relation)
-        g = Graph(rootName='PROJECT')
+        g = pwutils.graph.Graph(rootName='PROJECT')
         root = g.getRoot()
         root.object = None
         runs = self.getRuns(refresh=refresh)
@@ -739,28 +780,28 @@ class Project(object):
         """ Return all the objects have used obj
         as a source.
         """
-        return self.mapper.getRelationChilds(RELATION_SOURCE, obj)
+        return self.mapper.getRelationChilds(em.RELATION_SOURCE, obj)
     
     def getSourceParents(self, obj):
         """ Return all the objects that are SOURCE of this object.
         """
-        return self.mapper.getRelationParents(RELATION_SOURCE, obj)
+        return self.mapper.getRelationParents(em.RELATION_SOURCE, obj)
     
     def getTransformGraph(self, refresh=False):
         """ Get the graph from the TRASNFORM relation. """
         if refresh or not self._transformGraph:
-            self._transformGraph = self._getRelationGraph(RELATION_TRANSFORM, refresh)
+            self._transformGraph = self._getRelationGraph(em.RELATION_TRANSFORM, refresh)
             
         return self._transformGraph
             
     def getSourceGraph(self, refresh=False):
         """ Get the graph from the SOURCE relation. """
         if refresh or not self._sourceGraph:
-            self._sourceGraph = self._getRelationGraph(RELATION_SOURCE, refresh)
+            self._sourceGraph = self._getRelationGraph(em.RELATION_SOURCE, refresh)
             
         return self._sourceGraph
                 
-    def getRelatedObjects(self, relation, obj, direction=RELATION_CHILDS):
+    def getRelatedObjects(self, relation, obj, direction=em.RELATION_CHILDS):
         """ Get all objects related to obj by a give relation.
         Params:
             relation: the relation name to search for.

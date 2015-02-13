@@ -36,7 +36,7 @@ import os
 from pyworkflow.utils.utils import envVarOn
 
 from pyworkflow.manager import Manager
-from pyworkflow.config import MenuConfig, ProjectSettings, SettingList
+from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project
 from pyworkflow.gui import Message
 from pyworkflow.gui.browser import FileBrowserWindow
@@ -56,7 +56,6 @@ class ProjectWindow(ProjectBaseWindow):
         self.loadProject()
 
         # TODO: put the menu part more nicely. From here:
-        self.menuList = SettingList()
         menu = MenuConfig()
 
         projMenu = menu.addSubMenu('Project')
@@ -72,8 +71,7 @@ class ProjectWindow(ProjectBaseWindow):
         helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
         helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
 
-        self.menuList.append(menu)
-        self.menuCfg = self.menuList.getItem()
+        self.menuCfg = menu
         # TODO: up to here
 
         self.icon = self.generalCfg.icon.get()
@@ -110,7 +108,7 @@ class ProjectWindow(ProjectBaseWindow):
         self.project.load()
         self.settings = self.project.getSettings()
         self.generalCfg = self.settings.getConfig()
-        self.protCfg = self.settings.getCurrentProtocolMenu()
+        self.protCfg = self.project.getCurrentProtocolView()
 
     #
     # The next functions are callbacks from the menu options.
@@ -166,10 +164,8 @@ class ProjectManagerWindow(ProjectBaseWindow):
     def __init__(self, **args):
         # Load global configuration
         settings = ProjectSettings()
-        settings.loadConfig()
 
         # TODO: put the menu part more nicely. From here:
-        menuList = SettingList()
         menu = MenuConfig()
 
         confMenu = menu.addSubMenu('Configuration')
@@ -181,10 +177,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
         helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
         helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
 
-        menuList.append(menu)
-        # TODO: up to here
-
-        self.menuCfg = menuList.getItem()
+        self.menuCfg = menu
         self.generalCfg = settings.getConfig()
         
         ProjectBaseWindow.__init__(self, Message.LABEL_PROJECTS, minsize=(750, 500), **args)

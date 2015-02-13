@@ -113,7 +113,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
         item = tree.insert(prefix, 'end', key, text=text, image=img, tags=(tag))
         treeItems[item] = obj
         # Check if the attribute should be open or close
-        openItem = obj.getAttributeValue('openItem', level < 2)
+        openItem = getattr(obj, 'openItem', level < 2)
         if openItem:
             tree.item(item, open=True)
             
@@ -764,8 +764,8 @@ class ProtocolsView(tk.Frame):
         """Create the protocols Tree displayed in left panel"""
         comboFrame = tk.Frame(parent, bg=bgColor)
         tk.Label(comboFrame, text='View', bg=bgColor).grid(row=0, column=0, padx=(0, 5), pady=5)
-        choices = [pm.text.get() for pm in self.settings.protMenuList]
-        initialChoice = choices[self.settings.protMenuList.getIndex()]
+        choices = self.project.getProtocolViews() 
+        initialChoice = self.settings.getProtocolView()
         combo = ComboBox(comboFrame, choices=choices, initial=initialChoice)
         combo.setChangeCallback(self._onSelectProtocols)
         combo.grid(row=0, column=1)
@@ -781,8 +781,9 @@ class ProtocolsView(tk.Frame):
         """ This function will be called when a protocol menu
         is selected. The index of the new menu is passed. 
         """
-        protIndex = combo.getIndex()
-        self.protCfg = self.settings.setCurrentProtocolMenu(protIndex)
+        protView = combo.getText()
+        self.settings.setProtocolView(protView)
+        self.protCfg = self.project.getCurrentProtocolView()
         self.updateProtocolsTree(self.protCfg)
                 
     def updateProtocolsTree(self, protCfg):
@@ -803,6 +804,7 @@ class ProtocolsView(tk.Frame):
         
     def _treeViewItemChange(self, openItem):
         item = self.protTree.focus()
+        print "DEBUG: _treeViewItemChange, item: ", item
         if item in self.protTreeItems:
             self.protTreeItems[item].openItem.set(openItem)
         
