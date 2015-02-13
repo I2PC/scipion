@@ -187,6 +187,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                             getParticlePicker().saveData();
                         if(getParticlePicker().isScipionSave())
                         {
+                            
                             HashMap<String, String> msgfields = new HashMap<String, String>();
                             boolean createprot = getParticlePicker().getProtId() == null;
                             if(createprot)
