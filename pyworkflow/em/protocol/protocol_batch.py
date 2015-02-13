@@ -34,8 +34,17 @@ import os
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam, IntParam
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet
-from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair
+from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair, ParticlesTiltPair
 from pyworkflow.em.data import Mask
+
+from pyworkflow.em.data_tiltpairs import  TiltPair
+
+
+
+
+from pyworkflow.gui.plotter import Plotter
+
+
 
 
 
@@ -75,6 +84,7 @@ class ProtUserSubSet(BatchProtocol):
     def createSetStep(self):
         setObj = self.createSetObject()
         inputObj = self.inputObject.get()
+        print inputObj.getClass()
         other = self.other.get()
 
         if other and ',Volume' in other:
@@ -102,7 +112,10 @@ class ProtUserSubSet(BatchProtocol):
                 self._createSubSetOfCTF(inputObj)
 
         elif isinstance(inputObj, MicrographsTiltPair):
-            self._createSubSetFromMicrographsTiltPair(inputObj)
+            output = self._createSubSetFromMicrographsTiltPair(inputObj)
+
+        elif isinstance(inputObj, ParticlesTiltPair):
+            output = self._createSubSetFromParticlesTiltPair(inputObj)
 
         elif isinstance(inputObj, EMProtocol):
             otherid = self.other.get()
@@ -305,6 +318,27 @@ class ProtUserSubSet(BatchProtocol):
         self._defineOutputs(**outputDict)
         return output
 
+    def _createSubSetFromParticlesTiltPair(self, particlesTiltPair):
+        print 'create subset from particles tilt pair'
+        """ Create a subset of Micrographs Tilt Pair. """
+        output = ParticlesTiltPair(filename=self._getPath('particles_pairs.sqlite'))
+        print "self._dbName=%s" % self._dbName
+        modifiedSet = ParticlesTiltPair(filename=self._dbName, prefix=self._dbPrefix)
+
+        for particlePairI in modifiedSet:
+            untilted = particlePairI.getUntilted()
+            tilted = particlePairI.getTilted()
+            if particlePairI.isEnabled():
+
+                micPairO = ParticlesTiltPair()
+                micPairO.setUntilted(untilted)
+                micPairO.setTilted(tilted)
+                output.append(micPairO)
+        # Register outputs
+        outputDict = {'outputParticlesTiltPair': output}
+        self._defineOutputs(**outputDict)
+        return output
+
 
     def createSetObject(self):
         _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
@@ -392,4 +426,6 @@ class ProtCreateMask(BatchProtocol):
 
      def _methods(self):
          return self._summary()
+
+
 

@@ -62,11 +62,11 @@ SORT_BY = 'sortby'
 SAMPLINGRATE = 'sampling_rate'
 
 OBJCMDS = 'object_commands'
-OBJCMD_NMA_PLOTDIST = "'Plot distance profile'"
-OBJCMD_NMA_VMD = "'Display VMD animation'"
-OBJCMD_MOVIE_ALIGNPOLAR = "'Display Polar Presentation'"
-OBJCMD_MOVIE_ALIGNCARTESIAN = "'Display Cartesian Presentation'"
-OBJCMD_MOVIE_ALIGNPOLARCARTESIAN = "'Display Polar + Cartesian Presentations'"
+OBJCMD_NMA_PLOTDIST = "Plot distance profile"
+OBJCMD_NMA_VMD = "Display VMD animation"
+OBJCMD_MOVIE_ALIGNPOLAR = "Display Polar Presentation"
+OBJCMD_MOVIE_ALIGNCARTESIAN = "Display Cartesian Presentation"
+OBJCMD_MOVIE_ALIGNPOLARCARTESIAN = "Display Polar + Cartesian Presentations"
 
 GOTO = 'goto'
 ROWS = 'rows'
@@ -256,4 +256,14 @@ def runJavaIJapp(memory, appName, args, env={}):
 
     args = getJavaIJappArguments(memory, appName, args)
     print 'java %s'%args
-    subprocess.Popen('java ' + args, shell=True, env=env)
+    return subprocess.Popen('java ' + args, shell=True, env=env)
+
+def launchSupervisedPickerGUI(memory, micsFn, outputDir, mode, dbpath, protid, port):
+        app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
+        args = "--input %s --output %s --mode %s  --scipion %s \"%s\" %s"%(micsFn, outputDir, mode, dbpath, protid, port)
+        return runJavaIJapp("%dg" % memory, app, args)
+
+def launchTiltPairPickerGUI(memory, micsFn, outputDir, mode, dbpath, protid, port):
+        app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
+        args = "--input %s --output %s --mode %s  --scipion %s \"%s\" %s"%(micsFn, outputDir, mode, dbpath, protid, port)
+        return runJavaIJapp("%dg" % memory, app, args)

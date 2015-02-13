@@ -59,6 +59,8 @@ REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
 class Project(object):
     """This class will handle all information 
     related with a Project"""
+
+
     def __init__(self, path):
         """Create a project associated with a given path"""
         # To create a Project, a path is required
@@ -77,6 +79,7 @@ class Project(object):
         self._sourceGraph = None
         self.address = ''
         self.port = getFreePort()
+
         
     def getObjId(self):
         """ Return the unique id assigned to this project. """

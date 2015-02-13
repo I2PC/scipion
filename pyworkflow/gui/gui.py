@@ -30,7 +30,7 @@ settings and gui general functions
 import os
 import Tkinter as tk
 import tkFont
-
+import Queue
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
 from pyworkflow.utils.properties import Message, Color, Icon
@@ -277,6 +277,16 @@ class Window():
         self.root.bind("<Configure>", self._configure)
         self.master = masterWindow
         setCommonFonts(self)
+        self.queue = Queue.Queue(maxsize=0)
+
+
+
+    def process_queue(self):#called from main frame
+        if not self.queue.empty():
+            func = self.queue.get(block=False)
+            # executes graphic interface function
+            func()
+        self.root.after(1000, self.process_queue)
         
     def getRoot(self):
         return self.root
@@ -321,6 +331,7 @@ class Window():
                           refWindows=refw)
         self.root.deiconify()
         self.root.focus_set()
+        self.root.after(1000, self.process_queue)
         self.root.mainloop()
         
     def close(self, e=None):

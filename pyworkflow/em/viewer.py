@@ -158,10 +158,9 @@ class Classes3DView(ClassesView):
             
 class CoordinatesObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """
-    def __init__(self, path, outputdir, viewParams={}, **kwargs):
+    def __init__(self, project, path, outputdir, viewParams={}, **kwargs):
         DataView.__init__(self, path, **kwargs)
-        self.python = pw.PYTHON
-        self.script = pw.join('apps', 'pw_create_coords_subset.py')
+        self.project = project
         self.outputdir = outputdir
         
     def getShowJParams(self):

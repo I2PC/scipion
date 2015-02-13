@@ -157,8 +157,8 @@ class XmippViewer(Viewer):
             
         elif issubclass(cls, SetOfNormalModes):
             fn = obj.getFileName()
-            objCommands = '%s %s' % (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD)
-            self._views.append(ObjectView(self._project, obj.strId(), fn, self.protocol.strId(), viewParams={OBJCMDS: objCommands}, **args))
+            objCommands = "'%s' '%s'" % (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD)
+            self._views.append(ObjectView(self._project, self.protocol.strId(), fn, viewParams={OBJCMDS: objCommands}, **args))
 
         elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()
@@ -210,7 +210,7 @@ class XmippViewer(Viewer):
             else:
                 writeSetOfCoordinates(tmpDir, obj)
 
-            self._views.append(CoordinatesObjectView(fn, tmpDir))
+            self._views.append(CoordinatesObjectView(self._project, fn, tmpDir))
 
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
@@ -272,7 +272,7 @@ class XmippViewer(Viewer):
 #             writeSetOfCoordinates(tmpDir, obj.getUntilted()) 
 #             writeSetOfCoordinates(tmpDir, obj.getTilted()) 
             
-            scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getProject().getDbPath(), obj.strId())
+            scipion =  "%s \"%s\" %s" % (self.getProject().port, self.getProject().getDbPath(), obj.strId())
             app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
             args = " --input %(mdFn)s --output %(extraDir)s --mode readonly --scipion %(scipion)s"%locals()
         
@@ -353,11 +353,7 @@ class XmippViewer(Viewer):
                 writeSetOfMicrographs(micSet, micsfn)
                 
             posDir = getattr(obj.getCoords(), '_xmippMd').get()  # extra dir istead of md file for SetOfCoordinates
-            scipion = "%s %s \"%s\" %s" % (pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getProject().getDbPath(), obj.strId())
-            app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"# Launch the particle picking GUI
-            args = "--input %(micsfn)s --output %(posDir)s --mode review  --scipion %(scipion)s" % locals()
-            runJavaIJapp("2g", app, args)
-            # self._views.append(CoordinatesObjectView(fn, tmpDir, 'review', self._project.getName(), obj.strId()))
+            launchSupervisedPickerGUI("2g", micsfn, posDir, self.getProject().getDbPath(), obj.strId(), 'review', self.getProject().port)
 
         elif issubclass(cls, XmippProtParticlePickingPairs):
             tmpDir = self._getTmpPath(obj.getName()) 
@@ -368,20 +364,16 @@ class XmippViewer(Viewer):
                                         obj.outputCoordinatesTiltPair.getTilted().getMicrographs(), 
                                         mdFn) 
             extraDir = obj._getExtraPath()
-            scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getProject().getDbPath(), obj.strId())
-            app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
-            args = " --input %(mdFn)s --output %(extraDir)s --mode readonly --scipion %(scipion)s"%locals()
-        
-            runJavaIJapp("%dg" % obj.memory.get(), app, args)
+            launchTiltPairPickerGUI(obj.memory.get(), mdFn, extraDir, 'readonly', self.getProject().getDbPath(), obj.strId(), self.getProject().port)
 
         elif issubclass(cls, ProtMovieAlignment):
             outputMics = obj.outputMicrographs
             plotLabels = 'plotPolar._filename plotCart._filename'
             labels = plotLabels + ' _filename '
-            objCommands = '%s %s %s' % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
+            objCommands = "'%s' '%s' '%s'" % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
 
 
-            self._views.append(ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), obj.strId(), viewParams={MODE: MODE_MD,
+            self._views.append(ObjectView(self._project, self.protocol.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
                                                       ORDER: labels, VISIBLE: labels, RENDER: plotLabels, 'zoom': 50,
                                                       OBJCMDS: objCommands}))
 
