@@ -135,7 +135,6 @@ class ColumnsConfig():
                     if col.getName() in extra:
                         columnsName.append(col.getName())
                         columnsLabel.append(col.getLabel())
-                        print col.getName()
                 else:
                     columnsName.append(col.getName())
                     columnsLabel.append(col.getLabel())
