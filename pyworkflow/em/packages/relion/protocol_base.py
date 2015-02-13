@@ -699,14 +699,15 @@ class ProtRelionBase(EMProtocol):
         """ Return the .star file with the classes angular distribution
         for this iteration. If the file not exists, it will be written.
         """
+        data_star = self._getFileName('data', iter=it)
         data_angularDist = self._getFileName('angularDist_xmipp', iter=it)
         
-        if not exists(data_angularDist):
-            from convert import writeIterAngularDist
-            data_star = self._getFileName('data', iter=it)
-            writeIterAngularDist(self, data_star, data_angularDist, 
-                                 self.numberOfClasses.get(), self.PREFIXES)
- 
+        if exists(data_star):
+            if not exists(data_angularDist):
+                from convert import writeIterAngularDist
+                writeIterAngularDist(self, data_star, data_angularDist, 
+                                     self.numberOfClasses.get(), self.PREFIXES)
+
         return data_angularDist
     
     def _splitInCTFGroups(self, imgStar):
