@@ -187,12 +187,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                             getParticlePicker().saveData();
                         if(getParticlePicker().isScipionSave())
                         {
-                            
+                            int count = getParticlePicker().getParticlesCount();
+                            if(count == 0)
+                            {
+                                XmippDialog.showInfo(ParticlePickerJFrame.this, XmippMessage.getEmptyFieldMsg("coordinates"));
+                                return;
+                            }
                             HashMap<String, String> msgfields = new HashMap<String, String>();
                             boolean createprot = getParticlePicker().getProtId() == null;
                             if(createprot)
                                 msgfields.put("Run name:", "ProtUserCoordinates");
-                            int count = getParticlePicker().getParticlesCount();
+                            
                             String msg = String.format("<html>Are you sure you want to register a new set of Coordinates with <font color=red>%s</font> %s?", count, (count != 1)?"elements":"element");
                             InputFieldsMessageDialog dlg = new InputFieldsMessageDialog(ParticlePickerJFrame.this, "Question", msg);
                             
