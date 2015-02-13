@@ -137,8 +137,6 @@ class Project(object):
         Params:
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
         """
-        if isReadOnly():
-            raise Exception("Could not create new projects in READ-ONLY mode!!!")
         # Create project path if not exists
         makePath(self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
@@ -163,8 +161,7 @@ class Project(object):
     def _cleanData(self):
         """Clean all project data"""
         # Read only mode
-        if not isReadOnly():
-            cleanPath(*self.pathList)      
+        cleanPath(*self.pathList)      
                 
     def launchProtocol(self, protocol, wait=False):
         """ In this function the action of launching a protocol
@@ -234,14 +231,13 @@ class Project(object):
             
             except Exception, ex:
                 print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
-                if tries == 0: # 3 tries have been failed
-                    import traceback
+                if tries == 3: # 3 tries have been failed
                     traceback.print_exc()
                     # If any problem happens, the protocol will be marked wih a status fail
                     protocol.setFailed(str(ex))
                     self.mapper.store(protocol)
                 else:
-                    time.sleep(1)
+                    time.sleep(0.5)
                     self._updateProtocol(protocol, tries+1)
         
     def stopProtocol(self, protocol):

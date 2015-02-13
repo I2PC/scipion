@@ -195,5 +195,7 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         plotter.plotMatrix(_matrix,cmap='Greens'
                         , xticksLablesMajor=ticksLablesMajorX,rotationX=0
                         , yticksLablesMajor=ticksLablesMajorY)
-        return views.append(plotter)
+        views.append(plotter)
+        return views
+        #return views.append(plotter)
 

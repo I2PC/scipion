@@ -75,6 +75,10 @@ class ProtRelionBase(EMProtocol):
         self._createIterTemplates()
         
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
+        if not self.doContinue:
+            self.continueRun.set(None)
+        else:
+            self.referenceVolume.set(None)
     
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -124,10 +128,6 @@ class ProtRelionBase(EMProtocol):
                       help='If you set to *Yes*, you should select a previous'
                       'run of type *%s* class and most of the input parameters'
                       'will be taken from it.' % self.getClassName())
-        form.addParam('verboseLevel', EnumParam, default=1,
-                      choices=['0 low','1 high'],
-                      label='Verbose Level',
-                      help='the higher the more verbose output')
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       condition='not doContinue',
                       important=True,
@@ -183,26 +183,13 @@ class ProtRelionBase(EMProtocol):
                       help='It is recommended to strongly low-pass filter your initial reference map. '
                            'If it has not yet been low-pass filtered, it may be done internally using this option. ' 
                            'If set to 0, no low-pass filter will be applied to the initial reference(s).')
+        if not self.IS_CLASSIFY:
+            group.addParam('resolJoinHalves', FloatParam, default=40,
+                          label='Resolution join halves (A)', condition="not doContinue",
+                          help='Resolution (in Angstrom) up to which the two random half-reconstructions'
+                               ' will not be independent to prevent diverging orientations.') 
+
         
-        form.addParam('paddingFactor', FloatParam, default=3,
-                      condition='isClassify', expertLevel=LEVEL_ADVANCED,
-                      label='Padding factor',
-                      help='The padding factor used for oversampling of the Fourier transform. The default is 3x padding, '
-                           'which is combined with nearest-neighbour interpolation. However, for large 3D maps, storing the '
-                           'entire 3x oversampled Fourier transform (as doubles) plus the real-space padded map in memory may ' 
-                           'be too much. Therefore, for large maps or in cases of many 3D references, in order to fit into memory ' 
-                           'one may need to use a smaller padding factor: e.g. 2, or (not recommended) 1. For padding factors smaller '
-                           'than 3, (slower) linear interpolation will be used.\n'
-                           'The approximate amount of memory (in Gb) required to store K maps of (size x size x size) voxels and a' 
-                           'padding factor (pad) may be calculated as: K*2*8*(size*pad)^3/1024/1024/1024\n' 
-                           '<Note>: also consider the use of threads if memory is an issue.')
-        
-        extraDefault = '' if self.IS_CLASSIFY else '--low_resol_join_halves 40 '
-        form.addParam('extraParams', StringParam, default=extraDefault,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Additional parameters',
-                      help='')
-               
         form.addSection(label='CTF')
         form.addParam('doCTF', BooleanParam, default=True,
                       label='Do CTF-amplitude correction?',
@@ -226,10 +213,6 @@ class ProtRelionBase(EMProtocol):
         form.addParam('doCtfManualGroups', BooleanParam, default=False,
                       label='Do manual grouping ctfs?',
                       help='Set this to Yes the CTFs will grouping manually.')
-        #, defocusRange=1000, numParticles=1
-        # form.addParam('numberOfGroups', IntParam, default=200,
-        #               label='Number of ctf groups', condition='doCtfManualGroups',
-        #               help='Number of ctf groups that will be create')
         form.addParam('defocusRange', FloatParam, default=1000,
                       label='defocus range for group creation (in Angstroms)', condition='doCtfManualGroups',
                       help='Particles will be grouped by defocus.'
@@ -303,7 +286,7 @@ class ProtRelionBase(EMProtocol):
                            'corresponding pixels in the reconstructed map are set to the average value of '
                            'these pixels. Thereby, for example, the higher density inside the virion may be '
                            'set to a constant. Note that this second mask should have one-values inside the '
-                           'virion and zero-values in the capsid and the solvent areas.') 
+                           'virion and zero-values in the capsid and the solvent areas.')
         
         # Change the Sampling section name depending if classify or refine 3D
         if self.IS_CLASSIFY:
@@ -369,7 +352,7 @@ class ProtRelionBase(EMProtocol):
                               help='In the automated procedure to increase the angular samplings,\n'
                                    'local angular searches of -6/+6 times the sampling rate will\n'
                                    'be used from this angular sampling rate onwards.')
-            
+                
                 form.addSection("Movies")
                 form.addParam('realignMovieFrames', BooleanParam, default=False,
                               label='Realign movie frames?',
@@ -395,6 +378,33 @@ class ProtRelionBase(EMProtocol):
                               label='Stddev on the rotations (deg)',
                               help='A Gaussian prior with the specified standard deviation will be centered at the rotations determined for the corresponding particle where all movie-frames were averaged. For ribosomes, we used a value of 1 degree')
 
+        form.addSection('Additional')
+        form.addParam('memoryPreThreads', IntParam, default=2,
+                      label='Memory per Threads',
+                      help='Computer memory in Gigabytes that is avaliable for each thread. This will only'
+                           'affect some of the warnings about required computer memory.')
+        form.addParam('dontCombine', BooleanParam, default=False,
+                      label='Dont combine weights via disc?',
+                      help='Option *--dont_combine_weights_via_disc* in Relion.'
+                           'Send the large arrays of summed weights through the MPI network,'
+                           ' instead of writing large files to disc.')
+        form.addParam('verboseLevel', EnumParam, default=1,
+                      choices=['0 low','1 high'],
+                      label='Verbose Level',
+                      help='the higher the more verbose output')
+        form.addParam('paddingFactor', FloatParam, default=2,
+                      condition='isClassify',
+                      label='Padding factor',
+                      help='Option *--pad * in Relion'
+                           'Oversampling factor for the Fourier transforms of the references.')
+        
+        
+        extraDefault = '' if self.IS_CLASSIFY else ''
+        form.addParam('extraParams', StringParam, default=extraDefault,
+                      label='Additional parameters',
+                      help='')
+
+        
         form.addParallelSection(threads=1, mpi=3)
     
     def addSymmetry(self, container):
@@ -437,6 +447,8 @@ class ProtRelionBase(EMProtocol):
                     })
         self._setMaskArgs(args)
         self._setCTFArgs(args)
+        args['--offset_range'] = self.offsetSearchRangePix.get()
+        args['--offset_step']  = self.offsetSearchStepPix.get() * 2
         
         if self.IS_CLASSIFY:
             if self.maskZero == MASK_FILL_ZERO:
@@ -449,22 +461,19 @@ class ProtRelionBase(EMProtocol):
                 args['--firstiter_cc']=''
             args['--ini_high'] = self.initialLowPassFilterA.get()
             args['--sym'] = self.symmetryGroup.get()
-            
+        
+        args['--memory_per_thread'] = self.memoryPreThreads.get()
         self._setBasicArgs(args)
         
     def _setContinueArgs(self, args):
         continueRun = self.continueRun.get()
         continueRun._initialize()
         
-        continueIter = self._getContinueIter()
-        
         if self.IS_CLASSIFY:
-            itersToRun = continueIter + self.numberOfIterations.get()
-            self.numberOfIterations.set(itersToRun)
             self.copyAttributes(continueRun, 'regularisationParamT')
         self._setBasicArgs(args)
         
-        args['--continue'] = continueRun._getFileName('optimiser', iter=continueIter)
+        args['--continue'] = continueRun._getFileName('optimiser', iter=self._getContinueIter())
     
     def _setBasicArgs(self, args):
         """ Return a dictionary with basic arguments. """
@@ -476,13 +485,14 @@ class ProtRelionBase(EMProtocol):
                     })
 
         args['--verb'] = self.verboseLevel.get()
+        if self.dontCombine:
+            args['--dont_combine_weights_via_disc'] = ''
         if self.IS_CLASSIFY:
             args['--tau2_fudge'] = self.regularisationParamT.get()
-            args['--iter'] = self.numberOfIterations.get()
+            args['--iter'] = self._getnumberOfIters()
             
         self._setSamplingArgs(args)
-        args['--offset_range'] = self.offsetSearchRangePix.get()
-        args['--offset_step']  = self.offsetSearchStepPix.get() * 2
+        
                         
     def _setCTFArgs(self, args):        
         # CTF stuff
@@ -505,8 +515,7 @@ class ProtRelionBase(EMProtocol):
             
         if self.solventMask.hasValue():
             args['--solvent_mask2'] = self.solventMask.get().getFileName() #FIXME: CHANGE BY LOCATION
- 
-   
+    
     #--------------------------- STEPS functions --------------------------------------------       
     def convertInputStep(self, particlesId):
         """ Create the input file in STAR format as expected by Relion.
@@ -530,10 +539,6 @@ class ProtRelionBase(EMProtocol):
         if not self.IS_CLASSIFY:
             if self.realignMovieFrames:
                 movieParticleSet = self.inputMovieParticles.get()
-                
-#                 parentProtocol = self.getMapper().getParent(movieParticleSet)
-#                 print "Proj", parentProtocol.getProject()
-                
                 
                 auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
                 auxMovieParticles.copyInfo(movieParticleSet)
@@ -607,7 +612,7 @@ class ProtRelionBase(EMProtocol):
         self._initialize()
         iterMsg = 'Iteration %d' % self._lastIter()
         if self.hasAttribute('numberOfIterations'):
-            iterMsg += '/%d' % self.numberOfIterations.get()
+            iterMsg += '/%d' % self._getnumberOfIters()
         summary = [iterMsg]
         
         if self.doContinue:
@@ -641,10 +646,9 @@ class ProtRelionBase(EMProtocol):
         return program
     
     def _getInputParticles(self):
-        if self.doContinue:
-            return self.continueRun.get().inputParticles.get()
-        else:
-            return self.inputParticles.get()
+        if self.doContinue and not self.inputParticles:
+            self.inputParticles.set(self.continueRun.get().inputParticles.get())
+        return self.inputParticles.get()
     
     def _getIterNumber(self, index):
         """ Return the list of iteration files, give the iterTemplate. """
@@ -695,14 +699,15 @@ class ProtRelionBase(EMProtocol):
         """ Return the .star file with the classes angular distribution
         for this iteration. If the file not exists, it will be written.
         """
+        data_star = self._getFileName('data', iter=it)
         data_angularDist = self._getFileName('angularDist_xmipp', iter=it)
         
-        if not exists(data_angularDist):
-            from convert import writeIterAngularDist
-            data_star = self._getFileName('data', iter=it)
-            writeIterAngularDist(self, data_star, data_angularDist, 
-                                 self.numberOfClasses.get(), self.PREFIXES)
- 
+        if exists(data_star):
+            if not exists(data_angularDist):
+                from convert import writeIterAngularDist
+                writeIterAngularDist(self, data_star, data_angularDist, 
+                                     self.numberOfClasses.get(), self.PREFIXES)
+
         return data_angularDist
     
     def _splitInCTFGroups(self, imgStar):
@@ -714,12 +719,17 @@ class ProtRelionBase(EMProtocol):
     
     def _getContinueIter(self):
         continueRun = self.continueRun.get()
-        
-        if self.continueIter.get() == 'last':
-            continueIter = continueRun._lastIter()
+        if self.doContinue:
+            if self.continueIter.get() == 'last':
+                continueIter = continueRun._lastIter()
+            else:
+                continueIter = int(self.continueIter.get())
         else:
-            continueIter = int(self.continueIter.get())
+            continueIter = 0
         return continueIter
+    
+    def _getnumberOfIters(self):
+        return self._getContinueIter() + self.numberOfIterations.get()
     
     def _postprocessImageRow(self, img, imgRow):
 #         from convert import locationToRelion

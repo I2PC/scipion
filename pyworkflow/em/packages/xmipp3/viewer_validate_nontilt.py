@@ -80,7 +80,8 @@ class XmippValidateNonTiltViewer(ProtocolViewer):
         
         if vol is None: # Wrong volume selection
             return [self.errorMessage("Invalid volume id *%d*" % volId)]
-        
+
+        pFn = vol.clusterMd.get()
         md = MetaData(vol.clusterMd.get())
         return [self._viewPlot("Cluster tendency parameter for each image", IMAGE_INDEX, P_INDEX, 
                        md, MDL_IMAGE_IDX, MDL_WEIGHT, color='b'),
