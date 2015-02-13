@@ -80,12 +80,14 @@ def launch_viewer(request):
             
             urls = [viewToUrl(request, view) for view in views]
         else:
-            viewer = viewers[0](project=project)
+            viewerClass = viewers[0]
             # Lets assume if there is a viewer for the protocol
             # it will be a ProtocolViewer with a Form
-            if isinstance(viewer, ProtocolViewer):
+            if issubclass(viewerClass, ProtocolViewer):
+                viewer = viewerClass(project=project, protocol=obj)
                 urls = [viewerForm(project, obj, viewer)]
             else:
+                viewer = viewerClass(project=project)
                 views = viewer._visualize(obj)
                 urls = [viewToUrl(request, v) for v in views]
     else:
