@@ -30,8 +30,6 @@ mainly for project GUI
 
 import sys
 import os
-from os.path import join, exists
-import time
 from ConfigParser import ConfigParser
 import json
 
@@ -78,12 +76,11 @@ class SettingList(List):
 
 
 class ProjectSettings(OrderedObject):
-    """ This class will store settings related to a project. """
+    """ Store settings related to a project. """
     def __init__(self, confs={}, **kwargs):
         OrderedObject.__init__(self, **kwargs)
         self.config = ProjectConfig()
         self.hostList = SettingList() # List to store different hosts configurations
-        self.menuList = SettingList() # Store different menus
         self.protMenuList = SettingList() # Store different protocol configurations
         self.nodeList = NodeConfigList() # Store graph nodes positions and other info
         self.mapper = None # This should be set when load, or write
@@ -96,7 +93,6 @@ class ProjectSettings(OrderedObject):
         confs can contains the files for configuration .conf files. 
         """
         # Load configuration
-        self.addMenus(confs.get('menus', None))
         self.addProtocols(confs.get('protocols', None))
         self.addHosts(confs.get('hosts', None))
 
@@ -143,17 +139,8 @@ class ProjectSettings(OrderedObject):
         if commit:
             self.commit()
 
-    def addMenu(self, menuConfig):
-        self.menuList.append(menuConfig)
-
     def getConfig(self):
         return self.config
-
-    def getCurrentMenu(self):
-        """ Now by default return element at index 0,
-        later should be stored the current index.
-        """
-        return self.menuList.getItem()
 
     def getCurrentProtocolMenu(self):
         return self.protMenuList.getItem()
@@ -182,7 +169,7 @@ class ProjectSettings(OrderedObject):
         
     def addProtocols(self, protocolsConf=None):
         """ Read the protocol configuration from a .conf
-        file similar of the one in ~/.config/scipion/menu.conf,
+        file similar to the one in ~/.config/scipion/protocols.conf,
         which is the default one when no file is passed.
         """
     
@@ -197,11 +184,11 @@ class ProjectSettings(OrderedObject):
         # Read menus from users' config file.
         cp = ConfigParser()
         cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-        SCIPION_MENU = protocolsConf or os.environ['SCIPION_MENU']
+        SCIPION_PROTOCOLS = protocolsConf or os.environ['SCIPION_PROTOCOLS']
         # Also mentioned in /scipion . Maybe we could do better.
     
         try:
-            assert cp.read(SCIPION_MENU) != [], 'Missing file %s' % SCIPION_MENU
+            assert cp.read(SCIPION_PROTOCOLS) != [], 'Missing file %s' % SCIPION_PROTOCOLS
     
             # Populate the protocol menu from the config file.
             for menuName in cp.options('PROTOCOLS'):
@@ -212,7 +199,7 @@ class ProjectSettings(OrderedObject):
                 self.addProtocolMenu(menu)
         except Exception as e:
             sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                     'To solve it, delete %s and run again.' % (e, SCIPION_MENU))
+                     'To solve it, delete %s and run again.' % (e, SCIPION_PROTOCOLS))
 
     def addHosts(self, hostConf=None):
         # Read from users' config file.
@@ -255,36 +242,6 @@ class ProjectSettings(OrderedObject):
             sys.exit('Failed to read settings. The reported error was:\n  %s\n'
                      'To solve it, delete %s and run again.' % (e, HOSTS_CONFIG))
 
-
-    def addMenus(self, menusConf=None):
-        """ Add the menu to project windows. """
-        #TODO: read this from a .conf file
-        menu = MenuConfig()
-        projMenu = menu.addSubMenu('Project')
-        projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
-        projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
-        projMenu.addSubMenu('', '') # add separator
-        projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
-        projMenu.addSubMenu('Export tree graph', 'export_tree')
-        projMenu.addSubMenu('', '') # add separator
-        projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
-
-        helpMenu = menu.addSubMenu('Help')
-        helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
-        helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
-    
-        #writeConfig(menu, 'menu_default.xml')
-        self.addMenu(menu)
-    
-        # Write another test menu
-        menu = MenuConfig()
-        m1 = menu.addSubMenu('Test')
-        m1.addSubMenu('KK', icon='tree.gif')
-        m1.addSubMenu('PP', icon='folderopen.gif')
-    
-        #writeConfig(menu, 'menu_test.xml')
-        self.addMenu(menu)
-        
     def getNodes(self):
         return self.nodeList
     
