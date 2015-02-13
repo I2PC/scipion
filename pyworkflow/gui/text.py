@@ -66,7 +66,7 @@ elif os.name == 'posix':  # linux systems and so on
                 return
             except:
                 pass
-        elif x_open:  # standard way to open
+        if x_open:  # standard way to open
             proc = subprocess.Popen([x_open, path])
             time.sleep(1)
             if proc.poll() in [None, 0]:
