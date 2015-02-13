@@ -26,7 +26,8 @@
 <body>
 
 	<div data-layout='{"type": "flexGrid", "columns": 1, "hgap": 1, "vgap": 1}' class="layout-outer">
-		{% block content_header %}	
+		{% block header %}	
+			{% include "header.html" %}
 		{% endblock %}
 		
 		<aside>

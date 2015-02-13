@@ -26,7 +26,7 @@
 
 import json
 from django.http import HttpResponse
-from pyworkflow.viewer import WEB_DJANGO, MessageView, ProtocolViewer, TextView
+from pyworkflow.viewer import WEB_DJANGO, MessageView, ProtocolViewer, TextView, CommandView
 from pyworkflow.web.app.views_util import getImageUrl
 from views_util import savePlot
 from pyworkflow.gui.plotter import Plotter
@@ -133,7 +133,7 @@ def viewToUrl(request, view):
     # MESSAGE
     elif isinstance(view, MessageView):
         url = 'error::' + view.getMessage()
-    
+
     return url
 
 def getShowjWebURL(view):
@@ -159,9 +159,15 @@ def viewer_element(request):
     updateProtocolParams(request, protocolViewer, project)
     
     views = protocolViewer._getVisualizeDict()[viewerParam](viewerParam)
-    
-    urls = [viewToUrl(request, v) for v in views]
-    
+
+    urls = []
+    for v in views:
+         # COMMAND VIEW
+        if isinstance(v, CommandView):
+            v.show()
+        else:
+            urls.append(viewToUrl(request, v))
+
     jsonStr = json.dumps(urls, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
     
