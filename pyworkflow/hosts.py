@@ -264,7 +264,7 @@ def loadHosts(hostsConfigFile):
                 
             hosts[hostName] = host
 
-            return hosts
+        return hosts
     except Exception as e:
         sys.exit('Failed to read settings. The reported error was:\n  %s\n'
                  'To solve it, delete %s and run again.' % (e, hostsConfigFile))    

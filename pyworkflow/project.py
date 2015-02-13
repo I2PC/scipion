@@ -23,7 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.utils import startDebugger
+from pyworkflow.utils.utils import startDebugger, prettyDict
 """
 This modules handles the Project management
 """
@@ -142,8 +142,6 @@ class Project(object):
             settings: where to read the settings.
                 If None, use the settings.sqlite in project folder.
         """
-        print "Project.load....."
-             
         if not exists(self.path):
             raise Exception("Cannot load project, path doesn't exist: %s" % self.path)
         
@@ -189,6 +187,9 @@ class Project(object):
             
         self._hosts = loadHosts(hostsFile)
         
+    def getHostNames(self):
+        """ Return the list of host name in the project. """
+        return self._hosts.keys()
         
     def create(self, confs={}, runsView=1, readOnly=False, hosts=None):
         """Prepare all required paths and files to create a new project.
@@ -211,10 +212,7 @@ class Project(object):
         self.settings.write(self.settingsPath)
         # Create other paths inside project
         for p in self.pathList:
-            if '.' in p:
-                makeFilePath(p)
-            else:
-                makePath(p)
+            makePath(p)
                 
         self._loadHosts(hosts)
         
@@ -257,10 +255,6 @@ class Project(object):
         self.mapper.commit()
         
     def _updateProtocol(self, protocol, tries=0):
-        # Read only mode
-        #if os.environ.get('SCIPION_DEBUG', False):
-        #    from rpdb2 import start_embedded_debugger
-        #    start_embedded_debugger('a')
         
         if not self.isReadOnly():
             try:
