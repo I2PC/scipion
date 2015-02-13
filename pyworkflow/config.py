@@ -33,9 +33,7 @@ import os
 from ConfigParser import ConfigParser
 import json
 
-import pyworkflow as pw
 from pyworkflow.object import Boolean, Integer, String, List, OrderedObject, CsvList
-from pyworkflow.hosts import HostConfig, QueueConfig, QueueSystemConfig # we need this to be retrieved by mapper
 from pyworkflow.mapper import SqliteMapper
 
 PATH = os.path.dirname(__file__)
@@ -80,7 +78,6 @@ class ProjectSettings(OrderedObject):
     def __init__(self, confs={}, **kwargs):
         OrderedObject.__init__(self, **kwargs)
         self.config = ProjectConfig()
-        self.hostList = SettingList() # List to store different hosts configurations
         self.protMenuList = SettingList() # Store different protocol configurations
         self.nodeList = NodeConfigList() # Store graph nodes positions and other info
         self.mapper = None # This should be set when load, or write
@@ -94,27 +91,11 @@ class ProjectSettings(OrderedObject):
         """
         # Load configuration
         self.addProtocols(confs.get('protocols', None))
-        self.addHosts(confs.get('hosts', None))
 
     def commit(self):
         """ Commit changes made. """
         self.mapper.commit()
 
-    def addHost(self, hostConfig):
-        self.hostList.append(hostConfig)
-
-    def getHosts(self):
-        return self.hostList
-
-    def getHostById(self, hostId):
-        return self.mapper.selectById(hostId)
-
-    def getHostByLabel(self, hostLabel):
-        for host in self.hostList:
-            if host.label == hostLabel:
-                return host
-        return None
-    
     def getRunsView(self):
         return self.runsView.get()
     
@@ -126,18 +107,6 @@ class ProjectSettings(OrderedObject):
     
     def setReadOnly(self, value):
         self.readOnly.set(value)
-
-    def deleteHost(self, host, commit=False):
-        """ Delete a host of project settings.
-        params:
-            hostId: The host id to delete.
-        """
-        if not host in self.hostList:
-            raise Exception('Deleting host not from host list.')
-        self.hostList.remove(host)
-        self.mapper.delete(host)
-        if commit:
-            self.commit()
 
     def getConfig(self):
         return self.config
@@ -201,47 +170,6 @@ class ProjectSettings(OrderedObject):
             sys.exit('Failed to read settings. The reported error was:\n  %s\n'
                      'To solve it, delete %s and run again.' % (e, SCIPION_PROTOCOLS))
 
-    def addHosts(self, hostConf=None):
-        # Read from users' config file.
-        cp = ConfigParser()
-        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-        HOSTS_CONFIG = hostConf or os.environ['SCIPION_HOSTS']
-
-        try:
-            assert cp.read(HOSTS_CONFIG) != [], 'Missing file %s' % HOSTS_CONFIG
-
-            for hostName in cp.sections():
-                host = HostConfig()
-                host.label.set(hostName)
-                host.hostName.set(hostName)
-                host.hostPath.set(pw.SCIPION_USER_DATA)
-
-                # Helper functions (to write less)
-                def get(var): return cp.get(hostName, var).replace('%_(', '%(')
-                def isOn(var): return str(var).lower() in ['true', 'yes', '1']
-
-                host.mpiCommand.set(get('PARALLEL_COMMAND'))
-                host.queueSystem = QueueSystemConfig()
-                host.queueSystem.name.set(get('NAME'))
-                host.queueSystem.mandatory.set(isOn(get('MANDATORY')))
-                host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
-                host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
-                host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
-                host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
-
-                host.queueSystem.queues = List()
-                for qName, values in json.loads(get('QUEUES')).iteritems():
-                    queue = QueueConfig()
-                    queue.maxCores.set(values['MAX_CORES'])
-                    queue.allowMPI.set(isOn(values['ALLOW_MPI']))
-                    queue.allowThreads.set(isOn(values['ALLOW_THREADS']))
-                    host.queueSystem.queues.append(queue)
-
-                self.addHost(host)
-        except Exception as e:
-            sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                     'To solve it, delete %s and run again.' % (e, HOSTS_CONFIG))
-
     def getNodes(self):
         return self.nodeList
     
@@ -250,8 +178,7 @@ class ProjectSettings(OrderedObject):
     
     def addNode(self, nodeId, **kwargs):
         return self.nodeList.addNode(nodeId, **kwargs)
-
-
+    
 
 class ProjectConfig(OrderedObject):
     """A simple base class to store ordered parameters"""
