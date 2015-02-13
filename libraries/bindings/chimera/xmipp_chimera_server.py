@@ -51,13 +51,20 @@ class ChimeraServer:
                         print data
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
+                        #runCommand("volume #0 step 1")
+                        
+                    elif msg == 'voxelSize':
+                        voxelSize = self.remote_conn.recv()
+                        cmd = "volume #0 voxelSize %s"%voxelSize
+                        runCommand(cmd)
                         runCommand("focus")
-                    if msg == 'draw_angular_distribution':
+                    
+                    elif msg == 'draw_angular_distribution':
                         angulardist = self.remote_conn.recv()
                         for command in angulardist:
                             runCommand(command)
                     
-                    if msg == 'end':    
+                    elif msg == 'end':    
                         break
                     else:
                         sleep(0.01)
@@ -79,7 +86,7 @@ class ChimeraServer:
             
             
     def onAppQuit(self, trigger, extra, userdata):
-
+        print 'sended server exit'
         self.remote_conn.send('exit_server')
         self.listener.close()
         
