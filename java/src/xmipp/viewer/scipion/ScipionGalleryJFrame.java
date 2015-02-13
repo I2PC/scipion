@@ -5,7 +5,6 @@
  */
 package xmipp.viewer.scipion;
 
-import xmipp.ij.commons.SocketClient;
 import xmipp.ij.commons.InputFieldsMessageDialog;
 import xmipp.utils.ScipionParams;
 import java.awt.Color;

@@ -33,7 +33,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -60,7 +59,6 @@ import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.scipion.ScipionGalleryData;
 import xmipp.viewer.scipion.ScipionGalleryJFrame;
-import xmipp.ij.commons.SocketClient;
 
 public class PlotJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;

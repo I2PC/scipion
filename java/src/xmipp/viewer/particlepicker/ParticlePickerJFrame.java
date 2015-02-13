@@ -77,7 +77,6 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.ij.commons.InputFieldsMessageDialog;
-import xmipp.ij.commons.SocketClient;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {

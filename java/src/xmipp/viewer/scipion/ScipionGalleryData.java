@@ -5,7 +5,6 @@
  */
 package xmipp.viewer.scipion;
 
-import xmipp.ij.commons.SocketClient;
 import xmipp.utils.ScipionParams;
 import java.io.File;
 import java.sql.SQLException;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.ij.commons.Geometry;
-import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
