@@ -75,6 +75,14 @@ tk = env.AddLibrary(
     deps=[tcl],
     clean=[Dir('#software/tmp/tk8.6.1').abspath])
 
+tk_wish = env.Command(
+    'software/bin/wish',
+    'software/bin/wish8.6',
+    Action('ln -v -s wish8.6 wish', 'Linking wish8.6 to wish in software/bin',
+           chdir='software/bin'))
+Default(tk_wish)
+# Special case: tk does not make the link automatically, go figure.
+
 zlib = env.AddLibrary(
     'zlib',
     tar='zlib-1.2.8.tgz',
