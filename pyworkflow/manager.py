@@ -83,7 +83,7 @@ class Manager(object):
         """
         project = Project(self.getProjectPath(projectName))
         project.create(runsView=runsView, 
-                       hostConf=hostsConf, 
+                       hostsConf=hostsConf, 
                        protocolsConf=protocolsConf)
         return project
     
