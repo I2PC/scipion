@@ -97,6 +97,7 @@ mainUrls = ['',
     url(r'^getPath/', 'app.views_management.getPath'),
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     url(r'^get_file/$', 'app.views_util.get_file'),
+    url(r'^get_image_dim/$', 'app.views_util.get_image_dim'),
     
     #TESTING
 #    url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web

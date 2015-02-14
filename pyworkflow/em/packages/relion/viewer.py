@@ -249,10 +249,10 @@ Examples:
         
     def _formatFreq(self, value, pos):
         """ Format function for Matplotlib formatter. """
-        inv = 999
+        inv = 999.
         if value:
-            inv = int(1/value)
-        return "1/%d" % inv
+            inv = 1/value
+        return "1/%0.2f" % inv
 
     def _getGridSize(self, n=None):
         """ Figure out the layout of the plots given the number of references. """

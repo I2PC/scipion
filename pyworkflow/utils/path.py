@@ -280,6 +280,8 @@ def renderLine(line, add, lineNo=1, numberLines=True):
 
         add(line[pos:start], attribute)
         end = line.find('m', start+2)
+        if end < 0:  # an escape code interrupted by newline... weird
+            break
         code = line[start+2:end]
 
         # See what attribute to use from now on, and update pos

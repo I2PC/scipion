@@ -107,7 +107,6 @@ class XmippViewer(Viewer):
             
     def _visualize(self, obj, **args):
         cls = type(obj)
-        
         def _getMicrographDir(mic):
             """ Return an unique dir name for results of the micrograph. """
             return obj._getExtraPath(removeBaseExt(mic.getFileName()))        
@@ -149,7 +148,7 @@ class XmippViewer(Viewer):
 
         if issubclass(cls, Volume):
             fn = getImageLocation(obj)
-            self._views.append(DataView(fn, viewParams={RENDER: 'image'}))
+            self._views.append(DataView(fn, viewParams={RENDER: 'image', SAMPLINGRATE: obj.getSamplingRate()}))
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
@@ -376,12 +375,12 @@ class XmippViewer(Viewer):
             runJavaIJapp("%dg" % obj.memory.get(), app, args)
         
         elif issubclass(cls, ProtMovieAlignment):
-            outputMics = self.protocol.outputMicrographs
+            outputMics = obj.outputMicrographs
             plotLabels = 'plotPolar._filename plotCart._filename'
             labels = plotLabels + ' _filename '
             objCommands = '%s %s %s' % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
             self._views.append(ObjectView(self._project.getName(), outputMics.strId(), outputMics.getFileName(), 
-                                          self.protocol.strId(), 
+                                          obj.strId(), 
                                           viewParams={MODE: MODE_MD,
                                                       ORDER: labels, VISIBLE: labels, RENDER: plotLabels, 'zoom': 50,
                                                       OBJCMDS: objCommands}))
