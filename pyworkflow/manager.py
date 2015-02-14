@@ -26,14 +26,13 @@
 """
 This modules handles the System management
 """
+
 import os
-from os.path import abspath, join, basename
 
 import pyworkflow as pw
+import pyworkflow.utils as pwutils
 from project import Project
-from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils.path import cleanPath, makePath, getHomePath, missingPaths, copyFile
-from pyworkflow.hosts import HostMapper
+
 
 
 class ProjectInfo(object):
@@ -59,14 +58,14 @@ class Manager(object):
         
     def getProjectPath(self, projectName):
         """Return the project path given the name"""
-        return join(pw.PROJECTS, projectName)
+        return os.path.join(pw.PROJECTS, projectName)
         
     def listProjects(self, sortByDate=True):
         """Return a list with all existing projects
         And some other project info
         If sortByData is True, recently modified projects will be first"""
         projList = []
-        makePath(pw.PROJECTS)
+        pwutils.path.makePath(pw.PROJECTS)
         for f in os.listdir(pw.PROJECTS):
             p = self.getProjectPath(f)
             if os.path.isdir(p):
@@ -77,23 +76,25 @@ class Manager(object):
             projList.sort(key=lambda k: k.mTime, reverse=True)
         return projList
     
-    def createProject(self, projectName, confs={}, runsView=0):
+    def createProject(self, projectName, runsView=1, hostsConf=None, protocolsConf=None):
         """Create a new project.
         confs dict can contains customs .conf files 
         for: menus, protocols, or hosts
         """
         project = Project(self.getProjectPath(projectName))
-        project.create(confs, runsView)
+        project.create(runsView=runsView, 
+                       hostConf=hostsConf, 
+                       protocolsConf=protocolsConf)
         return project
     
     def loadProject(self, projId):
         """ Retrieve a project object, given its id. """
-        proj = Project(self.getProjectPath(projId))
-        proj.load()
-        return proj
+        project = Project(self.getProjectPath(projId))
+        project.load()
+        return project
 
     def deleteProject(self, projectName):
-        cleanPath(self.getProjectPath(projectName))
+        pwutils.path.cleanPath(self.getProjectPath(projectName))
 
     def renameProject(self, oldName, newName):
         os.rename(self.getProjectPath(oldName), self.getProjectPath(newName))
