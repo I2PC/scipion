@@ -233,6 +233,7 @@ class Project(object):
             viewKey = currentView
         else:
             viewKey = self._protocolViews.keys()[0]
+            self.settings.setProtocolView(viewKey)
             print "PROJECT: Warning, protocol view '%s' not found." % currentView
             print "         Using '%s' instead."  % viewKey
         
