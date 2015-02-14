@@ -260,6 +260,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     if (optimizeAngles)
     	steps(6)=steps(7)=steps(8)=1.;
     powellOptimizer(p, 1, 9, &L1cost, this, 0.01, cost, iter, steps, false);
+    if (cost>1e30)
+    	rowOut.setValue(MDL_ENABLED,-1);
 
 	I.read(fnImg);
     A(0,2)=p(2);
