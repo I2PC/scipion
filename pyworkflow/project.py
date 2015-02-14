@@ -293,7 +293,7 @@ class Project(object):
         pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
         
         # Launch the protocol, the jobId should be set after this call
-        pwprot.launch.launch(protocol, wait)
+        pwprot.launch(protocol, wait)
         
         # Commit changes
         if wait: # This is only useful for launching tests...
@@ -343,7 +343,7 @@ class Project(object):
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
         try:
-            pwprot.launch.stop(protocol)
+            pwprot.stop(protocol)
         except Exception:
             raise
         finally:
