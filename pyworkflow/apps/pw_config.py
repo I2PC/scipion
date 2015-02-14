@@ -28,11 +28,12 @@ Update project settings using the current settings from
 ProjectSettings().loadConfig().
 """
 
+import os
 import sys
-from os.path import join
 
+import pyworkflow as pw
 from pyworkflow.utils.path import copyFile, cleanPath
-from pyworkflow.config import ProjectSettings, pw
+from pyworkflow.config import ProjectSettings
 from pyworkflow.manager import Manager
 
 
@@ -46,7 +47,7 @@ def updateSettings():
     # Update the settings in all existing projects, by copying the sqlite file.
     manager = Manager()
     for p in manager.listProjects():
-        fpath = join(manager.getProjectPath(p.getName()), 'settings.sqlite')
+        fpath = os.path.join(manager.getProjectPath(p.getName()), 'settings.sqlite')
         print "Copying settings to:", fpath
         copyFile(pw.SETTINGS, fpath)
 
@@ -57,5 +58,5 @@ def updateSettings():
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         sys.exit("Error: %s does not take any argument (got: %s)." %
-                 sys.argv[0], " ".join(sys.argv[1:]))
+                 sys.argv[0], " ".os.path.join(sys.argv[1:]))
     updateSettings()

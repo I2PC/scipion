@@ -91,7 +91,7 @@ class ToolTip:
             if self._opts.has_key(key):
                 self._opts[key] = opts[key]
             else:    
-                KeyError = 'KeyError: Unknown option: "%s"' %key
+                KeyError = 'KeyError: Unknown option: "%s"' % key
                 raise KeyError
     
     ##----these methods handle the callbacks on "<Enter>", "<Leave>" and "<Motion>"---------------##
