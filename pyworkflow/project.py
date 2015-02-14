@@ -132,7 +132,7 @@ class Project(object):
         classesDict.update(em.getObjects())
         return SqliteMapper(sqliteFn, classesDict)
     
-    def load(self, dbPath=None, hosts=None, settings=None, chdir=True, protocolsConf=None):
+    def load(self, dbPath=None, hostsConf=None, protocolsConf=None, chdir=True):
         """ Load project data, configuration and settings.
         Params:
             dbPath: the path to the project database.
@@ -151,7 +151,7 @@ class Project(object):
         
         self._loadDb(dbPath)
         
-        self._loadHosts(hosts)
+        self._loadHosts(hostsConf)
         
         self._loadProtocols(protocolsConf)
         
@@ -239,7 +239,7 @@ class Project(object):
         
         return self._protocolViews[viewKey]          
         
-    def create(self, confs={}, runsView=1, readOnly=False, hosts=None):
+    def create(self, runsView=1, readOnly=False, hostsConf=None, protocolsConf=None):
         """Prepare all required paths and files to create a new project.
         Params:
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
@@ -253,8 +253,7 @@ class Project(object):
         self.mapper = self.createMapper(self.dbPath)
         self.mapper.commit()
         # Load settings from .conf files and write .sqlite
-        self.settings = pwconfig.ProjectSettings(confs)
-        self.settings.loadConfig(confs)
+        self.settings = pwconfig.ProjectSettings()
         self.settings.setRunsView(runsView)
         self.settings.setReadOnly(readOnly)
         self.settings.write(self.settingsPath)
@@ -262,7 +261,9 @@ class Project(object):
         for p in self.pathList:
             pwutils.path.makePath(p)
                 
-        self._loadHosts(hosts)
+        self._loadHosts(hostsConf)
+        
+        self._loadProtocols(protocolsConf)
         
     def _cleanData(self):
         """Clean all project data"""
