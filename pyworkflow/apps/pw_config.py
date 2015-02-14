@@ -41,7 +41,6 @@ def updateSettings():
     """
     # Load the default settings and write them in pw.SETTINGS (a sqlite file).
     settings = ProjectSettings()
-    settings.loadConfig()
     settings.write(pw.SETTINGS)
 
     # Update the settings in all existing projects, by copying the sqlite file.

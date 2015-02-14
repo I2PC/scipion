@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.utils import prettyDict
 """
 This modules serve to define some Configuration classes
 mainly for project GUI
@@ -270,35 +271,45 @@ class ProtocolConfig(MenuConfig):
         return MenuConfig.addSubMenu(self, text, value, **args)
 
 
-class NodeConfig(pwobj.OrderedObject):
+class NodeConfig(pwobj.Scalar):
     """ Store Graph node information such as x, y. """
     
     def __init__(self, nodeId=0, x=None, y=None, selected=False, expanded=True):
-        pwobj.OrderedObject.__init__(self)
+        pwobj.Scalar.__init__(self)
         # Special node id 0 for project node
-        self._id = pwobj.Integer(nodeId)
-        # Positions in the plane
-        self._x = pwobj.Integer(x)
-        self._y = pwobj.Integer(y)
-        # Flag to mark selected nodes
-        self._selected = pwobj.Boolean(selected)        
-        # Flag to mark if this node is expanded or closed
-        self._expanded = pwobj.Boolean(expanded)
+        self._values = {'id': nodeId, 
+                        'x': pwobj.Integer(x).get(0), 
+                        'y': pwobj.Integer(y).get(0), 
+                        'selected': selected, 
+                        'expanded': expanded}
+        
+    def _convertValue(self, value):
+        """Value should be a str with comman separated values
+        or a list.
+        """
+        self._values = json.loads(value)
+            
+    def getObjValue(self):
+        self._objValue = json.dumps(self._values)
+        return self._objValue
+    
+    def get(self):
+        return self.getObjValue()
         
     def getId(self):
-        return self._id.get()
+        return self._values['id']
     
     def setX(self, x):
-        self._x.set(x)
+        self._values['x'] = x
         
     def getX(self):
-        return self._x.get()
+        return self._values['x']
     
     def setY(self, y):
-        self._y.set(y)
+        self._values['y'] = y
         
     def getY(self):
-        return self._y.get()
+        return self._values['y']
     
     def setPosition(self, x, y):
         self.setX(x)
@@ -308,16 +319,19 @@ class NodeConfig(pwobj.OrderedObject):
         return self.getX(), self.getY()
         
     def setSelected(self, selected):
-        self._selected.set(selected)
+        self._values['selected'] = selected
         
     def isSelected(self):
-        return self._selected.get()
+        return self._values['selected']
     
     def setExpanded(self, expanded):
-        self._expanded.set(expanded)
+        self._values['expanded'] = expanded
         
     def isExpanded(self):
-        return self._expanded.get()
+        return self._values['expanded']
+    
+    def __str__(self):
+        return 'NodeConfig: %s' % self._values
     
     
 class NodeConfigList(pwobj.List):
@@ -345,4 +359,4 @@ class NodeConfigList(pwobj.List):
             
     def clear(self):
         pwobj.List.clear(self)
-        self._nodesDict = {}
+        self._nodesDict.clear()
