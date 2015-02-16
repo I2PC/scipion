@@ -25,34 +25,24 @@
 # *
 # **************************************************************************
 """
-Main project window application
+View with the protocols inside the main project window.
 """
+
 import os
 import pickle
 from collections import OrderedDict
 import Tkinter as tk
 import ttk
 
-
-from pyworkflow.utils.utils import prettySize
-from pyworkflow.gui.graph_layout import LevelTreeLayout, BasicLayout
-from pyworkflow.protocol.protocol import STATUS_RUNNING, STATUS_FAILED, STATUS_SAVED, List, String, Pointer
+import pyworkflow.object as pwobj
+import pyworkflow.utils as pwutils
+import pyworkflow.protocol as pwprot
+import pyworkflow.gui as pwgui
+import pyworkflow.em as em
 
 from pyworkflow.viewer import DESKTOP_TKINTER
-import pyworkflow.em as em
-from pyworkflow.utils import prettyDelta
 from pyworkflow.utils.properties import Message, Icon, Color
 
-import pyworkflow.gui as gui
-from pyworkflow.gui.browser import ObjectBrowser, FileBrowserWindow, BrowserWindow, TreeProvider, BoundTree
-from pyworkflow.gui.tree import Tree, ObjectTreeProvider, ProjectRunsTreeProvider
-from pyworkflow.gui.form import FormWindow
-from pyworkflow.gui.dialog import askYesNo, EditObjectDialog, createMessageBody, fillMessageText
-from pyworkflow.gui.text import TaggedText, TextFileViewer
-from pyworkflow.gui import Canvas, TextBox
-from pyworkflow.gui.graph import LevelTree
-from pyworkflow.gui.widgets import ComboBox, IconButton
-from pyworkflow.gui.tooltip import ToolTip
 
 from constants import STATUS_COLORS
 
@@ -115,7 +105,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
         item = tree.insert(prefix, 'end', key, text=text, image=img, tags=(tag))
         treeItems[item] = obj
         # Check if the attribute should be open or close
-        openItem = obj.getAttributeValue('openItem', level < 2)
+        openItem = getattr(obj, 'openItem', level < 2)
         if openItem:
             tree.item(item, open=True)
             
@@ -141,10 +131,10 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
         populateTree(self, tree, treeItems, key, sub, subclassedDict, level+1)
     
 
-class RunsTreeProvider(ProjectRunsTreeProvider):
+class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
     """Provide runs info to populate tree"""
     def __init__(self, project, actionFunc):
-        ProjectRunsTreeProvider.__init__(self, project)
+        pwgui.tree.ProjectRunsTreeProvider.__init__(self, project)
         self.actionFunc = actionFunc
         self._selection = project.getSettings().runSelection
     
@@ -162,15 +152,15 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
         
         return [   (ACTION_EDIT, single),
                    (ACTION_COPY, True), 
-                   (ACTION_DELETE, status != STATUS_RUNNING),
+                   (ACTION_DELETE, status != pwprot.STATUS_RUNNING),
                    (ACTION_STEPS, single),
-                   (ACTION_BROWSE, single and status != STATUS_SAVED),
+                   (ACTION_BROWSE, single and status != pwprot.STATUS_SAVED),
                    (ACTION_DB, single),
-                   (ACTION_STOP, status == STATUS_RUNNING and single),
+                   (ACTION_STOP, status == pwprot.STATUS_RUNNING and single),
                    (ACTION_EXPORT, not single),
                    (ACTION_COLLAPSE, single and status and expanded),
                    (ACTION_EXPAND, single and status and not expanded)
-                   #(ACTION_CONTINUE, status == STATUS_INTERACTIVE and single)
+                   #(ACTION_CONTINUE, status == pwprot.STATUS_INTERACTIVE and single)
                    ]
         
     def getObjectActions(self, obj):
@@ -187,23 +177,23 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
         return actions 
     
     
-class ProtocolTreeProvider(ObjectTreeProvider):
+class ProtocolTreeProvider(pwgui.tree.ObjectTreeProvider):
     """Create the tree elements for a Protocol run"""
     def __init__(self, protocol):
         self.protocol = protocol
         # This list is create to group the protocol parameters
         # in the tree display
-        self.status = List(objName='_status')
-        self.params = List(objName='_params')
+        self.status = pwobj.List(objName='_status')
+        self.params = pwobj.List(objName='_params')
         self.statusList = ['status', 'initTime', 'endTime', 'error', 'interactive', 'mode']
         if protocol is None:
             objList = []
         else:
             objList = [protocol]
-        ObjectTreeProvider.__init__(self, objList)
+        pwgui.tree.ObjectTreeProvider.__init__(self, objList)
         
         
-class StepsTreeProvider(TreeProvider):
+class StepsTreeProvider(pwgui.tree.TreeProvider):
     """Create the tree elements for a Protocol run"""
     def __init__(self, stepsList):
         for i, s in enumerate(stepsList):
@@ -219,7 +209,7 @@ class StepsTreeProvider(TreeProvider):
         
     def getObjectInfo(self, obj):
         info = {'key': obj._index, 
-                'values': (str(obj), prettyDelta(obj.getElapsedTime()), obj.getClassName())}
+                'values': (str(obj), pwutils.prettyDelta(obj.getElapsedTime()), obj.getClassName())}
             
         return info
     
@@ -235,11 +225,11 @@ class StepsTreeProvider(TreeProvider):
         return None, msg
     
 
-class StepsWindow(BrowserWindow):
+class StepsWindow(pwgui.browser.BrowserWindow):
     def __init__(self, title, parentWindow, protocol, **args):
         self._protocol = protocol
         provider = StepsTreeProvider(protocol.loadSteps())
-        BrowserWindow.__init__(self, title, parentWindow, weight=False, **args)
+        pwgui.browser.BrowserWindow.__init__(self, title, parentWindow, weight=False, **args)
         # Create buttons toolbar
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(1, weight=1)
@@ -251,25 +241,22 @@ class StepsWindow(BrowserWindow):
         btn.bind('<Button-1>', self._showTree)
         btn.grid(row=0, column=0, sticky='nw')
         # Create and set browser
-        browser = ObjectBrowser(self.root, provider, showPreviewTop=False)
+        browser = pwgui.browser.ObjectBrowser(self.root, provider, showPreviewTop=False)
         self.setBrowser(browser, row=1, column=0)
         
     def _showTree(self, e=None):
         g = self._protocol.getStepsGraph()
-        w = gui.Window("Protocol steps", self, minsize=(800, 600))
+        w = pwgui.Window("Protocol steps", self, minsize=(800, 600))
         root = w.root
-        canvas = Canvas(root, width=600, height=500)
+        canvas = pwgui.Canvas(root, width=600, height=500)
         canvas.grid(row=0, column=0, sticky='nsew')
-        lt = LevelTree(g)
-        lt.setCanvas(canvas)
-        lt.paint()
-        canvas.updateScrollRegion()        
+        canvas.drawGraph(g, pwgui.graph.LevelTreeLayout())
         w.show()
     
 
-class SearchProtocolWindow(gui.Window):
+class SearchProtocolWindow(pwgui.Window):
     def __init__(self, parentWindow, **kwargs):
-        gui.Window.__init__(self, title="Search Protocol", masterWindow=parentWindow)
+        pwgui.Window.__init__(self, title="Search Protocol", masterWindow=parentWindow)
         content = tk.Frame(self.root, bg='white')
         self._createContent(content)
         content.grid(row=0, column=0, sticky='news')
@@ -289,8 +276,9 @@ class SearchProtocolWindow(gui.Window):
         self._searchVar = tk.StringVar()
         entry = tk.Entry(frame, bg='white', textvariable=self._searchVar)
         entry.bind('<Return>', self._onSearchClick)
+        entry.focus_set()
         entry.grid(row=0, column=1, sticky='nw')
-        btn = IconButton(frame, "Search", imagePath=Icon.ACTION_SEARCH,
+        btn = pwgui.widgets.IconButton(frame, "Search", imagePath=Icon.ACTION_SEARCH,
                          command=self._onSearchClick)
         btn.grid(row=0, column=2, sticky='nw')
         
@@ -298,7 +286,7 @@ class SearchProtocolWindow(gui.Window):
 
     def _createResultsBox(self, content):
         frame = tk.Frame(content, bg=Color.LIGHT_GREY_COLOR, padx=5, pady=5)
-        gui.configureWeigths(frame)
+        pwgui.configureWeigths(frame)
         self._resultsTree = self.master.getViewWidget()._createProtocolsTree(frame)
         self._resultsTree.grid(row=0, column=0, sticky='news')
         frame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
@@ -313,7 +301,7 @@ class SearchProtocolWindow(gui.Window):
                 self._resultsTree.insert('', 'end', key, text=label, tags=('protocol'))
         
 
-class RunIOTreeProvider(TreeProvider):
+class RunIOTreeProvider(pwgui.tree.TreeProvider):
     """Create the tree elements from a Protocol Run input/output childs"""
     def __init__(self, parent, protocol, mapper):
         #TreeProvider.__init__(self)
@@ -331,7 +319,7 @@ class RunIOTreeProvider(TreeProvider):
             self.inputParentDict = OrderedDict()
             inputs = []
             
-            inputObj = String(Message.LABEL_INPUT)
+            inputObj = pwobj.String(Message.LABEL_INPUT)
             inputObj._icon = Icon.ACTION_IN
             self.inputParentDict['_input'] = inputObj
             inputParents = [inputObj]
@@ -343,7 +331,7 @@ class RunIOTreeProvider(TreeProvider):
                 # so update the parent dict with a new object
                 if key in self.inputParentDict:
                     if self.inputParentDict[key] == inputObj:
-                        parentObj = String(key)
+                        parentObj = pwobj.String(key)
                         parentObj._icon = Icon.ACTION_IN
                         parentObj._parentKey = '_input'
                         inputParents.append(parentObj)
@@ -353,8 +341,8 @@ class RunIOTreeProvider(TreeProvider):
                 inputs.append(attr) 
                     
             
-            outputs = [attr for n, attr in self.protocol.iterOutputAttributes(em.EMObject)]
-            self.outputStr = String(Message.LABEL_OUTPUT)
+            outputs = [attr for _, attr in self.protocol.iterOutputAttributes(em.EMObject)]
+            self.outputStr = pwobj.String(Message.LABEL_OUTPUT)
             objs = inputParents + inputs + [self.outputStr] + outputs                
         return objs
     
@@ -366,7 +354,7 @@ class RunIOTreeProvider(TreeProvider):
         
     def _editObject(self, obj):
         """Open the Edit GUI Form given an instance"""
-        EditObjectDialog(self.parent, Message.TITLE_EDIT_OBJECT, obj, self.mapper)
+        pwgui.dialog.EditObjectDialog(self.parent, Message.TITLE_EDIT_OBJECT, obj, self.mapper)
         
     def getObjectPreview(self, obj):
         desc = "<name>: " + obj.getName()
@@ -374,7 +362,7 @@ class RunIOTreeProvider(TreeProvider):
         return (None, desc)
     
     def getObjectActions(self, obj):
-        if isinstance(obj, Pointer):
+        if isinstance(obj, pwobj.Pointer):
             obj = obj.get()
         actions = []    
         
@@ -411,7 +399,7 @@ class RunIOTreeProvider(TreeProvider):
         if obj is None or not obj.hasValue():
             return None
         
-        if isinstance(obj, String):
+        if isinstance(obj, pwobj.String):
             value = obj.get()
             info = {'key': value, 'text': value, 'values': (''), 'open': True}
             if hasattr(obj, '_parentKey'):
@@ -421,7 +409,7 @@ class RunIOTreeProvider(TreeProvider):
             image = Icon.ACTION_OUT
             parent = self.outputStr
             
-            if isinstance(obj, Pointer):
+            if isinstance(obj, pwobj.Pointer):
                 name = obj.getLastName()
                 # Remove ugly item notations inside lists
                 name = name.replace('__item__000', '')
@@ -488,7 +476,7 @@ class ProtocolsView(tk.Frame):
         self.__autoRefreshCounter = 3 # start by 3 secs  
 
         c = self.createContent()
-        gui.configureWeigths(self)
+        pwgui.configureWeigths(self)
         c.grid(row=0, column=0, sticky='news')
         
     def createContent(self):
@@ -526,7 +514,7 @@ class ProtocolsView(tk.Frame):
         # Create the Action Buttons TOOLBAR
         toolbar = tk.Frame(rightFrame, bg='white')
         toolbar.grid(row=0, column=0, sticky='news')
-        gui.configureWeigths(toolbar)
+        pwgui.configureWeigths(toolbar)
         #toolbar.columnconfigure(0, weight=1)
         toolbar.columnconfigure(1, weight=1)
         
@@ -544,7 +532,7 @@ class ProtocolsView(tk.Frame):
         runsFrame = tk.Frame(v, bg='white')
         #runsFrame.grid(row=1, column=0, sticky='news', pady=5)
         self.runsTree = self.createRunsTree(runsFrame)        
-        gui.configureWeigths(runsFrame)
+        pwgui.configureWeigths(runsFrame)
         
         self.createRunsGraph(runsFrame)
         
@@ -560,7 +548,7 @@ class ProtocolsView(tk.Frame):
         infoFrame.columnconfigure(0, weight=1)
         infoFrame.rowconfigure(1, weight=1)
         # Create the Analyze results button
-        btnAnalyze = gui.Button(infoFrame, text=Message.LABEL_ANALYZE, fg='white', bg=Color.RED_COLOR, # font=self.font, 
+        btnAnalyze = pwgui.Button(infoFrame, text=Message.LABEL_ANALYZE, fg='white', bg=Color.RED_COLOR, # font=self.font, 
                           image=self.getImage(Icon.ACTION_VISUALIZE), compound=tk.LEFT, 
                         activeforeground='white', activebackground='#A60C0C', command=self._analyzeResultsClicked)
         btnAnalyze.grid(row=0, column=0, sticky='ne', padx=15)
@@ -569,45 +557,45 @@ class ProtocolsView(tk.Frame):
 
         # Summary tab
         dframe = tk.Frame(tab, bg='white')
-        gui.configureWeigths(dframe, row=0)
-        gui.configureWeigths(dframe, row=2)
+        pwgui.configureWeigths(dframe, row=0)
+        pwgui.configureWeigths(dframe, row=2)
         provider = RunIOTreeProvider(self, self.getSelectedProtocol(), self.project.mapper)
         self.style.configure("NoBorder.Treeview", background='white', borderwidth=0, font=self.windows.font)
-        self.infoTree = BoundTree(dframe, provider, height=6, show='tree', style="NoBorder.Treeview") 
+        self.infoTree = pwgui.browser.BoundTree(dframe, provider, height=6, show='tree', style="NoBorder.Treeview") 
         self.infoTree.grid(row=0, column=0, sticky='news')
         label = tk.Label(dframe, text='SUMMARY', bg='white', font=self.windows.fontBold)
         label.grid(row=1, column=0, sticky='nw', padx=(15, 0))
 
-        self.summaryText = TaggedText(dframe, width=40, height=5, bg='white', bd=0,
+        self.summaryText = pwgui.text.TaggedText(dframe, width=40, height=5, bg='white', bd=0,
                                       handlers={'sci-open': self._viewObject})
         self.summaryText.grid(row=2, column=0, sticky='news', padx=(30, 0))        
         
         # Method tab
         mframe = tk.Frame(tab)
-        gui.configureWeigths(mframe)
-        self.methodText = TaggedText(mframe, width=40, height=15, bg='white',
+        pwgui.configureWeigths(mframe)
+        self.methodText = pwgui.text.TaggedText(mframe, width=40, height=15, bg='white',
                                      handlers={'sci-open': self._viewObject})
         self.methodText.grid(row=0, column=0, sticky='news')   
         
         #Logs 
         ologframe = tk.Frame(tab)
-        gui.configureWeigths(ologframe)
-        self.outputViewer = TextFileViewer(ologframe, allowOpen=True)
+        pwgui.configureWeigths(ologframe)
+        self.outputViewer = pwgui.text.TextFileViewer(ologframe, allowOpen=True)
         self.outputViewer.grid(row=0, column=0, sticky='news')
         self.outputViewer.windows = self.windows
         
         self._updateSelection()
-#         self.outputLogText = TaggedText(ologframe, width=40, height=15, 
+#         self.outputLogText = pwgui.text.TaggedText(ologframe, width=40, height=15, 
 #                                         bg='black', foreground='white')
 #         self.outputLogText.grid(row=0, column=0, sticky='news')
 #         elogframe = tk.Frame(tab)
-#         gui.configureWeigths(elogframe)
-#         self.errorLogText = TaggedText(elogframe, width=40, height=15, 
+#         pwgui.configureWeigths(elogframe)
+#         self.errorLogText = pwgui.text.TaggedText(elogframe, width=40, height=15, 
 #                                        bg='black', foreground='white')
 #         self.errorLogText.grid(row=0, column=0, sticky='news')  
 #         slogframe = tk.Frame(tab)
-#         gui.configureWeigths(slogframe)
-#         self.scipionLogText = TaggedText(slogframe, width=40, height=15, 
+#         pwgui.configureWeigths(slogframe)
+#         self.scipionLogText = pwgui.text.TaggedText(slogframe, width=40, height=15, 
 #                                          bg='black', foreground='white')
 #         self.scipionLogText.grid(row=0, column=0, sticky='news')
         
@@ -646,7 +634,7 @@ class ProtocolsView(tk.Frame):
         for protId in list(self._selection):
             try:
                 self.project.getProtocol(protId)
-            except Exception, ex:
+            except Exception:
                 self._selection.remove(protId)
 
     def refreshRuns(self, e=None, initRefreshCounter=True):
@@ -663,7 +651,7 @@ class ProtocolsView(tk.Frame):
             mem = psutil.virtual_memory()
             print "------------- refreshing ---------- "
             print "  open files: ", len(proc.get_open_files())
-            print "  used memory: ", prettySize(mem.used)
+            print "  used memory: ", pwutils.prettySize(mem.used)
         self.updateRunsTree(True)
         self.updateRunsGraph(True)
 
@@ -716,7 +704,7 @@ class ProtocolsView(tk.Frame):
         
         # Add refresh Tree button
         btn = addButton(ACTION_TREE, "  ", self.allToolbar)
-        ToolTip(btn, "Re-organize the node positions.", 1500)
+        pwgui.tooltip.ToolTip(btn, "Re-organize the node positions.", 1500)
         self.viewButtons[ACTION_TREE] = btn       
         if self.runsView != VIEW_LIST:
             btn.grid(row=0, column=1)
@@ -730,8 +718,8 @@ class ProtocolsView(tk.Frame):
         """ Create the select-view combobox. """
         label = tk.Label(parent, text='View:', bg='white')
         label.grid(row=0, column=0)
-        viewChoices = ['List', 'Tree', 'Tree - small']
-        self.switchCombo = ComboBox(parent, width=10, 
+        viewChoices = ['String', 'Tree', 'Tree - small']
+        self.switchCombo = pwgui.widgets.ComboBox(parent, width=10, 
                                     choices=viewChoices, 
                                     values=[VIEW_LIST, VIEW_TREE, VIEW_TREE_SMALL],
                                     initial=viewChoices[self.runsView],
@@ -754,38 +742,39 @@ class ProtocolsView(tk.Frame):
         
     def _createProtocolsTree(self, parent):
         self.style.configure("W.Treeview", background=Color.LIGHT_GREY_COLOR, borderwidth=0)
-        tree = Tree(parent, show='tree', style='W.Treeview')
-        tree.column('#0', minwidth=300)
-        tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
-        tree.tag_bind('protocol', '<Double-1>', self._protocolItemClick)
-        tree.tag_bind('protocol', '<Return>', self._protocolItemClick)
-        tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
-        tree.tag_configure('section', font=self.windows.fontBold)
-        return tree
+        t = pwgui.tree.Tree(parent, show='tree', style='W.Treeview')
+        t.column('#0', minwidth=300)
+        t.tag_configure('protocol', image=self.getImage('python_file.gif'))
+        t.tag_bind('protocol', '<Double-1>', self._protocolItemClick)
+        t.tag_bind('protocol', '<Return>', self._protocolItemClick)
+        t.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
+        t.tag_configure('section', font=self.windows.fontBold)
+        return t
         
     def _createProtocolsPanel(self, parent, bgColor):
         """Create the protocols Tree displayed in left panel"""
         comboFrame = tk.Frame(parent, bg=bgColor)
         tk.Label(comboFrame, text='View', bg=bgColor).grid(row=0, column=0, padx=(0, 5), pady=5)
-        choices = [pm.text.get() for pm in self.settings.protMenuList]
-        initialChoice = choices[self.settings.protMenuList.getIndex()]
-        combo = ComboBox(comboFrame, choices=choices, initial=initialChoice)
+        choices = self.project.getProtocolViews() 
+        initialChoice = self.settings.getProtocolView()
+        combo = pwgui.widgets.ComboBox(comboFrame, choices=choices, initial=initialChoice)
         combo.setChangeCallback(self._onSelectProtocols)
         combo.grid(row=0, column=1)
         comboFrame.grid(row=0, column=0, padx=5, pady=5, sticky='nw')
         
-        tree = self._createProtocolsTree(parent)
-        tree.grid(row=1, column=0, sticky='news')
+        t = self._createProtocolsTree(parent)
+        t.grid(row=1, column=0, sticky='news')
         # Program automatic refresh
-        tree.after(3000, self._automaticRefreshRuns)
-        self.protTree = tree
+        t.after(3000, self._automaticRefreshRuns)
+        self.protTree = t
 
     def _onSelectProtocols(self, combo):
         """ This function will be called when a protocol menu
         is selected. The index of the new menu is passed. 
         """
-        protIndex = combo.getIndex()
-        self.protCfg = self.settings.setCurrentProtocolMenu(protIndex)
+        protView = combo.getText()
+        self.settings.setProtocolView(protView)
+        self.protCfg = self.project.getCurrentProtocolView()
         self.updateProtocolsTree(self.protCfg)
                 
     def updateProtocolsTree(self, protCfg):
@@ -796,7 +785,7 @@ class ProtocolsView(tk.Frame):
         self.protTreeItems = {}
         subclassedDict = {} # Check which classes serve as base to not show them
         emProtocolsDict = em.getProtocols()
-        for k1, v1 in emProtocolsDict.iteritems():
+        for _, v1 in emProtocolsDict.iteritems():
             for k2, v2 in emProtocolsDict.iteritems():
                 if v1 is not v2 and issubclass(v1, v2):
                     subclassedDict[k2] = True
@@ -806,16 +795,17 @@ class ProtocolsView(tk.Frame):
         
     def _treeViewItemChange(self, openItem):
         item = self.protTree.focus()
+        print "DEBUG: _treeViewItemChange, item: ", item
         if item in self.protTreeItems:
             self.protTreeItems[item].openItem.set(openItem)
         
     def createRunsTree(self, parent):
         self.provider = RunsTreeProvider(self.project, self._runActionClicked)
-        tree = BoundTree(parent, self.provider)        
-        tree.itemDoubleClick = self._runItemDoubleClick
-        tree.itemClick = self._runTreeItemClick
+        t = pwgui.tree.BoundTree(parent, self.provider)        
+        t.itemDoubleClick = self._runItemDoubleClick
+        t.itemClick = self._runTreeItemClick
             
-        return tree
+        return t
    
     def updateRunsTree(self, refresh=False):
         self.provider.setRefresh(refresh)
@@ -828,7 +818,7 @@ class ProtocolsView(tk.Frame):
             self.runsTree.selection_add(treeId)
     
     def createRunsGraph(self, parent):
-        self.runsGraphCanvas = Canvas(parent, width=400, height=400, 
+        self.runsGraphCanvas = pwgui.Canvas(parent, width=400, height=400, 
                                 tooltipCallback=self._runItemTooltip,
                                 tooltipDelay=1000)
         self.runsGraphCanvas.onClickCallback = self._runItemClick
@@ -848,9 +838,9 @@ class ProtocolsView(tk.Frame):
         
         # Check if there are positions stored
         if reorganize or len(self.settings.getNodes()) == 0:
-            layout = LevelTreeLayout() # create layout to arrange nodes as a level tree
+            layout = pwgui.graph.LevelTreeLayout() # create layout to arrange nodes as a level tree
         else:
-            layout = BasicLayout()
+            layout = pwgui.graph.BasicLayout()
             
         # Create empty nodeInfo for new runs
         for node in self.runsGraph.getNodes():
@@ -873,7 +863,7 @@ class ProtocolsView(tk.Frame):
         node.expanded = nodeInfo.isExpanded()
             
         if node.run:
-            status = node.run.status.get(STATUS_FAILED)
+            status = node.run.status.get(pwprot.STATUS_FAILED)
             if node.expanded:
                 expandedStr = ''
             else:
@@ -986,24 +976,23 @@ class ProtocolsView(tk.Frame):
             tm = '*%s*\n' % prot.getRunName()
             tm += '   Id: %s\n' % prot.getObjId()
             tm += 'State: %s\n' % prot.getStatusMessage()
-            tm += ' Time: %s\n' % prettyDelta(prot.getElapsedTime()) 
+            tm += ' Time: %s\n' % pwutils.prettyDelta(prot.getElapsedTime()) 
             if not hasattr(tw, 'tooltipText'):
                 frame = tk.Frame(tw)
                 frame.grid(row=0, column=0)
-                tw.tooltipText = createMessageBody(frame, tm, None, textPad=0,
+                tw.tooltipText = pwgui.dialog.createMessageBody(frame, tm, None, textPad=0,
                                                    textBg=Color.LIGHT_GREY_COLOR_2)
                 tw.tooltipText.config(bd=1, relief=tk.RAISED)
             else:
-                fillMessageText(tw.tooltipText, tm)
+                pwgui.dialog.fillMessageText(tw.tooltipText, tm)
             
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
-        hosts = [host.getLabel() for host in self.settings.getHosts()]
         
-        w = FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
+        w = pwgui.form.FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
                        self._executeSaveProtocol, self.windows,
-                       hostList=hosts, updateProtocolCallback=self._updateProtocol(prot))
+                       hostList=self.project.getHostNames(), updateProtocolCallback=self._updateProtocol(prot))
         w.adjustSize()
         w.show(center=True)
         
@@ -1015,8 +1004,8 @@ class ProtocolsView(tk.Frame):
     
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.getSelectedProtocol())
-        window = BrowserWindow(Message.TITLE_BROWSE_DATA, self.windows, icon=self.icon)
-        window.setBrowser(ObjectBrowser(window.root, provider))
+        window = pwgui.browser.BrowserWindow(Message.TITLE_BROWSE_DATA, self.windows, icon=self.icon)
+        window.setBrowser(pwgui.browser.ObjectBrowser(window.root, provider))
         window.itemConfig(self.getSelectedProtocol(), open=True)  
         window.show()
         
@@ -1024,7 +1013,7 @@ class ProtocolsView(tk.Frame):
         """ Open a file browser to inspect the files generated by the run. """
         protocol = self.getSelectedProtocol()
         workingDir = protocol.getWorkingDir()
-        window = FileBrowserWindow("Browsing: " + workingDir, 
+        window = pwgui.browser.FileBrowserWindow("Browsing: " + workingDir, 
                                    master=self.windows, 
                                    path=workingDir)
         window.show()
@@ -1141,7 +1130,7 @@ class ProtocolsView(tk.Frame):
         
     def _deleteProtocol(self):
         protocols = self._getSelectedProtocols()
-        if askYesNo(Message.TITLE_DELETE_FORM, 
+        if pwgui.dialog.askYesNo(Message.TITLE_DELETE_FORM, 
                     Message.LABEL_DELETE_FORM % ('\n  - '.join(['*%s*' % p.getRunName() for p in protocols])), 
                     self.root):
             self.project.deleteProtocol(*protocols)
@@ -1170,7 +1159,7 @@ class ProtocolsView(tk.Frame):
             except Exception, ex:
                 self.windows.showError(str(ex))
             
-        browser = FileBrowserWindow("Choose .json file to save workflow", 
+        browser = pwgui.browser.FileBrowserWindow("Choose .json file to save workflow", 
                                     master=self.windows, 
                                     path=self.project.getPath(''), 
                                     onSelect=_export,
@@ -1178,7 +1167,7 @@ class ProtocolsView(tk.Frame):
         browser.show()
             
     def _stopProtocol(self, prot):
-        if askYesNo(Message.TITLE_STOP_FORM, Message.LABEL_STOP_FORM, self.root):
+        if pwgui.dialog.askYesNo(Message.TITLE_STOP_FORM, Message.LABEL_STOP_FORM, self.root):
             self.project.stopProtocol(prot)
             self._scheduleRunsUpdate()
 
@@ -1262,20 +1251,20 @@ class ProtocolsView(tk.Frame):
             self.switchRunsView()
     
 
-class RunBox(TextBox):
+class RunBox(pwgui.TextBox):
     """ Just override TextBox move method to keep track of 
     position changes in the graph.
     """
     def __init__(self, nodeInfo, canvas, text, x, y, bgColor, textColor):
-        TextBox.__init__(self, canvas, text, x, y, bgColor, textColor)
+        pwgui.TextBox.__init__(self, canvas, text, x, y, bgColor, textColor)
         self.nodeInfo = nodeInfo
         canvas.addItem(self)
         
     def move(self, dx, dy):
-        TextBox.move(self, dx, dy)
+        pwgui.TextBox.move(self, dx, dy)
         self.nodeInfo.setPosition(self.x, self.y)
 
     def moveTo(self, x, y):
-        TextBox.moveTo(self, x, y)
+        pwgui.TextBox.moveTo(self, x, y)
         self.nodeInfo.setPosition(self.x, self.y)    
         

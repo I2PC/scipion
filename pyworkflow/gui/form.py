@@ -1230,7 +1230,6 @@ class FormWindow(Window):
                     else:
                         procs = numberOfThreads
                         value = 0
-                    print "value: %d, numberOfMpi %d, numberOfThreads %d" % (value, numberOfMpi, numberOfThreads)
                     procCombo = self._createBoundOptions(procFrame, 'stepsExecutionMode', ['Threads', 'MPI'], 
                                                          value, self._setThreadsOrMpi, bg='white')
                     procCombo.grid(row=0, column=0, sticky='nw', pady=5)
@@ -1653,7 +1652,7 @@ class FormWindow(Window):
                         param.set(value)
             except ValueError:
                 if len(var.get()):
-                    print "Error setting param for: ", paramName, "value: '%s'" % var.get()
+                    print ">>> ERROR: setting param for: ", paramName, "value: '%s'" % var.get()
                 param.set(None)
                 
     def updateLabelAndComment(self):
