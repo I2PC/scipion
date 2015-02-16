@@ -711,7 +711,7 @@ void XmippMetadataProgram::finishProcessing()
     if (!single_image && !mdOut.isEmpty() && !fn_out.empty())
     {
         if (produces_an_output || produces_a_metadata || !oroot.empty()) // Out as independent images
-            mdOut.write(fn_out);
+            mdOut.write(fn_out.replaceExtension("xmd"));
         else if (save_metadata_stack) // Output is stack and also save its associated metadata
         {
             FileName outFileName = getParam("--save_metadata_stack");
