@@ -276,6 +276,7 @@ class SearchProtocolWindow(pwgui.Window):
         self._searchVar = tk.StringVar()
         entry = tk.Entry(frame, bg='white', textvariable=self._searchVar)
         entry.bind('<Return>', self._onSearchClick)
+        entry.focus_set()
         entry.grid(row=0, column=1, sticky='nw')
         btn = pwgui.widgets.IconButton(frame, "Search", imagePath=Icon.ACTION_SEARCH,
                          command=self._onSearchClick)
