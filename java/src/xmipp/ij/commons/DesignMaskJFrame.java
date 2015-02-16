@@ -125,7 +125,7 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
             ig.write(path);
             ScipionParams params = (ScipionParams)iw.getParams();
             String label = dlg.getFieldValue(field);
-            String command = String.format("run protocol ProtCreateMask inputid=%s maskFile=%s label=%s", params.inputid, path, label);
+            String command = String.format("run protocol ProtCreateMask inputObj=%s maskFile='%s' label='%s'", params.inputid, path, label);
             XmippWindowUtil.runCommand(command, params.port);
 //            String[] command = new String[]{params.python, params.getRegisterMaskScript(), params.projectid, params.inputid, path, label};
 //            String output = XmippWindowUtil.executeCommand(command, true);

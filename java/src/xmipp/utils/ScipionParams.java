@@ -58,27 +58,9 @@ public class ScipionParams extends Params {
       
     }
     
-    public String getCTFScript()
-    {
-        return scripts + File.separator + "pw_recalculate_ctf.py";
-    }
     
-    public String getSubsetScript()
-    {
-        return scripts + File.separator + "pw_create_image_subset.py";
-    }
-
-    public String getObjectCmdScript() {
-        return scripts + File.separator + "pw_run_obj_cmd.py";
-    }
-
-    public String getRegisterMaskScript() {
-        return scripts + File.separator + "pw_create_mask.py";
-    }
-
-    public String getPlotSqliteScript() {
-        return scripts + File.separator + "pw_sqlite_plot.py";
-    }
+    
+    
     
    
 }

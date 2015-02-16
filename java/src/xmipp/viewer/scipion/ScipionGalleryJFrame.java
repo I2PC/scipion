@@ -159,7 +159,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        createCTFsSubset();
+                        if(!data.hasRecalculateCTF())
+                        {
+                            XmippDialog.showError(ScipionGalleryJFrame.this, "There are no ctfs to recalculate");
+                            return;
+                        }
+                        String command = String.format("run function recalculateCTF %s %s", inputid, sqlitefile);
+                        runCommand(command, "Recalculating CTF");
                     }
                 });
                 recalculatectfbt.setIcon(icon);
@@ -174,7 +180,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         {
                             String command = String.format(runProtCreateSubset, 
                             inputid, sqlitefile, "", "SetOfMicrographs", other, getRunLabel());
-                            createSubset(command, "Creating set ...");
+                            runCommand(command, "Creating set ...");
                         }
                     }
                 });
@@ -204,9 +210,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 }
             });
         }
-        
     }
-    
     
     
     protected void createVolume()
@@ -217,7 +221,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         {
             String command = String.format(runProtCreateSubset, 
                 inputid, sqlitefile, "", setType, data.getSelVolId().toString() + ",Volume", getRunLabel());
-            createSubset(command, "Creating set ...");
+            runCommand(command, "Creating volume ...");
         }
     }
     
@@ -247,7 +251,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         {
             String command = String.format(runProtCreateSubset, 
                     inputid, sqlitefile, ((ScipionGalleryData)data).getPreffix(), String.format("SetOf%s", type), other, getRunLabel());
-            createSubset(command, "Creating set ...");
+            runCommand(command, "Creating set ...");
         }
     }
     
@@ -259,9 +263,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         if (confirmCreate("Classes", size)) {
             String command = String.format(runProtCreateSubset, 
                 inputid, sqlitefile, "", setType , other, getRunLabel());
-
-            createSubset(command, "Creating set ...");
-
+            runCommand(command, "Creating set ...");
         }
     }
     
@@ -273,43 +275,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             String output = isClass2D()? "SetOfAverages,Representatives":"SetOfVolumes,Representatives";
             String command = String.format(runProtCreateSubset, 
             inputid, sqlitefile, "", output , other, getRunLabel());
-            createSubset(command, "Creating set ...");
-
+            runCommand(command, "Creating set ...");
         }
     }
     
-    protected void createCTFsSubset()
-    {
-        try {
-            
-            if(!data.hasRecalculateCTF())
-            {
-                XmippDialog.showError(ScipionGalleryJFrame.this, "There are no ctfs to recalculate");
-                return;
-            }
-
-            ((ScipionGalleryData)data).overwrite(sqlitefile);
-            final String[] command = new String[]{"ctf script???", inputid, sqlitefile};
-            new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-
-                    try {
-
-                        String output = XmippWindowUtil.executeCommand(command, false);
-                        
-                    } catch (Exception ex) {
-                        throw new IllegalArgumentException(ex.getMessage());
-                    }
-
-                }
-            }).start();
-        close(false);                          
-        } catch (Exception ex) {
-            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
+    
     
     public boolean confirmCreate(String output, int size)
     {
@@ -332,8 +302,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         super.reloadTableData(changed);
         enableActions();
     }
-    
-    
+        
 
     protected void enableActions() {
         boolean isenabled = !data.isVolumeMode();
@@ -379,36 +348,16 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         return true;
     }
     
-   protected void createSubset(final String command, String msg) 
+   protected void runCommand(final String command, String msg) 
     {
-        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, msg);
-        new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    ((ScipionGalleryData)data).overwrite(sqlitefile);
-                    XmippWindowUtil.runCommand(command, port);
-//                    String output = XmippWindowUtil.executeCommand(command, true);
-                    XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
-//                    if (output != null && !output.isEmpty()) 
-//                        System.out.println(output);
-                    close(false);
-//                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
-//                        
-//                    }
-
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    throw new IllegalArgumentException(ex.getMessage());
-                }
-
-            }
-        }).start();
+        try {
+            ((ScipionGalleryData)data).overwrite(sqlitefile);
+            XmippWindowUtil.runCommand(command, port);
+            close(false);
+        } catch (SQLException ex) {
+            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
-        
-   
-
     /**
 	 * Open another metadata separataly *
 	 */
@@ -467,9 +416,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                          if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
                             saveSelection(fc.getSelectedPath());
                     }
-                
-                
-            
             }
             catch (Exception e)
             {

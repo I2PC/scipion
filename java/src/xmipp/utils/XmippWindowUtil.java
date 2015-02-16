@@ -265,7 +265,7 @@ public class XmippWindowUtil
             return null;
         }
         
-        public static void runCommand(String command, int port) {
+    public static void runCommand(String command, int port) {
         
         String hostName = "";
  

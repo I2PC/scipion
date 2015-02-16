@@ -37,16 +37,12 @@ public class ImagePlusLoader {
     private boolean existsfile;
     
 
-    
-
     public ImagePlusLoader(ImagePlus imp) {
         this(getFile(imp), imp, null, false, false, -2);
-
     }
 
     public ImagePlusLoader(int index, ImageGeneric ig) {
         this(getFile(ig), null, ig, false, false, index);
-
     }
 
     public ImagePlusLoader(String fileName) {
@@ -55,7 +51,6 @@ public class ImagePlusLoader {
 
     public ImagePlusLoader(String fileName, boolean useGeometry, boolean wrap) {
         this(fileName, null, null, useGeometry, wrap, -2);
-        
     }
 
     public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, boolean wrap, int index) {
