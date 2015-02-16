@@ -34,7 +34,6 @@ It is composed by three panels:
 
 import os
 from pyworkflow.utils.utils import envVarOn
-
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project
@@ -42,17 +41,15 @@ from pyworkflow.gui import Message
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.gui.plotter import Plotter
 import threading
-
 import shlex
 from pyworkflow.gui.text import _open_cmd
 import SocketServer
 import matplotlib.pyplot as plt
 # Import possible Object commands to be handled
 from pyworkflow.em.showj import OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN
-
-
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
-
+from pyworkflow.em.packages.xmipp3 import XmippProtRecalculateCTF
+from pyworkflow.em.packages.grigoriefflab import ProtRecalculateCTFFind
 
 
 class ProjectWindow(ProjectBaseWindow):
@@ -90,8 +87,6 @@ class ProjectWindow(ProjectBaseWindow):
         self.switchView(VIEW_PROTOCOLS)
 
         self.initProjectTCPServer()#Socket thread to communicate with clients
-
-
 
 
     def createHeaderFrame(self, parent):
@@ -168,9 +163,6 @@ class ProjectWindow(ProjectBaseWindow):
         else:
             print "\nexport SCIPION_TREE_NAME=0 # to use ids instead of names"
 
-
-
-
     def initProjectTCPServer(self):
         server = ProjectTCPServer((self.project.address, self.project.port), ProjectTCPRequestHandler)
         server.project = self.project
@@ -212,7 +204,6 @@ class ProjectWindow(ProjectBaseWindow):
         else:
             xvalues = range(0, setObj.getSize())
 
-
         i = 0
         for column in columns:
             yvalues = []
@@ -225,11 +216,10 @@ class ProjectWindow(ProjectBaseWindow):
             color = colors[i]
             line = lines[i]
             if bins:
-                #self.queue.put(lambda: getPlotter(xlabel, ylabel, title, xvalues, yvalues, color, line, marker=None, bins=int(bins)).show())
-                getPlotter(xlabel, ylabel, title, xvalues, yvalues, color, line, marker=None, bins=int(bins)).show()
+                self.queue.put(lambda: self.getPlotter(xlabel, ylabel, title, xvalues, yvalues, color, line, marker=None, bins=int(bins)).show())
             else:
                 marker = (markers[i] if not markers[i] == 'none' else None)
-                self.queue.put(lambda: getPlotter(xlabel, ylabel, title, xvalues, yvalues, color, line, marker=marker).show())
+                self.queue.put(lambda: self.getPlotter(xlabel, ylabel, title, xvalues, yvalues, color, line, marker=marker).show())
             i += 1
 
     def runObjectCommand(self, args):
@@ -243,7 +233,6 @@ class ProjectWindow(ProjectBaseWindow):
         protocol = project.mapper.selectById(protocolId)
 
         #Plotter.setBackend('TkAgg')
-        print cmd
         if cmd == OBJCMD_NMA_PLOTDIST:
             self.queue.put(lambda: createDistanceProfilePlot(protocol, modeNumber=objId).show())
 
@@ -261,16 +250,53 @@ class ProjectWindow(ProjectBaseWindow):
             self.queue.put(lambda: createPlots(PLOT_POLARCART, protocol, objId))
 
 
-def getPlotter(xlabel, ylabel, title, xvalues, yvalues, color, line, marker=None, bins=None):
-    print 'get plotter'
-    plotter = Plotter(windowTitle=title)
-    a = plotter.createSubPlot(title, xlabel, ylabel)
+    def getPlotter(self, xlabel, ylabel, title, xvalues, yvalues, color, line, marker=None, bins=None):
+        plotter = Plotter(windowTitle=title)
+        a = plotter.createSubPlot(title, xlabel, ylabel)
 
-    if bins:
-       a.hist(yvalues, bins=int(bins), color=color, linestyle=line)
-    else:
-        a.plot(xvalues, yvalues, color, marker=marker, linestyle=line)
-    return plotter
+        if bins:
+           a.hist(yvalues, bins=int(bins), color=color, linestyle=line)
+        else:
+            a.plot(xvalues, yvalues, color, marker=marker, linestyle=line)
+        return plotter
+
+
+    def recalculateCTF(self, args):
+        """ Load the project and launch the protocol to
+        create the subset.
+        """
+        inputObjId = args[0]
+        sqliteFile = args[1]
+
+        # Retrieve project, input protocol and object from db
+        project = self.project
+        inputObj = project.mapper.selectById(int(inputObjId))
+        parentProtId = inputObj.getObjParentId()
+        parentProt = project.mapper.selectById(parentProtId)
+        parentClassName = parentProt.getClassName()
+        if parentClassName in ["XmippProtCTFMicrographs",
+                               "XmippProtRecalculateCTF"]:
+            # Create the new protocol
+            prot = project.newProtocol(XmippProtRecalculateCTF)
+        elif parentClassName in ["ProtCTFFind",
+                                 "ProtRecalculateCTFFind"]:
+            # Create the new protocol
+            prot = project.newProtocol(ProtRecalculateCTFFind)
+        else:
+            raise Exception('Unknown protocol class "%s" for recalculating CTF' % parentClassName)
+
+        useQueue = parentProt.useQueue()
+        Mpi = parentProt.numberOfMpi.get()
+        Threads = parentProt.numberOfThreads.get()
+        # Define the input params of the new protocol
+        prot._useQUeue = useQueue
+        prot.numberOfMpi.set(Mpi)
+        prot.numberOfThreads.set(Threads)
+        prot.sqliteFile.set(sqliteFile)
+        prot.inputCtf.set(inputObj)
+         # Launch the protocol
+        project.launchProtocol(prot, wait=True)
+
 
 
 class ProjectManagerWindow(ProjectBaseWindow):
@@ -338,7 +364,7 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
             protocol = project.newProtocol(protocolClass)
 
             for token in tokens[3:]:
-                print token
+                #print token
                 param, value = token.split('=')
                 attr = getattr(protocol, param, None)
                 if param == 'label':
@@ -351,7 +377,8 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
             project.launchProtocol(protocol, wait=True)
         if msg.startswith('run function'):
             functionName = tokens[2]
-            functionPointer = getattr(window, functionName)
+            functionPointer = g
+            etattr(window, functionName)
             functionPointer(tokens[3:])
         else:
             answer = 'no answer available'
