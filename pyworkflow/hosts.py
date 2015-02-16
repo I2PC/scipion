@@ -29,11 +29,14 @@ execution hosts.
 """
 
 import sys
-import os
+import json
 from ConfigParser import ConfigParser
+from collections import OrderedDict
 
+import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
+
 
 
 class HostMapper(SqliteMapper):
@@ -49,13 +52,13 @@ class HostMapper(SqliteMapper):
                 return host
         return None
         
-class HostConfig(OrderedObject):
+        
+class HostConfig():
     """ Main store the configuration for execution hosts. """
     
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args)
-        self.label = String()
-        self.hostName = String()
+    def __init__(self, **kwargs):
+        self.label = String(kwargs.get('label', None))
+        self.hostName = String(kwargs.get('hostName', None))
         self.userName = String()
         self.password = String()
         self.hostPath = String()
@@ -219,3 +222,4 @@ class QueueConfig(OrderedObject):
     
     def setMaxHours(self, maxHours):
         self.maxHours.set(maxHours)
+   

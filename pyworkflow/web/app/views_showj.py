@@ -100,11 +100,12 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
         
     if firstTime or tableChanged:
         # getting defaultColumnsLayoutProperties
-        columns_properties = getExtraParameters(extraParams, table)
-        request.session[sj.COLS_CONFIG_DEFAULT] = columns_properties
+        columnsProperties, _ = getExtraParameters(extraParams, table)
+        request.session[sj.COLS_CONFIG_DEFAULT] = columnsProperties
         
         # getting tableLayoutConfiguration
-        columnsConfig = sj.ColumnsConfig(table, inputParams[sj.ALLOW_RENDER], columns_properties)
+        allowRender = inputParams[sj.ALLOW_RENDER]
+        columnsConfig = sj.ColumnsConfig(table, allowRender, columnsProperties)
         request.session[sj.COLS_CONFIG] = columnsConfig 
     
     else:
@@ -135,7 +136,18 @@ def setLabelToRender(request, table, inputParams, extraParams, firstTime):
     hasChanged = hasTableChanged(request, inputParams)
     
     if (not labelAux or hasChanged):
-        labelsToRender, _ = inputParams[sj.COLS_CONFIG].getRenderableColumns()
+        columnsProperties, mapCol = getExtraParameters(extraParams, table)
+        labelsToRender = []
+
+        for x in columnsProperties:
+            if 'renderable' in columnsProperties[x]:
+                if columnsProperties[x]['renderable'] == "True":
+                    labelsToRender.append(mapCol[x])
+        
+        if len(labelsToRender) == 0:
+            labelsToRender = None
+        
+        labelsToRender, _ = inputParams[sj.COLS_CONFIG].getRenderableColumns(extra=labelsToRender)
         
         if labelsToRender:
             inputParams[sj.LABEL_SELECTED] = labelsToRender[0]
@@ -473,7 +485,7 @@ def getExtraParameters(extraParams, table):
                     if _mapRender[x] == 3 and not 'renderable' in defaultColumnsLayoutProperties[x]:
                         defaultColumnsLayoutProperties[x].update({'renderable':'False'})
     
-    return defaultColumnsLayoutProperties
+    return defaultColumnsLayoutProperties, _mapCol
 
 
 #### Load an Xmipp Dataset ###

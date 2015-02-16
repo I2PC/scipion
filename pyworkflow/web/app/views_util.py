@@ -596,13 +596,33 @@ def get_slice(request):
     img.save(response, "PNG")
     return response
 
+
+def get_image_dim(request):
+    path = request.GET.get('path',None)
+    x, y, _, _ = getImageDim(request, path)
+    
+    dimMax = 1024
+    dimMin = 256
+    
+    xdim = min(max(dimMin, x), dimMax)
+    rate = float(x)/xdim
+    ydim = int(y / rate)
+    
+    objs = [xdim, ydim]
+    
+    print "x, y = %s:%s" % (x,y)
+    print "rate: ", rate
+    print "xdim, ydim = %s:%s" % (xdim,ydim)
+    
+    jsonStr = json.dumps(objs, ensure_ascii=False)
+    return HttpResponse(jsonStr, mimetype='application/javascript')
+
 def getImageDim(request, imagePath):
     projectPath = request.session['projectPath']
 #     imgFn = os.path.join(projectPath, imagePath)
     from pyworkflow.em.packages.xmipp3.convert import xmippToLocation
     location = xmippToLocation(imagePath)
     x, y, z, n = ImageHandler().getDimensions(location)
-    print "DIMENSIONS!!! (%s,%s,%s,%s)" % (x,y,z,n)
     return x, y, z, n
 
 def getImageXdim(request, imagePath):

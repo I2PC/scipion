@@ -597,3 +597,22 @@ function randomString(length, chars) {
     return result;
 }
 
+function zoomImagePopUp(imagePath){
+	URL = getSubDomainURL() + "/get_image_dim/?path=" + imagePath
+	$.ajax({
+		type : "GET",
+		url : encodeURI(URL),
+		async: false,
+		datatype: "json",
+		success : function(res) {
+			res = res.replace("[", "")
+			res = res.replace("]", "")
+			res = res.split(",")
+			var width = res[0]
+			var height = res[1]
+			getImage = getSubDomainURL() + "/get_image/?image=" + imagePath + "&dim="+height
+			console.log(width, height)
+			customPopup(getImage, width, height)
+		}
+	});
+}

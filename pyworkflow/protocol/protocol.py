@@ -33,15 +33,16 @@ import sys
 import datetime as dt
 import pickle
 from collections import OrderedDict
+
 import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn
+from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath, cleanPattern,
                                    getFiles, exists, renderTextFile, copyFile)
 from pyworkflow.utils.log import ScipionLogger
 from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
-from params import Form, Group
+from params import Form
 import scipion
 
 
@@ -360,7 +361,6 @@ class Protocol(Step):
         return self.__project
     
     def setProject(self, project):
-    
         self.__project = project
         
     @staticmethod
@@ -1376,14 +1376,16 @@ def runProtocolMain(projectPath, protDbPath, protId):
     if not exists(projectPath):
         print "ERROR: project path '%s' does not exist. " % projectPath
         sys.exit(1)
+    
     fullDbPath = os.path.join(projectPath, protDbPath)
+    
     if not exists(fullDbPath):
         print "ERROR: protocol database '%s' does not exist. " % fullDbPath
         sys.exit(1)
         
-    # Enter to the project directory
-    os.chdir(projectPath)
-    protocol = getProtocolFromDb(protDbPath, protId)
+    # Enter to the project directory and load protocol from db
+    protocol = getProtocolFromDb(projectPath, protDbPath, protId, chdir=True)
+    
     hostConfig = protocol.getHostConfig()  
   
     # Create the steps executor
@@ -1391,7 +1393,6 @@ def runProtocolMain(projectPath, protDbPath, protId):
     if protocol.stepsExecutionMode == STEPS_PARALLEL:
         if protocol.numberOfMpi > 1:
             # Handle special case to execute in parallel
-            from pyworkflow.utils import runJob
             # We run "scipion run pyworkflow/...mpirun.py blah" instead of
             # calling directly "$SCIPION_PYTHON ...mpirun.py blah", so that
             # when it runs on a MPI node, it *always* has the scipion env.
@@ -1410,13 +1411,12 @@ def runProtocolMain(projectPath, protDbPath, protId):
     protocol.run()
     
     
-def runProtocolMainMPI(projectPath, dbPath, protId, mpiComm):
+def runProtocolMainMPI(projectPath, protDbPath, protId, mpiComm):
     """ This function only should be called after enter in runProtocolMain
     and the proper MPI scripts have been started...so no validations 
     will be made.
     """ 
-    os.chdir(projectPath)
-    protocol = getProtocolFromDb(dbPath, protId)
+    protocol = getProtocolFromDb(projectPath, protDbPath, protId, chdir=True)
     hostConfig = protocol.getHostConfig()
     # Create the steps executor
     executor = MPIStepExecutor(hostConfig, protocol.numberOfMpi.get()-1, mpiComm)
@@ -1426,24 +1426,16 @@ def runProtocolMainMPI(projectPath, dbPath, protId, mpiComm):
     protocol.run()        
     
      
-def getProtocolFromDb(dbPath, protId):
+def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
     """ Retrieve the Protocol object from a given .sqlite file
     and the protocol id.
     """
-    import pyworkflow.em as em
-    import pyworkflow.config as config
-    import pyworkflow.object as obj
-    classDict = dict(em.getProtocols())
-    classDict.update(em.getObjects())
-    #TODO: remove the use of config.__dict__ and maybe 
-    # review if it is the same classesDict needed in project.py
-    classDict.update(config.__dict__)
-    classDict.update(obj.__dict__)
-    from pyworkflow.mapper import SqliteMapper
-    mapper = SqliteMapper(dbPath, classDict)
-    protocol = mapper.selectById(protId)
-    if protocol is None:
-        raise Exception("Not protocol found with id: %d" % protId)
-    protocol.setMapper(mapper)
+    # We need this import here because from Project is imported
+    # all from protocol indirectly, so if move this to the top
+    # we get an import error
+    from pyworkflow.project import Project
+    project = Project(projectPath)
+    project.load(dbPath=os.path.join(projectPath, protDbPath), chdir=chdir)     
+    protocol = project.getProtocol(protId)
     return protocol
 

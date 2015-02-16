@@ -90,9 +90,8 @@ def create_service_project(request):
         #customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_PROTOCOLS']), 'menu_initvolume.conf')
         customMenu = os.path.join(os.environ['HOME'], '.config/scipion/menu_initvolume.conf')
         writeCustomMenu(customMenu)
-        confs = {'protocols': customMenu}
         
-        project = manager.createProject(projectName, confs, runsView=1)   
+        project = manager.createProject(projectName, runsView=1, protocolsConf=customMenu)   
         
         # 1. Import averages
         protImport = project.newProtocol(ProtImportAverages,

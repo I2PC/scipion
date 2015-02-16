@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.utils import prettyDict
 """
 This modules serve to define some Configuration classes
 mainly for project GUI
@@ -30,12 +31,13 @@ mainly for project GUI
 
 import sys
 import os
-from ConfigParser import ConfigParser
 import json
+from collections import OrderedDict
+from ConfigParser import ConfigParser
 
 import pyworkflow as pw
-from pyworkflow.object import Boolean, Integer, String, List, OrderedObject, CsvList
-from pyworkflow.hosts import HostConfig, QueueConfig, QueueSystemConfig # we need this to be retrieved by mapper
+import pyworkflow.object as pwobj
+import pyworkflow.hosts as pwhosts
 from pyworkflow.mapper import SqliteMapper
 
 PATH = os.path.dirname(__file__)
@@ -43,7 +45,9 @@ PATH = os.path.dirname(__file__)
 
 def loadSettings(dbPath):
     """ Load a ProjectSettings from dbPath. """
-    mapper = SqliteMapper(dbPath, globals())
+    classDict = dict(globals())
+    classDict.update(pwobj.__dict__)
+    mapper = SqliteMapper(dbPath, classDict)
     settingList = mapper.selectByClass('ProjectSettings')
     n = len(settingList)
 
@@ -58,63 +62,107 @@ def loadSettings(dbPath):
     return settings
 
 
-class SettingList(List):
-    """ Basically a list that also store an index of the last selection. """
-    def __init__(self, **args):
-        List.__init__(self, **args)
-        self.currentIndex = Integer(0)
+def loadHostsConf(hostsConf):
+    """ Load several hosts from a configuration file. 
+    Return an OrderedDict where the keys are the hostname
+    and the values the configuration for each host.
+    """
+    # Read from users' config file.
+    cp = ConfigParser()
+    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    hosts = OrderedDict()
+    
+    try:
+        assert cp.read(hostsConf) != [], 'Missing file %s' % hostsConf
 
-    def getIndex(self):
-        return self.currentIndex.get()
+        for hostName in cp.sections():
+            host = pwhosts.HostConfig(label=hostName, hostName=hostName)
+            host.setHostPath(pw.SCIPION_USER_DATA)
 
-    def setIndex(self, i):
-        self.currentIndex.set(i)
+            # Helper functions (to write less)
+            def get(var): return cp.get(hostName, var).replace('%_(', '%(')
+            def isOn(var): return str(var).lower() in ['true', 'yes', '1']
 
-    def getItem(self):
-        """ Get the item corresponding to current index. """
-        return self[self.getIndex()]
+            host.mpiCommand.set(get('PARALLEL_COMMAND'))
+            host.queueSystem = pwhosts.QueueSystemConfig()
+            host.queueSystem.name.set(get('NAME'))
+            host.queueSystem.mandatory.set(isOn(get('MANDATORY')))
+            host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
+            host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
+            host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
+            host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
+
+            host.queueSystem.queues = OrderedDict()
+            for qName, values in json.loads(get('QUEUES')).iteritems():
+                queue = pwhosts.QueueConfig()
+                queue.maxCores.set(values['MAX_CORES'])
+                queue.allowMPI.set(isOn(values['ALLOW_MPI']))
+                queue.allowThreads.set(isOn(values['ALLOW_THREADS']))
+                host.queueSystem.queues[qName] = queue
+                
+            hosts[hostName] = host
+
+        return hosts
+    except Exception as e:
+        sys.exit('Failed to read settings. The reported error was:\n  %s\n'
+                 'To solve it, delete %s and run again.' % (e, hostsConf)) 
+        
+
+def loadProtocolsConf(protocolsConf):
+    """ Read the protocol configuration from a .conf
+    file similar to the one in ~/.config/scipion/protocols.conf,
+    which is the default one when no file is passed.
+    """
+
+    # Helper function to recursively add items to a menu.
+    def add(menu, item):
+        "Add item (a dictionary that can contain more dictionaries) to menu"
+        children = item.pop('children', [])
+        subMenu = menu.addSubMenu(**item)  # we expect item={'text': ...}
+        for child in children:
+            add(subMenu, child)  # add recursively to sub-menu
+
+    # Read menus from users' config file.
+    cp = ConfigParser()
+    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    protocols = OrderedDict()
+    
+    try:
+        assert cp.read(protocolsConf) != [], 'Missing file %s' % protocolsConf
+
+        # Populate the protocol menu from the config file.
+        for menuName in cp.options('PROTOCOLS'):
+            menu = ProtocolConfig(menuName)
+            children = json.loads(cp.get('PROTOCOLS', menuName))
+            for child in children:
+                add(menu, child)
+            protocols[menuName] = menu
+        
+        return protocols
+    
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        sys.exit('Failed to read settings. The reported error was:\n  %s\n'
+                 'To solve it, delete %s and run again.' % (e, protocolsConf))
 
 
-class ProjectSettings(OrderedObject):
+class ProjectSettings(pwobj.OrderedObject):
     """ Store settings related to a project. """
     def __init__(self, confs={}, **kwargs):
-        OrderedObject.__init__(self, **kwargs)
+        pwobj.OrderedObject.__init__(self, **kwargs)
         self.config = ProjectConfig()
-        self.hostList = SettingList() # List to store different hosts configurations
-        self.protMenuList = SettingList() # Store different protocol configurations
+        self.currentProtocolsView = pwobj.String() # Store the current view selected by the user
         self.nodeList = NodeConfigList() # Store graph nodes positions and other info
         self.mapper = None # This should be set when load, or write
-        self.runsView = Integer(1) # by default the graph view
-        self.readOnly = Boolean(False)
-        self.runSelection = CsvList(int) # Store selected runs
-        
-    def loadConfig(self, confs={}):
-        """ Load values from configuration files.
-        confs can contains the files for configuration .conf files. 
-        """
-        # Load configuration
-        self.addProtocols(confs.get('protocols', None))
-        self.addHosts(confs.get('hosts', None))
+        self.runsView = pwobj.Integer(1) # by default the graph view
+        self.readOnly = pwobj.Boolean(False)
+        self.runSelection = pwobj.CsvList(int) # Store selected runs
 
     def commit(self):
         """ Commit changes made. """
         self.mapper.commit()
 
-    def addHost(self, hostConfig):
-        self.hostList.append(hostConfig)
-
-    def getHosts(self):
-        return self.hostList
-
-    def getHostById(self, hostId):
-        return self.mapper.selectById(hostId)
-
-    def getHostByLabel(self, hostLabel):
-        for host in self.hostList:
-            if host.label == hostLabel:
-                return host
-        return None
-    
     def getRunsView(self):
         return self.runsView.get()
     
@@ -127,30 +175,17 @@ class ProjectSettings(OrderedObject):
     def setReadOnly(self, value):
         self.readOnly.set(value)
 
-    def deleteHost(self, host, commit=False):
-        """ Delete a host of project settings.
-        params:
-            hostId: The host id to delete.
-        """
-        if not host in self.hostList:
-            raise Exception('Deleting host not from host list.')
-        self.hostList.remove(host)
-        self.mapper.delete(host)
-        if commit:
-            self.commit()
-
     def getConfig(self):
         return self.config
 
-    def getCurrentProtocolMenu(self):
-        return self.protMenuList.getItem()
+    def getProtocolView(self):
+        return self.currentProtocolsView.get()
 
-    def setCurrentProtocolMenu(self, index):
+    def setProtocolView(self, protocolView):
         """ Set the new protocol Menu given its index.
         The new ProtocolMenu will be returned.
         """
-        self.protMenuList.setIndex(index)
-        return self.getCurrentProtocolMenu()
+        self.currentProtocolsView.set(protocolView)
 
     def write(self, dbPath=None):
         self.setName('ProjectSettings')
@@ -164,84 +199,6 @@ class ProjectSettings(OrderedObject):
         self.mapper.insert(self)
         self.mapper.commit()
         
-    def addProtocolMenu(self, protMenuConfig):
-        self.protMenuList.append(protMenuConfig)
-        
-    def addProtocols(self, protocolsConf=None):
-        """ Read the protocol configuration from a .conf
-        file similar to the one in ~/.config/scipion/protocols.conf,
-        which is the default one when no file is passed.
-        """
-    
-        # Helper function to recursively add items to a menu.
-        def add(menu, item):
-            "Add item (a dictionary that can contain more dictionaries) to menu"
-            children = item.pop('children', [])
-            subMenu = menu.addSubMenu(**item)  # we expect item={'text': ...}
-            for child in children:
-                add(subMenu, child)  # add recursively to sub-menu
-    
-        # Read menus from users' config file.
-        cp = ConfigParser()
-        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-        SCIPION_PROTOCOLS = protocolsConf or os.environ['SCIPION_PROTOCOLS']
-        # Also mentioned in /scipion . Maybe we could do better.
-    
-        try:
-            assert cp.read(SCIPION_PROTOCOLS) != [], 'Missing file %s' % SCIPION_PROTOCOLS
-    
-            # Populate the protocol menu from the config file.
-            for menuName in cp.options('PROTOCOLS'):
-                menu = ProtocolConfig(menuName)
-                children = json.loads(cp.get('PROTOCOLS', menuName))
-                for child in children:
-                    add(menu, child)
-                self.addProtocolMenu(menu)
-        except Exception as e:
-            sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                     'To solve it, delete %s and run again.' % (e, SCIPION_PROTOCOLS))
-
-    def addHosts(self, hostConf=None):
-        # Read from users' config file.
-        cp = ConfigParser()
-        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-        HOSTS_CONFIG = hostConf or os.environ['SCIPION_HOSTS']
-
-        try:
-            assert cp.read(HOSTS_CONFIG) != [], 'Missing file %s' % HOSTS_CONFIG
-
-            for hostName in cp.sections():
-                host = HostConfig()
-                host.label.set(hostName)
-                host.hostName.set(hostName)
-                host.hostPath.set(pw.SCIPION_USER_DATA)
-
-                # Helper functions (to write less)
-                def get(var): return cp.get(hostName, var).replace('%_(', '%(')
-                def isOn(var): return str(var).lower() in ['true', 'yes', '1']
-
-                host.mpiCommand.set(get('PARALLEL_COMMAND'))
-                host.queueSystem = QueueSystemConfig()
-                host.queueSystem.name.set(get('NAME'))
-                host.queueSystem.mandatory.set(isOn(get('MANDATORY')))
-                host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
-                host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
-                host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
-                host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
-
-                host.queueSystem.queues = List()
-                for qName, values in json.loads(get('QUEUES')).iteritems():
-                    queue = QueueConfig()
-                    queue.maxCores.set(values['MAX_CORES'])
-                    queue.allowMPI.set(isOn(values['ALLOW_MPI']))
-                    queue.allowThreads.set(isOn(values['ALLOW_THREADS']))
-                    host.queueSystem.queues.append(queue)
-
-                self.addHost(host)
-        except Exception as e:
-            sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                     'To solve it, delete %s and run again.' % (e, HOSTS_CONFIG))
-
     def getNodes(self):
         return self.nodeList
     
@@ -250,23 +207,22 @@ class ProjectSettings(OrderedObject):
     
     def addNode(self, nodeId, **kwargs):
         return self.nodeList.addNode(nodeId, **kwargs)
+    
 
-
-
-class ProjectConfig(OrderedObject):
+class ProjectConfig(pwobj.OrderedObject):
     """A simple base class to store ordered parameters"""
     def __init__(self, **args):
-        OrderedObject.__init__(self, **args)
-        self.icon = String('scipion_bn.xbm')
-        self.logo = String('scipion_logo_small.png')
+        pwobj.OrderedObject.__init__(self, **args)
+        self.icon = pwobj.String('scipion_bn.xbm')
+        self.logo = pwobj.String('scipion_logo_small.png')
 
 
-class MenuConfig(OrderedObject):
+class MenuConfig(object):
     """Menu configuration in a tree fashion.
     Each menu can contains submenus.
     Leaf elements can contain actions"""
     def __init__(self, text=None, value=None,
-                 icon=None, tag=None, **args):
+                 icon=None, tag=None, **kwargs):
         """Constructor for the Menu config item.
         Arguments:
           text: text to be displayed
@@ -275,14 +231,12 @@ class MenuConfig(OrderedObject):
           tag: put some tags to items
         **args: pass other options to base class.
         """
-        OrderedObject.__init__(self, **args)
-        #List.__init__(self, **args)
-        self.text = String(text)
-        self.value = String(value)
-        self.icon = String(icon)
-        self.tag = String(tag)
-        self.childs = List()
-        self.openItem = Boolean(args.get('openItem', False))
+        self.text = pwobj.String(text)
+        self.value = pwobj.String(value)
+        self.icon = pwobj.String(icon)
+        self.tag = pwobj.String(tag)
+        self.childs = pwobj.List()
+        self.openItem = pwobj.Boolean(kwargs.get('openItem', False))
 
     def addSubMenu(self, text, value=None, **args):
         subMenu = type(self)(text, value, **args)
@@ -317,35 +271,45 @@ class ProtocolConfig(MenuConfig):
         return MenuConfig.addSubMenu(self, text, value, **args)
 
 
-class NodeConfig(OrderedObject):
+class NodeConfig(pwobj.Scalar):
     """ Store Graph node information such as x, y. """
     
     def __init__(self, nodeId=0, x=None, y=None, selected=False, expanded=True):
-        OrderedObject.__init__(self)
+        pwobj.Scalar.__init__(self)
         # Special node id 0 for project node
-        self._id = Integer(nodeId)
-        # Positions in the plane
-        self._x = Integer(x)
-        self._y = Integer(y)
-        # Flag to mark selected nodes
-        self._selected = Boolean(selected)        
-        # Flag to mark if this node is expanded or closed
-        self._expanded = Boolean(expanded)
+        self._values = {'id': nodeId, 
+                        'x': pwobj.Integer(x).get(0), 
+                        'y': pwobj.Integer(y).get(0), 
+                        'selected': selected, 
+                        'expanded': expanded}
+        
+    def _convertValue(self, value):
+        """Value should be a str with comman separated values
+        or a list.
+        """
+        self._values = json.loads(value)
+            
+    def getObjValue(self):
+        self._objValue = json.dumps(self._values)
+        return self._objValue
+    
+    def get(self):
+        return self.getObjValue()
         
     def getId(self):
-        return self._id.get()
+        return self._values['id']
     
     def setX(self, x):
-        self._x.set(x)
+        self._values['x'] = x
         
     def getX(self):
-        return self._x.get()
+        return self._values['x']
     
     def setY(self, y):
-        self._y.set(y)
+        self._values['y'] = y
         
     def getY(self):
-        return self._y.get()
+        return self._values['y']
     
     def setPosition(self, x, y):
         self.setX(x)
@@ -355,26 +319,29 @@ class NodeConfig(OrderedObject):
         return self.getX(), self.getY()
         
     def setSelected(self, selected):
-        self._selected.set(selected)
+        self._values['selected'] = selected
         
     def isSelected(self):
-        return self._selected.get()
+        return self._values['selected']
     
     def setExpanded(self, expanded):
-        self._expanded.set(expanded)
+        self._values['expanded'] = expanded
         
     def isExpanded(self):
-        return self._expanded.get()
+        return self._values['expanded']
+    
+    def __str__(self):
+        return 'NodeConfig: %s' % self._values
     
     
-class NodeConfigList(List):
+class NodeConfigList(pwobj.List):
     """ Store all nodes information items and 
     also store a dictionary for quick access
     to nodes query.
     """
     def __init__(self):
         self._nodesDict = {}
-        List.__init__(self)
+        pwobj.List.__init__(self)
         
     def getNode(self, nodeId):
         return self._nodesDict.get(nodeId, None)
@@ -391,5 +358,5 @@ class NodeConfigList(List):
             self._nodesDict[node.getId()] = node
             
     def clear(self):
-        List.clear(self)
-        self._nodesDict = {}
+        pwobj.List.clear(self)
+        self._nodesDict.clear()
