@@ -36,11 +36,12 @@ from pyworkflow.em.convert import ImageHandler, NO_INDEX
 from pyworkflow.em.data import (Micrograph, CTFModel, Particle, 
                                 Coordinate, Transform,
                                 SetOfMicrographs, SetOfCoordinates, 
-                                SetOfParticles)
+                                SetOfParticles, Acquisition)
 import emxlib
 from collections import OrderedDict
+#from software.em.xmipp.protocols.protocol_preprocess_particles import createAcquisition
 
-        
+
 def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=None):
     """ Export micrographs, coordinates or particles to  EMX format. """
     cleanPath(emxDir)
@@ -264,7 +265,10 @@ def _acquisitionFromEmx(emxObj, acquisition):
     if _hasAcquisitionLabels(emxObj):
         acquisition.setVoltage(emxObj.get('acceleratingVoltage'))
         acquisition.setAmplitudeContrast(emxObj.get('amplitudeContrast'))
-        acquisition.setSphericalAberration(emxObj.get('cs'))    
+        acquisition.setSphericalAberration(emxObj.get('cs'))
+        acquisition.setMagnification(1.)#stupid argument totally useless and confusing
+                                        # but hasAlignment checks on it
+
     
     
 def _hasCtfLabels(emxObj):
@@ -303,8 +307,13 @@ def _micrographFromEmx(emxMic, mic):
 def _particleFromEmx(emxObj, particle):
     _imageFromEmx(emxObj, particle)
     _setCoordinatesFromEmx(emxObj, particle.getCoordinate())
-    
-    
+    mic = emxObj.getMicrograph()
+    if mic is not None:
+        acquisition = Acquisition()
+        _acquisitionFromEmx(mic, acquisition)
+        particle.setAcquisition(acquisition)
+        particle.hasAcquisition()
+
 def _transformFromEmx(emxParticle, part, transform):
     """ Read the transformation matrix values from EMX tags. """
     m = transform.getMatrix()
@@ -385,10 +394,10 @@ def _particlesFromEmx(protocol
                       , acquisition
                       , samplingRate
                       , copyOrLink
-                      , alignType):
+                      , alignType=ALIGN_NONE):
     """ Create the output SetOfCoordinates or SetOfParticles given an EMXData object.
     Add CTF information to the particles if present.
-    """    
+    """
     emxParticle = emxData.getFirstObject(emxlib.PARTICLE)
     partDir = dirname(emxFile)
     micSet = getattr(protocol, 'outputMicrographs', None)
@@ -398,21 +407,23 @@ def _particlesFromEmx(protocol
         fn = emxParticle.get(emxlib.FILENAME)
         if exists(join(partDir, fn)): # if the particles has binary data, means particles case
             partSet = protocol._createSetOfParticles()
-            partSet.setAcquisition(acquisition)
+            partSet.setAcquisition(acquisition)# this adquisition is per project
+                                            #we need one per particle
             
             part = Particle()
+
             if _hasCtfLabels(emxParticle) or _hasCtfLabels(emxParticle.getMicrograph()):
                 part.setCTF(CTFModel())
                 partSet.setHasCTF(True)
             if emxParticle.has('centerCoord__X'):
                 part.setCoordinate(Coordinate())
-            if emxParticle.has('transformationMatrix__t11'):
-                _particleFromEmx(emxParticle, part)
-                #partSet.setAlignment3D()
-                partSet.setAlignment(alignType)
-            else:
-                partSet.setAlignment(alignType)
-
+            #if emxParticle.has('transformationMatrix__t11'):
+            #    _particleFromEmx(emxParticle, part)
+            #    #partSet.setAlignment3D()
+            #    partSet.setAlignment(alignType)
+            #else:
+            #    partSet.setAlignment(alignType)
+            partSet.setAlignment(alignType)
             if not samplingRate:
                 samplingRate = part.getSamplingRate()
             partSet.setSamplingRate(samplingRate) 
@@ -423,9 +434,10 @@ def _particlesFromEmx(protocol
             partSet = protocol._createSetOfCoordinates(micSet)
             part = Coordinate()
             particles = False
-            
+
         copiedFiles = {} # copied or linked
-        
+
+
         for emxParticle in emxData.iterClasses(emxlib.PARTICLE):
             if particles:
                 _particleFromEmx(emxParticle, part)
@@ -444,12 +456,12 @@ def _particlesFromEmx(protocol
                     transform = Transform()
                     _transformFromEmx(emxParticle, part, transform)
                     part.setTransform(transform)
+
             else:
                 _coordinateFromEmx(emxParticle, part)
                 
             partSet.append(part)
             part.cleanObjId()
-            
         if particles:
             protocol._defineOutputs(outputParticles=partSet)
         else:
