@@ -172,18 +172,16 @@ class ProjectWindow(ProjectBaseWindow):
         server_thread.daemon = True
         server_thread.start()
 
-    def plotSqlite(self, argv):
-        dbName = argv[0]
-        dbPreffix = argv[1]
-        columns = argv[2].split()
-        colors = argv[3].split()
-        lines = argv[4].split()
-        markers = argv[5].split()
-        xcolumn = argv[6]
-        ylabel = argv[7]
-        xlabel = argv[8]
-        title = argv[9]
-        bins = argv[10]
+    def scheduleSqlitePlot(self, *args):
+        self.queue.put(lambda: self.plotSqlite(*args))
+
+    def plotSqlite(self, dbName, dbPreffix,
+                   columnsStr, colorsStr, linesStr, markersStr,
+                   xcolumn, ylabel, xlabel, title, bins, orderColumn, orderDirection):
+        columns = columnsStr.split()
+        colors = colorsStr.split()
+        lines = linesStr.split()
+        markers = markersStr.split()
 
         from pyworkflow.mapper.sqlite import SqliteFlatDb
         db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPreffix)
@@ -194,7 +192,7 @@ class ProjectWindow(ProjectBaseWindow):
         if xcolumn:
             xvalues = []
 
-            for obj in setObj:
+            for obj in setObj.iterItems(orderBy=orderColumn, direction=orderDirection):
                 if hasattr(obj, xcolumn):
                     value = getattr(obj, xcolumn)
                 elif xcolumn == 'id':
@@ -203,32 +201,37 @@ class ProjectWindow(ProjectBaseWindow):
 
         else:
             xvalues = range(0, setObj.getSize())
-
         i = 0
+        plotter = Plotter(windowTitle=title)
+        ax = plotter.createSubPlot(title, xlabel, ylabel)
+
         for column in columns:
             yvalues = []
 
-            for obj in setObj.iterItems(orderBy=column):
+            for obj in setObj.iterItems(orderBy=orderColumn, direction=orderDirection):
                 if hasattr(obj, column):
-
                     value = getattr(obj, column)
                     yvalues.append(value.get())
+                elif column == 'id':
+                    id = int(obj.getObjId())
+                    yvalues.append(id)
             color = colors[i]
             line = lines[i]
             if bins:
-                self.queue.put(lambda: self.getPlotter(xlabel, ylabel, title, xvalues, yvalues, color, line, marker=None, bins=int(bins)).show())
+                ax.hist(yvalues, bins=int(bins), color=color, linestyle=line)
             else:
                 marker = (markers[i] if not markers[i] == 'none' else None)
-                self.queue.put(lambda: self.getPlotter(xlabel, ylabel, title, xvalues, yvalues, color, line, marker=marker).show())
+                ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line)
             i += 1
 
-    def runObjectCommand(self, args):
+        plotter.show()
+
+    def runObjectCommand(self, cmd, protocolStrId, objStrId):
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
         from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots, PLOT_POLAR, PLOT_CART, PLOT_POLARCART
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createVmdView
-        cmd = args[0]
-        protocolId = int(args[1])
-        objId = int(args[2])
+        protocolId = int(protocolStrId)
+        objId = int(objStrId)
         project = self.project
         protocol = project.mapper.selectById(protocolId)
 
@@ -249,25 +252,10 @@ class ProjectWindow(ProjectBaseWindow):
         elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
             self.queue.put(lambda: createPlots(PLOT_POLARCART, protocol, objId))
 
-
-    def getPlotter(self, xlabel, ylabel, title, xvalues, yvalues, color, line, marker=None, bins=None):
-        plotter = Plotter(windowTitle=title)
-        a = plotter.createSubPlot(title, xlabel, ylabel)
-
-        if bins:
-           a.hist(yvalues, bins=int(bins), color=color, linestyle=line)
-        else:
-            a.plot(xvalues, yvalues, color, marker=marker, linestyle=line)
-        return plotter
-
-
-    def recalculateCTF(self, args):
+    def recalculateCTF(self, inputObjId, sqliteFile):
         """ Load the project and launch the protocol to
         create the subset.
         """
-        inputObjId = args[0]
-        sqliteFile = args[1]
-
         # Retrieve project, input protocol and object from db
         project = self.project
         inputObj = project.mapper.selectById(int(inputObjId))
@@ -355,7 +343,7 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
         window = self.server.window
         msg = self.request.recv(1024)
         tokens = shlex.split(msg)
-        print msg
+        #print msg
         if msg.startswith('run protocol'):
             protocolName = tokens[2]
             from pyworkflow.em import getProtocols
@@ -377,9 +365,8 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
             project.launchProtocol(protocol, wait=True)
         if msg.startswith('run function'):
             functionName = tokens[2]
-            functionPointer = g
-            etattr(window, functionName)
-            functionPointer(tokens[3:])
+            functionPointer = getattr(window, functionName)
+            functionPointer(*tokens[3:])
         else:
             answer = 'no answer available'
             self.request.sendall(answer + '\n')
