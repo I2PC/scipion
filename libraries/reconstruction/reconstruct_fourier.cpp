@@ -152,6 +152,7 @@ void ProgRecFourier::produceSideinfo()
 
     // Read the input images
     SF.read(fn_sel);
+    SF.removeDisabled();
 
     // Ask for memory for the output volume and its Fourier transform
     size_t objId = SF.firstObject();
