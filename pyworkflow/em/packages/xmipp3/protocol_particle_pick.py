@@ -28,13 +28,14 @@
 This sub-package contains the XmippParticlePicking protocol
 """
 
-from pyworkflow.em import *  
+from pyworkflow.em import *
+from pyworkflow.protocol.launch import launch
 from pyworkflow.utils.path import *  
 import xmipp
 from xmipp3 import XmippProtocol
-from pyworkflow.em.showj import runJavaIJapp
-
+from pyworkflow.em.showj import launchSupervisedPickerGUI
 from convert import writeSetOfMicrographs, readSetOfCoordinates
+from pyworkflow.protocol import getProtocolFromDb
 
 
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
@@ -48,6 +49,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         ProtParticlePicking.__init__(self, **args)
         # The following attribute is only for testing
         self.importFolder = String(args.get('importFolder', None))
+
+
     
     #--------------------------- DEFINE param functions --------------------------------------------    
     def _defineParams(self, form):
@@ -90,19 +93,11 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     def launchParticlePickGUIStep(self, micFn):
         # Launch the particle picking GUI
         extraDir = self._getExtraPath()
-        scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getDbPath(), self.strId())
-        app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %(micFn)s --output %(extraDir)s --mode manual  --scipion %(scipion)s"%locals()
-        # TiltPairs
-#        if self.inputMics.hasTiltPairs():
-#            self._params['inputMicsXmipp'] = "TiltedPairs@" + fn
-#            program = "xmipp_micrograph_tiltpair_picking"
-        # Run the command with formatted parameters
-        
-        #self.runJob(program, arguments % self._params)
-        
-        runJavaIJapp("%dg" % self.memory.get(), app, args)
-        
+
+        self.initProtocolTCPServer()
+        process = launchSupervisedPickerGUI(self.memory.get(), micFn, extraDir, 'manual', self.getDbPath(), self.strId(), self.port)
+        process.wait()
+
     def _importFromFolderStep(self):
         """ This function will copy Xmipp .pos files for
         simulating a particle picking run...this is only
@@ -182,3 +177,30 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
                 summary.append("Automatic particles picked: %d"%autoParticlesSize)
             summary.append("Last micrograph: " + activeMic)
         return "\n".join(summary)
+
+    def registerCoords(self, args):
+
+        from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
+
+        extradir = self._getExtraPath()
+        count = self.getOutputsSize()
+
+        suffix = str(count + 1) if count > 0 else ''
+
+
+        inputset = self.getInputMicrographs()
+        outputName = 'outputCoordinates' + suffix
+        outputset = self._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
+        readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
+
+        summary = self.getSummary(outputset)
+        outputset.setObjComment(summary)
+
+        outputs = {outputName: outputset}
+        self._defineOutputs(**outputs)
+        self._defineSourceRelation(inputset, outputset)
+        self._store()
+
+
+
+

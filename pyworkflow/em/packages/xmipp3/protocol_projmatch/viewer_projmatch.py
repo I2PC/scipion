@@ -217,7 +217,7 @@ Examples:
         
 #     def createScipionView(self, filename, extraParams=''):
 #         inputParticlesId = self.protocol.inputParticles.get().strId()
-#         return Classes3DView(self._project.getName(), 
+#         return Classes3DView(self._project,
 #                           self.protocol.strId(), filename, other=inputParticlesId,
 #                           env=self._env)
 
@@ -294,7 +294,7 @@ Examples:
         path = self.protocol._getExtraPath('viewer_volumes.sqlite')
         samplingRate = self.protocol.inputParticles.get().getSamplingRate()
         self.createVolumesSqlite(volumes, path, samplingRate)
-        return [ObjectView(self._project.getName(), self.protocol.strId(), path)]
+        return [ObjectView(self._project, self.protocol.strId(), path)]
     
     def _showVolumesChimera(self, volumes):
         """ Create a chimera script to visualize selected volumes. """

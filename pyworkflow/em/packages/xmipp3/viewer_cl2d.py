@@ -113,7 +113,7 @@ class XmippCL2DViewer(ProtocolViewer):
     
     def _viewClasses(self, blockName, fn):
         fnSqlite = self._getClassesSqlite(blockName, fn)
-        return ClassesView(self._project.getName(), self.protocol.strId(), fnSqlite, 
+        return ClassesView(self._project, self.protocol.strId(), fnSqlite,
                            other=self._getInputParticles().strId())
     
     def _viewLevelFiles(self, e=None):
