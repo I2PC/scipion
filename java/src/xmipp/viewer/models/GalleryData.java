@@ -432,8 +432,9 @@ public class GalleryData {
             ColumnInfo sortci = getColumnInfo(sortby[0]);
             boolean asc = sortby.length == 1 || sortby[1].equals("asc");
             if(sortci != null)
-                sortMd(sortci.label, asc);
+                sortMd(sortci, asc);
         }
+        
     }// function loadMd
     
  
@@ -597,9 +598,13 @@ public class GalleryData {
      * Sort the metadata by a given column. The sort could be ascending or
      * descending
      */
-    public void sortMd(int label, boolean ascending) {
+    public void sortMd(ColumnInfo sortci, boolean asc) {
         try {
-            md.sort(label, ascending);
+            if(sortby == null)
+                sortby = new String[2];
+            sortby[0] = sortci.labelName;
+            sortby[1] = (asc)? "ASC": "DES";
+            md.sort(sortci.label, asc);
             hasMdChanges = true;
             ids = md.findObjects();
         } catch (Exception e) {
@@ -1878,6 +1883,11 @@ public class GalleryData {
             if(isColumnFormat())
                 return getColumnInfo(col);
             return getColumnInfo(row); 
+        }
+        
+        public String[] getSortBy()
+        {
+            return sortby;
         }
         
 }// class GalleryDaa

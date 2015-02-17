@@ -49,6 +49,7 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
+import org.junit.experimental.theories.ParameterSignature;
 import xmipp.jni.MetaData;
 import xmipp.utils.ColorEditor;
 import xmipp.utils.ColorRenderer;
@@ -213,9 +214,17 @@ public class PlotJDialog extends XmippDialog {
                             ScipionParams params = (ScipionParams)gallery.data.parameters;
                             //argsBasic = new String[]{params.python, params.getPlotSqliteScript(), gallery.data.getFileName(), ((ScipionGalleryData)gallery.data).getPreffix(), 
                               //  labels, colors, styles, markers, getXColumn(), getYLabel(), getXLabel(), getPlotTitle(), getBins()};
-                            String command = String.format("run function plotSqlite '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s'", 
-                                    gallery.data.getFileName(), ((ScipionGalleryData)gallery.data).getPreffix(), 
-                                labels, colors, styles, markers, getXColumn(), getYLabel(), getXLabel(), getPlotTitle(), getBins());
+                            ScipionGalleryData data = (ScipionGalleryData)gallery.data;
+                            String orderColumn = "id";
+                            String orderDirection = "ASC";
+                            if(params.sortby != null)
+                            {
+                                orderColumn = params.sortby[0];
+                                orderDirection = params.sortby[1];
+                            }   
+                            String command = String.format("run function scheduleSqlitePlot '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' %s %s", 
+                                    data.getFileName(), data.getPreffix(), 
+                                labels, colors, styles, markers, getXColumn(), getYLabel(), getXLabel(), getPlotTitle(), getBins(), orderColumn, orderDirection);
                             XmippWindowUtil.runCommand(command, params.port);
                         }
                         else
