@@ -443,14 +443,16 @@ class Image(EMObject):
         
     def hasAcquisition(self):
         # This doesn't work
-        return self._acquisition is not None
+        #TODO: ASK  jose miguel. the commented line does not work ROB
+        #return self._acquisition is not None
+        return self._acquisition.getVoltage() is not None
         #FIXME: check this later, very very IMPORTANT!!!
-        #return (self._acquisition is not None and 
+        #return (self._acquisition is not None and
         #        self._acquisition.getMagnification() is not None)
         
     def getAcquisition(self):
         return self._acquisition
-    
+
     def setAcquisition(self, acquisition):
         self._acquisition = acquisition
         
@@ -730,8 +732,10 @@ class SetOfImages(EMSet):
         if self.getSamplingRate() or not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
         # Copy the acquistion from the set to images
-        if self.hasAcquisition(): # only override acquisition if not None
-            image.setAcquisition(self.getAcquisition())
+        if self.hasAcquisition(): # only override image acquisition if setofImages acquisition is not none
+            #TODO: image acquisition should not be overwritten
+            if not image.hasAcquisition():
+                image.setAcquisition(self.getAcquisition())
         # Store the dimensions of the first image, just to 
         # avoid reading image files for further queries to dimensions
         if self._firstDim.isEmpty():
