@@ -139,7 +139,7 @@ Examples:
                           help='Display the classes and the images associated.')
             changesLabel = 'Changes in Offset, Angles and Classes'
         else:
-            group.addParam('showImagesAngularAssignment', BooleanParam, default=True,
+            group.addParam('showImagesAngularAssignment', LabelParam, default=True,
                            label='Particles angular assignment')
         
         if self.protocol.IS_3D:
