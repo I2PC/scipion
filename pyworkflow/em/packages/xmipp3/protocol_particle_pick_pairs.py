@@ -35,8 +35,10 @@ from pyworkflow.em.showj import runJavaIJapp
 from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
 from convert import writeSetOfMicrographsPairs
 from itertools import izip
-
+from pyworkflow.em.showj import launchTiltPairPickerGUI
 import xmipp
+from pyworkflow.protocol import getProtocolFromDb
+import os
 
 
 class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
@@ -77,7 +79,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             self._insertFunctionStep('_importFromFolderStep')     
         
     
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions ----------------------------------------------------
     def convertInputStep(self):
         
         # Get the converted input micrographs in Xmipp format
@@ -86,15 +88,12 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
                                    self.micsFn)       
         
     def launchParticlePickGUIStep(self):
-        
-        # Launch the particle picking GUI
-        micFn = self.micsFn
         extraDir = self._getExtraPath()
-        scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getDbPath(), self.strId())
-        app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
-        args = " --input %(micFn)s --output %(extraDir)s --mode manual --scipion %(scipion)s"%locals()
-        
-        runJavaIJapp("%dg" % self.memory.get(), app, args)
+        self.initProtocolTCPServer()
+        process = launchTiltPairPickerGUI(self.memory.get(), self.micsFn, extraDir, 'manual', self.getDbPath(), self.strId(), self.port)
+        process.wait()
+        print 'launch ended'
+
         
     def _importFromFolderStep(self):
         """ This function will copy Xmipp .pos files for
@@ -201,6 +200,49 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             summary.append("Particle size: %d"%particleSize)
             summary.append("Last micrograph: " + activemic)
         return "\n".join(summary)
-       
-    
+
+    def registerCoords(self, args):
+        from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
+
+        extradir = self._getExtraPath()
+        print extradir
+        count = self.getOutputsSize()
+        suffix = str(count + 1) if count > 0 else ''
+        print count
+        inputset = self.inputMicrographsTiltedPair.get()
+        uSet = inputset.getUntilted()
+        tSet = inputset.getTilted()
+        outputName = 'outputCoordinatesTiltPair' + suffix
+        uSuffix = 'Untilted' + suffix
+        tSuffix = 'Tilted' + suffix
+        # Create Untilted and Tilted SetOfCoordinates
+        uCoordSet = self._createSetOfCoordinates(uSet, suffix=uSuffix)
+        readSetOfCoordinates(extradir, uSet, uCoordSet)
+        uCoordSet.write()
+        tCoordSet = self._createSetOfCoordinates(tSet, suffix=tSuffix)
+        readSetOfCoordinates(extradir, tSet, tCoordSet)
+        tCoordSet.write()
+
+        # Read Angles from input micrographs
+        micsFn = self._getPath('input_micrographs.xmd')
+        setAngles = self._createSetOfAngles(suffix=suffix)
+        readAnglesFromMicrographs(micsFn, setAngles)
+        setAngles.write()
+        # Create CoordinatesTiltPair object
+        outputset = CoordinatesTiltPair(filename=self._getPath('coordinates_pairs%s.sqlite' % suffix))
+        outputset.setTilted(tCoordSet)
+        outputset.setUntilted(uCoordSet)
+        outputset.setAngles(setAngles)
+        outputset.setMicsPair(inputset)
+        for coordU, coordT in izip(uCoordSet, tCoordSet):
+            outputset.append(TiltPair(coordU, coordT))
+
+        summary = self.getSummary(outputset)
+        outputset.setObjComment(summary)
+        outputs = {outputName: outputset}
+        self._defineOutputs(**outputs)
+        self._defineSourceRelation(inputset, outputset)
+        self._store()
+
+
 

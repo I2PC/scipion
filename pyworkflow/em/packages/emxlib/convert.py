@@ -115,10 +115,11 @@ def _samplingToEmx(emxObj, sampling):
     emxObj.set('pixelSpacing__Y', sampling)
 
 def _alignmentToEmx(emxObj, transform):
-    matrix = transform.getMatrix()
-    for i in range(3):
-        for j in range(4):
-            emxObj.set('transformationMatrix__t%d%d' % (i+1, j+1),matrix[i, j])
+    if transform is not None:
+        matrix = transform.getMatrix()
+        for i in range(3):
+            for j in range(4):
+                emxObj.set('transformationMatrix__t%d%d' % (i+1, j+1),matrix[i, j])
 
 
 def _acquisitionToEmx(emxObj, acq):
