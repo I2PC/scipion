@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.utils import prettyDict
 """
 This modules serve to define some Configuration classes
 mainly for project GUI
