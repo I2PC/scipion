@@ -40,11 +40,9 @@ from protocol_projmatch import XmippProtProjMatch
 # from projmatch_initialize import createFilenameTemplates
 from pyworkflow.em.packages.xmipp3.convert import * # change this
 from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
-from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
-from pyworkflow.protocol.params import (PointerParam, BooleanParam, IntParam, 
-                                        FloatParam, StringParam, Positive, GE,
-                                        EnumParam, NumericRangeParam, TextParam,
-                                        DigFreqParam)
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
+from pyworkflow.protocol.params import (LabelParam, IntParam, FloatParam,
+                                        StringParam, EnumParam, NumericRangeParam)
 import xmipp
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 import numpy as np
@@ -112,16 +110,16 @@ Examples:
                       label='Display volume with',
                       help='*slices*: display volumes as 2D slices along z axis.\n'
                            '*chimera*: display volumes as surface with Chimera.')
-        group.addParam('showReference', BooleanParam, default=False,
+        group.addParam('showReference', LabelParam, default=False,
                       label='Show reference volume?',
                       help='Volume after filtration and masking')
-        group.addParam('showReconstruction', BooleanParam, default=False,
+        group.addParam('showReconstruction', LabelParam, default=False,
                       label='Show reconstructed volume?',
                       help='Volume as given by the reconstruction algorithm')
-        group.addParam('showFilteredReconstruction', BooleanParam, default=False,
+        group.addParam('showFilteredReconstruction', LabelParam, default=False,
                       label='Show reconstructed volume after filtration?',
                       help='Volume after filtration')
-        group.addParam('showBFactorCorrectedVolume', BooleanParam, default=False,
+        group.addParam('showBFactorCorrectedVolume', LabelParam, default=False,
                        label='Show a b_factor corrected volume?',
                        help=""" This utility boost up the high frequencies. Do not use the automated 
                             mode [default] for maps with resolutions lower than 12-15 Angstroms.
@@ -141,24 +139,24 @@ Examples:
                             """)
         
         group = form.addGroup('Library, classes and images')
-        group.addParam('showProjectionMatchingLibrary', BooleanParam, default=False,
+        group.addParam('showProjectionMatchingLibrary', LabelParam, default=False,
                       label='Display library?')
-        group.addParam('showProjectionMatchingClasses', BooleanParam, default=False,
+        group.addParam('showProjectionMatchingClasses', LabelParam, default=False,
                       label='Display classes?')
-        group.addParam('showProjectionMatchingLibraryAndClasses', BooleanParam, default=False,
+        group.addParam('showProjectionMatchingLibraryAndClasses', LabelParam, default=False,
                       label='Display library and classes in a single image?')
-        group.addParam('showProjectionMatchingLibraryAndImages', BooleanParam, default=False,
+        group.addParam('showProjectionMatchingLibraryAndImages', LabelParam, default=False,
                       label='Display library and experimental images in a single image?')
-        group.addParam('showDiscardedImages', BooleanParam, default=False,
+        group.addParam('showDiscardedImages', LabelParam, default=False,
                       label='Display input discarded images?')
-        group.addParam('showExperimentalImages', BooleanParam, default=False,
+        group.addParam('showExperimentalImages', LabelParam, default=False,
                       label='Display experimental images?',
                       help="""Display Input images with alignment and classification information
                            WARNING: the angles and shifts are the adecuate for reconstruction
                            but not for 2D aligment.
                            """)
         group = form.addGroup('Convergence')
-        group.addParam('plotHistogramAngularMovement', BooleanParam, default=False,
+        group.addParam('plotHistogramAngularMovement', LabelParam, default=False,
                       label='Plot histogram with angular/shift changes?',
                       help=""" Plot histogram with angular changes from one iteration to next. 
                            Iteration 0 -> initial values
@@ -167,13 +165,13 @@ Examples:
                       condition='plotHistogramAngularMovement',
                       label='Number of bins (for histogram)',
                       help='Number of bins in histograms')
-        group.addParam('usePsi', BooleanParam, default=False,
+        group.addParam('usePsi', LabelParam, default=False,
                       label='Use Psi to compute angular distances?',
                       help='Use Psi')
-        group.addParam('angleSort', BooleanParam, default=False,
+        group.addParam('angleSort', LabelParam, default=False,
                       label='Sort assigned angles?',
                       help='Sort by angles the experimental images.')
-        group.addParam('shiftSort', BooleanParam, default=False,
+        group.addParam('shiftSort', LabelParam, default=False,
                       label='Sort shift?',
                       help='Sort by shift the experimental images.')
         group = form.addGroup('Angular distribution and resolution plots')
@@ -182,7 +180,7 @@ Examples:
                       label='Display angular distribution',
                       help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                            '*chimera*: display angular distribution using Chimera with red spheres.') 
-        group.addParam('showResolutionPlots', BooleanParam, default=True,
+        group.addParam('showResolutionPlots', LabelParam, default=True,
                       label='Display resolution plots (FSC)?',
                       help='')
         group.addParam('resolutionThreshold', FloatParam, default=0.5, 
