@@ -165,13 +165,13 @@ Examples:
                       condition='plotHistogramAngularMovement',
                       label='Number of bins (for histogram)',
                       help='Number of bins in histograms')
-        group.addParam('usePsi', LabelParam, default=False,
+        group.addParam('usePsi', BooleanParam, default=False,
                       label='Use Psi to compute angular distances?',
                       help='Use Psi')
-        group.addParam('angleSort', LabelParam, default=False,
+        group.addParam('angleSort', BooleanParam, default=False,
                       label='Sort assigned angles?',
                       help='Sort by angles the experimental images.')
-        group.addParam('shiftSort', LabelParam, default=False,
+        group.addParam('shiftSort', BooleanParam, default=False,
                       label='Sort shift?',
                       help='Sort by shift the experimental images.')
         group = form.addGroup('Angular distribution and resolution plots')
