@@ -58,15 +58,15 @@ Depends(tiff, packageDeps)
 # Hdf5
 hdf5 = env.AddLibrary(
      'hdf5',
-     tar='hdf5-1.8.10.tgz',
-     buildDir=['hdf5-1.8.10', 'hdf5-1.8.10/c++'],
-     configDir=['hdf5-1.8.10', 'hdf5-1.8.10'],
+     tar='hdf5-1.8.14.tgz',
+     buildDir=['hdf5-1.8.14', 'hdf5-1.8.14/c++'],
+     configDir=['hdf5-1.8.14', 'hdf5-1.8.14'],
      flags=[['--enable-cxx'], ['--enable-cxx']],
      autoConfigTargets=['src/Makefile', 'c++/Makefile'],
      makeTargets=['all install', 'all install'],
      targets=[[File('#software/lib/libhdf5.so').abspath], [File('#software/lib/libhdf5_cpp.so').abspath]],
-     clean=[Dir('#software/tmp/hdf5-1.8.10').abspath],
-     url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/hdf5-1.8.10.tgz')
+     clean=[Dir('#software/tmp/hdf5-1.8.14').abspath],
+     url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/hdf5-1.8.14.tgz')
 Depends(hdf5, packageDeps)
 
 BASIC_LIBS = ['fftw3', 'fftw3_threads', 'tiff', 'jpeg', 'sqlite3', 'hdf5','hdf5_cpp', 'rt']
@@ -78,9 +78,9 @@ BASIC_INCS = [Dir('#software/include').abspath,
               Dir('external/tiff-3.9.4').abspath, 
               Dir('external/tiff-3.9.4/libtiff').abspath,  
               Dir('external/sqlite-3.6.23').abspath, 
-              Dir('external/hdf5-1.8.10/src').abspath, 
-              Dir('external/hdf5-1.8.10/c++').abspath, 
-              Dir('external/hdf5-1.8.10/c++/src').abspath,
+              Dir('external/hdf5-1.8.14/src').abspath,
+              Dir('external/hdf5-1.8.14/c++').abspath,
+              Dir('external/hdf5-1.8.14/c++/src').abspath,
               Dir('external/bilib/').abspath,
               Dir('external/alglib-3.8.0.cpp/src').abspath]
 

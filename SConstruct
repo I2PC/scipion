@@ -33,18 +33,20 @@
 import os
 import sys
 from os.path import join, abspath, splitext
+from subprocess import STDOUT, check_call, CalledProcessError
 from glob import glob
 import tarfile
 import fnmatch
 import platform
-import subprocess
 import SCons.Script
 import SCons.SConf
+from pip.index import PackageFinder
 
 
 
 # URL where we have most of our tgz files for libraries, modules and packages.
-URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
+#URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
+URL_BASE = 'http://metamagical.org/scipion_soft'
 
 # Define our builders.
 download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
@@ -86,13 +88,13 @@ def checkConfigLib(target, source, env):
     for tg in map(str, target):  # "target" is a list of SCons.Node.FS.File
         name = tg[len('software/log/lib_'):-len('.log')]
         try:
-            subprocess.check_call(['pkg-config', '--cflags', '--libs', name],
+            check_call(['pkg-config', '--cflags', '--libs', name],
                                   stdout=open(os.devnull, 'w'),
-                                  stderr=subprocess.STDOUT)
-        except (subprocess.CalledProcessError, OSError) as e:
+                                  stderr=STDOUT)
+        except (CalledProcessError, OSError) as e:
             try:
-                subprocess.check_call(['%s-config' % name, '--cflags'])
-            except (subprocess.CalledProcessError, OSError) as e:
+                check_call(['%s-config' % name, '--cflags'])
+            except (CalledProcessError, OSError) as e:
                 print """
   ************************************************************************
     Warning: %s not found. Please consider installing it first.
@@ -351,7 +353,9 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     return toReturn
 
 
-def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=None, incs=None, libs=None, prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], mpi=False, cuda=False, default=True):
+def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=None, incs=None, 
+                      libs=None, prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], 
+                      mpi=False, cuda=False, default=True):
     """Add self-made and compiled shared library to the compilation process
     
     This pseudobuilder access given directory, compiles it
@@ -406,8 +410,8 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
             tarfiles = tarfile.open(tars[x]).getmembers() 
             sources += [Entry(join(dirs[x], tarred.name)).abspath for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
         else:
-            #sources = deps
-            sources += [Entry(join(dirs[x], untarTargets[x])).abspath]
+            sources += glob(join(dirs[x], patterns[x]))
+            #sources += [Entry(join(dirs[x], untarTargets[x])).abspath]
     if tarExists:
         Depends(sources, untars)
     else:
@@ -433,7 +437,7 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     #print env2.Dump()
     library = env2.SharedLibrary(
               target=join(basedir, fullname),
-              #source=Entry(sources).abspath,
+              #source=lastTarget,
               source=sources,
               CPPPATH=incs + [env['CPPPATH']] + [Dir('#software/include').abspath],
               LIBPATH=libpath,
@@ -484,7 +488,6 @@ def symLink(env, target, source):
                          Action('rm -rf %s && ln -v -s %s %s' % (Entry(link).abspath, sources, Entry(link).abspath),
                                 'Creating a link from %s to %s' % (link, sources)))
     return result
-
 
 
 def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=None, buildDir=None, classDir=None, sourcePath=None, deps=[], default=True):
@@ -751,6 +754,26 @@ def libraryTest(env, name, lang='c'):
     # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
 
 
+def createPackageLink(packageLink, packageFolder):
+    """ Create a link to packageFolder in packageLink, validate
+    that packageFolder exists and if packageLink exists it is 
+    a link.
+    """
+    linkText = "'%s -> %s'" % (packageLink, packageFolder)
+    
+    if not os.path.exists(packageFolder if os.path.isabs(packageFolder) else 'software/em/%s' % packageFolder):
+        Exit("Creating link %s, but '%s' does not exist!!!\n"
+             "INSTALLATION FAILED!!!" % (linkText, packageFolder))
+        
+    if os.path.exists(packageLink):
+        if os.path.islink(packageLink):
+            os.remove(packageLink)
+        else:
+            Exit("Creating link %s, but '%s' exists and is not a link!!!\n"
+                 "INSTALLATION FAILED!!!" % (linkText, packageLink))
+    os.symlink(packageFolder, packageLink)
+    print "Created link: %s" % linkText
+    
 
 def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                extraActions=[], deps=[], clean=[], reqs=[], default=True):
@@ -782,6 +805,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     for req in reqs:
         libraryTest(env, req, reqs[req])
 
+    print "Adding package:", name
+
     # Add the option --with-<name>, so the user can call SCons with this
     # to get the package even if it is not on by default.
     AddOption('--with-%s' % name, dest=name, metavar='%s_HOME' % name.upper(),
@@ -804,23 +829,44 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         # by default it is as if we did not use --with-<name>
 
     packageHome = GetOption(name) or defaultPackageHome
+    packageLink = os.path.join('software', 'em', name)
     
     if not (default or packageHome):
         return ''
     
-    lastTarget = None
-    tLink = None
+    # 'unset' is the default value when calling only --with-package
+    # and a location is not provided
+    if packageHome == 'unset':
+        #TODO: Move the download logic in fetch_package.py to a function and
+        # avoid using a system call
+        # We need to download and untar it 'by hand' in order to be able to scan its content for dependencies
+        script = File('#scripts/fetch_package.py').abspath
+        command = ['python', script, name, 'software/em/%s' % buildDir, tar]
+        check_call(command)
+        
+        createPackageLink(packageLink, buildDir)
+    else:
+        createPackageLink(packageLink, packageHome)
+        return '' # When providing a packageHome, we only want to create the link
+    
+    
+    
+    
+    
+    lastTarget = Entry(packageLink)
+    #tLink = None
     # If we do have a local installation, link to it and exit.
-    if packageHome != 'unset':  # default value when calling only --with-package
-        #FIXME: only for operating while programming
-        if not os.path.exists(packageHome):
-            # If it's a completed local installation. Just link to it and do nothing more.
-            return env.Command(
-                Dir('software/em/%s/bin' % name),
-                Dir(packageHome),
-                Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
-                       'Linking package %s to software/em/%s' % (name, name),
-                       chdir='software/em'))
+#     if packageHome != 'unset':  # default value when calling only --with-package
+#         #FIXME: only for operating while programming
+#         if not os.path.exists(packageHome):
+#             # If it's a completed local installation. Just link to it and do nothing more.
+#             if os.path.exists()
+#             return env.Command(
+#                 Dir('software/em/%s/bin' % name),
+#                 Dir(packageHome),
+#                 Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
+#                        'Linking package %s to software/em/%s' % (name, name),
+#                        chdir='software/em'))
 
     # Check that all needed programs are there.
     if default or GetOption(name):
@@ -840,26 +886,35 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     # done. I don't know how to fix this easily in scons... :(
 
     # Donload, untar, link to it and execute any extra actions.
-    tDownload = download(env, File('#software/tmp/%s' % tar), Value(url))
-    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = untar(env, Dir('#software/em/%s/bin' % buildDir), tDownload,
-                   cdir=Dir('#software/em').abspath)
-    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-    Clean(tUntar, Dir('#software/em/%s' % buildDir))
-    Clean(tUntar, Dir('#software/em/%s' % name))
-    if packageHome != 'unset':
-        symLink(env, Dir('#software/em/%s' % name).abspath, Dir(packageHome).abspath)
-    if buildDir != name and packageHome == 'unset':
-        tLink = env.Command(
-            Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
-            Dir('#software/em/%s/bin' % buildDir),
-            Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
-                   'Linking package %s to software/em/%s' % (name, name),
-                   chdir='software/em'))
-    else:
-        tLink = tUntar  # just so the targets are properly connected later on
-    SideEffect('dummy', tLink)  # so it works fine in parallel builds
-    lastTarget = tLink
+#     if packageHome!='unset':
+#     #if packageHome != 'unset':
+#         tLink = env.Command(Dir('#software/em/%s' % name).abspath, Dir(packageHome).abspath, symLink)
+#         #tLink = env.Command(
+#         #    Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
+#         #    Dir('#software/em/%s/bin' % buildDir),
+#         #    Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
+#         #           'Linking package %s to software/em/%s' % (name, name),
+#         #           chdir='software/em'))
+#         commands = [['rm', '-f', 'software/em/%s' % name],
+#                    ['ln', '-v', '-s', os.path.relpath(Dir(packageHome).abspath, Entry('#software/em').abspath), 'software/em/%s' % name]]
+#         for command in commands:
+#             check_call(command)
+            # TODO: maybe put this in a block  try: ...  except (CalledProcessError, OSError) as e: ...
+#     if buildDir != name and packageHome == 'unset':
+#         tLink = env.Command(
+#             Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
+#             Dir('#software/em/%s/bin' % buildDir),
+#             Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
+#                    'Linking package %s to software/em/%s' % (name, name),
+#                    chdir='software/em'))
+#         # We need to download and untar it 'by hand' in order to be able to scan its content for dependencies
+#         script = File('#scripts/fetch_package.py').abspath
+#         command = ['python', script, name, 'software/em/%s' % buildDir, tar]
+#         check_call(command)  # TODO: maybe put in a block  try:  except (CalledProcessError, OSError) as e: ...
+#  #   else:
+#  #       tLink = tUntar  # just so the targets are properly connected later on
+#     SideEffect('dummy', tLink)  # so it works fine in parallel builds
+#     lastTarget = tLink
 
     if extraActions:
         for target, command in extraActions:
@@ -873,6 +928,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         for dep in deps:
             env.Depends(lastTarget, dep)
         Default(lastTarget)
+        
         return lastTarget
     
     if (default or packageHome):
