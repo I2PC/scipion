@@ -266,7 +266,7 @@ public class XmippWindowUtil
         }
         
     public static void runCommand(String command, int port) {
-        
+        System.out.println(command);
         String hostName = "";
  
         try {

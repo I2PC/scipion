@@ -49,7 +49,6 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
-import org.junit.experimental.theories.ParameterSignature;
 import xmipp.jni.MetaData;
 import xmipp.utils.ColorEditor;
 import xmipp.utils.ColorRenderer;
@@ -189,21 +188,24 @@ public class PlotJDialog extends XmippDialog {
 		String styles = "";
 		String markers = "";
 		Boolean checked = false;
-		String ylabel = tfYLabel.getText().trim();
-
+		
+                int plots = 0;
+                ColumnInfo plotci = null;
 		for (ColumnInfo ci: rows) {
 			ColumnInfo.ColumnExtraInfo cei = rowsExtra.get(ci);
 			if (cei.plot) {
+                                plots ++;
 				labels += ci.labelName + " ";
 				colors += "#" + cei.color + " ";
 				styles += cei.linestyle + " ";
 				markers += cei.marker + " ";
 				checked = true;
-				if (ylabel.length() == 0)
-					ylabel = rows.get(0).labelName;
+                                plotci = ci;
 			}
 		}
-
+                if(plots ==  1)
+                    tfYLabel.setText(plotci.labelName);
+                String ylabel = tfYLabel.getText().trim();
 		if (!checked)
 			return;
 
@@ -225,6 +227,7 @@ public class PlotJDialog extends XmippDialog {
                             String command = String.format("run function scheduleSqlitePlot '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' %s %s", 
                                     data.getFileName(), data.getPreffix(), 
                                 labels, colors, styles, markers, getXColumn(), getYLabel(), getXLabel(), getPlotTitle(), getBins(), orderColumn, orderDirection);
+                            
                             XmippWindowUtil.runCommand(command, params.port);
                         }
                         else

@@ -219,6 +219,7 @@ public class GalleryData {
         visibleLabels = null;
         orderLabels = null;
         sortby = null;
+        
         useGeo = wrap = false;
         displayLabels = null;
         mode = Mode.GALLERY_MD;
