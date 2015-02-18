@@ -312,7 +312,7 @@ class XmippViewer(Viewer):
                 labelRender = "_representative._filename"
                 self._visualize(fn, viewParams={ORDER: labels, 
                                                           VISIBLE: labels, 
-                                                          'sortby': '_xmipp_maxCC des', RENDER:labelRender})
+                                                          SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender})
             else:
                 fn = obj.outputAverages.getFileName()
                 labels = 'id enabled _index _filename _xmipp_maxCC _transform._matrix'
@@ -320,7 +320,7 @@ class XmippViewer(Viewer):
                 self._views.append(ObjectView(self._project, obj.outputAverages.strId(), fn,
                                               viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
-                                                      'sortby': '_xmipp_maxCC des', RENDER:labelRender}))
+                                                      SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender}))
         
         elif issubclass(cls, XmippProtProjectionOutliers):
             if isinstance(obj.inputSet.get(), SetOfClasses2D):
@@ -329,7 +329,7 @@ class XmippViewer(Viewer):
                 labelRender = "_representative._filename"
                 self._visualize(fn, viewParams={ORDER: labels, 
                                                           VISIBLE: labels, 
-                                                          'sortby': '_xmipp_zScoreResCov des', RENDER:labelRender})
+                                                          SORT_BY: '_xmipp_zScoreResCov desc', RENDER:labelRender})
             else:
                 fn = obj.outputAverages.getFileName()
                 labels = 'id enabled _index _filename  _xmipp_maxCC _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar _transform._matrix'
@@ -337,7 +337,7 @@ class XmippViewer(Viewer):
                 self._views.append(ObjectView(self._project, obj.outputAverages.strId(), fn,
                                               viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
-                                                      'sortby': '_xmipp_zScoreResCov des', RENDER:labelRender}))
+                                                      SORT_BY: '_xmipp_zScoreResCov desc', RENDER:labelRender}))
             
         elif issubclass(cls, XmippProtParticlePicking):
             if obj.getOutputsSize() >= 1:

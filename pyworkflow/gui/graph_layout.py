@@ -57,7 +57,11 @@ class BasicLayout(GraphLayout):
                 
     def _drawNode(self, node):
         """ Allocate node with x=0 and y=0. """
+
         parents = node.getParents()
+        if not parents:
+            print "EMPTY NODE ask JM"
+            return
         maxParent = parents[0]
         
         for p in parents[1:]:

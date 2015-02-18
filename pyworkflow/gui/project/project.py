@@ -32,7 +32,7 @@ It is composed by three panels:
 3. Summary/Details
 """
 
-import os
+import os, sys
 from pyworkflow.utils.utils import envVarOn
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
@@ -185,46 +185,60 @@ class ProjectWindow(ProjectBaseWindow):
 
         from pyworkflow.mapper.sqlite import SqliteFlatDb
         db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPreffix)
-        setClassName = db.getProperty('self') # get the set class name
+        if dbPreffix:
+            setClassName = "SetOf%ss"%db.getSelfClassName()
+        else:
+            setClassName = db.getProperty('self') # get the set class name
+
         from pyworkflow.em import getObjects
         setObj = getObjects()[setClassName](filename=dbName, prefix=dbPreffix)
 
-        if xcolumn:
-            xvalues = []
 
-            for obj in setObj.iterItems(orderBy=orderColumn, direction=orderDirection):
-                if hasattr(obj, xcolumn):
-                    value = getattr(obj, xcolumn)
-                elif xcolumn == 'id':
-                    id = int(obj.getObjId())
-                    xvalues.append(id)
-
-        else:
-            xvalues = range(0, setObj.getSize())
         i = 0
         plotter = Plotter(windowTitle=title)
         ax = plotter.createSubPlot(title, xlabel, ylabel)
 
+        isxvalues = bool(xcolumn)
+        xvalues = []
         for column in columns:
             yvalues = []
 
             for obj in setObj.iterItems(orderBy=orderColumn, direction=orderDirection):
-                if hasattr(obj, column):
-                    value = getattr(obj, column)
-                    yvalues.append(value.get())
-                elif column == 'id':
-                    id = int(obj.getObjId())
-                    yvalues.append(id)
+                value = self.getValue(obj, column)
+                yvalues.append(value)
+                if isxvalues:
+                    value = self.getValue(obj, xcolumn)
+                    xvalues.append(value)
+            if not isxvalues:
+                xvalues = range(0, setObj.getSize())
+            else:
+                isxvalues = False
+
             color = colors[i]
             line = lines[i]
             if bins:
-                ax.hist(yvalues, bins=int(bins), color=color, linestyle=line)
+                ax.hist(yvalues, bins=int(bins), color=color, linestyle=line, label=column)
             else:
                 marker = (markers[i] if not markers[i] == 'none' else None)
-                ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line)
+                ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line, label=column)
             i += 1
 
+        ax.legend(columns)
         plotter.show()
+
+    def getValue(self, obj, column):
+        if column == 'id':
+            id = int(obj.getObjId())
+            return id
+        if not '.' in column:
+            return getattr(obj, column).get()
+
+        else:
+            for attrName in column.split('.'):
+                obj = getattr(obj, attrName)
+        return obj.get()
+
+
 
     def runObjectCommand(self, cmd, protocolStrId, objStrId):
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
@@ -339,35 +353,38 @@ class ProjectTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
-        project = self.server.project
-        window = self.server.window
-        msg = self.request.recv(1024)
-        tokens = shlex.split(msg)
-        #print msg
-        if msg.startswith('run protocol'):
-            protocolName = tokens[2]
-            from pyworkflow.em import getProtocols
-            protocolClass = getProtocols()[protocolName]
-            # Create the new protocol instance and set the input values
-            protocol = project.newProtocol(protocolClass)
+        try:
+            project = self.server.project
+            window = self.server.window
+            msg = self.request.recv(1024)
+            tokens = shlex.split(msg)
+            #print msg
+            if msg.startswith('run protocol'):
+                protocolName = tokens[2]
+                from pyworkflow.em import getProtocols
+                protocolClass = getProtocols()[protocolName]
+                # Create the new protocol instance and set the input values
+                protocol = project.newProtocol(protocolClass)
 
-            for token in tokens[3:]:
-                #print token
-                param, value = token.split('=')
-                attr = getattr(protocol, param, None)
-                if param == 'label':
-                    protocol.setObjLabel(value)
-                elif attr.isPointer():
-                    obj = project.getObject(int(value))
-                    attr.set(obj)
-                elif value:
-                    attr.set(value)
-            project.launchProtocol(protocol, wait=True)
-        if msg.startswith('run function'):
-            functionName = tokens[2]
-            functionPointer = getattr(window, functionName)
-            functionPointer(*tokens[3:])
-        else:
-            answer = 'no answer available'
-            self.request.sendall(answer + '\n')
+                for token in tokens[3:]:
+                    #print token
+                    param, value = token.split('=')
+                    attr = getattr(protocol, param, None)
+                    if param == 'label':
+                        protocol.setObjLabel(value)
+                    elif attr.isPointer():
+                        obj = project.getObject(int(value))
+                        attr.set(obj)
+                    elif value:
+                        attr.set(value)
+                project.launchProtocol(protocol, wait=True)
+            if msg.startswith('run function'):
+                functionName = tokens[2]
+                functionPointer = getattr(window, functionName)
+                functionPointer(*tokens[3:])
+            else:
+                answer = 'no answer available'
+                self.request.sendall(answer + '\n')
+        except:
+            print "Unexpected error:", sys.exc_info()[0]
 

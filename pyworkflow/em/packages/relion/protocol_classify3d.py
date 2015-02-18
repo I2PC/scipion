@@ -94,7 +94,13 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        errors = []
+        partSizeX, _, _ = self._getInputParticles().getDim()
+        volSizeX, _, _ = self.input3DReference.get().getDim()
+        if partSizeX != volSizeX:
+            errors.append('Volume and particles dimensions must be equal!!!')
+
+        return errors
     
     def _validateContinue(self):
         """ Should be overriden in subclasses to

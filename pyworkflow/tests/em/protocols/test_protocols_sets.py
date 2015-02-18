@@ -44,6 +44,7 @@ from pyworkflow.em.protocol.protocol_sets import (
 
 # Used by Roberto's test, where he creates the particles "by hand"
 from pyworkflow.em.data import Particle, SetOfParticles
+from pyworkflow.utils.utils import prettyDict
 
 
 class TestSets(BaseTest):
@@ -259,7 +260,11 @@ class TestSets(BaseTest):
                 outputSet.append(obj)
 
         for item1, item2 in izip(imgSet, outputSet):
-            self.assertTrue(item1.equalAttributes(item2))
+            if not item1.equalAttributes(item2):
+                print "Items differ:"
+                prettyDict(item1.getObjDict())
+                prettyDict(item2.getObjDict())
+            self.assertTrue(item1.equalAttributes(item2),  )
 
 
 
