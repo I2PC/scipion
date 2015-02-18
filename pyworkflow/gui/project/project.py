@@ -217,12 +217,13 @@ class ProjectWindow(ProjectBaseWindow):
             color = colors[i]
             line = lines[i]
             if bins:
-                ax.hist(yvalues, bins=int(bins), color=color, linestyle=line)
+                ax.hist(yvalues, bins=int(bins), color=color, linestyle=line, label=column)
             else:
                 marker = (markers[i] if not markers[i] == 'none' else None)
-                ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line)
+                ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line, label=column)
             i += 1
 
+        ax.legend(columns)
         plotter.show()
 
     def getValue(self, obj, column):
@@ -357,7 +358,7 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
             window = self.server.window
             msg = self.request.recv(1024)
             tokens = shlex.split(msg)
-            print msg
+            #print msg
             if msg.startswith('run protocol'):
                 protocolName = tokens[2]
                 from pyworkflow.em import getProtocols
