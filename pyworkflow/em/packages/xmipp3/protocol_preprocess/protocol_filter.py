@@ -358,12 +358,13 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
 
         if self.inputCTF.hasValue():
             ctf = self.inputCTF.get()
+            mic = ctf.getMicrograph()
+            acquisition = mic.getAcquisition()
+            sampling    = mic.getSamplingRate()
         else:
             ctf = inputSet.getFirstItem().getCTF()
-        #is there any voltage, sampling and amplitud contrast available?
-        mic = ctf.getMicrograph()
-        acquisition = mic.getAcquisition()
-        sampling = mic.getSamplingRate()
+            acquisition = inputSet.getAcquisition()
+            sampling = inputSet.getSamplingRate()
         # Spherical aberration in mm
         ctf._xmipp_ctfVoltage = Float(acquisition.getVoltage())
         ctf._xmipp_ctfSphericalAberration = Float(acquisition.getSphericalAberration())
