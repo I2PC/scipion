@@ -842,7 +842,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     # Donload, untar, link to it and execute any extra actions.
     tDownload = download(env, File('#software/tmp/%s' % tar), Value(url))
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = untar(env, Dir('#software/em/%s/bin' % buildDir), tDownload,
+    tUntar = untar(env, Dir('#software/em/%s/bin2' % buildDir), tDownload,
                    cdir=Dir('#software/em').abspath)
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, Dir('#software/em/%s' % buildDir))
@@ -851,8 +851,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         symLink(env, Dir('#software/em/%s' % name).abspath, Dir(packageHome).abspath)
     if buildDir != name and packageHome == 'unset':
         tLink = env.Command(
-            Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
-            Dir('#software/em/%s/bin' % buildDir),
+            Dir('#software/em/%s/bin2').abspath % name,  # TODO: find smtg better than "/bin"
+            Dir('#software/em/%s/bin2' % buildDir),
             Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
                    'Linking package %s to software/em/%s' % (name, name),
                    chdir='software/em'))
