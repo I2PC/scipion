@@ -33,7 +33,7 @@ import pyworkflow.em as em
 from pyworkflow.em.packages.eman2.eman2 import getEmanProgram
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, EnumParam,
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
-from pyworkflow.utils.path import cleanPattern
+from pyworkflow.utils.path import cleanPattern, makePath
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtRefine3D
 
@@ -82,7 +82,8 @@ at each refinement step. The resolution you specify is a target, not the filter 
         """ Centralize the names of the files. """
         
         myDict = {
-                  'particles': self._getTmpPath('input_particles.hdf'),
+                  'partSet': 'sets/inputSet.lst',
+                  'partFlipSet': 'sets/inputSet__ctf_flip.lst',
                   'volume': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d.hdf'),
                   'classes': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d'),
                   'classesEven': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d_even.hdf'),
@@ -113,7 +114,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
                       label='Continue from iteration',
                       help='Select from which iteration do you want to continue.'
                            'if you use *last*, then the last iteration will be used.'
-                           'otherwise, a valid iteration number should be provided.')        
+                           'otherwise, a valid iteration number should be provided.')
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True,
                       pointerClass='SetOfParticles', condition='not doContinue',
                       help='Select the input particles.\n')  
@@ -149,6 +150,10 @@ at each refinement step. The resolution you specify is a target, not the filter 
                       help='Approximate molecular mass of the particle, in kDa.'
                            'This is used to runnormalize.bymass. Due to'
                            'resolution effects, not always the true mass.')
+        form.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
+                      label='Have data been phase-flipped?',
+                      help='Set this to Yes if the images have been ctf-phase corrected during the '
+                           'pre-processing steps.')       
         form.addParam('doBreaksym', BooleanParam, default=False,
                        label='Do not impose symmetry?',
                        help='If set True, reconstruction will be asymmetric with'
@@ -213,10 +218,27 @@ at each refinement step. The resolution you specify is a target, not the filter 
     #--------------------------- STEPS functions --------------------------------------------
     def convertImagesStep(self):
         from pyworkflow.em.packages.eman2.convert import writeSetOfParticles
-        
+        strFn = ""
         partSet = self.inputParticles.get()
         partAlign = partSet.getAlignment()
-        writeSetOfParticles(partSet, self._getFileName("particles"), alignType=partAlign) # 
+        storePath = self._getExtraPath("particles")
+        makePath(storePath)
+        writeSetOfParticles(partSet, storePath, alignType=partAlign)
+        if partSet.hasCTF():
+            program = getEmanProgram('e2ctf.py')
+            acq = partSet.getAcquisition()
+            
+            args = " --voltage %3d" % acq.getVoltage()
+            args += " --cs %f" % acq.getSphericalAberration()
+            args += " --ac %f" % (100 * acq.getAmplitudeContrast())
+            if not self.haveDataBeenPhaseFlipped:
+                args += " --phaseflip"
+            args += " --apix %f --allparticles --autofit --curdefocusfix --storeparm -v 8" % (partSet.getSamplingRate())
+            self.runJob(program, args, cwd=self._getExtraPath())
+        
+        program = getEmanProgram('e2buildsets.py')
+        args = " --setname=inputSet --allparticles"
+        self.runJob(program, args, cwd=self._getExtraPath())
     
     def refineStep(self, args):
         """ Run the EMAN program to refine a volume. """
@@ -258,6 +280,13 @@ at each refinement step. The resolution you specify is a target, not the filter 
         samplingRate = self.inputParticles.get().getSamplingRate()
         if self.resol.get() < 2*samplingRate:
             errors.append("Target resolution is smaller than 2*samplingRate value. This is impossible.")
+        
+        if not self.doContinue:
+            partSizeX, _, _ = self.inputParticles.get().getDim()
+            volSizeX, _, _ = self.input3DReference.get().getDim()
+            if partSizeX != volSizeX:
+                errors.append('Volume and particles dimensions must be equal!!!')
+
         return errors
     
     def _summary(self):
@@ -280,7 +309,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
         
         samplingRate = self.inputParticles.get().getSamplingRate()
         
-        params = {'imgsFn': self._getRelativeName("particles"),
+        params = {'imgsFn': self._getParticlesStack(),
                   'resol': self.resol.get(),
                   'speed': int(self.getEnumText('speed')),
                   'volume': os.path.relpath(self.input3DReference.get().getFileName(), self._getExtraPath()),
@@ -317,9 +346,11 @@ at each refinement step. The resolution you specify is a target, not the filter 
         """ Remove the folders and return the file from the filename. """
         return os.path.basename(self._getFileName(key, **args))
     
-    def _getRelativeName(self, key, **args):
-        """ Remove the folders and return the file from the filename. """
-        return os.path.relpath(self._getFileName(key,  **args), self._getExtraPath())
+    def _getParticlesStack(self):
+        if not self.haveDataBeenPhaseFlipped:
+            return self._getFileName("partFlipSet")
+        else:
+            return self._getFileName("partSet")
     
     def _iterTextFile(self):
         f = open(self._getExtraPath('output.txt'))

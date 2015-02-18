@@ -139,7 +139,7 @@ Examples:
                           help='Display the classes and the images associated.')
             changesLabel = 'Changes in Offset, Angles and Classes'
         else:
-            group.addParam('showImagesAngularAssignment', BooleanParam, default=True,
+            group.addParam('showImagesAngularAssignment', LabelParam, default=True,
                            label='Particles angular assignment')
         
         if self.protocol.IS_3D:
@@ -201,6 +201,7 @@ Examples:
     def _getVisualizeDict(self):
         self._load()
         return {'showImagesInClasses': self._showImagesInClasses,
+                'showImagesAngularAssignment' : self._showImagesAngularAssignment,
                 'showLL': self._showLL,
                 'showPMax': self._showPMax,
                 'showChanges': self._showChanges,
@@ -219,13 +220,27 @@ Examples:
     
     def createDataView(self, filename, viewParams={}):
         return em.DataView(filename, env=self._env, viewParams=viewParams)
-        
+    
     def createScipionView(self, filename, viewParams={}):
         inputParticlesId = self.protocol.inputParticles.get().strId()
         ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
         return ViewClass(self._project,
                           self.protocol.strId(), filename, other=inputParticlesId,
                           env=self._env, viewParams=viewParams)
+        
+    def createScipionPartView(self, filename, viewParams={}):
+        inputParticlesId = self.protocol._getInputParticles().strId()
+        
+        labels =  'enabled id _size _filename _transform._matrix'
+        viewParams = {em.ORDER:labels,
+                      em.VISIBLE: labels, em.RENDER:'_filename',
+                      'labels': 'id',
+                      }
+        return em.ObjectView(self._project.getName(), 
+                          self.protocol.strId(), filename, other=inputParticlesId,
+                          env=self._env, viewParams=viewParams)
+        
+        
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
@@ -296,7 +311,22 @@ Examples:
             views.append(v)
         
         return views
-          
+
+#===============================================================================
+# showImagesAngularAssignment     
+#===============================================================================
+
+    def _showImagesAngularAssignment(self, paramName=None):
+        
+        views = []
+        
+        for it in self._iterations:
+            fn = self.protocol._getIterData(it, alignType=em.ALIGN_PROJ)
+            v = self.createScipionPartView(fn)
+            views.append(v)
+        
+        return views
+    
 #=====================================================================
 # showLLRelion
 #=====================================================================

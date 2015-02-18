@@ -523,7 +523,7 @@ def writeSetOfParticles(imgSet, starFile,
     partMd.write('%s@%s' % (blockName, starFile))
 
 
-def writeSqliteIterData(imgStar, imgSqlite):
+def writeSqliteIterData(imgStar, imgSqlite, **kwargs):
     """ Given a Relion images star file (from some iteration)
     create the corresponding SetOfParticles (sqlite file)
     for this iteration. This file can be visualized sorted
@@ -531,7 +531,7 @@ def writeSqliteIterData(imgStar, imgSqlite):
     """
     cleanPath(imgSqlite)
     imgSet = em.SetOfParticles(filename=imgSqlite)
-    readSetOfParticles(imgStar, imgSet)
+    readSetOfParticles(imgStar, imgSet, **kwargs)
     imgSet.write()
     
     
