@@ -219,10 +219,11 @@ public class PlotJDialog extends XmippDialog {
                             ScipionGalleryData data = (ScipionGalleryData)gallery.data;
                             String orderColumn = "id";
                             String orderDirection = "ASC";
-                            if(params.sortby != null)
+                            String[] sortby = data.getSortBy();
+                            if(sortby != null)
                             {
-                                orderColumn = params.sortby[0];
-                                orderDirection = params.sortby[1];
+                                orderColumn = sortby[0];
+                                orderDirection = sortby[1];
                             }   
                             String command = String.format("run function scheduleSqlitePlot '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' %s %s", 
                                     data.getFileName(), data.getPreffix(), 
