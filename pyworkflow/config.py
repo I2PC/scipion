@@ -359,3 +359,13 @@ class NodeConfigList(pwobj.List):
     def clear(self):
         pwobj.List.clear(self)
         self._nodesDict.clear()
+        
+        
+class DownloadRecord(pwobj.OrderedObject):
+    """ Store information about Scipion downloads. """
+    def __init__(self, **kwargs):
+        pwobj.OrderedObject.__init__(self, **kwargs)
+        
+        self.fullName = pwobj.String(kwargs.get('fullName', None))
+        self.organization = pwobj.String(kwargs.get('organization', None))
+    
