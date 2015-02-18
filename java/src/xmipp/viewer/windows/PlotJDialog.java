@@ -203,9 +203,10 @@ public class PlotJDialog extends XmippDialog {
                                 plotci = ci;
 			}
 		}
-                if(plots ==  1)
-                    tfYLabel.setText(plotci.labelName);
                 String ylabel = tfYLabel.getText().trim();
+                if(plots ==  1 && ylabel.isEmpty())
+                    ylabel = plotci.labelName;
+
 		if (!checked)
 			return;
 
@@ -227,7 +228,7 @@ public class PlotJDialog extends XmippDialog {
                             }   
                             String command = String.format("run function scheduleSqlitePlot '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' %s %s", 
                                     data.getFileName(), data.getPreffix(), 
-                                labels, colors, styles, markers, getXColumn(), getYLabel(), getXLabel(), getPlotTitle(), getBins(), orderColumn, orderDirection);
+                                labels, colors, styles, markers, getXColumn(), ylabel, getXLabel(), getPlotTitle(), getBins(), orderColumn, orderDirection);
                             
                             XmippWindowUtil.runCommand(command, params.port);
                         }
@@ -277,10 +278,7 @@ public class PlotJDialog extends XmippDialog {
             return tfXLabel.getText().trim();
         }
         
-        public String getYLabel()
-        {
-            return tfYLabel.getText().trim();
-        }
+       
 
         public String getPlotTitle() {
             return tfTitle.getText();

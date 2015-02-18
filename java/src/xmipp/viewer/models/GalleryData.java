@@ -426,10 +426,10 @@ public class GalleryData {
             mode = Mode.TABLE_MD;
             zoom = 100;
         }
-        if(sortby != null)
+        if(parameters.sortby != null && parameters.getBlock().equals(selectedBlock))
         {
-            ColumnInfo sortci = getColumnInfo(sortby[0]);
-            boolean asc = sortby.length == 1 || sortby[1].equalsIgnoreCase("asc");
+            ColumnInfo sortci = getColumnInfo(parameters.sortby[0]);
+            boolean asc = parameters.sortby.length == 1 || parameters.sortby[1].equalsIgnoreCase("asc");
             if(sortci != null)
                 sortMd(sortci, asc);
         }
