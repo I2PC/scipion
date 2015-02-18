@@ -69,7 +69,7 @@ def form(request):
         protocol_parent = project.getProtocol(int(protRunIdViewer))
         protocol.setProtocol(protocol_parent)
     
-    hosts = [host.getLabel() for host in project.getSettings().getHosts()]
+    hosts = project.getHostNames()
     
     visualize = 0
     

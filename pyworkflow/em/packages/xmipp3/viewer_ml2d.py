@@ -29,7 +29,7 @@ visualization program.
 """
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
-from pyworkflow.gui.form import FormWindow
+from pyworkflow.protocol.params import LabelParam
 from protocol_ml2d import XmippProtML2D
 from convert import readSetOfClasses2D
 import numpy as np
@@ -60,22 +60,22 @@ class XmippML2DViewer(ProtocolViewer):
         group.addParam('iterSelection', StringParam, condition='classesToShow==%d' % ITER_SEL,
                       label="Iter selection",
                       help="Select several iterations such as: 1,3,4 or 3-5 ")        
-        group.addParam('doShowPlots', BooleanParam, default=True, 
+        group.addParam('doShowPlots', LabelParam,
                        label="Show all plots per iteration?",
                       help='Visualize several plots.')
         
-        group = form.addGroup('Iteration plots', condition='doShowPlots')
-        group.addParam('doShowLL', BooleanParam, default=False, 
+        group = form.addGroup('Iteration plots')
+        group.addParam('doShowLL', LabelParam,
                        label="Show Log-Likehood over iterations?",
                        help='The Log-Likelihood value should increase.')      
-        group.addParam('doShowPmax', BooleanParam, default=False, 
+        group.addParam('doShowPmax', LabelParam,
                        label="Show maximum model probability?", 
                        help='Show the maximum probability for a model, \n'
                             'this should tend to be a deltha function.')      
-        group.addParam('doShowSignalChange', BooleanParam, default=False,
+        group.addParam('doShowSignalChange', LabelParam,
                        label="Show plot for signal change?", 
                        help='Should approach to zero when convergence.')      
-        group.addParam('doShowMirror', BooleanParam, default=False,
+        group.addParam('doShowMirror', LabelParam,
                        label="Show mirror fraction for last iteration?", 
                        help='he the mirror fraction of each class in last iteration.')
         
@@ -122,7 +122,7 @@ class XmippML2DViewer(ProtocolViewer):
                 # Create a classes sqlite from the classes.xmd
                 fnSqlite = self._getClassesSqlite(fn, it)
                 #views.append(DataView('classes@' + fn))
-                views.append(ClassesView(self.getProject().getName(), 
+                views.append(ClassesView(self.getProject(),
                                         self.protocol.strId(), fnSqlite, 
                                         self.protocol.inputParticles.get().strId()))
             else:

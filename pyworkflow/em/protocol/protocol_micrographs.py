@@ -33,7 +33,7 @@ from os.path import join, basename, exists, dirname, relpath
 from itertools import izip
 
 from pyworkflow.object import String
-from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, LEVEL_EXPERT
+from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, FloatParam, IntParam, TextParam, BooleanParam, FileParam
 from pyworkflow.utils.path import copyTree, copyFile, removeBaseExt, makePath, moveFile
 from pyworkflow.utils.properties import Message

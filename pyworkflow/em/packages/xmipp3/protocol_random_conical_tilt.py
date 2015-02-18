@@ -32,7 +32,7 @@ from os.path import exists
 
 import xmipp
 from pyworkflow.object import String
-from pyworkflow.protocol.constants import  LEVEL_EXPERT
+from pyworkflow.protocol.constants import  LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, IntParam, StringParam, 
                                         BooleanParam, FloatParam, STEPS_PARALLEL)
 from pyworkflow.em.protocol import ProtInitialVolume
@@ -70,18 +70,18 @@ class XmippProtRCT(ProtInitialVolume):
                       label='Thin Object', 
                       help=' If the object is thin, then the tilted projections can be stretched to match the untilted projections')
                        
-        form.addParam('maxShift', IntParam, default="10", expertLevel=LEVEL_EXPERT,
+        form.addParam('maxShift', IntParam, default="10", expertLevel=LEVEL_ADVANCED,
                       label="Maximum allowed shift for tilted particles (pixels)", 
                       help='Particles that shift more will be discarded. A value larger than the '
                       'image size will not discard any particle.')
         
-        form.addParam('skipTranslation', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
+        form.addParam('skipTranslation', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label='Skip tilted translation alignment', 
                       help=' If the tilted image quality is very low, then this alignment might result in poor estimates.')
 
         form.addSection(label='Reconstruction')
 
-        form.addParam('additionalParams', StringParam, default="-n 5 -l 0.01", expertLevel=LEVEL_EXPERT,
+        form.addParam('additionalParams', StringParam, default="-n 5 -l 0.01", expertLevel=LEVEL_ADVANCED,
                       label='Additional reconstruction parameters', 
                       help='See: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Reconstruct_art_v31')
         

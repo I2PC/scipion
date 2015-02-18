@@ -71,7 +71,7 @@ class XmippMovieAlignViewer(ProtocolViewer):
         #return XmippViewer(project=self._project)._visualize(self.protocol.outputMicrographs)
         outputMics = self.protocol.outputMicrographs
         objCommands = '%s' % (OBJCMD_MOVIE_ALIGNPOLAR)
-        return [ObjectView(self._project.getName(), outputMics.strId(), outputMics.getFileName(), self.protocol.strId(), viewParams={OBJCMDS: objCommands})]
+        return [ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), self.protocol.strId(), viewParams={OBJCMDS: objCommands})]
 
     def showPlots(self, paramName):
         createPlots(self.plotToShow.get(), self.protocol, self.movieId.get())

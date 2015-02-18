@@ -34,7 +34,7 @@ from glob import glob
 import xmipp
 from pyworkflow.protocol.params import (PointerParam, IntParam, EnumParam, 
                                         StringParam, FloatParam, 
-                                        LEVEL_ADVANCED, LEVEL_EXPERT,
+                                        LEVEL_ADVANCED, LEVEL_ADVANCED,
     BooleanParam)
 from pyworkflow.em.protocol import ProtClassify2D, SetOfClasses2D
 from pyworkflow.utils.path import cleanPath, makePath
@@ -98,7 +98,7 @@ class XmippProtCL2D(ProtClassify2D):
                       label="Clustering method", default=CL_CLASSICAL, expertLevel=LEVEL_ADVANCED,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Use the classical clustering criterion or the robust')
-        form.addParam('extraParams', StringParam, expertLevel=LEVEL_EXPERT,
+        form.addParam('extraParams', StringParam, expertLevel=LEVEL_ADVANCED,
               label='Additional parameters',
               help='Additional parameters for classify_CL2D: \n  --verbose, --corrSplit, ...')
 
@@ -106,13 +106,13 @@ class XmippProtCL2D(ProtClassify2D):
         form.addParam('doCore', BooleanParam, default=True,
                       label='Perform core analysis',
                       help='An image belongs to the core if it is close (see Junk Zscore and PCA Zscore) to the class center')
-        form.addParam('thZscore', FloatParam, default=3, expertLevel=LEVEL_EXPERT,
+        form.addParam('thZscore', FloatParam, default=3, expertLevel=LEVEL_ADVANCED,
                       label='Junk Zscore',
                       help='Which is the average Z-score to be considered as junk. Typical values'
                            'go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is'
                            'within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores'
                            'accept more images.', condition='doCore')
-        form.addParam('thPCAZscore', FloatParam, default=3, expertLevel=LEVEL_EXPERT,
+        form.addParam('thPCAZscore', FloatParam, default=3, expertLevel=LEVEL_ADVANCED,
                       label='PCA Zscore',
                       help='Which is the PCA Z-score to be considered as junk. Typical values'
                            'go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is'
@@ -127,7 +127,7 @@ class XmippProtCL2D(ProtClassify2D):
                       help='An image belongs to the stable core if it has been with other images in the same class'
                            'in all the previous levels except possibly a few of them. Tolerance defines how few is few.'
                            'Tolerance=0 means that an image must be in all previous levels with the rest of images in'
-                           'the core.', expertLevel=LEVEL_EXPERT, condition='doCore and doStableCore')
+                           'the core.', expertLevel=LEVEL_ADVANCED, condition='doCore and doStableCore')
 
         form.addParallelSection(threads=0, mpi=4)
 

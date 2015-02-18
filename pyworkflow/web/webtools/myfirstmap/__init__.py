@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,28 +23,5 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module will be executed in remote host in order
-to launch a protocol remotely. 
-It will receive as params:
-    - path to mapper to read protocol
-    - id of the protocol object in the mapper
-    - wait True force to wait until protocol has finished 
-"""
-import sys
-from os.path import basename
-from pyworkflow.protocol import getProtocolFromDb
-from pyworkflow.protocol.launch import _launchLocal
 
-
-if __name__ == '__main__':
-    if len(sys.argv) > 3:
-        dbPath = sys.argv[1]
-        protId = int(sys.argv[2])
-        wait = bool(sys.argv[3])
-        protocol = getProtocolFromDb(dbPath, protId)
-        jobId = _launchLocal(protocol, wait)
-        # Print the status to be read 
-        print "OUTPUT jobId %s" % jobId
-    else:
-        print "usage: %s dbPath protocolID wait" % basename(sys.argv[0])
+from urls import urls

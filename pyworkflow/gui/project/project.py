@@ -33,38 +33,62 @@ It is composed by three panels:
 """
 
 import os
-from os.path import basename
-import subprocess
-
-import pyworkflow as pw
+from pyworkflow.utils.utils import envVarOn
 from pyworkflow.manager import Manager
-from pyworkflow.config import * # We need this to retrieve object from mapper
+from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project
 from pyworkflow.gui import Message
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.gui.plotter import Plotter
-
+import threading
+import shlex
+from pyworkflow.gui.text import _open_cmd
+import SocketServer
+import matplotlib.pyplot as plt
+# Import possible Object commands to be handled
+from pyworkflow.em.showj import OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
-
+from pyworkflow.em.packages.xmipp3 import XmippProtRecalculateCTF
+from pyworkflow.em.packages.grigoriefflab import ProtRecalculateCTFFind
 
 
 class ProjectWindow(ProjectBaseWindow):
     """ Main window for working in a Project. """
     def __init__(self, path, master=None):
         # Load global configuration
-        self.projName = Message.LABEL_PROJECT + basename(path)
+        self.projName = Message.LABEL_PROJECT + os.path.basename(path)
         self.projPath = path
         self.loadProject()
+
+        # TODO: put the menu part more nicely. From here:
+        menu = MenuConfig()
+
+        projMenu = menu.addSubMenu('Project')
+        projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
+        projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
+        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
+        projMenu.addSubMenu('Export tree graph', 'export_tree')
+        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
+
+        helpMenu = menu.addSubMenu('Help')
+        helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
+        helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
+
+        self.menuCfg = menu
+        # TODO: up to here
+
         self.icon = self.generalCfg.icon.get()
         self.selectedProtocol = None
         self.showGraph = False
-        
-        Plotter.setBackend('TkAgg')   
-        
+        Plotter.setBackend('TkAgg')
         ProjectBaseWindow.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
-        
         self.switchView(VIEW_PROTOCOLS)
-    
+
+        self.initProjectTCPServer()#Socket thread to communicate with clients
+
+
     def createHeaderFrame(self, parent):
         """Create the header and add the view selection frame at the right."""
         header = ProjectBaseWindow.createHeaderFrame(self, parent)
@@ -89,8 +113,7 @@ class ProjectWindow(ProjectBaseWindow):
         self.project.load()
         self.settings = self.project.getSettings()
         self.generalCfg = self.settings.getConfig()
-        self.menuCfg = self.settings.getCurrentMenu()
-        self.protCfg = self.settings.getCurrentProtocolMenu()
+        self.protCfg = self.project.getCurrentProtocolView()
 
     #
     # The next functions are callbacks from the menu options.
@@ -131,14 +154,158 @@ class ProjectWindow(ProjectBaseWindow):
                           selectButton='Import'
                           ).show()
 
+    def onExportTreeGraph(self):
+        runsGraph = self.project.getRunsGraph(refresh=True)
+        useId = not envVarOn('SCIPION_TREE_NAME')
+        runsGraph.printDot(useId=useId)
+        if useId:
+            print "\nexport SCIPION_TREE_NAME=1 # to use names instead of ids"
+        else:
+            print "\nexport SCIPION_TREE_NAME=0 # to use ids instead of names"
+
+    def initProjectTCPServer(self):
+        server = ProjectTCPServer((self.project.address, self.project.port), ProjectTCPRequestHandler)
+        server.project = self.project
+        server.window = self
+        server_thread = threading.Thread(target=server.serve_forever)
+        # Exit the server thread when the main thread terminates
+        server_thread.daemon = True
+        server_thread.start()
+
+    def scheduleSqlitePlot(self, *args):
+        self.queue.put(lambda: self.plotSqlite(*args))
+
+    def plotSqlite(self, dbName, dbPreffix,
+                   columnsStr, colorsStr, linesStr, markersStr,
+                   xcolumn, ylabel, xlabel, title, bins, orderColumn, orderDirection):
+        columns = columnsStr.split()
+        colors = colorsStr.split()
+        lines = linesStr.split()
+        markers = markersStr.split()
+
+        from pyworkflow.mapper.sqlite import SqliteFlatDb
+        db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPreffix)
+        setClassName = db.getProperty('self') # get the set class name
+        from pyworkflow.em import getObjects
+        setObj = getObjects()[setClassName](filename=dbName, prefix=dbPreffix)
+
+        if xcolumn:
+            xvalues = []
+
+            for obj in setObj.iterItems(orderBy=orderColumn, direction=orderDirection):
+                if hasattr(obj, xcolumn):
+                    value = getattr(obj, xcolumn)
+                elif xcolumn == 'id':
+                    id = int(obj.getObjId())
+                    xvalues.append(id)
+
+        else:
+            xvalues = range(0, setObj.getSize())
+        i = 0
+        plotter = Plotter(windowTitle=title)
+        ax = plotter.createSubPlot(title, xlabel, ylabel)
+
+        for column in columns:
+            yvalues = []
+
+            for obj in setObj.iterItems(orderBy=orderColumn, direction=orderDirection):
+                if hasattr(obj, column):
+                    value = getattr(obj, column)
+                    yvalues.append(value.get())
+                elif column == 'id':
+                    id = int(obj.getObjId())
+                    yvalues.append(id)
+            color = colors[i]
+            line = lines[i]
+            if bins:
+                ax.hist(yvalues, bins=int(bins), color=color, linestyle=line)
+            else:
+                marker = (markers[i] if not markers[i] == 'none' else None)
+                ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line)
+            i += 1
+
+        plotter.show()
+
+    def runObjectCommand(self, cmd, protocolStrId, objStrId):
+        from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
+        from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots, PLOT_POLAR, PLOT_CART, PLOT_POLARCART
+        from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createVmdView
+        protocolId = int(protocolStrId)
+        objId = int(objStrId)
+        project = self.project
+        protocol = project.mapper.selectById(protocolId)
+
+        #Plotter.setBackend('TkAgg')
+        if cmd == OBJCMD_NMA_PLOTDIST:
+            self.queue.put(lambda: createDistanceProfilePlot(protocol, modeNumber=objId).show())
+
+        elif cmd == OBJCMD_NMA_VMD:
+            vmd = createVmdView(protocol, modeNumber=objId)
+            vmd.show()
+
+        elif cmd == OBJCMD_MOVIE_ALIGNPOLAR:
+            self.queue.put(lambda: createPlots(PLOT_POLAR, protocol, objId))
+
+        elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
+            self.queue.put(lambda: createPlots(PLOT_CART, protocol, objId))
+
+        elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
+            self.queue.put(lambda: createPlots(PLOT_POLARCART, protocol, objId))
+
+    def recalculateCTF(self, inputObjId, sqliteFile):
+        """ Load the project and launch the protocol to
+        create the subset.
+        """
+        # Retrieve project, input protocol and object from db
+        project = self.project
+        inputObj = project.mapper.selectById(int(inputObjId))
+        parentProtId = inputObj.getObjParentId()
+        parentProt = project.mapper.selectById(parentProtId)
+        parentClassName = parentProt.getClassName()
+        if parentClassName in ["XmippProtCTFMicrographs",
+                               "XmippProtRecalculateCTF"]:
+            # Create the new protocol
+            prot = project.newProtocol(XmippProtRecalculateCTF)
+        elif parentClassName in ["ProtCTFFind",
+                                 "ProtRecalculateCTFFind"]:
+            # Create the new protocol
+            prot = project.newProtocol(ProtRecalculateCTFFind)
+        else:
+            raise Exception('Unknown protocol class "%s" for recalculating CTF' % parentClassName)
+
+        useQueue = parentProt.useQueue()
+        Mpi = parentProt.numberOfMpi.get()
+        Threads = parentProt.numberOfThreads.get()
+        # Define the input params of the new protocol
+        prot._useQUeue = useQueue
+        prot.numberOfMpi.set(Mpi)
+        prot.numberOfThreads.set(Threads)
+        prot.sqliteFile.set(sqliteFile)
+        prot.inputCtf.set(inputObj)
+         # Launch the protocol
+        project.launchProtocol(prot, wait=True)
+
+
 
 class ProjectManagerWindow(ProjectBaseWindow):
     """ Windows to manage all projects. """
     def __init__(self, **args):
         # Load global configuration
         settings = ProjectSettings()
-        settings.loadConfig()
-        self.menuCfg = settings.getCurrentMenu()
+
+        # TODO: put the menu part more nicely. From here:
+        menu = MenuConfig()
+
+        confMenu = menu.addSubMenu('Configuration')
+        confMenu.addSubMenu('General', 'general')
+        confMenu.addSubMenu('Hosts', 'hosts')
+        confMenu.addSubMenu('Protocols', 'protocols')
+
+        helpMenu = menu.addSubMenu('Help')
+        helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
+        helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
+
+        self.menuCfg = menu
         self.generalCfg = settings.getConfig()
         
         ProjectBaseWindow.__init__(self, Message.LABEL_PROJECTS, minsize=(750, 500), **args)
@@ -150,33 +317,57 @@ class ProjectManagerWindow(ProjectBaseWindow):
     # The next functions are callbacks from the menu options.
     # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
     #
-    def onBrowseFiles(self):
-        # Project -> Browse files
-        subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
-                          'browser', 'dir', os.environ['SCIPION_USER_DATA']])
-        # I'd like to do something like
-        #   from pyworkflow.gui.browser import FileBrowserWindow
-        #   FileBrowserWindow("Browsing: " + path, path=path).show()
-        # but it doesn't work because the images are not shared by the
-        # Tk() instance or something like that.
+    def onGeneral(self):
+        # Config -> General
+        _open_cmd('%s/.config/scipion/scipion.conf' % os.environ['HOME'])
 
-    def onRemoveTemporaryFiles(self):
-        # Project -> Remove temporary files
-        tmpPath = os.environ['SCIPION_TMP']
-        n = 0
-        try:
-            for fname in os.listdir(tmpPath):
-                fpath = "%s/%s" % (tmpPath, fname)
-                if os.path.isfile(fpath):
-                    os.remove(fpath)
-                    n += 1
-                # TODO: think what to do with directories. Delete? Report?
-            self.showInfo("Deleted content of %s -- %d file(s)." % (tmpPath, n))
-        except Exception as e:
-            self.showError(str(e))
+    def onHosts(self):
+        # Config -> Hosts
+        _open_cmd('%s/.config/scipion/hosts.conf' % os.environ['HOME'])
 
-    def onCleanProject(self):
-        # Project -> Clean project
-        self.showInfo("I did nothing, because I don't know what I'm supposed "
-                      "to do here.")
-        # TODO: well, something, clearly.
+    def onProtocols(self):
+        # Config -> Protocols
+        _open_cmd('%s/.config/scipion/protocols.conf' % os.environ['HOME'])
+
+
+
+class ProjectTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+    pass
+
+
+
+class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
+
+    def handle(self):
+        project = self.server.project
+        window = self.server.window
+        msg = self.request.recv(1024)
+        tokens = shlex.split(msg)
+        #print msg
+        if msg.startswith('run protocol'):
+            protocolName = tokens[2]
+            from pyworkflow.em import getProtocols
+            protocolClass = getProtocols()[protocolName]
+            # Create the new protocol instance and set the input values
+            protocol = project.newProtocol(protocolClass)
+
+            for token in tokens[3:]:
+                #print token
+                param, value = token.split('=')
+                attr = getattr(protocol, param, None)
+                if param == 'label':
+                    protocol.setObjLabel(value)
+                elif attr.isPointer():
+                    obj = project.getObject(int(value))
+                    attr.set(obj)
+                elif value:
+                    attr.set(value)
+            project.launchProtocol(protocol, wait=True)
+        if msg.startswith('run function'):
+            functionName = tokens[2]
+            functionPointer = getattr(window, functionName)
+            functionPointer(*tokens[3:])
+        else:
+            answer = 'no answer available'
+            self.request.sendall(answer + '\n')
+

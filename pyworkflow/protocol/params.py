@@ -58,7 +58,7 @@ class FormElement(OrderedObject):
         return self.expertLevel > LEVEL_NORMAL
     
     def setExpert(self):
-        self.expertLevel.set(LEVEL_EXPERT)
+        self.expertLevel.set(LEVEL_ADVANCED)
         
     def isImportant(self):
         return self._isImportant.get()

@@ -30,6 +30,7 @@ from os.path import exists
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from pyworkflow.em.plotter import EmPlotter
+from pyworkflow.protocol.params import LabelParam
 
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
@@ -62,11 +63,11 @@ Examples:
 "2,6,9-11" -> [2,6,9,10,11]
 "2 5, 6-8" -> [2,5,6,7,8]                      
                    """)
-        form.addParam('doShow3DRefsVolumes', BooleanParam, label="Visualize the 3D-references volumes?", default=True)
-        form.addParam('doShow3DReconsVolumes', BooleanParam, label="Visualize the 3D-reconstructed volumes?", default=True)
-        form.addParam('doShow3DMatchProj', BooleanParam, label="Visualize the matching projections of refinement?", default=True)
-        form.addParam('doShowAngDist', BooleanParam, label="Plot angular distribution?", default=True)
-#         form.addParam('doShowDataDist', BooleanParam, label="Plot data distribution over 3d-references?", default=True)
+        form.addParam('doShow3DRefsVolumes', LabelParam, label="Visualize the 3D-references volumes?", default=True)
+        form.addParam('doShow3DReconsVolumes', LabelParam, label="Visualize the 3D-reconstructed volumes?", default=True)
+        form.addParam('doShow3DMatchProj', LabelParam, label="Visualize the matching projections of refinement?", default=True)
+        form.addParam('doShowAngDist', LabelParam, label="Plot angular distribution?", default=True)
+#         form.addParam('doShowDataDist', LabelParam, label="Plot data distribution over 3d-references?", default=True)
         
 #         form.addSection(label='Overall Results')
 #         form.addParam('doShowStatistics', BooleanParam, label="Plot overall convergence statistics?", default=True)
@@ -95,14 +96,14 @@ Examples:
         path = self.protocol._getExtraPath('viewer_refvolumes.sqlite')
         samplingRate = self.protocol.inputParticles.get().getSamplingRate()
         self.createVolumesSqlite(files, path, samplingRate)
-        return [ObjectView(self._project.getName(), self.protocol.strId(), path)]
+        return [ObjectView(self._project, self.protocol.strId(), path)]
         
     def _view3DReconVolumes(self, e=None):
         files = self._getIterationFile("volume_iter_%03d.mrc")
         path = self.protocol._getExtraPath('viewer_volumes.sqlite')
         samplingRate = self.protocol.inputParticles.get().getSamplingRate()
         self.createVolumesSqlite(files, path, samplingRate)
-        return [ObjectView(self._project.getName(), self.protocol.strId(), path)]
+        return [ObjectView(self._project, self.protocol.strId(), path)]
     
     def _viewMatchProj(self, e=None):
         files = self._getIterationFile("particles_match_iter_%03d.mrc")
@@ -270,7 +271,7 @@ class ProtCTFFindViewer(Viewer):
             fn = obj.getFileName()
             psdLabels = '_psdFile'
             labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _micObj._filename' % psdLabels 
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
+            self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))
             
         return self._views

@@ -30,7 +30,7 @@ This sub-package contains wrapper around ML2D Xmipp program
 from os.path import join, exists
 
 from pyworkflow.em.protocol import ProtClassify2D
-from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
+from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, BooleanParam, IntParam, FloatParam
 
 from convert import writeSetOfParticles, readSetOfClasses2D
@@ -129,10 +129,10 @@ class XmippProtML2D(ProtClassify2D):
         form.addParam('psiStep', FloatParam, default=5.0, expertLevel=LEVEL_ADVANCED,
                       label='In-plane rotation sampling (degrees)',
                       help='In-plane rotation sampling interval (degrees).')          
-        form.addParam('stdNoise', FloatParam, default=1.0, expertLevel=LEVEL_EXPERT,
+        form.addParam('stdNoise', FloatParam, default=1.0, expertLevel=LEVEL_ADVANCED,
                       label='Std for pixel noise',
                       help='Expected standard deviation for pixel noise.')               
-        form.addParam('stdOffset', FloatParam, default=3.0, expertLevel=LEVEL_EXPERT,
+        form.addParam('stdOffset', FloatParam, default=3.0, expertLevel=LEVEL_ADVANCED,
                       label='Std for origin offset',
                       help='Expected standard deviation for origin offset (pixels).') 
         

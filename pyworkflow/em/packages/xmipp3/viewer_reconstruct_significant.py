@@ -33,7 +33,7 @@ from pyworkflow.em import *
 from protocol_reconstruct_significant import XmippProtReconstructSignificant
 from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
-from pyworkflow.protocol.params import HiddenBooleanParam
+from pyworkflow.protocol.params import LabelParam
 from convert import readSetOfParticles
 import glob
 
@@ -53,9 +53,9 @@ class XmippReconstructSignificantViewer(ProtocolViewer):
         form.addSection(label='Visualization')
         form.addParam('volumeToVisualize', IntParam, default=0,
                       label="Volume to visualize")      
-        form.addParam('doShowAngles', HiddenBooleanParam, default=False,
+        form.addParam('doShowAngles', LabelParam, default=False,
                       label="Visualize Significant Angular assignment")      
-        form.addParam('doShowImagesSignificant', HiddenBooleanParam, default=False,
+        form.addParam('doShowImagesSignificant', LabelParam, default=False,
                       label="Visualize Optimal Angular assignment")
         if self.protocol.keepIntermediate:
             form.addParam('iterationToVisualize', IntParam, default=-1,
@@ -99,7 +99,7 @@ class XmippReconstructSignificantViewer(ProtocolViewer):
         if iteration!=-1:
             fnAngles=self.protocol._getExtraPath('angles_iter%03d_%02d'%(iteration,self.volumeToVisualize.get()))
             fnSqlite=self._getMetadataSqlite(fnAngles)
-            return [ObjectView(self._project.getName(), self.protocol.strId(), fnSqlite)]
+            return [ObjectView(self._project, self.protocol.strId(), fnSqlite)]
         else:
             return [self.errorMessage("Requested iteration does not exist, the iteration number is larger than the number of calculated iterations. First iteration is number 0")]
 
@@ -111,6 +111,6 @@ class XmippReconstructSignificantViewer(ProtocolViewer):
         if iteration!=-1:
             fnImages=self.protocol._getExtraPath('images_significant_iter%03d_%02d'%(iteration,self.volumeToVisualize.get()))
             fnSqlite=self._getMetadataSqlite(fnImages)
-            return [ObjectView(self._project.getName(), self.protocol.strId(), fnSqlite)]
+            return [ObjectView(self._project, self.protocol.strId(), fnSqlite)]
         else:
             return [self.errorMessage("Requested iteration does not exist, the iteration number is larger than the number of calculated iterations. First iteration is number 0")]

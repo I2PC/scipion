@@ -34,7 +34,7 @@ import numpy as np
 
 from pyworkflow.utils.path import cleanPath, makePath, cleanPattern
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO)
-from pyworkflow.protocol.params import StringParam, BooleanParam
+from pyworkflow.protocol.params import StringParam, LabelParam
 from pyworkflow.em.data import SetOfParticles
 from pyworkflow.utils.process import runJob
 from pyworkflow.em.viewer import VmdView
@@ -55,8 +55,13 @@ class XmippDimredNMAViewer(ProtocolViewer):
     
     def __init__(self, **kwargs):
         ProtocolViewer.__init__(self, **kwargs)
-        self.data = self.loadData()
-        
+        self._data = None
+
+    def getData(self):
+        if self._data is None:
+            self._data = self.loadData()
+        return self._data
+
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         form.addParam('displayRawDeformation', StringParam, default='1',
@@ -67,12 +72,12 @@ class XmippDimredNMAViewer(ProtocolViewer):
                            'Type 1 2 3 to see the 3D plot of raw deformations 1, 2 and 3; etc.'
                            )
         
-        form.addParam('displayClustering', BooleanParam, default=False,
+        form.addParam('displayClustering', LabelParam,
                       label='Open clustering tool?',
                       help='Open a GUI to visualize the images as points'
                            'and select some of them to create new clusters.')
          
-        form.addParam('displayTrajectories', BooleanParam, default=False,
+        form.addParam('displayTrajectories', LabelParam,
                       label='Open trajectories tool?',
                       help='Open a GUI to visualize the images as points'
                            'to draw and ajust trajectories.')       
@@ -103,19 +108,19 @@ class XmippDimredNMAViewer(ProtocolViewer):
                               title="Invalid input")]
             
             # Actually plot
-            plotter = XmippNmaPlotter(data=self.data) 
+            plotter = XmippNmaPlotter(data=self.getData())
             baseList = [basename(n) for n in modeNameList]
             
             if dim == 1:
-                self.data.XIND = modeList[0]
+                self.getData().XIND = modeList[0]
                 plotter.plotArray1D("Histogram for %s" % baseList[0], 
                                     "Deformation value", "Number of images")
             else:
-                self.data.YIND = modeList[1]
+                self.getData().YIND = modeList[1]
                 if dim == 2:
                     plotter.plotArray2D("%s vs %s" % tuple(baseList), *baseList)
                 elif dim == 3:
-                    self.data.ZIND = modeList[2]
+                    self.getData().ZIND = modeList[2]
                     plotter.plotArray3D("%s %s %s" % tuple(baseList), *baseList)
             views.append(plotter)
             
@@ -125,7 +130,7 @@ class XmippDimredNMAViewer(ProtocolViewer):
         self.clusterWindow = self.tkWindow(ClusteringWindow, 
                                            title='Clustering Tool',
                                            dim=self.protocol.reducedDim.get(),
-                                           data=self.data,
+                                           data=self.getData(),
                                            callback=self._createCluster
                                            )
         return [self.clusterWindow]
@@ -135,7 +140,7 @@ class XmippDimredNMAViewer(ProtocolViewer):
         self.trajectoriesWindow = self.tkWindow(TrajectoriesWindow, 
                               title='Trajectories Tool',
                               dim=self.protocol.reducedDim.get(),
-                              data=self.data,
+                              data=self.getData(),
                               callback=self._generateAnimation,
                               loadCallback=self._loadAnimation,
                               numberOfPoints=10
@@ -155,7 +160,7 @@ class XmippDimredNMAViewer(ProtocolViewer):
         cleanPath(fnSqlite)
         partSet = SetOfParticles(filename=fnSqlite)
         partSet.copyInfo(inputSet)
-        for point in self.data:
+        for point in self.getData():
             if point.getState() == Point.SELECTED:
                 particle = inputSet[point.getId()]
                 partSet.append(particle)

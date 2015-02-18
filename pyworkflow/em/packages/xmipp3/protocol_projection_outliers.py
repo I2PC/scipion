@@ -28,7 +28,7 @@ This sub-package contains wrapper around Projection Outliers Xmipp program
 """
 
 from pyworkflow.object import Float
-from pyworkflow.protocol.constants import LEVEL_EXPERT
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.constants import ALIGN_PROJ
@@ -66,7 +66,7 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
                         'If no symmetry is present, give c1')
-        form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_EXPERT,
+        form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label='Angular sampling rate',
                       help='In degrees.'
                       ' This sampling defines how fine the projection gallery from the volume is explored.')

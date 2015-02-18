@@ -28,6 +28,7 @@ Text based widgets.
 """
 import os
 import sys
+import time
 import webbrowser
 import subprocess
 import Tkinter as tk
@@ -55,23 +56,26 @@ elif os.name == 'posix':  # linux systems and so on
         return None
 
     x_open = find_prog('xdg-open', 'gnome-open', 'kde-open', 'gvfs-open')
-    editor = find_prog('gedit', 'kate', 'emacs', 'nedit', 'mousepad')
+    editor = find_prog('pluma', 'gedit', 'kate', 'emacs', 'nedit', 'mousepad')
 
     def _open_cmd(path):
-        if x_open:
-            if subprocess.Popen([x_open, path]) == 0:
-                return  # yay! that's the way to do it!
-        # If we couldn't open it in a standard way, try web and editors
+        # If it is an url, open with browser.
         if path.startswith('http://') or path.startswith('https://'):
             try:
                 webbrowser.open_new_tab(path)
                 return
             except:
                 pass
-        else:
-            if editor:
-                if subprocess.Popen([editor, path]) == 0:
-                    return  # hope we found your fav editor :)
+        if x_open:  # standard way to open
+            proc = subprocess.Popen([x_open, path])
+            time.sleep(1)
+            if proc.poll() in [None, 0]:
+                return  # yay! that's the way to do it!
+        if editor:  # last card: try to open it in an editor
+            proc = subprocess.Popen([editor, path])
+            time.sleep(1)
+            if proc.poll() in [None, 0]:
+                return  # hope we found your fav editor :)
         print 'WARNING: Cannot open %s' % path  # nothing worked! :(
 else:
     def _open_cmd(path):
@@ -613,7 +617,7 @@ def openTextFileEditor(filename):
     try:
         _open_cmd(filename)
     except:
-        showTextFileViewer("File viewer", [filename]) 
+        showTextFileViewer("File viewer", [filename])
     
     
 def showTextFileViewer(title, filelist, parent=None, main=False):

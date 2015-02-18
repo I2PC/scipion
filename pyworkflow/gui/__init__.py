@@ -27,3 +27,5 @@
 from gui import *
 from canvas import *
 from widgets import *
+
+import tooltip

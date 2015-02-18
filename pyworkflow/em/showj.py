@@ -59,13 +59,14 @@ ORDER = 'order'
 VISIBLE = 'visible'
 ZOOM = 'zoom'
 SORT_BY = 'sortby'
+SAMPLINGRATE = 'sampling_rate'
 
 OBJCMDS = 'object_commands'
-OBJCMD_NMA_PLOTDIST = "'Plot distance profile'"
-OBJCMD_NMA_VMD = "'Display VMD animation'"
-OBJCMD_MOVIE_ALIGNPOLAR = "'Display Polar Presentation'"
-OBJCMD_MOVIE_ALIGNCARTESIAN = "'Display Cartesian Presentation'"
-OBJCMD_MOVIE_ALIGNPOLARCARTESIAN = "'Display Polar + Cartesian Presentations'"
+OBJCMD_NMA_PLOTDIST = "Plot distance profile"
+OBJCMD_NMA_VMD = "Display VMD animation"
+OBJCMD_MOVIE_ALIGNPOLAR = "Display Polar Presentation"
+OBJCMD_MOVIE_ALIGNCARTESIAN = "Display Cartesian Presentation"
+OBJCMD_MOVIE_ALIGNPOLARCARTESIAN = "Display Polar + Cartesian Presentations"
 
 GOTO = 'goto'
 ROWS = 'rows'
@@ -77,6 +78,7 @@ SELECTEDITEMS = 'listSelectedItems'
 ENABLEDITEMS = 'listEnabledItems'
 CHANGES = 'listChangesItems'
 OLDMODE = 'oldModeShowj'
+RENDERITEMS = 'renderItems'
 
 VOL_SELECTED = 'volumesToRenderComboBox'
 VOL_TYPE = 'typeVolume'
@@ -121,16 +123,21 @@ class ColumnsConfig():
             col_properties = ColumnProperties(col, allowRender, colDefaultLayout)
             self._columnsDict[col.getName()] = col_properties
         
-    def getRenderableColumns(self):
-        """ Return a list with the name of renderable columns. """
-        
+    def getRenderableColumns(self, extra=None):
+        """ Return a list with the name of renderable columns. 
+            extra: parameter used to keep some rendering columns."""
         columnsName = []
         columnsLabel = []
         
         for col in self._columnsDict.values():
             if col.isRenderable():
-                columnsName.append(col.getName())
-                columnsLabel.append(col.getLabel())
+                if extra is not None:
+                    if col.getName() in extra:
+                        columnsName.append(col.getName())
+                        columnsLabel.append(col.getLabel())
+                else:
+                    columnsName.append(col.getName())
+                    columnsLabel.append(col.getLabel())
         
 #       columns = [col.getName() for col in self._columnsDict.values() if col.isRenderable()]
         return columnsName, columnsLabel
@@ -248,4 +255,14 @@ def runJavaIJapp(memory, appName, args, env={}):
 
     args = getJavaIJappArguments(memory, appName, args)
     print 'java %s'%args
-    subprocess.Popen('java ' + args, shell=True, env=env)
+    return subprocess.Popen('java ' + args, shell=True, env=env)
+
+def launchSupervisedPickerGUI(memory, micsFn, outputDir, mode, dbpath, protid, port):
+        app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
+        args = "--input %s --output %s --mode %s  --scipion %s \"%s\" %s"%(micsFn, outputDir, mode, dbpath, protid, port)
+        return runJavaIJapp("%dg" % memory, app, args)
+
+def launchTiltPairPickerGUI(memory, micsFn, outputDir, mode, dbpath, protid, port):
+        app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
+        args = "--input %s --output %s --mode %s  --scipion %s \"%s\" %s"%(micsFn, outputDir, mode, dbpath, protid, port)
+        return runJavaIJapp("%dg" % memory, app, args)

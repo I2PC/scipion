@@ -160,11 +160,11 @@ class XmippFilterHelper():
                       help=('Amplitude decay in a [[https://en.wikipedia.org/'
                             'wiki/Raised-cosine_filter][raised cosine]]'))
 
-        form.addParam('inputCTF', PointerParam,
+        form.addParam('inputCTF', PointerParam, allowsNull=True,
                       condition='filterModeFourier == %d' % cls.FM_CTF,
                       label='CTF Object',
                       pointerClass='CTFModel',
-                      help='Object with CTF information')
+                      help='Object with CTF information if empty it will take the CTF information related with the first particle')
 
         #wavelets
         form.addParam('waveletMode',  EnumParam, choices=['remove_scale',
@@ -354,17 +354,24 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertCTFXmippStep(self, ctfModel):
         #defocus comes from here
-        ctf = self.inputCTF.get()
         inputSet = self.inputParticles.get()
+
+        if self.inputCTF.hasValue():
+            ctf = self.inputCTF.get()
+        else:
+            ctf = inputSet.getFirstItem().getCTF()
         #is there any voltage, sampling and amplitud contrast available?
-        acquisition = inputSet.getAcquisition()
-        sampling = inputSet.getSamplingRate()
+        mic = ctf.getMicrograph()
+        acquisition = mic.getAcquisition()
+        sampling = mic.getSamplingRate()
         # Spherical aberration in mm
         ctf._xmipp_ctfVoltage = Float(acquisition.getVoltage())
         ctf._xmipp_ctfSphericalAberration = Float(acquisition.getSphericalAberration())
         ctf._xmipp_ctfQ0 = Float(acquisition.getAmplitudeContrast())
         ctf._xmipp_ctfSamplingRate = Float(sampling)
         writeCTFModel(ctf, ctfModel)
+        ##ROB
+        writeCTFModel(ctf, '/tmp/ctf.xmd')
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def filterStep(self, args):

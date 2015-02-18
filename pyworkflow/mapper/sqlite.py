@@ -62,6 +62,10 @@ class SqliteMapper(Mapper):
         return value
         
     def __insert(self, obj, namePrefix=None):
+        if not hasattr(obj, '_objDoStore'):
+            print "MAPPER: object '%s' doesn't seem to be an Object subclass," % obj
+            print "       it does not have attribute '_objDoStore'. Insert skipped."
+            return 
         obj._objId = self.db.insertObject(obj._objName, obj.getClassName(),
                                           self.__getObjectValue(obj), obj._objParentId,
                                           obj._objLabel, obj._objComment)
@@ -77,17 +81,16 @@ class SqliteMapper(Mapper):
         self.__insert(obj)
         
     def insertChild(self, obj, key, attr, namePrefix=None):
-        try:
-            if namePrefix is None:
-                namePrefix = self.__getNamePrefix(obj)
-            attr._objName = joinExt(namePrefix, key)
-            attr._objParentId = obj._objId
-            self.__insert(attr, namePrefix)
-        except Exception, ex:
-            print ">>> ERROR::insertChild"
-            print "    obj: ", obj
-            print "    key: ", key#, "attr: ", attr
-            raise ex
+        if not hasattr(attr, '_objDoStore'):
+            print "MAPPER: object '%s' doesn't seem to be an Object subclass," % attr
+            print "       it does not have attribute '_objDoStore'. Insert skipped."
+            return 
+
+        if namePrefix is None:
+            namePrefix = self.__getNamePrefix(obj)
+        attr._objName = joinExt(namePrefix, key)
+        attr._objParentId = obj._objId
+        self.__insert(attr, namePrefix)
         
     def insertChilds(self, obj, namePrefix=None):
         """ Insert childs of an object, if namePrefix is None,
@@ -206,24 +209,32 @@ class SqliteMapper(Mapper):
             # been processed first, so it will be in the dictiorary
             parentObj = self.objDict.get(parentId, None)
             if parentObj is None: # Something went wrong
-                raise Exception("Parent object (id=%d) was not found, object: %s" % (parentId, childRow['name']))
-            
+                #print "WARNING: Parent object (id=%d) was not found, object: %s. Ignored." % (parentId, childRow['name'])
+                continue
             childObj = getattr(parentObj, childName, None)
             if childObj is None:
                 childObj = self._buildObject(childRow['classname'])
+                # If we have any problem building the object, just ignore it
+                if childObj is None:
+                    continue
                 setattr(parentObj, childName, childObj)
             self.fillObjectWithRow(childObj, childRow)  
             #childsDict[childObj._objId] = childObj  
               
     def __objFromRow(self, objRow):
-        obj = self._buildObject(objRow['classname'])
-        self.fillObject(obj, objRow)
+        objClassName = objRow['classname']
+        
+        obj = self._buildObject(objClassName)
+        if obj is not None:
+            self.fillObject(obj, objRow)
+        
         return obj
         
     def __iterObjectsFromRows(self, objRows, objectFilter=None):
         for objRow in objRows:
             obj = self.__objFromRow(objRow)
-            if objectFilter is None or objectFilter(obj):
+            if (obj is not None and 
+                objectFilter is None or objectFilter(obj)):
                 yield obj
         
     def __objectsFromRows(self, objRows, iterate=False, objectFilter=None):
@@ -257,6 +268,7 @@ class SqliteMapper(Mapper):
     
     def selectByClass(self, className, includeSubclasses=True, iterate=False, objectFilter=None):
         self.__initObjDict()
+        
         if includeSubclasses:
             from pyworkflow.utils.reflection import getSubclasses
             whereStr = "classname='%s'" % className

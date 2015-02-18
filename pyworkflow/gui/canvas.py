@@ -92,6 +92,7 @@ class Canvas(tk.Canvas, Scrollable):
         tw = tk.Toplevel(self)
         tw.withdraw() # hidden by default
         tw.wm_overrideredirect(1) # Remove window decorations
+        tw.bind("<Leave>", self.hideTooltip)
         
         self._tooltip = tw
         
@@ -107,7 +108,7 @@ class Canvas(tk.Canvas, Scrollable):
             tw.wm_geometry("+%d+%d" % (x, y))
             tw.deiconify()
         
-    def _hideTooltip(self):
+    def hideTooltip(self, e=None):
         if self._tooltipOn:
             self._tooltipOn = False
             tw = self._tooltip # short notation
@@ -211,7 +212,7 @@ class Canvas(tk.Canvas, Scrollable):
     def onLeave(self, event):
         if self._tooltipId:
             self.after_cancel(self._tooltipId)
-            self._hideTooltip()
+            self.hideTooltip()
             
     def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
         tb = TextBox(self, text, x, y, bgColor, textColor)
