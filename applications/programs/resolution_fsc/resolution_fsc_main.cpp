@@ -84,9 +84,9 @@ public:
         addParamsLine("   [--max_sam <max_sr=-1>]   : set fsc to 0 for frequencies above this one (Angstrom), -1 -> all fequencies");
 
         addExampleLine("Resolution of subset2.vol volume with respect to subset1.vol reference volume using 5.6 pixel size (in Angstrom):", false);
-        addExampleLine("xmipp_resolution_fsc --ref subset1.vol  -i subset2.vol --sam 5.6 ");
+        addExampleLine("xmipp_resolution_fsc --ref subset1.vol  -i subset2.vol --sampling_rate 5.6 ");
         addExampleLine("Resolution of a set of images using 5.6 pixel size (in Angstrom):", false);
-        addExampleLine("xmipp_resolution_fsc --set_of_images selfile.sel --sam 5.6");
+        addExampleLine("xmipp_resolution_fsc --set_of_images selfile.sel --sampling_rate 5.6");
     }
 
     void readParams()
