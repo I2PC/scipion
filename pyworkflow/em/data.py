@@ -445,7 +445,14 @@ class Image(EMObject):
         # This doesn't work
         #TODO: ASK  jose miguel. the commented line does not work ROB
         #return self._acquisition is not None
-        return self._acquisition.getVoltage() is not None
+        try:
+            return self._acquisition.getVoltage() is not None
+        except:
+            return False
+#        if self._acquisition.hasVoltage()
+#            return self._acquisition.getVoltage() is not None
+#        else:
+#            return False
         #FIXME: check this later, very very IMPORTANT!!!
         #return (self._acquisition is not None and
         #        self._acquisition.getMagnification() is not None)
