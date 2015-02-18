@@ -245,10 +245,10 @@ def contentContext(request, projectName):
     htmlTree = loadProtTree(project)
     
     # get the choices to load protocol trees
-    choices = [pm.text.get() for pm in project_settings.protMenuList]
+    choices = project.getProtocolViews()
 
     # get the choice current 
-    choiceSelected =  project_settings.protMenuList.getIndex()
+    choiceSelected =  choices.index(project.getCurrentProtocolView().text.get())
     
     # show the project name in the header.html
     projectNameHeader = 'Project '+ str(projectName)

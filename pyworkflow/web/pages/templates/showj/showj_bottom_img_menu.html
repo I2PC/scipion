@@ -35,6 +35,13 @@ $(document).ready(function(){
  		applyChangesToUpdate() //showj_menu_utils.js
  	});
  	
+ 	$('img.tableImages').dblclick(function(){
+ 		var src = $(this).attr("src") 
+ 		var imagePath = src.split("&image=")[1]
+ 		zoomImagePopUp(imagePath)
+ 	});
+ 	
+ 	
 });
 </script>
 	

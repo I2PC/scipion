@@ -77,7 +77,7 @@ class XmippNMAViewer(ProtocolViewer):
     def _viewParam(self, paramName):
         if paramName == 'displayModes':
             modes =  self.protocol.outputModes
-            return [ObjectView(self._project.getName(), modes.strId(), modes.getFileName())]
+            return [ObjectView(self._project, modes.strId(), modes.getFileName())]
         elif paramName == 'displayMaxDistanceProfile':
             fn = self.protocol._getExtraPath("maxAtomShifts.xmd")
             return [createShiftPlot(fn, "Maximum atom shifts", "maximum shift")]

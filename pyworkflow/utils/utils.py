@@ -559,3 +559,17 @@ def startDebugger(mode='SCIPION_DEBUG', password='a'):
             start_embedded_debugger(password)
         except Exception:
             print "Error importing rpdb2 debugging module, consider installing winpdb."
+
+
+def getFreePort(basePort=0,host=''):
+        import socket
+        port=0
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind((host, basePort))
+            ipaddr, port = s.getsockname()
+            s.close()
+        except Exception, e:
+            print e
+            return 0
+        return port

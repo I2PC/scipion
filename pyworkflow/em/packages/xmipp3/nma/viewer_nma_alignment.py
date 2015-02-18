@@ -51,7 +51,12 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
 
     def __init__(self, **kwargs):
         ProtocolViewer.__init__(self, **kwargs)
-        self.data = self.loadData()
+        self._data = None
+
+    def getData(self):
+        if self._data is None:
+            self._data = self.loadData()
+        return self._data
            
     def _defineParams(self, form):
         form.addSection(label='Visualization')
@@ -105,19 +110,19 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
                               title="Invalid input")]
             
             # Actually plot
-            plotter = XmippNmaPlotter(data=self.data) 
+            plotter = XmippNmaPlotter(data=self.getData())
             baseList = [basename(n) for n in modeNameList]
             
             if dim == 1:
-                self.data.XIND = modeList[0]
+                self.getData().XIND = modeList[0]
                 plotter.plotArray1D("Histogram for %s" % baseList[0], 
                                     "Deformation value", "Number of images")
             else:
-                self.data.YIND = modeList[1]
+                self.getData().YIND = modeList[1]
                 if dim == 2:
                     plotter.plotArray2D("%s vs %s" % tuple(baseList), *baseList)
                 elif dim == 3:
-                    self.data.ZIND = modeList[2]
+                    self.getData().ZIND = modeList[2]
                     plotter.plotArray3D("%s %s %s" % tuple(baseList), *baseList)
             views.append(plotter)
             

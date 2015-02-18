@@ -336,6 +336,11 @@ class SqliteDataSet(DataSet):
                     imgCols[colLabel.replace('_index', '')] = colName
                 
                 elif colLabel.endswith('_filename'):
+                    
+                    # TODO: Maybe not all the labels endswith "_filename" 
+                    # have to be rendered. 
+                    # for example in the RotSpectra with '_representative._filename'
+
                     prefix = colLabel.replace('_filename', '')
                     if prefix in imgCols:
                         renderType = COL_RENDER_IMAGE

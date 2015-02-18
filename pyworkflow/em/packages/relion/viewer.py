@@ -224,7 +224,7 @@ Examples:
     def createScipionView(self, filename, viewParams={}):
         inputParticlesId = self.protocol.inputParticles.get().strId()
         ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
-        return ViewClass(self._project.getName(), 
+        return ViewClass(self._project,
                           self.protocol.strId(), filename, other=inputParticlesId,
                           env=self._env, viewParams=viewParams)
         
@@ -416,7 +416,7 @@ Examples:
                     if exists(volFn.replace(':mrc', '')):
                         files.append(volFn)
         self.createVolumesSqlite(files, path, samplingRate)
-        return [em.ObjectView(self._project.getName(), self.protocol.strId(), path)]
+        return [em.ObjectView(self._project, self.protocol.strId(), path)]
     
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """

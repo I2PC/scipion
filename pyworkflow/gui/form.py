@@ -692,6 +692,7 @@ class ParamWidget():
             self._padx, self._pady = 2, 0
             self._labelFont = self.window.fontItalic
             self._entryWidth = 8
+        self._onlyLabel = False
         
     def _getParamLabel(self):
         return self.param.label.get()
@@ -703,7 +704,7 @@ class ParamWidget():
             bgColor = 'grey'
         
         self.label = tk.Label(self.parent, text=self._getParamLabel(), 
-                              bg=bgColor, font=self._labelFont, wraplength=300)
+                              bg=bgColor, font=self._labelFont, wraplength=500)
                
     def _createContent(self):
         self.content = tk.Frame(self.parent, bg='white')
@@ -838,7 +839,7 @@ class ParamWidget():
             
         elif t is LabelParam:
             var = None
-        
+            self._onlyLabel = True
         else:
             #v = self.setVarValue(paramName)
             var = tk.StringVar()
@@ -986,9 +987,14 @@ class ParamWidget():
     def show(self):
         """Grid the label and content in the specified row"""
         c = self.column
-        self.label.grid(row=self.row, column=c, sticky=self._labelSticky, padx=self._padx, pady=self._pady)
-        self.content.grid(row=self.row, column=c+1, sticky='news', 
-                          padx=self._padx, pady=self._pady)
+        if self._onlyLabel:
+            # Use two columns for this case since we are only displaying a label
+            self.label.grid(row=self.row, column=c, sticky=self._labelSticky, 
+                            padx=self._padx, pady=self._pady, columnspan=2)
+        else:
+            self.label.grid(row=self.row, column=c, sticky=self._labelSticky, padx=self._padx, pady=self._pady)
+            self.content.grid(row=self.row, column=c+1, sticky='news', 
+                              padx=self._padx, pady=self._pady)
         if self.btnFrame:
             self.btnFrame.grid(row=self.row, column=c+2, padx=self._padx, sticky='new')
         
@@ -1230,7 +1236,6 @@ class FormWindow(Window):
                     else:
                         procs = numberOfThreads
                         value = 0
-                    print "value: %d, numberOfMpi %d, numberOfThreads %d" % (value, numberOfMpi, numberOfThreads)
                     procCombo = self._createBoundOptions(procFrame, 'stepsExecutionMode', ['Threads', 'MPI'], 
                                                          value, self._setThreadsOrMpi, bg='white')
                     procCombo.grid(row=0, column=0, sticky='nw', pady=5)
@@ -1653,7 +1658,7 @@ class FormWindow(Window):
                         param.set(value)
             except ValueError:
                 if len(var.get()):
-                    print "Error setting param for: ", paramName, "value: '%s'" % var.get()
+                    print ">>> ERROR: setting param for: ", paramName, "value: '%s'" % var.get()
                 param.set(None)
                 
     def updateLabelAndComment(self):
