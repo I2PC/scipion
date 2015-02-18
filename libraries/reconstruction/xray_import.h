@@ -52,7 +52,7 @@ public:
     /// Input image size
     ImageInfo imgInfo;
     /// Number of pixels to crop from each side. Set to 0 for no cropping
-    int cropSizeX, cropSizeY;
+    int cropSizeX, cropSizeY,cropSizeXi, cropSizeYi,cropSizeXe, cropSizeYe;
     /// Number of threads
     int thrNum;
     /// Bad pixel factor
