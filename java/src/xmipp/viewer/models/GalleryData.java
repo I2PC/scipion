@@ -234,8 +234,6 @@ public class GalleryData {
         
             setRenderLabels(parameters.renderLabels);
             setRenderLabel(parameters.getRenderLabel());
-            
-            sortby = parameters.sortby;
             setVisibleLabels(parameters.visibleLabels);
             setOrderLabels(parameters.orderLabels);
             useGeo = parameters.useGeo;
@@ -431,7 +429,7 @@ public class GalleryData {
         if(sortby != null)
         {
             ColumnInfo sortci = getColumnInfo(sortby[0]);
-            boolean asc = sortby.length == 1 || sortby[1].equals("asc");
+            boolean asc = sortby.length == 1 || sortby[1].equalsIgnoreCase("asc");
             if(sortci != null)
                 sortMd(sortci, asc);
         }
@@ -604,7 +602,7 @@ public class GalleryData {
             if(sortby == null)
                 sortby = new String[2];
             sortby[0] = sortci.labelName;
-            sortby[1] = (asc)? "ASC": "DES";
+            sortby[1] = (asc)? "ASC": "DESC";
             md.sort(sortci.label, asc);
             hasMdChanges = true;
             ids = md.findObjects();

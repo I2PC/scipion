@@ -241,6 +241,8 @@ public class ScipionGalleryData extends GalleryData {
         return ((ScipionMetaData) md).getPreffix();
     }
     
+   
+    
         
     @Override
     public void removeCTF(int row) {
