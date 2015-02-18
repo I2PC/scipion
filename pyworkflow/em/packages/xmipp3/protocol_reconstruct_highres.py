@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package contains wrapper around Projection Outliers Xmipp program
+Protocol to perform high-resolution reconstructions
 """
 
 from pyworkflow.object import Float
@@ -109,16 +109,16 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         groupContinuous = form.addGroup('Continuous')
         groupContinuous.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True,
                       help='Optimize shifts within a limit')
-        groupContinuous.addParam('contMaxShift', IntParam, label="Max. shift variation (px)", default=5, expertLevel=LEVEL_EXPERT)
+        groupContinuous.addParam('contMaxShift', IntParam, label="Max. shift variation (px)", default=5, expertLevel=LEVEL_ADVANCED)
         groupContinuous.addParam('contScale', BooleanParam, label="Optimize scale?", default=True,
                       help='Optimize scale within a limit')
-        groupContinuous.addParam('contMaxScale', FloatParam, label="Max. scale variation", default=0.02, expertLevel=LEVEL_EXPERT)
+        groupContinuous.addParam('contMaxScale', FloatParam, label="Max. scale variation", default=0.02, expertLevel=LEVEL_ADVANCED)
         groupContinuous.addParam('contAngles', BooleanParam, label="Optimize angles?", default=True,
                       help='Optimize angles within a limit')
         groupContinuous.addParam('contGrayValues', BooleanParam, label="Optimize gray values?", default=False,
                       help='Optimize gray values. Do not perform this unless the reconstructed volume is gray-compatible with the projections,'\
                       ' i.e., the volumes haven been produced from projections')
-        groupContinuous.addParam('contPadding', IntParam, label="Fourier padding factor", default=2, expertLevel=LEVEL_EXPERT,
+        groupContinuous.addParam('contPadding', IntParam, label="Fourier padding factor", default=2, expertLevel=LEVEL_ADVANCED,
                       help='The volume is zero padded by this factor to produce projections')
         
         # COSS: Falta un script de postprocessing
@@ -152,8 +152,8 @@ class XmippProtReconstructHighRes(ProtRefine3D):
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertInputStep(self, inputParticles):
         writeSetOfParticles(inputParticles.get(),self.imgsFn)
-        self.runJob('xmipp_metadata_utilities','-i %s --fill imageOriginal constant noImage'%self.imgsFn,numberOfMpi=1)
-        self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "imageOriginal=image"'%self.imgsFn,numberOfMpi=1)
+        self.runJob('xmipp_metadata_utilities','-i %s --fill image1 constant noImage'%self.imgsFn,numberOfMpi=1)
+        self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "image1=image"'%self.imgsFn,numberOfMpi=1)
 
     def doWeightSSNR(self):
         R=self.particleRadius.get()
