@@ -44,7 +44,7 @@ import SCons.SConf
 
 
 # URL where we have most of our tgz files for libraries, modules and packages.
-URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
+URL_BASE = os.environ['SCIPION_URL_SOFTWARE']
 
 # Define our builders.
 download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
