@@ -45,8 +45,7 @@ from pip.index import PackageFinder
 
 
 # URL where we have most of our tgz files for libraries, modules and packages.
-#URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
-URL_BASE = 'http://metamagical.org/scipion_soft'
+URL_BASE = os.environ['SCIPION_URL_SOFTWARE']
 
 # Define our builders.
 download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
@@ -880,42 +879,15 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     Continue anyway? (y/n)""" % (p, name)
                 if raw_input().upper() != 'Y':
                     Exit(2)
+
     # This is not very satisfactory, because if something depends on
     # this library later on, and the library was not explicitely set
     # as default or --with-<library>, then the check will not be
     # done. I don't know how to fix this easily in scons... :(
 
-    # Donload, untar, link to it and execute any extra actions.
-#     if packageHome!='unset':
-#     #if packageHome != 'unset':
-#         tLink = env.Command(Dir('#software/em/%s' % name).abspath, Dir(packageHome).abspath, symLink)
-#         #tLink = env.Command(
-#         #    Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
-#         #    Dir('#software/em/%s/bin' % buildDir),
-#         #    Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
-#         #           'Linking package %s to software/em/%s' % (name, name),
-#         #           chdir='software/em'))
-#         commands = [['rm', '-f', 'software/em/%s' % name],
-#                    ['ln', '-v', '-s', os.path.relpath(Dir(packageHome).abspath, Entry('#software/em').abspath), 'software/em/%s' % name]]
-#         for command in commands:
-#             check_call(command)
-            # TODO: maybe put this in a block  try: ...  except (CalledProcessError, OSError) as e: ...
-#     if buildDir != name and packageHome == 'unset':
-#         tLink = env.Command(
-#             Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
-#             Dir('#software/em/%s/bin' % buildDir),
-#             Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
-#                    'Linking package %s to software/em/%s' % (name, name),
-#                    chdir='software/em'))
-#         # We need to download and untar it 'by hand' in order to be able to scan its content for dependencies
-#         script = File('#scripts/fetch_package.py').abspath
-#         command = ['python', script, name, 'software/em/%s' % buildDir, tar]
-#         check_call(command)  # TODO: maybe put in a block  try:  except (CalledProcessError, OSError) as e: ...
-#  #   else:
-#  #       tLink = tUntar  # just so the targets are properly connected later on
-#     SideEffect('dummy', tLink)  # so it works fine in parallel builds
-#     lastTarget = tLink
 
+    # If we have specified extraActions, do them and don't try to
+    # compile/install the package in any other way.
     if extraActions:
         for target, command in extraActions:
             lastTarget = env.Command(

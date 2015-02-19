@@ -58,7 +58,7 @@ class FormElement(OrderedObject):
         return self.expertLevel > LEVEL_NORMAL
     
     def setExpert(self):
-        self.expertLevel.set(LEVEL_EXPERT)
+        self.expertLevel.set(LEVEL_ADVANCED)
         
     def isImportant(self):
         return self._isImportant.get()
@@ -427,6 +427,9 @@ class PointerParam(Param):
         # Some conditions on the pointed candidates
         self.pointerCondition = String(args.get('pointerCondition', None))
         self.allowsNull = Boolean(args.get('allowsNull', False))
+        
+    def setPointerClass(self, newPointerClass):
+        self.pointerClass.set(newPointerClass)
 
 
 class MultiPointerParam(PointerParam):

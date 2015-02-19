@@ -139,7 +139,7 @@ Examples:
                           help='Display the classes and the images associated.')
             changesLabel = 'Changes in Offset, Angles and Classes'
         else:
-            group.addParam('showImagesAngularAssignment', BooleanParam, default=True,
+            group.addParam('showImagesAngularAssignment', LabelParam, default=True,
                            label='Particles angular assignment')
         
         if self.protocol.IS_3D:
@@ -201,6 +201,7 @@ Examples:
     def _getVisualizeDict(self):
         self._load()
         return {'showImagesInClasses': self._showImagesInClasses,
+                'showImagesAngularAssignment' : self._showImagesAngularAssignment,
                 'showLL': self._showLL,
                 'showPMax': self._showPMax,
                 'showChanges': self._showChanges,
@@ -219,13 +220,27 @@ Examples:
     
     def createDataView(self, filename, viewParams={}):
         return em.DataView(filename, env=self._env, viewParams=viewParams)
-        
+    
     def createScipionView(self, filename, viewParams={}):
         inputParticlesId = self.protocol.inputParticles.get().strId()
         ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
-        return ViewClass(self._project.getName(), 
+        return ViewClass(self._project,
                           self.protocol.strId(), filename, other=inputParticlesId,
                           env=self._env, viewParams=viewParams)
+        
+    def createScipionPartView(self, filename, viewParams={}):
+        inputParticlesId = self.protocol._getInputParticles().strId()
+        
+        labels =  'enabled id _size _filename _transform._matrix'
+        viewParams = {em.ORDER:labels,
+                      em.VISIBLE: labels, em.RENDER:'_filename',
+                      'labels': 'id',
+                      }
+        return em.ObjectView(self._project.getName(), 
+                          self.protocol.strId(), filename, other=inputParticlesId,
+                          env=self._env, viewParams=viewParams)
+        
+        
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
@@ -249,10 +264,10 @@ Examples:
         
     def _formatFreq(self, value, pos):
         """ Format function for Matplotlib formatter. """
-        inv = 999
+        inv = 999.
         if value:
-            inv = int(1/value)
-        return "1/%d" % inv
+            inv = 1/value
+        return "1/%0.2f" % inv
 
     def _getGridSize(self, n=None):
         """ Figure out the layout of the plots given the number of references. """
@@ -296,7 +311,22 @@ Examples:
             views.append(v)
         
         return views
-          
+
+#===============================================================================
+# showImagesAngularAssignment     
+#===============================================================================
+
+    def _showImagesAngularAssignment(self, paramName=None):
+        
+        views = []
+        
+        for it in self._iterations:
+            fn = self.protocol._getIterData(it, alignType=em.ALIGN_PROJ)
+            v = self.createScipionPartView(fn)
+            views.append(v)
+        
+        return views
+    
 #=====================================================================
 # showLLRelion
 #=====================================================================
@@ -370,10 +400,6 @@ Examples:
 #===============================================================================
 # ShowVolumes
 #===============================================================================
-
-
-
-
     def _createVolumesSqlite(self):
         """ Write an sqlite with all volumes selected for visualization. """
 
@@ -387,9 +413,10 @@ Examples:
             for ref3d in self._refsList:
                 for prefix in prefixes:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    files.append(volFn)
+                    if exists(volFn.replace(':mrc', '')):
+                        files.append(volFn)
         self.createVolumesSqlite(files, path, samplingRate)
-        return [em.ObjectView(self._project.getName(), self.protocol.strId(), path)]
+        return [em.ObjectView(self._project, self.protocol.strId(), path)]
     
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
@@ -442,8 +469,9 @@ Examples:
                         
         elif self.displayAngDist == ANGDIST_2DPLOT:
             for it in self._iterations:
-                views.append(self._createAngDist2D(it))
-                
+                plot = self._createAngDist2D(it)
+                if isinstance(plot, RelionPlotter):
+                    views.append(plot)
         return views
     
     def _createAngDistChimera(self, it):
@@ -472,7 +500,6 @@ Examples:
         else:
             return self.infoMessage("Please select only one class to display angular distribution",
                                     "Input selection") 
-        
     
     def _createAngDist2D(self, it):
         # Common variables to use
@@ -482,15 +509,18 @@ Examples:
         gridsize = self._getGridSize(n)
         
         data_angularDist = self.protocol._getIterAngularDist(it)
-        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
-                                 mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
-        for ref3d in self._refsList:
-            for prefix in prefixes:
-                mdAng = md.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
-                plot_title = '%s class %d' % (prefix, ref3d)
-                xplotter.plotMdAngularDistribution(plot_title, mdAng)
-        
-        return xplotter
+        if exists(data_angularDist):
+            xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
+                                     mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
+            for ref3d in self._refsList:
+                for prefix in prefixes:
+                        mdAng = md.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
+                        plot_title = '%s class %d' % (prefix, ref3d)
+                        xplotter.plotMdAngularDistribution(plot_title, mdAng)
+            
+            return xplotter
+        else:
+            return
                 
 #===============================================================================
 # plotSSNR              
@@ -523,7 +553,7 @@ Examples:
                 legendName = []
                 for it in self._iterations:
                     fn = self.protocol._getFileName(prefix + 'model', iter=it)
-                    if os.path.exists(fn):
+                    if exists(fn):
                         self._plotSSNR(a, blockName+fn)
                     legendName.append('iter %d' % it)
                 xplotter.showLegend(legendName)
@@ -565,7 +595,7 @@ Examples:
                 blockName = 'model_class_%d@' % ref3d
                 for it in self._iterations:
                     model_star = self.protocol._getFileName(prefix + 'model', iter=it)
-                    if os.path.exists(model_star):
+                    if exists(model_star):
                         self._plotFSC(a, blockName + model_star)
                         legends.append('iter %d' % it)
                 xplotter.showLegend(legends)
@@ -680,7 +710,7 @@ class PostprocessViewer(ProtocolViewer):
         a = xplotter.createSubPlot("GoldStandard FSC", 'Angstroms^-1', 'FSC', yformat=False)
         
         model_star = self.protocol._getExtraPath('postprocess.star')
-        if os.path.exists(model_star):
+        if exists(model_star):
             self._plotFSC(a, 'fsc@' + model_star)
         if threshold < self.maxfsc:
             a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')

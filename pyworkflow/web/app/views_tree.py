@@ -32,7 +32,7 @@ import pyworkflow.em as em
 #===============================================================================
 
 def loadProtTree(project):
-    protCfg = project.getSettings().getCurrentProtocolMenu()
+    protCfg = project.getCurrentProtocolView()
     root = TreeItem('root', 'root', '', '')
     populateProtTree(root, protCfg)
 #    return root

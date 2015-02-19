@@ -42,7 +42,7 @@ import pyworkflow as pw
 import pyworkflow.em as em
 from pyworkflow.em.data import Coordinate
 from pyworkflow.em.packages.eman2 import getEmanCommand, loadJson, getEnviron
-from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt, dirname
+from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt, dirname, basename
 
 
 # LABEL_TYPES = { 
@@ -160,20 +160,27 @@ def createEmanProcess(script='e2converter.py', args=None):
     return proc
     
     
-def writeSetOfParticles(partSet, filename, **kwargs):
+def writeSetOfParticles(partSet, path, **kwargs):
     """ Convert the imgSet particles to a single .hdf file as expected by Eman. 
     This function should be called from a current dir where
     the images in the set are available.
     """
-    from math import fabs
-    isMrcs, fnDict = convertBinaryFiles(partSet, dirname(filename))
-    
-    proc = createEmanProcess(args='write %s' % filename)
+#     from math import fabs
+    isMrcs, fnDict = convertBinaryFiles(partSet, path)
     
     partSet.getFirstItem().getFileName()
     fileName = ""
     a = 0
-    for part in partSet:
+    tmpMicId = 0
+#     listHdf = []
+    for i, part in iterParticlesByMic(partSet):
+        micId = part.getMicId()
+        if micId != tmpMicId:
+            tmpMicId = micId
+            hdfFn = os.path.join(path, "mic_%0.6d.hdf" % micId)
+#             listHdf.append(basename(hdfFn))
+            proc = createEmanProcess(args='write %s' % hdfFn)
+        
         objDict = part.getObjDict()
         alignType = kwargs.get('alignType')
 #         print "objDict, ", objDict
@@ -204,6 +211,7 @@ def writeSetOfParticles(partSet, filename, **kwargs):
         print >> proc.stdin, json.dumps(objDict)
         proc.stdin.flush()
         proc.stdout.readline()
+#     return listHdf
 
 
 def readSetOfParticles(filename, partSet, **kwargs):
@@ -298,7 +306,7 @@ def rowToAlignment(alignmentList, alignType):
 
 
 def convertBinaryFiles(imgSet, outputDir):
-    """ Convert binary images files to a format read by Relion.
+    """ Convert binary images files to a format read by EMAN.
     Params:
         imgSet: input image set to be converted.
         outputDir: where to put the converted file(s)
@@ -344,3 +352,8 @@ def convertBinaryFiles(imgSet, outputDir):
     return ismrcs, filesDict
 
 
+def iterParticlesByMic(partSet):
+    """ Iterate the particles ordered by micrograph """
+    for i, part in enumerate(partSet.iterItems(orderBy=['_micId', 'id'],
+                                                                 direction='ASC')):
+        yield i, part

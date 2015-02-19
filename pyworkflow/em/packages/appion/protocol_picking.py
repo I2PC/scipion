@@ -26,7 +26,7 @@
 
 import os
 
-from pyworkflow.protocol.params import IntParam, FloatParam, BooleanParam, StringParam, LEVEL_EXPERT
+from pyworkflow.protocol.params import IntParam, FloatParam, BooleanParam, StringParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import ProtParticlePicking
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.utils.properties import Message
@@ -54,17 +54,17 @@ class DogPickerProtPicking(ProtParticlePicking):
                    label='Invert', help = "Invert image before picking, DoG normally picks white particles.")
         form.addParam('threshold', FloatParam, default=0.5,
                     label='Threshold', help = "Threshold in standard deviations above the mean, e.g. --thresh=0.7")
-        # form.addParam('numberSizes', IntParam, expertLevel=LEVEL_EXPERT,
+        # form.addParam('numberSizes', IntParam, expertLevel=LEVEL_ADVANCED,
         #            label='Number of sizes', help = "Number of different sizes to try.")
-        # form.addParam('sizeRange', IntParam, expertLevel=LEVEL_EXPERT,
+        # form.addParam('sizeRange', IntParam, expertLevel=LEVEL_ADVANCED,
         #            label='Size range', help = "Size range in pixels about diam to search.")
-        # form.addParam('maxThreshold', FloatParam, expertLevel=LEVEL_EXPERT,
+        # form.addParam('maxThreshold', FloatParam, expertLevel=LEVEL_ADVANCED,
         #            label='Max threshold', help = "Threshold in standard deviations above the mean, e.g. --thresh=0.7")
-        # form.addParam('maxArea', FloatParam, expertLevel=LEVEL_EXPERT,
+        # form.addParam('maxArea', FloatParam, expertLevel=LEVEL_ADVANCED,
         #            label='Max area', help = "When thresholded the peak must be less than maxarea*pi*r^2.")
-        # form.addParam('maxPeaks', FloatParam, expertLevel=LEVEL_EXPERT,
+        # form.addParam('maxPeaks', FloatParam, expertLevel=LEVEL_ADVANCED,
         #            label='Max peaks', help = "Maximum number of allowed peaks.")
-        form.addParam('extraParams', StringParam, expertLevel=LEVEL_EXPERT,
+        form.addParam('extraParams', StringParam, expertLevel=LEVEL_ADVANCED,
               label='Additional parameters',
               help='Additional parameters for dogpicker: \n  --numberSizes, --sizeRange, --threshold,...')
 

@@ -37,7 +37,6 @@ class Message():
     VIEW_PROJECTS = 'Projects'
     VIEW_PROTOCOLS = 'Protocols'
     VIEW_DATA = 'Data'
-    VIEW_HOSTS = 'Hosts'
     VIEW_UPLOAD = 'Upload'
     
     # Projects Template
@@ -102,7 +101,7 @@ class Message():
     LABEL_LOGS_SCIPION = 'Scipion Log'
     
     LABEL_RUNNAME = 'Run name'
-    LABEL_EXECUTION = 'Execution'
+    LABEL_EXECUTION = 'Run mode'
     LABEL_PARALLEL = 'Parallel'
     
     NO_INFO_SUMMARY = 'No summary information.'
@@ -267,20 +266,6 @@ Do you really want to continue?'
     
     TITLE_SAVE_OUTPUT = 'Save protocol output'
     LABEL_SAVE_OUTPUT = 'Do you wish to save protocol output?'
-    
-    # Hosts Template
-    LABEL_HOSTS = 'Hosts'
-    LABEL_HOSTS_ACTION = ' Hosts '
-    TITLE_HOST_DELETE_FORM = 'Confirm DELETE'
-    LABEL_HOST_DELETE_FORM = '*ALL CONFIGURATION* related to this _host_ will be *DELETED*.\nDo you really want to continue?'    
-    BUTTON_TEST = 'Test configuration'
-    TITLE_HOST_SAVE_FORM = 'Action SAVE'
-    LABEL_HOST_SAVE_FORM_SUCESS = 'Host sucessfully saved. \n'
-    LABEL_HOST_SAVE_FORM_FAIL = 'Error saving host. \n'
-    LABEL_HOST_SAVE_FORM = '*ALL CONFIGURATION* related to this _host_ will be *DELETED*.\nDo you really want to continue?'    
-    LABEL_HOST_CONECTION_SUCESS = 'Connection SUCCEEDED to host'
-    LABEL_HOST_CONECTION_FAIL = 'Connection FAILED to host'
-    LABEL_HOST_CONECTION_TEST = 'Connection TEST'
     
     #SHOWJ_WEB
     SHOWJ_TITLE = 'Showj'

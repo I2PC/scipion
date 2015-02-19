@@ -62,11 +62,12 @@ leads to objective and high-quality results.
     def _setSamplingArgs(self, args):
         """ Set sampling related params"""
         # Sampling stuff
-        args['--healpix_order'] = self.angularSamplingDeg.get()
         args['--auto_local_healpix_order'] = self.localSearchAutoSamplingDeg.get()
         if not self.doContinue:
+            args['--healpix_order'] = self.angularSamplingDeg.get()
             args['--auto_refine'] = ''
             args['--split_random_halves'] = ''
+            args['--low_resol_join_halves'] = self.resolJoinHalves.get()
         
         # Set movie refinement arguments
         if self.realignMovieFrames:
@@ -111,7 +112,13 @@ leads to objective and high-quality results.
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        errors = []
+        partSizeX, _, _ = self._getInputParticles().getDim()
+        volSizeX, _, _ = self.input3DReference.get().getDim()
+        if partSizeX != volSizeX:
+            errors.append('Volume and particles dimensions must be equal!!!')
+
+        return errors
     
     def _validateContinue(self):
         """ Should be overriden in subclasses to

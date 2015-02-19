@@ -24,17 +24,15 @@
 # *
 # **************************************************************************
 
-import os
 
 import pyworkflow.em.packages.spider as spider
-
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import ProtImportParticles
 from pyworkflow.em.packages.spider.convert import writeSetOfImages
 
 from pyworkflow.tests import setupTestProject, DataSet, unittest, BaseTest
 from test_workflow import TestWorkflow
-from pyworkflow.em.packages.xmipp3.convert import locationToXmipp
+
   
    
 class TestSpiderConvert(TestWorkflow):
@@ -52,7 +50,7 @@ class TestSpiderConvert(TestWorkflow):
         protImport = self.newProtocol(ProtImportParticles, filesPath=self.particlesFn, samplingRate=3.5)
         self.launchProtocol(protImport)
         # check that input images have been imported (a better way to do this?)
-        if protImport.outputParticles is None:
+        if getattr(protImport, 'outputParticles', None) is None:
             raise Exception('Import of images: %s, failed. outputParticles is None.' % self.particlesFn)
         
         ih = ImageHandler()

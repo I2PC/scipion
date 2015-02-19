@@ -1,8 +1,6 @@
-#!/usr/bin/env python
 # **************************************************************************
 # *
-# * Authors:    Airen Zaldivar         (airenzp@gmail.com)
-#               J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -26,23 +24,11 @@
 # *
 # **************************************************************************
 
-import sys
-from pyworkflow.em import *
-from pyworkflow.manager import Manager
+import os
+from django.conf.urls import url
 
-
-if __name__ == '__main__':
-    #TODO: REMOVE THIS AFTER DEBUGGING
-    # print "ARGS: "
-    # for i, arg in enumerate(sys.argv):
-    #     print "%02d: %s" % (i, arg)
-    projectId=sys.argv[1]
-    inputId=sys.argv[2]
-    file=sys.argv[3]
-    label = sys.argv[4]
-
-    project = Manager().loadProject(projectId)
-    inputObject = project.mapper.selectById(int(inputId))
-    prot = project.newProtocol(ProtCreateMask, maskFile=file, inputObj=inputObject)
-    prot.setObjLabel(label)
-    project.launchProtocol(prot, wait=True)
+urls = [
+#     url(r'^desktop/', 'app.views_desktop.desktop'),
+    url(r'^download_form/', 'app.views_webtools.download_form'),
+    url(r'^doDownload/', 'app.views_webtools.doDownload'),
+]

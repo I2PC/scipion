@@ -24,7 +24,9 @@
 # *
 # **************************************************************************
 
-from pyworkflow.object import *
+import pyworkflow.object as obj
+
+
 
 class Mapper():
     """This class will serves as a Data Mapper pattern.
@@ -32,19 +34,37 @@ class Mapper():
     (like SQL, XML or others)
     The mapper should have access to class dictionary
     in order to build any give class by name"""
+    
+    # Just to avoid print several times the same warning
+    __warnings = set()
+    
     def __init__(self, dictClasses=None):
         if dictClasses:
             self.dictClasses = dictClasses 
         else:
-            self.dictClasses = globals()
+            self.dictClasses = dir(obj)
+            
+    def warning(self, msg):
+        if not msg in self.__warnings:
+            print "WARNING: %s" % msg
+            self.__warnings.add(msg)
     
-    def _buildObject(self, className, **args):
-        """Build an instance of an object
+    def _buildObject(self, className, **kwargs):
+        """ Build an instance of an object
         given the class name, it should be in 
-        the classes dictionary"""
-        if className in self.dictClasses:
-            return self.dictClasses[className](**args)
-        raise Exception('Mapper._buildObject: Unknown class: %s' % className)
+        the classes dictionary.
+        """
+        if className not in self.dictClasses:
+            self.warning("Class '%s' not found in mapper dict. Ignored. " % className)
+            return None
+        
+        objClass = self.dictClasses[className]
+        
+        if not issubclass(objClass, obj.Object):
+            print "WARNING: Class '%s' is not a subclass of Object. Ignored. " % className
+            return None
+        
+        return self.dictClasses[className](**kwargs)
     
     def _getStrValue(self, value):
         """ Return empty string if value is None or empty. """

@@ -31,7 +31,7 @@ import os
 import pyworkflow.em as em
 from pyworkflow.em.packages.eman2.eman2 import getEmanProgram
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, EnumParam,
-                                        StringParam, BooleanParam, LEVEL_EXPERT)
+                                        StringParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.utils.path import cleanPattern
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtReconstruct3D
@@ -109,14 +109,14 @@ class EmanProtReconstruct(ProtReconstruct3D):
                            'tet, icos, or oct.'
                            'See http://blake.bcm.edu/emanwiki/EMAN2/Symmetry'
                            'for a detailed descript of symmetry in Eman.')
-        line = form.addLine('Padding to Reconstruct: ', expertLevel=LEVEL_EXPERT,
+        line = form.addLine('Padding to Reconstruct: ', expertLevel=LEVEL_ADVANCED,
                             help='Will zero-pad images to the specifed size (x,y) or'
                                  '(x,x) prior to reconstruction. If not specified no'
                                  'padding occurs.')
         line.addParam('padX', IntParam, default=0, label='X ')
         line.addParam('padY', IntParam, default=0, label='Y ')
                     
-        line = form.addLine('Dimensions Volume: ', expertLevel=LEVEL_EXPERT,
+        line = form.addLine('Dimensions Volume: ', expertLevel=LEVEL_ADVANCED,
                             help='Defines the dimensions (x,y,z) or (x,x,x) of the'
                                  'reconstructed volume. If ommitted, implied value based'
                                  'on padded 2D images is used.')
@@ -124,7 +124,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
         line.addParam('dimVolY', IntParam, default=0, label='Y')            
         line.addParam('dimVolZ', IntParam, default=0, label='Z')
 
-        line = form.addLine('Dimensions to Write Volume: ', expertLevel=LEVEL_EXPERT,
+        line = form.addLine('Dimensions to Write Volume: ', expertLevel=LEVEL_ADVANCED,
                             help='Defines the dimensions (x,y,z) or (x,x,x) of the final'
                                  'volume written to disk, if ommitted, size will be'
                                  'based on unpadded input size.')
@@ -147,7 +147,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
                                'experimental'],
                       label="Mode to Fourier method:", default=FOURIER_GAUSS2,
                       display=EnumParam.DISPLAY_COMBO)
-        form.addParam('keepSense', EnumParam, expertLevel=LEVEL_EXPERT,
+        form.addParam('keepSense', EnumParam, expertLevel=LEVEL_ADVANCED,
                       choices=['percentage', 'standard deviation', 'absolute quality'],
                       label="Sense of keep:", default=KEEP_PERCENTAGE,
                       display=EnumParam.DISPLAY_COMBO,
@@ -160,7 +160,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
                            "will refer to the absolute quality of the class-average,"
                            " not a local quality relative to other similar sized"
                            "classes.")
-        form.addParam('keep', FloatParam, default=1.0, expertLevel=LEVEL_EXPERT,
+        form.addParam('keep', FloatParam, default=1.0, expertLevel=LEVEL_ADVANCED,
                       label="Fraction of slices to keep",
                       help='The fraction of slices to keep, in fraction,'
                            ' based on quality scores (1.0 = use all slices).') 

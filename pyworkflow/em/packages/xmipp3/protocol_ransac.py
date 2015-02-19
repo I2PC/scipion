@@ -32,7 +32,7 @@ from pyworkflow.object import String
 from pyworkflow.utils.path import cleanPath, moveFile, copyFile, cleanPattern
 from pyworkflow.protocol.params import (PointerParam, FloatParam, BooleanParam,
                                         IntParam, StringParam, 
-                                        STEPS_PARALLEL, LEVEL_EXPERT)
+                                        STEPS_PARALLEL, LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtInitialVolume
 from pyworkflow.em.data import SetOfClasses2D
 
@@ -73,61 +73,61 @@ class XmippProtRansac(ProtInitialVolume):
                       help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry"
                            " for a description of the symmetry groups format in Xmipp.\n"
                            "If no symmetry is present, use _c1_.")
-        form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_EXPERT,
+        form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label='Angular sampling rate',
                       help='In degrees.'
                       ' This sampling defines how fine the projection gallery from the volume is explored.')
-        form.addParam('nRansac', IntParam, default="400", expertLevel=LEVEL_EXPERT,
+        form.addParam('nRansac', IntParam, default="400", expertLevel=LEVEL_ADVANCED,
                       label="Number of RANSAC iterations", 
                       help='Number of initial volumes to test by RANSAC')
         
-        form.addParam('dimRed', BooleanParam, default=True, expertLevel=LEVEL_EXPERT,
+        form.addParam('dimRed', BooleanParam, default=True, expertLevel=LEVEL_ADVANCED,
                       label='Perform dimensionality reduction', 
                       help='The dimensionality reduction is performed using the Local Tangent Space'
                       'Alignment. See http://www.stat.missouri.edu/~ys873/research/LTSA11.pdf')
-        form.addParam('numGrids', IntParam, default=3, condition='dimRed', expertLevel=LEVEL_EXPERT,
+        form.addParam('numGrids', IntParam, default=3, condition='dimRed', expertLevel=LEVEL_ADVANCED,
                       label='Number of grids per dimension',
                       help='Number of squares to sample the classes')
-        form.addParam('numSamples', IntParam, default=8, condition='not dimRed', expertLevel=LEVEL_EXPERT,
+        form.addParam('numSamples', IntParam, default=8, condition='not dimRed', expertLevel=LEVEL_ADVANCED,
                       label='Number of random samples',
                       help='Number of squares to sample the classes')
         
-        form.addParam('corrThresh', FloatParam, default=0.77, expertLevel=LEVEL_EXPERT,
+        form.addParam('corrThresh', FloatParam, default=0.77, expertLevel=LEVEL_ADVANCED,
                       label='Inliers threshold',
                       help='Correlation value threshold to determine if an experimental projection is an inlier or outlier.')        
-        form.addParam('numVolumes', IntParam, default=10, expertLevel=LEVEL_EXPERT,
+        form.addParam('numVolumes', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label='Number of best volumes to refine',
                       help='Number of best volumes to refine using projection matching approach and the input classes')
-        form.addParam('numIter', IntParam, default=10, expertLevel=LEVEL_EXPERT,
+        form.addParam('numIter', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label='Number of iterations to refine the volumes',
                       help='Number of iterations to refine the best volumes using projection matching approach and the input classes')
-        form.addParam('initialVolume', PointerParam, label="Initial volume",  expertLevel=LEVEL_EXPERT,
+        form.addParam('initialVolume', PointerParam, label="Initial volume",  expertLevel=LEVEL_ADVANCED,
                       pointerClass='SetOfVolumes', allowsNull=True,
                       help='You may provide a very rough initial volume as a way to constraint the angular search.'
                             'For instance, when reconstructing a fiber, you may provide a cylinder so that side views'
                             'are assigned to the correct tilt angle, although the rotational angle may be completely wrong')           
                 
-        form.addParam('maxFreq', IntParam, default=5, expertLevel=LEVEL_EXPERT,
+        form.addParam('maxFreq', IntParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label='Max frequency of the initial volume',
                       help=' Max frequency of the initial volume in Angstroms')
         
-        form.addParam('useSA', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
+        form.addParam('useSA', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label='Combine simulated annealing and RANSAC', 
                       help='This option produces better results at a higher computational cost')
-        form.addParam('nIterRandom', IntParam, default=10, condition='useSA', expertLevel=LEVEL_EXPERT,
+        form.addParam('nIterRandom', IntParam, default=10, condition='useSA', expertLevel=LEVEL_ADVANCED,
                       label='Number of simulated annealing iterations',
                       help='During the simulated annealing iterations, all those particles positively'
                         'contributing to the improvement of the volume are considered. In this way,' 
                         'the same image may participate several times from different projection '
                         'directions (but different weights) depending on whether it improves the'
                         'correlation with the volume or not')
-        form.addParam('rejection', IntParam, default=50, condition='useSA', expertLevel=LEVEL_EXPERT,
+        form.addParam('rejection', IntParam, default=50, condition='useSA', expertLevel=LEVEL_ADVANCED,
                       label='Percentage of rejected particles',
                        help='At each iteration, the lowest correlated particles are'
                             'removed from the 3D reconstruction, although they may '
                             'participate in the next iteration')
 
-        form.addParam('useAll', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
+        form.addParam('useAll', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label='Use all images to refine', 
                       help=' When refining a RANSAC volume, use all images to refine it instead of only inliers')
         

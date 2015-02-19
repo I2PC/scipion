@@ -1,55 +1,32 @@
 <header data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="north">
 	<div id="headerMainContainer">
 		
-		{% if mode == 'service' %}
-		<a href="{{abs_url}}/service_projects/" id="headerLogoContainer">
-		{% else %}
+		{% block header_title %}
 		<a href="{{abs_url}}/projects/" id="headerLogoContainer">
-		{% endif %}
 			<img class="logo" src="{{logo_scipion}}" alt="Scipion logo">
 		</a>
-		
 		<span id="projectName">
-		{% if projectNameHeader == 'showj'%}
-			Xmipp Showj Web
-		{% else %}
 			{{projectNameHeader}}
-		{% endif %}
 		</span>
+		{% endblock %}
 		
 		<div id="headerRightContainer">
-			{% if projectNameHeader == 'showj'%}
-<!-- 				<a id="backToProject" href="/project_content/?projectName={{projectName}}">Back to project</a> -->
-			{% else %}
-				{% if projectName != None and projectName != ''%}
-					{% if mode != 'service' %}
-					<a href="{{abs_url}}/projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">
-					<i class="fa fa-home"></i> {{msg.VIEW_PROJECTS}}</a>
-<!-- 					<span id="tube">|</span> -->
-					&nbsp;
-					<a href="{{abs_url}}/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">
-					<i class="fa fa-cog"></i> {{msg.VIEW_PROTOCOLS}}</a>
-<!-- 					<span id="tube">|</span> -->
-					&nbsp;
-					<a href="{{abs_url}}/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">
-					<i class="fa fa-hdd-o"></i> {{msg.VIEW_DATA}}</a>
-<!-- 					<span id="tube">|</span> -->
-					&nbsp;
-					<a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">
-					<i class="fa fa-laptop"></i> {{msg.VIEW_HOSTS}}</a>
-					<!-- <span id="tube">|</span><a href="/view_hosts/" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a> -->
-<!-- 					<span id="tube">|</span> -->
-					&nbsp;
-					<a href='javascript:popup("/upload/")' class="headerLink">
-					<i class="fa fa-cloud-upload"></i> {{msg.VIEW_UPLOAD}}</a>
-					{% else %}
-					<a href="{{abs_url}}/service_projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}"><i class="fa fa-home"></i> Home</a>
-					
-					{% endif %}
-				{% endif %}
+			{% if projectName != None and projectName != ''%}
+				{% block header_menu %}
+				<a href="{{abs_url}}/projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">
+				<i class="fa fa-home"></i> {{msg.VIEW_PROJECTS}}</a>
+				&nbsp;
+				<a href="{{abs_url}}/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">
+				<i class="fa fa-cog"></i> {{msg.VIEW_PROTOCOLS}}</a>
+				&nbsp;
+				<a href="{{abs_url}}/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">
+				<i class="fa fa-hdd-o"></i> {{msg.VIEW_DATA}}</a>
+				&nbsp;
+				<a href='javascript:popup("/upload/")' class="headerLink">
+				<i class="fa fa-cloud-upload"></i> {{msg.VIEW_UPLOAD}}</a>
+				{% endblock %}
 			{% endif %}
 		</div>
-	
 	</div>
 	<div id="headerLine"></div>
 </header>

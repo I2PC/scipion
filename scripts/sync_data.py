@@ -169,8 +169,7 @@ def get_parser():
         help=('When uploading, delete any remote files in the dataset not '
               'present in local. It leaves the remote scipion data directory '
               'as it is in the local one. Dangerous, use with caution.'))
-    add('-u', '--url',
-        default='http://scipionwiki.cnb.csic.es/files/scipion/data/tests',
+    add('-u', '--url', default=os.environ['SCIPION_URL_TESTDATA'],
         help='URL where remote datasets will be looked for.')
     add('--check-all', action='store_true',
         help='See if there is any remote dataset not in sync with locals.')
