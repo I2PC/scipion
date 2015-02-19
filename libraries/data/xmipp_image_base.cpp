@@ -829,7 +829,7 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
 #undef DEBUG
     // Check that image is not empty
     if (getSize() < 1)
-        REPORT_ERROR(ERR_MULTIDIM_EMPTY,"write Image ERROR: image is empty!");
+        REPORT_ERROR(ERR_MULTIDIM_EMPTY,(String)"write Image ERROR: image "+name+" is empty!");
 
     replaceNsize = 0;//reset replaceNsize in case image is reused
     if(isStack && select_img == ALL_IMAGES && mode == WRITE_REPLACE)
