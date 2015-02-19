@@ -31,8 +31,10 @@
 
 
 import os
-import sys
 from os.path import join, abspath, splitext
+import sys
+from itertools import izip
+
 from subprocess import STDOUT, check_call, CalledProcessError
 from glob import glob
 import tarfile
@@ -40,8 +42,6 @@ import fnmatch
 import platform
 import SCons.Script
 import SCons.SConf
-from pip.index import PackageFinder
-
 
 
 # URL where we have most of our tgz files for libraries, modules and packages.
@@ -378,43 +378,20 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     fullname = prefix + name
     patterns = patterns or []
     sources = []
-    untars = []
     libpath.append(Dir('#software/lib').abspath)
     
-    # This is going to be funny. If tarfile exists, we're going to open it, search
-    # inside and make every later target depends on these sources. This way we'll 
-    # make the next target to be rebuild whenever a source file is touched. Otherwise, 
-    # if the tarfile doesn't exists, then we'll just supose a file called README
-    if tars:
-        for x, dir in enumerate(dirs):
-            tarDestination, tarName = splitext(tars[x])
-            tUntar = untar(env, File(join(dirs[x], untarTargets[x])).abspath, 
-                           File(tars[x]),
-                           cdir=Dir(dirs[x]).abspath)
-            SideEffect('dummy', tUntar)
-            env.Depends(tUntar, deps)
-            untars += tUntar
-        lastTarget = untars
-
-    tarExists = False
-    for x, p in enumerate(patterns):
-        if tars and os.path.exists(File(tars[x]).abspath):
-            tarExists = True
-            sourcesRel = join(dirs[x], p)
-            if not sourcesRel.startswith(basedir):
-                sourcesRel = join(basedir, p)
-#            if p.endswith(".cu"):
-#                cudaFiles = True
-            # select sources inside tarfile but we only get those files that match the pattern
-            tarfiles = tarfile.open(tars[x]).getmembers() 
-            sources += [Entry(join(dirs[x], tarred.name)).abspath for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
-        else:
-            sources += glob(join(dirs[x], patterns[x]))
-            #sources += [Entry(join(dirs[x], untarTargets[x])).abspath]
-    if tarExists:
-        Depends(sources, untars)
-    else:
-        untars = sources
+    print "os.getcwd():", os.getcwd()
+    print "dirs: ", dirs
+    print "patterns", patterns
+#     print ">>>>>>>>>>>>>> Open winpdb!!!!!, no sources."
+#     from rpdb2 import start_embedded_debugger
+#     start_embedded_debugger('a')
+    print "env['SCONSCRIPT_PATH']2222", env['SCONSCRIPT_PATH']
+    for d, p in izip(dirs, patterns):
+        sources += glob(join(d, p))
+        
+    if not sources:
+        Exit('No sources!!!')
 
     mpiArgs = {}
     if mpi:
@@ -433,6 +410,8 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     env2 = Environment()
     env2['ENV']['PATH'] = env['ENV']['PATH']
 
+
+    
     #print env2.Dump()
     library = env2.SharedLibrary(
               target=join(basedir, fullname),
@@ -457,7 +436,7 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     env.Default(lastTarget)
     
     for dep in deps:
-        env.Depends(untars, dep)
+        env.Depends(sources, dep)
     return lastTarget
 
 
@@ -848,11 +827,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         createPackageLink(packageLink, packageHome)
         return '' # When providing a packageHome, we only want to create the link
     
-    
-    
-    
-    
     lastTarget = Entry(packageLink)
+    targets = []
     #tLink = None
     # If we do have a local installation, link to it and exit.
 #     if packageHome != 'unset':  # default value when calling only --with-package
@@ -885,7 +861,9 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     # as default or --with-<library>, then the check will not be
     # done. I don't know how to fix this easily in scons... :(
 
-
+    #FIXME: REMOVE './' by packageLink when finished compilation tests!!!
+    scriptPath = join('./', 'SConscript_scipion')
+    scriptPath = join(packageLink, 'SConscript_scipion')
     # If we have specified extraActions, do them and don't try to
     # compile/install the package in any other way.
     if extraActions:
@@ -895,82 +873,29 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                 lastTarget,
                 Action(command, chdir=Entry('#software/em/%s' % name).abspath))
             SideEffect('dummy', lastTarget)
-        # Add the dependencies. Do it to the "link target" (tLink), so any
-        # extra actions (like setup scripts) have everything in place.
-        for dep in deps:
-            env.Depends(lastTarget, dep)
-        Default(lastTarget)
-        
-        return lastTarget
-    
-    if (default or packageHome):
-        for lastT in lastTarget:
-            if lastT is not None:
-                env.Default(lastT)
-    # Load Package vars
-    # First we search this in cfg folder and otherwise in package home
-    if not os.path.exists(confPath):
-        confPath = join(packageHome, '%s.cfg' % name)
-    if not os.path.exists(confPath):
-        confPath = 'unset'
-    
-    if confPath == 'unset' and packageHome == 'unset': 
-        Default(lastTarget)
-        return lastTarget
-    elif confPath != 'unset' and packageHome == 'unset':
-        print >>sys.stderr, '''### 
-### Caution: you're using %s 
-### as configuration file, and you may have not noticed. Please move this file
-### if you don't want to use it out from software/cfg and package home folders
-### or change its name to something different than <package_name>.cfg
-###''' % confPath
-
-    opts = Variables(confPath)
-    opts.Add('PACKAGE_SCRIPT')
-    opts.Add('PRIVATE_KEYS')
-    opts.Add('BOOL_PRIVATE_KEYS')
-    opts.Update(env) 
-    for var in env.get('PRIVATE_KEYS'):
-        opts.Add(var)
-        opts.Update(env)
-        opts.Add(*(env.get(var)))
-    for var in env.get('BOOL_PRIVATE_KEYS'):
-        opts.Add(var)
-        opts.Update(env)
-        opts.Add(BoolVariable(*env.get(var)))
-    opts.Update(env)
-    opts.Save(confPath + "_tmp", env)
-    Help(opts.GenerateHelpText(env, sort=cmp))
-#    print opts.keys()
-    scriptPath = env.get('PACKAGE_SCRIPT', '')
-    if packageHome == 'unset':
-        packageHome = './'
-    altScriptPath = join(packageHome, 'SConscript_scipion')
-    # FIXME: this scriptPath wont be reachable uless Xmipp is already downloaded
-    env.Replace(packageDeps=lastTarget)
-
-    if scriptPath!='' and os.path.exists(scriptPath):
-        print "Reading SCons script file at %s" % scriptPath
-        #lastTarget = env.SConscript(scriptPath, exports='env')
+            targets.append(lastTarget)            
+    elif os.path.exists(scriptPath):
+        print "Reading Scipion SCons script file from: '%s'" % scriptPath
+        env.Replace(packageDeps=deps)
+        env['SCONSCRIPT_PATH'] = os.path.abspath(packageLink)
+        print "env['SCONSCRIPT_PATH']", env['SCONSCRIPT_PATH']
         lastTarget = env.SConscript(scriptPath, exports='env')
-    elif os.path.exists(altScriptPath):
-        print "Config file not present. Trying SConscript in package home %s" % altScriptPath
-        lastTarget = env.SConscript(altScriptPath, exports='env')
+        targets.append(lastTarget)
     else:
-        print "Package installed by just downloading. Nothing special to do."
-
-    # Clean the special generated files
+        print "Package '%s' was downloaded and extracted, not further actions. " % name
+ 
+    for t in targets:
+        if t is not None:
+            # Make as default all produced targets if needed
+            if default or packageHome:
+                env.Default(t)
+            # Setup properly the dependencies for all targets
+            for d in deps:
+                env.Depends(t, d)
+   
+    # Clean the special generated files passed as argument
     for cFile in clean:
         Clean(lastTarget, cFile)
-    # Add the dependencies. Do it to the "link target" (tLink), so any
-    # extra actions (like setup scripts) have everything in place.
-    for dep in deps:
-        env.Depends(lastTarget, dep)
-
-    if (default or packageHome):
-        for lastT in lastTarget:
-            if lastT is not None:
-                env.Default(lastT)
 
     return lastTarget
 
