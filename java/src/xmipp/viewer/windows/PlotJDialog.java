@@ -49,7 +49,6 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
-import org.junit.experimental.theories.ParameterSignature;
 import xmipp.jni.MetaData;
 import xmipp.utils.ColorEditor;
 import xmipp.utils.ColorRenderer;
@@ -189,20 +188,24 @@ public class PlotJDialog extends XmippDialog {
 		String styles = "";
 		String markers = "";
 		Boolean checked = false;
-		String ylabel = tfYLabel.getText().trim();
-
+		
+                int plots = 0;
+                ColumnInfo plotci = null;
 		for (ColumnInfo ci: rows) {
 			ColumnInfo.ColumnExtraInfo cei = rowsExtra.get(ci);
 			if (cei.plot) {
+                                plots ++;
 				labels += ci.labelName + " ";
 				colors += "#" + cei.color + " ";
 				styles += cei.linestyle + " ";
 				markers += cei.marker + " ";
 				checked = true;
-				if (ylabel.length() == 0)
-					ylabel = rows.get(0).labelName;
+                                plotci = ci;
 			}
 		}
+                String ylabel = tfYLabel.getText().trim();
+                if(plots ==  1 && ylabel.isEmpty())
+                    ylabel = plotci.labelName;
 
 		if (!checked)
 			return;
@@ -217,14 +220,16 @@ public class PlotJDialog extends XmippDialog {
                             ScipionGalleryData data = (ScipionGalleryData)gallery.data;
                             String orderColumn = "id";
                             String orderDirection = "ASC";
-                            if(params.sortby != null)
+                            String[] sortby = data.getSortBy();
+                            if(sortby != null)
                             {
-                                orderColumn = params.sortby[0];
-                                orderDirection = params.sortby[1];
+                                orderColumn = sortby[0];
+                                orderDirection = sortby[1];
                             }   
                             String command = String.format("run function scheduleSqlitePlot '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' %s %s", 
                                     data.getFileName(), data.getPreffix(), 
-                                labels, colors, styles, markers, getXColumn(), getYLabel(), getXLabel(), getPlotTitle(), getBins(), orderColumn, orderDirection);
+                                labels, colors, styles, markers, getXColumn(), ylabel, getXLabel(), getPlotTitle(), getBins(), orderColumn, orderDirection);
+                            
                             XmippWindowUtil.runCommand(command, params.port);
                         }
                         else
@@ -273,10 +278,7 @@ public class PlotJDialog extends XmippDialog {
             return tfXLabel.getText().trim();
         }
         
-        public String getYLabel()
-        {
-            return tfYLabel.getText().trim();
-        }
+       
 
         public String getPlotTitle() {
             return tfTitle.getText();
