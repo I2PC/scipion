@@ -40,6 +40,8 @@ import pyworkflow.protocol as pwprot
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
+from pyworkflow.utils.graph import Graph
+from pyworkflow.utils import getFreePort
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
@@ -59,6 +61,8 @@ REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
 class Project(object):
     """This class will handle all information 
     related with a Project"""
+
+
     def __init__(self, path):
         """Create a project associated with a given path"""
         # To create a Project, a path is required
@@ -76,10 +80,12 @@ class Project(object):
         self._runsGraph = None
         self._transformGraph = None
         self._sourceGraph = None
+        self.address = ''
+        self.port = getFreePort()
         # Host configuration
         self._hosts = None
         self._protocolViews = None
-        
+
     def getObjId(self):
         """ Return the unique id assigned to this project. """
         return os.path.basename(self.path)

@@ -30,6 +30,7 @@ import os.path
 import unittest
 from pyworkflow.mapper import *
 from pyworkflow.object import *
+from pyworkflow.config import *
 from pyworkflow.em.data import Acquisition, SetOfImages, Image
 from pyworkflow.tests import *
 import pyworkflow.dataset as ds
@@ -241,6 +242,24 @@ class TestSqliteFlatMapper(BaseTest):
         
         self.assertEqual(mapper2.getProperty('samplingRate'), '3.0')
         self.assertEqual(mapper2.getProperty('defocusU'), '2000')
+        
+    def test_downloads(self):
+        dbName = self.getOutputPath('downloads.sqlite')
+        dbName = '/tmp/downloads.sqlite'
+        
+        print ">>> test_downloads: dbName = '%s'" % dbName
+        mapper = SqliteFlatMapper(dbName, globals())
+        mapper.enableAppend()
+        
+        n = 10
+        
+        for i in range(n):
+            download = DownloadRecord(fullName='Paco Perez', 
+                                      organization='kkkk')
+            mapper.store(download)
+            
+        mapper.commit()
+        mapper.close()
         
         
 class TestXmlMapper(BaseTest):

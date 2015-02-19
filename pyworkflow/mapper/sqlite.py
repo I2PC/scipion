@@ -519,6 +519,16 @@ class SqliteFlatMapper(Mapper):
         self.db.insertObject(obj.getObjId(), obj.isEnabled(), obj.getObjLabel(), obj.getObjComment(), 
                              *obj.getObjDict().values())
         
+    def enableAppend(self):
+        """ This will allow to append items to existing db. 
+        This is by default not allow, since most sets are not 
+        modified after creation.
+        """
+        if not self.doCreateTables:
+            obj = self.selectFirst()
+            if obj is not None:
+                self.db.setupCommands(obj.getObjDict(includeClass=True))
+        
     def clear(self):
         self.db.clear()
         self.doCreateTables = True

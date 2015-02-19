@@ -127,7 +127,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         ProtCTFMicrographs.__init__(self, **args)
 
     def _defineProcessParams(self, form):
-        form.addParam('doCTFAutoDownsampling', BooleanParam, default=False, 
+        form.addParam('doCTFAutoDownsampling', BooleanParam, default=True, 
               label="Automatic CTF downsampling detection", expertLevel=LEVEL_ADVANCED, 
               help='If this option is chosen, the algorithm automatically tries by default the '
               'suggested Downsample factor; and if it fails, +1; and if it fails, -1.')

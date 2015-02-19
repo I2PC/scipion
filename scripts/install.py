@@ -76,7 +76,7 @@ def build(args):
     # First make sure that we have SCons installed.
     if not exists(join(SOFTWARE, 'bin', 'scons')):
         # Download and extract SCons.
-        url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/python/%s.tgz' % SCONS
+        url = '%s/python/%s.tgz' % (os.environ['SCIPION_URL_SOFTWARE'], SCONS)
         sys.stdout.write(
            'Downloading, unpacking & installing scons from %s ...\n' % url)
         tarfile.open(fileobj=StringIO(urlopen(url).read())).extractall(INSTALL)

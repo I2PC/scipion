@@ -33,9 +33,7 @@ This module contains protocols related to Set operations such us:
 
 import random
 from protocol import EMProtocol
-from pyworkflow.protocol.params import (
-    PointerParam, BooleanParam, MultiPointerParam, IntParam)
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
+import pyworkflow.protocol as pwprot
 
 
 class ProtSets(EMProtocol):
@@ -51,20 +49,69 @@ class ProtUnionSet(ProtSets):
     same type of elements (Micrographs, Particles or Volumes) 
     """
     _label = 'union sets'
+    _unionTypes = ['Particles', 
+                   'Micrographs', 
+                   'CTFs + Micrographs', 
+                   'Volumes', 
+                   'Averages', 
+                   'All']
+    
+    def __init__(self, **kwargs):
+        ProtSets.__init__(self, **kwargs)
+        # We need to trace the changes of 'inputType' to 
+        # dynamically modify the property of pointerClass
+        # of the 'inputSets' parameter
+        def onChangeInputType():
+            inputText = self.getEnumText('inputType')
+            if  inputText == 'All':
+                pointerClass = 'EMSet'
+            elif inputText == 'CTFs + Micrographs':
+                pointerClass = 'SetOfCTF'
+            else:
+                pointerClass = 'SetOf' + inputText
+            # For relatively small set we usually want to include
+            # the single element type, this will allow, for example
+            # to union SetOfVolumes and Volumes in the final set
+            if inputText in ['Volumes', 'Averages']:
+                pointerClass += ',%s' % inputText[:-1] # remove last 's'
+                
+            self.inputSetsParam.setPointerClass(pointerClass)
+        
+        self.inputType.trace(onChangeInputType)
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
-        form.addParam('inputSets', MultiPointerParam, label="Input set", important=True,
-                      pointerClass='EMSet', minNumObjects=2, maxNumObjects=0,
-                      help='Select two or more sets (of micrographs, particles, volumes, etc.) to be united.'
-                           'If you select 3 sets with 100, 200, 200 elements, the final set will contain a '
-                           'total of 500 elements.')
-        form.addParam('renumber', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
+        form.addParam('inputType', pwprot.params.EnumParam, choices=self._unionTypes, default=5, # All
+                      label='Input type:',
+                      help='Select the type of objects that you want to union.\n'
+                           'Special case _All_ will allow you to select any type.')
+        form.addParam('inputTypeLabel', pwprot.params.LabelParam, condition='inputType==2',
+                      label='The special case of CTF + Micrographs will create two output '
+                            'sets: one with CTFs and other with associated Micrographs.')
+        self.inputSetsParam = form.addParam('inputSets', pwprot.params.MultiPointerParam, 
+                                            label="Input set", important=True,
+                                            pointerClass='EMSet', minNumObjects=2, maxNumObjects=0,
+                                            help='Select two or more sets (of micrographs, particles, volumes, etc.) to be united.'
+                                                 'If you select 3 sets with 100, 200, 200 elements, the final set will contain a '
+                                                 'total of 500 elements.')
+        form.addParam('renumber', pwprot.params.BooleanParam, default=False, 
+                      expertLevel=pwprot.LEVEL_ADVANCED,
                       label="Create new ids",
                       help='Make an automatic renumbering of the ids, so the new objects\n'
                            'are not associated to the old ones.')
+        form.addParam('ignoreDuplicates', pwprot.params.BooleanParam, default=False,
+                      expertLevel=pwprot.LEVEL_ADVANCED,
+                      label='Ignore duplicates?',
+                      help='By default if duplicated items are found in input sets '
+                      'this will cause renumbering of the items ids in the output set. '
+                      'This is the case for example when doing several imports, which '
+                      'whill cause ids overlapping, but we really want to insert as '
+                      'new items in the output. If, for example, the items belonged '
+                      'to the same set in a previous step, you should set this option '
+                      'to *Yes* to keep only one copy of the item. (the first ocurrence)')
+        
         # TODO: See what kind of restrictions we add (like "All sets should have the same sampling rate.")
 
     #--------------------------- INSERT steps functions --------------------------------------------   
@@ -81,40 +128,32 @@ class ProtUnionSet(ProtSets):
         # Copy info from input sets (sampling rate, etc).
         outputSet.copyInfo(set1)  # all sets must have the same info as set1!
 
-        # Keep original ids until we find a conflict. From then on, use new ids.
-        usedIds = set()  # to keep track of the object ids we have already seen
-        cleanIds = False
-
-        # If we want to renumber all start with an objId higher than any other.
-        if self.renumber.get():
-            firstObjId = max(obj.getObjId() for itemSet in self.inputSets
-                             for obj in itemSet.get()) + 1
-            cleanIds = True
-        else:
-            firstObjId = None
+        # Renumber from the begining if either the renumber option is selected
+        # or we find duplicated ids in the sets
+        cleanIds = self.renumber.get() or self.duplicatedIds()
 
         for itemSet in self.inputSets:
             for obj in itemSet.get():
-                objId = obj.getObjId()
-                if firstObjId is not None:  # 1st time renumbering
-                    obj.setObjId(firstObjId)
-                    firstObjId = None  # next ones assigned automatically
-                elif cleanIds:
-                    obj.cleanObjId()  # so it will be assigned automatically
-                elif objId in usedIds:  # duplicated id!
-                    # Note that we cannot use  "objId in outputSet"
-                    # because outputSet has not been saved to the sqlite
-                    # file yet, and it would fail :(
+                if cleanIds:
                     obj.cleanObjId()
-                    cleanIds = True  # from now on, always clean the ids
-                else:
-                    usedIds.add(objId)
                 outputSet.append(obj)
 
         self._defineOutputs(outputSet=outputSet)
 
     def getObjDict(self, includeClass=False):
         return super(ProtUnionSet, self).getObjDict(includeClass)
+    
+    def duplicatedIds(self):
+        """ Check if there are duplicated ids to renumber from the beginning. """
+        usedIds = set()  # to keep track of the object ids we have already seen
+        
+        for itemSet in self.inputSets:
+            for obj in itemSet.get():
+                objId = obj.getObjId()
+                if objId in usedIds:
+                    return True
+                usedIds.add(objId)
+        return False
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -160,7 +199,7 @@ class ProtUnionMicCtf(ProtSets):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputSets', MultiPointerParam, label="Input set", important=True,
+        form.addParam('inputSets', pwprot.params.MultiPointerParam, label="Input set", important=True,
                       pointerClass='SetOfCTF', minNumObjects=2, maxNumObjects=0,
                       help='Select two or more sets of CTF estimations to be united.'
                            'If you select 3 sets with 100, 200, 200 elements, the final set will contain a '
@@ -250,15 +289,15 @@ class ProtSplitSet(ProtSets):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputSet', PointerParam, pointerClass='EMSet',
+        form.addParam('inputSet', pwprot.params.PointerParam, pointerClass='EMSet',
                       label="Input set", important=True,
                       help='Select the set of elements (images, etc) that you want to split.'
         )
-        form.addParam('numberOfSets', IntParam, default=2,
+        form.addParam('numberOfSets', pwprot.params.IntParam, default=2,
                       label="Number of subsets",
                       help='Select how many subsets do you want to create.'
         )
-        form.addParam('randomize', BooleanParam, default=False,
+        form.addParam('randomize', pwprot.params.BooleanParam, default=False,
                       label="Randomize elements",
                       help='Put the elements at random in the different subsets.'
         )
@@ -338,21 +377,24 @@ class ProtSubSet(ProtSets):
         form.addSection(label='Input')
 
         add = form.addParam  # short notation
-        add('inputFullSet', PointerParam, label="Full set of items",
-            important=True, pointerClass='EMSet',
+        add('inputFullSet', pwprot.params.PointerParam, pointerClass='EMSet',
+            label="Full set of items", important=True, 
             help='Even if the operation can be applied to two arbitrary sets,\n'
                  'the most common use-case is to retrieve a subset of\n'
                  'elements from an original full set.\n'
                  '*Note*: the elements of the resulting set will be the same\n'
                  'ones as this input set.')
-        add('chooseAtRandom', BooleanParam, default=False, label="Make random subset",
+        add('chooseAtRandom', pwprot.params.BooleanParam, default=False, 
+            label="Make random subset",
             help='Choose elements randomly form the full set.')
-        add('inputSubSet', PointerParam, label="Subset of items",
+        add('inputSubSet', pwprot.params.PointerParam, 
             pointerClass='EMSet', condition='not chooseAtRandom',
+            label="Subset of items",
             help='The elements that are in this (normally smaller) set and\n'
                  'in the full set will be included in the resulting set.')
-        add('nElements', IntParam, default=2, label="Number of elements",
+        add('nElements', pwprot.params.IntParam, default=2, 
             condition='chooseAtRandom',
+            label="Number of elements",
             help='How many elements will be taken from the full set.')
 
     #--------------------------- INSERT steps functions --------------------------------------------   

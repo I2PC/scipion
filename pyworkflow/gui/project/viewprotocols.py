@@ -660,6 +660,7 @@ class ProtocolsView(tk.Frame):
             if self.__autoRefresh:
                 self.runsTree.after_cancel(self.__autoRefresh)
                 self.__autoRefresh = self.runsTree.after(self.__autoRefreshCounter*1000, self._automaticRefreshRuns)
+
         
     def _automaticRefreshRuns(self, e=None):
         """ Schedule automatic refresh increasing the time between refreshes. """
