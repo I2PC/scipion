@@ -610,9 +610,9 @@ def get_image_dim(request):
     
     objs = [xdim, ydim]
     
-    print "x, y = %s:%s" % (x,y)
-    print "rate: ", rate
-    print "xdim, ydim = %s:%s" % (xdim,ydim)
+#     print "x, y = %s:%s" % (x,y)
+#     print "rate: ", rate
+#     print "xdim, ydim = %s:%s" % (xdim,ydim)
     
     jsonStr = json.dumps(objs, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
