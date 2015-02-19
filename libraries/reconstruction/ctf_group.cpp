@@ -639,7 +639,7 @@ void ProgCtfGroup::writeOutputToDisc()
     size_t order, count;
     double sumimg=0.;
 
-    MultidimArray<double> ctf2D(Mwien.xdim,Mwien.ydim);
+    MultidimArray<double> ctf2D(paddim,paddim);
     Image<double> Ictf2D;
     Ictf2D.data.alias(ctf2D);
 
