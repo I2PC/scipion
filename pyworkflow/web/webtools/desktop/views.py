@@ -54,7 +54,6 @@ def doDownload(request):
     country = request.POST.get('country')
     version = request.POST.get('version')
     platform = request.POST.get('platform')
-    architecture = request.POST.get('architecture')
     
     errors = ""
     
@@ -70,8 +69,6 @@ def doDownload(request):
         errors += "Please choose one into the Scipion Version field.\n"
     if not len(platform) > 0:
         errors += "Please choose one into the Platform field.\n"
-    if not len(architecture) > 0:
-        errors += "Please choose one into the Architecture field.\n"
 
     if len(errors) == 0:
         # Save statistics into DB
