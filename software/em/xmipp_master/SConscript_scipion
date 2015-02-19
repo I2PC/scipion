@@ -86,6 +86,8 @@ BASIC_INCS = [Dir('#software/include').abspath,
 
 # XMIPP SHARED LIBRARIES
 # Xmipp External Libraries (bilib, condor, alglib)
+# TODO: Separate compilation of condor and alglib from biblib special compilation and 
+# refactor AddPackageLibrary
 xmippExternal = env.AddPackageLibrary(
               'XmippExternal',
               tars=['external/bilib.tgz', 
@@ -206,15 +208,15 @@ if int(env['gtest']):
 ######################################
 # --- From here...
 javaEnumDict = {
-            'ImageWriteMode': [File('libraries/data/xmipp_image_base.h').abspath, 'WRITE_'],
-            'CastWriteMode': [File('libraries/data/xmipp_image_base.h').abspath, 'CW_'],
-            'MDLabel': [File('libraries/data/metadata_label.h').abspath, ['MDL_', 'RLN_', 'BSOFT']],
-            'XmippError': [File('libraries/data/xmipp_error.h').abspath, 'ERR_']
+            'ImageWriteMode': [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, 'WRITE_'],
+            'CastWriteMode': [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, 'CW_'],
+            'MDLabel': [File('#software/em/xmipp/libraries/data/metadata_label.h').abspath, ['MDL_', 'RLN_', 'BSOFT']],
+            'XmippError': [File('#software/em/xmipp/libraries/data/xmipp_error.h').abspath, 'ERR_']
             }
 
 
 def WriteJavaEnum(class_name, header_file, pattern, log):
-    java_file = File(join(SCONSCRIPT_PATH, 'java/src/xmipp/jni/%s.java' % class_name)).abspath
+    java_file = File('#software/em/xmipp/java/src/xmipp/jni/%s.java' % class_name).abspath
     env.Depends(java_file, header_file)
     f = open(header_file)
     fOut = open(java_file, 'w+')
@@ -257,7 +259,8 @@ def WriteJavaEnum(class_name, header_file, pattern, log):
         log.write("Java file '%s' successful generated at %s\n" % (java_file, d))
 
 
-def ExtractEnumFromHeader(source, target, env):
+#def ExtractEnumFromHeader(source, target, env):
+def ExtractEnumFromHeader(env, target, source):
     log = open(str(target[0]), 'w+')
     for (class_name, list) in javaEnumDict.iteritems():
         WriteJavaEnum(class_name, list[0], list[1], log)
@@ -265,9 +268,10 @@ def ExtractEnumFromHeader(source, target, env):
     log.close()
     return None
 
-
-env.Append(JAVACLASSPATH='java/lib')
-env['JAVABUILDPATH'] = 'java/build'
+import pdb
+pdb.set_trace()
+env.Append(JAVACLASSPATH=":".join(glob(join(Dir('#software/em/xmipp/java/lib').abspath,'*.jar'))))
+env['JAVABUILDPATH'] = Entry('#software/em/xmipp/java/build').abspath
 env['JAVADIR'] = 'java'
 env['ENV']['LANG'] = 'en_GB.UTF-8'
 env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
@@ -275,80 +279,82 @@ env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
 if env['debug'] == True:
     env['JAVAC'] = 'javac -g'
 
-javaBuild = Execute(Mkdir('java/build'))
+javaBuild = Execute(Mkdir(Entry('#software/em/xmipp/java/build').abspath))
 
 # Update enums from c++ headers, if they don't exist, generate it
-javaLog = open(File('java/build/javaLog').abspath, 'w+')
+javaLog = open(File('#software/em/xmipp/java/build/javaLog').abspath, 'w+')
 for (class_name, class_list) in javaEnumDict.iteritems():
-    java_file = "java/src/xmipp/jni/%s.java" % class_name
+    java_file = File("#software/em/xmipp/java/src/xmipp/jni/%s.java" % class_name).abspath
     WriteJavaEnum(class_name, class_list[0], class_list[1], javaLog)
 
-javaEnums = env.Alias('javaEnums', 
-                      env.Command('libraries/bindings/java/src/xmipp/jni/enums.changelog',
-                      [File('libraries/data/xmipp_image_base.h').abspath, File('libraries/data/metadata_label.h').abspath],
-                      ExtractEnumFromHeader))
+javaExtractCommand = env.Command(Entry('#software/em/xmipp/libraries/bindings/java/src/xmipp/jni/enums.changelog').abspath,
+                                 [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, File('#software/em/xmipp/libraries/data/metadata_label.h').abspath],
+                                 ExtractEnumFromHeader)
+javaEnums = env.Alias('javaEnums', javaExtractCommand)
 
-imagejUntar = env.Untar(File('external/imagej/ij.jar').abspath, File('external/imagej.tgz').abspath, cdir=Dir('external').abspath)
+imagejUntar = env.Untar(File('#software/em/xmipp/external/imagej/ij.jar').abspath, File('#software/em/xmipp/external/imagej.tgz').abspath, cdir=Dir('#software/em/xmipp/external').abspath)
 env.Depends(imagejUntar, javaEnums)
 
-ijLink = env.SymLink(File('java/lib/ij.jar').abspath, imagejUntar[0].abspath)
+ijLink = env.SymLink(File('#software/em/xmipp/java/lib/ij.jar').abspath, imagejUntar[0].abspath)
 env.Depends(ijLink, imagejUntar)
 env.Default(ijLink)
 # --- ...to here
 
 xmippJavaJNI = env.AddJavaLibrary(
              'XmippJNI',
-             dirs=['java/src/xmipp/jni', 'java/src/xmipp/ij/commons'],
+             dirs=[Entry('#software/em/xmipp/java/src/xmipp/jni').abspath, Entry('#software/em/xmipp/java/src/xmipp/ij/commons').abspath],
              deps=['ij'],
              )
 env.Depends(xmippJavaJNI, ijLink)
 
 xmippUtils = env.AddJavaLibrary(
            'XmippUtils',
-           dirs=['java/src/xmipp/utils', 'java/src/xmipp/jni/'],
+           dirs=[Entry('#software/em/xmipp/java/src/xmipp/utils').abspath, Entry('#software/em/xmipp/java/src/xmipp/jni/').abspath],
            deps=['ij', 'commons-cli-1.1', 'XmippJNI'],
            )
 env.Depends(xmippUtils, ijLink)
 
 xmippIJ = env.AddJavaLibrary(
         'XmippIJ',
-        dirs=['java/src/xmipp/ij/commons'],
+        dirs=[Entry('#software/em/xmipp/java/src/xmipp/ij/commons').abspath],
         deps=['XmippUtils', 'XmippJNI'],
         )
 
 xmippViewer = env.AddJavaLibrary(
             'XmippViewer',
-            dirs=['java/src/xmipp/viewer'],
+            dirs=[Entry('#software/em/xmipp/java/src/xmipp/viewer').abspath],
             deps=['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13', 'XmippJNI'],
             )
 
 xmippTest = env.AddJavaLibrary(
           'XmippTest',
-          dirs=['java/src/xmipp/test'],
+          dirs=[Entry('#software/em/xmipp/java/src/xmipp/test').abspath],
           deps=['XmippViewer', 'junit4-4.8.2', 'core-1.1', 'XmippJNI']
           )
 
 xmippIJPlugin = env.AddJavaLibrary(
               'XmippIJPlugin_MasksToolbar',
-              dirs=['java/src/xmipp/ij/plugins/maskstoolbar'],
+              dirs=[Entry('#software/em/xmipp/java/src/xmipp/ij/plugins/maskstoolbar').abspath],
               deps=['XmippJNI']
               )
 
 env.Depends(xmippIJPlugin, ijLink)
-pluginLink = env.SymLink('external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar', xmippIJPlugin)
+pluginLink = env.SymLink(Entry('#software/em/xmipp/external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar').abspath, xmippIJPlugin)
 env.Depends(pluginLink, ijLink)
 env.Default(pluginLink)
 
 # For any yet unkown issue, using the environment used for the rest of the SCons is imposible to compile java code
 # FIXME: Its needed to guess why and correct this. In the meanwhile we'll use an alternative environment
 env2 = Environment()
-env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir('java/lib').abspath,'*.jar'))))
-javaExtraFileTypes = env2.Java('java/build/HandleExtraFileTypes.class', 'java/src/HandleExtraFileTypes.java')
-env2.Depends(javaExtraFileTypes, 'java/lib/XmippViewer.jar')
+import pdb
+pdb.set_trace()
+env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir('#software/em/xmipp/java/lib').abspath,'*.jar'))))
+javaExtraFileTypes = env2.Java(Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class').abspath, File('#software/em/xmipp/java/src/HandleExtraFileTypes.java').abspath)
+env2.Depends(javaExtraFileTypes, Entry('#software/em/xmipp/java/lib/XmippViewer.jar').abspath)
 env2.Default(javaExtraFileTypes)
 
 # FIXME: For any yet unkown issue, java is being compiled putting in -d flag the class name, producing a folder with the same name as the class and putting the class file inside
-fileTypesInstallation = env.Install('external/imagej/plugins/', 'java/build/HandleExtraFileTypes.class/HandleExtraFileTypes.class')
+fileTypesInstallation = env.Install(Dir('#software/em/xmipp/external/imagej/plugins/').abspath, Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class/HandleExtraFileTypes.class').abspath)
 env.Depends(fileTypesInstallation, pluginLink)
 env.Default(fileTypesInstallation)
 
