@@ -91,9 +91,9 @@ class TestBasic(BaseTest):
 
 
 SHOW_IMAGES  = False # Launch xmipp_showj to open intermediate results
-CLEAN_IMAGES = True # Remove the output temporary files
+CLEAN_IMAGES = False # Remove the output temporary files
 PRINT_MATRIX = False
-PRINT_FILES  = False
+PRINT_FILES  = True
 
 
 def runXmippProgram(cmd):
@@ -152,7 +152,7 @@ class TestConvertBase(BaseTest):
             partSet = SetOfParticles(filename=partFn1)
         else:
             partSet = SetOfVolumes(filename=partFn1)
-            
+        partSet.setAlignment(alignType)
         partSet.setAcquisition(Acquisition(voltage=300,
                                   sphericalAberration=2,
                                   amplitudeContrast=0.1,
@@ -167,8 +167,9 @@ class TestConvertBase(BaseTest):
             p.setTransform(Transform(a))
             partSet.append(p)
         # Write out the .sqlite file and check that are correctly aligned
+        print "Parset", partFn1
+        partSet.printAll()
         partSet.write()
-
         # Convert to a Xmipp metadata and also check that the images are
         # aligned correctly
         if alignType == ALIGN_2D or alignType == ALIGN_PROJ:

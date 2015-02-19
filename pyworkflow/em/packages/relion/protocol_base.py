@@ -685,13 +685,13 @@ class ProtRelionBase(EMProtocol):
 
         return data_classes
     
-    def _getIterData(self, it):
+    def _getIterData(self, it, **kwargs):
         """ Sort the it??.data.star file by the maximum likelihood. """
         data_sqlite = self._getFileName('data_scipion', iter=it)
         
         if not exists(data_sqlite):
             data = self._getFileName('data', iter=it)
-            writeSqliteIterData(data, data_sqlite)
+            writeSqliteIterData(data, data_sqlite, **kwargs)
         
         return data_sqlite
     
