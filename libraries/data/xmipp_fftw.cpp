@@ -410,7 +410,6 @@ void convolutionFFT(MultidimArray<double> &img,
 
     // Multiply FFT1 * FFT2'
     double dSize=MULTIDIM_SIZE(img);
-    double mdSize=-dSize;
     double a, b, c, d; // a+bi, c+di
     double *ptrFFT2=(double*)MULTIDIM_ARRAY(FFT2);
     double *ptrFFT1=(double*)MULTIDIM_ARRAY(FFT1);
