@@ -861,6 +861,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     SideEffect('dummy', tLink)  # so it works fine in parallel builds
     lastTarget = tLink
 
+    # If we have specified extraActions, do them and don't try to
+    # compile/install the package in any other way.
     if extraActions:
         for target, command in extraActions:
             lastTarget = env.Command(

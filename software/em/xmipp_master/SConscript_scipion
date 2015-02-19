@@ -28,12 +28,42 @@
 
 Import('env')
 
-# Required for custom functions
-from glob import glob
-import os
-from os.path import join, exists
-import os
-import sys
+# Define some variables used by Scons, note that some of 
+# the variables will be passed by Scipion in the environment (env) by
+# 
+
+CUDA_SDK_PATH = ''
+CUDA_LIB_PATH = ''
+JNI_CPPPATH = ['/usr/java/default/include', '/usr/java/include/linux']
+CPPPATH = []
+CC = 'gcc'
+CXX = 'g++'
+LINKERFORPROGRAMS = 'g++'
+CCFLAGS = ['-std=c99']
+CXXFLAGS = []
+LINKFLAGS = []
+MPI_CC = 'mpicc'
+MPI_CXX = 'mpiCC'
+MPI_LINKERFORPROGRAMS = 'mpiCC'
+MPI_LIB = 'mpi'
+MPI_LIBDIR = ['/usr/lib']
+MPI_INCLUDE = '/usr/lib64/mpi/gcc/openmpi/include'
+MPI_BINDIR = '/usr/bin'
+MATLAB_DIR = '/usr/local/MATLAB/R2011a'
+JAVA_HOME = '/usr/java/default'
+JAVA_BINDIR = '/usr/java/default/bin'
+
+gtest = True
+cuda = False
+release = True
+debug = False
+# profile = False
+# warn = False
+# fast = False
+# quiet = True
+matlab = False
+opencv = False
+
 
 packageDeps = env.get('packageDeps', '')
 if isinstance(packageDeps, basestring):
@@ -186,17 +216,17 @@ xmippParallel = env.AddPackageLibrary(
               mpi=True)
 
 # Gtest
-if int(env['gtest']):
-    gtest = env.ManualInstall('gtest',
-                              tar='gtest-1.6.0.tgz',
-                              buildDir='gtest-1.6.0/fused-src/gtest',
-                              url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/gtest-1.6.0.tgz',
-                              extraActions=[(File('#/software/lib/libgtest.so'), 
-                                             '%s -o %s -shared -L %s -L /usr/lib %s -fPIC %s' % (env['CC'],
-                                                                                                 File('#/software/lib/libgtest.so').abspath,
-                                                                                                 Dir('#software/lib').abspath,
-                                                                                                 '-l '+' -l'.join(BASIC_LIBS), 
-                                                                                                 File('#software/tmp/gtest-1.6.0/fused-src/gtest/gtest-all.cc').abspath))])
+if gtest:
+    env.ManualInstall('gtest',
+                      tar='gtest-1.6.0.tgz',
+                      buildDir='gtest-1.6.0/fused-src/gtest',
+                      url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/gtest-1.6.0.tgz',
+                      extraActions=[(File('#/software/lib/libgtest.so'), 
+                                     '%s -o %s -shared -L %s -L /usr/lib %s -fPIC %s' %
+                                     (env['CC'], File('#/software/lib/libgtest.so').abspath,
+                                      Dir('#software/lib').abspath,
+                                      '-l '+' -l'.join(BASIC_LIBS), 
+                                      File('#software/tmp/gtest-1.6.0/fused-src/gtest/gtest-all.cc').abspath))])
 
 
 # Java libraries
@@ -272,8 +302,8 @@ env['JAVADIR'] = 'java'
 env['ENV']['LANG'] = 'en_GB.UTF-8'
 env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
 # Set -g debug options if debugging
-if env['debug'] == True:
-    env['JAVAC'] = 'javac -g'
+if debug:
+    env['JAVAC'] = 'javac -g'  # TODO: check how to add -g without changing JAVAC
 
 javaBuild = Execute(Mkdir('java/build'))
 
@@ -492,7 +522,7 @@ env.AddProgram('xmipp_ctf_sort_psds',
                incs=BASIC_INCS,
                libs=_libsrecons, 
                deps=_depsrecons)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_idr_xray_tomo',
                    src=['applications/programs/idr_xray_tomo/'],
                    incs=BASIC_INCS,
@@ -717,7 +747,7 @@ env.AddProgram('xmipp_reconstruct_art_pseudo',
                incs=BASIC_INCS,
                libs=_libsrecons,
                deps=_depsrecons)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_reconstruct_art_xray',
                    src=['applications/programs/reconstruct_art_xray/'],
                    incs=BASIC_INCS,
@@ -742,7 +772,7 @@ env.AddProgram('xmipp_reconstruct_wbp',
 #               src=['applications/programs/reconstruct_fsc/'],
 #               incs=BASIC_INCS,
 #               libs=_libsnothing)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_resolution_ibw',
                    src=['applications/programs/resolution_ibw/'],
                    incs=BASIC_INCS,
@@ -828,7 +858,7 @@ env.AddProgram('xmipp_transform_window',
                src=['applications/programs/transform_window/'],
                incs=BASIC_INCS,
                libs=_libsnothing)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_tomo_align_dual_tilt_series',
                    src=['applications/programs/tomo_align_dual_tilt_series/'],
                    incs=BASIC_INCS,
@@ -844,7 +874,7 @@ env.AddProgram('xmipp_tomo_align_tilt_series',
                incs=BASIC_INCS,
                libs=_libsrecons,
                deps=_depsrecons,
-               cuda=int(env['cuda']))
+               cuda=cuda)
 env.AddProgram('xmipp_tomo_detect_missing_wedge',
                src=['applications/programs/tomo_detect_missing_wedge/'],
                incs=BASIC_INCS,
@@ -939,7 +969,7 @@ env.AddProgram('xmipp_xray_project',
                incs=BASIC_INCS,
                libs=_libsrecons,
                deps=_depsrecons)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_xray_volume_correct',
                    src=['applications/programs/xray_volume_correct/'],
                    incs=BASIC_INCS,
@@ -1159,7 +1189,7 @@ env.AddProgram('xmipp_mpi_transform_threshold',
                libs=_libsrecons,
                deps=_depsrecons,
                mpi=True)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_mpi_write_test', 
                    src=['applications/programs/mpi_write_test'],
                    incs=BASIC_INCS,
@@ -1379,7 +1409,7 @@ if int(env['gtest']):
     AddXmippTest('test_emx', testEMX, "$SOURCE $TARGET")
 
 # Matlab programs
-if int(env['matlab']):
+if matlab:
     def CompileMatlab(name, dependencies=[]):
         ''' name parameter is expected without .java extension '''
         source = 'libraries/bindings/matlab/'+name+".cpp"
@@ -1400,7 +1430,7 @@ if int(env['matlab']):
         CompileMatlab('xmipp_read_structure_factor')
 
 # Optical Alignment program
-if int(env['opencv']):
+if opencv:
     _libsoptical = BASIC_LIBS + ['opencv_core', 'opencv_legacy', 'opencv_imgproc', 'opencv_video', 'XmippDimred', 'XmippClassif', 'XmippRecons', 'XmippData', 'XmippExternal']
     _depsoptical = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so', 'lib/libXmippDimred.so', 'lib/libXmippClassif.so', 'lib/libXmippRecons.so', 'lib/libXmippData.so', 'lib/libXmippExternal.so']
     env.AddProgram('xmipp_optical_alignment_cpu', 
@@ -1408,7 +1438,7 @@ if int(env['opencv']):
                    incs=BASIC_INCS,
                    libs=_libsoptical,
                    deps=_depsoptical)
-    if int(env['cuda']):
+    if cuda:
         _libsoptical += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu' ]
         env.AddProgram('xmipp_optical_alignment_gpu', 
                        src=['applications/programs/optical_alignment_gpu'],
