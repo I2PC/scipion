@@ -32,26 +32,26 @@ Import('env')
 # the variables will be passed by Scipion in the environment (env) by
 # 
 
-CUDA_SDK_PATH = ''
-CUDA_LIB_PATH = ''
-JNI_CPPPATH = ['/usr/java/default/include', '/usr/java/include/linux']
-CPPPATH = []
-CC = 'gcc'
-CXX = 'g++'
-LINKERFORPROGRAMS = 'g++'
-CCFLAGS = ['-std=c99']
-CXXFLAGS = []
-LINKFLAGS = []
-MPI_CC = 'mpicc'
-MPI_CXX = 'mpiCC'
-MPI_LINKERFORPROGRAMS = 'mpiCC'
-MPI_LIB = 'mpi'
-MPI_LIBDIR = ['/usr/lib']
-MPI_INCLUDE = '/usr/lib64/mpi/gcc/openmpi/include'
-MPI_BINDIR = '/usr/bin'
-MATLAB_DIR = '/usr/local/MATLAB/R2011a'
-JAVA_HOME = '/usr/java/default'
-JAVA_BINDIR = '/usr/java/default/bin'
+env['CUDA_SDK_PATH'] = ''
+env['CUDA_LIB_PATH'] = ''
+env['JNI_CPPPATH'] = ['/usr/java/default/include', '/usr/java/include/linux']
+env['CPPPATH'] = []
+env['CC'] = 'gcc'
+env['CXX'] = 'g++'
+env['LINKERFORPROGRAMS'] = 'g++'
+env['CCFLAGS'] = ['-std=c99']
+env['CXXFLAGS'] = []
+env['LINKFLAGS'] = []
+env['MPI_CC'] = 'mpicc'
+env['MPI_CXX'] = 'mpiCC'
+env['MPI_LINKERFORPROGRAMS'] = 'mpiCC'
+env['MPI_LIB'] = 'mpi'
+env['MPI_LIBDIR'] = ['/usr/lib']
+env['MPI_INCLUDE'] = '/usr/lib64/mpi/gcc/openmpi/include'
+env['MPI_BINDIR'] = '/usr/bin'
+env['MATLAB_DIR'] = '/usr/local/MATLAB/R2011a'
+env['JAVA_HOME'] = '/usr/java/default'
+env['JAVA_BINDIR'] = '/usr/java/default/bin'
 
 gtest = True
 cuda = False
