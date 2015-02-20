@@ -129,7 +129,7 @@ class ObjectView(DataView):
         
     def getShowJParams(self):
         # mandatory to provide scipion params
-        params = DataView.getShowJParams(self) #+ ' --scipion %s %s %s'%(self.port, self.inputid, self.other)
+        params = DataView.getShowJParams(self) + ' --scipion %s %s %s'%(self.port, self.inputid, self.other)
         return params
     
     def show(self):
