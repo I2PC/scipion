@@ -124,6 +124,7 @@ try:
     DIRS_GLOBAL = getPaths('DIRS_GLOBAL')
     DIRS_LOCAL = getPaths('DIRS_LOCAL')
     PACKAGES = getPaths('PACKAGES')
+    REMOTE = dict(config.items('REMOTE'))
 
     for d in DIRS_LOCAL.values():
         if not exists(d):
@@ -172,6 +173,7 @@ VARS = {
 VARS.update(DIRS_GLOBAL)
 VARS.update(DIRS_LOCAL)
 VARS.update(PACKAGES)
+VARS.update(REMOTE)
 
 
 #
