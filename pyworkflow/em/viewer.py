@@ -99,11 +99,13 @@ class DataView(View):
             'zoom',
             'order',
             'render',
+#             'columns',
         }
         
         params = {}
         
         for key, value in self._viewParams.items():
+            print str(key), ":",str(value)  
             if key in parameters:
                 if key == 'mode' and value =='metadata':
                     value = 'table'

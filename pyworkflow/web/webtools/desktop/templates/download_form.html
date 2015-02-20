@@ -213,8 +213,8 @@ function launchSubmit(){
 						 Scipion users' mail list
 						</td>
 						<td id="" style="font-size:0.9em;">
-		      				<input type="radio" name="mailoption" value="mail" checked=""> Subscribe me
-							&nbsp;<input type="radio" name="mailoption" value="nomail"> Don't subscribe me
+		      				<input type="radio" name="mailoption" value=0 checked=""> Subscribe me
+							&nbsp;<input type="radio" name="mailoption" value=1> Don't subscribe me
 						</td>
 					</tr>
 					
@@ -224,7 +224,7 @@ function launchSubmit(){
 						</td>
 						<td id="value">
 							<select name="country">
-								<option value="" selected="selected">Select a Country</option>
+								<option value="" selected="selected"> - Select a Country - </option>
 								<option value="Afghanistan">Afghanistan</option>
 								<option value="Albania">Albania</option>
 								<option value="Algeria">Algeria</option>
@@ -422,7 +422,7 @@ function launchSubmit(){
 								<option value="Rwanda">Rwanda</option>
 								<option value="Saint Helena">Saint Helena</option>
 								<option value="Saint Kitts and Nevis">Saint Kitts and
-						launchSubmit			Nevis</option>
+									Nevis</option>
 								<option value="Saint Lucia">Saint Lucia</option>
 								<option value="Saint Pierre and Miquelon">Saint Pierre
 									and Miquelon</option>
@@ -502,9 +502,9 @@ function launchSubmit(){
 						</td>
 						<td id="value">
 							<select name="version">
-								<option value="" selected="selected">Select a Scipion
-									Version</option>
-								<option value="desktop">Scipion Desktop</option>
+								<option value="" selected="selected"> - Select a Scipion
+									Version - </option>
+								<option value="desktop">Scipion Desktop 0.9a</option>
 							</select>
 						</td>
 					</tr>
@@ -514,33 +514,9 @@ function launchSubmit(){
 						</td>
 						<td id="value">
 							<select name="platform">
-								<option value="" selected="selected">Choose Platform</option>
-								<option value="src">Generic (Source Code)</option>
-								<option value="linuxbinDebian">Linux binaries (Debian)</option>
-								<option value="linuxbinDebMint">Linux binaries (Mint)</option>
-								<option value="linuxbinDebUbuntu">Linux binaries (Ubuntu)</option>
-								<option value="linuxbinDebOthers">Linux binaries (Others
-									.deb)</option>
-								<option value="linuxbinRpmCentOS">Linux binaries (CentOS)</option>
-								<option value="linuxbinRpmOpenSuse">Linux binaries
-									(OpenSuse)</option>
-								<option value="linuxbinRpmFedora">Linux binaries (Fedora)</option>
-								<option value="linuxbinRpmOthers">Linux binaries (Others
-									RPM)</option>
-								<option value="linuxbin-CentOS5">Linux binaries (CentOS5)</option>
-								<option value="macosxbin">MAC OSX binaries</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td id="label">
-							Architecture
-						</td>
-						<td id="value">
-							<select name="architecture">
-								<option value="" selected="selected">Choose Architecture</option>
-								<option value="i386">32 bits</option>
-								<option value="x64">64 bits</option>
+								<option value="" selected="selected"> - Choose Platform - </option>
+								<option value="src">Source Code</option>
+								<option value="linuxbin">Linux binaries</option>
 							</select>
 						</td>
 					</tr>

@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # **************************************************************************
 # *
 # * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
@@ -33,6 +34,9 @@ from django.http import HttpResponse
 from django.core.context_processors import csrf
 from pyworkflow.web.pages import settings as django_settings
 
+import pyworkflow as pw
+DB_PATH_DOWNLOAD = os.path.join(pw.HOME, 'web', 'webtools', 'desktop', "download_statistics.db")
+
 def desktop(request):
     context = {}
     return render(request, 'index/index.html')
@@ -54,7 +58,6 @@ def doDownload(request):
     country = request.POST.get('country')
     version = request.POST.get('version')
     platform = request.POST.get('platform')
-    architecture = request.POST.get('architecture')
     
     errors = ""
     
@@ -64,19 +67,71 @@ def doDownload(request):
         errors += "Please fill in the Organization field.\n"
     if not len(email) > 0:
         errors += "Please fill in the Email field.\n"
-    if not len(mailoption) > 0:
-        errors += "Please choose one into the Country field.\n"
+#     if not len(mailoption) > 0:
+#         errors += "Please choose one into the Country field.\n"
     if not len(version) > 0:
         errors += "Please choose one into the Scipion Version field.\n"
     if not len(platform) > 0:
         errors += "Please choose one into the Platform field.\n"
-    if not len(architecture) > 0:
-        errors += "Please choose one into the Architecture field.\n"
 
     if len(errors) == 0:
         # Save statistics into DB
-        pass
-            
+        data = {"name": fullName,
+                "org" : organization,
+                "mail": email,
+                "subscription" : mailoption,
+                "country": country,
+                "version": version,
+                "platform": platform }
+        
+        # Update database with the new data
+#         createDB()
+        updateDB(data)
+        
     jsonStr = json.dumps({'errors' : parseText(errors)}, ensure_ascii=False)
     
     return HttpResponse(jsonStr, mimetype='application/javascript')   
+
+def createDB():
+    import sqlite3
+
+    conn = sqlite3.connect(DB_PATH_DOWNLOAD)
+    
+    conn.execute('''CREATE TABLE DOWNLOAD (
+        NAME           TEXT    NOT NULL,
+        ORG            TEXT     NOT NULL,
+        MAIL           TEXT    NOT NULL,
+        SUBSCRIPTION   INTEGER    NOT NULL,
+        COUNTRY    TEXT    NOT NULL,
+        VERSION     TEXT    NOT NULL,
+        PLATFORM    TEXT    NOT NULL
+        );''')
+    print "Table created successfully";
+    conn.close()
+
+def updateDB(data):
+    import sqlite3
+
+    conn = sqlite3.connect(DB_PATH_DOWNLOAD)
+    print "Opened database successfully";
+    
+    print "data: ", data
+    
+    name = data['name']
+    org = data['org']
+    mail = data['mail']
+    subscription = data['subscription']
+    country = data['country']
+    version = data['version']
+    platform = data['platform']
+    
+#     table = "downloads (NAME, ORG, MAIL, SUBSCRIBE, COUNTRY, VERSION, PLATFORM)"
+    table = "DOWNLOAD"
+    values = "VALUES ('"+ name +"', '"+ org +"', '"+ mail +"', '"+ subscription +"', '"+ country +"', '"+ version +"', '"+ platform +"')"
+    
+    conn.execute("INSERT INTO " + table + " " + values);
+    conn.commit()
+    
+    print "Records created successfully";
+    conn.close()
+    
