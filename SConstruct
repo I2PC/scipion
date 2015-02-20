@@ -51,6 +51,7 @@ URL_BASE = os.environ['SCIPION_URL_SOFTWARE']
 download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
 untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 
+
 # Create the environment the whole build will use.
 env = Environment(ENV=os.environ,
                   BUILDERS=Environment()['BUILDERS'],
@@ -64,6 +65,24 @@ env = Environment(ENV=os.environ,
 # Message from autoconf and make, so we don't see all its verbosity.
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
+
+
+def downloadOrLink(env, urlOrPath, output, downloadDir='software/tmp'):
+    """ Download if urlOrPath is an URL.
+    Or simply link if is a local file.
+    """
+    outputFile = File('%s/%s' % (downloadDir, output))
+    
+    #print "DEBUG: urlOrPath", urlOrPath
+    #print "DEBUG: os.path.isfile(urlOrPath)", os.path.isfile(urlOrPath)
+    
+    if os.path.isfile(urlOrPath):
+        target = env.SymLink(outputFile.path, urlOrPath)
+    else: 
+        target = download(env, outputFile.abspath, Value(urlOrPath))
+    SideEffect('dummy', target)  # so it works fine in parallel builds
+
+    return target
 
 
 def progInPath(env, prog):
@@ -301,8 +320,10 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     # Alternatively we could use CheckConfigLib() (as in commit cac431d117)
 
     # Create and concatenate the builders.
-    tDownload = download(env, File('#software/tmp/%s' % tar).abspath, Value(url))
-    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
+    #print "DEBUG: url: ", url
+    #print "DEBUG: tar: ", tar
+    tDownload = downloadOrLink(env, url, tar)
+    
     tUntar = untar(env, File('#software/tmp/%s/configure' % configDir[0]).abspath, tDownload,
                    cdir=Dir('#software/tmp').abspath)
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
@@ -349,6 +370,9 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
         if default or GetOption(name):
             env.Default(tMake[x])
         toReturn.append(tMake[x])
+        
+    env.Alias(name, toReturn)
+    
     return toReturn
 
 
@@ -661,8 +685,8 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
                   help='Activate module %s' % name)
 
     # Create and concatenate the builders.
-    tDownload = download(env, 'software/tmp/%s' % tar, Value(url))
-    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
+    tDownload = downloadOrLink(env, url, tar)
+
     tUntar = untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload,
                    cdir='software/tmp')
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
@@ -958,8 +982,7 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     # done. I don't know how to fix this easily in scons... :(
 
     # Donload, untar, and execute any extra actions.
-    tDownload = download(env, File('#software/tmp/%s' % tar).abspath, Value(url))
-    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
+    tDownload = downloadOrLink(env, url, tar)
     tUntar = untar(env, File('#software/tmp/%s/README' % buildDir).abspath, tDownload,
                    cdir=Dir('#software/tmp').abspath)
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
