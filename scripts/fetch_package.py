@@ -115,8 +115,8 @@ if not os.path.exists('software/tmp/%s' % _PACKAGE_TAR):
 #try:
 print 'dstFolder %s' % dstFolder
 print os.getcwd()
-packageTar = tarfile.open('software/tmp/%s' % _PACKAGE_TAR, 'r')
-packageTar.extractall(dstFolder)
+#packageTar = tarfile.open('software/tmp/%s' % _PACKAGE_TAR, 'r')
+#packageTar.extractall(dstFolder)
 #except:
 #    exitScript(_RETURN_BAD_UNTAR)
 

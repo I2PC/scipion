@@ -380,15 +380,8 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     sources = []
     libpath.append(Dir('#software/lib').abspath)
     
-    print "os.getcwd():", os.getcwd()
-    print "dirs: ", dirs
-    print "patterns", patterns
-#     print ">>>>>>>>>>>>>> Open winpdb!!!!!, no sources."
-#     from rpdb2 import start_embedded_debugger
-#     start_embedded_debugger('a')
-    print "env['SCONSCRIPT_PATH']2222", env['SCONSCRIPT_PATH']
     for d, p in izip(dirs, patterns):
-        sources += glob(join(d, p))
+        sources += glob(join(env['SCONSCRIPT_PATH'], d, p))
         
     if not sources:
         Exit('No sources!!!')
@@ -468,7 +461,8 @@ def symLink(env, target, source):
     return result
 
 
-def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=None, buildDir=None, classDir=None, sourcePath=None, deps=[], default=True):
+def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=None, 
+                   buildDir=None, classDir=None, sourcePath=None, deps=[], default=True):
     """Add self-made and compiled java library to the compilation process
     
     This pseudobuilder access given directory, compiles it
@@ -482,46 +476,65 @@ def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=Non
     jar = jar or '%s.jar' % name
     dirs = dirs or ['java/src']
     patterns = patterns or 'unset'
-    buildDir = buildDir or 'java/build'
-    installDir = installDir or 'java/lib'
-    classDir = classDir or 'java/build'
-    sourcePath = sourcePath or 'java/src'
-    sources = []
-    if patterns == 'unset':
-        patterns = []
-        for x in range(len(dirs)):
-            patterns += ['*.java']
+    buildDir = buildDir or join(env['SCONSCRIPT_PATH'], 'java/build')
+    installDir = installDir or join(env['SCONSCRIPT_PATH'], 'java/lib')
+    classDir = classDir or buildDir
+    sourcePath = sourcePath or join(env['SCONSCRIPT_PATH'], 'java/src')
+#     sources = []
+#     if patterns == 'unset':
+#         patterns = []
+#         for x in range(len(dirs)):
+#             patterns += ['*.java']
 
-    
     if not default:
         return None
     
-    deps = [join(installDir, '%s.jar' % name) for name in deps]
-    for x, source in enumerate(dirs):
-        sources += glob(join(dirs[x], patterns[x]))
+    #deps = [join(installDir, '%s.jar' % name) for name in deps]
+#     
+    sources = []
+#     for d in dirs:
+#         sources += glob(join(d, '*.java'))
+    
+    for d in dirs:
+        for subdir, dirs, files in os.walk(d):
+            for f in files:
+                if f.endswith('.java'):
+                    sources.append(os.path.join(subdir, f))
+        
     
     env2 = Environment()
-    env2['ENV']['PATH'] = env['ENV']['PATH']
-    env2['ENV']['JAVA_ROOT'] = env['ENV'].get('JAVA_ROOT', '')
-    env2['ENV']['JAVA_HOME'] = env['ENV'].get('JAVA_HOME', '')
-    env2['ENV']['JAVA_HOME'] = env['ENV'].get('JAVA_BINDIR', '')
-    env2['ENV']['JRE_HOME'] = env['ENV'].get('JRE_HOME', '')
-    env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir(installDir).abspath,'*.jar'))))
-    env2.AppendUnique(JAVASOURCEPATH=Dir(sourcePath).abspath)
 
-    jarCreation = env2.Jar(target=join(buildDir, jar), source=sources)
-    SideEffect('dummy', jarCreation)
-    lastTarget = jarCreation
+    env2['JAVACLASSPATH'] = '"%s"' % join(installDir, '*')
+    #env2['JAVACFLAGS'] = '-d "%s"' % buildDir
+    env2['JAVASOURCEPATH'] = sourcePath
+    #env2['JARCHDIR'] = buildDir
+    env2['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
+    #env2.Replace(JAVACLASSPATH=":".join(glob(join(Dir(installDir).abspath,'*.jar'))))
+    #env2.Replace(JAVASOURCEPATH=Dir(sourcePath).abspath)
+
+#    javaDir = env2.Java(target=buildDir, source=sources, JAVAVERSION='1.6')
+#    jarCreation = env2.Jar(join(buildDir, jar), source=sources, JAVAVERSION='1.6')
+    tgts = ['%s/%s' % (buildDir, s.replace('.java' ,'.class')) for s in sources]
+    javaDir = env2.Java(target=tgts, source=sources, JAVAVERSION='1.6')
+    jarCreation = env2.Jar(join(buildDir, jar), source=tgts, JAVAVERSION='1.6')
+    #SideEffect('dummy', jarCreation)
     for dep in deps:
-        env.Depends(jarCreation, File(dep).abspath)
+        env2.Depends(jarCreation, dep)
     
-    install = env.Install(Dir(installDir), jarCreation)
-    SideEffect('dummy', install)
-    lastTarget = install
+    #print "join(buildDir, jar) ", join(buildDir, jar)
+    #print "env.Install: ", Dir(installDir).abspath
+    #print "jarCreation: ", jarCreation[0].abspath
+    
+    jarInstall = env2.Install(installDir, jarCreation)
+    #env.Depends(jarInstall, jarCreation)
+    #SideEffect('dummy', jarInstall)
 
-    env.Default(lastTarget)
+    env2.Alias(jar, jarInstall)
+    env2.Default(jar)
+    env2.Alias('java', jarInstall)
+    #env.Default(jarInstall)
     
-    return lastTarget
+    return jarInstall
     
 
 
@@ -878,7 +891,6 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         print "Reading Scipion SCons script file from: '%s'" % scriptPath
         env.Replace(packageDeps=deps)
         env['SCONSCRIPT_PATH'] = os.path.abspath(packageLink)
-        print "env['SCONSCRIPT_PATH']", env['SCONSCRIPT_PATH']
         lastTarget = env.SConscript(scriptPath, exports='env')
         targets.append(lastTarget)
     else:
