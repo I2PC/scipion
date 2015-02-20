@@ -527,18 +527,21 @@ def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=Non
         
     
     env2 = Environment()
+#    env2['JAR'] = '/usr/java/default/bin/jar'
 
     env2['JAVACLASSPATH'] = '"%s"' % join(installDir, '*')
     #env2['JAVACFLAGS'] = '-d "%s"' % buildDir
     env2['JAVASOURCEPATH'] = sourcePath
-    #env2['JARCHDIR'] = buildDir
+    env2['JARCHDIR'] = buildDir
     env2['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
     #env2.Replace(JAVACLASSPATH=":".join(glob(join(Dir(installDir).abspath,'*.jar'))))
     #env2.Replace(JAVASOURCEPATH=Dir(sourcePath).abspath)
 
 #    javaDir = env2.Java(target=buildDir, source=sources, JAVAVERSION='1.6')
 #    jarCreation = env2.Jar(join(buildDir, jar), source=sources, JAVAVERSION='1.6')
-    tgts = ['%s/%s' % (buildDir, s.replace('.java' ,'.class')) for s in sources]
+    #tgts = ['%s/%s' % (buildDir, s.replace('.java' ,'.class')) for s in sources]
+    tgts = [s.replace(sourcePath, buildDir).replace('.java', '.class').replace('java/src/', 'java/build/') for s in sources]
+    print "tgts", tgts
     javaDir = env2.Java(target=tgts, source=sources, JAVAVERSION='1.6')
     jarCreation = env2.Jar(join(buildDir, jar), source=tgts, JAVAVERSION='1.6')
     #SideEffect('dummy', jarCreation)
