@@ -314,9 +314,10 @@ def main():
     elif mode == MODE_INSTALL or mode == MODE_UNINSTALL:
         # We do not os.environ.update(VARS) here. SCons needs to use
         # the python installed in the system by default.
-
-        # But we do set SCIPION_HOME to avoid picking one from the environment.
-        os.environ['SCIPION_HOME'] = SCIPION_HOME
+        # But we set all vars named SCIPION_*
+        for k, v in VARS.iteritems():
+            if k.startswith('SCIPION_'):
+                os.environ[k] = v
 
         # Create folders if needed.
         for path in DIRS_GLOBAL.values():
