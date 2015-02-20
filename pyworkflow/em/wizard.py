@@ -762,7 +762,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
             self.innerRadius = 0
         if self.outerRadius is None:
             self.outerRadius = int(self.dim_par/2)
-        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=int(self.outerRadius)*self.ratio, innerRadius=0)
+        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=int(self.outerRadius)*self.ratio, innerRadius=self.innerRadius)
         self.preview.grid(row=0, column=0) 
     
     def _createControls(self, frame):
