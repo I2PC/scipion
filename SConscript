@@ -80,7 +80,8 @@ tk_wish = env.Command(
     'software/bin/wish8.6',
     Action('ln -v -s wish8.6 wish', 'Linking wish8.6 to wish in software/bin',
            chdir='software/bin'))
-Default(tk_wish)
+env.Default(tk_wish)
+env.Depends(tk_wish, tk)
 # Special case: tk does not make the link automatically, go figure.
 
 zlib = env.AddLibrary(
@@ -293,6 +294,7 @@ lxml = addModule(
     default=False)
 # Commented out libxml2 and libxslt because they are so hard to
 # compile right.
+# TODO: we should check that this two are in the system
 
 addModule(
     'ipython',

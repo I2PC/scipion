@@ -541,7 +541,6 @@ def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=Non
 #    jarCreation = env2.Jar(join(buildDir, jar), source=sources, JAVAVERSION='1.6')
     #tgts = ['%s/%s' % (buildDir, s.replace('.java' ,'.class')) for s in sources]
     tgts = [s.replace(sourcePath, buildDir).replace('.java', '.class').replace('java/src/', 'java/build/') for s in sources]
-    print "tgts", tgts
     javaDir = env2.Java(target=tgts, source=sources, JAVAVERSION='1.6')
     jarCreation = env2.Jar(join(buildDir, jar), source=tgts, JAVAVERSION='1.6')
     #SideEffect('dummy', jarCreation)
@@ -907,6 +906,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     # If we have specified extraActions, do them and don't try to
     # compile/install the package in any other way.
     if extraActions:
+        lastTarget = ''
         for target, command in extraActions:
             lastTarget = env.Command(
                 Entry('#software/em/%s/%s' % (name, target)).abspath,
