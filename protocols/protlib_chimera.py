@@ -76,7 +76,16 @@ class XmippChimeraClient:
     
     
     def loadAngularDist(self):
+
         md = MetaData(self.angulardistfile)
+        print md
+        angleRotLabel = MDL_ANGLE_ROT
+        angleTiltLabel = MDL_ANGLE_TILT
+        anglePsiLabel = MDL_ANGLE_PSI
+        if not md.containsLabel(MDL_ANGLE_ROT):
+            angleRotLabel = RLN_ORIENT_ROT
+            angleTiltLabel = RLN_ORIENT_TILT
+            anglePsiLabel = RLN_ORIENT_PSI
         if not md.containsLabel(MDL_WEIGHT):
             md.fillConstant(MDL_WEIGHT, 1.)
             
@@ -95,12 +104,11 @@ class XmippChimeraClient:
         #self.angulardist.append('cofr %d,%d,%d'%(x2,y2,z2))
         for id in md:
             
-            rot = md.getValue(MDL_ANGLE_ROT, id)
-            tilt = md.getValue(MDL_ANGLE_TILT, id)
-            psi = md.getValue(MDL_ANGLE_PSI, id)
+            rot = md.getValue(angleRotLabel, id)
+            tilt = md.getValue(angleTiltLabel, id)
+            psi = md.getValue(anglePsiLabel, id)
             weight = md.getValue(MDL_WEIGHT, id)
             weight = (weight - minweight)/interval
-            
             x, y, z = Euler_direction(rot, tilt, psi)
             radius = weight * self.spheres_maxradius
 
