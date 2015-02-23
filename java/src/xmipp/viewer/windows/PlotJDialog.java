@@ -66,7 +66,7 @@ public class PlotJDialog extends XmippDialog {
 	private HashMap<ColumnInfo, ColumnInfo.ColumnExtraInfo> rowsExtra;
 	private ColumnsTableModel model;
 	private JTextField tfTitle, tfXLabel, tfYLabel, tfBins;
-	private JCheckBox jchHist;
+	private JComboBox<String> plotTypecb;
 	private JComboBox jcbXAxis;
         private List<ColumnInfo> rows;
 	// This will be used for check for results from the dialog
@@ -76,9 +76,11 @@ public class PlotJDialog extends XmippDialog {
 	JPanel panelEntries;
 	String[] COLORS = { "0000CC", "009900", "CC0000", "000000", "FF6600",
 			"FFFF00", "00CCFF" };
+        String[] plotTypes = new String[]{"Plot", "Histogram", "Scatter"};
+    private JLabel binslb;
 
 	public PlotJDialog(GalleryJFrame parent) {
-		super(parent, "Plot options", false);
+		super(parent, "Plot columns", false);
 
 		rows = new ArrayList<ColumnInfo>();
 		rowsExtra = new HashMap<ColumnInfo, ColumnInfo.ColumnExtraInfo>();
@@ -95,36 +97,47 @@ public class PlotJDialog extends XmippDialog {
 		closeOnAction = false;
 		initComponents();
 	}// constructor ColumnsJDialog
-
-	private void addPair(String text, Component c, int row) {
+        
+        private void addPair(String text, Component c, int row) {
+            addPair(text, c, row, 0);
+        }
+	private void addPair(String text, Component c, int row, int column) {
 		JLabel label = new JLabel(text);
 		gbc.anchor = GridBagConstraints.EAST;
-		panelEntries.add(label, XmippWindowUtil.getConstraints(gbc, 0, row));
+		panelEntries.add(label, XmippWindowUtil.getConstraints(gbc, column, row));
 		gbc.anchor = GridBagConstraints.WEST;
-		panelEntries.add(c, XmippWindowUtil.getConstraints(gbc, 1, row));
+		panelEntries.add(c, XmippWindowUtil.getConstraints(gbc, column + 1, row));
 	}
 
 	protected void createEntries() {
 		tfTitle = new JTextField(20);
 		tfXLabel = new JTextField(20);
 		tfYLabel = new JTextField(20);
-		tfBins = new JTextField(10);
-                tfBins.setEnabled(false);
-		jchHist = new JCheckBox();
-                jchHist.addActionListener(new ActionListener() {
+		
+                JPanel plotPanel = new JPanel();
+		plotTypecb = new JComboBox<String>(plotTypes);
+                plotTypecb.addActionListener(new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        tfBins.setEnabled(jchHist.isSelected());
+                        binslb.setVisible(isHistogram());
+                        tfBins.setVisible(isHistogram());
+                        revalidate();
+                        pack();
                     }
                 });
-
+                plotPanel.add(plotTypecb);
+                binslb = new JLabel("Bins");
+                binslb.setVisible(false);
+                tfBins = new JTextField(10);
+                tfBins.setVisible(false);
+                plotPanel.add(binslb);
+                plotPanel.add(tfBins);
 		panelEntries = new JPanel(new GridBagLayout());
 		addPair("Title:", tfTitle, 0);
 		addPair("X label:", tfXLabel, 1);
 		addPair("Y label:", tfYLabel, 2);
-		addPair("Histogram:", jchHist, 3);
-		addPair("Bins: ", tfBins, 4);
+		addPair("Type:", plotPanel, 3);
 		jcbXAxis = new JComboBox();
 		jcbXAxis.addItem("");
 		for (ColumnInfo ci : rows)
@@ -138,6 +151,11 @@ public class PlotJDialog extends XmippDialog {
                     }
                 });
 	}
+        
+        public boolean isHistogram()
+        {
+            return plotTypecb.getSelectedIndex() == 1;
+        }
 
 	@Override
 	protected void createContent(JPanel panel) {
@@ -154,8 +172,7 @@ public class PlotJDialog extends XmippDialog {
 		model = new ColumnsTableModel();
 		tableColumns = new JTable(model);
                 tableColumns.getColumnModel().getColumn(0).setPreferredWidth(250);
-		tableColumns
-				.setPreferredScrollableViewportSize(new Dimension(450, 200));
+		tableColumns.setPreferredScrollableViewportSize(new Dimension(450, 200));
 		sp.setViewportView(tableColumns);
 		panel.add(groupstbpn, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
 		createEntries();
@@ -226,8 +243,8 @@ public class PlotJDialog extends XmippDialog {
                                 orderColumn = sortby[0];
                                 orderDirection = sortby[1];
                             }   
-                            String command = String.format("run function scheduleSqlitePlot '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' %s %s", 
-                                    data.getFileName(), data.getPreffix(), 
+                            String command = String.format("run function scheduleSqlitePlot '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' %s %s", 
+                                    data.getFileName(), data.getPreffix(), plotTypecb.getSelectedItem(),
                                 labels, colors, styles, markers, getXColumn(), ylabel, getXLabel(), getPlotTitle(), getBins(), orderColumn, orderDirection);
                             
                             XmippWindowUtil.runCommand(command, params.port);
@@ -241,7 +258,7 @@ public class PlotJDialog extends XmippDialog {
                                             tfXLabel.getText().trim() };
                             ArrayList<String> argsArray = new ArrayList<String>(Arrays.asList(argsBasic));
                             
-                            if (jchHist.isSelected()) {
+                            if (isHistogram()) {
                                     argsArray.add("--nbins");
                                     argsArray.add(tfBins.getText().trim());
                             }
