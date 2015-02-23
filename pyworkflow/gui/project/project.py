@@ -199,7 +199,10 @@ class ProjectWindow(ProjectBaseWindow):
         ax = plotter.createSubPlot(title, xlabel, ylabel)
 
         isxvalues = bool(xcolumn)
-        xvalues = []
+
+        xvalues = range(0, setObj.getSize()) if not isxvalues else []
+
+
         for column in columns:
             yvalues = []
 
@@ -209,10 +212,8 @@ class ProjectWindow(ProjectBaseWindow):
                 if isxvalues:
                     value = self.getValue(obj, xcolumn)
                     xvalues.append(value)
-            if not isxvalues:
-                xvalues = range(0, setObj.getSize())
-            else:
-                isxvalues = False
+
+            isxvalues = False
 
             color = colors[i]
             line = lines[i]
