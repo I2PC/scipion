@@ -114,7 +114,7 @@ leads to objective and high-quality results.
         """
         errors = []
         partSizeX, _, _ = self._getInputParticles().getDim()
-        volSizeX, _, _ = self.input3DReference.get().getDim()
+        volSizeX, _, _ = self.referenceVolume.get().getDim()
         if partSizeX != volSizeX:
             errors.append('Volume and particles dimensions must be equal!!!')
 
