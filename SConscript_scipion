@@ -37,35 +37,8 @@ Import('env')
 # the variables will be passed by Scipion in the environment (env) by
 # 
 
-env['CUDA_SDK_PATH'] = ''
-env['CUDA_LIB_PATH'] = ''
-env['CPPPATH'] = []
-env['CC'] = 'gcc'
-env['CXX'] = 'g++'
-env['LINKERFORPROGRAMS'] = 'g++'
-env['CCFLAGS'] = ['-std=c99']
-env['CXXFLAGS'] = []
-env['LINKFLAGS'] = []
-env['MPI_CC'] = 'mpicc'
-env['MPI_CXX'] = 'mpiCC'
-env['MPI_LINKERFORPROGRAMS'] = 'mpiCC'
-env['MPI_LIB'] = 'mpi'
-env['MPI_LIBDIR'] = ['/usr/lib']
-env['MPI_INCLUDE'] = '/usr/lib64/mpi/gcc/openmpi/include'
-env['MPI_BINDIR'] = '/usr/bin'
-env['MATLAB_DIR'] = '/usr/local/MATLAB/R2011a'
-
-# Java related environment variables, probably the main one
-# that need to be modified is JAVA_HOME
-env['JAVA_HOME'] = '/usr/lib64/jvm/java-1.7.0-openjdk-1.7.0'
-env['JAVA_BINDIR'] = os.path.join(env['JAVA_HOME'], 'bin')
-env['JAVAC'] = os.path.join(env['JAVA_BINDIR'], 'javac')
-env['JAR'] = os.path.join(env['JAVA_BINDIR'], 'jar')
-env['JNI_CPPPATH'] = ['/usr/java/default/include', '/usr/java/include/linux']
-# CONFIGURATION IN TURING
-env['JNI_CPPPATH'] = [os.path.join(env['JAVA_HOME'], 'include'),
-                      os.path.join(env['JAVA_HOME'], 'include', 'linux')]
-
+env['CUDA_SDK_PATH'] = os.environ.get('CUDA_SDK_PATH', '')
+env['CUDA_LIB_PATH'] = os.environ.get('CUDA_LIB_PATH', '')
 
 gtest = False#True
 cuda = False
@@ -76,7 +49,7 @@ debug = False
 # fast = False
 # quiet = True
 matlab = False
-opencv = False
+opencv = GetOption('opencv')
 
 
 packageDeps = env.get('packageDeps', '')

@@ -417,7 +417,9 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
         mpiArgs = {'CC': env['MPI_CC'],
                    'CXX': env['MPI_CXX']}
         conf = Configure(env, custom_tests = {'CheckMPI': CheckMPI})
-        if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'], env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], env['MPI_LINKERFORPROGRAMS'], False):
+        if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'], 
+                             env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], 
+                             env['MPI_LINKERFORPROGRAMS'], False):
             print >> sys.stderr, 'ERROR: MPI is not properly working. Exiting...'
             Exit(1)
         env = conf.Finish()
@@ -1038,34 +1040,41 @@ env.AddMethod(addProgram, 'AddProgram')
 env.AddMethod(progInPath, 'ProgInPath')
 
 
-
-
 #  ************************************************************************
 #  *                                                                      *
 #  *                            Extra options                             *
 #  *                                                                      *
 #  ************************************************************************
 
+# Build variables, they are read from ~/.config/scipion/scipion.conf
+# in the [BUILD] section
 
-opts = Variables(None, ARGUMENTS)
+env['SCIPION_HOME'] = os.environ['SCIPION_HOME']
 
-opts.Add('SCIPION_HOME', 'Scipion base directory', abspath('.'))
-opts.Add('JAVAC', 'Java compiler', 'javac')
-opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
-opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
-opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
-opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
-opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
-opts.Add('MPI_LIB', 'MPI library', 'mpi')
-opts.Add('MPI_BINDIR', 'MPI binaries', '/usr/bin')
+env['CPPPATH'] = os.environ.get('CPPPATH', [])
+env['CC'] = os.environ.get('CC')
+env['CXX'] = os.environ.get('CXX')
+env['LINKERFORPROGRAMS'] = os.environ.get('LINKERFORPROGRAMS')
+env['CCFLAGS'] = os.environ.get('CCFLAGS', '').split()
+env['CXXFLAGS'] = os.environ.get('CXXFLAGS', '').split()
+env['LINKFLAGS'] = os.environ.get('LINKFLAGS', '').split()
 
-opts.Update(env)
+env['MPI_CC'] = os.environ.get('MPI_CC')
+env['MPI_CXX'] = os.environ.get('MPI_CXX')
+env['MPI_LINKERFORPROGRAMS'] = os.environ.get('MPI_LINKERFORPROGRAMS')
+env['MPI_LIB'] = os.environ.get('MPI_LIB')
+env['MPI_LIBDIR'] = os.environ.get('MPI_LIBDIR')
+env['MPI_INCLUDE'] = os.environ.get('MPI_INCLUDE')
+env['MPI_BINDIR'] = os.environ.get('MPI_BINDIR')
+env['MATLAB_DIR'] = os.environ.get('MATLAB_DIR')
 
-Help('\nVariables that can be set:\n')
-Help(opts.GenerateHelpText(env))
-Help('\n')
-
-
+# Java related environment variables, probably the main one
+# that need to be modified is JAVA_HOME
+env['JAVA_HOME'] = os.environ.get('JAVA_HOME')
+env['JAVA_BINDIR'] = os.environ.get('JAVA_BINDIR')
+env['JAVAC'] = os.environ.get('JAVAC')
+env['JAR'] = os.environ.get('JAR')
+env['JNI_CPPPATH'] = os.environ.get('JNI_CPPPATH').split(':')
 
 
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',

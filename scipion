@@ -125,6 +125,7 @@ try:
     DIRS_LOCAL = getPaths('DIRS_LOCAL')
     PACKAGES = getPaths('PACKAGES')
     REMOTE = dict(config.items('REMOTE'))
+    BUILD = dict(config.items('BUILD'))
 
     for d in DIRS_LOCAL.values():
         if not exists(d):
@@ -174,7 +175,7 @@ VARS.update(DIRS_GLOBAL)
 VARS.update(DIRS_LOCAL)
 VARS.update(PACKAGES)
 VARS.update(REMOTE)
-
+VARS.update(BUILD)
 
 #
 # Auxiliary functions to run commands in our environment, one of our
@@ -316,7 +317,7 @@ def main():
         # the python installed in the system by default.
         # But we set all vars named SCIPION_*
         for k, v in VARS.iteritems():
-            if k.startswith('SCIPION_'):
+            if k.startswith('SCIPION_') or k in BUILD:
                 os.environ[k] = v
 
         # Create folders if needed.
