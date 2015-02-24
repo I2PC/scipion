@@ -33,6 +33,8 @@ It is composed by three panels:
 """
 
 import os, sys
+import threading
+import shlex
 from pyworkflow.utils.utils import envVarOn
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
@@ -40,11 +42,9 @@ from pyworkflow.project import Project
 from pyworkflow.gui import Message
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.gui.plotter import Plotter
-import threading
-import shlex
 from pyworkflow.gui.text import _open_cmd
 import SocketServer
-import matplotlib.pyplot as plt
+
 # Import possible Object commands to be handled
 from pyworkflow.em.showj import OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
@@ -123,7 +123,7 @@ class ProjectWindow(ProjectBaseWindow):
         # Project -> Browse files
         FileBrowserWindow("Browse Project files",
                           self, self.project.getPath(''), 
-                          selectButton=None  # we are not going to select nothing
+                          selectButton=None  # we will select nothing
                           ).show()
 
     def onRemoveTemporaryFiles(self):
@@ -315,6 +315,10 @@ class ProjectManagerWindow(ProjectBaseWindow):
         # TODO: put the menu part more nicely. From here:
         menu = MenuConfig()
 
+        fileMenu = menu.addSubMenu('File')
+        fileMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
+        fileMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
+
         confMenu = menu.addSubMenu('Configuration')
         confMenu.addSubMenu('General', 'general')
         confMenu.addSubMenu('Hosts', 'hosts')
@@ -336,6 +340,11 @@ class ProjectManagerWindow(ProjectBaseWindow):
     # The next functions are callbacks from the menu options.
     # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
     #
+    def onBrowseFiles(self):
+        # File -> Browse files
+        FileBrowserWindow("Browse files", self,
+                          os.environ['SCIPION_USER_DATA'], selectButton=None).show()
+
     def onGeneral(self):
         # Config -> General
         _open_cmd('%s/.config/scipion/scipion.conf' % os.environ['HOME'])
