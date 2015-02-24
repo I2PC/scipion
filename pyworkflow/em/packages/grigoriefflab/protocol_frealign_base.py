@@ -30,7 +30,7 @@ from os.path import join, exists, basename
 
 from pyworkflow.object import Integer
 from pyworkflow.utils.path import copyFile, createLink, makePath
-from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, LEVEL_ADVANCED
+from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
 from pyworkflow.protocol.params import (StringParam, BooleanParam, IntParam, PointerParam,
                                         EnumParam, FloatParam, TextParam)
 from pyworkflow.em.protocol import EMProtocol
@@ -68,11 +68,13 @@ class ProtFrealignBase(EMProtocol):
             # Volumes for the iteration
             'ref_vol': iterFile('reference_volume_iter_%(iter)03d.mrc'),
             'iter_vol': iterFile('volume_iter_%(iter)03d.mrc'),
-            'output_vol_par': 'output_vol_iter_%(iter)03d.par',
+            'output_vol_par': iterFile('output_vol_iter_%(iter)03d.par'),
             # dictionary for all set
             'output_par': iterFile('particles_iter_%(iter)03d.par'),
+            'classes_scipion': iterFile('classes_scipion.sqlite'),
+            'data_scipion': iterFile('data_scipion.sqlite'),
             'shift' : 'particles_shifts_iter_%(iter)03d.shft',
-            'match' : 'particles_match_iter_%(iter)03d.mrc',
+            'match' : iterFile('particles_match_iter_%(iter)03d.mrc'),
             'weight' : 'volume_weights_iter_%(iter)03d.mrc',
             'vol1' : 'volume_1_iter_%(iter)03d.mrc',
             'vol2' : 'volume_2_iter_%(iter)03d.mrc',
@@ -91,7 +93,7 @@ class ProtFrealignBase(EMProtocol):
             # each class volumes for the iteration
             'ref_vol_class': iterFile('reference_volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
             'iter_vol_class': iterFile('volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
-            'output_vol_par_class': 'output_vol_iter_%(iter)03d_class_%(ref)02d.par',
+            'output_vol_par_class': iterFile('output_vol_iter_%(iter)03d_class_%(ref)02d.par'),
             # dictionary for each class
             'output_par_class': iterFile('particles_iter_%(iter)03d_class_%(ref)02d.par'),
             'output_par_class_tmp': iterFile('particles_iter_%(iter)03d_class_0.par'),
@@ -463,34 +465,13 @@ class ProtFrealignBase(EMProtocol):
                            'high values in the FSC curve (se publication #2 above). FREALIGN uses an\n'
                            'automatic weighting scheme and RBFACT should normally be set to 0.0.')
 
-        form.addParallelSection(threads=1, mpi=2)
+        form.addParallelSection(threads=1, mpi=4)
 
     #--------------------------- INSERT steps functions --------------------------------------------
-#    def reorder(self):
-#        ### Sort images by micId, otherwise frealign scale refinament fails...
-#        self.imgSet = SetOfParticles(filename=':memory:', doStore=False)
-#        self.imgSet.copyInfo(self.inputParticles.get())
-#        orderBy = '_micId'
-#        for part in self.inputParticles.get().iterItems(orderBy=orderBy, direction='ASC'):
-#            self.imgSet.append(part)
-
-    def iterParticlesByMic(self):
-        """ Iterate the particles ordered by micrograph """
-        for i, part in enumerate(self.inputParticles.get().iterItems(orderBy=['_micId', 'id'],
-                                                                     direction='ASC')):
-            yield i, part
-
-    def writeParticlesByMic(self, stackFn):
-        self.inputParticles.get().writeStack(stackFn,
-                                             orderBy=['_micId', 'id'],
-                                             direction='ASC')
-
     def _insertAllSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
         """
-        #self.reorder()# sort particles by micId
-        self.numberOfBlocks = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
-
+        self.numberOfBlocks = self._defNumberOfCPUs()
         self._createFilenameTemplates()
         self._insertContinueStep()
         self._insertItersSteps()
@@ -503,14 +484,16 @@ class ProtFrealignBase(EMProtocol):
             self.inputParticles.set(continueRun.inputParticles.get())
             self.symmetry.set(continueRun.symmetry.get())
             self.input3DReference.set(None)
+            
             if self.continueIter.get() == 'last':
                 self.initIter = continueRun._getCurrIter()
             else:
                 self.initIter = int(self.continueIter.get()) + 1
             self._insertFunctionStep('continueStep', self.initIter)
+        
         else:
             self.initIter = 1
-
+            
         self.finalIter = self.initIter + self.numberOfIterations.get()
 
     def _insertItersSteps(self):
@@ -521,10 +504,9 @@ class ProtFrealignBase(EMProtocol):
             paramsDic = self._getParamsIteration(iterN)
             depsRefine = self._insertRefineIterStep(iterN, paramsDic, [initId])
             self._insertFunctionStep("reconstructVolumeStep", iterN, paramsDic, prerequisites=depsRefine)
-
+    
     def _insertRefineIterStep(self, iterN, paramsDic, depsInitId):
         """ execute the refinement for the current iteration """
-
         depsRefine = []
         if iterN == 1:
             if not self.useInitialAngles.get():
@@ -555,8 +537,6 @@ class ProtFrealignBase(EMProtocol):
         currDir = self._iterWorkingDir(iterN)
         createLink(prevDir, currDir)
 
-        ##ROBimgSet = self.inputParticles.get()
-        #for imahes in new set
         imgFn = self._getFileName('particles')
         self.writeParticlesByMic(imgFn)
 
@@ -568,7 +548,7 @@ class ProtFrealignBase(EMProtocol):
         refVol = self._getFileName('ref_vol', iter=iterN) # reference volume of the step.
         iterVol =  self._getFileName('iter_vol', iter=iterN) # refined volume of the step
         prevIterVol = self._getFileName('iter_vol', iter=prevIter) # volume of the previous iteration
-
+        
         if iterN == 1:
             ### imgSet = self.inputParticles.get()
             vol = self.input3DReference.get()
@@ -581,14 +561,12 @@ class ProtFrealignBase(EMProtocol):
             copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
         else:
             self._splitParFile(iterN, self.numberOfBlocks)
-            copyFile(prevIterVol, refVol)   #Copy the reference volume as refined volume.
+            copyFile(prevIterVol, refVol)   #Copy the previous volume as reference volume.
         copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
-
+    
     def constructParamFilesStep(self, paramsDic):
         """ Construct a parameter file (.par) with the information of the SetOfParticles. """
-
         #  This function will be called only in iteration 1.
-
         iterN = 1
         iterDir = self._iterWorkingDir(iterN)
         self._enterDir(iterDir)
@@ -598,17 +576,9 @@ class ProtFrealignBase(EMProtocol):
         magnification = inputParticles.getAcquisition().getMagnification()
         params = {}
 
-        #frealign need to have a numeric micId not longer than 5 digits
-        micIdList = inputParticles.aggregate(['count'],'_micId',['_micId'])
-        micIdMap={}
-        counter = 0
-        for mic in micIdList:
-            micIdMap[mic['_micId']]=counter
-            counter = counter +1
-
         for block in self._allBlocks():
             more = 1
-            initPart, lastPart = self._initFinalBlockPaticles(block)
+            initPart, lastPart = self._initFinalBlockParticles(block)
             params['initParticle'] = initPart
             params['finalParticle'] = lastPart
             paramDic = self._setParamsRefineParticles(iterN, block)
@@ -618,7 +588,7 @@ class ProtFrealignBase(EMProtocol):
             # ToDo: Implement a better method to get the info particles.
             #  Now, you iterate several times over the SetOfParticles
             # (as many threads as you have)
-
+            micIdMap = self._getMicCounter()
             for i, img in self.iterParticlesByMic():
                 film = micIdMap[img.getMicId()]
                 ctf = img.getCTF()
@@ -659,13 +629,14 @@ class ProtFrealignBase(EMProtocol):
 
         for block in self._allBlocks():
             more = 1
-            _, lastPart = self._initFinalBlockPaticles(block)
+            _, lastPart = self._initFinalBlockParticles(block)
             parFn = self._getFileName('input_par_block', block= block, iter=1, prevIter=0)
             f = open(parFn, 'w')
             f.write("C           PSI   THETA     PHI       SHX       SHY     MAG  FILM      DF1"
                     "      DF2  ANGAST     OCC     -LogP      SIGMA   SCORE  CHANGE\n")
 
-            # ToDo: Implement a better method to get the info particles. Now, you iterate several times over the SetOfParticles (as many threads as you have)
+            # ToDo: Implement a better method to get the info particles.
+            # Now, you iterate several times over the SetOfParticles (as many threads as you have)
             for i, img in self.iterParticlesByMic():
                 partCounter = i + 1
 
@@ -685,7 +656,7 @@ class ProtFrealignBase(EMProtocol):
 
         iterDir = self._iterWorkingDir(iterN)
 
-        iniPart, lastPart = self._initFinalBlockPaticles(block)
+        iniPart, lastPart = self._initFinalBlockParticles(block)
         prevIter = iterN - 1
         param['inputParFn'] = self._getBaseName('input_par_block', block= block, iter=iterN, prevIter=prevIter)
         param['initParticle'] = iniPart
@@ -695,7 +666,7 @@ class ProtFrealignBase(EMProtocol):
 
         paramsRefine = dict(paramsDic.items() + paramDic.items() + param.items())
         args = self._prepareCommand()
-
+        
         if self.mode.get() != 0:
             # frealign program is already in the args script, that's why runJob('')
             self.runJob('', args % paramsRefine, cwd=iterDir)
@@ -711,16 +682,14 @@ class ProtFrealignBase(EMProtocol):
     def reconstructVolumeStep(self, iterN, paramsDic):
         """Reconstruct a volume from a SetOfParticles with its current parameters refined
         """
-
-        #imgSet = self.inputParticles.get()
         self._mergeAllParFiles(iterN, self.numberOfBlocks)  # merge all parameter files generated in a refineIterStep function.
-
+        
         initParticle = 1
         finalParticle = self.inputParticles.get().getSize()
 
         os.environ['NCPUS'] = str(self.numberOfBlocks)
         paramsDic['frealign'] = FREALIGNMP_PATH
-        paramsDic['outputParFn'] = self._getFileName('output_vol_par', iter=iterN)
+        paramsDic['outputParFn'] = self._getBaseName('output_vol_par', iter=iterN)
         paramsDic['initParticle'] = initParticle
         paramsDic['finalParticle'] = finalParticle
         #         paramsDic['paramRefine'] = '0, 0, 0, 0, 0'
@@ -947,23 +916,7 @@ class ProtFrealignBase(EMProtocol):
             paramsDic['paramRefine'] = '0, 0, 0, 0, 0'
 
         return paramsDic
-
-    def _particlesPerBlock(self, numberOfBlocks, numberOfParticles):
-        """ Return a list with numberOfBlocks values, each value will be
-        the number of particles assigned to each block. The number of particles
-        will be distributed equally between each block as possible.
-        """
-        restBlock = numberOfParticles % numberOfBlocks
-        colBlock = numberOfParticles / numberOfBlocks
-        # Create a list with the number of particles assigned
-        # to each block, initially equally distributed
-        blockParticles = [colBlock] * numberOfBlocks
-        # Now assign the particles in the rest
-        for i, v in enumerate(blockParticles):
-            if i < restBlock:
-                blockParticles[i] += 1
-        return blockParticles
-        #particles_iter_001.par
+    
     def _createIterWorkingDir(self, iterN):
         """create a new directory for the iterarion and change to this directory.
         """
@@ -1003,7 +956,7 @@ class ProtFrealignBase(EMProtocol):
         paramDics['stopParam'] = 0   #The stopParam must be 0 if you want obtain a 3D reconstruction.
         paramDics['volume'] = self._getBaseName('iter_vol', iter=iterN)
         paramDics['inputParFn'] = self._getBaseName('output_par', iter=iterN)
-        paramDics['imgFnMatch'] = self._getFileName('match', iter=iterN)
+        paramDics['imgFnMatch'] = self._getBaseName('match', iter=iterN)
         paramDics['outputShiftFn'] = self._getFileName('shift', iter=iterN)
         paramDics['3Dweigh'] = self._getFileName('weight', iter=iterN)
         paramDics['FSC3DR1'] = self._getFileName('vol1', iter=iterN)
@@ -1081,7 +1034,7 @@ M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRe
 eot
 """
         return args
-
+    
     def _mergeAllParFiles(self, iterN, numberOfBlocks):
         """ This method merge all parameters files that has been created in a refineIterStep """
 
@@ -1102,11 +1055,7 @@ eot
                     if not os.path.exists(file1):
                         raise Exception ("Error: file %s does not exists" % file1)
                     f1 = open(file1)
-
-                    #                 if block == 1:
-                    #                     lines = f1.readlines()
-                    #                     f2.writelines(lines[:-2])
-                    #                 else:
+                    
                     for l in f1:
                         if not l.startswith('C'):
                             f2.write(l)
@@ -1129,7 +1078,7 @@ eot
                 f2.write("C           PSI   THETA     PHI       SHX       SHY     MAG  FILM      DF1"
                          "      DF2  ANGAST     OCC     -LogP      SIGMA   SCORE  CHANGE\n")
 
-                _, finalPart = self._initFinalBlockPaticles(block)
+                _, finalPart = self._initFinalBlockParticles(block)
 
                 for l in f1:
 
@@ -1138,7 +1087,7 @@ eot
                     else:
                         split = l.split()
                         numPart = int(''.join(split[:1]))
-
+                        
                         if numPart <= finalPart:
                             f2.write(l)
                         else:
@@ -1168,17 +1117,50 @@ eot
         for i in range(1, self.numberOfBlocks+1):
             yield i
 
-    def _initFinalBlockPaticles(self, block):
+    def _initFinalBlockParticles(self, block):
         """ return initial and final particle number for a determined block """
+        sortedMicIdList = sorted(self._getMicIdList(), key=lambda k: k['_micId'])
         finalPart = 0
+        particlesPerBlock = self._particlesPerBlock(self.numberOfBlocks, sortedMicIdList)
+        print "particlesPerBlock", particlesPerBlock
         for i in range(block):
-            particlesPerBlock = self._particlesPerBlock(self.numberOfBlocks, self.inputParticles.get().getSize())
+            print "I ", i, particlesPerBlock[i]
             initPart = 1 + finalPart
             finalPart = finalPart + particlesPerBlock[i]
         return initPart, finalPart
-
+    
+    def _particlesPerBlock(self, numberOfBlocks, micIdList):
+        """ Return a list with numberOfBlocks values, each value will be
+        the number of particles assigned to each block.
+        """
+        numbOfMIcs = len(micIdList)
+        
+        restBlock = numbOfMIcs % numberOfBlocks
+        colBlock = numbOfMIcs / numberOfBlocks
+        # Create a list with the number of micrographs assigned
+        # to each block, initially equally distributed
+        blockMics = [colBlock] * numberOfBlocks
+        # Now assign the particles in the rest
+        for i, v in enumerate(blockMics):
+            if i < restBlock:
+                blockMics[i] += 1
+        
+        blckCounter = 0
+        micCounter = 1
+        numberOfParts = 0
+        particlesPerBlock = []
+        for mic in micIdList:
+            numberOfParts = numberOfParts + mic['count']
+            if micCounter == blockMics[blckCounter]:
+                if blckCounter < len(blockMics)-1:
+                    blckCounter += 1
+                micCounter = 0
+                particlesPerBlock.append(numberOfParts)
+                numberOfParts = 0
+            micCounter += 1
+        return particlesPerBlock
+    
     def writeAnglesLines(self, counter, img, filePar):
-
         objId = self.micIdMap[img.getMicId()]
 
         # get alignment parameters for each particle
@@ -1207,3 +1189,31 @@ eot
 
         filePar.write("%(counter)7d %(psi)7.2f %(theta)7.2f %(phi)7.2f %(shiftX)9.2f %(shiftY)9.2f"
                       " %(mag)7.0f %(objId)5d %(defU)8.1f %(defV)8.1f %(defAngle)7.2f  100.00      0000     0.5000   00.00   00.00\n" % locals())
+    
+    def iterParticlesByMic(self):
+        """ Iterate the particles ordered by micrograph """
+        for i, part in enumerate(self.inputParticles.get().iterItems(orderBy=['_micId', 'id'],
+                                                                     direction='ASC')):
+            yield i, part
+
+    def writeParticlesByMic(self, stackFn):
+        self.inputParticles.get().writeStack(stackFn,
+                                             orderBy=['_micId', 'id'],
+                                             direction='ASC')
+    
+    def _getMicIdList(self):
+        return self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
+    
+    def _getMicCounter(self):
+        #frealign need to have a numeric micId not longer than 5 digits
+        micIdMap={}
+        counter = 0
+        for mic in self._getMicIdList():
+            micIdMap[mic['_micId']]=counter
+            counter = counter +1
+        return micIdMap
+    
+    def _defNumberOfCPUs(self):
+        cpus = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
+        numberOfMics = len(self._getMicIdList())
+        return min(cpus, numberOfMics)
