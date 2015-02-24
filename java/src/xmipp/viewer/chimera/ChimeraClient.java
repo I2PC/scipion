@@ -30,16 +30,16 @@ public class ChimeraClient
 			Thread.sleep(3000);
 			client = new Socket("", port);
 			out = new PrintWriter(client.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-            
-//            ImageGeneric ig = new ImageGeneric(volfile);
-//			ig.setDataType(ImageGeneric.Double);
-//			ig.read(volfile, false);
-//			
-//			float[] data = ig.getArrayFloat(ImageGeneric.ALL_IMAGES, ImageGeneric.ALL_SLICES);
-//			XmippImageConverter.convertToImagePlus(ig).show();
-            String msg = "open_volume" ;
-            sendMessage(out, msg);
+                        in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+
+            //            ImageGeneric ig = new ImageGeneric(volfile);
+            //			ig.setDataType(ImageGeneric.Double);
+            //			ig.read(volfile, false);
+            //			
+            //			float[] data = ig.getArrayFloat(ImageGeneric.ALL_IMAGES, ImageGeneric.ALL_SLICES);
+            //			XmippImageConverter.convertToImagePlus(ig).show();
+                        String msg = "open_volume" ;
+                        sendMessage(out, msg);
 			String cube = "[";
 			for(int i = 0; i < 2; i ++)
 			{
@@ -56,15 +56,11 @@ public class ChimeraClient
 			cube += "]";
 			System.out.println(cube);			
 			//sendMessage(out, cube);
-            while ((msg = in.readLine()) != null) {
-                System.out.println("Server: " + msg);
-                sendMessage(out, cube);
-                break;
-               
-
-               
-            }
-			
+                    while ((msg = in.readLine()) != null) {
+                        System.out.println("Server: " + msg);
+                        sendMessage(out, cube);
+                        break;
+                    }
 			//out.write(data);
 			
 		}

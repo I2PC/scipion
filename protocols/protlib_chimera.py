@@ -78,7 +78,6 @@ class XmippChimeraClient:
     def loadAngularDist(self):
 
         md = MetaData(self.angulardistfile)
-        print md
         angleRotLabel = MDL_ANGLE_ROT
         angleTiltLabel = MDL_ANGLE_TILT
         anglePsiLabel = MDL_ANGLE_PSI

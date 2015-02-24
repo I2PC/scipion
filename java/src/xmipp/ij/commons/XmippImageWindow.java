@@ -83,6 +83,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
             
         }
 
+        @Override
 	public void openMaskToolbar()
 	{
 		menu.runCommand("Masks Tool Bar", new IJRequirement[] { IJRequirement.IMAGEJ });
@@ -106,6 +107,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		saveDataAs(imp.getTitle());
 	}
 
+        @Override
 	public ImagePlusLoader getImagePlusLoader()
 	{
 		return ipl;
@@ -124,12 +126,12 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	}
 
 	//overwriting ImageJ event to avoid switching menu
+        @Override
 	public void windowActivated(WindowEvent e)
 	{
 		//		if (IJ.isMacintosh())
 		//			this.setMenuBar(Menus.getMenuBar());
-		if (IJ.debugMode)
-			IJ.write(imp.getTitle() + ": Activated");
+		
 		if (!closed)
 		{
 			//ic.requestFocus();
@@ -137,6 +139,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		}
 	}
 
+        @Override
 	public XmippImageCanvas getCanvas()
 	{
 		return ((XmippImageCanvas) super.getCanvas());
@@ -260,6 +263,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
                 });
                 imp.getCanvas().addComponentListener(new java.awt.event.ComponentAdapter()
 		{
+                        @Override
 			public void componentResized(ComponentEvent e)
 			{
 				maskfr.refreshMask();
