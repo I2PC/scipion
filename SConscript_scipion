@@ -39,10 +39,6 @@ Import('env')
 
 env['CUDA_SDK_PATH'] = ''
 env['CUDA_LIB_PATH'] = ''
-env['JNI_CPPPATH'] = ['/usr/java/default/include', '/usr/java/include/linux']
-# CONFIGURATION IN TURING
-env['JNI_CPPPATH'] = ['/usr/lib64/jvm/java-1.7.0-openjdk-1.7.0/include',
-                      '/usr/lib64/jvm/java-1.7.0-openjdk-1.7.0/include/linux']
 env['CPPPATH'] = []
 env['CC'] = 'gcc'
 env['CXX'] = 'g++'
@@ -58,8 +54,18 @@ env['MPI_LIBDIR'] = ['/usr/lib']
 env['MPI_INCLUDE'] = '/usr/lib64/mpi/gcc/openmpi/include'
 env['MPI_BINDIR'] = '/usr/bin'
 env['MATLAB_DIR'] = '/usr/local/MATLAB/R2011a'
-env['JAVA_HOME'] = '/usr/java/default'
-env['JAVA_BINDIR'] = '/usr/java/default/bin'
+
+# Java related environment variables, probably the main one
+# that need to be modified is JAVA_HOME
+env['JAVA_HOME'] = '/usr/lib64/jvm/java-1.7.0-openjdk-1.7.0'
+env['JAVA_BINDIR'] = os.path.join(env['JAVA_HOME'], 'bin')
+env['JAVAC'] = os.path.join(env['JAVA_BINDIR'], 'javac')
+env['JAR'] = os.path.join(env['JAVA_BINDIR'], 'jar')
+env['JNI_CPPPATH'] = ['/usr/java/default/include', '/usr/java/include/linux']
+# CONFIGURATION IN TURING
+env['JNI_CPPPATH'] = [os.path.join(env['JAVA_HOME'], 'include'),
+                      os.path.join(env['JAVA_HOME'], 'include', 'linux')]
+
 
 gtest = False#True
 cuda = False
@@ -306,6 +312,9 @@ def ExtractEnumFromHeader(env, target, source):
     return None
 
 env['JAVADIR'] = 'java'
+env['JAVA_BUILDPATH'] = 'java/build'
+env['JAVA_LIBPATH'] = 'java/lib'
+env['JAVA_SOURCEPATH'] = 'java/src'
 env['ENV']['LANG'] = 'en_GB.UTF-8'
 env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
 # Set -g debug options if debugging
@@ -337,33 +346,28 @@ env.Default(ijLink)
 # --- ...to here
 
 xmippJavaJNI = env.AddJavaLibrary(
-             'XmippJNI',
-             dirs=['java/src/xmipp/jni'],
+             'XmippJNI', 'xmipp/jni',
              deps=[ijLink, javaEnums],
              )
 #env.Depends(xmippJavaJNI, ijLink)
 
 xmippJavaUtils = env.AddJavaLibrary(
-           'XmippUtils',
-           dirs=['java/src/xmipp/utils'],
+           'XmippUtils', 'xmipp/utils',
            deps=[ijLink, xmippJavaJNI],
            )
 
 xmippIJ = env.AddJavaLibrary(
-        'XmippIJ',
-        dirs=['java/src/xmipp/ij/commons'],
+        'XmippIJ', 'xmipp/ij/commons',
         deps=[xmippJavaUtils],
         )
 
 xmippViewer = env.AddJavaLibrary(
-            'XmippViewer',
-            dirs=['java/src/xmipp/viewer'],
+            'XmippViewer', 'xmipp/viewer',
             deps=[xmippIJ],
             )
 
 xmippTest = env.AddJavaLibrary(
-          'XmippTest',
-          dirs=['java/src/xmipp/test'],
+          'XmippTest', 'xmipp/test',
           deps=[xmippViewer]
           )
 

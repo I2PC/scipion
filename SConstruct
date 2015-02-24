@@ -480,15 +480,67 @@ def symLink(env, target, source):
     #os.symlink(sources, link)
     result = env.Command(Entry(link),
                          Entry(source),
-                         Action('rm -rf %s && ln -v -s %s %s' % (Entry(link).abspath, sources, Entry(link).abspath),
+                         Action('rm -rf %s && ln -v -s %s %s' % (Entry(link).abspath, sources, 
+                                                                 Entry(link).abspath),
                                 'Creating a link from %s to %s' % (link, sources)))
     return result
-
-
-def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=None, 
-                   buildDir=None, classDir=None, sourcePath=None, deps=[], default=True):
-    """Add self-made and compiled java library to the compilation process
     
+
+def Cmd(cmd):
+    print cmd
+    os.system(cmd)
+
+
+def AddMatchingFiles((pattern, blacklist, sources), directory, files):
+    ''' Callback, adds all matching files in dir '''
+    for filename in fnmatch.filter(files, pattern):
+        if filename not in blacklist:
+            sources.append(join(directory, filename))
+
+    
+def Glob(path, pattern, blacklist=[]):
+    """ Custom made globbing, walking into all subdirectories from path. """
+    sources = []
+    os.path.walk(path, AddMatchingFiles, (pattern, blacklist, sources))
+    return sources
+
+
+def CreateFileList(path, pattern, filename, root='', root2=''):
+    fOut = open(filename, 'w+')
+    files = [f.replace(root, root2) + '\n' for f in Glob(path, pattern, [])]
+    fOut.writelines(files)
+    fOut.close()
+    
+    
+def CompileJavaJar(target, source, env):  
+    """Add self-made and compiled java library to the compilation process """  
+    srcDir = str(source[0])
+    
+    buildDir = os.path.join(env['SCONSCRIPT_PATH'], env['JAVA_BUILDPATH'])
+    classPath = "'%s/*'" % os.path.join(env['SCONSCRIPT_PATH'], env['JAVA_LIBPATH'])
+    globalSrcDir = os.path.join(env['SCONSCRIPT_PATH'], env['JAVA_SOURCEPATH'])
+    jarfile = str(target[0])
+    name = os.path.basename(jarfile)
+    listfile = os.path.join(buildDir, name+'_source.txt')
+    classfile = os.path.join(buildDir, name+'_classes.txt')
+    CreateFileList(srcDir, '*.java', listfile)
+    Cmd(env['JAVAC'] + ' -cp %(classPath)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals())
+    
+    classDir = join(buildDir, os.path.relpath(srcDir, globalSrcDir))
+    # This is needed for compiling IJ plugins
+    # where the file 'plugins.config' need to be include in the final .jar file
+    configFile = 'plugins.config'
+    pluginDest = ''
+    if os.path.exists(join(srcDir, configFile)):
+        pluginDest = join(classDir, configFile)
+        Cmd('cp %s %s' % (join(srcDir, configFile), pluginDest))
+    CreateFileList(classDir, '*.class', classfile, buildDir + '/', '-C %(buildDir)s ' % locals())
+    jarFlags = env['JARFLAGS']
+    Cmd(env['JAR'] + ' %(jarFlags)s %(jarfile)s @%(classfile)s %(pluginDest)s' % locals())
+
+
+def addJavaLibrary(env, name, path, deps=[], default=True):
+    """ Add self-made and compiled java library to the compilation process
     This pseudobuilder access given directory, compiles it
     and installs it. It also tells SCons about it dependencies.
 
@@ -497,72 +549,27 @@ def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=Non
 
     Returns the final targets, the ones that Make will create.
     """
-    jar = jar or '%s.jar' % name
-    dirs = dirs or ['java/src']
-    patterns = patterns or 'unset'
-    buildDir = buildDir or join(env['SCONSCRIPT_PATH'], 'java/build')
-    installDir = installDir or join(env['SCONSCRIPT_PATH'], 'java/lib')
-    classDir = classDir or buildDir
-    sourcePath = sourcePath or join(env['SCONSCRIPT_PATH'], 'java/src')
-#     sources = []
-#     if patterns == 'unset':
-#         patterns = []
-#         for x in range(len(dirs)):
-#             patterns += ['*.java']
+    libPath = os.path.join(env['SCONSCRIPT_PATH'], env['JAVA_LIBPATH'])
+    srcPath = os.path.join(env['SCONSCRIPT_PATH'], env['JAVA_SOURCEPATH'])
 
-    if not default:
-        return None
-    
-    #deps = [join(installDir, '%s.jar' % name) for name in deps]
-#     
-    sources = []
-#     for d in dirs:
-#         sources += glob(join(d, '*.java'))
-    
-    for d in dirs:
-        for subdir, dirs, files in os.walk(d):
-            for f in files:
-                if f.endswith('.java'):
-                    sources.append(os.path.join(subdir, f))
-        
-    
-    env2 = Environment()
-#    env2['JAR'] = '/usr/java/default/bin/jar'
+    # Get all java files inside the source 
+    libSrcPath = os.path.join(srcPath, path)
+    sources = Glob(libSrcPath, "*.java")
 
-    env2['JAVACLASSPATH'] = '"%s"' % join(installDir, '*')
-    #env2['JAVACFLAGS'] = '-d "%s"' % buildDir
-    env2['JAVASOURCEPATH'] = sourcePath
-    env2['JARCHDIR'] = buildDir
-    env2['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
-    #env2.Replace(JAVACLASSPATH=":".join(glob(join(Dir(installDir).abspath,'*.jar'))))
-    #env2.Replace(JAVASOURCEPATH=Dir(sourcePath).abspath)
+    jar = '%s.jar' % name
+    jarfile = os.path.join(libPath, jar)
+    jarCreation = env.Command(jarfile, [libSrcPath], CompileJavaJar)
+    
+    for sd in sources + deps:
+        env.Depends(jarCreation, sd)
 
-#    javaDir = env2.Java(target=buildDir, source=sources, JAVAVERSION='1.6')
-#    jarCreation = env2.Jar(join(buildDir, jar), source=sources, JAVAVERSION='1.6')
-    #tgts = ['%s/%s' % (buildDir, s.replace('.java' ,'.class')) for s in sources]
-    tgts = [s.replace(sourcePath, buildDir).replace('.java', '.class').replace('java/src/', 'java/build/') for s in sources]
-    javaDir = env2.Java(target=tgts, source=sources, JAVAVERSION='1.6')
-    jarCreation = env2.Jar(join(buildDir, jar), source=tgts, JAVAVERSION='1.6')
-    #SideEffect('dummy', jarCreation)
-    for dep in deps:
-        env2.Depends(jarCreation, dep)
+    env.Alias(jar, jarCreation)
+    if default:
+        env.Default(jar)
+    env.Alias('java', jarCreation)
     
-    #print "join(buildDir, jar) ", join(buildDir, jar)
-    #print "env.Install: ", Dir(installDir).abspath
-    #print "jarCreation: ", jarCreation[0].abspath
+    return jarCreation
     
-    jarInstall = env2.Install(installDir, jarCreation)
-    #env.Depends(jarInstall, jarCreation)
-    #SideEffect('dummy', jarInstall)
-
-    env2.Alias(jar, jarInstall)
-    env2.Default(jar)
-    env2.Alias('java', jarInstall)
-    #env.Default(jarInstall)
-    
-    return jarInstall
-    
-
 
 def addJavaTest(env, name, source, installDir=None, default=True):
     """Add java test to the compilation process
@@ -584,7 +591,9 @@ def addJavaTest(env, name, source, installDir=None, default=True):
     Default(runTest)
 
 
-def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], incs=[], libs=[], cxxflags=[], linkflags=[], deps=[], mpi=False, cuda=False, default=True):
+def addProgram(env, name, src=None, pattern=None, installDir=None, 
+               libPaths=[], incs=[], libs=[], cxxflags=[], linkflags=[], 
+               deps=[], mpi=False, cuda=False, default=True):
     """Add, compile and install a program to the compilation process
     
     This pseudobuilder compiles a C++ program using CXX compiler and linker.
@@ -1027,6 +1036,8 @@ env.AddMethod(symLink, 'SymLink')
 env.AddMethod(addJavaTest, 'AddJavaTest')
 env.AddMethod(addProgram, 'AddProgram')
 env.AddMethod(progInPath, 'ProgInPath')
+
+
 
 
 #  ************************************************************************
