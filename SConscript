@@ -98,6 +98,11 @@ jpeg = env.AddLibrary(
     targets=[File('#software/lib/libjpeg.so')],
     flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
 
+png = env.AddLibrary(
+    'png',
+    tar='libpng-1.6.16.tgz',
+    deps=[zlib])
+
 sqlite = env.AddLibrary(
     'sqlite',
     tar='sqlite-3.6.23.tgz',
@@ -231,7 +236,7 @@ matplotlib = addModule(
     'matplotlib',
     tar='matplotlib-1.3.1.tgz',
     flags=['--old-and-unmanageable'],
-    deps=[numpy, dateutil, pyparsing])
+    deps=[numpy, png, dateutil, pyparsing])
 
 addModule(
     'psutil',
