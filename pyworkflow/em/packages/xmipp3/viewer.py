@@ -387,6 +387,7 @@ class ChimeraClient(CommandView):
     """ View for calling an external command. """
     def __init__(self, inputFile, projectionSize=256, 
                  angularDist=None, radius=None, sphere=None, **kwargs):
+
         cmd = 'xmipp_chimera_client --input "%(inputFile)s" --mode projector %(projectionSize)d' % locals()
         if angularDist:
             cmd += ' -a %(angularDist)s red %(radius)f' % locals() 

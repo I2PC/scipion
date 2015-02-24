@@ -175,7 +175,7 @@ class ProjectWindow(ProjectBaseWindow):
     def scheduleSqlitePlot(self, *args):
         self.queue.put(lambda: self.plotSqlite(*args))
 
-    def plotSqlite(self, dbName, dbPreffix,
+    def plotSqlite(self, dbName, dbPreffix, type,
                    columnsStr, colorsStr, linesStr, markersStr,
                    xcolumn, ylabel, xlabel, title, bins, orderColumn, orderDirection):
         columns = columnsStr.split()
@@ -199,7 +199,10 @@ class ProjectWindow(ProjectBaseWindow):
         ax = plotter.createSubPlot(title, xlabel, ylabel)
 
         isxvalues = bool(xcolumn)
-        xvalues = []
+
+        xvalues = range(0, setObj.getSize()) if not isxvalues else []
+
+
         for column in columns:
             yvalues = []
 
@@ -209,18 +212,20 @@ class ProjectWindow(ProjectBaseWindow):
                 if isxvalues:
                     value = self.getValue(obj, xcolumn)
                     xvalues.append(value)
-            if not isxvalues:
-                xvalues = range(0, setObj.getSize())
-            else:
-                isxvalues = False
+
+            isxvalues = False
 
             color = colors[i]
             line = lines[i]
             if bins:
                 ax.hist(yvalues, bins=int(bins), color=color, linestyle=line, label=column)
             else:
-                marker = (markers[i] if not markers[i] == 'none' else None)
-                ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line, label=column)
+
+                if type == 'Plot':
+                    marker = (markers[i] if not markers[i] == 'none' else None)
+                    ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line, label=column)
+                else:
+                    ax.scatter(xvalues, yvalues, c=color, label=column, alpha=0.5)
             i += 1
 
         ax.legend(columns)
