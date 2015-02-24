@@ -31,6 +31,7 @@
 # First import the environment (this comes from SConstruct)
 Import('env')
 
+from os import environ
 
 #  ************************************************************************
 #  *                                                                      *
@@ -349,8 +350,13 @@ env.AddPackage('frealign',
 env.AddPackage('pytom',
                tar='pytom_develop0.962.tgz',
                extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
-                             'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
-                              % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],shome))],
+                              'PATH=%s/software/bin:%s '
+                              'LD_LIBRARY_PATH=%s/software/lib:%s '
+                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s '
+                              './scipion_installer'
+                              % (shome, environ.get('PATH', ''),
+                                 shome, environ.get('LD_LIBRARY_PATH', ''),
+                                 env['MPI_LIBDIR'], env['MPI_INCLUDE'], shome))],
                deps=[boost_headers_only, fftw, swig, lxml],
                default=False)
 
