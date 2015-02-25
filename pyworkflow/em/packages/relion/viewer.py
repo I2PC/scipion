@@ -236,7 +236,7 @@ Examples:
                       em.VISIBLE: labels, em.RENDER:'_filename',
                       'labels': 'id',
                       }
-        return em.ObjectView(self._project.getName(), 
+        return em.ObjectView(self._project, 
                           self.protocol.strId(), filename, other=inputParticlesId,
                           env=self._env, viewParams=viewParams)
         

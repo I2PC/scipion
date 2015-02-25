@@ -240,7 +240,7 @@ marginal likelihood.
         
         for ref in range(1, numberOfClasses + 1):
             vol = Volume()
-            filepar = self._getFileName('output_par_class', iter=self._getLastIter(), ref=ref)
+            filepar = self._getBaseName('output_par_class', iter=self._getLastIter(), ref=ref)
             volFn = self._getFileName('iter_vol_class', iter=self._getLastIter(), ref=ref)
             vol.setFileName(volFn)
             volumes.append(vol)
