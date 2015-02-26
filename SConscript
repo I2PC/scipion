@@ -296,11 +296,11 @@ tornado = addModule(
 lxml = addModule(
     'lxml',
     tar='lxml-3.4.1.tgz',
-    deps=[], # libxml2], #, libxslt],
+    libChecks=['libxml-2.0', 'libxslt'],
+    deps=[], # libxml2, libxslt],
     default=False)
-# Commented out libxml2 and libxslt because they are so hard to
-# compile right.
-# TODO: we should check that this two are in the system
+# libxml2 and libxslt are checked instead of compiled because
+# they are so hard to compile right.
 
 addModule(
     'ipython',
@@ -381,16 +381,6 @@ env.AddPackage('motioncorr',
                tar='motioncorr_v2.1.tgz',
                default=False)
 
-
 env.AddPackage('simple',
                tar='simple2.tgz',
                default=False)
-
-# This last one already contains the binary.
-
-
-# TODO: check if we have to use the "purge" option below:
-
-# # Purge option
-# if GetOption('purge'):
-#     env.RemoveInstallation()
