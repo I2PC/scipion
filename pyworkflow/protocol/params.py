@@ -138,13 +138,9 @@ class ElementGroup(FormElement):
 
     def addLine(self, lineName, **kwargs):
         
-        # Patch used to avoid the blanks spaces in the names
-        # because the jquery getting elements are not permitted.
-        # JOSE MIGUEL: Replaced the blanks by underscores, because
-        # if not, lines with same first word will not be differentiated 
-        labelName = lineName.replace(' ', '_')
-        labelName = labelName.replace('(', '_')
-        labelName = labelName.replace(')', '_')
+        labelName = lineName
+        for symbol in ' ()':
+            labelName = labelName.replace(symbol, '_')
         
         return self.addParam(labelName, Line, form=self._form, 
                              label=lineName, **kwargs)        
@@ -181,10 +177,14 @@ class Section(ElementGroup):
         return self._form.getParam(self.questionParam.get())
 
     def addGroup(self, groupName, **kwargs):
-        return self.addParam(groupName, Group, form=self._form, 
+        
+        labelName = groupName
+        for symbol in ' ()':
+            labelName = labelName.replace(symbol, '_')
+        
+        return self.addParam(labelName, Group, form=self._form, 
                              label=groupName, **kwargs)
-            
-                    
+        
 class Form(object):
     """Store all sections and parameters"""
     def __init__(self):

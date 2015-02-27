@@ -69,7 +69,8 @@ def proccessModeFilter(mode, value):
     return value
 
 def validateMaskRadius(value, xdim, radius):
-    
+    """ Validation done for some radius length """
+     
     # MASK RADIUS
     if radius == 1:
         if value > xdim :

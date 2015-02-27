@@ -53,10 +53,10 @@ class ResmapPrewhitenWizardWeb(ResmapPrewhitenWizard):
                 return HttpResponse("errorInput")
         else:
             plotUrl, min_ang = getPlotResMap(request, protocol)
-    
+            
             context = {
                        # Params
-                       'inputId': protocol.inputVolume.getObjId(),
+                       'inputId': protocol.inputVolume.get().getObjId(),
                        'ang': protocol.prewhitenAng.get(),
                        'ramp': protocol.prewhitenRamp.get(),
                        # Extra Params
@@ -105,7 +105,7 @@ def get_resmap_plot(request):
     
     inputId = request.GET.get('inputId')
     inputVolume = project.mapper.selectById(inputId)
-    newProtocol.inputVolume = inputVolume
+    newProtocol.inputVolume.set(inputVolume)
     
     useSplit = request.GET.get('useSplit', None)
     if useSplit is not None:
@@ -160,7 +160,11 @@ def _beforePreWhitening(protocol, dir):
     from pyworkflow.em.convert import ImageHandler
     # Convert input volumes
     ih = ImageHandler()
-    ih.convert(protocol.inputVolume.get(), join(dir, 'volume1.map'))
+    inputVolume = protocol.inputVolume.get()
+    print inputVolume
+    path = join(dir, 'volume1.map')
+    print path
+    ih.convert(inputVolume, path)
     if protocol.useSplitVolume:
         ih.convert(protocol.splitVolume.get(), join(dir, 'volume2.map'))
     

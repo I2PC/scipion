@@ -66,13 +66,18 @@ class ProtMovieAlignment(ProtProcessMovies):
                       label="Alignment method", default=AL_OPTICAL,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Method to use for alignment of the movies')
+       
+        # GROUP COMMON PARAMETERS
         group = form.addGroup('Common parameters')
+        
         line = group.addLine('Used in alignment',
                             help='First and last frames used in alignment.\n'
                                   'The first frame in the stack is *0*.' )
         line.addParam('alignFrame0', IntParam, default=0, label='First')
         line.addParam('alignFrameN', IntParam, default=0, label='Last',
                       help='If *0*, use maximum value')
+        
+        # GROUP GPU PARAMETERS
         group = form.addGroup('GPU parameters',condition="alignMethod==%d or alignMethod==%d "
                                                          " or alignMethod==%d "
                                                          % (AL_OPTICAL, AL_DOSEFGPUOPTICAL, AL_DOSEFGPU))
@@ -84,21 +89,29 @@ class ProtMovieAlignment(ProtProcessMovies):
                       label="Choose GPU core",
                       condition="doGPU  or alignMethod==%d or alignMethod==%d  " % (AL_DOSEFGPU, AL_DOSEFGPUOPTICAL),
                       help="GPU may have several cores. Set it to one if you do not know what we are talking about")
-        group = form.addGroup('Optical Flow parameters',condition="alignMethod==%d or alignMethod==%d " % (AL_OPTICAL, AL_DOSEFGPUOPTICAL))
+        
+        # GROUP OPTICAL FLOW PARAMETERS
+        group = form.addGroup('Optical Flow parameters', expertLevel=LEVEL_ADVANCED, condition="alignMethod==%d or alignMethod==%d " % (AL_OPTICAL, AL_DOSEFGPUOPTICAL))
+        
         group.addParam('winSize', IntParam, default=150,
                       label="Window size", expertLevel=LEVEL_ADVANCED,
                       help="Window size (shifts are assumed to be constant within this window).")
+        
         #---------------------------------- DosefGPU Params--------------------------------
-        group = form.addGroup('DosefGPU parameters',condition="alignMethod==%d or alignMethod==%d " % (AL_DOSEFGPU, AL_DOSEFGPUOPTICAL))
+        # GROUP DOSEFGPU PARAMETERS
+        group = form.addGroup('DosefGPU parameters',condition="alignMethod==%d or alignMethod==%d" % (AL_DOSEFGPU, AL_DOSEFGPUOPTICAL))
+        
         line = group.addLine('Used in final sum',
                              help='First and last frames used in alignment.\n'
                                   'The first frame in the stack is *0*.' )
         line.addParam('sumFrame0', IntParam, default=0, label='First')
         line.addParam('sumFrameN', IntParam, default=0, label='Last',
                       help='If *0*, use maximum value')
+        
         line = group.addLine('Crop offsets (px)')
         line.addParam('cropOffsetX', IntParam, default=0, label='X')
         line.addParam('cropOffsetY', IntParam, default=0, label='Y')
+        
         line = group.addLine('Crop dimensions (px)',
                       help='How many pixels to crop from offset\n'
                            'If equal to 0, use maximum size.')
@@ -107,6 +120,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         group.addParam('binFactor', IntParam, default=1,
                        label='Binning factor',
                        help='1x or 2x. Bin stack before processing.')
+        
         group.addParam('extraParams', StringParam, default='',
                       expertLevel=LEVEL_ADVANCED,
                       label='Additional parameters',

@@ -252,18 +252,10 @@ function evalElements() {
 		var debug_param = "PARAM:"+param;
 		var debug_value = "VALUE:"+value;
 		var debug_type = "TYPE:"+type;
-//		console.log(debug_param + "," +debug_value + "," +debug_type);
-		
-		// Depending of the parameter is processed
-		
-		if (type == "Group"){
-			// Check expert level for the group content
-			var newLevel = $("select[name=expertLevel]").val();
-			var expLevel = $(this).attr('data-expert');
-			evalExpertLevel(expLevel, newLevel, $(this))
-		}
+		console.log(debug_param + ", " +debug_value + ", " +debug_type);
 		
 		switch (type){
+		// Depending of the parameter type is processed
 			
 			case "EnumParam":
 				// Get the kind of EnumParam
@@ -321,11 +313,11 @@ function setParamValue(paramId, value) {
 	row.val(value);
 	
 	// Get the new expertise level
-	var newLevel = $("select[name=expertLevel]").val();
-	
+//	var newLevel = $("select[name=expertLevel]").val();
+	var newLevel = $("input[name=expertLevel]:checked").val();
+	 
 	// DEBUG
-//	console.log("PARAM TO EVALUATE: " + paramId)
-//	console.log("WITH LEVEL: " + newLevel)
+	console.log("PARAM TO EVALUATE: " + paramId + " WITH LEVEL: " + newLevel)
 	
 	// Evaluate the dependencies for the new expert level and the row affected
 	evalDependencies(row, newLevel);
@@ -379,7 +371,7 @@ function evalDependencies(row, newLevel) {
 	// Get dependencies for the parameter
 	var dependencies = row.attr('data-depen');
 	
-//	console.log("Dependencies:", dependencies)
+	console.log("Dependencies:", dependencies)
 
 	if (dependencies != undefined && dependencies.length > 0) {
 		
@@ -390,7 +382,7 @@ function evalDependencies(row, newLevel) {
 			// Get params affected with the dependencies
 			var row2 = $("tr#" + arrayDepends[cont]);
 			
-//			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
+			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
 
 			// Evaluate the new parameter affected
 			var res = evalCondition(row2);
@@ -426,7 +418,7 @@ function evalCondition(row) {
 	
 		var params = row.attr('data-params');
 		
-//		console.log("Params:"+ params + " length:"+params.length)
+//		console.log("Params:"+ params + " length:"+params.length + "\n")
 		
 		if (params.length > 0){
 			
@@ -447,11 +439,11 @@ function evalCondition(row) {
 						value="''";
 					}
 				}
-		//		params += "param: " + param + " value: " + value + "\n";
+				params += "param: " + param + " value: " + value + "\n";
 				cond_eval = cond_eval.replace(param, value);
 			}
 			
-		//	console.log("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
+//			console.log("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
 			
 			cond_eval = normalizeConditions(cond_eval)
 			
