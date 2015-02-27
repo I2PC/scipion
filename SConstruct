@@ -873,18 +873,26 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     # 'unset' is the default value when calling only --with-package
     # and a location is not provided
     if packageHome == 'unset':
-        #TODO: Move the download logic in fetch_package.py to a function and
-        # avoid using a system call
-        # We need to download and untar it 'by hand' in order to be able to scan its content for dependencies
-        script = File('#scripts/fetch_package.py').abspath
-        command = ['python', script, name, 'software/em/%s' % buildDir, tar]
-        check_call(command)
-        
+        if os.environ.get('SCIPION_COMPILE_ONLY', '').lower() not in ['1', 'true', 'yes']:
+            try:
+                emDir = Dir('#software/em').abspath
+                if os.path.exists('%s/%s' % (emDir, tar)):
+                    print 'Warning: %s already exists. Download anyway? [Y/n]' % tar
+                    if raw_input().upper() != 'Y':
+                        Exit('If you just want to compile, use: scipion compile')
+                check_call(['wget', '-nv', url, '-c'], cwd=emDir)
+                if os.path.exists('%s/%s' % (emDir, name)):
+                    print 'Warning: %s already exists. Untar anyway? [Y/n]' % name
+                    if raw_input().upper() != 'Y':
+                        Exit('If you just want to compile, use: scipion compile')
+                check_call(['tar', '--recursive-unlink', '-xzf', tar], cwd=emDir)
+            except (CalledProcessError, OSError) as e:
+                Exit(e)
         createPackageLink(packageLink, buildDir)
     else:
         createPackageLink(packageLink, packageHome)
-        return '' # When providing a packageHome, we only want to create the link
-    
+        return ''  # when providing packageHome, we only want to create the link
+
     lastTarget = Entry(packageLink)
     targets = []
     #tLink = None
