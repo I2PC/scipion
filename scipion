@@ -50,7 +50,7 @@ if sys.version_info < (2, 5):
     sys.stdout.write('Warning: running with old Python.\n')
     # But we'll try anyway. Unless...
 
-    if len(sys.argv) > 1 and sys.argv[1] == 'install':
+    if len(sys.argv) > 1 and sys.argv[1] not in ['install', 'compile']:
         sys.exit('Please run this script with Python 2.5 or above.')
         # That's too much, because SCons doesn't work with an earlier version!
         # Also, the tarfile module works badly, etc. Not worth it.
@@ -236,6 +236,7 @@ MODE_DBBROWSE = 'browser'
 MODE_VIEWER = 'viewer'
 MODE_INSTALL = 'install'
 MODE_UNINSTALL = 'uninstall'
+MODE_COMPILE = 'compile'
 MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
@@ -312,7 +313,26 @@ def main():
         viewerArgs = ' '.join(sys.argv[2:])
         runApp('pw_viewer.py', args=viewerArgs, chdir=False)
 
-    elif mode == MODE_INSTALL or mode == MODE_UNINSTALL:
+    elif mode == MODE_UNINSTALL:
+        # We do not os.environ.update(VARS) here. SCons needs to use
+        # the python installed in the system by default.
+        # But we set all vars named SCIPION_*
+        for k, v in VARS.iteritems():
+            if k.startswith('SCIPION_') or k in BUILD:
+                os.environ[k] = v
+
+        from scripts.install import build
+        args = ['-c'] + sys.argv[2:]
+        ret = build(args)
+        if ret == 0 and not ('--help' in args or '-h' in args or '-H' in args
+                             or '-c' in args):
+            try:
+                os.remove(join(VARS['SCIPION_SOFTWARE'], 'log', 'success.log'))
+            except OSError:
+                pass
+        sys.exit(ret)
+
+    elif mode in [MODE_INSTALL, MODE_COMPILE]:
         # We do not os.environ.update(VARS) here. SCons needs to use
         # the python installed in the system by default.
         # But we set all vars named SCIPION_*
@@ -326,10 +346,10 @@ def main():
                 sys.stdout.write("  Creating folder %s ...\n" % path)
                 os.makedirs(path)
 
+        if mode == MODE_COMPILE:
+            os.environ['SCIPION_COMPILE_ONLY'] = 'True'
+
         args = sys.argv[2:]
-        # Uninstall is equals to install -c
-        if mode == MODE_UNINSTALL:
-            args = ['-c']
         from scripts.install import build
         if args and args[0] == '--binary':
             assert 'LDFLAGS' not in os.environ, "LDFLAGS already set. Refusing."
@@ -353,9 +373,6 @@ def main():
   ************************************************************************
 
 """)
-            #runApp('pw_config.py')
-            # FIXME: I am not sure this is a good idea. To begin with,
-            # right now it expects xmipp to be installed.
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:

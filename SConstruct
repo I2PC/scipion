@@ -67,19 +67,19 @@ env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
 
-def downloadOrLink(env, urlOrPath, output, downloadDir='software/tmp'):
-    """ Download if urlOrPath is an URL.
-    Or simply link if is a local file.
+def downloadOrLink(env, urlOrPath, output, downloadDir='software/tmp',
+                   extraDeps=[]):
+    """ Download if urlOrPath is an URL, link if it is a local file.
     """
     outputFile = File('%s/%s' % (downloadDir, output))
-    
-    #print "DEBUG: urlOrPath", urlOrPath
-    #print "DEBUG: os.path.isfile(urlOrPath)", os.path.isfile(urlOrPath)
-    
-    if os.path.isfile(urlOrPath):
+
+    if urlOrPath.startswith('file:///'):
+        target = env.SymLink(outputFile.path, urlOrPath[len('file://'):])
+    elif os.path.isfile(urlOrPath):
         target = env.SymLink(outputFile.path, urlOrPath)
     else: 
-        target = download(env, outputFile.abspath, Value(urlOrPath))
+        target = download(env, outputFile.abspath,
+                          [Value(urlOrPath)] + extraDeps)
     SideEffect('dummy', target)  # so it works fine in parallel builds
 
     return target
@@ -102,13 +102,11 @@ def checkConfigLib(target, source, env):
 
     # source is ignored and must be ''
     # target must look like 'software/log/lib_<name>.log'
-
     for tg in map(str, target):  # "target" is a list of SCons.Node.FS.File
         name = tg[len('software/log/lib_'):-len('.log')]
         try:
             check_call(['pkg-config', '--cflags', '--libs', name],
-                                  stdout=open(os.devnull, 'w'),
-                                  stderr=STDOUT)
+                       stdout=open(os.devnull, 'w'), stderr=STDOUT)
         except (CalledProcessError, OSError) as e:
             try:
                 check_call(['%s-config' % name, '--cflags'])
@@ -315,19 +313,20 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
                   help='Activate library %s' % name)
 
     # Add all the checks
-    for lib in libChecks:
-        libraryTest(env, lib)
-    # Alternatively we could use CheckConfigLib() (as in commit cac431d117)
+    checksTargets = ['software/log/lib_%s.log' % name for name in libChecks]
+    for tg in checksTargets:
+        CheckConfigLib(env, tg, '')
 
     # Create and concatenate the builders.
-    #print "DEBUG: url: ", url
-    #print "DEBUG: tar: ", tar
-    tDownload = downloadOrLink(env, url, tar)
+    compile_only = os.environ.get('SCIPION_COMPILE_ONLY', '').lower() in ['1', 'true', 'yes']
+    if not compile_only:
+        tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
     
-    tUntar = untar(env, File('#software/tmp/%s/configure' % configDir[0]).abspath, tDownload,
-                   cdir=Dir('#software/tmp').abspath)
-    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-    Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
+        tUntar = untar(env, File('#software/tmp/%s/configure' % configDir[0]).abspath,
+                       tDownload, cdir=Dir('#software/tmp').abspath)
+        SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+        Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
+
     tConfig = []
     tMake = []
     toReturn = []
@@ -340,7 +339,8 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
             AutoConfigParams=flags[x],
             AutoConfigStdOut=File('#software/log/%s_config_%s.log' % (name, x)).abspath))
         SideEffect('dummy', Dir('#software/tmp/%s' % configDir[x]))
-        env.Depends(tConfig[x], tUntar)
+        if not compile_only:
+            env.Depends(tConfig[x], tUntar)
 
         lastTarget = tConfig[x]
 
@@ -669,7 +669,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     return program
 
 
-def addModule(env, name, tar=None, buildDir=None, targets=None,
+def addModule(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
               url=None, flags=[], deps=[], clean=[], default=True):
     """Add Python module <name> to the construction process.
 
@@ -697,16 +697,24 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate module %s' % name)
 
-    # Create and concatenate the builders.
-    tDownload = downloadOrLink(env, url, tar)
+    # Add all the checks
+    checksTargets = ['software/log/lib_%s.log' % name for name in libChecks]
+    for tg in checksTargets:
+        CheckConfigLib(env, tg, '')
 
-    tUntar = untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload,
-                   cdir='software/tmp')
-    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-    Clean(tUntar, 'software/tmp/%s' % buildDir)
+    # Create and concatenate the builders.
+    compile_only = os.environ.get('SCIPION_COMPILE_ONLY', '').lower() in ['1', 'true', 'yes']
+    if not compile_only:
+        tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
+
+        tUntar = untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload,
+                       cdir='software/tmp')
+        SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+        Clean(tUntar, 'software/tmp/%s' % buildDir)
+
     tInstall = env.Command(
         ['software/lib/python2.7/site-packages/%s' % t for t in targets],
-        tUntar,
+        tUntar if not compile_only else '',
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                'PATH="%(root)s/bin:%(PATH)s" '
 #               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
@@ -951,7 +959,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
 
 
 def manualInstall(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
-                  extraActions=[], deps=[], clean=[], default=True):
+                  libChecks=[], extraActions=[], deps=[], clean=[], default=True):
     """Just download and run extraActions.
 
     This pseudobuilder downloads the given url, untars the resulting
@@ -996,12 +1004,21 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     # done. I don't know how to fix this easily in scons... :(
 
     # Donload, untar, and execute any extra actions.
-    tDownload = downloadOrLink(env, url, tar)
-    tUntar = untar(env, File('#software/tmp/%s/README' % buildDir).abspath, tDownload,
-                   cdir=Dir('#software/tmp').abspath)
-    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-    Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
-    lastTarget = tUntar
+    checksTargets = ['software/log/lib_%s.log' % name for name in libChecks]
+    for tg in checksTargets:
+        CheckConfigLib(env, tg, '')
+
+    # Create and concatenate the builders.
+    compile_only = os.environ.get('SCIPION_COMPILE_ONLY', '').lower() in ['1', 'true', 'yes']
+    if not compile_only:
+        tDownload = downloadOrLink(env, url, tar)
+        tUntar = untar(env, File('#software/tmp/%s/README' % buildDir).abspath,
+                       tDownload, cdir=Dir('#software/tmp').abspath)
+        SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+        Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
+        lastTarget = [tUntar] + checksTargets
+    else:
+        lastTarget = ''
 
     for target, command in extraActions:
         lastTarget = env.Command(
