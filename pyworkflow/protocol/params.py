@@ -379,7 +379,8 @@ class LabelParam(StringParam):
 class IntParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Integer, **args)
-        self.addValidator(Format(int, error="should be an integer"))
+        self.addValidator(Format(int, error="should be an integer",
+                                 allowsNull=args.get('allowsNull', False)))
         
         
 class EnumParam(IntParam):
@@ -536,7 +537,7 @@ class Conditional(Validator):
         
     def __call__(self, value):
         errors = []
-        if (value or not self._allowsNull):
+        if (value is not None or not self._allowsNull):
             if not self._condition(value):
                 errors.append(self.error)
         return errors   
