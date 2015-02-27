@@ -252,19 +252,10 @@ function evalElements() {
 		var debug_param = "PARAM:"+param;
 		var debug_value = "VALUE:"+value;
 		var debug_type = "TYPE:"+type;
-		console.log(debug_param + "," +debug_value + "," +debug_type);
-		
-		// Depending of the parameter is processed
-		
-		if (type == "Group"){
-			// Check expert level for the group content
-//			var newLevel = $("select[name=expertLevel]").val();
-			var newLevel = $("input[name=expertLevel]:checked").val();
-			var expLevel = $(this).attr('data-expert');
-			evalExpertLevel(expLevel, newLevel, $(this))
-		}
+		console.log(debug_param + ", " +debug_value + ", " +debug_type);
 		
 		switch (type){
+		// Depending of the parameter type is processed
 			
 			case "EnumParam":
 				// Get the kind of EnumParam
@@ -326,8 +317,7 @@ function setParamValue(paramId, value) {
 	var newLevel = $("input[name=expertLevel]:checked").val();
 	 
 	// DEBUG
-	console.log("PARAM TO EVALUATE: " + paramId)
-//	console.log("WITH LEVEL: " + newLevel)
+	console.log("PARAM TO EVALUATE: " + paramId + " WITH LEVEL: " + newLevel)
 	
 	// Evaluate the dependencies for the new expert level and the row affected
 	evalDependencies(row, newLevel);
@@ -340,9 +330,6 @@ function setParamValue(paramId, value) {
 		var expLevel = row.attr('data-expert');
 		evalExpertLevel(expLevel, newLevel, row)
 	}
-	
-	
-	console.log(row)
 	
 	// To process the hidden elements into protocol form
 	// is necessary to be evaluated himself.
@@ -365,9 +352,6 @@ function evalExpertLevel(expLevel, newLevel, row){
 function evalRow(row){
 	var evalThis = row.attr("data-cond")
 	
-	console.log("EVALUATE: "+ evalThis)
-	
-	
 	switch (evalThis){
 		case "False":
 			row.css('display', 'none')
@@ -387,7 +371,7 @@ function evalDependencies(row, newLevel) {
 	// Get dependencies for the parameter
 	var dependencies = row.attr('data-depen');
 	
-//	console.log("Dependencies:", dependencies)
+	console.log("Dependencies:", dependencies)
 
 	if (dependencies != undefined && dependencies.length > 0) {
 		
@@ -398,7 +382,7 @@ function evalDependencies(row, newLevel) {
 			// Get params affected with the dependencies
 			var row2 = $("tr#" + arrayDepends[cont]);
 			
-//			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
+			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
 
 			// Evaluate the new parameter affected
 			var res = evalCondition(row2);
