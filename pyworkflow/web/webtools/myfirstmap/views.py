@@ -36,8 +36,7 @@ from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
 
 def service_projects(request):
-    #Example Projects to be showed
-    
+   
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
