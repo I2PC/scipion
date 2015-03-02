@@ -1,0 +1,10 @@
+{% extends 'project_content/project_content.html' %}
+
+{% block header %}	
+	{% include "movies_header.html" %}
+{% endblock %}
+
+{% block service %}
+	{% include "configHiddenMovies.html" %}
+	{% include "helpPopupMovies.html" %}
+{% endblock %}
