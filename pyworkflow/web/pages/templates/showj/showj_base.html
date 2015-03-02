@@ -156,7 +156,8 @@ function setImageSize(refreshElement){
 	
 	if (refreshElement==true){
 		zoom_element.val(zoom_val_perc)
-	}
+	}#                     'alignVol': path_files + 'alignVol.png',
+
 	
 	if (tableImages_width>currentImageDim*1.2 || tableImages_width<currentImageDim*0.8){
 		recallServer=true
@@ -215,7 +216,7 @@ function setImageSize(refreshElement){
 <!-- Not used in the volume visualization -->
 {% if not dataset.getNumberSlices > 1 %}
 	<!-- Hidden menu for multiple selection tool -->
-	{% include "showj/showj_selection_menu.html" %}
+<!-- 	{% include "showj/showj_selection_menu.html" %} -->
 {% endif %}
 
 {% endblock %}	
