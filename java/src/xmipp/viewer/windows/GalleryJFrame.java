@@ -61,7 +61,6 @@ import javax.swing.ComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -85,6 +84,7 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
+import javax.vecmath.Point3d;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
@@ -1632,7 +1632,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					try
 					{
-						String args = data.getSelVolumeFile();
                                                 if(!XmippUtil.isInPath("chimera"))
                                                 {
                                                     XmippDialog.showError(GalleryJFrame.this, "Chimera is not available");
@@ -1642,7 +1641,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						// args = "spider:" + args;
 						// // FIXME: Check chimera is installed
 						// Process p = new ProcessBuilder("chimera", args).start();
-                                                String[] run = new String[]{"xmipp_chimera_client", "--input", args, "--mode", "projector"};
+                                                String run = String.format("xmipp_chimera_client --input %s --mode projector", data.getSelVolumeFile());
+                                                if(data.parameters.getSamplingRate() != null)
+                                                    run += String.format(" --samplingRate %s", data.parameters.getSamplingRate());
+                                                
 						XmippWindowUtil.executeCommand(run, false);
                                                 
 					}

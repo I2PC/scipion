@@ -319,14 +319,12 @@ public class XmippMenuBar extends MenuBar
 		//addIJMenuItem(thresholdingmn, "Simple Iterative Object Extraction", "SIOX Segmentation", IJRequirement.RGB);
 
 		// advanced binary menu
-		addIJMenuItem(binarymn, "Voxel Counter", "Voxel Counter", IJRequirement.STACK);// stack
-																						// required
+		addIJMenuItem(binarymn, "Voxel Counter", "Voxel Counter", IJRequirement.STACK);// stack required
 		addIJMenuItem(binarymn, "Erode", "Erode", IJRequirement.BINARY);
 		addIJMenuItem(binarymn, "Dilate", "Dilate", IJRequirement.BINARY);
 		addIJMenuItem(binarymn, "Open", "Open", IJRequirement.BINARY);
 		addIJMenuItem(binarymn, "Close", "Close", IJRequirement.BINARY);
-		addIJMenuItem(binarymn, "Float Morphology", "Float Morphology", IJRequirement.THIRTYTWOBIT);// missing
-																									// plugin
+		addIJMenuItem(binarymn, "Float Morphology", "Float Morphology", IJRequirement.THIRTYTWOBIT);// missing plugin
 		addIJMenuItem(binarymn, "Outline", "Outline", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
 		addIJMenuItem(binarymn, "Fill Holes", "Fill Holes", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
 		addIJMenuItem(binarymn, "Skeletonize", "Skeletonize", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
@@ -341,7 +339,7 @@ public class XmippMenuBar extends MenuBar
 		addIJMenuItem(processmn, "Gaussian Blur", "Gaussian Blur...");
 		addIJMenuItem(processmn, "Convolve", "Convolve...");
 		addIJMenuItem(processmn, "Median", "Median...");
-		addIJMenuItem(processmn, "FFT", "FFT");// memory error
+		addIJMenuItem(processmn, "FFT", "FFT", IJRequirement.IMAGEJ);// memory error
 		addIJMenuItem(processmn, "Straighten Curved Objects", "Straighten...", IJRequirement.IMAGEJ);
 
 		// advanced drawn menu

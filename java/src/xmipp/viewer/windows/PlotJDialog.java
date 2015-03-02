@@ -33,7 +33,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -67,7 +66,7 @@ public class PlotJDialog extends XmippDialog {
 	private HashMap<ColumnInfo, ColumnInfo.ColumnExtraInfo> rowsExtra;
 	private ColumnsTableModel model;
 	private JTextField tfTitle, tfXLabel, tfYLabel, tfBins;
-	private JCheckBox jchHist;
+	private JComboBox<String> plotTypecb;
 	private JComboBox jcbXAxis;
         private List<ColumnInfo> rows;
 	// This will be used for check for results from the dialog
@@ -77,9 +76,11 @@ public class PlotJDialog extends XmippDialog {
 	JPanel panelEntries;
 	String[] COLORS = { "0000CC", "009900", "CC0000", "000000", "FF6600",
 			"FFFF00", "00CCFF" };
+        String[] plotTypes = new String[]{"Plot", "Histogram", "Scatter"};
+    private JLabel binslb;
 
 	public PlotJDialog(GalleryJFrame parent) {
-		super(parent, "Plot options", false);
+		super(parent, "Plot columns", false);
 
 		rows = new ArrayList<ColumnInfo>();
 		rowsExtra = new HashMap<ColumnInfo, ColumnInfo.ColumnExtraInfo>();
@@ -96,37 +97,47 @@ public class PlotJDialog extends XmippDialog {
 		closeOnAction = false;
 		initComponents();
 	}// constructor ColumnsJDialog
-
-	private void addPair(String text, Component c, int row) {
+        
+        private void addPair(String text, Component c, int row) {
+            addPair(text, c, row, 0);
+        }
+	private void addPair(String text, Component c, int row, int column) {
 		JLabel label = new JLabel(text);
 		gbc.anchor = GridBagConstraints.EAST;
-		panelEntries.add(label, XmippWindowUtil.getConstraints(gbc, 0, row));
+		panelEntries.add(label, XmippWindowUtil.getConstraints(gbc, column, row));
 		gbc.anchor = GridBagConstraints.WEST;
-		panelEntries.add(c, XmippWindowUtil.getConstraints(gbc, 1, row));
+		panelEntries.add(c, XmippWindowUtil.getConstraints(gbc, column + 1, row));
 	}
 
 	protected void createEntries() {
 		tfTitle = new JTextField(20);
-		tfTitle.setText(gallery.data.getFileName());
 		tfXLabel = new JTextField(20);
 		tfYLabel = new JTextField(20);
-		tfBins = new JTextField(10);
-                tfBins.setEnabled(false);
-		jchHist = new JCheckBox();
-                jchHist.addActionListener(new ActionListener() {
+		
+                JPanel plotPanel = new JPanel();
+		plotTypecb = new JComboBox<String>(plotTypes);
+                plotTypecb.addActionListener(new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        tfBins.setEnabled(jchHist.isSelected());
+                        binslb.setVisible(isHistogram());
+                        tfBins.setVisible(isHistogram());
+                        revalidate();
+                        pack();
                     }
                 });
-
+                plotPanel.add(plotTypecb);
+                binslb = new JLabel("Bins");
+                binslb.setVisible(false);
+                tfBins = new JTextField(10);
+                tfBins.setVisible(false);
+                plotPanel.add(binslb);
+                plotPanel.add(tfBins);
 		panelEntries = new JPanel(new GridBagLayout());
 		addPair("Title:", tfTitle, 0);
 		addPair("X label:", tfXLabel, 1);
 		addPair("Y label:", tfYLabel, 2);
-		addPair("Histogram:", jchHist, 3);
-		addPair("Bins: ", tfBins, 4);
+		addPair("Type:", plotPanel, 3);
 		jcbXAxis = new JComboBox();
 		jcbXAxis.addItem("");
 		for (ColumnInfo ci : rows)
@@ -140,6 +151,11 @@ public class PlotJDialog extends XmippDialog {
                     }
                 });
 	}
+        
+        public boolean isHistogram()
+        {
+            return plotTypecb.getSelectedIndex() == 1;
+        }
 
 	@Override
 	protected void createContent(JPanel panel) {
@@ -156,8 +172,7 @@ public class PlotJDialog extends XmippDialog {
 		model = new ColumnsTableModel();
 		tableColumns = new JTable(model);
                 tableColumns.getColumnModel().getColumn(0).setPreferredWidth(250);
-		tableColumns
-				.setPreferredScrollableViewportSize(new Dimension(450, 200));
+		tableColumns.setPreferredScrollableViewportSize(new Dimension(450, 200));
 		sp.setViewportView(tableColumns);
 		panel.add(groupstbpn, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
 		createEntries();
@@ -190,20 +205,24 @@ public class PlotJDialog extends XmippDialog {
 		String styles = "";
 		String markers = "";
 		Boolean checked = false;
-		String ylabel = tfYLabel.getText().trim();
-
+		
+                int plots = 0;
+                ColumnInfo plotci = null;
 		for (ColumnInfo ci: rows) {
 			ColumnInfo.ColumnExtraInfo cei = rowsExtra.get(ci);
 			if (cei.plot) {
+                                plots ++;
 				labels += ci.labelName + " ";
 				colors += "#" + cei.color + " ";
 				styles += cei.linestyle + " ";
 				markers += cei.marker + " ";
 				checked = true;
-				if (ylabel.length() == 0)
-					ylabel = rows.get(0).labelName;
+                                plotci = ci;
 			}
 		}
+                String ylabel = tfYLabel.getText().trim();
+                if(plots ==  1 && ylabel.isEmpty())
+                    ylabel = plotci.labelName;
 
 		if (!checked)
 			return;
@@ -213,8 +232,22 @@ public class PlotJDialog extends XmippDialog {
                         if(parent instanceof ScipionGalleryJFrame)
                         {
                             ScipionParams params = (ScipionParams)gallery.data.parameters;
-                            argsBasic = new String[]{params.python, params.getPlotSqliteScript(), gallery.data.getFileName(), ((ScipionGalleryData)gallery.data).getPreffix(), 
-                                labels, colors, styles, markers, getXColumn(), getYLabel(), getXLabel(), getPlotTitle(), getBins()};
+                            //argsBasic = new String[]{params.python, params.getPlotSqliteScript(), gallery.data.getFileName(), ((ScipionGalleryData)gallery.data).getPreffix(), 
+                              //  labels, colors, styles, markers, getXColumn(), getYLabel(), getXLabel(), getPlotTitle(), getBins()};
+                            ScipionGalleryData data = (ScipionGalleryData)gallery.data;
+                            String orderColumn = "id";
+                            String orderDirection = "ASC";
+                            String[] sortby = data.getSortBy();
+                            if(sortby != null)
+                            {
+                                orderColumn = sortby[0];
+                                orderDirection = sortby[1];
+                            }   
+                            String command = String.format("run function scheduleSqlitePlot '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' %s %s", 
+                                    data.getFileName(), data.getPreffix(), plotTypecb.getSelectedItem(),
+                                labels, colors, styles, markers, getXColumn(), ylabel, getXLabel(), getPlotTitle(), getBins(), orderColumn, orderDirection);
+                            
+                            XmippWindowUtil.runCommand(command, params.port);
                         }
                         else
                         {
@@ -223,10 +256,9 @@ public class PlotJDialog extends XmippDialog {
                                             "--style", styles, "--markers", markers, "--title",
                                             tfTitle.getText().trim(), "--ytitle", ylabel, "--xtitle",
                                             tfXLabel.getText().trim() };
-                            ArrayList<String> argsArray = new ArrayList<String>(
-                                            Arrays.asList(argsBasic));
-
-                            if (jchHist.isSelected()) {
+                            ArrayList<String> argsArray = new ArrayList<String>(Arrays.asList(argsBasic));
+                            
+                            if (isHistogram()) {
                                     argsArray.add("--nbins");
                                     argsArray.add(tfBins.getText().trim());
                             }
@@ -240,10 +272,11 @@ public class PlotJDialog extends XmippDialog {
                                     System.out.print(a + " ");
                             System.out.println("");
                             argsBasic = argsArray.toArray(argsBasic);
+                            String result = XmippWindowUtil.executeCommand(argsBasic, false);
                         }
 			
 			
-			String result = XmippWindowUtil.executeCommand(argsBasic, false);
+			
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -262,10 +295,7 @@ public class PlotJDialog extends XmippDialog {
             return tfXLabel.getText().trim();
         }
         
-        public String getYLabel()
-        {
-            return tfYLabel.getText().trim();
-        }
+       
 
         public String getPlotTitle() {
             return tfTitle.getText();

@@ -1,10 +1,5 @@
 package xmipp.viewer.particlepicker;
 
-import ij.CommandListener;
-import ij.Executer;
-import ij.IJ;
-import ij.ImageListener;
-import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
 import java.awt.Color;
 import java.io.File;
@@ -18,12 +13,10 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
-import xmipp.utils.Params;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
@@ -98,7 +91,10 @@ public abstract class ParticlePicker {
 
     }
     
-    
+    public ParticlePickerParams getParams()
+    {
+        return params;
+    }
     
 
     public String getParticlesAutoBlock(String file) {
@@ -613,11 +609,11 @@ public abstract class ParticlePicker {
      {
          if(params == null)
              return false;
-         return params.script != null && mode != Mode.ReadOnly;
+         return params.port != null && mode != Mode.ReadOnly;
      }
 
-    public String[] getScipionSaveCommand() {
-        String[] cmd = new String[]{params.python, params.script, params.projectid, params.protid};
+    public String getScipionSaveCommand() {
+        String cmd = String.format("run function registerCoords %s %s", params.dbpath, params.protid);
         return cmd;
     }
      

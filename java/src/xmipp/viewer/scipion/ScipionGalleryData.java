@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.ij.commons.Geometry;
-import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -242,6 +241,8 @@ public class ScipionGalleryData extends GalleryData {
         return ((ScipionMetaData) md).getPreffix();
     }
     
+   
+    
         
     @Override
     public void removeCTF(int row) {
@@ -408,8 +409,10 @@ public class ScipionGalleryData extends GalleryData {
     public void runObjectCommand(int index, String objectCommand) {
         try {
             ScipionParams params = (ScipionParams)parameters;
-            String[] cmd = new String[]{params.python, params.getObjectCmdScript(), String.format("'%s'", objectCommand), params.projectid, params.other, String.valueOf(getId(index))};
-            XmippWindowUtil.executeCommand(cmd, false);
+            String command = String.format("run function runObjectCommand '%s' %s %s", objectCommand, params.inputid, getId(index));
+            XmippWindowUtil.runCommand(command, params.port);
+//            String[] cmd = new String[]{params.python, params.getObjectCmdScript(), String.format("'%s'", objectCommand), params.projectid, params.other, String.valueOf(getId(index))};
+//            XmippWindowUtil.executeCommand(cmd, false);
         } catch (Exception ex) {
             Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
         } 

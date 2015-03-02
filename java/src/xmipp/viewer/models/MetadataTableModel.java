@@ -143,7 +143,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                                 String str = md.getValueString(label, data.ids[row]);
                                 if (ci.labelName.contains("_transform._matrix"))
                                     return String.format("<html>%s</html>", XmippUtil.formatNumbers(str).replace("],", "]<br>"));
-                                
+
 				return str;
 			case MetaData.LABEL_VECTOR_DOUBLE:
 			case MetaData.LABEL_VECTOR_SIZET:
@@ -450,7 +450,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				ascending = !ascending;
 			else
 				sortColumnIndex = modelIndex;
-			data.sortMd(data.labels.get(sortColumnIndex).label, ascending);
+			data.sortMd(data.labels.get(sortColumnIndex), ascending);
 			clearSelection();
 			updateTableSelection(table);
 			cache.clear();
