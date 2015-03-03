@@ -261,6 +261,8 @@ class ChimeraClient:
             [index, file] = volfile.split('@'); 
         else :
             file = volfile
+        if ':' in file:
+            file = file[0: file.rfind(':')]
         if not os.path.exists(file):
             raise Exception("File %s does not exists"%file)
         self.kwargs = kwargs
@@ -283,6 +285,8 @@ class ChimeraClient:
         self.spheresColor = self.kwargs.get('spheresColor', 'red')
         spheresDistance = self.kwargs.get('spheresDistance', None)
         spheresMaxRadius = self.kwargs.get('spheresMaxRadius', None)
+        printCmd(spheresDistance)
+        printCmd(spheresMaxRadius)
         self.spheresDistance = float(spheresDistance) if spheresDistance else 0.75 * max(self.xdim, self.ydim, self.zdim)
         self.spheresMaxRadius = float(spheresMaxRadius) if spheresMaxRadius else 0.02 * self.spheresDistance
                
@@ -437,8 +441,7 @@ class ChimeraProjectionClient(ChimeraClient):
 
             
 def printCmd(cmd):
-        timeformat = "%S.%f" 
-        #print datetime.now().strftime(timeformat) + ' %s'%cmd
+        print cmd
         
         
  
