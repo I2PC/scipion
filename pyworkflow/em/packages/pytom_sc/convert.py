@@ -89,7 +89,6 @@ def writeSetOfVolumes(volSet, volXml, volDir):
     from pytom.frm.FRMAlignment import FRMScore
     
     w = SingleTiltWedge()
-    s = FRMScore(0)
     #s = PeakPrior()
     pl = ParticleList()
     ih = em.convert.ImageHandler()
@@ -113,9 +112,13 @@ def writeSetOfVolumes(volSet, volXml, volDir):
         # Make the volumes names relative to the xml file
         # where the programs will be executed
         volRel = os.path.relpath(volFn, os.path.dirname(volXml))
-        p = Particle(volRel)
-        p.setWedge(w)
-        p.setScore(s)
+        p = Particle()
+        pytomInfo = getattr(vol, 'pytomInfo', None)
+        if pytomInfo is None:
+            p.setWedge(w)
+        else:
+            p.fromXML(pytomInfo.get()) # Get stored XML format from PyTom
+        p.setFilename(volRel)
         pl.append(p)
         
     pl.toXMLFile(volXml)
