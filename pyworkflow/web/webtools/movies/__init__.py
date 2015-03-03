@@ -24,7 +24,4 @@
 # *
 # **************************************************************************
 
-# WEBSERVICES IMPORT
-from pyworkflow.web.webtools.myfirstmap.views import *
-from pyworkflow.web.webtools.desktop.views import *
-from pyworkflow.web.webtools.movies.views import *
+from urls import urls
