@@ -216,7 +216,7 @@ class ChimeraClientView(View):
     def __init__(self, inputFile, **kwargs):
         self._inputFile = inputFile
         self._kwargs = kwargs
-        print self._kwargs.get('showProjection')
+
         
     def show(self):
         if self._kwargs.get('showProjection', False):
@@ -252,7 +252,7 @@ class ChimeraViewer(Viewer):
         
 class ChimeraClient:
     
-    def __init__(self, volfile, angulardist=[], voxelSize=None, **kwargs):
+    def __init__(self, volfile, **kwargs):
         
         if volfile is None:
             raise ValueError(volfile)
@@ -260,15 +260,13 @@ class ChimeraClient:
             [index, file] = volfile.split('@'); 
         else :
             file = volfile 
-
+        self.kwargs = kwargs
         self.volfile = volfile
-        self.voxelSize = voxelSize
+        self.voxelSize = self.kwargs.get('voxelSize', None)
         self.address = ''
         self.port = getFreePort()
         
         serverfile = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'em', 'chimera_server.py')
-
-        
         command = CommandView("chimera --script '%s %s'&" % (serverfile, self.port),
                              env=getChimeraEnviron()).show()
         #is port available?
@@ -278,13 +276,12 @@ class ChimeraClient:
         printCmd('initVolumeData')
         self.initVolumeData()   
         
-        if angulardist:
-            self.angulardistfile = angulardist[0]
-            self.spheres_color = angulardist[1]
-            spheres_distance = angulardist[2]
-            spheres_maxradius = angulardist[3]
-            self.spheres_distance = float(spheres_distance) if not spheres_distance == 'default' else 0.75 * max(self.xdim, self.ydim, self.zdim)
-            self.spheres_maxradius = float(spheres_maxradius) if not spheres_maxradius == 'default' else 0.02 * self.spheres_distance
+        self.angularDistFile = self.kwargs.get('angularDistFile', None)
+        self.spheresColor = self.kwargs.get('spheresColor', 'red')
+        spheresDistance = self.kwargs.get('spheresDistance', None)
+        spheresMaxRadius = self.kwargs.get('spheresMaxRadius', None)
+        self.spheresDistance = float(spheresDistance) if spheresDistance else 0.75 * max(self.xdim, self.ydim, self.zdim)
+        self.spheresMaxRadius = float(spheresMaxRadius) if spheresMaxRadius else 0.02 * self.spheresDistance
                
         printCmd('openVolumeOnServer')
         self.openVolumeOnServer(self.vol)
@@ -292,7 +289,7 @@ class ChimeraClient:
     
     def loadAngularDist(self):
 
-        md = xmipp.MetaData(self.angulardistfile)
+        md = xmipp.MetaData(self.angularDistFile)
         angleRotLabel = xmipp.MDL_ANGLE_ROT
         angleTiltLabel = xmipp.MDL_ANGLE_TILT
         anglePsiLabel = xmipp.MDL_ANGLE_PSI
@@ -324,12 +321,12 @@ class ChimeraClient:
             weight = md.getValue(xmipp.MDL_WEIGHT, id)
             weight = (weight - minweight)/interval
             x, y, z = xmipp.Euler_direction(rot, tilt, psi)
-            radius = weight * self.spheres_maxradius
+            radius = weight * self.spheresMaxRadius
 
-            x = x * self.spheres_distance + x2
-            y = y * self.spheres_distance + y2
-            z = z * self.spheres_distance + z2
-            command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheres_color)
+            x = x * self.spheresDistance + x2
+            y = y * self.spheresDistance + y2
+            z = z * self.spheresDistance + z2
+            command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheresColor)
 
             self.angulardist.append(command)    
             printCmd(command)
@@ -343,7 +340,7 @@ class ChimeraClient:
         self.send('open_volume', volume)
         if not self.voxelSize is None:
             self.send('voxelSize', self.voxelSize)
-        if hasattr(self, 'angulardistfile'):
+        if self.angularDistFile:
             self.loadAngularDist()
             self.send('draw_angular_distribution', self.angulardist)
         self.client.send('end')
@@ -384,24 +381,20 @@ class ChimeraClient:
 
 class ChimeraProjectionClient(ChimeraClient):
     
-    def __init__(self, volfile, angulardist=[], size='default', padding_factor=1, max_freq=0.5, spline_degree=2, voxelSize=None, **kwargs):
-        ChimeraClient.__init__(self, volfile, angulardist, voxelSize)
+    def __init__(self, volfile, **kwargs):
+        ChimeraClient.__init__(self, volfile, **kwargs)
         self.projection = xmipp.Image()
         self.projection.setDataType(xmipp.DT_DOUBLE)
         #0.5 ->  Niquiest frequency
         #2 -> bspline interpolation
-        #print 'creating Fourier Projector'
-        
-        self.fourierprojector = xmipp.FourierProjector(self.image, padding_factor, max_freq, spline_degree)
-        self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
-        
-        if size == 'default':
-            self.size = self.xdim if self.xdim > 128 else 128
-        else:
-            self.size = float(size) 
 
+        self.size = self.kwargs.get('size', self.xdim if self.xdim > 128 else 128)
+        paddingFactor = self.kwargs.get('paddingFactor', 1)
+        maxFreq = self.kwargs.get('maxFreq', 0.5)
+        splineDegree = self.kwargs.get('splineDegree', 2)
+        self.fourierprojector = xmipp.FourierProjector(self.image, paddingFactor, maxFreq, splineDegree)
+        self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
         self.iw = ImageWindow(filename=os.path.basename(volfile),image=self.projection, dim=self.size, label="Projection")
-        
         self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
         self.iw.show()
 

@@ -618,7 +618,7 @@ Examples:
             file_name = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
             file_name_rec_filt = self.protocol._getFileName('reconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
             #args = "--input '%s' --mode projector 256 -a %s red %f" %(file_name_rec_filt, file_name, radius)
-            return ChimeraClientView(file_name_rec_filt, showProjection=True, angulardist=[file_name, 'red', 'default', radius])
+            return ChimeraClientView(file_name_rec_filt, showProjection=True, angularDistFile=file_name, spheresDistance=radius)
         else:
             return self.infoMessage('Please select only one class to display angular distribution')
     
