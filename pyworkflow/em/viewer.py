@@ -43,6 +43,7 @@ import sys
 from pyworkflow.utils import getFreePort
 from os import system
 from pyworkflow.gui.matplotlib_image import ImageWindow
+import os.path
 
 # PATH is used by app/em_viewer.py
 
@@ -259,7 +260,11 @@ class ChimeraClient:
         if '@' in volfile:
             [index, file] = volfile.split('@'); 
         else :
-            file = volfile 
+            file = volfile
+        if ':' in file:
+            file = file[0: file.rfind(':')]
+        if not os.path.exists(file):
+            raise Exception("File %s does not exists"%file)
         self.kwargs = kwargs
         self.volfile = volfile
         self.voxelSize = self.kwargs.get('voxelSize', None)
@@ -280,6 +285,8 @@ class ChimeraClient:
         self.spheresColor = self.kwargs.get('spheresColor', 'red')
         spheresDistance = self.kwargs.get('spheresDistance', None)
         spheresMaxRadius = self.kwargs.get('spheresMaxRadius', None)
+        printCmd(spheresDistance)
+        printCmd(spheresMaxRadius)
         self.spheresDistance = float(spheresDistance) if spheresDistance else 0.75 * max(self.xdim, self.ydim, self.zdim)
         self.spheresMaxRadius = float(spheresMaxRadius) if spheresMaxRadius else 0.02 * self.spheresDistance
                
@@ -434,8 +441,7 @@ class ChimeraProjectionClient(ChimeraClient):
 
             
 def printCmd(cmd):
-        timeformat = "%S.%f" 
-        #print datetime.now().strftime(timeformat) + ' %s'%cmd
+        print cmd
         
         
  

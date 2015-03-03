@@ -31,7 +31,7 @@ from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-
+from pyworkflow.em import ChimeraClientView
 from pyworkflow.viewer import CommandView
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
@@ -443,9 +443,8 @@ Examples:
             f.close()
             view = CommandView('chimera %s &' % cmdFile)                    
         else:
-            from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
             #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
-            view = ChimeraClient(volumes[0])
+            view = ChimeraClientView(volumes[0])
             
         return [view]
             
@@ -492,8 +491,7 @@ Examples:
                 volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
                 if exists(volFn.replace(":mrc","")):
                     angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
-                    from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
-                    return ChimeraClient(volFn, angularDist=angDistFile, radius=radius, sphere=sphere)
+                    return ChimeraClientView(volFn, angularDistFile=angDistFile, spheresDistance=radius)
                 else:
                     raise Exception("This class is Empty. Please try with other class")
         
@@ -660,9 +658,8 @@ class PostprocessViewer(ProtocolViewer):
     
     def _showVolumesChimera(self, volPath):
         """ Create a chimera script to visualize selected volumes. """
-        from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
         #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volPath)
-        view = ChimeraClient(volPath)
+        view = ChimeraClientView(volPath)
         return [view]
             
     def _showVolume(self, paramName=None):
