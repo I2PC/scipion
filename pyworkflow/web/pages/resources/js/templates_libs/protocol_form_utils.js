@@ -249,10 +249,10 @@ function evalElements() {
 		var type = $(this).attr('data-type');
 		
 		// DEBUG -----------------------------
-		var debug_param = "PARAM:"+param;
-		var debug_value = "VALUE:"+value;
-		var debug_type = "TYPE:"+type;
-		console.log(debug_param + ", " +debug_value + ", " +debug_type);
+//		var debug_param = "PARAM:"+param;
+//		var debug_value = "VALUE:"+value;
+//		var debug_type = "TYPE:"+type;
+//		console.log(debug_param + ", " +debug_value + ", " +debug_type);
 		
 		switch (type){
 		// Depending of the parameter type is processed
@@ -317,7 +317,7 @@ function setParamValue(paramId, value) {
 	var newLevel = $("input[name=expertLevel]:checked").val();
 	 
 	// DEBUG
-	console.log("PARAM TO EVALUATE: " + paramId + " WITH LEVEL: " + newLevel)
+//	console.log("PARAM TO EVALUATE: " + paramId + " WITH LEVEL: " + newLevel)
 	
 	// Evaluate the dependencies for the new expert level and the row affected
 	evalDependencies(row, newLevel);
@@ -371,7 +371,7 @@ function evalDependencies(row, newLevel) {
 	// Get dependencies for the parameter
 	var dependencies = row.attr('data-depen');
 	
-	console.log("Dependencies:", dependencies)
+//	console.log("Dependencies:", dependencies)
 
 	if (dependencies != undefined && dependencies.length > 0) {
 		
@@ -382,7 +382,7 @@ function evalDependencies(row, newLevel) {
 			// Get params affected with the dependencies
 			var row2 = $("tr#" + arrayDepends[cont]);
 			
-			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
+//			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
 
 			// Evaluate the new parameter affected
 			var res = evalCondition(row2);
