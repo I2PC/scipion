@@ -37,7 +37,6 @@ from showj import (runJavaIJapp, ZOOM, ORDER, VISIBLE,
                    MODE, PATH, TABLE_NAME, MODE_MD, RENDER)
 from threading import Thread
 from multiprocessing.connection import Client
-from pickle import loads
 from numpy import array, flipud
 import xmipp
 import sys
@@ -217,12 +216,13 @@ class ChimeraClientView(View):
     def __init__(self, inputFile, **kwargs):
         self._inputFile = inputFile
         self._kwargs = kwargs
+        print self._kwargs.get('showProjection')
         
     def show(self):
         if self._kwargs.get('showProjection', False):
-            ChimeraClient(self._inputFile, **self._kwargs)
-        else:
             ChimeraProjectionClient(self._inputFile, **self._kwargs)
+        else:
+            ChimeraClient(self._inputFile, **self._kwargs)
         
         
 class ChimeraViewer(Viewer):
@@ -266,7 +266,7 @@ class ChimeraClient:
         self.address = ''
         self.port = getFreePort()
         
-        serverfile = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'em', 'xmipp_chimera_server.py')
+        serverfile = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'em', 'chimera_server.py')
 
         
         command = CommandView("chimera --script '%s %s'&" % (serverfile, self.port),
@@ -386,7 +386,6 @@ class ChimeraProjectionClient(ChimeraClient):
     
     def __init__(self, volfile, angulardist=[], size='default', padding_factor=1, max_freq=0.5, spline_degree=2, voxelSize=None, **kwargs):
         ChimeraClient.__init__(self, volfile, angulardist, voxelSize)
-        
         self.projection = xmipp.Image()
         self.projection.setDataType(xmipp.DT_DOUBLE)
         #0.5 ->  Niquiest frequency
@@ -423,7 +422,7 @@ class ChimeraProjectionClient(ChimeraClient):
     def answer(self, msg):
         ChimeraClient.answer(self, msg)
         if msg == 'motion_stop':
-            data = loads(self.client.recv())#wait for data
+            data = self.client.recv()#wait for data
             printCmd('reading motion')
             self.motion = array(data)
             printCmd('getting euler angles')
