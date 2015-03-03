@@ -58,7 +58,12 @@ class RelionPartMaskRadiusWeb(RelionPartMaskDiameterWizard):
             if len(particles) == 0:
                 return HttpResponse("errorIterate")
             
-            xdim = getImageXdim(request, particles[0].text)
+            # getting dimension in Pixels
+            xdim = getImageXdim(request, particles[0].text) 
+            
+            # get sampling rate from the first particle
+#             samplingRate = self.firstItem.getSamplingRate()
+#             print "Sampling Rate: ",samplingRate
             
             params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
             

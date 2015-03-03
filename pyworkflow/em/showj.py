@@ -259,12 +259,10 @@ def runJavaIJapp(memory, appName, args, env={}):
 
 def launchSupervisedPickerGUI(memory, micsFn, outputDir, mode, dbpath, protid, port):
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        #args = "--input %s --output %s --mode %s  --scipion %s \"%s\" %s"%(micsFn, outputDir, mode, dbpath, protid, port)
-        args = "--input %s --output %s --mode %s  "%(micsFn, outputDir, mode )
+        args = "--input %s --output %s --mode %s  --scipion %s \"%s\" %s"%(micsFn, outputDir, mode, dbpath, protid, port)
         return runJavaIJapp("%dg" % memory, app, args)
 
 def launchTiltPairPickerGUI(memory, micsFn, outputDir, mode, dbpath, protid, port):
         app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
-        #args = "--input %s --output %s --mode %s  --scipion %s \"%s\" %s"%(micsFn, outputDir, mode, dbpath, protid, port)
-        args = "--input %s --output %s --mode %s  "%(micsFn, outputDir, mode)
+        args = "--input %s --output %s --mode %s  --scipion %s \"%s\" %s"%(micsFn, outputDir, mode, dbpath, protid, port)
         return runJavaIJapp("%dg" % memory, app, args)

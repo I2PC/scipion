@@ -371,9 +371,8 @@ class XmippViewer(Viewer):
             plotLabels = 'plotPolar._filename plotCart._filename'
             labels = plotLabels + ' _filename '
             objCommands = "'%s' '%s' '%s'" % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
-
-
-            self._views.append(ObjectView(self._project, self.protocol.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
+            
+            self._views.append(ObjectView(self._project, obj.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
                                                       ORDER: labels, VISIBLE: labels, RENDER: plotLabels, 'zoom': 50,
                                                       OBJCMDS: objCommands}))
 
@@ -388,6 +387,7 @@ class ChimeraClient(CommandView):
     """ View for calling an external command. """
     def __init__(self, inputFile, projectionSize=256, 
                  angularDist=None, radius=None, sphere=None, **kwargs):
+
         cmd = 'xmipp_chimera_client --input "%(inputFile)s" --mode projector %(projectionSize)d' % locals()
         if angularDist:
             cmd += ' -a %(angularDist)s red %(radius)f' % locals() 

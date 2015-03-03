@@ -73,8 +73,8 @@ class ProtResMap(ProtAnalysis3D):
                       help='Select a volume to apply as a mask.')
         
         line = form.addLine('Pre-whitening')
-        line.addParam('prewhitenAng', FloatParam, label="Angstroms")
-        line.addParam('prewhitenRamp', FloatParam, label='Ramp')                      
+        line.addParam('prewhitenAng', FloatParam, default=0, label="Angstroms")
+        line.addParam('prewhitenRamp', FloatParam, default=0, label='Ramp')                      
         
         group = form.addGroup('Extra parameters')
         #form.addSection(label='Optional')

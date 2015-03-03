@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,40 +23,5 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This modules contains constants related to EM
-"""
-#------------------ Constants values --------------------------------------
 
-NO_INDEX = 0  # This is the index value for single images
-    
-
-# Sampling rate input modes
-SAMPLING_FROM_IMAGE = 0
-SAMPLING_FROM_SCANNER = 1
-
-# This is the name for track which data is the source of others
-RELATION_SOURCE = 'relation_datasource'
-RELATION_TRANSFORM = 'relation_transform'
-RELATION_CTF = 'relation_ctf'
-
-UNIT_PIXEL = 'px'
-UNIT_PIXEL_FOURIER = '1/px'
-UNIT_ANGSTROM = 'A'
-UNIT_ANGSTROM_FOURIER = '1/A'
-
-# Fourier Filter options
-FILTER_LOW_PASS = 0
-FILTER_HIGH_PASS = 1
-FILTER_BAND_PASS = 2
-FILTER_GAUSSIAN = 3
-FILTER_LOW_PASS_NO_DECAY = 4
-FILTER_NO_DECAY = 5
-
-# Transform
-ALIGN_NONE = 'None'
-ALIGN_2D   = '2D'         # 2D image alignment
-ALIGN_3D   = '3D'         # 3D map alignment
-ALIGN_PROJ = 'Projection' # relate projections with 3d map
-
-ALIGNMENTS = [ALIGN_NONE, ALIGN_2D, ALIGN_3D, ALIGN_PROJ]
+from urls import urls

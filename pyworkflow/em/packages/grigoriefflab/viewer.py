@@ -26,11 +26,16 @@
 """
 Visualization of the results of the Frealign protocol.
 """
-from os.path import exists
-from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import *
+import os
+from os.path import exists, relpath
+from pyworkflow.utils.path import cleanPath
+from pyworkflow.viewer import (Viewer, ProtocolViewer, DESKTOP_TKINTER,
+                               WEB_DJANGO, CommandView)
+import pyworkflow.em as em
 from pyworkflow.em.plotter import EmPlotter
-from pyworkflow.protocol.params import LabelParam
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
+from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
+                                        EnumParam, BooleanParam, FloatParam)
 
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
@@ -38,8 +43,17 @@ from protocol_ctffind3 import ProtCTFFind, ProtRecalculateCTFFind
 
 
 LAST_ITER = 0
-ALL_ITER = 1
+ALL_ITERS = 1
 SELECTED_ITERS = 2
+
+ANGDIST_2DPLOT = 0
+ANGDIST_CHIMERA = 1
+
+VOLUME_SLICES = 0
+VOLUME_CHIMERA = 1
+
+CLASSES_ALL = 0
+CLASSES_SEL = 1
 
 
 class FrealignViewer(ProtocolViewer):
@@ -49,11 +63,12 @@ class FrealignViewer(ProtocolViewer):
     _targets = [ProtFrealign, ProtFrealignClassify]    
     
     def _defineParams(self, form):
+        self._env = os.environ.copy()
         form.addSection(label='Results per Iteration')
         form.addParam('iterToShow', EnumParam, label="Which iteration do you want to visualize?", default=0, 
                       choices=['last','all','selection'], display=EnumParam.DISPLAY_LIST)
-        form.addParam('selectedIters', StringParam, default='',
-              label='Selected iterations', condition='iterToShow==2',
+        form.addParam('selectedIters', NumericRangeParam, default='1',
+              label='Selected iterations', condition='iterToShow==%d' % SELECTED_ITERS,
               help="""
 *last*: only the last iteration will be visualized.
 *all*: all iterations  will be visualized.
@@ -61,79 +76,455 @@ class FrealignViewer(ProtocolViewer):
 Examples:
 "1,5-8,10" -> [1,5,6,7,8,10]
 "2,6,9-11" -> [2,6,9,10,11]
-"2 5, 6-8" -> [2,5,6,7,8]                      
+"2 5, 6-8" -> [2,5,6,7,8]                    
                    """)
-        form.addParam('doShow3DRefsVolumes', LabelParam, label="Visualize the 3D-references volumes?", default=True)
-        form.addParam('doShow3DReconsVolumes', LabelParam, label="Visualize the 3D-reconstructed volumes?", default=True)
-        form.addParam('doShow3DMatchProj', LabelParam, label="Visualize the matching projections of refinement?", default=True)
-        form.addParam('doShowAngDist', LabelParam, label="Plot angular distribution?", default=True)
-#         form.addParam('doShowDataDist', LabelParam, label="Plot data distribution over 3d-references?", default=True)
+        group = form.addGroup('Particles')
         
-#         form.addSection(label='Overall Results')
-#         form.addParam('doShowStatistics', BooleanParam, label="Plot overall convergence statistics?", default=True)
+        if self.protocol.IS_REFINE:
+            group.addParam('showImagesAngularAssignment', LabelParam,
+                           label='Particles angular assignment')
+            group.addParam('show3DMatchProj', LabelParam, condition=self.protocol.writeMatchProjections,
+                           label="Visualize the matching projections of refinement")
+        else:
+            group.addParam('showImagesInClasses', LabelParam,
+                          label='Particles assigned to each Class', important=True,
+                          help='Display the classes and the images associated.')
+        
+        group = form.addGroup('Volumes')
+        
+        if not self.protocol.IS_REFINE:
+            group.addParam('showClasses3D', BooleanParam, default=CLASSES_ALL,
+                           choices=['all', 'selection'], 
+                           display=EnumParam.DISPLAY_LIST,
+                           label='CLASS 3D to visualize',
+                           help='')
+            group.addParam('class3DSelection', NumericRangeParam, default='1',
+                          condition='showClasses3D == %d' % CLASSES_SEL,
+                          label='Classes list',
+                          help='')
+        
+        group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
+              default=VOLUME_SLICES, display=EnumParam.DISPLAY_COMBO, 
+              label='Display volume with',
+              help='*slices*: display volumes as 2D slices along z axis.\n'
+                   '*chimera*: display volumes as surface with Chimera.')
+        
+        group = form.addGroup('Angular distribution and resolution plots')
+        
+        group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
+              default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_COMBO, 
+              label='Display angular distribution',
+              help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
+                   '*chimera*: display angular distribution using Chimera with red spheres.') 
+        
+        group.addParam('resolutionPlotsSSNR', LabelParam, default=True,
+                      label='Display SSNR plots',condition=self.protocol.doAditionalStatisFSC,
+                      help='Display signal to noise ratio plots (SSNR) ')
+        group.addParam('resolutionPlotsFSC', LabelParam, default=True,
+                      label='Display resolution plots (FSC)',
+                      help='')
+        group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Threshold in resolution plots',
+                      help='')
     
     def _getVisualizeDict(self):
-        return {'doShow3DRefsVolumes': self._view3DRefsVolumes,
-                'doShow3DReconsVolumes': self._view3DReconVolumes,
-                'doShow3DMatchProj': self._viewMatchProj,
-                'doShowAngDist': self._plotAngularDistribution,
-#                'doShowDataDist': self_showDataDist
+        self._load()
+        return {'showImagesInClasses': self._showImagesInClasses,
+                'showImagesAngularAssignment' : self._showImagesAngularAssignment,
+                'show3DMatchProj': self._viewMatchProj,
+                'displayVol': self._showVolumes,
+                'displayAngDist': self._showAngularDistribution,
+                'resolutionPlotsSSNR': self._showSSNR,
+                'resolutionPlotsFSC': self._showFSC
                 }
-    
-    def _viewAll(self, *args):
-        pass
-#         if self.doShow3DRefsVolumes:
-#             self._view3DRefsVolumes()
-#         if self.doShow3DReconsVolumes:
-#             self._view3DReconVolumes()
-#         if self._doShow3DMatchProj:
-#             self._viewMatchProj()
-#         if self.doShowAngDist:
-#             self._plotAngularDistribution()
-    
-    def _view3DRefsVolumes(self, e=None):
-        files = self._getIterationFile("reference_volume_iter_%03d.mrc")
-        path = self.protocol._getExtraPath('viewer_refvolumes.sqlite')
-        samplingRate = self.protocol.inputParticles.get().getSamplingRate()
-        self.createVolumesSqlite(files, path, samplingRate)
-        return [ObjectView(self._project, self.protocol.strId(), path)]
-        
-    def _view3DReconVolumes(self, e=None):
-        files = self._getIterationFile("volume_iter_%03d.mrc")
-        path = self.protocol._getExtraPath('viewer_volumes.sqlite')
-        samplingRate = self.protocol.inputParticles.get().getSamplingRate()
-        self.createVolumesSqlite(files, path, samplingRate)
-        return [ObjectView(self._project, self.protocol.strId(), path)]
-    
-    def _viewMatchProj(self, e=None):
-        files = self._getIterationFile("particles_match_iter_%03d.mrc")
-        return [self.createDataView(files[0])]
-    
-    def _plotAngularDistribution(self, e=None):
-        """ Plot the angular distributions for each reference and each iteration.
-        Returns:
-            views: a list of all angular distribution plots or some errors.
+
+#===============================================================================
+# showImagesInClasses     
+#===============================================================================
+            
+    def _showImagesInClasses(self, paramName=None):
+        """ Read frealign .par images file and 
+        generate a new SetOfClasses3D.
+        If the new metadata was already written, it is just shown.
         """
         views = []
-        errors = self.setVisualizeIterations()
         
-        if len(errors) == 0:
-            for iteration in self.visualizeIters:
-                pathFile = self.protocol._getExtraPath("iter_%03d" % iteration, "particles_iter_%03d.par" % iteration)
-                print pathFile
-                
-                if not os.path.exists(pathFile):
-                    errors.append('Iteration %s does not exist.' % iteration)
-                else:
-                    xplotter = self._createIterAngularDistributionPlot(iteration, pathFile)
-                    views.append(xplotter)
-                    
-        if errors:
-            views.append(self.errorMessage('\n'.join(errors), "Visualization errors"))
+        for it in self._iterations:
+            fn = self._getIterClasses(it)
+            v = self.createScipionView(fn)
+            views.append(v)
+        
+        return views
 
+#===============================================================================
+# showImagesAngularAssignment     
+#===============================================================================
+
+    def _showImagesAngularAssignment(self, paramName=None):
+        
+        views = []
+        
+        for it in self._iterations:
+            fn = self._getIterData(it)
+            v = self.createScipionPartView(fn)
+            views.append(v)
+        
+        return views
+
+#===============================================================================
+# show3DMatchProj     
+#===============================================================================
+    
+    def _viewMatchProj(self, paramName=None):
+        views = []
+        for it in self._iterations:
+            files = self.protocol._getFileName('match', iter=it)
+            v = self.createDataView(files)
+            views.append(v)
         return views
     
-    def _createIterAngularDistributionPlot(self, iteration, pathFile):
+#===============================================================================
+# ShowVolumes
+#===============================================================================
+    def _showVolumes(self, paramName=None):
+        if self.displayVol == VOLUME_CHIMERA:
+            return self._showVolumesChimera()
+        
+        elif self.displayVol == VOLUME_SLICES:
+            return self._createVolumesSqlite()
+    
+    def _createVolumesSqlite(self):
+        """ Write an sqlite with all volumes selected for visualization. """
+
+        path = self.protocol._getExtraPath('frealign_viewer_volumes.sqlite')
+        samplingRate = self.protocol.inputParticles.get().getSamplingRate()
+
+        files = []
+        if self.protocol.IS_REFINE:
+            for it in self._iterations:
+                volFn = self.protocol._getFileName('iter_vol', iter=it)
+                if exists(volFn):
+                    files.append(volFn)
+        else:
+            for it in self._iterations:
+                for ref3d in self._refsList:
+                    volFn = self.protocol._getFileName('iter_vol_class', iter=it, ref3d=ref3d)
+                if exists(volFn):
+                    files.append(volFn)
+        
+        self.createVolumesSqlite(files, path, samplingRate)
+        return [em.ObjectView(self._project, self.protocol.strId(), path)]
+    
+    def _showVolumesChimera(self):
+        """ Create a chimera script to visualize selected volumes. """
+        volumes = []
+        if self.protocol.IS_REFINE:
+            for it in self._iterations:
+                volFn = self.protocol._getFileName('iter_vol', iter=it)
+                volumes.append(volFn)
+        else:
+            for it in self._iterations:
+                for ref3d in self._refsList:
+                    volFn = self.protocol._getFileName('iter_vol_class', iter=it, ref3d=ref3d)
+                    volumes.append(volFn)
+        
+        if len(volumes) > 1:
+            cmdFile = self.protocol._getExtraPath('chimera_volumes.cmd')
+            f = open(cmdFile, 'w+')
+            for vol in volumes:
+                localVol = relpath(vol, self.protocol._getExtraPath())
+                if exists(vol):
+                    f.write("open %s\n" % localVol)
+            f.write('tile\n')
+            f.close()
+            view = CommandView('chimera %s &' % cmdFile)                    
+        else:
+            from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
+            #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
+            view = ChimeraClient(volumes[0])
+            
+        return [view]
+    
+#===============================================================================
+# showAngularDistribution
+#===============================================================================
+    def _showAngularDistribution(self, paramName=None):
+        views = []
+        
+        if self.displayAngDist == ANGDIST_CHIMERA:
+            for it in self._iterations:
+                views.append(self._createAngDistChimera(it))
+                        
+        elif self.displayAngDist == ANGDIST_2DPLOT:
+            for it in self._iterations:
+                plot = self._createAngDist2D(it)
+                if isinstance(plot, EmPlotter):
+                    views.append(plot)
+        return views
+    
+    def _createAngDistChimera(self, it):
+        pass
+#         # FIXME
+#         #outerRadius = int(float(self.maskDiameterA)/self.SamplingRate)
+#         outerRadius = 30
+#         radius = float(outerRadius) * 1.1
+#         # Common variables to use
+#         sphere = self.spheresScale.get()
+#         prefixes = self._getPrefixes()
+# 
+#         data_angularDist = self.protocol._getIterAngularDist(it)
+# 
+#         if len(self._refsList) == 1:
+#             # If just one reference we can show the angular distribution
+#             ref3d = self._refsList[0]
+#             for prefix in prefixes:
+#                 volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+#                 if exists(volFn.replace(":mrc","")):
+#                     angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
+#                     from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
+#                     return ChimeraClient(volFn, angularDist=angDistFile, radius=radius, sphere=sphere)
+#                 else:
+#                     raise Exception("This class is Empty. Please try with other class")
+#         
+#         else:
+#             return self.infoMessage("Please select only one class to display angular distribution",
+#                                     "Input selection") 
+    
+    def _createAngDist2D(self, it):
+        nrefs = len(self._refsList)
+        gridsize = self._getGridSize(nrefs)
+        
+        if self.protocol.IS_REFINE:
+            data_angularDist = self.protocol._getFileName("output_par", iter=it)
+            if exists(data_angularDist):
+                xplotter = EmPlotter(x=gridsize[0], y=gridsize[1],
+                                    mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
+                plot_title = 'iter %d' % it
+                phi, theta = self._getAngularDistribution(data_angularDist)
+                xplotter.plotAngularDistribution(plot_title, phi, theta)
+                return xplotter
+            else:
+                return
+        else:
+            for ref3d in self._refsList:
+                data_angularDist = self.protocol._getFileName("output_par_class", iter=it, ref=ref3d)
+                if exists(data_angularDist):
+                    xplotter = EmPlotter(x=gridsize[0], y=gridsize[1],
+                                        mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
+                    plot_title = 'class %d' % ref3d
+                    phi, theta = self._getAngularDistribution(data_angularDist)
+                    xplotter.plotAngularDistribution(plot_title, phi, theta)
+            return xplotter
+    
+#===============================================================================
+# plotFSC
+#===============================================================================
+    def _showFSC(self, paramName=None):
+        threshold = self.resolutionThresholdFSC.get()
+        nrefs = len(self._refsList)
+        gridsize = self._getGridSize(nrefs)
+        xplotter = EmPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
+        
+        if self.protocol.IS_REFINE:
+            plot_title = 'FSC'
+            a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'FSC', yformat=False)
+            legends = []
+            
+            show = False
+            for it in self._iterations:
+                parFn = self.protocol._getFileName('output_vol_par', iter=it)
+                if exists(parFn):
+                    show = True
+                    self._plotFSC(a, parFn)
+                    legends.append('iter %d' % it)
+            xplotter.showLegend(legends)
+            if show:
+                if threshold < self.maxFrc:
+                    a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+                a.grid(True)
+            else:
+                raise Exception("Set a valid iteration to show its FSC")
+        else:
+            for ref3d in self._refsList:
+                plot_title = 'class %s' % ref3d
+                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'FSC', yformat=False)
+                legends = []
+                
+                for it in self._iterations:
+                    parFn = self.protocol._getFileName('output_vol_par_class', iter=it, ref=ref3d)
+                    if exists(parFn):
+                        self._plotFSC(a, parFn)
+                        legends.append('iter %d' % it)
+                xplotter.showLegend(legends)
+                if show:
+                    if threshold < self.maxFrc:
+                        a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+                    a.grid(True)
+                else:
+                    raise Exception("Set a valid iteration to show its FSC")
+        
+        return [xplotter]
+    
+    def _plotFSC(self, a, parFn):
+        resolution_inv = self._getColunmFromFilePar(parFn, 2, invert=True)
+        frc = self._getColunmFromFilePar(parFn, 5)
+        self.maxFrc = max(frc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
+        
+# #===============================================================================
+# # plotSSNR              
+# #===============================================================================
+    def _showSSNR(self, paramName=None):
+        nrefs = len(self._refsList)
+        gridsize = self._getGridSize(nrefs)
+        xplotter = EmPlotter(x=gridsize[0], y=gridsize[1])
+         
+        for ref3d in self._refsList:
+            plot_title = 'Resolution SSNR, for Class %s' % ref3d
+            a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'sqrt(SSNR)', yformat=False)
+            legendName = []
+            for it in self._iterations:
+                if self.protocol.IS_REFINE:
+                    fn = self.protocol._getFileName('output_vol_par', iter=it)
+                else:
+                    fn = self.protocol._getFileName('output_vol_par_class', iter=it, ref=ref3d)
+                if exists(fn):
+                    self._plotSSNR(a, fn)
+                legendName.append('iter %d' % it)
+            xplotter.showLegend(legendName)
+            a.grid(True)
+         
+        return [xplotter]
+    
+    def _plotSSNR(self, a, parFn):
+        resolution_inv = self._getColunmFromFilePar(parFn, 2, invert=True)
+        frc = self._getColunmFromFilePar(parFn, 8)
+        
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)               
+  
+#===============================================================================
+# Utils Functions
+#===============================================================================
+    def _load(self):
+        """ Load selected iterations and classes 3D for visualization mode. """
+        self._refsList = [1] 
+        if not self.protocol.IS_REFINE:
+            if self.showClasses3D == CLASSES_ALL:
+                self._refsList = range(1, self.protocol.numberOfClasses.get()+1)
+            else:
+                self._refsList = self._getListFromRangeString(self.class3DSelection.get())
+        
+        self.protocol._createFilenameTemplates() # Load filename templates
+        self.lastIter = self.protocol._getLastIter()
+        self._iterations = []
+        
+        if self.iterToShow.get() == LAST_ITER:
+            self._iterations = [self.lastIter]
+            
+        elif self.iterToShow.get() == ALL_ITERS:
+            self._iterations = range(1, self.lastIter + 1)
+        elif self.iterToShow.get() == SELECTED_ITERS:
+            self._iterations = self._getListFromRangeString(self.selectedIters.get())
+            
+        from matplotlib.ticker import FuncFormatter
+        self._plotFormatter = FuncFormatter(self._formatFreq) 
+    
+    def _validate(self):
+        if self.lastIter is None:
+            return ['There are not iterations completed.'] 
+    
+    def createDataView(self, filename, viewParams={}):
+        return em.DataView(filename, env=self._env, viewParams=viewParams)
+    
+    def createScipionView(self, filename, viewParams={}):
+        inputParticlesId = self.protocol.inputParticles.get().strId()
+        return em.Classes3DView(self._project,
+                                self.protocol.strId(), filename, other=inputParticlesId,
+                                env=self._env, viewParams=viewParams)
+        
+    def createScipionPartView(self, filename, viewParams={}):
+        inputParticlesId = self.protocol.inputParticles.get().strId()
+        
+        labels =  'enabled id _size _filename _transform._matrix'
+        viewParams = {em.ORDER:labels,
+                      em.VISIBLE: labels, em.RENDER:'_filename',
+                      'labels': 'id',
+                      }
+        return em.ObjectView(self._project,  self.protocol.strId(),
+                             filename, other=inputParticlesId,
+                             env=self._env, viewParams=viewParams)
+    
+    def _formatFreq(self, value, pos):
+        """ Format function for Matplotlib formatter. """
+        inv = 999.
+        if value:
+            inv = 1/value
+        return "1/%0.2f" % inv
+    
+    def _getGridSize(self, n=None):
+        """ Figure out the layout of the plots given the number of references. """
+        if n is None:
+            n = len(self._refsList)
+        
+        if n == 1:
+            gridsize = [1, 1]
+        elif n == 2:
+            gridsize = [2, 1]
+        else:
+            gridsize = [(n+1)/2, 2]
+            
+        return gridsize
+    
+    def _getIterClasses(self, it, clean=False):
+        """ Return the file with the classes for this iteration.
+        If the file doesn't exists, it will be created. 
+        """
+        from convert import readSetOfClasses3D
+        
+        dataClasses = self.protocol._getFileName('classes_scipion', iter=it)
+        
+        if clean:
+            cleanPath(dataClasses)
+        
+        if not exists(dataClasses):
+            fileparList = []
+            volumeList = []
+            for ref in self._refsList:
+                filepar = self.protocol._getFileName('output_par_class', iter=it, ref=ref)
+                volFn = self.protocol._getFileName('iter_vol_class', iter=it, ref=ref)
+                fileparList.append(filepar)
+                volumeList.append(volFn)
+            
+            clsSet = em.SetOfClasses3D(filename=dataClasses)
+            clsSet.setImages(self.inputParticles.get())
+            readSetOfClasses3D(clsSet, fileparList, volumeList)
+            clsSet.write()
+            clsSet.close()
+
+        return dataClasses
+    
+    def _getIterData(self, it, **kwargs):
+        from convert import readSetOfParticles
+        
+        imgSqlite = self.protocol._getFileName('data_scipion', iter=it)
+        
+        if not exists(imgSqlite):
+            imgPar = self.protocol._getFileName('output_par', iter=it)
+            
+            cleanPath(imgSqlite)
+            imgSet = em.SetOfParticles(filename=imgSqlite)
+            readSetOfParticles(self.protocol.inputParticles.get(), imgSet, imgPar)
+            imgSet.write()
+            
+        return imgSqlite
+    
+    def _getAngularDistribution(self, pathFile):
         # Create Angular plot for one iteration
         file = open(pathFile)
         phi = []
@@ -144,134 +535,121 @@ Examples:
                 lineList = line.split()
                 phi.append(float(lineList[3]))
                 theta.append(float(lineList[2]))
-        gridsize = [1, 1]
-        figsize = (4, 4)
-        xplotter = EmPlotter(*gridsize, figsize=figsize, 
-                                windowTitle="Angular distribution - iteration %d" % iteration)
-        plot_title = 'iter %d' % iteration
+        file.close()
+        return phi, theta
+
+    def _getColunmFromFilePar(self, parFn, col, invert=False):
+        f1 = open(parFn)
         
-        xplotter.plotAngularDistribution(plot_title, phi, theta)
-        
-        return xplotter
-    
-    
-    def createDataView(self, filename):
-        return DataView(filename)
-    
-    def _getIterationFile(self, filePath):
-        self.setVisualizeIterations()
-        
-        path = []
-        for i, iter in enumerate(self.visualizeIters):
-            pathDir = self.protocol._getExtraPath("iter_%03d" % iter)
-            pathNew = join(pathDir, filePath % iter)
-#             print "path=%s" % pathNew
-            
-            if os.path.exists(pathNew):
-                path.append(pathNew)
-#                runShowJ(path)
-            else:
-                self.formWindow.showError('Iteration %s does not exist.' % iter)
-        
-        return path
-        
-    def setVisualizeIterations(self):
-        '''Validate and set the set of iterations to visualize.
-        If not set is selected, only use the last iteration'''
-        self.lastIter = self.protocol.numberOfIterations.get()
-        self.visualizeIters = []
-        
-        if self.iterToShow.get() == LAST_ITER:
-            self.visualizeIters = [self.lastIter]
-            
-        elif self.iterToShow.get() == ALL_ITER:
-            self.visualizeIters = range(1, self.lastIter + 1)
-        elif self.iterToShow.get() == SELECTED_ITERS:
-            if self.selectedIters.empty():
-                return ['Please select the iterations that you want to visualize.']
-            else:
-                try:
-                    self.visualizeIters = self._getListFromRangeString(self.selectedIters.get())
-                except Exception, ex:
-                    return ['Invalid iterations range.']
-        return [] # No errors resulted
+        readLines = False
+        value = []
+        for l in f1:
+            if "C  Average" in l:
+                readLines = False
+            if readLines:
+                valList = l.split()
+                val = float(valList[col])
+                if invert:
+                    val = 1/val
+                value.append(val)
+            if "NO.  RESOL" in l:
+                readLines = True
+        f1.close()
+        return value
+
+#     def _getIterationFile(self, filePath):
+#         self.setVisualizeIterations()
+#         
+#         path = []
+#         for i, iter in enumerate(self.visualizeIters):
+#             pathDir = self.protocol._getExtraPath("iter_%03d" % iter)
+#             pathNew = join(pathDir, filePath % iter)
+# #             print "path=%s" % pathNew
+#             
+#             if os.path.exists(pathNew):
+#                 path.append(pathNew)
+# #                runShowJ(path)
+#             else:
+#                 self.formWindow.showError('Iteration %s does not exist.' % iter)
+#         
+#         return path
 
 
-class ProtCTFFindViewer(Viewer):
-    """ Visualization of Frealign."""    
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _label = 'viewer CtfFind'
-    _targets = [ProtCTFFind, ProtRecalculateCTFFind]
-    
-    
-    def __init__(self, **args):
-        Viewer.__init__(self, **args)
-        self._views = []
-        
-    def visualize(self, obj, **args):
-        self._visualize(obj, **args)
-        
-        for v in self._views:
-            v.show()
-            
-    def _visualize(self, obj, **args):
-        cls = type(obj)
-        
-        def _getMicrographDir(mic):
-            """ Return an unique dir name for results of the micrograph. """
-            return obj._getExtraPath(removeBaseExt(mic.getFileName()))        
-        
-        def iterMicrographs(mics):
-            """ Iterate over micrographs and yield
-            micrograph name and a directory to process.
-            """
-            for mic in mics:
-                micFn = mic.getFileName()
-                micDir = _getMicrographDir(mic) 
-                yield (micFn, micDir, mic)
-        
-        def visualizeObjs(obj, setOfMics):
-                
-                if exists(obj._getPath("ctfs_temporary.sqlite")):
-                    os.remove(obj._getPath("ctfs_temporary.sqlite"))
-                
-                ctfSet = self.protocol._createSetOfCTF("_temporary")
-                for fn, micDir, mic in iterMicrographs(setOfMics):
-                    out = self.protocol._getCtfOutPath(micDir)
-                    psdFile = self.protocol._getPsdPath(micDir)
-                    
-                    if exists(out) and exists(psdFile):
-                        result = self.protocol._parseOutput(out)
-                        defocusU, defocusV, defocusAngle = result
-                        # save the values of defocus for each micrograph in a list
-                        ctfModel = self.protocol._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
-                        ctfModel.setMicrograph(mic)
-                        ctfSet.append(ctfModel)
-                
-                if ctfSet.getSize() < 1:
-                    raise Exception("Has not been completed the CTT estimation of any micrograph")
-                else:
-                    ctfSet.write()
-                    ctfSet.close()
-                    self._visualize(ctfSet)
-        
-        if issubclass(cls, ProtCTFFind) and not obj.hasAttribute("outputCTF"):
-            mics = obj.inputMicrographs.get()
-            visualizeObjs(obj, mics)
-
-        elif issubclass(cls, ProtRecalculateCTFFind) and not obj.hasAttribute("outputCTF"):
-            
-            mics = obj.inputCtf.get().getMicrographs()
-            visualizeObjs(obj, mics)
-        
-        elif obj.hasAttribute("outputCTF"):
-            self._visualize(obj.outputCTF)
-            
-        else:
-            fn = obj.getFileName()
-            psdLabels = '_psdFile'
-            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _micObj._filename' % psdLabels 
-            self._views.append(ObjectView(self._project, obj.strId(), fn,
-                                          viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))
-            
-        return self._views
+# class ProtCTFFindViewer(Viewer):
+#     """ Visualization of Frealign."""    
+#     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+#     _label = 'viewer CtfFind'
+#     _targets = [ProtCTFFind, ProtRecalculateCTFFind]
+#     
+#     
+#     def __init__(self, **args):
+#         Viewer.__init__(self, **args)
+#         self._views = []
+#         
+#     def visualize(self, obj, **args):
+#         self._visualize(obj, **args)
+#         
+#         for v in self._views:
+#             v.show()
+#             
+#     def _visualize(self, obj, **args):
+#         cls = type(obj)
+#         
+#         def _getMicrographDir(mic):
+#             """ Return an unique dir name for results of the micrograph. """
+#             return obj._getExtraPath(removeBaseExt(mic.getFileName()))        
+#         
+#         def iterMicrographs(mics):
+#             """ Iterate over micrographs and yield
+#             micrograph name and a directory to process.
+#             """
+#             for mic in mics:
+#                 micFn = mic.getFileName()
+#                 micDir = _getMicrographDir(mic) 
+#                 yield (micFn, micDir, mic)
+#         
+#         def visualizeObjs(obj, setOfMics):
+#                 
+#                 if exists(obj._getPath("ctfs_temporary.sqlite")):
+#                     os.remove(obj._getPath("ctfs_temporary.sqlite"))
+#                 
+#                 ctfSet = self.protocol._createSetOfCTF("_temporary")
+#                 for fn, micDir, mic in iterMicrographs(setOfMics):
+#                     out = self.protocol._getCtfOutPath(micDir)
+#                     psdFile = self.protocol._getPsdPath(micDir)
+#                     
+#                     if exists(out) and exists(psdFile):
+#                         result = self.protocol._parseOutput(out)
+#                         defocusU, defocusV, defocusAngle = result
+#                         # save the values of defocus for each micrograph in a list
+#                         ctfModel = self.protocol._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
+#                         ctfModel.setMicrograph(mic)
+#                         ctfSet.append(ctfModel)
+#                 
+#                 if ctfSet.getSize() < 1:
+#                     raise Exception("Has not been completed the CTT estimation of any micrograph")
+#                 else:
+#                     ctfSet.write()
+#                     ctfSet.close()
+#                     self._visualize(ctfSet)
+#         
+#         if issubclass(cls, ProtCTFFind) and not obj.hasAttribute("outputCTF"):
+#             mics = obj.inputMicrographs.get()
+#             visualizeObjs(obj, mics)
+# 
+#         elif issubclass(cls, ProtRecalculateCTFFind) and not obj.hasAttribute("outputCTF"):
+#             
+#             mics = obj.inputCtf.get().getMicrographs()
+#             visualizeObjs(obj, mics)
+#         
+#         elif obj.hasAttribute("outputCTF"):
+#             self._visualize(obj.outputCTF)
+#             
+#         else:
+#             fn = obj.getFileName()
+#             psdLabels = '_psdFile'
+#             labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _micObj._filename' % psdLabels 
+#             self._views.append(ObjectView(self._project, obj.strId(), fn,
+#                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))
+#             
+#         return self._views

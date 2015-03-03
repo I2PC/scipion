@@ -626,7 +626,9 @@ def getImageDim(request, imagePath):
     return x, y, z, n
 
 def getImageXdim(request, imagePath):
-    return getImageDim(request, imagePath)[0]
+    xdim = getImageDim(request, imagePath)[0]
+#     print "x dimension: ", xdim
+    return xdim
 
 def readDimensions(request, path, typeOfColumn):
     if (typeOfColumn == COL_RENDER_IMAGE or

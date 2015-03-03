@@ -70,7 +70,7 @@ class SpiderProtMaskWeb(SpiderProtMaskWizard):
             params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
             
             context = {'objects': self._getParticles(objs),
-                       'xdim':xdim,
+                       'xdim':int(xdim/2),
                        'params': params }
         
             context = base_wiz(request, context)

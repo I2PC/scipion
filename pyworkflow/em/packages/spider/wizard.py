@@ -270,8 +270,9 @@ def filter_spider(inputLocStr, outputLocStr, **pars):
     
 #-------------- Custom mask Wizard -----------------------------
 
-CUSTOMMASK_VARS = ['filterRadius1', 'sdFactor', 'filterRadius2', 'maskThreshold']
-# Map between the index in the result stack
+CUSTOMMASK_VARS = {'filterRadius1': 'First radius', 'sdFactor': 'First threshold',
+                   'filterRadius2': 'Second radius', 'maskThreshold': 'Max threshold'}
+
 # and the label to the given image
 MASKRESULT_LABELS = ['input image',
                      'filtered',
@@ -285,12 +286,12 @@ MASKRESULT_LABELS = ['input image',
 
 
 class SpiderCustomMaskWizard(EmWizard):    
-    _targets = [(SpiderProtCustomMask, CUSTOMMASK_VARS)]
+    _targets = [(SpiderProtCustomMask, CUSTOMMASK_VARS.keys())]
     
     def _getParameters(self, protocol):
         protParams = {}
         protParams['input']= protocol.inputImage
-        protParams['label']= CUSTOMMASK_VARS
+        protParams['label']= CUSTOMMASK_VARS.keys()
         protParams['labelText']= MASKRESULT_LABELS
         protParams['value']= [protocol.getAttributeValue(a) for a in protParams['label']]
         
@@ -306,7 +307,7 @@ class SpiderCustomMaskWizard(EmWizard):
         if protocol.inputImage.get():
             d = CustomMaskDialog(form.root, provider, protocolParent=protocol)
             if d.resultYes():
-                for varName in CUSTOMMASK_VARS:
+                for varName in CUSTOMMASK_VARS.iterkeys():
                     form.setVar(varName, d.getVarValue(varName))
         else:
             dialog.showWarning("Input error", "Select the input image first", form.root)  
@@ -339,11 +340,11 @@ class CustomMaskDialog(ImagePreviewDialog):
         self.lastObj = obj
         dialog.FlashMessage(self, self.message, func=self._computeRightPreview)
            
-    def _createVarWidgets(self, parent, varName, row, col):
+    def _createVarWidgets(self, parent, varName, varLabel, row, col):
         var = tk.StringVar()
         self._vars[varName] = var
         var.set(self.protocolParent.getAttributeValue(varName))
-        varLabel = tk.Label(parent, text=varName)
+        varLabel = tk.Label(parent, text=varLabel)
         varLabel.grid(row=row, column=col*2, padx=5, pady=5)
         varEntry = tk.Entry(parent, width=10, textvariable=var)
         varEntry.grid(row=row, column=col*2+1, padx=5, pady=5)
@@ -354,7 +355,7 @@ class CustomMaskDialog(ImagePreviewDialog):
         inputFrame.grid(row=0, column=0)
         
         for i, varName in enumerate(CUSTOMMASK_VARS):
-            self._createVarWidgets(inputFrame, varName, i%2, i/2)
+            self._createVarWidgets(inputFrame, varName, CUSTOMMASK_VARS[varName], i%2, i/2)
             
         previewBtn = HotButton(frame, text='Preview', command=self._computeRightPreview)
         previewBtn.grid(row=1, column=1, padx=5, pady=5)
