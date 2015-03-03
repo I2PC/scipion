@@ -24,7 +24,7 @@
  *
  ******************************************************************************/
 
-function serviceProjForm(){
+function moviesProjForm(){
 	var title = 'Project creation'
 	var dialog = "<p>Your <strong>Project</strong> will be created.<br /><br />" +
         "This process generates a unique <strong>url access</strong>.<br /><br />" +

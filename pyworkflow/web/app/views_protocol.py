@@ -50,9 +50,15 @@ def findWizardsWeb(protocol):
     
     return findWizardsFromDict(protocol, WEB_DJANGO, webWizardsDict)
 
-     
+
 def form(request):
     from django.shortcuts import render_to_response
+    context = contextForm(request)
+    context.update({'path_mode':'select'})
+    return render_to_response('form/form.html', context)
+
+     
+def contextForm(request):
     from views_base import base_form
     from django.core.context_processors import csrf
     from views_util import getResourceCss, getResourceIcon, getResourceJs, getResourceLogo
@@ -185,7 +191,7 @@ def form(request):
                'jquery_ui_css': getResourceCss('jquery_ui'),
                'wizard': getResourceIcon('wizard'),
                'protocol_form_utils': getResourceJs('protocol_form_utils'),
-               'hosts':hosts,
+               'hosts': hosts,
                'comment': parseText(protocol.getObjComment())
                }
     
@@ -195,10 +201,9 @@ def form(request):
 
     # Cross Site Request Forgery protection is need it
     context.update(csrf(request))
-    
     context = base_form(request, context)
-    
-    return render_to_response('form/form.html', context)
+
+    return context
 
 def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar):
     from pyworkflow.em import Boolean, PointerParam

@@ -113,15 +113,18 @@
 							</td>
 <!-- PATH PARAM -->
 						{% if param.getClassName == "PathParam" or param.getClassName == "FileParam" or param.getClassName == "FolderParam" %}
-<!-- 							{% include "form/file_browse.html" %} -->
 							
-							<script src="{{upload_utils}} "type="text/javascript"></script>
-							
-							<td class="ico">
-								<a href="javascript:browseUpload('{{paramName}}');">
-									<i class="fa fa-search" style="font-size:1.1em;"></i>
-								</a> 
-							</td>
+							{% if path_mode == "select" %}
+								{% include "form/file_browse.html" %}
+							{% elif path_mode == "upload" %}
+								<script src="{{upload_utils}} "type="text/javascript"></script>
+								
+								<td class="ico">
+									<a href="javascript:browseUpload('{{paramName}}');">
+										<i class="fa fa-search" style="font-size:1.1em;"></i>
+									</a> 
+								</td>
+							{% endif %}
 							
 <!-- POINTER PARAM -->	
 						{% elif param.getClassName == "PointerParam" %}

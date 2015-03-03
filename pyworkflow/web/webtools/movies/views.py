@@ -35,7 +35,7 @@ from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
 
-def service_projects(request):
+def service_movies(request):
 
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
@@ -69,14 +69,13 @@ Movies_Alignment = [
         f.close()
         
 def create_service_project(request):
-    """
+    
     if request.is_ajax():
+        
         import os
         from pyworkflow.object import Pointer
-        from pyworkflow.em.protocol import ProtUnionSet, ProtImportAverages
-        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant, XmippProtAlignVolumeForWeb
-        from pyworkflow.em.packages.eman2 import EmanProtInitModel
-        from pyworkflow.em.packages.simple import ProtPrime
+        from pyworkflow.em.protocol import ProtImportMovies
+        from pyworkflow.em.packages.xmipp3 import ProtMovieAlignment
         
         # Create a new project
         manager = Manager()
@@ -91,10 +90,19 @@ def create_service_project(request):
         
         project = manager.createProject(projectName, runsView=1, protocolsConf=customMenu)   
         
-        # 1. Import averages
-        protImport = project.newProtocol(ProtImportAverages,
-                                         objLabel='import averages')
+        # 1. Import movies
+        protImport = project.newProtocol(ProtImportMovies,
+                                         objLabel='select movies')
+        project.saveProtocol(protImport)   
         
+        # 2. Movie Alignment 
+        protMovAlign = project.newProtocol(ProtMovieAlignment)
+        protMovAlign.setObjLabel('xmipp - movie alignment')
+        protMovAlign.inputSet.set(protImport)
+        protMovAlign.inputSet.setExtendedAttribute('outputMovies')
+        project.saveProtocol(protMovAlign)
+        
+        """
         # If using test data execute the import averages run
         # options are set in 'project_utils.js'
         dsMDA = DataSet.getDataSet('initial_volume')
@@ -111,50 +119,6 @@ def create_service_project(request):
             project.launchProtocol(protImport, wait=True)
         else:
             project.saveProtocol(protImport)
-            
-        
-        # 2a. Ransac 
-        protRansac = project.newProtocol(XmippProtRansac)
-        protRansac.setObjLabel('xmipp - ransac')
-        protRansac.inputSet.set(protImport)
-        protRansac.inputSet.setExtendedAttribute('outputAverages')
-        project.saveProtocol(protRansac)
-        
-        # 2b. Eman 
-        protEmanInitVol = project.newProtocol(EmanProtInitModel)
-        protEmanInitVol.setObjLabel('eman - initial vol')
-        protEmanInitVol.inputSet.set(protImport)
-        protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
-        project.saveProtocol(protEmanInitVol)
-        
-        # 2c. Significant 
-        protSignificant = project.newProtocol(XmippProtReconstructSignificant)
-        protSignificant.setObjLabel('xmipp - significant')
-        protSignificant.inputSet.set(protImport)
-        protSignificant.inputSet.setExtendedAttribute('outputAverages')
-        project.saveProtocol(protSignificant)
-        
-        # 3. Join result volumes
-        p1 = Pointer()
-        p1.set(protRansac)
-        p1.setExtendedAttribute('outputVolumes')
-        
-        p2 = Pointer()
-        p2.set(protEmanInitVol)
-        p2.setExtendedAttribute('outputVolumes')
-        
-        p3 = Pointer()
-        p3.set(protSignificant)
-        p3.setExtendedAttribute('outputVolume')
-        
-        
-        protJoin = project.newProtocol(XmippProtAlignVolumeForWeb)
-        protJoin.setObjLabel('align volumes')
-        protJoin.inputVolumes.append(p1)
-        protJoin.inputVolumes.append(p2)
-        protJoin.inputVolumes.append(p3)
-        project.saveProtocol(protJoin)
-        
     """
     return HttpResponse(mimetype='application/javascript')
 
@@ -178,20 +142,17 @@ def check_project_id(request):
     
     return HttpResponse(result, mimetype='application/javascript')
  
-def service_content(request):
+def movies_content(request):
     projectName = request.GET.get('p', None)
     path_files = '/resources_movies/img/'
     
     context = contentContext(request, projectName)
     context.update({
-#                     'importAverages': path_files + 'importAverages.png',
-#                     'useProtocols': path_files + 'useProtocols.png',
-#                     'protForm': path_files + 'protForm.png',
-#                     'summary': path_files + 'summary.png',
-#                     'showj': path_files + 'showj.png',
-#                     'alignVol': path_files + 'alignVol.png',
-#                     'download': path_files + 'download.png',
-#                     'mode':'service',
+                    # MODE
+                    'mode':'service',
+                    
+                    # IMAGES
+#                     'imageName': path_files + 'image.png',
                     })
     
     return render_to_response('movies_content.html', context)
