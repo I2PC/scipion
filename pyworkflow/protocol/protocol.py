@@ -678,6 +678,14 @@ class Protocol(Step):
             stepsSet.close() # Close the connection
               
         return prevSteps
+    
+    def _insertPreviousSteps(self):
+        """ Insert steps of previous execution. 
+        It can be used to track previous steps done for
+        protocol that allow some kind of continue (such as ctf estimation).
+        """
+        for step in self.loadSteps():
+            self.__insertStep(step)
         
     def __findStartingStep(self):
         """ From a previous run, compare self._steps and self._prevSteps
