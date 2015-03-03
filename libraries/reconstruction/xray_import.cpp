@@ -329,13 +329,14 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
 
     // Process the flatfield images
 
-    // Checking if fnFFinput is a single file to obtain the flatfield avg from
-
 
     MultidimArray<double> &mdaIavg = Iavg();
 
+    Matrix1D<double> expTimeArray, cBeamArray, slitWidthArray; // Local vectors
+
     DataSource ldSource = dSource;
 
+    // Checking if fnFFinput is a single file to obtain the flatfield avg from
     if (extFlat && isImage(fnFFinput))
     {
         fMD.read(fnFFinput);
@@ -343,9 +344,6 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
     }
     else
     {
-
-        Matrix1D<double> expTimeArray, cBeamArray, slitWidthArray;
-
         switch (ldSource)
         {
         case MISTRAL:
