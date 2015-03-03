@@ -66,6 +66,9 @@ env = Environment(ENV=os.environ,
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
+# Check the following flag to see if in compilation mode
+COMPILE_ONLY = os.environ.get('SCIPION_COMPILE_ONLY', '').lower() in ['1', 'true', 'yes']
+
 
 def downloadOrLink(env, urlOrPath, output, downloadDir='software/tmp',
                    extraDeps=[]):
@@ -318,8 +321,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
         CheckConfigLib(env, tg, '')
 
     # Create and concatenate the builders.
-    compile_only = os.environ.get('SCIPION_COMPILE_ONLY', '').lower() in ['1', 'true', 'yes']
-    if not compile_only:
+    if not COMPILE_ONLY:
         tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
     
         tUntar = untar(env, File('#software/tmp/%s/configure' % configDir[0]).abspath,
@@ -339,7 +341,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
             AutoConfigParams=flags[x],
             AutoConfigStdOut=File('#software/log/%s_config_%s.log' % (name, x)).abspath))
         SideEffect('dummy', Dir('#software/tmp/%s' % configDir[x]))
-        if not compile_only:
+        if not COMPILE_ONLY:
             env.Depends(tConfig[x], tUntar)
 
         lastTarget = tConfig[x]
@@ -703,8 +705,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
         CheckConfigLib(env, tg, '')
 
     # Create and concatenate the builders.
-    compile_only = os.environ.get('SCIPION_COMPILE_ONLY', '').lower() in ['1', 'true', 'yes']
-    if not compile_only:
+    if not COMPILE_ONLY:
         tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
 
         tUntar = untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload,
@@ -714,7 +715,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
 
     tInstall = env.Command(
         ['software/lib/python2.7/site-packages/%s' % t for t in targets],
-        tUntar if not compile_only else '',
+        tUntar if not COMPILE_ONLY else '',
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                'PATH="%(root)s/bin:%(PATH)s" '
 #               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
@@ -802,13 +803,18 @@ def createPackageLink(packageLink, packageFolder):
              "INSTALLATION FAILED!!!" % (linkText, packageFolder))
         
     if os.path.exists(packageLink):
-        if os.path.islink(packageLink):
-            os.remove(packageLink)
+        if not COMPILE_ONLY:
+            if os.path.islink(packageLink):
+                os.remove(packageLink)
+            else:
+                Exit("Creating link %s, but '%s' exists and is not a link!!!\n"
+                     "INSTALLATION FAILED!!!" % (linkText, packageLink))
         else:
-            Exit("Creating link %s, but '%s' exists and is not a link!!!\n"
-                 "INSTALLATION FAILED!!!" % (linkText, packageLink))
-    os.symlink(packageFolder, packageLink)
-    print "Created link: %s" % linkText
+            print "Link '%s', but not changing because in COMPILATION MODE."
+
+    if not COMPILE_ONLY:
+        os.symlink(packageFolder, packageLink)
+        print "Created link: %s" % linkText
     
 
 def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
@@ -1017,8 +1023,7 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         CheckConfigLib(env, tg, '')
 
     # Create and concatenate the builders.
-    compile_only = os.environ.get('SCIPION_COMPILE_ONLY', '').lower() in ['1', 'true', 'yes']
-    if not compile_only:
+    if not COMPILE_ONLY:
         tDownload = downloadOrLink(env, url, tar)
         tUntar = untar(env, File('#software/tmp/%s/README' % buildDir).abspath,
                        tDownload, cdir=Dir('#software/tmp').abspath)
