@@ -39,7 +39,7 @@ from pyworkflow.utils import createUniqueFileName, cleanPattern
 from protocol_projmatch import XmippProtProjMatch
 # from projmatch_initialize import createFilenameTemplates
 from pyworkflow.em.packages.xmipp3.convert import * # change this
-from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
+from pyworkflow.em.viewer import ChimeraProjectionClient
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, IntParam, FloatParam,
                                         StringParam, EnumParam, NumericRangeParam)
@@ -309,10 +309,11 @@ Examples:
                 f.write("open %s\n" % vol)
             f.write('tile\n')
             f.close()
-            view = CommandView('chimera %s &' % cmdFile)                    
+            view = ChimeraView(cmdFile)
         else:
+            
             #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
-            view = ChimeraClient(volumes[0])
+            view = ChimeraClientView(volumes[0], showProjection=True)
         
         return [view]
     
@@ -617,7 +618,7 @@ Examples:
             file_name = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
             file_name_rec_filt = self.protocol._getFileName('reconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
             #args = "--input '%s' --mode projector 256 -a %s red %f" %(file_name_rec_filt, file_name, radius)
-            return ChimeraClient(file_name_rec_filt, angularDist=file_name, radius=radius)
+            return ChimeraClientView(file_name_rec_filt, showProjection=True, angulardist=[file_name, 'red', 'default', radius])
         else:
             return self.infoMessage('Please select only one class to display angular distribution')
     

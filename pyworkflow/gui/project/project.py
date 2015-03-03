@@ -52,6 +52,7 @@ from pyworkflow.em.packages.xmipp3 import XmippProtRecalculateCTF
 from pyworkflow.em.packages.grigoriefflab import ProtRecalculateCTFFind
 
 
+
 class ProjectWindow(ProjectBaseWindow):
     """ Main window for working in a Project. """
     def __init__(self, path, master=None):

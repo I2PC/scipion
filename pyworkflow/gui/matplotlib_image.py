@@ -36,6 +36,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.cm as cm
 from matplotlib.patches import Wedge
 
+import xmipp
+import pyworkflow.gui as pwgui
+
+
 
 class FigureFrame(tk.Frame):
     """ Create a Tk Frame that will contains a 
@@ -177,6 +181,41 @@ class MaskPreview(ImagePreview):
         self.ring = Wedge((center, center), outerRadius, 0, 360, width=width, alpha=0.15) # Full ring
         self.ax.add_patch(self.ring)
         self.canvas.draw()
+        
+        
+class ImageWindow(pwgui.Window):
+    #TODO: change filename (now with xmipp format) by location (index, fn as in scipion)
+    # this will require to put a wrapper to readPreview in ImageHandler that accepts location
+    def __init__(self, filename=None, dim=256, dpi=96, image=None, label=None):
+        pwgui.Window.__init__(self, minsize=None)
+        
+        if image is None:
+            image = xmipp.Image()
+            if dim is None:
+                image.read(filename)
+                dim, _, _, _ = image.getDimensions()
+            else:
+                image.readPreview(filename, dim)
+            
+        dpi = min(dpi, dim)
+        
+        self.imagePreview = ImagePreview(self.root, dim, dpi, label, 0)
+
+        if image is None and filename is None:
+            raise Exception("ImageWindow: image or filename should be provided.")
+       
+        if filename is None:
+            filename = "No filename"
+            
+        self.updateImage(image)
+        
+        self.imagePreview.grid(row=0, column=0)
+    
+    def updateData(self, Z):
+        self.imagePreview.updateData(Z)
+    
+    def updateImage(self, image):
+        self.updateData(image.getData())
         
         
 def getPngData(filename):  
