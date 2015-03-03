@@ -301,7 +301,7 @@ public class PlotJDialog extends XmippDialog {
         }
 
         public String getBins() {
-            if(tfBins.isEnabled())
+            if(tfBins.isVisible())
                 return tfBins.getText();
             return "";
         }
