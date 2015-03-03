@@ -43,6 +43,7 @@ import sys
 from pyworkflow.utils import getFreePort
 from os import system
 from pyworkflow.gui.matplotlib_image import ImageWindow
+import os.path
 
 # PATH is used by app/em_viewer.py
 
@@ -259,7 +260,9 @@ class ChimeraClient:
         if '@' in volfile:
             [index, file] = volfile.split('@'); 
         else :
-            file = volfile 
+            file = volfile
+        if not os.path.exists(file):
+            raise Exception("File %s does not exists"%file)
         self.kwargs = kwargs
         self.volfile = volfile
         self.voxelSize = self.kwargs.get('voxelSize', None)
