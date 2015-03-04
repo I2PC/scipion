@@ -1089,19 +1089,25 @@ env['CCFLAGS'] = os.environ.get('CCFLAGS', '').split()
 env['CXXFLAGS'] = os.environ.get('CXXFLAGS', '').split()
 env['LINKFLAGS'] = os.environ.get('LINKFLAGS', '').split()
 
+for path in ['MPI_LIBDIR', 'MPI_INCLUDE', 'MPI_BINDIR',
+             'JAVA_HOME', 'JAVA_BINDIR']:
+    if not os.path.isdir(os.environ.get(path, '')):
+        Exit('Path to $%s (%s) should exist, but it does not. Stopping.\n'
+             'Please run "scipion config"' % (path, os.environ.get(path, '')))
+
 env['MPI_CC'] = os.environ.get('MPI_CC')
 env['MPI_CXX'] = os.environ.get('MPI_CXX')
 env['MPI_LINKERFORPROGRAMS'] = os.environ.get('MPI_LINKERFORPROGRAMS')
 env['MPI_LIB'] = os.environ.get('MPI_LIB')
-env['MPI_LIBDIR'] = os.environ.get('MPI_LIBDIR')
-env['MPI_INCLUDE'] = os.environ.get('MPI_INCLUDE')
-env['MPI_BINDIR'] = os.environ.get('MPI_BINDIR')
+env['MPI_LIBDIR'] = os.environ['MPI_LIBDIR']
+env['MPI_INCLUDE'] = os.environ['MPI_INCLUDE']
+env['MPI_BINDIR'] = os.environ['MPI_BINDIR']
 env['MATLAB_DIR'] = os.environ.get('MATLAB_DIR')
 
 # Java related environment variables, probably the main one
 # that need to be modified is JAVA_HOME
-env['JAVA_HOME'] = os.environ.get('JAVA_HOME')
-env['JAVA_BINDIR'] = os.environ.get('JAVA_BINDIR')
+env['JAVA_HOME'] = os.environ['JAVA_HOME']
+env['JAVA_BINDIR'] = os.environ['JAVA_BINDIR']
 env['JAVAC'] = os.environ.get('JAVAC')
 env['JAR'] = os.environ.get('JAR')
 env['JNI_CPPPATH'] = os.environ.get('JNI_CPPPATH').split(':')
