@@ -39,7 +39,6 @@ import java.util.HashMap;
 import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -122,7 +121,7 @@ public class PlotJDialog extends XmippDialog {
                     public void actionPerformed(ActionEvent ae) {
                         binslb.setVisible(isHistogram());
                         tfBins.setVisible(isHistogram());
-                        revalidate();
+                        validate();
                         pack();
                     }
                 });
@@ -302,7 +301,7 @@ public class PlotJDialog extends XmippDialog {
         }
 
         public String getBins() {
-            if(tfBins.isEnabled())
+            if(tfBins.isVisible())
                 return tfBins.getText();
             return "";
         }
