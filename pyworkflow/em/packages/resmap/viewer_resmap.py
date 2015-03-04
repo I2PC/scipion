@@ -33,6 +33,7 @@ import sys
 
 from pyworkflow.protocol.params import LabelParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.em.viewer import ChimeraView
 from pyworkflow.gui.plotter import Plotter
 from protocol_resmap import ProtResMap
 
@@ -88,7 +89,11 @@ class ResMapViewer(ProtocolViewer):
         return [self.protocol._plotHistogram()]
     
     def _showChimera(self, param=None):
-        os.system('chimera "%s" &' % self.protocol._getPath('volume1_resmap_chimera.cmd'))
+        #os.system('chimera "%s" &' % self.protocol._getPath('volume1_resmap_chimera.cmd'))
+        cmdFile = self.protocol._getPath('volume1_resmap_chimera.cmd')
+        view = ChimeraView(cmdFile)
+        view.show()
+
         
         
 class ResMapViewerWeb(ResMapViewer):
