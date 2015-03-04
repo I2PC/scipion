@@ -441,7 +441,7 @@ Examples:
                     f.write("open %s\n" % localVol)
             f.write('tile\n')
             f.close()
-            view = CommandView('chimera %s &' % cmdFile)                    
+            view = em.ChimeraView(cmdFile)
         else:
             #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
             view = ChimeraClientView(volumes[0])
