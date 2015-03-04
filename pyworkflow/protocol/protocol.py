@@ -158,6 +158,7 @@ class Step(OrderedObject):
         self.setRunning() 
         try:
             self._run()
+            self.endTime.set(dt.datetime.now())
             if self.status == STATUS_RUNNING:
                 if self.isInteractive():
                     # If the Step is interactive, after run
@@ -171,8 +172,8 @@ class Step(OrderedObject):
             import traceback
             traceback.print_exc()            
             #raise #only in development
-        finally:
-            self.endTime.set(dt.datetime.now())
+        # finally:
+        #     self.endTime.set(dt.datetime.now())
 
 
 class FunctionStep(Step):
@@ -677,6 +678,14 @@ class Protocol(Step):
             stepsSet.close() # Close the connection
               
         return prevSteps
+    
+    def _insertPreviousSteps(self):
+        """ Insert steps of previous execution. 
+        It can be used to track previous steps done for
+        protocol that allow some kind of continue (such as ctf estimation).
+        """
+        for step in self.loadSteps():
+            self.__insertStep(step)
         
     def __findStartingStep(self):
         """ From a previous run, compare self._steps and self._prevSteps
@@ -905,7 +914,8 @@ class Protocol(Step):
         
     def _endRun(self):
         """ Print some ending message and close some files. """   
-        self._store()
+        #self._store()
+        self._store(self.endTime)
         
         if envVarOn('SCIPION_DEBUG_NOCLEAN'):
             self.warning('Not cleaning temporarly files since SCIPION_DEBUG_NOCLEAN is set to True.')
