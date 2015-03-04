@@ -104,6 +104,9 @@ public:
      */
     bool phaseFlipped;
 
+    /** Minimum CTF value to invert */
+    double minCTF;
+
     /** Sampling rate */
     double Ts;
 

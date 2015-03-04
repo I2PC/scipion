@@ -50,6 +50,8 @@ void ProgRecFourier::defineParams()
     addParamsLine("  [--sampling <Ts=1>]            : sampling rate of the input images in Angstroms/pixel");
     addParamsLine("                                 : It is only used when correcting for the CTF");
     addParamsLine("  [--phaseFlipped]               : Give this flag if images have been already phase flipped");
+    addParamsLine("  [--minCTF <ctf=0.01>]          : Minimum value of the CTF that will be inverted");
+    addParamsLine("                                 : CTF values (in absolute value) below this one will not be corrected");
     addExampleLine("For reconstruct enforcing i3 symmetry and using stored weights:", false);
     addExampleLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
 }
@@ -74,6 +76,7 @@ void ProgRecFourier::readParams()
     NiterWeight = getIntParam("--iter");
     useCTF = checkParam("--useCTF");
     phaseFlipped = checkParam("--phaseFlipped");
+    minCTF = getDoubleParam("--minCTF");
     if (useCTF)
     	Ts=getDoubleParam("--sampling");
 }
@@ -101,7 +104,8 @@ void ProgRecFourier::show()
         if (useCTF)
         	std::cout << "Using CTF information" << std::endl
         	          << "Sampling rate: " << Ts << std::endl
-        	          << "Phase flipped: " << phaseFlipped << std::endl;
+        	          << "Phase flipped: " << phaseFlipped << std::endl
+        	          << "Minimum CTF: " << minCTF << std::endl;
         std::cout << "\n Interpolation Function"
         << "\n   blrad                 : "  << blob.radius
         << "\n   blord                 : "  << blob.order
@@ -573,7 +577,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 	YY(contFreq)=YY(freq)*iTs;
                                 	threadParams->ctf.precomputeValues(XX(contFreq),YY(contFreq));
                                 	wCTF=threadParams->ctf.getValueAt();
-                                	if (fabs(wCTF)<0.01)
+                                	if (fabs(wCTF)<parent->minCTF)
                                 		wCTF=1;
                                 	else
                                 		wCTF=1.0/wCTF;
