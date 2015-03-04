@@ -68,7 +68,7 @@ Movies_Alignment = [
         ''')
         f.close()
         
-def create_service_project(request):
+def create_movies_project(request):
     
     if request.is_ajax():
         
@@ -98,8 +98,8 @@ def create_service_project(request):
         # 2. Movie Alignment 
         protMovAlign = project.newProtocol(ProtMovieAlignment)
         protMovAlign.setObjLabel('xmipp - movie alignment')
-        protMovAlign.inputSet.set(protImport)
-        protMovAlign.inputSet.setExtendedAttribute('outputMovies')
+        protMovAlign.inputMovies.set(protImport)
+        protMovAlign.inputMovies.setExtendedAttribute('outputMovies')
         project.saveProtocol(protMovAlign)
         
         """
@@ -129,7 +129,7 @@ def get_testdata(request):
     fn = dsMDA.getFile(testDataKey)
     return HttpResponse(fn, mimetype='application/javascript')
 
-def check_project_id(request):
+def check_m_id(request):
     result = 0
     projectName = request.GET.get('code', None)
     
