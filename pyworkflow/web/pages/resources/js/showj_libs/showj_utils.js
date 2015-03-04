@@ -236,12 +236,10 @@ function updateMainContainerDim(colVal){
 function initializeZoomEvents(){
 	$('#id_zoom').click(function(){
 		console.log("click in zoom event")
-		/* updateImageDimByUrl(); */
 		setImageSize(false)
 	});
 	
 	$('#id_zoom').change(function(){
-		/* updateImageDimByUrl(); */
 		console.log("change in zoom event")
 		setImageSize(false)
 	});
@@ -249,7 +247,6 @@ function initializeZoomEvents(){
 	$('#id_zoom').keyup(function(e){
 		var code = e.keyCode || e.which; 
 		  	if (code  == 13) {               
-				 /* updateImageDimByUrl(); */
 				 setImageSize(false)
 		  	}
 	});	 
