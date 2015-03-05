@@ -61,8 +61,8 @@ def writeCustomMenu(customMenu):
 Movies_Alignment = [
     {"tag": "section", "text": "1. Upload data", "children": [
         {"tag": "url", "value": "/upload/", "text": "Upload Data", "icon": "fa-upload.png"}]},
-    {"tag": "section", "text": "2. Select your data", "children": [
-        {"tag": "protocol", "value": "ProtImportMovies", "text": "Select Movies", "icon": "bookmark.png"}]},
+    {"tag": "section", "text": "2. Import your data", "children": [
+        {"tag": "protocol", "value": "ProtImportMovies", "text": "Import Movies", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Align your Movies", "children": [
         {"tag": "protocol", "value": "ProtImportMovies", "text": "xmipp3 - movie alignment"}]}]
         ''')
@@ -92,7 +92,7 @@ def create_movies_project(request):
         
         # 1. Import movies
         protImport = project.newProtocol(ProtImportMovies,
-                                         objLabel='select movies')
+                                         objLabel='import movies')
         project.saveProtocol(protImport)   
         
         # 2. Movie Alignment 
