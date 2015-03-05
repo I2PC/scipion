@@ -191,7 +191,6 @@ author = "Pascual-Montano, A and K.A. Taylor and H. Winkler and R.D. Pascual-Mar
 keywords = "Classification, Electron tomography, Image processing, Neural networks, Self-organizing maps, Probability density function, Kernel functions, Actin, Myosin, Muscle proteins "
 }
 
-% 14568533
 @Article{Rosenthal2003,
    Author="Rosenthal, P. B.  and Henderson, R. ",
    Title="{{O}ptimal determination of particle orientation, absolute hand, and contrast loss in single-particle electron cryomicroscopy}",
