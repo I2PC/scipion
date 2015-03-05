@@ -52,7 +52,7 @@ if not env.GetOption('clean'):
 # version is in the system.
 
 fftw = env.AddLibrary(
-    'fftw',
+    'fftw3',
     tar='fftw-3.3.4.tgz',
     targets=[File('#software/lib/libfftw3.so').abspath],
     flags=['--enable-threads', '--enable-shared'],
@@ -103,12 +103,30 @@ png = env.AddLibrary(
     tar='libpng-1.6.16.tgz',
     deps=[zlib])
 
+tiff = env.AddLibrary(
+     'tiff',
+     tar='tiff-3.9.4.tgz',
+     targets=[File('#software/lib/libtiff.so').abspath],
+     deps=[zlib])
+
 sqlite = env.AddLibrary(
-    'sqlite',
+    'sqlite3',
     tar='sqlite-3.6.23.tgz',
     targets=[File('#software/lib/libsqlite3.so').abspath],
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
+
+hdf5 = env.AddLibrary(
+     'hdf5',
+     tar='hdf5-1.8.14.tgz',
+     buildDir=['hdf5-1.8.14', 'hdf5-1.8.14/c++'],
+     configDir=['hdf5-1.8.14', 'hdf5-1.8.14'],
+     flags=[['--enable-cxx'], ['--enable-cxx']],
+     autoConfigTargets=['src/Makefile', 'c++/Makefile'],
+     makeTargets=['all install', 'all install'],
+     targets=[[File('#software/lib/libhdf5.so').abspath], 
+              [File('#software/lib/libhdf5_cpp.so').abspath]],
+     clean=[Dir('#software/tmp/hdf5-1.8.14').abspath])
 
 python = env.AddLibrary(
     'python',

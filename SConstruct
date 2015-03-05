@@ -92,6 +92,9 @@ def progInPath(env, prog):
     "Is program prog in PATH?"
     return any(os.path.exists('%s/%s' % (base, prog)) for base in
                os.environ.get('PATH', '').split(os.pathsep))
+    
+def targetInBuild(env, targetName):
+    return targetName in map(str, BUILD_TARGETS)
 
 
 # This functions was previously used for checking the presence of a
@@ -220,7 +223,7 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, 
 #   addLibrary        - install a library
 #   addModule         - install a Python module
 #   addPackage        - install an EM package
-#   addPackageLibrary - install a EM package library
+#   addCppLibrary - install a EM package library
 #   addJavaLibrary    - install a java jar
 #   addProgram        - install a EM package program
 #   manualInstall     - install by manually running commands
@@ -378,7 +381,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     return toReturn
 
 
-def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=None, incs=None, 
+def addCppLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=None, incs=None, 
                       libs=None, prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], 
                       mpi=False, cuda=False, default=True):
     """Add self-made and compiled shared library to the compilation process
@@ -407,10 +410,10 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     libpath.append(Dir('#software/lib').abspath)
     
     for d, p in izip(dirs, patterns):
-        sources += glob(join(env['SCONSCRIPT_PATH'], d, p))
+        sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
         
-    if not sources:
-        Exit('No sources!!!')
+    if not sources and env.TargetInBuild(name):
+        Exit('No sources found for Library: %s. Exiting!!!' % name)
 
     mpiArgs = {}
     if mpi:
@@ -431,8 +434,6 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     env2 = Environment()
     env2['ENV']['PATH'] = env['ENV']['PATH']
 
-
-    
     #print env2.Dump()
     library = env2.SharedLibrary(
               target=join(basedir, fullname),
@@ -458,6 +459,9 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     
     for dep in deps:
         env.Depends(sources, dep)
+    
+    env.Alias(name, lastTarget)
+    
     return lastTarget
 
 
@@ -520,9 +524,9 @@ def CompileJavaJar(target, source, env):
     """Add self-made and compiled java library to the compilation process """  
     srcDir = str(source[0])
     
-    buildDir = os.path.join(env['SCONSCRIPT_PATH'], env['JAVA_BUILDPATH'])
-    classPath = "'%s/*'" % os.path.join(env['SCONSCRIPT_PATH'], env['JAVA_LIBPATH'])
-    globalSrcDir = os.path.join(env['SCONSCRIPT_PATH'], env['JAVA_SOURCEPATH'])
+    buildDir = os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_BUILDPATH'])
+    classPath = "'%s/*'" % os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_LIBPATH'])
+    globalSrcDir = os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_SOURCEPATH'])
     jarfile = str(target[0])
     name = os.path.basename(jarfile)
     listfile = os.path.join(buildDir, name+'_source.txt')
@@ -553,8 +557,8 @@ def addJavaLibrary(env, name, path, deps=[], default=True):
 
     Returns the final targets, the ones that Make will create.
     """
-    libPath = os.path.join(env['SCONSCRIPT_PATH'], env['JAVA_LIBPATH'])
-    srcPath = os.path.join(env['SCONSCRIPT_PATH'], env['JAVA_SOURCEPATH'])
+    libPath = os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_LIBPATH'])
+    srcPath = os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_SOURCEPATH'])
 
     # Get all java files inside the source 
     libSrcPath = os.path.join(srcPath, path)
@@ -570,7 +574,10 @@ def addJavaLibrary(env, name, path, deps=[], default=True):
     env.Alias(jar, jarCreation)
     if default:
         env.Default(jar)
-    env.Alias('java', jarCreation)
+    
+    packageName = env['PACKAGE']['NAME']
+    env.Alias(packageName+'-java', jarCreation)
+    env.Alias(packageName, jarCreation)
     
     return jarCreation
     
@@ -847,7 +854,10 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     for req in reqs:
         libraryTest(env, req, reqs[req])
 
-    print "Adding package:", name
+    inBuild = env.TargetInBuild(name)
+    
+    if inBuild:
+        print "Adding package:", name
 
     # Add the option --with-<name>, so the user can call SCons with this
     # to get the package even if it is not on by default.
@@ -862,24 +872,26 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     #   PKG_HOME  if we passed --with-<name>=PKG_HOME (nargs=1)
 
     # See if we have used the --with-<package> option and exit if appropriate.
-    if GetOption('withAllPackages'):
-        defaultPackageHome = 'unset'
+    if GetOption(name):
+        packageHome = GetOption(name) if not COMPILE_ONLY else 'unset'
+        
+    elif GetOption('withAllPackages'):
+        packageHome = 'unset'
         # we asked to install all packages, so it is at least as if we
         # also did --with-<name>
     else:
-        defaultPackageHome = None
+        packageHome = None
         # by default it is as if we did not use --with-<name>
 
-    packageHome = GetOption(name) or defaultPackageHome
     packageLink = os.path.join('software', 'em', name)
     
-    if not (default or packageHome):
+    if not (default or packageHome or COMPILE_ONLY):
         return ''
     
     # 'unset' is the default value when calling only --with-package
     # and a location is not provided
     if packageHome == 'unset':
-        if os.environ.get('SCIPION_COMPILE_ONLY', '').lower() not in ['1', 'true', 'yes']:
+        if not COMPILE_ONLY:
             try:
                 emDir = Dir('#software/em').abspath
                 if os.path.exists('%s/%s' % (emDir, tar)):
@@ -894,8 +906,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                 check_call(['tar', '--recursive-unlink', '-xzf', tar], cwd=emDir)
             except (CalledProcessError, OSError) as e:
                 Exit(e)
-        createPackageLink(packageLink, buildDir)
-    else:
+            createPackageLink(packageLink, buildDir)
+    elif packageHome is not None:
         createPackageLink(packageLink, packageHome)
         return ''  # when providing packageHome, we only want to create the link
 
@@ -934,8 +946,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     # done. I don't know how to fix this easily in scons... :(
 
     #FIXME: REMOVE './' by packageLink when finished compilation tests!!!
-    scriptPath = join('./', 'SConscript_scipion')
-    scriptPath = join(packageLink, 'SConscript_scipion')
+    scriptPath = join(packageLink, 'scipion_sconscript')
     # If we have specified extraActions, do them and don't try to
     # compile/install the package in any other way.
     if extraActions:
@@ -950,11 +961,15 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     elif os.path.exists(scriptPath):
         print "Reading Scipion SCons script file from: '%s'" % scriptPath
         env.Replace(packageDeps=deps)
-        env['SCONSCRIPT_PATH'] = os.path.abspath(packageLink)
+        env['PACKAGE'] = {'NAME': name,
+                          'DEPS': deps,
+                          'SCONSCRIPT': os.path.abspath(packageLink)
+                          }
         lastTarget = env.SConscript(scriptPath, exports='env')
         targets.append(lastTarget)
     else:
-        print "Package '%s' was downloaded and extracted, not further actions. " % name
+        if inBuild:
+            print "Package '%s' was downloaded and extracted, not further actions. " % name
  
     for t in targets:
         if t is not None:
@@ -1062,12 +1077,13 @@ env.AddMethod(addModule, 'AddModule')
 env.AddMethod(addPackage, 'AddPackage')
 env.AddMethod(manualInstall, 'ManualInstall')
 env.AddMethod(compilerConfig, 'CompilerConfig')
-env.AddMethod(addPackageLibrary, 'AddPackageLibrary')
+env.AddMethod(addCppLibrary, 'AddCppLibrary')
 env.AddMethod(addJavaLibrary, 'AddJavaLibrary')
 env.AddMethod(symLink, 'SymLink')
 env.AddMethod(addJavaTest, 'AddJavaTest')
 env.AddMethod(addProgram, 'AddProgram')
 env.AddMethod(progInPath, 'ProgInPath')
+env.AddMethod(targetInBuild, 'TargetInBuild')
 
 
 #  ************************************************************************
