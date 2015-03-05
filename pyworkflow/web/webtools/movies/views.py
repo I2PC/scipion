@@ -146,7 +146,8 @@ def check_m_id(request):
 def movies_form(request):
     from django.shortcuts import render_to_response
     context = contextForm(request)
-    context.update({'path_mode':'select'})
+    context.update({'path_mode':'select',
+                    'formUrl': 'mov_form'})
     return render_to_response('form/form.html', context)
  
 def movies_content(request):

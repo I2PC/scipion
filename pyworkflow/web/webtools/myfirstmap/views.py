@@ -194,7 +194,8 @@ def check_project_id(request):
 def myfirstmap_form(request):
     from django.shortcuts import render_to_response
     context = contextForm(request)
-    context.update({'path_mode':'upload'})
+    context.update({'path_mode':'upload',
+                    'formUrl': 'my_form'})
     return render_to_response('form/form.html', context)
 
  

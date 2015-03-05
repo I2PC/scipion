@@ -54,7 +54,8 @@ def findWizardsWeb(protocol):
 def form(request):
     from django.shortcuts import render_to_response
     context = contextForm(request)
-    context.update({'path_mode':'select'})
+    context.update({'path_mode':'select',
+                    'formUrl': 'form'})
     return render_to_response('form/form.html', context)
 
      
@@ -356,7 +357,7 @@ def updateParam(request, project, protocol, paramName):
             setPointerValue(project, attr, htmlValue, paramName, attr)
         else: 
             attr.set(htmlValue) # set the value for normal attribues
-            
+
         
 def save_protocol(request):
     project, protocol = loadProtocolProject(request)
