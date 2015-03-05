@@ -35,14 +35,18 @@ from pyworkflow.utils.path import makePath, moveFile, removeBaseExt, replaceBase
 from convert import *
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
 
-class XmippCTFBase():
-    """ This class contains the common functionalities for all protocols to
-estimate CTF on a set of micrographs using Xmipp 3.1 """
 
+class XmippProtCTFMicrographs(ProtCTFMicrographs):
+    """Protocol to estimate CTF on a set of micrographs using Xmipp 3.1"""
+    _label = 'ctf estimation'
+    
     _criterion="ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "\
                "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0.3 OR " \
                "ctfCritNonAstigmaticValidty>25"
 
+    def __init__(self, **args):
+        ProtCTFMicrographs.__init__(self, **args)
+    
     def _createFilenameTemplates(self):
         __prefix = join('%(micDir)s','xmipp_ctf')
         _templateDict = {
@@ -59,73 +63,6 @@ estimate CTF on a set of micrographs using Xmipp 3.1 """
                          }
         self._updateFilenamesDict(_templateDict)
     
-    #--------------------------- INFO functions ----------------------------------------------------
-    def _citations(self):
-        return ['Sorzano2007a']
-    
-    def _summary(self):
-        summary=[]
-        if self.methodsVar.hasValue():
-            summary.append(self.methodsVar.get())
-        return summary
-    
-    #--------------------------- UTILS functions ---------------------------------------------------
-    def _setPsdFiles(self, ctfModel, micDir):
-        ctfModel._psdFile = String(self._getFileName('psd', micDir=micDir))
-        ctfModel._xmipp_enhanced_psd = String(self._getFileName('enhanced_psd', micDir=micDir))
-        ctfModel._xmipp_ctfmodel_quadrant = String(self._getFileName('ctfmodel_quadrant', micDir=micDir))
-        ctfModel._xmipp_ctfmodel_halfplane = String(self._getFileName('ctfmodel_halfplane', micDir=micDir))
-    
-    def evaluateSingleMicrograph(self,micFn,micDir,ctfDownFactor):
-        mdEval = md.MetaData()
-        id = mdEval.addObject()
-
-# Check what happen with movies        
-#             if md.MDL_TYPE == md.MDL_MICROGRAPH_MOVIE:
-#                 mdEval.setValue(md.MDL_MICROGRAPH_MOVIE, micFn, id)
-#                 mdEval.setValue(md.MDL_MICROGRAPH,('%05d@%s'%(1, micFn)), id)
-#             else:
-        mdEval.setValue(md.MDL_MICROGRAPH, micFn, id)
-        
-        mdEval.setValue(md.MDL_PSD, str(self._getFileName('psd', micDir=micDir)), id)
-        mdEval.setValue(md.MDL_PSD_ENHANCED, str(self._getFileName('enhanced_psd', micDir=micDir)), id)
-        mdEval.setValue(md.MDL_CTF_MODEL, str(self._getFileName('ctfparam', micDir=micDir)), id)
-        mdEval.setValue(md.MDL_IMAGE1, str(self._getFileName('ctfmodel_quadrant', micDir=micDir)), id)
-        mdEval.setValue(md.MDL_IMAGE2, str(self._getFileName('ctfmodel_halfplane', micDir=micDir)), id)
-        mdEval.setValue(md.MDL_CTF_DOWNSAMPLE_PERFORMED,float(ctfDownFactor), id)
-        fnEval = self._getFileName('ctf', micDir=micDir)
-        mdEval.write(fnEval)
-        
-        # Evaluate if estimated ctf is good enough
-        # self.runJob("xmipp_ctf_sort_psds","-i %s --downsampling %f"%(fnEval,ctfDownFactor))   
-        try:
-            self.runJob("xmipp_ctf_sort_psds","-i %s"%(fnEval))
-        except Exception:
-            pass
-#             print >> sys.stderr, "xmipp_ctf_sort_psds has been Failed!"
-#             raise ex
-
-        # Check if it is a good micrograph
-        fnRejected = self._getTmpPath(basename(micFn +"_rejected.xmd"))
-        self.runJob("xmipp_metadata_utilities",'-i %s --query select "%s" -o %s' % (fnEval, self._criterion, fnRejected))
-        
-        retval=True
-        if not isMdEmpty(fnRejected):
-            mdCTF = md.MetaData(fnEval)
-            mdCTF.setValue(md.MDL_ENABLED, -1, mdCTF.firstObject())
-            mdCTF.write(fnEval)
-            retval=False
-        cleanPath(fnRejected)
-        return retval
-
-
-class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
-    """Protocol to estimate CTF on a set of micrographs using Xmipp 3.1"""
-    _label = 'ctf estimation'
-    
-    def __init__(self, **args):
-        ProtCTFMicrographs.__init__(self, **args)
-
     def _defineProcessParams(self, form):
         form.addParam('doCTFAutoDownsampling', BooleanParam, default=True, 
               label="Automatic CTF downsampling detection", expertLevel=LEVEL_ADVANCED, 
@@ -141,9 +78,9 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertFinalSteps(self, deps):
         stepId = self._insertFunctionStep('sortPSDStep', prerequisites=deps)
-        self._insertFunctionStep('createOutputStep', prerequisites=[stepId])
+        return [stepId]
     
-    #--------------------------- STEPS functions ---------------------------------------------------      
+    #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir):
         """ Run the estimate CTF program """        
         # Create micrograph dir under extra directory
@@ -191,6 +128,14 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         if deleteTmp != "":
             cleanPath(deleteTmp)
     
+    def _restimateCTF(self, id):
+        ctfModel = self.recalculateSet[id]
+        """ Run the estimate CTF program """
+        self._prepareRecalCommand(ctfModel)
+        # CTF estimation with Xmipp                
+        self.runJob(self._program, self._args % self._params)
+
+    
     def sortPSDStep(self):
         # Gather all metadatas of all micrographs
         md=xmipp.MetaData()
@@ -226,7 +171,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         md.write(self._getPath("ctfs_selection.xmd"))
         cleanPath(fnRejected)
         
-    def createOutputStep(self):
+    def _createOutputStep(self):
         ctfSet = self._createSetOfCTF()
         inputMics = self.inputMicrographs.get()
         ctfSet.setMicrographs(inputMics)
@@ -272,7 +217,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
 #                 micSet.append(mic)
 #             self._defineOutputs(outputMicrographs=micSet)
 #             self._defineTransformRelation(inputMics, micSet)
-
+    
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         validateMsgs = []
@@ -282,7 +227,10 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         return validateMsgs
     
     def _summary(self):
-        return ProtCTFMicrographs._summary(self) + XmippCTFBase._summary(self)
+        summary = ProtCTFMicrographs._summary(self)
+        if self.methodsVar.hasValue():
+            summary.append(self.methodsVar.get())
+        return summary
     
     def _methods(self):
         str="We calculated the CTF of micrographs %s using Xmipp [Sorzano2007a]"%self.getObjectTag('inputMicrographs')
@@ -290,13 +238,13 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
             str+=" with a fast defocus estimate [Vargas2013a]"
         str+="."
         if self.methodsVar.hasValue():
-            str+=" "+self.methodsVar.get()
+            str+=" " + self.methodsVar.get()
         if self.hasAttribute('outputCTF'):
             str += '\nOutput set is %s.'%self.getObjectTag('outputCTF')
         return [str]
-        
+    
     def _citations(self):
-        papers=XmippCTFBase._citations(self)
+        papers = ['Sorzano2007a']
         if self.doFastDefocus:
             papers.append('Vargas2013a')
         return papers
@@ -324,6 +272,104 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
             
         if self.doFastDefocus:
             self._args += " --fastDefocus"
+    
+    def _prepareRecalCommand(self, ctfModel):
+        if self.recalculate:
+            self._defineRecalValues(ctfModel)
+            self._createFilenameTemplates()
+            self._program = 'xmipp_ctf_estimate_from_psd'       
+            self._args = "--psd %(psdFn)s "
+            line = ctfModel.getObjComment().split()
+    
+            # get the size and the image of psd
+    
+            imgPsd = ctfModel.getPsdFile()
+            psdFile = basename(imgPsd)
+            imgh = ImageHandler()
+            size, _, _, _ = imgh.getDimensions(imgPsd)
+            
+            mic = ctfModel.getMicrograph()
+            micDir = self._getMicrographDir(mic)
+            cleanPath(self._getFileName('ctfparam', micDir=micDir))
+            
+            params2 = {'psdFn': join(micDir, psdFile),
+                       'defocusU': float(line[0]),
+                       'defocusV': float(line[1]),
+                       'angle': line[2],
+                      }
+            self._params = dict(self._params.items() + params2.items())
+            
+            # Mapping between base protocol parameters and the package specific command options
+            self.__params = {'sampling_rate': self._params['samplingRate'],
+                             'kV': self._params['voltage'],
+                             'Cs': self._params['sphericalAberration'],
+                             'min_freq': line[3],
+                             'max_freq': line[4],
+                             'defocusU': self._params['defocusU'],
+                             'defocusV': self._params['defocusV'],
+                             'azimuthal_angle': self._params['angle'],
+                             'Q0': self._params['ampContrast'],
+                             'defocus_range': 5000,
+                             'ctfmodelSize': size
+                            }
+            
+            for par, val in self.__params.iteritems():
+                self._args += " --%s %s" % (par, str(val))
+    
+    def _setPsdFiles(self, ctfModel, micDir):
+        ctfModel._psdFile = String(self._getFileName('psd', micDir=micDir))
+        ctfModel._xmipp_enhanced_psd = String(self._getFileName('enhanced_psd', micDir=micDir))
+        ctfModel._xmipp_ctfmodel_quadrant = String(self._getFileName('ctfmodel_quadrant', micDir=micDir))
+        ctfModel._xmipp_ctfmodel_halfplane = String(self._getFileName('ctfmodel_halfplane', micDir=micDir))
+    
+    def evaluateSingleMicrograph(self,micFn,micDir,ctfDownFactor):
+        mdEval = md.MetaData()
+        id = mdEval.addObject()
+
+# Check what happen with movies        
+#             if md.MDL_TYPE == md.MDL_MICROGRAPH_MOVIE:
+#                 mdEval.setValue(md.MDL_MICROGRAPH_MOVIE, micFn, id)
+#                 mdEval.setValue(md.MDL_MICROGRAPH,('%05d@%s'%(1, micFn)), id)
+#             else:
+        mdEval.setValue(md.MDL_MICROGRAPH, micFn, id)
+        
+        mdEval.setValue(md.MDL_PSD, str(self._getFileName('psd', micDir=micDir)), id)
+        mdEval.setValue(md.MDL_PSD_ENHANCED, str(self._getFileName('enhanced_psd', micDir=micDir)), id)
+        mdEval.setValue(md.MDL_CTF_MODEL, str(self._getFileName('ctfparam', micDir=micDir)), id)
+        mdEval.setValue(md.MDL_IMAGE1, str(self._getFileName('ctfmodel_quadrant', micDir=micDir)), id)
+        mdEval.setValue(md.MDL_IMAGE2, str(self._getFileName('ctfmodel_halfplane', micDir=micDir)), id)
+        mdEval.setValue(md.MDL_CTF_DOWNSAMPLE_PERFORMED,float(ctfDownFactor), id)
+        fnEval = self._getFileName('ctf', micDir=micDir)
+        mdEval.write(fnEval)
+        
+        # Evaluate if estimated ctf is good enough
+        # self.runJob("xmipp_ctf_sort_psds","-i %s --downsampling %f"%(fnEval,ctfDownFactor))   
+        try:
+            self.runJob("xmipp_ctf_sort_psds","-i %s"%(fnEval))
+        except Exception:
+            pass
+#             print >> sys.stderr, "xmipp_ctf_sort_psds has been Failed!"
+#             raise ex
+
+        # Check if it is a good micrograph
+        fnRejected = self._getTmpPath(basename(micFn +"_rejected.xmd"))
+        self.runJob("xmipp_metadata_utilities",'-i %s --query select "%s" -o %s' % (fnEval, self._criterion, fnRejected))
+        
+        retval=True
+        if not isMdEmpty(fnRejected):
+            mdCTF = md.MetaData(fnEval)
+            mdCTF.setValue(md.MDL_ENABLED, -1, mdCTF.firstObject())
+            mdCTF.write(fnEval)
+            retval=False
+        cleanPath(fnRejected)
+        return retval
+    
+    def _createNewCtfModel(self, mic):
+        micDir = self._getMicrographDir(mic)
+        ctfparam = self._getFileName('ctfparam', micDir=micDir)
+        ctfModel2 = readCTFModel(ctfparam, mic)
+        self._setPsdFiles(ctfModel2, micDir)
+        return ctfModel2
     
     def _createErrorCtfParam(self, micDir):
                 ctfparam = self._getFileName('ctfErrorParam', micDir=micDir)
@@ -376,106 +422,3 @@ data_fullMicrograph
                 f.write(lines)
                 f.close()
                 return ctfparam
-
-
-class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
-    """Protocol to recalculate CTF on a subSet of micrographs using Xmipp 3.1"""
-    _label = 'ctf re-estimation'
-    
-    def __init__(self, **args):
-        ProtRecalculateCTF.__init__(self, **args)
-    
-    #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertFinalSteps(self, deps):
-        self._createFilenameTemplates()
-        stepId = self._insertFunctionStep('sortPSDStep', prerequisites=deps)
-        self._insertFunctionStep('createOutputStep', prerequisites=[stepId])
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def _estimateCTF(self, id):
-        ctfModel = self.recalculateSet[id]
-        """ Run the estimate CTF program """
-        self._prepareCommand(ctfModel)
-        # CTF estimation with Xmipp                
-        self.runJob(self._program, self._args % self._params)
-    
-
-    #--------------------------- INFO functions ----------------------------------------------------
-    def _summary(self):
-        return ProtRecalculateCTF._summary(self)+XmippCTFBase._summary(self)
-
-    def _methods(self):
-        methodStr = "We calculated the CTF using Xmipp [Sorzano2007a]."
-        if self.methodsVar.hasValue():
-            methodStr += " " + self.methodsVar.get()
-        return [methodStr]
-    
-    #--------------------------- UTILS functions ---------------------------------------------------
-    def _prepareCommand(self, ctfModel):
-        self._defineValues(ctfModel)
-        self._createFilenameTemplates()
-        self._program = 'xmipp_ctf_estimate_from_psd'       
-        self._args = "--psd %(psdFn)s "
-        line = ctfModel.getObjComment().split()
-
-        # get the size and the image of psd
-
-        imgPsd = ctfModel.getPsdFile()
-        psdFile = basename(imgPsd)
-        imgh = ImageHandler()
-        size, _, _, _ = imgh.getDimensions(imgPsd)
-        
-        mic = ctfModel.getMicrograph()
-        micDir = self._getMicrographDir(mic)
-        cleanPath(self._getFileName('ctfparam', micDir=micDir))
-        
-        params2 = {'psdFn': join(micDir, psdFile),
-                   'defocusU': float(line[0]),
-                   'defocusV': float(line[1]),
-                   'angle': line[2],
-                  }
-        self._params = dict(self._params.items() + params2.items())
-        
-        # Mapping between base protocol parameters and the package specific command options
-        self.__params = {'sampling_rate': self._params['samplingRate'],
-                         'kV': self._params['voltage'],
-                         'Cs': self._params['sphericalAberration'],
-                         'min_freq': line[3],
-                         'max_freq': line[4],
-                         'defocusU': self._params['defocusU'],
-                         'defocusV': self._params['defocusV'],
-                         'azimuthal_angle': self._params['angle'],
-                         'Q0': self._params['ampContrast'],
-                         'defocus_range': 5000,
-                         'ctfmodelSize': size
-                        }
-        
-        for par, val in self.__params.iteritems():
-            self._args += " --%s %s" % (par, str(val))
-
-    def sortPSDStep(self):
-        # Gather all metadatas of all micrographs
-        #self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
-        #modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
-        
-        for ctfModel in self.recalculateSet:
-            if ctfModel.isEnabled() and ctfModel.getObjComment():
-                mic = ctfModel.getMicrograph()
-
-
-                # Update the CTF models that where recalculated
-                # and append later to the set
-                # we dont want to copy the id here since it is already correct
-                micDir = self._getMicrographDir(mic)
-                micFn = mic.getFileName()
-                ctfparam = self._getFileName('ctfparam', micDir=micDir)
-                mdCTF = xmipp.MetaData(ctfparam)
-                ctfDownFactor = mdCTF.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,mdCTF.firstObject())
-                self.evaluateSingleMicrograph(micFn,micDir,ctfDownFactor)
-
-    def _createNewCtfModel(self, mic):
-        micDir = self._getMicrographDir(mic)
-        ctfparam = self._getFileName('ctfparam', micDir=micDir)
-        ctfModel2 = readCTFModel(ctfparam, mic)
-        self._setPsdFiles(ctfModel2, micDir)
-        return ctfModel2

@@ -39,7 +39,7 @@ from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
 
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
-from protocol_ctffind3 import ProtCTFFind, ProtRecalculateCTFFind
+from protocol_ctffind3 import ProtCTFFind
 
 
 LAST_ITER = 0
@@ -579,7 +579,7 @@ class ProtCTFFindViewer(Viewer):
     """ Visualization of Frealign."""
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _label = 'viewer CtfFind'
-    _targets = [ProtCTFFind, ProtRecalculateCTFFind]
+    _targets = [ProtCTFFind]
      
      
     def __init__(self, **args):
@@ -637,10 +637,6 @@ class ProtCTFFindViewer(Viewer):
             mics = obj.inputMicrographs.get()
             visualizeObjs(obj, mics)
  
-        elif issubclass(cls, ProtRecalculateCTFFind) and not obj.hasAttribute("outputCTF"):
-             
-            mics = obj.inputCtf.get().getMicrographs()
-            visualizeObjs(obj, mics)
          
         elif obj.hasAttribute("outputCTF"):
             self._visualize(obj.outputCTF)

@@ -48,8 +48,6 @@ import SocketServer
 # Import possible Object commands to be handled
 from pyworkflow.em.showj import OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
-from pyworkflow.em.packages.xmipp3 import XmippProtRecalculateCTF
-from pyworkflow.em.packages.grigoriefflab import ProtRecalculateCTFFind
 
 
 class ProjectWindow(ProjectBaseWindow):
@@ -243,8 +241,6 @@ class ProjectWindow(ProjectBaseWindow):
                 obj = getattr(obj, attrName)
         return obj.get()
 
-
-
     def runObjectCommand(self, cmd, protocolStrId, objStrId):
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
         from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots, PLOT_POLAR, PLOT_CART, PLOT_POLARCART
@@ -270,7 +266,7 @@ class ProjectWindow(ProjectBaseWindow):
 
         elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
             self.queue.put(lambda: createPlots(PLOT_POLARCART, protocol, objId))
-
+    
     def recalculateCTF(self, inputObjId, sqliteFile):
         """ Load the project and launch the protocol to
         create the subset.
@@ -280,30 +276,19 @@ class ProjectWindow(ProjectBaseWindow):
         inputObj = project.mapper.selectById(int(inputObjId))
         parentProtId = inputObj.getObjParentId()
         parentProt = project.mapper.selectById(parentProtId)
-        parentClassName = parentProt.getClassName()
-        if parentClassName in ["XmippProtCTFMicrographs",
-                               "XmippProtRecalculateCTF"]:
-            # Create the new protocol
-            prot = project.newProtocol(XmippProtRecalculateCTF)
-        elif parentClassName in ["ProtCTFFind",
-                                 "ProtRecalculateCTFFind"]:
-            # Create the new protocol
-            prot = project.newProtocol(ProtRecalculateCTFFind)
+        protDep = project._getProtocolsDependencies([parentProt])
+        if protDep:
+                prot = parentProt.copy()
+                prot.continueRun.set(parentProt)
         else:
-            raise Exception('Unknown protocol class "%s" for recalculating CTF' % parentClassName)
-
-        useQueue = parentProt.useQueue()
-        Mpi = parentProt.numberOfMpi.get()
-        Threads = parentProt.numberOfThreads.get()
+            prot = parentProt
+            prot.isFirstTime.set(True)
+        
         # Define the input params of the new protocol
-        prot._useQUeue = useQueue
-        prot.numberOfMpi.set(Mpi)
-        prot.numberOfThreads.set(Threads)
+        prot.recalculate.set(True)
         prot.sqliteFile.set(sqliteFile)
-        prot.inputCtf.set(inputObj)
-         # Launch the protocol
+        # Launch the protocol
         project.launchProtocol(prot, wait=True)
-
 
 
 class ProjectManagerWindow(ProjectBaseWindow):

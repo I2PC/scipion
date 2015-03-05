@@ -676,7 +676,6 @@ class Protocol(Step):
             for step in stepsSet:
                 prevSteps.append(step.clone())
             stepsSet.close() # Close the connection
-              
         return prevSteps
     
     def _insertPreviousSteps(self):
