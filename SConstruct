@@ -635,8 +635,8 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
                  join("/usr","local","cuda","lib64"),
                  env['CUDA_LIB_PATH']]
     sources = []
-    for x, dir in enumerate(src):
-        sources += glob(join(dir, pattern[x]))
+    for s, p in izip(src, pattern):
+        sources += glob(join(s, p))
     
     ccCopy = env['MPI_CC'] if mpi else env['CC']
     cxxCopy = env['MPI_CXX'] if mpi else env['CXX']
