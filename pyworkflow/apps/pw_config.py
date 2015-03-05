@@ -43,7 +43,20 @@ def main():
         help=('Rewrite the configuration files using the original templates.'))
     args = parser.parse_args()
 
-    checkOrCreateConf(overwrite=args.overwrite)
+    try:
+        settingsDir = join(os.environ['SCIPION_HOME'], 'settings')
+        for fpath, tmplt in [
+                (os.environ['SCIPION_CONFIG'], 'scipion.conf'),
+                (os.environ['SCIPION_PROTOCOLS'], 'protocols.conf'),
+                (os.environ['SCIPION_HOSTS'], 'hosts.conf')]:
+            if not exists(fpath) or overwrite:
+                createConf(fpath, join(settingsDir, tmplt))
+            else:
+                checkConf(fpath, join(settingsDir, tmplt))
+    except Exception:
+        # This way of catching exceptions works with Python 2 & 3
+        sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
+        sys.exit(1)
 
 
 def createConf(fpath, ftemplate):
@@ -94,23 +107,6 @@ def checkConf(fpath, ftemplate):
             for o in dt[s] - df[s]:
                 print('In section %s, option %s exists in the template '
                       'but not in the configuration file.' % (s, o))
-
-
-def checkOrCreateConf(overwrite=False):
-    try:
-        settingsDir = join(os.environ['SCIPION_HOME'], 'settings')
-        for fpath, tmplt in [
-                (os.environ['SCIPION_CONFIG'], 'scipion.conf'),
-                (os.environ['SCIPION_PROTOCOLS'], 'protocols.conf'),
-                (os.environ['SCIPION_HOSTS'], 'hosts.conf')]:
-            if not exists(fpath) or overwrite:
-                createConf(fpath, join(settingsDir, tmplt))
-            else:
-                checkConf(fpath, join(settingsDir, tmplt))
-    except Exception:
-        # This way of catching exceptions works with Python 2 & 3
-        sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
-        sys.exit(1)
 
 
 if __name__ == '__main__':
