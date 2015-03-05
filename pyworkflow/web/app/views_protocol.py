@@ -341,6 +341,7 @@ def updateParam(request, project, protocol, paramName):
             from the web form
     """
     attr = getattr(protocol, paramName)
+#     print "ParamName: %s , Attr: %s" % (paramName, attr)
         
     if isinstance(attr, PointerList):
         attr.clear()

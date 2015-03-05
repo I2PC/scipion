@@ -1026,7 +1026,7 @@ function refreshRuns(mode) {
 			// datatype: "text",
 			success : function(data) {
 
-				console.log("data: " + data)
+//				console.log("data: " + data)
 
 				if (typeof data == 'string' || data instanceof String) {
 
@@ -1048,10 +1048,10 @@ function refreshRuns(mode) {
 						checkStatusNode(id, status)
 						checkStatusRow(id, status, time)
 
-						console.log(status)
+//						console.log(status)
 
 						if (status == "finished") {
-							console.log("protocol finished!")
+//							console.log("protocol finished!")
 							// updateTabs(id)
 						}
 					}
