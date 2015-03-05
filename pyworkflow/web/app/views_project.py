@@ -217,9 +217,9 @@ def project_content(request):
     if projectName is None:
         projectName = request.POST.get('projectName', None)
     context = contentContext(request, projectName)
-    context.update({'mode': None})
+    context.update({'mode': None,
+                   'formUrl':'form'})
     return render_to_response('project_content/project_content.html', context)
-
 
 
 def contentContext(request, projectName):

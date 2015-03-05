@@ -815,20 +815,22 @@ function switchMode(mode) {
 	param['smallGraphTool'] = smallGraphTool ;
 	
 	changeStatusGraph(mode, param);
-
-	// Graph will be painted once
-	if (graph.attr("data-time") == 'first') {
+	
+	if (graph.attr("data-time") == 'first' && mode == 1) {
+		// Graph will be painted once
 		callPaintGraph(graph, "normal");
 		graph.attr("data-time", "not");
 	}
 	
-	if (smallGraph.attr("data-time") == 'first') {
+	if (smallGraph.attr("data-time") == 'first' && mode == 2) {
+		// Small Graph will be painted once
 		callPaintGraph(smallGraph, "small");
 		smallGraph.attr("data-time", "not");
 	}
 
 	// Keep the consistency about the selected elements between
 	// the list and graph views.
+	
 	if (mode == 1){
 		transposeElmMarked("active");
 	}
@@ -1024,7 +1026,7 @@ function refreshRuns(mode) {
 			// datatype: "text",
 			success : function(data) {
 
-				console.log("data: " + data)
+//				console.log("data: " + data)
 
 				if (typeof data == 'string' || data instanceof String) {
 
@@ -1046,10 +1048,10 @@ function refreshRuns(mode) {
 						checkStatusNode(id, status)
 						checkStatusRow(id, status, time)
 
-						console.log(status)
+//						console.log(status)
 
 						if (status == "finished") {
-							console.log("protocol finished!")
+//							console.log("protocol finished!")
 							// updateTabs(id)
 						}
 					}

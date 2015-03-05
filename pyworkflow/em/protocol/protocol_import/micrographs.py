@@ -53,7 +53,7 @@ class ProtImportMicBase(ProtImportImages):
                        default=SAMPLING_FROM_IMAGE,
                        label=Message.LABEL_SAMP_MODE,
                        help=Message.TEXT_SAMP_MODE)
-        group.addParam('samplingRate', FloatParam,  
+        group.addParam('samplingRate', FloatParam,  default=1.0,
                        condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE, 
                        label=Message.LABEL_SAMP_RATE,
                        help=Message.TEXT_SAMP_RATE)
