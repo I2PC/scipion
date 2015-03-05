@@ -254,7 +254,8 @@ class ChimeraViewer(Viewer):
 class ChimeraClient:
     
     def __init__(self, volfile, **kwargs):
-        
+
+        self.kwargs = kwargs
         if volfile is None:
             raise ValueError(volfile)
         if '@' in volfile:
@@ -265,12 +266,15 @@ class ChimeraClient:
             file = file[0: file.rfind(':')]
         if not os.path.exists(file):
             raise Exception("File %s does not exists"%file)
-        self.kwargs = kwargs
+        self.angularDistFile = self.kwargs.get('angularDistFile', None)
+        if self.angularDistFile and not (os.path.exists(self.angularDistFile) or xmipp.existsBlockInMetaDataFile(self.angularDistFile)):#check blockname:
+            raise Exception("Path %s does not exists"%self.angularDistFile)
+
         self.volfile = volfile
         self.voxelSize = self.kwargs.get('voxelSize', None)
         self.address = ''
         self.port = getFreePort()
-        
+
         serverfile = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'em', 'chimera_server.py')
         command = CommandView("chimera --script '%s %s'&" % (serverfile, self.port),
                              env=getChimeraEnviron()).show()
@@ -280,16 +284,12 @@ class ChimeraClient:
         
         printCmd('initVolumeData')
         self.initVolumeData()   
-        
-        self.angularDistFile = self.kwargs.get('angularDistFile', None)
         self.spheresColor = self.kwargs.get('spheresColor', 'red')
         spheresDistance = self.kwargs.get('spheresDistance', None)
         spheresMaxRadius = self.kwargs.get('spheresMaxRadius', None)
-        printCmd(spheresDistance)
-        printCmd(spheresMaxRadius)
         self.spheresDistance = float(spheresDistance) if spheresDistance else 0.75 * max(self.xdim, self.ydim, self.zdim)
         self.spheresMaxRadius = float(spheresMaxRadius) if spheresMaxRadius else 0.02 * self.spheresDistance
-               
+
         printCmd('openVolumeOnServer')
         self.openVolumeOnServer(self.vol)
         self.initListenThread()
@@ -394,8 +394,9 @@ class ChimeraProjectionClient(ChimeraClient):
         self.projection.setDataType(xmipp.DT_DOUBLE)
         #0.5 ->  Niquiest frequency
         #2 -> bspline interpolation
-
-        self.size = self.kwargs.get('size', self.xdim if self.xdim > 128 else 128)
+        size = self.kwargs.get('size', None)
+        defaultSize = self.xdim if self.xdim > 128 else 128
+        self.size = size if size else defaultSize
         paddingFactor = self.kwargs.get('paddingFactor', 1)
         maxFreq = self.kwargs.get('maxFreq', 0.5)
         splineDegree = self.kwargs.get('splineDegree', 2)
