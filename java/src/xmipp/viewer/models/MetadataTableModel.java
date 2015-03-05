@@ -36,13 +36,16 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.FloatRenderer;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
@@ -221,6 +224,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	public boolean isCellEditable(int row, int column) {
+                if(data.isScipionInstance() || data.isChimeraClient())
+                    return false;
 		ColumnInfo ci = visibleLabels.get(column);
 		return ci.allowEdit && !ci.render;
 	}
@@ -245,6 +250,14 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                                     openXmippImageWindow(index, ci.label);
 				return true;
 			}
+                        if(data.isChimeraClient())//
+                        {
+                            String rot = data.getValueFromLabel(row, MDLabel.MDL_ANGLE_ROT);
+                            String tilt = data.getValueFromLabel(row, MDLabel.MDL_ANGLE_TILT);
+                            String psi = data.getValueFromLabel(row, MDLabel.MDL_ANGLE_PSI);
+                            String command = String.format("rotate %s %s %s", rot, tilt, psi);
+                            XmippWindowUtil.runCommand(command, data.parameters.getChimeraPort());
+                        }
 		} catch (Exception e) {
                         if(e.getMessage() == null)
                             e.printStackTrace();

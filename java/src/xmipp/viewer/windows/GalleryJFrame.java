@@ -1512,12 +1512,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		public void update()
 		{
                         
-                        boolean isscipion = (data instanceof ScipionGalleryData);
+                        boolean isscipion = data.isScipionInstance();
 			boolean galMode = data.isGalleryMode();
 			boolean volMode = !data.getSelVolumeFile().isEmpty();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
-                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data instanceof ScipionGalleryData));
+                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data.isScipionInstance()));
 			setItemEnabled(FILE_SAVE, !volMode && !isscipion);
 			setItemEnabled(FILE_SAVEAS, !volMode && !isscipion);
 			
@@ -1879,7 +1879,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
                         row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
-                        boolean isscipion = data instanceof ScipionGalleryData;
+                        boolean isscipion = data.isScipionInstance();
 			setItemVisible(SET_CLASS, data.isClassificationMd() && !isscipion);
 			// This item visibility depends on current selection
 			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0 && !isscipion);

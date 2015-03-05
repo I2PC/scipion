@@ -88,7 +88,7 @@ public class Params {
     private String block;
     public String[] objectCommands;
     private Float samplingRate;
-    public int chimeraPort;
+    public Integer chimeraPort;
     
 
     public Params() {
@@ -325,6 +325,9 @@ public class Params {
         return samplingRate;
     }
     
-    
+    public Integer getChimeraPort()
+    {
+        return chimeraPort;
+    }
    
 }
