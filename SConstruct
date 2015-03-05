@@ -808,7 +808,7 @@ def createPackageLink(packageLink, packageFolder):
     if not os.path.exists(packageFolder if os.path.isabs(packageFolder) else 'software/em/%s' % packageFolder):
         Exit("Creating link %s, but '%s' does not exist!!!\n"
              "INSTALLATION FAILED!!!" % (linkText, packageFolder))
-        
+
     if os.path.exists(packageLink):
         if not COMPILE_ONLY:
             if os.path.islink(packageLink):
@@ -822,7 +822,7 @@ def createPackageLink(packageLink, packageFolder):
     if not COMPILE_ONLY:
         os.symlink(packageFolder, packageLink)
         print "Created link: %s" % linkText
-    
+
 
 def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                extraActions=[], deps=[], clean=[], reqs=[], default=True):
