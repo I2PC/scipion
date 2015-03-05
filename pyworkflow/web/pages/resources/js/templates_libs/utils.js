@@ -301,6 +301,8 @@ function infoPopup(title, msgText, autoclose, closeFunc) {
 			callback: function(){
 				window.close();
 				if (closeFunc){
+					var funcs = closeFunc.split("form")
+					closeFunc = funcs[0] + getFormUrl() + funcs[1]
 					eval(closeFunc)
 				}
 			}
