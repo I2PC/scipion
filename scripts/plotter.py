@@ -57,7 +57,6 @@ def main():
     #I guess this can be done in a single call
     cur.execute("select julianday(timestamp)  from %s where id=1"%tableName )
     initTime = cur.fetchone()[0]
-    print initTime
     cur.execute("select (julianday(timestamp) - %f)*24  from %s"%(initTime,tableName) )
     id=[r[0] for r in cur.fetchall()]
     cur.execute("select cpu  from %s"%tableName )
