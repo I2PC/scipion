@@ -23,10 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <bilib/headers/dft.h>
+
 #include "xmipp_fft.h"
 #include "args.h"
 #include "histogram.h"
-#include "headers/dft.h"
 
 /* Format conversions ------------------------------------------------------ */
 /** Convert whole -> half of (centro-symmetric) Fourier transforms 1D. -- */

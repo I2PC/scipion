@@ -23,7 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/spherical_harmonics.h>
+#include "data/spherical_harmonics.h"
+
 
 void PolySphericalHarmonics::shPols(int degree, MultidimArray<double> & im,
 		 int verbose)

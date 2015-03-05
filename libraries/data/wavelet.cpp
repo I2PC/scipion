@@ -28,6 +28,8 @@
 /* WAVELETS                                                                  */
 /* ------------------------------------------------------------------------- */
 
+#include <bilib/headers/wavelet.h>
+
 #include "wavelet.h"
 #include "args.h"
 #include "numerical_tools.h"
@@ -35,7 +37,6 @@
 #include "mask.h"
 
 #include "xmipp_image.h"
-#include <headers/wavelet.h>
 #include "xmipp_fftw.h"
 
 

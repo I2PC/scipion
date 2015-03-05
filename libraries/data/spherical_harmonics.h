@@ -26,9 +26,10 @@
 #ifndef SPHERICAL_HARMONICS_H_
 #define SPHERICAL_HARMONICS_H_
 
+#include <alglib/src/specialfunctions.h>
+
 #include "multidim_array.h"
 #include "matrix2d.h"
-#include "specialfunctions.h"
 //#include "../../../kk/gsl-1.16/gsl/gsl_sf_gegenbauer.h"
 
 # define pi           3.14159265358979323846  /* pi */

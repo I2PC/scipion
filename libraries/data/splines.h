@@ -26,9 +26,10 @@
 #ifndef _SPLINES_HH
 #define _SPLINES_HH
 
+#include <bilib/headers/kernel.h>
+
 #include "grids.h"
 
-#include "headers/kernel.h"
 
 /* ========================================================================= */
 /* SPLINES                                                                   */

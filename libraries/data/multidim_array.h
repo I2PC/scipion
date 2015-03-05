@@ -29,8 +29,11 @@
 #ifdef XMIPP_MMAP
 #include <sys/mman.h>
 #endif
-#include "types/tsplinebasis.h"
-#include "headers/kernel.h"
+/// Consider biblib as external library
+/// for compilation, xmipp/external should be passed as -I
+#include <bilib/types/tsplinebasis.h>
+#include <bilib/headers/kernel.h>
+
 #include "xmipp_strings.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
