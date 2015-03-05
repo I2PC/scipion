@@ -37,7 +37,7 @@ def main():
     parser = argparse.ArgumentParser(description='store memory and cpu usage, plot it using monitor.py program. Usage scipion run monitor.py')
 
     parser.add_argument('--interval', action="store", type=int, default=60, help="record during these minutes")
-    parser.add_argument('--sleepSec', action="store", type=int, default=2, help="record each these seconds")
+    parser.add_argument('--sleepSec', action="store", type=int, default=20, help="record each these seconds")
     args = parser.parse_args()
     # Get arguments. This will be implement later
     baseFn = os.path.join(os.environ.get('SCIPION_USER_DATA'),'tmp','log.sqlite')
