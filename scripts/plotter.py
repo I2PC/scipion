@@ -57,6 +57,8 @@ def main():
     #I guess this can be done in a single call
     cur.execute("select julianday(timestamp)  from %s where id=1"%tableName )
     initTime = cur.fetchone()[0]
+    cur.execute("select timestamp  from %s where id=1"%tableName )
+    initTimeTitle = cur.fetchone()[0]
     cur.execute("select (julianday(timestamp) - %f)*24  from %s"%(initTime,tableName) )
     id=[r[0] for r in cur.fetchall()]
     cur.execute("select cpu  from %s"%tableName )
@@ -71,7 +73,7 @@ def main():
 
     x1,x2,y1,y2 = pyplot.axis()
     pyplot.axis((0.,x2,y1,y2))
-    pyplot.title("System Monitor")
+    pyplot.title("System Monitor (%s)"%initTimeTitle)
     pyplot.xlabel("time (hours)")
     pyplot.ylabel("percentage")
     pyplot.legend()

@@ -58,7 +58,7 @@ from protocol_projection_outliers import XmippProtProjectionOutliers
 from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
-from protocol_ctf_micrographs import XmippProtCTFMicrographs, XmippProtRecalculateCTF
+from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from pyworkflow.em.showj import *
 from protocol_movie_alignment import ProtMovieAlignment
 
@@ -91,7 +91,6 @@ class XmippViewer(Viewer):
                 XmippProtScreenClasses, 
                 XmippProtScreenParticles, 
                 XmippProtCTFMicrographs, 
-                XmippProtRecalculateCTF,
                 ProtMovieAlignment
                 ]
     
@@ -239,10 +238,6 @@ class XmippViewer(Viewer):
             mics = obj.inputMicrographs.get()
             visualizeCTFObjs(obj, mics)
 
-        if issubclass(cls, XmippProtRecalculateCTF) and not obj.hasAttribute("outputCTF"):
-            mics = obj.inputCtf.get().getMicrographs()
-            visualizeCTFObjs(obj, mics)
-        
         elif obj.hasAttribute("outputCTF"):
             self._visualize(obj.outputCTF)
         
