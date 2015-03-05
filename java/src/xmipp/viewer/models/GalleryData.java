@@ -54,6 +54,7 @@ import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.scipion.ScipionGalleryData;
 import xmipp.viewer.scipion.ScipionMetaData;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -166,6 +167,10 @@ public class GalleryData {
     public void setModelDim(Integer rows, Integer cols) {
         this.rows = rows;
         this.columns = cols;
+    }
+
+    public boolean isScipionInstance() {
+        return this instanceof ScipionGalleryData;
     }
 
 
@@ -1889,4 +1894,9 @@ public class GalleryData {
             return sortby;
         }
         
+        
+        public boolean isChimeraClient()
+        {
+            return parameters.getChimeraPort() != null;
+        }
 }// class GalleryDaa

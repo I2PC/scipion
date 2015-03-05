@@ -228,7 +228,7 @@ public class PlotJDialog extends XmippDialog {
 
 		try {
                         String[] argsBasic;
-                        if(parent instanceof ScipionGalleryJFrame)
+                        if(((GalleryJFrame)parent).data.isScipionInstance())
                         {
                             ScipionParams params = (ScipionParams)gallery.data.parameters;
                             //argsBasic = new String[]{params.python, params.getPlotSqliteScript(), gallery.data.getFileName(), ((ScipionGalleryData)gallery.data).getPreffix(), 
