@@ -133,6 +133,10 @@ function popup(URL) {
 	 * Launch a basic popup (600x500) opening the URL passed by argument.
 	 */
 	
+	if (URL.indexOf('/form/') == 0) {
+		URL = setFormURL(URL)
+	}
+	
 	var URL = getSubDomainURL() + URL
 	var popup_width = 600;
 	var popup_height = 500;
@@ -156,6 +160,11 @@ function customPopup(URL, widthValue, heightValue) {
 	 * Launch a popup opening the URL passed by argument. 
 	 * The size of the popup is customized with the width and height chosen.
 	 */
+	
+	if (URL.indexOf('/form/') == 0) {
+		URL = setFormURL(URL)
+	}
+	
 	var URL = getSubDomainURL() + URL
 	var day = new Date();
 	var id = day.getTime();

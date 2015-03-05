@@ -28,6 +28,7 @@ from os.path import exists, join, basename
 from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs
 from pyworkflow.web.app.views_base import base_grid, base_flex
 from pyworkflow.web.app.views_project import contentContext
+from pyworkflow.web.app.views_protocol import contextForm
 from django.shortcuts import render_to_response
 from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
@@ -142,6 +143,12 @@ def check_m_id(request):
     
     return HttpResponse(result, mimetype='application/javascript')
  
+def movies_form(request):
+    from django.shortcuts import render_to_response
+    context = contextForm(request)
+    context.update({'path_mode':'select'})
+    return render_to_response('form/form.html', context)
+ 
 def movies_content(request):
     projectName = request.GET.get('p', None)
     path_files = '/resources_movies/img/'
@@ -150,7 +157,7 @@ def movies_content(request):
     context.update({
                     # MODE
                     'mode':'service',
-                    
+                    'formUrl': 'mov_form',
                     # IMAGES
 #                     'imageName': path_files + 'image.png',
                     })

@@ -26,6 +26,10 @@
 <body>
 
 	<div data-layout='{"type": "flexGrid", "columns": 1, "hgap": 1, "vgap": 1}' class="layout-outer">
+		
+		<!-- UTILS VARS -->
+		<input type="hidden" id="formUrl" value="{{formUrl}}">
+		
 		{% block header %}	
 			{% include "header.html" %}
 		{% endblock %}

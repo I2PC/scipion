@@ -28,6 +28,7 @@ from os.path import exists, join, basename
 from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs
 from pyworkflow.web.app.views_base import base_grid, base_flex
 from pyworkflow.web.app.views_project import contentContext
+from pyworkflow.web.app.views_protocol import contextForm
 from django.shortcuts import render_to_response
 from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
@@ -190,6 +191,13 @@ def check_project_id(request):
     
     return HttpResponse(result, mimetype='application/javascript')
  
+def myfirstmap_form(request):
+    from django.shortcuts import render_to_response
+    context = contextForm(request)
+    context.update({'path_mode':'upload'})
+    return render_to_response('form/form.html', context)
+
+ 
 def service_content(request):
     projectName = request.GET.get('p', None)
     path_files = '/resources_myfirstmap/img/'
@@ -202,6 +210,7 @@ def service_content(request):
                     'showj': path_files + 'showj.png',
                     'alignVol': path_files + 'alignVol.png',
                     'download': path_files + 'download.png',
+                    'formUrl': 'my_form',
                     'mode':'service',
                     })
     
