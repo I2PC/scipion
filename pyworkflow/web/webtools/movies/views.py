@@ -25,8 +25,8 @@
 # **************************************************************************
 
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs
-from pyworkflow.web.app.views_base import base_grid, base_flex
+from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs, getResourceIcon
+from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
 from django.shortcuts import render_to_response
@@ -61,7 +61,7 @@ def writeCustomMenu(customMenu):
 
 Movies_Alignment = [
     {"tag": "section", "text": "1. Upload data", "children": [
-        {"tag": "url", "value": "/upload/", "text": "Upload Data", "icon": "fa-upload.png"}]},
+        {"tag": "url", "value": "/upload_movies/", "text":"Upload Data", "icon": "fa-upload.png"}]},
     {"tag": "section", "text": "2. Import your data", "children": [
         {"tag": "protocol", "value": "ProtImportMovies", "text": "Import Movies", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Align your Movies", "children": [
@@ -165,4 +165,21 @@ def movies_content(request):
                     })
     
     return render_to_response('movies_content.html', context)
+
+
+def upload_movies(request):
+
+#     path = os.path.join(request.session['projectPath'],'Uploads')
+#     split_path = path.split("/ScipionUserData/")
+#     relative_path = "ScipionUserData/" + split_path[1]
+
+    context = {
+#                'relative_path': relative_path,
+               'logo_scipion_small': getResourceIcon('logo_scipion_small'),
+               "upload_utils": getResourceJs('upload_utils'),
+               }
+
+    context = base_form(request, context)
+    
+    return render_to_response('upload_movies.html', context)
 
