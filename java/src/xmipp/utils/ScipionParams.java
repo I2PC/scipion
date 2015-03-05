@@ -16,11 +16,9 @@ import org.apache.commons.cli.Option;
 public class ScipionParams extends Params {
 
     
-    public int port;
+
     public String inputid;
     public String other;
-    public String scripts;
-    public String[] objectCommands;
 
     public final static String SCIPION = "scipion";
     
