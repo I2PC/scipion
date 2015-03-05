@@ -50,6 +50,7 @@ public class Params {
     public final static String NO_WRAP = "dont_wrap";
     public final static String OBJECT_CMDS = "object_commands";
     public final static String SAMPLINGRATE = "sampling_rate";
+    public final static String CHIMERAPORT = "chimera_port";
     
     
     
@@ -86,10 +87,8 @@ public class Params {
     public String[] sortby;
     private String block;
     public String[] objectCommands;
-    private float samplingRate;
-    
-    
-    
+    private Float samplingRate;
+    public int chimeraPort;
     
 
     public Params() {
@@ -156,6 +155,7 @@ public class Params {
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
         options.addOption(SAMPLINGRATE, true, "");
+        options.addOption(CHIMERAPORT, true, "");
 
     }
     
@@ -285,6 +285,10 @@ public class Params {
             if (cmdLine.hasOption(SAMPLINGRATE)) {
                 samplingRate = Float.parseFloat(cmdLine.getOptionValue(SAMPLINGRATE));
             }
+            if (cmdLine.hasOption(CHIMERAPORT)) {
+                chimeraPort = Integer.parseInt(cmdLine.getOptionValue(CHIMERAPORT));
+            }
+           
            
            
         } catch (Exception ex) {

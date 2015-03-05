@@ -30,7 +30,6 @@ from xmipp import *
 from multiprocessing.connection import Client
 from protlib_xmipp import getImageData
 from protlib_gui_figure import ImageWindow
-from pickle import dumps, loads
 from threading import Thread
 from os import system
 from numpy import array, ndarray, flipud
@@ -101,6 +100,7 @@ class XmippChimeraClient:
         z2=self.zdim/2
         #cofr does not seem to work!
         #self.angulardist.append('cofr %d,%d,%d'%(x2,y2,z2))
+        
         for id in md:
             
             rot = md.getValue(angleRotLabel, id)
@@ -217,7 +217,7 @@ class XmippProjectionExplorer(XmippChimeraClient):
     def answer(self, msg):
         XmippChimeraClient.answer(self, msg)
         if msg == 'motion_stop':
-            data = loads(self.client.recv())#wait for data
+            data = self.client.recv()#wait for data
             printCmd('reading motion')
             self.motion = array(data)
             printCmd('getting euler angles')

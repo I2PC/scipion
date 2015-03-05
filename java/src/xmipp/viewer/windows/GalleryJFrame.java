@@ -1632,20 +1632,20 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					try
 					{
-                                                if(!XmippUtil.isInPath("chimera"))
+                                                
+						String scipionHome = System.getenv().get("SCIPION_HOME");
+                                                if(scipionHome == null)
                                                 {
-                                                    XmippDialog.showError(GalleryJFrame.this, "Chimera is not available");
+                                                    XmippDialog.showError(GalleryJFrame.this, "Scipion is not available");
                                                     return;
                                                 }
-						// if (Filename.isSpiderVolume(args))
-						// args = "spider:" + args;
-						// // FIXME: Check chimera is installed
-						// Process p = new ProcessBuilder("chimera", args).start();
-                                                String run = String.format("xmipp_chimera_client --input %s --mode projector", data.getSelVolumeFile());
+                                                String run = String.format("python %s%2$spyworkflow%2$sapps%2$spw_chimera_client.py projector --input %3$s", scipionHome, File.separator, data.getSelVolumeFile());
+                                                System.out.println(run);
                                                 if(data.parameters.getSamplingRate() != null)
                                                     run += String.format(" --samplingRate %s", data.parameters.getSamplingRate());
                                                 
-						XmippWindowUtil.executeCommand(run, false);
+						String output = XmippWindowUtil.executeCommand(run, true);
+                                                System.out.println(output);
                                                 
 					}
 					catch (Exception ex)
