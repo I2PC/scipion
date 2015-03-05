@@ -90,6 +90,7 @@ def create_movies_project(request):
         writeCustomMenu(customMenu)
         
         project = manager.createProject(projectName, runsView=1, protocolsConf=customMenu)   
+        copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # 1. Import movies
         protImport = project.newProtocol(ProtImportMovies,

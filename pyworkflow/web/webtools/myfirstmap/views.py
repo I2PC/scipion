@@ -92,6 +92,7 @@ def create_service_project(request):
         writeCustomMenu(customMenu)
         
         project = manager.createProject(projectName, runsView=1, protocolsConf=customMenu)   
+        copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # 1. Import averages
         protImport = project.newProtocol(ProtImportAverages,
