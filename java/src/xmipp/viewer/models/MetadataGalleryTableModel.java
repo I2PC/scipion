@@ -28,12 +28,13 @@ package xmipp.viewer.models;
 import ij.ImagePlus;
 import java.util.ArrayList;
 import java.util.List;
+import xmipp.ij.commons.ImagePlusFromFile;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
-import xmipp.jni.MDLabel;
 import xmipp.utils.DEBUG;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 import xmipp.viewer.windows.ImagesWindowFactory;
@@ -44,7 +45,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	private static final long serialVersionUID = 1L;
 	// Label to be rendered
 	protected ColumnInfo renderLabel;
-	protected ImageGeneric image;
 	// Also store the visible ones to fast access
 	public ArrayList<ColumnInfo> visibleLabels;
 
@@ -52,7 +52,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		super(data);
 		data.normalize = false;
-
 	}
 
 	/** Update the columns display information */
@@ -109,7 +108,11 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		{
 			try
 			{
-                            ImagePlusLoader loader = new ImagePlusLoader(imagepath, data.useGeo, data.wrap);
+                            ImagePlusLoader loader;
+                            if(Filename.isVolume(imagepath))
+                                loader = new ImagePlusLoader(imagepath, null, null, data.useGeo, data.wrap, ImageGeneric.MID_SLICE);
+                            else
+                                loader = new ImagePlusLoader(imagepath, data.useGeo, data.wrap);
                             loader.setGeometry(data.getGeometry(id));
                             loader.setDimension(thumb_width, thumb_height);
                             return loader.getImagePlus();
@@ -138,34 +141,35 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			// data.globalRender = true;
 		}
 		ImageDimension dim = null;
-
-		if (data.hasRenderLabel())
+                int width = 30, height = 30;
+		if (data.hasRenderLabel()) 
 		{
+                        
 			renderLabel = data.ciFirstRender;
 			// if (renderLabels) {
-			for (int i = 0; i < data.ids.length; ++i)
-			{
-				String imageFn = getImageFilename(i, renderLabel.label);
-				if (imageFn != null && Filename.exists(imageFn))
-				{
-					try
-					{
-						image = new ImageGeneric(imageFn);
-						dim = new ImageDimension(image);
-						break;
-					}
-					catch (Exception e)
-					{
-						dim = null;
-					}
-				}
-			}
+			String imageFn = data.getSampleImage(renderLabel);
+                        if(imageFn != null)
+                            try
+                            {
+                                    ImagePlus image = new ImagePlusFromFile(imageFn).getImagePlus();
+                                    width = image.getWidth(); 
+                                    height = image.getHeight();
+                                    dim = new ImageDimension(width, height);
+                            }
+                            catch (Exception e)
+                            {
+                                    dim = null;
+                                    e.printStackTrace();
+                            }
 		}
 
 		if (dim == null)
-			dim = new ImageDimension(30);
+			dim = new ImageDimension(width);
 		dim.setZDim(data.ids.length);
-
+                int defZoom = GalleryData.getDefaultZoom(width);
+                int similarity = Math.min(defZoom, data.zoom)/Math.max(defZoom, data.zoom);
+                if(data.zoom == 0 || similarity < 0.5)
+                    data.zoom = defZoom;
 		return dim;
 	}
 
@@ -203,6 +207,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		ImageItem item = new ImageItem(index);
 		boolean useGeo = data.useGeo;
 		ImagePlus imp = getImage(objId, imageFn, useGeo, data.wrap);
+                
 		item.setImagePlus(imp);
 		return item;
 	}
@@ -270,12 +275,14 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
         protected void openXmippImageWindow(int index, int label)
         {
                 String file = getImageFilename(index, label);
+                if(file == null)
+                    throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(data.getValueFromLabel(index, label)));
                 ImagePlusLoader loader = new ImagePlusLoader(file, data.useGeo, data.wrap);
                 if(data.containsGeometryInfo())
                     loader.setGeometry(data.getGeometry(data.ids[index]));
                 if (data.getNormalized())
                     loader.setNormalize(normalize_min, normalize_max);
-                ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
+                ImagesWindowFactory.openXmippImageWindow(data.window, loader, data.parameters);
         }
 
 	@Override
@@ -326,7 +333,12 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	}// function handleRightClick
 
 	// Extension of the ImagePlusLoader, read an image from a Metadata row
-	
 
+    @Override
+    public boolean showLabels() {
+        return true;
+    }
+	
+        
 
 }

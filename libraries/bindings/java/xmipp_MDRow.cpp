@@ -18,6 +18,12 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MDRow_create
     STORE_PEER_ID(jobj, mdRow);
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_MDRow_createRef
+(JNIEnv *env, jobject jobj, jlong id)
+{
+    STORE_PEER_ID(jobj, id);
+}
+
 JNIEXPORT void JNICALL Java_xmipp_jni_MDRow_destroy
 (JNIEnv *env, jobject jobj)
 {
@@ -185,6 +191,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MDRow_setValueDouble(JNIEnv *env,
     }
     XMIPP_JAVA_CATCH;
 }
+
 JNIEXPORT void JNICALL Java_xmipp_jni_MDRow_setValueString(JNIEnv *env,
         jobject jobj, jint label, jstring value)
 {

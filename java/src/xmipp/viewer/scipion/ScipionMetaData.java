@@ -22,9 +22,6 @@ import xmipp.jni.CTFDescription;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
-import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippQuestionDialog;
-import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -44,36 +41,30 @@ public class ScipionMetaData extends MetaData {
     private String[] blocks;
     private int enableds;
     Boolean checkTmp;
+    HashMap<String, String> properties;
+    HashMap <Long, EMObject> idsmap;
     
     
 
-    public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns) {
-        this(prefix, self, selfalias, columns, new ArrayList<EMObject>());
-    }
-
-    public ScipionMetaData(String preffix, String self, String selfalias, List<ColumnInfo> columns, List<EMObject> emobjects) {
-        this.preffix = preffix;
-        this.self = self;
-        this.selfalias = selfalias;
-        this.columns = columns;
-        this.emobjects = emobjects;
-        blocks = new String[]{getBlock()};
-    }
+   
 
     public ScipionMetaData(String dbfile) {
         this.filename = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
         loadData();
-        if (self.equals("Class2D") || self.equals("Class3D")) {
-            String prefix;
+        if (isClassificationMd()) {
+            String preffix;
             haschilds = true;
             List<String> childblocks = new ArrayList<String>();
             for (EMObject emo : emobjects) {
-                prefix = String.format("Class%03d_", emo.getId());
-                emo.childmd = new ScipionMetaData(dbfile, prefix);
-                emo.childmd.setParent(this);
-                childblocks.add(emo.childmd.getBlock());
+                if((Integer)emo.getValue("_size") != 0)
+                {
+                    preffix = String.format("Class%03d_", emo.getId());
+                    emo.childmd = new ScipionMetaData(dbfile, preffix);
+                    emo.childmd.setParent(this);
+                    childblocks.add(emo.childmd.getBlock());
+                }
             }
         
          
@@ -89,14 +80,15 @@ public class ScipionMetaData extends MetaData {
 
     }
 
-    public ScipionMetaData(String dbfile, String prefix) {
+    public ScipionMetaData(String dbfile, String preffix) {
 
         this.filename = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
-        this.preffix = prefix;
-        blocks = new String[]{getBlock()};
+        this.preffix = preffix;
         loadData();
+        blocks = new String[]{getBlock()};
+        
 
     }
 
@@ -112,63 +104,33 @@ public class ScipionMetaData extends MetaData {
 
             name = alias = "enabled";
             labelscount++;
-            enabledci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false);
+            enabledci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false, true);
             columns.add(enabledci);
 
             name = alias = "id";
             labelscount++;
-            idci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false);
+            idci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false, false);
             columns.add(idci);
 
             name = alias = "label";
             labelscount++;
-            labelci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false);
+            labelci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false, false);
             columns.add(labelci);
 
             name = alias = "comment";
             labelscount++;
-            commentci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false);
+            commentci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false, false);
             columns.add(commentci);
 
             c = getConnection();
             stmt = c.createStatement();
             ResultSet rs;
 
+            loadValues(c);
+           
             
-            EMObject emo;
-            
-            String query = String.format("SELECT id, label, comment, enabled FROM %sObjects;", preffix);
+            String query = String.format("SELECT * FROM %sClasses;", preffix);
             rs = stmt.executeQuery(query);
-            Object value;
-            int index = 0;
-            while (rs.next()) {
-                emo = new EMObject(index, this);
-                for (ColumnInfo column : columns) {
-                            alias = column.comment;
-                            switch (column.type) {
-
-                                case MetaData.LABEL_INT:
-                                    value = rs.getInt(alias);
-                                    break;
-                                case MetaData.LABEL_DOUBLE:
-                                    value = rs.getFloat(alias);
-                                    break;
-                                default:
-                                    value = rs.getString(alias);
-                            }
-                            emo.values.put(column, value);
-                        }
-                emobjects.add(emo);
-                if(emo.isEnabled())
-                    enableds ++;
-                else
-                    emo.changed = true;
-                index ++;
-            }
-            
-            query = String.format("SELECT * FROM %sClasses;", preffix);
-            rs = stmt.executeQuery(query);
-            
             while (rs.next()) {
                 name = rs.getString("label_property");
                 alias = rs.getString("column_name");
@@ -182,10 +144,22 @@ public class ScipionMetaData extends MetaData {
 
                 labelscount++;
                 allowRender = isImage(self, name);
-                ci = new ColumnInfo(labelscount, name, alias, type, allowRender);
+                ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
                 columns.add(ci);
             }
+            if (preffix == null || preffix.equals(""))
+            {
+                properties = new HashMap<String, String>();
+                String key, value;
+                query = "SELECT * FROM Properties;";
+                rs = stmt.executeQuery(query);
 
+                while (rs.next()) {
+                    key = rs.getString("key");
+                    value = rs.getString("value");
+                    properties.put(key, value);
+                }
+            }
 
             rs.close();
             stmt.close();
@@ -197,7 +171,48 @@ public class ScipionMetaData extends MetaData {
         }
     }
 
-    
+    protected void loadValues(Connection c)
+    {
+        try {
+            idsmap = new HashMap<Long, EMObject>();
+            Statement stmt = c.createStatement();
+            ResultSet rs;
+            EMObject emo;
+            String alias;
+            
+            String query = String.format("SELECT id, label, comment, enabled FROM %sObjects;", preffix);
+            rs = stmt.executeQuery(query);
+            Object value;
+            int index = 0;
+            while (rs.next()) {
+                emo = new EMObject(index, this);
+                for (ColumnInfo column : columns) {
+                    alias = column.comment;
+                    switch (column.type) {
+                        
+                        case MetaData.LABEL_INT:
+                            value = rs.getInt(alias);
+                            break;
+                        case MetaData.LABEL_DOUBLE:
+                            value = rs.getFloat(alias);
+                            break;
+                        default:
+                            value = rs.getString(alias);
+                    }
+                    emo.values.put(column, value);
+                }
+                emobjects.add(emo);
+                idsmap.put(emo.getId(), emo);
+                if(emo.isEnabled())
+                    enableds ++;
+                else
+                    emo.changed = true;
+                index ++;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     
     public void setParent(ScipionMetaData md) {
         this.parent = md;
@@ -222,12 +237,7 @@ public class ScipionMetaData extends MetaData {
     }
 
     public EMObject getEMObject(long id) {
-        for (EMObject emo : emobjects) {
-            if (emo.getId() == id) {
-                return emo;
-            }
-        }
-        return null;
+        return idsmap.get(id);
     }
 
     public synchronized String getValueFromLabel(int index, int label) {
@@ -261,17 +271,7 @@ public class ScipionMetaData extends MetaData {
         return null;
     }
 
-    public ScipionMetaData getMd(List<EMObject> emos) {
-        ScipionMetaData selmd;
-        //either selection of classes or particles main selection will be saved on Classes and Objects table
-        selmd = new ScipionMetaData("", self, selfalias, columns);
-        for (EMObject emo : emos) {
-            selmd.add(emo);
-        }
-
-        return selmd;
-    }
-
+   
     public void add(EMObject emo) {
         emobjects.add(emo);
         if (emo.childmd != null) {
@@ -279,10 +279,7 @@ public class ScipionMetaData extends MetaData {
         }
     }
 
-    public ScipionMetaData getStructure(String prefix) {
-        return new ScipionMetaData(prefix, self, selfalias, columns);
-    }
-
+   
     
 
     public long[] findObjects() {
@@ -440,17 +437,7 @@ public class ScipionMetaData extends MetaData {
         }
     }
 
-    public List<EMObject> getChilds(long[] ids) {
-        ArrayList<EMObject> childs = new ArrayList<EMObject>();
-        EMObject emo;
-        for (int i = 0; i < ids.length; i++) {
-            emo = getEMObject(ids[i]);
-            if (emo.childmd != null) {
-                childs.addAll(emo.childmd.getEMObjects());
-            }
-        }
-        return childs;
-    }
+   
 
     public void unionAll(MetaData md) {
 
@@ -685,23 +672,10 @@ public class ScipionMetaData extends MetaData {
 
         StopWatch.getInstance().printElapsedTime("sort done");
     }
+
     
-    class EMObjectComparator implements Comparator<EMObject> {
-        private final ColumnInfo ci;
-        
-        public EMObjectComparator(ColumnInfo ci)
-        {
-            this.ci = ci;
-        }
-
-        @Override
-        public int compare(EMObject o1, EMObject o2) {
-            Comparable value1 = (Comparable)o1.getValue(ci);
-            Comparable value2 = (Comparable)o2.getValue(ci);
-            return value1.compareTo(value2);
-          }
-
-    }
+    
+    
 
     public void overwrite(String src, String path) throws SQLException {
         try {
@@ -732,12 +706,14 @@ public class ScipionMetaData extends MetaData {
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
             c.setAutoCommit(false);
-            stmt = c.prepareStatement(String.format("UPDATE %sObjects SET %s=? WHERE id=?;", preffix, enabledci.labelName));
+            stmt = c.prepareStatement(String.format("UPDATE %sObjects SET %s=?, %s=?, %s=? WHERE id=?;", preffix, enabledci.labelName, labelci.labelName, commentci.labelName));
 
             for (EMObject emo : emobjects) {
                 if (emo.changed) {
                     stmt.setInt(1, emo.isEnabled() ? 1 : 0);
-                    stmt.setInt(2, emo.getId().intValue());
+                    stmt.setString(2, emo.getLabel());
+                    stmt.setString(3, emo.getComment());
+                    stmt.setInt(4, emo.getId().intValue());
                     stmt.executeUpdate();
                     
                 }
@@ -800,12 +776,24 @@ public class ScipionMetaData extends MetaData {
 
     @Override
     public String getCTFFile(long id) {
-        return null;//Maybe write ctf info for id in new metadata and return it;
+                String psde = getPSDEnhanced(id);
+                if(psde != null)
+                {
+                    String ctf = psde.replace("_enhanced_psd.xmp", ".ctfparam");
+                    if(new File(ctf).exists())
+                        return ctf;
+                }
+        return null;
     }
     
     @Override
     public String getPSDFile(long id) {
         return (String) getEMObject(id).getValue("_psdFile");
+    }
+    
+    @Override
+    public String getPSDEnhanced(long id) {
+        return (String) getEMObject(id).getValue("_xmipp_enhanced_psd");
     }
     
     public CTFDescription getCTFDescription(long id)
@@ -823,10 +811,24 @@ public class ScipionMetaData extends MetaData {
     
     // Check if the underlying data has geometrical information
     public boolean containsGeometryInfo() {
-//        if(!self.equals("Class2D") || self.equals("Class3D"))
-//            return false;
-        boolean contains = getColumnInfo("_alignment._matrix") != null;
-        return contains;
+        String column = "_alignment";
+        String value = null;
+        if(properties == null)
+        {
+            if (parent == null) 
+                return false; 
+            else
+                for(EMObject emo: parent.emobjects)
+                    if(preffix.contains(emo.getId().toString()))
+                        value = (String)emo.getValue(column);
+        }
+        else
+            value = properties.get(column);
+
+        if (value == null)
+            return false;
+        
+        return value.equals("2D");
     }
     
     
@@ -922,6 +924,10 @@ public class ScipionMetaData extends MetaData {
                 return true;
         return false;
     }
+
+    boolean isClassificationMd() {
+        return self.equals("Class2D") || self.equals("Class3D");
+    }
     
     
     public class EMObject {
@@ -946,6 +952,8 @@ public class ScipionMetaData extends MetaData {
         }
 
         Object getValue(ColumnInfo c) {
+            if(c == null)
+                return null;
             if(!values.containsKey(c))
                 try {
                     loadNeighborhoodValues(index, c);
@@ -982,6 +990,8 @@ public class ScipionMetaData extends MetaData {
         
         public Boolean getValueBoolean(String column) {
             ColumnInfo ci = getColumnInfo(column);
+            if(column == null)
+                return null;
             Object value = getValue(ci);
             if(value == null)
                 return null;
@@ -1039,31 +1049,133 @@ public class ScipionMetaData extends MetaData {
         void setIndex(int index) {
             this.index = index;
         }
+
+        void setLabel(String label) {
+            setValue(labelci, label);
+        }
         
-        
-        
+        public EllipseCTF getEllipseCTF()
+        {
+            String comment = getComment();
+            if(comment == null || comment.isEmpty())
+                return null;
+            String[] params = comment.trim().split("\\s+");
+            double defU = Double.parseDouble(params[0]);
+            double defV = Double.parseDouble(params[1]);
+            double angle = Double.parseDouble(params[2]);
+            double lowFreq = Double.parseDouble(params[3]);
+            double highFreq = Double.parseDouble(params[4]);
+            EllipseCTF ctf = md.getEllipseCTF(getId());
+            ctf.setDefocus(defU, defV, angle);
+            ctf.setFreqRange(lowFreq, highFreq);
+            return ctf;
+        }
     }
     
-    public String getTmpFile() {
-            String ext = XmippStringUtils.getFileExtension(filename);
-            String ext2 = "_selection" + ext;
-            String sqlitefile = filename;
-            if(!filename.endsWith(ext2))
-                sqlitefile = filename.replace(ext, ext2);
-            return sqlitefile;
-    }
+    
         
 
     protected Connection getConnection() throws ClassNotFoundException, SQLException
     {
         Class.forName("org.sqlite.JDBC");
-        String file = getTmpFile();
-        if(checkTmp == null && new File(file).exists())
-            checkTmp = true;//XmippQuestionDialog.showYesNoQuestion(null, "Temporary save has been detected. Do you wish to import it?");
-        if(checkTmp == null || !checkTmp)
-            file = filename;
-        Connection c = DriverManager.getConnection("jdbc:sqlite:" + file);
+        
+        Connection c = DriverManager.getConnection("jdbc:sqlite:" + filename);
         return c;
     }
+    
+    void loadSelection(String selectedPath) {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            Connection c = DriverManager.getConnection("jdbc:sqlite:" + selectedPath);
+            if(parent != null)
+                parent.loadSelection(selectedPath, c);
+            else
+                loadSelection(selectedPath, c);
+            c.close();
+        } catch (Exception ex) {
+            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    
+    void loadSelection(String selectedPath, Connection c) {
+        
+        try {
+            
+            Statement stmt = c.createStatement();
+            ResultSet rs;
+            EMObject emo;
+            String alias;
+
+            String query = String.format("SELECT id, enabled, label, comment FROM %sObjects;", preffix);
+            rs = stmt.executeQuery(query);
+            Object enabled, label, comment;
+            long id;
+            enableds = 0;
+            boolean isctfmd = isCTFMd();
+            EllipseCTF ctf;
+            while (rs.next()) {
+                id = rs.getInt("id");
+                emo = getEMObject(id);
+                alias = enabledci.comment;
+                enabled = rs.getInt(alias);
+                emo.setValue(enabledci, enabled);
+                alias = labelci.comment;
+                label = rs.getString(alias);
+                emo.setValue(labelci, label);
+                alias = commentci.comment;
+                comment = rs.getString(alias);
+                emo.setValue(commentci, comment);
+                if(emo.isEnabled())
+                    enableds ++;
+                if(isctfmd)
+                {
+                    ctf = emo.getEllipseCTF();
+                    if(ctf != null)
+                        ctfs.put(id, ctf);
+                }
+                
+            }
+            
+            rs.close();
+            stmt.close();
+            
+            if (haschilds) {
+                for (EMObject emobject : emobjects) {
+                    if(emobject.childmd != null)
+                        emobject.childmd.loadSelection(selectedPath, c);
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+   
+    
+    class EMObjectComparator implements Comparator<EMObject> {
+        private final ColumnInfo ci;
+        
+        public EMObjectComparator(ColumnInfo ci)
+        {
+            this.ci = ci;
+        }
+
+        @Override
+        public int compare(EMObject o1, EMObject o2) {
+            Comparable value1 = (Comparable)o1.getValue(ci);
+            Comparable value2 = (Comparable)o2.getValue(ci);
+            return value1.compareTo(value2);
+          }
+
+    }
+    
+    public String getSetType() {
+        if(properties == null)
+            return "SetOfParticles";//child md from classes set
+        return properties.get("self");
+    }
+    
+   
    
 }

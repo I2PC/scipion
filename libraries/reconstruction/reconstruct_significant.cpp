@@ -31,6 +31,7 @@ ProgReconstructSignificant::ProgReconstructSignificant()
 {
 	rank=0;
 	Nprocessors=1;
+	randomize_random_generator();
 }
 
 void ProgReconstructSignificant::defineParams()
@@ -56,6 +57,7 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--strictDirection]          : Images not significant for a direction are also discarded");
     addParamsLine("  [--angDistance <a=10>]       : Angular distance");
     addParamsLine("  [--dontApplyFisher]          : Do not select directions using Fisher");
+    addParamsLine("  [--dontReconstruct]          : Do not reconstruct");
 }
 
 // Read arguments ==========================================================
@@ -78,6 +80,13 @@ void ProgReconstructSignificant::readParams()
     angDistance=getDoubleParam("--angDistance");
     Nvolumes=getIntParam("--numberOfVolumes");
     applyFisher=checkParam("--dontApplyFisher");
+    doReconstruct=!checkParam("--dontReconstruct");
+    if (!doReconstruct)
+    {
+    	if (rank==0)
+    		std::cout << "Setting iterations to 1 because of --dontReconstruct\n";
+    	Niter=1; // Make sure that there is a single iteration
+    }
 }
 
 // Show ====================================================================
@@ -98,6 +107,7 @@ void ProgReconstructSignificant::show()
         std::cout << "Use Imed                    : "  << useImed << std::endl;
         std::cout << "Angular distance            : "  << angDistance << std::endl;
         std::cout << "Apply Fisher                : "  << applyFisher << std::endl;
+        std::cout << "Reconstruct                 : "  << doReconstruct << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnInit !="")
@@ -144,11 +154,13 @@ void ProgReconstructSignificant::alignImagesToGallery()
 	}
 
 	MultidimArray<double> ccVol(Nvols);
+	MDRow row;
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
 		if ((nImg+1)%Nprocessors==rank)
 		{
 			mdIn.getValue(MDL_IMAGE,fnImg,__iter.objId);
+			mdIn.getRow(row,__iter.objId);
 #ifdef DEBUG
 			std::cout << "Processing: " << fnImg << std::endl;
 #endif
@@ -163,12 +175,17 @@ void ProgReconstructSignificant::alignImagesToGallery()
 
 			// Compute all correlations
 	    	for (size_t nVolume=0; nVolume<Nvols; ++nVolume)
+	    	{
+	    		AlignmentTransforms *transforms=galleryTransforms[nVolume];
 		    	for (size_t nDir=0; nDir<Ndirs; ++nDir)
 				{
 					mCurrentImageAligned=mCurrentImage;
 					mGalleryProjection.aliasImageInStack(gallery[nVolume](),nDir);
 					mGalleryProjection.setXmippOrigin();
-					double corr=alignImagesConsideringMirrors(mGalleryProjection,mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
+					double corr=alignImagesConsideringMirrors(mGalleryProjection,transforms[nDir],
+							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
+//					double corr=alignImagesConsideringMirrors(mGalleryProjection,
+//							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
 					M=M.inv();
 					double imed=imedDistance(mGalleryProjection, mCurrentImageAligned);
 
@@ -207,6 +224,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 					else if (imed>worstImed)
 						worstImed=imed;
 				}
+	    	}
 
 	    	// Keep the best assignment for the projection matching
 	    	// Each process keeps a list of the images for each volume
@@ -217,8 +235,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 
 			if (maxShift<0 || (maxShift>0 && fabs(shiftX)<maxShift && fabs(shiftY)<maxShift))
 			{
-				size_t recId=mdProjectionMatching.addObject();
-				mdProjectionMatching.setValue(MDL_IMAGE,fnImg,recId);
+				size_t recId=mdProjectionMatching.addRow(row);
 				mdProjectionMatching.setValue(MDL_ENABLED,1,recId);
 				mdProjectionMatching.setValue(MDL_MAXCC,bestCorr,recId);
 				mdProjectionMatching.setValue(MDL_ANGLE_ROT,bestRot,recId);
@@ -289,8 +306,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 						          << "shiftX=" << shiftX << " shiftY=" << shiftY << std::endl;
 			#endif
 
-						size_t recId=mdPartial.addObject();
-						mdPartial.setValue(MDL_IMAGE,fnImg,recId);
+						size_t recId=mdPartial.addRow(row);
 						mdPartial.setValue(MDL_ENABLED,1,recId);
 						mdPartial.setValue(MDL_MAXCC,cc,recId);
 						mdPartial.setValue(MDL_COST,imed,recId);
@@ -304,6 +320,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 						mdPartial.setValue(MDL_REF,(int)nDir,recId);
 						mdPartial.setValue(MDL_REF3D,(int)nVolume,recId);
 						mdPartial.setValue(MDL_WEIGHT,thisWeight,recId);
+						mdPartial.setValue(MDL_WEIGHT_SIGNIFICANT,thisWeight,recId);
 					}
 				}
 			}
@@ -346,6 +363,8 @@ void ProgReconstructSignificant::run()
 	Matrix1D<double> dir1, dir2;
     for (iter=1; iter<=Niter; iter++)
     {
+    	if (rank==0)
+    		std::cout << "\nIteration " << iter << std::endl;
     	// Generate projections from the different volumes
     	generateProjections();
 
@@ -363,7 +382,7 @@ void ProgReconstructSignificant::run()
     	// Reweight according to each direction
     	if (rank==0)
     	{
-    		std::cout << "Readjusting weights ..." << std::endl;
+    		std::cerr << "Readjusting weights ..." << std::endl;
     		init_progress_bar(Nvols);
 			for (size_t nVolume=0; nVolume<Nvols; ++nVolume)
 			{
@@ -412,7 +431,7 @@ void ProgReconstructSignificant::run()
 						double cdfThis=DIRECT_A1D_ELEM(cdfccdir,nImg);
 						if ((cdfThis>=oneAlpha || !strict) && DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)>0)
 						{
-							std::cout << "Neighborhood " << nDir << " accepts image " << nImg << " with weight " << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir) << "*" << ccimg << "*" << iBestCorr << "*" << cdfThis << "=" << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*ccimg*iBestCorr*cdfThis << std::endl;
+							// std::cout << "Neighborhood " << nDir << " accepts image " << nImg << " with weight " << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir) << "*" << ccimg << "*" << iBestCorr << "*" << cdfThis << "=" << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*ccimg*iBestCorr*cdfThis << std::endl;
 							DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg*iBestCorr*cdfThis;
 						}
 						else
@@ -436,31 +455,33 @@ void ProgReconstructSignificant::run()
 					mdReconstruction.getValue(MDL_REF,nDir,__iter.objId);
 					mdReconstruction.getValue(MDL_REF3D,nVol,__iter.objId);
 					mdReconstruction.setValue(MDL_WEIGHT,DIRECT_A3D_ELEM(weight,nImg,nVol,nDir),__iter.objId);
-					if (DIRECT_A3D_ELEM(weight,nImg,nVol,nDir)==0)
-						std::cout << "Direction " << nDir << " does not accept img " << nImg << std::endl;
+					mdReconstruction.setValue(MDL_WEIGHT_SIGNIFICANT,DIRECT_A3D_ELEM(weight,nImg,nVol,nDir),__iter.objId);
+					//if (DIRECT_A3D_ELEM(weight,nImg,nVol,nDir)==0)
+					//	std::cout << "Direction " << nDir << " does not accept img " << nImg << std::endl;
 				}
 
 				// Remove zero-weight images
 				mdAux.clear();
-				mdAux.importObjects(mdReconstruction,MDValueGT(MDL_WEIGHT,0.0));
+				if (mdReconstruction.size()>0)
+					mdAux.importObjects(mdReconstruction,MDValueGT(MDL_WEIGHT,0.0));
 
-				String fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+				String fnAngles=formatString("%s/angles_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 				if (mdAux.size()>0)
 					mdAux.write(fnAngles);
 				else
 				{
-					std::cout << formatString("%s/angles_iter%02d_%02d.xmd is empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
+					std::cout << formatString("%s/angles_iter%03d_%02d.xmd is empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
 					emptyVolumes=true;
 				}
 
 				MetaData &mdPM=mdReconstructionProjectionMatching[nVolume];
 				if (mdPM.size()>0)
 				{
-					String fnImages=formatString("%s/images_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+					String fnImages=formatString("%s/images_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 					mdPM.write(fnImages);
 
 					// Remove from mdPM those images that do not participate in angles
-					String fnAux=formatString("%s/aux_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+					String fnAux=formatString("%s/aux_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 					// Take only the image name from angles.xmd
 					String cmd=(String)"xmipp_metadata_utilities -i "+fnAngles+" --operate keep_column image -o "+fnAux;
 					if (system(cmd.c_str())!=0)
@@ -470,31 +491,41 @@ void ProgReconstructSignificant::run()
 					if (system(cmd.c_str())!=0)
 						REPORT_ERROR(ERR_MD,(String)"Cannot execute "+cmd);
 					// Intersect with images.xmd
-					String fnImagesSignificant=formatString("%s/images_significant_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+					String fnImagesSignificant=formatString("%s/images_significant_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 					cmd=(String)"xmipp_metadata_utilities -i "+fnImages+" --set intersection "+fnAux+" image image -o "+fnImagesSignificant;
 					if (system(cmd.c_str())!=0)
 						REPORT_ERROR(ERR_MD,(String)"Cannot execute "+cmd);
 					deleteFile(fnAux);
 				}
 				else
-					std::cout << formatString("%s/images_iter%02d_%02d.xmd empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
-				deleteFile(formatString("%s/gallery_iter%02d_%02d_sampling.xmd",fnDir.c_str(),iter,nVolume));
-				deleteFile(formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,nVolume));
-				//deleteFile(formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,nVolume));
+					std::cout << formatString("%s/images_iter%03d_%02d.xmd empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
+				deleteFile(formatString("%s/gallery_iter%03d_%02d_sampling.xmd",fnDir.c_str(),iter,nVolume));
+				deleteFile(formatString("%s/gallery_iter%03d_%02d.doc",fnDir.c_str(),iter,nVolume));
+				deleteFile(formatString("%s/gallery_iter%03d_%02d.stk",fnDir.c_str(),iter,nVolume));
+				if (iter>=1 && !keepIntermediateVolumes)
+				{
+					deleteFile(formatString("%s/volume_iter%03d_%02d.vol",fnDir.c_str(),iter-1,nVolume));
+					deleteFile(formatString("%s/images_iter%03d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
+					deleteFile(formatString("%s/angles_iter%03d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
+					deleteFile(formatString("%s/images_significant_iter%03d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
+				}
 			}
 
 			if (verbose>=2)
 			{
 				save()=cc;
-				save.write(formatString("%s/cc_iter%02d.vol",fnDir.c_str(),iter));
+				save.write(formatString("%s/cc_iter%03d.vol",fnDir.c_str(),iter));
 				save()=weight;
-				save.write(formatString("%s/weight_iter%02d.vol",fnDir.c_str(),iter));
+				save.write(formatString("%s/weight_iter%03d.vol",fnDir.c_str(),iter));
 			}
     	}
     	synchronize();
 
     	// Reconstruct
-    	reconstructCurrent();
+    	if (doReconstruct)
+    		reconstructCurrent();
+    	else
+    		break;
 
     	currentAlpha+=deltaAlpha;
 
@@ -507,19 +538,30 @@ void ProgReconstructSignificant::reconstructCurrent()
 {
 	if (rank==0)
 		std::cerr << "Reconstructing volumes ..." << std::endl;
+	MetaData MD;
 	for (size_t nVolume=0; nVolume<mdInit.size(); ++nVolume)
 	{
 		if ((nVolume+1)%Nprocessors!=rank)
 			continue;
 
-		FileName fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+		FileName fnAngles=formatString("%s/angles_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 		if (!fnAngles.exists())
 			continue;
-		FileName fnVolume=formatString("%s/volume_iter%02d_%02d.vol",fnDir.c_str(),iter,nVolume);
+		MD.read(fnAngles);
+		std::cout << "Volume " << nVolume << ": number of images=" << MD.size() << std::endl;
+		FileName fnVolume=formatString("%s/volume_iter%03d_%02d.vol",fnDir.c_str(),iter,nVolume);
 		String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
 		String cmd=(String)"xmipp_reconstruct_fourier "+args;
 		if (system(cmd.c_str())==-1)
 			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+		if (fnSym!="c1")
+		{
+			args=formatString("-i %s --sym %s -v 0",fnVolume.c_str(),fnSym.c_str());
+			cmd=(String)"xmipp_transform_symmetrize "+args;
+			if (system(cmd.c_str())==-1)
+				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+		}
 
 		args=formatString("-i %s --mask circular %d -v 0",fnVolume.c_str(),-Xdim/2);
 		cmd=(String)"xmipp_transform_mask "+args;
@@ -537,10 +579,10 @@ void ProgReconstructSignificant::generateProjections()
 	{
 		if ((n+1)%Nprocessors!=rank)
 			continue;
-		fnVol=formatString("%s/volume_iter%02d_%02d.vol",fnDir.c_str(),iter-1,n);
-		fnGallery=formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,n);
-		fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter-1,n);
-		fnGalleryMetaData=formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,n);
+		fnVol=formatString("%s/volume_iter%03d_%02d.vol",fnDir.c_str(),iter-1,n);
+		fnGallery=formatString("%s/gallery_iter%03d_%02d.stk",fnDir.c_str(),iter,n);
+		fnAngles=formatString("%s/angles_iter%03d_%02d.xmd",fnDir.c_str(),iter-1,n);
+		fnGalleryMetaData=formatString("%s/gallery_iter%03d_%02d.doc",fnDir.c_str(),iter,n);
 		String args=formatString("-i %s -o %s --sampling_rate %f --sym %s --compute_neighbors --angular_distance -1 --experimental_images %s --min_tilt_angle %f --max_tilt_angle %f -v 0",
 				fnVol.c_str(),fnGallery.c_str(),angularSampling,fnSym.c_str(),fnAngles.c_str(),tilt0,tiltF);
 
@@ -553,11 +595,15 @@ void ProgReconstructSignificant::generateProjections()
 	// Read projection galleries
 	std::vector<GalleryImage> galleryNames;
 	mdGallery.clear();
+
+	CorrelationAux aux;
+	AlignmentAux aux2;
+	MultidimArray<double> mGalleryProjection;
 	for (int n=0; n<Nvol; n++)
 	{
 		mdGallery.push_back(galleryNames);
-		fnGalleryMetaData=formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,n);
-		fnGallery=formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,n);
+		fnGalleryMetaData=formatString("%s/gallery_iter%03d_%02d.doc",fnDir.c_str(),iter,n);
+		fnGallery=formatString("%s/gallery_iter%03d_%02d.stk",fnDir.c_str(),iter,n);
 		MetaData mdAux(fnGalleryMetaData);
 		galleryNames.clear();
 		FOR_ALL_OBJECTS_IN_METADATA(mdAux)
@@ -569,6 +615,23 @@ void ProgReconstructSignificant::generateProjections()
 			mdGallery[n].push_back(I);
 		}
 		gallery[n].read(fnGallery);
+
+		// Calculate transforms of this gallery
+		size_t kmax=NSIZE(gallery[n]());
+		if (galleryTransforms[n]==NULL)
+		{
+			delete galleryTransforms[n];
+			galleryTransforms[n]=new AlignmentTransforms[kmax];
+		}
+		AlignmentTransforms *transforms=galleryTransforms[n];
+		for (size_t k=0; k<kmax; ++k)
+		{
+			mGalleryProjection.aliasImageInStack(gallery[n](),k);
+			mGalleryProjection.setXmippOrigin();
+			aux.transformer1.FourierTransform((MultidimArray<double> &)mGalleryProjection, transforms[k].FFTI, true);
+		    normalizedPolarFourierTransform(mGalleryProjection, transforms[k].polarFourierI, false,
+		                                    XSIZE(mGalleryProjection) / 5, XSIZE(mGalleryProjection) / 2, aux2.plans, 1);
+		}
 	}
 }
 
@@ -589,8 +652,10 @@ void ProgReconstructSignificant::produceSideinfo()
 	getImageSize(mdIn,Xdim,Ydim,Zdim,Ndim);
 
 	// If there is not any input volume, create a random one
+	bool deleteInit=false;
 	if (fnInit=="")
 	{
+		deleteInit=true;
 		MetaData mdAux;
 		for (int n=0; n<Nvolumes; ++n)
 		{
@@ -614,6 +679,8 @@ void ProgReconstructSignificant::produceSideinfo()
 				String cmd=(String)"xmipp_reconstruct_fourier "+args;
 				if (system(cmd.c_str())==-1)
 					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+				if (!keepIntermediateVolumes)
+					deleteFile(fnAngles);
 
 				// Symmetrize with many different possibilities to have a spherical volume
 				args=formatString("-i %s --sym i1 -v 0",fnVolume.c_str());
@@ -649,13 +716,14 @@ void ProgReconstructSignificant::produceSideinfo()
 		{
 			mdInit.getValue(MDL_IMAGE,fnVol,__iter.objId);
 			V.read(fnVol);
-			fnVol=formatString("%s/volume_iter00_%02d.vol",fnDir.c_str(),idx);
+			fnVol=formatString("%s/volume_iter000_%02d.vol",fnDir.c_str(),idx);
 			V.write(fnVol);
 			mdInit.setValue(MDL_IMAGE,fnVol,__iter.objId);
-			fnAngles=formatString("%s/angles_iter00_%02d.xmd",fnDir.c_str(),idx);
+			fnAngles=formatString("%s/angles_iter000_%02d.xmd",fnDir.c_str(),idx);
 			mdIn.write(fnAngles);
 		}
 		gallery.push_back(galleryDummy);
+		galleryTransforms.push_back(NULL);
 		mdReconstructionPartial.push_back(mdPartial);
 		mdReconstructionProjectionMatching.push_back(mdProjMatch);
 		idx++;
@@ -663,4 +731,6 @@ void ProgReconstructSignificant::produceSideinfo()
 
 	iter=0;
 	synchronize();
+	if (deleteInit && rank==0)
+		deleteFile(fnInit);
 }

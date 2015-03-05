@@ -329,13 +329,14 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
 
     // Process the flatfield images
 
-    // Checking if fnFFinput is a single file to obtain the flatfield avg from
-
 
     MultidimArray<double> &mdaIavg = Iavg();
 
+    Matrix1D<double> expTimeArray, cBeamArray, slitWidthArray; // Local vectors
+
     DataSource ldSource = dSource;
 
+    // Checking if fnFFinput is a single file to obtain the flatfield avg from
     if (extFlat && isImage(fnFFinput))
     {
         fMD.read(fnFFinput);
@@ -343,9 +344,6 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
     }
     else
     {
-
-        Matrix1D<double> expTimeArray, cBeamArray, slitWidthArray;
-
         switch (ldSource)
         {
         case MISTRAL:
@@ -426,12 +424,16 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
                                    imFFInfo.adim.xdim,imFFInfo.adim.ydim,imgInfo.adim.xdim,imgInfo.adim.ydim));
         std::cout << "Setting crop values to fit the smallest dimensions." <<std::endl;
 
-        cropSizeX = (imgInfo.adim.xdim - std::min(imgInfo.adim.xdim-cropSizeX*2, imFFInfo.adim.xdim))/2;
-        cropSizeY = (imgInfo.adim.ydim - std::min(imgInfo.adim.ydim-cropSizeY*2, imFFInfo.adim.ydim))/2;
+        // This shift in the crop sizes is exclusive of Mistral data
+        cropSizeXi = (imgInfo.adim.xdim - std::min(imgInfo.adim.xdim-cropSizeX*2, imFFInfo.adim.xdim))/2 + 1;
+        cropSizeYi = (imgInfo.adim.ydim - std::min(imgInfo.adim.ydim-cropSizeY*2, imFFInfo.adim.ydim))/2 + 1;
+        cropSizeXe = cropSizeXi - 2;
+        cropSizeYe = cropSizeYi - 2;
     }
 
-    int cropX = (imFFInfo.adim.xdim - (imgInfo.adim.xdim-cropSizeX*2))/2;
-    int cropY = (imFFInfo.adim.ydim - (imgInfo.adim.ydim-cropSizeY*2))/2;
+    int cropX = (imFFInfo.adim.xdim - (imgInfo.adim.xdim-cropSizeXi-cropSizeXe))/2;// - 1;
+    int cropY = (imFFInfo.adim.ydim - (imgInfo.adim.ydim-cropSizeYi-cropSizeYe))/2;// - 1;
+
 
     int N  = 0;
     Image<double> Iaux;
@@ -442,6 +444,7 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
         fMD.getValue(MDL_IMAGE, fnImg, __iter.objId);
 
         readAndCrop(fnImg, Iaux, cropX, cropY);
+
 
         if ( darkFix )
         {
@@ -529,7 +532,16 @@ void runThread(ThreadArgument &thArg)
 
             MDRow rowGeo;
             ptrProg->readGeoInfo(fnImgIn, rowGeo);
-            ptrProg->readAndCrop(fnImgIn, Iaux, ptrProg->cropSizeX, ptrProg->cropSizeY);
+//            ptrProg->readAndCrop(fnImgIn, Iaux, ptrProg->cropSizeX, ptrProg->cropSizeY);
+
+            Iaux.read(fnImgIn);
+            Iaux().selfWindow(ptrProg->cropSizeYi,ptrProg->cropSizeXi,
+            		(int)(YSIZE(Iaux())-ptrProg->cropSizeYe-1),(int)(XSIZE(Iaux())-ptrProg->cropSizeXe-1));
+
+            Iaux().resetOrigin();
+
+
+
 
             if (XSIZE(ptrProg->IavgDark())!=0)
             {
@@ -708,7 +720,7 @@ void ProgXrayImport::run()
         }
     }
 
-    createEmptyFile(fnOut, imgInfo.adim.xdim-2*cropSizeX, imgInfo.adim.ydim-2*cropSizeY, 1, nIm);
+    createEmptyFile(fnOut, imgInfo.adim.xdim-cropSizeXi-cropSizeXe, imgInfo.adim.ydim-cropSizeYi-cropSizeYe, 1, nIm);
 
     // Process images
     td = new ThreadTaskDistributor(nIm, XMIPP_MAX(1, nIm/30));

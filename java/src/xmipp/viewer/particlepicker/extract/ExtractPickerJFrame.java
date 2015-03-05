@@ -4,14 +4,11 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -23,12 +20,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
-import xmipp.ij.commons.Tool;
-import xmipp.jni.CTFDescription;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
@@ -42,7 +35,6 @@ import xmipp.viewer.particlepicker.ParticlesDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.windows.GalleryJFrame;
-import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class ExtractPickerJFrame extends ParticlePickerJFrame
 {
@@ -87,9 +79,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 		initToolBar();
 		add(tb, XmippWindowUtil.getConstraints(constraints, 0, 1, 2, 1, GridBagConstraints.NONE));
-		add(new JLabel("Shape:"), XmippWindowUtil.getConstraints(constraints, 0, 2));
-		initShapePane();
-		add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 2));
+		
 		add(new JLabel("Color By:"), XmippWindowUtil.getConstraints(constraints, 0, 3));
 		initColorLegendPane();
 		add(colorlegendpn, XmippWindowUtil.getConstraints(constraints, 1, 3));
@@ -118,6 +108,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		colorlegendpn.add(new JLabel("Color by:"));
 		colorby = picker.getColumns();
 		scorescb = new JComboBox(colorby);
+                
 		scorescb.addActionListener(new ActionListener()
 		{
 			
@@ -138,14 +129,13 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		colorlegendpn.add(ColorHelper.getColorMap());
 		colorlegendpn.add(maxlb);
 		
-		
-		
 		index = picker.getMicrographIndex();
 
 	}
 	
 	ColorHelper getColorHelper()
 	{
+                
 		return (ColorHelper)scorescb.getSelectedItem();
 	}
 	
@@ -157,14 +147,13 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		micrographpn = new JPanel(new GridBagLayout());
 		micrographpn.setBorder(BorderFactory.createTitledBorder("Micrograph"));
 		JScrollPane sp = new JScrollPane();
-		JPanel ctfpn = new JPanel();
-		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF", TitledBorder.CENTER, TitledBorder.BELOW_BOTTOM));
 		iconbt = new JButton(Micrograph.getNoImageIcon());
 		iconbt.setToolTipText("Load CTF Profile");
 		iconbt.setBorderPainted(false);
 		iconbt.setContentAreaFilled(false);
 		iconbt.setFocusPainted(false);
 		iconbt.setOpaque(false);
+                iconbt.setMargin(new Insets(0, 0, 0, 0));
 		iconbt.addActionListener(new ActionListener()
 		{
 
@@ -179,22 +168,21 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 			}
 		});
-		ctfpn.add(iconbt);
 		micrographsmd = new ExtractMicrographsTableModel();
 		micrographstb.setModel(micrographsmd);
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(245);
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(345);
 		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(70);
 		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(70);
-		micrographstb.setPreferredScrollableViewportSize(new Dimension(420, 304));
+		micrographstb.setPreferredScrollableViewportSize(new Dimension(520, 304));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		if (index != -1)
 			micrographstb.setRowSelectionInterval(index, index);
 
 		sp.setViewportView(micrographstb);
 		micrographpn.add(sp, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
-		micrographpn.add(ctfpn, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
+		micrographpn.add(iconbt, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
 		JPanel infopn = new JPanel();
 		particleslb = new JLabel(Integer.toString(picker.getParticlesCount()));
 		
@@ -295,7 +283,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	public void updateMicrographsModel(boolean all)
 	{
 		if (particlesdialog != null)
-			loadParticles();
+			loadParticles(false);
 
 		if (all)
 			micrographsmd.fireTableRowsUpdated(0, micrographsmd.getRowCount() - 1);
@@ -336,7 +324,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	
 
 	@Override
-	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	public String importParticles(Format format, String dir, String preffix, String suffix, float scale, boolean invertx, boolean inverty)
 	{
 		throw new UnsupportedOperationException();
 

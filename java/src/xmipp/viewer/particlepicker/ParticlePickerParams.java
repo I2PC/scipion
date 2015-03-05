@@ -6,6 +6,7 @@
 
 package xmipp.viewer.particlepicker;
 
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.cli.BasicParser;
@@ -35,12 +36,11 @@ public class ParticlePickerParams {
     private CommandLine cmdLine;
     
     
-    public String python;
-    public String script;
     public String inputfile;
     public String outputdir;
     public String protid;
-    public String projectid;
+    public String dbpath;
+    public Integer port;
     public Mode mode;
     public int threads;
     public boolean fast;
@@ -76,7 +76,8 @@ public class ParticlePickerParams {
         cmdLine = parser.parse(options, args);
         inputfile = cmdLine.getOptionValue(INPUTOPT);
         outputdir = cmdLine.getOptionValue(OUTPUTOPT);
-        mode = Mode.getMode(cmdLine.getOptionValue(MODEOPT));
+        String str = cmdLine.getOptionValue(MODEOPT);
+        mode = Mode.getMode(str);
          if (cmdLine.hasOption(THREADSOPT)) 
             threads = Integer.parseInt(cmdLine.getOptionValue(THREADSOPT));
         if (cmdLine.hasOption(FASTOPT)) 
@@ -86,20 +87,24 @@ public class ParticlePickerParams {
         
        
         if (cmdLine.hasOption(SCIPIONOPT)) {
-            XmippWindowUtil.setIsScipion(true);
+            
             
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
             if(cmdargs != null)
             {
-                python = cmdargs[0];
-                script = cmdargs[1];
-                projectid = cmdargs[2];
-                protid = cmdargs[3];
+                System.out.println(Arrays.toString(cmdargs));
+                dbpath = cmdargs[0];
+                protid = cmdargs[1];
+                port = Integer.parseInt(cmdargs[2]);
             }
         }
 
     }
     
     
+    public boolean isScipion()
+    {
+        return cmdLine.hasOption(SCIPIONOPT);
+    }
     
 }

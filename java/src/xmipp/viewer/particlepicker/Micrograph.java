@@ -6,6 +6,7 @@ import java.awt.Image;
 import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import xmipp.ij.commons.XmippImageConverter;
@@ -13,7 +14,6 @@ import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.training.Main;
 
 public abstract class Micrograph {
 
@@ -57,7 +57,8 @@ public abstract class Micrograph {
                     path = Filename.removePrefix(file);
 		 if (!new File(path).exists()) 
                 {
-                     file = Filename.findImagePath(name, Main.selfile, true);
+                     
+                     file = Filename.findImagePath(name, ParticlePicker.getPicker().selfile, true);
                      if(file == null)
                         throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
                 }
@@ -156,7 +157,6 @@ public abstract class Micrograph {
 			height = imp.getHeight();
 		} else {
 			try {
-                System.out.println("loading dim from ig");                
 				ImageGeneric img = new ImageGeneric(file); // this reads the header
 				width = img.getXDim();
 				height = img.getYDim();
@@ -166,6 +166,8 @@ public abstract class Micrograph {
 			}
 		}
 	}
+        
+        
 
 	public ImagePlus getImagePlus() {
 		try {

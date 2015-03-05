@@ -1,9 +1,13 @@
+#include <iostream>
+#include <data/xmipp_fftw.h>
 #include <data/xmipp_image.h>
 #include <data/filters.h>
-#include <data/xmipp_fftw.h>
-#include <iostream>
+#include <data/transformations.h>
+
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
+
+
 class TransformationTest : public ::testing::Test
 {
 protected:
@@ -201,6 +205,51 @@ TEST_F(TransformationTest, geo2TransformationMatrix)
     EXPECT_DOUBLE_EQ(z, z2);
     EXPECT_EQ(flip, flip2);
 }
+
+TEST_F(TransformationTest, str2TransformationMatrix)
+{
+    //It would be nice to have a operator == for mdrow
+
+    Matrix2D<double> M(4, 4);
+    M.initIdentity();
+    dMij(M, 0, 0) = -1.1601138;
+    dMij(M, 0, 1) = -1.6291519;
+    dMij(M, 0, 2) = 2;
+    dMij(M, 1, 0) = -1.6291519;
+    dMij(M, 1, 1) = 1.1601138;
+    dMij(M, 1, 2) = 4;
+
+    const char * matrixStr1 = " -1.1601138 -1.6291519 2 0 "
+                              " -1.6291519  1.1601138 4 0 "
+                              "  0          0         1 0 "
+                              "  0          0         0 1 ";
+    Matrix2D<double> matrix1;
+    string2TransformationMatrix(matrixStr1, matrix1);
+    EXPECT_EQ(M, matrix1);
+
+    const char * matrixStr2 = " [[-1.1601138 -1.6291519 2 0], "
+                              "  [-1.6291519  1.1601138 4 0], "
+                              "  [ 0          0         1 0], "
+                              "  [ 0          0         0 1]] ";
+    Matrix2D<double> matrix2;
+    string2TransformationMatrix(matrixStr2, matrix2);
+    EXPECT_EQ(M, matrix2);
+
+
+}
+
+/*
+
+
+
+
+DEBUG_JM: A:
+ 0.9420923 -1.3393493  1.1483055          2
+-0.93493539 0.72492445  1.6125695          4
+ 1.4961143  1.2963904 0.28462967          6
+         0          0          0          1
+ */
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

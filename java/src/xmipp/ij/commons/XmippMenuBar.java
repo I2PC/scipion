@@ -9,7 +9,6 @@ import ij.ImagePlus;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
-
 import java.awt.CheckboxMenuItem;
 import java.awt.Frame;
 import java.awt.Menu;
@@ -26,9 +25,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import javax.swing.JOptionPane;
 import javax.vecmath.Color3f;
-
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -40,9 +37,9 @@ import xmipp.utils.XmippFileChooser;
 public class XmippMenuBar extends MenuBar
 {
 
-	private Menu filemn;
-	private Menu imagemn;
-	private Menu advancedmn;
+	protected Menu filemn;
+	protected Menu imagemn;
+	protected Menu advancedmn;
 	private MenuItem savemi;
 	private MenuItem saveasmi;
 	private MenuItem openwith3dmi;
@@ -67,6 +64,7 @@ public class XmippMenuBar extends MenuBar
 	private Menu helpmn;
 	private MenuItem keyassistmi;
 	private QuickHelpJDialog keyassistdlg;
+        
 
 	enum IJRequirement
 	{
@@ -175,7 +173,7 @@ public class XmippMenuBar extends MenuBar
 		});
 		
 		ugmi = new CheckboxMenuItem("Use Geometry");
-		//ugmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
+		ugmi.setEnabled(xw.getImagePlusLoader().hasGeometry());
 		ugmi.setState(xw.getImagePlusLoader().getUseGeometry());
 		ugmi.addItemListener(new ItemListener()
 		{
@@ -191,7 +189,7 @@ public class XmippMenuBar extends MenuBar
 
 		
 		wrapmi = new CheckboxMenuItem("Wrap");
-//		wrapmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
+		wrapmi.setEnabled(xw.getImagePlusLoader().hasGeometry());
 		wrapmi.setState(xw.getImagePlusLoader().isWrap());
 		wrapmi.addItemListener(new ItemListener()
 		{
@@ -283,7 +281,10 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(drawmn);
 		advancedmn.add(profilemn);
 		
-		
+                
+                
+                
+                	
 		keyassistmi = new MenuItem("Key Assist");
 		keyassistmi.addActionListener(new ActionListener()
 		{
@@ -318,14 +319,12 @@ public class XmippMenuBar extends MenuBar
 		//addIJMenuItem(thresholdingmn, "Simple Iterative Object Extraction", "SIOX Segmentation", IJRequirement.RGB);
 
 		// advanced binary menu
-		addIJMenuItem(binarymn, "Voxel Counter", "Voxel Counter", IJRequirement.STACK);// stack
-																						// required
+		addIJMenuItem(binarymn, "Voxel Counter", "Voxel Counter", IJRequirement.STACK);// stack required
 		addIJMenuItem(binarymn, "Erode", "Erode", IJRequirement.BINARY);
 		addIJMenuItem(binarymn, "Dilate", "Dilate", IJRequirement.BINARY);
 		addIJMenuItem(binarymn, "Open", "Open", IJRequirement.BINARY);
 		addIJMenuItem(binarymn, "Close", "Close", IJRequirement.BINARY);
-		addIJMenuItem(binarymn, "Float Morphology", "Float Morphology", IJRequirement.THIRTYTWOBIT);// missing
-																									// plugin
+		addIJMenuItem(binarymn, "Float Morphology", "Float Morphology", IJRequirement.THIRTYTWOBIT);// missing plugin
 		addIJMenuItem(binarymn, "Outline", "Outline", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
 		addIJMenuItem(binarymn, "Fill Holes", "Fill Holes", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
 		addIJMenuItem(binarymn, "Skeletonize", "Skeletonize", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
@@ -340,7 +339,7 @@ public class XmippMenuBar extends MenuBar
 		addIJMenuItem(processmn, "Gaussian Blur", "Gaussian Blur...");
 		addIJMenuItem(processmn, "Convolve", "Convolve...");
 		addIJMenuItem(processmn, "Median", "Median...");
-		addIJMenuItem(processmn, "FFT", "FFT");// memory error
+		addIJMenuItem(processmn, "FFT", "FFT", IJRequirement.IMAGEJ);// memory error
 		addIJMenuItem(processmn, "Straighten Curved Objects", "Straighten...", IJRequirement.IMAGEJ);
 
 		// advanced drawn menu
@@ -512,13 +511,14 @@ public class XmippMenuBar extends MenuBar
 		IJ.run(xw.getImagePlusLoader().getImagePlus(), command, "");
 	}//function runCommand
 	
-	public Map<String, String> getKeyAssist()
+	public Map<Object, Object> getKeyAssist()
 	{
-		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
+		Map<Object, Object> map = Collections.synchronizedMap(new LinkedHashMap<Object, Object>());
 		map.put("Shift + Scroll Up", "Zoom in");
 		map.put("Shift + Scroll Down", "Zoom out");
 		map.put("Right click + Mouse move", "Moves image previously expanded");
 		return map;
 	}
-
+        
+        
 }

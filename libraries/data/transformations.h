@@ -27,10 +27,10 @@
 #ifndef TRANSFORMATIONS_H
 #define TRANSFORMATIONS_H
 
-#include <external/bilib/headers/kerneldiff1.h>
-#include <external/bilib/types/tboundaryconvention.h>
-#include <external/bilib/headers/changebasis.h>
-#include <external/bilib/headers/pyramidtools.h>
+#include "headers/kerneldiff1.h"
+#include "types/tboundaryconvention.h"
+#include "headers/changebasis.h"
+#include "headers/pyramidtools.h"
 #include "matrix2d.h"
 #include "multidim_array.h"
 #include "multidim_array_generic.h"
@@ -54,6 +54,16 @@
   */
 void geo2TransformationMatrix(const MDRow &imageHeader, Matrix2D<double> &A,
                               bool only_apply_shifts = false);
+
+/** Retrieve the matrix from an string representation
+ * Valid formats are:
+ * [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+ * or
+ * 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+ * or
+ * 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
+ */
+void string2TransformationMatrix(const String &matrixStr, Matrix2D<double> &matrix);
 
 /** Retrieve the geometry transformations from matrix for 2D. */
 void transformationMatrix2Parameters2D(const Matrix2D<double> &A, bool &flip,

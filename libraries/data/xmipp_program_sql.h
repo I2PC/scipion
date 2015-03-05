@@ -28,7 +28,7 @@
 
 #include <map>
 #include "xmipp_program.h"
-#include "external/sqlite-3.6.23/sqlite3.h"
+#include "sqlite3.h"
 
 typedef std::map<const char*, String> DictDB;
 

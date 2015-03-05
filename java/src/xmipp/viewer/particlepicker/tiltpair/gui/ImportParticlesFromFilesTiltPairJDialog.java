@@ -15,6 +15,7 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import xmipp.utils.XmippFileChooser;
 
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
@@ -55,12 +56,12 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 
 		gbc.anchor = GridBagConstraints.WEST;
 		/** Create a combobox with possible formats */
-		jcbFormat = new JComboBox(FormatStrings);
+		jcbFormat = new JComboBox(formatsString);
 		jcbFormat.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				format = FormatList[jcbFormat.getSelectedIndex()];
+				format = formatsList[jcbFormat.getSelectedIndex()];
 				
 			}
 		});
@@ -104,7 +105,18 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 			browseDirectory(sourcetf2);
 	}// function actionPerformed
 
-	
+        protected void browseDirectory(JTextField sourcetf) {
+		int returnVal = xfc.showOpenDialog(this);
+		try {
+			if (returnVal == XmippFileChooser.APPROVE_OPTION) {
+				path = xfc.getSelectedPath();
+				sourcetf.setText(path);
+			}
+		} catch (Exception ex) {
+			showException(ex);
+		}
+
+	}
 	
 	
 	protected String importParticles() {

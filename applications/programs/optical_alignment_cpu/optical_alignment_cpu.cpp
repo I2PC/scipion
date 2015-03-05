@@ -47,7 +47,6 @@ class ProgOpticalAligment: public XmippProgram
 {
 
 public:
-
     FileName fname;
     FileName foname;
 
@@ -301,7 +300,6 @@ public:
             II.write(foname);
             return 0;
         }
-
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
 
         while (div!=1)

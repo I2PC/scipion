@@ -39,6 +39,9 @@ public class ImageGeneric {
     public final static int X_POS = 5;  // Align X axis to Z axis, rotating 90 degrees around Y axis");
 
     public final static int VIEWS[] = {Z_NEG, Y_NEG, X_NEG, Y_POS, X_POS };
+
+    
+    
     // Associated filename.
     private String filename;
     private boolean useLogarithm = true;   // To convert PSD images.
@@ -74,6 +77,7 @@ public class ImageGeneric {
     public ImageGeneric(String filename) throws Exception {
         this();
         setFilename(filename);
+        
     }
     
     /** Set a new filename and reload the header */
@@ -234,7 +238,7 @@ public class ImageGeneric {
     		int select_slice, long select_image) throws Exception;
     
 
-    public native double[] alignImage(ImageGeneric img) throws Exception;
+    public synchronized native double[] alignImage(ImageGeneric img) throws Exception;
     
     public synchronized native void getRadialAvg(ImageGeneric radialimg) throws Exception;
     
@@ -309,5 +313,14 @@ public class ImageGeneric {
 	}
         
         public native void applyGeo(double shiftX, double shiftY, double anglepsi, boolean flip, boolean wrap);
+        
+        /**
+         * Same as previous function, but reading the geometry information
+         * from the transformation matrix. The matrix will be passed to the 
+         * binding in its string representation read from the sqlite file.
+         */
+        public native void applyGeoMatrix(String matrixString, boolean wrap);
+        
+
     
 }

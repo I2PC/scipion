@@ -59,7 +59,9 @@ void ProgImageResiduals::processImage(const FileName &fnImg, const FileName &fnI
     i++;
 }
 
-// See formula (25) of Cherian 2013
+// See formula (25) of
+// Cherian, A.; Sra, S.; Banerjee, A. & Papanikolopoulos, N. Jensen-Bregman LogDet divergence with application to efficient
+// similarity search for covariance matrices. IEEE Trans Pattern Anal Mach Intell, 2013, 35, 2161-2174
 void updateRavg(MetaData &mdR, Matrix2D<double> &Ravg)
 {
 	FileName fnR;

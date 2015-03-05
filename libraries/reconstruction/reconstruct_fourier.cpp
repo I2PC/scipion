@@ -45,7 +45,13 @@ void ProgRecFourier::defineParams()
     addParamsLine("  [--weight]                     : Use weights stored in the image metadata");
     addParamsLine("  [--thr <threads=1> <rows=1>]   : Number of concurrent threads and rows processed at time by a thread");
     addParamsLine("  [--blob <radius=1.9> <order=0> <alpha=15>] : Blob parameters");
-    addParamsLine( "                                  : radius in pixels, order of Bessel function in blob and parameter alpha");
+    addParamsLine("                                 : radius in pixels, order of Bessel function in blob and parameter alpha");
+    addParamsLine("  [--useCTF]                     : Use CTF information if present");
+    addParamsLine("  [--sampling <Ts=1>]            : sampling rate of the input images in Angstroms/pixel");
+    addParamsLine("                                 : It is only used when correcting for the CTF");
+    addParamsLine("  [--phaseFlipped]               : Give this flag if images have been already phase flipped");
+    addParamsLine("  [--minCTF <ctf=0.01>]          : Minimum value of the CTF that will be inverted");
+    addParamsLine("                                 : CTF values (in absolute value) below this one will not be corrected");
     addExampleLine("For reconstruct enforcing i3 symmetry and using stored weights:", false);
     addExampleLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
 }
@@ -68,6 +74,11 @@ void ProgRecFourier::readParams()
     numThreads = getIntParam("--thr");
     thrWidth = getIntParam("--thr", 1);
     NiterWeight = getIntParam("--iter");
+    useCTF = checkParam("--useCTF");
+    phaseFlipped = checkParam("--phaseFlipped");
+    minCTF = getDoubleParam("--minCTF");
+    if (useCTF)
+    	Ts=getDoubleParam("--sampling");
 }
 
 // Show ====================================================================
@@ -90,6 +101,11 @@ void ProgRecFourier::show()
             std::cout << " Use weights stored in the image headers or doc file" << std::endl;
         else
             std::cout << " Do NOT use weights" << std::endl;
+        if (useCTF)
+        	std::cout << "Using CTF information" << std::endl
+        	          << "Sampling rate: " << Ts << std::endl
+        	          << "Phase flipped: " << phaseFlipped << std::endl
+        	          << "Minimum CTF: " << minCTF << std::endl;
         std::cout << "\n Interpolation Function"
         << "\n   blrad                 : "  << blob.radius
         << "\n   blord                 : "  << blob.order
@@ -152,6 +168,7 @@ void ProgRecFourier::produceSideinfo()
 
     // Read the input images
     SF.read(fn_sel);
+    SF.removeDisabled();
 
     // Ask for memory for the output volume and its Fourier transform
     size_t objId = SF.firstObject();
@@ -253,29 +270,6 @@ void ProgRecFourier::produceSideinfo()
     }
 }
 
-void ProgRecFourier::get_angles_for_image(const FileName &fn, double &rot,
-        double &tilt, double &psi, double &xoff, double &yoff, bool &flip,
-        double &weight, MetaData * docfile)
-{
-    std::vector<size_t> found;
-    (*docfile).findObjects(found,MDValueEQ(MDL_IMAGE,(std::string)fn));
-
-    if (found.size()==1)
-    {
-        (*docfile).getValue(MDL_ANGLE_ROT,rot,found[0]);
-        (*docfile).getValue(MDL_ANGLE_TILT,tilt,found[0]);
-        (*docfile).getValue(MDL_ANGLE_PSI,psi,found[0]);
-        (*docfile).getValue(MDL_SHIFT_X,xoff,found[0]);
-        (*docfile).getValue(MDL_SHIFT_Y,yoff,found[0]);
-        flip=0;
-        weight=0;
-        (*docfile).getValue(MDL_FLIP,flip,found[0]);
-        (*docfile).getValue(MDL_WEIGHT,weight,found[0]);
-    }
-    else
-        REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
-}
-
 void * ProgRecFourier::processImageThread( void * threadArgs )
 {
 
@@ -321,6 +315,11 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
     x2precalculated.setXmippOrigin();
     y2precalculated.setXmippOrigin();
     z2precalculated.setXmippOrigin();
+
+	bool hasCTF=(threadParams->selFile->containsLabel(MDL_CTF_MODEL) || threadParams->selFile->containsLabel(MDL_CTF_DEFOCUSU)) &&
+			parent->useCTF;
+	if (hasCTF)
+		threadParams->ctf.enable_CTF=true;
     do
     {
         barrier_wait( barrier );
@@ -346,6 +345,11 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     tilt = proj.tilt();
                     psi  = proj.psi();
                     weight = proj.weight();
+                    if (hasCTF)
+                    {
+                    	threadParams->ctf.readFromMetadataRow(*(threadParams->selFile),objId[threadParams->imageIndex]);
+                    	threadParams->ctf.produceSideInfo();
+                    }
 
                     threadParams->weight = 1.;
 
@@ -371,8 +375,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     {
                         localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
                         localPaddedImg.setXmippOrigin();
-                        FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
-                        A2D_ELEM(localPaddedImg,i,j)=weight*proj(i,j);
+                        const MultidimArray<double> &mProj=proj();
+                        FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
+                        A2D_ELEM(localPaddedImg,i,j)=A2D_ELEM(mProj,i,j);
+                        // COSS A2D_ELEM(localPaddedImg,i,j)=weight*A2D_ELEM(mProj,i,j);
                         CenterFFT(localPaddedImg,true);
 
                         // Fourier transformer for the images
@@ -450,6 +456,8 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
             {
 
                 MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
+                if (threadParams->weight==0.0)
+                	break;
                 bool reprocessFlag = threadParams->reprocessFlag;
                 int * statusArray = parent->statusArray;
 
@@ -457,6 +465,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 int maxAssignedRow;
                 bool breakCase;
                 bool assigned;
+
+                // Get the inverse of the sampling rate
+                double iTs=1/parent->Ts;
+
                 do
                 {
                     minAssignedRow = -1;
@@ -532,10 +544,11 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     Matrix2D<double> * A_SL = threadParams->symmetry;
 
                     // Loop over all Fourier coefficients in the padded image
-                    Matrix1D<double> freq(3), gcurrent(3), real_position(3);
+                    Matrix1D<double> freq(3), gcurrent(3), real_position(3), contFreq(3);
                     Matrix1D<int> corner1(3), corner2(3);
 
                     // Some alias and calculations moved from heavy loops
+                    double wCTF=1;
                     double blobRadiusSquared = parent->blob.radius * parent->blob.radius;
                     double iDeltaSqrt = parent->iDeltaSqrt;
                     Matrix1D<double> & blobTableSqrt = parent->blobTableSqrt;
@@ -558,6 +571,20 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 ZZ(freq)=0;
                                 if (XX(freq)*XX(freq)+YY(freq)*YY(freq)>parent->maxResolution2)
                                     continue;
+                                if (hasCTF && !reprocessFlag)
+                                {
+                                	XX(contFreq)=XX(freq)*iTs;
+                                	YY(contFreq)=YY(freq)*iTs;
+                                	threadParams->ctf.precomputeValues(XX(contFreq),YY(contFreq));
+                                	wCTF=threadParams->ctf.getValueAt();
+                                	if (fabs(wCTF)<parent->minCTF)
+                                		wCTF=1;
+                                	else
+                                		wCTF=1.0/wCTF;
+                                	if (parent->phaseFlipped)
+                                		wCTF=fabs(wCTF);
+                                }
+
                                 SPEED_UP_temps012;
                                 M3x3_BY_V3x1(freq,*A_SL,freq);
 
@@ -583,9 +610,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 << "   Corner2=" << corner2.transpose() << std::endl;
 #endif
                                 // Loop within the box
-                                double *ptrIn;
-
-                                ptrIn =(double *)&(A2D_ELEM(*paddedFourier, i,j));
+                                double *ptrIn=(double *)&(A2D_ELEM(*paddedFourier, i,j));
 
                                 // Some precalculations
                                 for (int intz = ZZ(corner1); intz <= ZZ(corner2); ++intz)
@@ -655,8 +680,8 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             if (d2 > blobRadiusSquared)
                                                 continue;
                                             int aux = (int)(d2 * iDeltaSqrt + 0.5);//Same as ROUND but avoid comparison
-                                            //double w = blobTableSqrt((int)aux);
-                                            double w = VEC_ELEM(blobTableSqrt, aux);
+                                            double w = VEC_ELEM(blobTableSqrt, aux)*threadParams->weight;
+
                                             // Look for the location of this logical index
                                             // in the physical layout
 #ifdef DEBUG
@@ -705,13 +730,14 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             }
                                             else
                                             {
+                                            	double wEffective=w*wCTF;
                                                 double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, izp,iyp,ixp));
-                                                ptrOut[0] += w * ptrIn[0];
+                                                ptrOut[0] += wEffective * ptrIn[0];
 
                                                 if (conjugate)
-                                                    ptrOut[1]-=w*ptrIn[1];
+                                                    ptrOut[1]-=wEffective*ptrIn[1];
                                                 else
-                                                    ptrOut[1]+=w*ptrIn[1];
+                                                    ptrOut[1]+=wEffective*ptrIn[1];
                                             }
                                         }
                                     }
@@ -859,7 +885,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                     // Compute the coordinate axes of the symmetrized projection
                     Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
 
-                    // Poner lo necesario en la estructura de cada hilo.
+                    // Fill the thread arguments for each thread
                     for ( int th = 0 ; th < numThreads ; th ++ )
                     {
                         // Passing parameters to each thread
@@ -988,7 +1014,8 @@ void ProgRecFourier::correctWeight()
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
         {
             double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
-            ptrOut[0] /= A3D_ELEM(FourierWeights,k,i,j);
+            if (fabs(A3D_ELEM(FourierWeights,k,i,j))>1e-3)
+            	ptrOut[0] /= A3D_ELEM(FourierWeights,k,i,j);
         }
     }
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)

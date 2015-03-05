@@ -1,10 +1,5 @@
 package xmipp.viewer.particlepicker;
 
-import ij.CommandListener;
-import ij.Executer;
-import ij.IJ;
-import ij.ImageListener;
-import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
 import java.awt.Color;
 import java.io.File;
@@ -12,16 +7,17 @@ import java.io.FilenameFilter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
+import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 /**
@@ -40,9 +36,8 @@ public abstract class ParticlePicker {
     protected Mode mode;
     protected List<IJCommand> filters;
     protected String selfile;
-    protected String command;
+    
     protected String configfile;
-    public String python, script, protid, projectid;//scipion params
     protected final String[] availableFilters = new String[]{"Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
                    "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
 
@@ -56,9 +51,12 @@ public abstract class ParticlePicker {
     public static final int sizemax = 2000;
     protected String block;
 
-    private static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW};
+    protected static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW};
 
-    private static int nextcolor;
+    protected static int nextcolor;
+    public final HashMap<Format, String> emextensions;
+    protected ParticlePickerParams params;
+    protected static ParticlePicker picker;
 
     public static Color getNextColor() {
         Color next = colors[nextcolor];
@@ -93,6 +91,11 @@ public abstract class ParticlePicker {
 
     }
     
+    public ParticlePickerParams getParams()
+    {
+        return params;
+    }
+    
 
     public String getParticlesAutoBlock(String file) {
         return particlesAutoBlock + "@" + file;
@@ -107,24 +110,35 @@ public abstract class ParticlePicker {
         return getParticlesAutoBlock(getOutputPath(m.getPosFile()));
     }
 
-    public ParticlePicker(String selfile, Mode mode) {
-        this(null, selfile, ".", mode);
+    public ParticlePicker(String selfile, Mode mode, ParticlePickerParams params) {
+        this(null, selfile, ".", mode, params);
     }
 
-    public ParticlePicker(String selfile, String outputdir, Mode mode) {
-        this(null, selfile, outputdir, mode);
+    public ParticlePicker(String selfile, String outputdir, Mode mode, ParticlePickerParams params) {
+        this(null, selfile, outputdir, mode, params);
     }
 
-    public ParticlePicker(String block, String selfile, String outputdir, Mode mode) {
+    public ParticlePicker(String block, String selfile, String outputdir, Mode mode, ParticlePickerParams params) {
+        this.params = params;
         this.block = block;
         this.outputdir = outputdir;
+        if(!new File(outputdir).isDirectory())
+            throw new IllegalArgumentException(XmippMessage.getInvalidDirectoryMsg(outputdir));
         this.selfile = selfile;
         this.mode = mode;
         this.configfile = getOutputPath("config.xmd");
 
-        initFilters();
+        filters = new ArrayList<IJCommand>();
         loadEmptyMicrographs();
         loadConfig();
+        emextensions = new HashMap<Format, String>();
+        emextensions.put(Format.Xmipp, ".pos");
+        emextensions.put(Format.Xmipp24, ".pos");
+        emextensions.put(Format.Xmipp30, ".pos");
+        emextensions.put(Format.Xmipp301, ".pos");
+        emextensions.put(Format.Relion, ".star");
+        emextensions.put(Format.Eman, ".box");
+        picker = this;
     }
 
     public void loadConfig() {
@@ -135,8 +149,8 @@ public abstract class ParticlePicker {
             color = getNextColor();
             size = getDefaultSize();
             setMicrograph(getMicrographs().get(0));
-
             filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
+            saveConfig();
             return;
         }
 
@@ -158,8 +172,8 @@ public abstract class ParticlePicker {
                 md = new MetaData("filters@" + file);
                 long[] ids = md.findObjects();
                 for (long id : ids) {
-                    command = md.getValueString(MDLabel.MDL_MACRO_CMD, id).replace('_', ' ');
-                    options = md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, id).replace('_', ' ');
+                    command = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD, id));
+                    options = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, id));
                     if (options.equals("NULL")) {
                         options = "";
                     }
@@ -174,7 +188,7 @@ public abstract class ParticlePicker {
 
     }
 
-    public void saveConfig() {
+    public synchronized void saveConfig() {
         try {
             MetaData md;
             String file = configfile;
@@ -183,17 +197,18 @@ public abstract class ParticlePicker {
             saveConfig(md, id);
             md.write("properties@" + file);
             md.destroy();
-            String options;
+            String cmd, options;
             md = new MetaData();
-
             for (IJCommand f : filters) {
                 id = md.addObject();
-                md.setValueString(MDLabel.MDL_MACRO_CMD, f.getCommand().replace(' ', '_'), id);
-                options = (f.getOptions() == null || f.getOptions().equals("")) ? "NULL" : f.getOptions().replace(' ', '_');
+                cmd = f.getMdCommand();
+                md.setValueString(MDLabel.MDL_MACRO_CMD, cmd, id);
+                options = f.getMdOptions();
                 md.setValueString(MDLabel.MDL_MACRO_CMD_ARGS, options, id);
             }
             md.writeBlock("filters@" + file);
             md.destroy();
+            
 
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, e.getMessage(), e);
@@ -210,9 +225,8 @@ public abstract class ParticlePicker {
     
     public Format detectFileFormat(String path) {
         if(!new File(path).exists())
-            return Format.Unknown;
-        
-        if (path.endsWith(".pos"))
+            return Format.None;
+        if (path.endsWith(emextensions.get(Format.Xmipp)))
         {
             if(MetaData.isPlainPos(path) ) 
                 return Format.Xmipp24;
@@ -221,20 +235,26 @@ public abstract class ParticlePicker {
             }
             return Format.Xmipp301;
         }
-        if (path.endsWith(".box")) {
+        else if (path.endsWith(emextensions.get(Format.Eman))) {
             return Format.Eman;
         }
+        else if (path.endsWith(emextensions.get(Format.Relion)))
+            return Format.Relion;
          
-        return Format.Unknown;
+        return Format.None;
     }
 
-    public Format detectFormat(String path) {
-        
-            File[] files = getCoordsFiles(path);
-            if(files.length == 0)
-                return Format.Unknown;
-            return detectFileFormat(files[0].getAbsolutePath());
-            
+    public Format detectFormat(String path, String preffix, String suffix) {
+        String file;
+        Format f;
+        for (Micrograph m : getMicrographs())
+        {
+            file = Filename.join(path, preffix + m.getName() + suffix);
+            f = detectFileFormat(file);
+            if(f != Format.None)
+                return f;
+        }
+        return Format.None;
     }
 
     public String getExportFile(String path) {
@@ -262,41 +282,7 @@ public abstract class ParticlePicker {
 
     public abstract void loadEmptyMicrographs();
 
-    private void initFilters() {
 
-        filters = new ArrayList<IJCommand>();
-
-        Recorder.record = true;
-
-        // detecting if a command is thrown by ImageJ
-        Executer.addCommandListener(new CommandListener() {
-            public String commandExecuting(String command) {
-
-                
-                ParticlePicker.this.command = command;
-                return command;
-
-            }
-        });
-        ImagePlus.addImageListener(new ImageListener() {
-
-            @Override
-            public void imageUpdated(ImagePlus arg0) {
-                updateFilters();
-            }
-
-            @Override
-            public void imageOpened(ImagePlus arg0) {
-
-            }
-
-            @Override
-            public void imageClosed(ImagePlus arg0) {
-                // TODO Auto-generated method stub
-
-            }
-        });
-    }
 
     protected boolean isRegisteredFilter(String command2) {
         for (IJCommand f : filters) {
@@ -307,7 +293,7 @@ public abstract class ParticlePicker {
         return false;
     }
 
-    private void updateFilters() {
+    public void updateFilters(String command) {
         if (command != null) {
             String options = "";
             if (Recorder.getCommandOptions() != null) {
@@ -325,8 +311,6 @@ public abstract class ParticlePicker {
             }
 
             saveConfig();
-            command = null;
-
         }
     }
 
@@ -464,15 +448,21 @@ public abstract class ParticlePicker {
                 break;
             case Xmipp301:
                 fillParticlesMdFromXmipp301File(path, m, md);
-
                 break;
             case Eman:
                 fillParticlesMdFromEmanFile(path, m, md, scale);
                 break;
+             case Relion:
+                fillParticlesMdFromRelionFile(path, m, md);
+                
+                break;
             default:
                 md.clear();
         }
-        
+        if (scale != 1.f) {
+            String command = String.format(Locale.ENGLISH, "xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale);
+            md.operate(command);
+        } 
         int width = (int) (m.getWidth() / scale);// original width
         int height = (int) (m.getHeigth() / scale);// original height
         if (invertx) {
@@ -481,10 +471,7 @@ public abstract class ParticlePicker {
         if (inverty) {
             md.operate(String.format("ycoor=%d-ycoor", height));
         }
-        if (scale != 1.f) {
-            String command = String.format(Locale.ENGLISH, "xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale);
-            md.operate(command);
-        }
+       
         
     }// function importParticlesFromFile
     
@@ -504,8 +491,22 @@ public abstract class ParticlePicker {
                 
     }
 
-    
-
+    public void fillParticlesMdFromRelionFile(String file, Micrograph m, MetaData md) {
+         MetaData relionmd = new MetaData(file);
+         long[] ids = relionmd.findObjects();
+         int xcoor, ycoor;
+         long id;
+         for(int i = 0; i < ids.length; i++ )
+         {
+            xcoor = (int)relionmd.getValueDouble(MDLabel.RLN_IMAGE_COORD_X, ids[i]);
+            ycoor = (int)relionmd.getValueDouble(MDLabel.RLN_IMAGE_COORD_Y, ids[i]);
+            id = md.addObject();
+            md.setValueInt(MDLabel.MDL_XCOOR, xcoor, id);
+            md.setValueInt(MDLabel.MDL_YCOOR, ycoor, id);
+         }
+         relionmd.destroy();
+                
+    }
     
     public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale) {
         // inverty = true;
@@ -585,6 +586,7 @@ public abstract class ParticlePicker {
                         size = (int)(size * scale);
                         setSize(size);
                         saveConfig();
+                        configmd.destroy();
                     }
                 }
     }
@@ -599,35 +601,19 @@ public abstract class ParticlePicker {
                 });
         }
 
-     public void setPython(String python)
-     {
-         this.python = python;
-     }
-     
-     public void setScipionScript(String script)
-     {
-         this.script = script;
-     }
-     
     
      
-     public void setProjectId(String projectid)
-     {
-         this.projectid = projectid;
-     }
      
-     public void setProtId(String protid)
-     {
-         this.protid = protid;
-     }
      
      public boolean isScipionSave()
      {
-         return script != null && mode != Mode.ReadOnly;
+         if(params == null)
+             return false;
+         return params.port != null && mode != Mode.ReadOnly;
      }
 
-    public String[] getScipionSaveCommand() {
-        String[] cmd = new String[]{python, script, projectid, protid};
+    public String getScipionSaveCommand() {
+        String cmd = String.format("run function registerCoords %s %s", params.dbpath, params.protid);
         return cmd;
     }
      
@@ -635,11 +621,14 @@ public abstract class ParticlePicker {
     public abstract int getParticlesCount();
 
     public String getProtId() {
-        return protid;
+        return params.protid;
     }
 
     
-
+    public static ParticlePicker getPicker()
+    {
+        return picker;
+    }
      
 
    

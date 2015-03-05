@@ -15,6 +15,9 @@ extern "C" {
 JNIEXPORT void JNICALL Java_xmipp_jni_MDRow_create
   (JNIEnv *, jobject);
 
+JNIEXPORT void JNICALL Java_xmipp_jni_MDRow_createRef
+  (JNIEnv *, jobject, jlong);
+
 /*
  * Class:     xmipp_MDRow
  * Method:    destroy

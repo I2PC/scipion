@@ -11,6 +11,7 @@ import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.IJCommand;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
+import xmipp.viewer.particlepicker.ParticlePickerParams;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -22,18 +23,18 @@ public class ExtractParticlePicker extends ParticlePicker
 	private ArrayList<ColorHelper> colorby;
 
 
-	public ExtractParticlePicker(String selfile, int size, Mode mode)
+	public ExtractParticlePicker(String selfile, int size, Mode mode, ParticlePickerParams params)
 	{
-		super(selfile, mode);
+		super(selfile, mode, params);
 		setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 	}
 	
-	public ExtractParticlePicker(String block, String selfile, int size, Mode mode)
+	public ExtractParticlePicker(String block, String selfile, int size, Mode mode, ParticlePickerParams params)
 	{
-		super(block, selfile, ".", mode);
+		super(block, selfile, ".", mode, params);
 		setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
@@ -85,12 +86,15 @@ public class ExtractParticlePicker extends ParticlePicker
 	public void loadColumns(MetaData md)
 	{
 		colorby = new ArrayList<ColorHelper>();
+                
 		loadColumn(MDLabel.MDL_ZSCORE, "ZScore", md);
 		loadColumn(MDLabel.MDL_ZSCORE_SHAPE1, "ZScore-Shape1", md);
 		loadColumn(MDLabel.MDL_ZSCORE_SHAPE2, "ZScore-Shape2", md);
 		loadColumn(MDLabel.MDL_ZSCORE_SNR1, "ZScore-SNR1", md);
 		loadColumn(MDLabel.MDL_ZSCORE_SNR2, "ZScore-SNR2", md);
 		loadColumn(MDLabel.MDL_ZSCORE_HISTOGRAM, "ZScore-Hist", md);
+                if(colorby.isEmpty())
+                    throw new IllegalArgumentException("No score available to sort particles");
 		
 	}
 	
@@ -211,7 +215,7 @@ public class ExtractParticlePicker extends ParticlePicker
 
 	public static ExtractPickerJFrame open(String block, String filename, int size, GalleryJFrame galleryfr)
 	{
-		ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, size, Mode.Extract);
+		ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, size, Mode.Extract, null);
 		return new ExtractPickerJFrame(picker, galleryfr);
 	}
 

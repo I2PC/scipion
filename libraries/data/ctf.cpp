@@ -50,7 +50,10 @@ void groupCTFMetaData(const MetaData &imgMd, MetaData &ctfMd)
       for(int i=0; i < CTF_ALL_LABELS_SIZE; i++)
         if (imgMd.containsLabel(CTF_ALL_LABELS[i]))
           groupbyLabels.push_back(CTF_ALL_LABELS[i]);
-
+      if (imgMd.containsLabel(MDL_MICROGRAPH_ID))
+        groupbyLabels.push_back(MDL_MICROGRAPH_ID);
+      else
+    	  REPORT_ERROR(ERR_MD_MISSINGLABEL,"ERROR: Input metadata has micrographId");
       //MetaData auxMd;
       ctfMd.aggregateGroupBy(imgMd, AGGR_COUNT, groupbyLabels, MDL_CTF_DEFOCUSU, MDL_COUNT);
   }
@@ -66,19 +69,30 @@ void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
 
     if (enable_CTF)
     {
-        row.getValueOrDefault(MDL_CTF_VOLTAGE, kV, 100);
-        row.getValueOrDefault(MDL_CTF_DEFOCUSU, DeltafU, 0);
-        row.getValueOrDefault(MDL_CTF_DEFOCUSV, DeltafV, DeltafU);
-        row.getValueOrDefault(MDL_CTF_DEFOCUS_ANGLE, azimuthal_angle, 0);
-        row.getValueOrDefault(MDL_CTF_CS, Cs, 0);
-        row.getValueOrDefault(MDL_CTF_CA, Ca, 0);
-        row.getValueOrDefault(MDL_CTF_ENERGY_LOSS, espr, 0);
-        row.getValueOrDefault(MDL_CTF_LENS_STABILITY, ispr, 0);
-        row.getValueOrDefault(MDL_CTF_CONVERGENCE_CONE, alpha, 0);
-        row.getValueOrDefault(MDL_CTF_LONGITUDINAL_DISPLACEMENT, DeltaF, 0);
-        row.getValueOrDefault(MDL_CTF_TRANSVERSAL_DISPLACEMENT, DeltaR, 0);
-        row.getValueOrDefault(MDL_CTF_Q0, Q0, 0);
-        row.getValueOrDefault(MDL_CTF_K, K, 1);
+    	if (row.containsLabel(MDL_CTF_DEFOCUSU))
+    	{
+			row.getValueOrDefault(MDL_CTF_VOLTAGE, kV, 100);
+			row.getValueOrDefault(MDL_CTF_DEFOCUSU, DeltafU, 0);
+			row.getValueOrDefault(MDL_CTF_DEFOCUSV, DeltafV, DeltafU);
+			row.getValueOrDefault(MDL_CTF_DEFOCUS_ANGLE, azimuthal_angle, 0);
+			row.getValueOrDefault(MDL_CTF_CS, Cs, 0);
+			row.getValueOrDefault(MDL_CTF_CA, Ca, 0);
+			row.getValueOrDefault(MDL_CTF_ENERGY_LOSS, espr, 0);
+			row.getValueOrDefault(MDL_CTF_LENS_STABILITY, ispr, 0);
+			row.getValueOrDefault(MDL_CTF_CONVERGENCE_CONE, alpha, 0);
+			row.getValueOrDefault(MDL_CTF_LONGITUDINAL_DISPLACEMENT, DeltaF, 0);
+			row.getValueOrDefault(MDL_CTF_TRANSVERSAL_DISPLACEMENT, DeltaR, 0);
+			row.getValueOrDefault(MDL_CTF_Q0, Q0, 0);
+			row.getValueOrDefault(MDL_CTF_K, K, 1);
+    	}
+    	else if (row.containsLabel(MDL_CTF_MODEL))
+    	{
+    		FileName fnctf;
+    		row.getValue(MDL_CTF_MODEL,fnctf);
+    		MetaData ctfparam;
+    		ctfparam.read(fnctf);
+    		readFromMetadataRow(ctfparam,ctfparam.firstObject(),disable_if_not_K);
+    	}
 
         if (K == 0 && disable_if_not_K)
             enable_CTF = false;

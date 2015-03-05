@@ -44,9 +44,10 @@ public:
 
 protected:
     int             splineDegree, dim;
-    bool            applyTransform, inverse, wrap, isVol, flip;
+    bool            applyTransform, inverse, wrap, isVol, flip, mdVol;
     Matrix2D<double> R, A, B, T;
     ImageGeneric img, imgOut;
+    String matrixStr; // To read directly the matrix
 
     void defineParams();
     void readParams();

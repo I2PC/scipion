@@ -32,9 +32,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 	for (size_t n=0; n<NSIZE(mI); ++n)
             for (size_t z=0; z<ZSIZE(mI); ++z)
             {
-            	for (size_t y=0; y<Y; ++y)
-                    for (size_t x=0; x<X; ++x, ptrMatlab++)
-                       ptrC[x*YSIZE(mI)+y]=*ptrMatlab;
+            	for (size_t x=0; x<X; ++x)
+                    for (size_t y=0; y<Y; ++y, ptrMatlab++)
+                       ptrC[y*XSIZE(mI)+x]=*ptrMatlab;
             ptrC+=YXSIZE(mI);
            }
     I.write(fnImg);

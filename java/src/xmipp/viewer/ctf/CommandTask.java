@@ -34,6 +34,7 @@ public class CommandTask implements Runnable {
 	}
 
 	public CommandTask(String command) {
+                //System.out.println(command);
 		commands = new ArrayList<String>();
 		addCommand(command);
 	}

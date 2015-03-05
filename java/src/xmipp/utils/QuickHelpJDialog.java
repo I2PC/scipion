@@ -22,13 +22,20 @@ public class QuickHelpJDialog extends JDialog
 		private JButton okbt;
 		private QuickHelpPane helppn;
 		private String helptitle;
-		private Map<String, String> helpmap;
+		private Map<Object, Object> helpmap;
+                private final boolean editmap;
+                
+                public QuickHelpJDialog(Frame window, boolean modal, String helptitle, Map<Object, Object> map)
+                {
+                    this(window, modal, helptitle, map, false);
+                }
 
-		public QuickHelpJDialog(Frame window, boolean modal, String helptitle, Map<String, String> map)
+		public QuickHelpJDialog(Frame window, boolean modal, String helptitle, Map<Object, Object> map, boolean editmap)
 		{
 			super(window, modal);
 			this.helpmap = map;
 			this.helptitle = helptitle;
+                        this.editmap = editmap;
 			initComponents();
 		}
 
@@ -40,7 +47,7 @@ public class QuickHelpJDialog extends JDialog
 			GridBagConstraints constraints = new GridBagConstraints();
 			constraints.insets = new Insets(10, 10, 10, 10);
 			setLayout(new GridBagLayout());
-			helppn = new QuickHelpPane( helptitle, helpmap);
+			helppn = new QuickHelpPane( helptitle, helpmap, editmap);
 			add(helppn, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
 			okbt = XmippWindowUtil.getTextButton("Ok", new ActionListener()
 			{

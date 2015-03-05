@@ -33,7 +33,8 @@ public class GalleryRowHeaderModel implements ListModel {
     private int n = 0;
     private GalleryData data = null;
 
-    public GalleryRowHeaderModel(int n, int first_index) {        
+    public GalleryRowHeaderModel(int n, int first_index) {      
+        
         this.first_index = first_index;
         this.n = n;
     }

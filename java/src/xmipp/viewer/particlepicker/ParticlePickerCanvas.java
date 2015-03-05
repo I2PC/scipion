@@ -2,7 +2,6 @@ package xmipp.viewer.particlepicker;
 
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -19,6 +18,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import xmipp.ij.commons.XmippImageCanvas;
+import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
@@ -34,7 +34,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public final static BasicStroke activecst = new BasicStroke(3.0f);
         
 	
-	protected ImageWindow iw;
+	protected XmippImageWindow iw;
 	
 	public void display()
 	{
@@ -44,8 +44,11 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			iw.updateImage(getImage());
 		}
 		else
-			this.iw = new ImageWindow(getImage(), this);
-		// iw.maximize();
+                {
+			this.iw = new XmippImageWindow(getImage(), this, null);
+                        iw.maximize();
+                }
+                
 		iw.setTitle(getMicrograph().getName());
 		
 	}
@@ -217,7 +220,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			// only display a hand if the cursor is over the items
 			final Rectangle cellBounds = iw.getBounds();
 			Toolkit toolkit = Toolkit.getDefaultToolkit();
-			Cursor eraserCursor = toolkit.createCustomCursor(XmippResource.getIcon("clean.gif").getImage(), new Point(0, 0), "Eraser");
+			Cursor eraserCursor = toolkit.createCustomCursor(XmippResource.getIcon("eraser.png").getImage(), new Point(0, 0), "Eraser");
 			if (cellBounds != null && cellBounds.contains(x, y))
 				setCursor(eraserCursor);
 			else
@@ -398,5 +401,17 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	
 
 	protected abstract void doCustomPaint(Graphics2D g2);
+        
+         public void mouseWheelMoved(int x, int y, int rotation, Dimension size)
+	{
+                getIw().setSize(size);
+		if (rotation < 0)
+			zoomIn(x, y);
+		else
+			zoomOut(x, y);
+		if (getMagnification() <= 1.0)
+			imp.repaintWindow();
+
+	}
 
 }

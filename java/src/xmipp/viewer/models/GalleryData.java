@@ -29,6 +29,7 @@ import ij.ImagePlus;
 import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -53,6 +54,7 @@ import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.scipion.ScipionMetaData;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
 import xmipp.viewer.windows.SaveJDialog;
@@ -63,15 +65,14 @@ import xmipp.viewer.windows.SaveJDialog;
 public class GalleryData {
 
 
-    protected HashMap<String, ColumnInfo> displayci;
+    protected HashMap<String, ColumnInfo> displaycis;
     protected MetaData md;
     protected long[] ids;
     protected String[] mdBlocks = null;
     protected String selectedBlock;
     // The following is only used in VolumeGallery mode
     protected String selectedVolFn = "";
-    protected String commonVolPrefix = "";
-    protected String[] volumes = null;
+    //protected String commonVolPrefix = "";
 
     protected List<ColumnInfo> labels = null;
     // First label that can be rendered
@@ -83,7 +84,7 @@ public class GalleryData {
     protected boolean showLabel = false;
     protected boolean renderImages;
     public final Params parameters;
-    protected int numberOfVols = 0;
+
 
     // flag to perform global normalization
     protected boolean normalize = false;
@@ -95,7 +96,7 @@ public class GalleryData {
     protected boolean isClassification = false;
     protected int refLabel;
     // Store the selection state for each item
-    protected boolean[] selection;
+    
 
     // Array with all ClassInfo
     protected ArrayList<ClassInfo> classesArray;
@@ -104,21 +105,69 @@ public class GalleryData {
     // Flags to check if md or classes has changed
     protected boolean hasMdChanges, hasClassesChanges;
     protected GalleryJFrame window;
-    protected HashMap<Long, EllipseCTF> ctfs;
-    protected String[] displayLabel;
+    
+    protected String[] displayLabels;
+    protected String[] sortby;
+    
+    protected boolean isVolumeMd;
+    protected Integer rows, columns;
+
+    
+    
     protected String[] renderLabels;
-    protected String renderLabel;
+    protected String renderLabel = "first";
     protected String[] visibleLabels;
     protected String[] orderLabels;
-    protected String[] sortby;
-    protected int selfrom = -1, selto = -1;
 
-    public boolean hasRecalulateCTF() {
-        return ctfs != null && !ctfs.isEmpty();
+    public boolean isObjectCmd(String cmd) {
+        for(String objCmd: parameters.objectCommands)
+            if(objCmd.equals(cmd))
+                return true;
+        return false;
     }
 
+    public Integer getModelRows()
+    {
+        return rows;
+    }
     
+    public Integer getModelColumns()
+    {
+        return columns;
+    }
     
+    public void runObjectCommand(int index, String objectCommand) {
+        try {
+            String[] cmd = new String[]{objectCommand};
+            System.out.println(Arrays.toString(cmd));
+        } catch (Exception ex) {
+            Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public String getTmpFile(String suffix) {
+        String ext = XmippStringUtils.getFileExtension(filename);
+        String ext2 = suffix + ext;
+        String tmpfile = filename;
+        if(!filename.endsWith(ext2))
+            tmpfile = filename.replace(ext, ext2);
+        return tmpfile;
+    }
+
+    public void selectVolumeAt(int selectedIndex) {
+        selectedVolFn = getVolumeAt(selectedIndex);
+    }
+
+    public boolean isAutoAdjust()
+    {
+        return rows == null && columns == null;
+    }
+
+    public void setModelDim(Integer rows, Integer cols) {
+        this.rows = rows;
+        this.columns = cols;
+    }
+
 
     public enum Mode {
 
@@ -143,31 +192,17 @@ public class GalleryData {
     public GalleryData(GalleryJFrame window, Params parameters, MetaData md) {
         this.window = window;
         this.parameters = parameters;
-        md.setRenderLabels(parameters.renderLabels);
-        md.setRenderLabel(parameters.getRenderLabel());
-        sortby = parameters.sortby;
-        md.setVisibleLabels(parameters.visibleLabels);
-        md.setOrderLabels(parameters.orderLabels);
+        
         try {
-
             selectedBlock = "";
-
-            zoom = parameters.zoom;
-            this.renderImages = md.getRenderLabels() != null && !md.getRenderLabel().equals("first");
-            mode = Mode.GALLERY_MD;
-            resliceView = parameters.resliceView;
-            useGeo = parameters.useGeo;
-            wrap = parameters.wrap;
-            displayLabel = parameters.getDisplayLabels();
-            displayci = new HashMap<String, ColumnInfo>();
-            if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) {
-                mode = Mode.TABLE_MD;
-            } else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) {
-                mode = Mode.GALLERY_ROTSPECTRA;
-            }
-
-            setFileName(md.getFilename());
             this.md = md;
+            setFileName(md.getPath());
+            zoom = parameters.zoom;
+            resliceView = parameters.resliceView;
+            if(parameters.rows > 0)
+                rows = parameters.rows;
+            if(parameters.columns > 0)
+                columns = parameters.columns;
             loadMd();
 
         } catch (Exception e) {
@@ -176,6 +211,45 @@ public class GalleryData {
         }
 
     }// constructor GalleryData
+    
+    protected void readMdParameters()
+    {
+        renderLabels = null;
+        renderLabel = "first";
+        visibleLabels = null;
+        orderLabels = null;
+        sortby = null;
+        
+        useGeo = wrap = false;
+        displayLabels = null;
+        mode = Mode.GALLERY_MD;
+        this.renderImages = true;
+        displaycis = new HashMap<String, ColumnInfo>();
+        
+        if(parameters.getBlock() == null)
+            parameters.setBlock(selectedBlock);//Identifies parameters with first block loaded
+        
+        if(parameters.getBlock().equals(selectedBlock))
+        {
+        
+            setRenderLabels(parameters.renderLabels);
+            setRenderLabel(parameters.getRenderLabel());
+            setVisibleLabels(parameters.visibleLabels);
+            setOrderLabels(parameters.orderLabels);
+            useGeo = parameters.useGeo;
+            wrap = parameters.wrap;
+            displayLabels = parameters.getDisplayLabels();
+            if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
+            {
+                mode = Mode.TABLE_MD;
+                if(renderLabel.equals("first"))
+                    renderImages = false;
+            }
+            else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
+                mode = Mode.GALLERY_ROTSPECTRA;
+            
+        }
+    }
 
     public List<ColumnInfo> getColumns() {
         return labels;
@@ -187,6 +261,7 @@ public class GalleryData {
             for(ColumnInfo ci: labels)
                 if(ci.labelName.equals(key))
                     ciFirstRender = ci;
+            renderLabel = ciFirstRender.labelName;
 	}
 
     public ColumnInfo getRenderColumn() {
@@ -228,15 +303,11 @@ public class GalleryData {
 
     public void setFileName(String file) {
         filename = file;
-
         if (file != null) {
             if (Filename.hasPrefix(file)) {
                 if (Filename.isMetadata(file)) {
-                    selectedBlock = Filename.getPrefix(file); // FIXME:
-                    // validate
-                    // block exists
+                    selectedBlock = Filename.getPrefix(file); 
                     filename = Filename.getFilename(file);
-
                 }
             }
             if (Filename.exists(filename)) {
@@ -246,20 +317,19 @@ public class GalleryData {
                 }
             }
         }
-
     }
 
     public void setDisplayLabel(String key, boolean selected) {
         if(!selected)
         {
-            displayci.remove(key);
+            displaycis.remove(key);
             return;
         }
         
         for(ColumnInfo ci: labels)
             if(ci.labelName.equals(key))
             {
-                displayci.put(key, ci);
+                displaycis.put(key, ci);
                 break;
             }
     }
@@ -268,14 +338,15 @@ public class GalleryData {
      * Load contents from a metadata already read
      */
     public void loadMd() throws Exception {
+        readMdParameters();
         ids = md.findObjects();
         loadLabels();
-        numberOfVols = 0;
-        volumes = null;
+        
         if (!containsGeometryInfo()) {
             useGeo = false;
+            wrap = false;
         }
-        selection = new boolean[ids.length];
+        
         isClassification = checkifIsClassificationMd();
 
         if (isClassification) {
@@ -291,7 +362,7 @@ public class GalleryData {
             return;
         }
 
-        if (!md.isColumnFormat()) {
+        if (!md.isColumnFormat() ) {
             mode = Mode.TABLE_MD;
             if (zoom == 0) {
                 zoom = 100;
@@ -301,7 +372,7 @@ public class GalleryData {
         if (isGalleryMode()) {
             mode = Mode.GALLERY_MD;
         }
-
+        isVolumeMd = false;
         if (hasRenderLabel()) {
             int renderLabel = ciFirstRender.label;
             ImageGeneric image = null;
@@ -311,15 +382,9 @@ public class GalleryData {
 			// Try to find at least one image to render
             // and take dimensions from that
             for (int i = 0; i < ids.length && image == null; ++i) {
-                imageFn = Filename.findImagePath(
-                        md.getValueString(renderLabel, ids[i]), filename, true);
-
-				// DEBUG.printFormat("imageFn1: %s", imageFn);
-
-                // imageFn = Filename.fixPath(md.getValueString(renderLabel,
-                // ids[i]), filename, false);
-                // DEBUG.printFormat("imageFn2: %s", imageFn);
-                // if (imageFn != null){
+                imageFn = md.getValueString(renderLabel, ids[i]);
+                if(imageFn != null)
+                    imageFn = Filename.findImagePath(imageFn , filename, true);
                 if (imageFn != null) {
                     try {
                         image = new ImageGeneric(imageFn);
@@ -336,10 +401,8 @@ public class GalleryData {
                     if (md.containsMicrographsInfo()) {
                         MAX_SIZE /= 2;
                     }
-                    int xdim = image.getXDim();
-                    int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
-                    float scale = (float) x / xdim;
-                    zoom = (int) Math.ceil(scale * 100);
+                    zoom = getDefaultZoom(image.getXDim());
+                    
                 }
 
                 if (image.isVolume()) { // We are assuming all are volumes
@@ -347,18 +410,10 @@ public class GalleryData {
                     if (isGalleryMode()) {
                         mode = Mode.GALLERY_VOL;
                     }
-                    numberOfVols = md.size();
-                    volumes = new String[numberOfVols];
-
-                    for (int i = 0; i < numberOfVols; ++i) {
-                        volumes[i] = md.getValueString(
-                                ciFirstRender.label, ids[i]);
-                    }
-                    commonVolPrefix = XmippStringUtils
-                            .commonPathPrefix(volumes);
+                    isVolumeMd = true;
 
                     if (selectedVolFn.isEmpty()) {
-                        selectVolume(volumes[0]);
+                        selectedVolFn = getVolumeAt(0);
                     }
 
                 }
@@ -371,16 +426,24 @@ public class GalleryData {
             mode = Mode.TABLE_MD;
             zoom = 100;
         }
-        if(sortby != null)
+        if(parameters.sortby != null && parameters.getBlock().equals(selectedBlock))
         {
-            ColumnInfo sortci = getColumnInfo(sortby[0]);
-            boolean asc = sortby.length == 1 || sortby[1].equals("asc");
+            ColumnInfo sortci = getColumnInfo(parameters.sortby[0]);
+            boolean asc = parameters.sortby.length == 1 || parameters.sortby[1].equalsIgnoreCase("asc");
             if(sortci != null)
-                sortMd(sortci.label, asc);
+                sortMd(sortci, asc);
         }
+        
     }// function loadMd
-
     
+ 
+    public static int getDefaultZoom(int xdim)
+    {
+        int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
+        float scale = (float) x / xdim;
+        int zoom = (int) Math.ceil(scale * 100);
+        return zoom;
+    }
 
     public ColumnInfo getColumnInfo(String labelName) {
         for (ColumnInfo ci : labels) {
@@ -394,7 +457,7 @@ public class GalleryData {
                
     public boolean isDisplayLabel()
     {
-        return displayci != null;
+        return displaycis != null;
     }
 
    
@@ -402,8 +465,11 @@ public class GalleryData {
     public String getDisplayLabel(long id)
     {
         String label = "";
-        for(ColumnInfo ci: displayci.values())
-            label += " " + md.getValueString(ci.label, id);
+        
+        for(ColumnInfo ci: displaycis.values())
+            label += ci.labelName + "=" + md.getValueString(ci.label, id) + ", ";
+        if(!label.isEmpty())
+            label = label.substring(0, label.length() - 2);
         return label;
     }
 
@@ -420,12 +486,13 @@ public class GalleryData {
                     labelids.length);
             ciFirstRender = null;
             ColumnInfo ciFirstRenderVisible = null;
-            int inputRenderLabel = MDLabel.MDL_UNDEFINED;
+            String inputRenderLabel = "";
 
-            if (!md.getRenderLabel().equalsIgnoreCase("first")) {
-                inputRenderLabel = MetaData.str2Label(md.getRenderLabel());
+            if (!renderLabel.equalsIgnoreCase("first")) {
+                inputRenderLabel = renderLabel;
             }
-
+            String sampleImage;
+            ColumnInfo auxRender = null;
             for (int i = 0; i < labelids.length; ++i) {
                 ci = initColumnInfo(labelids[i]);
                 if (labels != null) {
@@ -436,23 +503,36 @@ public class GalleryData {
                     }
                 } else {
                     ci.render = isRenderLabel(ci);
+                    if(ci.render)
+                        auxRender = ci;
                     ci.visible = isVisibleLabel(ci);
                 }
                 newLabels.add(ci);
-                if (inputRenderLabel == labelids[i] && ci.render) {//render label specified and included on renders
+                if (inputRenderLabel.equals(ci.labelName) && ci.render) {//render label specified and included on renders
                     ciFirstRender = ci;
                     if (ci.visible) {
                         ciFirstRenderVisible = ci;
                     }
                 }
-                if ((ciFirstRender == null || ci.label == MDLabel.MDL_IMAGE) && ci.allowRender)// favor mdl_image over mdl_micrograph
-                    ciFirstRender = ci;
-                if ((ciFirstRenderVisible == null || ci.label == MDLabel.MDL_IMAGE) && ci.allowRender && ci.visible) 
-                    ciFirstRenderVisible = ci;
+                
+
+                if (ciFirstRender == null && ci.allowRender)
+                {
+                    sampleImage = getSampleImage(ci);
+                    if(sampleImage != null)
+                    {
+                        ciFirstRender = ci;
+                        if (ciFirstRenderVisible == null && ci.visible) 
+                            ciFirstRenderVisible = ci;
+                    }
+                }
             }
+            if(ciFirstRender == null)
+                ciFirstRender = ciFirstRenderVisible = auxRender;//if there are no images found render none image on gallery mode
             if (ciFirstRenderVisible != null) {
                 ciFirstRender = ciFirstRenderVisible;
             }
+            
             // Add MDL_ENABLED if not present
             if (!md.containsLabel(MDLabel.MDL_ENABLED) && (md.containsLabel(MDLabel.MDL_IMAGE) || md.containsLabel(MDLabel.MDL_MICROGRAPH))) {
                 newLabels.add(0, new ColumnInfo(MDLabel.MDL_ENABLED));
@@ -462,18 +542,34 @@ public class GalleryData {
                 }
                 // hasMdChanges = true;
             }
+            
 
             labels = newLabels;
             orderLabels();
-            
-            if(displayLabel != null)
-                for(String label: displayLabel)
+            if(displayLabels != null)
+                for(String label: displayLabels)
                     setDisplayLabel(label, true);
 //////            System.out.printf("render: %s %s \n", ciFirstRender, ciFirstRenderVisible);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }// function loadLabels
+    
+    public String getSampleImage(ColumnInfo ci)
+    {
+        String imageFn, mddir = md.getBaseDir();
+        for (int i = 0; i < ids.length; ++i)
+        {
+            imageFn = getValueFromLabel(i, ci.label);
+            if(imageFn != null)
+            {
+                imageFn = Filename.findImagePath(imageFn, mddir, true);
+                if (imageFn != null && Filename.exists(imageFn))
+                       return imageFn;
+            }
+        }
+        return null;
+    }
     
     public ColumnInfo initColumnInfo(int label)
     {
@@ -501,10 +597,13 @@ public class GalleryData {
      * Sort the metadata by a given column. The sort could be ascending or
      * descending
      */
-    public void sortMd(int label, boolean ascending) {
+    public void sortMd(ColumnInfo sortci, boolean asc) {
         try {
-            md.sort(label, ascending);
-            clearSelection();
+            if(sortby == null)
+                sortby = new String[2];
+            sortby[0] = sortci.labelName;
+            sortby[1] = (asc)? "ASC": "DESC";
+            md.sort(sortci.label, asc);
             hasMdChanges = true;
             ids = md.findObjects();
         } catch (Exception e) {
@@ -514,13 +613,7 @@ public class GalleryData {
     
     
 
-    public void clearSelection() {
-        for (int i = 0; i < selection.length; ++i) {
-            selection[i] = false;
-        }
-        selfrom = selto = -1;
-
-    }
+   
 
     /**
      * Reload current metadata from file
@@ -576,9 +669,7 @@ public class GalleryData {
         return mdBlocks != null ? mdBlocks.length : 0;
     }
 
-    public int getNumberOfVols() {
-        return numberOfVols;
-    }
+   
 
     /**
      * Return the mode of the gallery
@@ -641,17 +732,14 @@ public class GalleryData {
     public void changeMode() {
         if (isGalleryMode()) {
             mode = Mode.TABLE_MD;
-            if (selection.length < ids.length) //This can happen when in volume mode, that changes the selection array
-            {
-                selection = new boolean[ids.length];
-            }
-        } else if (isRotSpectraMd()) {
+           
+        } else if (isRotSpectraMd() && parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
             mode = Mode.GALLERY_ROTSPECTRA;
-        } else if (numberOfVols > 0) {
+        else if ( isVolumeMd) 
             mode = Mode.GALLERY_VOL;
-        } else {
+        else
             mode = Mode.GALLERY_MD;
-        }
+        
 
     }
 
@@ -659,12 +747,10 @@ public class GalleryData {
      * following function only should be used in VolumeGallery mode
      */
     public String getVolumeAt(int index) {
-        return volumes[index];
+            return md.getValueString(ciFirstRender.label, ids[index]);
     }
 
-    public void selectVolume(String vol) {
-        selectedVolFn = vol; // FIXME: Check it is valid
-    }
+    
 
     // Check if the underlying data has geometrical information
     public boolean containsGeometryInfo() {
@@ -894,31 +980,17 @@ public class GalleryData {
         }
     }// function loadClassesInfo
 
-    /**
-     * Return the number of selected elements
-     */
-    public int getSelectionCount() {
-        int count = 0;
-
-        if (!isVolumeMode() && hasSelection()) {
-            for (int i = selfrom; i <= selto; ++i) {
-                if (selection[i]) {
-                    ++count;
-                }
-            }
-        }
-        return count;
-    }
+    
 
     /**
      * Create a metadata just with selected items
      */
-    public MetaData getSelectionMd() {
+    public MetaData getSelectionMd(boolean[] selection) {
         MetaData selectionMd = null;
-        if (!isVolumeMode() && hasSelection()) {
-            long[] selectedIds = new long[getSelectionCount()];
+        if (!isVolumeMode()) {
+            long[] selectedIds = new long[selection.length];
             int count = 0;
-            for (int i = selfrom; i <= selto; ++i) {
+            for (int i = 0; i < selection.length; i++) {
                 if (selection[i]) {
                     selectedIds[count++] = ids[i];
                 }
@@ -1000,19 +1072,18 @@ public class GalleryData {
     /**
      * Get all the images assigned to all selected classes
      */
-    public MetaData getClassesImages() {
+    public MetaData getClassesImages(boolean[] selection) {
         MetaData mdImages = new MetaData();
         MetaData md;
-        if(hasSelection())
-            for (int i = selfrom; i <= selto; ++i) {
-                if (selection[i]) {
-                    md = getClassImages(i);
-                    if (md != null) {
-                        mdImages.unionAll(md);
-                        md.destroy();
-                    }
+        for (int i = 0; i < selection.length; i++) {
+            if (selection[i]) {
+                md = getClassImages(i);
+                if (md != null) {
+                    mdImages.unionAll(md);
+                    md.destroy();
                 }
             }
+        }
         return mdImages;
     }
 
@@ -1041,11 +1112,31 @@ public class GalleryData {
             }
             String fnVectors = filename.replace("classes", "vectors");
             String fnVectorsData = fnVectors.replace(".xmd", ".vec");
+            
             if (isClassificationMd() && Filename.exists(fnVectors) && Filename.exists(fnVectorsData)) {
                 return true;
             }
         }
         return false;
+    }
+    
+    public class RotSpectra
+    {
+        public String fnVectors, fnVectorsData, fnClasses;
+        
+        public RotSpectra(String fnClasses, String fnVectors, String fnVectorsData)
+        {
+            this.fnClasses = fnClasses;
+            this.fnVectors = fnVectors;
+            this.fnVectorsData = fnVectorsData;
+        }
+    }
+    
+    public RotSpectra getRotSpectra()
+    {
+        String fnVectors = filename.replace("classes", "vectors");
+        String fnVectorsData = fnVectors.replace(".xmd", ".vec");
+        return new RotSpectra(filename, fnVectors, fnVectorsData);
     }
 
     /**
@@ -1128,9 +1219,9 @@ public class GalleryData {
     /**
      * Delete from metadata selected items
      */
-    public void removeSelection() throws Exception {
-        if(hasSelection())
-            for (int i = selfrom; i <= selto; ++i) {
+    public void removeSelection(boolean[] selection) throws Exception {
+
+            for (int i = 0; i < selection.length; i++) {
                 if (selection[i]) {
                     md.removeObject(ids[i]);
                     hasMdChanges = true;
@@ -1189,7 +1280,9 @@ public class GalleryData {
         return null;
     }
 
-    public MetaData getImagesMd(MetaData md) {
+    
+    
+    public MDRow[] getImages(MetaData md) {
         int idlabel = getRenderLabel();
         if (md == null) {
             return null;
@@ -1198,30 +1291,34 @@ public class GalleryData {
             return null;
         }
 
-        MDRow mdRow = new MDRow();
-        MetaData imagesmd = new MetaData();
+        MDRow mdRow = null;
+        ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
         int index = 0;
         String imagepath;
-        long id2;
-        // md.print();
+
         for (long id : md.findObjects()) {
             if (isEnabled(index)) {
+                
                 imagepath = md.getValueString(idlabel, id, true);
                 if (imagepath != null && ImageGeneric.exists(imagepath)) {
-                    id2 = imagesmd.addObject();
+                    mdRow = new MDRow();
+                    
                     if (useGeo) {
+                        
                         md.getRow(mdRow, id);
                         mdRow.setValueString(idlabel, imagepath);
-                        imagesmd.setRow(mdRow, id2);
+                        
                     } else {
-                        imagesmd.setValueString(idlabel, imagepath, id2);
+                        mdRow.setValueString(MDLabel.MDL_IMAGE, imagepath);
                     }
+                    
+                    imagesmd.add(mdRow);
                 }
             }
             index++;
         }
-        mdRow.destroy();
-        return imagesmd;
+
+        return imagesmd.toArray(new MDRow[]{});
     }
 
     public String getFileInfo() {
@@ -1235,13 +1332,12 @@ public class GalleryData {
         return fileInfo;
     }
 
-    public void saveClassSelection(String path) {
+    public void saveClassSelection(boolean[]selection, String path) {
         try {
-            saveSelection("classes" + Filename.SEPARATOR + path, true);
+            saveSelection(selection, "classes" + Filename.SEPARATOR + path, true);
             MetaData imagesmd;
             // Fill the classX_images blocks
-            if(hasSelection())
-                for (int i = selfrom; i <= selto; ++i) {
+                for (int i = 0; i < selection.length; i++) {
                     if (selection[i]) {
                         long id = ids[i];
                         int ref = md.getValueInt(MDLabel.MDL_REF, id);
@@ -1266,14 +1362,14 @@ public class GalleryData {
     /**
      * Save selected items as a metadata
      */
-    public void saveSelection() throws Exception {
+    public void saveSelection(boolean[] selection) throws Exception {
 
         SaveJDialog dlg = new SaveJDialog(window, "selection" + getFileExtension(), true);
         boolean save = dlg.showDialog();
         if (save) {
             boolean overwrite = dlg.isOverwrite();
             String path = dlg.getMdFilename();
-            saveSelection(path, overwrite);
+            saveSelection(selection, path, overwrite);
         }
 
     }
@@ -1281,8 +1377,8 @@ public class GalleryData {
     /**
      * Save selected items as a metadata
      */
-    public void saveSelection(String path, boolean overwrite) throws Exception {
-        MetaData md = getSelectionMd();
+    public void saveSelection(boolean[] selection, String path, boolean overwrite) throws Exception {
+        MetaData md = getSelectionMd(selection);
 
         String file = path.substring(path.lastIndexOf("@") + 1, path.length());
         if (!new File(file).exists())// overwrite or append, save selection
@@ -1300,39 +1396,9 @@ public class GalleryData {
         md.destroy();
     }
 
-    public boolean isSelected(int index) {
-        return selection[index];
-    }
+    
 
-    public void setSelected(int index, boolean isselected) {
-        if(isselected && (selfrom > index || selfrom == -1))
-            selfrom = index;
-        if(isselected && selto < index)
-            selto = index;
-        
-        if(!isselected && selfrom == index && selto != selfrom)
-        {
-            selfrom = -1;
-            for(int i = index; i <= selto; i ++)
-                if(selection[i])
-                {
-                    selfrom = i;
-                    break;
-                }
-        }       
-        
-        if(!isselected && selto == index && selfrom != selto)
-        {
-            selto = -1;
-            for(int i = index; i >= selfrom; i --)
-                if(selection[i])
-                {
-                    selto = i;
-                    break;
-                }
-        }      
-        selection[index] = isselected;
-    }
+   
     public int size() {
         return ids.length;
     }
@@ -1385,9 +1451,7 @@ public class GalleryData {
         return selectedBlock;
     }
 
-    public String getCommonVolPrefix() {
-        return commonVolPrefix;
-    }
+    
 
     public String getSelVolumeFile() {
         return selectedVolFn;
@@ -1600,20 +1664,24 @@ public class GalleryData {
         md.write(path);
     }
 
-    public boolean hasSelection() {
-        if(selfrom == -1)
-            return false;
-        return true;
-    }
+  
 
     public MetaData getMd() {
         return md;
     }
 
     public boolean isRenderLabel(ColumnInfo ci) {
-
+        if(!renderImages)
+            return false;
+        if (renderLabel.equals("first") )
+        {
+            if(md instanceof ScipionMetaData)
+                return ci.render && ci.visible;
+            else
+                return MetaData.isImage(ci.label) && ci.visible;
+        }
         
-        for (String i : md.getRenderLabels()) {
+        for (String i : getRenderLabels()) {
             if (i.equals(ci.labelName) && ci.visible) {
                 return true;
             }
@@ -1622,10 +1690,10 @@ public class GalleryData {
     }
 
     public boolean isVisibleLabel(ColumnInfo ci) {
-        if (md.getVisibleLabels() == null) {
+        if (getVisibleLabels() == null) {
             return true;
         }
-        for (String i : md.getVisibleLabels()) {
+        for (String i : getVisibleLabels()) {
             if (i.equals(ci.labelName)) {
                 return true;
             }
@@ -1634,7 +1702,7 @@ public class GalleryData {
     }
 
     public void orderLabels() {
-        String[] orderLabels = md.getOrderLabels();
+        String[] orderLabels = getOrderLabels();
         if (orderLabels == null) {
             return;
         }
@@ -1655,31 +1723,31 @@ public class GalleryData {
     }
 
     public void removeCTF(int row) {
-        if(ctfs == null)
-            return;
-        ctfs.remove(ids[row]);
+        md.removeCTF(ids[row]);
         
         
     }
 
     public boolean isRecalculateCTF(int row) {
-        if (ctfs == null) {
-            ctfs = new HashMap<Long, EllipseCTF>();
-        }
+        if(!isCTFMd())
+            return false;
         long id = ids[row];
-        if(ctfs.containsKey(id))
+        if(md.containsCTF(id))
             return true;
         return false;
     }
     
+    public boolean hasRecalculateCTF()
+    {
+        return md.hasRecalculateCTF();
+    }
+    
     public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) 
     {
-         if (ctfs == null) {
-            ctfs = new HashMap<Long, EllipseCTF>();
-        }
-        ctfs.put(ids[row], ellipseCTF);
+        
+        md.putCTF(ids[row], ellipseCTF);
         EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
-                ellipseCTF, 90 - ellipseCTF.getEllipseFitter().angle, 
+                ellipseCTF, 90 - ellipseCTF.getDefocusAngle(), 
                 md.getPSDFile(ids[row]), ellipseCTF.getD(), window.getTasksEngine(), row, sortFn);
         window.getTasksEngine().add(estimateFromCTFTask);
     }
@@ -1688,20 +1756,26 @@ public class GalleryData {
         try {
             long id = ids[row];
             
-            String psdFile = md.getPSDFile(id);
-            ImageGeneric img = new ImageGeneric(psdFile);
+            String psd = md.getPSDFile(id);
+            String psden = md.getPSDEnhanced(id);
+            ImageGeneric img;
+            if(psden != null)
+                img = new ImageGeneric(psden);
+            else
+                img = new ImageGeneric(psd);
             ImagePlus imp = XmippImageConverter.readToImagePlus(img);
             
-            EllipseCTF ctfparams = md.getEllipseCTF(id, imp.getWidth());
             
-            
-
             if (profile) {
-                new CTFAnalyzerJFrame(imp, md.getCTFDescription(id), psdFile, md.getEllipseCTF(id).getSamplingRate());
+                if( psden == null)
+                    new CTFAnalyzerJFrame(imp, md.getCTFDescription(id), psd, md.getEllipseCTF(id).getSamplingRate());
+                else
+                    new CTFAnalyzerJFrame(imp, md.getCTFFile(id), psd);
             } else {
-                String sortfn = createSortFile(psdFile, row);
+                EllipseCTF ctfparams = md.getEllipseCTF(id, imp.getWidth());
+                String sortfn = createSortFile(psd, row);
                 XmippUtil.showImageJ(Tool.VIEWER);// removed Toolbar.FREEROI
-                CTFRecalculateImageWindow ctfiw = new CTFRecalculateImageWindow(this, imp, psdFile, ctfparams, ctfTasks, row, sortfn);
+                CTFRecalculateImageWindow ctfiw = new CTFRecalculateImageWindow(this, imp, psd, ctfparams, ctfTasks, row, sortfn);
             }
 
         } catch (Exception e) {
@@ -1724,16 +1798,95 @@ public class GalleryData {
             return new Geometry(shiftx, shifty, psiangle, flip);
         }
         
-        public int getSelFrom()
-        {
-            return selfrom;
+        
+        
+            
+	public void setRenderLabels(String[] renderLabels) {
+            this.renderLabels = renderLabels;
+        }
+
+        public void setVisibleLabels(String[] visibleLabels) {
+            this.visibleLabels = visibleLabels;
+        }
+
+        public void setOrderLabels(String[] orderLabels) {
+            this.orderLabels = orderLabels;
+        }
+
+        public void setRenderLabel(String renderLabel) {
+            this.renderLabel = renderLabel;
         }
         
-        public int getSelTo()
+        
+        
+        
+         public String[] getRenderLabels()
+       {
+           return renderLabels;
+       }
+       
+       public String[] getVisibleLabels()
+       {
+           return visibleLabels;
+       }
+       
+       public String[] getOrderLabels()
+       {
+           return orderLabels;
+       }
+        
+       public Long getSelVolId()
+       {
+           if(selectedVolFn == null || selectedVolFn.isEmpty())
+               return null;
+           String vol;
+           for(Long id: ids)
+           {
+               vol = md.getValueString(ciFirstRender.label, id);
+               if(vol.equals(selectedVolFn))
+                   return id;
+           }
+           return null;
+       }
+       
+       public MetaData getImagesMd(boolean[] selection, boolean selected) {
+            int idlabel = getRenderLabel();
+            MDRow mdRow;
+            MetaData imagesmd = new MetaData();
+            int index = 0;
+            String imagepath;
+            long imageid;
+            for (long id : md.findObjects()) {
+                if (isEnabled(index) && (!selected || selection[index])) {
+                    imagepath = md.getValueString(idlabel, id, true);
+                    if (imagepath != null && ImageGeneric.exists(imagepath)) {
+                        imageid = imagesmd.addObject();
+                        if (useGeo()) 
+                        {
+                            mdRow = new MDRow();
+                            md.getRow(mdRow, id);//copy geo info in mdRow
+                            imagesmd.setRow(mdRow, imageid);
+                        }
+                        imagesmd.setValueString(MDLabel.MDL_IMAGE, imagepath, imageid);
+                    }
+                }
+                index++;
+            }
+            return imagesmd;
+       }
+       
+        public ColumnInfo getColumn(int row, int col)
         {
-            return selto;
+            if(isGalleryMode())
+                return ciFirstRender;
+            if(isColumnFormat())
+                return getColumnInfo(col);
+            return getColumnInfo(row); 
         }
         
-        
+        public String[] getSortBy()
+        {
+            return sortby;
+        }
         
 }// class GalleryDaa

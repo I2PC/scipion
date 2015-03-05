@@ -119,7 +119,7 @@ public:
 
     /// Get angles (either from reading the header or from a docfile)
     void getAnglesForImage(size_t id, double &rot, double &tilt, double &psi,
-                              double &xoff, double &yoff, double &flip, double &weight);
+                              double &xoff, double &yoff, bool &flip, double &weight);
 
     /// Fill array with transformation matrices needed for arbitrary geometry filter
     void getAllMatrices(MetaData &SF) ;

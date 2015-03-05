@@ -24,11 +24,4 @@
  ***************************************************************************/
 
 #include <parallel/mpi_reconstruct_significant.h>
-
-
-int main(int argc, char *argv[])
-{
-    MpiProgReconstructSignificant prm;
-    prm.read(argc, argv);
-    return prm.tryRun();
-}
+RUN_XMIPP_PROGRAM(MpiProgReconstructSignificant)

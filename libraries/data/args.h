@@ -151,7 +151,7 @@ template <typename T>
 void readFloatList(const char* str,
                    int N,
                    Matrix1D< T >& v,
-                   int _errno = 2105,
+                   ErrorType _errno = ERR_VALUE_INCORRECT,
                    std::string errmsg = "Error reading floating list",
                    int exit = 0)
 {

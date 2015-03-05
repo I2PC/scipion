@@ -28,7 +28,7 @@
 #define __XmippFFTW_H
 
 #include <complex>
-#include "../../external/fftw-3.3.3/api/fftw3.h"
+#include "fftw3.h"
 #include "multidim_array.h"
 #include "multidim_array_generic.h"
 #include "xmipp_fft.h"
@@ -579,8 +579,12 @@ void auto_correlation_matrix(const MultidimArray< T > & Img, MultidimArray< doub
 /** Fast autocorrelation matrix */
 void auto_correlation_matrix(const MultidimArray<double> & Img, MultidimArray< double >& R, CorrelationAux &aux);
 
-void convolutionFFT(const MultidimArray<double> &img,
+void convolutionFFTStack(const MultidimArray<double> &img,
                     const MultidimArray<double> &kernel,
+                    MultidimArray<double> &result);
+
+void convolutionFFT(MultidimArray<double> &img,
+                    MultidimArray<double> &kernel,
                     MultidimArray<double> &result);
 
 /** Fourier-Ring-Correlation between two multidimArrays using FFT

@@ -27,13 +27,21 @@ package xmipp.utils;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Window;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -41,45 +49,41 @@ import javax.swing.JRootPane;
 
 public class XmippWindowUtil
 {
-        private static boolean isScipion;
+        public static final Color firebrick = Color.decode("#B22222");
+        public static final Color lightgrey = Color.decode("#EAEBEC");
 
 	/** Some colors contants */
 	public static final Color LIGHT_BLUE = new Color(173, 216, 230);
         
-        public static void setIsScipion(boolean value)
-        {
-            isScipion = value;
-        }
         
-        public static boolean isScipion()
-        {
-            return isScipion;
-        }
 
 	/**
 	 * This function will be used to place the location of a windows relative to
 	 * another windows or screen
 	 */
-	private static void setLocation(double positionx, double positiony, Container w, Dimension dim, Point offset)
+	private static void setLocation(double positionx, double positiony, Container w, Rectangle bounds)
 	{
 		Rectangle abounds = w.getBounds();
-		int x = (int) (positionx * (dim.width - abounds.width) + offset.x);
-		int y = (int) (positiony * (dim.height - abounds.height) + offset.y);
+		int x = (int) (positionx * (bounds.width - abounds.width) + bounds.x);
+		int y = (int) (positiony * (bounds.height - abounds.height) + bounds.y);
 		w.setLocation(x, y);
 	}
 
-	public static void setLocation(double positionx, double positiony, Container w)
+	public static void setLocation(double positionx, double positiony, Window w)
 	{
-		setLocation(positionx, positiony, w, w.getToolkit().getScreenSize(), new Point(0, 0));
+            GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            
+            
+            setLocation(positionx, positiony, w, gd.getDefaultConfiguration().getBounds());
 	}
 
 	public static void setLocation(float positionx, float positiony, Container w, Container parent)
 	{
-		setLocation(positionx, positiony, w, parent.getSize(), parent.getLocation());
+		setLocation(positionx, positiony, w, parent.getBounds());
 	}
 
 	/** Center the component in the screen */
-	public static void centerWindows(Container w)
+	public static void centerWindows(Window w)
 	{
 		setLocation(0.5f, 0.5f, w);
 	}
@@ -87,7 +91,7 @@ public class XmippWindowUtil
 	/** Center the component relative to parent component */
 	public static void centerWindows(Container w, Container parent)
 	{
-		setLocation(0.5f, 0.5f, w, parent.getSize(), parent.getLocation());
+		setLocation(0.5f, 0.5f, w, parent.getBounds());
 	}
 
 	public static GridBagConstraints getConstraints(GridBagConstraints constraints, int x, int y)
@@ -122,8 +126,8 @@ public class XmippWindowUtil
 	public static JButton getTextButton(String text, ActionListener listener)
 	{
 		JButton btn = new JButton(text);
-                if(!isScipion())
-                    btn.setBackground(LIGHT_BLUE);
+                //if(!isScipion)
+                //    btn.setBackground(LIGHT_BLUE);
 		btn.addActionListener(listener);
 		return btn;
 	}
@@ -134,6 +138,15 @@ public class XmippWindowUtil
 		label.setIcon(XmippResource.getIcon(icon));
 		return label;
 	}
+        
+        public static JButton getScipionIconButton(String text) {
+            Icon icon = XmippResource.getIcon("fa-plus-circle.png");
+            JButton button = new JButton(text.replace("Create ", ""), icon);
+            button.setToolTipText(text);
+            button.setBackground(firebrick);
+            button.setForeground(Color.WHITE);
+            return button;
+        }
 
 	public static GridBagConstraints getConstraints(GridBagConstraints constraints, int x, int y, int columns, int rows)
 	{
@@ -220,10 +233,7 @@ public class XmippWindowUtil
                         XmippWindowUtil.releaseGUI(frame.getRootPane());
 
                         if(output != null && !output.isEmpty())
-                        {
                             System.out.println(output);
-
-                        }
 
                     } catch (Exception ex) {
                         throw new IllegalArgumentException(ex.getMessage());
@@ -233,8 +243,8 @@ public class XmippWindowUtil
             }).start();
         }
         
-        public static String executeCommand(String[] command, boolean wait) throws Exception {
-
+    public static String executeCommand(String[] command, boolean wait) throws Exception {
+            //System.out.println(Arrays.toString(command));
             Process p = Runtime.getRuntime().exec(command);
             if(wait)
             {
@@ -244,26 +254,59 @@ public class XmippWindowUtil
             return null;
     }
     
-    
-    
-    public static String readProcessOutput(Process p) throws IOException
-    {
-        StringBuffer output = new StringBuffer();
-        BufferedReader reader
-                = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    public static String executeCommand(String command, boolean wait) throws Exception {
+            //System.out.println(Arrays.toString(command));
+            Process p = Runtime.getRuntime().exec(command);
+            if(wait)
+            {
+                p.waitFor();
+                return readProcessOutput(p);
+            }
+            return null;
+        }
+        
+    public static void runCommand(String command, int port) {
+        System.out.println(command);
+        String hostName = "";
+ 
+        try {
+            Socket socket = new Socket(hostName, port);
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            out.println(command);
+            socket.close();
+        
+            
+        } catch (UnknownHostException e) {
+            System.err.println("Don't know about host " + hostName);
+            System.exit(1);
+        } catch (IOException e) {
+            System.err.println("Couldn't get I/O for the connection to " +
+                hostName);
+            System.exit(1);
+        }
+        }
 
-       
-        String line = "";
-        while ((line = reader.readLine()) != null) {
-            output.append(line + "\n");
+
+
+        public static String readProcessOutput(Process p) throws IOException
+        {
+            StringBuffer output = new StringBuffer();
+            BufferedReader reader
+                    = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                output.append(line + "\n");
+            }
+            reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+
+            while ((line = reader.readLine()) != null) {
+                output.append(line + "\n");
+            }
+            return output.toString();
+
         }
-        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-        
-        while ((line = reader.readLine()) != null) {
-            output.append(line + "\n");
-        }
-        return output.toString();
-        
-    }
 
 }

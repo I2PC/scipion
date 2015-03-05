@@ -81,6 +81,27 @@ CONFIGURE_ARGS=""
 COMPILE_ARGS=""
 GUI_ARGS="gui"
 
+# Hack: download the tgz files that we don't want to have in the
+# repository itself. This way, we don't have to change anything
+# special.
+XMIPP_URL=http://metamagical.org/xmipp_soft
+PACKAGES="gtest-1.6.0 imagej hdf5-1.8.14 tiff-3.9.4 sh_alignment "`
+         `"condor NMA alglib-3.8.0.cpp fftw-3.3.3 sqlite-3.6.23 "`
+         `"jpegsrc.v8c bilib scons"
+for PACKAGE in $PACKAGES ; do
+    if [ ! -e external/${PACKAGE}.tgz ] ; then
+        wget -nv -P external ${XMIPP_URL}/${PACKAGE}.tgz
+    fi
+done
+
+PACKAGES_PYTHON="numpy-1.6.1 matplotlib-1.1.0 tk8.5.10 Python-2.7.2 "`
+                `"psutil-0.7.1 scipy-0.12.0 tcl8.5.10 mpi4py-1.3.1"
+for PACKAGE in $PACKAGES_PYTHON ; do
+    if [ ! -e external/python/${PACKAGE}.tgz ] ; then
+        wget -nv -P external/python ${XMIPP_URL}/python/${PACKAGE}.tgz
+    fi
+done
+
 
 #External libraries definitions
 VALGLIB=3.8.0
@@ -108,7 +129,7 @@ GTEST_FOLDER="gtest-${VGTEST}"
 GTEST_TAR="${GTEST_FOLDER}.tgz"
 DO_GTEST=0
 
-VHDF5=1.8.10
+VHDF5=1.8.14
 HDF5_FOLDER="hdf5-${VHDF5}"
 HDF5_TAR="${HDF5_FOLDER}.tgz"
 DO_HDF5=0
@@ -1417,6 +1438,8 @@ decompressExternals()
         fi
       fi
       elemAt $lib "${EXTERNAL_LIBRARIES_FILES}"
+      # TODO: this would be a good place to download the tgz if it was
+      # not already there.
       echoExec "tar -xvzf ${INTERELEMARRAY}" "/dev/null" 1
     fi
     lib=$(expr $lib + 1)
@@ -1672,14 +1695,14 @@ fi
 shouldIDoIt library ${HDF5_TAR}
 if [ $? -eq 1 ]; then
   if [ $DO_CLEAN  -eq 1 ]; then
-    uninstall_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
-    uninstall_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
+    uninstall_libs ${HDF5_FOLDER}/src/.libs libhdf5 9 false
+    uninstall_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 9 false
   fi
   if [ $DO_COMPILE  -eq 1 ]; then
     configure_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
     compile_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
-    install_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
-    install_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
+    install_libs ${HDF5_FOLDER}/src/.libs libhdf5 9 false
+    install_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 9 false
   fi
 fi
 

@@ -39,6 +39,12 @@ class MpiProgReconstructSignificant: public ProgReconstructSignificant
 public:
 	MpiNode *node;
 public:
+	// Empty constructor
+	MpiProgReconstructSignificant();
+
+	// Destructor
+	~MpiProgReconstructSignificant();
+
 	// Redefine how to read the command line
 	void read(int argc, char** argv);
 

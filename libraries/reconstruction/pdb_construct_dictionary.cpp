@@ -26,6 +26,8 @@
 #include "pdb_construct_dictionary.h"
 #include <data/xmipp_image_extension.h>
 
+/** Explore FLANN http://www.cs.ubc.ca/research/flann/, as a way to speed-up calculations */
+
 void ProgConstructPDBDictionary::defineParams()
 {
     // Usage

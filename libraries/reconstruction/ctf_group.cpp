@@ -607,9 +607,17 @@ void ProgCtfGroup::writeOutputToDisc()
     }
     else
     {
-    	//ImagesMD.write("/tmp/ImagesMD");
-    	//sortedCtfMD.write("/tmp/sortedCtfMD");
-        ctfImagesGroup.joinNatural(ImagesMD, sortedCtfMD);
+    	ctfImagesGroup.join1(ImagesMD,
+    			             sortedCtfMD,
+    			             MDL_MICROGRAPH_ID,LEFT);
+        //ctfImagesGroup.joinNatural(ImagesMD, sortedCtfMD);
+//#define DEBUG
+#ifdef DEBUG
+    ImagesMD.write("/tmp/ImagesMD.xmd");
+    sortedCtfMD.write("/tmp/sortedCtfMD.xmd");
+    ctfImagesGroup.write("/tmp/ctfImagesGroup.xmd");
+
+#endif
     }
 
     //
@@ -631,7 +639,7 @@ void ProgCtfGroup::writeOutputToDisc()
     size_t order, count;
     double sumimg=0.;
 
-    MultidimArray<double> ctf2D(Mwien.xdim,Mwien.ydim);
+    MultidimArray<double> ctf2D(paddim,paddim);
     Image<double> Ictf2D;
     Ictf2D.data.alias(ctf2D);
 

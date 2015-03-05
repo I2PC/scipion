@@ -370,7 +370,7 @@ void FFT_phase(const MultidimArray< std::complex<double> > &v,
 }
 
 
-void convolutionFFT(const MultidimArray<double> &img,
+void convolutionFFTStack(const MultidimArray<double> &img,
                     const MultidimArray<double> &kernel,
                     MultidimArray<double> &result)
 {
@@ -398,6 +398,37 @@ void convolutionFFT(const MultidimArray<double> &img,
 
 }
 
+void convolutionFFT(MultidimArray<double> &img,
+                    MultidimArray<double> &kernel,
+                    MultidimArray<double> &result)
+{
+	FourierTransformer transformer1, transformer2;
+	MultidimArray< std::complex<double> > FFT1, FFT2;
+    transformer1.FourierTransform(img, FFT1, false);
+    result=kernel;
+    transformer2.FourierTransform(result, FFT2, false);
+
+    // Multiply FFT1 * FFT2'
+    double dSize=MULTIDIM_SIZE(img);
+    double a, b, c, d; // a+bi, c+di
+    double *ptrFFT2=(double*)MULTIDIM_ARRAY(FFT2);
+    double *ptrFFT1=(double*)MULTIDIM_ARRAY(FFT1);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
+    {
+        a=*ptrFFT1++;
+        b=*ptrFFT1++;
+        c=(*ptrFFT2)*dSize;
+        d=(*(ptrFFT2+1))*dSize;
+        *ptrFFT2++ = a*c-b*d;
+        *ptrFFT2++ = b*c+a*d;
+    }
+
+    // Invert the product, in order to obtain the correlation image
+    transformer2.inverseFourierTransform();
+
+    // Center the resulting image to compensate for phase shift
+    CenterFFT(result, false);
+}
 
 // Fourier ring correlation -----------------------------------------------
 //#define SAVE_REAL_PART
@@ -562,10 +593,6 @@ void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda
 
     //Init with zero
     MpmemFourier.initZeros();
-    mdaIn.printShape();
-    mdaOut.printShape();
-    MmemFourier.printShape();
-    MpmemFourier.printShape();
 
     for (size_t k = kp0; k<=kpF; ++k)
     {
@@ -626,8 +653,6 @@ void getSpectrum(MultidimArray<double> &Min,
                  MultidimArray<double> &spectrum,
                  int spectrum_type)
 {
-    Min.checkDimension(3);
-
     MultidimArray<std::complex<double> > Faux;
     int xsize = XSIZE(Min);
     Matrix1D<double> f(3);
@@ -637,11 +662,14 @@ void getSpectrum(MultidimArray<double> &Min,
     spectrum.initZeros(xsize);
     count.initZeros();
     transformer.FourierTransform(Min, Faux, false);
+    if (ZSIZE(Faux)==1)
+    	ZZ(f)=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(Faux)
     {
         FFT_IDX2DIGFREQ(j,xsize,XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(Faux),YY(f));
-        FFT_IDX2DIGFREQ(k,ZSIZE(Faux),ZZ(f));
+        if (ZSIZE(Faux)>1)
+        	FFT_IDX2DIGFREQ(k,ZSIZE(Faux),ZZ(f));
         double R=f.module();
         //if (R>0.5) continue;
         int idx = round(R*xsize);

@@ -35,33 +35,7 @@ class ChimeraServer:
         
         chimera.triggers.addHandler(chimera.MOTION_STOP, self.onMotionStop, None)
         chimera.triggers.addHandler(chimera.APPQUIT, self.onAppQuit, None)
-        self.initListen()
-            
-            
-    def initListen(self):
-        self.listen_thread = Thread(target=self.listen)
-        self.listen_thread.daemon = True
-        self.listen_thread.start()
-    
-
-    def listen(self):
-        try:
-            while True:
-                if self.remote_conn.poll():
-                    
-                    msg = self.remote_conn.recv()
-                    
-                    
-                    if msg == 'exit_client':
-                        break
-                    else:
-                        sleep(0.01)
-        except EOFError:
-            print 'Lost connection to client'
-        finally:
-            self.listener.close()
-            runCommand('close all')
-            runCommand('stop really')
+   
             
             
             
@@ -77,13 +51,20 @@ class ChimeraServer:
                         print data
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
+                        #runCommand("volume #0 step 1")
+                        
+                    elif msg == 'voxelSize':
+                        voxelSize = self.remote_conn.recv()
+                        cmd = "volume #0 voxelSize %s"%voxelSize
+                        runCommand(cmd)
                         runCommand("focus")
-                    if msg == 'draw_angular_distribution':
+                    
+                    elif msg == 'draw_angular_distribution':
                         angulardist = self.remote_conn.recv()
                         for command in angulardist:
                             runCommand(command)
                     
-                    if msg == 'end':    
+                    elif msg == 'end':    
                         break
                     else:
                         sleep(0.01)
@@ -105,7 +86,7 @@ class ChimeraServer:
             
             
     def onAppQuit(self, trigger, extra, userdata):
-
+        print 'sended server exit'
         self.remote_conn.send('exit_server')
         self.listener.close()
         

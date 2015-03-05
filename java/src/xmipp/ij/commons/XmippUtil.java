@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -34,6 +35,7 @@ public class XmippUtil {
                 writer.write("macro \"Particle Picker Tool - C0a0L18f8L818f\" {   }\nmacro \"Xmipp Micrograph Viewer Tool - C0a0L18f8L818f\" {  }");
                 writer.close();
                 IJ.run("Install...", "install=" + tempFile.getAbsolutePath());
+                //Tool cannot be set if it is not a default one
              } catch (Exception ex) {
                 Logger.getLogger(XmippUtil.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IllegalArgumentException(ex);
@@ -124,5 +126,19 @@ public class XmippUtil {
         }
         return false;
     }
+    
+     public static String formatNumbers(String str)
+        {
+            Pattern p = Pattern.compile("(-?(\\d)+(\\.)?(\\d)*)");
+            Matcher m = p.matcher(str);
+            StringBuffer sb = new StringBuffer(str.length());
+            while(m.find())
+            {
+                String number = m.group(1);
+                m.appendReplacement(sb, String.format("%.2f", Double.parseDouble(number)));
+            }
+            m.appendTail(sb);
+            return sb.toString();
+        }
        
 }

@@ -20,8 +20,6 @@ import javax.swing.SwingUtilities;
 import javax.vecmath.Color3f;
 
 import xmipp.ij.commons.ImagePlusLoader;
-import xmipp.ij.commons.Tool;
-import xmipp.ij.commons.XmippUtil;
 import xmipp.ij.commons.XmippIJWindow;
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.ij.commons.XmippImageConverter;
@@ -33,12 +31,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
-import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
-import xmipp.viewer.ctf.CTFAnalyzerJFrame;
-import xmipp.viewer.ctf.CTFRecalculateImageWindow;
-import xmipp.jni.EllipseCTF;
-import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.scipion.ScipionGalleryData;
 import xmipp.viewer.scipion.ScipionMetaData;
 
@@ -78,8 +71,7 @@ public class ImagesWindowFactory {
 							.equalsIgnoreCase(Params.OPENING_MODE_IMAGE))
 						openFileAsImage(null, filename, parameters);
 					else
-						openMetadata(filename, parameters,
-								Params.OPENING_MODE_GALLERY);
+						openMetadata(filename, parameters, Params.OPENING_MODE_GALLERY);
 				}
 			}
 		} catch (Exception e) {
@@ -105,7 +97,7 @@ public class ImagesWindowFactory {
 		try {
 			ImagePlusLoader ipl = new ImagePlusLoader(filename);
 			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
-					parameters.poll);
+					parameters);
 			if (parameters.mask_toolbar)
 				xiw.openMaskToolbar();
 		} catch (Exception e) {
@@ -132,24 +124,24 @@ public class ImagesWindowFactory {
 	}
 
 	public static XmippIJWindow openXmippImageWindow(Window window,
-			ImagePlus imp, boolean poll) {
-		return openXmippImageWindow(window, new ImagePlusLoader(imp), poll);
+			ImagePlus imp, Params params) {
+		return openXmippImageWindow(window, new ImagePlusLoader(imp), params);
 	}
 
 	public static XmippIJWindow openXmippImageWindow(Window window,
-			ImagePlusLoader impLoader, boolean poll) {
-		return openXmippImageWindow(window, impLoader, impLoader.getName(), poll);
+			ImagePlusLoader impLoader, Params parameters) {
+		return openXmippImageWindow(window, impLoader, impLoader.getName(), parameters);
 		
 	}
 	public static XmippIJWindow openXmippImageWindow(Window window,
-			ImagePlusLoader impLoader, String title, boolean poll) {
+			ImagePlusLoader impLoader, String title, Params parameters) {
                 
 		XmippIJWindow iw;
 		
 		if (impLoader.isStackOrVolume())
 			iw = (title != null)? new XmippStackWindow(window, impLoader, title): new XmippStackWindow(window, impLoader);
 		else
-			iw = (title != null )? new XmippImageWindow(impLoader, title): new XmippImageWindow(impLoader);
+			iw = (title != null )? new XmippImageWindow(impLoader, title, parameters): new XmippImageWindow(impLoader, parameters);
                 
 		SwingUtilities.invokeLater(new Worker(iw));
 		return iw;
@@ -182,7 +174,7 @@ public class ImagesWindowFactory {
 
 		if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_DEFAULT))
 			parameters.mode = mode;
-		return new GalleryJFrame(filename, md, parameters);
+		return new GalleryJFrame(md, parameters);
 	}
 
 	public static GalleryJFrame openMetadata(String filename, Params parameters,

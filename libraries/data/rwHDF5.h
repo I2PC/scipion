@@ -26,7 +26,7 @@
 #ifndef RWHDF5_H_
 #define RWHDF5_H_
 
-#include "../../external/hdf5-1.8.10/src/hdf5.h"
+#include "hdf5.h"
 
 
 

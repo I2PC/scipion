@@ -80,6 +80,8 @@ public:
     /** Apply fisher */
     bool applyFisher;
 
+    /** Do reconstruct */
+    bool doReconstruct;
 public: // Internal members
     size_t rank, Nprocessors;
 
@@ -110,6 +112,7 @@ public: // Internal members
     // Images
     // COSS Image<double> inputImages;
     std::vector< Image<double> > gallery;
+    std::vector< AlignmentTransforms* > galleryTransforms;
 
 	// Current iteration
 	int iter;

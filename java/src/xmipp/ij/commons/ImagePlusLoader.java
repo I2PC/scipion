@@ -29,6 +29,7 @@ import ij.ImagePlus;
 import java.io.File;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.utils.XmippMessage;
 
 public class ImagePlusLoader {
 
@@ -36,66 +37,41 @@ public class ImagePlusLoader {
     private boolean existsfile;
     
 
-    public ImagePlusLoader() {
-
-    }
-
     public ImagePlusLoader(ImagePlus imp) {
-        this(getFile(imp), imp, null, false, -1);
-
+        this(getFile(imp), imp, null, false, false, -2);
     }
 
     public ImagePlusLoader(int index, ImageGeneric ig) {
-        this(getFile(ig), null, ig, false, index);
-
+        this(getFile(ig), null, ig, false, false, index);
     }
 
     public ImagePlusLoader(String fileName) {
-        this(fileName, null, null, false, -1);
+        this(fileName, null, null, false, false, -2);
     }
 
     public ImagePlusLoader(String fileName, boolean useGeometry, boolean wrap) {
-        this(fileName, null, null, useGeometry, -1);
-        setWrap(wrap);
+        this(fileName, null, null, useGeometry, wrap, -2);
     }
 
-    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, int index) {
-        int index2 = -1;
-
+    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, boolean wrap, int index) {
+        
         if (fileName != null) {
-            //ROB & KINO: This breaks hdf files IO
-            //If filename should be manipulated it would be better to do it with the
-            //C++ FileNAme class if a label is needed for the windows title
-            //create a variable for the title.
-        	
-        	/*if (Filename.hasPrefix(fileName)) {
-
-                
-                int arrobaindex = fileName.lastIndexOf(Filename.SEPARATOR);
-                String header = fileName.substring(0, arrobaindex);
-
-                int sepindex = header.lastIndexOf(File.separator);//-1 if separator does not exists
-                String textindex = fileName.substring(sepindex + 1, arrobaindex);
-                if(index == -1)
-                    index = Integer.parseInt(textindex);
-                else
-                    index2 = Integer.parseInt(textindex);
-                fileName = fileName.substring(arrobaindex + 1);
-                if (sepindex != -1) {
-                    fileName = Filename.join(header.replace(textindex + "@", ""), fileName);
-                }
-            }*/
-
             String path = Filename.findImagePath(fileName, null, true);//check if file exists dismissing preffix and suffix
             existsfile = path != null;
         }
         if (existsfile) 
             impreader = new ImagePlusFromFile(fileName, imp, ig);
         else 
+        {
+
+            if(fileName != null)
+                throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(fileName));
             impreader = new ImagePlusNotFromFile(imp, ig);
-        
-        impreader.setIndexes(index, index2);
+        }
+//        
+        impreader.setIndex(index);
         impreader.setUseGeometry(useGeo);
+        setWrap(wrap);
     }
 
     public ImagePlusLoader(ImageGeneric ig) {
@@ -176,11 +152,18 @@ public class ImagePlusLoader {
     {
         impreader.setGeometry(geometry);
     }
+     
+      public boolean hasGeometry()
+    {
+        return impreader.geometry != null;
+    }
 
     
     public void setDimension(int width, int height)
     {
         impreader.setDimension(width, height);
     }
+    
+    
 
 }

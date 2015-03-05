@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include <dirent.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <algorithm>
 #include "xmipp_filename.h"
@@ -414,6 +415,13 @@ size_t FileName::getFileSize() const
         REPORT_ERROR(ERR_UNCLASSIFIED,formatString("FileName::getFileSize: Cannot get size of file %s/%s",cCurrentPath,this->c_str()));
     }
     return info.st_size;
+
+//    int fd = open(c_str(), O_RDONLY);
+//    size_t size = lseek(fd, 0, SEEK_END); // seek to end of file
+//    close(fd);
+//
+//    return size;
+
 }
 
 FileName FileName::removeFileFormat() const

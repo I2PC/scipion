@@ -11,8 +11,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
+import xmipp.utils.XmippWindowUtil;
 
 public class ParticlesDialog extends Dialog
 {
@@ -46,11 +46,11 @@ public class ParticlesDialog extends Dialog
 
 	}
 
-	public void loadParticles(boolean changesize)
+	public void loadParticles(boolean resize)
 	{
 
 		List<? extends PickerParticle> particles = frame.getAvailableParticles();
-		side = frame.getSide(frame.getParticlePicker().getSize());
+		side = frame.getSide();
 
 		if (side == 0)
 			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("side"));
@@ -65,7 +65,7 @@ public class ParticlesDialog extends Dialog
 			return;
 		}
 
-		if (changesize) // first time or keep size
+		if (resize) // first time or keep size
 		{
 			columns = Math.min(200, particles.size() * side) / side;
 			rows = (int) Math.ceil(particles.size() / (float) columns);
@@ -92,10 +92,12 @@ public class ParticlesDialog extends Dialog
 		for (int i = 0; i < rows; i++)
 			for (int j = 0; j < columns; j++, index++)
 			{
+                                
 				if (index == particles.size())
 					break;
 				p = particles.get(index);
 				c = p.getParticleCanvas(frame);
+                                
 				particlespn.add(c, XmippWindowUtil.getConstraints(constraints, j, i, 1));
 			}
                 // particlespn.revalidate();
@@ -138,5 +140,7 @@ public class ParticlesDialog extends Dialog
 		dispose();
 
 	}
+        
+        
 
 }

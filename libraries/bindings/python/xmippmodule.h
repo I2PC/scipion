@@ -103,6 +103,15 @@ xmipp_ImgCompare(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 xmipp_compareTwoFiles(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+PyObject *
+xmipp_compareTwoImageTolerance(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+PyObject *
+xmipp_bsoftRemoveLoopBlock(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+PyObject *
+xmipp_bsoftRestoreLoopBlock(PyObject *obj, PyObject *args, PyObject *kwargs);
+
 
 /***************************************************************/
 /*                   Some specific utility functions           */
