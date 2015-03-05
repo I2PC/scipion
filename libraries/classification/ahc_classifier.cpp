@@ -22,9 +22,11 @@
  *  All comments concerning this program package may be sent to the    
  *  e-mail address 'xmipp@cnb.csic.es'                                  
  ***************************************************************************/
+
+#include <alglib/src/dataanalysis.h>
+
 #include "ahc_classifier.h"
 
-#include "../../external/alglib-3.8.0.cpp/src/dataanalysis.h"
 
 void AHCClassifier::clusterData(const Matrix2D<double> &X, int numberOfClusters, int distance, int linkageType)
 {

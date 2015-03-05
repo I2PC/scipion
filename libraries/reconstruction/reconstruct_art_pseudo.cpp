@@ -24,9 +24,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "reconstruct_art_pseudo.h"
 #include <fstream>
-#include <data/histogram.h>
+
+#include "data/histogram.h"
+#include "reconstruct_art_pseudo.h"
 
 #define FORWARD   1
 #define BACKWARD -1

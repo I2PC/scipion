@@ -90,7 +90,6 @@ BASIC_INCS = []#Dir('#software/include').abspath]#,
 
 # Create a shortcut and customized function
 # to add the Xmipp CPP libraries
-
 def addLib(name, **kwargs):
     # Install all libraries in scipion/software/lib
     kwargs['installDir'] = '#software/lib' 
@@ -148,39 +147,35 @@ env.Alias('XmippExternal', EXT_LIBS)
 
 # Data
 #TODO: checklib rt?????
-xmippData = addLib(
-          'XmippData',
-          dirs=['libraries'],
-          patterns=['data/*.cpp'],
-          libs=['fftw3', 'fftw3_threads', 'tiff', 'jpeg', 
-                'sqlite3', 'hdf5','hdf5_cpp', 'rt', 'XmippBilib'],
-          deps=['fftw3', 'tiff', 'jpeg', 
-                'sqlite3', 'hdf5', 'XmippBilib'])
+addLib('XmippData',
+       dirs=['libraries'],
+       patterns=['data/*.cpp'],
+       libs=['fftw3', 'fftw3_threads', 'tiff', 'jpeg', 
+             'sqlite3', 'hdf5','hdf5_cpp', 'rt', 'XmippBilib'],
+       deps=['fftw3', 'tiff', 'jpeg', 
+             'sqlite3', 'hdf5', 'XmippBilib'])
 
 # Classification
-xmippClassif = addLib(
-             'XmippClassif',
-             dirs=['libraries/classification'],
-             libs=['XmippExternal', 'XmippData'],
-             deps=['XmippExternal', 'XmippData'])
+addLib('XmippClassif',
+       dirs=['libraries'],
+       patterns=['classification/*.cpp'],
+       libs=['XmippData'],
+       deps=['XmippData'])
 
 # Dimred
-xmippDimred = addLib(
-            'XmippDimred',
-            dirs=['libraries/dimred'],
-            patterns=['*.cpp'],
-            incs=bilib_incs,
-            libs=['XmippExternal', 'XmippData'],
-            deps=['XmippExternal', 'XmippData'])
+addLib('XmippDimred',
+       dirs=['libraries'],
+       patterns=['dimred/*.cpp'],
+       libs=['XmippData'],
+       deps=['XmippData'])
 
 # Reconstruction
-xmippRecons = addLib(
-            'XmippRecons',
-            dirs=['libraries/reconstruction'],
-            patterns=['*.cpp'],
-            incs=bilib_incs,
-            libs=['XmippExternal', 'XmippData', 'XmippClassif'],
-            deps=['XmippExternal', 'XmippData', 'XmippClassif'])
+addLib('XmippRecons',
+       dirs=['libraries'],
+       patterns=['reconstruction/*.cpp'],
+       incs=bilib_incs,
+       libs=['XmippData', 'XmippClassif'],
+       deps=['XmippData', 'XmippClassif'])
 
 # Interface
 xmippInterface = env.AddCppLibrary(

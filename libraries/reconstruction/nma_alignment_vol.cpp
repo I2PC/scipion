@@ -21,16 +21,17 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "nma_alignment_vol.h"
-#include <data/metadata_extension.h>
-#include <data/filters.h>
-#include "program_extension.h"
-
 #include <iostream>
 #include <unistd.h>
 #include <sys/stat.h>
-#include "../../external/condor/Solver.h"
-#include "../../external/condor/tools.h"
+#include <condor/Solver.h>
+#include <condor/tools.h>
+
+#include "data/metadata_extension.h"
+#include "data/filters.h"
+#include "program_extension.h"
+#include "nma_alignment_vol.h"
+
 
 // Empty constructor =======================================================
 ProgNmaAlignmentVol::ProgNmaAlignmentVol() {

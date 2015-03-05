@@ -26,12 +26,13 @@
 #define _PROG_NMA_ALIGNMENT
 
 #include <vector>
-#include <data/xmipp_program.h>
-#include <data/metadata.h>
-#include <data/xmipp_image.h>
+#include <condor/ObjectiveFunction.h>
+#include <condor/Vector.h>
+
+#include "data/xmipp_program.h"
+#include "data/metadata.h"
+#include "data/xmipp_image.h"
 #include "volume_from_pdb.h"
-#include "../../external/condor/ObjectiveFunction.h"
-#include "../../external/condor/Vector.h"
 
 /**@defgroup NMAAlignment Alignment with Normal modes
    @ingroup ReconsLibrary */
