@@ -68,8 +68,6 @@ SCIPION_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
 SCIPION_PROTOCOLS = os.path.expanduser('~/.config/scipion/protocols.conf')
 SCIPION_HOSTS = os.path.expanduser('~/.config/scipion/hosts.conf')
 
-overwriteConfs = False  # regenerate config files?
-
 # Allow the user to override them (and remove them from sys.argv).
 while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
     arg = sys.argv.pop(1)
@@ -78,45 +76,33 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
         SCIPION_CONFIG = os.path.abspath(os.path.expanduser(value))
     elif arg == '--protocols':
         SCIPION_PROTOCOLS = os.path.abspath(os.path.expanduser(value))
-    elif arg == '--overwrite':
-        overwriteConfs = True
-        sys.argv.insert(1, value)  # hack, there is no "value" to read here
     else:
         sys.exit('Unknown argument: %s' % arg)
-
-
-def createConf(fpath, ftemplate):
-    "Create config file in fpath following the template in ftemplate"
-    if not exists(dirname(fpath)):
-        os.makedirs(dirname(fpath))
-    if exists(fpath):
-        backup = '%s.%d' % (fpath, int(time.time()))
-        sys.stdout.write('File %s already exists. Creating backup %s.\n' %
-                         (fpath, backup))
-        os.rename(fpath, backup)
-    open(fpath, 'w').write(open(ftemplate).read())  # cp ftemplate fpath
 
 
 #
 # Initialize variables from config file.
 #
 
+for confFile in [SCIPION_CONFIG, SCIPION_PROTOCOLS, SCIPION_HOSTS]:
+    if not exists(confFile) and (len(sys.argv) == 1 or sys.argv[1] != 'config'):
+        sys.exit('Missing file %s\nPlease run\n  %s config\nto fix your '
+                 'configuration' % (confFile, sys.argv[0]))
+
+# VARS will contain all the relevant environment variables, including
+# directories and packages.
+VARS = {
+    'SCIPION_HOME': SCIPION_HOME,
+    'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
+    'SCIPION_PYTHON': 'python',
+    'SCIPION_CONFIG': SCIPION_CONFIG,
+    'SCIPION_PROTOCOLS': SCIPION_PROTOCOLS,
+    'SCIPION_HOSTS': SCIPION_HOSTS}
+
 try:
-    if not exists(SCIPION_CONFIG) or overwriteConfs:
-        sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_CONFIG)
-        createConf(SCIPION_CONFIG, '%s/settings/scipion.conf' % SCIPION_HOME)
-
-    if not exists(SCIPION_PROTOCOLS) or overwriteConfs:
-        sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_PROTOCOLS)
-        createConf(SCIPION_PROTOCOLS, '%s/settings/protocols.conf' % SCIPION_HOME)
-
-    if not exists(SCIPION_HOSTS) or overwriteConfs:
-        sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_HOSTS)
-        createConf(SCIPION_HOSTS, '%s/settings/hosts.conf' % SCIPION_HOME)
-
     config = ConfigParser()
     config.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    assert config.read(SCIPION_CONFIG) != [], 'Missing file %s' % SCIPION_CONFIG
+    config.read(SCIPION_CONFIG)
 
     def getPaths(section):
         return dict([(key, join(SCIPION_HOME, os.path.expanduser(path)))
@@ -134,48 +120,41 @@ try:
 
     SCIPION_SOFTWARE = DIRS_GLOBAL['SCIPION_SOFTWARE']
     XMIPP_LIB = join(PACKAGES['XMIPP_HOME'], 'lib')
+
+    PATH = os.pathsep.join(
+        [join(SCIPION_SOFTWARE, 'bin'),
+         os.environ.get('PATH', '')]
+    )
+    LD_LIBRARY_PATH = os.pathsep.join(
+        [join(SCIPION_SOFTWARE, 'lib'),
+         XMIPP_LIB,
+         os.environ.get('LD_LIBRARY_PATH', '')]
+    )
+    PYTHONPATH = os.pathsep.join(
+        [SCIPION_HOME,
+         join(SCIPION_SOFTWARE, 'lib', 'python2.7', 'site-packages'),
+         XMIPP_LIB,
+         os.environ.get('PYTHONPATH', '')]
+    )
+
+    VARS.update({
+        'PATH': PATH,
+        'PYTHONPATH': PYTHONPATH,
+        'LD_LIBRARY_PATH': LD_LIBRARY_PATH})
+
+    VARS.update(DIRS_GLOBAL)
+    VARS.update(DIRS_LOCAL)
+    VARS.update(PACKAGES)
+    VARS.update(REMOTE)
+    VARS.update(BUILD)
 except Exception:
-    # This way of catching exceptions works with Python 2 & 3
-    sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
-    sys.stdout.write('Please check the configuration file %s and try again.\n' %
-                     SCIPION_CONFIG)
-    sys.exit(1)
+    if len(sys.argv) == 1 or sys.argv[1] != 'config':
+        # This way of catching exceptions works with Python 2 & 3
+        sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
+        sys.stdout.write('Please check the configuration file %s and '
+                         'try again.\n' % SCIPION_CONFIG)
+        sys.exit(1)
 
-PATH = os.pathsep.join(
-    [join(SCIPION_SOFTWARE, 'bin'),
-     os.environ.get('PATH', '')]
-)
-LD_LIBRARY_PATH = os.pathsep.join(
-    [join(SCIPION_SOFTWARE, 'lib'),
-     XMIPP_LIB,
-     os.environ.get('LD_LIBRARY_PATH', '')]
-)
-PYTHONPATH = os.pathsep.join(
-    [SCIPION_HOME,
-     join(SCIPION_SOFTWARE, 'lib', 'python2.7', 'site-packages'),
-     XMIPP_LIB,
-     os.environ.get('PYTHONPATH', '')]
-)
-
-# VARS will contain all the relevant environment variables, including
-# directories and packages.
-VARS = {
-    'SCIPION_HOME': SCIPION_HOME,
-    'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
-    'SCIPION_PYTHON': 'python',
-    'SCIPION_CONFIG': SCIPION_CONFIG,
-    'SCIPION_PROTOCOLS': SCIPION_PROTOCOLS,
-    'SCIPION_HOSTS': SCIPION_HOSTS,
-    'PATH': PATH,
-    'PYTHONPATH': PYTHONPATH,
-    'LD_LIBRARY_PATH': LD_LIBRARY_PATH,
-}
-
-VARS.update(DIRS_GLOBAL)
-VARS.update(DIRS_LOCAL)
-VARS.update(PACKAGES)
-VARS.update(REMOTE)
-VARS.update(BUILD)
 
 #
 # Auxiliary functions to run commands in our environment, one of our
@@ -201,22 +180,6 @@ def runScript(scriptCmd, chdir=True):
 def runApp(app, args='', chdir=True):
     runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args), chdir)
 
-
-#
-# If this is the first time that the user runs scipion...
-#
-# if not exists(join(DIRS_LOCAL['SCIPION_USER_DATA'], 'settings.sqlite')):
-#     os.environ['SCIPION_USER_DATA'] = VARS['SCIPION_USER_DATA']
-#     os.environ['SCIPION_PYTHON'] = VARS['SCIPION_PYTHON']
-#     try:
-#         from pyworkflow.apps.config import writeDefaults
-#         writeDefaults()
-#     except Exception:  # we expect a ImportError due to no psutil
-#         if len(sys.argv) < 2 or sys.argv[1] != 'install':
-#             sys.exit('%s\nDid you already run "%s install" ?' %
-#                      (sys.exc_info()[1], sys.argv[0]))
-#         else:
-#             pass  # go ahead, install it!
 
 
 #
@@ -257,7 +220,7 @@ def main():
         mode = MODE_MANAGER
 
     # First see if we have a working installation.
-    if mode != MODE_INSTALL:
+    if mode not in [MODE_INSTALL, MODE_CONFIG]:
         ok = True
         for d, path in DIRS_GLOBAL.items():
             if not exists(path):
@@ -376,8 +339,7 @@ def main():
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:
-        assert n == 2, "config takes no arguments (got %s)" % sys.argv[2:]
-        runApp('pw_config.py')
+        runApp('pw_config.py', args=' '.join('"%s"' % x for x in sys.argv[2:]))
 
     elif mode == MODE_STATS:
         statsDir = join(SCIPION_HOME, 'data', 'stats')
