@@ -37,6 +37,7 @@
 #include <data/xmipp_threads.h>
 #include <data/blobs.h>
 #include <data/metadata.h>
+#include <data/ctf.h>
 
 #include <data/args.h>
 #include <data/xmipp_fft.h>
@@ -71,6 +72,7 @@ struct ImageThreadParams
     ProgRecFourier * parent;
     MultidimArray< std::complex<double> > *paddedFourier;
     MultidimArray< std::complex<double> > *localPaddedFourier;
+    CTFDescription ctf;
     Matrix2D<double> * symmetry;
     int read;
     Matrix2D<double> * localAInv;
@@ -93,6 +95,20 @@ public:
 
     /** Flag whether to use the weights in the image metadata */
     bool do_weights;
+
+    /** Use CTF */
+    bool useCTF;
+
+    /** Phase flipped.
+     * True if the images have been phase flipped before entering.
+     */
+    bool phaseFlipped;
+
+    /** Minimum CTF value to invert */
+    double minCTF;
+
+    /** Sampling rate */
+    double Ts;
 
     /** Projection padding Factor */
     double padding_factor_proj;
