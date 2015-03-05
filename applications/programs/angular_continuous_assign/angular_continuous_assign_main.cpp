@@ -23,6 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/angular_continuous_assign.h>
+#include "reconstruction/angular_continuous_assign.h"
 
 RUN_XMIPP_PROGRAM(ProgAngularContinuousAssign)

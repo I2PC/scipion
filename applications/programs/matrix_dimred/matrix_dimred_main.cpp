@@ -23,6 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <libraries/dimred/matrix_dimred.h>
+#include "dimred/matrix_dimred.h"
 
 RUN_XMIPP_PROGRAM(ProgMatrixDimRed)

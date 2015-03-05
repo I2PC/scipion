@@ -1,7 +1,7 @@
 #include <data/multidim_array.h>
 #include <data/matrix2d.h>
 #include <iostream>
-#include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
+#include <gtest/gtest.h>
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
 // Modify this test so it uses Fixures as test_image and test_metadata
 TEST( MultidimTest, Size)

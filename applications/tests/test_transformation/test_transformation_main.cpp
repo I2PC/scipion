@@ -4,7 +4,7 @@
 #include <data/filters.h>
 #include <data/transformations.h>
 
-#include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
+#include <gtest/gtest.h>
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
 
 

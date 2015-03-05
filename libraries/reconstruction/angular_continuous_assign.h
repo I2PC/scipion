@@ -27,10 +27,10 @@
 #ifndef _PROG_ANGULAR_PREDICT_CONTINOUOS
 #define _PROG_ANGULAR_PREDICT_CONTINUOUS
 
-#include <data/xmipp_program.h>
-#include <data/xmipp_image.h>
-#include <data/mask.h>
-#include <data/metadata.h>
+#include "data/xmipp_program.h"
+#include "data/xmipp_image.h"
+#include "data/mask.h"
+#include "data/metadata.h"
 
 /**@defgroup AngularPredictContinuous angular_continuous_assign (Continuous angular assignment)
    @ingroup ReconsLibrary */

@@ -23,6 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <libraries/dimred/transform_dimred.h>
+#include "dimred/transform_dimred.h"
 
 RUN_XMIPP_PROGRAM(ProgTransformDimRed)

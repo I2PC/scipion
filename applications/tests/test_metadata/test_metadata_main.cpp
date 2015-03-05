@@ -4,7 +4,7 @@
 #include <data/metadata_extension.h>
 #include <data/xmipp_image_convert.h>
 #include <iostream>
-#include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <string.h>
 #include <fstream>
 /*

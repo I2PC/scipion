@@ -23,16 +23,17 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/angular_commonline.h>
+#include "reconstruction/angular_commonline.h"
+
 
 int main(int argc, char **argv)
 {
     Prog_Angular_CommonLine prm;
     try {
         prm.read(argc,(const char **)argv);
-    } catch (XmippError XE)
+    } catch (XmippError &xe)
     {
-        std::cout << XE << std::endl;
+        std::cout << xe << std::endl;
         prm.usage();
         return 1;
     }
@@ -40,9 +41,9 @@ int main(int argc, char **argv)
         prm.show();
         prm.produceSideInfo();
         prm.run();
-    } catch (XmippError XE)
+    } catch (XmippError &xe)
     {
-        std::cout << XE << std::endl;
+        std::cout << xe << std::endl;
         return 2;
     }
     return 0;
