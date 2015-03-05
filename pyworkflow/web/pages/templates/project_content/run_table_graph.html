@@ -1,6 +1,8 @@
 
 <script type="text/javascript">
 	$(function() {
+		// by default list mode is active.
+		
 		{% if runsView == 1 %}
 			switchMode(1);
 		{% elif runsView == 2 %}
@@ -11,8 +13,7 @@
 	});
 </script>
 
-<!-- Run Table ---------------------->
-
+<!-- Run Table (List) ---------------------->
 <div id="runTable" style="display:inline;">
 	<table id="data" cellspacing="0">
 		<tr>
@@ -43,14 +44,17 @@
 	</table>
 </div>
 
-<!-- Run Graph ---------------------->
 
+<!-- Run Graph ---------------------->
 <div id="runGraph">
 	<div id="graphActiv" style="display:none;" data-mode="inactive"
 		data-time="first" data-project="{{projectName}}" data-option="">
 		<!-- data-option: Used to remove the last highlighted node. -->
 	</div>
 	
+	
+	
+<!-- Run Small Graph ---------------------->
 	<div id="graphSmallActiv" style="display:none;" data-mode="inactive"
 		data-time="first" data-project="{{projectName}}" data-option="">
 		<!-- data-option: Used to remove the last highlighted node. -->

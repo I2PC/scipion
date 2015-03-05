@@ -209,15 +209,18 @@ function setImageSize(refreshElement){
 {% endblock %}
 
 {% block content %}	
-{% block content_view %}
-	<!-- Here is defined the visualization mode -->
-{% endblock %}	
 
-<!-- Not used in the volume visualization -->
-{% if not dataset.getNumberSlices > 1 %}
-	<!-- Hidden menu for multiple selection tool -->
-<!-- 	{% include "showj/showj_selection_menu.html" %} -->
-{% endif %}
+	{% block content_view %}
+		<!-- Here is defined the visualization mode -->
+	{% endblock %}	
+	
+	{% if 0 %}
+		<!-- Not used in the volume visualization -->
+		{% if not dataset.getNumberSlices > 1 %}
+			<!-- Hidden menu for multiple selection tool -->
+			{% include "showj/showj_selection_menu.html" %}
+		{% endif %}
+	{% endif %}	
 
 {% endblock %}	
 

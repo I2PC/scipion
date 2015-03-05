@@ -94,7 +94,8 @@ def update_prot_tree(request):
     index = request.GET.get('index', None)
 
     # set the new protocol tree chosen
-    project_settings.setCurrentProtocolMenu(index)
+    views = project.getProtocolViews()
+    project_settings.setProtocolView(views[int(index)])
     project_settings.write()
         
     return HttpResponse(mimetype='application/javascript')
@@ -216,9 +217,9 @@ def project_content(request):
     if projectName is None:
         projectName = request.POST.get('projectName', None)
     context = contentContext(request, projectName)
-    context.update({'mode': None})
+    context.update({'mode': None,
+                   'formUrl':'form'})
     return render_to_response('project_content/project_content.html', context)
-
 
 
 def contentContext(request, projectName):
