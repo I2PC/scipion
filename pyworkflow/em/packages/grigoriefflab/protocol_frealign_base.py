@@ -1100,6 +1100,7 @@ eot
 
     def _setLastIter(self, iterN):
         self._lastIter.set(iterN)
+        self._store(self._lastIter)
 
     def _getLastIter(self):
         return self._lastIter.get()
