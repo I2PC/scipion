@@ -1639,7 +1639,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                                     XmippDialog.showError(GalleryJFrame.this, "Scipion is not available");
                                                     return;
                                                 }
-                                                String run = String.format("python %s%2$spyworkflow%2$sapps%2$spw_chimera_client.py --input %3$s --mode projector", scipionHome, File.separator, data.getSelVolumeFile());
+                                                String run = String.format("python %s%2$spyworkflow%2$sapps%2$spw_chimera_client.py projector --input %3$s", scipionHome, File.separator, data.getSelVolumeFile());
                                                 System.out.println(run);
                                                 if(data.parameters.getSamplingRate() != null)
                                                     run += String.format(" --samplingRate %s", data.parameters.getSamplingRate());

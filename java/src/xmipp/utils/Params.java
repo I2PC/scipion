@@ -87,7 +87,7 @@ public class Params {
     public String[] sortby;
     private String block;
     public String[] objectCommands;
-    private float samplingRate;
+    private Float samplingRate;
     public int chimeraPort;
     
 
