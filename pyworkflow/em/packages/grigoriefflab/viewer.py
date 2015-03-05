@@ -29,13 +29,12 @@ Visualization of the results of the Frealign protocol.
 import os
 from os.path import exists, relpath
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO)
+from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO, Viewer)
 import pyworkflow.em as em
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
                                         EnumParam, BooleanParam, FloatParam)
-
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
 from protocol_ctffind3 import ProtCTFFind, ProtRecalculateCTFFind
