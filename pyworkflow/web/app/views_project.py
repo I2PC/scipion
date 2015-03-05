@@ -94,7 +94,8 @@ def update_prot_tree(request):
     index = request.GET.get('index', None)
 
     # set the new protocol tree chosen
-    project_settings.setCurrentProtocolMenu(index)
+    views = project.getProtocolViews()
+    project_settings.setProtocolView(views[int(index)])
     project_settings.write()
         
     return HttpResponse(mimetype='application/javascript')

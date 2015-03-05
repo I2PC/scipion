@@ -55,7 +55,15 @@ class XmippProtResolution3D(ProtAnalysis3D):
         form.addParam('doStructureFactor', BooleanParam, default=True,
                       label="Calculate Structure Factor?", 
                       help='If set True calculate Structure Factor')
-    
+        form.addParam('doApplyBFactor', BooleanParam, default=True,
+                      label="Calculate and apply B-factor?",
+                      help='''Sharpen a volume by applying a negative B-factor
+The high-resolution features will enhanced, thereby
+correcting the envelope functions of the microscope,
+detector etc. This implementation follows the
+automated mode based on methodology developed
+by Rosenthal2003''')
+
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         """Insert all steps to calculate the resolution of a 3D reconstruction. """
