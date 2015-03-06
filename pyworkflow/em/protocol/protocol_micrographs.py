@@ -134,6 +134,10 @@ class ProtCTFMicrographs(ProtMicrographs):
         
         self._insertFunctionStep('createOutputStep', prerequisites=fDeps)
     
+    def _insertFinalSteps(self, deps):
+        """ This should be implemented in subclasses"""
+        pass
+    
     def _insertEstimationSteps(self, deps):
         self._defineValues()
         self._prepareCommand()

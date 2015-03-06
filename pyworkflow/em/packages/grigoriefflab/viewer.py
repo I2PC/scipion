@@ -39,7 +39,7 @@ from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
 
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
-from protocol_ctffind3 import ProtCTFFind
+from pyworkflow.em.packages.grigoriefflab.protocol_ctffind import ProtCTFFind
 
 
 LAST_ITER = 0
