@@ -51,12 +51,29 @@ if not env.GetOption('clean'):
 # But because freetype's compilation is a pain, it's better to use whatever
 # version is in the system.
 
-fftw = env.AddLibrary(
-    'fftw3',
+# fftw = env.AddLibrary(
+#     'fftw3',
+#     tar='fftw-3.3.4.tgz',
+#     targets=[File('#software/lib/libfftw3.so').abspath],
+#     flags=['--enable-threads', '--enable-shared'],
+#     clean=[Dir('#software/tmp/fftw-3.3.4')])
+
+# I needed to add two compilations of fftw to get float extensions
+fftw1 = env.AddLibrary(
+    'fftw',
     tar='fftw-3.3.4.tgz',
     targets=[File('#software/lib/libfftw3.so').abspath],
     flags=['--enable-threads', '--enable-shared'],
     clean=[Dir('#software/tmp/fftw-3.3.4')])
+    
+fftw2 = env.AddLibrary(
+    'fftwf',
+    tar='fftw-3.3.4f.tgz',
+    targets=[File('#software/lib/libfftw3f.so').abspath],
+    flags=['--enable-threads', '--enable-shared', '--enable-float'],
+    clean=[Dir('#software/tmp/fftw-3.3.4f')])
+    
+fftw = env.Alias('fftw', [fftw1, fftw2])
 
 tcl = env.AddLibrary(
     'tcl',

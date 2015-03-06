@@ -1066,6 +1066,8 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     if default or GetOption(name):
         env.Default(lastTarget)
 
+    env.Alias(name, lastTarget)
+    
     return lastTarget
 
 
