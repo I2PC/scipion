@@ -33,6 +33,9 @@ import time
 import psutil
 import argparse
 
+
+
+
 def main():
     parser = argparse.ArgumentParser(description='store memory and cpu usage, plot it using monitor.py program. Usage scipion run monitor.py')
 
@@ -58,7 +61,8 @@ def createTable(cur,baseFn,tableName):
                             timestamp DATE DEFAULT (datetime('now','localtime')),
                             mem FLOAT,
                             cpu FLOAT,
-                            openfile INT)"""%tableName
+                            openfile INT,
+                            swap FLOAT)""" % tableName
     cur.execute(sql)
 
 def loopPsUtils(cur, tableName, interval,sleepSec):
@@ -73,10 +77,10 @@ def loopPsUtils(cur, tableName, interval,sleepSec):
          # non-blocking (percentage since last call)
          cpu = psutil.cpu_percent(interval=0)
          mem = psutil.virtual_memory()
+         swap = psutil.swap_memory()
          #vmem(total=8240947200L, available=7441436672L, percent=9.7, used=1939496960L, 
          #free=6301450240L, active=727162880, inactive=966086656, buffers=123904000L, cached=1016082432)
-         memPercent = mem.percent
-         sql = "INSERT INTO %s(mem,cpu) VALUES(%f,%f);"%(tableName,memPercent,cpu)
+         sql = "INSERT INTO %s(mem,cpu,swap) VALUES(%f,%f,%f);" % (tableName, mem.percent, cpu, swap.percent)
          cur.execute(sql)
          time.sleep(sleepSec)
 

@@ -16,6 +16,7 @@ urls = [
     url(r'^create_movies_project/$', 'app.views_webtools.create_movies_project'),
 #     url(r'^get_testdata/$', 'app.views_webtools.get_testdata'),
     url(r'^mov_form/$', 'app.views_webtools.movies_form'),
-    url(r'^m_content/$', 'app.views_webtools.movies_content')
+    url(r'^m_content/$', 'app.views_webtools.movies_content'),
+    url(r'^upload_movies/', 'app.views_webtools.upload_movies'),
     
 ]

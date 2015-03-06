@@ -25,8 +25,8 @@
 # **************************************************************************
 
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs
-from pyworkflow.web.app.views_base import base_grid, base_flex
+from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs, getResourceIcon
+from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
 from django.shortcuts import render_to_response
@@ -46,7 +46,6 @@ def service_movies(request):
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
                'movies_utils': movies_utils,
-               'hiddenTreeProt': True,
                }
     
     context = base_grid(request, context)
@@ -61,7 +60,7 @@ def writeCustomMenu(customMenu):
 
 Movies_Alignment = [
     {"tag": "section", "text": "1. Upload data", "children": [
-        {"tag": "url", "value": "/upload/", "text": "Upload Data", "icon": "fa-upload.png"}]},
+        {"tag": "url", "value": "/upload_movies/", "text":"Upload Data", "icon": "fa-upload.png"}]},
     {"tag": "section", "text": "2. Import your data", "children": [
         {"tag": "protocol", "value": "ProtImportMovies", "text": "Import Movies", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Align your Movies", "children": [
@@ -91,6 +90,11 @@ def create_movies_project(request):
         
         project = manager.createProject(projectName, runsView=1, protocolsConf=customMenu)   
         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
+        
+        # Create symbolic link for uploads
+        uploadFolder = "ScipionUserData/Movies/projects/"+ projectName + "/Uploads/"
+        uploadFolderReal = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
+        
         
         # 1. Import movies
         protImport = project.newProtocol(ProtImportMovies,
@@ -131,6 +135,7 @@ def get_testdata(request):
     fn = dsMDA.getFile(testDataKey)
     return HttpResponse(fn, mimetype='application/javascript')
 
+
 def check_m_id(request):
     result = 0
     projectName = request.GET.get('code', None)
@@ -144,12 +149,6 @@ def check_m_id(request):
     
     return HttpResponse(result, mimetype='application/javascript')
  
-def movies_form(request):
-    from django.shortcuts import render_to_response
-    context = contextForm(request)
-    context.update({'path_mode':'select',
-                    'formUrl': 'mov_form'})
-    return render_to_response('form/form.html', context)
  
 def movies_content(request):
     projectName = request.GET.get('p', None)
@@ -158,11 +157,40 @@ def movies_content(request):
     context = contentContext(request, projectName)
     context.update({
                     # MODE
-                    'mode':'service',
                     'formUrl': 'mov_form',
                     # IMAGES
-#                     'imageName': path_files + 'image.png',
+                    'uploadMovies': path_files + 'uploadMovies.png',
+                    'importMovies': path_files + 'importMovies.png',
+                    'movieAlignment': path_files + 'movieAlignment.png',
+                    'protMovieAlign': path_files + 'protMovieAlign.png',
+                    'summary': path_files + 'summary.png',
+                    'showj': path_files + 'showj.png',
+                    'download': path_files + 'download.png',
                     })
     
     return render_to_response('movies_content.html', context)
+
+
+def movies_form(request):
+    from django.shortcuts import render_to_response
+    context = contextForm(request)
+    context.update({'path_mode':'select',
+                    'formUrl': 'mov_form'})
+    return render_to_response('form/form.html', context)
+
+
+def upload_movies(request):
+
+    projectName = request.session['projectName']
+    
+    command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
+    pathUpload = "/mnt/big1/scipion-mws/data/uploads/" + projectName
+
+    context = {'command': command,
+               'logo_scipion_small': getResourceIcon('logo_scipion_small'),
+               }
+
+    context = base_form(request, context)
+    
+    return render_to_response('upload_movies.html', context)
 

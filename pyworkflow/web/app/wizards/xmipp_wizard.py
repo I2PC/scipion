@@ -36,6 +36,7 @@ from pyworkflow.em.packages.xmipp3.wizard import *
 from pyworkflow.web.app.em_wizard import *
 from tools import *
 from pyworkflow.web.app.views_base import base_wiz
+from pyworkflow.wizard import WEB_DJANGO
 
 #===============================================================================
 # DOWNSAMPLING
