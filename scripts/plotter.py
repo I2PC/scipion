@@ -87,7 +87,7 @@ def main():
     
     # Plot memory by default if not option is selected
     if not (args.cpu or args.mem or args.mem):
-         args.swap = True
+         args.mem = True
 
     # Force to start the x values at 0
     #x1,x2,y1,y2 = pyplot.axis()
