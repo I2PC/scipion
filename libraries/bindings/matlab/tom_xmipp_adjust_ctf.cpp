@@ -216,7 +216,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
                 Matrix1D<double> u(2);
                 VECTOR_R2(u,cos(iu*2*PI/YSIZE(zeros)),sin(iu*2*PI/YSIZE(zeros)));
                 Matrix1D<double> contfreq(2), digfreq(2);
-                ctfmodel.zero(n+1,u,contfreq);
+                ctfmodel.lookFor(n+1,u,contfreq);
                 contfreq2digfreq(contfreq,digfreq,ctfmodel.Tm);
                 digfreq*=adjustParams.ctfmodelSize;
                 digfreq+=adjustParams.ctfmodelSize/2+1;
