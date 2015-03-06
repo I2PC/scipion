@@ -50,7 +50,7 @@ debug = False
 # fast = False
 # quiet = True
 matlab = False
-opencv = GetOption('opencv')
+opencv = True#GetOption('opencv')
 
 
 packageDeps = env['PACKAGE']['DEPS']
@@ -91,7 +91,7 @@ def addLib(name, **kwargs):
     kwargs['patterns'] = patterns
     
     lib = env.AddCppLibrary(name, **kwargs)
-    env.Alias('Xmipp', lib)
+    env.Alias('Xmipp-libs', lib)
     
     return lib
 
@@ -396,7 +396,6 @@ def addRunTest(testName, prog):
     env.Alias('run_' + testName, testCase)
     env.Depends(testCase, prog)
     env.Alias('Xmipp-runtests', testCase)
-    #env.Alias('Xmipp', testCase)
     
     AlwaysBuild(testCase)
     
@@ -435,7 +434,6 @@ def addProg(progName, **kwargs):
     # Add some aliases before return
     env.Alias(xmippProgName, prog)
     env.Alias('Xmipp-programs', prog)
-    env.Alias('Xmipp', prog)
     
     if progName.startswith('test_'):
         env.Alias('Xmipp-tests', prog)
@@ -627,11 +625,29 @@ for p in ['angular_commonline',
           ]:
     addProg(p)
 
-# special case of volume_align_prog which also required include from python
+
+# Programs with specials needs
+
+# This programs need python lib to compile
 # addProg('volume_align_prog',
 #         incs=python_incs,
 #         libs=['python'])
 
+# Optical Alignment program, that depends on opencv (cpu version)
+if opencv:
+    addProg('optical_alignment_cpu',
+            libs=['opencv_core', 
+                  'opencv_legacy', 
+                  'opencv_imgproc', 
+                  'opencv_video'])
+
+if cuda:
+    addProg('optical_alignment_gpu',
+            libs=['cudart', 'cublas', 
+                  'cufft', 'curand', 
+                  'cusparse', 'npp', 
+                  'nvToolsExt', 
+                  'opencv_gpu'])
 
 # Some special programs not ready for release
 if not release:
@@ -663,7 +679,6 @@ def addBatch(batchName, script, scriptFolder='applications/scripts'):
                             os.path.join(XMIPP_PATH, scriptFolder, script)
                             )
     env.Alias('Xmipp-batchs', batchLink)
-    env.Alias('Xmipp', batchLink)
     
     return batchLink
                             
@@ -759,23 +774,8 @@ for b in bindings:
     
 env.Default('Xmipp-matlab', matlab)
 
-# Optical Alignment program
-if opencv:
-    _libsoptical = BASIC_LIBS + ['opencv_core', 'opencv_legacy', 'opencv_imgproc', 'opencv_video', 'XmippDimred', 'XmippClassif', 'XmippRecons', 'XmippData', 'XmippExternal']
-    _depsoptical = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so', 'lib/libXmippDimred.so', 'lib/libXmippClassif.so', 'lib/libXmippRecons.so', 'lib/libXmippData.so', 'lib/libXmippExternal.so']
-    addProg2('xmipp_optical_alignment_cpu', 
-                   src=['applications/programs/optical_alignment_cpu'],
-                   incs=BASIC_INCS,
-                   libs=_libsoptical,
-                   deps=_depsoptical)
+XmippAlias = env.Alias('Xmipp', ['Xmipp-libs', 
+                                 'Xmipp-programs', 
+                                 'Xmipp-batchs'])
 
-if cuda:
-    _libsoptical += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu' ]
-    addProg2('xmipp_optical_alignment_gpu', 
-                   src=['applications/programs/optical_alignment_gpu'],
-                   incs=BASIC_INCS,
-                   libs=_libsoptical,
-                   deps=_depsoptical)  
-
-XmippAlias = env.Alias('Xmipp')
 Return('XmippAlias')
