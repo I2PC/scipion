@@ -8,7 +8,7 @@ import xmipp
 def main():
     commonParser = argparse.ArgumentParser(add_help=False, prog='Chimera Client')
     commonParser.add_argument('--input', help='Volume to visualize', required=True)
-    commonParser.add_argument('--samplingRate', type=float, help='Volume sampling rate')
+    commonParser.add_argument('--samplingRate', help='Volume sampling rate')
 
     commonParser.add_argument('--angDistFile', help='Angular distribution file')
     commonParser.add_argument('--spheresColor', default='red', help='Angular distribution spheres color')
@@ -32,9 +32,9 @@ def main():
                         'BSPLINE2': xmipp.BSPLINE2, 'BSPLINE3': xmipp.BSPLINE3, 'BSPLINE4': xmipp.BSPLINE4}
 
     args = parentParser.parse_args()
-    print args
+    #print args
     volfile = args.input
-    voxelSize= args.samplingRate
+    voxelSize= args.samplingRate if hasattr(args, 'samplingRate') else None
     angularDistFile = args.angDistFile if hasattr(args, 'angDistFile') else None
     spheresColor = args.spheresColor if hasattr(args, 'spheresColor') else None
     spheresDistance = args.spheresDistance if hasattr(args, 'spheresDistance') else None

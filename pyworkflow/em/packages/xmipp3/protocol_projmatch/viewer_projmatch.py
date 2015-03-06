@@ -39,7 +39,7 @@ from pyworkflow.utils import createUniqueFileName, cleanPattern
 from protocol_projmatch import XmippProtProjMatch
 # from projmatch_initialize import createFilenameTemplates
 from pyworkflow.em.packages.xmipp3.convert import * # change this
-from pyworkflow.em.viewer import ChimeraProjectionClient
+from pyworkflow.em.viewer import ChimeraDataViewPair
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, IntParam, FloatParam,
                                         StringParam, EnumParam, NumericRangeParam)
@@ -217,8 +217,8 @@ Examples:
         if self.lastIter is None:
             return ['There are not iterations completed.'] 
     
-    def createDataView(self, filename, extraParams=''):
-        return DataView(filename)
+    def createDataView(self, filename, viewParams={}):
+        return DataView(filename, viewParams)
         
 #     def createScipionView(self, filename, extraParams=''):
 #         inputParticlesId = self.protocol.inputParticles.get().strId()
@@ -560,6 +560,7 @@ Examples:
         md = xmipp.MetaData()
         for ref3d in self._refsList:
             for it in self._iterations:
+
                 file_name = self.protocol._getFileName('docfileInputAnglesIters', iter=it)
                 file_name_ctf = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@" + file_name
                 if exists(file_name):
@@ -569,6 +570,15 @@ Examples:
                     print "File %s does not exist" % file_name
                     return []
     
+
+                file_name = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@" + self.protocol._getFileName('docfileInputAnglesIters', iter=it)
+                md.read(file_name)
+                volfile = self.protocol.outputVolume#temporarily, can be outputVolumes I think
+                return [ChimeraDataViewPair(file_name, vol)]
+                #return [self.createDataView(file_name)]
+
+
+
 #===============================================================================
 # Convergence
 #===============================================================================

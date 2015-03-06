@@ -32,18 +32,20 @@ import os
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
 from pyworkflow.em.data import PdbFile
 from pyworkflow.utils import Environ, runJob
-import pyworkflow as pw
+from pyworkflow.em.showj import CHIMERA_PORT
 from showj import (runJavaIJapp, ZOOM, ORDER, VISIBLE, 
                    MODE, PATH, TABLE_NAME, MODE_MD, RENDER)
 from threading import Thread
 from multiprocessing.connection import Client
-from numpy import array, flipud
+from numpy import flipud
 import xmipp
 import sys
 from pyworkflow.utils import getFreePort
 from os import system
 from pyworkflow.gui.matplotlib_image import ImageWindow
 import os.path
+import socket
+from time import sleep
 
 # PATH is used by app/em_viewer.py
 
@@ -191,7 +193,9 @@ class ImageView(View):
         
     def getImagePath(self):
         return self._imagePath
-    
+
+
+
         
 #------------------------ Some views and  viewers ------------------------
         
@@ -224,7 +228,22 @@ class ChimeraClientView(View):
             ChimeraProjectionClient(self._inputFile, **self._kwargs)
         else:
             ChimeraClient(self._inputFile, **self._kwargs)
-        
+
+class ChimeraDataViewPair(DataView, ChimeraClientView):
+
+    def __init__(self, datafile, vol, viewParams={}, **kwargs):
+        print 'on pair'
+        self.showjPort = getFreePort()
+        viewParams[CHIMERA_PORT] = self.showjPort
+        viewParams[MODE] = MODE_MD
+        DataView.__init__(self, datafile, viewParams, **kwargs)
+        ChimeraClientView.__init__(self, vol.getFileName(), showProjection=True, showjPort=self.showjPort, voxelSize=vol.getSamplingRate())
+
+
+    def show(self):
+        DataView.show(self)
+        ChimeraClientView.show(self)
+
         
 class ChimeraViewer(Viewer):
     """ Wrapper to visualize PDB object with Chimera. """
@@ -272,6 +291,7 @@ class ChimeraClient:
 
         self.volfile = volfile
         self.voxelSize = self.kwargs.get('voxelSize', None)
+
         self.address = ''
         self.port = getFreePort()
 
@@ -339,18 +359,19 @@ class ChimeraClient:
             printCmd(command)
             
     def send(self, cmd, data):
-        #print cmd
+        print cmd
         self.client.send(cmd)
         self.client.send(data)
         
     def openVolumeOnServer(self, volume):
         self.send('open_volume', volume)
         if not self.voxelSize is None:
-            self.send('voxelSize', self.voxelSize)
+            self.send('voxel_size', self.voxelSize)
         if self.angularDistFile:
             self.loadAngularDist()
             self.send('draw_angular_distribution', self.angulardist)
         self.client.send('end')
+
 
     def initListenThread(self):
             self.listen_thread = Thread(target=self.listen)
@@ -365,6 +386,7 @@ class ChimeraClient:
                 #print 'on client loop'
                 msg = self.client.recv()
                 self.answer(msg)
+                sleep(0.01)
                             
         except EOFError:
             print 'Lost connection to server'
@@ -402,9 +424,18 @@ class ChimeraProjectionClient(ChimeraClient):
         splineDegree = self.kwargs.get('splineDegree', 2)
         self.fourierprojector = xmipp.FourierProjector(self.image, paddingFactor, maxFreq, splineDegree)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
+
+        self.showjPort = self.kwargs.get('showjPort', None)
         self.iw = ImageWindow(filename=os.path.basename(volfile),image=self.projection, dim=self.size, label="Projection")
+        if self.showjPort:
+            self.showjThread = Thread(target=self.listenShowJ)
+            self.showjThread.daemon = True
+            self.showjThread.start()
         self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
         self.iw.show()
+
+
+
 
     def rotate(self, rot, tilt, psi):
         printCmd('image.projectVolumeDouble')
@@ -425,24 +456,55 @@ class ChimeraProjectionClient(ChimeraClient):
         if msg == 'motion_stop':
             data = self.client.recv()#wait for data
             printCmd('reading motion')
-            self.motion = array(data)
+            self.motion = data
             printCmd('getting euler angles')
             rot, tilt, psi = xmipp.Euler_matrix2angles(self.motion)
             printCmd('calling rotate')  
             self.rotate(rot, tilt, psi)
             
-    def exitClient(self):
+    def exitClient(self):#close window before volume loaded
         if not self.listen:
             sys.exit(0)
     
+
+
     def initListenThread(self):
             self.listen_thread = Thread(target=self.listen)
             self.listen_thread.daemon = True
-            self.listen_thread.start() 
+            self.listen_thread.start()
+
+
+    def listenShowJ(self):
+        self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.serversocket.bind(('', self.showjPort))
+        #become a server socket
+        self.serversocket.listen(1)
+
+        while True:
+            print 'on listening'
+            try:
+                (clientsocket, address) = self.serversocket.accept()
+                print "connection accepted"
+                msg = clientsocket.recv(1024)#should be a single message, so no loop
+                print 'msg %s' % msg
+                tokens = msg.split()
+                rot = float(tokens[1])
+                tilt= float(tokens[2])
+                psi= float(tokens[3])
+                matrix = xmipp.Euler_angles2matrix(rot, tilt, psi)
+                print matrix
+                self.client.send('rotate')
+                self.client.send(matrix)
+                clientsocket.close()
+
+            except EOFError:
+                print 'Lost connection to client'
+
 
             
 def printCmd(cmd):
-        print cmd
+    #pass
+    print cmd
         
         
  
