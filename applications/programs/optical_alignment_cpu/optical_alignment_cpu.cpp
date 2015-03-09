@@ -36,6 +36,7 @@
 #include <data/multidim_array.h>
 #include <data/xmipp_image.h>
 #include <data/normalize.h>
+#include <data/xmipp_fftw.h>
 
 
 using namespace std;
@@ -47,14 +48,10 @@ class ProgOpticalAligment: public XmippProgram
 {
 
 public:
-    FileName fname;
-    FileName foname;
+    FileName fname, foname;
 
-    int winSize;
-    int gpuDevice;
-    int fstFrame;
-    int lstFrame;
-    bool doAverage;
+    int winSize, gpuDevice, fstFrame, lstFrame;
+    bool doAverage, psd;
 
     void defineParams()
     {
@@ -65,6 +62,7 @@ public:
         addParamsLine("     [--ned <int=0>]     : last frame used in alignment (0 = last frame in the movie ");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
         addParamsLine("     [--simpleAverage]: if we want to just compute the simple average");
+        addParamsLine("     [--psd]             : save raw PSD and corrected PSD");
 #ifdef GPU
 
         addParamsLine("     [--gpu <int=0>]         : GPU device to be used");
@@ -79,6 +77,7 @@ public:
         lstFrame  = getIntParam("--ned");
         winSize   = getIntParam("--winSize");
         doAverage = checkParam("--simpleAverage");
+        psd = checkParam("--psd");
 #ifdef GPU
 
         gpuDevice = getIntParam("--gpu");
@@ -229,6 +228,8 @@ public:
     int main2()
     {
         // XMIPP structures are defined here
+    	MultidimArray<std::complex<double> > Faux;
+    	MultidimArray<double> Maux;
         MultidimArray<double> preImg, avgCurr, avgStep, mappedImg;
         ImageGeneric movieStack, movieStackNormalize;
         Image<double> II;
@@ -299,6 +300,16 @@ public:
             II() = avgCurr;
             II.write(foname);
             return 0;
+        }
+        if (psd)
+        {
+            FileName rawPSDFile;
+            FourierTransform(avgCurr, Faux);
+            FFT_magnitude(Faux, Maux);
+            CenterFFT(Maux, true);
+            II()=Maux;
+            rawPSDFile = foname.removeAllExtensions()+".psd";
+            II.write("dfsd.psd");
         }
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
 
