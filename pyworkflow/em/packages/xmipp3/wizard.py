@@ -260,7 +260,7 @@ class XmippParticleMaskRadiiWizard(ParticlesMaskRadiiWizard):
     
 
 class XmippVolumeMaskRadiusWizard(VolumeMaskRadiusWizard):
-    _targets = [(XmippProtMaskVolumes, ['radius']), 
+    _targets = [(XmippProtMaskVolumes, ['radius']),
                 (XmippProtAlignVolume, ['maskRadius']),
                 (XmippProtPreprocessVolumes, ['backRadius'])]
     

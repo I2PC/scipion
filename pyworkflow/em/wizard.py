@@ -38,6 +38,7 @@ import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow import findResource
+from pyworkflow.object import PointerList
 
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.constants import (UNIT_PIXEL, 
@@ -117,20 +118,31 @@ class EmWizard(Wizard):
         """
         provider = None
         if objs.hasValue():
-            objs = objs.get()
-            
-            if isinstance(objs, SetOfMicrographs):
-                mics = self._getMics(objs)
-                provider = ListTreeProvider(mics)
+            # If objs is a PointerList currently it can only be formed of SetOfVolumes and Volume
+            # (for protocol align_volume). Should this change review this part
+            if isinstance(objs, PointerList):
+                vols_total = []
+                for pointer in objs:
+                    obj = pointer.get()
+                    print obj
+                    vols = self._getVols(obj)
+                    vols_total.extend(vols)
+                provider = ListTreeProvider(vols_total)
+            else:
+                objs = objs.get()
 
-            if isinstance(objs, SetOfParticles):
-                particles = self._getParticles(objs)
-                provider = ListTreeProvider(particles)
-                provider.getText = self._getText
-            
-            if isinstance(objs, SetOfVolumes) or isinstance(objs, Volume):
-                vols = self._getVols(objs)
-                provider = ListTreeProvider(vols)
+                if isinstance(objs, SetOfMicrographs):
+                    mics = self._getMics(objs)
+                    provider = ListTreeProvider(mics)
+
+                if isinstance(objs, SetOfParticles):
+                    particles = self._getParticles(objs)
+                    provider = ListTreeProvider(particles)
+                    provider.getText = self._getText
+
+                if isinstance(objs, SetOfVolumes) or isinstance(objs, Volume):
+                    vols = self._getVols(objs)
+                    provider = ListTreeProvider(vols)
             
             return provider
         return None
