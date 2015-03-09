@@ -228,8 +228,8 @@ public:
     int main2()
     {
         // XMIPP structures are defined here
-    	MultidimArray<std::complex<double> > Faux;
-    	MultidimArray<double> Maux;
+        MultidimArray<std::complex<double> > Faux;
+        MultidimArray<double> Maux;
         MultidimArray<double> preImg, avgCurr, avgStep, mappedImg;
         ImageGeneric movieStack, movieStackNormalize;
         Image<double> II;
@@ -301,6 +301,7 @@ public:
             II.write(foname);
             return 0;
         }
+        // if the user want to save the PSD
         if (psd)
         {
             FileName rawPSDFile;
@@ -308,8 +309,8 @@ public:
             FFT_magnitude(Faux, Maux);
             CenterFFT(Maux, true);
             II()=Maux;
-            rawPSDFile = foname.removeAllExtensions()+".psd";
-            II.write("dfsd.psd");
+            rawPSDFile = foname.removeAllExtensions()+"_raw.psd";
+            II.write(rawPSDFile);
         }
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
 
@@ -431,6 +432,16 @@ public:
         II() = avgCurr;
         II.write(foname);
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
+        if (psd)
+        {
+            FileName correctedPSDFile;
+            FourierTransform(avgCurr, Faux);
+            FFT_magnitude(Faux, Maux);
+            CenterFFT(Maux, true);
+            II()=Maux;
+            correctedPSDFile = foname.removeAllExtensions()+"_corrected.psd";
+            II.write(correctedPSDFile);
+        }
         return 0;
     }
 };
