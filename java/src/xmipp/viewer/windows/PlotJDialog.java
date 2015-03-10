@@ -65,7 +65,7 @@ public class PlotJDialog extends XmippDialog {
 	private HashMap<ColumnInfo, ColumnInfo.ColumnExtraInfo> rowsExtra;
 	private ColumnsTableModel model;
 	private JTextField tfTitle, tfXLabel, tfYLabel, tfBins;
-	private JComboBox<String> plotTypecb;
+	private JComboBox plotTypecb;
 	private JComboBox jcbXAxis;
         private List<ColumnInfo> rows;
 	// This will be used for check for results from the dialog
@@ -114,7 +114,7 @@ public class PlotJDialog extends XmippDialog {
 		tfYLabel = new JTextField(20);
 		
                 JPanel plotPanel = new JPanel();
-		plotTypecb = new JComboBox<String>(plotTypes);
+		plotTypecb = new JComboBox(plotTypes);
                 plotTypecb.addActionListener(new ActionListener() {
 
                     @Override
