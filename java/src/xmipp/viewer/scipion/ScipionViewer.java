@@ -76,7 +76,7 @@ public class ScipionViewer extends Viewer {
                 if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_IMAGE)) {
                     openFileAsImage(null, filename, parameters);
                 } else {
-                    parameters.mode = Params.OPENING_MODE_GALLERY;
+                    //parameters.mode = Params.OPENING_MODE_GALLERY;
                     md = new MetaData(filename);
                     new GalleryJFrame(md, parameters);
                 }
