@@ -1,0 +1,16 @@
+{% extends 'wizards/wiz_base.html' %} 
+{% block head %}
+	<script type="text/javascript" src="{{raphael}}"></script>
+	<script>
+		function returnParams(){
+			putSelection('{{param}}', '{{label}}_input');
+		}
+		$(function() {
+		    returnParams();
+		  });
+	</script>
+{% endblock %} 
+
+{% block function %}
+	onclick="returnParams()"
+{% endblock %}
