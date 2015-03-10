@@ -130,42 +130,8 @@ class XmippCTFWizard(CtfWizard):
 class XmippBoxSizeWizard(Wizard):
     _targets = [(XmippProtExtractParticles, ['boxSize'])]
 
-    def _getBoxSize(self, protocol):
-
-        # Get input coordinates from protocol and if they have not value exit
-        inputCoords = protocol.getCoords()
-        if  inputCoords is None:
-            return 0
-
-        # Get boxSize from coordinates and sampling input from associated micrographs
-        boxSize = inputCoords.getBoxSize()
-        samplingInput = inputCoords.getMicrographs().getSamplingRate()
-
-        # If downsampling type same as picking sampling does not change
-        if protocol.downsampleType.get() == SAME_AS_PICKING:
-            samplingFinal = samplingInput
-        else:
-            # In case is not same as picking get input micrographs and its sampling rate
-            if issubclass(protocol.getClass(), XmippProtExtractParticles):
-                inputMics = protocol.inputMicrographs.get()
-            if issubclass(protocol.getClass(), XmippProtExtractParticlesPairs):
-                inputMics = inputCoords.getMicrographs()
-
-            samplingMics = inputMics.getSamplingRate()
-
-            if protocol.downsampleType.get() == ORIGINAL:
-                # If 'original' get sampling rate from original micrographs
-                samplingFinal = samplingMics
-            else:
-                # IF 'other' multiply the original sampling rate by the factor provided
-                samplingFinal = samplingMics*protocol.downFactor.get()
-
-        downFactor = samplingFinal/samplingInput
-
-        return int(boxSize/downFactor)
-
     def show(self, form):
-        form.setVar('boxSize', self._getBoxSize(form.protocol))
+        form.setVar('boxSize', form.protocol.getBoxSize())
 
 
 #===============================================================================

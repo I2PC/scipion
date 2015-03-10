@@ -490,3 +490,35 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         else:
             return None
 
+    def getBoxSize(self):
+        # This function is needed by the wizard
+
+        # Get input coordinates from protocol and if they have not value leave the existing boxSize value
+        inputCoords = self.getCoords()
+        if  inputCoords is None:
+            return self.boxSize.get()
+
+        # Get boxSize from coordinates and sampling input from associated micrographs
+        boxSize = inputCoords.getBoxSize()
+        samplingInput = inputCoords.getMicrographs().getSamplingRate()
+
+        # If downsampling type same as picking sampling does not change
+        if self.downsampleType.get() == SAME_AS_PICKING:
+            samplingFinal = samplingInput
+        else:
+            if self.getInputMicrographs() is not None:
+                samplingMics = self.getInputMicrographs().getSamplingRate()
+            else:
+                return self.boxSize.get()
+
+            if self.downsampleType.get() == ORIGINAL:
+                # If 'original' get sampling rate from original micrographs
+                samplingFinal = samplingMics
+            else:
+                # IF 'other' multiply the original sampling rate by the factor provided
+                samplingFinal = samplingMics*self.downFactor.get()
+
+        downFactor = samplingFinal/samplingInput
+
+        return int(boxSize/downFactor)
+

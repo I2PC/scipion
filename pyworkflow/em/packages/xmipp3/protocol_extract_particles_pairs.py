@@ -338,7 +338,11 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
 
     def getInputMicrographs(self):
         """ Return the micrographs associated to the SetOfCoordinates"""
-        return self.inputCoordinatesTiltedPairs.get().getMicsPair()
+        #return self.inputCoordinatesTiltedPairs.get().getMicsPair()
+        if self.inputCoordinatesTiltedPairs.hasValue():
+            return self.inputCoordinatesTiltedPairs.get().getUntilted().getMicrographs()
+        else:
+            return None
     
     def getOutput(self):
         if self.outputParticlesTiltPair.hasValue():
