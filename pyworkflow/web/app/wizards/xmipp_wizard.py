@@ -315,7 +315,7 @@ class XmippBoxSizeWizardWeb(XmippBoxSizeWizard):
     _environments = [WEB_DJANGO]
     
     def _run(self, protocol, request):
-        boxSize = self._getBoxSize(protocol)
+        boxSize = protocol.getBoxSize()
         
         context = {'label':'boxSize',
                    'param': boxSize}
