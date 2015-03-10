@@ -316,12 +316,7 @@ class XmippBoxSizeWizardWeb(XmippBoxSizeWizard):
     
     def _run(self, protocol, request):
         boxSize = protocol.getBoxSize()
+        context = '{boxSize='+ str(boxSize) +'}'
+        return HttpResponse('auto_wizard:'+context)
         
-        context = {'label':'boxSize',
-                   'param': boxSize}
-            
-        context = base_wiz(request, context)
-        
-        return render_to_response('wizards/wiz_return.html', context)    
-        
-        
+
