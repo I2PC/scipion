@@ -26,16 +26,34 @@
 # *
 # **************************************************************************
 
+import os
+from os.path import join
+from glob import glob
+
+
 Import('env')
 
-# Required for custom functions
-from glob import glob
-import os
-from os.path import join, exists
-import os
-import sys
+# Define some variables used by Scons, note that some of 
+# the variables will be passed by Scipion in the environment (env) by
+# 
 
-packageDeps = env.get('packageDeps', '')
+env['CUDA_SDK_PATH'] = os.environ.get('CUDA_SDK_PATH', '')
+env['CUDA_LIB_PATH'] = os.environ.get('CUDA_LIB_PATH', '')
+
+gtest = False#True
+cuda = False
+release = True
+debug = False
+# profile = False
+# warn = False
+# fast = False
+# quiet = True
+matlab = False
+opencv = GetOption('opencv')
+
+
+packageDeps = env['PACKAGE']['DEPS']
+
 if isinstance(packageDeps, basestring):
     packageDeps = [packageDeps]
 
@@ -43,140 +61,137 @@ if isinstance(packageDeps, basestring):
 CYGWIN = env['PLATFORM'] == 'cygwin'
 MACOSX = env['PLATFORM'] == 'darwin'
 MINGW = env['PLATFORM'] == 'win32'
-SCONSCRIPT_PATH = Dir('.').abspath
+
+XMIPP_PATH = Dir('.').abspath
+
+XMIPP_URL_SOFTWARE = 'http://metamagical.org/xmipp_soft'
 
 # XMIPP ADDITIONAL EXTERNAL LIBRARIES
-# Tiff
-tiff = env.AddLibrary(
-     'tiff',
-     tar='tiff-3.9.4.tgz',
-#     targets=['lib/libtiff.so'],
-     clean=[Dir('#software/tmp/tiff-3.9.4').abspath],
-     url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/tiff-3.9.4.tgz',)
-Depends(tiff, packageDeps)
 
-# Hdf5
-hdf5 = env.AddLibrary(
-     'hdf5',
-     tar='hdf5-1.8.14.tgz',
-     buildDir=['hdf5-1.8.14', 'hdf5-1.8.14/c++'],
-     configDir=['hdf5-1.8.14', 'hdf5-1.8.14'],
-     flags=[['--enable-cxx'], ['--enable-cxx']],
-     autoConfigTargets=['src/Makefile', 'c++/Makefile'],
-     makeTargets=['all install', 'all install'],
-     targets=[[File('#software/lib/libhdf5.so').abspath], [File('#software/lib/libhdf5_cpp.so').abspath]],
-     clean=[Dir('#software/tmp/hdf5-1.8.14').abspath],
-     url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/hdf5-1.8.14.tgz')
-Depends(hdf5, packageDeps)
-
-BASIC_LIBS = ['fftw3', 'fftw3_threads', 'tiff', 'jpeg', 'sqlite3', 'hdf5','hdf5_cpp', 'rt']
-BASIC_INCS = [Dir('#software/include').abspath,
-              Dir('#software/include/python2.7').abspath,
-              Dir('.').abspath,
-              Dir('external').abspath,
-              Dir('libraries').abspath, 
-              Dir('external/tiff-3.9.4').abspath, 
-              Dir('external/tiff-3.9.4/libtiff').abspath,  
-              Dir('external/sqlite-3.6.23').abspath, 
-              Dir('external/hdf5-1.8.14/src').abspath,
-              Dir('external/hdf5-1.8.14/c++').abspath,
-              Dir('external/hdf5-1.8.14/c++/src').abspath,
-              Dir('external/bilib/').abspath,
-              Dir('external/alglib-3.8.0.cpp/src').abspath]
+BASIC_LIBS = []#'fftw3', 'fftw3_threads', 'tiff', 'jpeg', 'sqlite3', 'hdf5','hdf5_cpp', 'rt']
+BASIC_INCS = []#Dir('#software/include').abspath]#,
+#               Dir('#software/include/python2.7').abspath,
+#               Dir('.').abspath,
+#               Dir('external').abspath,
+#               Dir('libraries').abspath, 
+#               #Dir('external/tiff-3.9.4').abspath, 
+#               #Dir('external/tiff-3.9.4/libtiff').abspath,  
+#               #Dir('external/sqlite-3.6.23').abspath, 
+#               #Dir('external/hdf5-1.8.14/src').abspath,
+#               #Dir('external/hdf5-1.8.14/c++').abspath,
+#               #Dir('external/hdf5-1.8.14/c++/src').abspath,
+#               Dir('external/bilib/').abspath,
+#               Dir('external/alglib-3.8.0.cpp/src').abspath]
 
 # XMIPP SHARED LIBRARIES
 # Xmipp External Libraries (bilib, condor, alglib)
-xmippExternal = env.AddPackageLibrary(
+# TODO: Separate compilation of condor and alglib from biblib special compilation and 
+# refactor AddPackageLibrary
+
+# Create a shortcut and customized function
+# to add the Xmipp CPP libraries
+
+def addLib(name, **kwargs):
+    # Install all libraries in scipion/software/lib
+    kwargs['installDir'] = '#software/lib' 
+    # Add always the xmipp path as -I for include and also xmipp/libraries
+    incs = kwargs.get('incs', []) + [os.path.join(XMIPP_PATH, 'external'),
+                                     os.path.join(XMIPP_PATH, 'libraries')]
+    kwargs['incs'] = incs 
+    return env.AddCppLibrary(name, **kwargs)
+
+# Includes of bilib library
+bilib_incs = ['external/bilib' + s for s in ['', '/headers', '/types']]
+alglib_incs = ['external/alglib-3.8.0.cpp/src']
+
+xmippExternal = addLib(
               'XmippExternal',
-              tars=['external/bilib.tgz', 
-                    'external/condor.tgz', 
-                    'external/alglib-3.8.0.cpp.tgz'],
-              untarTargets=['bilib/configs.h',
-                            'condor/Matrix.h',
-                            'alglib-3.8.0.cpp/gpl3.txt'],
-              dirs=['external',
-                    'external',
-                    'external'],
+              dirs=['external']*3,
               patterns=['bilib/sources/*.cc', 
                         'condor/*.cpp',
                         'alglib-3.8.0.cpp/src/*.cpp'],
-              incs=BASIC_INCS+['external/bilib' + s for s in ['', '/headers', '/types']],
-              deps=tiff + hdf5 + packageDeps)
+              incs=bilib_incs, 
+              deps=packageDeps)
 
-xmippSqliteExt = env.AddPackageLibrary(
+xmippSqliteExt = addLib(
                'XmippSqliteExt',
                dirs=['external/sqliteExt'],
                patterns=['extension-functions.c'],
-               libs=['m'],
-               deps=tiff + hdf5 + packageDeps)
+               libs=['m'])
 
 # Data
-xmippData = env.AddPackageLibrary(
+xmippData = addLib(
           'XmippData',
           dirs=['libraries/data'],
           patterns=['*.cpp'],
-          incs=BASIC_INCS,
-          libs=['XmippExternal'] + BASIC_LIBS,
-          deps=tiff + hdf5 + xmippExternal + xmippSqliteExt)
+          incs=bilib_incs + alglib_incs,
+          libs=['fftw3', 'fftw3_threads', 'tiff', 'jpeg', 
+                'sqlite3', 'hdf5','hdf5_cpp', 'rt', 'XmippExternal'],
+          deps=['fftw3', 'fftw3_threads', 'tiff', 'jpeg', 
+                'sqlite3', 'hdf5','hdf5_cpp', 'rt', 'XmippExternal'])
 
 # Classification
-xmippClassif = env.AddPackageLibrary(
+xmippClassif = addLib(
              'XmippClassif',
              dirs=['libraries/classification'],
              patterns=['*.cpp'],
-             incs=BASIC_INCS,
-             libs=['XmippExternal', 'XmippData'] + BASIC_LIBS,
-             deps=xmippExternal + xmippSqliteExt + xmippData)
+             incs=bilib_incs,
+             libs=['XmippExternal', 'XmippData'],
+             deps=['XmippExternal', 'XmippData'])
 
 # Dimred
-xmippDimred = env.AddPackageLibrary(
+xmippDimred = addLib(
             'XmippDimred',
             dirs=['libraries/dimred'],
             patterns=['*.cpp'],
-            incs=BASIC_INCS,
-            libs=['XmippExternal', 'XmippData'] + BASIC_LIBS,
-            deps=xmippExternal + xmippSqliteExt + xmippData)
+            incs=bilib_incs,
+            libs=['XmippExternal', 'XmippData'],
+            deps=['XmippExternal', 'XmippData'])
 
 # Reconstruction
-xmippRecons = env.AddPackageLibrary(
+xmippRecons = addLib(
             'XmippRecons',
             dirs=['libraries/reconstruction'],
             patterns=['*.cpp'],
-            incs=BASIC_INCS+[Dir('libraries/reconstruction').path],
-            libs=['XmippExternal', 'XmippData', 'XmippClassif'] + BASIC_LIBS,
-            deps=xmippExternal + xmippSqliteExt + xmippData + xmippClassif)
+            incs=bilib_incs,
+            libs=['XmippExternal', 'XmippData', 'XmippClassif'],
+            deps=['XmippExternal', 'XmippData', 'XmippClassif'])
 
 # Interface
-xmippInterface = env.AddPackageLibrary(
+xmippInterface = env.AddCppLibrary(
                'XmippInterface',
                dirs=['libraries/interface'],
                patterns=['*.cpp'],
-               incs=BASIC_INCS+[Dir('#software/include/python2.7').abspath, Dir('#software/lib/python2.7/site-packages').abspath, Dir('#software/lib/python2.7/site-packages/numpy/core/include').abspath],
+               incs=BASIC_INCS+[Dir('#software/include/python2.7').abspath, 
+                                Dir('#software/lib/python2.7/site-packages').abspath, 
+                                Dir('#software/lib/python2.7/site-packages/numpy/core/include').abspath],
                libs=['XmippExternal', 'XmippData', 'pthread'],
                deps=xmippExternal + xmippSqliteExt + xmippData)
 
 # Python binding
-xmippPyBinding = env.AddPackageLibrary(
+xmippPyBinding = env.AddCppLibrary(
                'xmipp',
                dirs=['libraries/bindings/python'],
                patterns=['*.cpp'],
-               incs=BASIC_INCS+[Dir('#software/include/python2.7').abspath, Dir('#software/lib/python2.7/site-packages/numpy/core/include').abspath],
+               incs=BASIC_INCS+[Dir('#software/include/python2.7').abspath, 
+                                Dir('#software/lib/python2.7/site-packages/numpy/core/include').abspath],
                libs=['XmippExternal', 'XmippData', 'XmippRecons'] + BASIC_LIBS,
                deps=xmippExternal + xmippSqliteExt + xmippData + xmippRecons,
                prefix='',
                installDir=Dir('#software/lib').abspath)
 
 # Java binding
-xmippJNI = env.AddPackageLibrary(
+xmippJNI = env.AddCppLibrary(
          'XmippJNI',
          dirs=['libraries/bindings/java'],
          patterns=['*.cpp'],
-         incs=BASIC_INCS+[Dir('.').path, Dir('libraries').path],
+         incs=BASIC_INCS+[Dir('.').path, 
+                          Dir('libraries').path] + env['JNI_CPPPATH'],
          libs=['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal'] + BASIC_LIBS,
          deps=xmippData + xmippSqliteExt + xmippRecons + xmippClassif + xmippExternal)
 
 # Parallelization
-xmippParallel = env.AddPackageLibrary(
+xmippParallel = env.AddCppLibrary(
               'XmippParallel',
               dirs=['libraries/parallel'],
               patterns=['*.cpp'],
@@ -186,17 +201,17 @@ xmippParallel = env.AddPackageLibrary(
               mpi=True)
 
 # Gtest
-if int(env['gtest']):
-    gtest = env.ManualInstall('gtest',
-                              tar='gtest-1.6.0.tgz',
-                              buildDir='gtest-1.6.0/fused-src/gtest',
-                              url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/gtest-1.6.0.tgz',
-                              extraActions=[(File('#/software/lib/libgtest.so'), 
-                                             '%s -o %s -shared -L %s -L /usr/lib %s -fPIC %s' % (env['CC'],
-                                                                                                 File('#/software/lib/libgtest.so').abspath,
-                                                                                                 Dir('#software/lib').abspath,
-                                                                                                 '-l '+' -l'.join(BASIC_LIBS), 
-                                                                                                 File('#software/tmp/gtest-1.6.0/fused-src/gtest/gtest-all.cc').abspath))])
+if gtest:
+    env.ManualInstall('gtest', default=True,
+                      tar='gtest-1.6.0.tgz',
+                      buildDir='gtest-1.6.0/fused-src/gtest',
+                      url=XMIPP_URL_SOFTWARE + '/gtest-1.6.0.tgz',
+                      extraActions=[(File('#/software/lib/libgtest.so'), 
+                                     '%s -o %s -shared -L %s -L /usr/lib %s -fPIC %s' %
+                                     (env['CC'], File('#/software/lib/libgtest.so').abspath,
+                                      Dir('#software/lib').abspath,
+                                      '-l '+' -l'.join(BASIC_LIBS), 
+                                      File('#software/tmp/gtest-1.6.0/fused-src/gtest/gtest-all.cc').abspath))])
 
 
 # Java libraries
@@ -206,15 +221,15 @@ if int(env['gtest']):
 ######################################
 # --- From here...
 javaEnumDict = {
-            'ImageWriteMode': [File('libraries/data/xmipp_image_base.h').abspath, 'WRITE_'],
-            'CastWriteMode': [File('libraries/data/xmipp_image_base.h').abspath, 'CW_'],
-            'MDLabel': [File('libraries/data/metadata_label.h').abspath, ['MDL_', 'RLN_', 'BSOFT']],
-            'XmippError': [File('libraries/data/xmipp_error.h').abspath, 'ERR_']
+            'ImageWriteMode': [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, 'WRITE_'],
+            'CastWriteMode': [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, 'CW_'],
+            'MDLabel': [File('#software/em/xmipp/libraries/data/metadata_label.h').abspath, ['MDL_', 'RLN_', 'BSOFT']],
+            'XmippError': [File('#software/em/xmipp/libraries/data/xmipp_error.h').abspath, 'ERR_']
             }
 
 
 def WriteJavaEnum(class_name, header_file, pattern, log):
-    java_file = File(join(SCONSCRIPT_PATH, 'java/src/xmipp/jni/%s.java' % class_name)).abspath
+    java_file = File('#software/em/xmipp/java/src/xmipp/jni/%s.java' % class_name).abspath
     env.Depends(java_file, header_file)
     f = open(header_file)
     fOut = open(java_file, 'w+')
@@ -257,7 +272,8 @@ def WriteJavaEnum(class_name, header_file, pattern, log):
         log.write("Java file '%s' successful generated at %s\n" % (java_file, d))
 
 
-def ExtractEnumFromHeader(source, target, env):
+#def ExtractEnumFromHeader(source, target, env):
+def ExtractEnumFromHeader(env, target, source):
     log = open(str(target[0]), 'w+')
     for (class_name, list) in javaEnumDict.iteritems():
         WriteJavaEnum(class_name, list[0], list[1], log)
@@ -265,100 +281,99 @@ def ExtractEnumFromHeader(source, target, env):
     log.close()
     return None
 
-
-env.Append(JAVACLASSPATH='java/lib')
-env['JAVABUILDPATH'] = 'java/build'
-env['JAVADIR'] = 'java'
-env['ENV']['LANG'] = 'en_GB.UTF-8'
-env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
-# Set -g debug options if debugging
-if env['debug'] == True:
-    env['JAVAC'] = 'javac -g'
-
-javaBuild = Execute(Mkdir('java/build'))
-
-# Update enums from c++ headers, if they don't exist, generate it
-javaLog = open(File('java/build/javaLog').abspath, 'w+')
-for (class_name, class_list) in javaEnumDict.iteritems():
-    java_file = "java/src/xmipp/jni/%s.java" % class_name
-    WriteJavaEnum(class_name, class_list[0], class_list[1], javaLog)
-
-javaEnums = env.Alias('javaEnums', 
-                      env.Command('libraries/bindings/java/src/xmipp/jni/enums.changelog',
-                      [File('libraries/data/xmipp_image_base.h').abspath, File('libraries/data/metadata_label.h').abspath],
-                      ExtractEnumFromHeader))
-
-imagejUntar = env.Untar(File('external/imagej/ij.jar').abspath, File('external/imagej.tgz').abspath, cdir=Dir('external').abspath)
-env.Depends(imagejUntar, javaEnums)
-
-ijLink = env.SymLink(File('java/lib/ij.jar').abspath, imagejUntar[0].abspath)
-env.Depends(ijLink, imagejUntar)
-env.Default(ijLink)
-# --- ...to here
-
-xmippJavaJNI = env.AddJavaLibrary(
-             'XmippJNI',
-             dirs=['java/src/xmipp/jni', 'java/src/xmipp/ij/commons'],
-             deps=['ij'],
-             )
-env.Depends(xmippJavaJNI, ijLink)
-
-xmippUtils = env.AddJavaLibrary(
-           'XmippUtils',
-           dirs=['java/src/xmipp/utils', 'java/src/xmipp/jni/'],
-           deps=['ij', 'commons-cli-1.1', 'XmippJNI'],
-           )
-env.Depends(xmippUtils, ijLink)
-
-xmippIJ = env.AddJavaLibrary(
-        'XmippIJ',
-        dirs=['java/src/xmipp/ij/commons'],
-        deps=['XmippUtils', 'XmippJNI'],
-        )
-
-xmippViewer = env.AddJavaLibrary(
-            'XmippViewer',
-            dirs=['java/src/xmipp/viewer'],
-            deps=['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13', 'XmippJNI'],
+if 'xmipp-java' in map(str, BUILD_TARGETS):
+    env['JAVADIR'] = 'java'
+    env['JAVA_BUILDPATH'] = 'java/build'
+    env['JAVA_LIBPATH'] = 'java/lib'
+    env['JAVA_SOURCEPATH'] = 'java/src'
+    env['ENV']['LANG'] = 'en_GB.UTF-8'
+    env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
+    # Set -g debug options if debugging
+    if debug:
+        env['JAVAC'] = 'javac -g'  # TODO: check how to add -g without changing JAVAC
+    
+    javaBuild = Execute(Mkdir(Entry('#software/em/xmipp/java/build').abspath))
+    
+    # Update enums from c++ headers, if they don't exist, generate it
+    javaLog = open(File('#software/em/xmipp/java/build/javaLog').abspath, 'w+')
+    for (class_name, class_list) in javaEnumDict.iteritems():
+        java_file = File("#software/em/xmipp/java/src/xmipp/jni/%s.java" % class_name).abspath
+        WriteJavaEnum(class_name, class_list[0], class_list[1], javaLog)
+    
+    javaExtractCommand = env.Command(Entry('#software/em/xmipp/libraries/bindings/java/src/xmipp/jni/enums.changelog').abspath,
+                                     [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, File('#software/em/xmipp/libraries/data/metadata_label.h').abspath],
+                                     ExtractEnumFromHeader)
+    
+    javaEnums = env.Alias('javaEnums', javaExtractCommand)
+    
+    imagejUntar = env.Untar(File('#software/em/xmipp/external/imagej/ij.jar').abspath, 
+                            File('#software/em/xmipp/external/imagej.tgz').abspath, 
+                            cdir=Dir('#software/em/xmipp/external').abspath)
+    #env.Depends(imagejUntar, javaEnums)
+    
+    ijLink = env.SymLink(File('#software/em/xmipp/java/lib/ij.jar').abspath, imagejUntar[0].abspath)
+    env.Depends(ijLink, imagejUntar)
+    env.Default(ijLink)
+    # --- ...to here
+    
+    xmippJavaJNI = env.AddJavaLibrary(
+                 'XmippJNI', 'xmipp/jni',
+                 deps=[ijLink, javaEnums],
+                 )
+    #env.Depends(xmippJavaJNI, ijLink)
+    
+    xmippJavaUtils = env.AddJavaLibrary(
+               'XmippUtils', 'xmipp/utils',
+               deps=[ijLink, xmippJavaJNI],
+               )
+    
+    xmippIJ = env.AddJavaLibrary(
+            'XmippIJ', 'xmipp/ij/commons',
+            deps=[xmippJavaUtils],
             )
-
-xmippTest = env.AddJavaLibrary(
-          'XmippTest',
-          dirs=['java/src/xmipp/test'],
-          deps=['XmippViewer', 'junit4-4.8.2', 'core-1.1', 'XmippJNI']
-          )
-
-xmippIJPlugin = env.AddJavaLibrary(
-              'XmippIJPlugin_MasksToolbar',
-              dirs=['java/src/xmipp/ij/plugins/maskstoolbar'],
-              deps=['XmippJNI']
+    
+    xmippViewer = env.AddJavaLibrary(
+                'XmippViewer', 'xmipp/viewer',
+                deps=[xmippIJ],
+                )
+    
+    xmippTest = env.AddJavaLibrary(
+              'XmippTest', 'xmipp/test',
+              deps=[xmippViewer]
               )
-
-env.Depends(xmippIJPlugin, ijLink)
-pluginLink = env.SymLink('external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar', xmippIJPlugin)
-env.Depends(pluginLink, ijLink)
-env.Default(pluginLink)
-
-# For any yet unkown issue, using the environment used for the rest of the SCons is imposible to compile java code
-# FIXME: Its needed to guess why and correct this. In the meanwhile we'll use an alternative environment
-env2 = Environment()
-env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir('java/lib').abspath,'*.jar'))))
-javaExtraFileTypes = env2.Java('java/build/HandleExtraFileTypes.class', 'java/src/HandleExtraFileTypes.java')
-env2.Depends(javaExtraFileTypes, 'java/lib/XmippViewer.jar')
-env2.Default(javaExtraFileTypes)
-
-# FIXME: For any yet unkown issue, java is being compiled putting in -d flag the class name, producing a folder with the same name as the class and putting the class file inside
-fileTypesInstallation = env.Install('external/imagej/plugins/', 'java/build/HandleExtraFileTypes.class/HandleExtraFileTypes.class')
-env.Depends(fileTypesInstallation, pluginLink)
-env.Default(fileTypesInstallation)
-
-# Java tests
-AddOption('--run-java-tests', dest='run_java_tests', action='store_true',
-          help='Run all Java tests (not only default ones)')
-
-env.AddJavaTest('FilenameTest', 'XmippTest.jar', default=False)
-env.AddJavaTest('ImageGenericTest', 'XmippTest.jar', default=False)
-env.AddJavaTest('MetadataTest', 'XmippTest.jar', default=False)
+    
+    # xmippIJPlugin = env.AddJavaLibrary(
+    #               'XmippIJPlugin_MasksToolbar',
+    #               dirs=[Entry('#software/em/xmipp/java/src/xmipp/ij/plugins/maskstoolbar').abspath],
+    #               deps=['XmippJNI']
+    #               )
+    
+    #env.Depends(xmippIJPlugin, ijLink)
+    #pluginLink = env.SymLink(Entry('#software/em/xmipp/external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar').abspath, xmippIJPlugin)
+    #env.Depends(pluginLink, ijLink)
+    #env.Default(pluginLink)
+    
+    
+    # For any yet unkown issue, using the environment used for the rest of the SCons is imposible to compile java code
+    # FIXME: Its needed to guess why and correct this. In the meanwhile we'll use an alternative environment
+    env2 = Environment()
+    env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir('#software/em/xmipp/java/lib').abspath,'*.jar'))))
+    javaExtraFileTypes = env2.Java(Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class').abspath, File('#software/em/xmipp/java/src/HandleExtraFileTypes.java').abspath)
+    env2.Depends(javaExtraFileTypes, Entry('#software/em/xmipp/java/lib/XmippViewer.jar').abspath)
+    env2.Default(javaExtraFileTypes)
+    
+    # FIXME: For any yet unkown issue, java is being compiled putting in -d flag the class name, producing a folder with the same name as the class and putting the class file inside
+    fileTypesInstallation = env.Install(Dir('#software/em/xmipp/external/imagej/plugins/').abspath, Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class/HandleExtraFileTypes.class').abspath)
+    #env.Depends(fileTypesInstallation, pluginLink)
+    env.Default(fileTypesInstallation)
+    
+    # Java tests
+    AddOption('--run-java-tests', dest='run_java_tests', action='store_true',
+              help='Run all Java tests (not only default ones)')
+    
+    env.AddJavaTest('FilenameTest', 'XmippTest.jar', default=False)
+    env.AddJavaTest('ImageGenericTest', 'XmippTest.jar', default=False)
+    env.AddJavaTest('MetadataTest', 'XmippTest.jar', default=False)
 
 # XMIPP PROGRAMS
 # 
@@ -492,7 +507,7 @@ env.AddProgram('xmipp_ctf_sort_psds',
                incs=BASIC_INCS,
                libs=_libsrecons, 
                deps=_depsrecons)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_idr_xray_tomo',
                    src=['applications/programs/idr_xray_tomo/'],
                    incs=BASIC_INCS,
@@ -717,7 +732,7 @@ env.AddProgram('xmipp_reconstruct_art_pseudo',
                incs=BASIC_INCS,
                libs=_libsrecons,
                deps=_depsrecons)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_reconstruct_art_xray',
                    src=['applications/programs/reconstruct_art_xray/'],
                    incs=BASIC_INCS,
@@ -742,7 +757,7 @@ env.AddProgram('xmipp_reconstruct_wbp',
 #               src=['applications/programs/reconstruct_fsc/'],
 #               incs=BASIC_INCS,
 #               libs=_libsnothing)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_resolution_ibw',
                    src=['applications/programs/resolution_ibw/'],
                    incs=BASIC_INCS,
@@ -828,7 +843,7 @@ env.AddProgram('xmipp_transform_window',
                src=['applications/programs/transform_window/'],
                incs=BASIC_INCS,
                libs=_libsnothing)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_tomo_align_dual_tilt_series',
                    src=['applications/programs/tomo_align_dual_tilt_series/'],
                    incs=BASIC_INCS,
@@ -844,7 +859,7 @@ env.AddProgram('xmipp_tomo_align_tilt_series',
                incs=BASIC_INCS,
                libs=_libsrecons,
                deps=_depsrecons,
-               cuda=int(env['cuda']))
+               cuda=cuda)
 env.AddProgram('xmipp_tomo_detect_missing_wedge',
                src=['applications/programs/tomo_detect_missing_wedge/'],
                incs=BASIC_INCS,
@@ -939,7 +954,7 @@ env.AddProgram('xmipp_xray_project',
                incs=BASIC_INCS,
                libs=_libsrecons,
                deps=_depsrecons)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_xray_volume_correct',
                    src=['applications/programs/xray_volume_correct/'],
                    incs=BASIC_INCS,
@@ -1159,7 +1174,7 @@ env.AddProgram('xmipp_mpi_transform_threshold',
                libs=_libsrecons,
                deps=_depsrecons,
                mpi=True)
-if not int(env['release']):
+if not release:
     env.AddProgram('xmipp_mpi_write_test', 
                    src=['applications/programs/mpi_write_test'],
                    incs=BASIC_INCS,
@@ -1169,6 +1184,7 @@ if not int(env['release']):
 
 # Batches (apps)
 xmippApropos = env.SymLink('bin/xmipp_apropos', 'applications/scripts/apropos/batch_apropos.py')
+env.Default(xmippApropos)
 #Depends(xmippApropos, packageDeps)
 
 xmippCompile = env.SymLink('bin/xmipp_compile', 'applications/scripts/compile/batch_compile.py')
@@ -1218,21 +1234,26 @@ xmippImagej = env.SymLink('bin/xmipp_imagej', 'external/runImageJ')
 
 xmippPython = env.SymLink('bin/xmipp_python', File('#software/bin/python').abspath)
 
-env.Alias('batchs', [xmippApropos, xmippCompile, xmippExportEMX, xmippImportBox, xmippImportCTFparam, 
+batchs = env.Alias('batchs', [xmippApropos, xmippCompile, xmippExportEMX, xmippImportBox, xmippImportCTFparam, 
                      xmippImportCTFdat, xmippImportEMX, xmippMetadataPlot, xmippMetadataSelfileCreate, xmippProtocols, 
                      xmippBrowser, xmippMicrographParticlePicking, xmippChimeraClient, xmippMicrographTiltpairPicking, xmippMPIClassifyCLTomo, 
                      xmippMPIStepsRunner, xmippProjectionsExplorer, xmippShowj, xmippTomoj, xmippVisualizePreprocessingMicrographj, 
                      xmippVolumeAlign, xmippImagej, xmippPython])
 env.Depends('batchs', packageDeps)
+env.Default(batchs)
 
 # Tests
-if int(env['gtest']):
+if gtest:
+    _libstests = BASIC_LIBS+['XmippRecons', 'XmippClassif', 'XmippData', 'XmippExternal', 'XmippDimred', 'gtest']
+    _depstests = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so', 'lib/libXmippDimred.so']
+    _incstests = BASIC_INCS + ['']
+    
     def AddXmippTest(name, testprog, command):
         #testprog = AddXmippProgram(name, ['gtest'], 'tests')
         testname = 'xmipp_' + name
         xmlFileName = join('applications','tests','OUTPUT', testname) + ".xml"
         if  os.path.exists(xmlFileName):
-           os.remove(xmlFileName)
+            os.remove(xmlFileName)
         env['ENV']['LD_LIBRARY_PATH'] = ':'.join([Dir('lib').abspath, Dir('#software/lib').abspath])
         env['ENV']['XMIPP_HOME'] = Dir('.').abspath
         testcase = env.Alias('run_' + name , env.Command(xmlFileName, 'bin/xmipp_%s' % name, command))
@@ -1240,9 +1261,6 @@ if int(env['gtest']):
         test = env.Alias('run_tests', testcase)
         AlwaysBuild(testcase)
         return testcase
-    
-    _libstests = BASIC_LIBS+['XmippRecons', 'XmippClassif', 'XmippData', 'XmippExternal', 'XmippDimred', 'gtest']
-    _depstests = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so', 'lib/libXmippDimred.so']
     # C tests
     testCTF = env.AddProgram('xmipp_test_ctf', 
                              src=['applications/tests/test_ctf'],
@@ -1379,7 +1397,7 @@ if int(env['gtest']):
     AddXmippTest('test_emx', testEMX, "$SOURCE $TARGET")
 
 # Matlab programs
-if int(env['matlab']):
+if matlab:
     def CompileMatlab(name, dependencies=[]):
         ''' name parameter is expected without .java extension '''
         source = 'libraries/bindings/matlab/'+name+".cpp"
@@ -1400,7 +1418,7 @@ if int(env['matlab']):
         CompileMatlab('xmipp_read_structure_factor')
 
 # Optical Alignment program
-if int(env['opencv']):
+if opencv:
     _libsoptical = BASIC_LIBS + ['opencv_core', 'opencv_legacy', 'opencv_imgproc', 'opencv_video', 'XmippDimred', 'XmippClassif', 'XmippRecons', 'XmippData', 'XmippExternal']
     _depsoptical = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so', 'lib/libXmippDimred.so', 'lib/libXmippClassif.so', 'lib/libXmippRecons.so', 'lib/libXmippData.so', 'lib/libXmippExternal.so']
     env.AddProgram('xmipp_optical_alignment_cpu', 
@@ -1408,7 +1426,7 @@ if int(env['opencv']):
                    incs=BASIC_INCS,
                    libs=_libsoptical,
                    deps=_depsoptical)
-    if int(env['cuda']):
+    if cuda:
         _libsoptical += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu' ]
         env.AddProgram('xmipp_optical_alignment_gpu', 
                        src=['applications/programs/optical_alignment_gpu'],
