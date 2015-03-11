@@ -249,7 +249,6 @@ public class GalleryData {
             useGeo = parameters.useGeo;
             wrap = parameters.wrap;
             displayLabels = parameters.getDisplayLabels();
-            System.out.println(parameters.mode);
             if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
             {
                 mode = Mode.TABLE_MD;
