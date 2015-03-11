@@ -299,8 +299,8 @@ public:
             FileName rawPSDFile;
             II() = avgCurr;
             II.write(foname);
-            rawPSDFile = foname.removeAllExtensions()+"_raw";
-            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim 400 --overlap 0.9",
+            rawPSDFile = fname.removeAllExtensions()+"_raw";
+            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim 400 --overlap 0.7",
                                      foname.c_str(), rawPSDFile.c_str());
             String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
             std::cerr<<"Computing the raw FFT"<<std::endl;
@@ -437,8 +437,8 @@ public:
         if (psd)
         {
             FileName correctedPSDFile;
-            correctedPSDFile = foname.removeAllExtensions()+"_corrected";
-            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim 400 --overlap 0.9",
+            correctedPSDFile = fname.removeAllExtensions()+"_corrected";
+            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim 400 --overlap 0.7",
                                      foname.c_str(), correctedPSDFile.c_str());
             String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
             std::cerr<<"Computing the corrected FFT"<<std::endl;
