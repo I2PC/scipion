@@ -189,7 +189,6 @@ def parseCtffind4Output(filename):
         if not line.startswith("#"):
             result = line.split()[1:]
     f.close()
-    print "results, ", line.split()[1:]
     return result
 
 def readCtfModel(ctfModel, filename, ctf4=False):
