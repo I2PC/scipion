@@ -339,6 +339,7 @@ Examples:
                     self._plotFSC(a, parFn)
                     legends.append('iter %d' % it)
             xplotter.showLegend(legends)
+            
             if show:
                 if threshold < self.maxFrc:
                     a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
@@ -354,6 +355,7 @@ Examples:
                 for it in self._iterations:
                     parFn = self.protocol._getFileName('output_vol_par_class', iter=it, ref=ref3d)
                     if exists(parFn):
+                        show = True
                         self._plotFSC(a, parFn)
                         legends.append('iter %d' % it)
                 xplotter.showLegend(legends)
@@ -627,7 +629,7 @@ class ProtCTFFindViewer(Viewer):
                     ctfSet.append(ctfModel)
              
             if ctfSet.getSize() < 1:
-                raise Exception("Has not been completed the CTT estimation of any micrograph")
+                raise Exception("Has not been completed the CTF estimation of any micrograph")
             else:
                 ctfSet.write()
                 ctfSet.close()
@@ -644,11 +646,68 @@ class ProtCTFFindViewer(Viewer):
         else:
             fn = obj.getFileName()
             psdLabels = '_psdFile'
-            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _micObj._filename' % psdLabels 
-            self._views.append(em.ObjectView(self._project, obj.strId(), fn,
-                                             viewParams={em.MODE: em.MODE_MD,
-                                                         em.ORDER: labels,
-                                                         em.VISIBLE: labels,
-                                                         em.ZOOM: 50,
-                                                         em.RENDER: psdLabels}))
+            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _micObj._filename' % psdLabels
+            if self.protocol.useCftfind4:
+                from pyworkflow.em.showj import OBJCMDS, OBJCMD_CTFFIND4
+                self._views.append(em.ObjectView(self._project, obj.strId(), fn,
+                                                 viewParams={em.MODE: em.MODE_MD,
+                                                             em.ORDER: labels,
+                                                             em.VISIBLE: labels,
+                                                             em.ZOOM: 50,
+                                                             em.RENDER: psdLabels,
+                                                             OBJCMDS: "'%s'" % OBJCMD_CTFFIND4}))
+            else:
+                self._views.append(em.ObjectView(self._project, obj.strId(), fn,
+                                                 viewParams={em.MODE: em.MODE_MD,
+                                                             em.ORDER: labels,
+                                                             em.VISIBLE: labels,
+                                                             em.ZOOM: 50,
+                                                             em.RENDER: psdLabels}))
+        
         return self._views
+    
+def createCtfPlot(ctfSet, ctfId):
+    from pyworkflow.utils.path import removeExt
+    ctfModel = ctfSet[ctfId]
+    psdFn = ctfModel.getPsdFile()
+    fn = removeExt(psdFn) + "_avrot.txt"
+
+    gridsize = [1, 1]
+    xplotter = EmPlotter(x=gridsize[0], y=gridsize[1], windowTitle='CTF Fitting')
+    plot_title = "CTF Fitting"
+    a = xplotter.createSubPlot(plot_title, 'pixels^-1', 'CTF', yformat=False)
+    legendName = []
+    for i in range(1, 5):
+        _plotCurve(a, i, fn)
+        if i == 1:
+            legendName.append('rotational avg. No Astg')
+        elif i == 2:
+            legendName.append('rotational avg.')
+        elif i == 3:
+            legendName.append('CTF Fit')
+        elif i == 4:
+            legendName.append('Cross Correlation')
+        elif i == 5:
+            legendName.append('2sigma cross correlation of noise')
+            
+    xplotter.showLegend(legendName)
+    a.grid(True)
+    xplotter.show()
+
+def _plotCurve(a, i, fn):
+    freqs = _getValues(fn, 0)
+    curv = _getValues(fn, i)
+    a.plot(freqs, curv)
+
+def _getValues(fn, row):
+    f = open(fn)
+    values = []
+    i = 0
+    for line in f:
+        if not line.startswith("#"):
+            if i == row:
+                values = line.split()
+                break
+            i += 1
+    f.close()
+    return values

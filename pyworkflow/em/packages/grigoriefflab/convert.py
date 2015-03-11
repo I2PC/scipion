@@ -199,8 +199,8 @@ def readCtfModel(ctfModel, filename, ctf4=False):
     else:
         defocusU, defocusV, defocusAngle, _, ctfFit, ctfResolution = parseCtffind4Output(filename)
         ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
-        setattr(ctfModel, "_ctffind4._crossCorrelation", Float(ctfFit))
-        setattr(ctfModel, "_ctffind4._ctfResolution", Float(ctfResolution))
+        ctfModel._ctffind4_crossCorrelation = Float(ctfFit)
+        ctfModel._ctffind4_ctfResolution = Float(ctfResolution)
 
 def geometryFromMatrix(matrix):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
