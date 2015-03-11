@@ -1527,6 +1527,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo());
 			setItemSelected(DISPLAY_WRAP, data.containsGeometryInfo() && data.getWrap());
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo());
+                        setItemSelected(DISPLAY_INVERTY, data.isInvertY());
 			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.renderImages());
                         setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());

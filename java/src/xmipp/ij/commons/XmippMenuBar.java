@@ -64,6 +64,7 @@ public class XmippMenuBar extends MenuBar
 	private Menu helpmn;
 	private MenuItem keyassistmi;
 	private QuickHelpJDialog keyassistdlg;
+    private final CheckboxMenuItem invertymi;
         
 
 	enum IJRequirement
@@ -201,6 +202,18 @@ public class XmippMenuBar extends MenuBar
 				
 			}
 		});
+                invertymi = new CheckboxMenuItem("Invert Y");
+		invertymi.setState(xw.getImagePlusLoader().isInvertY());
+		invertymi.addItemListener(new ItemListener()
+		{
+
+			@Override
+			public void itemStateChanged(ItemEvent e)
+			{
+				invertY(invertymi.getState());
+				
+			}
+		});
 		
 		exitmi = new MenuItem("Exit");
 		exitmi.setShortcut(new MenuShortcut(KeyEvent.VK_Q));
@@ -222,6 +235,7 @@ public class XmippMenuBar extends MenuBar
 		filemn.add(pollmi);
 		filemn.add(ugmi);
 		filemn.add(wrapmi);
+                filemn.add(invertymi);
 		filemn.add(exitmi);
 
 		// menubar image menu
@@ -281,10 +295,6 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(drawmn);
 		advancedmn.add(profilemn);
 		
-                
-                
-                
-                	
 		keyassistmi = new MenuItem("Key Assist");
 		keyassistmi.addActionListener(new ActionListener()
 		{
@@ -406,6 +416,12 @@ public class XmippMenuBar extends MenuBar
 	protected void wrap(boolean value)
 	{
 		xw.getImagePlusLoader().setWrap(value);
+		xw.loadData();
+	}
+        
+        protected void invertY(boolean value)
+	{
+		xw.getImagePlusLoader().setInvertY(value);
 		xw.loadData();
 	}
 	

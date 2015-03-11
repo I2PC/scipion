@@ -174,6 +174,10 @@ public class GalleryData {
         return this instanceof ScipionGalleryData;
     }
 
+    public boolean isInvertY() {
+        return inverty;
+    }
+
 
     public enum Mode {
 
@@ -231,7 +235,7 @@ public class GalleryData {
         mode = Mode.GALLERY_MD;
         this.renderImages = true;
         displaycis = new HashMap<String, ColumnInfo>();
-        
+        this.inverty = parameters.inverty;
         if(parameters.getBlock() == null)
             parameters.setBlock(selectedBlock);//Identifies parameters with first block loaded
         

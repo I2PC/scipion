@@ -51,6 +51,7 @@ public class Params {
     public final static String OBJECT_CMDS = "object_commands";
     public final static String SAMPLINGRATE = "sampling_rate";
     public final static String CHIMERAPORT = "chimera_port";
+    public final static String INVERTY = "inverty";
     
     
     
@@ -89,6 +90,7 @@ public class Params {
     public String[] objectCommands;
     private Float samplingRate;
     public Integer chimeraPort;
+    public boolean inverty;
     
 
     public Params() {
@@ -156,6 +158,7 @@ public class Params {
         options.addOption(opt);
         options.addOption(SAMPLINGRATE, true, "");
         options.addOption(CHIMERAPORT, true, "");
+        options.addOption(INVERTY, false, "");
 
     }
     
@@ -288,6 +291,7 @@ public class Params {
             if (cmdLine.hasOption(CHIMERAPORT)) {
                 chimeraPort = Integer.parseInt(cmdLine.getOptionValue(CHIMERAPORT));
             }
+            inverty = cmdLine.hasOption(INVERTY);
            
            
            

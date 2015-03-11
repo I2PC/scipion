@@ -64,6 +64,7 @@ public abstract class ImagePlusReader {
                         }
                         
                         checkResizeAndGeo();
+                        checkInvertY();
 			if(normalize)
 			{
 				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
@@ -107,7 +108,6 @@ public abstract class ImagePlusReader {
     
     
     protected void checkInvertY() {
-        System.out.println("check inverty " + inverty);
         if(inverty)
         {
             imp.getProcessor().flipVertical();
@@ -193,6 +193,10 @@ public abstract class ImagePlusReader {
 
     public boolean isWrap() {
         return wrap;
+    }
+
+    public boolean isInvertY() {
+        return inverty;
     }
 
 }

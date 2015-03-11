@@ -95,7 +95,7 @@ public class ImagesWindowFactory {
 	public static void openFileAsImage(Frame pframe, String filename,
 			Params parameters) {
 		try {
-			ImagePlusLoader ipl = new ImagePlusLoader(filename);
+			ImagePlusLoader ipl = new ImagePlusLoader(filename, false);
 			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
 					parameters);
 			if (parameters.mask_toolbar)
@@ -114,7 +114,7 @@ public class ImagesWindowFactory {
 		if (Filename.isMetadata(path)) {
 			MetaData md = new MetaData(path);
 			imp = XmippImageConverter.readMetadataToImagePlus(
-					MDLabel.MDL_IMAGE, md, parameters.useGeo, parameters.wrap);
+					MDLabel.MDL_IMAGE, md, parameters.useGeo, parameters.wrap, parameters.inverty);
 			md.destroy();
 		} else {
 			imp = XmippImageConverter.loadImage(path,

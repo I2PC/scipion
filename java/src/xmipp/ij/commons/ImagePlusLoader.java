@@ -36,24 +36,31 @@ public class ImagePlusLoader {
     protected ImagePlusReader impreader;
     private boolean existsfile;
     
-
     public ImagePlusLoader(ImagePlus imp) {
-        this(getFile(imp), imp, null, false, false, -2);
+        this(getFile(imp), imp, null, false, false, false, -2);
+    }
+
+    public ImagePlusLoader(ImagePlus imp, boolean inverty) {
+        this(getFile(imp), imp, null, false, false, inverty, -2);
     }
 
     public ImagePlusLoader(int index, ImageGeneric ig) {
-        this(getFile(ig), null, ig, false, false, index);
+        this(getFile(ig), null, ig, false, false, false, index);
+    }
+    
+    public ImagePlusLoader(int index, ImageGeneric ig, boolean inverty) {
+        this(getFile(ig), null, ig, false, false, inverty, index);
     }
 
-    public ImagePlusLoader(String fileName) {
-        this(fileName, null, null, false, false, -2);
+    public ImagePlusLoader(String fileName, boolean inverty) {
+        this(fileName, null, null, false, false, inverty, -2);
     }
 
-    public ImagePlusLoader(String fileName, boolean useGeometry, boolean wrap) {
-        this(fileName, null, null, useGeometry, wrap, -2);
+    public ImagePlusLoader(String fileName, boolean useGeometry, boolean wrap, boolean inverty) {
+        this(fileName, null, null, useGeometry, wrap, inverty, -2);
     }
 
-    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, boolean wrap, int index) {
+    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, boolean wrap, boolean inverty, int index) {
         
         if (fileName != null) {
             String path = Filename.findImagePath(fileName, null, true);//check if file exists dismissing preffix and suffix
@@ -72,6 +79,7 @@ public class ImagePlusLoader {
         impreader.setIndex(index);
         impreader.setUseGeometry(useGeo);
         setWrap(wrap);
+        setInvertY(inverty);
     }
 
     public ImagePlusLoader(ImageGeneric ig) {
@@ -167,6 +175,10 @@ public class ImagePlusLoader {
     public void setDimension(int width, int height)
     {
         impreader.setDimension(width, height);
+    }
+
+    public boolean isInvertY() {
+        return impreader.isInvertY();
     }
     
     

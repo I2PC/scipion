@@ -99,21 +99,18 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		}
 	}
 	
-	
-
 	public ImagePlus getImage(long id, String imagepath, boolean useGeo, boolean wrap)
 	{
 		ImagePlus imp = null;
 		if (imagepath != null && Filename.exists(imagepath))
 		{
-                        System.out.println("get image " + id);
 			try
 			{
                             ImagePlusLoader loader;
                             if(Filename.isVolume(imagepath))
-                                loader = new ImagePlusLoader(imagepath, null, null, data.useGeo, data.wrap, ImageGeneric.MID_SLICE);
+                                loader = new ImagePlusLoader(imagepath, null, null, data.useGeo, data.wrap, data.inverty, ImageGeneric.MID_SLICE);
                             else
-                                loader = new ImagePlusLoader(imagepath, data.useGeo, data.wrap);
+                                loader = new ImagePlusLoader(imagepath, data.useGeo, data.wrap, data.inverty);
                             loader.setGeometry(data.getGeometry(id));
                             loader.setInvertY(data.inverty);
                             loader.setDimension(thumb_width, thumb_height);
@@ -126,6 +123,22 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		}
 		return imp;
 	}
+        
+        
+        
+        protected void openXmippImageWindow(int index, int label)
+        {
+                String file = getImageFilename(index, label);
+                if(file == null)
+                    throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(data.getValueFromLabel(index, label)));
+                ImagePlusLoader loader = new ImagePlusLoader(file, data.useGeo, data.wrap, data.inverty);
+                if(data.containsGeometryInfo())
+                    loader.setGeometry(data.getGeometry(data.ids[index]));
+                if (data.getNormalized())
+                    loader.setNormalize(normalize_min, normalize_max);
+                ImagesWindowFactory.openXmippImageWindow(data.window, loader, data.parameters);
+        }
+
 
 	// Load initial dimensions
 	@Override
@@ -276,19 +289,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		return false;
 	}// function handleDoubleClick
         
-        protected void openXmippImageWindow(int index, int label)
-        {
-                String file = getImageFilename(index, label);
-                if(file == null)
-                    throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(data.getValueFromLabel(index, label)));
-                ImagePlusLoader loader = new ImagePlusLoader(file, data.useGeo, data.wrap);
-                if(data.containsGeometryInfo())
-                    loader.setGeometry(data.getGeometry(data.ids[index]));
-                if (data.getNormalized())
-                    loader.setNormalize(normalize_min, normalize_max);
-                ImagesWindowFactory.openXmippImageWindow(data.window, loader, data.parameters);
-        }
-
+        
 	@Override
 	protected double[] getMinAndMax()
 	{
@@ -320,8 +321,8 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		try
 		{
-                    ImagePlus imp = XmippImageConverter.readMetadataToImagePlus(renderLabel.label, data.md, data.useGeo, data.wrap);
-                    return new ImagePlusLoader(imp);
+                    ImagePlus imp = XmippImageConverter.readMetadataToImagePlus(renderLabel.label, data.md, data.useGeo, data.wrap, data.inverty);
+                    return new ImagePlusLoader(imp, data.inverty);
 		}
 		catch (Exception e)
 		{
