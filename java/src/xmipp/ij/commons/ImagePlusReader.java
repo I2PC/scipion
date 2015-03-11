@@ -30,6 +30,7 @@ public abstract class ImagePlusReader {
     protected double normalize_max;
     protected Geometry geometry;
     protected int width, height;
+    protected boolean inverty;
     
 
     public abstract boolean getAllowsPoll();
@@ -104,11 +105,29 @@ public abstract class ImagePlusReader {
         }
     }
     
+    
+    protected void checkInvertY() {
+        System.out.println("check inverty " + inverty);
+        if(inverty)
+        {
+            imp.getProcessor().flipVertical();
+            
+            imp.updateImage();
+        }
+    }
+    
+    
     public void setNormalize(double normalize_min, double normalize_max)
     {
             this.normalize = true;
             this.normalize_min = normalize_min;
             this.normalize_max = normalize_max;
+
+    }
+    
+    public void setInvertY(boolean inverty)
+    {
+            this.inverty = inverty;
 
     }
     

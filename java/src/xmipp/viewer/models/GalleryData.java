@@ -119,6 +119,7 @@ public class GalleryData {
     protected String renderLabel = "first";
     protected String[] visibleLabels;
     protected String[] orderLabels;
+    protected boolean inverty;
 
     public boolean isObjectCmd(String cmd) {
         for(String objCmd: parameters.objectCommands)

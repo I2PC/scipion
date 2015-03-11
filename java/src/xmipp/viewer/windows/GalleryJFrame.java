@@ -1466,14 +1466,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
 			// Display
 			addItem(DISPLAY, "Display");
-
-			
+                        addItem(DISPLAY_INVERTY, "Invert Y");
+                        
                         addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
-			
-                        
-			
-                        addSeparator(DISPLAY);
+			addSeparator(DISPLAY);
                         addDisplayLabelItems();
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
 			
@@ -1484,6 +1481,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				addItem(DISPLAY_RESLICE_VIEWS[i], reslices[i]);
                         addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
+                        
+                        
+			
+                        
+			
                         
                         addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
@@ -1555,7 +1557,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			String cmd = evt.getActionCommand();
 			try
 			{
-				if (cmd.equals(DISPLAY_NORMALIZE))
+                                if (cmd.equals(DISPLAY_INVERTY))
+				{
+					gallery.setInvertY(getItemSelected(DISPLAY_INVERTY));
+				}
+                                else if (cmd.equals(DISPLAY_NORMALIZE))
 				{
 					gallery.setNormalized(getItemSelected(DISPLAY_NORMALIZE));
 				}

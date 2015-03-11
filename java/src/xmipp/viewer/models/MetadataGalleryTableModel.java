@@ -106,6 +106,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		ImagePlus imp = null;
 		if (imagepath != null && Filename.exists(imagepath))
 		{
+                        System.out.println("get image " + id);
 			try
 			{
                             ImagePlusLoader loader;
@@ -114,6 +115,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                             else
                                 loader = new ImagePlusLoader(imagepath, data.useGeo, data.wrap);
                             loader.setGeometry(data.getGeometry(id));
+                            loader.setInvertY(data.inverty);
                             loader.setDimension(thumb_width, thumb_height);
                             return loader.getImagePlus();
 			}
@@ -151,7 +153,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                         if(imageFn != null)
                             try
                             {
-                                    ImagePlus image = new ImagePlusFromFile(imageFn).getImagePlus();
+                                    ImagePlusFromFile loader = new ImagePlusFromFile(imageFn);
+                                    ImagePlus image = loader.getImagePlus();
+                                    
                                     width = image.getWidth(); 
                                     height = image.getHeight();
                                     dim = new ImageDimension(width, height);

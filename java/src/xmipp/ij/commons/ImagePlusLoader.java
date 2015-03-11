@@ -82,6 +82,11 @@ public class ImagePlusLoader {
         impreader.setNormalize(normalize_min, normalize_max);
 
     }
+    
+    public void setInvertY(boolean invert) {
+        impreader.setInvertY(invert);
+
+    }
 
     public ImagePlus getImagePlus() {
         return impreader.getImagePlus();
