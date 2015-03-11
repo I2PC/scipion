@@ -60,6 +60,8 @@ VISIBLE = 'visible'
 ZOOM = 'zoom'
 SORT_BY = 'sortby'
 SAMPLINGRATE = 'sampling_rate'
+CHIMERA_PORT = 'chimera_port'
+INVERTY = 'inverty'
 
 OBJCMDS = 'object_commands'
 OBJCMD_NMA_PLOTDIST = "Plot distance profile"

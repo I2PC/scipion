@@ -32,9 +32,23 @@ import os
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
 from pyworkflow.em.data import PdbFile
 from pyworkflow.utils import Environ, runJob
-import pyworkflow as pw
+from pyworkflow.em.showj import CHIMERA_PORT
 from showj import (runJavaIJapp, ZOOM, ORDER, VISIBLE, 
-                   MODE, PATH, TABLE_NAME, MODE_MD, RENDER)
+                   MODE, PATH, TABLE_NAME, MODE_MD, RENDER, INVERTY)
+from threading import Thread
+from multiprocessing.connection import Client
+from numpy import flipud
+import xmipp
+import sys
+from pyworkflow.utils import getFreePort
+from os import system
+from pyworkflow.gui.matplotlib_image import ImageWindow
+import os.path
+import socket
+from time import sleep
+from numpy import linalg as LA
+import numpy
+from math import acos, pi
 # PATH is used by app/em_viewer.py
 
 
@@ -181,7 +195,9 @@ class ImageView(View):
         
     def getImagePath(self):
         return self._imagePath
-    
+
+
+
         
 #------------------------ Some views and  viewers ------------------------
         
@@ -194,23 +210,53 @@ def getChimeraEnviron():
                 position=Environ.BEGIN)
     return environ    
     
-       
+  
 class ChimeraView(CommandView):
     """ View for calling an external command. """
     def __init__(self, inputFile, **kwargs):
         CommandView.__init__(self, 'chimera "%s" &' % inputFile,
                              env=getChimeraEnviron(), **kwargs)
-        
+
+             
+class ChimeraClientView(View):
+    """ View for calling an external command. """
+    def __init__(self, inputFile, **kwargs):
+        self._inputFile = inputFile
+        self._kwargs = kwargs
+
+    def show(self):
+        if self._kwargs.get('showProjection', False):
+            ChimeraProjectionClient(self._inputFile, **self._kwargs)
+        else:
+            ChimeraClient(self._inputFile, **self._kwargs)
+
+
+class ChimeraDataView(DataView, ChimeraClientView):
+
+    def __init__(self, datafile, vol, viewParams={}, **kwargs):
+        print 'on pair'
+
+        self.showjPort = getFreePort()
+        viewParams[CHIMERA_PORT] = self.showjPort
+        viewParams[MODE] = MODE_MD
+        viewParams[INVERTY] = ''
+        DataView.__init__(self, datafile, viewParams, **kwargs)
+        ChimeraClientView.__init__(self, vol.getFileName(), showProjection=True, showjPort=self.showjPort, voxelSize=vol.getSamplingRate())
+
+    def show(self):
+        DataView.show(self)
+        ChimeraClientView.show(self)
+
         
 class ChimeraViewer(Viewer):
     """ Wrapper to visualize PDB object with Chimera. """
     _environments = [DESKTOP_TKINTER]
     _targets = [PdbFile]
     
-    def __init__(self, **args):
-        Viewer.__init__(self, **args)
+    def __init__(self, **kwargs):
+        Viewer.__init__(self, **kwargs)
 
-    def visualize(self, obj, **args):        
+    def visualize(self, obj, **kwargs):        
         cls = type(obj)
         
         if issubclass(cls, PdbFile):
@@ -225,8 +271,241 @@ class ChimeraViewer(Viewer):
             # the first approach is better 
         else:
             raise Exception('ChimeraViewer.visualize: can not visualize class: %s' % obj.getClassName())
- 
- 
+        
+        
+class ChimeraClient:
+    
+    def __init__(self, volfile, **kwargs):
+
+        self.kwargs = kwargs
+        if volfile is None:
+            raise ValueError(volfile)
+        if '@' in volfile:
+            [index, file] = volfile.split('@'); 
+        else :
+            file = volfile
+        if ':' in file:
+            file = file[0: file.rfind(':')]
+        if not os.path.exists(file):
+            raise Exception("File %s does not exists"%file)
+        self.angularDistFile = self.kwargs.get('angularDistFile', None)
+        if self.angularDistFile and not (os.path.exists(self.angularDistFile) or xmipp.existsBlockInMetaDataFile(self.angularDistFile)):#check blockname:
+            raise Exception("Path %s does not exists"%self.angularDistFile)
+
+        self.volfile = volfile
+        self.voxelSize = self.kwargs.get('voxelSize', None)
+
+        self.address = ''
+        self.port = getFreePort()
+
+        serverfile = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'em', 'chimera_server.py')
+        command = CommandView("chimera --script '%s %s'&" % (serverfile, self.port),
+                             env=getChimeraEnviron()).show()
+        #is port available?
+        self.authkey = 'test'
+        self.client = Client((self.address, self.port), authkey=self.authkey)
+        
+        printCmd('initVolumeData')
+        self.initVolumeData()   
+        self.spheresColor = self.kwargs.get('spheresColor', 'red')
+        spheresDistance = self.kwargs.get('spheresDistance', None)
+        spheresMaxRadius = self.kwargs.get('spheresMaxRadius', None)
+        self.spheresDistance = float(spheresDistance) if spheresDistance else 0.75 * max(self.xdim, self.ydim, self.zdim)
+        self.spheresMaxRadius = float(spheresMaxRadius) if spheresMaxRadius else 0.02 * self.spheresDistance
+
+        printCmd('openVolumeOnServer')
+        self.openVolumeOnServer(self.vol)
+        self.initListenThread()
+    
+    def loadAngularDist(self):
+
+        md = xmipp.MetaData(self.angularDistFile)
+        angleRotLabel = xmipp.MDL_ANGLE_ROT
+        angleTiltLabel = xmipp.MDL_ANGLE_TILT
+        anglePsiLabel = xmipp.MDL_ANGLE_PSI
+        if not md.containsLabel(xmipp.MDL_ANGLE_ROT):
+            angleRotLabel = xmipp.RLN_ORIENT_ROT
+            angleTiltLabel = xmipp.RLN_ORIENT_TILT
+            anglePsiLabel = xmipp.RLN_ORIENT_PSI
+        if not md.containsLabel(xmipp.MDL_WEIGHT):
+            md.fillConstant(xmipp.MDL_WEIGHT, 1.)
+            
+        maxweight = md.aggregateSingle(xmipp.AGGR_MAX, xmipp.MDL_WEIGHT)
+        minweight = md.aggregateSingle(xmipp.AGGR_MIN, xmipp.MDL_WEIGHT)
+        interval = maxweight - minweight
+        if interval < 1:
+            interval = 1
+        minweight = minweight - 1#to avoid 0 on normalized weight
+        
+        self.angulardist = []  
+        x2=self.xdim/2
+        y2=self.ydim/2
+        z2=self.zdim/2
+        #cofr does not seem to work!
+        #self.angulardist.append('cofr %d,%d,%d'%(x2,y2,z2))
+        for id in md:
+            
+            rot = md.getValue(angleRotLabel, id)
+            tilt = md.getValue(angleTiltLabel, id)
+            psi = md.getValue(anglePsiLabel, id)
+            weight = md.getValue(xmipp.MDL_WEIGHT, id)
+            weight = (weight - minweight)/interval
+            x, y, z = xmipp.Euler_direction(rot, tilt, psi)
+            radius = weight * self.spheresMaxRadius
+
+            x = x * self.spheresDistance + x2
+            y = y * self.spheresDistance + y2
+            z = z * self.spheresDistance + z2
+            command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheresColor)
+
+            self.angulardist.append(command)    
+            printCmd(command)
+            
+    def send(self, cmd, data):
+        self.client.send(cmd)
+        self.client.send(data)
+        
+    def openVolumeOnServer(self, volume):
+        self.send('open_volume', volume)
+        if not self.voxelSize is None:
+            self.send('voxel_size', self.voxelSize)
+        if self.angularDistFile:
+            self.loadAngularDist()
+            self.send('draw_angular_distribution', self.angulardist)
+        self.client.send('end')
+
+    def initListenThread(self):
+            self.listen_thread = Thread(target=self.listen)
+            #self.listen_thread.daemon = True
+            self.listen_thread.start()
+    
+    def listen(self):
+        
+        self.listen = True
+        try:
+            while self.listen:
+                #print 'on client loop'
+                msg = self.client.recv()
+                self.answer(msg)
+                sleep(0.01)
+                            
+        except EOFError:
+            print 'Lost connection to server'
+        finally:
+            self.exit()
+            
+    def exit(self):
+            self.client.close()#close connection
+
+    def initVolumeData(self):
+        self.image = xmipp.Image(self.volfile)
+        self.image.convert2DataType(xmipp.DT_DOUBLE)
+        self.xdim, self.ydim, self.zdim, self.n = self.image.getDimensions()
+        printCmd("size %dx %dx %d"%(self.xdim, self.ydim, self.zdim))
+        self.vol = self.image.getData()
+        
+    def answer(self, msg):
+        if msg == 'exit_server':
+            self.listen = False
+
+
+class ChimeraProjectionClient(ChimeraClient):
+    
+    def __init__(self, volfile, **kwargs):
+        ChimeraClient.__init__(self, volfile, **kwargs)
+        self.projection = xmipp.Image()
+        self.projection.setDataType(xmipp.DT_DOUBLE)
+        #0.5 ->  Niquiest frequency
+        #2 -> bspline interpolation
+        size = self.kwargs.get('size', None)
+        defaultSize = self.xdim if self.xdim > 128 else 128
+        self.size = size if size else defaultSize
+        paddingFactor = self.kwargs.get('paddingFactor', 1)
+        maxFreq = self.kwargs.get('maxFreq', 0.5)
+        splineDegree = self.kwargs.get('splineDegree', 2)
+        self.fourierprojector = xmipp.FourierProjector(self.image, paddingFactor, maxFreq, splineDegree)
+        self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
+
+        self.showjPort = self.kwargs.get('showjPort', None)
+        self.iw = ImageWindow(filename=os.path.basename(volfile),image=self.projection, dim=self.size, label="Projection")
+        if self.showjPort:
+            self.showjThread = Thread(target=self.listenShowJ)
+            self.showjThread.daemon = True
+            self.showjThread.start()
+        self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
+        self.iw.show()
+
+
+
+
+    def rotate(self, rot, tilt, psi):
+
+        printCmd('image.projectVolumeDouble')
+        self.fourierprojector.projectVolume(self.projection, rot, tilt, psi)
+        printCmd('flipud')
+        self.vol = flipud(self.projection.getData())
+        if hasattr(self, 'iw'):#sometimes is not created and rotate is called
+            self.iw.updateData(self.vol)
+
+    def exit(self):
+        ChimeraClient.exit(self)
+        if hasattr(self, "iw"):
+            self.iw.root.destroy()
+            
+    def answer(self, msg):
+        ChimeraClient.answer(self, msg)
+        if msg == 'motion_stop':
+            data = self.client.recv()#wait for data
+            printCmd('reading motion')
+            self.motion = data
+            printCmd('getting euler angles')
+            rot, tilt, psi = xmipp.Euler_matrix2angles(self.motion)
+            printCmd('calling rotate')  
+            self.rotate(rot, tilt, psi)
+            
+    def exitClient(self):#close window before volume loaded
+        if not self.listen:
+            sys.exit(0)
+    
+
+
+    def initListenThread(self):
+        self.listen_thread = Thread(target=self.listen)
+        self.listen_thread.daemon = True
+        self.listen_thread.start()
+
+
+    def listenShowJ(self):
+        self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.serversocket.bind(('', self.showjPort))
+        #become a server socket
+        self.serversocket.listen(1)
+
+        while True:
+            print 'on listening'
+            try:
+                (clientsocket, address) = self.serversocket.accept()
+                print "connection accepted"
+                msg = clientsocket.recv(1024)#should be a single message, so no loop
+                print 'msg %s' % msg
+                tokens = msg.split()
+                rot = float(tokens[1])
+                tilt= float(tokens[2])
+                psi= float(tokens[3])
+
+                matrix = xmipp.Euler_angles2matrix(rot, tilt, psi)
+                self.client.send('rotate')
+                self.client.send(matrix)
+                clientsocket.close()
+
+            except EOFError:
+                print 'Lost connection to client'
+
+
+def printCmd(cmd):
+    pass
+    #print cmd
+
 def getVmdEnviron():
     """ Return the proper environ to launch VMD.
     VMD_HOME variable is read from the ~/.config/scipion.conf file.
