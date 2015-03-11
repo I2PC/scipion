@@ -80,13 +80,9 @@ def validateMaskRadius(value, xdim, radius):
     
     # MASK RADII
     elif radius == 2:
-        if value[0] > xdim :
-            value[0] = xdim
-        elif value[1] > xdim :
-            value[1] = xdim
-        elif value[0] == -1 :
+        if value[0] > xdim or value[0] == -1:
             value[0] = xdim/2
-        elif value[1] == -1 :
+        if value[1] > xdim or value[1] == -1:
             value[1] = xdim/2
     
     return value
