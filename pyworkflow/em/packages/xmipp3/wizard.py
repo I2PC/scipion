@@ -140,15 +140,18 @@ class XmippBoxSizeWizard(Wizard):
 class XmippParticleConsensusRadiusWizard(Wizard):
     _targets = [(XmippProtConsensusPicking, ['consensusRadius'])]
 
-    def show(self, form):
-        if not form.protocol.inputCoordinates is None:
-            boxSize=form.protocol.inputCoordinates[0].get().getBoxSize()
+    def _getRadius(self, protocol):
+        if protocol.inputCoordinates.hasValue():
+            boxSize=protocol.inputCoordinates[0].get().getBoxSize()
             radius = int(boxSize*0.1)
             if radius<10:
                 radius=10
         else:
             radius = 10
-        form.setVar('consensusRadius', radius)
+        return radius
+
+    def show(self, form):
+        form.setVar('consensusRadius', self._getRadius(form.protocol))
 
 #===============================================================================
 # NUMBER OF CLASSES

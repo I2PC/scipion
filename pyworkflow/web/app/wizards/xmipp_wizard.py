@@ -174,149 +174,167 @@ class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
             context = base_wiz(request, context)
             return render_to_response('wizards/wiz_volume_mask_radius.html', context)    
 
+class XmippVolumeRadiusWizardWeb(XmippVolumeRadiusWizard, XmippVolumeMaskRadiusWeb):
+    pass
+
 class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
     _environments = [WEB_DJANGO]
-    
+
     def _run(self, protocol, request):
         params = self._getParameters(protocol)
         objs = params['input'].get()
-        
-        res = validateSet(objs) 
-        
+
+        res = validateSet(objs)
+
         if res is not 1:
             return HttpResponse(res)
         else:
             vols = self._getVols(objs)
-            
+
             if len(vols) == 0:
                 return HttpResponse("errorIterate")
-            
+
             xdim = getImageXdim(request, vols[0].getFileName())
-            
-            params['value'] = validateMaskRadius(params['value'], xdim, radius=2)  
-            
+
+            params['value'] = validateMaskRadius(params['value'], xdim, radius=2)
+
             context = {'objects': vols,
                        'xdim': int(xdim/2),
                        'params': params}
-        
-            context = base_wiz(request, context)
-            return render_to_response('wizards/wiz_volumes_mask_radii.html', context)    
 
-    
+            context = base_wiz(request, context)
+            return render_to_response('wizards/wiz_volumes_mask_radii.html', context)
+
+
 #===============================================================================
 # FILTERS
 #===============================================================================
 
 class XmippFilterParticlesWeb(XmippFilterParticlesWizard):
     _environments = [WEB_DJANGO]
-    
+
     def _run(self, protocol, request):
         params = self._getParameters(protocol)
         objs = params['input'].get()
-        
+
         res = validateParticles(objs)
-        
+
         if res is not 1:
             return HttpResponse(res)
         else:
             particles = self._getParticles(objs)
-            
+
             if len(particles) == 0:
                 return HttpResponse("errorIterate")
-            
+
             params['value'] = proccessModeFilter(params['mode'], params['value'])
-            
+
             context = {'objects': particles,
                        'params':params}
-            
+
             context = base_wiz(request, context)
-            
+
             return render_to_response('wizards/wiz_filter_particles.html', context)
 
 
 class XmippFilterVolumesWeb(XmippFilterVolumesWizard):
     _environments = [WEB_DJANGO]
-    
+
     def _run(self, protocol, request):
         params = self._getParameters(protocol)
         objs = params['input'].get()
-        
+
         res = validateSet(objs)
-        
+
         if res is not 1:
             return HttpResponse(res)
         else:
             volumes = self._getVols(objs)
-            
+
             if len(volumes) == 0:
                 return HttpResponse("errorIterate")
-            
+
             params['value'] = proccessModeFilter(params['mode'], params['value'])
-            
+
             context = {'objects': volumes,
                        'params':params}
-            
+
             context = base_wiz(request, context)
-            
-            return render_to_response('wizards/wiz_filter_volumes.html', context)            
-    
-    
+
+            return render_to_response('wizards/wiz_filter_volumes.html', context)
+
+
 class XmippGaussianParticlesWeb(XmippGaussianParticlesWizard):
     _environments = [WEB_DJANGO]
-    
+
     def _run(self, protocol, request):
         params = self._getParameters(protocol)
         objs = params['input'].get()
-        
+
         res = validateParticles(objs)
-        
+
         if res is not 1:
             return HttpResponse(res)
         else:
             particles = self._getParticles(objs)
-            
+
             if len(particles) == 0:
                 return HttpResponse("errorIterate")
 
             context = {'objects': particles,
                        'params':params}
-            
+
             context = base_wiz(request, context)
-            
+
             return render_to_response('wizards/wiz_gaussian_particle.html', context)
-    
+
 
 class XmippGaussianVolumesWeb(XmippGaussianVolumesWizard):
     _environments = [WEB_DJANGO]
-    
+
     def _run(self, protocol, request):
         params = self._getParameters(protocol)
         objs = params['input'].get()
-        
+
         res = validateSet(objs)
-        
+
         if res is not 1:
             return HttpResponse(res)
         else:
             volumes = self._getVols(objs)
-            
+
             if len(volumes) == 0:
                 return HttpResponse("errorIterate")
-            
+
             context = {'objects': volumes,
                        'params':params}
-            
+
             context = base_wiz(request, context)
-            
-            return render_to_response('wizards/wiz_gaussian_vol.html', context)     
-        
-        
+
+            return render_to_response('wizards/wiz_gaussian_vol.html', context)
+
+
 class XmippBoxSizeWizardWeb(XmippBoxSizeWizard):
     _environments = [WEB_DJANGO]
-    
+
     def _run(self, protocol, request):
         boxSize = protocol.getBoxSize()
         context = '{boxSize='+ str(boxSize) +'}'
         return HttpResponse('auto_wizard:'+context)
-        
 
+
+class XmippParticleConsensusRadiusWizardWeb(XmippParticleConsensusRadiusWizard):
+    _environments = [WEB_DJANGO]
+
+    def _run(self, protocol, request):
+        radius = self._getRadius(protocol)
+        context = '{consensusRadius='+ str(radius) +'}'
+        return HttpResponse('auto_wizard:'+context)
+
+class XmippCL2DNumberOfClassesWizardWeb(XmippCL2DNumberOfClassesWizard):
+    _environments = [WEB_DJANGO]
+
+    def _run(self, protocol, request):
+        numClasses = self._getNumberOfClasses(protocol)
+        context = '{numberOfClasses='+ str(numClasses) +'}'
+        return HttpResponse('auto_wizard:'+context)
