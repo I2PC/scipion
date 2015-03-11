@@ -172,7 +172,7 @@ class TestBrandeisCtffind4(TestBrandeisBase):
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
         
-        valuesList = [[23861, 23664, 56], [22383, 22153, 52.6], [22716, 22526, 59.1]]
+        valuesList = [[23861, 23664, 53], [22383, 22153, 48.5], [22716, 22526, 54.3]]
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
@@ -186,7 +186,7 @@ class TestBrandeisCtffind4(TestBrandeisBase):
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
         
-        valuesList = [[23863, 23640, 64], [22159, 21983, 50.6], [22394, 22269, 45]]
+        valuesList = [[23863, 23640, 54], [22159, 21983, 45.8], [22394, 22269, 171]]
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
