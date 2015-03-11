@@ -188,7 +188,6 @@ class ImageWindow(pwgui.Window):
     # this will require to put a wrapper to readPreview in ImageHandler that accepts location
     def __init__(self, filename=None, dim=256, dpi=96, image=None, label=None):
         pwgui.Window.__init__(self, minsize=None)
-        
         if image is None:
             image = xmipp.Image()
             if dim is None:

@@ -39,7 +39,7 @@ from pyworkflow.utils import createUniqueFileName, cleanPattern
 from protocol_projmatch import XmippProtProjMatch
 # from projmatch_initialize import createFilenameTemplates
 from pyworkflow.em.packages.xmipp3.convert import * # change this
-from pyworkflow.em.viewer import ChimeraDataViewPair
+from pyworkflow.em.viewer import ChimeraDataView
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, IntParam, FloatParam,
                                         StringParam, EnumParam, NumericRangeParam)
@@ -56,6 +56,8 @@ ANGDIST_CHIMERA = 1
 
 VOLUME_SLICES = 0
 VOLUME_CHIMERA = 1
+
+CHIMERADATAVIEW = 0
 
 REF_ALL = 0
 REF_SEL = 1
@@ -89,17 +91,17 @@ Examples:
                            """)
         form.addParam('iterSelection', NumericRangeParam, 
                       condition='viewIter==%d' % ITER_SELECTION, 
-                      label="Iterations list", 
+                      label="Iteration list",
                       help="Write the iteration list to visualize.")
         
         group = form.addGroup('Volumes display')
         group.addParam('showRef3DNo', EnumParam, choices=['all', 'selection'], default=REF_ALL,
                       display=EnumParam.DISPLAY_LIST,
-                      label='Show results for reference 3D volumes?',
+                      label='Show results for reference volumes',
                       help='')
         group.addParam('ref3DSelection', NumericRangeParam, default='1',
                       condition='showRef3DNo == %d' % REF_SEL,
-                      label='references list',
+                      label='Iteration list',
                       help='')
         group.addParam('matrixWidth', FloatParam, default=-1, 
                       expertLevel=LEVEL_ADVANCED,
@@ -111,16 +113,16 @@ Examples:
                       help='*slices*: display volumes as 2D slices along z axis.\n'
                            '*chimera*: display volumes as surface with Chimera.')
         group.addParam('showReference', LabelParam, default=False,
-                      label='Show reference volume?',
+                      label='Show reference volume',
                       help='Volume after filtration and masking')
         group.addParam('showReconstruction', LabelParam, default=False,
-                      label='Show reconstructed volume?',
+                      label='Show reconstructed volume',
                       help='Volume as given by the reconstruction algorithm')
         group.addParam('showFilteredReconstruction', LabelParam, default=False,
-                      label='Show reconstructed volume after filtration?',
+                      label='Show reconstructed volume after filtration',
                       help='Volume after filtration')
         group.addParam('showBFactorCorrectedVolume', LabelParam, default=False,
-                       label='Show a b_factor corrected volume?',
+                       label='Show a b_factor corrected volume',
                        help=""" This utility boost up the high frequencies. Do not use the automated 
                             mode [default] for maps with resolutions lower than 12-15 Angstroms.
                             It does not make sense to apply the Bfactor to the firsts iterations
@@ -137,32 +139,52 @@ Examples:
                        help=""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
                             for details. DEFAULT behaviour is --auto
                             """)
-        
+        form.addSection(label='Library, classes and images')
+
         group = form.addGroup('Library, classes and images')
+        group.addParam('showChimeraWithDataView', EnumParam, choices=['Yes', 'No'],
+                      display=EnumParam.DISPLAY_LIST, default=1,
+                      label='Display volume',
+                      help='*Yes*: display volume.\n'
+                           '*No*: .')
         group.addParam('showProjectionMatchingLibrary', LabelParam, default=False,
-                      label='Display library?',
+                      label='Display library',
                       help="Display library.")
         group.addParam('showProjectionMatchingClasses', LabelParam, default=False,
-                      label='Display classes?',
+                      label='Display classes',
                       help="Display classes.")
         group.addParam('showProjectionMatchingLibraryAndClasses', LabelParam, default=False,
-                      label='Display library and classes in a single image?',
-                      help="Display library and classes in a single image.")
+                      label='Display library and classes',
+                      help="Display library and classes.")
         group.addParam('showProjectionMatchingLibraryAndImages', LabelParam, default=False,
-                      label='Display library and experimental images in a single image?',
-                      help="Display library and experimental images in a single image.")
+                      label='Display library and experimental images',
+                      help="Display library and experimental images")
         group.addParam('showDiscardedImages', LabelParam, default=False,
-                      label='Display input discarded images?',
+                      label='Display input discarded images',
                       help='Display input discarded images.')
         group.addParam('showExperimentalImages', LabelParam, default=False,
-                      label='Display experimental images?',
+                      label='Display experimental images',
                       help="""Display Input images with alignment and classification information
                            WARNING: the angles and shifts are the adecuate for reconstruction
                            but not for 2D aligment.
                            """)
+        group = form.addGroup('Angular distribution and resolution plots')
+        group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'],
+                      display=EnumParam.DISPLAY_LIST, default=ANGDIST_2DPLOT,
+                      label='Display angular distribution',
+                      help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
+                           '*chimera*: display angular distribution using Chimera with red spheres.')
+        group.addParam('showResolutionPlots', LabelParam, default=True,
+                      label='Display resolution plots (FSC)',
+                      help='')
+        group.addParam('resolutionThreshold', FloatParam, default=0.5,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Threshold in resolution plots',
+                      help='')
+        form.addSection(label='Convergence')
         group = form.addGroup('Convergence')
         group.addParam('plotHistogramAngularMovement', LabelParam, default=False,
-                      label='Plot histogram with angular/shift changes?',
+                      label='Plot histogram with angular/shift changes',
                       help=""" Plot histogram with angular changes from one iteration to next. 
                            Iteration 0 -> initial values
                            """)
@@ -171,27 +193,15 @@ Examples:
                       label='Number of bins (for histogram)',
                       help='Number of bins in histograms')
         group.addParam('usePsi', BooleanParam, default=False,
-                      label='Use Psi to compute angular distances?',
+                      label='Use Psi to compute angular distances',
                       help='Use Psi')
         group.addParam('angleSort', BooleanParam, default=False,
-                      label='Sort assigned angles?',
+                      label='Sort assigned angles',
                       help='Sort by angles the experimental images.')
         group.addParam('shiftSort', BooleanParam, default=False,
-                      label='Sort shift?',
+                      label='Sort shift',
                       help='Sort by shift the experimental images.')
-        group = form.addGroup('Angular distribution and resolution plots')
-        group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'], 
-                      display=EnumParam.DISPLAY_LIST, default=ANGDIST_2DPLOT,
-                      label='Display angular distribution',
-                      help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
-                           '*chimera*: display angular distribution using Chimera with red spheres.') 
-        group.addParam('showResolutionPlots', LabelParam, default=True,
-                      label='Display resolution plots (FSC)?',
-                      help='')
-        group.addParam('resolutionThreshold', FloatParam, default=0.5, 
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Threshold in resolution plots',
-                      help='')                                      
+
 
     def _getVisualizeDict(self):
         self._load()
@@ -565,19 +575,26 @@ Examples:
                 file_name_ctf = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@" + file_name
                 if exists(file_name):
                     md.read(file_name_ctf)
-                    return [self.createDataView(file_name_ctf)]
+                    if self.showChimeraWithDataView == CHIMERADATAVIEW:
+                        return self.createChimeraDataView(file_name_ctf)
+                    else:
+                        return [self.createDataView(file_name_ctf)]
                 else:
                     print "File %s does not exist" % file_name
                     return []
-    
 
-                file_name = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@" + self.protocol._getFileName('docfileInputAnglesIters', iter=it)
-                md.read(file_name)
-                volfile = self.protocol.outputVolume#temporarily, can be outputVolumes I think
-                return [ChimeraDataViewPair(file_name, vol)]
-                #return [self.createDataView(file_name)]
+    def createChimeraDataView(self, datafile):
 
+        volumes = self._volFileNames('reconstructedFileNamesIters')
+        if len(volumes) > 1:#one reference and one iteration allowed
+            self.showError('you cannot display more than one volume with images')
+            return []
+        else:
+            vol = Volume()
+            vol.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
+            vol.setFileName(volumes[0])
 
+            return [ChimeraDataView(datafile, vol)]
 
 #===============================================================================
 # Convergence

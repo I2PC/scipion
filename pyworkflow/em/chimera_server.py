@@ -5,7 +5,8 @@
 from multiprocessing.connection import Listener, Client
 from VolumeData import Array_Grid_Data
 from VolumeViewer import volume_from_grid_data
-from numpy import array
+from numpy import array, identity, dot
+from numpy.linalg import inv
 import chimera
 from time import sleep
 from threading import Thread
@@ -44,14 +45,28 @@ class ChimeraServer:
                         #print data
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
+
                         #runCommand("volume #0 step 1")
                         
                     elif msg == 'voxel_size':
-                        voxelSize = self.vol_conn.recv()
-                        cmd = "volume #0 voxelSize %s"%voxelSize
+                        self.voxelSize = self.vol_conn.recv()
+                        cmd = "volume #0 voxelSize %s"%self.voxelSize
+                        print cmd
                         runCommand(cmd)
+                        om = chimera.openModels
+                        mlist = om.list()
+                        m = mlist[0]
+                        centerVec = m.bbox()[1].center().toVector()
+                        centerVec = [0, 0, 0]
+                        print centerVec
+                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize, -64 * self.voxelSize + centerVec[0], 0 + centerVec[1], 0 + centerVec[2], 'orange'))
+                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize , 0  + centerVec[0], -64 * self.voxelSize  + centerVec[1], 0 + centerVec[2], 'forest green'))
+                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize, 0 + centerVec[0], 0 + centerVec[1], -64 * self.voxelSize  + centerVec[2], 'magenta'))
+                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize, 64 * self.voxelSize  + centerVec[0], 0 + centerVec[1], 0 + centerVec[2], 'red'))
+                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize, 0 + centerVec[0], 64 * self.voxelSize + centerVec[1], 0 + centerVec[2], 'green'))
+                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize, 0 + centerVec[0], 0 + centerVec[1], 64 * self.voxelSize  + centerVec[2], 'blue'))
                         runCommand("focus")
-                    
+
                     elif msg == 'draw_angular_distribution':
                         angulardist = self.vol_conn.recv()
                         for command in angulardist:
@@ -74,6 +89,15 @@ class ChimeraServer:
 
     def listenShowJ(self):
         try:
+            om = chimera.openModels
+            mlist = om.list()
+            m = mlist[0]
+            centerVec = m.bbox()[1].center().toVector()
+            xform = chimera.Xform.xform(1, 0, 0, -centerVec[0],
+                                     0, 1, 0, -centerVec[1],
+                                     0, 0, 1, -centerVec[2], orthogonalize=True)
+            m.openState.globalXform(xform)
+            auxMatrix = identity(3)
 
             while True:
                 if self.vol_conn.poll():
@@ -81,19 +105,15 @@ class ChimeraServer:
                     msg = self.vol_conn.recv()
                     print msg
                     if msg == 'rotate':
-                        matrix = self.vol_conn.recv()
-                        print matrix
-                        om = chimera.openModels
-                        mlist = om.list()
-                        m = mlist[0]
-                        print type(matrix)
-                        xform = chimera.Xform.xform(matrix[0][0],matrix[0][1], matrix[0][2], 0,
-                                      matrix[1][0], matrix[1][1], matrix[1][2], 0,
-                                      matrix[2][0], matrix[2][1], matrix[2][2], 0, orthogonalize=False)
 
+                        matrix1 = self.vol_conn.recv()
+                        matrix = dot(matrix1, inv(auxMatrix))#undo last rotation and put new one
+                        auxMatrix = matrix1
+                        xform = chimera.Xform.xform(matrix[0][0], matrix[0][1], matrix[0][2], 0,
+                                       matrix[1][0], matrix[1][1], matrix[1][2], 0,
+                                       matrix[2][0], matrix[2][1], matrix[2][2], 0, orthogonalize=True)
 
                         m.openState.globalXform(xform)
-
                     else:
                         sleep(0.01)
         except EOFError:

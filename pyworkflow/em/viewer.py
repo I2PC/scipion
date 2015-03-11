@@ -34,7 +34,7 @@ from pyworkflow.em.data import PdbFile
 from pyworkflow.utils import Environ, runJob
 from pyworkflow.em.showj import CHIMERA_PORT
 from showj import (runJavaIJapp, ZOOM, ORDER, VISIBLE, 
-                   MODE, PATH, TABLE_NAME, MODE_MD, RENDER)
+                   MODE, PATH, TABLE_NAME, MODE_MD, RENDER, INVERTY)
 from threading import Thread
 from multiprocessing.connection import Client
 from numpy import flipud
@@ -46,7 +46,9 @@ from pyworkflow.gui.matplotlib_image import ImageWindow
 import os.path
 import socket
 from time import sleep
-
+from numpy import linalg as LA
+import numpy
+from math import acos, pi
 # PATH is used by app/em_viewer.py
 
 
@@ -222,23 +224,24 @@ class ChimeraClientView(View):
         self._inputFile = inputFile
         self._kwargs = kwargs
 
-        
     def show(self):
         if self._kwargs.get('showProjection', False):
             ChimeraProjectionClient(self._inputFile, **self._kwargs)
         else:
             ChimeraClient(self._inputFile, **self._kwargs)
 
-class ChimeraDataViewPair(DataView, ChimeraClientView):
+
+class ChimeraDataView(DataView, ChimeraClientView):
 
     def __init__(self, datafile, vol, viewParams={}, **kwargs):
         print 'on pair'
+
         self.showjPort = getFreePort()
         viewParams[CHIMERA_PORT] = self.showjPort
         viewParams[MODE] = MODE_MD
+        viewParams[INVERTY] = ''
         DataView.__init__(self, datafile, viewParams, **kwargs)
         ChimeraClientView.__init__(self, vol.getFileName(), showProjection=True, showjPort=self.showjPort, voxelSize=vol.getSamplingRate())
-
 
     def show(self):
         DataView.show(self)
@@ -359,7 +362,6 @@ class ChimeraClient:
             printCmd(command)
             
     def send(self, cmd, data):
-        print cmd
         self.client.send(cmd)
         self.client.send(data)
         
@@ -371,7 +373,6 @@ class ChimeraClient:
             self.loadAngularDist()
             self.send('draw_angular_distribution', self.angulardist)
         self.client.send('end')
-
 
     def initListenThread(self):
             self.listen_thread = Thread(target=self.listen)
@@ -438,14 +439,14 @@ class ChimeraProjectionClient(ChimeraClient):
 
 
     def rotate(self, rot, tilt, psi):
+
         printCmd('image.projectVolumeDouble')
         self.fourierprojector.projectVolume(self.projection, rot, tilt, psi)
         printCmd('flipud')
         self.vol = flipud(self.projection.getData())
-        printCmd('iw.updateData')
-        self.iw.updateData(self.vol)
-        printCmd('end rotate')
-    
+        if hasattr(self, 'iw'):#sometimes is not created and rotate is called
+            self.iw.updateData(self.vol)
+
     def exit(self):
         ChimeraClient.exit(self)
         if hasattr(self, "iw"):
@@ -469,9 +470,9 @@ class ChimeraProjectionClient(ChimeraClient):
 
 
     def initListenThread(self):
-            self.listen_thread = Thread(target=self.listen)
-            self.listen_thread.daemon = True
-            self.listen_thread.start()
+        self.listen_thread = Thread(target=self.listen)
+        self.listen_thread.daemon = True
+        self.listen_thread.start()
 
 
     def listenShowJ(self):
@@ -491,8 +492,8 @@ class ChimeraProjectionClient(ChimeraClient):
                 rot = float(tokens[1])
                 tilt= float(tokens[2])
                 psi= float(tokens[3])
+
                 matrix = xmipp.Euler_angles2matrix(rot, tilt, psi)
-                print matrix
                 self.client.send('rotate')
                 self.client.send(matrix)
                 clientsocket.close()
@@ -501,13 +502,10 @@ class ChimeraProjectionClient(ChimeraClient):
                 print 'Lost connection to client'
 
 
-            
 def printCmd(cmd):
-    #pass
-    print cmd
-        
-        
- 
+    pass
+    #print cmd
+
 def getVmdEnviron():
     """ Return the proper environ to launch VMD.
     VMD_HOME variable is read from the ~/.config/scipion.conf file.
