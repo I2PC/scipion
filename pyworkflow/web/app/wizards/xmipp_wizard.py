@@ -309,4 +309,14 @@ class XmippGaussianVolumesWeb(XmippGaussianVolumesWizard):
             context = base_wiz(request, context)
             
             return render_to_response('wizards/wiz_gaussian_vol.html', context)     
+        
+        
+class XmippBoxSizeWizardWeb(XmippBoxSizeWizard):
+    _environments = [WEB_DJANGO]
+    
+    def _run(self, protocol, request):
+        boxSize = protocol.getBoxSize()
+        context = '{boxSize='+ str(boxSize) +'}'
+        return HttpResponse('auto_wizard:'+context)
+        
 

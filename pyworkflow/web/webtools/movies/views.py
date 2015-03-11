@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+import os
 from os.path import exists, join, basename
 from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs, getResourceIcon
 from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
@@ -35,6 +36,7 @@ from pyworkflow.manager import Manager
 from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
+import pyworkflow.utils as pwutils
 
 def service_movies(request):
 
@@ -80,6 +82,7 @@ def create_movies_project(request):
         # Create a new project
         manager = Manager()
         projectName = request.GET.get('projectName')
+        projectPath = manager.getProjectPath(projectName)
         
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
@@ -92,9 +95,11 @@ def create_movies_project(request):
         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # Create symbolic link for uploads
-        uploadFolder = "ScipionUserData/Movies/projects/"+ projectName + "/Uploads/"
-        uploadFolderReal = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
-        
+        dest = os.path.join(projectPath,'Uploads')
+        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
+#         source = "/home/josegutab/examples/"+ projectName
+        pwutils.path.makePath(source)
+        pwutils.createLink(source, dest)
         
         # 1. Import movies
         protImport = project.newProtocol(ProtImportMovies,
