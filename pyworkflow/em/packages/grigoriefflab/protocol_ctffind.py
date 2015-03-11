@@ -61,7 +61,8 @@ class ProtCTFFind(ProtCTFMicrographs):
         micFnMrc = self._getTmpPath(replaceBaseExt(micFn, 'mrc'))
         if downFactor != 1:
             #Replace extension by 'mrc' cause there are some formats that cannot be written (such as dm3)
-            self.runJob("xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor))
+            import pyworkflow.em.packages.xmipp3 as xmipp3
+            self.runJob("xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor), env=xmipp3.getEnviron())
             self._params['scannedPixelSize'] = self.inputMicrographs.get().getScannedPixelSize() * downFactor
         else:
             micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc"))

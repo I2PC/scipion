@@ -123,12 +123,12 @@ class ProtCTFMicrographs(ProtMicrographs):
         fDeps = []
         
         if not self.recalculate:
-            deps = self._insertEstimationSteps(deps)
+            deps = self._insertEstimationSteps()
             # Insert step to create output objects
             fDeps = self._insertFinalSteps(deps)
         else:
             if self.isFirstTime:
-                self._insertPreviousSteps() # Insert previous estimation or re-estimation an so on...
+                deps = self._insertPreviousSteps() # Insert previous estimation or re-estimation an so on...
                 self.isFirstTime.set(False)
             fDeps = self._insertRecalculateSteps(deps)
         
@@ -136,9 +136,10 @@ class ProtCTFMicrographs(ProtMicrographs):
     
     def _insertFinalSteps(self, deps):
         """ This should be implemented in subclasses"""
-        pass
+        return deps
     
-    def _insertEstimationSteps(self, deps):
+    def _insertEstimationSteps(self):
+        estimDeps = []
         self._defineValues()
         self._prepareCommand()
         # For each micrograph insert the steps to process it
@@ -147,20 +148,22 @@ class ProtCTFMicrographs(ProtMicrographs):
             # Make estimation steps independent between them
             stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir,
                                                   prerequisites=[]) # Make estimation steps independent between them
-            deps.append(stepId)
-        return deps
+            estimDeps.append(stepId)
+        return estimDeps
     
     def _insertRecalculateSteps(self, deps):
+        recalDeps = []
         # For each psd insert the steps to process it
         self.recalculateSet = SetOfCTF(filename=self.sqliteFile.get(), objDoStore=False)
         for ctf in self.recalculateSet:
             line = ctf.getObjComment()
             if ctf.isEnabled() and line:
                 # CTF Re-estimation
-                copyId = self._insertFunctionStep('copyMicDirectoryStep', ctf.getObjId())
+                copyId = self._insertFunctionStep('copyMicDirectoryStep', ctf.getObjId(), deps)
                 # Make estimation steps independent between them
                 stepId = self._insertFunctionStep('_restimateCTF', ctf.getObjId(), prerequisites=[copyId])
-                deps.append(stepId)
+                recalDeps.append(stepId)
+        return recalDeps
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir):

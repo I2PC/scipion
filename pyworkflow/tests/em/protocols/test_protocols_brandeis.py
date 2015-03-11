@@ -157,6 +157,43 @@ class TestBrandeisCtffind(TestBrandeisBase):
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
 
 
+class TestBrandeisCtffind4(TestBrandeisBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestBrandeisBase.setData()
+        cls.protImport = cls.runImportMicrographBPV(cls.micFn)
+    
+    def testCtffind4V1(self):
+        protCTF = ProtCTFFind(useCftfind4=True)
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        protCTF.ctfDownFactor.set(2)
+        protCTF.numberOfThreads.set(4)
+        self.proj.launchProtocol(protCTF, wait=True)
+        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
+        
+        valuesList = [[23861, 23664, 56], [22383, 22153, 52.6], [22716, 22526, 59.1]]
+        for ctfModel, values in izip(protCTF.outputCTF, valuesList):
+            self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=1)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
+
+    def testCtffind4V22(self):
+        protCTF = ProtCTFFind(useCftfind4=True)
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        protCTF.numberOfThreads.set(4)
+        self.proj.launchProtocol(protCTF, wait=True)
+        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
+        
+        valuesList = [[23863, 23640, 64], [22159, 21983, 50.6], [22394, 22269, 45]]
+        for ctfModel, values in izip(protCTF.outputCTF, valuesList):
+            self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=1)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
+
+
 class TestBrandeisFrealign(TestBrandeisBase):
     @classmethod
     def setUpClass(cls):
