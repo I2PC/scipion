@@ -29,8 +29,7 @@
 This module implement the wrappers aroung Xmipp ML2D protocol
 visualization program.
 """
-import os
-from os.path import exists
+
 
 from pyworkflow.protocol.executor import StepExecutor
 from pyworkflow.viewer import CommandView, Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
@@ -576,14 +575,14 @@ Examples:
                 if exists(file_name):
                     md.read(file_name_ctf)
                     if self.showChimeraWithDataView == CHIMERADATAVIEW:
-                        return self.createChimeraDataView(file_name_ctf)
+                        return self.createChimeraDataView(DataView(file_name_ctf))
                     else:
                         return [self.createDataView(file_name_ctf)]
                 else:
                     print "File %s does not exist" % file_name
                     return []
 
-    def createChimeraDataView(self, datafile):
+    def createChimeraDataView(self, view):
 
         volumes = self._volFileNames('reconstructedFileNamesIters')
         if len(volumes) > 1:#one reference and one iteration allowed
@@ -594,7 +593,7 @@ Examples:
             vol.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
             vol.setFileName(volumes[0])
 
-            return [ChimeraDataView(datafile, vol)]
+            return [ChimeraDataView(view, vol)]
 
 #===============================================================================
 # Convergence

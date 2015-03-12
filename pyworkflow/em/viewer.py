@@ -29,6 +29,8 @@ This module implement viewers for some type of common objects.
 """
 
 import os
+import shlex
+import ast
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
 from pyworkflow.em.data import PdbFile
 from pyworkflow.utils import Environ, runJob
@@ -231,20 +233,19 @@ class ChimeraClientView(View):
             ChimeraClient(self._inputFile, **self._kwargs)
 
 
-class ChimeraDataView(DataView, ChimeraClientView):
+class ChimeraDataView(ChimeraClientView):
 
-    def __init__(self, datafile, vol, viewParams={}, **kwargs):
+    def __init__(self, dataview, vol, viewParams={}, **kwargs):
         print 'on pair'
-
+        self.dataview = dataview
         self.showjPort = getFreePort()
-        viewParams[CHIMERA_PORT] = self.showjPort
-        viewParams[MODE] = MODE_MD
-        viewParams[INVERTY] = ''
-        DataView.__init__(self, datafile, viewParams, **kwargs)
+        self.dataview._viewParams[CHIMERA_PORT] = self.showjPort
+        self.dataview._viewParams[MODE] = MODE_MD
+        self.dataview._viewParams[INVERTY] = ''
         ChimeraClientView.__init__(self, vol.getFileName(), showProjection=True, showjPort=self.showjPort, voxelSize=vol.getSamplingRate())
 
     def show(self):
-        DataView.show(self)
+        self.dataview.show()
         ChimeraClientView.show(self)
 
         
@@ -436,8 +437,6 @@ class ChimeraProjectionClient(ChimeraClient):
         self.iw.show()
 
 
-
-
     def rotate(self, rot, tilt, psi):
 
         self.fourierprojector.projectVolume(self.projection, rot, tilt, psi)
@@ -483,12 +482,19 @@ class ChimeraProjectionClient(ChimeraClient):
             try:
                 (clientsocket, address) = self.serversocket.accept()
                 msg = clientsocket.recv(1024)#should be a single message, so no loop
-                tokens = msg.split()
-                rot = float(tokens[1])
-                tilt= float(tokens[2])
-                psi= float(tokens[3])
+                tokens = shlex.split(msg)
+                cmd = tokens[0]
+                if cmd == 'rotate':
+                    rot = float(tokens[1])
+                    tilt= float(tokens[2])
+                    psi= float(tokens[3])
 
-                matrix = xmipp.Euler_angles2matrix(rot, tilt, psi)
+                    matrix = xmipp.Euler_angles2matrix(rot, tilt, psi)
+                elif cmd == 'rotate_matrix':
+                    matrixString = tokens[1]
+                    matrix = ast.literal_eval(matrixString)
+                    matrix = [matrix[0][:3], matrix[1][:3], matrix[2][:3]]
+                print matrix
                 self.client.send('rotate')
                 self.client.send(matrix)
                 clientsocket.close()
