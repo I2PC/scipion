@@ -96,8 +96,8 @@ def create_movies_project(request):
         
         # Create symbolic link for uploads
         dest = os.path.join(projectPath,'Uploads')
-        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
-#         source = "/home/josegutab/examples/"+ projectName
+#        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
+        source = "/home/josegutab/examples/"+ projectName
         pwutils.path.makePath(source)
         pwutils.createLink(source, dest)
         
@@ -158,19 +158,21 @@ def check_m_id(request):
 def movies_content(request):
     projectName = request.GET.get('p', None)
     path_files = '/resources_movies/img/'
+    command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
     
     context = contentContext(request, projectName)
     context.update({
                     # MODE
                     'formUrl': 'mov_form',
+                    'mode':'service',
                     # IMAGES
-                    'uploadMovies': path_files + 'uploadMovies.png',
                     'importMovies': path_files + 'importMovies.png',
                     'movieAlignment': path_files + 'movieAlignment.png',
                     'protMovieAlign': path_files + 'protMovieAlign.png',
                     'summary': path_files + 'summary.png',
                     'showj': path_files + 'showj.png',
                     'download': path_files + 'download.png',
+                    'command' : command,
                     })
     
     return render_to_response('movies_content.html', context)
@@ -189,7 +191,6 @@ def upload_movies(request):
     projectName = request.session['projectName']
     
     command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
-    pathUpload = "/mnt/big1/scipion-mws/data/uploads/" + projectName
 
     context = {'command': command,
                'logo_scipion_small': getResourceIcon('logo_scipion_small'),
