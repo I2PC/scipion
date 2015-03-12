@@ -30,7 +30,7 @@ serve as base for implementing visualization tools(Viewer sub-classes).
 
 from os.path import join
 from protocol import Protocol
-
+import os
 from pyworkflow.utils.path import cleanPath
 
 DESKTOP_TKINTER = 'tkinter'

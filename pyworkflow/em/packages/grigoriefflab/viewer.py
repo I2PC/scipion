@@ -28,15 +28,13 @@ Visualization of the results of the Frealign protocol.
 """
 import os
 from os.path import exists, relpath
-from pyworkflow.utils.path import cleanPath, removeBaseExt
-from pyworkflow.viewer import (Viewer, ProtocolViewer, DESKTOP_TKINTER,
-                               WEB_DJANGO, CommandView)
+from pyworkflow.utils.path import cleanPath
+from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO, Viewer)
 import pyworkflow.em as em
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
                                         EnumParam, BooleanParam, FloatParam)
-
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
 from pyworkflow.em.packages.grigoriefflab.protocol_ctffind import ProtCTFFind
@@ -238,11 +236,11 @@ Examples:
                     f.write("open %s\n" % localVol)
             f.write('tile\n')
             f.close()
-            view = CommandView('chimera %s &' % cmdFile)                    
+            view = em.ChimeraView(cmdFile)
         else:
-            from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
+            from pyworkflow.em.viewer import ChimeraClientView
             #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
-            view = ChimeraClient(volumes[0])
+            view = ChimeraClientView(volumes[0], showProjection=False)
             
         return [view]
     
