@@ -228,8 +228,6 @@ public:
     int main2()
     {
         // XMIPP structures are defined here
-        MultidimArray<std::complex<double> > Faux;
-        MultidimArray<double> Maux;
         MultidimArray<double> preImg, avgCurr, avgStep, mappedImg;
         ImageGeneric movieStack, movieStackNormalize;
         Image<double> II;
@@ -295,22 +293,26 @@ public:
         imagenum -= (imagenum-lstFrame) + (fstFrame-1);
         levelNum = sqrt(double(imagenum));
         computeAvg(fname, fstFrame, lstFrame, avgCurr);
+        // if the user want to save the PSD
+        if (psd)
+        {
+            FileName rawPSDFile;
+            II() = avgCurr;
+            II.write(foname);
+            rawPSDFile = fname.removeAllExtensions()+"_raw";
+            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim 400 --overlap 0.7",
+                                     foname.c_str(), rawPSDFile.c_str());
+            String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
+            std::cerr<<"Computing the raw FFT"<<std::endl;
+            if (system(cmd.c_str())==-1)
+                REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+            foname.deleteFile();
+        }
         if(doAverage)
         {
             II() = avgCurr;
             II.write(foname);
             return 0;
-        }
-        // if the user want to save the PSD
-        if (psd)
-        {
-            FileName rawPSDFile;
-            FourierTransform(avgCurr, Faux);
-            FFT_magnitude(Faux, Maux);
-            CenterFFT(Maux, true);
-            II()=Maux;
-            rawPSDFile = foname.removeAllExtensions()+"_raw.psd";
-            II.write(rawPSDFile);
         }
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
 
@@ -435,12 +437,13 @@ public:
         if (psd)
         {
             FileName correctedPSDFile;
-            FourierTransform(avgCurr, Faux);
-            FFT_magnitude(Faux, Maux);
-            CenterFFT(Maux, true);
-            II()=Maux;
-            correctedPSDFile = foname.removeAllExtensions()+"_corrected.psd";
-            II.write(correctedPSDFile);
+            correctedPSDFile = fname.removeAllExtensions()+"_corrected";
+            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim 400 --overlap 0.7",
+                                     foname.c_str(), correctedPSDFile.c_str());
+            String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
+            std::cerr<<"Computing the corrected FFT"<<std::endl;
+            if (system(cmd.c_str())==-1)
+                REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
         }
         return 0;
     }
