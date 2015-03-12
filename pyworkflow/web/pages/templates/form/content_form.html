@@ -102,8 +102,15 @@
 									{% endfor %}
 									</select>
 								{% elif param.getClassName == "PathParam" or param.getClassName == "FileParam" or param.getClassName == "FolderParam" %}
-									<input type="hidden" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" class="upload1">
-									<input type="text" id="inputPath" class="upload2" style="min-width: 230px;" value="{{param.htmlValue}}">
+									
+									{% if path_mode == "select" %}
+										<input type="hidden" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}">
+										<input type="text" id="{{paramName}}_input_show" value="{{param.htmlValue}}">
+									{% elif path_mode == "upload" %}
+										<input type="hidden" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" class="upload1">
+										<input type="text" id="inputPath" class="upload2" style="min-width: 230px;" value="{{param.htmlValue}}">
+									{% endif %}
+								
 								{% elif param.getClassName == "LabelParam" %}
                                     <!-- Nada -->
                                 {% else %}
