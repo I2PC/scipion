@@ -277,16 +277,18 @@ class Window():
         self.root.bind("<Configure>", self._configure)
         self.master = masterWindow
         setCommonFonts(self)
-        self.queue = Queue.Queue(maxsize=0)
-
-
-
-    def process_queue(self):#called from main frame
+        
+        if kwargs.get('enableQueue', False):
+            self.queue = Queue.Queue(maxsize=0)
+        else:
+            self.queue = None
+            
+    def __processQueue(self):#called from main frame
         if not self.queue.empty():
             func = self.queue.get(block=False)
             # executes graphic interface function
             func()
-        self.root.after(1000, self.process_queue)
+        self._queueTimer = self.root.after(1000, self.__processQueue)
         
     def getRoot(self):
         return self.root
@@ -310,7 +312,6 @@ class Window():
         if x != self._x or y != self._y:
             self._x, self._y = x, y
             self.handleMove()    
-            
         
     def handleResize(self):
         """Override this method to respond to resize events."""
@@ -331,7 +332,8 @@ class Window():
                           refWindows=refw)
         self.root.deiconify()
         self.root.focus_set()
-        self.root.after(1000, self.process_queue)
+        if self.queue is not None:
+            self._queueTimer = self.root.after(1000, self.__processQueue)
         self.root.mainloop()
         
     def close(self, e=None):
@@ -343,6 +345,8 @@ class Window():
             pass
         else:
             self.master.root.focus_set()
+        if self.queue is not None:
+            self.root.after_cancel(self._queueTimer)
         self.close()
         
     def getImage(self, imgName, percent=100, maxheight=None):

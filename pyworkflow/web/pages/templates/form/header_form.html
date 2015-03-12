@@ -73,13 +73,13 @@
 <!-- 				<td> -->
 <!-- 					{{msg.LABEL_HOST}} -->
 <!-- 				</td> -->
-<!-- 				<td> -->
-<!-- 					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange=""> -->
-<!-- 					{% for h in hosts %} -->
-<!-- 						<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option> -->
-<!-- 					{% endfor %} -->
-<!-- 					</select> -->
-<!-- 				</td> -->
+				<td style="display:none">
+					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
+					{% for h in hosts %}
+						<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
+					{% endfor %}
+					</select>
+				</td>
 <!-- 				<td> -->
 <!-- 					.ico -->
 <!-- 				</td> -->
@@ -138,13 +138,6 @@
 				<strong>{{msg.LABEL_EXPERT}}</strong>
 			</td>
 			<td>
-<!-- 				<select name="{{msg.VAR_EXPERT}}" size=1 -->
-<!-- 				onChange="javascript:evalElements();"> -->
-<!-- 					<option value="0" {% if expertLevel == 0 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_NORMAL}}</option> -->
-<!-- 					<option value="1" {% if expertLevel == 1 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_ADVANCE}}</option> -->
-<!-- 					<option value="2" {% if expertLevel == 2 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_EXPERT}}</option> -->
-<!-- 				</select> -->
-				
 				<input type="radio" id="" name={{msg.VAR_EXPERT}} onChange="javascript:evalElements();" value="0"
 			  	{% if expertLevel == 0 %} checked {% endif %}/>{{msg.LABEL_EXPERT_NORMAL}}
 			  	&nbsp;

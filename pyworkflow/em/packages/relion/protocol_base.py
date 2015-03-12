@@ -132,7 +132,7 @@ class ProtRelionBase(EMProtocol):
                       condition='not doContinue',
                       important=True,
                       label="Input particles",  
-                      help='Select the input images from the project.')   
+                      help='Select the input images from the project.')
         form.addParam('continueRun', PointerParam, pointerClass=self.getClassName(),
                       condition='doContinue', allowsNull=True,
                       label='Select previous run',

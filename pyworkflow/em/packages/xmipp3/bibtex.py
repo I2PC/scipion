@@ -191,9 +191,23 @@ author = "Pascual-Montano, A and K.A. Taylor and H. Winkler and R.D. Pascual-Mar
 keywords = "Classification, Electron tomography, Image processing, Neural networks, Self-organizing maps, Probability density function, Kernel functions, Actin, Myosin, Muscle proteins "
 }
 
+@Article{Rosenthal2003,
+   Author="Rosenthal, P. B.  and Henderson, R. ",
+   Title="{{O}ptimal determination of particle orientation, absolute hand, and contrast loss in single-particle electron cryomicroscopy}",
+   Journal="J. Mol. Biol.",
+   Year="2003",
+   Volume="333",
+   Number="4",
+   Pages="721--745",
+   Month="Oct",
+   url="http://www.sciencedirect.com/science/article/pii/S0022283603010222",
+   doi="http://dx.doi.org/10.1016/j.jmb.2003.07.013"
+}
+
+
 @article{Scheres2005a,
 title = "Maximum-likelihood Multi-reference Refinement for Electron Microscopy Images ",
-journal = "JMB",
+   Journal="J. Mol. Biol.",
 volume = "348",
 number = "1",
 pages = "139 - 149",

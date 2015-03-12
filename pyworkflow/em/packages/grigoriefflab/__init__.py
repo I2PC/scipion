@@ -34,7 +34,7 @@ _logo = "brandeis_logo.png"
 from pyworkflow.em.packages.grigoriefflab.grigoriefflab import *
 
 from viewer import *
-from protocol_ctffind3 import ProtCTFFind, ProtRecalculateCTFFind
+from pyworkflow.em.packages.grigoriefflab.protocol_ctffind import ProtCTFFind
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
 

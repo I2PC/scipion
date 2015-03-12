@@ -1100,6 +1100,7 @@ eot
 
     def _setLastIter(self, iterN):
         self._lastIter.set(iterN)
+        self._store(self._lastIter)
 
     def _getLastIter(self):
         return self._lastIter.get()
@@ -1122,9 +1123,7 @@ eot
         sortedMicIdList = sorted(self._getMicIdList(), key=lambda k: k['_micId'])
         finalPart = 0
         particlesPerBlock = self._particlesPerBlock(self.numberOfBlocks, sortedMicIdList)
-        print "particlesPerBlock", particlesPerBlock
         for i in range(block):
-            print "I ", i, particlesPerBlock[i]
             initPart = 1 + finalPart
             finalPart = finalPart + particlesPerBlock[i]
         return initPart, finalPart

@@ -29,17 +29,15 @@ Visualization of the results of the Frealign protocol.
 import os
 from os.path import exists, relpath
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.viewer import (Viewer, ProtocolViewer, DESKTOP_TKINTER,
-                               WEB_DJANGO, CommandView)
+from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO, Viewer)
 import pyworkflow.em as em
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
                                         EnumParam, BooleanParam, FloatParam)
-
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
-from protocol_ctffind3 import ProtCTFFind, ProtRecalculateCTFFind
+from pyworkflow.em.packages.grigoriefflab.protocol_ctffind import ProtCTFFind
 
 
 LAST_ITER = 0
@@ -238,11 +236,11 @@ Examples:
                     f.write("open %s\n" % localVol)
             f.write('tile\n')
             f.close()
-            view = CommandView('chimera %s &' % cmdFile)                    
+            view = em.ChimeraView(cmdFile)
         else:
-            from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
+            from pyworkflow.em.viewer import ChimeraClientView
             #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
-            view = ChimeraClient(volumes[0])
+            view = ChimeraClientView(volumes[0], showProjection=False)
             
         return [view]
     
@@ -339,6 +337,7 @@ Examples:
                     self._plotFSC(a, parFn)
                     legends.append('iter %d' % it)
             xplotter.showLegend(legends)
+            
             if show:
                 if threshold < self.maxFrc:
                     a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
@@ -354,6 +353,7 @@ Examples:
                 for it in self._iterations:
                     parFn = self.protocol._getFileName('output_vol_par_class', iter=it, ref=ref3d)
                     if exists(parFn):
+                        show = True
                         self._plotFSC(a, parFn)
                         legends.append('iter %d' % it)
                 xplotter.showLegend(legends)
@@ -575,81 +575,137 @@ Examples:
 #         return path
 
 
-# class ProtCTFFindViewer(Viewer):
-#     """ Visualization of Frealign."""    
-#     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-#     _label = 'viewer CtfFind'
-#     _targets = [ProtCTFFind, ProtRecalculateCTFFind]
-#     
-#     
-#     def __init__(self, **args):
-#         Viewer.__init__(self, **args)
-#         self._views = []
-#         
-#     def visualize(self, obj, **args):
-#         self._visualize(obj, **args)
-#         
-#         for v in self._views:
-#             v.show()
-#             
-#     def _visualize(self, obj, **args):
-#         cls = type(obj)
-#         
-#         def _getMicrographDir(mic):
-#             """ Return an unique dir name for results of the micrograph. """
-#             return obj._getExtraPath(removeBaseExt(mic.getFileName()))        
-#         
-#         def iterMicrographs(mics):
-#             """ Iterate over micrographs and yield
-#             micrograph name and a directory to process.
-#             """
-#             for mic in mics:
-#                 micFn = mic.getFileName()
-#                 micDir = _getMicrographDir(mic) 
-#                 yield (micFn, micDir, mic)
-#         
-#         def visualizeObjs(obj, setOfMics):
-#                 
-#                 if exists(obj._getPath("ctfs_temporary.sqlite")):
-#                     os.remove(obj._getPath("ctfs_temporary.sqlite"))
-#                 
-#                 ctfSet = self.protocol._createSetOfCTF("_temporary")
-#                 for fn, micDir, mic in iterMicrographs(setOfMics):
-#                     out = self.protocol._getCtfOutPath(micDir)
-#                     psdFile = self.protocol._getPsdPath(micDir)
-#                     
-#                     if exists(out) and exists(psdFile):
-#                         result = self.protocol._parseOutput(out)
-#                         defocusU, defocusV, defocusAngle = result
-#                         # save the values of defocus for each micrograph in a list
-#                         ctfModel = self.protocol._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
-#                         ctfModel.setMicrograph(mic)
-#                         ctfSet.append(ctfModel)
-#                 
-#                 if ctfSet.getSize() < 1:
-#                     raise Exception("Has not been completed the CTT estimation of any micrograph")
-#                 else:
-#                     ctfSet.write()
-#                     ctfSet.close()
-#                     self._visualize(ctfSet)
-#         
-#         if issubclass(cls, ProtCTFFind) and not obj.hasAttribute("outputCTF"):
-#             mics = obj.inputMicrographs.get()
-#             visualizeObjs(obj, mics)
-# 
-#         elif issubclass(cls, ProtRecalculateCTFFind) and not obj.hasAttribute("outputCTF"):
-#             
-#             mics = obj.inputCtf.get().getMicrographs()
-#             visualizeObjs(obj, mics)
-#         
-#         elif obj.hasAttribute("outputCTF"):
-#             self._visualize(obj.outputCTF)
-#             
-#         else:
-#             fn = obj.getFileName()
-#             psdLabels = '_psdFile'
-#             labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _micObj._filename' % psdLabels 
-#             self._views.append(ObjectView(self._project, obj.strId(), fn,
-#                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))
-#             
-#         return self._views
+class ProtCTFFindViewer(Viewer):
+    """ Visualization of Frealign."""
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _label = 'viewer CtfFind'
+    _targets = [ProtCTFFind]
+     
+     
+    def __init__(self, **args):
+        Viewer.__init__(self, **args)
+        self._views = []
+         
+    def visualize(self, obj, **args):
+        self._visualize(obj, **args)
+         
+        for v in self._views:
+            v.show()
+             
+    def _visualize(self, obj, **args):
+        cls = type(obj)
+         
+        def _getMicrographDir(mic):
+            """ Return an unique dir name for results of the micrograph. """
+            return obj._getExtraPath(removeBaseExt(mic.getFileName()))
+         
+        def iterMicrographs(mics):
+            """ Iterate over micrographs and yield
+            micrograph name and a directory to process.
+            """
+            for mic in mics:
+                micFn = mic.getFileName()
+                micDir = _getMicrographDir(mic) 
+                yield (micFn, micDir, mic)
+         
+        def visualizeObjs(obj, setOfMics):
+                 
+            if exists(obj._getPath("ctfs_temporary.sqlite")):
+                os.remove(obj._getPath("ctfs_temporary.sqlite"))
+             
+            ctfSet = self.protocol._createSetOfCTF("_temporary")
+            for fn, micDir, mic in iterMicrographs(setOfMics):
+                out = self.protocol._getCtfOutPath(micDir)
+                psdFile = self.protocol._getPsdPath(micDir)
+                 
+                if exists(out) and exists(psdFile):
+                    result = self.protocol._parseOutput(out)
+                    defocusU, defocusV, defocusAngle = result
+                    # save the values of defocus for each micrograph in a list
+                    ctfModel = self.protocol._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
+                    ctfModel.setMicrograph(mic)
+                    ctfSet.append(ctfModel)
+             
+            if ctfSet.getSize() < 1:
+                raise Exception("Has not been completed the CTF estimation of any micrograph")
+            else:
+                ctfSet.write()
+                ctfSet.close()
+                self._visualize(ctfSet)
+         
+        if issubclass(cls, ProtCTFFind) and not obj.hasAttribute("outputCTF"):
+            mics = obj.inputMicrographs.get()
+            visualizeObjs(obj, mics)
+ 
+         
+        elif obj.hasAttribute("outputCTF"):
+            self._visualize(obj.outputCTF)
+             
+        else:
+            fn = obj.getFileName()
+            psdLabels = '_psdFile'
+            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _micObj._filename' % psdLabels
+            if self.protocol.useCftfind4:
+                from pyworkflow.em.showj import OBJCMDS, OBJCMD_CTFFIND4
+                self._views.append(em.ObjectView(self._project, obj.strId(), fn,
+                                                 viewParams={em.MODE: em.MODE_MD,
+                                                             em.ORDER: labels,
+                                                             em.VISIBLE: labels,
+                                                             em.ZOOM: 50,
+                                                             em.RENDER: psdLabels,
+                                                             OBJCMDS: "'%s'" % OBJCMD_CTFFIND4}))
+            else:
+                self._views.append(em.ObjectView(self._project, obj.strId(), fn,
+                                                 viewParams={em.MODE: em.MODE_MD,
+                                                             em.ORDER: labels,
+                                                             em.VISIBLE: labels,
+                                                             em.ZOOM: 50,
+                                                             em.RENDER: psdLabels}))
+        
+        return self._views
+    
+def createCtfPlot(ctfSet, ctfId):
+    from pyworkflow.utils.path import removeExt
+    ctfModel = ctfSet[ctfId]
+    psdFn = ctfModel.getPsdFile()
+    fn = removeExt(psdFn) + "_avrot.txt"
+
+    gridsize = [1, 1]
+    xplotter = EmPlotter(x=gridsize[0], y=gridsize[1], windowTitle='CTF Fitting')
+    plot_title = "CTF Fitting"
+    a = xplotter.createSubPlot(plot_title, 'pixels^-1', 'CTF', yformat=False)
+    legendName = []
+    for i in range(1, 5):
+        _plotCurve(a, i, fn)
+        if i == 1:
+            legendName.append('rotational avg. No Astg')
+        elif i == 2:
+            legendName.append('rotational avg.')
+        elif i == 3:
+            legendName.append('CTF Fit')
+        elif i == 4:
+            legendName.append('Cross Correlation')
+        elif i == 5:
+            legendName.append('2sigma cross correlation of noise')
+            
+    xplotter.showLegend(legendName)
+    a.grid(True)
+    xplotter.show()
+
+def _plotCurve(a, i, fn):
+    freqs = _getValues(fn, 0)
+    curv = _getValues(fn, i)
+    a.plot(freqs, curv)
+
+def _getValues(fn, row):
+    f = open(fn)
+    values = []
+    i = 0
+    for line in f:
+        if not line.startswith("#"):
+            if i == row:
+                values = line.split()
+                break
+            i += 1
+    f.close()
+    return values

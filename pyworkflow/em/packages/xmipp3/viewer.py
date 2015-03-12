@@ -58,7 +58,7 @@ from protocol_projection_outliers import XmippProtProjectionOutliers
 from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
-from protocol_ctf_micrographs import XmippProtCTFMicrographs, XmippProtRecalculateCTF
+from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from pyworkflow.em.showj import *
 from protocol_movie_alignment import ProtMovieAlignment
 
@@ -91,7 +91,6 @@ class XmippViewer(Viewer):
                 XmippProtScreenClasses, 
                 XmippProtScreenParticles, 
                 XmippProtCTFMicrographs, 
-                XmippProtRecalculateCTF,
                 ProtMovieAlignment
                 ]
     
@@ -239,10 +238,6 @@ class XmippViewer(Viewer):
             mics = obj.inputMicrographs.get()
             visualizeCTFObjs(obj, mics)
 
-        if issubclass(cls, XmippProtRecalculateCTF) and not obj.hasAttribute("outputCTF"):
-            mics = obj.inputCtf.get().getMicrographs()
-            visualizeCTFObjs(obj, mics)
-        
         elif obj.hasAttribute("outputCTF"):
             self._visualize(obj.outputCTF)
         
@@ -368,7 +363,7 @@ class XmippViewer(Viewer):
 
         elif issubclass(cls, ProtMovieAlignment):
             outputMics = obj.outputMicrographs
-            plotLabels = 'plotPolar._filename plotCart._filename'
+            plotLabels = 'psdRaw._filename psdCorr._filename plotPolar._filename plotCart._filename'
             labels = plotLabels + ' _filename '
             objCommands = "'%s' '%s' '%s'" % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
             
@@ -383,19 +378,19 @@ class XmippViewer(Viewer):
         return self._views
     
     
-class ChimeraClient(CommandView):
-    """ View for calling an external command. """
-    def __init__(self, inputFile, projectionSize=256, 
-                 angularDist=None, radius=None, sphere=None, **kwargs):
-
-        cmd = 'xmipp_chimera_client --input "%(inputFile)s" --mode projector %(projectionSize)d' % locals()
-        if angularDist:
-            cmd += ' -a %(angularDist)s red %(radius)f' % locals() 
-            if sphere > 0:
-                cmd += ' %f' % sphere
-        CommandView.__init__(self, cmd + ' &', env=getEnviron())
-        
-    def show(self):
-        from subprocess import call
-        call(self._cmd, shell=True, env=self._env)
+# class ChimeraClient(CommandView):
+#     """ View for calling an external command. """
+#     def __init__(self, inputFile, projectionSize=256, 
+#                  angularDist=None, radius=None, sphere=None, **kwargs):
+# 
+#         cmd = 'xmipp_chimera_client --input "%(inputFile)s" --mode projector %(projectionSize)d' % locals()
+#         if angularDist:
+#             cmd += ' -a %(angularDist)s red %(radius)f' % locals() 
+#             if sphere > 0:
+#                 cmd += ' %f' % sphere
+#         CommandView.__init__(self, cmd + ' &', env=getEnviron())
+#         
+#     def show(self):
+#         from subprocess import call
+#         call(self._cmd, shell=True, env=self._env)
         

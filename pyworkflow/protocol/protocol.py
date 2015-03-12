@@ -676,8 +676,15 @@ class Protocol(Step):
             for step in stepsSet:
                 prevSteps.append(step.clone())
             stepsSet.close() # Close the connection
-              
         return prevSteps
+    
+    def _insertPreviousSteps(self):
+        """ Insert steps of previous execution. 
+        It can be used to track previous steps done for
+        protocol that allow some kind of continue (such as ctf estimation).
+        """
+        for step in self.loadSteps():
+            self.__insertStep(step)
         
     def __findStartingStep(self):
         """ From a previous run, compare self._steps and self._prevSteps
@@ -907,8 +914,10 @@ class Protocol(Step):
     def _endRun(self):
         """ Print some ending message and close some files. """   
         #self._store()
+        self._store(self.summaryVar)
+        self._store(self.methodsVar)
         self._store(self.endTime)
-        
+
         if envVarOn('SCIPION_DEBUG_NOCLEAN'):
             self.warning('Not cleaning temporarly files since SCIPION_DEBUG_NOCLEAN is set to True.')
         else:

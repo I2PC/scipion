@@ -24,18 +24,21 @@
 # *
 # **************************************************************************
 
+import os
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs
-from pyworkflow.web.app.views_base import base_grid, base_flex
+from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs, getResourceIcon
+from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
 from pyworkflow.web.app.views_project import contentContext
+from pyworkflow.web.app.views_protocol import contextForm
 from django.shortcuts import render_to_response
 from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
 from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
+import pyworkflow.utils as pwutils
 
-def service_projects(request):
+def service_movies(request):
 
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
@@ -45,7 +48,6 @@ def service_projects(request):
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
                'movies_utils': movies_utils,
-               'hiddenTreeProt': True,
                }
     
     context = base_grid(request, context)
@@ -60,27 +62,27 @@ def writeCustomMenu(customMenu):
 
 Movies_Alignment = [
     {"tag": "section", "text": "1. Upload data", "children": [
-        {"tag": "url", "value": "/upload/", "text": "Upload Data", "icon": "fa-upload.png"}]},
-    {"tag": "section", "text": "2. Select your data", "children": [
-        {"tag": "protocol", "value": "ProtImportMovies", "text": "Select Movies", "icon": "bookmark.png"}]},
+        {"tag": "url", "value": "/upload_movies/", "text":"Upload Data", "icon": "fa-upload.png"}]},
+    {"tag": "section", "text": "2. Import your data", "children": [
+        {"tag": "protocol", "value": "ProtImportMovies", "text": "Import Movies", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Align your Movies", "children": [
         {"tag": "protocol", "value": "ProtImportMovies", "text": "xmipp3 - movie alignment"}]}]
         ''')
         f.close()
         
-def create_service_project(request):
-    """
+def create_movies_project(request):
+    
     if request.is_ajax():
+        
         import os
         from pyworkflow.object import Pointer
-        from pyworkflow.em.protocol import ProtUnionSet, ProtImportAverages
-        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant, XmippProtAlignVolumeForWeb
-        from pyworkflow.em.packages.eman2 import EmanProtInitModel
-        from pyworkflow.em.packages.simple import ProtPrime
+        from pyworkflow.em.protocol import ProtImportMovies
+        from pyworkflow.em.packages.xmipp3 import ProtMovieAlignment
         
         # Create a new project
         manager = Manager()
         projectName = request.GET.get('projectName')
+        projectPath = manager.getProjectPath(projectName)
         
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
@@ -90,11 +92,28 @@ def create_service_project(request):
         writeCustomMenu(customMenu)
         
         project = manager.createProject(projectName, runsView=1, protocolsConf=customMenu)   
+        copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
-        # 1. Import averages
-        protImport = project.newProtocol(ProtImportAverages,
-                                         objLabel='import averages')
+        # Create symbolic link for uploads
+        dest = os.path.join(projectPath,'Uploads')
+        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
+#         source = "/home/josegutab/examples/"+ projectName
+        pwutils.path.makePath(source)
+        pwutils.createLink(source, dest)
         
+        # 1. Import movies
+        protImport = project.newProtocol(ProtImportMovies,
+                                         objLabel='import movies')
+        project.saveProtocol(protImport)   
+        
+        # 2. Movie Alignment 
+        protMovAlign = project.newProtocol(ProtMovieAlignment)
+        protMovAlign.setObjLabel('xmipp - movie alignment')
+        protMovAlign.inputMovies.set(protImport)
+        protMovAlign.inputMovies.setExtendedAttribute('outputMovies')
+        project.saveProtocol(protMovAlign)
+        
+        """
         # If using test data execute the import averages run
         # options are set in 'project_utils.js'
         dsMDA = DataSet.getDataSet('initial_volume')
@@ -111,50 +130,6 @@ def create_service_project(request):
             project.launchProtocol(protImport, wait=True)
         else:
             project.saveProtocol(protImport)
-            
-        
-        # 2a. Ransac 
-        protRansac = project.newProtocol(XmippProtRansac)
-        protRansac.setObjLabel('xmipp - ransac')
-        protRansac.inputSet.set(protImport)
-        protRansac.inputSet.setExtendedAttribute('outputAverages')
-        project.saveProtocol(protRansac)
-        
-        # 2b. Eman 
-        protEmanInitVol = project.newProtocol(EmanProtInitModel)
-        protEmanInitVol.setObjLabel('eman - initial vol')
-        protEmanInitVol.inputSet.set(protImport)
-        protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
-        project.saveProtocol(protEmanInitVol)
-        
-        # 2c. Significant 
-        protSignificant = project.newProtocol(XmippProtReconstructSignificant)
-        protSignificant.setObjLabel('xmipp - significant')
-        protSignificant.inputSet.set(protImport)
-        protSignificant.inputSet.setExtendedAttribute('outputAverages')
-        project.saveProtocol(protSignificant)
-        
-        # 3. Join result volumes
-        p1 = Pointer()
-        p1.set(protRansac)
-        p1.setExtendedAttribute('outputVolumes')
-        
-        p2 = Pointer()
-        p2.set(protEmanInitVol)
-        p2.setExtendedAttribute('outputVolumes')
-        
-        p3 = Pointer()
-        p3.set(protSignificant)
-        p3.setExtendedAttribute('outputVolume')
-        
-        
-        protJoin = project.newProtocol(XmippProtAlignVolumeForWeb)
-        protJoin.setObjLabel('align volumes')
-        protJoin.inputVolumes.append(p1)
-        protJoin.inputVolumes.append(p2)
-        protJoin.inputVolumes.append(p3)
-        project.saveProtocol(protJoin)
-        
     """
     return HttpResponse(mimetype='application/javascript')
 
@@ -165,7 +140,8 @@ def get_testdata(request):
     fn = dsMDA.getFile(testDataKey)
     return HttpResponse(fn, mimetype='application/javascript')
 
-def check_project_id(request):
+
+def check_m_id(request):
     result = 0
     projectName = request.GET.get('code', None)
     
@@ -178,21 +154,48 @@ def check_project_id(request):
     
     return HttpResponse(result, mimetype='application/javascript')
  
-def service_content(request):
+ 
+def movies_content(request):
     projectName = request.GET.get('p', None)
     path_files = '/resources_movies/img/'
     
     context = contentContext(request, projectName)
     context.update({
-#                     'importAverages': path_files + 'importAverages.png',
-#                     'useProtocols': path_files + 'useProtocols.png',
-#                     'protForm': path_files + 'protForm.png',
-#                     'summary': path_files + 'summary.png',
-#                     'showj': path_files + 'showj.png',
-#                     'alignVol': path_files + 'alignVol.png',
-#                     'download': path_files + 'download.png',
-#                     'mode':'service',
+                    # MODE
+                    'formUrl': 'mov_form',
+                    # IMAGES
+                    'uploadMovies': path_files + 'uploadMovies.png',
+                    'importMovies': path_files + 'importMovies.png',
+                    'movieAlignment': path_files + 'movieAlignment.png',
+                    'protMovieAlign': path_files + 'protMovieAlign.png',
+                    'summary': path_files + 'summary.png',
+                    'showj': path_files + 'showj.png',
+                    'download': path_files + 'download.png',
                     })
     
     return render_to_response('movies_content.html', context)
+
+
+def movies_form(request):
+    from django.shortcuts import render_to_response
+    context = contextForm(request)
+    context.update({'path_mode':'select',
+                    'formUrl': 'mov_form'})
+    return render_to_response('form/form.html', context)
+
+
+def upload_movies(request):
+
+    projectName = request.session['projectName']
+    
+    command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
+    pathUpload = "/mnt/big1/scipion-mws/data/uploads/" + projectName
+
+    context = {'command': command,
+               'logo_scipion_small': getResourceIcon('logo_scipion_small'),
+               }
+
+    context = base_form(request, context)
+    
+    return render_to_response('upload_movies.html', context)
 
