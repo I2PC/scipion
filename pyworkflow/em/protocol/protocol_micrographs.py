@@ -128,9 +128,9 @@ class ProtCTFMicrographs(ProtMicrographs):
             fDeps = self._insertFinalSteps(deps)
         else:
             if self.isFirstTime:
-                deps = self._insertPreviousSteps() # Insert previous estimation or re-estimation an so on...
+                self._insertPreviousSteps() # Insert previous estimation or re-estimation an so on...
                 self.isFirstTime.set(False)
-            fDeps = self._insertRecalculateSteps(deps)
+            fDeps = self._insertRecalculateSteps()
         
         self._insertFunctionStep('createOutputStep', prerequisites=fDeps)
     
@@ -151,7 +151,7 @@ class ProtCTFMicrographs(ProtMicrographs):
             estimDeps.append(stepId)
         return estimDeps
     
-    def _insertRecalculateSteps(self, deps):
+    def _insertRecalculateSteps(self):
         recalDeps = []
         # For each psd insert the steps to process it
         self.recalculateSet = SetOfCTF(filename=self.sqliteFile.get(), objDoStore=False)
@@ -159,7 +159,7 @@ class ProtCTFMicrographs(ProtMicrographs):
             line = ctf.getObjComment()
             if ctf.isEnabled() and line:
                 # CTF Re-estimation
-                copyId = self._insertFunctionStep('copyMicDirectoryStep', ctf.getObjId(), prerequisites=deps)
+                copyId = self._insertFunctionStep('copyMicDirectoryStep', ctf.getObjId())
                 # Make estimation steps independent between them
                 stepId = self._insertFunctionStep('_restimateCTF', ctf.getObjId(), prerequisites=[copyId])
                 recalDeps.append(stepId)
