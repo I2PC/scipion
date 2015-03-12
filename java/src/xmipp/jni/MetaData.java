@@ -146,7 +146,7 @@ public class MetaData {
 
 	public native boolean removeLabel(int label);
 
-	public boolean containsGeometryInfo() {
+	public boolean containsGeometryInfo(String type) {
 		try {
 			for (int i = 0; i < GEOMETRY_LABELS.length; i++)
 				if (containsLabel(GEOMETRY_LABELS[i]))

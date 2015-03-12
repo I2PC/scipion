@@ -178,6 +178,14 @@ public class GalleryData {
         return inverty;
     }
 
+    public String getChimeraProjectionCmd(int row) {
+        String rot = getValueFromLabel(row, MDLabel.MDL_ANGLE_ROT);
+        String tilt = getValueFromLabel(row, MDLabel.MDL_ANGLE_TILT);
+        String psi = getValueFromLabel(row, MDLabel.MDL_ANGLE_PSI);
+        String command = String.format("rotate %s %s %s", rot, tilt, psi);
+        return command;
+    }
+
 
     public enum Mode {
 
@@ -760,12 +768,16 @@ public class GalleryData {
             return md.getValueString(ciFirstRender.label, ids[index]);
     }
 
-    
+    public boolean containsGeometryInfo() 
+    {
+        return containsGeometryInfo("2D");
+    }
 
     // Check if the underlying data has geometrical information
-    public boolean containsGeometryInfo() {
+    public boolean containsGeometryInfo(String type) 
+    {
         try {
-            return md.containsGeometryInfo();
+            return md.containsGeometryInfo(type);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -1793,12 +1805,15 @@ public class GalleryData {
         }
     }
      
-
-
-        
         public Geometry getGeometry(long id)
         {
-            if(!containsGeometryInfo())
+            return getGeometry(id, "2D");
+        }
+
+        
+        public Geometry getGeometry(long id, String type)
+        {
+            if(!containsGeometryInfo(type))
                 return null;
             double shiftx, shifty, psiangle;
             shiftx = md.getValueDouble(MDLabel.MDL_SHIFT_X, id);
