@@ -288,6 +288,8 @@ class ProtocolViewer(Protocol, Viewer):
                 
     def _citations(self):
         return self.protocol._citations()
+
+
     
     #TODO: This method should not be necessary, instead NumericListParam should return a list and not a String 
     def _getListFromRangeString(self, rangeStr):

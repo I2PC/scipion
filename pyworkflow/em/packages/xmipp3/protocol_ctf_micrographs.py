@@ -98,7 +98,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             if ctfDownFactor >= 2:
                 downsampleList.append(ctfDownFactor-1)
             else:
-                downsampleList.append(max(ctfDownFactor/2.,1.))
+                if ctfDownFactor > 1:
+                    downsampleList.append((ctfDownFactor+1)/2)
     
         deleteTmp=""
         for downFactor in downsampleList:
@@ -116,7 +117,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             
             # CTF estimation with Xmipp
             try:
-                self.runJob(self._program, self._args % self._params)
+                self.runJob(self._program, self._args % self._params+" --downSamplingPerformed %f"%downFactor)
                 mdCTF = md.RowMetaData(self._getFileName('ctfparam', micDir=micDir))
             except Exception:
                 break
