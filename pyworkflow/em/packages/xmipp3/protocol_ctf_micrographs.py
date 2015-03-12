@@ -161,7 +161,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
             if ctfDownFactor >= 2:
                 downsampleList.append(ctfDownFactor-1)
             else:
-                downsampleList.append(max(ctfDownFactor/2.,1.))
+                if ctfDownFactor > 1:
+                    downsampleList.append((ctfDownFactor+1)/2)
     
         deleteTmp=""
         for downFactor in downsampleList:
