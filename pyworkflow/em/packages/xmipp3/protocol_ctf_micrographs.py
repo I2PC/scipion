@@ -117,7 +117,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             
             # CTF estimation with Xmipp
             try:
-                self.runJob(self._program, self._args % self._params)
+                self.runJob(self._program, self._args % self._params+" --downSamplingPerformed %f"%downFactor)
                 mdCTF = md.RowMetaData(self._getFileName('ctfparam', micDir=micDir))
             except Exception:
                 break
