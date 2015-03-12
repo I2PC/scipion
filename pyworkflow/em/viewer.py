@@ -425,9 +425,9 @@ class ChimeraProjectionClient(ChimeraClient):
         splineDegree = self.kwargs.get('splineDegree', 2)
         self.fourierprojector = xmipp.FourierProjector(self.image, paddingFactor, maxFreq, splineDegree)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
-
         self.showjPort = self.kwargs.get('showjPort', None)
         self.iw = ImageWindow(filename=os.path.basename(volfile),image=self.projection, dim=self.size, label="Projection")
+        self.iw.updateData(flipud(self.projection.getData()))
         if self.showjPort:
             self.showjThread = Thread(target=self.listenShowJ)
             self.showjThread.daemon = True
@@ -440,12 +440,10 @@ class ChimeraProjectionClient(ChimeraClient):
 
     def rotate(self, rot, tilt, psi):
 
-        printCmd('image.projectVolumeDouble')
         self.fourierprojector.projectVolume(self.projection, rot, tilt, psi)
-        printCmd('flipud')
-        self.vol = flipud(self.projection.getData())
+        self.projectionData = flipud(self.projection.getData())
         if hasattr(self, 'iw'):#sometimes is not created and rotate is called
-            self.iw.updateData(self.vol)
+            self.iw.updateData(self.projectionData)
 
     def exit(self):
         ChimeraClient.exit(self)
@@ -482,12 +480,9 @@ class ChimeraProjectionClient(ChimeraClient):
         self.serversocket.listen(1)
 
         while True:
-            print 'on listening'
             try:
                 (clientsocket, address) = self.serversocket.accept()
-                print "connection accepted"
                 msg = clientsocket.recv(1024)#should be a single message, so no loop
-                print 'msg %s' % msg
                 tokens = msg.split()
                 rot = float(tokens[1])
                 tilt= float(tokens[2])

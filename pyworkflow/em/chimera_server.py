@@ -97,7 +97,7 @@ class ChimeraServer:
                                      0, 1, 0, -centerVec[1],
                                      0, 0, 1, -centerVec[2], orthogonalize=True)
             m.openState.globalXform(xform)
-            auxMatrix = identity(3)
+            self.motion = identity(3)
 
             while True:
                 if self.vol_conn.poll():
@@ -107,8 +107,8 @@ class ChimeraServer:
                     if msg == 'rotate':
 
                         matrix1 = self.vol_conn.recv()
-                        matrix = dot(matrix1, inv(auxMatrix))#undo last rotation and put new one
-                        auxMatrix = matrix1
+                        matrix = dot(matrix1, inv(self.motion))#undo last rotation and put new one
+                        self.motion = matrix1
                         xform = chimera.Xform.xform(matrix[0][0], matrix[0][1], matrix[0][2], 0,
                                        matrix[1][0], matrix[1][1], matrix[1][2], 0,
                                        matrix[2][0], matrix[2][1], matrix[2][2], 0, orthogonalize=True)
