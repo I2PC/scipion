@@ -153,8 +153,10 @@ function createMovProject(elm) {
 			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/movies/m_content/?p="+ projName+ "'>" +
 			"http://scipion.cnb.csic.es/movies/m_content/?p="+ projName+ "</a>"+
 			"</h3></p><br />" +
-            "<p>Please <strong>save this url securely</strong> " +
-			"in order to access to this project in future sessions.</p><br />";
+			"<p>The access to this new project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
+            "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
+			"in order to access to this project in future sessions.</p>"+
+			"<p>In case to lost your url to access, please contact with us by this email: <span style='color:firebrick;'>scipion-devel at cnb.csic.es</span></p>";
 			
 			msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";
 			var funcName = "goToProject"
