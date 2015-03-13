@@ -179,46 +179,57 @@ public class ImagesWindowFactory {
 		return new GalleryJFrame(md, parameters);
 	}
 
-	public static GalleryJFrame openMetadata(String filename, Params parameters,
+	public static void openMetadata(String filename, Params parameters,
 			String mode) throws Exception 
         {
                 if(filename.endsWith(".sqlite") || filename.endsWith(".db"))
-                    openScipionMetadata(filename, parameters, mode);
+                    openScipionMetadata(filename, parameters);
                 else
-                    return openMetadata(filename, new MetaData(filename), parameters, mode);
-                return null;
+                    openMetadata(filename, new MetaData(filename), parameters, mode);
 	}
         
-        public static GalleryJFrame openScipionMetadata(String filename, Params parameters,
-			String mode) throws Exception 
+        public static void openScipionMetadata(String filename, Params parameters) throws Exception 
         {
                 if(!(filename.endsWith(".sqlite") || filename.endsWith(".db")))
                     throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("scipion metadata", filename));
                 else
                 {
-                    ScipionMetaData md = null;
+                    ScipionMetaData md;
                     if(filename.contains("@"))
                     {
                         int sep = filename.indexOf('@');
-                        String preffix = filename.substring(0, sep);
+                        final String preffix = filename.substring(0, sep);
                         filename = filename.substring(sep + 1);
-                        md = new ScipionMetaData(filename, preffix);
+                        md = new ScipionMetaData(filename);
+                        final ScipionGalleryData data = new ScipionGalleryData(null, parameters, md);
+                        SwingUtilities.invokeLater(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                GalleryJFrame frame = new GalleryJFrame(data);
+                                frame.selectBlock(preffix);
+                            }
+                        });
+                        
                     }
                     else
+                    {
                         md = new ScipionMetaData(filename);
-                    ScipionGalleryData data = new ScipionGalleryData(null, parameters, md);
-                    return new GalleryJFrame(data);
+                        ScipionGalleryData data = new ScipionGalleryData(null, parameters, md);
+                        new GalleryJFrame(data);
+                    }
                 }
-                
 	}
         
+       
+        
 
-	public static GalleryJFrame openFilesAsGallery(String filenames[],
+	public static void openFilesAsGallery(String filenames[],
 			boolean useSameTable) throws Exception {
-		return openFilesAsGallery(filenames, useSameTable, new Params());
+		openFilesAsGallery(filenames, useSameTable, new Params());
 	}
 
-	public static GalleryJFrame openFilesAsGallery(String filenames[],
+	public static void openFilesAsGallery(String filenames[],
 			boolean useSameTable, Params parameters) throws Exception {
 		GalleryJFrame gallery = null;
 
@@ -230,12 +241,11 @@ public class ImagesWindowFactory {
 			openMetadata(null, md, parameters, null);
 		} else {
 			for (int i = 0; i < filenames.length; i++) {
-				gallery = openMetadata(filenames[i], parameters,
+				openMetadata(filenames[i], parameters,
 						Params.OPENING_MODE_GALLERY);
 			}
 		}
 
-		return gallery;
 	}
 
 	public static void openImagePlusAs3D(ImagePlus ip) {

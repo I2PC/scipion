@@ -246,7 +246,14 @@ public class GalleryData {
         this.inverty = parameters.inverty;
         if(parameters.getBlock() == null)
             parameters.setBlock(selectedBlock);//Identifies parameters with first block loaded
-        
+        if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
+            {
+                mode = Mode.TABLE_MD;
+//                if(renderLabel.equals("first") && isScipionInstance())
+//                    renderImages = false;
+            }
+            else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
+                mode = Mode.GALLERY_ROTSPECTRA;
         if(parameters.getBlock().equals(selectedBlock))
         {
         
@@ -257,14 +264,7 @@ public class GalleryData {
             useGeo = parameters.useGeo;
             wrap = parameters.wrap;
             displayLabels = parameters.getDisplayLabels();
-            if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
-            {
-                mode = Mode.TABLE_MD;
-                if(renderLabel.equals("first") && isScipionInstance())
-                    renderImages = false;
-            }
-            else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
-                mode = Mode.GALLERY_ROTSPECTRA;
+            
             
         }
     }
