@@ -130,7 +130,7 @@ def builder(target, source, env):
         fullcmd += make_targets.split()
 
     # Capture the make command's output, unless we're verbose
-    if 'MAKECOMSTR' in env and out is not None:
+    if out is not None:
         fout = open(out, 'w+')
     else:
         fout = None
