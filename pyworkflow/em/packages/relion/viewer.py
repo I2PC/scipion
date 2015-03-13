@@ -139,11 +139,7 @@ Examples:
         
         group = form.addGroup('Particles')
         if self.protocol.IS_CLASSIFY:
-            group.addParam('showChimeraWithDataView', EnumParam, choices=['Yes', 'No'],
-                      display=EnumParam.DISPLAY_LIST, default=1,
-                      label='Display 3D class volume',
-                      help='*Yes*: display volume.\n'
-                           '*No*: .')
+
             group.addParam('showImagesInClasses', LabelParam, default=True,
                           label='Particles assigned to each Class', important=True,
                           help='Display the classes and the images associated.')
@@ -153,7 +149,7 @@ Examples:
                            label='Particles angular assignment')
         
         if self.protocol.IS_3D:
-            group = form.addGroup('3D')
+            group = form.addGroup('Volumes')
             
             if self.protocol.IS_CLASSIFY:
                 group.addParam('showClasses3D', BooleanParam, default=CLASSES_ALL,
@@ -232,32 +228,29 @@ Examples:
         return em.DataView(filename, env=self._env, viewParams=viewParams)
 
     def createScipionView(self, filename, viewParams={}):
-        if self.showChimeraWithDataView == CHIMERADATAVIEW:
-            view = self.createChimeraDataView(filename)
-        else:
-            inputParticlesId = self.protocol.inputParticles.get().strId()
-            ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
-            view = ViewClass(self._project,
-                              self.protocol.strId(), filename, other=inputParticlesId,
-                              env=self._env, viewParams=viewParams)
+
+        inputParticlesId = self.protocol.inputParticles.get().strId()
+        ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
+        view = ViewClass(self._project,
+                          self.protocol.strId(), filename, other=inputParticlesId,
+                          env=self._env, viewParams=viewParams)
 
         return view
 
-    def createChimeraDataView(self, filename):
-
-        volumes = self.getVolumeNames()
-        if len(volumes) > 1:#one reference and one iteration allowed
-            self.showError('you cannot display more than one volume with images')
-            return []
-        else:
-            preffix = 'Class%03d_Particles@'%int(self.class3DSelection.get())
-            filename = preffix + filename
-            view = DataView(filename, env=self._env)
-            vol = Volume()
-            vol.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
-            vol.setFileName(volumes[0])
-
-            return ChimeraDataView(view, vol)
+    # def createChimeraDataView(self, filename):
+    #
+    #     volumes = self.getVolumeNames()
+    #     if len(volumes) > 1:#one reference and one iteration allowed
+    #         self.showError('you cannot display more than one volume with images')
+    #         return []
+    #     else:
+    #         preffix = 'Class%03d_Particles@'%int(self.class3DSelection.get())
+    #         filename = preffix + filename
+    #         view = DataView(filename, env=self._env)
+    #         vol = Volume()
+    #         vol.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
+    #         vol.setFileName(volumes[0])
+    #         return ChimeraDataView(view, vol)
         
     def createScipionPartView(self, filename, viewParams={}):
         inputParticlesId = self.protocol._getInputParticles().strId()
