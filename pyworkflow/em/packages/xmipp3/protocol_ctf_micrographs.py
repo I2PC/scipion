@@ -186,11 +186,17 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             fn = self._getPath("ctfs_selection.xmd")
         mdFn = md.MetaData(fn)
         mdAux = md.MetaData()
-        mdCTF = md.MetaData()
         
         for _, micDir, mic in self._iterMicrographs():
             if exists(self._getFileName('ctfparam', micDir=micDir)):
                 mdCTF = md.MetaData(self._getFileName('ctfparam', micDir=micDir))
+                mdQuality = md.MetaData(self._getFileName('ctf', micDir=micDir))
+                mdCTF.setValue(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY,
+                               mdQuality.getValue(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY,mdQuality.firstObject()),
+                               mdCTF.firstObject())
+                mdCTF.setValue(xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO,
+                               mdQuality.getValue(xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO,mdQuality.firstObject()),
+                               mdCTF.firstObject())
             else:
                 mdCTF = md.MetaData(self._getFileName('ctfErrorParam', micDir=micDir))
             mdAux.importObjects( mdFn, md.MDValueEQ(md.MDL_MICROGRAPH_ID, long(mic.getObjId())))
