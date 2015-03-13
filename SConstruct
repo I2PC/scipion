@@ -63,8 +63,9 @@ env = Environment(ENV=os.environ,
 # See how to change it into a cleaner way (not doing BUILDERS=Environment()['BUILDERS']!)
 
 # Message from autoconf and make, so we don't see all its verbosity.
-env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
-env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
+if GetOption('silent'):
+    env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
+    env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
 # Check the following flag to see if in compilation mode
 COMPILE_ONLY = os.environ.get('SCIPION_COMPILE_ONLY', '').lower() in ['1', 'true', 'yes']
@@ -248,7 +249,7 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, 
 
 
 def addLibrary(env, name, tar=None, buildDir=None, configDir=None, 
-               targets=None, makeTargets=None, libChecks=[], url=None, flags=[], addPath=True,
+               targets=[], makeTargets=None, libChecks=[], url=None, flags=[], addPath=True,
                autoConfigTargets='Makefile', deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
 
@@ -274,31 +275,24 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     configDir = configDir or buildDir
     targets = targets or [File('#software/lib/lib%s.so' % name).abspath]
     makeTargets = makeTargets or 'all install'
-    if isinstance(buildDir, basestring):
-        buildDir = [buildDir]
-        configDir = [configDir]
-        flags = [flags]
-        autoConfigTargets = [autoConfigTargets]
-        targets = [targets]
-        makeTargets = [makeTargets]
-    if len(buildDir) != len(configDir) != len(flags):
-        print >> sys.stderr, 'ERROR: buildDir, configDir and flags length must be equal. Exiting...'
-        Exit(1)
 
     # Add "software/lib" and "software/bin" to LD_LIBRARY_PATH and PATH.
-    def pathAppend(var, value):
-        valueOld = os.environ.get(var, '')
-        i = 0  # so if flags is empty, we put it at the beginning too
-        for flag in flags:
-            for i in range(len(flag)):
-                if flag[i].startswith('%s=' % var):
-                    valueOld = flag.pop(i).split('=', 1)[1] + ':' + valueOld
-                    break
-            flag.insert(i, '%s=%s:%s' % (var, value, valueOld))
-
-    if addPath:
-        pathAppend('LD_LIBRARY_PATH', Dir('#software/lib').abspath)
-        pathAppend('PATH', Dir('#software/bin').abspath)
+    newFlags = []
+    for flag in flags:
+        newValue = None
+        for var, value in [('LD_LIBRARY_PATH', Dir('#software/lib').abspath),
+                       ('PATH', Dir('#software/bin').abspath)]:
+            if flag.startswith('%s=' % var):
+                valueOld = flag.split('=', 1)[1] + ':' + os.environ.get(var, '')
+                newValue = '%s=%s:%s' % (var, value, valueOld)
+                break
+        if newValue is None:
+            newFlags.append(flag)
+        else:
+            newFlags.append(newValue)
+    # Install everything in the appropriate place.
+    newFlags.append('--prefix=%s' % Dir('#software').abspath)
+    newFlags.append('--libdir=%s' % Dir('#software/lib').abspath)  # not lib64
 
     # We would like to add CFLAGS and LDFLAGS so the libraries find
     # any dependencies in the right place.
@@ -307,10 +301,6 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     # but then libraries like zlib will not compile.
     # TODO: maybe add an argument to the function to chose if we want them?
 
-    # Install everything in the appropriate place.
-    for flag in flags:
-        flag += ['--prefix=%s' % Dir('#software').abspath,
-                 '--libdir=%s' % Dir('#software/lib').abspath]  # not lib64
 
     # Add the option --with-name, so the user can call SCons with this
     # to activate the library even if it is not on by default.
@@ -319,7 +309,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
                   help='Activate library %s' % name)
 
     # Add all the checks
-    checksTargets = ['software/log/lib_%s.log' % name for name in libChecks]
+    checksTargets = ['software/log/lib_%s.log' % n for n in libChecks]
     for tg in checksTargets:
         CheckConfigLib(env, tg, '')
 
@@ -327,62 +317,52 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     if not COMPILE_ONLY:
         tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
     
-        tUntar = untar(env, File('#software/tmp/%s/configure' % configDir[0]).abspath,
+        tUntar = untar(env, File('#software/tmp/%s/configure' % configDir).abspath,
                        tDownload, cdir=Dir('#software/tmp').abspath)
-        SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+        #SideEffect('dummy', tUntar)  # so it works fine in parallel builds
         Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
 
-    tConfig = []
-    tMake = []
-    toReturn = []
-    for x, folder in enumerate(buildDir):
-        tConfig.append(*env.AutoConfig(
-            target=Dir('#software/tmp/%s' % configDir[x]),
-            source=Dir('#software/tmp/%s' % configDir[x]),
-            AutoConfigTarget=autoConfigTargets[x],
-            AutoConfigSource='configure',
-            AutoConfigParams=flags[x],
-            AutoConfigStdOut=File('#software/log/%s_config_%s.log' % (name, x)).abspath))
-        SideEffect('dummy', Dir('#software/tmp/%s' % configDir[x]))
-        if not COMPILE_ONLY:
-            env.Depends(tConfig[x], tUntar)
-
-        lastTarget = tConfig[x]
-
-        make = env.Make(
-            source=lastTarget,
-            target=targets[x],
-            MakePath=Dir('#software/tmp/%s' % buildDir[x]).abspath,
-            MakeEnv=os.environ,
-            MakeTargets=makeTargets[x],
-            MakeStdOut=File('#software/log/%s_make_%s.log' % (name, x)).abspath)
-        SideEffect('dummy', make)
-        lastTarget = make
-        
-        if not isinstance(make, basestring):
-            tMake+=make
-        else:
-            tMake.append(make)
-
-        SideEffect('dummy', tMake[x]) # so it works fine in parallel builds
-        for cFile in clean:
-            Clean(tMake[x], cFile)
-        # Clean the special generated files
-        # Add the dependencies.
-        for dep in deps:
-            env.Depends(tConfig[x], dep)
-        # Make library by default
-        if default or GetOption(name):
-            env.Default(tMake[x])
-        toReturn.append(tMake[x])
-        
-    env.Alias(name, toReturn)
+    dummyName = 'dummy'
     
-    return toReturn
+    tConfig = env.AutoConfig(
+        target=Dir('#software/tmp/%s' % configDir),
+        source=Dir('#software/tmp/%s' % configDir),
+        AutoConfigTarget=autoConfigTargets,
+        AutoConfigSource='configure',
+        AutoConfigParams=newFlags,
+        AutoConfigStdOut=File('#software/log/%s_config.log' % name).abspath)
+    
+    if not COMPILE_ONLY:
+        env.Depends(tConfig, tUntar)
+
+    tMake = env.Make(
+        source=tConfig,
+        target=targets,
+        MakePath=Dir('#software/tmp/%s' % buildDir).abspath,
+        MakeEnv=os.environ,
+        MakeTargets=makeTargets,
+        MakeStdOut=File('#software/log/%s_make.log' % name).abspath)
+    
+    for cFile in clean:
+        Clean(tMake, cFile)
+    
+    # Prevents that several configure, make at done at the same
+    # time for the same library
+    SideEffect(dummyName, [tConfig, tMake])
+        
+    env.Depends(name, deps)
+    if default or GetOption(name):
+        env.Default(name)
+        
+    libTarget = env.Alias(name, [tConfig, tMake])
+    env.Depends(libTarget, deps)
+    env.Alias('Scipion-libs', libTarget)
+    
+    return libTarget
 
 
-def addCppLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=None, incs=None, 
-                      libs=None, prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], 
+def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[], 
+                      libs=[], prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], 
                       mpi=False, cuda=False, default=True):
     """Add self-made and compiled shared library to the compilation process
     
@@ -394,20 +374,17 @@ def addCppLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=N
 
     Returns the final targets, the ones that Make will create.
     """
-    libs = libs or []
-    dirs = dirs or []
-    tars = tars or []
-    untarTargets = untarTargets or ['configure']
+    _libs = list(libs)
+    _libpath = list(libpath)
     lastTarget = deps
-    incs = incs or []
     prefix = 'lib' if prefix is None else prefix
     suffix = '.so' if suffix is None else suffix
     
     basedir = 'lib'
     fullname = prefix + name
-    patterns = patterns or []
     sources = []
-    libpath.append(Dir('#software/lib').abspath)
+
+    _libpath.append(Dir('#software/lib').abspath)
     
     for d, p in izip(dirs, patterns):
         sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
@@ -415,10 +392,11 @@ def addCppLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=N
     if not sources and env.TargetInBuild(name):
         Exit('No sources found for Library: %s. Exiting!!!' % name)
 
+
     mpiArgs = {}
     if mpi:
-        libpath.append(env['MPI_LIBDIR'])
-        libs.append(env['MPI_LIB'])
+        _libpath.append(env['MPI_LIBDIR'])
+        libs.append(env['MPI_LIB'])        
         mpiArgs = {'CC': env['MPI_CC'],
                    'CXX': env['MPI_CXX']}
         conf = Configure(env, custom_tests = {'CheckMPI': CheckMPI})
@@ -440,10 +418,11 @@ def addCppLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=N
               #source=lastTarget,
               source=sources,
               CPPPATH=incs + [env['CPPPATH']] + [Dir('#software/include').abspath],
-              LIBPATH=libpath,
+              LIBPATH=_libpath,
               LIBS=libs,
               SHLIBPREFIX=prefix,
               SHLIBSUFFIX=suffix,
+              LINKFLAGS=env['LINKFLAGS'],
               **mpiArgs
               )
     SideEffect('dummy', library)
@@ -523,7 +502,7 @@ def CreateFileList(path, pattern, filename, root='', root2=''):
 def CompileJavaJar(target, source, env):  
     """Add self-made and compiled java library to the compilation process """  
     srcDir = str(source[0])
-    
+    print "Compiling jar: ", target[0]
     buildDir = os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_BUILDPATH'])
     classPath = "'%s/*'" % os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_LIBPATH'])
     globalSrcDir = os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_SOURCEPATH'])
@@ -577,7 +556,6 @@ def addJavaLibrary(env, name, path, deps=[], default=True):
     
     packageName = env['PACKAGE']['NAME']
     env.Alias(packageName+'-java', jarCreation)
-    env.Alias(packageName, jarCreation)
     
     return jarCreation
     
@@ -592,14 +570,16 @@ def addJavaTest(env, name, source, installDir=None, default=True):
 
     Returns the final targets, the ones that Command returns.
     """
-    if not default and not GetOption('run_java_tests'):
+    if not env.TargetInBuild('run_java_tests'):
         return ''
     installDir = installDir or 'java/lib'
     classPath = ":".join(glob(join(Dir(installDir).abspath,'*.jar')))
     cmd = '%s -cp %s org.junit.runner.JUnitCore xmipp.test.%s' % (join(env['JAVA_BINDIR'], 'java'), classPath, name)
     runTest = env.Command(name, join(installDir, source), cmd)
     env.Alias('run_java_tests', runTest)
-    Default(runTest)
+    env.Default(runTest)
+    
+    return runTest
 
 
 def addProgram(env, name, src=None, pattern=None, installDir=None, 
@@ -653,8 +633,8 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
         appendUnique(libPathsCopy, env['MPI_LIBDIR'])
         appendUnique(libsCopy, env['MPI_LIB'])
         appendUnique(ldLibraryPathCopy, env['MPI_LIBDIR'])
-	env2['ENV']['LD_LIBRARY_PATH'] = env['ENV'].get('LD_LIBRARY_PATH', '')
-	env2['ENV']['PATH'] = env['ENV']['PATH']
+    env2['ENV']['LD_LIBRARY_PATH'] = env['ENV'].get('LD_LIBRARY_PATH', '')
+    env2['ENV']['PATH'] = env['ENV']['PATH']
 
 
     program = env2.Program(
@@ -672,8 +652,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
                           )
     env2.Default(program)
     
-    if deps: 
-        env2.Depends(program, [dep for dep in deps])
+    env2.Depends(program, deps)
     
     return program
 
@@ -744,8 +723,8 @@ def addModule(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
         Clean(lastTarget, cFile)
 
     # Add the dependencies.
-    for dep in deps:
-        env.Depends(tInstall, dep)
+    env.Depends(tInstall, deps)
+    env.Alias('Scipion-modules', tInstall)
 
     if default or GetOption(name):
         env.Default(tInstall)

@@ -60,20 +60,21 @@ if not env.GetOption('clean'):
 
 # I needed to add two compilations of fftw to get float extensions
 fftw1 = env.AddLibrary(
-    'fftw',
+    'fftw1',
     tar='fftw-3.3.4.tgz',
     targets=[File('#software/lib/libfftw3.so').abspath],
     flags=['--enable-threads', '--enable-shared'],
     clean=[Dir('#software/tmp/fftw-3.3.4')])
     
 fftw2 = env.AddLibrary(
-    'fftwf',
+    'fftw2',
     tar='fftw-3.3.4f.tgz',
     targets=[File('#software/lib/libfftw3f.so').abspath],
     flags=['--enable-threads', '--enable-shared', '--enable-float'],
     clean=[Dir('#software/tmp/fftw-3.3.4f')])
     
-fftw = env.Alias('fftw', [fftw1, fftw2])
+fftw = env.Alias('fftw3', [fftw1, fftw2])
+env.Default(fftw)
 
 tcl = env.AddLibrary(
     'tcl',
@@ -112,8 +113,9 @@ zlib = env.AddLibrary(
 jpeg = env.AddLibrary(
     'jpeg',
     tar='libjpeg-turbo-1.3.1.tgz',
-    targets=[File('#software/lib/libjpeg.so')],
-    flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
+    targets=[File('#software/lib/libjpeg.so').abspath],
+    flags=['--without-simd'])
+    #flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
 
 png = env.AddLibrary(
     'png',
@@ -132,18 +134,28 @@ sqlite = env.AddLibrary(
     targets=[File('#software/lib/libsqlite3.so').abspath],
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
+# 
+# hdf5 = env.AddLibrary(
+#      'hdf5',
+#      tar='hdf5-1.8.14.tgz',
+#      buildDir=['hdf5-1.8.14', 'hdf5-1.8.14/c++'],
+#      configDir=['hdf5-1.8.14', 'hdf5-1.8.14'],
+#      flags=[['--enable-cxx'], ['--enable-cxx']],
+#      autoConfigTargets=['src/Makefile', 'c++/Makefile'],
+#      makeTargets=['all install', 'all install'],
+#      targets=[[File('#software/lib/libhdf5.so').abspath], 
+#               [File('#software/lib/libhdf5_cpp.so').abspath]],
+#      clean=[Dir('#software/tmp/hdf5-1.8.14').abspath])
 
 hdf5 = env.AddLibrary(
      'hdf5',
      tar='hdf5-1.8.14.tgz',
-     buildDir=['hdf5-1.8.14', 'hdf5-1.8.14/c++'],
-     configDir=['hdf5-1.8.14', 'hdf5-1.8.14'],
-     flags=[['--enable-cxx'], ['--enable-cxx']],
-     autoConfigTargets=['src/Makefile', 'c++/Makefile'],
-     makeTargets=['all install', 'all install'],
-     targets=[[File('#software/lib/libhdf5.so').abspath], 
-              [File('#software/lib/libhdf5_cpp.so').abspath]],
-     clean=[Dir('#software/tmp/hdf5-1.8.14').abspath])
+     flags=['--enable-cxx'],
+     #makeTargets=['all install'],
+     targets=[File('#software/lib/libhdf5.so').abspath, 
+              File('#software/lib/libhdf5_cpp.so').abspath],
+     deps=[zlib])
+
 
 python = env.AddLibrary(
     'python',
