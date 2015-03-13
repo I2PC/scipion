@@ -33,7 +33,7 @@ function moviesProjForm(){
 	
     dialog += "<p>Confirm to generate it.</p>";
 
-	var funcName = 'createServProject';
+	var funcName = 'createMovProject';
 
 	accessPopup(title, dialog, funcName, 'Confirm', 'Cancel');
 }
@@ -102,13 +102,13 @@ function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
 		case "groel":
-			var url = "/content/?p=GroelTestData";
+			var url = "/m_content/?p=GroelTestData";
 			break;
 		case "bpv":
-			var url ="/content/?p=BpvTestData";
+			var url ="/m_content/?p=BpvTestData";
 			break;
 		case "ribosome":
-			var url ="/content/?p=RiboTestData";
+			var url ="/m_content/?p=RiboTestData";
 			break;
 	}
 	goWithSubDomainURL(url);
@@ -132,11 +132,11 @@ function downloadTestdata(elm){
 	});
 }
 
-function createServProject(elm) {
+function createMovProject(elm) {
 	var projName = randomString(32, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
 
-	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
+	var URL = getSubDomainURL() + "/create_movies_project/?projectName=" + projName
 	if(selected != undefined){
 		URL += "&testData="+selected;
 	}
@@ -150,11 +150,13 @@ function createServProject(elm) {
 			
 			var msg = "<p>Your <strong>url to access </strong> to this <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
-			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/myfirstmap/content/?p="+ projName+ "'>" +
-			"http://scipion.cnb.csic.es/myfirstmap/content/?p="+ projName+ "</a>"+
+			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/movies/m_content/?p="+ projName+ "'>" +
+			"http://scipion.cnb.csic.es/movies/m_content/?p="+ projName+ "</a>"+
 			"</h3></p><br />" +
-            "<p>Please <strong>save this url securely</strong> " +
-			"in order to access to this project in future sessions.</p><br />";
+			"<p>The access to this new project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
+            "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
+			"in order to access to this project in future sessions.</p>"+
+			"<p>In case to lost your url to access, please contact with us by this email: <span style='color:firebrick;'>scipion-devel at cnb.csic.es</span></p>";
 			
 			msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";
 			var funcName = "goToProject"
@@ -170,13 +172,13 @@ function goToProject(elm) {
 	// remove the blank spaces
 	code = code.replace(/\s+/g, '');
 	
-	var URL = getSubDomainURL() + "/check_project_id/?code=" + code;
+	var URL = getSubDomainURL() + "/check_m_id/?code=" + code;
 	$.ajax({
 		type : "GET",
 		url : URL,
 		success : function(result) {
 			if (result == 1) {
-				var URL2 = getSubDomainURL() + "/content/?p="+code;
+				var URL2 = getSubDomainURL() + "/m_content/?p="+code;
 				window.location.href = URL2;
 			} else {
 				var title = "Bad Access";

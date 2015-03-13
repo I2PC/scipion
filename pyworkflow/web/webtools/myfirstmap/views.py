@@ -28,6 +28,7 @@ from os.path import exists, join, basename
 from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs
 from pyworkflow.web.app.views_base import base_grid, base_flex
 from pyworkflow.web.app.views_project import contentContext
+from pyworkflow.web.app.views_protocol import contextForm
 from django.shortcuts import render_to_response
 from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
@@ -91,6 +92,7 @@ def create_service_project(request):
         writeCustomMenu(customMenu)
         
         project = manager.createProject(projectName, runsView=1, protocolsConf=customMenu)   
+        copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # 1. Import averages
         protImport = project.newProtocol(ProtImportAverages,
@@ -190,9 +192,20 @@ def check_project_id(request):
     
     return HttpResponse(result, mimetype='application/javascript')
  
+def myfirstmap_form(request):
+    from django.shortcuts import render_to_response
+    context = contextForm(request)
+    context.update({'path_mode':'upload',
+                    'formUrl': 'my_form'})
+    return render_to_response('form/form.html', context)
+
+ 
 def service_content(request):
     projectName = request.GET.get('p', None)
     path_files = '/resources_myfirstmap/img/'
+    
+    # Get info about when the project was created
+    daysLeft = "14"
     
     context = contentContext(request, projectName)
     context.update({'importAverages': path_files + 'importAverages.png',
@@ -202,7 +215,9 @@ def service_content(request):
                     'showj': path_files + 'showj.png',
                     'alignVol': path_files + 'alignVol.png',
                     'download': path_files + 'download.png',
+                    'formUrl': 'my_form',
                     'mode':'service',
+                    'daysLeft': daysLeft,
                     })
     
     return render_to_response('service_content.html', context)

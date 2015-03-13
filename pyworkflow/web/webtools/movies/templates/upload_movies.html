@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang='es'>
+	<head>
+		<title>Scipion Movies Upload</title>	
+		<meta charset="utf-8">
+		<link rel="icon" type="image/png" href={{favicon}} />
+
+		<style type="text/css">
+			.ui-state-active {
+				{% if visualize == 1 %}
+				background: #6E6E6E !important;
+				{% else %}
+				background: Firebrick !important;
+				{% endif %}
+				font-size: 0.9em !important;
+				font-weight: bold !important;
+				text-align: center !important;
+				padding: 2px !important;
+			}
+			.ui-tabs-anchor{
+				color: #000 !important;
+				padding: .3em 1em !important;
+			}
+			.ui-state-active .ui-tabs-anchor{
+				color: white !important;
+			} 
+		</style>
+
+		<!-- CSS -->
+		<link href="{{general_css}}" rel="stylesheet" type="text/css">
+		<link href={{form_css}} rel="stylesheet" type="text/css">
+		<link href="{{jquery_ui_css}}" rel="stylesheet" type="text/css">
+		<link href="{{font_awesome}}" rel="stylesheet" type="text/css">
+		<!-- JS -->
+		<script src={{jquery}} type="text/javascript"></script>
+		<script src={{utils}} type="text/javascript"></script>
+		<script src={{config}} type="text/javascript"></script>
+		<script src="{{jquery_ui}} "type="text/javascript"></script>
+		<script src="{{jquery_browser}} "type="text/javascript"></script>
+		<script>
+			$(function() {
+				//tabs				
+				$("#tabs").tabs();
+			});
+		</script>
+
+	</head>
+	<body>
+		<div>
+			<img src='{{logo_scipion_small}}' style="margin:5px;width:auto;height:2.5em;float:left;"/>
+			<h3 id="protName" style="">
+					Scipion Movies Upload 
+			</h3>
+		</div>
+		
+		<div id="tabs">
+			<ul>
+				<li>
+					<a href="#tabs-1">Upload</a>
+				</li>
+			</ul>
+			<div id="tabs-2">
+	 			<div class="box">
+					<p>
+						<img src="/resources/{{icon.ACTION_BROWSE}}">&nbsp;
+						<strong> Instructions to upload your movies</strong>
+					</p>
+					<br />	
+					<p> 
+					In order to send your movies to be chosen into the 
+					web platform, you have to run this command in your 
+					terminal, note up the USER_FOLDER is the location where
+					your movies are storaged:
+					</p> 
+					<p style='font-family:Monospace;padding:1em;font-size:110%;'> 
+					{{command}}
+					</p> 
+					<p>
+					To demo the maximum size to storage in the upload space is 25 gigabytes. In case to exceed this size, files will be not processed.
+					</p> 
+					<p> 
+					The speed of the transfer process depends on your connection and the movies files size.
+					</p> 
+				</div>
+			</div>
+		</div>
+		<br />
+		<div class="boxBottom">
+			<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i> {{msg.LABEL_BUTTON_CLOSE}}</a>
+		</div>
+	</body>
+</html>

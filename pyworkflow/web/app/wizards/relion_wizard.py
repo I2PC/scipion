@@ -61,9 +61,8 @@ class RelionPartMaskRadiusWeb(RelionPartMaskDiameterWizard):
             # getting dimension in Pixels
             xdim = getImageXdim(request, particles[0].text) 
             
-            # get sampling rate from the first particle
-#             samplingRate = self.firstItem.getSamplingRate()
-#             print "Sampling Rate: ",samplingRate
+            # Multiply by sampling rate to convert to angstroms
+            xdim *= objs.getSamplingRate()
             
             params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
             
@@ -94,6 +93,9 @@ class RelionVolMaskRadiusWeb(RelionBackRadiusWizard):
                 return HttpResponse("errorIterate")
             
             xdim = getImageXdim(request, vols[0].getFileName())
+
+            # Multiply by sampling rate to convert to angstroms
+            xdim *= objs.getSamplingRate()
             
             params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
                

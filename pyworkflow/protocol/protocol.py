@@ -676,7 +676,6 @@ class Protocol(Step):
             for step in stepsSet:
                 prevSteps.append(step.clone())
             stepsSet.close() # Close the connection
-              
         return prevSteps
     
     def _insertPreviousSteps(self):
@@ -915,8 +914,10 @@ class Protocol(Step):
     def _endRun(self):
         """ Print some ending message and close some files. """   
         #self._store()
+        self._store(self.summaryVar)
+        self._store(self.methodsVar)
         self._store(self.endTime)
-        
+
         if envVarOn('SCIPION_DEBUG_NOCLEAN'):
             self.warning('Not cleaning temporarly files since SCIPION_DEBUG_NOCLEAN is set to True.')
         else:

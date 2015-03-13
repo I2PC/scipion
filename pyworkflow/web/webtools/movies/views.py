@@ -24,16 +24,19 @@
 # *
 # **************************************************************************
 
+import os
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs
-from pyworkflow.web.app.views_base import base_grid, base_flex
+from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs, getResourceIcon
+from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
 from pyworkflow.web.app.views_project import contentContext
+from pyworkflow.web.app.views_protocol import contextForm
 from django.shortcuts import render_to_response
 from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
 from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
+import pyworkflow.utils as pwutils
 
 def service_movies(request):
 
@@ -45,7 +48,6 @@ def service_movies(request):
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
                'movies_utils': movies_utils,
-               'hiddenTreeProt': True,
                }
     
     context = base_grid(request, context)
@@ -60,15 +62,15 @@ def writeCustomMenu(customMenu):
 
 Movies_Alignment = [
     {"tag": "section", "text": "1. Upload data", "children": [
-        {"tag": "url", "value": "/upload/", "text": "Upload Data", "icon": "fa-upload.png"}]},
-    {"tag": "section", "text": "2. Select your data", "children": [
-        {"tag": "protocol", "value": "ProtImportMovies", "text": "Select Movies", "icon": "bookmark.png"}]},
+        {"tag": "url", "value": "/upload_movies/", "text":"Upload Data", "icon": "fa-upload.png"}]},
+    {"tag": "section", "text": "2. Import your data", "children": [
+        {"tag": "protocol", "value": "ProtImportMovies", "text": "Import Movies", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Align your Movies", "children": [
         {"tag": "protocol", "value": "ProtImportMovies", "text": "xmipp3 - movie alignment"}]}]
         ''')
         f.close()
         
-def create_service_project(request):
+def create_movies_project(request):
     
     if request.is_ajax():
         
@@ -80,6 +82,7 @@ def create_service_project(request):
         # Create a new project
         manager = Manager()
         projectName = request.GET.get('projectName')
+        projectPath = manager.getProjectPath(projectName)
         
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
@@ -89,17 +92,25 @@ def create_service_project(request):
         writeCustomMenu(customMenu)
         
         project = manager.createProject(projectName, runsView=1, protocolsConf=customMenu)   
+        copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
+        
+        # Create symbolic link for uploads
+        dest = os.path.join(projectPath,'Uploads')
+#        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
+        source = "/home/josegutab/examples/"+ projectName
+        pwutils.path.makePath(source)
+        pwutils.createLink(source, dest)
         
         # 1. Import movies
         protImport = project.newProtocol(ProtImportMovies,
-                                         objLabel='select movies')
+                                         objLabel='import movies')
         project.saveProtocol(protImport)   
         
         # 2. Movie Alignment 
         protMovAlign = project.newProtocol(ProtMovieAlignment)
         protMovAlign.setObjLabel('xmipp - movie alignment')
-        protMovAlign.inputSet.set(protImport)
-        protMovAlign.inputSet.setExtendedAttribute('outputMovies')
+        protMovAlign.inputMovies.set(protImport)
+        protMovAlign.inputMovies.setExtendedAttribute('outputMovies')
         project.saveProtocol(protMovAlign)
         
         """
@@ -129,7 +140,8 @@ def get_testdata(request):
     fn = dsMDA.getFile(testDataKey)
     return HttpResponse(fn, mimetype='application/javascript')
 
-def check_project_id(request):
+
+def check_m_id(request):
     result = 0
     projectName = request.GET.get('code', None)
     
@@ -142,18 +154,53 @@ def check_project_id(request):
     
     return HttpResponse(result, mimetype='application/javascript')
  
+ 
 def movies_content(request):
     projectName = request.GET.get('p', None)
     path_files = '/resources_movies/img/'
+    command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
+    
+    # Get info about when the project was created
+    daysLeft = "14"
     
     context = contentContext(request, projectName)
     context.update({
                     # MODE
+                    'formUrl': 'mov_form',
                     'mode':'service',
-                    
                     # IMAGES
-#                     'imageName': path_files + 'image.png',
+                    'importMovies': path_files + 'importMovies.png',
+                    'movieAlignment': path_files + 'movieAlignment.png',
+                    'protMovieAlign': path_files + 'protMovieAlign.png',
+                    'summary': path_files + 'summary.png',
+                    'showj': path_files + 'showj.png',
+                    'download': path_files + 'download.png',
+                    'command' : command,
+                    'daysLeft': daysLeft,
                     })
     
     return render_to_response('movies_content.html', context)
+
+
+def movies_form(request):
+    from django.shortcuts import render_to_response
+    context = contextForm(request)
+    context.update({'path_mode':'select',
+                    'formUrl': 'mov_form'})
+    return render_to_response('form/form.html', context)
+
+
+def upload_movies(request):
+
+    projectName = request.session['projectName']
+    
+    command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
+
+    context = {'command': command,
+               'logo_scipion_small': getResourceIcon('logo_scipion_small'),
+               }
+
+    context = base_form(request, context)
+    
+    return render_to_response('upload_movies.html', context)
 

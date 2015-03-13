@@ -48,9 +48,10 @@ class ProjectBaseWindow(Window):
     """ Base windows for Project and Manager GUIs.
     It extends from Window and add some layout functions (header and footer)
     """
-    def __init__(self, title, masterWindow=None, weight=True, minsize=(500, 300),
+    def __init__(self, title, masterWindow=None, weight=True, minsize=(900, 500),
                  icon="scipion_bn.xbm", **args):
-        Window.__init__(self, title, masterWindow, weight=weight, icon=icon, minsize=(900,500))
+        Window.__init__(self, title, masterWindow, weight=weight, 
+                        icon=icon, minsize=minsize, enableQueue=True)
         
         content = tk.Frame(self.root)
         content.columnconfigure(0, weight=1)

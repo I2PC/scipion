@@ -29,8 +29,7 @@
 This module implement the wrappers aroung Xmipp ML2D protocol
 visualization program.
 """
-import os
-from os.path import exists
+
 
 from pyworkflow.protocol.executor import StepExecutor
 from pyworkflow.viewer import CommandView, Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
@@ -39,7 +38,7 @@ from pyworkflow.utils import createUniqueFileName, cleanPattern
 from protocol_projmatch import XmippProtProjMatch
 # from projmatch_initialize import createFilenameTemplates
 from pyworkflow.em.packages.xmipp3.convert import * # change this
-from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
+from pyworkflow.em.viewer import ChimeraDataView
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, IntParam, FloatParam,
                                         StringParam, EnumParam, NumericRangeParam)
@@ -56,6 +55,8 @@ ANGDIST_CHIMERA = 1
 
 VOLUME_SLICES = 0
 VOLUME_CHIMERA = 1
+
+CHIMERADATAVIEW = 0
 
 REF_ALL = 0
 REF_SEL = 1
@@ -89,17 +90,17 @@ Examples:
                            """)
         form.addParam('iterSelection', NumericRangeParam, 
                       condition='viewIter==%d' % ITER_SELECTION, 
-                      label="Iterations list", 
+                      label="Iteration list",
                       help="Write the iteration list to visualize.")
         
         group = form.addGroup('Volumes display')
         group.addParam('showRef3DNo', EnumParam, choices=['all', 'selection'], default=REF_ALL,
                       display=EnumParam.DISPLAY_LIST,
-                      label='Show results for reference 3D volumes?',
+                      label='Show results for reference volumes',
                       help='')
         group.addParam('ref3DSelection', NumericRangeParam, default='1',
                       condition='showRef3DNo == %d' % REF_SEL,
-                      label='references list',
+                      label='Iteration list',
                       help='')
         group.addParam('matrixWidth', FloatParam, default=-1, 
                       expertLevel=LEVEL_ADVANCED,
@@ -111,16 +112,16 @@ Examples:
                       help='*slices*: display volumes as 2D slices along z axis.\n'
                            '*chimera*: display volumes as surface with Chimera.')
         group.addParam('showReference', LabelParam, default=False,
-                      label='Show reference volume?',
+                      label='Show reference volume',
                       help='Volume after filtration and masking')
         group.addParam('showReconstruction', LabelParam, default=False,
-                      label='Show reconstructed volume?',
+                      label='Show reconstructed volume',
                       help='Volume as given by the reconstruction algorithm')
         group.addParam('showFilteredReconstruction', LabelParam, default=False,
-                      label='Show reconstructed volume after filtration?',
+                      label='Show reconstructed volume after filtration',
                       help='Volume after filtration')
         group.addParam('showBFactorCorrectedVolume', LabelParam, default=False,
-                       label='Show a b_factor corrected volume?',
+                       label='Show a b_factor corrected volume',
                        help=""" This utility boost up the high frequencies. Do not use the automated 
                             mode [default] for maps with resolutions lower than 12-15 Angstroms.
                             It does not make sense to apply the Bfactor to the firsts iterations
@@ -137,27 +138,52 @@ Examples:
                        help=""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
                             for details. DEFAULT behaviour is --auto
                             """)
-        
+        form.addSection(label='Library, classes and images')
+
         group = form.addGroup('Library, classes and images')
+        group.addParam('showChimeraWithDataView', EnumParam, choices=['Yes', 'No'],
+                      display=EnumParam.DISPLAY_LIST, default=1,
+                      label='Display volume',
+                      help='*Yes*: display volume.\n'
+                           '*No*: .')
         group.addParam('showProjectionMatchingLibrary', LabelParam, default=False,
-                      label='Display library?')
+                      label='Display library',
+                      help="Display library.")
         group.addParam('showProjectionMatchingClasses', LabelParam, default=False,
-                      label='Display classes?')
+                      label='Display classes',
+                      help="Display classes.")
         group.addParam('showProjectionMatchingLibraryAndClasses', LabelParam, default=False,
-                      label='Display library and classes in a single image?')
+                      label='Display library and classes',
+                      help="Display library and classes.")
         group.addParam('showProjectionMatchingLibraryAndImages', LabelParam, default=False,
-                      label='Display library and experimental images in a single image?')
+                      label='Display library and experimental images',
+                      help="Display library and experimental images")
         group.addParam('showDiscardedImages', LabelParam, default=False,
-                      label='Display input discarded images?')
+                      label='Display input discarded images',
+                      help='Display input discarded images.')
         group.addParam('showExperimentalImages', LabelParam, default=False,
-                      label='Display experimental images?',
+                      label='Display experimental images',
                       help="""Display Input images with alignment and classification information
                            WARNING: the angles and shifts are the adecuate for reconstruction
                            but not for 2D aligment.
                            """)
+        group = form.addGroup('Angular distribution and resolution plots')
+        group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'],
+                      display=EnumParam.DISPLAY_LIST, default=ANGDIST_2DPLOT,
+                      label='Display angular distribution',
+                      help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
+                           '*chimera*: display angular distribution using Chimera with red spheres.')
+        group.addParam('showResolutionPlots', LabelParam, default=True,
+                      label='Display resolution plots (FSC)',
+                      help='')
+        group.addParam('resolutionThreshold', FloatParam, default=0.5,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Threshold in resolution plots',
+                      help='')
+        form.addSection(label='Convergence')
         group = form.addGroup('Convergence')
         group.addParam('plotHistogramAngularMovement', LabelParam, default=False,
-                      label='Plot histogram with angular/shift changes?',
+                      label='Plot histogram with angular/shift changes',
                       help=""" Plot histogram with angular changes from one iteration to next. 
                            Iteration 0 -> initial values
                            """)
@@ -166,27 +192,15 @@ Examples:
                       label='Number of bins (for histogram)',
                       help='Number of bins in histograms')
         group.addParam('usePsi', BooleanParam, default=False,
-                      label='Use Psi to compute angular distances?',
+                      label='Use Psi to compute angular distances',
                       help='Use Psi')
         group.addParam('angleSort', BooleanParam, default=False,
-                      label='Sort assigned angles?',
+                      label='Sort assigned angles',
                       help='Sort by angles the experimental images.')
         group.addParam('shiftSort', BooleanParam, default=False,
-                      label='Sort shift?',
+                      label='Sort shift',
                       help='Sort by shift the experimental images.')
-        group = form.addGroup('Angular distribution and resolution plots')
-        group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'], 
-                      display=EnumParam.DISPLAY_LIST, default=ANGDIST_2DPLOT,
-                      label='Display angular distribution',
-                      help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
-                           '*chimera*: display angular distribution using Chimera with red spheres.') 
-        group.addParam('showResolutionPlots', LabelParam, default=True,
-                      label='Display resolution plots (FSC)?',
-                      help='')
-        group.addParam('resolutionThreshold', FloatParam, default=0.5, 
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Threshold in resolution plots',
-                      help='')                                      
+
 
     def _getVisualizeDict(self):
         self._load()
@@ -212,8 +226,8 @@ Examples:
         if self.lastIter is None:
             return ['There are not iterations completed.'] 
     
-    def createDataView(self, filename, extraParams=''):
-        return DataView(filename)
+    def createDataView(self, filename, viewParams={}):
+        return DataView(filename, viewParams)
         
 #     def createScipionView(self, filename, extraParams=''):
 #         inputParticlesId = self.protocol.inputParticles.get().strId()
@@ -231,7 +245,8 @@ Examples:
             self._refsList = self._getListFromRangeString(self.ref3DSelection.get())
         # ToDo: enhance this
         self.firstIter = 1
-        self.lastIter = self.protocol.numberOfIterations.get()
+        #self.lastIter = self.protocol.numberOfIterations.get()
+        self.lastIter = self.protocol.getLastIter()
         
         if self.viewIter.get() == ITER_LAST:
             self._iterations = [self.lastIter]
@@ -309,10 +324,11 @@ Examples:
                 f.write("open %s\n" % vol)
             f.write('tile\n')
             f.close()
-            view = CommandView('chimera %s &' % cmdFile)                    
+            view = ChimeraView(cmdFile)
         else:
+            
             #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
-            view = ChimeraClient(volumes[0])
+            view = ChimeraClientView(volumes[0], showProjection=True)
         
         return [view]
     
@@ -328,7 +344,10 @@ Examples:
         for it in self._iterations:
             for ref3d in self._refsList:
                 volFn = self.protocol._getFileName(volTemplate, iter=it, ref=ref3d)
-                volumes.append(volFn)
+                if exists(volFn):
+                    volumes.append(volFn)
+                else:
+                    print "Volume %s does not exist" % volFn
         return volumes
     
     def _showRefs(self, paramName=None):
@@ -378,35 +397,39 @@ Examples:
         for ref3d in self._refsList:
             for it in self._iterations:
                 convert_refno_to_stack_position = {}
-                file_nameReferences = 'projectionDirections@' + self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
+                file_name = self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
+                file_nameReferences = 'projectionDirections@' + file_name
                 #last reference name
-                mdReferences     = xmipp.MetaData(file_nameReferences)
-                mdReferencesSize = mdReferences.size()
-                for id in mdReferences:
-                    convert_refno_to_stack_position[mdReferences.getValue(xmipp.MDL_NEIGHBOR,id)]=id
-                file_nameAverages   = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
-                if exists(file_nameAverages):
-                    #print "OutClassesXmd", OutClassesXmd
-                    mdIn.read(file_nameAverages)
-                    mdOut.clear()
-                    for i in mdIn:
-                        #id1=mdOut.addObject()
-                        #mdOut.setValue(MDL_IMAGE,mdIn.getValue(MDL_IMAGE,i),id1)
-                        ref2D = mdIn.getValue(xmipp.MDL_REF,i)
-                        file_references = self.protocol._getFileName('projectLibraryStk', iter=it, ref=ref3d)
-                        file_reference = xmipp.FileName()
-                        file_reference.compose(convert_refno_to_stack_position[ref2D],file_references)
-                        id2=mdOut.addObject()
-                        mdOut.setValue(xmipp.MDL_IMAGE, file_reference, id2)
-                        
-                    if mdOut.size() == 0:
-                        print "Empty metadata: ", file_nameReferences
-                    else:
-                        file_nameReferences = self.protocol._getTmpPath('references_library.xmd')
-                        sfn = createUniqueFileName(file_nameReferences)
-                        file_nameReferences = 'projectionDirections@' + sfn
-                        mdOut.write(file_nameReferences)
-                        list.append(self.createDataView(file_nameReferences))
+                if exists(file_name):
+                    mdReferences     = xmipp.MetaData(file_nameReferences)
+                    mdReferencesSize = mdReferences.size()
+                    for id in mdReferences:
+                        convert_refno_to_stack_position[mdReferences.getValue(xmipp.MDL_NEIGHBOR,id)]=id
+                    file_nameAverages   = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
+                    if exists(file_nameAverages):
+                        #print "OutClassesXmd", OutClassesXmd
+                        mdIn.read(file_nameAverages)
+                        mdOut.clear()
+                        for i in mdIn:
+                            #id1=mdOut.addObject()
+                            #mdOut.setValue(MDL_IMAGE,mdIn.getValue(MDL_IMAGE,i),id1)
+                            ref2D = mdIn.getValue(xmipp.MDL_REF,i)
+                            file_references = self.protocol._getFileName('projectLibraryStk', iter=it, ref=ref3d)
+                            file_reference = xmipp.FileName()
+                            file_reference.compose(convert_refno_to_stack_position[ref2D],file_references)
+                            id2=mdOut.addObject()
+                            mdOut.setValue(xmipp.MDL_IMAGE, file_reference, id2)
+
+                        if mdOut.size() == 0:
+                            print "Empty metadata: ", file_nameReferences
+                        else:
+                            file_nameReferences = self.protocol._getTmpPath('references_library.xmd')
+                            sfn = createUniqueFileName(file_nameReferences)
+                            file_nameReferences = 'projectionDirections@' + sfn
+                            mdOut.write(file_nameReferences)
+                            list.append(self.createDataView(file_nameReferences))
+                else:
+                    print "File %s does not exist" % file_name
         return list
     
     def _showProjMatchClasses(self, paramName=None):
@@ -421,6 +444,8 @@ Examples:
                         print "Empty metadata: ", classesFn
                     else:
                         classes.append(self.createDataView(classesFn))
+                else:
+                    print "File %s does not exist" % classesFn
         return classes
     
     def _showProjMatchLibAndClasses(self, paramName=None):
@@ -432,34 +457,38 @@ Examples:
         for ref3d in self._refsList:
             for it in self._iterations:
                 convert_refno_to_stack_position = {}
-                file_nameReferences = 'projectionDirections@' + self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
-                mdReferences     = xmipp.MetaData(file_nameReferences)
-                mdReferencesSize = mdReferences.size()
-                for id in mdReferences:
-                    convert_refno_to_stack_position[mdReferences.getValue(xmipp.MDL_NEIGHBOR,id)]=id
-                file_nameAverages   = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
-                file_references = self.protocol._getFileName('projectLibraryStk', iter=it, ref=ref3d)
-                if exists(file_nameAverages):
-                    mdIn.read(file_nameAverages)
-                    mdOut.clear()
-                    for i in mdIn:
-                        ref2D = mdIn.getValue(xmipp.MDL_REF, i)
-                        file_reference = xmipp.FileName()
-                        file_reference.compose(convert_refno_to_stack_position[ref2D],file_references)
-                        id1 = mdOut.addObject()
-                        mdOut.setValue(xmipp.MDL_IMAGE, mdIn.getValue(xmipp.MDL_IMAGE,i), id1)
-                        mdOut.setValue(xmipp.MDL_IMAGE2, file_reference, id1)
-                        
-                    if mdOut.size() == 0:
-                        print "Empty metadata: ", file_nameReferences
+                file_name = self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
+                file_nameReferences = 'projectionDirections@' + file_name
+                if exists(file_name):
+                    mdReferences     = xmipp.MetaData(file_nameReferences)
+                    mdReferencesSize = mdReferences.size()
+                    for id in mdReferences:
+                        convert_refno_to_stack_position[mdReferences.getValue(xmipp.MDL_NEIGHBOR,id)]=id
+                    file_nameAverages   = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
+                    file_references = self.protocol._getFileName('projectLibraryStk', iter=it, ref=ref3d)
+                    if exists(file_nameAverages):
+                        mdIn.read(file_nameAverages)
+                        mdOut.clear()
+                        for i in mdIn:
+                            ref2D = mdIn.getValue(xmipp.MDL_REF, i)
+                            file_reference = xmipp.FileName()
+                            file_reference.compose(convert_refno_to_stack_position[ref2D],file_references)
+                            id1 = mdOut.addObject()
+                            mdOut.setValue(xmipp.MDL_IMAGE, mdIn.getValue(xmipp.MDL_IMAGE,i), id1)
+                            mdOut.setValue(xmipp.MDL_IMAGE2, file_reference, id1)
+
+                        if mdOut.size() == 0:
+                            print "Empty metadata: ", file_nameReferences
+                        else:
+                            file_nameReferences = self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
+                            sfn = createUniqueFileName(file_nameReferences)
+                            file_nameReferences = 'projectionDirections@' + sfn
+                            mdOut.merge(mdIn)
+                            mdOut.write(file_nameReferences)
+                            # ToDo: show the metadata in "metadata" form.
+                            list.append(self.createDataView(file_nameReferences))
                     else:
-                        file_nameReferences = self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
-                        sfn = createUniqueFileName(file_nameReferences)
-                        file_nameReferences = 'projectionDirections@' + sfn
-                        mdOut.merge(mdIn)
-                        mdOut.write(file_nameReferences)
-                        # ToDo: show the metadata in "metadata" form.
-                        list.append(self.createDataView(file_nameReferences))
+                        print "File %s does not exist" % file_name
         return list
     
     def _showProjMatchLibAndImages(self, paramName=None):
@@ -472,71 +501,100 @@ Examples:
         for ref3d in self._refsList:
             for it in self._iterations:
                 convert_refno_to_stack_position = {}
-                file_nameReferences = 'projectionDirections@' + self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
-                #last reference name
-                mdReferences = xmipp.MetaData(file_nameReferences)
-                mdReferencesSize = mdReferences.size()
-                for id in mdReferences:
-                    convert_refno_to_stack_position[mdReferences.getValue(xmipp.MDL_NEIGHBOR,id)]=id
-                file_nameImages = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@" + self.protocol._getFileName('docfileInputAnglesIters', iter=it)
-                mdTmp.read(file_nameImages)#query with ref3D
-                mdIn.importObjects(mdTmp, xmipp.MDValueEQ(xmipp.MDL_REF3D, ref3d))
-                mdOut.clear()
-                for i in mdIn:
-                    id1 = mdOut.addObject()
-                    mdOut.setValue(xmipp.MDL_IMAGE, mdIn.getValue(xmipp.MDL_IMAGE,i), id1)
-                    psi = -1. * mdIn.getValue(xmipp.MDL_ANGLE_PSI, i)
-                    flip = mdIn.getValue(xmipp.MDL_FLIP, i)
-                    if(flip):
-                        psi = -psi
-                    eulerMatrix = xmipp.Euler_angles2matrix(0., 0., psi)
-                    x = mdIn.getValue(xmipp.MDL_SHIFT_X, i)
-                    y = mdIn.getValue(xmipp.MDL_SHIFT_Y, i)
-                    shift = array([x, y, 0])
-                    shiftOut = dot(eulerMatrix, shift)
-                    [x,y,z] = shiftOut
-                    if flip:
-                        x = -x
-                    mdOut.setValue(xmipp.MDL_ANGLE_PSI, psi, id1)
-                    mdOut.setValue(xmipp.MDL_SHIFT_X, x, id1)
-                    mdOut.setValue(xmipp.MDL_SHIFT_Y, y, id1)
-                    mdOut.setValue(xmipp.MDL_FLIP, flip, id1)
-                    ref2D = mdIn.getValue(xmipp.MDL_REF,i)
-                    file_references = self.protocol._getFileName('projectLibraryStk', iter=it, ref=ref3d)
-                    file_reference = xmipp.FileName()
-                    file_reference.compose(convert_refno_to_stack_position[ref2D], file_references)
-                    id2 = mdOut.addObject()
-                    mdOut.setValue(xmipp.MDL_IMAGE, file_reference, id2)
-                    mdOut.setValue(xmipp.MDL_ANGLE_PSI, 0., id2)
-                if mdOut.size() == 0:
-                    print "Empty metadata"
+                file_name = self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
+                file_nameReferences = 'projectionDirections@' + file_name
+                if exists(file_name):
+                    #last reference name
+                    mdReferences = xmipp.MetaData(file_nameReferences)
+                    mdReferencesSize = mdReferences.size()
+                    for id in mdReferences:
+                        convert_refno_to_stack_position[mdReferences.getValue(xmipp.MDL_NEIGHBOR,id)]=id
+                    file_nameImages = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@" + self.protocol._getFileName('docfileInputAnglesIters', iter=it)
+                    mdTmp.read(file_nameImages)#query with ref3D
+                    mdIn.importObjects(mdTmp, xmipp.MDValueEQ(xmipp.MDL_REF3D, ref3d))
+                    mdOut.clear()
+                    for i in mdIn:
+                        id1 = mdOut.addObject()
+                        mdOut.setValue(xmipp.MDL_IMAGE, mdIn.getValue(xmipp.MDL_IMAGE,i), id1)
+                        psi = -1. * mdIn.getValue(xmipp.MDL_ANGLE_PSI, i)
+                        flip = mdIn.getValue(xmipp.MDL_FLIP, i)
+                        if(flip):
+                            psi = -psi
+                        eulerMatrix = xmipp.Euler_angles2matrix(0., 0., psi)
+                        x = mdIn.getValue(xmipp.MDL_SHIFT_X, i)
+                        y = mdIn.getValue(xmipp.MDL_SHIFT_Y, i)
+                        shift = array([x, y, 0])
+                        shiftOut = dot(eulerMatrix, shift)
+                        [x,y,z] = shiftOut
+                        if flip:
+                            x = -x
+                        mdOut.setValue(xmipp.MDL_ANGLE_PSI, psi, id1)
+                        mdOut.setValue(xmipp.MDL_SHIFT_X, x, id1)
+                        mdOut.setValue(xmipp.MDL_SHIFT_Y, y, id1)
+                        mdOut.setValue(xmipp.MDL_FLIP, flip, id1)
+                        ref2D = mdIn.getValue(xmipp.MDL_REF,i)
+                        file_references = self.protocol._getFileName('projectLibraryStk', iter=it, ref=ref3d)
+                        file_reference = xmipp.FileName()
+                        file_reference.compose(convert_refno_to_stack_position[ref2D], file_references)
+                        id2 = mdOut.addObject()
+                        mdOut.setValue(xmipp.MDL_IMAGE, file_reference, id2)
+                        mdOut.setValue(xmipp.MDL_ANGLE_PSI, 0., id2)
+                    if mdOut.size() == 0:
+                        print "Empty metadata"
+                    else:
+                        file_nameReferences = self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
+                        sfn   = createUniqueFileName(file_nameReferences)
+                        file_nameReferences = 'projectionDirections@' + sfn
+                        mdOut.write(sfn)
+                        imgAndClasses.append(self.createDataView(file_nameReferences))
                 else:
-                    file_nameReferences = self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
-                    sfn   = createUniqueFileName(file_nameReferences)
-                    file_nameReferences = 'projectionDirections@' + sfn
-                    mdOut.write(sfn)
-                    imgAndClasses.append(self.createDataView(file_nameReferences))
+                        print "File %s does not exist" % file_name
         return imgAndClasses
     
     def _showDiscardedImages(self, paramName=None):
         md = xmipp.MetaData()
         for it in self._iterations:
             file_name = self.protocol._getFileName('outClassesDiscarded', iter=it)
-            md.read(file_name)
             if exists(file_name):
+                md.read(file_name)
                 if md.size() == 0:
                     print "Empty metadata: ", file_name
                 else:
                     return [self.createDataView(file_name)]
+            else:
+                print "File %s does not exist" % file_name
+                return []
     
     def _showExperimentalImages(self, paramName=None):
         md = xmipp.MetaData()
         for ref3d in self._refsList:
             for it in self._iterations:
-                file_name = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@" + self.protocol._getFileName('docfileInputAnglesIters', iter=it)
-                md.read(file_name)
-                return [self.createDataView(file_name)]
-    
+
+                file_name = self.protocol._getFileName('docfileInputAnglesIters', iter=it)
+                file_name_ctf = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@" + file_name
+                if exists(file_name):
+                    md.read(file_name_ctf)
+                    if self.showChimeraWithDataView == CHIMERADATAVIEW:
+                        return self.createChimeraDataView(DataView(file_name_ctf))
+                    else:
+                        return [self.createDataView(file_name_ctf)]
+                else:
+                    print "File %s does not exist" % file_name
+                    return []
+
+    def createChimeraDataView(self, view):
+
+        volumes = self._volFileNames('reconstructedFileNamesIters')
+        if len(volumes) > 1:#one reference and one iteration allowed
+            self.showError('you cannot display more than one volume with images')
+            return []
+        else:
+            vol = Volume()
+            vol.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
+            vol.setFileName(volumes[0])
+
+            return [ChimeraDataView(view, vol)]
+
 #===============================================================================
 # Convergence
 #===============================================================================
@@ -552,55 +610,59 @@ Examples:
         numberOfBins = self.numberOfBins.get()
         md = xmipp.MetaData()
         for it in self._iterations:
-            md.read(self.protocol._mdDevitationsFn(it))
-            if not self.usePsi: 
-                md.fillConstant(xmipp.MDL_ANGLE_PSI,0.)
-            
-            nrefs = len(self._refsList)
-            gridsize = self._getGridSize(nrefs)
-            xplotterShift = XmippPlotter(*gridsize, mainTitle='Iteration_%d\n' % it, windowTitle="ShiftDistribution")
-            xplotter = XmippPlotter(*gridsize, mainTitle='Iteration_%d' % it, windowTitle="AngularDistribution")
-            
-            for ref3d in self._refsList:
-                mDoutRef3D = xmipp.MetaData()
-                mDoutRef3D.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_REF3D, ref3d))
-                _frequency = "Frequency (%d)" % mDoutRef3D.size()
-                
-                xplotterShift.createSubPlot("%s_ref3D_%d"%(xmipp.label2Str(xmipp.MDL_SHIFT_DIFF),ref3d), "pixels", _frequency) 
-                xplotter.createSubPlot("%s_ref3D_%d"%(xmipp.label2Str(xmipp.MDL_ANGLE_DIFF),ref3d), "degrees", _frequency) 
-                #mDoutRef3D.write("afterimportObject@mdIter.sqlite",MD_APPEND)
-                xplotter.plotMd(mDoutRef3D, 
-                                xmipp.MDL_ANGLE_DIFF, 
-                                xmipp.MDL_ANGLE_DIFF, 
-                                color=colors[ref3d%lenColors], 
-                                #nbins=50
-                                nbins=int(numberOfBins)
-                                )#if nbins is present do an histogram
-                xplotterShift.plotMd(mDoutRef3D, 
-                                xmipp.MDL_SHIFT_DIFF, 
-                                xmipp.MDL_SHIFT_DIFF, 
-                                color=colors[ref3d%lenColors], 
-                                nbins=int(numberOfBins)
-                                )#if nbins is present do an histogram
-                 
-                if self.angleSort:
-                    mDoutRef3D.sort(xmipp.MDL_ANGLE_DIFF)
-                    fn = xmipp.FileName()
-                    baseFileName   = self.protocol._getTmpPath("angle_sort.xmd")
-                    fn = self.protocol._getRefBlockFileName("angle_iter", it, "ref3D", ref3d, baseFileName)
-                    mDoutRef3D.write(fn, xmipp.MD_APPEND)
-                    print "File with sorted angles saved in:", fn
-                     
-                if self.shiftSort:
-                    mDoutRef3D.sort(xmipp.MDL_SHIFT_DIFF)
-                    fn = xmipp.FileName()
-                    baseFileName   = self.protocol._getTmpPath("angle_sort.xmd")
-                    fn = self.protocol._getRefBlockFileName("shift_iter", it, "ref3D", ref3d, baseFileName)
-                    mDoutRef3D.write(fn, xmipp.MD_APPEND)
-                    print "File with sorted shifts saved in:", fn
-                
-                plots.append(xplotterShift)
-                plots.append(xplotter)
+            mdFn = self.protocol._mdDevitationsFn(it)
+            if xmipp.existsBlockInMetaDataFile(mdFn):
+                md.read(mdFn)
+                if not self.usePsi:
+                    md.fillConstant(xmipp.MDL_ANGLE_PSI,0.)
+
+                nrefs = len(self._refsList)
+                gridsize = self._getGridSize(nrefs)
+                xplotterShift = XmippPlotter(*gridsize, mainTitle='Iteration_%d\n' % it, windowTitle="ShiftDistribution")
+                xplotter = XmippPlotter(*gridsize, mainTitle='Iteration_%d' % it, windowTitle="AngularDistribution")
+
+                for ref3d in self._refsList:
+                    mDoutRef3D = xmipp.MetaData()
+                    mDoutRef3D.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_REF3D, ref3d))
+                    _frequency = "Frequency (%d)" % mDoutRef3D.size()
+
+                    xplotterShift.createSubPlot("%s_ref3D_%d"%(xmipp.label2Str(xmipp.MDL_SHIFT_DIFF),ref3d), "pixels", _frequency)
+                    xplotter.createSubPlot("%s_ref3D_%d"%(xmipp.label2Str(xmipp.MDL_ANGLE_DIFF),ref3d), "degrees", _frequency)
+                    #mDoutRef3D.write("afterimportObject@mdIter.sqlite",MD_APPEND)
+                    xplotter.plotMd(mDoutRef3D,
+                                    xmipp.MDL_ANGLE_DIFF,
+                                    xmipp.MDL_ANGLE_DIFF,
+                                    color=colors[ref3d%lenColors],
+                                    #nbins=50
+                                    nbins=int(numberOfBins)
+                    )#if nbins is present do an histogram
+                    xplotterShift.plotMd(mDoutRef3D,
+                                         xmipp.MDL_SHIFT_DIFF,
+                                         xmipp.MDL_SHIFT_DIFF,
+                                         color=colors[ref3d%lenColors],
+                                         nbins=int(numberOfBins)
+                    )#if nbins is present do an histogram
+
+                    if self.angleSort:
+                        mDoutRef3D.sort(xmipp.MDL_ANGLE_DIFF)
+                        fn = xmipp.FileName()
+                        baseFileName   = self.protocol._getTmpPath("angle_sort.xmd")
+                        fn = self.protocol._getRefBlockFileName("angle_iter", it, "ref3D", ref3d, baseFileName)
+                        mDoutRef3D.write(fn, xmipp.MD_APPEND)
+                        print "File with sorted angles saved in:", fn
+
+                    if self.shiftSort:
+                        mDoutRef3D.sort(xmipp.MDL_SHIFT_DIFF)
+                        fn = xmipp.FileName()
+                        baseFileName   = self.protocol._getTmpPath("angle_sort.xmd")
+                        fn = self.protocol._getRefBlockFileName("shift_iter", it, "ref3D", ref3d, baseFileName)
+                        mDoutRef3D.write(fn, xmipp.MD_APPEND)
+                        print "File with sorted shifts saved in:", fn
+
+                    plots.append(xplotterShift)
+                    plots.append(xplotter)
+            else:
+                print "File %s does not exist" % mdFn
         return plots
     
 #===============================================================================
@@ -617,7 +679,11 @@ Examples:
             file_name = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
             file_name_rec_filt = self.protocol._getFileName('reconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
             #args = "--input '%s' --mode projector 256 -a %s red %f" %(file_name_rec_filt, file_name, radius)
-            return ChimeraClient(file_name_rec_filt, angularDist=file_name, radius=radius)
+            if exists(file_name):
+                return ChimeraClientView(file_name_rec_filt, showProjection=True, angularDistFile=file_name, spheresDistance=radius)
+            else:
+                print "File %s does not exist" % file_name
+                return None
         else:
             return self.infoMessage('Please select only one class to display angular distribution')
     
@@ -627,9 +693,14 @@ Examples:
         gridsize = self._getGridSize(nrefs)
         xplotter = XmippPlotter(*gridsize, mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
         for ref3d in self._refsList:
-            md = xmipp.MetaData(self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d))
-            plot_title = 'Ref3D_%d' % ref3d
-            xplotter.plotMdAngularDistribution(plot_title, md)
+            file_name = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
+            if exists(file_name):
+                md = xmipp.MetaData(file_name)
+                plot_title = 'Ref3D_%d' % ref3d
+                xplotter.plotMdAngularDistribution(plot_title, md)
+            else:
+                print "File %s does not exist" % file_name
+                return None
         
         return xplotter
     
@@ -649,11 +720,15 @@ Examples:
         
         if self.showAngDist == ANGDIST_CHIMERA:
             for it in self._iterations:
-                views.append(self._createAngDistChimera(it))
+                angDist = self._createAngDistChimera(it)
+                if angDist is not None:
+                    views.append(angDist)
                         
         elif self.showAngDist == ANGDIST_2DPLOT:
             for it in self._iterations:
-                views.append(self._createAngDist2D(it))
+                angDist = self._createAngDist2D(it)
+                if angDist is not None:
+                    views.append(angDist)
                 
         return views
     
@@ -675,9 +750,11 @@ Examples:
                 if exists(file_name):
                     self._plotFSC(a, file_name)
                     legends.append('iter %d' % it)
-            xplotter.showLegend(legends)
-            if threshold < self.maxFrc:
-                a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+                    xplotter.showLegend(legends)
+                    if threshold < self.maxFrc:
+                        a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+                else:
+                    print "File %s does not exist" % file_name
             a.grid(True)
             
         return [xplotter]

@@ -28,6 +28,13 @@ import os
 import json
 from views_util import loadProject, loadProtocolProject, parseText
 from django.http import HttpResponse
+from django.shortcuts import render_to_response
+
+import em_wizard
+from pyworkflow.wizard import WEB_DJANGO
+from pyworkflow.em import findWizardsFromDict, getSubclassesFromModules, Wizard
+from pyworkflow.em import Pointer, PointerList, Boolean, PointerParam
+from pyworkflow.protocol.params import MultiPointerParam, RelationParam, Line
 
 SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
 OBJ_PARAMS =['runName', 'comment']
@@ -42,19 +49,14 @@ def getPointerHtml(protVar):
 
         
 def findWizardsWeb(protocol):   
-    import em_wizard
-    from pyworkflow.wizard import WEB_DJANGO
-    from pyworkflow.em import findWizardsFromDict, getSubclassesFromModules, Wizard
-    
     webWizardsDict = getSubclassesFromModules(Wizard, {'em_wizard': em_wizard})
-    
     return findWizardsFromDict(protocol, WEB_DJANGO, webWizardsDict)
 
 
 def form(request):
-    from django.shortcuts import render_to_response
     context = contextForm(request)
-    context.update({'path_mode':'select'})
+    context.update({'path_mode':'select',
+                    'formUrl': 'form'})
     return render_to_response('form/form.html', context)
 
      
@@ -206,9 +208,6 @@ def contextForm(request):
     return context
 
 def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar):
-    from pyworkflow.em import Boolean, PointerParam
-    from pyworkflow.protocol.params import MultiPointerParam, RelationParam, Line
-
     try:
         # MULTI POINTER
         if isinstance(param, MultiPointerParam):
@@ -330,8 +329,6 @@ def setPointerValue(project, attr, htmlValue, paramName, pointer):
  
  
 def updateParam(request, project, protocol, paramName):
-    from pyworkflow.em import Pointer, PointerList
-    
     """
     Params:
         request: current request handler
@@ -341,6 +338,7 @@ def updateParam(request, project, protocol, paramName):
             from the web form
     """
     attr = getattr(protocol, paramName)
+#     print "ParamName: %s , Attr: %s" % (paramName, attr)
         
     if isinstance(attr, PointerList):
         attr.clear()
@@ -355,7 +353,7 @@ def updateParam(request, project, protocol, paramName):
             setPointerValue(project, attr, htmlValue, paramName, attr)
         else: 
             attr.set(htmlValue) # set the value for normal attribues
-            
+
         
 def save_protocol(request):
     project, protocol = loadProtocolProject(request)

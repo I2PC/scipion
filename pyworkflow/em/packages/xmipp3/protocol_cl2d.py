@@ -161,8 +161,6 @@ class XmippProtCL2D(ProtClassify2D):
             args += ' --nref0 %(nref0)d'
         else:
             args += ' --ref0 %(initialClassesFn)s'
-        if self.extraParams.hasValue():
-            args += ' %(extraParams)s'
 
         self._insertClassifySteps("xmipp_classify_CL2D", args, subset=CLASSES)
 

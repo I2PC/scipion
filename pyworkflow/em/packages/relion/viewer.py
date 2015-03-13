@@ -31,7 +31,7 @@ from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-
+from pyworkflow.em import ChimeraClientView
 from pyworkflow.viewer import CommandView
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
@@ -40,6 +40,9 @@ from protocol_postprocess import ProtRelionPostprocess
 from pyworkflow.protocol.params import *
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.utils.path import exists
+from pyworkflow.em.viewer import ChimeraDataView, DataView
+from pyworkflow.em.data import Volume
+from pyworkflow.em.showj import *
 
 ITER_LAST = 0
 ITER_SELECTION = 1
@@ -49,6 +52,8 @@ ANGDIST_CHIMERA = 1
 
 VOLUME_SLICES = 0
 VOLUME_CHIMERA = 1
+
+CHIMERADATAVIEW = 0
 
 CLASSES_ALL = 0
 CLASSES_SEL = 1
@@ -134,6 +139,11 @@ Examples:
         
         group = form.addGroup('Particles')
         if self.protocol.IS_CLASSIFY:
+            group.addParam('showChimeraWithDataView', EnumParam, choices=['Yes', 'No'],
+                      display=EnumParam.DISPLAY_LIST, default=1,
+                      label='Display 3D class volume',
+                      help='*Yes*: display volume.\n'
+                           '*No*: .')
             group.addParam('showImagesInClasses', LabelParam, default=True,
                           label='Particles assigned to each Class', important=True,
                           help='Display the classes and the images associated.')
@@ -149,7 +159,7 @@ Examples:
                 group.addParam('showClasses3D', BooleanParam, default=CLASSES_ALL,
                                choices=['all', 'selection'], 
                                display=EnumParam.DISPLAY_LIST,
-                               label='CLASS 3D to visualize',
+                               label='3D Class to visualize',
                                help='')
                 group.addParam('class3DSelection', NumericRangeParam, default='1',
                               condition='showClasses3D == %d' % CLASSES_SEL,
@@ -220,13 +230,34 @@ Examples:
     
     def createDataView(self, filename, viewParams={}):
         return em.DataView(filename, env=self._env, viewParams=viewParams)
-    
+
     def createScipionView(self, filename, viewParams={}):
-        inputParticlesId = self.protocol.inputParticles.get().strId()
-        ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
-        return ViewClass(self._project,
-                          self.protocol.strId(), filename, other=inputParticlesId,
-                          env=self._env, viewParams=viewParams)
+        if self.showChimeraWithDataView == CHIMERADATAVIEW:
+            view = self.createChimeraDataView(filename)
+        else:
+            inputParticlesId = self.protocol.inputParticles.get().strId()
+            ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
+            view = ViewClass(self._project,
+                              self.protocol.strId(), filename, other=inputParticlesId,
+                              env=self._env, viewParams=viewParams)
+
+        return view
+
+    def createChimeraDataView(self, filename):
+
+        volumes = self.getVolumeNames()
+        if len(volumes) > 1:#one reference and one iteration allowed
+            self.showError('you cannot display more than one volume with images')
+            return []
+        else:
+            preffix = 'Class%03d_Particles@'%int(self.class3DSelection.get())
+            filename = preffix + filename
+            view = DataView(filename, env=self._env)
+            vol = Volume()
+            vol.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
+            vol.setFileName(volumes[0])
+
+            return ChimeraDataView(view, vol)
         
     def createScipionPartView(self, filename, viewParams={}):
         inputParticlesId = self.protocol._getInputParticles().strId()
@@ -417,17 +448,27 @@ Examples:
                         files.append(volFn)
         self.createVolumesSqlite(files, path, samplingRate)
         return [em.ObjectView(self._project, self.protocol.strId(), path)]
-    
+
+
+    def getVolumeNames(self):
+
+        vols = []
+        prefixes = self._getPrefixes()
+        for it in self._iterations:
+            for ref3d in self._refsList:
+                for prefix in prefixes:
+                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                    vols.append(volFn)
+        return vols
+
+
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
         prefixes = self._getPrefixes()
         volumes = []
         
-        for it in self._iterations:
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    volumes.append(volFn)
+        for volFn in self.getVolumeNames():
+            volumes.append(volFn)
                     
         if len(volumes) > 1:
             cmdFile = self.protocol._getExtraPath('chimera_volumes.cmd')
@@ -441,11 +482,10 @@ Examples:
                     f.write("open %s\n" % localVol)
             f.write('tile\n')
             f.close()
-            view = CommandView('chimera %s &' % cmdFile)                    
+            view = em.ChimeraView(cmdFile)
         else:
-            from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
             #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
-            view = ChimeraClient(volumes[0])
+            view = ChimeraClientView(volumes[0])
             
         return [view]
             
@@ -492,8 +532,7 @@ Examples:
                 volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
                 if exists(volFn.replace(":mrc","")):
                     angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
-                    from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
-                    return ChimeraClient(volFn, angularDist=angDistFile, radius=radius, sphere=sphere)
+                    return ChimeraClientView(volFn, angularDistFile=angDistFile, spheresDistance=radius)
                 else:
                     raise Exception("This class is Empty. Please try with other class")
         
@@ -660,9 +699,8 @@ class PostprocessViewer(ProtocolViewer):
     
     def _showVolumesChimera(self, volPath):
         """ Create a chimera script to visualize selected volumes. """
-        from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
         #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volPath)
-        view = ChimeraClient(volPath)
+        view = ChimeraClientView(volPath)
         return [view]
             
     def _showVolume(self, paramName=None):

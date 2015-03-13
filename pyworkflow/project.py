@@ -286,10 +286,8 @@ class Project(object):
         #if protocol.getStatus() != STATUS_INTERACTIVE:
         if not protocol.isInteractive():
             self._checkModificationAllowed([protocol], 'Cannot RE-LAUNCH protocol')
-        
         protocol.setStatus(pwprot.STATUS_LAUNCHED)
         self._setupProtocol(protocol)
-        
         #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean() # Create working dir if necessary
         self.mapper.commit()
@@ -310,7 +308,6 @@ class Project(object):
         self.mapper.commit()
         
     def _updateProtocol(self, protocol, tries=0):
-        
         if not self.isReadOnly():
             try:
                 # Backup the values of 'jobId', 'label' and 'comment'
@@ -380,15 +377,7 @@ class Project(object):
                 not child.isSaved()) 
         
     
-    def _checkProtocolsDependencies(self, protocols, msg):
-        """ Check if the protocols have depencies.
-        This method is used before delete or save protocols to be sure
-        it is not referenced from other runs. (an Exception is raised)
-        Params:
-             protocols: protocol list to be analyzed.
-             msg: String message to be prefixed to Exception error.
-        """
-        # Check if the protocol have any dependencies
+    def _getProtocolsDependencies(self, protocols):
         error = ''
         for prot in protocols:
             node = self.getRunsGraph().getNode(prot.strId())
@@ -398,6 +387,19 @@ class Project(object):
                     deps = [' ' + c.getRunName() for c in childs]
                     error += '\n *%s* is referenced from:\n   - ' % prot.getRunName()
                     error += '\n   - '.join(deps) 
+        return error
+        
+    
+    def _checkProtocolsDependencies(self, protocols, msg):
+        """ Check if the protocols have depencies.
+        This method is used before delete or save protocols to be sure
+        it is not referenced from other runs. (an Exception is raised)
+        Params:
+             protocols: protocol list to be analyzed.
+             msg: String message to be prefixed to Exception error.
+        """
+        # Check if the protocol have any dependencies
+        error = self._getProtocolsDependencies(protocols)
         if error:
             raise Exception(msg + error)
         

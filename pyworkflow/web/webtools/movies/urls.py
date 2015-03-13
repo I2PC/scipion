@@ -12,9 +12,11 @@ urls = [
     
     url(r'^movies/', 'app.views_webtools.service_movies'),
 #     url(r'^mov/', 'app.views_webtools.service_projects'),
-    url(r'^check_project_id/$', 'app.views_webtools.check_project_id'),
-    url(r'^create_movie_project/$', 'app.views_webtools.create_service_project'),
-    url(r'^get_testdata/$', 'app.views_webtools.get_testdata'),
-    url(r'^movies_content/$', 'app.views_webtools.movies_content')
+    url(r'^check_m_id/$', 'app.views_webtools.check_m_id'),
+    url(r'^create_movies_project/$', 'app.views_webtools.create_movies_project'),
+#     url(r'^get_testdata/$', 'app.views_webtools.get_testdata'),
+    url(r'^mov_form/$', 'app.views_webtools.movies_form'),
+    url(r'^m_content/$', 'app.views_webtools.movies_content'),
+    url(r'^upload_movies/', 'app.views_webtools.upload_movies'),
     
 ]

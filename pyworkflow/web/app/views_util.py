@@ -349,7 +349,7 @@ def textfileViewer(title, file):
     x = 0
     while 1:
         line = f.readline()
-        
+        code
         if not line:
             break
         if len(line) > 1:

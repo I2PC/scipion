@@ -73,9 +73,9 @@ class FrealignVolRadiiWeb(FrealignVolRadiiWizard):
     def _run(self, protocol, request):
         params = self._getParameters(protocol)
         objs = params['input'].get()
-        
-        res = validateSet(objs) 
-        
+
+        res = validateSet(objs)
+
         if res is not 1:
             return HttpResponse(res)
         else:
@@ -85,6 +85,9 @@ class FrealignVolRadiiWeb(FrealignVolRadiiWizard):
                 return HttpResponse("errorIterate")
             
             xdim = getImageXdim(request, vols[0].getFileName())
+
+            # Multiply by sampling rate to convert to angstroms
+            xdim *= objs.getSamplingRate()
             
             params['value'] = validateMaskRadius(params['value'], xdim, radius=2)  
             
