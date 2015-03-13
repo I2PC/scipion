@@ -290,9 +290,10 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtRotSpectra):
             self._visualize(obj.outputClasses, viewParams={#'mode': 'rotspectra', 
                                                            'columns': obj.SomXdim.get(),
-                                                           'render': 'average._filename spectraPlot._filename',
+                                                           RENDER: 'average._filename spectraPlot._filename',
+                                                           VISIBLE:  'enabled id _size average._filename spectraPlot._filename',
                                                            'labels': '_size',
-                                                           'sortby': 'id'})
+                                                           SORT_BY: 'id'})
         
         elif issubclass(cls, XmippProtKerdensom):
             self._visualize(obj.outputClasses, viewParams={'columns': obj.SomXdim.get(),

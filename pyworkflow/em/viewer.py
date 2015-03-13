@@ -80,7 +80,8 @@ class DataView(View):
         runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), env=self._env)
     
     def getShowJParams(self):
-        params = '-i ' + self._path
+        inputPath = self._path if not self._tableName else self._tableName + '@' + self._path
+        params = '-i ' + inputPath
         for key, value in self._viewParams.items():
             params = "%s --%s %s"%(params, key, value)
         
@@ -494,7 +495,6 @@ class ChimeraProjectionClient(ChimeraClient):
                     matrixString = tokens[1]
                     matrix = ast.literal_eval(matrixString)
                     matrix = [matrix[0][:3], matrix[1][:3], matrix[2][:3]]
-                print matrix
                 self.client.send('rotate')
                 self.client.send(matrix)
                 clientsocket.close()
