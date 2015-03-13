@@ -16,6 +16,7 @@ import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.Viewer;
 import xmipp.viewer.windows.GalleryJFrame;
+import xmipp.viewer.windows.ImagesWindowFactory;
 import static xmipp.viewer.windows.ImagesWindowFactory.openFileAsImage;
 
 /**
@@ -66,17 +67,12 @@ public class ScipionViewer extends Viewer {
             
             MetaData md;
             if(filename.endsWith(".sqlite") || filename.endsWith(".db"))
-            {
-                StopWatch.getInstance().printElapsedTime("reading db");
-                ScipionGalleryData data = new ScipionGalleryData(null, filename, parameters);
-                ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data);
-                
-            }
+                ImagesWindowFactory.openScipionMetadata(filename, parameters, parameters.mode);
             else if (Filename.isMetadata(filename)) {
                 if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_IMAGE)) {
                     openFileAsImage(null, filename, parameters);
                 } else {
-                    parameters.mode = Params.OPENING_MODE_GALLERY;
+                    //parameters.mode = Params.OPENING_MODE_GALLERY;
                     md = new MetaData(filename);
                     new GalleryJFrame(md, parameters);
                 }

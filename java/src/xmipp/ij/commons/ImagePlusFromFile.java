@@ -86,11 +86,13 @@ public class ImagePlusFromFile extends ImagePlusReader{
                              }
                         }
                         checkResizeAndGeo();
+                        checkInvertY();
 			if(normalize)
 			{
 				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
 				imp.updateImage();
 			}
+                        
 			return imp;
                         
 		}
@@ -130,6 +132,8 @@ public class ImagePlusFromFile extends ImagePlusReader{
             return name;
 
         }
+
+    
 
         
         

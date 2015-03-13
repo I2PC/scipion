@@ -54,6 +54,7 @@ import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.scipion.ScipionGalleryData;
 import xmipp.viewer.scipion.ScipionMetaData;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -118,6 +119,7 @@ public class GalleryData {
     protected String renderLabel = "first";
     protected String[] visibleLabels;
     protected String[] orderLabels;
+    protected boolean inverty;
 
     public boolean isObjectCmd(String cmd) {
         for(String objCmd: parameters.objectCommands)
@@ -166,6 +168,22 @@ public class GalleryData {
     public void setModelDim(Integer rows, Integer cols) {
         this.rows = rows;
         this.columns = cols;
+    }
+
+    public boolean isScipionInstance() {
+        return this instanceof ScipionGalleryData;
+    }
+
+    public boolean isInvertY() {
+        return inverty;
+    }
+
+    public String getChimeraProjectionCmd(int row) {
+        String rot = getValueFromLabel(row, MDLabel.MDL_ANGLE_ROT);
+        String tilt = getValueFromLabel(row, MDLabel.MDL_ANGLE_TILT);
+        String psi = getValueFromLabel(row, MDLabel.MDL_ANGLE_PSI);
+        String command = String.format("rotate %s %s %s", rot, tilt, psi);
+        return command;
     }
 
 
@@ -225,7 +243,7 @@ public class GalleryData {
         mode = Mode.GALLERY_MD;
         this.renderImages = true;
         displaycis = new HashMap<String, ColumnInfo>();
-        
+        this.inverty = parameters.inverty;
         if(parameters.getBlock() == null)
             parameters.setBlock(selectedBlock);//Identifies parameters with first block loaded
         
@@ -242,7 +260,7 @@ public class GalleryData {
             if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
             {
                 mode = Mode.TABLE_MD;
-                if(renderLabel.equals("first"))
+                if(renderLabel.equals("first") && isScipionInstance())
                     renderImages = false;
             }
             else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
@@ -750,12 +768,16 @@ public class GalleryData {
             return md.getValueString(ciFirstRender.label, ids[index]);
     }
 
-    
+    public boolean containsGeometryInfo() 
+    {
+        return containsGeometryInfo("2D");
+    }
 
     // Check if the underlying data has geometrical information
-    public boolean containsGeometryInfo() {
+    public boolean containsGeometryInfo(String type) 
+    {
         try {
-            return md.containsGeometryInfo();
+            return md.containsGeometryInfo(type);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -1783,12 +1805,15 @@ public class GalleryData {
         }
     }
      
-
-
-        
         public Geometry getGeometry(long id)
         {
-            if(!containsGeometryInfo())
+            return getGeometry(id, "2D");
+        }
+
+        
+        public Geometry getGeometry(long id, String type)
+        {
+            if(!containsGeometryInfo(type))
                 return null;
             double shiftx, shifty, psiangle;
             shiftx = md.getValueDouble(MDLabel.MDL_SHIFT_X, id);
@@ -1889,4 +1914,9 @@ public class GalleryData {
             return sortby;
         }
         
+        
+        public boolean isChimeraClient()
+        {
+            return parameters.getChimeraPort() != null;
+        }
 }// class GalleryDaa

@@ -266,7 +266,7 @@ public class XmippWindowUtil
         }
         
     public static void runCommand(String command, int port) {
-        System.out.println(command);
+        //System.out.println(command);
         String hostName = "";
  
         try {
@@ -279,11 +279,9 @@ public class XmippWindowUtil
             
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host " + hostName);
-            System.exit(1);
         } catch (IOException e) {
             System.err.println("Couldn't get I/O for the connection to " +
                 hostName);
-            System.exit(1);
         }
         }
 

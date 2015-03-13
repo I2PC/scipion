@@ -29,8 +29,6 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
@@ -43,6 +41,7 @@ import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.FloatRenderer;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
@@ -221,6 +220,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	public boolean isCellEditable(int row, int column) {
+                if(data.isScipionInstance() || data.isChimeraClient())
+                    return false;
 		ColumnInfo ci = visibleLabels.get(column);
 		return ci.allowEdit && !ci.render;
 	}
@@ -245,6 +246,12 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                                     openXmippImageWindow(index, ci.label);
 				return true;
 			}
+                        if(data.isChimeraClient())//
+                        {
+                            String cmd = data.getChimeraProjectionCmd(row);
+                            
+                            XmippWindowUtil.runCommand(cmd, data.parameters.getChimeraPort());
+                        }
 		} catch (Exception e) {
                         if(e.getMessage() == null)
                             e.printStackTrace();

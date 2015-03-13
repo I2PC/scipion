@@ -36,6 +36,7 @@
 #include <data/multidim_array.h>
 #include <data/xmipp_image.h>
 #include <data/normalize.h>
+#include <data/xmipp_fftw.h>
 
 
 using namespace std;
@@ -47,14 +48,10 @@ class ProgOpticalAligment: public XmippProgram
 {
 
 public:
-    FileName fname;
-    FileName foname;
+    FileName fname, foname;
 
-    int winSize;
-    int gpuDevice;
-    int fstFrame;
-    int lstFrame;
-    bool doAverage;
+    int winSize, gpuDevice, fstFrame, lstFrame;
+    bool doAverage, psd;
 
     void defineParams()
     {
@@ -65,6 +62,7 @@ public:
         addParamsLine("     [--ned <int=0>]     : last frame used in alignment (0 = last frame in the movie ");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
         addParamsLine("     [--simpleAverage]: if we want to just compute the simple average");
+        addParamsLine("     [--psd]             : save raw PSD and corrected PSD");
 #ifdef GPU
 
         addParamsLine("     [--gpu <int=0>]         : GPU device to be used");
@@ -79,6 +77,7 @@ public:
         lstFrame  = getIntParam("--ned");
         winSize   = getIntParam("--winSize");
         doAverage = checkParam("--simpleAverage");
+        psd = checkParam("--psd");
 #ifdef GPU
 
         gpuDevice = getIntParam("--gpu");
@@ -294,6 +293,21 @@ public:
         imagenum -= (imagenum-lstFrame) + (fstFrame-1);
         levelNum = sqrt(double(imagenum));
         computeAvg(fname, fstFrame, lstFrame, avgCurr);
+        // if the user want to save the PSD
+        if (psd)
+        {
+            FileName rawPSDFile;
+            II() = avgCurr;
+            II.write(foname);
+            rawPSDFile = fname.removeAllExtensions()+"_raw";
+            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim 400 --overlap 0.7",
+                                     foname.c_str(), rawPSDFile.c_str());
+            String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
+            std::cerr<<"Computing the raw FFT"<<std::endl;
+            if (system(cmd.c_str())==-1)
+                REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+            foname.deleteFile();
+        }
         if(doAverage)
         {
             II() = avgCurr;
@@ -420,6 +434,17 @@ public:
         II() = avgCurr;
         II.write(foname);
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
+        if (psd)
+        {
+            FileName correctedPSDFile;
+            correctedPSDFile = fname.removeAllExtensions()+"_corrected";
+            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim 400 --overlap 0.7",
+                                     foname.c_str(), correctedPSDFile.c_str());
+            String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
+            std::cerr<<"Computing the corrected FFT"<<std::endl;
+            if (system(cmd.c_str())==-1)
+                REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+        }
         return 0;
     }
 };

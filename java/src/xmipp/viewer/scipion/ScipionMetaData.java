@@ -22,6 +22,9 @@ import xmipp.jni.CTFDescription;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
+import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippMessage;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -49,6 +52,7 @@ public class ScipionMetaData extends MetaData {
    
 
     public ScipionMetaData(String dbfile) {
+       
         this.filename = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
@@ -166,7 +170,8 @@ public class ScipionMetaData extends MetaData {
             c.close();
             StopWatch.getInstance().printElapsedTime("loaded data");
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new IllegalArgumentException(e);
+            
 
         }
     }
@@ -210,7 +215,8 @@ public class ScipionMetaData extends MetaData {
                 index ++;
             }
         } catch (SQLException ex) {
-            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IllegalArgumentException(ex);
+            
         }
     }
     
@@ -764,9 +770,12 @@ public class ScipionMetaData extends MetaData {
             defU = emo.getValueDouble("_defocusU");
             defV = emo.getValueDouble("_defocusV");
             defAngle = emo.getValueDouble("_defocusAngle");
+            Double downsampleFactor = emo.getValueDouble("_xmipp_CtfDownsampleFactor");
+            if(downsampleFactor == null)
+                downsampleFactor = 1.;
                 //read params from sqlite
 
-            return new EllipseCTF(id, Q0, Cs, 1, Ts, kV, defU, defV, defAngle, D);
+            return new EllipseCTF(id, Q0, Cs, downsampleFactor, Ts, kV, defU, defV, defAngle, D);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
             throw new IllegalArgumentException(ex);
@@ -809,6 +818,11 @@ public class ScipionMetaData extends MetaData {
         }
     }
     
+    public ColumnInfo getGeoMatrixColumn()
+    {
+        String column = isClassificationMd()? "_representative._transform._matrix" : "_transform._matrix";
+        return getColumnInfo(column);
+    }
     // Check if the underlying data has geometrical information
     public boolean containsGeometryInfo() {
         String column = "_alignment";
@@ -831,11 +845,29 @@ public class ScipionMetaData extends MetaData {
         return value.equals("2D");
     }
     
-    
-    public boolean containsMicrographsInfo()
-    {
-        return false;
+    // Check if the underlying data has geometrical information
+    public boolean containsGeometryInfo(String type) {
+        String column = "_alignment";
+        String value = null;
+        if(properties == null)
+        {
+            if (parent == null) 
+                return false; 
+            else
+                for(EMObject emo: parent.emobjects)
+                    if(preffix.contains(emo.getId().toString()))
+                        value = (String)emo.getValue(column);
+        }
+        else
+            value = properties.get(column);
+
+        if (value == null)
+            return false;
+            
+        return value.equals(type);
     }
+    
+    
     
     public int getEnabledCount()
     {

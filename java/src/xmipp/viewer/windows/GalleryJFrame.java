@@ -1466,14 +1466,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
 			// Display
 			addItem(DISPLAY, "Display");
-
-			
+                        addItem(DISPLAY_INVERTY, "Invert Y");
+                        
                         addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
-			
-                        
-			
-                        addSeparator(DISPLAY);
+			addSeparator(DISPLAY);
                         addDisplayLabelItems();
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
 			
@@ -1484,6 +1481,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				addItem(DISPLAY_RESLICE_VIEWS[i], reslices[i]);
                         addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
+                        
+                        
+			
+                        
+			
                         
                         addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
@@ -1512,12 +1514,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		public void update()
 		{
                         
-                        boolean isscipion = (data instanceof ScipionGalleryData);
+                        boolean isscipion = data.isScipionInstance();
 			boolean galMode = data.isGalleryMode();
 			boolean volMode = !data.getSelVolumeFile().isEmpty();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
-                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data instanceof ScipionGalleryData));
+                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data.isScipionInstance()));
 			setItemEnabled(FILE_SAVE, !volMode && !isscipion);
 			setItemEnabled(FILE_SAVEAS, !volMode && !isscipion);
 			
@@ -1525,6 +1527,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo());
 			setItemSelected(DISPLAY_WRAP, data.containsGeometryInfo() && data.getWrap());
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo());
+                        setItemSelected(DISPLAY_INVERTY, data.isInvertY());
 			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.renderImages());
                         setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
@@ -1555,7 +1558,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			String cmd = evt.getActionCommand();
 			try
 			{
-				if (cmd.equals(DISPLAY_NORMALIZE))
+                                if (cmd.equals(DISPLAY_INVERTY))
+				{
+					gallery.setInvertY(getItemSelected(DISPLAY_INVERTY));
+				}
+                                else if (cmd.equals(DISPLAY_NORMALIZE))
 				{
 					gallery.setNormalized(getItemSelected(DISPLAY_NORMALIZE));
 				}
@@ -1879,7 +1886,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
                         row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
-                        boolean isscipion = data instanceof ScipionGalleryData;
+                        boolean isscipion = data.isScipionInstance();
 			setItemVisible(SET_CLASS, data.isClassificationMd() && !isscipion);
 			// This item visibility depends on current selection
 			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0 && !isscipion);
