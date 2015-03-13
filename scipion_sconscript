@@ -71,10 +71,13 @@ XMIPP_PATH = Dir('.').abspath
 #  *                      Xmipp C++ Libraries                            *
 #  ***********************************************************************
 
+ALL_LIBS = set(['fftw3', 'tiff', 'jpeg', 
+             'sqlite3', 'hdf5'])
 
 # Create a shortcut and customized function
 # to add the Xmipp CPP libraries
 def addLib(name, **kwargs):
+    ALL_LIBS.add(name)
     # Install all libraries in scipion/software/lib
     kwargs['installDir'] = '#software/lib' 
     # Add always the xmipp path as -I for include and also xmipp/libraries
@@ -85,6 +88,12 @@ def addLib(name, **kwargs):
     # Add always packageDeps as dependencies
     deps = kwargs.get('deps', []) + packageDeps
     kwargs['deps'] = deps
+    
+    # Add libraries in libs as deps if not present
+    libs = kwargs.get('libs', [])
+    for lib in libs:
+        if lib in ALL_LIBS and lib not in deps:
+            deps.append(lib)
     
     # If pattern not provided use *.cpp as default
     patterns = kwargs.get('patterns', '*.cpp')
@@ -127,10 +136,12 @@ addLib('XmippSqliteExt',
 addLib('XmippGtest',
        dirs=['external'],
        patterns=['gtest/*.cc'],
-       default=gtest
+       default=gtest,
+       libs=['pthread']
        )
 
-EXT_LIBS = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippSqliteExt']
+EXT_LIBS = ['XmippAlglib', 'XmippBilib', 'XmippCondor']
+EXT_LIBS2 = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippSqliteExt']
 env.Alias('XmippExternal', EXT_LIBS)
 
 
@@ -139,32 +150,35 @@ env.Alias('XmippExternal', EXT_LIBS)
 addLib('XmippData',
        dirs=['libraries'],
        patterns=['data/*.cpp'],
-       libs=['fftw3', 'fftw3_threads', 'tiff', 'jpeg', 
-             'sqlite3', 'hdf5','hdf5_cpp', 'rt', 'XmippBilib'],
-       deps=['fftw3', 'tiff', 'jpeg', 
-             'sqlite3', 'hdf5', 'XmippBilib'])
+       libs=['fftw3', 'fftw3_threads', 
+             'hdf5','hdf5_cpp', 
+             'tiff', 
+             'jpeg', 
+             'sqlite3',     
+             'pthread',
+             'rt', 
+             'XmippAlglib', 'XmippBilib'])
 
 # Classification
 addLib('XmippClassif',
        dirs=['libraries'],
        patterns=['classification/*.cpp'],
-       libs=['XmippData'],
-       deps=['XmippData'])
+       libs=['XmippData', 'XmippAlglib', 'XmippBilib'])
 
 # Dimred
 addLib('XmippDimred',
        dirs=['libraries'],
        patterns=['dimred/*.cpp'],
-       libs=['XmippData'],
-       deps=['XmippData'])
+       libs=['XmippData', 'XmippBilib'])
 
 # Reconstruction
 addLib('XmippRecons',
        dirs=['libraries'],
        patterns=['reconstruction/*.cpp'],
        incs=bilib_incs,
-       libs=['XmippData', 'XmippClassif'],
-       deps=['XmippData', 'XmippClassif'])
+       libs=['hdf5', 'hdf5_cpp', 'pthread',
+             'fftw3_threads',
+             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor'])
 
 # Interface
 python_incs = ['#software/include/python2.7',
@@ -175,26 +189,23 @@ addLib('XmippInterface',
        dirs=['libraries'],
        patterns=['interface/*.cpp'],
        incs=python_incs,
-       libs=['XmippData', 'pthread']
-       )
+       libs=[ 'pthread', 'python2.7', 
+             'XmippData', 'XmippBilib'])
 
 # Parallelization
 addLib('XmippParallel',
               dirs=['libraries'],
               patterns=['parallel/*.cpp'],
-              libs=['XmippData', 'XmippClassif', 'XmippRecons', 'pthread'],
+              libs=['pthread', 'fftw3_threads',
+                    'XmippData', 'XmippClassif', 'XmippRecons', 'XmippBilib'],
               mpi=True)
-
-XMIPP_LIBS = ['XmippData', 'XmippClassif', 'XmippDimred', 'XmippRecons']
-
 
 # Python binding
 addLib('xmipp',
        dirs=['libraries/bindings/python'],
        patterns=['*.cpp'],
-       incs=['#software/include/python2.7',
-             '#software/lib/python2.7/site-packages/numpy/core/include'],
-       libs=['XmippData', 'XmippRecons'],
+       incs=python_incs,
+       libs=['python2.7', 'XmippData', 'XmippRecons', 'XmippBilib'],
        prefix='')
 
 # Java binding
@@ -202,7 +213,7 @@ addLib('XmippJNI',
        dirs=['libraries/bindings/java'],
        patterns=['*.cpp'],
        incs=env['JNI_CPPPATH'],
-       libs=['XmippData', 'pthread', 'XmippRecons'],
+       libs=[ 'pthread', 'XmippData', 'XmippRecons','XmippClassif', 'XmippBilib'],
        )
 
 
@@ -293,7 +304,8 @@ if 'Xmipp-java' in map(str, BUILD_TARGETS):
         WriteJavaEnum(class_name, class_list[0], class_list[1], javaLog)
     
     javaExtractCommand = env.Command(Entry('#software/em/xmipp/libraries/bindings/java/src/xmipp/jni/enums.changelog').abspath,
-                                     [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, File('#software/em/xmipp/libraries/data/metadata_label.h').abspath],
+                                     [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, 
+                                      File('#software/em/xmipp/libraries/data/metadata_label.h').abspath],
                                      ExtractEnumFromHeader)
     
     javaEnums = env.Alias('javaEnums', javaExtractCommand)
@@ -350,12 +362,14 @@ if 'Xmipp-java' in map(str, BUILD_TARGETS):
     # FIXME: Its needed to guess why and correct this. In the meanwhile we'll use an alternative environment
     env2 = Environment()
     env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir('#software/em/xmipp/java/lib').abspath,'*.jar'))))
-    javaExtraFileTypes = env2.Java(Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class').abspath, File('#software/em/xmipp/java/src/HandleExtraFileTypes.java').abspath)
+    javaExtraFileTypes = env2.Java(Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class').abspath, 
+                                   File('#software/em/xmipp/java/src/HandleExtraFileTypes.java').abspath)
     env2.Depends(javaExtraFileTypes, Entry('#software/em/xmipp/java/lib/XmippViewer.jar').abspath)
     env2.Default(javaExtraFileTypes)
     
     # FIXME: For any yet unkown issue, java is being compiled putting in -d flag the class name, producing a folder with the same name as the class and putting the class file inside
-    fileTypesInstallation = env.Install(Dir('#software/em/xmipp/external/imagej/plugins/').abspath, Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class/HandleExtraFileTypes.class').abspath)
+    fileTypesInstallation = env.Install(Dir('#software/em/xmipp/external/imagej/plugins/').abspath, 
+                                        Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class/HandleExtraFileTypes.class').abspath)
     #env.Depends(fileTypesInstallation, pluginLink)
     env.Default(fileTypesInstallation)
     
@@ -363,25 +377,26 @@ if 'Xmipp-java' in map(str, BUILD_TARGETS):
     AddOption('--run-java-tests', dest='run_java_tests', action='store_true',
               help='Run all Java tests (not only default ones)')
     
-    env.AddJavaTest('FilenameTest', 'XmippTest.jar', default=False)
-    env.AddJavaTest('ImageGenericTest', 'XmippTest.jar', default=False)
-    env.AddJavaTest('MetadataTest', 'XmippTest.jar', default=False)
+    env.AddJavaTest('FilenameTest', 'XmippTest.jar')
+    env.AddJavaTest('ImageGenericTest', 'XmippTest.jar')
+    env.AddJavaTest('MetadataTest', 'XmippTest.jar')
 
-
+    env.Alias('Xmipp-java', [xmippJavaJNI, 
+                             xmippJavaUtils,
+                             xmippIJ,
+                             xmippViewer,
+                             xmippTest])
 
 
 #  ***********************************************************************
 #  *                      Xmipp Programs and Tests                       *
 #  ***********************************************************************
 
-
+XMIPP_LIBS = ['XmippData', 'XmippRecons', 'XmippClassif']
 PROG_DEPS = EXT_LIBS + XMIPP_LIBS
-PROG_LIBS = EXT_LIBS + XMIPP_LIBS + ['XmippParallel',
-                                     'XmippGtest',
-                                     'fftw3', 'fftw3_threads', 
+PROG_LIBS = EXT_LIBS + XMIPP_LIBS + ['fftw3', 'fftw3_threads', 
                                      'tiff', 
-                                     'hdf5', 'hdf5_cpp',
-                                     'mpi', 'mpi_cxx']
+                                     'hdf5', 'hdf5_cpp']
 
 def addRunTest(testName, prog):
     """ Add a Scons target for running xmipp tests. """
@@ -426,18 +441,23 @@ def addProg(progName, **kwargs):
                                      os.path.join(XMIPP_PATH, 'libraries')]
     kwargs['incs'] = incs 
     
-    kwargs['mpi'] = progName.startswith('mpi_')
+    if progName.startswith('mpi_'):
+        kwargs['mpi'] = True
+        kwargs['libs'] += ['mpi', 'mpi_cxx', 'XmippParallel']
     
     xmippProgName = 'xmipp_%s' % progName
+    
+    if progName.startswith('test_'):
+        kwargs['libs'] += ['XmippGtest']
+        env.Alias('Xmipp-tests', xmippProgName)
+        addRunTest(progName, xmippProgName)
+        
     prog = env.AddProgram(xmippProgName, **kwargs)
     
     # Add some aliases before return
     env.Alias(xmippProgName, prog)
     env.Alias('Xmipp-programs', prog)
     
-    if progName.startswith('test_'):
-        env.Alias('Xmipp-tests', prog)
-        addRunTest(progName, prog)
     
     return prog
 
@@ -487,7 +507,7 @@ for p in ['angular_commonline',
           'image_statistics',
           'image_vectorize',
           
-          'matrix_dimred',
+          ('matrix_dimred', ['XmippDimred']),
           #'metadata_convert_to_spider',
           'metadata_histogram',
           'metadata_import',
@@ -526,7 +546,7 @@ for p in ['angular_commonline',
           'transform_add_noise',
           'transform_adjust_volume_grey_levels',
           'transform_center_image',
-          'transform_dimred',
+          ('transform_dimred', ['XmippDimred']),
           'transform_downsample',
           'transform_filter',
           'transform_geometry',
@@ -602,8 +622,10 @@ for p in ['angular_commonline',
           
           # Unittest for Xmipp libraries
           'test_ctf',
+          ('test_dimred', ['XmippDimred']),
           'test_euler',
           'test_fftw',
+          'test_filename',
           'test_filters',
           'test_fringe_processing',
           'test_funcs',
@@ -618,12 +640,14 @@ for p in ['angular_commonline',
           'test_sampling',
           'test_symmetries',
           'test_transformation',
-          'test_dimred',
-          'test_wavelets',
-          'test_filename',
-         
+          'test_wavelets'         
           ]:
-    addProg(p)
+    # Allow to add specific libs for indiviual programs
+    # by using a tuple instead of string
+    if isinstance(p, tuple):
+        addProg(p[0], libs=p[1])
+    else:
+        addProg(p)
 
 
 # Programs with specials needs
@@ -657,8 +681,7 @@ if not release:
               'tomo_align_dual_tilt_series',
               'tomo_align_refinement',
               'xray_volume_correct',
-              'mpi_write_test',
-              'idr_xray_tomo'
+              'mpi_write_test'
               ]:
         addProg(p)
 
