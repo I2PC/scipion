@@ -22,6 +22,9 @@ import xmipp.jni.CTFDescription;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
+import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippMessage;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -49,6 +52,7 @@ public class ScipionMetaData extends MetaData {
    
 
     public ScipionMetaData(String dbfile) {
+       
         this.filename = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
@@ -166,7 +170,8 @@ public class ScipionMetaData extends MetaData {
             c.close();
             StopWatch.getInstance().printElapsedTime("loaded data");
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new IllegalArgumentException(e);
+            
 
         }
     }
@@ -210,7 +215,8 @@ public class ScipionMetaData extends MetaData {
                 index ++;
             }
         } catch (SQLException ex) {
-            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IllegalArgumentException(ex);
+            
         }
     }
     
@@ -767,7 +773,6 @@ public class ScipionMetaData extends MetaData {
             Double downsampleFactor = emo.getValueDouble("_xmipp_CtfDownsampleFactor");
             if(downsampleFactor == null)
                 downsampleFactor = 1.;
-            System.out.println(downsampleFactor);
                 //read params from sqlite
 
             return new EllipseCTF(id, Q0, Cs, downsampleFactor, Ts, kV, defU, defV, defAngle, D);
