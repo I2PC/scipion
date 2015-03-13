@@ -88,8 +88,8 @@ public class EllipseCTF {
 
     // Calculates defocus U and V according to ellipse parameters.
     public void calculateDefocus(double minor, double major) {
-        defocusU = defocus(minor, Q0, lambda, Cs, D, Ts);
-        defocusV = defocus(major, Q0, lambda, Cs, D, Ts);
+        defocusU = defocus(minor, Q0, lambda, Cs, D, Ts * downsampleFactor);
+        defocusV = defocus(major, Q0, lambda, Cs, D, Ts * downsampleFactor);
     }
 
     

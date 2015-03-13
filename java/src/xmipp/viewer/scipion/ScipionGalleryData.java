@@ -279,14 +279,19 @@ public class ScipionGalleryData extends GalleryData {
     
     public ColumnInfo getGeoMatrixColumn()
     {
-        String column = isClassificationMd()? "_representative._transform._matrix" : "_transform._matrix";
-        return getColumnInfo(column);
+        return ((ScipionMetaData)md).getGeoMatrixColumn();
     }
     
+   
     
     public Geometry getGeometry(long id)
     {
-        if (!containsGeometryInfo()) 
+        return getGeometry(id, "2D");
+    }
+            
+    public Geometry getGeometry(long id, String type)
+    {
+        if (!containsGeometryInfo(type)) 
             return null;
         ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
         ColumnInfo column = getGeoMatrixColumn();
@@ -448,7 +453,12 @@ public class ScipionGalleryData extends GalleryData {
                 index++;
             }
             return imagesmd;
-        
+    }
+    
+    public String getChimeraProjectionCmd(int row) {
+        Geometry geo = getGeometry(ids[row], "3D");
+        String command = String.format("rotate_matrix '%s'", geo.getMatrix());
+        return command;
     }
     
     

@@ -29,17 +29,13 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
-import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
@@ -252,11 +248,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			}
                         if(data.isChimeraClient())//
                         {
-                            String rot = data.getValueFromLabel(row, MDLabel.MDL_ANGLE_ROT);
-                            String tilt = data.getValueFromLabel(row, MDLabel.MDL_ANGLE_TILT);
-                            String psi = data.getValueFromLabel(row, MDLabel.MDL_ANGLE_PSI);
-                            String command = String.format("rotate %s %s %s", rot, tilt, psi);
-                            XmippWindowUtil.runCommand(command, data.parameters.getChimeraPort());
+                            String cmd = data.getChimeraProjectionCmd(row);
+                            
+                            XmippWindowUtil.runCommand(cmd, data.parameters.getChimeraPort());
                         }
 		} catch (Exception e) {
                         if(e.getMessage() == null)

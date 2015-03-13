@@ -24,6 +24,7 @@ import xmipp.ij.commons.XmippIJWindow;
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
+import xmipp.ij.commons.XmippMenuBar;
 import xmipp.ij.commons.XmippStackWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -32,6 +33,7 @@ import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippMessage;
 import xmipp.viewer.scipion.ScipionGalleryData;
 import xmipp.viewer.scipion.ScipionMetaData;
 
@@ -95,7 +97,7 @@ public class ImagesWindowFactory {
 	public static void openFileAsImage(Frame pframe, String filename,
 			Params parameters) {
 		try {
-			ImagePlusLoader ipl = new ImagePlusLoader(filename);
+			ImagePlusLoader ipl = new ImagePlusLoader(filename, false);
 			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
 					parameters);
 			if (parameters.mask_toolbar)
@@ -114,7 +116,7 @@ public class ImagesWindowFactory {
 		if (Filename.isMetadata(path)) {
 			MetaData md = new MetaData(path);
 			imp = XmippImageConverter.readMetadataToImagePlus(
-					MDLabel.MDL_IMAGE, md, parameters.useGeo, parameters.wrap);
+					MDLabel.MDL_IMAGE, md, parameters.useGeo, parameters.wrap, parameters.inverty);
 			md.destroy();
 		} else {
 			imp = XmippImageConverter.loadImage(path,
@@ -178,15 +180,38 @@ public class ImagesWindowFactory {
 	}
 
 	public static GalleryJFrame openMetadata(String filename, Params parameters,
-			String mode) throws Exception {
+			String mode) throws Exception 
+        {
                 if(filename.endsWith(".sqlite") || filename.endsWith(".db"))
-                {
-                    ScipionGalleryData data = new ScipionGalleryData(null, parameters, new ScipionMetaData(filename));
-                    return new GalleryJFrame(data);
-                }
+                    openScipionMetadata(filename, parameters, mode);
                 else
                     return openMetadata(filename, new MetaData(filename), parameters, mode);
+                return null;
 	}
+        
+        public static GalleryJFrame openScipionMetadata(String filename, Params parameters,
+			String mode) throws Exception 
+        {
+                if(!(filename.endsWith(".sqlite") || filename.endsWith(".db")))
+                    throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("scipion metadata", filename));
+                else
+                {
+                    ScipionMetaData md = null;
+                    if(filename.contains("@"))
+                    {
+                        int sep = filename.indexOf('@');
+                        String preffix = filename.substring(0, sep);
+                        filename = filename.substring(sep + 1);
+                        md = new ScipionMetaData(filename, preffix);
+                    }
+                    else
+                        md = new ScipionMetaData(filename);
+                    ScipionGalleryData data = new ScipionGalleryData(null, parameters, md);
+                    return new GalleryJFrame(data);
+                }
+                
+	}
+        
 
 	public static GalleryJFrame openFilesAsGallery(String filenames[],
 			boolean useSameTable) throws Exception {

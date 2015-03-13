@@ -200,7 +200,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	
 	public final String DISPLAY_RENDERIMAGE = "Display.RenderImage";
 	
-	
+	public final String DISPLAY_INVERTY = "Display.InvertY_cb";
 	public final String DISPLAY_APPLYGEO = "Display.ApplyGeo_cb";
 	public final String DISPLAY_WRAP = "Display.Wrap_cb";
 	public final String DISPLAY_COLUMNS = "Display.Columns_mi";

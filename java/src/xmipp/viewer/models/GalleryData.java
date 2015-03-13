@@ -119,6 +119,7 @@ public class GalleryData {
     protected String renderLabel = "first";
     protected String[] visibleLabels;
     protected String[] orderLabels;
+    protected boolean inverty;
 
     public boolean isObjectCmd(String cmd) {
         for(String objCmd: parameters.objectCommands)
@@ -171,6 +172,18 @@ public class GalleryData {
 
     public boolean isScipionInstance() {
         return this instanceof ScipionGalleryData;
+    }
+
+    public boolean isInvertY() {
+        return inverty;
+    }
+
+    public String getChimeraProjectionCmd(int row) {
+        String rot = getValueFromLabel(row, MDLabel.MDL_ANGLE_ROT);
+        String tilt = getValueFromLabel(row, MDLabel.MDL_ANGLE_TILT);
+        String psi = getValueFromLabel(row, MDLabel.MDL_ANGLE_PSI);
+        String command = String.format("rotate %s %s %s", rot, tilt, psi);
+        return command;
     }
 
 
@@ -230,7 +243,7 @@ public class GalleryData {
         mode = Mode.GALLERY_MD;
         this.renderImages = true;
         displaycis = new HashMap<String, ColumnInfo>();
-        
+        this.inverty = parameters.inverty;
         if(parameters.getBlock() == null)
             parameters.setBlock(selectedBlock);//Identifies parameters with first block loaded
         
@@ -244,7 +257,6 @@ public class GalleryData {
             useGeo = parameters.useGeo;
             wrap = parameters.wrap;
             displayLabels = parameters.getDisplayLabels();
-            System.out.println(parameters.mode);
             if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
             {
                 mode = Mode.TABLE_MD;
@@ -756,12 +768,16 @@ public class GalleryData {
             return md.getValueString(ciFirstRender.label, ids[index]);
     }
 
-    
+    public boolean containsGeometryInfo() 
+    {
+        return containsGeometryInfo("2D");
+    }
 
     // Check if the underlying data has geometrical information
-    public boolean containsGeometryInfo() {
+    public boolean containsGeometryInfo(String type) 
+    {
         try {
-            return md.containsGeometryInfo();
+            return md.containsGeometryInfo(type);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -1789,12 +1805,15 @@ public class GalleryData {
         }
     }
      
-
-
-        
         public Geometry getGeometry(long id)
         {
-            if(!containsGeometryInfo())
+            return getGeometry(id, "2D");
+        }
+
+        
+        public Geometry getGeometry(long id, String type)
+        {
+            if(!containsGeometryInfo(type))
                 return null;
             double shiftx, shifty, psiangle;
             shiftx = md.getValueDouble(MDLabel.MDL_SHIFT_X, id);

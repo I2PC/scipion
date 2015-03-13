@@ -223,7 +223,7 @@ public class XmippImageConverter {
 
 	/** Read the entries on the metadata and create an ImagePlus */
 	public static ImagePlus readMetadataToImagePlus(int label, MetaData md,
-			boolean useGeo, boolean wrap) throws Exception {
+			boolean useGeo, boolean wrap, boolean inverty) throws Exception {
 		LinkedList<String> missing = new LinkedList<String>();
 		ImagePlus imp = null;
 
@@ -236,7 +236,8 @@ public class XmippImageConverter {
 
 				try {
 					ImagePlus slice = readMdRowToImagePlus(filename, md, id, useGeo, wrap);
-
+                                        if(inverty)
+                                            slice = new ImagePlusLoader(slice, inverty).getImagePlus();
 					if (is == null)
 						is = new ImageStack(slice.getWidth(), slice.getHeight());
 					is.addSlice(filename, slice.getProcessor());
