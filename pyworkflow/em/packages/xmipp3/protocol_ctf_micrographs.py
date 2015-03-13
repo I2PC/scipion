@@ -123,7 +123,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
                 break
             
             # Check the quality of the estimation and reject it necessary
-            if self.evaluateSingleMicrograph(micFn,micDir,ctfDownFactor):
+            if self.evaluateSingleMicrograph(micFn,micDir):
                 break
             
         if deleteTmp != "":
@@ -135,7 +135,10 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self._prepareRecalCommand(ctfModel)
         # CTF estimation with Xmipp                
         self.runJob(self._program, self._args % self._params)
-
+        
+        mic=ctfModel.getMicrograph()
+        micDir = self._getMicrographDir(mic)
+        self.evaluateSingleMicrograph(mic.getFileName(),micDir)
     
     def sortPSDStep(self):
         # Gather all metadatas of all micrographs
@@ -183,11 +186,17 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             fn = self._getPath("ctfs_selection.xmd")
         mdFn = md.MetaData(fn)
         mdAux = md.MetaData()
-        mdCTF = md.MetaData()
         
         for _, micDir, mic in self._iterMicrographs():
             if exists(self._getFileName('ctfparam', micDir=micDir)):
                 mdCTF = md.MetaData(self._getFileName('ctfparam', micDir=micDir))
+                mdQuality = md.MetaData(self._getFileName('ctf', micDir=micDir))
+                mdCTF.setValue(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY,
+                               mdQuality.getValue(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY,mdQuality.firstObject()),
+                               mdCTF.firstObject())
+                mdCTF.setValue(xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO,
+                               mdQuality.getValue(xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO,mdQuality.firstObject()),
+                               mdCTF.firstObject())
             else:
                 mdCTF = md.MetaData(self._getFileName('ctfErrorParam', micDir=micDir))
             mdAux.importObjects( mdFn, md.MDValueEQ(md.MDL_MICROGRAPH_ID, long(mic.getObjId())))
@@ -254,7 +263,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
     def _prepareCommand(self):
         self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_micrograph'       
-        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate %(samplingRate)s"
+        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate %(samplingRate)s --overlap 0.7 "
         
         # Mapping between base protocol parameters and the package specific command options
         self.__params = {'kV': self._params['voltage'],
@@ -291,7 +300,10 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             
             mic = ctfModel.getMicrograph()
             micDir = self._getMicrographDir(mic)
-            cleanPath(self._getFileName('ctfparam', micDir=micDir))
+            fnCTFparam = self._getFileName('ctfparam', micDir=micDir)
+            mdCTFParam = xmipp.MetaData(fnCTFparam)
+            downFactor = mdCTFParam.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,mdCTFParam.firstObject())
+            cleanPath(fnCTFparam)
             
             params2 = {'psdFn': join(micDir, psdFile),
                        'defocusU': float(line[0]),
@@ -301,7 +313,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             self._params = dict(self._params.items() + params2.items())
             
             # Mapping between base protocol parameters and the package specific command options
-            self.__params = {'sampling_rate': self._params['samplingRate'],
+            self.__params = {'sampling_rate': self._params['samplingRate']*downFactor,
+                             'downSamplingPerformed': downFactor,
                              'kV': self._params['voltage'],
                              'Cs': self._params['sphericalAberration'],
                              'min_freq': line[3],
@@ -323,7 +336,10 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         ctfModel._xmipp_ctfmodel_quadrant = String(self._getFileName('ctfmodel_quadrant', micDir=micDir))
         ctfModel._xmipp_ctfmodel_halfplane = String(self._getFileName('ctfmodel_halfplane', micDir=micDir))
     
-    def evaluateSingleMicrograph(self,micFn,micDir,ctfDownFactor):
+    def evaluateSingleMicrograph(self,micFn,micDir):
+        mdCTFparam=xmipp.MetaData(self._getFileName('ctfparam', micDir=micDir))
+        ctfDownFactor=mdCTFparam.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,mdCTFparam.firstObject())
+        
         mdEval = md.MetaData()
         id = mdEval.addObject()
 

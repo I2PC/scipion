@@ -97,7 +97,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                             condition='not recalculate',
                             help='Select _minimum_ and _maximum_ values for defocus search range (in microns).'
                                  'Underfocus is represented by a positive number.')
-        line.addParam('minDefocus', FloatParam, default=0.5, 
+        line.addParam('minDefocus', FloatParam, default=0.25, 
                       label='Min')
         line.addParam('maxDefocus', FloatParam, default=4.,
                       label='Max')

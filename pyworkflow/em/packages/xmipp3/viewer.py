@@ -245,8 +245,9 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
 #            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
             psdLabels = '_psdFile _xmipp_enhanced_psd _xmipp_ctfmodel_quadrant _xmipp_ctfmodel_halfplane'
-            labels = 'id enabled label %s _defocusU _defocusV _defocusAngle _defocusRatio '\
-                     '_xmipp_ctfCritFirstZero _xmipp_ctfCritCorr13 _xmipp_ctfCritFitting _micObj._filename' % psdLabels 
+            labels = 'id enabled label %s _defocusU _defocusV _defocusAngle _defocusRatio ' \
+                     '_xmipp_ctfCritFirstZero _xmipp_ctfCritCorr13 _xmipp_ctfCritFitting _xmipp_ctfCritNonAstigmaticValidty ' \
+                     '_xmipp_ctfCritCtfMargin _micObj._filename' % psdLabels 
             self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))    
 

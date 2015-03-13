@@ -44,6 +44,9 @@
 	        //Functionality
 	        onSelect: function(path) {
 	        	$('input#{{paramName}}_input').val(path)
+	        	var newPath = path.split("/")
+	        	var elmSelected = newPath.length -1
+	        	$('input#{{paramName}}_input_show').val(newPath[elmSelected])
 	        },
 	        onLoad: function() {
 	            return $('input#{{paramName}}_input').val();
