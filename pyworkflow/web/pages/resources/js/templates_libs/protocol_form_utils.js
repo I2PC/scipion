@@ -185,6 +185,11 @@ $(document).ready(function() {
 					errorPopup("Error", "Input selected are None");
 				} else if (html=="errorIterate"){
 					errorPopup("Error", "Error iterating over the input set");
+				} else if (html.indexOf('auto_wizard') == 0){
+					var params = html.split('{')[1].split('}')[0].split('=')
+					var label = params[0]
+					var value = params[1]
+					$("input#"+label+"_input").val(value)
 				} else {
 					customPopupHTML(html,800,540);
 				}

@@ -33,7 +33,8 @@ from pyworkflow.utils import *
 from math import floor
 from xmipp3 import XmippProtocol
 from convert import createXmippInputVolumes, readSetOfVolumes, locationToXmipp
-from xmipp import MetaData, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_DPR
+import pyworkflow.em.metadata as md
+
 
 class XmippProtResolution3D(ProtAnalysis3D):
     """ Computes resolution by several methods """
@@ -75,8 +76,6 @@ by Rosenthal2003''')
             self._insertFunctionStep('calculateFscStep')
         if self.doStructureFactor:
             self._insertFunctionStep('structureFactorcStep')
-        
-        
         self._insertFunctionStep('createSummaryStep')
 
     #--------------------------- STEPS steps functions --------------------------------------------
@@ -94,69 +93,19 @@ by Rosenthal2003''')
         args = "-i %s -o %s --sampling %f" % (self.inputVol, structureFn, samplingRate)
         self.runJob("xmipp_volume_structure_factor", args)
     
-    def calculateFSCResolution(self, md, threshold):
-        xl=-1
-        xr=-1
-        yl=-1
-        yr=-1
-        leftSet=False
-        rightSet=False
-        for objId in md:
-            freq=md.getValue(MDL_RESOLUTION_FREQ,objId)
-            FSC=md.getValue(MDL_RESOLUTION_FRC,objId)
-            if FSC>threshold:
-                xl=freq
-                yl=FSC
-                leftSet=True
-            else:
-                xr=freq
-                yr=FSC
-                rightSet=True
-                break
-        if leftSet and rightSet:
-            x=xl+(threshold-yl)/(yr-yl)*(xr-xl)
-            return 1.0/x
-        else:
-            return -1
-    
-    def calculateDPRResolution(self, md, threshold):
-        xl=-1
-        xr=-1
-        yl=-1
-        yr=-1
-        leftSet=False
-        rightSet=False
-        for objId in md:
-            freq=md.getValue(MDL_RESOLUTION_FREQ,objId)
-            DPR=md.getValue(MDL_RESOLUTION_DPR,objId)
-            if DPR<threshold:
-                xl=freq
-                yl=DPR
-                leftSet=True
-            else:
-                xr=freq
-                yr=DPR
-                rightSet=True
-                break
-        if leftSet and rightSet:
-            x=xl+(threshold-yl)/(yr-yl)*(xr-xl)
-            return 1.0/x
-        else:
-            return -1
-
     def createSummaryStep(self):
         summary=""
         methodsStr=""
         if self.doFSC.get():
             summary+="FSC file: %s\n" % self.getFileTag(self._defineFscName())
-            md=MetaData(self._defineFscName())
-            f=self.calculateFSCResolution(md,0.5)
+            mData=md.MetaData(self._defineFscName())
+            f=self.calculateFSCResolution(mData,0.5)
             summary+="   Resolution FSC=0.5: %3.2f Angstroms\n"%f
             methodsStr+=" The resolution at FSC=0.5 was %3.2f Angstroms."%f
-            f=self.calculateFSCResolution(md,0.143)
+            f=self.calculateFSCResolution(mData,0.143)
             summary+="   Resolution FSC=0.143: %3.2f Angstroms\n"%f
             methodsStr+=" The resolution at FSC=0.143 was %3.2f Angstroms."%f
-            f=self.calculateDPRResolution(md,45)
+            f=self.calculateDPRResolution(mData,45)
             summary+="   Resolution DPR=45: %3.2f Angstroms\n"%f
             methodsStr+=" The resolution at DPR=45 was %3.2f Angstroms."%f
         if self.doStructureFactor:
@@ -197,9 +146,61 @@ by Rosenthal2003''')
                 values = map(float, f.readline().split())
                 methodsStr+=" The corresponding Bfactor was %4.3f."%values[4]
         return [methodsStr]
-              
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
     def _defineStructFactorName(self):
         return self._getPath('structureFactor.xmd')
     
     def _defineFscName(self):
         return self._getPath('fsc.xmd')
+
+    def calculateFSCResolution(self, mData, threshold):
+        xl=-1
+        xr=-1
+        yl=-1
+        yr=-1
+        leftSet=False
+        rightSet=False
+        for objId in mData:
+            freq=mData.getValue(md.MDL_RESOLUTION_FREQ,objId)
+            FSC=mData.getValue(md.MDL_RESOLUTION_FRC,objId)
+            if FSC>threshold:
+                xl=freq
+                yl=FSC
+                leftSet=True
+            else:
+                xr=freq
+                yr=FSC
+                rightSet=True
+                break
+        if leftSet and rightSet:
+            x=xl+(threshold-yl)/(yr-yl)*(xr-xl)
+            return 1.0/x
+        else:
+            return -1
+    
+    def calculateDPRResolution(self, mData, threshold):
+        xl=-1
+        xr=-1
+        yl=-1
+        yr=-1
+        leftSet=False
+        rightSet=False
+        for objId in mData:
+            freq=mData.getValue(md.MDL_RESOLUTION_FREQ,objId)
+            DPR=mData.getValue(md.MDL_RESOLUTION_DPR,objId)
+            if DPR<threshold:
+                xl=freq
+                yl=DPR
+                leftSet=True
+            else:
+                xr=freq
+                yr=DPR
+                rightSet=True
+                break
+        if leftSet and rightSet:
+            x=xl+(threshold-yl)/(yr-yl)*(xr-xl)
+            return 1.0/x
+        else:
+            return -1
+

@@ -111,22 +111,6 @@ class XmippProtRansac(ProtInitialVolume):
                       label='Max frequency of the initial volume',
                       help=' Max frequency of the initial volume in Angstroms')
         
-        form.addParam('useSA', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
-                      label='Combine simulated annealing and RANSAC', 
-                      help='This option produces better results at a higher computational cost')
-        form.addParam('nIterRandom', IntParam, default=10, condition='useSA', expertLevel=LEVEL_ADVANCED,
-                      label='Number of simulated annealing iterations',
-                      help='During the simulated annealing iterations, all those particles positively'
-                        'contributing to the improvement of the volume are considered. In this way,' 
-                        'the same image may participate several times from different projection '
-                        'directions (but different weights) depending on whether it improves the'
-                        'correlation with the volume or not')
-        form.addParam('rejection', IntParam, default=50, condition='useSA', expertLevel=LEVEL_ADVANCED,
-                      label='Percentage of rejected particles',
-                       help='At each iteration, the lowest correlated particles are'
-                            'removed from the 3D reconstruction, although they may '
-                            'participate in the next iteration')
-
         form.addParam('useAll', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label='Use all images to refine', 
                       help=' When refining a RANSAC volume, use all images to refine it instead of only inliers')
@@ -157,12 +141,6 @@ class XmippProtRansac(ProtInitialVolume):
             fnBase='proposedVolume%05d' % n
             fnRoot=self._getPath(fnBase)
                     
-            # Simulated annealing
-            self._insertFunctionStep('reconstructStep',fnRoot,
-                                               prerequisites=[bestVolumesStepId]) # Make estimation steps indepent between them
-            if self.useSA.get():
-                self._insertFunctionStep('simulatedAnnealingStep',fnRoot)
-        
             for it in range(self.numIter.get()):    
                 self._insertFunctionStep('reconstructStep',fnRoot) 
                 self._insertFunctionStep('projMatchStep',fnBase)
@@ -223,12 +201,6 @@ class XmippProtRansac(ProtInitialVolume):
         else:
             writeSetOfParticles(inputSet, classesFn)
         
-    def simulatedAnnealingStep(self, fnRoot):
-        self.runJob("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
-                         %(fnRoot,fnRoot,fnRoot,self.symmetryGroup.get(),self.nIterRandom.get(),self.rejection.get()))
-        moveFile(fnRoot+"_sa.vol", fnRoot+".vol")
-        cleanPath(fnRoot+"_sa.xmd")
-    
     def ransacIterationStep(self, n):
     
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd")  
@@ -256,14 +228,6 @@ class XmippProtRansac(ProtInitialVolume):
         
         fnVol = fnRoot+'.vol'
         
-        # Simulated annealing
-        if self.useSA.get():
-            smallIter=int(min(floor(self.nIterRandom.get()/5.0),0));
-            self.runJob("xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"
-                      %(fnRoot+".xmd",fnVol,fnRoot,self.symmetryGroup.get(),smallIter,self.rejection.get()))
-            moveFile(fnRoot+"_sa.vol", fnVol)
-            cleanPath(fnRoot+"_sa.xmd")
-    
         # Generate projections from this reconstruction
         fnGallery=self._getTmpPath('gallery_'+fnBase+'.stk')
         self.runJob("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
@@ -485,8 +449,6 @@ class XmippProtRansac(ProtInitialVolume):
             summary.append("Number of refinement interations: %d" % self.numIter.get())
             if self.summaryVar.hasValue():
                 summary.append(self.summaryVar.get())
-            if self.useSA:
-                summary.append("Simulated annealing used")            
         else:
             summary.append("Output volumes not ready yet.")
 

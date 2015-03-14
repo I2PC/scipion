@@ -192,7 +192,10 @@ def moveFile(source, dest):
 def createLink(source, dest):
     """ Creates a link to a given file path. """
     if exists(dest):
-        os.remove(dest)
+        if isdir(dest):
+            shutil.rmtree(dest)
+        else:
+            os.remove(dest)
     destDir = split(dest)[0]
     os.symlink(relpath(source,destDir),dest)
     

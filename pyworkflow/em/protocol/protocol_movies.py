@@ -125,10 +125,10 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def _getMovieName(self, movieId, ext='.mrc'):
         return self._getExtraPath('movie_%06d%s' % (movieId, ext)) 
     
-    def _getNameExt(self, movieName, ext):
+    def _getNameExt(self, movieName, postFix, ext):
         #return 'micrograph_%06d.mrc' % movieId
-        return removeBaseExt(movieName) + '-aligned.' + ext
-
+        #return removeBaseExt(movieName) + '_aligned.' + ext
+        return removeBaseExt(movieName) + postFix + '.' + ext
     def _getPlotName(self, movieName, plotType):
         if plotType == PLOT_CART:
             return removeBaseExt(movieName) + '_plot_cart.png'

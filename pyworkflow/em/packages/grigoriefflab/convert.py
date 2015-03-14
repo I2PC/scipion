@@ -37,7 +37,7 @@ from numpy import rad2deg
 from numpy.linalg import inv
 #from itertools import izip
 
-from pyworkflow.em.packages.grigoriefflab.grigoriefflab import *
+from pyworkflow.em.packages.grigoriefflab import *
 
 HEADER_COLUMNS = ['INDEX', 'PSI', 'THETA', 'PHI', 'SHX', 'SHY', 'MAG',
                   'FILM', 'DF1', 'DF2', 'ANGAST', 'OCC',
@@ -179,6 +179,28 @@ def parseCtffindOutput(filename):
     f.close()
     return result
 
+def parseCtffind4Output(filename):
+    """ Retrieve defocus U, V and angle from the
+    output file of the ctffind3 execution.
+    """
+    f = open(filename)
+    result = None
+    for line in f:
+        if not line.startswith("#"):
+            result = line.split()[1:]
+    f.close()
+    return result
+
+def readCtfModel(ctfModel, filename, ctf4=False):
+    if not ctf4:
+        defocusU, defocusV, defocusAngle = parseCtffindOutput(filename)
+        ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
+    else:
+        defocusU, defocusV, defocusAngle, _, ctfFit, ctfResolution = parseCtffind4Output(filename)
+        ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
+        ctfModel._ctffind4_crossCorrelation = Float(ctfFit)
+        ctfModel._ctffind4_ctfResolution = Float(ctfResolution)
+
 def geometryFromMatrix(matrix):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     inverseTransform = True
@@ -196,13 +218,3 @@ def geometryFromAligment(alignment):
     shifts, angles = geometryFromMatrix(alignment.getMatrix(),True)#####
 
     return shifts, angles
-
-
-    alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
-    alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
-
-    alignmentRow.setValue(xmipp.MDL_SHIFT_Z, shifts[2])
-    alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
-    alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
-    alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
-    alignmentRow.setValue(xmipp.MDL_FLIP, flip)

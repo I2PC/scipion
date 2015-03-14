@@ -204,6 +204,9 @@ def service_content(request):
     projectName = request.GET.get('p', None)
     path_files = '/resources_myfirstmap/img/'
     
+    # Get info about when the project was created
+    daysLeft = "14"
+    
     context = contentContext(request, projectName)
     context.update({'importAverages': path_files + 'importAverages.png',
                     'useProtocols': path_files + 'useProtocols.png',
@@ -214,6 +217,7 @@ def service_content(request):
                     'download': path_files + 'download.png',
                     'formUrl': 'my_form',
                     'mode':'service',
+                    'daysLeft': daysLeft,
                     })
     
     return render_to_response('service_content.html', context)
