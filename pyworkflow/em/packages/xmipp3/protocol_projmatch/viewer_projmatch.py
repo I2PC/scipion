@@ -77,7 +77,7 @@ class XmippProjMatchViewer(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         group = form.addGroup('Overall results')
-        form.addParam('viewIter', EnumParam, choices=['last', 'all', 'selection'], default=ITER_LAST,
+        form.addParam('viewIter', EnumParam, choices=['last', 'selection'], default=ITER_LAST,
                       display=EnumParam.DISPLAY_LIST,
                       label="Iteration to visualize", 
                       help="""
@@ -95,22 +95,23 @@ Examples:
 
         group = form.addGroup('Particles')
 
-        group.addParam('displayLibraryOrClasses', EnumParam, choices=['Library', 'Classes', 'Library and Classes'],
+        group.addParam('showProjectionMatchingLibraryAndImages', LabelParam, default=False,
+                      label='Display projections and particles',
+                      help="Display projections and particles")
+        group.addParam('displayLibraryOrClasses', EnumParam, choices=['projections', 'classes', 'projections and classes'],
                           default=DISPLAY_LIBRARY, display=EnumParam.DISPLAY_COMBO,
                           label='Display',
                           help='Displays images with angular assignment')
-        group.addParam('showProjectionMatchingLibraryAndImages', LabelParam, default=False,
-                      label='Display library and experimental images',
-                      help="Display library and experimental images")
-        group.addParam('showDiscardedImages', LabelParam, default=False,
-                      label='Display input discarded images',
-                      help='Display input discarded images.')
+
         group.addParam('showExperimentalImages', LabelParam, default=False,
-                      label='Display experimental images',
-                      help="""Display Input images with alignment and classification information
+                      label='Display particles',
+                      help="""Display particles with alignment and classification information
                            WARNING: the angles and shifts are the adecuate for reconstruction
                            but not for 2D aligment.
                            """)
+        group.addParam('showDiscardedImages', LabelParam, default=False,
+                      label='Display discarded particles',
+                      help='Display discarded particles.')
 
 
         group = form.addGroup('Volumes')
@@ -126,14 +127,28 @@ Examples:
                       expertLevel=LEVEL_ADVANCED,
                       label='Width of projection galleries',
                       help='Usually a multiple of 2 is the right value. -1 => authomatic')
-        group.addParam('showVolume', EnumParam, choices=['slices', 'chimera'],
-                      display=EnumParam.DISPLAY_LIST, default=VOLUME_SLICES,
+
+        group.addParam('displayVolWith', EnumParam, choices=['slices', 'chimera'],
+                      display=EnumParam.DISPLAY_COMBO, default=VOLUME_SLICES,
                       label='Display volume with',
                       help='*slices*: display volumes as 2D slices along z axis.\n'
                            '*chimera*: display volumes as surface with Chimera.')
-        group.addParam('displayVolume', EnumParam, choices=['Reference volume', 'Reconstructed volume', 'Filtered volume'],
+
+        # Line is not working well for this case
+        # line = group.addLine("Display volume", help="some help")
+        # line.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed', 'Filtered'],
+        #                   default=1, display=EnumParam.DISPLAY_COMBO,
+        #                   label='',
+        #                   help='Displays selected volume')
+        # line.addParam('displayVolWith', EnumParam, choices=['slices', 'chimera'],
+        #               display=EnumParam.DISPLAY_COMBO, default=VOLUME_SLICES,
+        #               label='with',
+        #               help='*slices*: display volumes as 2D slices along z axis.\n'
+        #                    '*chimera*: display volumes as surface with Chimera.')
+
+        group.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed', 'Filtered'],
                           default=1, display=EnumParam.DISPLAY_COMBO,
-                          label='Display',
+                          label='Display volume',
                           help='Displays selected volume')
         group.addParam('showBFactorCorrectedVolume', LabelParam, default=False,
                        label='Show a b_factor corrected volume',
@@ -154,7 +169,7 @@ Examples:
                             for details. DEFAULT behaviour is --auto
                             """)
         group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'],
-                      display=EnumParam.DISPLAY_LIST, default=ANGDIST_2DPLOT,
+                      display=EnumParam.DISPLAY_COMBO, default=ANGDIST_2DPLOT,
                       label='Display angular distribution',
                       help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                            '*chimera*: display angular distribution using Chimera with red spheres.')
@@ -332,9 +347,9 @@ Examples:
         return [view]
     
     def _showVolumes(self, volumes, paramName):
-        if self.showVolume == VOLUME_CHIMERA:
+        if self.displayVolWith == VOLUME_CHIMERA:
             return self._showVolumesChimera(volumes)
-        elif self.showVolume == VOLUME_SLICES:
+        elif self.displayVolWith == VOLUME_SLICES:
             #return self._createVolumesMd(volumes)
             return self.viewVolumesSqlite(volumes)
     
@@ -558,7 +573,7 @@ Examples:
                         file_nameReferences = self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
                         sfn   = createUniqueFileName(file_nameReferences)
                         file_nameReferences = 'projectionDirections@' + sfn
-                        mdOut.write(sfn)
+                        mdOut.write(file_nameReferences)
                         imgAndClasses.append(self.createDataView(file_nameReferences))
                 else:
                         print "File %s does not exist" % file_name

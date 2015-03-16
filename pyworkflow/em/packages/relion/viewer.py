@@ -182,10 +182,10 @@ Examples:
                           help='')
             group = form.addGroup('Resolution')
             group.addParam('resolutionPlotsSSNR', LabelParam, default=True,
-                          label='Display SSNR plots?',
+                          label='Display SSNR plotss',
                           help='Display signal to noise ratio plots (SSNR) ')
             group.addParam('resolutionPlotsFSC', LabelParam, default=True,
-                          label='Display resolution plots (FSC) ?',
+                          label='Display resolution plots (FSC)',
                           help='')
             group.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
                           expertLevel=LEVEL_ADVANCED,
@@ -197,7 +197,7 @@ Examples:
         
         form.addSection('Overall')      
         form.addParam('showPMax', LabelParam, default=True,
-                      label="Show average PMax?", 
+                      label="Show average PMax",
                       help='Average (per class) of the maximum value\n of normalized probability function')      
         form.addParam('showChanges', LabelParam, default=True,
                       label=changesLabel,
