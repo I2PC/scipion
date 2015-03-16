@@ -56,7 +56,7 @@ ANGDIST_CHIMERA = 1
 VOLUME_SLICES = 0
 VOLUME_CHIMERA = 1
 
-CHIMERADATAVIEW = 0
+DISPLAY_LIBRARY = 0
 
 REF_ALL = 0
 REF_SEL = 1
@@ -77,7 +77,7 @@ class XmippProjMatchViewer(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         group = form.addGroup('Overall results')
-        form.addParam('viewIter', EnumParam, choices=['last', 'selection'], default=ITER_LAST, 
+        form.addParam('viewIter', EnumParam, choices=['last', 'all', 'selection'], default=ITER_LAST,
                       display=EnumParam.DISPLAY_LIST,
                       label="Iteration to visualize", 
                       help="""
@@ -92,11 +92,31 @@ Examples:
                       condition='viewIter==%d' % ITER_SELECTION, 
                       label="Iteration list",
                       help="Write the iteration list to visualize.")
-        
-        group = form.addGroup('Volumes display')
+
+        group = form.addGroup('Particles')
+
+        group.addParam('displayLibraryOrClasses', EnumParam, choices=['Library', 'Classes', 'Library and Classes'],
+                          default=DISPLAY_LIBRARY, display=EnumParam.DISPLAY_COMBO,
+                          label='Display',
+                          help='Displays images with angular assignment')
+        group.addParam('showProjectionMatchingLibraryAndImages', LabelParam, default=False,
+                      label='Display library and experimental images',
+                      help="Display library and experimental images")
+        group.addParam('showDiscardedImages', LabelParam, default=False,
+                      label='Display input discarded images',
+                      help='Display input discarded images.')
+        group.addParam('showExperimentalImages', LabelParam, default=False,
+                      label='Display experimental images',
+                      help="""Display Input images with alignment and classification information
+                           WARNING: the angles and shifts are the adecuate for reconstruction
+                           but not for 2D aligment.
+                           """)
+
+
+        group = form.addGroup('Volumes')
         group.addParam('showRef3DNo', EnumParam, choices=['all', 'selection'], default=REF_ALL,
                       display=EnumParam.DISPLAY_LIST,
-                      label='Show results for reference volumes',
+                      label='Reference to visualize',
                       help='')
         group.addParam('ref3DSelection', NumericRangeParam, default='1',
                       condition='showRef3DNo == %d' % REF_SEL,
@@ -106,20 +126,15 @@ Examples:
                       expertLevel=LEVEL_ADVANCED,
                       label='Width of projection galleries',
                       help='Usually a multiple of 2 is the right value. -1 => authomatic')
-        group.addParam('showVolume', EnumParam, choices=['slices', 'chimera'], 
+        group.addParam('showVolume', EnumParam, choices=['slices', 'chimera'],
                       display=EnumParam.DISPLAY_LIST, default=VOLUME_SLICES,
                       label='Display volume with',
                       help='*slices*: display volumes as 2D slices along z axis.\n'
                            '*chimera*: display volumes as surface with Chimera.')
-        group.addParam('showReference', LabelParam, default=False,
-                      label='Show reference volume',
-                      help='Volume after filtration and masking')
-        group.addParam('showReconstruction', LabelParam, default=False,
-                      label='Show reconstructed volume',
-                      help='Volume as given by the reconstruction algorithm')
-        group.addParam('showFilteredReconstruction', LabelParam, default=False,
-                      label='Show reconstructed volume after filtration',
-                      help='Volume after filtration')
+        group.addParam('displayVolume', EnumParam, choices=['Reference volume', 'Reconstructed volume', 'Filtered volume'],
+                          default=1, display=EnumParam.DISPLAY_COMBO,
+                          label='Display',
+                          help='Displays selected volume')
         group.addParam('showBFactorCorrectedVolume', LabelParam, default=False,
                        label='Show a b_factor corrected volume',
                        help=""" This utility boost up the high frequencies. Do not use the automated 
@@ -138,36 +153,6 @@ Examples:
                        help=""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
                             for details. DEFAULT behaviour is --auto
                             """)
-        form.addSection(label='Library, classes and images')
-
-        group = form.addGroup('Library, classes and images')
-        group.addParam('showChimeraWithDataView', EnumParam, choices=['Yes', 'No'],
-                      display=EnumParam.DISPLAY_LIST, default=1,
-                      label='Display volume',
-                      help='*Yes*: display volume.\n'
-                           '*No*: .')
-        group.addParam('showProjectionMatchingLibrary', LabelParam, default=False,
-                      label='Display library',
-                      help="Display library.")
-        group.addParam('showProjectionMatchingClasses', LabelParam, default=False,
-                      label='Display classes',
-                      help="Display classes.")
-        group.addParam('showProjectionMatchingLibraryAndClasses', LabelParam, default=False,
-                      label='Display library and classes',
-                      help="Display library and classes.")
-        group.addParam('showProjectionMatchingLibraryAndImages', LabelParam, default=False,
-                      label='Display library and experimental images',
-                      help="Display library and experimental images")
-        group.addParam('showDiscardedImages', LabelParam, default=False,
-                      label='Display input discarded images',
-                      help='Display input discarded images.')
-        group.addParam('showExperimentalImages', LabelParam, default=False,
-                      label='Display experimental images',
-                      help="""Display Input images with alignment and classification information
-                           WARNING: the angles and shifts are the adecuate for reconstruction
-                           but not for 2D aligment.
-                           """)
-        group = form.addGroup('Angular distribution and resolution plots')
         group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'],
                       display=EnumParam.DISPLAY_LIST, default=ANGDIST_2DPLOT,
                       label='Display angular distribution',
@@ -180,6 +165,7 @@ Examples:
                       expertLevel=LEVEL_ADVANCED,
                       label='Threshold in resolution plots',
                       help='')
+
         form.addSection(label='Convergence')
         group = form.addGroup('Convergence')
         group.addParam('plotHistogramAngularMovement', LabelParam, default=False,
@@ -204,13 +190,16 @@ Examples:
 
     def _getVisualizeDict(self):
         self._load()
-        return {'showReference': self._showRefs,
-                'showReconstruction': self._showRecons,
-                'showFilteredReconstruction' : self._showFilVols,
-                'showBFactorCorrectedVolume' : self._showBfactorVols,
-                'showProjectionMatchingLibrary' : self._showProjMatchLibrary,
-                'showProjectionMatchingClasses' : self._showProjMatchClasses,
-                'showProjectionMatchingLibraryAndClasses' : self._showProjMatchLibAndClasses,
+        return {
+                # 'showReference': self._showRefs,
+                # 'showReconstruction': self._showRecons,
+                # 'showFilteredReconstruction' : self._showFilVols,
+                # 'showBFactorCorrectedVolume' : self._showBfactorVols,
+                #'showProjectionMatchingLibrary' : self._showProjMatchLibrary,
+                # 'showProjectionMatchingClasses' : self._showProjMatchClasses,
+                # 'showProjectionMatchingLibraryAndClasses' : self._showProjMatchLibAndClasses,
+                'displayVolume' : self._showVolume,
+                'displayLibraryOrClasses' : self._showLibraryOrClasses,
                 'showProjectionMatchingLibraryAndImages' : self._showProjMatchLibAndImages,
                 'showDiscardedImages' : self._showDiscardedImages,
                 'showExperimentalImages' : self._showExperimentalImages,
@@ -290,6 +279,16 @@ Examples:
 #===============================================================================
 # Show Volumes
 #===============================================================================
+
+    def _showVolume(self, paramName=None):
+        choice = self.displayVolume.get()
+        print choice
+        if choice == 0:
+            return self._showRefs(paramName)
+        elif choice == 1:
+            return self._showRecons(paramName)
+        else:
+            return self._showFilVols(paramName)
     
     def _createVolumesMd(self, volumes):
         """ Write a metadata with all volumes selected for visualization. """
@@ -387,7 +386,20 @@ Examples:
 # Show Library, Classes and Images
 #===============================================================================
 
+
+    def _showLibraryOrClasses(self, paramName=None):
+        choice = self.displayLibraryOrClasses.get()
+        print choice
+        if choice == DISPLAY_LIBRARY:
+            return self._showProjMatchLibrary(paramName)
+        elif choice == 1:
+            return self._showProjMatchClasses(paramName)
+        else:
+            return self._showProjMatchLibAndClasses(paramName)
+
+
     def _showProjMatchLibrary(self, paramName=None):
+        print '_show library'
         #map stack position with ref number
         list = []
         mdIn  = xmipp.MetaData()
@@ -449,6 +461,7 @@ Examples:
         return classes
     
     def _showProjMatchLibAndClasses(self, paramName=None):
+        print 'show lib and classes'
         #map stack position with ref number
         list = []
         mdIn  = xmipp.MetaData()
@@ -574,26 +587,23 @@ Examples:
                 file_name_ctf = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@" + file_name
                 if exists(file_name):
                     md.read(file_name_ctf)
-                    if self.showChimeraWithDataView == CHIMERADATAVIEW:
-                        return self.createChimeraDataView(DataView(file_name_ctf))
-                    else:
-                        return [self.createDataView(file_name_ctf)]
+                    return [self.createDataView(file_name_ctf)]
                 else:
                     print "File %s does not exist" % file_name
                     return []
 
-    def createChimeraDataView(self, view):
-
-        volumes = self._volFileNames('reconstructedFileNamesIters')
-        if len(volumes) > 1:#one reference and one iteration allowed
-            self.showError('you cannot display more than one volume with images')
-            return []
-        else:
-            vol = Volume()
-            vol.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
-            vol.setFileName(volumes[0])
-
-            return [ChimeraDataView(view, vol)]
+    # def createChimeraDataView(self, view):
+    #
+    #     volumes = self._volFileNames('reconstructedFileNamesIters')
+    #     if len(volumes) > 1:#one reference and one iteration allowed
+    #         self.showError('you cannot display more than one volume with images')
+    #         return []
+    #     else:
+    #         vol = Volume()
+    #         vol.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
+    #         vol.setFileName(volumes[0])
+    #
+    #         return [ChimeraDataView(view, vol)]
 
 #===============================================================================
 # Convergence
