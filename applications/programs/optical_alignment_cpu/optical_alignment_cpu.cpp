@@ -51,6 +51,7 @@ public:
     FileName fname, foname;
 
     int winSize, gpuDevice, fstFrame, lstFrame;
+    int psdPieceSize;
     bool doAverage, psd;
 
     void defineParams()
@@ -288,6 +289,7 @@ public:
         // Compute the average of the whole stack
         fstFrame++; // Just to adapt to Li algorithm
         lstFrame++; // Just to adapt to Li algorithm
+        psdPieceSize = 400; // Currently we set it as a constant
         if (lstFrame>=imagenum || lstFrame==1)
             lstFrame = imagenum;
         imagenum -= (imagenum-lstFrame) + (fstFrame-1);
@@ -299,8 +301,8 @@ public:
             II() = avgCurr;
             II.write(foname);
             rawPSDFile = fname.removeAllExtensions()+"_raw";
-            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim 400 --overlap 0.7",
-                                     foname.c_str(), rawPSDFile.c_str());
+            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
+                                     foname.c_str(), rawPSDFile.c_str(), psdPieceSize);
             String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
             std::cerr<<"Computing the raw FFT"<<std::endl;
             if (system(cmd.c_str())==-1)
@@ -438,8 +440,8 @@ public:
             Image<double> psdCorr, psdRaw;
             MultidimArray<double> psdCorrArr, psdRawArr;
             correctedPSDFile = fname.removeAllExtensions()+"_corrected";
-            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim 400 --overlap 0.7",
-                                     foname.c_str(), correctedPSDFile.c_str());
+            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
+                                     foname.c_str(), correctedPSDFile.c_str(), psdPieceSize);
             String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
             std::cerr<<"Computing the corrected FFT"<<std::endl;
             if (system(cmd.c_str())==-1)
@@ -448,12 +450,12 @@ public:
             psdCorr.read(correctedPSDFile+".psd");
             psdCorrArr=psdCorr();
             psdRawArr=psdRaw();
-            for (size_t i=0;i<400;i++)
-            	for (size_t j=0;j<200;j++)
+            for (size_t i=0;i<psdPieceSize;i++)
+            	for (size_t j=0;j<size_t(psdPieceSize/2);j++)
             		DIRECT_A2D_ELEM(psdCorrArr,i,j)=DIRECT_A2D_ELEM(psdRawArr,i,j);
             psdCorr()=psdCorrArr;
             psdCorr.write(correctedPSDFile+".psd");
-            //rawPSDFile.deleteFile();
+            FileName auxFile = rawPSDFile.addExtension("psd");
         }
         return 0;
     }
