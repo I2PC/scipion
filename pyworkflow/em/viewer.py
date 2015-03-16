@@ -386,7 +386,7 @@ class ChimeraClient:
         self.listen = True
         try:
             while self.listen:
-                #print 'on client loop'
+                print 'on client loop'
                 msg = self.client.recv()
                 self.answer(msg)
                 sleep(0.01)

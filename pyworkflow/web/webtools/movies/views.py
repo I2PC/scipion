@@ -24,7 +24,6 @@
 # *
 # **************************************************************************
 
-import os
 from os.path import exists, join, basename
 from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs, getResourceIcon
 from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
@@ -43,7 +42,7 @@ def service_movies(request):
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
-    movies_utils = django_settings.STATIC_URL + "js/movies_utils.js"
+    movies_utils = join(django_settings.STATIC_URL, "js/", "movies_utils.js")
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),

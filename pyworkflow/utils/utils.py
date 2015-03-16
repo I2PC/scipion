@@ -88,6 +88,8 @@ def dateStr(dt, secs=False):
         dateFormat += ':%S'
     return dt.strftime(dateFormat)
 
+prettyTime = dateStr
+
 
 def prettySize(size):
     """Human friendly file size"""
