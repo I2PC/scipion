@@ -10,15 +10,12 @@ import ij.gui.ImageWindow;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
-
 import java.awt.Component;
 import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.Window;
-
 import javax.swing.SwingUtilities;
 import javax.vecmath.Color3f;
-
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippIJWindow;
 import xmipp.ij.commons.XmippImageCanvas;
@@ -35,6 +32,7 @@ import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.scipion.ScipionGalleryData;
+import xmipp.viewer.scipion.ScipionGalleryJFrame;
 import xmipp.viewer.scipion.ScipionMetaData;
 
 /**
@@ -206,7 +204,7 @@ public class ImagesWindowFactory {
 
                             @Override
                             public void run() {
-                                GalleryJFrame frame = new GalleryJFrame(data);
+                                ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data);
                                 frame.selectBlock(preffix);
                             }
                         });
@@ -216,7 +214,7 @@ public class ImagesWindowFactory {
                     {
                         md = new ScipionMetaData(filename);
                         ScipionGalleryData data = new ScipionGalleryData(null, parameters, md);
-                        new GalleryJFrame(data);
+                        new ScipionGalleryJFrame(data);
                     }
                 }
 	}
