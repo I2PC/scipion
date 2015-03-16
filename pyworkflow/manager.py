@@ -87,10 +87,10 @@ class Manager(object):
                        protocolsConf=protocolsConf)
         return project
     
-    def loadProject(self, projId):
+    def loadProject(self, projId, **kwargs):
         """ Retrieve a project object, given its id. """
         project = Project(self.getProjectPath(projId))
-        project.load()
+        project.load(**kwargs)
         return project
 
     def deleteProject(self, projectName):
