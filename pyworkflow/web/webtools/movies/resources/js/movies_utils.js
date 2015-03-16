@@ -133,7 +133,8 @@ function downloadTestdata(elm){
 }
 
 function createMovProject(elm) {
-	var projName = randomString(32, '#aA')
+	var projName = "mov"+randomString(32, '#aA')
+	
 	var selected = $("#testData input[type='radio']:checked").val();
 
 	var URL = getSubDomainURL() + "/create_movies_project/?projectName=" + projName
