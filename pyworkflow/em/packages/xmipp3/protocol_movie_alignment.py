@@ -155,7 +155,6 @@ class ProtMovieAlignment(ProtProcessMovies):
             metadataName = self._getNameExt(movie.getFileName(), '_aligned', 'xmd')
             plotPolarName = self._getNameExt(movie.getFileName(), '_plot_polar', 'png')
             plotCartName = self._getNameExt(movie.getFileName(), '_plot_cart', 'png')
-            psdRawName = self._getNameExt(movie.getFileName(), '_raw', 'psd')
             psdCorrName = self._getNameExt(movie.getFileName(),'_corrected', 'psd')
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
@@ -171,11 +170,9 @@ class ProtMovieAlignment(ProtProcessMovies):
             mic.setFileName(self._getExtraPath(micName))
             mic.plotPolar = em.Image()
             mic.plotCart = em.Image()
-            mic.psdRaw = em.Image()
             mic.psdCorr = em.Image()
             mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
             mic.plotCart.setFileName(self._getExtraPath(plotCartName))
-            mic.psdRaw.setFileName(self._getExtraPath(psdRawName))
             mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
             micSet.append(mic)
 
@@ -216,7 +213,6 @@ class ProtMovieAlignment(ProtProcessMovies):
         #micName = self._getMicName(movieId)
         micName = self._getNameExt(movieName, '_aligned', 'mrc')
         metadataName = self._getNameExt(movieName, '_aligned', 'xmd')
-        psdRawName = self._getNameExt(movieName, '_raw', 'psd')
         psdCorrName = self._getNameExt(movieName,'_corrected', 'psd')
 
         firstFrame = self.alignFrame0.get()
@@ -288,7 +284,6 @@ class ProtMovieAlignment(ProtProcessMovies):
                 import sys
                 print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
             moveFile(join(movieFolder, metadataName), self._getExtraPath())
-            moveFile(join(movieFolder, psdRawName), self._getExtraPath())
             moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
 
         # Move output micrograph and related information to 'extra' folder
