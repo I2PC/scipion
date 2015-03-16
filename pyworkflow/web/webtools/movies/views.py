@@ -36,6 +36,7 @@ from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
 import pyworkflow.utils as pwutils
+from pyworkflow.utils.utils import prettyDelta
 
 def service_movies(request):
 
@@ -95,8 +96,8 @@ def create_movies_project(request):
         
         # Create symbolic link for uploads
         dest = os.path.join(projectPath,'Uploads')
-#        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
-        source = "/home/josegutab/examples/"+ projectName
+        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
+#         source = "/home/josegutab/examples/"+ projectName
         pwutils.path.makePath(source)
         pwutils.createLink(source, dest)
         
@@ -160,8 +161,8 @@ def movies_content(request):
     command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
     
     project = loadProject(projectName)
-    elapsedTime = project.getElapsedTime()
-    daysleft = "14"
+    elapsedTime = prettyDelta(project.getElapsedTime())
+    daysleft = prettyDelta
     
     context = contentContext(request, projectName)
     context.update({
