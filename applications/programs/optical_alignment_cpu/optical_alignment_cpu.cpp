@@ -456,6 +456,7 @@ public:
             psdCorr()=psdCorrArr;
             psdCorr.write(correctedPSDFile+".psd");
             FileName auxFile = rawPSDFile.addExtension("psd");
+            auxFile.deleteFile();
         }
         return 0;
     }
