@@ -1173,21 +1173,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				public void setSelectedItem(Object item)
 				{
 					if (proceedWithChanges())
-					{
-						data.selectBlock((String) item);
-						jcbVolumes.invalidate();
-						try
-						{
-							data.loadMd();
-							reloadTableData();
-                                                        autoAdjustColumns(data.isAutoAdjust());
-						}
-						catch (Exception e)
-						{
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
+                                            selectBlock((String)item);
 				}
 
 				@Override
@@ -1217,6 +1203,23 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		jcbVolumes.setModel(new VolumesComboBoxModel());
 		cbPanel.add(jcbVolumes);
 	}
+        
+        public void selectBlock(String block)
+        {
+            data.selectBlock(block);
+            jcbVolumes.invalidate();
+            try
+            {
+                    data.loadMd();
+                    reloadTableData();
+                    autoAdjustColumns(data.isAutoAdjust());
+            }
+            catch (Exception e)
+            {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+            }
+        }
         
         public class VolumesComboBoxModel implements ComboBoxModel
         {
