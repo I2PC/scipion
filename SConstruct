@@ -376,6 +376,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     """
     _libs = list(libs)
     _libpath = list(libpath)
+    _incs = list(incs)
     lastTarget = deps
     prefix = 'lib' if prefix is None else prefix
     suffix = '.so' if suffix is None else suffix
@@ -392,34 +393,44 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     if not sources and env.TargetInBuild(name):
         Exit('No sources found for Library: %s. Exiting!!!' % name)
 
-
-    mpiArgs = {}
-    if mpi:
-        _libpath.append(env['MPI_LIBDIR'])
-        libs.append(env['MPI_LIB'])        
-        mpiArgs = {'CC': env['MPI_CC'],
-                   'CXX': env['MPI_CXX']}
-        conf = Configure(env, custom_tests = {'CheckMPI': CheckMPI})
-        if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'], 
-                             env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], 
-                             env['MPI_LINKERFORPROGRAMS'], False):
-            print >> sys.stderr, 'ERROR: MPI is not properly working. Exiting...'
-            Exit(1)
-        env = conf.Finish()
-        env.PrependENVPath('PATH', env['MPI_BINDIR'])
-    
     # FIXME: There must be a key in env dictionary that breaks the compilation. Please find it to make it more beautiful
     env2 = Environment()
     env2['ENV']['PATH'] = env['ENV']['PATH']
 
+    mpiArgs = {}
+    if mpi:
+        print "addCppLibrary: %s, mpi=True" % name
+        _libpath.append(env['MPI_LIBDIR'])
+        _libs.append(env['MPI_LIB']) 
+        _incs.append(env['MPI_INCLUDE'])
+               
+        mpiArgs = {'CC': env['MPI_CC'],
+                   'CXX': env['MPI_CXX'],
+                   'LINK': env['MPI_LINKERFORPROGRAMS']}
+#         conf = Configure(env, custom_tests = {'CheckMPI': CheckMPI})
+#         if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'], 
+#                              env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], 
+#                              env['MPI_LINKERFORPROGRAMS'], False):
+#             print >> sys.stderr, 'ERROR: MPI is not properly working. Exiting...'
+#             Exit(1)
+#         env = conf.Finish()
+        env2.PrependENVPath('PATH', env['MPI_BINDIR'])
+    
+
+    _incs.append(env['CPPPATH'])
+    _incs.append('#software/include')
+
+    print "-"* 50    
+    print "DEBUG: addCppLibrary: %s, _incs=%s" % (name, _incs)
+    print "                env['CPPPATH'] = %s" % (env['CPPPATH'])
     #print env2.Dump()
     library = env2.SharedLibrary(
               target=join(basedir, fullname),
               #source=lastTarget,
               source=sources,
-              CPPPATH=incs + [env['CPPPATH']] + [Dir('#software/include').abspath],
+              CPPPATH=_incs,
               LIBPATH=_libpath,
-              LIBS=libs,
+              LIBS=_libs,
               SHLIBPREFIX=prefix,
               SHLIBSUFFIX=suffix,
               LINKFLAGS=env['LINKFLAGS'],
@@ -621,7 +632,8 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     ccCopy = env['MPI_CC'] if mpi else env['CC']
     cxxCopy = env['MPI_CXX'] if mpi else env['CXX']
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
-    incsCopy = incs + env['CPPPATH'] + ['libraries', Dir('#software/include').abspath, Dir('#software/include/python2.7').abspath]
+    incsCopy = incs + env['CPPPATH'] + ['libraries', Dir('#software/include').abspath, 
+                                        Dir('#software/include/python2.7').abspath]
     libsCopy = libs
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
