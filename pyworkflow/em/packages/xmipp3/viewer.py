@@ -365,7 +365,7 @@ class XmippViewer(Viewer):
 
         elif issubclass(cls, ProtMovieAlignment):
             outputMics = obj.outputMicrographs
-            plotLabels = 'psdRaw._filename psdCorr._filename plotPolar._filename plotCart._filename'
+            plotLabels = 'psdCorr._filename plotPolar._filename plotCart._filename'
             labels = plotLabels + ' _filename '
             objCommands = "'%s' '%s' '%s'" % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
             
