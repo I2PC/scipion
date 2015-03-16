@@ -161,6 +161,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
             alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
+            alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
             movieCreatePlot(PLOT_POLAR, alignedMovie, True)
             movieCreatePlot(PLOT_CART, alignedMovie, True)
             movieSet.append(alignedMovie)
