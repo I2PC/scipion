@@ -207,7 +207,7 @@ def service_content(request):
     # Get info about when the project was created
     project = loadProject(projectName)
     elapsedTime = project.getElapsedTime()
-    daysleft = "14"
+    daysLeft = "14"
     
     context = contentContext(request, projectName)
     context.update({'importAverages': path_files + 'importAverages.png',

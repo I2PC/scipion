@@ -162,7 +162,7 @@ def movies_content(request):
     
     project = loadProject(projectName)
     elapsedTime = prettyDelta(project.getElapsedTime())
-    daysleft = prettyDelta
+    daysleft = "14"
     
     context = contentContext(request, projectName)
     context.update({
