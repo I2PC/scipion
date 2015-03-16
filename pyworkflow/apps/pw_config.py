@@ -49,7 +49,7 @@ def main():
                 (os.environ['SCIPION_CONFIG'], 'scipion.conf'),
                 (os.environ['SCIPION_PROTOCOLS'], 'protocols.conf'),
                 (os.environ['SCIPION_HOSTS'], 'hosts.conf')]:
-            if not exists(fpath) or overwrite:
+            if not exists(fpath) or args.overwrite:
                 createConf(fpath, join(settingsDir, tmplt))
             else:
                 checkConf(fpath, join(settingsDir, tmplt))
