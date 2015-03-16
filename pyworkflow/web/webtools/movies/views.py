@@ -159,8 +159,9 @@ def movies_content(request):
     path_files = '/resources_movies/img/'
     command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
     
-    # Get info about when the project was created
-    daysLeft = "14"
+    project = loadProject(projectName)
+    elapsedTime = project.getElapsedTime()
+    daysleft = "14"
     
     context = contentContext(request, projectName)
     context.update({
@@ -175,7 +176,7 @@ def movies_content(request):
                     'showj': path_files + 'showj.png',
                     'download': path_files + 'download.png',
                     'command' : command,
-                    'daysLeft': daysLeft,
+                    'daysLeft': daysleft,
                     })
     
     return render_to_response('movies_content.html', context)
