@@ -402,6 +402,7 @@ unsigned int  randomize_random_generator()
     struct timespec highresTime;
 
 #ifdef __MACH__ // OS X does not have clock_gettime, use clock_get_time
+
     clock_serv_t cclock;
     mach_timespec_t mts;
     host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
@@ -410,8 +411,10 @@ unsigned int  randomize_random_generator()
     highresTime.tv_sec = mts.tv_sec;
     highresTime.tv_nsec = mts.tv_nsec;
 #else
+
     clock_gettime(CLOCK_REALTIME, &highresTime);
 #endif
+
     srand(rand()+clock()+time(NULL)+highresTime.tv_nsec);
     rand_return = rand();
 
@@ -689,24 +692,24 @@ void print_elapsed_time(TimeStamp& time, bool _IN_SECS)
 
 size_t Timer::now()
 {
-  gettimeofday(&tv, NULL);
-  localtime_r(&tv.tv_sec,&tm);
-  return tm.tm_hour * 3600 * 1000 + tm.tm_min * 60 * 1000 + tm.tm_sec * 1000 +
-                  tv.tv_usec / 1000;
+    gettimeofday(&tv, NULL);
+    localtime_r(&tv.tv_sec,&tm);
+    return tm.tm_hour * 3600 * 1000 + tm.tm_min * 60 * 1000 + tm.tm_sec * 1000 +
+           tv.tv_usec / 1000;
 }
 
 void Timer::tic()
 {
-  tic_time = now();
+    tic_time = now();
 }
 
 void Timer::toc(const char * msg)
 {
-  size_t diff = now() - tic_time;
-  if (msg != NULL)
-      std::cout << msg;
-  std::cout << "Elapsed time: ";
-  std::cout << diff/1000.0 << " secs." << std::endl;
+    size_t diff = now() - tic_time;
+    if (msg != NULL)
+        std::cout << msg;
+    std::cout << "Elapsed time: ";
+    std::cout << diff/1000.0 << " secs." << std::endl;
 }
 
 
@@ -924,7 +927,7 @@ size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
         retval = 0;
         for (size_t n = 0; n < nitems; n++)
         {
-        	char * ptrp = ptr + size - 1;
+            char * ptrp = ptr + size - 1;
             for (size_t i = 0; i < size; ++i, --ptrp)
             {
                 if (fwrite(ptrp, 1, 1, fp) != 1)
@@ -1070,6 +1073,57 @@ bool IsBigEndian(void)
 {
     static const unsigned long ul = 0x01000000;
     return ((int)(*((unsigned char *) &ul)))!=0;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// process_mem_usage(double &, double &) - takes two doubles by reference,
+// attempts to read the system-dependent data for a process' virtual memory
+// size and resident set size, and return the results in KB.
+//
+// On failure, returns 0.0, 0.0
+void processMemUsage(double& vm_usage, double& resident_set)
+{
+    using std::ios_base;
+    using std::ifstream;
+    using std::string;
+
+    vm_usage     = 0.0;
+    resident_set = 0.0;
+
+    // 'file' stat seems to give the most reliable results
+    //
+    ifstream stat_stream("/proc/self/stat",ios_base::in);
+
+    // dummy vars for leading entries in stat that we don't care about
+    //
+    string pid, comm, state, ppid, pgrp, session, tty_nr;
+    string tpgid, flags, minflt, cminflt, majflt, cmajflt;
+    string utime, stime, cutime, cstime, priority, nice;
+    string O, itrealvalue, starttime;
+
+    // the two fields we want
+    //
+    unsigned long vsize;
+    long rss;
+
+    stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr
+    >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
+    >> utime >> stime >> cutime >> cstime >> priority >> nice
+    >> O >> itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
+
+    stat_stream.close();
+
+    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
+    vm_usage     = vsize / 1024.0;
+    resident_set = rss * page_size_kb;
+}
+
+void printMemoryUsed()
+{
+	double virtualMemory, residentMemory;
+	processMemUsage(virtualMemory, residentMemory);
+	std::cout << "VM: " << virtualMemory << "kB ; RSS: " << residentMemory << " kB" << std::endl;
 }
 
 /** Divides a number into most equally groups */

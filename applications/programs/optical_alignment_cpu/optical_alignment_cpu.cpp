@@ -232,7 +232,7 @@ public:
         ImageGeneric movieStack, movieStackNormalize;
         Image<double> II;
         MetaData MD; // To save plot information
-        FileName motionInfFile;
+        FileName motionInfFile, correctedPSDFile, rawPSDFile;
         ArrayDim aDim;
 
         // For measuring times (both for whole process and for each level of the pyramid)
@@ -296,7 +296,6 @@ public:
         // if the user want to save the PSD
         if (psd)
         {
-            FileName rawPSDFile;
             II() = avgCurr;
             II.write(foname);
             rawPSDFile = fname.removeAllExtensions()+"_raw";
@@ -436,7 +435,8 @@ public:
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
         if (psd)
         {
-            FileName correctedPSDFile;
+            Image<double> psdCorr, psdRaw;
+            MultidimArray<double> psdCorrArr, psdRawArr;
             correctedPSDFile = fname.removeAllExtensions()+"_corrected";
             String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim 400 --overlap 0.7",
                                      foname.c_str(), correctedPSDFile.c_str());
@@ -444,6 +444,16 @@ public:
             std::cerr<<"Computing the corrected FFT"<<std::endl;
             if (system(cmd.c_str())==-1)
                 REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+            psdRaw.read(rawPSDFile+".psd");
+            psdCorr.read(correctedPSDFile+".psd");
+            psdCorrArr=psdCorr();
+            psdRawArr=psdRaw();
+            for (size_t i=0;i<400;i++)
+            	for (size_t j=0;j<200;j++)
+            		DIRECT_A2D_ELEM(psdCorrArr,i,j)=DIRECT_A2D_ELEM(psdRawArr,i,j);
+            psdCorr()=psdCorrArr;
+            psdCorr.write(correctedPSDFile+".psd");
+            //rawPSDFile.deleteFile();
         }
         return 0;
     }

@@ -1225,10 +1225,23 @@ void swapbytes(char* v, unsigned long n);
  */
 bool IsBigEndian(void);
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// process_mem_usage(double &, double &) - takes two doubles by reference,
+// attempts to read the system-dependent data for a process' virtual memory
+// size and resident set size, and return the results in KB.
+//
+// On failure, returns 0.0, 0.0
+void processMemUsage(double& vm_usage, double& resident_set);
+
 /** Returns 1 if machine is little endian else 0
  *  little-endian format (sometimes called the Intel format
  */
 bool IsLittleEndian(void);
+
+/** Print the memory used by this process.
+ */
+void printMemoryUsed();
 //@}
 
 /** @name Marsaglia Marsaglia random functions
