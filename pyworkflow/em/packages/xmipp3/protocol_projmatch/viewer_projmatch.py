@@ -94,15 +94,13 @@ Examples:
                       help="Write the iteration list to visualize.")
 
         group = form.addGroup('Particles')
-
-        group.addParam('showProjectionMatchingLibraryAndImages', LabelParam, default=False,
-                      label='Display projections and particles',
-                      help="Display projections and particles")
         group.addParam('displayLibraryOrClasses', EnumParam, choices=['projections', 'classes', 'projections and classes'],
                           default=DISPLAY_LIBRARY, display=EnumParam.DISPLAY_COMBO,
                           label='Display',
                           help='Displays images with angular assignment')
-
+        group.addParam('showProjectionMatchingLibraryAndImages', LabelParam, default=False,
+                      label='Display projections and particles',
+                      help="Display projections and particles")
         group.addParam('showExperimentalImages', LabelParam, default=False,
                       label='Display particles',
                       help="""Display particles with alignment and classification information
