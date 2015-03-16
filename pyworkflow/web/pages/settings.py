@@ -78,8 +78,7 @@ MEDIA_ROOT = os.path.join(pw.HOME, 'resources')
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://example.com/media/", "http://media.example.com/"
-# MEDIA_URL = ABSOLUTE_URL+'/resources/'
-MEDIA_URL = '/resources/'
+MEDIA_URL = ABSOLUTE_URL + '/resources/'
 
 # Temporary folder where store the files after do a upload
 FILE_UPLOAD_TEMP_DIR = MEDIA_ROOT
@@ -88,12 +87,11 @@ FILE_UPLOAD_TEMP_DIR = MEDIA_ROOT
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/var/www/example.com/static/"
-
 STATIC_ROOT = 'static'
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
-STATIC_URL = ABSOLUTE_URL+'/static/'
+STATIC_URL = ABSOLUTE_URL + '/static/'
 
 # Additional locations of static files
 WS_ROOT = os.path.join(pw.HOME, 'web', 'webtools')

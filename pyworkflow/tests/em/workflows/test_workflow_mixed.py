@@ -50,7 +50,7 @@ class TestMixedBPV(TestWorkflow):
         self.launchProtocol(protCTF)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
         
-        valuesList = [[24029, 23940, 54.8], [22424, 22356, 66.6], [22858, 22781, 64]]
+        valuesList = [[24029, 23940, 54.8], [22424, 22356, 64.08], [22858, 22781, 64]]
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
