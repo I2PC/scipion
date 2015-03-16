@@ -41,7 +41,7 @@ def service_projects(request):
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
-    myfirstmap_utils = os.path.join(django_settings.STATIC_URL, "js/", "myfirstmap_utils.js")
+    myfirstmap_utils = join(django_settings.STATIC_URL, "js/", "myfirstmap_utils.js")
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
