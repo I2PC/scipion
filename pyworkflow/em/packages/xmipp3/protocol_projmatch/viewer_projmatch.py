@@ -573,7 +573,7 @@ Examples:
                         file_nameReferences = self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
                         sfn   = createUniqueFileName(file_nameReferences)
                         file_nameReferences = 'projectionDirections@' + sfn
-                        mdOut.write(sfn)
+                        mdOut.write(file_nameReferences)
                         imgAndClasses.append(self.createDataView(file_nameReferences))
                 else:
                         print "File %s does not exist" % file_name
