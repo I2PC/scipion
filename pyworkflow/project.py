@@ -33,6 +33,7 @@ import json
 import traceback
 import time
 from collections import OrderedDict
+import datetime as dt
 
 import pyworkflow.em as em
 import pyworkflow.config as pwconfig
@@ -103,6 +104,24 @@ class Project(object):
     def getDbPath(self):
         """ Return the path to the sqlite db. """
         return self.dbPath
+    
+    def getCreationTime(self):
+        """ Return the time when the project was created. """
+        # In project.create method, the first object inserted
+        # in the mapper should be the creation time
+        creation = self.mapper.selectFirst()
+        return creation.get()
+    
+    def getElapsedTime(self):
+        """ Return the time since the project was created. """
+        elapsed = None
+        creationTime = self.getCreationTime()
+        
+        if creationTime is not None:
+            f = "%Y-%m-%d %H:%M:%S.%f"
+            elapsed = dt.datetime.now() - dt.datetime.strptime(creationTime, f)
+        
+        return elapsed
     
     def setDbPath(self, dbPath):
         """ Set the project db path.
@@ -177,9 +196,10 @@ class Project(object):
         if dbPath is not None:
             self.setDbPath(dbPath)
         
-        if not os.path.exists(self.dbPath):
-            raise Exception("Project database not found in '%s'" % os.path.join(self.path, self.dbPath))
-        self.mapper = self.createMapper(self.dbPath)
+        absDbPath = os.path.join(self.path, self.dbPath)
+        if not os.path.exists(absDbPath):
+            raise Exception("Project database not found in '%s'" % absDbPath)
+        self.mapper = self.createMapper(absDbPath)
         
     def _loadHosts(self, hosts):
         """ Loads hosts configuration from hosts file. """
@@ -257,6 +277,9 @@ class Project(object):
         print "Creating project at: ", os.path.abspath(self.dbPath)
         # Create db throught the mapper
         self.mapper = self.createMapper(self.dbPath)
+        creation = pwobj.String(objName='CreationTime') # Store creation time
+        creation.set(dt.datetime.now())
+        self.mapper.insert(creation)
         self.mapper.commit()
         # Load settings from .conf files and write .sqlite
         self.settings = pwconfig.ProjectSettings()
