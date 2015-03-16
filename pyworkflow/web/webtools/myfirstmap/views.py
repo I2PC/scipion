@@ -202,7 +202,7 @@ def myfirstmap_form(request):
  
 def service_content(request):
     projectName = request.GET.get('p', None)
-    path_files = '/resources_myfirstmap/img/'
+    path_files = django_settings.STATIC_URL + '/resources_myfirstmap/img/'
     
     # Get info about when the project was created
     project = loadProject(projectName)

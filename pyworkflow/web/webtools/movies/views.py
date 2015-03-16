@@ -157,7 +157,7 @@ def check_m_id(request):
  
 def movies_content(request):
     projectName = request.GET.get('p', None)
-    path_files = '/resources_movies/img/'
+    path_files = django_settings.STATIC_URL + '/resources_movies/img/'
     command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
     
     project = loadProject(projectName)
