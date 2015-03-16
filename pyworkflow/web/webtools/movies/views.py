@@ -43,7 +43,7 @@ def service_movies(request):
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
-    movies_utils = django_settings.STATIC_URL + "js/movies_utils.js"
+    movies_utils = os.path.join(django_settings.STATIC_URL, "js/", "movies_utils.js")
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
