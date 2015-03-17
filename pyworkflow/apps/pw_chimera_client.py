@@ -47,7 +47,16 @@ def main():
         splineDegree = splineDegreeDict.get(args.splineDegree)
         paddingFactor= args.paddingFactor
         maxFreq = args.maxFreq
-        ChimeraProjectionClient(volfile, angularDistFile=angularDistFile, spheresColor=spheresColor, spheresDistance=spheresDistance, spheresMaxRadius=spheresMaxRadius, size=projectionSize, paddingFactor=paddingFactor, maxFreq=maxFreq, splineDegree=splineDegree, voxelSize=voxelSize)
+        ChimeraProjectionClient(volfile,
+                                angularDistFile=angularDistFile,
+                                spheresColor=spheresColor,
+                                spheresDistance=spheresDistance,
+                                spheresMaxRadius=spheresMaxRadius,
+                                size=projectionSize,
+                                paddingFactor=paddingFactor,
+                                maxFreq=maxFreq,
+                                splineDegree=splineDegree,
+                                voxelSize=voxelSize)
 
     
 def which(file):
