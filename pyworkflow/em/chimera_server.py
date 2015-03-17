@@ -64,6 +64,7 @@ class ChimeraServer:
             #print data
             grid = Array_Grid_Data(data)
             self.volume = volume_from_grid_data(grid)
+
             
             #om = chimera.openModels
             #mlist = om.list()
