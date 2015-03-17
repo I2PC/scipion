@@ -41,7 +41,7 @@ def service_projects(request):
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
-    myfirstmap_utils = django_settings.STATIC_URL + "js/myfirstmap_utils.js"
+    myfirstmap_utils = join(django_settings.STATIC_URL, "js/", "myfirstmap_utils.js")
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
@@ -202,9 +202,11 @@ def myfirstmap_form(request):
  
 def service_content(request):
     projectName = request.GET.get('p', None)
-    path_files = '/resources_myfirstmap/img/'
+    path_files = django_settings.ABSOLUTE_URL + '/resources_myfirstmap/img/'
     
     # Get info about when the project was created
+    project = loadProject(projectName)
+    elapsedTime = project.getElapsedTime()
     daysLeft = "14"
     
     context = contentContext(request, projectName)

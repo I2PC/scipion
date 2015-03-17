@@ -50,7 +50,7 @@ class TestMixedBPV(TestWorkflow):
         self.launchProtocol(protCTF)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
         
-        valuesList = [[24029, 23940, 54.8], [22424, 22356, 66.6], [22858, 22781, 64]]
+        valuesList = [[24029, 23940, 54.8], [22424, 22356, 64.08], [22858, 22781, 64]]
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
@@ -71,7 +71,7 @@ class TestMixedBPV(TestWorkflow):
 
         # Extract the SetOfParticles.
         print "Run extract particles with other downsampling factor"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, downsampleType=OTHER, doFlip=False, downFactor=5, runMode=1, doInvert=False)
+        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=110, downsampleType=OTHER, doFlip=False, downFactor=5, runMode=1, doInvert=False)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)

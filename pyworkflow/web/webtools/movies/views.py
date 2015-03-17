@@ -24,7 +24,6 @@
 # *
 # **************************************************************************
 
-import os
 from os.path import exists, join, basename
 from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs, getResourceIcon
 from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
@@ -37,13 +36,14 @@ from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
 import pyworkflow.utils as pwutils
+from pyworkflow.utils.utils import prettyDelta
 
 def service_movies(request):
 
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
-    movies_utils = django_settings.STATIC_URL + "js/movies_utils.js"
+    movies_utils = join(django_settings.STATIC_URL, "js/", "movies_utils.js")
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
@@ -96,8 +96,8 @@ def create_movies_project(request):
         
         # Create symbolic link for uploads
         dest = os.path.join(projectPath,'Uploads')
-#        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
-        source = "/home/josegutab/examples/"+ projectName
+        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
+#         source = "/home/josegutab/examples/"+ projectName
         pwutils.path.makePath(source)
         pwutils.createLink(source, dest)
         
@@ -157,11 +157,12 @@ def check_m_id(request):
  
 def movies_content(request):
     projectName = request.GET.get('p', None)
-    path_files = '/resources_movies/img/'
+    path_files = django_settings.ABSOLUTE_URL + '/resources_movies/img/'
     command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
     
-    # Get info about when the project was created
-    daysLeft = "14"
+    project = loadProject(projectName)
+    elapsedTime = prettyDelta(project.getElapsedTime())
+    daysleft = "14"
     
     context = contentContext(request, projectName)
     context.update({
@@ -176,7 +177,7 @@ def movies_content(request):
                     'showj': path_files + 'showj.png',
                     'download': path_files + 'download.png',
                     'command' : command,
-                    'daysLeft': daysLeft,
+                    'daysLeft': daysleft,
                     })
     
     return render_to_response('movies_content.html', context)

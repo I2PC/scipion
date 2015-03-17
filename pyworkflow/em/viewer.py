@@ -395,7 +395,7 @@ class ChimeraClient:
         self.listen = True
         try:
             while self.listen:
-                #print 'on client loop'
+                print 'on client loop'
                 msg = self.client.recv()
                 self.answer(msg)
                 sleep(0.01)
@@ -547,14 +547,11 @@ class ChimeraProjectionClient(ChimeraClient):
     def exitClient(self):#close window before volume loaded
         if not self.listen:
             sys.exit(0)
-    
-
 
     def initListenThread(self):
         self.listen_thread = Thread(target=self.listen)
         self.listen_thread.daemon = True
         self.listen_thread.start()
-
 
     def listenShowJ(self):
         self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -584,7 +581,6 @@ class ChimeraProjectionClient(ChimeraClient):
 
             except EOFError:
                 print 'Lost connection to client'
-
 
 def printCmd(cmd):
     pass
