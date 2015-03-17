@@ -108,9 +108,9 @@ def create_movies_project(request):
             path_test = getMovTestFile(testDataKey)
             for f in os.listdir(path_test):                 
                 file_path = os.path.join(path_test, f)
-                pwutils.createLink(file_path, dest)
+                pwutils.createLink(file_path, source)
             
-            protImport.filesPath.set(source)
+            protImport.filesPath.set(source + "*.mrcs")
 #             protImport.samplingRate.set(1.)
             
             project.launchProtocol(protImport, wait=True)
