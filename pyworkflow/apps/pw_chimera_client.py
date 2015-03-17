@@ -26,6 +26,7 @@ def main():
     projectorParser.add_argument('--maxFreq', default=0.5, type=float, help='Projection spline degree')
     projectorParser.add_argument('--splineDegree', default='BSPLINE2',
                         choices=['NEAREST', 'LINEAR', 'BSPLINE2', 'BSPLINE3', 'BSPLINE4'], help='projection window dimensions')
+    projectorParser.add_argument('--showjPort', help='Port to link projections to chimera', type=int)
 
 
     splineDegreeDict = {'NEAREST': xmipp.NEAREST, 'LINEAR': xmipp.LINEAR,
@@ -44,6 +45,7 @@ def main():
         ChimeraClient(volfile, angularDistFile=angularDistFile, spheresColor=spheresColor, spheresDistance=spheresDistance, spheresMaxRadius=spheresMaxRadius, voxelSize=voxelSize)
     else:
         projectionSize = args.projectionSize if hasattr(args, 'projectionSize') else None
+        showjPort = args.showjPort if hasattr(args, 'showjPort') else None
         splineDegree = splineDegreeDict.get(args.splineDegree)
         paddingFactor= args.paddingFactor
         maxFreq = args.maxFreq
@@ -56,7 +58,7 @@ def main():
                                 paddingFactor=paddingFactor,
                                 maxFreq=maxFreq,
                                 splineDegree=splineDegree,
-                                voxelSize=voxelSize)
+                                voxelSize=voxelSize, showjPort=showjPort)
 
     
 def which(file):

@@ -41,8 +41,6 @@ class ChimeraServer:
         """
         chimera.triggers.addHandler(chimera.MOTION_STOP, self.onMotionStop, None)####
 
-
-
     def openVolume(self):
         try:
             while True:
@@ -66,8 +64,7 @@ class ChimeraServer:
             #print data
             grid = Array_Grid_Data(data)
             self.volume = volume_from_grid_data(grid)
-
-
+            
             #om = chimera.openModels
             #mlist = om.list()
             #m = mlist[0]
@@ -99,8 +96,6 @@ class ChimeraServer:
             commandList = self.vol_conn.recv()
             for command in commandList:
                 runCommand(command)
-
-
 
     def initListenShowJ(self):
 
@@ -174,7 +169,6 @@ class ChimeraVirusServer(ChimeraServer):
         """
         pass
         #chimera.triggers.addHandler(chimera.MOTION_STOP, self.onMotionStop, None)####
-
 
     def answer(self, msg):
         """execute a single command and return values"""
