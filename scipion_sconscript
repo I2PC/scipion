@@ -202,16 +202,16 @@ addLib('XmippParallel',
 
 # Python binding
 addLib('xmipp',
-       dirs=['libraries/bindings/python'],
-       patterns=['*.cpp'],
+       dirs=['libraries/bindings'],
+       patterns=['python/*.cpp'],
        incs=python_incs,
        libs=['python2.7', 'XmippData', 'XmippRecons', 'XmippBilib'],
        prefix='')
 
 # Java binding
 addLib('XmippJNI',
-       dirs=['libraries/bindings/java'],
-       patterns=['*.cpp'],
+       dirs=['libraries/bindings'],
+       patterns=['java/*.cpp'],
        incs=env['JNI_CPPPATH'],
        libs=[ 'pthread', 'XmippData', 'XmippRecons','XmippClassif', 'XmippBilib'],
        )
