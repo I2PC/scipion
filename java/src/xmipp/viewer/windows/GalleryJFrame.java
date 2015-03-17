@@ -46,6 +46,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -84,7 +85,6 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
-import javax.vecmath.Point3d;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
@@ -115,7 +115,6 @@ import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MetadataTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
-import xmipp.viewer.scipion.ScipionGalleryData;
 
 /**
  * This is the main frame used in showj
@@ -1458,6 +1457,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.gif", "control released H");
 			addItem(FILE_OPENMICROGRAPHS, "Open particle micrographs");
 			addItem(FILE_INFO, "File info ...");
+                        addItem(FILE_LINK_CHIMERA, "Link projections to chimera ...");
 
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
@@ -1485,11 +1485,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				addItem(DISPLAY_RESLICE_VIEWS[i], reslices[i]);
                         addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
                         
-                        
-			
-                        
-			
-                        
+                                                
                         addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
@@ -1522,6 +1518,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			boolean volMode = !data.getSelVolumeFile().isEmpty();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
+                        setItemVisible(FILE_LINK_CHIMERA , data.containsGeometryInfo("3D"));
                         setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data.isScipionInstance()));
 			setItemEnabled(FILE_SAVE, !volMode && !isscipion);
 			setItemEnabled(FILE_SAVEAS, !volMode && !isscipion);
@@ -1640,28 +1637,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(FILE_OPENWITH_CHIMERA))
 				{
-					try
-					{
-                                                
-						String scipionHome = System.getenv().get("SCIPION_HOME");
-                                                if(scipionHome == null)
-                                                {
-                                                    XmippDialog.showError(GalleryJFrame.this, "Scipion is not available");
-                                                    return;
-                                                }
-                                                String run = String.format("python %s%2$spyworkflow%2$sapps%2$spw_chimera_client.py projector --input %3$s", scipionHome, File.separator, data.getSelVolumeFile());
-                                                System.out.println(run);
-                                                if(data.parameters.getSamplingRate() != null)
-                                                    run += String.format(" --samplingRate %s", data.parameters.getSamplingRate());
-                                                
-						String output = XmippWindowUtil.executeCommand(run, true);
-                                                System.out.println(output);
-                                                
-					}
-					catch (Exception ex)
-					{
-						ex.printStackTrace();
-					}
+                                    openChimera(data.getSelVolumeFile(), false);
 				}
 				else if (cmd.equals(FILE_OPENMICROGRAPHS))
 				{
@@ -1687,6 +1663,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					{
 						e1.printStackTrace();
 					}
+				}
+                                else if (cmd.equals(FILE_LINK_CHIMERA))
+				{
+					linkProjectionsToChimera();
 				}
 				else if (cmd.equals(FILE_REFRESH))
 				{
@@ -2298,6 +2278,48 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         public TasksEngine getTasksEngine()
         {
             return ctfTasks;
+        }
+        
+        protected void linkProjectionsToChimera()
+        {
+            
+                
+            fc.showOpenDialog(this);
+            openChimera(fc.getSelectedPath(), true);
+            
+        }
+        
+        protected void openChimera(String file, boolean link)
+        {
+            try
+            {
+
+                    String scipionHome = System.getenv().get("SCIPION_HOME");
+                    if(scipionHome == null)
+                    {
+                        XmippDialog.showError(GalleryJFrame.this, "Scipion is not available");
+                        return;
+                    }
+                    
+                        
+                    String run = String.format("python %s%2$spyworkflow%2$sapps%2$spw_chimera_client.py projector --input %3$s ", scipionHome, File.separator, file);
+                    
+                    if(data.parameters.getSamplingRate() != null)
+                        run += String.format(" --samplingRate %s", data.parameters.getSamplingRate());
+                    if(link)
+                    {
+                        int port = XmippUtil.findFreePort();
+                        data.parameters.setChimeraPort(port);
+                        run += "--showjPort " + port;
+                    }
+                    String output = XmippWindowUtil.executeCommand(run, false);
+                    //System.out.println(output);
+
+            }
+            catch (Exception ex)
+            {
+                    ex.printStackTrace();
+            }
         }
        
 }// class JFrameGallery
