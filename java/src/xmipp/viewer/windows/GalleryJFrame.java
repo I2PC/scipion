@@ -100,6 +100,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
@@ -1640,7 +1641,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                     {
                                         int result = fc.showOpenDialog(GalleryJFrame.this);
                                         if(result != XmippFileChooser.CANCEL_OPTION)
-                                        openChimera(fc.getSelectedPath(), true);
+                                        {
+                                            String path = fc.getSelectedPath();
+                                            if(!Filename.isVolumeExt(path))
+                                            {
+                                                XmippDialog.showError(GalleryJFrame.this, XmippMessage.getFileTypeNotSupportedMsg(path));
+                                                return;
+                                            }
+                                            openChimera(path, true);
+                                        }
                                     }
                                     else
                                         openChimera(data.getSelVolumeFile(), false);
