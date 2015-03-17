@@ -333,5 +333,9 @@ public class Params {
     {
         return chimeraPort;
     }
+
+    public void setChimeraPort(int i) {
+        chimeraPort = i;
+    }
    
 }
