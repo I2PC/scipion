@@ -1457,7 +1457,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.gif", "control released H");
 			addItem(FILE_OPENMICROGRAPHS, "Open particle micrographs");
 			addItem(FILE_INFO, "File info ...");
-                        addItem(FILE_LINK_CHIMERA, "Link projections to chimera ...");
+                        
 
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
@@ -1516,9 +1516,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         boolean isscipion = data.isScipionInstance();
 			boolean galMode = data.isGalleryMode();
 			boolean volMode = !data.getSelVolumeFile().isEmpty();
-			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
+			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode || data.containsGeometryInfo("3D"));
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
-                        setItemVisible(FILE_LINK_CHIMERA , data.containsGeometryInfo("3D"));
                         setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data.isScipionInstance()));
 			setItemEnabled(FILE_SAVE, !volMode && !isscipion);
 			setItemEnabled(FILE_SAVEAS, !volMode && !isscipion);
@@ -1637,7 +1636,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(FILE_OPENWITH_CHIMERA))
 				{
-                                    openChimera(data.getSelVolumeFile(), false);
+                                    if(data.containsGeometryInfo("3D"))
+                                    {
+                                        int result = fc.showOpenDialog(GalleryJFrame.this);
+                                        if(result != XmippFileChooser.CANCEL_OPTION)
+                                        openChimera(fc.getSelectedPath(), true);
+                                    }
+                                    else
+                                        openChimera(data.getSelVolumeFile(), false);
 				}
 				else if (cmd.equals(FILE_OPENMICROGRAPHS))
 				{
@@ -1663,10 +1669,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					{
 						e1.printStackTrace();
 					}
-				}
-                                else if (cmd.equals(FILE_LINK_CHIMERA))
-				{
-					linkProjectionsToChimera();
 				}
 				else if (cmd.equals(FILE_REFRESH))
 				{
@@ -2280,14 +2282,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             return ctfTasks;
         }
         
-        protected void linkProjectionsToChimera()
-        {
-            
-                
-            fc.showOpenDialog(this);
-            openChimera(fc.getSelectedPath(), true);
-            
-        }
+        
         
         protected void openChimera(String file, boolean link)
         {
