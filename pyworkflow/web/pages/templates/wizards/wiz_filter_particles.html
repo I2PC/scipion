@@ -9,16 +9,18 @@
 			putSelection('input#decay_val', '{{params.label.2}}_input');
 		}
 		
-		function compositeLoad(elm){
+		function compositeLoad(elm, samplingRate){
 // 			var first = $("tr#"+firstElm);
 			var low = $('#low_val').attr('value')
 			var high = $('#high_val').attr('value')
 			var decay = $('#decay_val').attr('value')
-			
-			compositeBandpass(elm, low, high, decay);
+
+			var a = convertBandPass(low, high, decay, samplingRate)
+
+			compositeBandpass(elm, a[0], a[1], a[2]);
 		}
 		
-		function loadPreview(type, value){
+		function loadPreview(type, value, samplingRate){
 			
 			switch (type){
 			
@@ -40,8 +42,10 @@
 					var decay = value;
 					break;
 				}
-			
-			previewBandpassFilter(low, high, decay);
+
+			var a = convertBandPass(low, high, decay, samplingRate)
+
+			previewBandpassFilter(a[0], a[1], a[2]);
 		}
 		
 	</script>
@@ -55,7 +59,7 @@
 </script>
 {% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
-	onclick="compositeLoad($(this));" value="{{obj.text}}">
+	onclick="compositeLoad($(this), {{params.samplingRate}});" value="{{obj.text}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
@@ -74,12 +78,12 @@
 {% endblock %} 
 {% block options %}
 <fieldset id="sliderOptions">
-	<legend>Frequencies</legend>
+	<legend>Frequencies ({{params.unit}})</legend>
 	<table id="fourierTable">
 		<tr>
 			<td>
 				<div id="lowFou">
-					{% if params.mode == 1 or params.mode == 2 or params.mode == 4 %}
+					{% if params.mode == 1 or params.mode == 2 or params.mode == 5 %}
 					<span id="title_freq">Low freq<span>
 					<div id="sliderLite" class="slider_low"></div>
 					<div id="slider_low_result">{{params.value.0}}</div>
@@ -91,7 +95,7 @@
 			</td>
 			<td>
 				<div id="highFou">
-					{% if params.mode == 0 or params.mode == 2 or params.mode == 3 or params.mode == 4 %}
+					{% if params.mode == 0 or params.mode == 2 or params.mode == 3 or params.mode == 4 or params.mode == 5 %}
 					<span id="title_freq">High freq<span>
 					<div id="sliderLite" class="slider_high"></div>
 					<div id="slider_high_result">{{params.value.1}}</div>
@@ -121,9 +125,9 @@ $(".slider_low").slider({
 	animate : true,
 	range : "min",
 	value : "{{params.value.0}}",
-	min : 0.00,
-	max : 0.50,
-	step : 0.01,
+	min : {{params.min}},
+	max : {{params.max}},
+	step : {{params.step}},
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_low_result").html(ui.value);
@@ -133,16 +137,16 @@ $(".slider_low").slider({
 		$('#low_val').attr('value', ui.value);
 		
 		//update the image filtered
-		loadPreview("low", ui.value);
+		loadPreview("low", ui.value, {{params.samplingRate}});
 	}
 });
 $(".slider_high").slider({
 	animate : true,
 	range : "min",
 	value : "{{params.value.1}}",
-	min : 0.00,
-	max : 0.50,
-	step : 0.01,
+	min : {{params.min}},
+	max : {{params.max}},
+	step : {{params.step}},
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_high_result").html(ui.value);
@@ -152,16 +156,16 @@ $(".slider_high").slider({
 		$('#high_val').attr('value', ui.value);
 		
 		//update the image filtered
-		loadPreview("high", ui.value);
+		loadPreview("high", ui.value, {{params.samplingRate}});
 	}
 });
 $(".slider_decay").slider({
 	animate : true,
 	range : "min",
 	value : "{{params.value.2}}",
-	min : 0.00,
-	max : 0.50,
-	step : 0.01,
+	min : {{params.min}},
+	max : {{params.max}},
+	step : {{params.step}},
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_decay_result").html(ui.value);
@@ -171,11 +175,11 @@ $(".slider_decay").slider({
 		$('#decay_val').attr('value', ui.value);
 		
 		//update the image filtered
-		loadPreview("decay", ui.value);
+		loadPreview("decay", ui.value, {{params.samplingRate}});
 	}
 });
 //Load the First Element of the list
-window.onload =  compositeLoad($("tr#"+firstElm));
+window.onload =  compositeLoad($("tr#"+firstElm), {{params.samplingRate}});
 </script>
 {% endblock %}
 {% block function %}

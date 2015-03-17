@@ -284,8 +284,6 @@ class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
         
         label, value = self._getInputProtocol(self._targets, protocol)
 
-        print "value", value
-        
         protParams = {}
         protParams['input']= protocol.inputVolumes
         protParams['label']= label
