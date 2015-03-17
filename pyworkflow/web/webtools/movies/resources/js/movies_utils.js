@@ -58,7 +58,7 @@ function serviceTestDataForm(){
     
     var btn1 = 'Create project'
 	var ico1 = 'fa-check'
-	var funcName1 = 'createServProject';	
+	var funcName1 = 'createMovProject';	
 	
     accessPopup(title, dialog, funcName1, btn1, "Cancel")
     

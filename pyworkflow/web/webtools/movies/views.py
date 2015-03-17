@@ -97,7 +97,6 @@ def create_movies_project(request):
         # Create symbolic link for uploads
         dest = os.path.join(projectPath,'Uploads')
         source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
-#         source = "/home/josegutab/examples/"+ projectName
         pwutils.path.makePath(source)
         pwutils.createLink(source, dest)
         
@@ -106,11 +105,12 @@ def create_movies_project(request):
                                          objLabel='import movies')
         
         if testDataKey :
-            fn = getMovTestFile(testDataKey)
-            newFn = join(project.uploadPath, basename(fn))
-            copyFile(fn, newFn)
+            path_test = getMovTestFile(testDataKey)
+            for f in os.listdir(path_test):                 
+                file_path = os.path.join(path_test, f)
+                pwutils.createLink(file_path, dest)
             
-            protImport.filesPath.set(newFn)
+            protImport.filesPath.set(source)
 #             protImport.samplingRate.set(1.)
             
             project.launchProtocol(protImport, wait=True)
@@ -124,31 +124,13 @@ def create_movies_project(request):
         protMovAlign.inputMovies.setExtendedAttribute('outputMovies')
         project.saveProtocol(protMovAlign)
         
-        """
-        # If using test data execute the import averages run
-        # options are set in 'project_utils.js'
-        dsMDA = DataSet.getDataSet('initial_volume')
-        
-        if testDataKey :
-            fn = dsMDA.getFile(testDataKey)
-            newFn = join(project.uploadPath, basename(fn))
-            copyFile(fn, newFn)
-            
-            protImport.filesPath.set(newFn)
-            protImport.samplingRate.set(1.)
-#             protImport.setObjectLabel('import averages (%s)' % testDataKey)
-            
-            project.launchProtocol(protImport, wait=True)
-        else:
-            project.saveProtocol(protImport)
-    """
     return HttpResponse(mimetype='application/javascript')
 
 def getMovTestFile(key):
     if(key == "ribosome"):
-        fn = "/mnt/big1/scipionweb/movies_testdata/80S_ribosome/*mrcs"
+        path = "/mnt/big1/scipionweb/movies_testdata/80S_ribosome/"
         
-    return fn
+    return path
 
 def check_m_id(request):
     result = 0
