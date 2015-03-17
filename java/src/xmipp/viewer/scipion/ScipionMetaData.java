@@ -823,27 +823,7 @@ public class ScipionMetaData extends MetaData {
         String column = isClassificationMd()? "_representative._transform._matrix" : "_transform._matrix";
         return getColumnInfo(column);
     }
-    // Check if the underlying data has geometrical information
-    public boolean containsGeometryInfo() {
-        String column = "_alignment";
-        String value = null;
-        if(properties == null)
-        {
-            if (parent == null) 
-                return false; 
-            else
-                for(EMObject emo: parent.emobjects)
-                    if(preffix.contains(emo.getId().toString()))
-                        value = (String)emo.getValue(column);
-        }
-        else
-            value = properties.get(column);
-
-        if (value == null)
-            return false;
-        
-        return value.equals("2D");
-    }
+    
     
     // Check if the underlying data has geometrical information
     public boolean containsGeometryInfo(String type) {

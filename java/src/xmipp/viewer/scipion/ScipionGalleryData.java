@@ -457,6 +457,8 @@ public class ScipionGalleryData extends GalleryData {
     
     public String getChimeraProjectionCmd(int row) {
         Geometry geo = getGeometry(ids[row], "3D");
+        if(geo == null)
+            geo = getGeometry(ids[row], "Projection");
         String command = String.format("rotate_matrix '%s'", geo.getMatrix());
         return command;
     }
