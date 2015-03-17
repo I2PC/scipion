@@ -1516,7 +1516,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         boolean isscipion = data.isScipionInstance();
 			boolean galMode = data.isGalleryMode();
 			boolean volMode = !data.getSelVolumeFile().isEmpty();
-			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode || data.containsGeometryInfo("3D"));
+			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode || data.containsGeometryInfo("3D")|| data.containsGeometryInfo("Projection"));
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
                         setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data.isScipionInstance()));
 			setItemEnabled(FILE_SAVE, !volMode && !isscipion);
@@ -1636,7 +1636,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(FILE_OPENWITH_CHIMERA))
 				{
-                                    if(data.containsGeometryInfo("3D"))
+                                    if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
                                     {
                                         int result = fc.showOpenDialog(GalleryJFrame.this);
                                         if(result != XmippFileChooser.CANCEL_OPTION)
@@ -1662,8 +1662,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                                 XmippUtil.showImageJ(Tool.VIEWER);
 						ImagePlusLoader loader = gallery.getImageLoader();
 						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, data.parameters);
-
-                                                
 					}
 					catch (Exception e1)
 					{
