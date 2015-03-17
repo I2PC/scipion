@@ -41,8 +41,7 @@ class ChimeraServer:
         """
         chimera.triggers.addHandler(chimera.MOTION_STOP, self.onMotionStop, None)####
 
-    def handleInitMessage(self, msg):
-        pass
+
 
     def openVolume(self):
         try:
@@ -50,53 +49,58 @@ class ChimeraServer:
                 if self.vol_conn.poll():
                     
                     msg = self.vol_conn.recv()
-                    #print msg
-                    if msg == 'open_volume':
-                        data = self.vol_conn.recv()#objects are serialized by default
-                        #print data
-                        grid = Array_Grid_Data(data)
-                        self.volume = volume_from_grid_data(grid)
-                        #om = chimera.openModels
-                        #mlist = om.list()
-                        #m = mlist[0]
-                        #centerVec = m.bbox()[1].center().toVector()
-                        #xform = chimera.Xform.xform(1, 0, 0, -centerVec[0],
-                        #             0, 1, 0, -centerVec[1],
-                        #             0, 0, 1, -centerVec[2], orthogonalize=True)
-                        #m.openState.globalXform(xform)
-
-                        #runCommand("volume #0 step 1")
-                        
-                    elif msg == 'voxel_size':
-                        self.voxelSize = self.vol_conn.recv()
-                        cmd = "volume #0 voxelSize %s"%self.voxelSize
-                        #print cmd
-                        runCommand(cmd)
-                        #print reference spheres. Usefull for debuging, remove
-                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize, -64 * self.voxelSize ,   0                  , 0 , 'orange'))
-                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  , -64 * self.voxelSize , 0 , 'forest green'))
-                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  ,   0                  , -64 * self.voxelSize  , 'magenta'))
-                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,  64 * self.voxelSize ,   0                  , 0 , 'red'))
-                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  ,  64 * self.voxelSize , 0 , 'green'))
-                        runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  ,   0                  , 64 * self.voxelSize , 'blue'))
-                        runCommand("focus")
-                        #end debug
-
-                    elif msg == 'command_list':
-                        commandList = self.vol_conn.recv()
-                        for command in commandList:
-                            runCommand(command)
-
-                    elif msg == 'end':#if you dont break cicle volume is never shown
+                    self.answer(msg)
+                    if msg == 'end':#if you dont break cicle volume is never shown
                         break
 
-                    else:
-                        self.handleInitMessage(msg)
                 else:
                     sleep(0.01)
         except EOFError:
             print ('Lost connection to client')
             #should close app??
+
+    def answer(self, msg):
+        #print msg
+        if msg == 'open_volume':
+            data = self.vol_conn.recv()#objects are serialized by default
+            #print data
+            grid = Array_Grid_Data(data)
+            self.volume = volume_from_grid_data(grid)
+
+
+            #om = chimera.openModels
+            #mlist = om.list()
+            #m = mlist[0]
+            #centerVec = m.bbox()[1].center().toVector()
+            #xform = chimera.Xform.xform(1, 0, 0, -centerVec[0],
+            #             0, 1, 0, -centerVec[1],
+            #             0, 0, 1, -centerVec[2], orthogonalize=True)
+            #m.openState.globalXform(xform)
+
+            #runCommand("volume #0 step 1")
+
+
+        elif msg == 'voxel_size':
+            self.voxelSize = self.vol_conn.recv()
+            cmd = "volume #0 voxelSize %s"%self.voxelSize
+            #print cmd
+            runCommand(cmd)
+            #print reference spheres. Usefull for debuging, remove
+            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize, -64 * self.voxelSize ,   0                  , 0 , 'orange'))
+            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  , -64 * self.voxelSize , 0 , 'forest green'))
+            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  ,   0                  , -64 * self.voxelSize  , 'magenta'))
+            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,  64 * self.voxelSize ,   0                  , 0 , 'red'))
+            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  ,  64 * self.voxelSize , 0 , 'green'))
+            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  ,   0                  , 64 * self.voxelSize , 'blue'))
+            runCommand("focus")
+            #end debug
+
+        elif msg == 'command_list':
+            commandList = self.vol_conn.recv()
+            for command in commandList:
+                runCommand(command)
+
+
 
     def initListenShowJ(self):
 
@@ -172,8 +176,9 @@ class ChimeraVirusServer(ChimeraServer):
         #chimera.triggers.addHandler(chimera.MOTION_STOP, self.onMotionStop, None)####
 
 
-    def handleInitMessage(self, msg):
+    def answer(self, msg):
         """execute a single command and return values"""
+        ChimeraServer.answer(msg)
         if msg == 'hk_icosahedron_lattice':
             from IcosahedralCage import cages
             h,k,radius,sym = self.vol_conn.recv()
