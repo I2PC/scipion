@@ -350,7 +350,7 @@ class XmippViewer(Viewer):
                 writeSetOfMicrographs(micSet, micsfn)
                 
             posDir = getattr(obj.getCoords(), '_xmippMd').get()  # extra dir istead of md file for SetOfCoordinates
-            launchSupervisedPickerGUI("2g", micsfn, posDir, self.getProject().getDbPath(), obj.strId(), 'review', self.getProject().port)
+            launchSupervisedPickerGUI(2, micsfn, posDir, 'review', self.getProject().getDbPath(), obj.strId(), self.getProject().port)
 
         elif issubclass(cls, XmippProtParticlePickingPairs):
             tmpDir = self._getTmpPath(obj.getName()) 

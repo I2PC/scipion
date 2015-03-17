@@ -327,6 +327,7 @@ class ChimeraClient:
     def loadAngularDist(self):
         #FIXME do not seems to be a good idea to use
         # metada instead of native scipon here
+        #print self.angularDistFile
         md = xmipp.MetaData(self.angularDistFile)
         if not md.containsLabel(xmipp.MDL_ANGLE_ROT):
             angleRotLabel = xmipp.RLN_ORIENT_ROT
