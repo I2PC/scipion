@@ -103,21 +103,45 @@ class RelionVolFilterWizard(FilterVolumesWizard):
         
         protParams = {}
         protParams['input']= protocol.referenceVolume
-        protParams['label']= [None, label]
-        protParams['value']= [0., value, 0.02]
+        protParams['label']= label
+        protParams['value']= value
+        protParams['mode'] = FILTER_LOW_PASS_NO_DECAY
         return protParams  
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']    
         return FilterVolumesWizard._getListProvider(self, _objs)
     
+    # def show(self, form):
+    #     params = self._getParameters(form.protocol)
+    #     # Value should be LowFreq=0, HighFreq and Decay for Low pass filter
+    #     _value = params['value']
+    #     _label = params['label']
+    #     FilterVolumesWizard.show(self, form, _value, _label,
+    #                              mode=FILTER_LOW_PASS,
+    #                              unit=UNIT_ANGSTROM,
+    #                              showDecay=False)
+
     def show(self, form):
         params = self._getParameters(form.protocol)
-        # Value should be LowFreq=0, HighFreq and Decay for Low pass filter
-        _value = params['value']
-        _label = params['label']
-        FilterVolumesWizard.show(self, form, _value, _label, 
-                                 mode=FILTER_LOW_PASS, 
-                                 unit=UNIT_ANGSTROM,
-                                 showDecay=False)
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+
+            args = {'mode': params['mode'],
+                    'highFreq': params['value'],
+                    'unit': UNIT_ANGSTROM
+                    }
+
+            args['showLowFreq'] = False
+            args['showDecay'] = False
+
+            d = BandPassFilterDialog(form.root, provider, **args)
+
+            if d.resultYes():
+                form.setVar('initialLowPassFilterA', d.samplingRate/d.getHighFreq())
+
+        else:
+            dialog.showWarning("Input volumes", "Select volumes first", form.root)
         

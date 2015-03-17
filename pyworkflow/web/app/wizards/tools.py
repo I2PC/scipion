@@ -49,40 +49,38 @@ def proccessModeFilter(mode, value):
     if mode == FILTER_LOW_PASS:
         print "filter low pass"
 #        value[0] = 0.
-        value[0] = 1.0
+        value[0] = 0.01
     
     elif mode == FILTER_HIGH_PASS:
         print "filter high pass"
-        value[1] = 1.0
+        value[1] = 0.01
     
     elif mode == FILTER_BAND_PASS:
         print "filter band pass"
     
     elif mode == FILTER_LOW_PASS_NO_DECAY:
         print "filter low pass no decay"
-        value = [1.0, value, 0]
+        value = [0.01, value, 0.01]
         
     elif mode == FILTER_NO_DECAY:
         print "filter band pass no decay"
-        value = [value[0], value[1], 0]
+        value = [value[0], value[1], 0.01]
         
     return value
 
 def validateMaskRadius(value, xdim, radius):
     """ Validation done for some radius length """
-     
+
     # MASK RADIUS
     if radius == 1:
-        if value > xdim :
-            value = xdim
-        elif value == -1 :
+        if value > xdim/2 or value == -1:
             value = xdim/2
     
     # MASK RADII
     elif radius == 2:
-        if value[0] > xdim or value[0] == -1:
+        if value[0] > xdim/2 or value[0] == -1:
             value[0] = xdim/2
-        if value[1] > xdim or value[1] == -1:
+        if value[1] > xdim/2 or value[1] == -1:
             value[1] = xdim/2
     
     return value

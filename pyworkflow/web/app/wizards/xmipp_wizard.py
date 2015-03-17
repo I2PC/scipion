@@ -177,6 +177,9 @@ class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
 class XmippVolumeRadiusWizardWeb(XmippVolumeRadiusWizard, XmippVolumeMaskRadiusWeb):
     pass
 
+class XmippVolumeRadiusWizardPWeb(XmippVolumeMaskRadiusProjMWizard, XmippVolumeMaskRadiusWeb):
+    pass
+
 class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
     _environments = [WEB_DJANGO]
 
@@ -199,12 +202,14 @@ class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
             params['value'] = validateMaskRadius(params['value'], xdim, radius=2)
 
             context = {'objects': vols,
-                       'xdim': int(xdim/2),
+                       'xdim': xdim/2,
                        'params': params}
 
             context = base_wiz(request, context)
             return render_to_response('wizards/wiz_volumes_mask_radii.html', context)
 
+class XmippVolumeMaskRadiiPWeb(XmippVolumeRadiiProjMWizard, XmippVolumeMaskRadiiWeb):
+    pass
 
 #===============================================================================
 # FILTERS
@@ -228,6 +233,19 @@ class XmippFilterParticlesWeb(XmippFilterParticlesWizard):
                 return HttpResponse("errorIterate")
 
             params['value'] = proccessModeFilter(params['mode'], params['value'])
+
+            params['samplingRate'] = particles[1].getSamplingRate()
+
+            itemDim,_,_ = particles[1].getDim()
+
+            if params['unit'] == UNIT_ANGSTROM:
+                params['min'] = 2.*params['samplingRate']
+                params['max'] = 2.*itemDim*params['samplingRate']
+            else:
+                params['min'] = 0.01
+                params['max'] = 0.5
+
+            params['step'] = params['max'] / 1000
 
             context = {'objects': particles,
                        'params':params}
@@ -255,6 +273,20 @@ class XmippFilterVolumesWeb(XmippFilterVolumesWizard):
                 return HttpResponse("errorIterate")
 
             params['value'] = proccessModeFilter(params['mode'], params['value'])
+            params['label'] = params['label']
+
+            params['samplingRate'] = objs.getSamplingRate()
+
+            itemDim,_,_ = objs.getDim()
+
+            if params['unit'] == UNIT_ANGSTROM:
+                params['min'] = 2.*params['samplingRate']
+                params['max'] = 2.*itemDim*params['samplingRate']
+            else:
+                params['min'] = 0.01
+                params['max'] = 0.5
+
+            params['step'] = params['max'] / 1000
 
             context = {'objects': volumes,
                        'params':params}

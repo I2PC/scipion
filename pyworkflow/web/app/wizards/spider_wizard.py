@@ -99,7 +99,7 @@ class SpiderParticlesMaskRadiiWeb(SpiderParticlesMaskRadiiWizard):
             params['value'] = validateMaskRadius(params['value'], xdim, radius=2)               
             
             context = {'objects': particles,
-                       'xdim':xdim,
+                       'xdim':xdim/2,
                        'params': params }
         
             context = base_wiz(request, context)

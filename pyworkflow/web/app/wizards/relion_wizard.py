@@ -111,30 +111,42 @@ class RelionVolMaskRadiusWeb(RelionBackRadiusWizard):
 # FILTERS
 #===============================================================================
 
-# class RelionBandpassWeb(RelionBandpassWizard):
-#     _environments = [WEB_DJANGO]
-#     
-#     def _run(self, protocol, request):
-#         params = self._getParameters(protocol)
-#         objs = params['input'].get()
-#         
-#         res = validateParticles(objs)
-#         
-#         if res is not 1:
-#             return HttpResponse(res)
-#         else:
-#             particles = self._getParticles(objs)
-#             
-#             if len(particles) == 0:
-#                 return HttpResponse("errorIterate")
-#             
-#             context = {'objects': particles,
-#                        'params':params
-#                        }
-#             
-#             context = wiz_base(request, context)
-#             
-#             return render_to_response('wizards/wiz_relion_bandpass.html', context)
+class RelionVolFilterWizardWeb(RelionVolFilterWizard):
+    _environments = [WEB_DJANGO]
+
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)
+        objs = params['input'].get()
+
+        res = validateSet(objs)
+
+        if res is not 1:
+            return HttpResponse(res)
+        else:
+            volumes = self._getVols(objs)
+
+            if len(volumes) == 0:
+                return HttpResponse("errorIterate")
+
+            params['value'] = proccessModeFilter(params['mode'], params['value'])
+            params['label'] = ['',params['label'],'']
+
+            params['samplingRate'] = objs.getSamplingRate()
+            params['unit'] = UNIT_ANGSTROM
+
+            itemDim,_,_ = objs.getDim()
+
+            params['min'] = 2.*params['samplingRate']
+            params['max'] = 2.*itemDim*params['samplingRate']
+
+            params['step'] = params['max'] / 1000
+
+            context = {'objects': volumes,
+                       'params':params}
+
+            context = base_wiz(request, context)
+
+            return render_to_response('wizards/wiz_filter_volumes.html', context)
 
 
     

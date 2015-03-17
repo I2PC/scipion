@@ -103,7 +103,10 @@
  * 
  * function previewSpiderFilter(filterType, filterMode, usePadding)
  * 	->	This function get a image using a spider filter with some parameters.
- * 
+ *
+ * function convertBandPass(low, high, decay, samplingRate)
+ * 	->	This function convert band pass parameters to A.
+ *
  ******************************************************************************/
 
 /** METHODS ******************************************************************/
@@ -520,3 +523,16 @@ function previewSpiderCustomMask(path, radius1, sdFactor, radius2, maskThreshold
 	}
 }
 
+function convertBandPass(low, high, decay, samplingRate) {
+    if (low != 0){
+        low = samplingRate/low;
+    }
+    if (high != 0){
+        high = samplingRate/high;
+    }
+    if (decay != 0){
+        decay = samplingRate/decay;
+    }
+
+    return [low, high, decay];
+}
