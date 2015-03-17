@@ -104,7 +104,18 @@ def create_movies_project(request):
         # 1. Import movies
         protImport = project.newProtocol(ProtImportMovies,
                                          objLabel='import movies')
-        project.saveProtocol(protImport)   
+        
+        if testDataKey :
+            fn = getMovTestFile(testDataKey)
+            newFn = join(project.uploadPath, basename(fn))
+            copyFile(fn, newFn)
+            
+            protImport.filesPath.set(newFn)
+#             protImport.samplingRate.set(1.)
+            
+            project.launchProtocol(protImport, wait=True)
+        else:
+            project.saveProtocol(protImport)
         
         # 2. Movie Alignment 
         protMovAlign = project.newProtocol(ProtMovieAlignment)
@@ -133,13 +144,11 @@ def create_movies_project(request):
     """
     return HttpResponse(mimetype='application/javascript')
 
-def get_testdata(request):
-    # Filename to use as test data 
-    testDataKey = request.GET.get('testData')
-    dsMDA = DataSet.getDataSet('initial_volume')
-    fn = dsMDA.getFile(testDataKey)
-    return HttpResponse(fn, mimetype='application/javascript')
-
+def getMovTestFile(key):
+    if(key == "ribosome"):
+        fn = "/mnt/big1/scipionweb/movies_testdata/80S_ribosome/*mrcs"
+        
+    return fn
 
 def check_m_id(request):
     result = 0
