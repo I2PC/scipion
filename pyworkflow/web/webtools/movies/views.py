@@ -24,7 +24,6 @@
 # *
 # **************************************************************************
 
-import os
 from os.path import exists, join, basename
 from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs, getResourceIcon
 from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
@@ -37,16 +36,18 @@ from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
 import pyworkflow.utils as pwutils
+from pyworkflow.utils.utils import prettyDelta
 
 def service_movies(request):
 
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
-    movies_utils = django_settings.STATIC_URL + "js/movies_utils.js"
+    movies_utils = join(django_settings.STATIC_URL, "js/", "movies_utils.js")
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
+               'scipion_mail': getResourceIcon('scipion_mail'),
                'movies_utils': movies_utils,
                }
     
@@ -96,15 +97,30 @@ def create_movies_project(request):
         
         # Create symbolic link for uploads
         dest = os.path.join(projectPath,'Uploads')
-#        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
-        source = "/home/josegutab/examples/"+ projectName
+        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
         pwutils.path.makePath(source)
         pwutils.createLink(source, dest)
         
         # 1. Import movies
         protImport = project.newProtocol(ProtImportMovies,
                                          objLabel='import movies')
-        project.saveProtocol(protImport)   
+        
+        if testDataKey :
+            path_test = getMovTestFile(testDataKey)
+            filesToImport = source + "/*.mrcs"
+            
+            for f in os.listdir(path_test):           
+                # Create a symbolic link for each file
+                file_path = os.path.join(path_test, f)
+                source_file = os.path.join(source, f)
+                pwutils.createLink(file_path, source_file)
+            
+            protImport.filesPath.set(filesToImport)
+            protImport.samplingRate.set(1.)
+            
+            project.launchProtocol(protImport, wait=True)
+        else:
+            project.saveProtocol(protImport)
         
         # 2. Movie Alignment 
         protMovAlign = project.newProtocol(ProtMovieAlignment)
@@ -113,33 +129,13 @@ def create_movies_project(request):
         protMovAlign.inputMovies.setExtendedAttribute('outputMovies')
         project.saveProtocol(protMovAlign)
         
-        """
-        # If using test data execute the import averages run
-        # options are set in 'project_utils.js'
-        dsMDA = DataSet.getDataSet('initial_volume')
-        
-        if testDataKey :
-            fn = dsMDA.getFile(testDataKey)
-            newFn = join(project.uploadPath, basename(fn))
-            copyFile(fn, newFn)
-            
-            protImport.filesPath.set(newFn)
-            protImport.samplingRate.set(1.)
-#             protImport.setObjectLabel('import averages (%s)' % testDataKey)
-            
-            project.launchProtocol(protImport, wait=True)
-        else:
-            project.saveProtocol(protImport)
-    """
     return HttpResponse(mimetype='application/javascript')
 
-def get_testdata(request):
-    # Filename to use as test data 
-    testDataKey = request.GET.get('testData')
-    dsMDA = DataSet.getDataSet('initial_volume')
-    fn = dsMDA.getFile(testDataKey)
-    return HttpResponse(fn, mimetype='application/javascript')
-
+def getMovTestFile(key):
+    if(key == "ribosome"):
+        path = "/mnt/big1/scipionweb/movies_testdata/80S_ribosome/"
+        
+    return path
 
 def check_m_id(request):
     result = 0
@@ -157,11 +153,12 @@ def check_m_id(request):
  
 def movies_content(request):
     projectName = request.GET.get('p', None)
-    path_files = '/resources_movies/img/'
+    path_files = django_settings.ABSOLUTE_URL + '/resources_movies/img/'
     command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
     
-    # Get info about when the project was created
-    daysLeft = "14"
+    project = loadProject(projectName)
+    elapsedTime = prettyDelta(project.getElapsedTime())
+    daysleft = "14"
     
     context = contentContext(request, projectName)
     context.update({
@@ -176,7 +173,7 @@ def movies_content(request):
                     'showj': path_files + 'showj.png',
                     'download': path_files + 'download.png',
                     'command' : command,
-                    'daysLeft': daysLeft,
+                    'daysLeft': daysleft,
                     })
     
     return render_to_response('movies_content.html', context)

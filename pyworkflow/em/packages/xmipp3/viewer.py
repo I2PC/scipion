@@ -350,7 +350,7 @@ class XmippViewer(Viewer):
                 writeSetOfMicrographs(micSet, micsfn)
                 
             posDir = getattr(obj.getCoords(), '_xmippMd').get()  # extra dir istead of md file for SetOfCoordinates
-            launchSupervisedPickerGUI("2g", micsfn, posDir, self.getProject().getDbPath(), obj.strId(), 'review', self.getProject().port)
+            launchSupervisedPickerGUI(2, micsfn, posDir, 'review', self.getProject().getDbPath(), obj.strId(), self.getProject().port)
 
         elif issubclass(cls, XmippProtParticlePickingPairs):
             tmpDir = self._getTmpPath(obj.getName()) 
@@ -365,7 +365,7 @@ class XmippViewer(Viewer):
 
         elif issubclass(cls, ProtMovieAlignment):
             outputMics = obj.outputMicrographs
-            plotLabels = 'psdRaw._filename psdCorr._filename plotPolar._filename plotCart._filename'
+            plotLabels = 'psdCorr._filename plotPolar._filename plotCart._filename'
             labels = plotLabels + ' _filename '
             objCommands = "'%s' '%s' '%s'" % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
             

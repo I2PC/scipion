@@ -42,38 +42,26 @@ function serviceTestDataForm(){
 	var title = 'Test data'
 	var dialog = ""
 		
-	dialog += "<p>You have two options to use <strong>Test data</strong> :<br />" +
-        "1.- <strong>Create a project</strong> with <strong>Test data</strong> already imported inside.<br />" +	
-		"2.- <strong>Download</strong> test files to your computer, to be manually imported into an already created project.</p>";
+	dialog += "<p><strong>Create a project</strong> with <strong>Test data</strong> already imported inside.<br /></p>";
 	dialog += "<br />";
 	dialog += '<div id="testData">';
 	dialog += "<p>Select <strong>Test data</strong>:</p>";
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
-	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
-	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome">';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome" checked>';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
+//	dialog += '<br />';
+//	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
+//	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
 	dialog += '<br />';
 	dialog += "</div>";
 	dialog += "<br />";
-    dialog += "<p>After selection, choose your option.</p>";
 
     
     var btn1 = 'Create project'
 	var ico1 = 'fa-check'
-	var funcName1 = 'createServProject';	
-		
-	var btn2 = 'Download'
-	var ico2 = 'fa-download';
-	var funcName2 = 'downloadTestdata';
+	var funcName1 = 'createMovProject';	
 	
-	accessPopup2opt(title, dialog, 
-					 btn1, ico1, funcName1, 
-					 btn2, ico2, funcName2, 
-					 "Cancel")
+    accessPopup(title, dialog, funcName1, btn1, "Cancel")
+    
 }
 
 function goExampleForm(){
@@ -82,14 +70,11 @@ function goExampleForm(){
 
 	dialog += '<div id="exProjects">';
 	dialog += "<p>Select the <strong>Test data</strong>:</p>";
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
-	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
-	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome">';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome" checked>';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
+//	dialog += '<br />';
+//	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
+//	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
 	dialog += '<br />';
 	dialog += "</div>";
 	dialog += "<br />";
@@ -101,39 +86,17 @@ function goExampleForm(){
 function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
-		case "groel":
-			var url = "/m_content/?p=GroelTestData";
-			break;
-		case "bpv":
-			var url ="/m_content/?p=BpvTestData";
-			break;
 		case "ribosome":
-			var url ="/m_content/?p=RiboTestData";
+			var url ="/m_content/?p=80SRiboTestData";
 			break;
 	}
 	goWithSubDomainURL(url);
 }
 
-function downloadTestdata(elm){
-	var selected = $("#testData input[type='radio']:checked").val();
-	var URL = getSubDomainURL() + "/get_testdata/?testData="+ selected;
-	
-	$.ajax({
-		type : "GET",
-		url : URL,
-		dataType: "text",
-		async: false,
-		success : function(text) {
-			var str = text.split("/")
-			var fn = str[str.length-1]
-			var URL = getSubDomainURL() + '/get_file/?path='+text+'&filename='+fn
-			window.location.href = URL;
-		}
-	});
-}
 
 function createMovProject(elm) {
-	var projName = randomString(32, '#aA')
+	var projName = "mov"+randomString(32, '#aA')
+	
 	var selected = $("#testData input[type='radio']:checked").val();
 
 	var URL = getSubDomainURL() + "/create_movies_project/?projectName=" + projName
@@ -150,13 +113,13 @@ function createMovProject(elm) {
 			
 			var msg = "<p>Your <strong>url to access </strong> to this <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
-			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/movies/m_content/?p="+ projName+ "'>" +
-			"http://scipion.cnb.csic.es/movies/m_content/?p="+ projName+ "</a>"+
+			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/m_content/?p="+ projName+ "'>" +
+			"http://scipion.cnb.csic.es/m/m_content/?p="+ projName+ "</a>"+
 			"</h3></p><br />" +
 			"<p>The access to this new project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
 			"in order to access to this project in future sessions.</p>"+
-			"<p>In case to lost your url to access, please contact with us by this email: <span style='color:firebrick;'>scipion-devel at cnb.csic.es</span></p>";
+			"<p>In case to lost your url to access, please contact with us by this email: <span style='color:firebrick;'>scipion at cnb.csic.es</span></p>";			
 			
 			msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";
 			var funcName = "goToProject"
@@ -193,14 +156,8 @@ function goToProject(elm) {
 function getRefTestData(id){
 	var ref = ""
 	switch(id){
-		case "bpv":
-			ref = "<strong>Bovine Papillomavirus</strong> (8 averages, 100x100 pixels, <a href='http://dx.doi.org/10.1073/pnas.0914604107' style='color:firebrick;' target='_blank'>from Wolf,M. et al. (2010)</a>)"
-			break;
-		case "groel":
-			ref = "<strong>GroEL</strong> (44 averages, 64x64 pixels, <a href='http://dx.doi.org/10.1016/j.str.2004.05.006' style='color:firebrick;' target='_blank'>from Ludtke, S.J. et al. (2004)</a>)"
-			break;
 		case "ribosome":
-			ref = "<strong>Eukaryotic Ribosome</strong> (32 averages, 64x64 pixels, <a href='ftp://ftp.ebi.ac.uk/pub/databases/emtest/SPIDER_FRANK_data/' style='color:firebrick;' target='_blank'>from J.Frank lab</a>)"
+			ref = "<strong>S.cereviseae 80S ribosome</strong> (5 movies, (1.77 Å, 1.77 Å), <a href='http://dx.doi.org/10.7554/eLife.00461' style='color:firebrick;' target='_blank'>from Bai XC, Fernandez IS, McMullan G, Scheres SH</a>)"
 			break;
 	}
 	return ref;

@@ -50,7 +50,7 @@ class TestMixedBPV(TestWorkflow):
         self.launchProtocol(protCTF)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
         
-        valuesList = [[24029, 23940, 54.8], [22424, 22356, 66.6], [22858, 22781, 64]]
+        valuesList = [[24029, 23940, 54.8], [22424, 22356, 64.08], [22858, 22781, 64]]
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
@@ -71,7 +71,7 @@ class TestMixedBPV(TestWorkflow):
 
         # Extract the SetOfParticles.
         print "Run extract particles with other downsampling factor"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, downsampleType=OTHER, doFlip=False, downFactor=5, runMode=1, doInvert=False)
+        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, downsampleType=OTHER, doFlip=False, downFactor=8, runMode=1, doInvert=False)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
@@ -98,130 +98,7 @@ class TestMixedBPV(TestWorkflow):
 
 class TestMixedBPV2(TestWorkflow):
 
-#     GOLD_FILES = {'protImport': [
-#                     'protImport/BPV_1388.mrc',
-#                     'protImport/micrographs.sqlite', 
-#                     'protImport/BPV_1387.mrc',
-#                     'protImport/BPV_1386.mrc'],
-#               'protDownsampling': ['protDownsampling/BPV_1388.mrc', 
-#                     'protDownsampling/BPV_1387.mrc', 
-#                     'protImport/BPV_1386.mrc', 
-#                     'protDownsampling/micrographs.xmd', 
-#                     'protImport/BPV_1388.mrc', 
-#                     'protImport/micrographs.sqlite', 
-#                     'protDownsampling/BPV_1386.mrc', 
-#                     'protImport/BPV_1387.mrc',
-#                     'protDownsampling/logs/run.log',
-#                     'protDownsampling/logs/run.db'],
-#               'protCTF': [
-#                     'protCTF/extra/BPV_1387/xmipp_ctf_ctfmodel_quadrant.xmp', 
-#                     'protCTF/extra/BPV_1387/xmipp_ctf.psd', 
-#                     'protCTF/extra/BPV_1386/xmipp_ctf_enhanced_psd.xmp', 
-#                     'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam', 
-#                     'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam', 
-#                     'protCTF/extra/BPV_1388/xmipp_ctf.psd', 
-#                     'protCTF/extra/BPV_1388/xmipp_ctf_ctfmodel_halfplane.xmp', 
-#                     'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam', 
-#                     'protCTF/extra/BPV_1388/xmipp_ctf_enhanced_psd.xmp', 
-#                     'protCTF/tmp/micrographs.xmd', 
-#                     'protCTF/extra/BPV_1387/xmipp_ctf_ctfmodel_halfplane.xmp', 
-#                     'protCTF/extra/BPV_1387/xmipp_ctf_enhanced_psd.xmp', 
-#                     'protCTF/extra/BPV_1386/xmipp_ctf_ctfmodel_quadrant.xmp', 
-#                     'protDownsampling/BPV_1388.mrc', 
-#                     'protDownsampling/BPV_1387.mrc', 
-#                     'protDownsampling/micrographs.xmd', 
-#                     'protCTF/extra/BPV_1386/xmipp_ctf.psd', 
-#                     'protCTF/extra/BPV_1386/xmipp_ctf_ctfmodel_halfplane.xmp', 
-#                     'protCTF/micrographs.xmd', 
-#                     'protDownsampling/BPV_1386.mrc', 
-#                     'protCTF/extra/BPV_1388/xmipp_ctf_ctfmodel_quadrant.xmp',
-#                     'protCTF/logs/run.log', 
-#                     'protCTF/logs/run.db'],
-#               'protExtract':[
-#                     'protPP/info/BPV_1386_info.json',
-#                     'protPP/info/BPV_1387_info.json',
-#                     'protPP/info/BPV_1388_info.json',
-#                     'protExtract/extra/scipion_micrographs_coordinates.xmd',
-#                     'protExtract/images.xmd', 
-#                     'protExtract/extra/BPV_1386.pos', 
-#                     'protExtract/extra/BPV_1387.pos', 
-#                     'protExtract/extra/BPV_1388.pos', 
-#                     'protExtract/tmp/BPV_1388_flipped.xmp', 
-#                     'protExtract/tmp/BPV_1387_flipped.xmp', 
-#                     'protExtract/tmp/BPV_1386_flipped.xmp',
-#                     'protExtract/tmp/BPV_1386_noDust.xmp', 
-#                     'protExtract/tmp/BPV_1387_noDust.xmp', 
-#                     'protExtract/tmp/BPV_1388_noDust.xmp', 
-#                     'protExtract/extra/BPV_1386.xmd', 
-#                     'protExtract/extra/BPV_1387.xmd', 
-#                     'protExtract/extra/BPV_1388.xmd', 
-#                     'protExtract/extra/BPV_1388.stk', 
-#                     'protExtract/extra/BPV_1386.stk', 
-#                     'protExtract/extra/BPV_1387.stk', 
-#                     'protExtract/logs/run.log',
-#                     'protExtract/logs/run.db',
-#                     ],
-#                 'protML2D': [
-#                     'protExtract/extra/BPV_1386.stk', 
-#                     'protExtract/extra/BPV_1387.stk', 
-#                     'protExtract/extra/BPV_1388.stk', 
-#                     'protExtract/images.xmd', 
-#                     'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam',
-#                     'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam',
-#                     'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam',
-#                     'protML2D/ml2d_extra/iter000/iter_images.xmd', 
-#                     'protML2D/ml2d_extra/iter000/iter_classes.xmd', 
-#                     'protML2D/ml2d_extra/iter000/iter_classes.stk', 
-#                     'protML2D/ml2d_extra/iter001/iter_images.xmd', 
-#                     'protML2D/ml2d_extra/iter001/iter_classes.xmd', 
-#                     'protML2D/ml2d_extra/iter001/iter_classes.stk', 
-#                     'protML2D/ml2d_extra/iter002/iter_images.xmd', 
-#                     'protML2D/ml2d_extra/iter002/iter_classes.xmd', 
-#                     'protML2D/ml2d_extra/iter002/iter_classes.stk', 
-# #                     'protML2D/ml2d_extra/iter003/iter_images.xmd', 
-# #                     'protML2D/ml2d_extra/iter003/iter_classes.xmd',  
-# #                     'protML2D/ml2d_extra/iter003/iter_classes.stk',
-# #                     'protML2D/ml2d_extra/iter004/iter_images.xmd', 
-# #                     'protML2D/ml2d_extra/iter004/iter_classes.xmd',  
-# #                     'protML2D/ml2d_extra/iter004/iter_classes.stk',
-#                     'protML2D/ml2d_classes.stk', 
-#                     'protML2D/ml2d_images.xmd', 
-#                     'protML2D/ml2d__images_average.xmp', 
-#                     'protML2D/logs/run.log',
-#                     'protML2D/logs/run.db',
-#                     'protML2D/ml2d_classes.xmd',
-#                     ],
-#                 'protIniModel': [
-#                     'protML2D/ml2d_classes.stk',
-#                     'protML2D/ml2d_classes.xmd',
-#                     'protIniModel/initial_models/model_00_01.hdf',
-#                     'protIniModel/initial_models/model_00_02.hdf',
-#                     'protIniModel/initial_models/model_00_03.hdf',
-#                     'protIniModel/initial_models/model_00_04.hdf',
-#                     'protIniModel/initial_models/model_00_01_init.hdf',
-#                     'protIniModel/initial_models/model_00_02_init.hdf',
-#                     'protIniModel/initial_models/model_00_03_init.hdf',
-#                     'protIniModel/initial_models/model_00_04_init.hdf',
-#                     'protIniModel/initial_models/model_00_01_proj.hdf',
-#                     'protIniModel/initial_models/model_00_02_proj.hdf',
-#                     'protIniModel/initial_models/model_00_03_proj.hdf',
-#                     'protIniModel/initial_models/model_00_04_proj.hdf',
-#                     'protIniModel/initial_models/model_00_01_aptcl.hdf',
-#                     'protIniModel/initial_models/model_00_02_aptcl.hdf',
-#                     'protIniModel/initial_models/model_00_03_aptcl.hdf',
-#                     'protIniModel/initial_models/model_00_04_aptcl.hdf',
-#                     'protIniModel/initial_models/particles_00.hdf',
-#                     'protIniModel/tasks_did2name.json',
-#                     'protIniModel/.eman2log.txt',
-#                     'protIniModel/logs/run.log',
-#                     'protIniModel/logs/run.db',
-#                     'protIniModel/tasks_active.json',
-#                     'protIniModel/tasks_complete.txt',
-#                     'protIniModel/tasks_name2did.json',
-#                     'protIniModel/precache_files.json',
-#                     'protIniModel/scipion_volumes.json'],
-# 
-#                 }
+
 
     @classmethod
     def setUpClass(cls):
