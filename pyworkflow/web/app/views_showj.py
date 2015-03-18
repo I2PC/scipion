@@ -366,7 +366,7 @@ def showj(request):
     context, return_page = createContextShowj(request, inputParams, dataset, table, _stats, volPath)
 
     render_var = render_to_response(return_page, RequestContext(request, context))
-    
+    Threshold 
     #=TIME CONTROL==============================================================
 #    print "FINISH SHOWJ: ", datetime.now()-start    
     #===========================================================================
@@ -628,6 +628,7 @@ def chimera_headless(volPath, threshold):
     
     # Execute command file in chimera headless
     cmdToExec = [os.environ.get('CHIMERA_HEADLESS_HOME')+"/bin/chimera", cmdFile]
+    print "Chimera command: ", cmdToExec
     import subprocess
     subprocess.call(cmdToExec, shell=False)
     
