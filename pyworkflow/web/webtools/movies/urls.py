@@ -10,7 +10,7 @@ urls = [
         {'document_root': MEDIA_MOVIES}
     ),
     
-    url(r'^movies/', 'app.views_webtools.service_movies'),
+    url(r'^mymovies/', 'app.views_webtools.service_movies'),
 #     url(r'^mov/', 'app.views_webtools.service_projects'),
     url(r'^check_m_id/$', 'app.views_webtools.check_m_id'),
     url(r'^create_movies_project/$', 'app.views_webtools.create_movies_project'),
