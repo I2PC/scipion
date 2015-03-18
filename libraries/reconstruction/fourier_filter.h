@@ -89,10 +89,11 @@ public:
 #define SPARSIFY     13
 #define STOPLOWBANDX 14
 #define STOPLOWBANDY 15
+#define FSCPROFILE   16
 
     /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, CTFPOS,
        WEDGE, CONE, GAUSSIAN, FROM_FILE, REALGAUSSIAN, BFACTOR, SPARSIFY,
-       STOPLOWBANDX, STOPLOWBANDY */
+       STOPLOWBANDX, STOPLOWBANDY, FSCPROFILE */
     int FilterBand;
 
     /** Cut frequency for Low and High pass filters, first freq for bandpass.
@@ -120,6 +121,9 @@ public:
     /** CTF parameters. */
     CTFDescription ctf;
     
+    /** FSC file */
+    FileName fnFSC;
+
     /** Correct phase before applying CTF */
     bool do_correct_phase;
 
@@ -182,6 +186,9 @@ public:
 
     // Auxiliary variables for sparsify
     MultidimArray<double> vMag, vMagSorted;
+
+    // Auxiliary variables for FSC profile
+    std::vector<double> freqContFSC, FSC;
 };
 
 /** Fast access to bandpass filter.
