@@ -157,19 +157,6 @@ def getAttrTestFile(key):
         
     return attr
 
-def check_m_id(request):
-    result = 0
-    projectName = request.GET.get('code', None)
-    
-    try:
-        manager = Manager()
-        project = loadProject(projectName)
-        result = 1
-    except Exception:
-        pass
-    
-    return HttpResponse(result, mimetype='application/javascript')
- 
  
 def movies_content(request):
     projectName = request.GET.get('p', None)
