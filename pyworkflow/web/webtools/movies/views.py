@@ -107,16 +107,15 @@ def create_movies_project(request):
         if testDataKey :
             path_test = getMovTestFile(testDataKey)
             filesToImport = source + "/*.mrcs"
-#             print "path test: ", path_test
+            
             for f in os.listdir(path_test):           
+                # Create a symbolic link for each file
                 file_path = os.path.join(path_test, f)
                 source_file = os.path.join(source, f)
-#                 print "file path: ", file_path      
-#                 print "create link %s : %s" % (file_path, source_file)
                 pwutils.createLink(file_path, source_file)
             
             protImport.filesPath.set(filesToImport)
-#             protImport.samplingRate.set(1.)
+            protImport.samplingRate.set(1.)
             
             project.launchProtocol(protImport, wait=True)
         else:
