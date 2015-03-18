@@ -72,7 +72,7 @@ fftw2 = env.AddLibrary(
     targets=[File('#software/lib/libfftw3f.so').abspath],
     flags=['--enable-threads', '--enable-shared', '--enable-float'],
     clean=[Dir('#software/tmp/fftw-3.3.4f')])
-    
+
 fftw = env.Alias('fftw3', [fftw1, fftw2])
 env.Default(fftw)
 
@@ -365,8 +365,8 @@ addModule(
 # extraActions is a list of (target, command) to run after installation.
 
 env.AddPackage('xmipp',
-               tar='xmipp_master.tgz',
-               buildDir='xmipp_master',
+               tar='xmipp_scipion.tgz',
+               buildDir='xmipp_scipion',
                reqs={'mpi': 'cxx',
                      'freetype': 'cxx',
                      'X11': 'cxx',

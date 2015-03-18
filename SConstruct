@@ -357,7 +357,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     libTarget = env.Alias(name, [tConfig, tMake])
     env.Depends(libTarget, deps)
     env.Alias('Scipion-libs', libTarget)
-    
+
     return libTarget
 
 
