@@ -96,8 +96,7 @@ def create_service_project(request):
         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # 1. Import averages
-        protImport = project.newProtocol(ProtImportAverages,
-                                         objLabel='import averages')
+        
         
         # If using test data execute the import averages run
         # options are set in 'project_utils.js'
@@ -111,9 +110,11 @@ def create_service_project(request):
             protImport.filesPath.set(newFn)
             protImport.samplingRate.set(1.)
 #             protImport.setObjectLabel('import averages (%s)' % testDataKey)
-            
+            label_import = 'import averages ('+ testDataKey +')'
+            protImport = project.newProtocol(ProtImportAverages, objLabel=label_import)
             project.launchProtocol(protImport, wait=True)
         else:
+            protImport = project.newProtocol(ProtImportAverages, objLabel='import averages')
             project.saveProtocol(protImport)
             
         

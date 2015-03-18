@@ -102,8 +102,7 @@ def create_movies_project(request):
         pwutils.createLink(source, dest)
         
         # 1. Import movies
-        protImport = project.newProtocol(ProtImportMovies,
-                                         objLabel='import movies')
+        
         
         if testDataKey :
             attr = getAttrTestFile(testDataKey)
@@ -123,8 +122,11 @@ def create_movies_project(request):
             protImport.magnification.set(attr['magnification'])
             protImport.samplingRate.set(attr['samplingRate'])
             
+            label_import = "import movies ("+ testDataKey +")" 
+            protImport = project.newProtocol(ProtImportMovies, objLabel=label_import)
             project.launchProtocol(protImport, wait=True)
         else:
+            protImport = project.newProtocol(ProtImportMovies, objLabel='import movies')
             project.saveProtocol(protImport)
         
         # 2. Movie Alignment 
