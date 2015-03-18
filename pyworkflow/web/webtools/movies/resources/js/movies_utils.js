@@ -48,9 +48,9 @@ function serviceTestDataForm(){
 	dialog += "<p>Select <strong>Test data</strong>:</p>";
 	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome" checked>';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
-//	dialog += '<br />';
-//	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
-//	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="falcon">';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("falcon");
 	dialog += '<br />';
 	dialog += "</div>";
 	dialog += "<br />";
@@ -72,9 +72,9 @@ function goExampleForm(){
 	dialog += "<p>Select the <strong>Test data</strong>:</p>";
 	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome" checked>';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
-//	dialog += '<br />';
-//	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
-//	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="falcon">';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("falcon");
 	dialog += '<br />';
 	dialog += "</div>";
 	dialog += "<br />";
@@ -88,6 +88,9 @@ function getProjExample(elm){
 	switch(x){
 		case "ribosome":
 			var url ="/m_content/?p=80SRiboTestData";
+			break;
+		case "falcon":
+			var url ="/m_content/?p=FalconTestData";
 			break;
 	}
 	goWithSubDomainURL(url);
@@ -158,6 +161,9 @@ function getRefTestData(id){
 	switch(id){
 		case "ribosome":
 			ref = "<strong>S.cereviseae 80S ribosome</strong> (5 movies, (1.77 Å, 1.77 Å), <a href='http://dx.doi.org/10.7554/eLife.00461' style='color:firebrick;' target='_blank'>from Bai XC, Fernandez IS, McMullan G, Scheres SH</a>)"
+			break;
+		case "falcon":
+			ref = "<strong>Falcon 2014</strong>"
 			break;
 	}
 	return ref;

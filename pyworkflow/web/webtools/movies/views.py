@@ -144,6 +144,13 @@ def getAttrTestFile(key):
                 "amplitudeContrast" : 0.1,
                 "magnification" : 59000,
                 "samplingRate": 1.77}
+    if(key == "falcon"):
+        attr = {"path" : "/mnt/big1/scipionweb/movies_testdata/Falcon_2014/",
+                "voltage" : 300.0,
+                "sphericalAberration" : 2.7,
+                "amplitudeContrast" : 0.1,
+                "magnification" : 59000,
+                "samplingRate": 1.34}
         
     return attr
 
