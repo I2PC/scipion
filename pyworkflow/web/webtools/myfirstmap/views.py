@@ -107,11 +107,11 @@ def create_service_project(request):
             newFn = join(project.uploadPath, basename(fn))
             copyFile(fn, newFn)
             
+            label_import = 'import averages ('+ testDataKey +')'
+            protImport = project.newProtocol(ProtImportAverages, objLabel=label_import)
             protImport.filesPath.set(newFn)
             protImport.samplingRate.set(1.)
 #             protImport.setObjectLabel('import averages (%s)' % testDataKey)
-            label_import = 'import averages ('+ testDataKey +')'
-            protImport = project.newProtocol(ProtImportAverages, objLabel=label_import)
             project.launchProtocol(protImport, wait=True)
         else:
             protImport = project.newProtocol(ProtImportAverages, objLabel='import averages')

@@ -115,6 +115,9 @@ def create_movies_project(request):
                 source_file = os.path.join(source, f)
                 pwutils.createLink(file_path, source_file)
             
+            label_import = "import movies ("+ testDataKey +")" 
+            protImport = project.newProtocol(ProtImportMovies, objLabel=label_import)
+
             protImport.filesPath.set(filesToImport)
             protImport.voltage.set(attr['voltage'])
             protImport.sphericalAberration.set(attr['sphericalAberration'])
@@ -122,8 +125,6 @@ def create_movies_project(request):
             protImport.magnification.set(attr['magnification'])
             protImport.samplingRate.set(attr['samplingRate'])
             
-            label_import = "import movies ("+ testDataKey +")" 
-            protImport = project.newProtocol(ProtImportMovies, objLabel=label_import)
             project.launchProtocol(protImport, wait=True)
         else:
             protImport = project.newProtocol(ProtImportMovies, objLabel='import movies')
