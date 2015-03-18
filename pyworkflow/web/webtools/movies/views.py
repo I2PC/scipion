@@ -47,6 +47,7 @@ def service_movies(request):
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
+               'scipion_mail': getResourceIcon('scipion_mail'),
                'movies_utils': movies_utils,
                }
     
