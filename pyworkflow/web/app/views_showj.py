@@ -366,7 +366,7 @@ def showj(request):
     context, return_page = createContextShowj(request, inputParams, dataset, table, _stats, volPath)
 
     render_var = render_to_response(return_page, RequestContext(request, context))
-    Threshold 
+
     #=TIME CONTROL==============================================================
 #    print "FINISH SHOWJ: ", datetime.now()-start    
     #===========================================================================
