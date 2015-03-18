@@ -263,8 +263,6 @@ Examples:
         return em.ObjectView(self._project, 
                           self.protocol.strId(), filename, other=inputParticlesId,
                           env=self._env, viewParams=viewParams)
-        
-        
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """

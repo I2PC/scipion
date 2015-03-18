@@ -426,7 +426,6 @@ Examples:
         
         if self.iterToShow.get() == LAST_ITER:
             self._iterations = [self.lastIter]
-            
         elif self.iterToShow.get() == ALL_ITERS:
             self._iterations = range(1, self.lastIter + 1)
         elif self.iterToShow.get() == SELECTED_ITERS:

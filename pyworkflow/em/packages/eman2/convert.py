@@ -42,7 +42,7 @@ import pyworkflow as pw
 import pyworkflow.em as em
 from pyworkflow.em.data import Coordinate
 from pyworkflow.em.packages.eman2 import getEmanCommand, loadJson, getEnviron
-from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt, dirname, basename
+from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt, cleanPath
 
 
 # LABEL_TYPES = { 
@@ -144,7 +144,7 @@ def writeSetOfCoordinates():
     pass
 
 
-def createEmanProcess(script='e2converter.py', args=None):
+def createEmanProcess(script='e2converter.py', args=None, direc="."):
     """ Open a new Process with all EMAN environment (python...etc)
     that will server as an adaptor to use EMAN library
     """
@@ -155,7 +155,7 @@ def createEmanProcess(script='e2converter.py', args=None):
     print "** Running: '%s'" % cmd
     proc = subprocess.Popen(cmd, shell=True, env=getEnviron(), 
                             stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE)
+                            stdout=subprocess.PIPE, cwd=direc)
     
     return proc
     
@@ -177,6 +177,8 @@ def writeSetOfParticles(partSet, path, **kwargs):
         micId = part.getMicId()
         if micId != tmpMicId:
             tmpMicId = micId
+            if not micId:
+                micId = 0
             hdfFn = os.path.join(path, "mic_%0.6d.hdf" % micId)
 #             listHdf.append(basename(hdfFn))
             proc = createEmanProcess(args='write %s' % hdfFn)
@@ -357,3 +359,18 @@ def iterParticlesByMic(partSet):
     for i, part in enumerate(partSet.iterItems(orderBy=['_micId', 'id'],
                                                                  direction='ASC')):
         yield i, part
+
+def writeSqliteIterData(partSet, imgSqlite, itemMatrix, iterTextFile):
+    """ Given a Relion images star file (from some iteration)
+    create the corresponding SetOfParticles (sqlite file)
+    for this iteration. This file can be visualized sorted
+    by the LogLikelihood.
+    """
+    cleanPath(imgSqlite)
+    imgSet = em.SetOfParticles(filename=imgSqlite)
+    imgSet.copyInfo(partSet)
+    imgSet.setAlignment(em.ALIGN_PROJ)
+    imgSet.copyItems(partSet,
+                         updateItemCallback=itemMatrix,
+                         itemDataIterator=iterTextFile)
+    imgSet.write()
