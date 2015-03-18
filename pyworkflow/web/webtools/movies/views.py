@@ -106,7 +106,8 @@ def create_movies_project(request):
                                          objLabel='import movies')
         
         if testDataKey :
-            path_test = getMovTestFile(testDataKey)
+            attr = getAttrTestFile(testDataKey)
+            path_test = attr['path']
             filesToImport = source + "/*.mrcs"
             
             for f in os.listdir(path_test):           
@@ -116,7 +117,11 @@ def create_movies_project(request):
                 pwutils.createLink(file_path, source_file)
             
             protImport.filesPath.set(filesToImport)
-            protImport.samplingRate.set(1.)
+            protImport.voltage.set(attr['voltage'])
+            protImport.sphericalAberration.set(attr['sphericalAberration'])
+            protImport.amplitudeContrast.set(attr['amplitudeContrast'])
+            protImport.magnification.set(attr['magnification'])
+            protImport.samplingRate.set(attr['samplingRate'])
             
             project.launchProtocol(protImport, wait=True)
         else:
@@ -131,11 +136,16 @@ def create_movies_project(request):
         
     return HttpResponse(mimetype='application/javascript')
 
-def getMovTestFile(key):
+def getAttrTestFile(key):
     if(key == "ribosome"):
-        path = "/mnt/big1/scipionweb/movies_testdata/80S_ribosome/"
+        attr = {"path" : "/mnt/big1/scipionweb/movies_testdata/80S_ribosome/",
+                "voltage" : 300.0,
+                "sphericalAberration" : 2.7,
+                "amplitudeContrast" : 0.1,
+                "magnification" : 59000,
+                "samplingRate": 1.77}
         
-    return path
+    return attr
 
 def check_m_id(request):
     result = 0
