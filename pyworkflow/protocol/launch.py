@@ -107,7 +107,10 @@ def _launchLocal(protocol, wait):
     #threads = protocol.numberOfThreads.get()
     python = os.environ['SCIPION_PYTHON']
     scipion = os.path.join(os.environ['SCIPION_HOME'], 'scipion')
-    command = '%s %s runprotocol pw_protocol_run.py "%s" "%s" %s' % (python, scipion, protocol.getProject().path, protocol.getDbPath(), protStrId)
+    command = '%s %s runprotocol pw_protocol_run.py "%s" "%s" %s' % (python, scipion, 
+                                                                     protocol.getProject().path, 
+                                                                     protocol.getDbPath(), 
+                                                                     protStrId)
     hostConfig = protocol.getHostConfig()
     useQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
     #bg = not wait and not useQueue
@@ -124,24 +127,34 @@ def _launchLocal(protocol, wait):
     
     
 def _launchRemote(protocol, wait):
-    from pyworkflow.utils.remote import sshConnectFromHost, RemotePath
+    #from pyworkflow.utils.remote import sshConnectFromHost, RemotePath
     # Establish connection
     host = protocol.getHostConfig()
-    ssh = sshConnectFromHost(host)
-    rpath = RemotePath(ssh)
+    #ssh = sshConnectFromHost(host)
+    #rpath = RemotePath(ssh)
     # Copy protocol files
-    _copyFiles(protocol, rpath)
+    #_copyFiles(protocol, rpath)
     # Run remote program to launch the protocol
-    cmd  = 'cd %s; pw_protocol_launch.py %s %s %s' % (host.getHostPath(), 
-                                                   protocol.getDbPath(), 
-                                                   protocol.strId(), str(wait))
-    print "Running remote %s" % greenStr(cmd)
-    stdin, stdout, stderr = ssh.exec_command(cmd)
-    for l in stdout.readlines():
-        if l.startswith('OUTPUT jobId'):
-            jobId = int(l.split()[2])
-            break
-    return jobId
+    tpl  = "ssh %(host)s '%(scipion)s/scipion runprotocol pw_protocol_launch.py %(project)s %(protDb)s %(protId)s'"
+    args = {'host': host.getAddress(),
+            'scipion': host.getScipionHome(),
+            'project': protocol.getProject().path,
+            'protDb': protocol.getDbPath(),
+            'protId': protocol.getObjId()
+            }
+    cmd = tpl % args
+    print "** Running remote: %s" % greenStr(cmd)
+    p = Popen(cmd, shell=True, stdout=PIPE)
+    
+    out = p.communicate()[0]
+    for l in out:
+        if l.startswith('Scipion remote jobid: '):
+            s = re.search('(\d+)', l)
+            if s:
+                return int(s.group(0))
+            else:
+                print "** Couldn't parse %s ouput: %s" % (cmd, redStr(out)) 
+    return UNKNOWN_JOBID
 
 
 def _copyFiles(protocol, rpath):
