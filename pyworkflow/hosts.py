@@ -63,6 +63,8 @@ class HostConfig():
         self.password = String()
         self.hostPath = String()
         self.mpiCommand = String()
+        self.scipionHome = String()
+        self.address = String()
         self.queueSystem = QueueSystemConfig()
     
     def getLabel(self):
@@ -117,7 +119,19 @@ class HostConfig():
         self.mpiCommand.set(mpiCommand)  
         
     def setQueueSystem(self, queueSystem):
-        self.queueSystem = queueSystem    
+        self.queueSystem = queueSystem
+        
+    def getScipionHome(self):
+        return self.scipionHome.get()
+    
+    def setScipionHome(self, newScipionHome):
+        self.scipionHome.set(newScipionHome)
+        
+    def getAddress(self):
+        return self.address.get()
+    
+    def setAddress(self, newAddress):
+        return self.address.set(newAddress)
 
 
 class QueueSystemConfig(OrderedObject):
