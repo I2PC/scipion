@@ -64,18 +64,7 @@ class ChimeraServer:
             #print data
             grid = Array_Grid_Data(data)
             self.volume = volume_from_grid_data(grid)
-
-            
-            #om = chimera.openModels
-            #mlist = om.list()
-            #m = mlist[0]
-            #centerVec = m.bbox()[1].center().toVector()
-            #xform = chimera.Xform.xform(1, 0, 0, -centerVec[0],
-            #             0, 1, 0, -centerVec[1],
-            #             0, 0, 1, -centerVec[2], orthogonalize=True)
-            #m.openState.globalXform(xform)
-
-            #runCommand("volume #0 step 1")
+            self.centerVolume()
 
 
         elif msg == 'voxel_size':
@@ -83,13 +72,6 @@ class ChimeraServer:
             cmd = "volume #0 voxelSize %s"%self.voxelSize
             #print cmd
             runCommand(cmd)
-            #print reference spheres. Usefull for debuging, remove
-            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize, -64 * self.voxelSize ,   0                  , 0 , 'orange'))
-            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  , -64 * self.voxelSize , 0 , 'forest green'))
-            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  ,   0                  , -64 * self.voxelSize  , 'magenta'))
-            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,  64 * self.voxelSize ,   0                  , 0 , 'red'))
-            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  ,  64 * self.voxelSize , 0 , 'green'))
-            runCommand('shape sphere radius %s center %s,%s,%s color %s '%(self.voxelSize,   0                  ,   0                  , 64 * self.voxelSize , 'blue'))
             runCommand("focus")
             #end debug
 
@@ -104,21 +86,21 @@ class ChimeraServer:
         self.listenShowJThread.daemon = True
         self.listenShowJThread.start()
 
+    def centerVolume(self):
+        om = chimera.openModels
+        mlist = om.list()
+        #assume that volume is 0 may be dangerous
+        #this should be in init but it does not work there
+        self.model = mlist[0]
+        centerVec = self.model.bbox()[1].center().toVector()
+        xform = chimera.Xform.xform(1, 0, 0, -centerVec[0],
+                                    0, 1, 0, -centerVec[1],
+                                    0, 0, 1, -centerVec[2], orthogonalize=True)
+        self.model.openState.globalXform(xform)
+        #end of this
+
     def listenShowJ(self):
         try:
-            om = chimera.openModels
-            mlist = om.list()
-            #assume that volume is 0 may be dangerous
-            #this should be in init but it does not work there
-            m = mlist[0]
-            centerVec = m.bbox()[1].center().toVector()
-            xform = chimera.Xform.xform(1, 0, 0, -centerVec[0],
-                                        0, 1, 0, -centerVec[1],
-                                        0, 0, 1, -centerVec[2], orthogonalize=True)
-            m.openState.globalXform(xform)
-            #end of this
-
-            self.motion = identity(3)
 
             while True:
                 if self.vol_conn.poll():
@@ -134,7 +116,7 @@ class ChimeraServer:
                                        matrix[1][0], matrix[1][1], matrix[1][2], 0,
                                        matrix[2][0], matrix[2][1], matrix[2][2], 0, orthogonalize=True)
 
-                        m.openState.globalXform(xform)
+                        self.model.openState.globalXform(xform)
                     else:
                         sleep(0.01)
         except EOFError:
@@ -145,10 +127,9 @@ class ChimeraServer:
     def onMotionStop(self, trigger, extra, userdata):
         rx, ry , rz, t = self.volume.openState.xform.getCoordFrame()
         self.motion = array([[rx[0], ry[0], rz[0]], [rx[1], ry[1], rz[1]], [rx[2], ry[2], rz[2]]])
-        printCmd('sending motion')
         self.vol_conn.send('motion_stop')
         self.vol_conn.send(self.motion)#send serialized motion
-        printCmd('sended motion')
+
 
     def onAppQuit(self, trigger, extra, userdata):
         self.vol_conn.send('exit_server')
