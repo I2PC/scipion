@@ -6,6 +6,7 @@
 package xmipp.viewer.scipion;
 
 import ij.IJ;
+import ij.ImagePlus;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
@@ -17,9 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.ij.commons.ImagePlusFromFile;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.CTFDescription;
 import xmipp.jni.EllipseCTF;
+import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
@@ -1188,6 +1191,37 @@ public class ScipionMetaData extends MetaData {
         return properties.get("self");
     }
     
-   
+    public double[] getStatistics(boolean applyGeo, int label)
+    {
+        double[] minMax = new double [2];
+        ColumnInfo ci = getColumnInfo(label);
+        if(!ci.render)
+            throw new IllegalArgumentException("No images to process");
+        String imageFn, mddir = this.getBaseDir();
+        ImagePlus imp;
+        minMax[0] = Double.MAX_VALUE;
+        minMax[1] = -Double.MAX_VALUE;
+        double aux;
+        for (EMObject emo: emobjects)
+        {
+            imageFn = emo.getValueString(ci);
+            if(imageFn != null)
+            {
+                imageFn = Filename.findImagePath(imageFn, mddir, true);
+                if (imageFn != null && Filename.exists(imageFn))
+                {
+                    imp = new ImagePlusFromFile(imageFn).getImagePlus();
+                    aux = imp.getProcessor().getMin();
+                    if(aux < minMax[0])
+                        minMax[0] = aux;
+                    aux = imp.getProcessor().getMax();
+                    if(aux > minMax[1])
+                        minMax[1] = aux;
+                }
+            }
+        }
+        
+        return minMax;
+    }
    
 }
