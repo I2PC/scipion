@@ -1968,7 +1968,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else if (cmd.equals(CTF_PROFILE))
 			{
                                 int index = gallery.getIndex(row, col);
-				data.showCTF(true, index, ctfTasks);
+				data.showCTF(true, index, gallery.getSelection(), ctfTasks);
 			}
 			else if (cmd.equals(CTF_RECALCULATE))
 			{
@@ -1979,7 +1979,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                 else
                                 {
                                     if(isrecalculate)
-                                        data.showCTF(false, index, ctfTasks);
+                                        data.showCTF(false, index, gallery.getSelection(), ctfTasks);
                                     else
                                         data.removeCTF(row);
                                 }

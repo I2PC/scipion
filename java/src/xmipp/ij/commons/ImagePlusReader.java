@@ -111,7 +111,6 @@ public abstract class ImagePlusReader {
         if(inverty)
         {
             imp.getProcessor().flipVertical();
-            
             imp.updateImage();
         }
     }
