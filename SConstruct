@@ -348,14 +348,14 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     
     # Prevents that several configure, make at done at the same
     # time for the same library
-    SideEffect(dummyName, [tConfig, tMake])
+    SideEffect('dummy', tMake)
         
     env.Depends(name, deps)
-    if default or GetOption(name):
-        env.Default(name)
+    if default:
+        env.Default(tMake)
         
     libTarget = env.Alias(name, [tConfig, tMake])
-    env.Depends(libTarget, deps)
+    env.Depends(tConfig, deps)
     env.Alias('Scipion-libs', libTarget)
 
     return libTarget
