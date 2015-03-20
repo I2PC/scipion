@@ -48,7 +48,7 @@ import SCons.SConf
 URL_BASE = os.environ['SCIPION_URL_SOFTWARE']
 
 # Define our builders.
-download = Builder(action='wget -nv --show-progress -c -O $TARGET $SOURCE')
+download = Builder(action='wget -nv -c -O $TARGET $SOURCE')
 untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 
 
@@ -901,7 +901,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                     print 'Warning: %s already exists. Download anyway? [Y/n]' % tar
                     if raw_input().upper() != 'Y':
                         Exit('If you just want to compile, use: scipion compile')
-                check_call(['wget', '-nv', '--show-progress', '-c', url], cwd=emDir)
+                check_call(['wget', '-nv', '-c', url], cwd=emDir)
                 if os.path.exists('%s/%s' % (emDir, name)):
                     print 'Warning: %s already exists. Untar anyway? [Y/n]' % name
                     if raw_input().upper() != 'Y':
