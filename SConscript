@@ -134,28 +134,14 @@ sqlite = env.AddLibrary(
     targets=[File('#software/lib/libsqlite3.so').abspath],
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
-# 
-# hdf5 = env.AddLibrary(
-#      'hdf5',
-#      tar='hdf5-1.8.14.tgz',
-#      buildDir=['hdf5-1.8.14', 'hdf5-1.8.14/c++'],
-#      configDir=['hdf5-1.8.14', 'hdf5-1.8.14'],
-#      flags=[['--enable-cxx'], ['--enable-cxx']],
-#      autoConfigTargets=['src/Makefile', 'c++/Makefile'],
-#      makeTargets=['all install', 'all install'],
-#      targets=[[File('#software/lib/libhdf5.so').abspath], 
-#               [File('#software/lib/libhdf5_cpp.so').abspath]],
-#      clean=[Dir('#software/tmp/hdf5-1.8.14').abspath])
 
 hdf5 = env.AddLibrary(
      'hdf5',
      tar='hdf5-1.8.14.tgz',
      flags=['--enable-cxx'],
-     #makeTargets=['all install'],
      targets=[File('#software/lib/libhdf5.so').abspath, 
               File('#software/lib/libhdf5_cpp.so').abspath],
      deps=[zlib])
-
 
 python = env.AddLibrary(
     'python',
