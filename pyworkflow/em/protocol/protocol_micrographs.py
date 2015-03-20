@@ -214,8 +214,10 @@ class ProtCTFMicrographs(ProtMicrographs):
         if self.recalculate:
             ctfSet = self._createSetOfCTF("_recalculated")
             defocusList = []
-            
-            oldCtfSet = getattr(self, 'outputCTF')
+            if self.continueRun:
+                oldCtfSet = getattr(self.continueRun.get(), 'outputCTF')
+            else:
+                oldCtfSet = getattr(self, 'outputCTF')
             micSet = oldCtfSet.getMicrographs()
             # README: We suppose this is reading the ctf selection (with enabled/disabled)
             # to only consider the enabled ones in the final SetOfCTF
