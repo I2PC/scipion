@@ -131,19 +131,6 @@ Examples:
                       label='Display volume with',
                       help='*slices*: display volumes as 2D slices along z axis.\n'
                            '*chimera*: display volumes as surface with Chimera.')
-
-        # Line is not working well for this case
-        # line = group.addLine("Display volume", help="some help")
-        # line.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed', 'Filtered'],
-        #                   default=1, display=EnumParam.DISPLAY_COMBO,
-        #                   label='',
-        #                   help='Displays selected volume')
-        # line.addParam('displayVolWith', EnumParam, choices=['slices', 'chimera'],
-        #               display=EnumParam.DISPLAY_COMBO, default=VOLUME_SLICES,
-        #               label='with',
-        #               help='*slices*: display volumes as 2D slices along z axis.\n'
-        #                    '*chimera*: display volumes as surface with Chimera.')
-
         group.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed', 'Filtered'],
                           default=1, display=EnumParam.DISPLAY_COMBO,
                           label='Display volume',
@@ -759,25 +746,27 @@ Examples:
         threshold = self.resolutionThreshold.get()
         nrefs = len(self._refsList)
         gridsize = self._getGridSize(nrefs)
-        
         xmipp.activateMathExtensions()
         
-        xplotter = XmippPlotter(*gridsize, windowTitle='Resolution FSC')
-        
         for ref3d in self._refsList:
+            xplotter = XmippPlotter(*gridsize, windowTitle='Resolution FSC')
+            legends = []
+            show = False
             plot_title = 'Ref3D_%s' % ref3d
             a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'FSC', yformat=False)
             legends = []
             for it in self._iterations:
                 file_name = self.protocol._getFileName('resolutionXmdFile', iter=it, ref=ref3d)
                 if exists(file_name):
-                    self._plotFSC(a, file_name)
+                    show = True
                     legends.append('iter %d' % it)
+                    self._plotFSC(a, file_name)
                     xplotter.showLegend(legends)
-                    if threshold < self.maxFrc:
-                        a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
-                else:
-                    print "File %s does not exist" % file_name
-            a.grid(True)
+            if show:
+                if threshold < self.maxFrc:
+                    a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+                a.grid(True)
+            else:
+                raise Exception("Set a valid iteration to show its FSC")
             
-        return [xplotter]
+            return [xplotter]
