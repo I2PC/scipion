@@ -30,24 +30,48 @@ So, it will just do the same job of launch._launchLocal and print
 the jobId to be tracked from the machine that was invoked.
 """
 
+import os
 import sys
+import subprocess
 
 
+def usage(msg=''):
+    print "Usage: pw_protocol_remote.py [run|stop] project protDbPath protID\n%s" % msg
+    sys.exit(1)
+    
+    
 if __name__ == '__main__':
-    if len(sys.argv) > 2:
-        projectPath = sys.argv[1]
-        protDbPath = sys.argv[2]
-        protId = int(sys.argv[3])
+    n = len(sys.argv)
+    if n < 5:
+        usage("Received only %d arguments" % n)
         
-        from pyworkflow.protocol import getProtocolFromDb
-        from pyworkflow.protocol.launch import launch 
-        
-        protocol = getProtocolFromDb(projectPath, protDbPath, protId, chdir=False)
-        # We need to change the hostname to localhost, since it will run here. 
-        protocol.setHostName('localhost')
-        jobId = launch(protocol)
-        
-        print "Scipion remote jobid: ", jobId
+    mode = sys.argv[1]
+    
+    if mode not in ['run', 'stop']:
+        usage("Mode should be 'run' or 'stop'. Received: '%s'" % mode)
+
+    projectPath = os.path.join(os.environ['SCIPION_USER_DATA'], 'projects', sys.argv[2])
+    print "projectPath: ", projectPath
+    protDbPath = sys.argv[3]
+    protId = int(sys.argv[4])
+
+    from pyworkflow.protocol import getProtocolFromDb
+    from pyworkflow.protocol.launch import launch, stop
+
+    protocol = getProtocolFromDb(projectPath, protDbPath, protId, chdir=False)
+    # We need to change the hostname to localhost, since it will 
+    # be considered 'local' from now on to either run or stop
+    protocol.setHostName('localhost')
+    
+    if mode == 'run':        
+        FNULL = open(os.devnull, 'w')
+        jobId = launch(protocol, stdin=None, stdout=FNULL, stderr=subprocess.STDOUT)        
+        print "Scipion remote jobid: %d" % jobId
+    elif mode == 'stop':
+        stop(protocol)
     else:
-        from os.path import basename
-        print "usage: %s dbPath protocolID" % basename(sys.argv[0])
+        usage()
+        
+        
+        
+

@@ -55,16 +55,18 @@ LOCALHOST = 'localhost'
 # *         Public functions provided by the module
 # ******************************************************************
 
-def launch(protocol, wait=False):
+def launch(protocol, wait=False, stdin=None, stdout=None, stderr=None):
     """ This function should be used to launch a protocol
     This function will decide wich case, A or B will be used.
     """
     if _isLocal(protocol):
-        jobId = _launchLocal(protocol, wait)
+        jobId = _launchLocal(protocol, wait, stdin, stdout, stderr)
     else:
         jobId = _launchRemote(protocol, wait)
     
     protocol.setJobId(jobId)
+    
+    return jobId
     
     
 def stop(protocol):
@@ -94,7 +96,7 @@ def _getAppsProgram(prog):
     return os.environ.get('SCIPION_PYTHON', 'python') + ' ' + pw.join('apps', prog)
     
     
-def _launchLocal(protocol, wait):
+def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
     # Check first if we need to launch with MPI or not
 #     if (protocol.stepsExecutionMode == STEPS_PARALLEL and
 #         protocol.numberOfMpi > 1):
@@ -121,40 +123,48 @@ def _launchLocal(protocol, wait):
         submitDict['JOB_COMMAND'] = command
         jobId = _submit(hostConfig, submitDict)
     else:
-        jobId = _run(command, wait)
+        jobId = _run(command, wait, stdin, stdout, stderr)
 
     return jobId
     
     
-def _launchRemote(protocol, wait):
-    #from pyworkflow.utils.remote import sshConnectFromHost, RemotePath
-    # Establish connection
+def _runRemote(protocol, mode):
+    """ Launch remotely 'pw_protocol_remote.py' script to run or stop a protocol. 
+    Params:
+    	protocol: the protocol to be ran or stopped.
+	mode: should be either 'run' or 'stop'
+    """
     host = protocol.getHostConfig()
-    #ssh = sshConnectFromHost(host)
-    #rpath = RemotePath(ssh)
-    # Copy protocol files
-    #_copyFiles(protocol, rpath)
-    # Run remote program to launch the protocol
-    tpl  = "ssh %(host)s '%(scipion)s/scipion runprotocol pw_protocol_launch.py %(project)s %(protDb)s %(protId)s'"
-    args = {'host': host.getAddress(),
+    tpl  = "ssh %(address)s '%(scipion)s/scipion runprotocol pw_protocol_remote.py %(mode)s %(project)s %(protDb)s %(protId)s'"
+    args = {'address': host.getAddress(),
+    	    'mode': mode,
             'scipion': host.getScipionHome(),
-            'project': protocol.getProject().path,
+            'project': os.path.basename(protocol.getProject().path), # use project base name, in remote SCIPION_USER_DATA/projects should be prepended
             'protDb': protocol.getDbPath(),
             'protId': protocol.getObjId()
             }
     cmd = tpl % args
     print "** Running remote: %s" % greenStr(cmd)
     p = Popen(cmd, shell=True, stdout=PIPE)
+
+    return p
     
-    out = p.communicate()[0]
-    for l in out:
-        if l.startswith('Scipion remote jobid: '):
-            s = re.search('(\d+)', l)
-            if s:
-                return int(s.group(0))
-            else:
-                print "** Couldn't parse %s ouput: %s" % (cmd, redStr(out)) 
-    return UNKNOWN_JOBID
+    
+    
+def _launchRemote(protocol, wait):
+    p = _runRemote(protocol, 'run')
+    jobId = UNKNOWN_JOBID    
+    out, err = p.communicate()
+    if err:
+        raise Exception(err)
+    s = re.search('Scipion remote jobid: (\d+)', out)
+    if s:
+        jobId = int(s.group(1))
+    else:
+        raise Exception("** Couldn't parse ouput: %s" % redStr(out))
+		
+             
+    return jobId    
 
 
 def _copyFiles(protocol, rpath):
@@ -204,11 +214,11 @@ def _submit(hostConfig, submitDict):
         return UNKNOWN_JOBID
 
     
-def _run(command, wait):
+def _run(command, wait, stdin=None, stdout=None, stderr=None):
     """ Execute a command in a subprocess and return the pid. """
     gcmd = greenStr(command)
     print "** Running command: '%s'" % gcmd
-    p = Popen(command, shell=True)
+    p = Popen(command, shell=True, stdout=stdout, stderr=stderr)
     jobId = p.pid
     if wait:
         p.wait()
@@ -232,22 +242,6 @@ def _stopLocal(protocol):
 
 
 def _stopRemote(protocol):
-    raise Exception("_stopRemote not implemented yet")
-    from pyworkflow.utils.remote import sshConnectFromHost, RemotePath
-    # Establish connection
-    host = protocol.getHostConfig()
-    ssh = sshConnectFromHost(host)
-    rpath = RemotePath(ssh)
-    # Copy protocol files
-    _copyFiles(protocol, rpath)
-    # Run remote program to launch the protocol
-    cmd  = 'cd %s; pw_protocol_launch.py %s %s %s' % (host.getHostPath(), 
-                                                   protocol.getDbPath(), 
-                                                   protocol.strId(), str(wait))
-    print "Running remote %s" % greenStr(cmd)
-    stdin, stdout, stderr = ssh.exec_command(cmd)
-    for l in stdout.readlines():
-        if l.startswith('OUTPUT jobId'):
-            jobId = int(l.split()[2])
-            break
-    return jobId
+    _runRemote(protocol, 'stop')
+    
+    
