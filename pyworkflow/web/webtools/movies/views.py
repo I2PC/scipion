@@ -102,11 +102,11 @@ def create_movies_project(request):
         pwutils.createLink(source, dest)
         
         # 1. Import movies
-        protImport = project.newProtocol(ProtImportMovies,
-                                         objLabel='import movies')
+        
         
         if testDataKey :
-            path_test = getMovTestFile(testDataKey)
+            attr = getAttrTestFile(testDataKey)
+            path_test = attr['path']
             filesToImport = source + "/*.mrcs"
             
             for f in os.listdir(path_test):           
@@ -115,11 +115,19 @@ def create_movies_project(request):
                 source_file = os.path.join(source, f)
                 pwutils.createLink(file_path, source_file)
             
+            label_import = "import movies ("+ testDataKey +")" 
+            protImport = project.newProtocol(ProtImportMovies, objLabel=label_import)
+
             protImport.filesPath.set(filesToImport)
-            protImport.samplingRate.set(1.)
+            protImport.voltage.set(attr['voltage'])
+            protImport.sphericalAberration.set(attr['sphericalAberration'])
+            protImport.amplitudeContrast.set(attr['amplitudeContrast'])
+            protImport.magnification.set(attr['magnification'])
+            protImport.samplingRate.set(attr['samplingRate'])
             
             project.launchProtocol(protImport, wait=True)
         else:
+            protImport = project.newProtocol(ProtImportMovies, objLabel='import movies')
             project.saveProtocol(protImport)
         
         # 2. Movie Alignment 
@@ -131,25 +139,24 @@ def create_movies_project(request):
         
     return HttpResponse(mimetype='application/javascript')
 
-def getMovTestFile(key):
+def getAttrTestFile(key):
     if(key == "ribosome"):
-        path = "/mnt/big1/scipionweb/movies_testdata/80S_ribosome/"
+        attr = {"path" : "/mnt/big1/scipionweb/movies_testdata/80S_ribosome/",
+                "voltage" : 300.0,
+                "sphericalAberration" : 2.7,
+                "amplitudeContrast" : 0.1,
+                "magnification" : 59000,
+                "samplingRate": 1.77}
+    if(key == "falcon"):
+        attr = {"path" : "/mnt/big1/scipionweb/movies_testdata/Falcon_2014/",
+                "voltage" : 300.0,
+                "sphericalAberration" : 2.7,
+                "amplitudeContrast" : 0.1,
+                "magnification" : 59000,
+                "samplingRate": 1.34}
         
-    return path
+    return attr
 
-def check_m_id(request):
-    result = 0
-    projectName = request.GET.get('code', None)
-    
-    try:
-        manager = Manager()
-        project = loadProject(projectName)
-        result = 1
-    except Exception:
-        pass
-    
-    return HttpResponse(result, mimetype='application/javascript')
- 
  
 def movies_content(request):
     projectName = request.GET.get('p', None)

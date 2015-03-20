@@ -96,8 +96,7 @@ def create_service_project(request):
         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # 1. Import averages
-        protImport = project.newProtocol(ProtImportAverages,
-                                         objLabel='import averages')
+        
         
         # If using test data execute the import averages run
         # options are set in 'project_utils.js'
@@ -108,12 +107,13 @@ def create_service_project(request):
             newFn = join(project.uploadPath, basename(fn))
             copyFile(fn, newFn)
             
+            label_import = 'import averages ('+ testDataKey +')'
+            protImport = project.newProtocol(ProtImportAverages, objLabel=label_import)
             protImport.filesPath.set(newFn)
             protImport.samplingRate.set(1.)
-#             protImport.setObjectLabel('import averages (%s)' % testDataKey)
-            
             project.launchProtocol(protImport, wait=True)
         else:
+            protImport = project.newProtocol(ProtImportAverages, objLabel='import averages')
             project.saveProtocol(protImport)
             
         
@@ -138,13 +138,6 @@ def create_service_project(request):
         protSignificant.inputSet.setExtendedAttribute('outputAverages')
         project.saveProtocol(protSignificant)
         
-#         # 2d. Prime 
-#         protPrime = project.newProtocol(ProtPrime)
-#         protPrime.setObjLabel('simple - prime')
-#         protPrime.inputClasses.set(protImport)
-#         protPrime.inputClasses.setExtendedAttribute('outputAverages')
-#         project.saveProtocol(protPrime)
-        
         # 3. Join result volumes
         p1 = Pointer()
         p1.set(protRansac)
@@ -157,10 +150,6 @@ def create_service_project(request):
         p3 = Pointer()
         p3.set(protSignificant)
         p3.setExtendedAttribute('outputVolume')
-        
-#         p4 = Pointer()
-#         p4.set(protPrime)
-#         p4.setExtendedAttribute('outputVolume')
         
         protJoin = project.newProtocol(XmippProtAlignVolumeForWeb)
         protJoin.setObjLabel('align volumes')
@@ -180,18 +169,6 @@ def get_testdata(request):
     fn = dsMDA.getFile(testDataKey)
     return HttpResponse(fn, mimetype='application/javascript')
 
-def check_project_id(request):
-    result = 0
-    projectName = request.GET.get('code', None)
-    
-    try:
-        manager = Manager()
-        project = loadProject(projectName)
-        result = 1
-    except Exception:
-        pass
-    
-    return HttpResponse(result, mimetype='application/javascript')
  
 def myfirstmap_form(request):
     from django.shortcuts import render_to_response

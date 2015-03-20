@@ -316,7 +316,7 @@ class MdFileHandler(ImageFileHandler):
         filename = objFile.getPath()
         ext = getExt(filename)
         
-        if ext == '.xmd' or ext == '.ctfparam' or ext == '.pos':
+        if ext == '.xmd' or ext == '.ctfparam' or ext == '.pos' or ext == '.doc':
             import xmipp
             msg = "*Metadata File* "
             blocks = xmipp.getBlocksInMetaDataFile(filename)
@@ -590,7 +590,7 @@ class FileBrowserWindow(BrowserWindow):
                                              '.txt', '.log', '.out', '.err', '.stdout', '.stderr', '.emx', '.json', '.xml')
         FileTreeProvider.registerFileHandler(TextFileHandler('file_python.gif'), '.py')
         FileTreeProvider.registerFileHandler(TextFileHandler('file_java.gif'), '.java')
-        FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam')
+        FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')
         FileTreeProvider.registerFileHandler(SqlFileHandler(), '.sqlite', '.db')
         FileTreeProvider.registerFileHandler(ParticleFileHandler(), '.xmp', '.tif', '.tiff', '.spi', '.mrc', 
                                              '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', 
