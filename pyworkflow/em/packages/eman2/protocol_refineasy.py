@@ -95,7 +95,12 @@ at each refinement step. The resolution you specify is a target, not the filter 
                   'clsEven': self._getExtraPath('refine_%(run)02d/cls_result_%(iter)02d_even.hdf'),
                   'clsOdd': self._getExtraPath('refine_%(run)02d/cls_result_%(iter)02d_odd.hdf'),
                   'angles': self._getExtraPath('projectionAngles_it%(iter)02d.txt'),
-                  'mapEven': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d_even.hdf')
+                  'mapEven': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d_even.hdf'),
+                  'mapOdd': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d_odd.hdf'),
+                  'mapFull': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d.hdf'),
+                  'fscUnmasked': self._getExtraPath('refine_%(run)02d/fsc_unmasked_%(iter)02d.txt'),
+                  'fscMasked': self._getExtraPath('refine_%(run)02d/fsc_masked_%(iter)02d.txt'),
+                  'fscMaskedTight': self._getExtraPath('refine_%(run)02d/fsc_maskedtight_%(iter)02d.txt'),
                   }
         
         self._updateFilenamesDict(myDict)
@@ -277,7 +282,8 @@ at each refinement step. The resolution you specify is a target, not the filter 
         if exists(angles):
             cleanPath(angles)
         proc = createEmanProcess(args='read %s %s %s %s' 
-                                 % (self._getParticlesStack(), clsFn, classesFn, self._getBaseName('angles', iter=iterN)),
+                                 % (self._getParticlesStack(), clsFn, classesFn,
+                                    self._getBaseName('angles', iter=iterN)),
                                  direc=self._getExtraPath())
         proc.wait()
         newPartSet = self._createSetOfParticles()
