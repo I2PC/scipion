@@ -178,11 +178,12 @@ swig = env.AddLibrary(
     'swig',
     tar='swig-3.0.2.tgz',
     targets=[File('#software/bin/swig').abspath],
-    makeTargets='swig install',
+    makeTargets=['Source/Swig/tree.o'],
     deps=[pcre],
     default=False)
 # We have to add the "makeTargets" part because swig needs to call
 # "make" before "make install". Horrible.
+# makeTargets have paths relative to the builddir.
 
 env.AddLibrary(
     'parallel',

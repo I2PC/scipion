@@ -274,7 +274,6 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
     configDir = configDir or buildDir
     targets = targets or [File('#software/lib/lib%s.so' % name).abspath]
-    makeTargets = makeTargets or 'all install'
 
     # Add "software/lib" and "software/bin" to LD_LIBRARY_PATH and PATH.
     newFlags = []
@@ -319,10 +318,8 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     
         tUntar = untar(env, File('#software/tmp/%s/configure' % configDir).abspath,
                        tDownload, cdir=Dir('#software/tmp').abspath)
-        #SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+        SideEffect('dummy', tUntar)  # so it works fine in parallel builds
         Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
-
-    dummyName = 'dummy'
     
     tConfig = env.AutoConfig(
         target=Dir('#software/tmp/%s' % configDir),
@@ -335,12 +332,27 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     if not COMPILE_ONLY:
         env.Depends(tConfig, tUntar)
 
+    if not makeTargets:
+        # This should be the normal case
+        lastTarget = tConfig
+    else:
+        # Some libraries (like swig) need to call "make" before "make
+        # install", and so we have to complicate things. Thank you, swig.
+        tMakePreInstall = env.Make(
+            source=tConfig,
+            target=[File('#software/tmp/%s/%s' % (buildDir, t)).abspath for t in makeTargets],
+            MakePath=Dir('#software/tmp/%s' % buildDir).abspath,
+            MakeEnv=os.environ,
+            MakeStdOut=File('#software/log/%s_make_pre-install.log' % name).abspath)
+        SideEffect('dummy', tMakePreInstall)
+        lastTarget = tMakePreInstall
+
     tMake = env.Make(
-        source=tConfig,
+        source=lastTarget,
         target=targets,
         MakePath=Dir('#software/tmp/%s' % buildDir).abspath,
         MakeEnv=os.environ,
-        MakeTargets=makeTargets,
+        MakeTargets='install',
         MakeStdOut=File('#software/log/%s_make.log' % name).abspath)
     
     for cFile in clean:
