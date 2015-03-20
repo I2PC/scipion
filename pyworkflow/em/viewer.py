@@ -399,15 +399,14 @@ class ChimeraClient:
 
                 msg = self.client.recv()
                 self.answer(msg)
-                sleep(0.01)
-                            
         except EOFError:
             print 'Lost connection to server'
         finally:
             self.exit()
             
     def exit(self):
-            self.client.close()#close connection
+        self.client.close()
+
 
     def initVolumeData(self):
         self.image = xmipp.Image(self.volfile)
