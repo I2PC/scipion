@@ -110,8 +110,9 @@ class ChimeraServer:
                     if msg == 'rotate':
 
                         matrix1 = self.vol_conn.recv()
-                        matrix = dot(matrix1, inv(self.motion))#undo last rotation and put new one
-                        self.motion = matrix1
+                        #undo last rotation and put new one. #Traslation is not undone, if user moves volume wrong translation applied
+                        matrix = dot(matrix1, inv(self.rotation))
+
                         xform = chimera.Xform.xform(matrix[0][0], matrix[0][1], matrix[0][2], 0,
                                        matrix[1][0], matrix[1][1], matrix[1][2], 0,
                                        matrix[2][0], matrix[2][1], matrix[2][2], 0, orthogonalize=True)
@@ -125,10 +126,11 @@ class ChimeraServer:
 
     
     def onMotionStop(self, trigger, extra, userdata):
-        rx, ry , rz, t = self.volume.openState.xform.getCoordFrame()
-        self.motion = array([[rx[0], ry[0], rz[0]], [rx[1], ry[1], rz[1]], [rx[2], ry[2], rz[2]]])
+        rx, ry, rz, t = self.volume.openState.xform.getCoordFrame()
+        self.rotation = array([[rx[0], ry[0], rz[0]], [rx[1], ry[1], rz[1]], [rx[2], ry[2], rz[2]]])
+
         self.vol_conn.send('motion_stop')
-        self.vol_conn.send(self.motion)#send serialized motion
+        self.vol_conn.send(self.rotation)#send serialized motion
 
 
     def onAppQuit(self, trigger, extra, userdata):

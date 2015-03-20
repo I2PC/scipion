@@ -63,7 +63,7 @@ class FrealignViewer(ProtocolViewer):
     def _defineParams(self, form):
         self._env = os.environ.copy()
         form.addSection(label='Visualization')
-        form.addParam('iterToShow', EnumParam, label="Which iteration do you want to visualize?", default=0, 
+        form.addParam('iterToShow', EnumParam, label="Iteration to visualize", default=0,
                       choices=['last','all','selection'], display=EnumParam.DISPLAY_LIST)
         form.addParam('selectedIters', NumericRangeParam, default='1',
               label='Selected iterations', condition='iterToShow==%d' % SELECTED_ITERS,
@@ -111,8 +111,9 @@ Examples:
               default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_COMBO, 
               label='Display angular distribution',
               help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
-                   '*chimera*: display angular distribution using Chimera with red spheres.') 
+                   '*chimera*: display angular distribution using Chimera with red spheres.')
         
+        group = form.addGroup('Resolution')
         group.addParam('resolutionPlotsSSNR', LabelParam, default=True,
                       label='Display SSNR plots',condition=self.protocol.doAditionalStatisFSC,
                       help='Display signal to noise ratio plots (SSNR) ')

@@ -139,7 +139,7 @@ Examples:
         if self.protocol.IS_CLASSIFY:
 
             group.addParam('showImagesInClasses', LabelParam, default=True,
-                          label='Particles assigned to each Class', important=True,
+                          label='Particles assigned to each Class',
                           help='Display the classes and the images associated.')
             changesLabel = 'Changes in Offset, Angles and Classes'
         else:

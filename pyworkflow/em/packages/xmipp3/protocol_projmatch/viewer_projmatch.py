@@ -148,6 +148,11 @@ Examples:
                           default=1, display=EnumParam.DISPLAY_COMBO,
                           label='Display volume',
                           help='Displays selected volume')
+        group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'],
+                      display=EnumParam.DISPLAY_COMBO, default=ANGDIST_2DPLOT,
+                      label='Display angular distribution',
+                      help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
+                           '*chimera*: display angular distribution using Chimera with red spheres.')
         group.addParam('showBFactorCorrectedVolume', LabelParam, default=False,
                        label='Show a b_factor corrected volume',
                        help=""" This utility boost up the high frequencies. Do not use the automated 
@@ -166,11 +171,7 @@ Examples:
                        help=""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
                             for details. DEFAULT behaviour is --auto
                             """)
-        group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'],
-                      display=EnumParam.DISPLAY_COMBO, default=ANGDIST_2DPLOT,
-                      label='Display angular distribution',
-                      help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
-                           '*chimera*: display angular distribution using Chimera with red spheres.')
+
         group.addParam('showResolutionPlots', LabelParam, default=True,
                       label='Display resolution plots (FSC)',
                       help='')
