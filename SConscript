@@ -154,14 +154,14 @@ python = env.AddLibrary(
 libxml2 = env.AddLibrary(
     'libxml2',
     tar='libxml2-2.9.2.tgz',
-    targets=['lib/libxml2.so'],
+    targets=[File('#software/lib/libxml2.so').abspath],
     deps=[python],
     default=False)
 
 libxslt = env.AddLibrary(
     'libxslt',
     tar='libxslt-1.1.28.tgz',
-    targets=['lib/libxslt.so'],
+    targets=[File('#software/lib/libxslt.so')],
     deps=[libxml2],
     default=False)
 # This library is pretty complicated to compile right. For the moment,
