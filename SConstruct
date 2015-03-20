@@ -731,7 +731,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
 #               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
 # The CFLAGS line is commented out because even if it is needed for modules
 # like libxml2, it causes problems for others like numpy and scipy (see for
-# (example http://mail.scipy.org/pipermail/scipy-user/2007-January/010773.html)
+# example http://mail.scipy.org/pipermail/scipy-user/2007-January/010773.html)
 # TODO: maybe add an argument to the function to chose if we want them?
                '%(root)s/bin/python setup.py install %(flags)s > '
                '%(root)s/log/%(name)s.log 2>&1' % {'root': Dir('#software').abspath,
