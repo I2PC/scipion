@@ -1249,10 +1249,18 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         
                         public String getVolumeName(String volume)
                         {
-                                if(!Filename.hasPrefix(volume))//is stack
-                                    volume = Filename.getBaseName(volume);
-				return volume;
-                        }
+                                if(Filename.hasPrefix(volume))//is stack
+                                    return volume;
+                                String base = Filename.getBaseName(volume);
+                                int count = 0;
+                                for(int i = 0; i < getSize(); i ++)
+                                    if(base.equals(Filename.getBaseName(data.getVolumeAt(i))))
+                                        count ++;
+                                if(count == 1)
+                                    return base;
+                                
+				return volume;//needs full path to differentiate volumes
+                        } 
 
 			@Override
 			public Object getSelectedItem()
