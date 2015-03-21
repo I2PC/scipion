@@ -1050,7 +1050,7 @@ class GroupWidget(ParamWidget):
         pass
                
     def _createContent(self):
-        self.content = tk.LabelFrame(self.parent, text=self.paramName, bg='white')
+        self.content = tk.LabelFrame(self.parent, text=self.param.getLabel(), bg='white')
         gui.configureWeigths(self.content) 
         
     def show(self):
