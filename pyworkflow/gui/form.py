@@ -49,6 +49,9 @@ from canvas import Canvas
 from tree import TreeProvider, BoundTree
 #from pyworkflow.em import findViewers
 
+THREADS = 'Threads'
+MPI = 'MPI'
+
 #-------------------- Variables wrappers around more complex objects -----------------------------
 
 class BoolVar():
@@ -1237,17 +1240,27 @@ class FormWindow(Window):
             c2 = 0
             sticky = 'ne'
             if self.protocol.stepsExecutionMode == STEPS_PARALLEL:
+                self.procTypeVar = tk.StringVar()
+                
                 if allowThreads and allowMpi:
                     if numberOfMpi > 1:
                         procs = numberOfMpi
-                        value = 1 
+                        self.procTypeVar.set(MPI)
                     else:
                         procs = numberOfThreads
-                        value = 0
-                    procCombo = self._createBoundOptions(procFrame, 'stepsExecutionMode', ['Threads', 'MPI'], 
-                                                         value, self._setThreadsOrMpi, bg='white')
+                        self.procTypeVar.set(THREADS)
+                        
+                    self.procTypeVar.trace('w', self._setThreadsOrMpi)
+                    procCombo = tk.Frame(procFrame)
+                    for i, opt in enumerate([THREADS, MPI]):
+                        rb = tk.Radiobutton(procCombo, text=opt, 
+                                            variable=self.procTypeVar, 
+                                            value=opt, bg='white')
+                        rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
+                        
                     procCombo.grid(row=0, column=0, sticky='nw', pady=5)
-                    procEntry = self._createBoundEntry(procFrame, Message.VAR_THREADS, func=self._setThreadsOrMpi, value=procs)
+                    procEntry = self._createBoundEntry(procFrame, Message.VAR_THREADS, 
+                                                       func=self._setThreadsOrMpi, value=procs)
                     procEntry.grid(row=0, column=1, padx=(0, 5), sticky='nw')
                     
             else:
@@ -1388,6 +1401,7 @@ class FormWindow(Window):
         var = ComboVar(param)
         if value is not None:
             var.set(value)
+        print "_createEnumBinding, paramName: %s, var.get(): %s" % (paramName, var.get())
         self._addVarBinding(paramName, var, None, *callbacks)
         return param, var
         
@@ -1612,10 +1626,11 @@ class FormWindow(Window):
             s.adjustContent()
             
     def _setThreadsOrMpi(self, *args):
-        mode = self.widgetDict['stepsExecutionMode'].get()
+        mode = self.procTypeVar.get()
+        print "_setThreadsOrMpi, mode:", mode
         try:
             procs = int(self.widgetDict['numberOfThreads'].get())
-            if mode == 0: # threads mode
+            if mode == THREADS: # threads mode
                 self.protocol.numberOfThreads.set(procs)
                 self.protocol.numberOfMpi.set(min(1, self.protocol.numberOfMpi.get())) # 0 or 1
             else:
