@@ -222,12 +222,11 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
         }
         
         @Override
-	public void windowClosing(WindowEvent e) {
+	public void windowClosing(WindowEvent e) 
+        {
             
             super.windowClosing(e);
             XmippApplication.removeInstance(true);
-           
-		
 	}
 
 }

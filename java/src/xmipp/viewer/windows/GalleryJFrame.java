@@ -1225,7 +1225,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public int getSize()
 			{
-				return data.size();
+                            if(!data.isVolumeMode())
+                                return 0;
+                            return data.size();
 			}
 
 			@Override
