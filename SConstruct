@@ -68,7 +68,7 @@ if GetOption('silent'):
     env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
 # Check the following flag to see if in compilation mode
-COMPILE_ONLY = os.environ.get('SCIPION_COMPILE_ONLY', '').lower() in ['1', 'true', 'yes']
+COMPILE_MODE = os.environ.get('SCIPION_COMPILE_MODE', '').lower() in ['1', 'true', 'yes']
 
 
 def downloadOrLink(env, urlOrPath, output, downloadDir='software/tmp',
@@ -313,13 +313,12 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
         CheckConfigLib(env, tg, '')
 
     # Create and concatenate the builders.
-    if not COMPILE_ONLY:
-        tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
-    
-        tUntar = untar(env, File('#software/tmp/%s/configure' % configDir).abspath,
-                       tDownload, cdir=Dir('#software/tmp').abspath)
-        SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-        Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
+    tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
+
+    tUntar = untar(env, File('#software/tmp/%s/configure' % configDir).abspath,
+                   tDownload, cdir=Dir('#software/tmp').abspath)
+    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+    Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
     
     tConfig = env.AutoConfig(
         target=Dir('#software/tmp/%s' % configDir),
@@ -329,8 +328,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
         AutoConfigParams=newFlags,
         AutoConfigStdOut=File('#software/log/%s_config.log' % name).abspath)
     
-    if not COMPILE_ONLY:
-        env.Depends(tConfig, tUntar)
+    env.Depends(tConfig, tUntar)
 
     if not makeTargets:
         # This should be the normal case
@@ -715,17 +713,16 @@ def addModule(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
         CheckConfigLib(env, tg, '')
 
     # Create and concatenate the builders.
-    if not COMPILE_ONLY:
-        tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
+    tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
 
-        tUntar = untar(env, File('#software/tmp/%s/setup.py' % buildDir).abspath,
-                       tDownload, cdir=Dir('#software/tmp').abspath)
-        SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-        Clean(tUntar, 'software/tmp/%s' % buildDir)
+    tUntar = untar(env, File('#software/tmp/%s/setup.py' % buildDir).abspath,
+                   tDownload, cdir=Dir('#software/tmp').abspath)
+    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+    Clean(tUntar, 'software/tmp/%s' % buildDir)
 
     tInstall = env.Command(
-        [Dir('#software/lib/python2.7/site-packages/%s' % t).abspath for t in targets],
-        tUntar if not COMPILE_ONLY else '',
+        [Entry('#software/lib/python2.7/site-packages/%s' % t).abspath for t in targets],
+        tUntar,
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                'PATH="%(root)s/bin:%(PATH)s" '
 #               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
@@ -813,7 +810,7 @@ def createPackageLink(packageLink, packageFolder):
              "INSTALLATION FAILED!!!" % (linkText, packageFolder))
 
     if os.path.exists(packageLink):
-        if not COMPILE_ONLY:
+        if not COMPILE_MODE:
             if os.path.islink(packageLink):
                 os.remove(packageLink)
             else:
@@ -822,7 +819,7 @@ def createPackageLink(packageLink, packageFolder):
         else:
             print "Link '%s', but not changing because in COMPILATION MODE."
 
-    if not COMPILE_ONLY:
+    if not COMPILE_MODE:
         os.symlink(packageFolder, packageLink)
         print "Created link: %s" % linkText
 
@@ -876,7 +873,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
 
     # See if we have used the --with-<package> option and exit if appropriate.
     if GetOption(name):
-        packageHome = GetOption(name) if not COMPILE_ONLY else 'unset'
+        packageHome = GetOption(name) if not COMPILE_MODE else 'unset'
         
     elif GetOption('withAllPackages'):
         packageHome = 'unset'
@@ -888,13 +885,13 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
 
     packageLink = os.path.join('software', 'em', name)
     
-    if not (default or packageHome or COMPILE_ONLY):
+    if not (default or packageHome or COMPILE_MODE):
         return ''
     
     # 'unset' is the default value when calling only --with-package
     # and a location is not provided
     if packageHome == 'unset':
-        if not COMPILE_ONLY:
+        if not COMPILE_MODE:
             try:
                 emDir = Dir('#software/em').abspath
                 if os.path.exists('%s/%s' % (emDir, tar)):
@@ -912,7 +909,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
             createPackageLink(packageLink, buildDir)
     elif packageHome is not None:
         createPackageLink(packageLink, packageHome)
-        return ''  # when providing packageHome, we only want to create the link
+        if not COMPILE_MODE:
+            return ''  # when providing packageHome, we only want to create the link
 
     lastTarget = Entry(packageLink)
     targets = []
@@ -1041,7 +1039,7 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         CheckConfigLib(env, tg, '')
 
     # Create and concatenate the builders.
-    if not COMPILE_ONLY:
+    if not COMPILE_MODE:
         tDownload = downloadOrLink(env, url, tar)
         tUntar = untar(env, File('#software/tmp/%s/README' % buildDir).abspath,
                        tDownload, cdir=Dir('#software/tmp').abspath)

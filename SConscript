@@ -361,7 +361,7 @@ env.AddPackage('xmipp',
                      'ncurses': 'cxx',
                      'ssl': 'cxx',
                      'readline': 'cxx'},
-               deps=[opencv],
+               #deps=[opencv],
                default=False)
 # In case you want to install an older version of Xmipp, you can use
 # the extraActions parameter instead of using its own SConscript, like this:

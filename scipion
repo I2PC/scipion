@@ -310,7 +310,7 @@ def main():
                 os.makedirs(path)
 
         if mode == MODE_COMPILE:
-            os.environ['SCIPION_COMPILE_ONLY'] = 'True'
+            os.environ['SCIPION_COMPILE_MODE'] = 'True'
 
         args = sys.argv[2:]
         from scripts.install import build
