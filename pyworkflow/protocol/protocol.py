@@ -32,6 +32,7 @@ import os
 import sys
 import datetime as dt
 import pickle
+import json
 from collections import OrderedDict
 
 import pyworkflow as pw
@@ -320,6 +321,9 @@ class Protocol(Step):
         self.runMode = Integer(kwargs.get('runMode', MODE_RESUME))
         # Use queue system?
         self._useQueue = Boolean(False)
+        # Store a json string with queue name
+        # and queue parameters (only meanful if _useQueue=True)
+        self._queueParams = String()
         
         self._jobId = String() # Store queue job id
         self._pid = Integer()
@@ -1118,6 +1122,12 @@ class Protocol(Step):
     def useQueue(self):
         """ Return True if the protocol should be launched throught a queue. """
         return self._useQueue.get()
+    
+    def getQueueParams(self):
+        return json.loads(self._queueParams.get())
+    
+    def setQueueParams(self, queueParams):
+        self._queueParams.set(json.dumps(queueParams))
         
     def getNumberOfSteps(self):
         return self._numberOfSteps.get(0)

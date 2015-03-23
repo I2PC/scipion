@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.gui.dialog import MessageDialog
 """
 This modules implements the automatic
 creation of protocol form GUI from its
@@ -33,6 +34,7 @@ import os
 import Tkinter as tk
 import ttk
 from collections import OrderedDict
+from itertools import izip
 from datetime import datetime
 
 import pyworkflow.object as pwobj
@@ -45,7 +47,7 @@ import gui
 from gui import configureWeigths, Window
 from browser import FileBrowserWindow
 from widgets import Button, HotButton, IconButton
-from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo
+from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo, Dialog
 from canvas import Canvas
 from tree import TreeProvider, BoundTree
 #from pyworkflow.em import findViewers
@@ -1292,9 +1294,11 @@ class FormWindow(Window):
         var, frame = ParamWidget.createBoolWidget(runFrame, bg='white')
         self._addVarBinding(Message.VAR_QUEUE, var)
         frame.grid(row=2, column=c+1, pady=5, sticky='nw')
+        btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, command=self._editQueueParams)
+        btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
                              command=self._createHelpCommand(Message.HELP_RUNMODE))
-        btnHelp.grid(row=2, column=c+2, padx=(5, 0), pady=2, sticky='ne')
+        btnHelp.grid(row=2, column=c+3, padx=(5, 0), pady=2, sticky='ne')
         
         # Run Name not editable
         #entry.configure(state='readonly')
@@ -1320,6 +1324,21 @@ class FormWindow(Window):
             self.updateLabelAndComment()
             if self.updateProtocolCallback:
                 self.updateProtocolCallback(self.protocol)
+                
+    def _editQueueParams(self, e=None):
+        """ Open the dialog to edit the queue parameters. """
+        dlg = QueueDialog(self, {'default': [('hours', '72', 'Hours', 'Number of time in the queue before the job is stopped.'),
+                                                  ('cores', '8', 'Cores'),
+                                                  ('memory', '16', 'Memory')], 
+                                      'long': [('hours', '72', 'Hours'),
+                                               ('cores', '8', 'Cores')], 
+                                      'short': []})
+        if dlg.resultYes():
+            self.protocol.setQueueParams(dlg.value)
+            return True
+        else:
+            return False
+        
         
     def _createParams(self, parent):
         paramsFrame = tk.Frame(parent)
@@ -1451,6 +1470,10 @@ class FormWindow(Window):
         self._close(onlySave=True)
         
     def execute(self, e=None):
+        if self.protocol.useQueue():
+            if not self._editQueueParams():
+                return
+        
         if (self.protocol.getRunMode() == params.MODE_RESTART and 
             not askYesNo(Message.TITLE_RESTART_FORM, 
                          Message.LABEL_RESTART_FORM % ('*%s*' % self.protocol.getRunName()), 
@@ -1709,3 +1732,97 @@ def editObject(self, title, root, obj, mapper):
     return EditObjectDialog(root, title, obj, mapper)
     
 
+class QueueDialog(Dialog):
+    """ Dialog to entry the queue parameters. """
+    def __init__(self, window, queueDict):
+        self.value = None
+        self.widgets = [] # widget list
+        self.vars = []
+        self.queueDict = queueDict
+        self.window = window
+        self.queueName, self.queueParams = window.protocol.getQueueParams()
+        Dialog.__init__(self, window.root, "Queue parameters")
+        
+    def body(self, bodyFrame):
+        bodyFrame.config(bg='white')
+        self.content = tk.Frame(bodyFrame, bg='white')
+        self.content.grid(row=0, column=0, padx=20, pady=20)
+        
+        label = tk.Label(self.content, text='Submit to queue', 
+                         font=self.window.fontBold, bg='white')
+        label.grid(row=0, column=0, sticky='ne', padx=5, pady=5)
+        self.queueVar = tk.StringVar()
+        self.queueVar.trace('w', self._onQueueChanged)
+        combo = ttk.Combobox(self.content, textvariable=self.queueVar, 
+                             state='readonly', width=14)
+        combo.grid(row=0, column=1, sticky='nw', padx=5, pady=5)
+        queueKeys = self.queueDict.keys()
+        combo['values'] = queueKeys
+        
+        
+        selected = self.queueName #TODO: replace this with real selected queue
+        self.queueVar.set(selected) # This will trigger queue params setup
+
+        self.initial_focus = combo
+        
+    def _onQueueChanged(self, *args):
+        for w in self.widgets:
+            w.destroy()
+            
+        selected = self.queueVar.get()
+        params = self.queueDict[selected]
+        
+        self.widgets = [] # clear the widget list
+        self.vars = []
+        r = 1 # starting row to place params
+        for p in params:
+            if len(p) == 3: # No help provided
+                name, value, label = p
+                helpMsg = None
+            elif len(p) == 4:
+                name, value, label, helpMsg = p
+            else:
+                raise Exception('Incorrect number of params for %s, expected 3 or 4' % name)
+            
+            label = tk.Label(self.content, text=label, bg='white')
+            label.grid(row=r, column=0, sticky='ne', padx=5, pady=(0,5))
+            var = tk.StringVar()
+            # Set the value comming in the protocol 
+            var.set(self.queueParams.get(name, value))
+            
+            entry = tk.Entry(self.content, textvariable=var, width=15)
+            entry.grid(row=r, column=1, sticky='nw', padx=5, pady=(0, 5))
+            
+            if helpMsg:
+                def addHelpButton(name, helpMsg):
+                    def showHelp():
+                        showInfo("Help", helpMsg, self)
+                    
+                    btn = IconButton(self.content, Message.LABEL_BUTTON_HELP, 
+                                      Icon.ACTION_HELP, 
+                                      command=showHelp)
+                    btn.grid(row=r, column=2, sticky='ne', padx=5, pady=(0, 5))
+                    self.widgets.append(btn)
+                addHelpButton(name, helpMsg)
+            
+            self.vars.append(var)
+            self.widgets.append(label)
+            self.widgets.append(entry)
+            r += 1
+        
+    def apply(self):
+        # Set as value the queue selected and a dictionary 
+        # with the values of each parameter
+        selected = self.queueVar.get()
+        paramsDict = {}
+        params = self.queueDict[selected]
+        for p, v in izip(params, self.vars):
+            if len(p) == 3:
+                name, value, label = p
+            else: 
+                name, value, label, _ = p 
+            paramsDict[name] = v.get() # get the value from the corresponding tk var
+        self.value = selected, paramsDict
+        
+    def validate(self):
+        return True
