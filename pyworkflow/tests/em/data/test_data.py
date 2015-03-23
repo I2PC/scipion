@@ -15,6 +15,8 @@ from pyworkflow.em.packages.xmipp3.convert import *
 import pyworkflow.em.packages.eman2.convert as e2convert
 from pyworkflow.em.protocol import EMProtocol
 
+import pyworkflow.em.metadata as md
+
 
 
 class TestImage(unittest.TestCase):
@@ -183,6 +185,7 @@ class TestSetOfParticles(BaseTest):
         # Allow what huge means to be defined with environment var
         n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
         print ">>>> Creating a set of %d particles." % n
+        print "     (set SCIPION_TEST_HUGE environment var to other value)"
         
         dbFn = self.getOutputPath('huge_set.sqlite')
         #dbFn = ':memory:'
@@ -199,8 +202,46 @@ class TestSetOfParticles(BaseTest):
             
             imgSet.append(img)
             img.cleanObjId()
+            #img.setObjId(None)
             
         imgSet.write()
+        
+    def test_hugeSetToMd(self):
+        """ Just as a bencharmark comparing to test_hugeSet ."""
+        # Allow what huge means to be defined with environment var
+        n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
+        print ">>>> Creating a set of %d particles." % n
+        print "     (set SCIPION_TEST_HUGE environment var to other value)"
+        
+        imgMd = md.MetaData()
+        
+        for i in range(1, n+1):
+            # Creating object inside the loop significantly
+            # decrease performance
+            #img = Particle()
+            objId = imgMd.addObject()
+            imgMd.setValue(md.MDL_IMAGE, '%06d@images.stk' % (i+1), objId)
+            
+        mdFn = self.getOutputPath('huge_set.xmd')
+        print "Writing metadata to: ", mdFn
+        imgMd.write(mdFn)
+        
+    def test_hugeSetToText(self):
+        """ Just as a bencharmark comparing to test_hugeSet ."""
+        # Allow what huge means to be defined with environment var
+        n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
+        print ">>>> Creating a set of %d particles." % n
+        print "     (set SCIPION_TEST_HUGE environment var to other value)"
+        
+        textFn = self.getOutputPath('huge_set.txt')
+        print "Writing to text file: ", textFn
+        f = open(textFn, 'w')
+        
+        for i in range(1, n+1):
+            print >> f, '%06d@images.stk' % i
+            
+        f.close()     
+        
 
     def test_getFiles(self):
         #create setofImages

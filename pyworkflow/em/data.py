@@ -744,8 +744,9 @@ class SetOfImages(EMSet):
                 image.setAcquisition(self.getAcquisition())
         # Store the dimensions of the first image, just to 
         # avoid reading image files for further queries to dimensions
-        if self._firstDim.isEmpty():
-            self._firstDim.set(image.getDim())
+        if self.getSize() == 0: # only check this for first time append is called
+            if self._firstDim.isEmpty():
+                self._firstDim.set(image.getDim())
         EMSet.append(self, image)
     
     def copyInfo(self, other):

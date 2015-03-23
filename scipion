@@ -194,8 +194,14 @@ def runCmd(cmd):
 def runScript(scriptCmd, chdir=True):
     if chdir:
         os.chdir(SCIPION_HOME)
-    cmd = '%s %s' % (VARS['SCIPION_PYTHON'], scriptCmd)
+    doProfile = os.environ.get('SCIPION_PROFILE', '0').lower()
+    if doProfile in ['1', 'true', 'on', 'yes']:
+        profileStr = '-m cProfile -o output.profile'
+    else:
+        profileStr = ''
+    cmd = '%s %s %s' % (VARS['SCIPION_PYTHON'], profileStr, scriptCmd)
     runCmd(cmd)
+
 
 def runApp(app, args='', chdir=True):
     runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args), chdir)

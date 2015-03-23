@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.gui.dialog import MessageDialog
 """
 This modules implements the automatic
 creation of protocol form GUI from its
@@ -33,21 +34,26 @@ import os
 import Tkinter as tk
 import ttk
 from collections import OrderedDict
+from itertools import izip
 from datetime import datetime
 
+import pyworkflow.object as pwobj
 from pyworkflow.utils import startDebugger
 from pyworkflow.utils.path import getHomePath
 from pyworkflow.utils.properties import Message, Icon, Color
 from pyworkflow.viewer import DESKTOP_TKINTER
+import pyworkflow.protocol.params as params
 import gui
 from gui import configureWeigths, Window
 from browser import FileBrowserWindow
 from widgets import Button, HotButton, IconButton
-from pyworkflow.protocol.params import *
-from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo
+from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo, Dialog
 from canvas import Canvas
 from tree import TreeProvider, BoundTree
 #from pyworkflow.em import findViewers
+
+THREADS = 'Threads'
+MPI = 'MPI'
 
 #-------------------- Variables wrappers around more complex objects -----------------------------
 
@@ -72,12 +78,12 @@ class PointerVar():
     """Wrapper around tk.StringVar to hold object pointers"""
     def __init__(self, protocol):
         self.tkVar = tk.StringVar()
-        self._pointer = Pointer()
+        self._pointer = pwobj.Pointer()
         self.trace = self.tkVar.trace
         self._protocol = protocol
         
     def set(self, value):
-        if isinstance(value, Pointer):
+        if isinstance(value, pwobj.Pointer):
             self._pointer.copy(value)
         else:
             self._pointer.set(value)
@@ -139,7 +145,7 @@ class MultiPointerVar():
         
     def set(self, value):
         
-        if isinstance(value, Object) or isinstance(value, list):
+        if isinstance(value, pwobj.Object) or isinstance(value, list):
             self.provider.addObject(value)
             self._updateObjectsList()
           
@@ -175,7 +181,7 @@ class MultiPointerTreeProvider(TreeProvider):
         """
         strId = None
         
-        if isinstance(obj, Pointer):
+        if isinstance(obj, pwobj.Pointer):
             
             if obj.hasValue():
                 strId = obj.getObjValue().strId()
@@ -195,10 +201,10 @@ class MultiPointerTreeProvider(TreeProvider):
         """ If obj is a pointer return obj. If not
         create a pointer and return it.
         """
-        if isinstance(obj, Pointer):
+        if isinstance(obj, pwobj.Pointer):
             ptr = obj
         else:
-            ptr = Pointer(value=obj)
+            ptr = pwobj.Pointer(value=obj)
             
         return ptr
 
@@ -270,7 +276,7 @@ class ProtocolClassTreeProvider(TreeProvider):
      
     def getObjects(self):
         from pyworkflow.em import findSubClasses, getProtocols
-        return [String(s) for s in findSubClasses(getProtocols(), self.protocolClassName).keys()]
+        return [pwobj.String(s) for s in findSubClasses(getProtocols(), self.protocolClassName).keys()]
         
     def getColumns(self):
         return [('Protocol', 250)]
@@ -437,7 +443,7 @@ class SubclassesTreeProvider(TreeProvider):
                 'selected': self.isSelected(obj), 'parent': parent}
 
     def getObjectActions(self, obj):
-        if isinstance(obj, Pointer):
+        if isinstance(obj, pwobj.Pointer):
             obj = obj.getName()
         actions = []    
         from pyworkflow.em import findViewers
@@ -737,7 +743,7 @@ class ParamWidget():
             self.wizParamName = self.paramName
             return True
         
-        if isinstance(self.param, Line):
+        if isinstance(self.param, params.Line):
             for name, _ in self.param.iterParams():
                 if name in self.window.wizards:
                     self.wizParamName = name
@@ -765,27 +771,27 @@ class ParamWidget():
         t = type(param)
         entryWidth = 30
 
-        if t is HiddenBooleanParam:
+        if t is params.HiddenBooleanParam:
             var = 0
         
-        elif t is BooleanParam:
+        elif t is params.BooleanParam:
             var, frame = ParamWidget.createBoolWidget(content, bg='white')
             frame.grid(row=0, column=0, sticky='w')
         
-        elif t is EnumParam:
+        elif t is params.EnumParam:
             var = ComboVar(param)
-            if param.display == EnumParam.DISPLAY_COMBO:
+            if param.display == params.EnumParam.DISPLAY_COMBO:
                 combo = ttk.Combobox(content, textvariable=var.tkVar, state='readonly')
                 combo['values'] = param.choices
                 combo.grid(row=0, column=0, sticky='w')
-            elif param.display == EnumParam.DISPLAY_LIST:
+            elif param.display == params.EnumParam.DISPLAY_LIST:
                 for i, opt in enumerate(param.choices):
                     rb = tk.Radiobutton(content, text=opt, variable=var.tkVar, value=opt)
                     rb.grid(row=i, column=0, sticky='w')
             else:
                 raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
         
-        elif t is MultiPointerParam:
+        elif t is params.MultiPointerParam:
             tp = MultiPointerTreeProvider(self._protocol.mapper)
             tree = BoundTree(content, tp)
             var = MultiPointerVar(tp, tree)
@@ -795,12 +801,12 @@ class ParamWidget():
             self._selectmode = 'extended' # allows multiple object selection
             self.visualizeCallback = self._visualizeMultiPointerParam
         
-        elif t is PointerParam or t is RelationParam:
+        elif t is params.PointerParam or t is params.RelationParam:
             var = PointerVar(self._protocol)
             entry = tk.Entry(content, width=entryWidth, textvariable=var.tkVar, state="readonly")
             entry.grid(row=0, column=0, sticky='w')
             
-            if t is RelationParam:
+            if t is params.RelationParam:
                 btnFunc = self._browseRelation
                 removeFunc = self._removeRelation
             else:
@@ -813,7 +819,7 @@ class ParamWidget():
             self._addButton("Select", Icon.ACTION_SEARCH, btnFunc)
             self._addButton("Remove", Icon.ACTION_DELETE, removeFunc)
         
-        elif t is ProtocolClassParam:
+        elif t is params.ProtocolClassParam:
             var = tk.StringVar()
             entry = tk.Entry(content, width=entryWidth, textvariable=var, state="readonly")
             entry.grid(row=0, column=0, sticky='w')
@@ -834,21 +840,21 @@ class ParamWidget():
             self._addButton("Edit", Icon.ACTION_EDIT, self._openProtocolForm)
             #btn = Button(content, "Edit", command=self._openProtocolForm)
             #btn.grid(row=1, column=0)
-        elif t is Line:
+        elif t is params.Line:
             var = None
             
-        elif t is LabelParam:
+        elif t is params.LabelParam:
             var = None
             self._onlyLabel = True
         else:
             #v = self.setVarValue(paramName)
             var = tk.StringVar()
-            if issubclass(t, FloatParam) or issubclass(t, IntParam):
+            if issubclass(t, params.FloatParam) or issubclass(t, params.IntParam):
                 entryWidth = self._entryWidth # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
             
-            if issubclass(t, PathParam):
+            if issubclass(t, params.PathParam):
                 self._entryPath = entry
                 self._addButton('Browse', Icon.ACTION_BROWSE, self._browsePath)
 
@@ -913,7 +919,7 @@ class ParamWidget():
                          selectmode=self._selectmode)
         
         if dlg.values:
-            if isinstance(self.param, PointerParam):
+            if isinstance(self.param, params.PointerParam):
                 self.set(dlg.values[0]) # only a single value for Poin
             else: # MulitiPointerParam
                 self.set(dlg.values)
@@ -1046,7 +1052,7 @@ class GroupWidget(ParamWidget):
         pass
                
     def _createContent(self):
-        self.content = tk.LabelFrame(self.parent, text=self.paramName, bg='white')
+        self.content = tk.LabelFrame(self.parent, text=self.param.getLabel(), bg='white')
         gui.configureWeigths(self.content) 
         
     def show(self):
@@ -1200,7 +1206,8 @@ class FormWindow(Window):
         self._createHeaderLabel(runFrame, Message.LABEL_EXECUTION, bold=True, sticky='ne', row=r, pady=0)
         modeFrame = tk.Frame(runFrame, bg='white')
         #self._createHeaderLabel(modeFrame, "Mode", sticky='ne', row=0, pady=0, column=0)
-        runMode = self._createBoundOptions(modeFrame, Message.VAR_RUN_MODE, MODE_CHOICES, self.protocol.runMode.get(),
+        runMode = self._createBoundOptions(modeFrame, Message.VAR_RUN_MODE, 
+                                           params.MODE_CHOICES, self.protocol.runMode.get(),
                                            self._onRunModeChanged, bg='white')   
         runMode.grid(row=0, column=0, sticky='new', padx=(0, 5), pady=5)
         btnHelp = IconButton(modeFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
@@ -1236,18 +1243,28 @@ class FormWindow(Window):
             r2 = 0
             c2 = 0
             sticky = 'ne'
-            if self.protocol.stepsExecutionMode == STEPS_PARALLEL:
+            if self.protocol.stepsExecutionMode == params.STEPS_PARALLEL:
+                self.procTypeVar = tk.StringVar()
+                
                 if allowThreads and allowMpi:
                     if numberOfMpi > 1:
                         procs = numberOfMpi
-                        value = 1 
+                        self.procTypeVar.set(MPI)
                     else:
                         procs = numberOfThreads
-                        value = 0
-                    procCombo = self._createBoundOptions(procFrame, 'stepsExecutionMode', ['Threads', 'MPI'], 
-                                                         value, self._setThreadsOrMpi, bg='white')
+                        self.procTypeVar.set(THREADS)
+                        
+                    self.procTypeVar.trace('w', self._setThreadsOrMpi)
+                    procCombo = tk.Frame(procFrame, bg='white')
+                    for i, opt in enumerate([THREADS, MPI]):
+                        rb = tk.Radiobutton(procCombo, text=opt, 
+                                            variable=self.procTypeVar, 
+                                            value=opt, bg='white')
+                        rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
+                        
                     procCombo.grid(row=0, column=0, sticky='nw', pady=5)
-                    procEntry = self._createBoundEntry(procFrame, Message.VAR_THREADS, func=self._setThreadsOrMpi, value=procs)
+                    procEntry = self._createBoundEntry(procFrame, Message.VAR_THREADS, 
+                                                       func=self._setThreadsOrMpi, value=procs)
                     procEntry.grid(row=0, column=1, padx=(0, 5), sticky='nw')
                     
             else:
@@ -1277,9 +1294,11 @@ class FormWindow(Window):
         var, frame = ParamWidget.createBoolWidget(runFrame, bg='white')
         self._addVarBinding(Message.VAR_QUEUE, var)
         frame.grid(row=2, column=c+1, pady=5, sticky='nw')
+        btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, command=self._editQueueParams)
+        btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
                              command=self._createHelpCommand(Message.HELP_RUNMODE))
-        btnHelp.grid(row=2, column=c+2, padx=(5, 0), pady=2, sticky='ne')
+        btnHelp.grid(row=2, column=c+3, padx=(5, 0), pady=2, sticky='ne')
         
         # Run Name not editable
         #entry.configure(state='readonly')
@@ -1305,6 +1324,21 @@ class FormWindow(Window):
             self.updateLabelAndComment()
             if self.updateProtocolCallback:
                 self.updateProtocolCallback(self.protocol)
+                
+    def _editQueueParams(self, e=None):
+        """ Open the dialog to edit the queue parameters. """
+        dlg = QueueDialog(self, {'default': [('hours', '72', 'Hours', 'Number of time in the queue before the job is stopped.'),
+                                                  ('cores', '8', 'Cores'),
+                                                  ('memory', '16', 'Memory')], 
+                                      'long': [('hours', '72', 'Hours'),
+                                               ('cores', '8', 'Cores')], 
+                                      'short': []})
+        if dlg.resultYes():
+            self.protocol.setQueueParams(dlg.value)
+            return True
+        else:
+            return False
+        
         
     def _createParams(self, parent):
         paramsFrame = tk.Frame(parent)
@@ -1313,7 +1347,7 @@ class FormWindow(Window):
         expFrame = tk.Frame(paramsFrame)
         expLabel = tk.Label(expFrame, text=Message.LABEL_EXPERT, font=self.fontBold)
         expLabel.grid(row=0, column=0, sticky='nw', padx=5)
-        expCombo = self._createBoundOptions(expFrame, Message.VAR_EXPERT, LEVEL_CHOICES,
+        expCombo = self._createBoundOptions(expFrame, Message.VAR_EXPERT, params.LEVEL_CHOICES,
                                             self.protocol.expertLevel.get(),
                                             self._onExpertLevelChanged) 
         expCombo.grid(row=0, column=1, sticky='nw', pady=5)
@@ -1384,7 +1418,7 @@ class FormWindow(Window):
         return tk.Entry(parent, font=self.font, width=width, textvariable=var)
     
     def _createEnumBinding(self, paramName, choices, value=None, *callbacks):
-        param = EnumParam(choices=choices)
+        param = params.EnumParam(choices=choices)
         var = ComboVar(param)
         if value is not None:
             var.set(value)
@@ -1436,7 +1470,11 @@ class FormWindow(Window):
         self._close(onlySave=True)
         
     def execute(self, e=None):
-        if (self.protocol.getRunMode() == MODE_RESTART and 
+        if self.protocol.useQueue():
+            if not self._editQueueParams():
+                return
+        
+        if (self.protocol.getRunMode() == params.MODE_RESTART and 
             not askYesNo(Message.TITLE_RESTART_FORM, 
                          Message.LABEL_RESTART_FORM % ('*%s*' % self.protocol.getRunName()), 
                          self.root)):
@@ -1471,7 +1509,7 @@ class FormWindow(Window):
     
     def getWidgetValue(self, protVar, param):
         widgetValue = ""                
-        if isinstance(param, MultiPointerParam):
+        if isinstance(param, params.MultiPointerParam):
             widgetValue = protVar
         else:
             widgetValue = protVar.get(param.default.get())  
@@ -1495,10 +1533,10 @@ class FormWindow(Window):
         parent = sectionWidget.contentFrame
         r = 0
         for paramName, param in sectionParam.iterParams():
-            if isinstance(param, Group):
+            if isinstance(param, params.Group):
                 widget = GroupWidget(r, paramName, param, self, parent)
                 self._fillGroup(param, widget)
-            elif isinstance (param, Line):
+            elif isinstance (param, params.Line):
                 widget = LineWidget(r, paramName, param, self, parent, None)
                 self._fillLine(param, widget)
             else:
@@ -1512,7 +1550,7 @@ class FormWindow(Window):
                     if not protVar:
                         widget.hide() # Show only if question var is True
                 else:
-                    if isinstance(param, PointerParam):
+                    if isinstance(param, params.PointerParam):
                         visualizeCallback = self._visualize # Add visualize icon for pointer params
                     else:
                         visualizeCallback = self.visualizeDict.get(paramName, None)
@@ -1534,7 +1572,7 @@ class FormWindow(Window):
         parent = groupWidget.content
         r = 0
         for paramName, param in groupParam.iterParams():
-            if isinstance (param, Line):
+            if isinstance (param, params.Line):
                 widget = LineWidget(r, paramName, param, self, parent, None)
                 self._fillLine(param, widget)
             else:
@@ -1543,7 +1581,7 @@ class FormWindow(Window):
                 if protVar is None:
                     raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 
-                if isinstance(param, PointerParam):
+                if isinstance(param, params.PointerParam):
                     visualizeCallback = self._visualize # Add visualize icon for pointer params
                 else:
                     visualizeCallback = self.visualizeDict.get(paramName, None)
@@ -1565,7 +1603,7 @@ class FormWindow(Window):
             if protVar is None:
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
             
-            if isinstance(param, PointerParam):
+            if isinstance(param, params.PointerParam):
                 visualizeCallback = self._visualize # Add visualize icon for pointer params
             else:
                 visualizeCallback = self.visualizeDict.get(paramName, None)
@@ -1612,10 +1650,10 @@ class FormWindow(Window):
             s.adjustContent()
             
     def _setThreadsOrMpi(self, *args):
-        mode = self.widgetDict['stepsExecutionMode'].get()
+        mode = self.procTypeVar.get()
         try:
             procs = int(self.widgetDict['numberOfThreads'].get())
-            if mode == 0: # threads mode
+            if mode == THREADS: # threads mode
                 self.protocol.numberOfThreads.set(procs)
                 self.protocol.numberOfMpi.set(min(1, self.protocol.numberOfMpi.get())) # 0 or 1
             else:
@@ -1658,7 +1696,7 @@ class FormWindow(Window):
                     param.set(value._parentObject)
                     param.setExtendedItemId(value.getObjId())
                 else:
-                    if isinstance(param, Object):
+                    if isinstance(param, pwobj.Object):
                         param.set(value)
             except ValueError:
                 if len(var.get()):
@@ -1694,3 +1732,97 @@ def editObject(self, title, root, obj, mapper):
     return EditObjectDialog(root, title, obj, mapper)
     
 
+class QueueDialog(Dialog):
+    """ Dialog to entry the queue parameters. """
+    def __init__(self, window, queueDict):
+        self.value = None
+        self.widgets = [] # widget list
+        self.vars = []
+        self.queueDict = queueDict
+        self.window = window
+        self.queueName, self.queueParams = window.protocol.getQueueParams()
+        Dialog.__init__(self, window.root, "Queue parameters")
+        
+    def body(self, bodyFrame):
+        bodyFrame.config(bg='white')
+        self.content = tk.Frame(bodyFrame, bg='white')
+        self.content.grid(row=0, column=0, padx=20, pady=20)
+        
+        label = tk.Label(self.content, text='Submit to queue', 
+                         font=self.window.fontBold, bg='white')
+        label.grid(row=0, column=0, sticky='ne', padx=5, pady=5)
+        self.queueVar = tk.StringVar()
+        self.queueVar.trace('w', self._onQueueChanged)
+        combo = ttk.Combobox(self.content, textvariable=self.queueVar, 
+                             state='readonly', width=14)
+        combo.grid(row=0, column=1, sticky='nw', padx=5, pady=5)
+        queueKeys = self.queueDict.keys()
+        combo['values'] = queueKeys
+        
+        
+        selected = self.queueName #TODO: replace this with real selected queue
+        self.queueVar.set(selected) # This will trigger queue params setup
+
+        self.initial_focus = combo
+        
+    def _onQueueChanged(self, *args):
+        for w in self.widgets:
+            w.destroy()
+            
+        selected = self.queueVar.get()
+        params = self.queueDict[selected]
+        
+        self.widgets = [] # clear the widget list
+        self.vars = []
+        r = 1 # starting row to place params
+        for p in params:
+            if len(p) == 3: # No help provided
+                name, value, label = p
+                helpMsg = None
+            elif len(p) == 4:
+                name, value, label, helpMsg = p
+            else:
+                raise Exception('Incorrect number of params for %s, expected 3 or 4' % name)
+            
+            label = tk.Label(self.content, text=label, bg='white')
+            label.grid(row=r, column=0, sticky='ne', padx=5, pady=(0,5))
+            var = tk.StringVar()
+            # Set the value comming in the protocol 
+            var.set(self.queueParams.get(name, value))
+            
+            entry = tk.Entry(self.content, textvariable=var, width=15)
+            entry.grid(row=r, column=1, sticky='nw', padx=5, pady=(0, 5))
+            
+            if helpMsg:
+                def addHelpButton(name, helpMsg):
+                    def showHelp():
+                        showInfo("Help", helpMsg, self)
+                    
+                    btn = IconButton(self.content, Message.LABEL_BUTTON_HELP, 
+                                      Icon.ACTION_HELP, 
+                                      command=showHelp)
+                    btn.grid(row=r, column=2, sticky='ne', padx=5, pady=(0, 5))
+                    self.widgets.append(btn)
+                addHelpButton(name, helpMsg)
+            
+            self.vars.append(var)
+            self.widgets.append(label)
+            self.widgets.append(entry)
+            r += 1
+        
+    def apply(self):
+        # Set as value the queue selected and a dictionary 
+        # with the values of each parameter
+        selected = self.queueVar.get()
+        paramsDict = {}
+        params = self.queueDict[selected]
+        for p, v in izip(params, self.vars):
+            if len(p) == 3:
+                name, value, label = p
+            else: 
+                name, value, label, _ = p 
+            paramsDict[name] = v.get() # get the value from the corresponding tk var
+        self.value = selected, paramsDict
+        
+    def validate(self):
+        return True

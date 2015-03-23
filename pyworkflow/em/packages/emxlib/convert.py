@@ -29,7 +29,7 @@ This module implement the import/export of Micrographs and Particles to EMX
 
 from __future__ import print_function
 from os.path import join, dirname, basename, exists
-from pyworkflow.em.constants import ALIGN_NONE
+from pyworkflow.em.constants import ALIGN_NONE, ALIGN_PROJ
 
 from pyworkflow.utils.path import createLink, makePath, cleanPath, replaceBaseExt
 from pyworkflow.em.convert import ImageHandler, NO_INDEX
@@ -38,6 +38,7 @@ from pyworkflow.em.data import (Micrograph, CTFModel, Particle,
                                 SetOfMicrographs, SetOfCoordinates, 
                                 SetOfParticles, Acquisition)
 import emxlib
+from numpy.linalg import inv
 from collections import OrderedDict
 #from software.em.xmipp.protocols.protocol_preprocess_particles import createAcquisition
 
@@ -114,9 +115,13 @@ def _samplingToEmx(emxObj, sampling):
     emxObj.set('pixelSpacing__X', sampling)
     emxObj.set('pixelSpacing__Y', sampling)
 
-def _alignmentToEmx(emxObj, transform):
+def _alignmentToEmx(emxObj, transform, partAlign):
     if transform is not None:
         matrix = transform.getMatrix()
+        #after disscusionn with bernard
+        #FIXME invert only if 3D. The other direciton in fixed
+        if partAlign == ALIGN_PROJ:
+            matrix = inv(matrix)
         for i in range(3):
             for j in range(4):
                 emxObj.set('transformationMatrix__t%d%d' % (i+1, j+1),matrix[i, j])
@@ -173,7 +178,7 @@ def _setupEmxParticle(emxData, coordinate, index, filename, micSet):
     return emxParticle
            
            
-def _particleToEmx(emxData, particle, micSet):
+def _particleToEmx(emxData, particle, micSet, partAlign):
     #import pdb
     #pdb.set_trace()
 
@@ -182,7 +187,7 @@ def _particleToEmx(emxData, particle, micSet):
     if particle.hasCTF():
         _ctfToEmx(emxParticle, particle.getCTF())
     _samplingToEmx(emxParticle, particle.getSamplingRate())
-    _alignmentToEmx(emxParticle, particle.getTransform())
+    _alignmentToEmx(emxParticle, particle.getTransform(),partAlign)
     return emxParticle
 
 
@@ -220,7 +225,7 @@ def _particlesToEmx(emxData, partSet, stackFn=None, micSet=None):
     """
 
     ih = ImageHandler()
-
+    partAlign = partSet.getAlignment()
     for i, particle in enumerate(partSet):
         if stackFn:
             print ("stackFn-----------------------------------------")
@@ -229,7 +234,7 @@ def _particlesToEmx(emxData, partSet, stackFn=None, micSet=None):
             ih.convert(loc, newLoc)
             newFn = basename(stackFn)
             particle.setLocation(i+1, newFn)
-            emxObj = _particleToEmx(emxData, particle, micSet)
+            emxObj = _particleToEmx(emxData, particle, micSet, partAlign)
         else:
             emxObj = _coordinateToEmx(emxData, particle, micSet)
         emxData.addObject(emxObj)
@@ -315,16 +320,24 @@ def _particleFromEmx(emxObj, particle):
         particle.setAcquisition(acquisition)
         particle.hasAcquisition()
 
-def _transformFromEmx(emxParticle, part, transform):
+def _transformFromEmx(emxParticle, part, transform,alignType):
     """ Read the transformation matrix values from EMX tags. """
     m = transform.getMatrix()
-    
+    #invert matrix
+    #invert only if proj
+
     for i in range(3):
         for j in range(4):
             m[i, j] = emxParticle.get('transformationMatrix__t%d%d' % (i+1, j+1))
-    
+
+    #invert if aligment...
+    if alignType == ALIGN_PROJ:
+        m = inv(m)
+
+    transform.setMatrix(m)
+    print ("m",m,"transform",transform)
     transform.setObjId(part.getObjId())
-            
+
 def _coordinateFromEmx(emxObj, coordinate):
     #_imageFromEmx(emxObj, coordinate)
     _setCoordinatesFromEmx(emxObj, coordinate)
@@ -455,7 +468,7 @@ def _particlesFromEmx(protocol
                 
                 if partSet.hasAlignment():
                     transform = Transform()
-                    _transformFromEmx(emxParticle, part, transform)
+                    _transformFromEmx(emxParticle, part, transform, alignType)
                     part.setTransform(transform)
 
             else:
