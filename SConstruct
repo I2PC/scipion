@@ -41,14 +41,24 @@ import subprocess
 import SCons.Script
 import SCons.SConf
 
-
+MACOSX = (platform.system() == 'Darwin')
+WINDOWS = (platform.system() == 'Windows')
+LINUX = (platform.system() == 'Linux')
 
 # URL where we have most of our tgz files for libraries, modules and packages.
 URL_BASE = os.environ['SCIPION_URL_SOFTWARE']
 
-# Define our builders.
-download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
-untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
+# Define our builders
+if LINUX:
+    download = Builder(action='wget -nv --show-progress -c -O $TARGET $SOURCE')
+    untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
+elif MACOSX:
+    download = Builder(action='curl -L "$SOURCE" -o "$TARGET"')
+    untar = Builder(action='tar -C $cdir -xzf $SOURCE')
+else:
+    print 'OS not tested yet'
+    Exit(1)
+
 
 # Create the environment the whole build will use.
 env = Environment(ENV=os.environ,
