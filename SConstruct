@@ -718,13 +718,13 @@ def addModule(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
     if not COMPILE_ONLY:
         tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
 
-        tUntar = untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload,
-                       cdir='software/tmp')
+        tUntar = untar(env, File('#software/tmp/%s/setup.py' % buildDir).abspath,
+                       tDownload, cdir=Dir('#software/tmp').abspath)
         SideEffect('dummy', tUntar)  # so it works fine in parallel builds
         Clean(tUntar, 'software/tmp/%s' % buildDir)
 
     tInstall = env.Command(
-        ['software/lib/python2.7/site-packages/%s' % t for t in targets],
+        [Dir('#software/lib/python2.7/site-packages/%s' % t).abspath for t in targets],
         tUntar if not COMPILE_ONLY else '',
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                'PATH="%(root)s/bin:%(PATH)s" '
