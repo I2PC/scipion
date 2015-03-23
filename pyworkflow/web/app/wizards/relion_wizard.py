@@ -94,9 +94,6 @@ class RelionVolMaskRadiusWeb(RelionBackRadiusWizard):
             
             xdim = getImageXdim(request, vols[0].getFileName())
 
-            # Multiply by sampling rate to convert to angstroms
-            xdim *= objs.getSamplingRate()
-            
             params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
                
             context = {'objects': vols,
