@@ -81,7 +81,10 @@ def main():
     parser.add_argument('--swap', '-s',
                         action='store_true',
                         help='Plot swap memory stored by monitor.')
-    parser.add_argument('--sleepSec', action="store", type=int, default=20, help="record each these seconds")
+    #TODO: I have remove the repaint ability in plotter since it make imposible to maximize the plot
+    # and it is not very usefull. If you want to recover it uncomment all the lines starting with #! 
+    #and comment the lines ending with #!  
+    #!parser.add_argument('--sleepSec', action="store", type=int, default=20, help="record each these seconds")
     
     args = parser.parse_args()   
     
@@ -99,7 +102,7 @@ def main():
     pyplot.ylabel("percentage")
     
     
-    pyplot.ion()
+    #!pyplot.ion()
     
     lines = {}
     
@@ -127,9 +130,10 @@ def main():
         pyplot.legend()
         x1,x2,y1,y2 = pyplot.axis()
         pyplot.axis((0.,x2,y1,y2))
-        pyplot.draw()
+        #!pyplot.draw()
+        pyplot.show()#!
         time.sleep(args.sleepSec)
-        
+        break#!        
 
 
 
