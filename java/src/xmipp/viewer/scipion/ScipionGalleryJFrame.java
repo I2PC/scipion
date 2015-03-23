@@ -295,7 +295,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     public boolean confirmCreate(String output, int size)
     {
-        String msg = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size > 1)?"elements":"element");
+        String msg = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size == 1)?"element":"elements");
         
         dlg = new InputFieldsMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
         return dlg.action == InputFieldsMessageDialog.OK_OPTION;

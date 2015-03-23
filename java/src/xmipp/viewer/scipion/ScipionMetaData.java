@@ -446,10 +446,7 @@ public class ScipionMetaData extends MetaData {
         }
     }
 
-   
-
     public void unionAll(MetaData md) {
-
         emobjects.addAll(((ScipionMetaData) md).getEMObjects());
     }
 
@@ -471,7 +468,6 @@ public class ScipionMetaData extends MetaData {
             }
         }
         return null;
-
     }
 
     public void write(String path) {
@@ -492,7 +488,6 @@ public class ScipionMetaData extends MetaData {
                 }
             }
         }
-
     }
 
     public String toString() {

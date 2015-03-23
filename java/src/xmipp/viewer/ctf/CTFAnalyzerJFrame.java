@@ -305,8 +305,6 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 
 	private void fillRadialGraphics()
 	{
-		
-
 		int x0 = imageprofilepn.getX0();
 		int y0 = imageprofilepn.getY0();
 		// // Get profile.
@@ -416,15 +414,12 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 			if (values[i] > min && values[i] < max)
 				series.add(xs[i], values[i]);
 		}
-
 		return series;
 	}
 	
     
     private void customizeSeriesRenderes(XYPlot plot, boolean show_bgnoise, boolean show_envelope,
             boolean show_psd, boolean show_ctf) {
-
-        
         serie_index = 0;
         
         if (show_ctf) {
@@ -519,10 +514,8 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-
 			fillGraphics();
 			envelopepsdchb.setEnabled(psdrb.isSelected());
-
 		}
 
 	}
@@ -627,10 +620,10 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
     }
     
     private String getTheorethicalPSDLabel()
-	{
-		// TODO Auto-generated method stub
-		return String.format("Log(%s)", "Theoretical " + XmippLabel.LABEL_PSD);
-	}
+    {
+            // TODO Auto-generated method stub
+            return String.format("Log(%s)", "Theoretical " + XmippLabel.LABEL_PSD);
+    }
     
     public String getPSDProfileLabel()
     {
