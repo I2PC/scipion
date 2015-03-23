@@ -27,7 +27,7 @@
 """
 This module implement viewers for some type of common objects.
 """
-
+from __future__ import print_function
 import os
 import shlex
 import ast
@@ -122,7 +122,7 @@ class DataView(View):
         params = {}
         
         for key, value in self._viewParams.items():
-            print str(key), ":",str(value)  
+            print (str(key), ":",str(value))
             if key in parameters:
                 if key == 'mode' and value =='metadata':
                     value = 'table'
@@ -237,7 +237,7 @@ class ChimeraClientView(View):
 class ChimeraDataView(ChimeraClientView):
 
     def __init__(self, dataview, vol, viewParams={}, **kwargs):
-        print 'on pair'
+        #print 'on pair'
         self.dataview = dataview
         self.showjPort = getFreePort()
         self.dataview._viewParams[CHIMERA_PORT] = self.showjPort
@@ -395,13 +395,13 @@ class ChimeraClient:
         self.listen = True
         try:
             while self.listen:
-                print 'on client loop'
+                #print 'on client loop'
                 msg = self.client.recv()
                 self.answer(msg)
                 sleep(0.01)
                             
         except EOFError:
-            print 'Lost connection to server'
+            print ('Lost connection to server')
         finally:
             self.exit()
             
@@ -426,9 +426,12 @@ class ChimeraVirusClient(ChimeraClient):
         self.k = kwargs.get('k', 0)
         self.sym = kwargs.get('sym','n25')
         self.radius = kwargs.get('radius', 100)
+        self.spheRadius = kwargs.get('spheRadius',1.5)
+        print("spheRadius1",self.spheRadius)
         self.color = kwargs.get('color', 'red')
         self.linewidth = kwargs.get('linewidth', 1)
         self.sphere = kwargs.get('sphere', 0)
+        self.shellRadius = kwargs.get('shellRadius',self.spheRadius)
         kwargs['ChimeraServer']='ChimeraVirusServer'
         ChimeraClient.__init__(self, volfile, **kwargs)
 
@@ -441,29 +444,56 @@ class ChimeraVirusClient(ChimeraClient):
         command += 'color %s '%self.color
         command += 'linewidth %d '%self.linewidth
         command += 'sphere %f '%self.sphere
-        printCmd(command)
         return command
 
     def openVolumeOnServer(self, volume):
         ChimeraClient.openVolumeOnServer(self, volume, sendEnd=False)
         commandList=[self.hkcageCommand()]
-        self.send('command_list', commandList)
+        print("spheRadius2",self.spheRadius)
         self.send('hk_icosahedron_lattice',(self.h,
                                           self.k,
                                           self.radius,
-                                          self.sym))
-        msg = self.client.recv()
-        print('msg1: ', msg)
-        msg = self.client.recv()
-        print('msg2: ', msg)
+                                          self.shellRadius,
+                                          self.spheRadius,
+                                          self.sym,
+                                          self.sphere,
+                                          self.color))
+        #get here the list of vertexes, info will be pass by id later
+        self.send('command_list', commandList)
+        #get va with sphere centers
+
+        #va coordinates of  vertex of the triangles inside de canonical trianlge
+        msg1    = self.client.recv()
+        self.va = self.client.recv()
+        ####self.listToBild(self.va,1.6,msg1+'.bild')
         self.client.send('end')
 
+    #this is an auxiliary file that should be deleted
+    def listToBild(self,points, radius, file, color='0 0 1'):
+        print ("--------------------------------")
+        f= open(file,'w')
+        for point in points:
+            print ("\n.color", color,"\n.sphere", point[0]+128.
+                                                , point[1]+128.
+                                                , point[2]+128.
+                                                , radius,file=f)
     def answer(self, msg):
         ChimeraClient.answer(self, msg)
         if msg == 'motion_stop':
-            pass
-        else:
+            data = self.client.recv()#wait for data
+            printCmd('reading motion')
+            self.motion = data
+            printCmd('getting euler angles')
+            rot, tilt, psi = xmipp.Euler_matrix2angles(self.motion)
+            printCmd('calling rotate')
+            self.rotate(rot, tilt, psi)
 
+    def answer(self, msg):
+        ChimeraClient.answer(self, msg)
+        if msg == 'id':
+            id = self.client.recv()
+            self.listToBild([self.va[id-1]],2.5,'id.bild')
+        else:
             pass
 
     def listenShowJ(self):
@@ -491,7 +521,7 @@ class ChimeraVirusClient(ChimeraClient):
                 clientsocket.close()
 
             except EOFError:
-                print 'Lost connection to client'
+                print ('Lost connection to client')
 
 
 class ChimeraProjectionClient(ChimeraClient):
@@ -580,7 +610,7 @@ class ChimeraProjectionClient(ChimeraClient):
                 clientsocket.close()
 
             except EOFError:
-                print 'Lost connection to client'
+                print ('Lost connection to client')
 
 def printCmd(cmd):
     pass
