@@ -353,3 +353,15 @@ def check_project_id(request):
 
 
 
+def webservice_projects(request):
+   
+    if 'projectName' in request.session: request.session['projectName'] = ""
+    if 'projectPath' in request.session: request.session['projectPath'] = ""
+
+    context = {'projects_css': getResourceCss('projects'),
+               }
+    
+    context = base_grid(request, context)
+    return render_to_response('webservice_projects.html', context)
+
+
