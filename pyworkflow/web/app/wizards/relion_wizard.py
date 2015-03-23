@@ -134,6 +134,10 @@ class RelionVolFilterWizardWeb(RelionVolFilterWizard):
             params['samplingRate'] = objs.getSamplingRate()
             params['unit'] = UNIT_ANGSTROM
 
+            # Correct default values to angstroms
+            params['value'][0] = params['samplingRate'] / params['value'][0]
+            params['value'][2] = params['samplingRate'] / params['value'][2]
+
             itemDim,_,_ = objs.getDim()
 
             params['min'] = 2.*params['samplingRate']
