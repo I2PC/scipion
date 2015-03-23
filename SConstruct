@@ -124,13 +124,13 @@ CheckConfigLib = Builder(action=checkConfigLib)
 
 # Add the path to dynamic libraries so the linker can find them.
 
-if platform.system() == 'Linux':
+if LINUX:
     env.AppendUnique(LIBPATH=os.environ.get('LD_LIBRARY_PATH', ''))
-elif platform.system() == 'Darwin':
-    print "OS not tested yet"
+elif MACOSX:
     env.AppendUnique(LIBPATH=os.environ.get('DYLD_FALLBACK_LIBRARY_PATH', ''))
-elif platform.system() == 'Windows':
+elif WINDOWS:
     print "OS not tested yet"
+    Exit(1)
 else:
     print "Unknown system: %s\nPlease tell the developers." % platform.system()
 
