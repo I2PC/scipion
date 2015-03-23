@@ -621,8 +621,9 @@ function zoomImagePopUp(imagePath){
 			res = res.split(",")
 			var width = res[0]
 			var height = res[1]
-			getImage = getSubDomainURL() + "/get_image/?image=" + imagePath + "&dim="+height
-
+			
+			// getSubDomainURL() not neccesary
+			getImage = "/get_image/?image=" + imagePath + "&dim="+height
 			customPopup(getImage, width, height)
 		}
 	});

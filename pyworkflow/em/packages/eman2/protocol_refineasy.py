@@ -29,6 +29,9 @@ This sub-package contains wrapper around EMAN initialmodel program
 """
 
 import os
+import re
+from os.path import exists
+from glob import glob
 import pyworkflow.em as em
 from pyworkflow.em.packages.eman2.eman2 import getEmanProgram
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, EnumParam,
@@ -75,7 +78,6 @@ independently to produce a gold standard resolution curve for every step in the 
 - The gold standard FSC also permits us to automatically filter the structure
 at each refinement step. The resolution you specify is a target, not the filter resolution.
     """
-    
     _label = 'refine easy'
 
     def _createFilenameTemplates(self):
@@ -84,18 +86,32 @@ at each refinement step. The resolution you specify is a target, not the filter 
         myDict = {
                   'partSet': 'sets/inputSet.lst',
                   'partFlipSet': 'sets/inputSet__ctf_flip.lst',
+                  'data_scipion': self._getExtraPath('data_scipion_it%(iter)02d.sqlite'),
                   'volume': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d.hdf'),
-                  'classes': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d'),
+                  'classes': 'refine_%(run)02d/classes_%(iter)02d',
                   'classesEven': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d_even.hdf'),
                   'classesOdd': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d_odd.hdf'),
-                  'cls': self._getExtraPath('refine_%(run)02d/cls_result_%(iter)02d'),
+                  'cls': 'refine_%(run)02d/cls_result_%(iter)02d',
                   'clsEven': self._getExtraPath('refine_%(run)02d/cls_result_%(iter)02d_even.hdf'),
-                  'clsOdd': self._getExtraPath('refine_%(run)02d/cls_result_%(iter)02d_odd.hdf')
+                  'clsOdd': self._getExtraPath('refine_%(run)02d/cls_result_%(iter)02d_odd.hdf'),
+                  'angles': self._getExtraPath('projectionAngles_it%(iter)02d.txt'),
+                  'mapEven': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d_even.hdf'),
+                  'mapOdd': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d_odd.hdf'),
+                  'mapFull': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d.hdf'),
+                  'fscUnmasked': self._getExtraPath('refine_%(run)02d/fsc_unmasked_%(iter)02d.txt'),
+                  'fscMasked': self._getExtraPath('refine_%(run)02d/fsc_masked_%(iter)02d.txt'),
+                  'fscMaskedTight': self._getExtraPath('refine_%(run)02d/fsc_maskedtight_%(iter)02d.txt'),
                   }
         
         self._updateFilenamesDict(myDict)
-
-
+    
+    def _createIterTemplates(self, currRun):
+        """ Setup the regex on how to find iterations. """
+        self._iterTemplate = self._getFileName('mapEven', run=currRun, iter=0).replace('00','??')
+        # Iterations will be identify by threed_XX_ where XX is the iteration number
+        # and is restricted to only 2 digits.
+        self._iterRegex = re.compile('threed_(\d{2,2})_')
+    
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -207,6 +223,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):        
         self._createFilenameTemplates()
+        self._createIterTemplates(self._getRun())
         self._insertFunctionStep('convertImagesStep')
         if self.doContinue:
             pass
@@ -248,6 +265,8 @@ at each refinement step. The resolution you specify is a target, not the filter 
         self.runJob(program, args, cwd=self._getExtraPath())
     
     def createOutputStep(self):
+        from pyworkflow.utils.path import cleanPath
+        
         iterN = self.numberOfIterations.get()
         partSet = self.inputParticles.get()
         numRun = self._getRun()
@@ -258,21 +277,26 @@ at each refinement step. The resolution you specify is a target, not the filter 
         
         clsFn = self._getFileName("cls", run=numRun, iter=iterN)
         classesFn = self._getFileName("classes", run=numRun, iter=iterN)
+        angles = self._getFileName('angles', iter=iterN)
         
-        proc = createEmanProcess(args='read %s %s %s %s' % (self._getFileName("particles"), clsFn, classesFn, self._getExtraPath('output.txt')))
+        if exists(angles):
+            cleanPath(angles)
+        proc = createEmanProcess(args='read %s %s %s %s' 
+                                 % (self._getParticlesStack(), clsFn, classesFn,
+                                    self._getBaseName('angles', iter=iterN)),
+                                 direc=self._getExtraPath())
         proc.wait()
         newPartSet = self._createSetOfParticles()
         newPartSet.copyInfo(partSet)
         newPartSet.setAlignment(em.ALIGN_PROJ)
         newPartSet.copyItems(partSet,
                              updateItemCallback=self._createItemMatrix,
-                             itemDataIterator=self._iterTextFile())
+                             itemDataIterator=self._iterTextFile(iterN))
         
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(partSet, vol)
         self._defineOutputs(outputParticles=newPartSet)
         self._defineSourceRelation(partSet, newPartSet)
-        
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
@@ -342,25 +366,57 @@ at each refinement step. The resolution you specify is a target, not the filter 
             return 1
         else:
             return 2
+    
     def _getBaseName(self, key, **args):
         """ Remove the folders and return the file from the filename. """
         return os.path.basename(self._getFileName(key, **args))
     
     def _getParticlesStack(self):
-        if not self.haveDataBeenPhaseFlipped:
+        if not self.haveDataBeenPhaseFlipped and self.inputParticles.get().hasCTF():
             return self._getFileName("partFlipSet")
         else:
             return self._getFileName("partSet")
     
-    def _iterTextFile(self):
-        f = open(self._getExtraPath('output.txt'))
+    def _iterTextFile(self, iterN):
+        f = open(self._getFileName('angles', iter=iterN))
         
         for line in f:
             yield map(float, line.split())
             
         f.close()
-            
+    
     def _createItemMatrix(self, item, rowList):
         item.setTransform(rowToAlignment(rowList[1:], alignType=em.ALIGN_PROJ))
+    
+    def _getIterNumber(self, index):
+        """ Return the list of iteration files, give the iterTemplate. """
+        result = None
+        files = sorted(glob(self._iterTemplate))
+        if files:
+            f = files[index]
+            s = self._iterRegex.search(f)
+            if s:
+                result = int(s.group(1)) # group 1 is 3 digits iteration number
+        return result
         
-        
+    def _lastIter(self):
+        return self._getIterNumber(-1)
+
+    def _firstIter(self):
+        return self._getIterNumber(0) or 1
+
+    def _getIterData(self, it):
+        from convert import writeSqliteIterData
+        data_sqlite = self._getFileName('data_scipion', iter=it)
+        partSet = self.inputParticles.get()
+        if not exists(data_sqlite):
+            clsFn = self._getFileName("cls", run=self._getRun(), iter=it)
+            classesFn = self._getFileName("classes", run=self._getRun(), iter=it)
+            angles = self._getBaseName('angles', iter=it)
+            
+            proc = createEmanProcess(args='read %s %s %s %s' 
+                         % (self._getParticlesStack(), clsFn, classesFn, angles),
+                         direc=self._getExtraPath())
+            proc.wait()
+            writeSqliteIterData(partSet, data_sqlite, self._createItemMatrix, self._iterTextFile(it))
+        return data_sqlite

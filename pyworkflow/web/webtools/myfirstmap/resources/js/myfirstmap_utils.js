@@ -156,7 +156,7 @@ function createServProject(elm) {
 			"<p>The access to this new project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
 			"in order to access to this project in future sessions.</p>"+
-			"<p>In case to lost your url to access, please contact with us by this email: <span style='color:firebrick;'>scipion-devel at cnb.csic.es</span></p>";			
+			"<p>In case to lost your url to access, please contact with us by this email: <span style='color:firebrick;'>scipion at cnb.csic.es</span></p>";			
 			
 			msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";
 			var funcName = "goToProject"

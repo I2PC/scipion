@@ -267,7 +267,7 @@ class ChimeraViewer(Viewer):
                 if hasattr(obj, '_chimeraScript'):
                     fn = obj._chimeraScript.get()
             ChimeraView(fn).show()
-            #FIXME: there is an asymetry between ProtocolViewer and Viewer
+            #FIXME: there is an asymmetry between ProtocolViewer and Viewer
             # for the first, the visualize method return a list of View's (that are shown)
             # for the second, the visualize directly shows the objects. 
             # the first approach is better 
@@ -278,6 +278,8 @@ class ChimeraViewer(Viewer):
 class ChimeraClient:
     
     def __init__(self, volfile, **kwargs):
+        if volfile.endswith('.mrc'):
+            volfile += ':mrc'
 
         self.kwargs = kwargs
         if volfile is None:
@@ -327,6 +329,7 @@ class ChimeraClient:
     def loadAngularDist(self):
         #FIXME do not seems to be a good idea to use
         # metada instead of native scipon here
+        #print self.angularDistFile
         md = xmipp.MetaData(self.angularDistFile)
         if not md.containsLabel(xmipp.MDL_ANGLE_ROT):
             angleRotLabel = xmipp.RLN_ORIENT_ROT
@@ -395,18 +398,15 @@ class ChimeraClient:
         self.listen = True
         try:
             while self.listen:
-                #print 'on client loop'
                 msg = self.client.recv()
                 self.answer(msg)
-                sleep(0.01)
-                            
         except EOFError:
             print ('Lost connection to server')
         finally:
             self.exit()
             
     def exit(self):
-            self.client.close()#close connection
+        self.client.close()
 
     def initVolumeData(self):
         self.image = xmipp.Image(self.volfile)
@@ -414,7 +414,7 @@ class ChimeraClient:
         self.xdim, self.ydim, self.zdim, self.n = self.image.getDimensions()
         #printCmd("size %dx %dx %d"%(self.xdim, self.ydim, self.zdim))
         self.vol = self.image.getData()
-        
+
     def answer(self, msg):
         if msg == 'exit_server':
             self.listen = False

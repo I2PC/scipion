@@ -283,8 +283,8 @@ class ProjectWindow(ProjectBaseWindow):
         parentProt = project.mapper.selectById(parentProtId)
         protDep = project._getProtocolsDependencies([parentProt])
         if protDep:
-                prot = parentProt.copy()
-                prot.continueRun.set(parentProt)
+            prot = project.copyProtocol(parentProt)
+            prot.continueRun.set(parentProt)
         else:
             prot = parentProt
             prot.isFirstTime.set(True)

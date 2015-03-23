@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,22 +23,5 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This package contains the protocols and data for EMAN2
-"""
 
-from bibtex import _bibtex # Load bibtex dict with references
-
-_logo = "eman2_logo.png"
-_references = ['Tang2007']
-
-
-from eman2 import *
-from data import *
-from protocol_boxing import EmanProtBoxing
-from protocol_initialmodel import EmanProtInitModel
-from protocol_reconstruct import EmanProtReconstruct
-from protocol_refineasy import EmanProtRefine
-from viewer import EmanViewer, RefineEasyViewer
-
-_environ = getEnviron()
+from urls import urls

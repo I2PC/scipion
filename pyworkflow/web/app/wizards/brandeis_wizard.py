@@ -121,7 +121,17 @@ class FrealignBandpassWeb(FrealignBandpassWizard):
             
             #careful with mode
             params['value'] = proccessModeFilter(params['mode'], params['value'])
-            
+
+            params['samplingRate'] = particles[1].getSamplingRate()
+            params['unit'] = UNIT_ANGSTROM
+
+            itemDim,_,_ = particles[1].getDim()
+
+            params['min'] = 2.*params['samplingRate']
+            params['max'] = 2.*itemDim*params['samplingRate']
+
+            params['step'] = params['max'] / 1000
+
             context = {'objects': particles,
                        'params':params}
             
@@ -143,17 +153,28 @@ class FrealignVolBandpassWeb(FrealignVolBandpassWizard):
             return HttpResponse(res)
         else:
             volumes = self._getVols(objs)
-            
+
             if len(volumes) == 0:
                 return HttpResponse("errorIterate")
-            
+
             params['value'] = proccessModeFilter(params['mode'], params['value'])
-            
+            params['label'] = ['',params['label'],'']
+
+            params['samplingRate'] = objs.getSamplingRate()
+            params['unit'] = UNIT_ANGSTROM
+
+            itemDim,_,_ = objs.getDim()
+
+            params['min'] = 2.*params['samplingRate']
+            params['max'] = 2.*itemDim*params['samplingRate']
+
+            params['step'] = params['max'] / 1000
+
             context = {'objects': volumes,
                        'params':params}
-            
+
             context = base_wiz(request, context)
-            
+
             return render_to_response('wizards/wiz_filter_volumes.html', context)            
     
     

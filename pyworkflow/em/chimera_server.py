@@ -42,31 +42,16 @@ class ChimeraServer:
         """
         chimera.triggers.addHandler(chimera.MOTION_STOP, self.onMotionStop, None)####
 
-    def handleInitMessage(self, msg):
-        pass
-
     def openVolume(self):
         try:
             while True:
                 if self.vol_conn.poll():
                     
                     msg = self.vol_conn.recv()
-                    #print msg
                     if msg == 'open_volume':
                         data = self.vol_conn.recv()#objects are serialized by default
-                        #print data
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
-                        #om = chimera.openModels
-                        #mlist = om.list()
-                        #m = mlist[0]
-                        #centerVec = m.bbox()[1].center().toVector()
-                        #xform = chimera.Xform.xform(1, 0, 0, -centerVec[0],
-                        #             0, 1, 0, -centerVec[1],
-                        #             0, 0, 1, -centerVec[2], orthogonalize=True)
-                        #m.openState.globalXform(xform)
-
-                        #runCommand("volume #0 step 1")
                         
                     elif msg == 'voxel_size':
                         self.voxelSize = self.vol_conn.recv()
@@ -82,13 +67,34 @@ class ChimeraServer:
                     elif msg == 'end':#if you dont break cicle volume is never shown
                         break
 
-                    else:
-                        self.handleInitMessage(msg)
                 else:
                     sleep(0.01)
         except EOFError:
             print ('Lost connection to client')
             #should close app??
+
+    def answer(self, msg):
+        #print msg
+        if msg == 'open_volume':
+            data = self.vol_conn.recv()#objects are serialized by default
+            #print data
+            grid = Array_Grid_Data(data)
+            self.volume = volume_from_grid_data(grid)
+            self.centerVolume()
+
+
+        elif msg == 'voxel_size':
+            self.voxelSize = self.vol_conn.recv()
+            cmd = "volume #0 voxelSize %s"%self.voxelSize
+            #print cmd
+            runCommand(cmd)
+            runCommand("focus")
+            #end debug
+
+        elif msg == 'command_list':
+            commandList = self.vol_conn.recv()
+            for command in commandList:
+                runCommand(command)
 
     def initListenShowJ(self):
 
@@ -96,25 +102,21 @@ class ChimeraServer:
         self.listenShowJThread.daemon = True
         self.listenShowJThread.start()
 
+    def centerVolume(self):
+        om = chimera.openModels
+        mlist = om.list()
+        #assume that volume is 0 may be dangerous
+        #this should be in init but it does not work there
+        self.model = mlist[0]
+        centerVec = self.model.bbox()[1].center().toVector()
+        xform = chimera.Xform.xform(1, 0, 0, -centerVec[0],
+                                    0, 1, 0, -centerVec[1],
+                                    0, 0, 1, -centerVec[2], orthogonalize=True)
+        self.model.openState.globalXform(xform)
+        #end of this
+
     def listenShowJ(self):
         try:
-
-            om = chimera.openModels
-            mlist = om.list()
-            m = mlist[0]
-            #assume that volume is 0 may be dangerous
-            #this should be in init but it does not work there
-
-            if self.centerVolume:
-                self.centerVec = m.bbox()[1].center().toVector()
-                xform = chimera.Xform.xform(1, 0, 0, -self.centerVec[0],
-                                            0, 1, 0, -self.centerVec[1],
-                                            0, 0, 1, -self.centerVec[2], orthogonalize=True)
-                m.openState.globalXform(xform)
-                #end of this
-
-            self.motion = identity(3)
-
             while True:
                 if self.vol_conn.poll():
 
@@ -123,13 +125,14 @@ class ChimeraServer:
                     if msg == 'rotate':
 
                         matrix1 = self.vol_conn.recv()
-                        matrix = dot(matrix1, inv(self.motion))#undo last rotation and put new one
-                        self.motion = matrix1
+                        #undo last rotation and put new one. #Traslation is not undone, if user moves volume wrong translation applied
+                        matrix = dot(matrix1, inv(self.rotation))
+
                         xform = chimera.Xform.xform(matrix[0][0], matrix[0][1], matrix[0][2], 0,
                                        matrix[1][0], matrix[1][1], matrix[1][2], 0,
                                        matrix[2][0], matrix[2][1], matrix[2][2], 0, orthogonalize=True)
 
-                        m.openState.globalXform(xform)
+                        self.model.openState.globalXform(xform)
                     else:
                         sleep(0.01)
         except EOFError:
@@ -138,12 +141,12 @@ class ChimeraServer:
 
     
     def onMotionStop(self, trigger, extra, userdata):
-        rx, ry , rz, t = self.volume.openState.xform.getCoordFrame()
-        self.motion = array([[rx[0], ry[0], rz[0]], [rx[1], ry[1], rz[1]], [rx[2], ry[2], rz[2]]])
-        printCmd('sending motion')
+        rx, ry, rz, t = self.volume.openState.xform.getCoordFrame()
+        self.rotation = array([[rx[0], ry[0], rz[0]], [rx[1], ry[1], rz[1]], [rx[2], ry[2], rz[2]]])
+
         self.vol_conn.send('motion_stop')
-        self.vol_conn.send(self.motion)#send serialized motion
-        printCmd('sended motion')
+        self.vol_conn.send(self.rotation)#send serialized motion
+
 
     def onAppQuit(self, trigger, extra, userdata):
         self.vol_conn.send('exit_server')
@@ -175,8 +178,10 @@ class ChimeraVirusServer(ChimeraServer):
         self.vol_conn.send('id')
         self.vol_conn.send(sel[0].id)#send serialized motion
 
-    def handleInitMessage(self, msg):
+    #not sure if  next function is answer or hanfleInit def handleInitMessage(self, msg):
+    def answer(self, msg):
         """execute a single command and return values"""
+        ChimeraServer.answer(msg)
         if msg == 'hk_icosahedron_lattice':
             from IcosahedralCage import cages
             h,k,radius,shellRadius,spheRadius,sym,sphere,color = \

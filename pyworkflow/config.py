@@ -79,13 +79,20 @@ def loadHostsConf(hostsConf):
             host.setHostPath(pw.SCIPION_USER_DATA)
 
             # Helper functions (to write less)
-            def get(var): return cp.get(hostName, var).replace('%_(', '%(')
-            def isOn(var): return str(var).lower() in ['true', 'yes', '1']
+            def get(var, default=None):
+                if cp.has_option(hostName, var):
+                    return cp.get(hostName, var).replace('%_(', '%(')
+                else:
+                    return default
 
+            host.setScipionHome(get('SCIPION_HOME', os.environ['SCIPION_HOME']))
+            # Read the address of the remote hosts, 
+            # using 'localhost' as default for backward compatibility
+            host.setAddress(get('ADDRESS', 'localhost'))
             host.mpiCommand.set(get('PARALLEL_COMMAND'))
             host.queueSystem = pwhosts.QueueSystemConfig()
             host.queueSystem.name.set(get('NAME'))
-            host.queueSystem.mandatory.set(isOn(get('MANDATORY')))
+            host.queueSystem.mandatory.set(get('MANDATORY'))
             host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
             host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
             host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
@@ -95,8 +102,8 @@ def loadHostsConf(hostsConf):
             for qName, values in json.loads(get('QUEUES')).iteritems():
                 queue = pwhosts.QueueConfig()
                 queue.maxCores.set(values['MAX_CORES'])
-                queue.allowMPI.set(isOn(values['ALLOW_MPI']))
-                queue.allowThreads.set(isOn(values['ALLOW_THREADS']))
+                queue.allowMPI.set(values['ALLOW_MPI'])
+                queue.allowThreads.set(values['ALLOW_THREADS'])
                 host.queueSystem.queues[qName] = queue
                 
             hosts[hostName] = host
