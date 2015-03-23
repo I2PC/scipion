@@ -213,11 +213,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                     
 			this.data = data;
                         data.setWindow(this);
-                        StopWatch stopWatch = StopWatch.getInstance();
 			createModel();
-                        stopWatch.printElapsedTime("creating gui");
 			createGUI();
-                        stopWatch.printElapsedTime("done init");
 			XmippApplication.addInstance(false);
 		}
 		catch (Exception e)
@@ -1249,6 +1246,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         
                         public String getVolumeName(String volume)
                         {
+
                                 if(Filename.hasPrefix(volume))//is stack
                                     return volume;
                                 String base = Filename.getBaseName(volume);

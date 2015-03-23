@@ -219,8 +219,8 @@ public class ScipionGalleryData extends GalleryData {
     }
 
 
-    public void overwrite(String path) throws SQLException {
-        ((ScipionMetaData) md).overwrite(filename, path);
+    public void overwrite(String path, boolean[] selection) throws SQLException {
+        ((ScipionMetaData) md).overwrite(filename, path, selection);
     }
 
     public String getScipionType() {

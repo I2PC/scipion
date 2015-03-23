@@ -686,18 +686,18 @@ public class ScipionMetaData extends MetaData {
     
     
 
-    public void overwrite(String src, String path) throws SQLException {
+    public void overwrite(String src, String path, boolean[] selection) throws SQLException {
         try {
             XmippUtil.copyFile(src, path);
             if (parent != null) {
-                parent.overwrite(src, path);//this will write parent and siblings
+                parent.overwrite(src, path, null);//this will write parent and siblings
                 return;
             }
-            overwriteBlock(path);
+            overwriteBlock(path, selection);
             if (haschilds) {
                 for (EMObject emo : emobjects) {
                     if (emo.childmd != null) {
-                        emo.childmd.overwriteBlock(path);
+                        emo.childmd.overwriteBlock(path, null);
                     }
                 }
             }
@@ -707,7 +707,7 @@ public class ScipionMetaData extends MetaData {
 
     }
 
-    public void overwriteBlock(String path) throws SQLException {//overwrites enabled column in existing sqlite objects table
+    public void overwriteBlock(String path, boolean[] selection) throws SQLException {//overwrites enabled column in existing sqlite objects table
         Connection c = null;
         PreparedStatement stmt = null;
         try {
@@ -716,9 +716,21 @@ public class ScipionMetaData extends MetaData {
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
             c.setAutoCommit(false);
             stmt = c.prepareStatement(String.format("UPDATE %sObjects SET %s=?, %s=?, %s=? WHERE id=?;", preffix, enabledci.labelName, labelci.labelName, commentci.labelName));
-
-            for (EMObject emo : emobjects) {
-                if (emo.changed) {
+            boolean enabled;
+            for (EMObject emo : emobjects) 
+            {
+                if(selection != null)
+                {
+                    enabled = selection[emo.index];
+                    stmt.setInt(1, enabled ? 1 : 0);
+                    stmt.setString(2, emo.getLabel());
+                    stmt.setString(3, emo.getComment());
+                    stmt.setInt(4, emo.getId().intValue());
+                    stmt.executeUpdate();
+                 
+                }
+                else if (emo.changed) {
+                    
                     stmt.setInt(1, emo.isEnabled() ? 1 : 0);
                     stmt.setString(2, emo.getLabel());
                     stmt.setString(3, emo.getComment());

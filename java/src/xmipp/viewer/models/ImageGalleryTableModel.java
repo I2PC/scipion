@@ -585,7 +585,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
         public abstract boolean showLabels() ;
 
         public void setInvertY(boolean itemSelected) {
-            System.out.println("invert y " + itemSelected);
             data.inverty = itemSelected;
             cache.clear();
             fireTableDataChanged();
