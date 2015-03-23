@@ -378,7 +378,7 @@ class SubclassesTreeProvider(TreeProvider):
                
         # Retrieve all objects of type SetOf'className'
         for setObject in self.protocol.getProject().iterSubclasses("Set", self.classFilter):
-            # If object is not yet on the list add it but dont allow to select it 
+            # If object is not yet on the list add it but dont allow to select it
             obj = self._getObjectFromList(objects, setObject)
             if  obj is None:
                 objects.append(setObject)
@@ -387,7 +387,7 @@ class SubclassesTreeProvider(TreeProvider):
             else:
                 obj._allowSelection = True   
                 setObject = obj
-            
+
             # Add each item on the set to the list of objects
             for i, item in enumerate(setObject):
                 if i == self.maxNum: # Only load up to NUM particles
@@ -910,12 +910,13 @@ class ParamWidget():
             selected = [value]
         tp = SubclassesTreeProvider(self._protocol, self.param, selected=selected)
         
-        def validateSelected(selectedItem):
-            if not getattr(selectedItem, '_allowSelection', True):
-                return "Please select object of types: %s" % self.param.pointerClass.get()
+        def validateSelected(selectedItems):
+            for item in selectedItems:
+                if not getattr(item, '_allowSelection', True):
+                    return "Please select object of types: %s" % self.param.pointerClass.get()
 
         dlg = ListDialog(self.parent, "Select object", tp, 
-                         "Double click an item to preview the object",
+                         "Double click an item to preview the object",validateSelectionCallback= validateSelected,
                          selectmode=self._selectmode)
         
         if dlg.values:
@@ -932,7 +933,7 @@ class ParamWidget():
         """Select a relation from DB
         This function is suppose to be used only for RelationParam. """
         tp = RelationsTreeProvider(self._protocol, self.param, selected=self.get())
-        dlg = ListDialog(self.parent, "Select object", tp, 
+        dlg = ListDialog(self.parent, "Select object", tp,
                          selectmoded=self._selectmode)
         if dlg.values is not None:
             self.set(dlg.values[0])
