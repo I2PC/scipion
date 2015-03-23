@@ -271,7 +271,6 @@ public class XmippImageConverter {
 			fi.directory = absPath.substring(0,
 					absPath.lastIndexOf(File.separator));
 			fi.fileName = f.getName();
-
 			imp.setFileInfo(fi);
 		}
 

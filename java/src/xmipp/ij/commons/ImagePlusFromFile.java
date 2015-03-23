@@ -52,7 +52,6 @@ public class ImagePlusFromFile extends ImagePlusReader{
                             if(Filename.isXmippSupported(fileName))
                                 try
                                 {
-
                                     ig = new ImageGeneric(fileName);//to read again file
                                 }
                                 catch(Exception e)

@@ -67,7 +67,7 @@ public class ScipionViewer extends Viewer {
             
             MetaData md;
             if(filename.endsWith(".sqlite") || filename.endsWith(".db"))
-                ImagesWindowFactory.openScipionMetadata(filename, parameters, parameters.mode);
+                ImagesWindowFactory.openScipionMetadata(filename, parameters);
             else if (Filename.isMetadata(filename)) {
                 if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_IMAGE)) {
                     openFileAsImage(null, filename, parameters);
@@ -96,7 +96,7 @@ public class ScipionViewer extends Viewer {
             XmippDialog.showError(null, String.format(
                     "Couldn't open file: '%s'\nError: %s", filename,
                     e.getMessage()));
-            DEBUG.printException(e);
+            e.printStackTrace();
         }
     }
 

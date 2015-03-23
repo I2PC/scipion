@@ -220,9 +220,12 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	public boolean isCellEditable(int row, int column) {
-                if(data.isScipionInstance() || data.isChimeraClient())
+            ColumnInfo ci = visibleLabels.get(column);
+            if(ci.isEnable())
+                return ci.allowEdit;//maybe on metadatas sometimes is disabled
+            if(data.isScipionInstance() || data.isChimeraClient())
                     return false;
-		ColumnInfo ci = visibleLabels.get(column);
+		
 		return ci.allowEdit && !ci.render;
 	}
 

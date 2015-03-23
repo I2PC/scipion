@@ -46,6 +46,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -84,7 +85,6 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
-import javax.vecmath.Point3d;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
@@ -100,6 +100,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
@@ -115,7 +116,6 @@ import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MetadataTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
-import xmipp.viewer.scipion.ScipionGalleryData;
 
 /**
  * This is the main frame used in showj
@@ -213,11 +213,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                     
 			this.data = data;
                         data.setWindow(this);
-                        StopWatch stopWatch = StopWatch.getInstance();
 			createModel();
-                        stopWatch.printElapsedTime("creating gui");
 			createGUI();
-                        stopWatch.printElapsedTime("done init");
 			XmippApplication.addInstance(false);
 		}
 		catch (Exception e)
@@ -1173,21 +1170,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				public void setSelectedItem(Object item)
 				{
 					if (proceedWithChanges())
-					{
-						data.selectBlock((String) item);
-						jcbVolumes.invalidate();
-						try
-						{
-							data.loadMd();
-							reloadTableData();
-                                                        autoAdjustColumns(data.isAutoAdjust());
-						}
-						catch (Exception e)
-						{
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
+                                            selectBlock((String)item);
 				}
 
 				@Override
@@ -1218,6 +1201,23 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		cbPanel.add(jcbVolumes);
 	}
         
+        public void selectBlock(String block)
+        {
+            data.selectBlock(block);
+            jcbVolumes.invalidate();
+            try
+            {
+                    data.loadMd();
+                    reloadTableData();
+                    autoAdjustColumns(data.isAutoAdjust());
+            }
+            catch (Exception e)
+            {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+            }
+        }
+        
         public class VolumesComboBoxModel implements ComboBoxModel
         {
                        
@@ -1246,10 +1246,19 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         
                         public String getVolumeName(String volume)
                         {
-                                if(!Filename.hasPrefix(volume))//is stack
-                                    volume = Filename.getBaseName(volume);
-				return volume;
-                        }
+
+                                if(Filename.hasPrefix(volume))//is stack
+                                    return volume;
+                                String base = Filename.getBaseName(volume);
+                                int count = 0;
+                                for(int i = 0; i < getSize(); i ++)
+                                    if(base.equals(Filename.getBaseName(data.getVolumeAt(i))))
+                                        count ++;
+                                if(count == 1)
+                                    return base;
+                                
+				return volume;//needs full path to differentiate volumes
+                        } 
 
 			@Override
 			public Object getSelectedItem()
@@ -1455,6 +1464,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.gif", "control released H");
 			addItem(FILE_OPENMICROGRAPHS, "Open particle micrographs");
 			addItem(FILE_INFO, "File info ...");
+                        
 
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
@@ -1470,6 +1480,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         
                         addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
+                        addItem(DISPLAY_NORMALIZE, "Normalize", null, "control released N");
 			addSeparator(DISPLAY);
                         addDisplayLabelItems();
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
@@ -1482,11 +1493,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				addItem(DISPLAY_RESLICE_VIEWS[i], reslices[i]);
                         addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
                         
-                        
-			
-                        
-			
-                        
+                                                
                         addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
@@ -1494,7 +1501,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         
 			// Metadata operations
 			addItem(METADATA, "Metadata");
-                        addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
+                        
 			
 			addItem(MD_PLOT, "Plot", "plot.png");
 			addItem(MD_CLASSES, "Classes");
@@ -1517,7 +1524,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         boolean isscipion = data.isScipionInstance();
 			boolean galMode = data.isGalleryMode();
 			boolean volMode = !data.getSelVolumeFile().isEmpty();
-			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
+			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode || data.containsGeometryInfo("3D")|| data.containsGeometryInfo("Projection"));
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
                         setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data.isScipionInstance()));
 			setItemEnabled(FILE_SAVE, !volMode && !isscipion);
@@ -1637,28 +1644,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(FILE_OPENWITH_CHIMERA))
 				{
-					try
-					{
-                                                
-						String scipionHome = System.getenv().get("SCIPION_HOME");
-                                                if(scipionHome == null)
-                                                {
-                                                    XmippDialog.showError(GalleryJFrame.this, "Scipion is not available");
-                                                    return;
-                                                }
-                                                String run = String.format("python %s%2$spyworkflow%2$sapps%2$spw_chimera_client.py projector --input %3$s", scipionHome, File.separator, data.getSelVolumeFile());
-                                                System.out.println(run);
-                                                if(data.parameters.getSamplingRate() != null)
-                                                    run += String.format(" --samplingRate %s", data.parameters.getSamplingRate());
-                                                
-						String output = XmippWindowUtil.executeCommand(run, true);
-                                                System.out.println(output);
-                                                
-					}
-					catch (Exception ex)
-					{
-						ex.printStackTrace();
-					}
+                                    if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
+                                    {
+                                        int result = fc.showOpenDialog(GalleryJFrame.this);
+                                        if(result != XmippFileChooser.CANCEL_OPTION)
+                                        {
+                                            String path = fc.getSelectedPath();
+                                            if(!Filename.isVolumeExt(path))
+                                            {
+                                                XmippDialog.showError(GalleryJFrame.this, XmippMessage.getFileTypeNotSupportedMsg(path));
+                                                return;
+                                            }
+                                            openChimera(path, true);
+                                        }
+                                    }
+                                    else
+                                        openChimera(data.getSelVolumeFile(), false);
 				}
 				else if (cmd.equals(FILE_OPENMICROGRAPHS))
 				{
@@ -1677,8 +1678,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                                 XmippUtil.showImageJ(Tool.VIEWER);
 						ImagePlusLoader loader = gallery.getImageLoader();
 						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, data.parameters);
-
-                                                
 					}
 					catch (Exception e1)
 					{
@@ -1953,19 +1952,17 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else if (cmd.equals(REFRESH))
 			{
 				gallery.refreshAt(row, col);
-
 			}
 			else if (cmd.equals(OPEN))
 			{
-                               
                                 ColumnInfo ci = data.getColumn(row, col);
                                 if (ci.allowRender)
-                                        gallery.handleDoubleClick(row, col);
+                                    gallery.handleDoubleClick(row, col);
                                 else
                                 {
-                                        int index = gallery.getIndex(row, col);
-                                        String file = data.getValueFromCol(index, ci);
-                                        ImagesWindowFactory.openFileAsDefault(file);
+                                    int index = gallery.getIndex(row, col);
+                                    String file = data.getValueFromCol(index, ci);
+                                    ImagesWindowFactory.openFileAsDefault(file);
                                 }
 			}
 			else if (cmd.equals(OPEN_ASTEXT))
@@ -1976,7 +1973,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else if (cmd.equals(CTF_PROFILE))
 			{
                                 int index = gallery.getIndex(row, col);
-				data.showCTF(true, index, ctfTasks);
+				data.showCTF(true, index, gallery.getSelection(), ctfTasks);
 			}
 			else if (cmd.equals(CTF_RECALCULATE))
 			{
@@ -1987,7 +1984,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                 else
                                 {
                                     if(isrecalculate)
-                                        data.showCTF(false, index, ctfTasks);
+                                        data.showCTF(false, index, gallery.getSelection(), ctfTasks);
                                     else
                                         data.removeCTF(row);
                                 }
@@ -2295,6 +2292,41 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         public TasksEngine getTasksEngine()
         {
             return ctfTasks;
+        }
+        
+        
+        
+        protected void openChimera(String file, boolean link)
+        {
+            try
+            {
+
+                    String scipionHome = System.getenv().get("SCIPION_HOME");
+                    if(scipionHome == null)
+                    {
+                        XmippDialog.showError(GalleryJFrame.this, "Scipion is not available");
+                        return;
+                    }
+                    
+                        
+                    String run = String.format("python %s%2$spyworkflow%2$sapps%2$spw_chimera_client.py projector --input %3$s ", scipionHome, File.separator, file);
+                    
+                    if(data.parameters.getSamplingRate() != null)
+                        run += String.format(" --samplingRate %s", data.parameters.getSamplingRate());
+                    if(link)
+                    {
+                        int port = XmippUtil.findFreePort();
+                        data.parameters.setChimeraPort(port);
+                        run += "--showjPort " + port;
+                    }
+                    String output = XmippWindowUtil.executeCommand(run, false);
+                    //System.out.println(output);
+
+            }
+            catch (Exception ex)
+            {
+                    ex.printStackTrace();
+            }
         }
        
 }// class JFrameGallery

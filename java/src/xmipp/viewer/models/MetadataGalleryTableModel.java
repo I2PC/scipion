@@ -326,7 +326,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+                    e.printStackTrace();
 		}
 		return null;
 	}// function getImageLoader

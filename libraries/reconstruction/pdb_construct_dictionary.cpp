@@ -82,6 +82,10 @@ void ProgConstructPDBDictionary::run()
 #endif
     MultidimArray<double> patchLow, patchHigh;
     int patchSize_2=patchSize/2;
+
+    patchLow.resize(patchSize_2,patchSize_2,patchSize_2);
+    patchLow.setXmippOrigin();
+
     FOR_ALL_OBJECTS_IN_METADATA2(mdlow,mdhigh)
     {
     	// Read the low and high resolution volumes
@@ -125,12 +129,13 @@ void ProgConstructPDBDictionary::run()
                  		++NcandidatePatches;
 
                  		// Candidate patch
-                 		patchLow/=sqrt(patchLow.sum2());
+                 		double inormPatchLow=1.0/sqrt(patchLow.sum2());
+                 		patchLow*=inormPatchLow;
                  		if (notInDictionary(patchLow))
                  		{
                  			++NsuccessfulPatches;
                  			dictionaryLow.push_back(patchLow);
-                     		patchHigh/=sqrt(patchHigh.sum2());
+                     		patchHigh*=inormPatchLow;
                  			dictionaryHigh.push_back(patchHigh);
                  		}
 
@@ -157,6 +162,7 @@ void ProgConstructPDBDictionary::run()
 bool ProgConstructPDBDictionary::notInDictionary(const MultidimArray<double> &candidatePatch) const
 {
 	size_t imax=dictionaryLow.size();
+
 	for (size_t i=0; i<imax; ++i)
 	{
 		const MultidimArray<double> &dictionaryPatch=dictionaryLow[i];

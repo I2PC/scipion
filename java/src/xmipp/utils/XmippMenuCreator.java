@@ -192,6 +192,7 @@ public abstract class XmippMenuCreator implements ActionListener {
         public final String FILE_EXPORTIMAGES = "File.ExportImages_mi";
 	public final String FILE_REFRESH = "File.Refresh_mi";
 	public final String FILE_EXIT = "File.Exit_mi";
+        public final String FILE_LINK_CHIMERA = "File.LinkWithChimera_mi";
 	public final String DISPLAY = "Display";
 
 	
@@ -203,6 +204,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String DISPLAY_INVERTY = "Display.InvertY_cb";
 	public final String DISPLAY_APPLYGEO = "Display.ApplyGeo_cb";
 	public final String DISPLAY_WRAP = "Display.Wrap_cb";
+        public final String DISPLAY_NORMALIZE = "Display.Normalize_cb";
 	public final String DISPLAY_COLUMNS = "Display.Columns_mi";
 	public final String DISPLAY_RESLICE = "Display.Reslice";
 	public final String DISPLAY_RESLICE_VIEWS[] = { 
@@ -213,7 +215,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 			"Display.Reslice.XPos_rb"};
 
 	public final String METADATA = "Metadata";
-        public final String DISPLAY_NORMALIZE = "Metadata.Normalize_cb";
+        
 	public final String MD_CLASSES = "Metadata.Classes_mi";
 	public final String MD_EDIT_COLS = "Metadata.EditCols_mi";
 	public final String MD_ADD_OBJECT = "Metadata.AddObject_mi";

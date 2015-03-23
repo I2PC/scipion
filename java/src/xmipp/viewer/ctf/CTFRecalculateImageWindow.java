@@ -4,7 +4,6 @@
  */
 package xmipp.viewer.ctf;
 
-import xmipp.jni.EllipseCTF;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageLayout;
@@ -31,9 +30,11 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import xmipp.ij.commons.XmippApplication;
+import xmipp.jni.EllipseCTF;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.GalleryData;
+import xmipp.viewer.windows.GalleryJFrame;
 
 /**
  *
@@ -51,12 +52,13 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
     private CTFCanvas canvas;
     private GalleryData data;
     protected TasksEngine tasksEngine;
+    private final boolean[] selection;
     
-    public CTFRecalculateImageWindow(GalleryData data, ImagePlus imp, String psd, EllipseCTF ellipsectf,
+    public CTFRecalculateImageWindow(GalleryData data, boolean[] selection, ImagePlus imp, String psd, EllipseCTF ellipsectf,
              TasksEngine tasksEngine, int row, String sortFn) {
         super(imp, new CTFCanvas(imp));
         XmippApplication.addInstance(true);
-
+        this.selection = selection;
         this.data = data;
         this.PSDFilename = psd;
         this.sortFn = sortFn;
@@ -194,7 +196,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
         ellipseCTF.setFreqRange(getLowFreq(), getHighFreq());
         ellipseCTF.setEllipseFitter(ellipseFitter);
         // Add "estimate..." to tasks.
-        data.recalculateCTF(row, ellipseCTF, sortFn);
+        data.recalculateCTF(row, selection, ellipseCTF, sortFn);
         exit();
     }
 

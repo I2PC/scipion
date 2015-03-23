@@ -451,31 +451,34 @@ void ProgCTFEstimateFromMicrograph::run()
         			}
 
         			// Keep psd for the PCA
-        			if (XSIZE(PCAmask) == 0)
+        			if (estimate_ctf)
         			{
-        				PCAmask.initZeros(mpsd);
-        				Matrix1D<int> idx(2);  // Indexes for Fourier plane
-        				Matrix1D<double> freq(2); // Frequencies for Fourier plane
-        				size_t PCAdim = 0;
-        				FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
-        				{
-        					VECTOR_R2(idx, j, i);
-        					FFT_idx2digfreq(mpsd, idx, freq);
-        					double w = freq.module();
-        					if (w > 0.05 && w < 0.4)
-        					{
-        						A2D_ELEM(PCAmask,i,j)=1;
-        						++PCAdim;
-        					}
-        				}
-        				PCAv.initZeros(PCAdim);
-        			}
+						if (XSIZE(PCAmask) == 0)
+						{
+							PCAmask.initZeros(mpsd);
+							Matrix1D<int> idx(2);  // Indexes for Fourier plane
+							Matrix1D<double> freq(2); // Frequencies for Fourier plane
+							size_t PCAdim = 0;
+							FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
+							{
+								VECTOR_R2(idx, j, i);
+								FFT_idx2digfreq(mpsd, idx, freq);
+								double w = freq.module();
+								if (w > 0.05 && w < 0.4)
+								{
+									A2D_ELEM(PCAmask,i,j)=1;
+									++PCAdim;
+								}
+							}
+							PCAv.initZeros(PCAdim);
+						}
 
-        			size_t ii = -1;
-        			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PCAmask)
-        			if (DIRECT_MULTIDIM_ELEM(PCAmask,n))
-        				A1D_ELEM(PCAv,++ii)=(float)DIRECT_MULTIDIM_ELEM(mpsd,n);
-        			pcaAnalyzer.addVector(PCAv);
+						size_t ii = -1;
+						FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PCAmask)
+						if (DIRECT_MULTIDIM_ELEM(PCAmask,n))
+							A1D_ELEM(PCAv,++ii)=(float)DIRECT_MULTIDIM_ELEM(mpsd,n);
+						pcaAnalyzer.addVector(PCAv);
+        			}
         		}
 
         		// Compute the theoretical model if not averaging ....................

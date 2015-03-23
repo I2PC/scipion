@@ -235,6 +235,10 @@ def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, PixelSiz
         for objId in mdTilted:
             u = mdTilted.getValue(MDL_MICROGRAPH, objId)
             t = mdTilted.getValue(MDL_MICROGRAPH_TILTED, objId)
+            if u.startswith("./"):
+                u=u[2:]
+            if t.startswith("./"):
+                t=t[2:]
             id2 = md.addObject()
             md.setValue(MDL_MICROGRAPH, FilenameDict[u], id2)
             md.setValue(MDL_MICROGRAPH_TILTED, FilenameDict[t], id2)

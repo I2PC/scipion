@@ -11,6 +11,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ServerSocket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -128,17 +129,25 @@ public class XmippUtil {
     }
     
      public static String formatNumbers(String str)
+    {
+        Pattern p = Pattern.compile("(-?(\\d)+(\\.)?(\\d)*)");
+        Matcher m = p.matcher(str);
+        StringBuffer sb = new StringBuffer(str.length());
+        while(m.find())
         {
-            Pattern p = Pattern.compile("(-?(\\d)+(\\.)?(\\d)*)");
-            Matcher m = p.matcher(str);
-            StringBuffer sb = new StringBuffer(str.length());
-            while(m.find())
-            {
-                String number = m.group(1);
-                m.appendReplacement(sb, String.format("%.2f", Double.parseDouble(number)));
-            }
-            m.appendTail(sb);
-            return sb.toString();
+            String number = m.group(1);
+            m.appendReplacement(sb, String.format("%.2f", Double.parseDouble(number)));
         }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+     
+    public static int findFreePort() 
+             throws IOException {
+            ServerSocket server = new ServerSocket(0);
+            int port = server.getLocalPort();
+            server.close();
+            return port;
+    }
        
 }
