@@ -412,6 +412,11 @@ env.AddPackage('relion',
                     % GetOption('num_jobs'))],
                default=False)
 
+env.AddPackage('resmap',
+               tar='resmap-1.1.5-scipion.tgz',
+               deps=['scipy'],
+               default=False)
+
 env.AddPackage('spider',
                tar='spider-web-21.13.tgz',
                neededProgs=['csh'],
