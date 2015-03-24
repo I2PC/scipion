@@ -43,7 +43,6 @@ SCIPION_USER_DATA = os.environ["SCIPION_USER_DATA"]
 PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
 
 
-PROJECTS = os.path.join(SCIPION_USER_DATA, 'projects')
 SETTINGS = os.path.join(SCIPION_USER_DATA, 'settings.sqlite')
 
 

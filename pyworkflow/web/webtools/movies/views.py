@@ -71,6 +71,17 @@ Movies_Alignment = [
         ''')
         f.close()
         
+        
+def getServiceManager():
+    manager = Manager(SCIPION_USER_DATA=os.path.join(os.environ['SCIPION_USER_DATA'], serviceName))
+    manager.config = os.path.join(os.environ['HOME'], '.config', 
+                                        'scipion', serviceName)
+    manager.protocols = os.path.join(serviceConfig, 'protocols.conf')
+    manager.hosts = os.path.join(serviceConfig, 'hosts.conf')
+    
+    return manager
+
+
 def create_movies_project(request):
     
     if request.is_ajax():
@@ -81,7 +92,8 @@ def create_movies_project(request):
         from pyworkflow.em.packages.xmipp3 import ProtMovieAlignment
         
         # Create a new project
-        manager = Manager()
+        serviceName = 'movies'
+        
         projectName = request.GET.get('projectName')
         projectPath = manager.getProjectPath(projectName)
         
@@ -89,11 +101,15 @@ def create_movies_project(request):
         testDataKey = request.GET.get('testData')
         
         #customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_PROTOCOLS']), 'menu_initvolume.conf')
-        customMenu = os.path.join(os.environ['HOME'], '.config/scipion/menu_movies.conf')
-        writeCustomMenu(customMenu)
         
-        project = manager.createProject(projectName, runsView=1, protocolsConf=customMenu)   
-        copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
+        
+        
+        manager = getServiceManager()
+        writeCustomMenu(manager.protocols)
+        project = manager.createProject(projectName, runsView=1, 
+                                        protocolsConf=manager.protocols,
+                                        hostsConf=manager.hosts)   
+#         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # Create symbolic link for uploads
         dest = os.path.join(projectPath,'Uploads')
@@ -102,8 +118,6 @@ def create_movies_project(request):
         pwutils.createLink(source, dest)
         
         # 1. Import movies
-        
-        
         if testDataKey :
             attr = getAttrTestFile(testDataKey)
             path_test = attr['path']
@@ -163,7 +177,10 @@ def movies_content(request):
     path_files = django_settings.ABSOLUTE_URL + '/resources_movies/img/'
     command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
     
-    project = loadProject(projectName)
+    manager = getServiceManager()
+    project = manager.loadProject(projectName, 
+                                  protocolsConf=manager.protocols,
+                                  hostsConf=manager.hosts)
     daysLeft = prettyDelta(project.getLeftTime(14))
     if daysLeft is None: 
         daysLeft = 14

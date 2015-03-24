@@ -52,21 +52,24 @@ class ProjectInfo(object):
 class Manager(object):
     """This class will handle the creation, modification
     and listing of projects."""
-    def __init__(self):
+    def __init__(self, SCIPION_USER_DATA=None):
         """For create a Project, the path is required"""
-        pass
+        if SCIPION_USER_DATA is None:
+            self.PROJECTS = os.path.join(SCIPION_USER_DATA, 'projects')
+        else:
+            self.PROJECTS = os.path.join('SCIPION_USER_DATA', 'projects')
         
     def getProjectPath(self, projectName):
         """Return the project path given the name"""
-        return os.path.join(pw.PROJECTS, projectName)
+        return os.path.join(self.PROJECTS, projectName)
         
     def listProjects(self, sortByDate=True):
         """Return a list with all existing projects
         And some other project info
         If sortByData is True, recently modified projects will be first"""
         projList = []
-        pwutils.path.makePath(pw.PROJECTS)
-        for f in os.listdir(pw.PROJECTS):
+        pwutils.path.makePath(self.PROJECTS)
+        for f in os.listdir(self.PROJECTS):
             p = self.getProjectPath(f)
             if os.path.isdir(p):
                 stat = os.stat(p)

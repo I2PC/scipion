@@ -119,7 +119,7 @@ class ProjectsView(tk.Frame):
         newName = askString("Rename project %s" % projName, "Enter new name:", self.root)
         if not newName or newName == projName:
             return
-        if newName in os.listdir(pw.PROJECTS):
+        if self.manager.hasProject(newName):
             showError("Rename cancelled",
                       "Project name already exists: %s" % newName, self.root)
             return
