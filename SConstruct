@@ -52,7 +52,7 @@ URL_BASE = os.environ['SCIPION_URL_SOFTWARE']
 
 # Define our builders
 if LINUX:
-    download = Builder(action='wget -nv --show-progress -c -O $TARGET $SOURCE')
+    download = Builder(action='wget -nv -c -O $TARGET $SOURCE')
     untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 elif MACOSX:
     download = Builder(action='curl -L "$SOURCE" -o "$TARGET"')
