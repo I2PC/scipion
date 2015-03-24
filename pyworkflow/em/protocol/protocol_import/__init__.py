@@ -29,7 +29,7 @@ Sub-packages containing different sub-modules to import different type
 of objects.
 """
 
-from base import ProtImportFiles
+from base import ProtImport, ProtImportFiles
 from images import ProtImportImages
 from micrographs import ProtImportMicrographs, ProtImportMovies
 from particles import ProtImportParticles, ProtImportAverages
