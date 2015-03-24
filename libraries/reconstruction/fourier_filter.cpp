@@ -76,6 +76,9 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("               requires --sampling;                                                         ");
     program->addParamsLine("            fsc <metadata>                   : Filter with the FSC profile contained in the metadata");
     program->addParamsLine("               requires --sampling;                                                         ");
+    program->addParamsLine("            binary_file <file>               : Binary file with the filter");
+    program->addParamsLine("                                             :+The filter must be defined in the whole Fourier space (not only the nonredundant part).");
+    program->addParamsLine("                                             :+This filter is produced, for instance, by xmipp_ctf_group");
     program->addParamsLine("         alias -f;");
     program->addParamsLine("  [--sampling <sampling_rate>]               : If provided pass frequencies are taken in Ang and for the CTF case");
     program->addParamsLine("                                             : and for the CTF case this is the sampling used to compute the CTF");
@@ -206,6 +209,11 @@ void FourierFilter::readParams(XmippProgram *program)
         FilterShape = FilterBand = FSCPROFILE;
         fnFSC = program->getParam("--fourier", "fsc");
     }
+    else if (filter_type == "binary_file")
+    {
+        FilterShape = FilterBand = BINARYFILE;
+        fnFilter = program->getParam("--fourier", "binary_file");
+    }
     else
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't happen, check argument parser or params definition");
 
@@ -262,6 +270,9 @@ void FourierFilter::show()
         case FSCPROFILE:
             std::cout << "FSC file " << fnFSC << std::endl
                       << "Sampling rate " << sampling_rate << std::endl;
+            break;
+        case BINARYFILE:
+            std::cout << "Filter file " << fnFilter << std::endl;
             break;
         }
         if(FilterShape!=CONE && FilterShape!=WEDGE)
@@ -480,6 +491,7 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
         mdFSC.getColumnValues(MDL_RESOLUTION_FREQ,freqContFSC);
         mdFSC.getColumnValues(MDL_RESOLUTION_FRC,FSC);
     }
+    std::cout << "Generating mask " << do_generate_3dmask << std::endl;
 
     if (do_generate_3dmask)
     {
@@ -505,6 +517,15 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
                 break;
             }
         }
+        else if (FilterShape==BINARYFILE)
+        {
+        	Image<double> filter;
+        	filter.read(fnFilter);
+            scaleToSize(BSPLINE3, maskFourierd, filter(), XSIZE(v), YSIZE(v), ZSIZE(v));
+            maskFourierd.resize(Fourier);
+            return;
+        }
+
         else
         {
             maskFourierd.initZeros(Fourier);
@@ -531,6 +552,14 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
         transformer.setReal(v);
         MultidimArray< std::complex<double> > Fourier;
         transformer.getFourierAlias(Fourier);
+        if (FilterShape==BINARYFILE)
+        {
+        	Image<double> filter;
+        	filter.read(fnFilter);
+            scaleToSize(BSPLINE3, maskFourierd, filter(), XSIZE(v), YSIZE(v), ZSIZE(v));
+            maskFourierd.resize(Fourier);
+            return;
+        }
         maskFourierd.initZeros(Fourier);
         w.resizeNoCopy(3);
         for (size_t k=0; k<ZSIZE(Fourier); k++)
