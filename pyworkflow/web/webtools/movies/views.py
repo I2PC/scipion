@@ -83,7 +83,6 @@ def create_movies_project(request):
         
         # Create a new project
         projectName = request.GET.get('projectName')
-        projectPath = manager.getProjectPath(projectName)
         
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
@@ -96,6 +95,7 @@ def create_movies_project(request):
 #         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # Create symbolic link for uploads
+        projectPath = manager.getProjectPath(projectName)
         dest = os.path.join(projectPath,'Uploads')
         source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
         pwutils.path.makePath(source)

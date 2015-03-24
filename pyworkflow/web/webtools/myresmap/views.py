@@ -86,7 +86,8 @@ def create_resmap_project(request):
         writeCustomMenu(manager.protocols)
         project = manager.createProject(projectName, runsView=1, 
                                         protocolsConf=manager.protocols,
-                                        hostsConf=manager.hosts)   
+                                        hostsConf=manager.hosts)  
+         
 #         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # 1. Import volumes
