@@ -43,6 +43,7 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--numberOfVolumes <N=1>]    : Number of volumes to reconstruct");
     addParamsLine("  [--initvolumes <md_file=\"\">] : Set of initial volumes. If none is given, a single volume");
     addParamsLine("                               : is reconstructed with random angles assigned to the images");
+    addParamsLine("  [--initgallery <md_file=\"\">]   : Gallery of projections from a single volume");
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
     addParamsLine("  [--iter <N=10>]              : Number of iterations");
@@ -80,6 +81,7 @@ void ProgReconstructSignificant::readParams()
     angDistance=getDoubleParam("--angDistance");
     Nvolumes=getIntParam("--numberOfVolumes");
     applyFisher=checkParam("--dontApplyFisher");
+    fnFirstGallery=getParam("--initgallery");
     doReconstruct=!checkParam("--dontReconstruct");
     if (!doReconstruct)
     {
@@ -110,10 +112,15 @@ void ProgReconstructSignificant::show()
         std::cout << "Reconstruct                 : "  << doReconstruct << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
-        if (fnInit !="")
-            std::cout << "Initial volume              : "  << fnInit << std::endl;
+        if (fnFirstGallery=="")
+        {
+			if (fnInit !="")
+				std::cout << "Initial volume              : "  << fnInit << std::endl;
+			else
+				std::cout << "Number of volumes           : "  << Nvolumes << std::endl;
+        }
         else
-        	std::cout << "Number of volumes           : "  << Nvolumes << std::endl;
+            std::cout <<     "Gallery                     : "  << fnFirstGallery << std::endl;
     }
 }
 
@@ -443,7 +450,7 @@ void ProgReconstructSignificant::run()
 			progress_bar(Nvols);
 
 			// Write the corresponding angular metadata
-			for (size_t nVolume=0; nVolume<mdInit.size(); ++nVolume)
+			for (size_t nVolume=0; nVolume<(size_t)Nvolumes; ++nVolume)
 			{
 				MetaData &mdReconstruction=mdReconstructionPartial[nVolume];
 				// Readjust weights with direction weights
@@ -539,7 +546,7 @@ void ProgReconstructSignificant::reconstructCurrent()
 	if (rank==0)
 		std::cerr << "Reconstructing volumes ..." << std::endl;
 	MetaData MD;
-	for (size_t nVolume=0; nVolume<mdInit.size(); ++nVolume)
+	for (size_t nVolume=0; nVolume<(size_t)Nvolumes; ++nVolume)
 	{
 		if ((nVolume+1)%Nprocessors!=rank)
 			continue;
@@ -572,25 +579,28 @@ void ProgReconstructSignificant::reconstructCurrent()
 
 void ProgReconstructSignificant::generateProjections()
 {
-	int Nvol=(int)mdInit.size();
-	FileName fnVol, fnGallery, fnAngles, fnGalleryMetaData;
-	// Generate projections
-	for (int n=0; n<Nvol; n++)
+	FileName fnGallery, fnGalleryMetaData;
+	if (iter>1 || fnFirstGallery=="")
 	{
-		if ((n+1)%Nprocessors!=rank)
-			continue;
-		fnVol=formatString("%s/volume_iter%03d_%02d.vol",fnDir.c_str(),iter-1,n);
-		fnGallery=formatString("%s/gallery_iter%03d_%02d.stk",fnDir.c_str(),iter,n);
-		fnAngles=formatString("%s/angles_iter%03d_%02d.xmd",fnDir.c_str(),iter-1,n);
-		fnGalleryMetaData=formatString("%s/gallery_iter%03d_%02d.doc",fnDir.c_str(),iter,n);
-		String args=formatString("-i %s -o %s --sampling_rate %f --sym %s --compute_neighbors --angular_distance -1 --experimental_images %s --min_tilt_angle %f --max_tilt_angle %f -v 0",
-				fnVol.c_str(),fnGallery.c_str(),angularSampling,fnSym.c_str(),fnAngles.c_str(),tilt0,tiltF);
+		FileName fnVol, fnAngles;
+		// Generate projections
+		for (int n=0; n<Nvolumes; n++)
+		{
+			if ((n+1)%Nprocessors!=rank)
+				continue;
+			fnVol=formatString("%s/volume_iter%03d_%02d.vol",fnDir.c_str(),iter-1,n);
+			fnGallery=formatString("%s/gallery_iter%03d_%02d.stk",fnDir.c_str(),iter,n);
+			fnAngles=formatString("%s/angles_iter%03d_%02d.xmd",fnDir.c_str(),iter-1,n);
+			fnGalleryMetaData=formatString("%s/gallery_iter%03d_%02d.doc",fnDir.c_str(),iter,n);
+			String args=formatString("-i %s -o %s --sampling_rate %f --sym %s --compute_neighbors --angular_distance -1 --experimental_images %s --min_tilt_angle %f --max_tilt_angle %f -v 0",
+					fnVol.c_str(),fnGallery.c_str(),angularSampling,fnSym.c_str(),fnAngles.c_str(),tilt0,tiltF);
 
-		String cmd=(String)"xmipp_angular_project_library "+args;
-		if (system(cmd.c_str())==-1)
-			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+			String cmd=(String)"xmipp_angular_project_library "+args;
+			if (system(cmd.c_str())==-1)
+				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+		}
+		synchronize();
 	}
-	synchronize();
 
 	// Read projection galleries
 	std::vector<GalleryImage> galleryNames;
@@ -599,11 +609,19 @@ void ProgReconstructSignificant::generateProjections()
 	CorrelationAux aux;
 	AlignmentAux aux2;
 	MultidimArray<double> mGalleryProjection;
-	for (int n=0; n<Nvol; n++)
+	for (int n=0; n<Nvolumes; n++)
 	{
 		mdGallery.push_back(galleryNames);
-		fnGalleryMetaData=formatString("%s/gallery_iter%03d_%02d.doc",fnDir.c_str(),iter,n);
-		fnGallery=formatString("%s/gallery_iter%03d_%02d.stk",fnDir.c_str(),iter,n);
+		if (iter>1 || fnFirstGallery=="")
+		{
+			fnGalleryMetaData=formatString("%s/gallery_iter%03d_%02d.doc",fnDir.c_str(),iter,n);
+			fnGallery=formatString("%s/gallery_iter%03d_%02d.stk",fnDir.c_str(),iter,n);
+		}
+		else
+		{
+			fnGalleryMetaData=fnFirstGallery;
+			fnGallery=fnFirstGallery.replaceExtension("stk");
+		}
 		MetaData mdAux(fnGalleryMetaData);
 		galleryNames.clear();
 		FOR_ALL_OBJECTS_IN_METADATA(mdAux)
@@ -652,73 +670,97 @@ void ProgReconstructSignificant::produceSideinfo()
 	getImageSize(mdIn,Xdim,Ydim,Zdim,Ndim);
 
 	// If there is not any input volume, create a random one
-	bool deleteInit=false;
-	if (fnInit=="")
+	if (fnFirstGallery=="")
 	{
-		deleteInit=true;
-		MetaData mdAux;
-		for (int n=0; n<Nvolumes; ++n)
+		bool deleteInit=false;
+		if (fnInit=="")
 		{
-			fnInit=fnDir+"/volume_random.xmd";
+			deleteInit=true;
+			MetaData mdAux;
+			for (int n=0; n<Nvolumes; ++n)
+			{
+				fnInit=fnDir+"/volume_random.xmd";
+				if (rank==0)
+				{
+					MetaData mdRandom;
+					mdRandom=mdIn;
+					FOR_ALL_OBJECTS_IN_METADATA(mdRandom)
+					{
+						mdRandom.setValue(MDL_ANGLE_ROT,rnd_unif(0,360),__iter.objId);
+						mdRandom.setValue(MDL_ANGLE_TILT,rnd_unif(0,180),__iter.objId);
+						mdRandom.setValue(MDL_ANGLE_PSI,rnd_unif(0,360),__iter.objId);
+						mdRandom.setValue(MDL_SHIFT_X,0.0,__iter.objId);
+						mdRandom.setValue(MDL_SHIFT_Y,0.0,__iter.objId);
+					}
+					FileName fnAngles=fnDir+formatString("/angles_random_%02d.xmd",n);
+					FileName fnVolume=fnDir+formatString("/volume_random_%02d.vol",n);
+					mdRandom.write(fnAngles);
+					String args=formatString("-i %s -o %s --sym %s -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
+					String cmd=(String)"xmipp_reconstruct_fourier "+args;
+					if (system(cmd.c_str())==-1)
+						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+					if (!keepIntermediateVolumes)
+						deleteFile(fnAngles);
+
+					// Symmetrize with many different possibilities to have a spherical volume
+					args=formatString("-i %s --sym i1 -v 0",fnVolume.c_str());
+					cmd=(String)"xmipp_transform_symmetrize "+args;
+					if (system(cmd.c_str())==-1)
+						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+					args=formatString("-i %s --sym i3 -v 0",fnVolume.c_str());
+					if (system(cmd.c_str())==-1)
+						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+					args=formatString("-i %s --sym i2 -v 0",fnVolume.c_str());
+					if (system(cmd.c_str())==-1)
+						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+					deleteFile(fnAngles);
+					mdAux.setValue(MDL_IMAGE,fnVolume,mdAux.addObject());
+				}
+			}
+			if (rank==0)
+				mdAux.write(fnInit);
+			synchronize();
+		}
+
+		// Copy all input values as iteration 0 volumes
+		MetaData mdInit;
+		mdInit.read(fnInit);
+		FileName fnVol;
+		Image<double> V;
+		int idx=0;
+		FOR_ALL_OBJECTS_IN_METADATA(mdInit)
+		{
 			if (rank==0)
 			{
-				MetaData mdRandom;
-				mdRandom=mdIn;
-				FOR_ALL_OBJECTS_IN_METADATA(mdRandom)
-				{
-					mdRandom.setValue(MDL_ANGLE_ROT,rnd_unif(0,360),__iter.objId);
-					mdRandom.setValue(MDL_ANGLE_TILT,rnd_unif(0,180),__iter.objId);
-					mdRandom.setValue(MDL_ANGLE_PSI,rnd_unif(0,360),__iter.objId);
-					mdRandom.setValue(MDL_SHIFT_X,0.0,__iter.objId);
-					mdRandom.setValue(MDL_SHIFT_Y,0.0,__iter.objId);
-				}
-				FileName fnAngles=fnDir+formatString("/angles_random_%02d.xmd",n);
-				FileName fnVolume=fnDir+formatString("/volume_random_%02d.vol",n);
-				mdRandom.write(fnAngles);
-				String args=formatString("-i %s -o %s --sym %s -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
-				String cmd=(String)"xmipp_reconstruct_fourier "+args;
-				if (system(cmd.c_str())==-1)
-					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-				if (!keepIntermediateVolumes)
-					deleteFile(fnAngles);
-
-				// Symmetrize with many different possibilities to have a spherical volume
-				args=formatString("-i %s --sym i1 -v 0",fnVolume.c_str());
-				cmd=(String)"xmipp_transform_symmetrize "+args;
-				if (system(cmd.c_str())==-1)
-					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-				args=formatString("-i %s --sym i3 -v 0",fnVolume.c_str());
-				if (system(cmd.c_str())==-1)
-					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-				args=formatString("-i %s --sym i2 -v 0",fnVolume.c_str());
-				if (system(cmd.c_str())==-1)
-					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-				deleteFile(fnAngles);
-				mdAux.setValue(MDL_IMAGE,fnVolume,mdAux.addObject());
+				mdInit.getValue(MDL_IMAGE,fnVol,__iter.objId);
+				V.read(fnVol);
+				fnVol=formatString("%s/volume_iter000_%02d.vol",fnDir.c_str(),idx);
+				V.write(fnVol);
+				mdInit.setValue(MDL_IMAGE,fnVol,__iter.objId);
 			}
+			idx++;
 		}
-		if (rank==0)
-			mdAux.write(fnInit);
+		Nvolumes=(int)mdInit.size();
+
+		iter=0;
 		synchronize();
+		if (deleteInit && rank==0)
+			deleteFile(fnInit);
 	}
+	else
+		Nvolumes=1;
+	synchronize();
 
 	// Copy all input values as iteration 0 volumes
-	mdInit.read(fnInit);
-	FileName fnVol, fnAngles;
-	Image<double> V, galleryDummy;
-	int idx=0;
+	FileName fnAngles;
+	Image<double> galleryDummy;
 	MetaData mdPartial, mdProjMatch;
-	FOR_ALL_OBJECTS_IN_METADATA(mdInit)
+	for (int idx=0; idx<Nvolumes; ++idx)
 	{
 		if (rank==0)
 		{
-			mdInit.getValue(MDL_IMAGE,fnVol,__iter.objId);
-			V.read(fnVol);
-			fnVol=formatString("%s/volume_iter000_%02d.vol",fnDir.c_str(),idx);
-			V.write(fnVol);
-			mdInit.setValue(MDL_IMAGE,fnVol,__iter.objId);
 			fnAngles=formatString("%s/angles_iter000_%02d.xmd",fnDir.c_str(),idx);
 			mdIn.write(fnAngles);
 		}
@@ -726,11 +768,8 @@ void ProgReconstructSignificant::produceSideinfo()
 		galleryTransforms.push_back(NULL);
 		mdReconstructionPartial.push_back(mdPartial);
 		mdReconstructionProjectionMatching.push_back(mdProjMatch);
-		idx++;
 	}
 
 	iter=0;
 	synchronize();
-	if (deleteInit && rank==0)
-		deleteFile(fnInit);
 }
