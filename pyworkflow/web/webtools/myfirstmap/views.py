@@ -186,6 +186,8 @@ def service_content(request):
     # Get info about when the project was created
     project = loadProject(projectName)
     daysLeft = prettyDelta(project.getLeftTime(14))
+    if daysLeft is None: 
+        daysLeft = 14
     
     context = contentContext(request, projectName)
     context.update({'importAverages': path_files + 'importAverages.png',

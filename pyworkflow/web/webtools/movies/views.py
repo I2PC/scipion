@@ -165,6 +165,8 @@ def movies_content(request):
     
     project = loadProject(projectName)
     daysLeft = prettyDelta(project.getLeftTime(14))
+    if daysLeft is None: 
+        daysLeft = 14
     
     context = contentContext(request, projectName)
     context.update({
