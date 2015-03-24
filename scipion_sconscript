@@ -50,7 +50,7 @@ debug = False
 # fast = False
 # quiet = True
 matlab = False
-opencv = True#GetOption('opencv')
+opencv = GetOption('opencv')
 
 
 packageDeps = env['PACKAGE']['DEPS']
@@ -663,7 +663,8 @@ if opencv:
             libs=['opencv_core', 
                   'opencv_legacy', 
                   'opencv_imgproc', 
-                  'opencv_video'])
+                  'opencv_video'],
+            deps=['opencv'])
 
 if cuda:
     addProg('optical_alignment_gpu',
@@ -671,7 +672,8 @@ if cuda:
                   'cufft', 'curand', 
                   'cusparse', 'npp', 
                   'nvToolsExt', 
-                  'opencv_gpu'])
+                  'opencv_gpu'],
+            deps=['opencv'])
 
 # Some special programs not ready for release
 if not release:
