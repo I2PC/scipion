@@ -95,10 +95,11 @@ tk = env.AddLibrary(
     clean=[Dir('#software/tmp/tk8.6.1').abspath])
 
 tk_wish = env.Command(
-    'software/bin/wish',
-    'software/bin/wish8.6',
-    Action('ln -v -s wish8.6 wish', 'Linking wish8.6 to wish in software/bin',
-           chdir='software/bin'))
+    File('#software/bin/wish').abspath,
+    File('#software/bin/wish8.6').abspath,
+    Action('ln -v -s wish8.6 wish', 
+           'Linking wish8.6 to wish in software/bin',
+           chdir=Dir('#software/bin').abspath))
 env.Default(tk_wish)
 env.Depends(tk_wish, tk)
 # Special case: tk does not make the link automatically, go figure.

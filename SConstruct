@@ -62,8 +62,10 @@ env = Environment(ENV=os.environ,
 # (by CheckLib and so on). See http://www.scons.org/doc/2.0.1/HTML/scons-user/x3516.html
 # See how to change it into a cleaner way (not doing BUILDERS=Environment()['BUILDERS']!)
 
+AddOption('--verbose', dest='verbose', action='store_true',
+          help='Show full message of compilation lines')
 # Message from autoconf and make, so we don't see all its verbosity.
-if GetOption('silent'):
+if not GetOption('verbose'):
     env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
     env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
