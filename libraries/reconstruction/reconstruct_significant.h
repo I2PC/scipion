@@ -39,7 +39,7 @@ class ProgReconstructSignificant: public XmippProgram
 {
 public:
     /** Filenames */
-    FileName fnIn, fnDir, fnSym, fnInit;
+    FileName fnIn, fnDir, fnSym, fnInit, fnFirstGallery;
 
     /** First significance */
     double alpha0;
@@ -86,7 +86,7 @@ public: // Internal members
     size_t rank, Nprocessors;
 
     // Metadata with input images and input volumes
-    MetaData mdIn, mdInit;
+    MetaData mdIn;
 
     // Size of the images
     size_t Xdim;

@@ -54,14 +54,33 @@ public:
     /** Low resolution and high resolution dictionary */
     std::vector< MultidimArray<double> > dictionaryLow, dictionaryHigh;
 
+    /** Signature dictionary */
+    std::vector< Matrix1D<double> > dictionarySignature;
+
+    /** Rotation group */
+    std::vector< Matrix2D<double> > rotationGroup;
+
+    /** Auxiliary patch */
+    MultidimArray<double> auxPatch;
+
+    /** Signature */
+    Matrix1D<double> auxSignature;
 public:
     void defineParams();
     void readParams();
     void show();
     void run();
 
+    /** Construct rotation group */
+    void constructRotationGroup();
+
+    /** Orient canonically a patch */
+    size_t canonicalOrientation(const MultidimArray<double> &patch, MultidimArray<double> &canonicalPatch,
+    		Matrix1D<double> &patchSignature);
+
     /** True if the patch is not already in the low resolution dictionary */
-    bool notInDictionary(const MultidimArray<double> &candidatePatch) const;
+    bool notInDictionary(const MultidimArray<double> &candidatePatch, MultidimArray<double> &canonicalPatch,
+    		Matrix1D<double> &canonicalSignature, size_t &canonicalIdx);
 
     /** Load dictionaries */
     void loadDictionaries();

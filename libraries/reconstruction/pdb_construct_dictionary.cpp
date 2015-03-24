@@ -74,14 +74,17 @@ void ProgConstructPDBDictionary::run()
     MetaData mdlow, mdhigh;
     mdlow.read(fnLow);
     mdhigh.read(fnHigh);
+    constructRotationGroup();
 
     FileName fnVol;
     Image<double> Vlow, Vhigh;
 #ifdef DEBUG
     Image<double>Vmask;
 #endif
-    MultidimArray<double> patchLow, patchHigh;
+    MultidimArray<double> patchLow, patchHigh, canonicalPatch;
+    Matrix1D<double> canonicalSignature;
     int patchSize_2=patchSize/2;
+    size_t canonicalIdx;
 
     patchLow.resize(patchSize_2,patchSize_2,patchSize_2);
     patchLow.setXmippOrigin();
@@ -131,12 +134,15 @@ void ProgConstructPDBDictionary::run()
                  		// Candidate patch
                  		double inormPatchLow=1.0/sqrt(patchLow.sum2());
                  		patchLow*=inormPatchLow;
-                 		if (notInDictionary(patchLow))
+                 		if (notInDictionary(patchLow,canonicalPatch,canonicalSignature,canonicalIdx))
                  		{
                  			++NsuccessfulPatches;
-                 			dictionaryLow.push_back(patchLow);
+                 			selfApplyGeometry(LINEAR,patchHigh,rotationGroup[canonicalIdx],IS_INV,DONT_WRAP);
+
+                 			dictionaryLow.push_back(canonicalPatch);
                      		patchHigh*=inormPatchLow;
                  			dictionaryHigh.push_back(patchHigh);
+                 			dictionarySignature.push_back(canonicalSignature);
                  		}
 
 #ifdef DEBUG
@@ -159,18 +165,27 @@ void ProgConstructPDBDictionary::run()
 }
 #undef DEBUG
 
-bool ProgConstructPDBDictionary::notInDictionary(const MultidimArray<double> &candidatePatch) const
+bool ProgConstructPDBDictionary::notInDictionary(const MultidimArray<double> &candidatePatch, MultidimArray<double> &canonicalPatch,
+		Matrix1D<double> &canonicalSignature, size_t &canonicalIdx)
 {
+	canonicalIdx=canonicalOrientation(candidatePatch,canonicalPatch,canonicalSignature);
 	size_t imax=dictionaryLow.size();
 
 	for (size_t i=0; i<imax; ++i)
 	{
-		const MultidimArray<double> &dictionaryPatch=dictionaryLow[i];
-		double dotProduct=0;
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(dictionaryPatch)
-			dotProduct+=DIRECT_MULTIDIM_ELEM(dictionaryPatch,n)*DIRECT_MULTIDIM_ELEM(candidatePatch,n);
+		const Matrix1D<double> &dictSignature=dictionarySignature[i];
+		double dotProduct=XX(canonicalSignature)*XX(dictSignature)+
+                          YY(canonicalSignature)*YY(dictSignature)+
+                          ZZ(canonicalSignature)*ZZ(dictSignature);
 		if (dotProduct>angleThreshold)
-			return false;
+		{
+			const MultidimArray<double> &dictionaryPatch=dictionaryLow[i];
+			dotProduct=0;
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(dictionaryPatch)
+				dotProduct+=DIRECT_MULTIDIM_ELEM(dictionaryPatch,n)*DIRECT_MULTIDIM_ELEM(auxPatch,n);
+			if (dotProduct>angleThreshold)
+				return false;
+		}
 	}
 	return true;
 }
@@ -181,17 +196,24 @@ void ProgConstructPDBDictionary::loadDictionaries()
 	size_t Xdim, Ydim, Zdim, Ndim;
 	FileName fnLow=fnRoot+"_low.mrcs";
 	FileName fnHigh=fnRoot+"_high.mrcs";
+	FileName fnSignature=fnRoot+"_signature.raw";
 	getImageSize(fnLow, Xdim, Ydim, Zdim, Ndim);
 	dictionaryLow.reserve(Ndim);
 	dictionaryHigh.reserve(Ndim);
+	FILE *fhSignature=fopen(fnSignature.c_str(),"r");
 	Image<double> aux;
+	Matrix1D<double> auxSignature(3);
 	for (size_t n=0; n<Ndim; ++n)
 	{
 		aux.read(fnLow,DATA,n+1);
 		dictionaryLow.push_back(aux());
 		aux.read(fnHigh,DATA,n+1);
 		dictionaryHigh.push_back(aux());
+		size_t sizeRead=fread(MATRIX1D_ARRAY(auxSignature),sizeof(double),3,fhSignature);
+		if (sizeRead==3)
+			dictionarySignature.push_back(auxSignature);
 	}
+	fclose(fhSignature);
 }
 
 void ProgConstructPDBDictionary::saveDictionaries() const
@@ -200,14 +222,104 @@ void ProgConstructPDBDictionary::saveDictionaries() const
 	size_t imax=dictionaryLow.size();
 	FileName fnLow=fnRoot+"_low.mrcs";
 	FileName fnHigh=fnRoot+"_high.mrcs";
+	FileName fnSignature=fnRoot+"_signature.raw";
 	createEmptyFile(fnLow,patchSize,patchSize,patchSize,imax,true);
 	createEmptyFile(fnHigh,patchSize,patchSize,patchSize,imax,true);
 	Image<double> aux;
+	FILE *fhSignature=fopen(fnSignature.c_str(),"wb");
 	for (size_t i=0; i<imax; ++i)
 	{
 		aux()=dictionaryLow[i];
 		aux.write(fnLow,i+1,true,WRITE_REPLACE);
 		aux()=dictionaryHigh[i];
 		aux.write(fnHigh,i+1,true,WRITE_REPLACE);
+		fwrite(MATRIX1D_ARRAY(dictionarySignature[i]),sizeof(double),3,fhSignature);
 	}
+	fclose(fhSignature);
 }
+
+void ProgConstructPDBDictionary::constructRotationGroup()
+{
+	Matrix2D<double> A(4,4), B;
+	A.initIdentity();
+	rotationGroup.push_back(A);
+
+	A.initZeros();
+	A(0,1)=A(2,2)=1; A(1,0)=-1; A(3,3)=1;
+	rotationGroup.push_back(A);
+
+	A.initZeros();
+	A(2,0)=1; A(1,1)=1; A(0,2)=1; A(3,3)=1;
+	rotationGroup.push_back(A);
+
+	A.initZeros();
+	A(0,0)=1; A(1,2)=-1; A(2,1)=1; A(3,3)=1;
+	rotationGroup.push_back(A);
+
+	A.initZeros();
+	A(0,0)=-1; A(2,2)=1; A(1,1)=1; A(3,3)=1;
+	rotationGroup.push_back(A);
+
+	A.initZeros();
+	A(0,0)=1; A(1,1)=-1; A(2,2)=1; A(3,3)=1;
+	rotationGroup.push_back(A);
+
+	bool finished;
+	do
+	{
+		finished=true;
+		for (size_t i=0; i<rotationGroup.size(); ++i)
+			for (size_t j=0; j<rotationGroup.size(); ++j)
+			{
+				B=rotationGroup[i]*rotationGroup[j];
+				bool found=false;
+				for (size_t k=0; k<rotationGroup.size(); ++k)
+					if (rotationGroup[k].equal(B))
+					{
+						found=true;
+						break;
+					}
+				if (!found)
+				{
+					rotationGroup.push_back(B);
+					finished=false;
+				}
+			}
+	} while (!finished);
+}
+
+size_t ProgConstructPDBDictionary::canonicalOrientation(const MultidimArray<double> &patch, MultidimArray<double> &canonicalPatch,
+		Matrix1D<double> &patchSignature)
+{
+	patchSignature.resizeNoCopy(3);
+	size_t imax=rotationGroup.size();
+	double bestMoment=-1e38;
+	size_t bestIdx=0;
+	for (size_t i=0; i<imax; ++i)
+	{
+		applyGeometry(LINEAR,auxPatch,patch,rotationGroup[i],IS_INV,DONT_WRAP);
+		// Calculate gradients
+		double momentX=0, momentY=0, momentZ=0;
+		auxPatch.setXmippOrigin();
+		FOR_ALL_ELEMENTS_IN_ARRAY3D(auxPatch)
+		{
+			double val=A3D_ELEM(auxPatch,k,i,j);
+			momentX+=j*val;
+			momentY+=i*val;
+			momentZ+=k*val;
+		}
+		double moment=momentX+momentY+momentZ;
+		if (moment>bestMoment)
+		{
+			bestMoment=moment;
+			bestIdx=i;
+			canonicalPatch=auxPatch;
+			XX(patchSignature)=momentX;
+			YY(patchSignature)=momentY;
+			ZZ(patchSignature)=momentZ;
+		}
+	}
+	patchSignature.selfNormalize();
+	return bestIdx;
+}
+#undef DEBUG

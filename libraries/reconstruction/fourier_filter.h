@@ -90,10 +90,11 @@ public:
 #define STOPLOWBANDX 14
 #define STOPLOWBANDY 15
 #define FSCPROFILE   16
+#define BINARYFILE   17
 
     /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, CTFPOS,
        WEDGE, CONE, GAUSSIAN, FROM_FILE, REALGAUSSIAN, BFACTOR, SPARSIFY,
-       STOPLOWBANDX, STOPLOWBANDY, FSCPROFILE */
+       STOPLOWBANDX, STOPLOWBANDY, FSCPROFILE, BINARYFILE */
     int FilterBand;
 
     /** Cut frequency for Low and High pass filters, first freq for bandpass.
@@ -123,6 +124,9 @@ public:
     
     /** FSC file */
     FileName fnFSC;
+
+    /** Binary file with the filter */
+    FileName fnFilter;
 
     /** Correct phase before applying CTF */
     bool do_correct_phase;
