@@ -322,3 +322,40 @@ class ProtocolViewer(Protocol, Viewer):
                     volSet.append(vol)
         volSet.write()
         return volSet
+    
+    def createAngDistributionSqlite(self, sqliteFn,
+                                    itemDataIterator=None):
+        projectionList = [] # List of list of 3 elements containing angleTilt, anglePsi, weight
+        
+        def getCloseProjection(angleTilt, anglePsi):
+            """ Get an existing projection close to angleTilt, anglePsi.
+            Return None if not found close enough.
+            """
+            for projection in projectionList:
+                if abs(projection[0] - angleTilt) <= 0.01 and abs(projection[1] - anglePsi) <= 0.01:
+                    return projection
+            return None            
+            
+        for angleTilt, anglePsi in itemDataIterator:
+            projection = getCloseProjection(angleTilt, anglePsi)
+            if projection is None:
+                projectionList.append([angleTilt, anglePsi, 1])
+            else:
+                projection[2] = projection[2] + 1
+        
+        
+                
+
+        
+
+
+
+
+
+
+
+
+
+
+
+

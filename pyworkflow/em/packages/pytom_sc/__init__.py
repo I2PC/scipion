@@ -29,13 +29,17 @@ wrapping Pytom programs http://www.pytom.org
 """
 from bibtex import _bibtex # Load bibtex dict with references
 
-_logo = "pytom_logo.png"
+#_logo = "pytom_logo.png"
+_logo = 'pytomLogo.jpg'
 
-from pytom import *
+import convert
 
 
-_environ = getEnviron()
+_environ = convert.getEnviron()
 
-# from viewer import *
+from protocol_import import ProtPyTomImport
 from protocol_autofocus_classify import ProtAutofocusClassify
+from protocol_frm_alignment import ProtFrmAlign
+
+from viewer_autofocus_classify import PyTomAutofocusViewer
 
