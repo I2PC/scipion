@@ -27,7 +27,7 @@
 from os.path import exists, join, basename
 import json
 from views_base import base_grid, base_flex
-from views_util import loadProject, getResourceCss, getResourceIcon, getResourceJs
+from views_util import loadProject, getResourceCss, getResourceIcon, getResourceJs, getServiceManager
 from views_tree import loadProtTree
 from pyworkflow.manager import Manager
 from pyworkflow.utils.path import copyFile
@@ -341,10 +341,17 @@ def protocol_info(request):
 def check_project_id(request):
     result = 0
     projectName = request.GET.get('code', None)
+    serviceName = request.GET.get('serviceName', None)
     
     try:
-        manager = Manager()
-        project = loadProject(projectName)
+        if serviceName is None:
+            manager = Manager()
+            project = loadProject(projectName)
+        else: 
+            manager = getServiceManager(serviceName)
+            project = manager.loadProject(projectName, 
+                              protocolsConf=manager.protocols,
+                              hostsConf=manager.hosts)
         result = 1
     except Exception:
         pass

@@ -138,7 +138,7 @@ function goToProject(elm) {
 	// remove the blank spaces
 	code = code.replace(/\s+/g, '');
 	
-	var URL = getSubDomainURL() + "/check_project_id/?code=" + code;
+	var URL = getSubDomainURL() + "/check_project_id/?code=" + code +"&service=movies";
 	$.ajax({
 		type : "GET",
 		url : URL,
