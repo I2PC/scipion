@@ -53,6 +53,10 @@ def main():
                 createConf(fpath, join(settingsDir, tmplt))
             else:
                 checkConf(fpath, join(settingsDir, tmplt))
+        # After all, check some extra things are fine in scipion.conf
+        checkPaths(os.environ['SCIPION_CONFIG'])
+        # TODO: say that we are checking scipion.conf, and be more
+        # nice to the user.
     except Exception:
         # This way of catching exceptions works with Python 2 & 3
         sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
@@ -75,6 +79,19 @@ def createConf(fpath, ftemplate):
     print('* Creating local configuration file: %s' % fpath)
     open(fpath, 'w').write(open(ftemplate).read())  # cp ftemplate fpath
     print('Edit it to reflect the configuration of your system.')
+
+
+def checkPaths(conf):
+    "Check that some paths in the config file actually make sense"
+    cf = ConfigParser()
+    cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    assert cf.read(conf) != [], 'Missing file %s' % conf
+    for var in ['MPI_LIBDIR', 'MPI_INCLUDE', 'MPI_BINDIR',
+                'JAVA_HOME', 'JAVA_BINDIR']:
+        path = cf.get('BUILD', var)
+        if not os.path.isdir(path):
+            print('Path to %s (%s) should exist but it does not.' % (var, path))
+    # TODO: also check that some libraries and header files are actually there.
 
 
 def checkConf(fpath, ftemplate):
