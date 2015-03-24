@@ -35,6 +35,7 @@ from pyworkflow.manager import Manager
 from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
+from pyworkflow.utils.utils import prettyDelta
 
 def resmap_projects(request):
    
@@ -142,8 +143,7 @@ def resmap_content(request):
     
     # Get info about when the project was created
     project = loadProject(projectName)
-    elapsedTime = project.getElapsedTime()
-    daysLeft = "14"
+    daysLeft = prettyDelta(project.getLeftTime(14))
     
     context = contentContext(request, projectName)
     context.update({'importVolumes': path_files + 'importVolumes.png',

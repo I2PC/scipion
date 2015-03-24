@@ -123,6 +123,12 @@ class Project(object):
         
         return elapsed
     
+    def getLeftTime(self, numDays):
+        elapsedTime = self.getElapsedTime()
+        td = dt.timedelta(days=numDays)
+        diff = td - (elapsedTime)
+        return diff
+    
     def setDbPath(self, dbPath):
         """ Set the project db path.
         This function is used when running a protocol where

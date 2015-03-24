@@ -425,7 +425,7 @@ class ListDialog(Dialog):
     It is implemented using a Tree widget.
     """
     def __init__(self, parent, title, provider, 
-                 message=None, validateSelectionCallback=None, **kwargs):
+                 message=None, **kwargs):
         """ From kwargs:
                 message: message tooltip to show when browsing.
                 selected: the item that should be selected.

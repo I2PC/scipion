@@ -164,8 +164,7 @@ def movies_content(request):
     command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
     
     project = loadProject(projectName)
-    elapsedTime = prettyDelta(project.getElapsedTime())
-    daysleft = "14"
+    daysLeft = prettyDelta(project.getLeftTime(14))
     
     context = contentContext(request, projectName)
     context.update({

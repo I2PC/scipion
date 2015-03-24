@@ -88,14 +88,14 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         form.addParam('doScale', BooleanParam, default=False,
                       label='Scale particles?',
                       help='Re-scale the particles to this size (in pixels).')
-        form.addParam('scaleSize', IntParam, validators=[Positive],
+        form.addParam('scaleSize', IntParam, default=0, validators=[Positive],
                       condition='doScale',
                       label='Scale size (px)',
                       help='New particle size in pixels.')  
         form.addParam('doWindow', BooleanParam, default=False,
                       label='Window particles?', 
                       help='Re-window the particles to this size (in pixels).')
-        form.addParam('windowSize', IntParam, validators=[Positive],
+        form.addParam('windowSize', IntParam, default=0, validators=[Positive],
                       condition='doWindow',
                       label='Window size (px)',
                       help='New particles windows size (in pixels).')  
