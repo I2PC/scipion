@@ -442,10 +442,6 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     _incs.append(env['CPPPATH'])
     _incs.append('#software/include')
 
-    print "-"* 50    
-    print "DEBUG: addCppLibrary: %s, _incs=%s" % (name, _incs)
-    print "                env['CPPPATH'] = %s" % (env['CPPPATH'])
-    #print env2.Dump()
     library = env2.SharedLibrary(
               target=join(basedir, fullname),
               #source=lastTarget,
