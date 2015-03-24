@@ -903,12 +903,12 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
             try:
                 emDir = Dir('#software/em').abspath
                 if os.path.exists('%s/%s' % (emDir, tar)):
-                    print 'Warning: %s already exists. Download anyway? [Y/n]' % tar
+                    print 'Warning: %s already exists. Download anyway? [y/N]' % tar
                     if raw_input().upper() != 'Y':
                         Exit('If you just want to compile, use: scipion compile')
                 check_call(['wget', '-nv', '-c', url], cwd=emDir)
                 if os.path.exists('%s/%s' % (emDir, name)):
-                    print 'Warning: %s already exists. Untar anyway? [Y/n]' % name
+                    print 'Warning: %s already exists. Untar anyway? [y/N]' % name
                     if raw_input().upper() != 'Y':
                         Exit('If you just want to compile, use: scipion compile')
                 check_call(['tar', '--recursive-unlink', '-xzf', tar], cwd=emDir)
