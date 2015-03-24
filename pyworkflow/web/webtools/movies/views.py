@@ -87,7 +87,6 @@ def create_movies_project(request):
         
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
-        #customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_PROTOCOLS']), 'menu_initvolume.conf')
         
         manager = getServiceManager('movies')
         writeCustomMenu(manager.protocols)

@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs, getResourceIcon
+from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager
 from pyworkflow.web.app.views_base import base_grid, base_flex
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
@@ -77,18 +77,17 @@ def create_resmap_project(request):
         from pyworkflow.em.packages.resmap.protocol_resmap import ProtResMap
         
         # Create a new project
-        manager = Manager()
         projectName = request.GET.get('projectName')
         
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
         
-        #customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_PROTOCOLS']), 'menu_initvolume.conf')
-        customMenu = os.path.join(os.environ['HOME'], '.config/scipion/menu_resmap.conf')
-        writeCustomMenu(customMenu)
-        
-        project = manager.createProject(projectName, runsView=1, protocolsConf=customMenu)   
-        copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
+        manager = getServiceManager('myresmap')
+        writeCustomMenu(manager.protocols)
+        project = manager.createProject(projectName, runsView=1, 
+                                        protocolsConf=manager.protocols,
+                                        hostsConf=manager.hosts)   
+#         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # 1. Import volumes
         
