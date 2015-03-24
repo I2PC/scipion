@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs, getResourceIcon
+from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager
 from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
@@ -70,16 +70,6 @@ Movies_Alignment = [
         {"tag": "protocol", "value": "ProtImportMovies", "text": "xmipp3 - movie alignment"}]}]
         ''')
         f.close()
-        
-        
-def getServiceManager():
-    manager = Manager(SCIPION_USER_DATA=os.path.join(os.environ['SCIPION_USER_DATA'], serviceName))
-    manager.config = os.path.join(os.environ['HOME'], '.config', 
-                                        'scipion', serviceName)
-    manager.protocols = os.path.join(serviceConfig, 'protocols.conf')
-    manager.hosts = os.path.join(serviceConfig, 'hosts.conf')
-    
-    return manager
 
 
 def create_movies_project(request):
@@ -92,19 +82,14 @@ def create_movies_project(request):
         from pyworkflow.em.packages.xmipp3 import ProtMovieAlignment
         
         # Create a new project
-        serviceName = 'movies'
-        
         projectName = request.GET.get('projectName')
         projectPath = manager.getProjectPath(projectName)
         
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
-        
         #customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_PROTOCOLS']), 'menu_initvolume.conf')
         
-        
-        
-        manager = getServiceManager()
+        manager = getServiceManager('movies')
         writeCustomMenu(manager.protocols)
         project = manager.createProject(projectName, runsView=1, 
                                         protocolsConf=manager.protocols,
@@ -177,7 +162,7 @@ def movies_content(request):
     path_files = django_settings.ABSOLUTE_URL + '/resources_movies/img/'
     command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
     
-    manager = getServiceManager()
+    manager = getServiceManager('movies')
     project = manager.loadProject(projectName, 
                                   protocolsConf=manager.protocols,
                                   hostsConf=manager.hosts)

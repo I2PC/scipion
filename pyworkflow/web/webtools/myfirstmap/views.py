@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs, getResourceIcon
+from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager
 from pyworkflow.web.app.views_base import base_grid, base_flex
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
@@ -73,6 +73,7 @@ Initial_Volume = [
         ''')
         f.close()
         
+
 def create_service_project(request):
     if request.is_ajax():
         import os
@@ -83,18 +84,20 @@ def create_service_project(request):
         from pyworkflow.em.packages.simple import ProtPrime
         
         # Create a new project
-        manager = Manager()
         projectName = request.GET.get('projectName')
         
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
         
         #customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_PROTOCOLS']), 'menu_initvolume.conf')
-        customMenu = os.path.join(os.environ['HOME'], '.config/scipion/menu_initvolume.conf')
-        writeCustomMenu(customMenu)
         
-        project = manager.createProject(projectName, runsView=1, protocolsConf=customMenu)   
-        copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
+        manager = getServiceManager('myfirstmap')
+        writeCustomMenu(manager.protocols)
+        project = manager.createProject(projectName, runsView=1, 
+                                        protocolsConf=manager.protocols,
+                                        hostsConf=manager.hosts)   
+#         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
+        
         
         # 1. Import averages
         
@@ -184,7 +187,10 @@ def service_content(request):
     path_files = django_settings.ABSOLUTE_URL + '/resources_myfirstmap/img/'
     
     # Get info about when the project was created
-    project = loadProject(projectName)
+    manager = getServiceManager('myfirstmap')
+    project = manager.loadProject(projectName, 
+                                  protocolsConf=manager.protocols,
+                                  hostsConf=manager.hosts)
     daysLeft = prettyDelta(project.getLeftTime(14))
     if daysLeft is None: 
         daysLeft = 14

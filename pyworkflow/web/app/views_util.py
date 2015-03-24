@@ -196,6 +196,16 @@ def loadProtocolProject(request, requestType='POST'):
         protocol = project.newProtocol(protocolClass)
         
     return (project, protocol)
+
+
+def getServiceManager(serviceName):
+    manager = Manager(SCIPION_USER_DATA=os.path.join(os.environ['SCIPION_USER_DATA'], serviceName))
+    manager.config = os.path.join(os.environ['HOME'], '.config', 
+                                        'scipion', serviceName)
+    manager.protocols = os.path.join(manager.config, 'protocols.conf')
+    manager.hosts = os.path.join(manager.config, 'hosts.conf')
+    
+    return manager
 #===============================================================================
 # Browse to relations objects
 #===============================================================================
