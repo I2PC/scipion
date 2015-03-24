@@ -202,7 +202,7 @@ def getServiceManager(serviceName):
     print "getServiceManager"
     print "serviceName: ", serviceName
     scipionUserData = os.path.join(os.environ['SCIPION_USER_DATA'], serviceName)
-    manager = Manager(SCIPION_USER_DATA=scipionUserData)
+    manager = Manager(SCIPION_USER_DATA = scipionUserData)
     
     manager.config = os.path.join(os.environ['HOME'], '.config', 'scipion', serviceName)
     manager.protocols = os.path.join(manager.config, 'protocols.conf')

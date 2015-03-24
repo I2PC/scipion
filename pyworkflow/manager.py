@@ -57,7 +57,7 @@ class Manager(object):
         if SCIPION_USER_DATA is None:
             self.PROJECTS = os.path.join(SCIPION_USER_DATA, 'projects')
         else:
-            self.PROJECTS = os.path.join('SCIPION_USER_DATA', 'projects')
+            self.PROJECTS = os.path.join(os.environ["SCIPION_USER_DATA"], 'projects')
         
     def getProjectPath(self, projectName):
         """Return the project path given the name"""

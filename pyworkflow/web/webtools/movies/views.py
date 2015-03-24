@@ -90,8 +90,9 @@ def create_movies_project(request):
         manager = getServiceManager('movies')
         writeCustomMenu(manager.protocols)
         project = manager.createProject(projectName, runsView=1, 
-                                        protocolsConf=manager.protocols,
-                                        hostsConf=manager.hosts)   
+                                        hostsConf=manager.hosts,
+                                        protocolsConf=manager.protocols
+                                        )   
 #         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # Create symbolic link for uploads

@@ -94,8 +94,9 @@ def create_service_project(request):
         manager = getServiceManager('myfirstmap')
         writeCustomMenu(manager.protocols)
         project = manager.createProject(projectName, runsView=1, 
-                                        protocolsConf=manager.protocols,
-                                        hostsConf=manager.hosts)   
+                                        hostsConf=manager.hosts,
+                                        protocolsConf=manager.protocols
+                                        ) 
 #         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         
