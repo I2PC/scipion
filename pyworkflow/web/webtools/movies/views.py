@@ -179,7 +179,7 @@ def movies_content(request):
                     'showj': path_files + 'showj.png',
                     'download': path_files + 'download.png',
                     'command' : command,
-                    'daysLeft': daysleft,
+                    'daysLeft': daysLeft,
                     })
     
     return render_to_response('movies_content.html', context)
