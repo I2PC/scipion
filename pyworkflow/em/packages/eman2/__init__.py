@@ -39,6 +39,6 @@ from protocol_boxing import EmanProtBoxing
 from protocol_initialmodel import EmanProtInitModel
 from protocol_reconstruct import EmanProtReconstruct
 from protocol_refineasy import EmanProtRefine
-from viewer import EmanViewer
+from viewer import EmanViewer, RefineEasyViewer
 
 _environ = getEnviron()

@@ -133,7 +133,7 @@ function downloadTestdata(elm){
 }
 
 function createServProject(elm) {
-	var projName = randomString(32, '#aA')
+	var projName = "map"+randomString(32, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
 
 	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
@@ -150,13 +150,13 @@ function createServProject(elm) {
 			
 			var msg = "<p>Your <strong>url to access </strong> to this <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
-			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/myfirstmap/content/?p="+ projName+ "'>" +
-			"http://scipion.cnb.csic.es/myfirstmap/content/?p="+ projName+ "</a>"+
+			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/content/?p="+ projName+ "'>" +
+			"http://scipion.cnb.csic.es/m/content/?p="+ projName+ "</a>"+
 			"</h3></p><br />" +
 			"<p>The access to this new project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
 			"in order to access to this project in future sessions.</p>"+
-			"<p>In case to lost your url to access, please contact with us by this email: <span style='color:firebrick;'>scipion-devel at cnb.csic.es</span></p>";			
+			"<p>In case to lost your url to access, please contact with us by this email: <span style='color:firebrick;'>scipion at cnb.csic.es</span></p>";			
 			
 			msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";
 			var funcName = "goToProject"

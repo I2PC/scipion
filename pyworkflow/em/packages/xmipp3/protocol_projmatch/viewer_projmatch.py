@@ -94,15 +94,13 @@ Examples:
                       help="Write the iteration list to visualize.")
 
         group = form.addGroup('Particles')
-
-        group.addParam('showProjectionMatchingLibraryAndImages', LabelParam, default=False,
-                      label='Display projections and particles',
-                      help="Display projections and particles")
         group.addParam('displayLibraryOrClasses', EnumParam, choices=['projections', 'classes', 'projections and classes'],
                           default=DISPLAY_LIBRARY, display=EnumParam.DISPLAY_COMBO,
                           label='Display',
                           help='Displays images with angular assignment')
-
+        group.addParam('showProjectionMatchingLibraryAndImages', LabelParam, default=False,
+                      label='Display projections and particles',
+                      help="Display projections and particles")
         group.addParam('showExperimentalImages', LabelParam, default=False,
                       label='Display particles',
                       help="""Display particles with alignment and classification information
@@ -133,23 +131,15 @@ Examples:
                       label='Display volume with',
                       help='*slices*: display volumes as 2D slices along z axis.\n'
                            '*chimera*: display volumes as surface with Chimera.')
-
-        # Line is not working well for this case
-        # line = group.addLine("Display volume", help="some help")
-        # line.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed', 'Filtered'],
-        #                   default=1, display=EnumParam.DISPLAY_COMBO,
-        #                   label='',
-        #                   help='Displays selected volume')
-        # line.addParam('displayVolWith', EnumParam, choices=['slices', 'chimera'],
-        #               display=EnumParam.DISPLAY_COMBO, default=VOLUME_SLICES,
-        #               label='with',
-        #               help='*slices*: display volumes as 2D slices along z axis.\n'
-        #                    '*chimera*: display volumes as surface with Chimera.')
-
         group.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed', 'Filtered'],
                           default=1, display=EnumParam.DISPLAY_COMBO,
                           label='Display volume',
                           help='Displays selected volume')
+        group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'],
+                      display=EnumParam.DISPLAY_COMBO, default=ANGDIST_2DPLOT,
+                      label='Display angular distribution',
+                      help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
+                           '*chimera*: display angular distribution using Chimera with red spheres.')
         group.addParam('showBFactorCorrectedVolume', LabelParam, default=False,
                        label='Show a b_factor corrected volume',
                        help=""" This utility boost up the high frequencies. Do not use the automated 
@@ -168,11 +158,7 @@ Examples:
                        help=""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
                             for details. DEFAULT behaviour is --auto
                             """)
-        group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'],
-                      display=EnumParam.DISPLAY_COMBO, default=ANGDIST_2DPLOT,
-                      label='Display angular distribution',
-                      help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
-                           '*chimera*: display angular distribution using Chimera with red spheres.')
+
         group.addParam('showResolutionPlots', LabelParam, default=True,
                       label='Display resolution plots (FSC)',
                       help='')
@@ -761,25 +747,27 @@ Examples:
         threshold = self.resolutionThreshold.get()
         nrefs = len(self._refsList)
         gridsize = self._getGridSize(nrefs)
-        
         xmipp.activateMathExtensions()
         
-        xplotter = XmippPlotter(*gridsize, windowTitle='Resolution FSC')
-        
         for ref3d in self._refsList:
+            xplotter = XmippPlotter(*gridsize, windowTitle='Resolution FSC')
+            legends = []
+            show = False
             plot_title = 'Ref3D_%s' % ref3d
             a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'FSC', yformat=False)
             legends = []
             for it in self._iterations:
                 file_name = self.protocol._getFileName('resolutionXmdFile', iter=it, ref=ref3d)
                 if exists(file_name):
-                    self._plotFSC(a, file_name)
+                    show = True
                     legends.append('iter %d' % it)
+                    self._plotFSC(a, file_name)
                     xplotter.showLegend(legends)
-                    if threshold < self.maxFrc:
-                        a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
-                else:
-                    print "File %s does not exist" % file_name
-            a.grid(True)
+            if show:
+                if threshold < self.maxFrc:
+                    a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+                a.grid(True)
+            else:
+                raise Exception("Set a valid iteration to show its FSC")
             
-        return [xplotter]
+            return [xplotter]

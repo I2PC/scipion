@@ -337,3 +337,19 @@ def protocol_info(request):
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
+
+def check_project_id(request):
+    result = 0
+    projectName = request.GET.get('code', None)
+    
+    try:
+        manager = Manager()
+        project = loadProject(projectName)
+        result = 1
+    except Exception:
+        pass
+    
+    return HttpResponse(result, mimetype='application/javascript')
+
+
+

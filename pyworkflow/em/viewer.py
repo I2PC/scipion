@@ -267,7 +267,7 @@ class ChimeraViewer(Viewer):
                 if hasattr(obj, '_chimeraScript'):
                     fn = obj._chimeraScript.get()
             ChimeraView(fn).show()
-            #FIXME: there is an asymetry between ProtocolViewer and Viewer
+            #FIXME: there is an asymmetry between ProtocolViewer and Viewer
             # for the first, the visualize method return a list of View's (that are shown)
             # for the second, the visualize directly shows the objects. 
             # the first approach is better 
@@ -278,6 +278,8 @@ class ChimeraViewer(Viewer):
 class ChimeraClient:
     
     def __init__(self, volfile, **kwargs):
+        if volfile.endswith('.mrc'):
+            volfile += ':mrc'
 
         self.kwargs = kwargs
         if volfile is None:
@@ -296,39 +298,48 @@ class ChimeraClient:
 
         self.volfile = volfile
         self.voxelSize = self.kwargs.get('voxelSize', None)
-
+        # ChimeraServer is the basic server. There are other
+        # than inherit from it.
+        serverName=self.kwargs.get('ChimeraServer','ChimeraServer')
         self.address = ''
         self.port = getFreePort()
 
         serverfile = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'em', 'chimera_server.py')
-        command = CommandView("chimera --script '%s %s'&" % (serverfile, self.port),
-                             env=getChimeraEnviron()).show()
+        command = CommandView("chimera --script '%s %s %s' &" %
+                              (serverfile, self.port,serverName),
+                             env=getChimeraEnviron(),).show()
         #is port available?
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
-        
-        printCmd('initVolumeData')
-        self.initVolumeData()   
+
+        self.initVolumeData()
+        #FIXME: Following lines are particular ROB
+        #there should not be in generic client
         self.spheresColor = self.kwargs.get('spheresColor', 'red')
         spheresDistance = self.kwargs.get('spheresDistance', None)
         spheresMaxRadius = self.kwargs.get('spheresMaxRadius', None)
         self.spheresDistance = float(spheresDistance) if spheresDistance else 0.75 * max(self.xdim, self.ydim, self.zdim)
         self.spheresMaxRadius = float(spheresMaxRadius) if spheresMaxRadius else 0.02 * self.spheresDistance
+        #END Of PARTICULAR LINES
 
-        printCmd('openVolumeOnServer')
+        #What is the object of printCmd
         self.openVolumeOnServer(self.vol)
         self.initListenThread()
     
     def loadAngularDist(self):
-
+        #FIXME do not seems to be a good idea to use
+        # metada instead of native scipon here
+        #print self.angularDistFile
         md = xmipp.MetaData(self.angularDistFile)
-        angleRotLabel = xmipp.MDL_ANGLE_ROT
-        angleTiltLabel = xmipp.MDL_ANGLE_TILT
-        anglePsiLabel = xmipp.MDL_ANGLE_PSI
         if not md.containsLabel(xmipp.MDL_ANGLE_ROT):
             angleRotLabel = xmipp.RLN_ORIENT_ROT
             angleTiltLabel = xmipp.RLN_ORIENT_TILT
             anglePsiLabel = xmipp.RLN_ORIENT_PSI
+        else:
+            angleRotLabel = xmipp.MDL_ANGLE_ROT
+            angleTiltLabel = xmipp.MDL_ANGLE_TILT
+            anglePsiLabel = xmipp.MDL_ANGLE_PSI
+
         if not md.containsLabel(xmipp.MDL_WEIGHT):
             md.fillConstant(xmipp.MDL_WEIGHT, 1.)
             
@@ -346,7 +357,6 @@ class ChimeraClient:
         #cofr does not seem to work!
         #self.angulardist.append('cofr %d,%d,%d'%(x2,y2,z2))
         for id in md:
-            
             rot = md.getValue(angleRotLabel, id)
             tilt = md.getValue(angleTiltLabel, id)
             psi = md.getValue(anglePsiLabel, id)
@@ -361,20 +371,22 @@ class ChimeraClient:
             command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheresColor)
 
             self.angulardist.append(command)    
-            printCmd(command)
+            #printCmd(command)
             
     def send(self, cmd, data):
         self.client.send(cmd)
         self.client.send(data)
         
-    def openVolumeOnServer(self, volume):
+    def openVolumeOnServer(self, volume, sendEnd=True):
         self.send('open_volume', volume)
         if not self.voxelSize is None:
             self.send('voxel_size', self.voxelSize)
+        #At some point the following lines should be a "particular" 
         if self.angularDistFile:
             self.loadAngularDist()
-            self.send('draw_angular_distribution', self.angulardist)
-        self.client.send('end')
+            self.send('command_list', self.angulardist)
+        if sendEnd:
+            self.client.send('end')
 
     def initListenThread(self):
             self.listen_thread = Thread(target=self.listen)
@@ -386,29 +398,101 @@ class ChimeraClient:
         self.listen = True
         try:
             while self.listen:
-                print 'on client loop'
+
                 msg = self.client.recv()
                 self.answer(msg)
-                sleep(0.01)
-                            
         except EOFError:
             print 'Lost connection to server'
         finally:
             self.exit()
             
     def exit(self):
-            self.client.close()#close connection
+        self.client.close()
 
     def initVolumeData(self):
         self.image = xmipp.Image(self.volfile)
         self.image.convert2DataType(xmipp.DT_DOUBLE)
         self.xdim, self.ydim, self.zdim, self.n = self.image.getDimensions()
-        printCmd("size %dx %dx %d"%(self.xdim, self.ydim, self.zdim))
+        #printCmd("size %dx %dx %d"%(self.xdim, self.ydim, self.zdim))
         self.vol = self.image.getData()
-        
+
     def answer(self, msg):
         if msg == 'exit_server':
             self.listen = False
+
+class ChimeraVirusClient(ChimeraClient):
+
+    def __init__(self, volfile, **kwargs):
+        self.h = kwargs.get('h', 5)
+        self.k = kwargs.get('k', 0)
+        self.sym = kwargs.get('sym','n25')
+        self.radius = kwargs.get('radius', 100)
+        self.color = kwargs.get('color', 'red')
+        self.linewidth = kwargs.get('linewidth', 1)
+        self.sphere = kwargs.get('sphere', 0)
+        kwargs['ChimeraServer']='ChimeraVirusServer'
+        ChimeraClient.__init__(self, volfile, **kwargs)
+
+    def hkcageCommand(self):
+        command  = 'hkcage '
+        command += '%d %d '%(self.h,self.k)
+        command += 'radius  %f '%(self.radius)
+        command += 'orientation %s '%self.sym
+        command += 'replace true '
+        command += 'color %s '%self.color
+        command += 'linewidth %d '%self.linewidth
+        command += 'sphere %f '%self.sphere
+        printCmd(command)
+        return command
+
+    def openVolumeOnServer(self, volume):
+        ChimeraClient.openVolumeOnServer(self, volume, sendEnd=False)
+        commandList=[self.hkcageCommand()]
+        self.send('command_list', commandList)
+        self.send('hk_icosahedron_lattice',(self.h,
+                                          self.k,
+                                          self.radius,
+                                          self.sym))
+        msg = self.client.recv()
+        print('msg1: ', msg)
+        msg = self.client.recv()
+        print('msg2: ', msg)
+        self.client.send('end')
+
+    def answer(self, msg):
+        ChimeraClient.answer(self, msg)
+        if msg == 'motion_stop':
+            pass
+        else:
+
+            pass
+
+    def listenShowJ(self):
+        """This function with a very confusing name send messages to
+        the chimera server"""
+
+        while True:
+            try:
+                (clientsocket, address) = self.serversocket.accept()
+                msg = clientsocket.recv(1024)#should be a single message, so no loop
+                tokens = shlex.split(msg)
+                cmd = tokens[0]
+                if cmd == 'rotate':
+                    rot  = float(tokens[1])
+                    tilt = float(tokens[2])
+                    psi  = float(tokens[3])
+
+                    matrix = xmipp.Euler_angles2matrix(rot, tilt, psi)
+                elif cmd == 'rotate_matrix':
+                    matrixString = tokens[1]
+                    matrix = ast.literal_eval(matrixString)
+                    matrix = [matrix[0][:3], matrix[1][:3], matrix[2][:3]]
+                self.client.send('rotate')
+                self.client.send(matrix)
+                clientsocket.close()
+
+            except EOFError:
+                print 'Lost connection to client'
 
 
 class ChimeraProjectionClient(ChimeraClient):
@@ -464,14 +548,11 @@ class ChimeraProjectionClient(ChimeraClient):
     def exitClient(self):#close window before volume loaded
         if not self.listen:
             sys.exit(0)
-    
-
 
     def initListenThread(self):
         self.listen_thread = Thread(target=self.listen)
         self.listen_thread.daemon = True
         self.listen_thread.start()
-
 
     def listenShowJ(self):
         self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -486,9 +567,9 @@ class ChimeraProjectionClient(ChimeraClient):
                 tokens = shlex.split(msg)
                 cmd = tokens[0]
                 if cmd == 'rotate':
-                    rot = float(tokens[1])
-                    tilt= float(tokens[2])
-                    psi= float(tokens[3])
+                    rot  = float(tokens[1])
+                    tilt = float(tokens[2])
+                    psi  = float(tokens[3])
 
                     matrix = xmipp.Euler_angles2matrix(rot, tilt, psi)
                 elif cmd == 'rotate_matrix':
@@ -501,7 +582,6 @@ class ChimeraProjectionClient(ChimeraClient):
 
             except EOFError:
                 print 'Lost connection to client'
-
 
 def printCmd(cmd):
     pass

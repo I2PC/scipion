@@ -155,7 +155,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             metadataName = self._getNameExt(movie.getFileName(), '_aligned', 'xmd')
             plotPolarName = self._getNameExt(movie.getFileName(), '_plot_polar', 'png')
             plotCartName = self._getNameExt(movie.getFileName(), '_plot_cart', 'png')
-            psdCorrName = self._getNameExt(movie.getFileName(),'_corrected', 'psd')
+            psdCorrName = self._getNameExt(movie.getFileName(),'_aligned_corrected', 'psd')
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
@@ -214,7 +214,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         #micName = self._getMicName(movieId)
         micName = self._getNameExt(movieName, '_aligned', 'mrc')
         metadataName = self._getNameExt(movieName, '_aligned', 'xmd')
-        psdCorrName = self._getNameExt(movieName,'_corrected', 'psd')
+        psdCorrName = self._getNameExt(movieName,'_aligned_corrected', 'psd')
 
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()

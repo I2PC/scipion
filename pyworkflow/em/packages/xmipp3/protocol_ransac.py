@@ -38,7 +38,7 @@ from pyworkflow.em.data import SetOfClasses2D
 
 from convert import writeSetOfClasses2D, readSetOfVolumes, writeSetOfParticles
 from utils import isMdEmpty
-
+from pyworkflow.em.convert import ImageHandler
 
 
 class XmippProtRansac(ProtInitialVolume):
@@ -102,7 +102,7 @@ class XmippProtRansac(ProtInitialVolume):
                       label='Number of iterations to refine the volumes',
                       help='Number of iterations to refine the best volumes using projection matching approach and the input classes')
         form.addParam('initialVolume', PointerParam, label="Initial volume",  expertLevel=LEVEL_ADVANCED,
-                      pointerClass='SetOfVolumes', allowsNull=True,
+                      pointerClass='Volume', allowsNull=True,
                       help='You may provide a very rough initial volume as a way to constraint the angular search.'
                             'For instance, when reconstructing a fiber, you may provide a cylinder so that side views'
                             'are assigned to the correct tilt angle, although the rotational angle may be completely wrong')           
@@ -142,7 +142,10 @@ class XmippProtRansac(ProtInitialVolume):
             fnRoot=self._getPath(fnBase)
                     
             for it in range(self.numIter.get()):    
-                self._insertFunctionStep('reconstructStep',fnRoot) 
+                if it==0:
+                    self._insertFunctionStep('reconstructStep',fnRoot, prerequisites=[bestVolumesStepId])
+                else:
+                    self._insertFunctionStep('reconstructStep',fnRoot)
                 self._insertFunctionStep('projMatchStep',fnBase)
             
             stepId =  self._insertRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
@@ -387,10 +390,9 @@ class XmippProtRansac(ProtInitialVolume):
 
 
     def projectInitialVolume(self):
-        self.volFn = createXmippInputVolumes(self, self.initialVolume.get()) # This function is deprecated
-        
         fnOutputInitVolume=self._getTmpPath("initialVolume.vol")
-        self.runJob('xmipp_image_convert',"-i %s -o %s"%(removeExt(self.volFn),fnOutputInitVolume))
+        img = ImageHandler()
+        img.convert(self.initialVolume.get(), fnOutputInitVolume)
         self.runJob("xmipp_image_resize","-i %s --dim %d %d"%(fnOutputInitVolume,self.Xdim2,self.Xdim2))
         fnGallery=self._getTmpPath('gallery_InitialVolume.stk')
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd") 

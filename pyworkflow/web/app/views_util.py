@@ -48,6 +48,7 @@ iconDict = {
             'logo_scipion_normal': 'scipion_logo_normal.png',
             'logo_scipion_transparent': 'scipion_logo_transparent.png',
             'favicon': 'favicon.ico',
+            'scipion_mail': 'scipion_mail.png',
             'help': 'system_help24.png',
             'browse': 'zoom.png',
             'wizard': 'tools_wizard.png',

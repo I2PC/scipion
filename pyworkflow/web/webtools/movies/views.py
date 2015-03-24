@@ -36,6 +36,7 @@ from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
 import pyworkflow.utils as pwutils
+from pyworkflow.utils.utils import prettyDelta
 
 def service_movies(request):
 
@@ -46,6 +47,7 @@ def service_movies(request):
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
+               'scipion_mail': getResourceIcon('scipion_mail'),
                'movies_utils': movies_utils,
                }
     
@@ -95,15 +97,38 @@ def create_movies_project(request):
         
         # Create symbolic link for uploads
         dest = os.path.join(projectPath,'Uploads')
-#        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
-        source = "/home/josegutab/examples/"+ projectName
+        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
         pwutils.path.makePath(source)
         pwutils.createLink(source, dest)
         
         # 1. Import movies
-        protImport = project.newProtocol(ProtImportMovies,
-                                         objLabel='import movies')
-        project.saveProtocol(protImport)   
+        
+        
+        if testDataKey :
+            attr = getAttrTestFile(testDataKey)
+            path_test = attr['path']
+            filesToImport = source + "/*.mrcs"
+            
+            for f in os.listdir(path_test):           
+                # Create a symbolic link for each file
+                file_path = os.path.join(path_test, f)
+                source_file = os.path.join(source, f)
+                pwutils.createLink(file_path, source_file)
+            
+            label_import = "import movies ("+ testDataKey +")" 
+            protImport = project.newProtocol(ProtImportMovies, objLabel=label_import)
+
+            protImport.filesPath.set(filesToImport)
+            protImport.voltage.set(attr['voltage'])
+            protImport.sphericalAberration.set(attr['sphericalAberration'])
+            protImport.amplitudeContrast.set(attr['amplitudeContrast'])
+            protImport.magnification.set(attr['magnification'])
+            protImport.samplingRate.set(attr['samplingRate'])
+            
+            project.launchProtocol(protImport, wait=True)
+        else:
+            protImport = project.newProtocol(ProtImportMovies, objLabel='import movies')
+            project.saveProtocol(protImport)
         
         # 2. Movie Alignment 
         protMovAlign = project.newProtocol(ProtMovieAlignment)
@@ -112,55 +137,35 @@ def create_movies_project(request):
         protMovAlign.inputMovies.setExtendedAttribute('outputMovies')
         project.saveProtocol(protMovAlign)
         
-        """
-        # If using test data execute the import averages run
-        # options are set in 'project_utils.js'
-        dsMDA = DataSet.getDataSet('initial_volume')
-        
-        if testDataKey :
-            fn = dsMDA.getFile(testDataKey)
-            newFn = join(project.uploadPath, basename(fn))
-            copyFile(fn, newFn)
-            
-            protImport.filesPath.set(newFn)
-            protImport.samplingRate.set(1.)
-#             protImport.setObjectLabel('import averages (%s)' % testDataKey)
-            
-            project.launchProtocol(protImport, wait=True)
-        else:
-            project.saveProtocol(protImport)
-    """
     return HttpResponse(mimetype='application/javascript')
 
-def get_testdata(request):
-    # Filename to use as test data 
-    testDataKey = request.GET.get('testData')
-    dsMDA = DataSet.getDataSet('initial_volume')
-    fn = dsMDA.getFile(testDataKey)
-    return HttpResponse(fn, mimetype='application/javascript')
+def getAttrTestFile(key):
+    if(key == "ribosome"):
+        attr = {"path" : "/mnt/big1/scipionweb/movies_testdata/80S_ribosome/",
+                "voltage" : 300.0,
+                "sphericalAberration" : 2.7,
+                "amplitudeContrast" : 0.1,
+                "magnification" : 59000,
+                "samplingRate": 1.77}
+    if(key == "falcon"):
+        attr = {"path" : "/mnt/big1/scipionweb/movies_testdata/Falcon_2014/",
+                "voltage" : 300.0,
+                "sphericalAberration" : 2.7,
+                "amplitudeContrast" : 0.1,
+                "magnification" : 59000,
+                "samplingRate": 1.34}
+        
+    return attr
 
-
-def check_m_id(request):
-    result = 0
-    projectName = request.GET.get('code', None)
-    
-    try:
-        manager = Manager()
-        project = loadProject(projectName)
-        result = 1
-    except Exception:
-        pass
-    
-    return HttpResponse(result, mimetype='application/javascript')
- 
  
 def movies_content(request):
     projectName = request.GET.get('p', None)
-    path_files = '/resources_movies/img/'
+    path_files = django_settings.ABSOLUTE_URL + '/resources_movies/img/'
     command = "rsync -av --port 3333 USER_FOLDER/ scipion.cnb.csic.es::mws/" + projectName
     
-    # Get info about when the project was created
-    daysLeft = "14"
+    project = loadProject(projectName)
+    elapsedTime = prettyDelta(project.getElapsedTime())
+    daysleft = "14"
     
     context = contentContext(request, projectName)
     context.update({
@@ -175,7 +180,7 @@ def movies_content(request):
                     'showj': path_files + 'showj.png',
                     'download': path_files + 'download.png',
                     'command' : command,
-                    'daysLeft': daysLeft,
+                    'daysLeft': daysleft,
                     })
     
     return render_to_response('movies_content.html', context)

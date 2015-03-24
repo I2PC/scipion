@@ -62,8 +62,8 @@ class FrealignViewer(ProtocolViewer):
     
     def _defineParams(self, form):
         self._env = os.environ.copy()
-        form.addSection(label='Results per Iteration')
-        form.addParam('iterToShow', EnumParam, label="Which iteration do you want to visualize?", default=0, 
+        form.addSection(label='Visualization')
+        form.addParam('iterToShow', EnumParam, label="Iteration to visualize", default=0,
                       choices=['last','all','selection'], display=EnumParam.DISPLAY_LIST)
         form.addParam('selectedIters', NumericRangeParam, default='1',
               label='Selected iterations', condition='iterToShow==%d' % SELECTED_ITERS,
@@ -106,15 +106,14 @@ Examples:
               label='Display volume with',
               help='*slices*: display volumes as 2D slices along z axis.\n'
                    '*chimera*: display volumes as surface with Chimera.')
-        
-        group = form.addGroup('Angular distribution and resolution plots')
-        
+
         group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
               default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_COMBO, 
               label='Display angular distribution',
               help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
-                   '*chimera*: display angular distribution using Chimera with red spheres.') 
+                   '*chimera*: display angular distribution using Chimera with red spheres.')
         
+        group = form.addGroup('Resolution')
         group.addParam('resolutionPlotsSSNR', LabelParam, default=True,
                       label='Display SSNR plots',condition=self.protocol.doAditionalStatisFSC,
                       help='Display signal to noise ratio plots (SSNR) ')
@@ -426,7 +425,6 @@ Examples:
         
         if self.iterToShow.get() == LAST_ITER:
             self._iterations = [self.lastIter]
-            
         elif self.iterToShow.get() == ALL_ITERS:
             self._iterations = range(1, self.lastIter + 1)
         elif self.iterToShow.get() == SELECTED_ITERS:

@@ -1212,9 +1212,17 @@ class FormWindow(Window):
         
         # Host
         self._createHeaderLabel(runFrame, Message.LABEL_HOST, row=r, column=c, pady=0, padx=(15,5), sticky='ne')
-        self._createBoundCombo(runFrame, Message.VAR_EXEC_HOST, self.hostList).grid(row=r, column=c+1, pady=5, sticky='nw')
-        
+        # Keep track of hostname selection
+        self.hostVar = tk.StringVar()
+        protHost = self.protocol.getHostName()
+        hostName = protHost if protHost in self.hostList else self.hostList[0]
+        self.hostVar.trace('w', self._setHostName)
+        self.hostCombo = ttk.Combobox(runFrame, textvariable=self.hostVar, state='readonly', width=10)
+        self.hostCombo['values'] = self.hostList
+        self.hostVar.set(hostName)
+        self.hostCombo.grid(row=r, column=c+1, pady=5, sticky='nw')
         r = 2
+
         # Parallel
         # some short notation
         allowThreads = self.protocol.allowThreads # short notation
@@ -1383,13 +1391,6 @@ class FormWindow(Window):
         self._addVarBinding(paramName, var, None, *callbacks)
         return param, var
         
-    def _createBoundCombo(self, parent, paramName, choices, *callbacks):
-        param, var = self._createEnumBinding(paramName, choices, *callbacks)
-        combo = ttk.Combobox(parent, textvariable=var.tkVar, state='readonly', width=10)
-        combo['values'] = param.choices
-        
-        return combo
-    
     def _createBoundOptions(self, parent, paramName, choices, value, *callbacks, **kwargs):
         param, var = self._createEnumBinding(paramName, choices, value, *callbacks)
         frame = tk.Frame(parent, **kwargs)
@@ -1621,7 +1622,10 @@ class FormWindow(Window):
                 self.protocol.numberOfMpi.set(procs)
                 self.protocol.numberOfThreads.set(min(1, self.protocol.numberOfThreads.get())) # 0 or 1
         except Exception:
-            pass            
+            pass    
+        
+    def _setHostName(self, *args):
+        self.protocol.setHostName(self.hostVar.get())        
         
     def _onRunModeChanged(self, paramName):
         self.setParamFromVar(paramName)

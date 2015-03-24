@@ -264,6 +264,18 @@ class XmippVolumeRadiusWizard(XmippVolumeMaskRadiusWizard):
         protParams['value']= protocol.cylinderRadius.get()
         return protParams
 
+class XmippVolumeMaskRadiusProjMWizard(XmippVolumeMaskRadiusWizard):
+    _targets = [(XmippProtProjMatch, ['maskRadius'])]
+
+    def _getParameters(self, protocol):
+
+        label, value = self._getInputProtocol(self._targets, protocol)
+
+        protParams = {}
+        protParams['input']= protocol.input3DReferences
+        protParams['label']= label
+        protParams['value']= value
+        return protParams
 
 class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
     _targets = [(XmippProtMaskVolumes, ['innerRadius', 'outerRadius'])]
@@ -271,7 +283,7 @@ class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
     def _getParameters(self, protocol):
         
         label, value = self._getInputProtocol(self._targets, protocol)
-        
+
         protParams = {}
         protParams['input']= protocol.inputVolumes
         protParams['label']= label
@@ -287,6 +299,21 @@ class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
         _value = params['value']
         _label = params['label']
         VolumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
+
+class XmippVolumeRadiiProjMWizard(XmippVolumeRadiiWizard):
+    _targets = [(XmippProtProjMatch, ['innerRadius', 'outerRadius'])]
+
+    def _getParameters(self, protocol):
+
+        label, value = self._getInputProtocol(self._targets, protocol)
+        # Convert values to integer (From NumericListParam they come as string)
+        value = [int(val) for val in value]
+
+        protParams = {}
+        protParams['input']= protocol.inputVolumes
+        protParams['label']= label
+        protParams['value']= value
+        return protParams
     
 
 #===============================================================================

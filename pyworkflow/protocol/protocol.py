@@ -1384,16 +1384,6 @@ def runProtocolMain(projectPath, protDbPath, protId):
         protDbPath: path to protocol db relative to projectPath
         protId: id of the protocol object in db.
     """
-    if not exists(projectPath):
-        print "ERROR: project path '%s' does not exist. " % projectPath
-        sys.exit(1)
-    
-    fullDbPath = os.path.join(projectPath, protDbPath)
-    
-    if not exists(fullDbPath):
-        print "ERROR: protocol database '%s' does not exist. " % fullDbPath
-        sys.exit(1)
-        
     # Enter to the project directory and load protocol from db
     protocol = getProtocolFromDb(projectPath, protDbPath, protId, chdir=True)
     
@@ -1444,6 +1434,16 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
     # We need this import here because from Project is imported
     # all from protocol indirectly, so if move this to the top
     # we get an import error
+    if not exists(projectPath):
+        raise Exception("ERROR: project path '%s' does not exist. " % projectPath)
+        sys.exit(1)
+    
+    fullDbPath = os.path.join(projectPath, protDbPath)
+    
+    if not exists(fullDbPath):
+        raise Exception("ERROR: protocol database '%s' does not exist. " % fullDbPath)
+        sys.exit(1)
+        
     from pyworkflow.project import Project
     project = Project(projectPath)
     project.load(dbPath=os.path.join(projectPath, protDbPath), chdir=chdir)     
