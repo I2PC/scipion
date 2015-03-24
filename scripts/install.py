@@ -79,7 +79,12 @@ def build(args):
         url = '%s/python/%s.tgz' % (os.environ['SCIPION_URL_SOFTWARE'], SCONS)
         sys.stdout.write(
            'Downloading, unpacking & installing scons from %s ...\n' % url)
-        tarfile.open(fileobj=StringIO(urlopen(url).read())).extractall(INSTALL)
+        
+        if url.startswith('file:///') or os.path.isfile(url):
+            fObj = open(url)
+        else:
+            fObj = StringIO(urlopen(url).read())
+        tarfile.open(fileobj=fObj).extractall(INSTALL)
 
         # Install it.
         command = [sys.executable, 'setup.py', 'install', '--prefix=%s' % SOFTWARE]

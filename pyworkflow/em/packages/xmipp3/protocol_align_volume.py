@@ -250,6 +250,8 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         """ Iterate over all the input volumes. """
         for pointer in self.inputVolumes:
             item = pointer.get()
+            if item is None:
+                break
             itemId = item.getObjId()
             if isinstance(item, em.Volume):
                 item.outputName = self._getExtraPath('output_vol%06d.vol' % itemId)

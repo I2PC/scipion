@@ -31,6 +31,7 @@
 # First import the environment (this comes from SConstruct)
 Import('env')
 
+from os import environ
 
 #  ************************************************************************
 #  *                                                                      *
@@ -50,12 +51,30 @@ if not env.GetOption('clean'):
 # But because freetype's compilation is a pain, it's better to use whatever
 # version is in the system.
 
-fftw = env.AddLibrary(
-    'fftw',
+# fftw = env.AddLibrary(
+#     'fftw3',
+#     tar='fftw-3.3.4.tgz',
+#     targets=[File('#software/lib/libfftw3.so').abspath],
+#     flags=['--enable-threads', '--enable-shared'],
+#     clean=[Dir('#software/tmp/fftw-3.3.4')])
+
+# I needed to add two compilations of fftw to get float extensions
+fftw1 = env.AddLibrary(
+    'fftw1',
     tar='fftw-3.3.4.tgz',
     targets=[File('#software/lib/libfftw3.so').abspath],
     flags=['--enable-threads', '--enable-shared'],
     clean=[Dir('#software/tmp/fftw-3.3.4')])
+    
+fftw2 = env.AddLibrary(
+    'fftw2',
+    tar='fftw-3.3.4f.tgz',
+    targets=[File('#software/lib/libfftw3f.so').abspath],
+    flags=['--enable-threads', '--enable-shared', '--enable-float'],
+    clean=[Dir('#software/tmp/fftw-3.3.4f')])
+
+fftw = env.Alias('fftw3', [fftw1, fftw2])
+env.Default(fftw)
 
 tcl = env.AddLibrary(
     'tcl',
@@ -76,11 +95,13 @@ tk = env.AddLibrary(
     clean=[Dir('#software/tmp/tk8.6.1').abspath])
 
 tk_wish = env.Command(
-    'software/bin/wish',
-    'software/bin/wish8.6',
-    Action('ln -v -s wish8.6 wish', 'Linking wish8.6 to wish in software/bin',
-           chdir='software/bin'))
-Default(tk_wish)
+    File('#software/bin/wish').abspath,
+    File('#software/bin/wish8.6').abspath,
+    Action('ln -v -s wish8.6 wish', 
+           'Linking wish8.6 to wish in software/bin',
+           chdir=Dir('#software/bin').abspath))
+env.Default(tk_wish)
+env.Depends(tk_wish, tk)
 # Special case: tk does not make the link automatically, go figure.
 
 zlib = env.AddLibrary(
@@ -93,15 +114,35 @@ zlib = env.AddLibrary(
 jpeg = env.AddLibrary(
     'jpeg',
     tar='libjpeg-turbo-1.3.1.tgz',
-    targets=[File('#software/lib/libjpeg.so')],
-    flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
+    targets=[File('#software/lib/libjpeg.so').abspath],
+    flags=['--without-simd'])
+    #flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
+
+png = env.AddLibrary(
+    'png',
+    tar='libpng-1.6.16.tgz',
+    deps=[zlib])
+
+tiff = env.AddLibrary(
+     'tiff',
+     tar='tiff-3.9.4.tgz',
+     targets=[File('#software/lib/libtiff.so').abspath],
+     deps=[zlib])
 
 sqlite = env.AddLibrary(
-    'sqlite',
+    'sqlite3',
     tar='sqlite-3.6.23.tgz',
     targets=[File('#software/lib/libsqlite3.so').abspath],
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
+
+hdf5 = env.AddLibrary(
+     'hdf5',
+     tar='hdf5-1.8.14.tgz',
+     flags=['--enable-cxx'],
+     targets=[File('#software/lib/libhdf5.so').abspath, 
+              File('#software/lib/libhdf5_cpp.so').abspath],
+     deps=[zlib])
 
 python = env.AddLibrary(
     'python',
@@ -114,14 +155,14 @@ python = env.AddLibrary(
 libxml2 = env.AddLibrary(
     'libxml2',
     tar='libxml2-2.9.2.tgz',
-    targets=['lib/libxml2.so'],
+    targets=[File('#software/lib/libxml2.so').abspath],
     deps=[python],
     default=False)
 
 libxslt = env.AddLibrary(
     'libxslt',
     tar='libxslt-1.1.28.tgz',
-    targets=['lib/libxslt.so'],
+    targets=[File('#software/lib/libxslt.so')],
     deps=[libxml2],
     default=False)
 # This library is pretty complicated to compile right. For the moment,
@@ -138,11 +179,12 @@ swig = env.AddLibrary(
     'swig',
     tar='swig-3.0.2.tgz',
     targets=[File('#software/bin/swig').abspath],
-    makeTargets='swig install',
+    makeTargets=['Source/Swig/tree.o'],
     deps=[pcre],
     default=False)
 # We have to add the "makeTargets" part because swig needs to call
 # "make" before "make install". Horrible.
+# makeTargets have paths relative to the builddir.
 
 env.AddLibrary(
     'parallel',
@@ -229,7 +271,7 @@ matplotlib = addModule(
     'matplotlib',
     tar='matplotlib-1.3.1.tgz',
     flags=['--old-and-unmanageable'],
-    deps=[numpy, dateutil, pyparsing])
+    deps=[numpy, png, dateutil, pyparsing])
 
 addModule(
     'psutil',
@@ -289,10 +331,11 @@ tornado = addModule(
 lxml = addModule(
     'lxml',
     tar='lxml-3.4.1.tgz',
-    deps=[], # libxml2], #, libxslt],
+    libChecks=['libxml-2.0', 'libxslt'],
+    deps=[], # libxml2, libxslt],
     default=False)
-# Commented out libxml2 and libxslt because they are so hard to
-# compile right.
+# libxml2 and libxslt are checked instead of compiled because
+# they are so hard to compile right.
 
 addModule(
     'ipython',
@@ -310,8 +353,8 @@ addModule(
 # extraActions is a list of (target, command) to run after installation.
 
 env.AddPackage('xmipp',
-               tar='xmipp_master.tgz',
-               buildDir='xmipp_master',
+               tar='xmipp_scipion.tgz',
+               buildDir='xmipp_scipion',
                reqs={'mpi': 'cxx',
                      'freetype': 'cxx',
                      'X11': 'cxx',
@@ -319,6 +362,7 @@ env.AddPackage('xmipp',
                      'ncurses': 'cxx',
                      'ssl': 'cxx',
                      'readline': 'cxx'},
+               #deps=[opencv],
                default=False)
 # In case you want to install an older version of Xmipp, you can use
 # the extraActions parameter instead of using its own SConscript, like this:
@@ -351,8 +395,13 @@ env.AddPackage('frealign',
 env.AddPackage('pytom',
                tar='pytom_develop0.962.tgz',
                extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
-                             'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
-                              % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],shome))],
+                              'PATH=%s/software/bin:%s '
+                              'LD_LIBRARY_PATH=%s/software/lib:%s '
+                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s '
+                              './scipion_installer'
+                              % (shome, environ.get('PATH', ''),
+                                 shome, environ.get('LD_LIBRARY_PATH', ''),
+                                 env['MPI_LIBDIR'], env['MPI_INCLUDE'], shome))],
                deps=[boost_headers_only, fftw, swig, lxml],
                default=False)
 
@@ -361,6 +410,11 @@ env.AddPackage('relion',
                extraActions=[
                    ('relion_build.log', './INSTALL.sh -j %s'
                     % GetOption('num_jobs'))],
+               default=False)
+
+env.AddPackage('resmap',
+               tar='resmap-1.1.5-scipion.tgz',
+               deps=['scipy'],
                default=False)
 
 env.AddPackage('spider',
@@ -372,16 +426,6 @@ env.AddPackage('motioncorr',
                tar='motioncorr_v2.1.tgz',
                default=False)
 
-
 env.AddPackage('simple',
                tar='simple2.tgz',
                default=False)
-
-# This last one already contains the binary.
-
-
-# TODO: check if we have to use the "purge" option below:
-
-# # Purge option
-# if GetOption('purge'):
-#     env.RemoveInstallation()
