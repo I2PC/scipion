@@ -65,8 +65,6 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 
 # Default values for configuration files.
 SCIPION_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
-SCIPION_PROTOCOLS = os.path.expanduser('~/.config/scipion/protocols.conf')
-SCIPION_HOSTS = os.path.expanduser('~/.config/scipion/hosts.conf')
 
 # Allow the user to override them (and remove them from sys.argv).
 while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
@@ -74,11 +72,10 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
     value = sys.argv.pop(1)
     if arg == '--config':
         SCIPION_CONFIG = os.path.abspath(os.path.expanduser(value))
-    elif arg == '--protocols':
-        SCIPION_PROTOCOLS = os.path.abspath(os.path.expanduser(value))
     else:
         sys.exit('Unknown argument: %s' % arg)
-
+SCIPION_PROTOCOLS = join(dirname(SCIPION_CONFIG), 'protocols.conf')
+SCIPION_HOSTS = join(dirname(SCIPION_CONFIG), 'hosts.conf')
 
 #
 # Initialize variables from config file.
