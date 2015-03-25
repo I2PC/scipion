@@ -175,8 +175,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        int size = ((ScipionGalleryData)data).getEnabledCount();
-                        if (confirmCreate("Micrographs", size)) 
+                        if (confirmCreate("Micrographs")) 
                         {
                             String command = String.format(runProtCreateSubset, 
                             inputid, sqlitefile, "", "SetOfMicrographs", other, getRunLabel());
@@ -216,8 +215,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     protected void createVolume()
     {
         msgfields.put(runNameKey, "ProtRegisterVolume");
-        boolean register = confirmCreate("Are you sure you want to register volume in scipion?");
-        if(register)
+        dlg = new InputFieldsMessageDialog(ScipionGalleryJFrame.this, "Question", "Are you sure you want to register volume in scipion?", msgfields);
+        int create = dlg.action;
+        if (create == InputFieldsMessageDialog.OK_OPTION);
         {
             String command = String.format(runProtCreateSubset, 
                 inputid, sqlitefile, "", setType, data.getSelVolId().toString() + ",Volume", getRunLabel());
@@ -238,15 +238,25 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     protected void createSimpleSubset()
     {
         int size = 0;
-                    
+       
         if(data.hasClasses())
         {
+            boolean[] selection = gallery.getSelection();
             for(ScipionMetaData.EMObject emo: ((ScipionGalleryData)data).getEMObjects())
-                if(emo.isEnabled() && emo.childmd != null)
+            {
+                if(gallery.hasSelection())
+                { if(selection[emo.index] && emo.childmd != null)
+                    size += emo.childmd.size();
+                }
+                else if(emo.isEnabled() && emo.childmd != null)
                     size += emo.childmd.getEnabledCount();
+            }
         }
+        else if (gallery.hasSelection())
+            size = gallery.getSelectionCount();
         else
             size = ((ScipionGalleryData)data).getEnabledCount();
+        
         if (confirmCreate(type, size)) 
         {
             String command = String.format(runProtCreateSubset, 
@@ -260,7 +270,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         int size = ((ScipionGalleryData)data).getEnabledCount();
                        
-        if (confirmCreate("Classes", size)) {
+        if (confirmCreate("Classes")) {
             String command = String.format(runProtCreateSubset, 
                 inputid, sqlitefile, "", setType , other, getRunLabel());
             runCommand(command, "Creating set ...");
@@ -269,9 +279,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     protected void createRepresentativesSubset()
     {
-        int size = ((ScipionGalleryData)data).getEnabledCount();
-                        
-        if (confirmCreate("Representatives", size)) {
+        if (confirmCreate("Representatives")) {
             String output = isClass2D()? "SetOfAverages,Representatives":"SetOfVolumes,Representatives";
             String command = String.format(runProtCreateSubset, 
             inputid, sqlitefile, "", output , other, getRunLabel());
@@ -279,22 +287,18 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
     
-    
+    public boolean confirmCreate(String output)
+    {
+        int size = gallery.hasSelection()? gallery.getSelectionCount(): ((ScipionGalleryData)data).getEnabledCount();
+        return confirmCreate(output, size);
+    }
     
     public boolean confirmCreate(String output, int size)
     {
-        String msg = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size > 1)?"elements":"element");
-        if( ((ScipionGalleryData)data).getEnabledCount() == data.size())
-            msg += "<br><font color=red>Note:</font> There are no disabled items to dismiss";
-        return confirmCreate(msg);
-    }
-    
-    public boolean confirmCreate(String msg)
-    {
-       
+        String msg = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size == 1)?"element":"elements");
+        
         dlg = new InputFieldsMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
-        int create = dlg.action;
-        return (create == InputFieldsMessageDialog.OK_OPTION);
+        return dlg.action == InputFieldsMessageDialog.OK_OPTION;
     }
 
     public void reloadTableData(boolean changed)
@@ -302,7 +306,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         super.reloadTableData(changed);
         enableActions();
     }
-        
 
     protected void enableActions() {
         boolean isenabled = !data.isVolumeMode();
@@ -310,7 +313,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         Color forecolor = isenabled ? Color.WHITE : Color.GRAY;
         if(cmdbutton != null)
         {
-            
             cmdbutton.setVisible(isenabled);
             cmdbutton.setBackground(color);
             cmdbutton.setForeground(forecolor);
@@ -328,7 +330,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             representativesbt.setForeground(forecolor);
         }
     }
-    
 
     @Override
     protected void changeView()
@@ -340,7 +341,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             cmdbutton.setVisible(data.isTableMode());
             createvolbt.setVisible(!data.isTableMode());
         }
-
     }
   
     public boolean proceedWithChanges()
@@ -348,10 +348,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         return true;
     }
     
-   protected void runCommand(final String command, String msg) 
+    protected void runCommand(final String command, String msg) 
     {
         try {
-            ((ScipionGalleryData)data).overwrite(sqlitefile);
+            boolean[] selection = null;
+            if(gallery.hasSelection())
+                selection = gallery.getSelection();
+            ((ScipionGalleryData)data).overwrite(sqlitefile, selection);
             XmippWindowUtil.runCommand(command, port);
             close(false);
         } catch (SQLException ex) {
@@ -380,8 +383,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             XmippDialog.showError(this, e.getMessage());
         }
     }
-    
-    
     
     protected void initGalleryMenu() {
             menu = new ScipionGalleryMenu();
@@ -432,7 +433,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
         protected void saveSelection(String path) {
             try {
-                ((ScipionGalleryData)data).overwrite(path);
+                boolean[] selection = null;
+                if(gallery.hasSelection())
+                    selection = gallery.getSelection();
+                ((ScipionGalleryData)data).overwrite(path, selection);
             } catch (SQLException ex) {
                 Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }

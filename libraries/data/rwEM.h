@@ -118,7 +118,7 @@ EMHead;
  * @param select_img Index number of selected image
  * @return
  */
-int readEM(size_t select_img);
+int readEM(size_t select_img, bool isStack=false);
 
 /** Write image to EM file format
  *

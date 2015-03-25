@@ -174,10 +174,10 @@ const ApplyGeoParams &params)
 
 void ImageBase::setGeo(const MDRow &row, size_t n)
 {
-	if (n<MD.size())
-		MD[n]=row;
-	else
-		REPORT_ERROR(ERR_MD_OBJECTNUMBER,"Trying to set a value outside the current metadata size");
+    if (n<MD.size())
+        MD[n]=row;
+    else
+        REPORT_ERROR(ERR_MD_OBJECTNUMBER,"Trying to set a value outside the current metadata size");
 }
 
 int ImageBase::readApplyGeo(const FileName &name, const MDRow &row,
@@ -471,7 +471,7 @@ void ImageBase::getDimensions(size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &
  */
 void ImageBase::getInfo(ImageInfo &imgInfo) const
 {
-	imgInfo.filename = filename;
+    imgInfo.filename = filename;
     imgInfo.offset = offset;
     imgInfo.datatype = datatype();
     imgInfo.swap = getSwap() > 0;
@@ -749,6 +749,8 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         err = readTIA(select_img,false);
     else if (ext_name.contains("dm3"))//DM3
         err = readDM3(select_img,false);
+    else if (ext_name.contains("ems"))//EM stack
+        err = readEM(select_img, true);
     else if (ext_name.contains("em"))//EM
         err = readEM(select_img);
     else if (ext_name.contains("pif"))//PIF

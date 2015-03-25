@@ -6,6 +6,7 @@
 package xmipp.viewer.scipion;
 
 import ij.IJ;
+import ij.ImagePlus;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
@@ -17,9 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.ij.commons.ImagePlusFromFile;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.CTFDescription;
 import xmipp.jni.EllipseCTF;
+import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
@@ -443,10 +446,7 @@ public class ScipionMetaData extends MetaData {
         }
     }
 
-   
-
     public void unionAll(MetaData md) {
-
         emobjects.addAll(((ScipionMetaData) md).getEMObjects());
     }
 
@@ -468,7 +468,6 @@ public class ScipionMetaData extends MetaData {
             }
         }
         return null;
-
     }
 
     public void write(String path) {
@@ -489,7 +488,6 @@ public class ScipionMetaData extends MetaData {
                 }
             }
         }
-
     }
 
     public String toString() {
@@ -683,18 +681,18 @@ public class ScipionMetaData extends MetaData {
     
     
 
-    public void overwrite(String src, String path) throws SQLException {
+    public void overwrite(String src, String path, boolean[] selection) throws SQLException {
         try {
             XmippUtil.copyFile(src, path);
             if (parent != null) {
-                parent.overwrite(src, path);//this will write parent and siblings
+                parent.overwrite(src, path, null);//this will write parent and siblings
                 return;
             }
-            overwriteBlock(path);
+            overwriteBlock(path, selection);
             if (haschilds) {
                 for (EMObject emo : emobjects) {
                     if (emo.childmd != null) {
-                        emo.childmd.overwriteBlock(path);
+                        emo.childmd.overwriteBlock(path, null);
                     }
                 }
             }
@@ -704,7 +702,7 @@ public class ScipionMetaData extends MetaData {
 
     }
 
-    public void overwriteBlock(String path) throws SQLException {//overwrites enabled column in existing sqlite objects table
+    public void overwriteBlock(String path, boolean[] selection) throws SQLException {//overwrites enabled column in existing sqlite objects table
         Connection c = null;
         PreparedStatement stmt = null;
         try {
@@ -713,9 +711,21 @@ public class ScipionMetaData extends MetaData {
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
             c.setAutoCommit(false);
             stmt = c.prepareStatement(String.format("UPDATE %sObjects SET %s=?, %s=?, %s=? WHERE id=?;", preffix, enabledci.labelName, labelci.labelName, commentci.labelName));
-
-            for (EMObject emo : emobjects) {
-                if (emo.changed) {
+            boolean enabled;
+            for (EMObject emo : emobjects) 
+            {
+                if(selection != null)
+                {
+                    enabled = selection[emo.index];
+                    stmt.setInt(1, enabled ? 1 : 0);
+                    stmt.setString(2, emo.getLabel());
+                    stmt.setString(3, emo.getComment());
+                    stmt.setInt(4, emo.getId().intValue());
+                    stmt.executeUpdate();
+                 
+                }
+                else if (emo.changed) {
+                    
                     stmt.setInt(1, emo.isEnabled() ? 1 : 0);
                     stmt.setString(2, emo.getLabel());
                     stmt.setString(3, emo.getComment());
@@ -1188,6 +1198,37 @@ public class ScipionMetaData extends MetaData {
         return properties.get("self");
     }
     
-   
+    public double[] getStatistics(boolean applyGeo, int label)
+    {
+        double[] minMax = new double [2];
+        ColumnInfo ci = getColumnInfo(label);
+        if(!ci.render)
+            throw new IllegalArgumentException("No images to process");
+        String imageFn, mddir = this.getBaseDir();
+        ImagePlus imp;
+        minMax[0] = Double.MAX_VALUE;
+        minMax[1] = -Double.MAX_VALUE;
+        double aux;
+        for (EMObject emo: emobjects)
+        {
+            imageFn = emo.getValueString(ci);
+            if(imageFn != null)
+            {
+                imageFn = Filename.findImagePath(imageFn, mddir, true);
+                if (imageFn != null && Filename.exists(imageFn))
+                {
+                    imp = new ImagePlusFromFile(imageFn).getImagePlus();
+                    aux = imp.getProcessor().getMin();
+                    if(aux < minMax[0])
+                        minMax[0] = aux;
+                    aux = imp.getProcessor().getMax();
+                    if(aux > minMax[1])
+                        minMax[1] = aux;
+                }
+            }
+        }
+        
+        return minMax;
+    }
    
 }

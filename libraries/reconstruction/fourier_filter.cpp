@@ -74,6 +74,11 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("                                             : The CTF phase will be corrected before applying");
     program->addParamsLine("            bfactor <B>                      : Exponential filter (positive values for decay) ");
     program->addParamsLine("               requires --sampling;                                                         ");
+    program->addParamsLine("            fsc <metadata>                   : Filter with the FSC profile contained in the metadata");
+    program->addParamsLine("               requires --sampling;                                                         ");
+    program->addParamsLine("            binary_file <file>               : Binary file with the filter");
+    program->addParamsLine("                                             :+The filter must be defined in the whole Fourier space (not only the nonredundant part).");
+    program->addParamsLine("                                             :+This filter is produced, for instance, by xmipp_ctf_group");
     program->addParamsLine("         alias -f;");
     program->addParamsLine("  [--sampling <sampling_rate>]               : If provided pass frequencies are taken in Ang and for the CTF case");
     program->addParamsLine("                                             : and for the CTF case this is the sampling used to compute the CTF");
@@ -198,7 +203,16 @@ void FourierFilter::readParams(XmippProgram *program)
     {
         FilterShape = FilterBand = BFACTOR;
         w1 = program->getDoubleParam("--fourier", "bfactor");
-        w2 = program->getDoubleParam("--sampling");
+    }
+    else if (filter_type == "fsc")
+    {
+        FilterShape = FilterBand = FSCPROFILE;
+        fnFSC = program->getParam("--fourier", "fsc");
+    }
+    else if (filter_type == "binary_file")
+    {
+        FilterShape = FilterBand = BINARYFILE;
+        fnFilter = program->getParam("--fourier", "binary_file");
     }
     else
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't happen, check argument parser or params definition");
@@ -244,13 +258,21 @@ void FourierFilter::show()
             std::cout << "CTFPOS\n";
             break;
         case BFACTOR:
-            std::cout << "Bfactor "<< w1 <<std::endl;
+            std::cout << "Bfactor "<< w1 << std::endl
+                      << "Sampling rate " << sampling_rate << std::endl;
             break;
         case WEDGE:
             std::cout << "Missing wedge keep data between tilting angles of " << t1 << " and " << t2 << " deg\n";
             break;
         case CONE:
             std::cout << "Missing cone for RCT data with tilting angles up to " << t1 << " deg\n";
+            break;
+        case FSCPROFILE:
+            std::cout << "FSC file " << fnFSC << std::endl
+                      << "Sampling rate " << sampling_rate << std::endl;
+            break;
+        case BINARYFILE:
+            std::cout << "Filter file " << fnFilter << std::endl;
             break;
         }
         if(FilterShape!=CONE && FilterShape!=WEDGE)
@@ -425,10 +447,32 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
         break;
     case BFACTOR:
         {
-            double R = absw / w2;
+            double R = absw / sampling_rate;
             return exp( - (w1 / 4.)  * R * R);
         }
         break;
+    case FSCPROFILE:
+		{
+			double R = absw / sampling_rate;
+			int idx=-1;
+			size_t imax=freqContFSC.size();
+			double *ptrFreq=&freqContFSC[0];
+			for (size_t i=0; i<imax; ++i)
+				if (ptrFreq[i]>R)
+				{
+					idx=(int)i;
+					break;
+				}
+			if (idx>=1)
+			{
+				double x0=freqContFSC[idx-1];
+				double x1=freqContFSC[idx];
+				double y0=FSC[idx-1];
+				double y1=FSC[idx];
+				return y0+(y1-y0)*(R-x0)/(x1-x0);
+			}
+			return 0;
+		}
     default:
         REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown mask type");
     }
@@ -440,6 +484,15 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
 {
     if (FilterShape==SPARSIFY)
         return;
+
+    if (FilterShape==FSCPROFILE)
+    {
+    	MetaData mdFSC(fnFSC);
+        mdFSC.getColumnValues(MDL_RESOLUTION_FREQ,freqContFSC);
+        mdFSC.getColumnValues(MDL_RESOLUTION_FRC,FSC);
+    }
+    std::cout << "Generating mask " << do_generate_3dmask << std::endl;
+
     if (do_generate_3dmask)
     {
         transformer.setReal(v);
@@ -464,6 +517,15 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
                 break;
             }
         }
+        else if (FilterShape==BINARYFILE)
+        {
+        	Image<double> filter;
+        	filter.read(fnFilter);
+            scaleToSize(BSPLINE3, maskFourierd, filter(), XSIZE(v), YSIZE(v), ZSIZE(v));
+            maskFourierd.resize(Fourier);
+            return;
+        }
+
         else
         {
             maskFourierd.initZeros(Fourier);
@@ -490,6 +552,14 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
         transformer.setReal(v);
         MultidimArray< std::complex<double> > Fourier;
         transformer.getFourierAlias(Fourier);
+        if (FilterShape==BINARYFILE)
+        {
+        	Image<double> filter;
+        	filter.read(fnFilter);
+            scaleToSize(BSPLINE3, maskFourierd, filter(), XSIZE(v), YSIZE(v), ZSIZE(v));
+            maskFourierd.resize(Fourier);
+            return;
+        }
         maskFourierd.initZeros(Fourier);
         w.resizeNoCopy(3);
         for (size_t k=0; k<ZSIZE(Fourier); k++)

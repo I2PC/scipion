@@ -1764,17 +1764,21 @@ public class GalleryData {
         return md.hasRecalculateCTF();
     }
     
-    public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) 
+    public void recalculateCTF(int row, boolean[] selection, EllipseCTF ellipseCTF, String sortFn) 
     {
-        
-        md.putCTF(ids[row], ellipseCTF);
-        EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
-                ellipseCTF, 90 - ellipseCTF.getDefocusAngle(), 
-                md.getPSDFile(ids[row]), ellipseCTF.getD(), window.getTasksEngine(), row, sortFn);
-        window.getTasksEngine().add(estimateFromCTFTask);
+        if(isEnabled(row))
+        {
+            for(int i = 0; i <selection.length; i ++ )
+                if(selection[i] && isEnabled(i))
+                    md.putCTF(ids[i], ellipseCTF);
+            EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
+                    ellipseCTF, 90 - ellipseCTF.getDefocusAngle(), 
+                    md.getPSDFile(ids[row]), ellipseCTF.getD(), window.getTasksEngine(), row, sortFn);
+            window.getTasksEngine().add(estimateFromCTFTask);
+        }
     }
     
-     public void showCTF(boolean profile, int row, TasksEngine ctfTasks) {
+     public void showCTF(boolean profile, int row, boolean[] selection, TasksEngine ctfTasks) {
         try {
             long id = ids[row];
             
@@ -1797,7 +1801,7 @@ public class GalleryData {
                 EllipseCTF ctfparams = md.getEllipseCTF(id, imp.getWidth());
                 String sortfn = createSortFile(psd, row);
                 XmippUtil.showImageJ(Tool.VIEWER);// removed Toolbar.FREEROI
-                CTFRecalculateImageWindow ctfiw = new CTFRecalculateImageWindow(this, imp, psd, ctfparams, ctfTasks, row, sortfn);
+                CTFRecalculateImageWindow ctfiw = new CTFRecalculateImageWindow(this, selection, imp, psd, ctfparams, ctfTasks, row, sortfn);
             }
 
         } catch (Exception e) {
@@ -1843,12 +1847,10 @@ public class GalleryData {
         }
         
         
-        
-        
-         public String[] getRenderLabels()
-       {
+        public String[] getRenderLabels()
+        {
            return renderLabels;
-       }
+        }
        
        public String[] getVisibleLabels()
        {

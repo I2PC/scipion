@@ -213,11 +213,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                     
 			this.data = data;
                         data.setWindow(this);
-                        StopWatch stopWatch = StopWatch.getInstance();
 			createModel();
-                        stopWatch.printElapsedTime("creating gui");
 			createGUI();
-                        stopWatch.printElapsedTime("done init");
 			XmippApplication.addInstance(false);
 		}
 		catch (Exception e)
@@ -1228,7 +1225,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public int getSize()
 			{
-				return data.size();
+                            if(!data.isVolumeMode())
+                                return 0;
+                            return data.size();
 			}
 
 			@Override
@@ -1249,10 +1248,19 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         
                         public String getVolumeName(String volume)
                         {
-                                if(!Filename.hasPrefix(volume))//is stack
-                                    volume = Filename.getBaseName(volume);
-				return volume;
-                        }
+
+                                if(Filename.hasPrefix(volume))//is stack
+                                    return volume;
+                                String base = Filename.getBaseName(volume);
+                                int count = 0;
+                                for(int i = 0; i < getSize(); i ++)
+                                    if(base.equals(Filename.getBaseName(data.getVolumeAt(i))))
+                                        count ++;
+                                if(count == 1)
+                                    return base;
+                                
+				return volume;//needs full path to differentiate volumes
+                        } 
 
 			@Override
 			public Object getSelectedItem()
@@ -1474,6 +1482,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         
                         addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
+                        addItem(DISPLAY_NORMALIZE, "Normalize", null, "control released N");
 			addSeparator(DISPLAY);
                         addDisplayLabelItems();
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
@@ -1494,7 +1503,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         
 			// Metadata operations
 			addItem(METADATA, "Metadata");
-                        addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
+                        
 			
 			addItem(MD_PLOT, "Plot", "plot.png");
 			addItem(MD_CLASSES, "Classes");
@@ -1945,19 +1954,17 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else if (cmd.equals(REFRESH))
 			{
 				gallery.refreshAt(row, col);
-
 			}
 			else if (cmd.equals(OPEN))
 			{
-                               
                                 ColumnInfo ci = data.getColumn(row, col);
                                 if (ci.allowRender)
-                                        gallery.handleDoubleClick(row, col);
+                                    gallery.handleDoubleClick(row, col);
                                 else
                                 {
-                                        int index = gallery.getIndex(row, col);
-                                        String file = data.getValueFromCol(index, ci);
-                                        ImagesWindowFactory.openFileAsDefault(file);
+                                    int index = gallery.getIndex(row, col);
+                                    String file = data.getValueFromCol(index, ci);
+                                    ImagesWindowFactory.openFileAsDefault(file);
                                 }
 			}
 			else if (cmd.equals(OPEN_ASTEXT))
@@ -1968,7 +1975,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else if (cmd.equals(CTF_PROFILE))
 			{
                                 int index = gallery.getIndex(row, col);
-				data.showCTF(true, index, ctfTasks);
+				data.showCTF(true, index, gallery.getSelection(), ctfTasks);
 			}
 			else if (cmd.equals(CTF_RECALCULATE))
 			{
@@ -1979,7 +1986,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                 else
                                 {
                                     if(isrecalculate)
-                                        data.showCTF(false, index, ctfTasks);
+                                        data.showCTF(false, index, gallery.getSelection(), ctfTasks);
                                     else
                                         data.removeCTF(row);
                                 }

@@ -219,8 +219,8 @@ public class ScipionGalleryData extends GalleryData {
     }
 
 
-    public void overwrite(String path) throws SQLException {
-        ((ScipionMetaData) md).overwrite(filename, path);
+    public void overwrite(String path, boolean[] selection) throws SQLException {
+        ((ScipionMetaData) md).overwrite(filename, path, selection);
     }
 
     public String getScipionType() {
@@ -259,22 +259,25 @@ public class ScipionGalleryData extends GalleryData {
         return null;
     }
     
-    
-    public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) {
+    @Override
+    public void recalculateCTF(int row, boolean[] selection, EllipseCTF ellipseCTF, String sortFn) {
+        
+        ScipionMetaData.EMObject emo;
+        long id;
         if(isEnabled(row))
         {
-            
-            ScipionMetaData.EMObject emo;
-            
-                if(isEnabled(row))
+            for(int i = 0; i <selection.length; i ++ )
+                if(selection[i] && isEnabled(i))
                 {
-                    emo = ((ScipionMetaData) md).getEMObjects().get(row);
-                    md.putCTF(ids[row], ellipseCTF);
+                    id = ids[i];
+                    emo = ((ScipionMetaData) md).getEMObject(id);
+                    md.putCTF(id, ellipseCTF);
                     emo.setLabel("(recalculate ctf)");
                     emo.setComment(ellipseCTF.toString());
+                    window.fireTableRowsUpdated(i, i);
                 }
-            window.fireTableRowsUpdated(row, row);
         }
+        
     }
     
     public ColumnInfo getGeoMatrixColumn()
