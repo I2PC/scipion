@@ -140,7 +140,7 @@ class RelionVolFilterWizardWeb(RelionVolFilterWizard):
             params['min'] = 2.*params['samplingRate']
             params['max'] = 2.*itemDim*params['samplingRate']
 
-            params['step'] = params['max'] / 1000
+            params['value'] = setValueOnRange(params['value'], params['min'], params['max'])
 
             context = {'objects': volumes,
                        'params':params}

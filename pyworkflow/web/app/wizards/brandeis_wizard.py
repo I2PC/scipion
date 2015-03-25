@@ -125,12 +125,15 @@ class FrealignBandpassWeb(FrealignBandpassWizard):
             params['samplingRate'] = particles[1].getSamplingRate()
             params['unit'] = UNIT_ANGSTROM
 
+            # Correct default values to angstroms
+            params['value'][2] = params['samplingRate'] / params['value'][2]
+
             itemDim,_,_ = particles[1].getDim()
 
             params['min'] = 2.*params['samplingRate']
             params['max'] = 2.*itemDim*params['samplingRate']
 
-            params['step'] = params['max'] / 1000
+            params['value'] = setValueOnRange(params['value'], params['min'], params['max'])
 
             context = {'objects': particles,
                        'params':params}
@@ -163,12 +166,16 @@ class FrealignVolBandpassWeb(FrealignVolBandpassWizard):
             params['samplingRate'] = objs.getSamplingRate()
             params['unit'] = UNIT_ANGSTROM
 
+            # Correct default values to angstroms
+            params['value'][0] = params['samplingRate'] / params['value'][0]
+            params['value'][2] = params['samplingRate'] / params['value'][2]
+
             itemDim,_,_ = objs.getDim()
 
             params['min'] = 2.*params['samplingRate']
             params['max'] = 2.*itemDim*params['samplingRate']
 
-            params['step'] = params['max'] / 1000
+            params['value'] = setValueOnRange(params['value'], params['min'], params['max'])
 
             context = {'objects': volumes,
                        'params':params}

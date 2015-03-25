@@ -53,11 +53,15 @@ class ResmapPrewhitenWizardWeb(ResmapPrewhitenWizard):
                 return HttpResponse("errorInput")
         else:
             plotUrl, min_ang = getPlotResMap(request, protocol)
+
+            ang = protocol.prewhitenAng.get()
+            if ang < min_ang:
+                ang = min_ang
             
             context = {
                        # Params
                        'inputId': protocol.inputVolume.get().getObjId(),
-                       'ang': protocol.prewhitenAng.get(),
+                       'ang': round(ang, 2),
                        'ramp': protocol.prewhitenRamp.get(),
                        # Extra Params
                        'pValue': protocol.pVal.get(),
@@ -66,7 +70,7 @@ class ResmapPrewhitenWizardWeb(ResmapPrewhitenWizard):
                        'stepRes': protocol.stepRes.get(),
                        # Others
                        'plot': plotUrl,
-                       'min_ang': min_ang,
+                       'min_ang': round(min_ang, 2),
                        'messi_js': getResourceJs('messi'),
                        'messi_css': getResourceCss('messi'),
                        }

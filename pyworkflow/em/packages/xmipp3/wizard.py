@@ -395,7 +395,8 @@ class XmippFilterVolumesWizard(FilterVolumesWizard):
         _value = params['value']
         _label = params['label']
         _mode = params['mode']
-        FilterVolumesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
+        _unit = params['unit']
+        FilterVolumesWizard.show(self, form, _value, _label, _mode, _unit)
 
 
 class XmippGaussianParticlesWizard(GaussianParticlesWizard):

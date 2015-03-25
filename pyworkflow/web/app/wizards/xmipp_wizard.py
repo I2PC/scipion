@@ -245,7 +245,7 @@ class XmippFilterParticlesWeb(XmippFilterParticlesWizard):
                 params['min'] = 0.01
                 params['max'] = 0.5
 
-            params['step'] = params['max'] / 1000
+            params['value'] = setValueOnRange(params['value'], params['min'], params['max'])
 
             context = {'objects': particles,
                        'params':params}
@@ -286,7 +286,7 @@ class XmippFilterVolumesWeb(XmippFilterVolumesWizard):
                 params['min'] = 0.01
                 params['max'] = 0.5
 
-            params['step'] = params['max'] / 1000
+            params['value'] = setValueOnRange(params['value'], params['min'], params['max'])
 
             context = {'objects': volumes,
                        'params':params}

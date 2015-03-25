@@ -32,7 +32,7 @@ from pyworkflow.em.protocol import ProtFilterParticles
 from pyworkflow.protocol.params import EnumParam, BooleanParam, DigFreqParam, FloatParam
 from pyworkflow.utils.path import removeBaseExt
 
-from ..constants import FILTER_SPACE_REAL, FILTER_FERMI, FILTER_BUTTERWORTH, FILTER_LOWPASS
+from ..constants import FILTER_SPACE_REAL, FILTER_FERMI, FILTER_BUTTERWORTH, FILTER_LOWPASS, FILTER_HIGHPASS
 from ..spider import SpiderShell
 from protocol_base import SpiderProtocol
         
@@ -101,11 +101,10 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         line = form.addLine('Frequency', 
                             condition='filterType > %d and filterType != %d' % (FILTER_SPACE_REAL,FILTER_FERMI),
                             help='Range to apply the filter. Expected values between 0 and 0.5.')
-        line.addParam('lowFreq', DigFreqParam, default=0.1, 
+        line.addParam('lowFreq', DigFreqParam, condition='filterMode==%d' % FILTER_HIGHPASS, default=0.1,
                     label='Lowest')
-        line.addParam('highFreq', 
-                    DigFreqParam, default=0.2, 
-                    label='Highest')
+        line.addParam('highFreq', DigFreqParam, condition='filterMode==%d' % FILTER_LOWPASS,
+                    default=0.2, label='Highest')
          
         form.addParam('temperature', FloatParam, default=0.3, 
                       label='Temperature T:',

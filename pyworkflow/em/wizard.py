@@ -772,7 +772,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         from pyworkflow.gui.matplotlib_image import MaskPreview    
         if self.innerRadius is None:
             self.innerRadius = 0
-        if self.outerRadius is None or self.outerRadius == -1:
+        if self.outerRadius is None or self.outerRadius == -1 or self.outerRadius > self.dim_par/2:
             self.outerRadius = int(self.dim_par/2)
         self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=int(self.outerRadius)*self.ratio, innerRadius=self.innerRadius*self.ratio)
         self.preview.grid(row=0, column=0) 
