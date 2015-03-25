@@ -29,7 +29,7 @@
 In this module are protocol base classes related to EM Micrographs
 """
 
-from os.path import join
+from os.path import join, exists
 
 from pyworkflow.object import String
 from pyworkflow.protocol.params import IntParam, StringParam, BooleanParam, LEVEL_ADVANCED, LEVEL_ADVANCED, EnumParam
@@ -162,8 +162,9 @@ class ProtMovieAlignment(ProtProcessMovies):
             alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
             alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
-            movieCreatePlot(PLOT_POLAR, alignedMovie, True)
-            movieCreatePlot(PLOT_CART, alignedMovie, True)
+            if exists(str(alignedMovie.alignMetaData)):
+                movieCreatePlot(PLOT_POLAR, alignedMovie, True)
+                movieCreatePlot(PLOT_CART, alignedMovie, True)
             movieSet.append(alignedMovie)
 
             mic = em.Micrograph()
