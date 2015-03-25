@@ -27,10 +27,10 @@
 
 #define EMHEADERSIZE 512 // size of EM file header
 
-int ImageBase::readEM(size_t select_img)
+int ImageBase::readEM(size_t select_img, bool isStack)
 {
     // EM File formats does not support stacks
-    if (select_img > FIRST_IMAGE)
+    if (select_img > FIRST_IMAGE & !isStack)
         REPORT_ERROR(ERR_ARG_INCORRECT, "readEM: EM file format does not support stacks.");
 
     EMHead header;
@@ -57,10 +57,19 @@ int ImageBase::readEM(size_t select_img)
     replaceNsize = 1;
 
     ArrayDim aDim;
-    aDim.ndim = 1;
+    if (isStack)
+    {
+        aDim.ndim = header.zdim;
+        aDim.zdim = 1;
+    }
+    else
+    {
+        aDim.ndim = 1;
+        aDim.zdim = header.zdim;
+    }
+
     aDim.xdim = header.xdim;
     aDim.ydim= header.ydim;
-    aDim.zdim = header.zdim;
 
     setDimensions(aDim);
 
@@ -75,7 +84,7 @@ int ImageBase::readEM(size_t select_img)
         datatype = DT_Short;
         break;
     case 4:
-        datatype = DT_Long;
+        datatype = DT_Int;
         break;
     case 3:
     case 5:
