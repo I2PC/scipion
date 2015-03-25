@@ -27,11 +27,24 @@
 # *
 # **************************************************************************
 
+import platform
+from os import environ
 
 # First import the environment (this comes from SConstruct)
 Import('env')
 
-from os import environ
+# Then we get some OS vars
+MACOSX = (platform.system() == 'Darwin')
+WINDOWS = (platform.system() == 'Windows')
+LINUX = (platform.system() == 'Linux')
+
+if LINUX:
+    libSuffix = 'so'
+elif MACOSX:
+    libSuffix = 'dylib'
+else:
+    print 'OS not yet tested'
+    Exit(1)
 
 #  ************************************************************************
 #  *                                                                      *
@@ -54,7 +67,7 @@ if not env.GetOption('clean'):
 # fftw = env.AddLibrary(
 #     'fftw3',
 #     tar='fftw-3.3.4.tgz',
-#     targets=[File('#software/lib/libfftw3.so').abspath],
+#     targets=[File('#software/lib/libfftw3.%s' % libSuffix).abspath],
 #     flags=['--enable-threads', '--enable-shared'],
 #     clean=[Dir('#software/tmp/fftw-3.3.4')])
 
@@ -62,35 +75,53 @@ if not env.GetOption('clean'):
 fftw1 = env.AddLibrary(
     'fftw1',
     tar='fftw-3.3.4.tgz',
-    targets=[File('#software/lib/libfftw3.so').abspath],
+    targets=[File('#software/lib/libfftw3.%s' % libSuffix).abspath],
     flags=['--enable-threads', '--enable-shared'],
     clean=[Dir('#software/tmp/fftw-3.3.4')])
     
 fftw2 = env.AddLibrary(
     'fftw2',
     tar='fftw-3.3.4f.tgz',
-    targets=[File('#software/lib/libfftw3f.so').abspath],
+    targets=[File('#software/lib/libfftw3f.%s' % libSuffix).abspath],
     flags=['--enable-threads', '--enable-shared', '--enable-float'],
     clean=[Dir('#software/tmp/fftw-3.3.4f')])
 
 fftw = env.Alias('fftw3', [fftw1, fftw2])
 env.Default(fftw)
 
+if LINUX:
+    osBuildDir = 'tcl8.6.1/unix'
+    osFlags = ['--enable-threads']
+elif MACOSX:
+    osBuildDir = 'tcl8.6.1/macosx'
+    osFlags = ['--enable-threads', 'INSTALL_ROOT=software/lib']
+else:
+    print 'OS not tested yet'
+    Exit(1)
 tcl = env.AddLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
-    buildDir='tcl8.6.1/unix',
-    targets=[File('#software/lib/libtcl8.6.so').abspath],
-    flags=['--enable-threads'],
+    buildDir=osBuildDir,
+    targets=[File('#software/lib/libtcl8.6.%s' % libSuffix).abspath],
+    flags=osFlags,
     clean=[Dir('#software/tmp/tcl8.6.1').abspath])
 
+if LINUX:
+    osBuildDir = 'tk8.6.1/unix'
+    osFlags = ['--enable-threads']
+elif MACOSX:
+    osBuildDir = 'tk8.6.1/macosx'
+    osFlags = ['--enable-threads', 'INSTALL_ROOT=software/lib']
+else:
+    print 'OS not tested yet'
+    Exit(1)
 tk = env.AddLibrary(
     'tk',
     tar='tk8.6.1-src.tgz',
-    buildDir='tk8.6.1/unix',
-    targets=[File('#software/lib/libtk8.6.so').abspath],
+    buildDir=osBuildDir,
+    targets=[File('#software/lib/libtk8.6.%s' % libSuffix).abspath],
     libChecks=['xft'],
-    flags=['--enable-threads'],
+    flags=osFlags,
     deps=[tcl],
     clean=[Dir('#software/tmp/tk8.6.1').abspath])
 
@@ -107,14 +138,14 @@ env.Depends(tk_wish, tk)
 zlib = env.AddLibrary(
     'zlib',
     tar='zlib-1.2.8.tgz',
-    targets=[File('#software/lib/libz.so').abspath],
+    targets=[File('#software/lib/libz.%s' % libSuffix).abspath],
     addPath=False,
     autoConfigTargets='zlib.pc')
 
 jpeg = env.AddLibrary(
     'jpeg',
     tar='libjpeg-turbo-1.3.1.tgz',
-    targets=[File('#software/lib/libjpeg.so').abspath],
+    targets=[File('#software/lib/libjpeg.%s' % libSuffix)],
     flags=['--without-simd'])
     #flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
 
@@ -132,7 +163,7 @@ tiff = env.AddLibrary(
 sqlite = env.AddLibrary(
     'sqlite3',
     tar='sqlite-3.6.23.tgz',
-    targets=[File('#software/lib/libsqlite3.so').abspath],
+    targets=[File('#software/lib/libsqlite3.%s' % libSuffix).abspath],
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
@@ -140,14 +171,14 @@ hdf5 = env.AddLibrary(
      'hdf5',
      tar='hdf5-1.8.14.tgz',
      flags=['--enable-cxx'],
-     targets=[File('#software/lib/libhdf5.so').abspath, 
-              File('#software/lib/libhdf5_cpp.so').abspath],
+     targets=[File('#software/lib/libhdf5.%s' % libSuffix).abspath, 
+              File('#software/lib/libhdf5_cpp.%s' % libSuffix).abspath],
      deps=[zlib])
 
 python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
-    targets=[File('#software/lib/libpython2.7.so').abspath,
+    targets=[File('#software/lib/libpython2.7.%s' % libSuffix).abspath,
              File('#software/bin/python').abspath],
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
@@ -155,14 +186,14 @@ python = env.AddLibrary(
 libxml2 = env.AddLibrary(
     'libxml2',
     tar='libxml2-2.9.2.tgz',
-    targets=[File('#software/lib/libxml2.so').abspath],
+    targets=[File('#software/lib/libxml2.%s' % libSuffix).abspath],
     deps=[python],
     default=False)
 
 libxslt = env.AddLibrary(
     'libxslt',
     tar='libxslt-1.1.28.tgz',
-    targets=[File('#software/lib/libxslt.so')],
+    targets=[File('#software/lib/libxslt.%s' % libSuffix)],
     deps=[libxml2],
     default=False)
 # This library is pretty complicated to compile right. For the moment,
@@ -209,7 +240,7 @@ lapack = env.ManualInstall(
         ('%s/software/tmp/lapack-3.5.0/Makefile' % shome,
          'cmake -DBUILD_SHARED_LIBS:BOOL=ON -DLAPACKE:BOOL=ON '
          '-DCMAKE_INSTALL_PREFIX:PATH=%s/software .' % shome),
-        ('%s/software/lib/liblapack.so' % shome,
+        ('%s/software/lib/liblapack.%s' % (shome, libSuffix),
          'make install')],
     default=False)
 
@@ -220,7 +251,7 @@ opencv = env.ManualInstall(
     extraActions=[
         ('%s/software/tmp/opencv-2.4.9/Makefile' % shome,
          'cmake -DCMAKE_INSTALL_PREFIX:PATH=%s/software .' % shome),
-        ('%s/software/lib/libopencv_core.so' % shome,
+        ('%s/software/lib/libopencv_core.%s' % (shome, libSuffix),
          'make install')],
     default=False)
 
@@ -394,7 +425,7 @@ env.AddPackage('frealign',
 
 env.AddPackage('pytom',
                tar='pytom_develop0.962.tgz',
-               extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
+               extraActions=[('pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix,
                               'PATH=%s/software/bin:%s '
                               'LD_LIBRARY_PATH=%s/software/lib:%s '
                               'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s '

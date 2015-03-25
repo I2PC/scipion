@@ -154,8 +154,11 @@ class SpiderFilterParticlesWeb(SpiderFilterParticlesWizard):
             
             if len(particles) == 0:
                 return HttpResponse("errorIterate")
-            
+
+            print "params mode", params['mode']
             params['value'] = proccessModeFilter(params['mode'], params['value'])
+
+            params['value'] = setValueOnRange(params['value'], 0, 0.5)
             
             context = {'objects': particles,
                        'params':params }

@@ -126,7 +126,7 @@ $(".slider_low").slider({
 	value : "{{params.value.0}}",
 	min : {{params.min}},
 	max : {{params.max}},
-	step : {{params.step}},
+	step : 0.01,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_low_result").html(ui.value);
@@ -145,7 +145,7 @@ $(".slider_high").slider({
 	value : "{{params.value.1}}",
 	min : {{params.min}},
 	max : {{params.max}},
-	step : {{params.step}},
+	step : 0.01,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_high_result").html(ui.value);
@@ -164,7 +164,7 @@ $(".slider_decay").slider({
 	value : "{{params.value.2}}",
 	min : {{params.min}},
 	max : {{params.max}},
-	step : {{params.step}},
+	step : 0.01,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_decay_result").html(ui.value);

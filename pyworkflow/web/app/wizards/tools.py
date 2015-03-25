@@ -68,6 +68,17 @@ def proccessModeFilter(mode, value):
         
     return value
 
+def setValueOnRange(valueList, min, max):
+    # Check if a value is on a range and if not set it
+    for i, val in enumerate(valueList):
+        if val < min:
+            val = min
+        if val > max:
+            val = max
+        valueList[i] = val
+
+    return valueList
+
 def validateMaskRadius(value, xdim, radius):
     """ Validation done for some radius length """
 
