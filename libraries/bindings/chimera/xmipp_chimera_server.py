@@ -45,7 +45,7 @@ class ChimeraServer:
                 if self.remote_conn.poll():
                     
                     msg = self.remote_conn.recv()
-                    #print msg
+
                     if msg == 'open_volume':
                         data = self.remote_conn.recv()
                         print data
@@ -63,8 +63,11 @@ class ChimeraServer:
                         angulardist = self.remote_conn.recv()
                         for command in angulardist:
                             runCommand(command)
-                    
-                    elif msg == 'end':    
+                    #think about pasing the list and doing the parsing here ROB
+                    elif msg == 'command':
+                        command = self.remote_conn.recv()
+                        runCommand(command)
+                    elif msg == 'end':
                         break
                     else:
                         sleep(0.01)
