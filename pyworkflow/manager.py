@@ -29,7 +29,6 @@ This modules handles the System management
 
 import os
 
-import pyworkflow as pw
 import pyworkflow.utils as pwutils
 from project import Project
 
@@ -54,7 +53,7 @@ class Manager(object):
     and listing of projects."""
     def __init__(self, SCIPION_USER_DATA=None):
         """For create a Project, the path is required"""
-        if SCIPION_USER_DATA is None:
+        if SCIPION_USER_DATA is not None:
             self.PROJECTS = os.path.join(SCIPION_USER_DATA, 'projects')
         else:
             self.PROJECTS = os.path.join(os.environ["SCIPION_USER_DATA"], 'projects')
