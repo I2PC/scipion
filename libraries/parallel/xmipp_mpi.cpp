@@ -139,7 +139,7 @@ MpiFileMutex::~MpiFileMutex()
 }
 
 //------------ MPI ---------------------------
-MpiNode::MpiNode(int &argc, char ** argv)
+MpiNode::MpiNode(int &argc, char **& argv)
 {
     MPI::Init(argc, argv);
     int irank, isize;
