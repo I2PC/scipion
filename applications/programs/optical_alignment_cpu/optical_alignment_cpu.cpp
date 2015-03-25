@@ -300,7 +300,7 @@ public:
         {
             II() = avgCurr;
             II.write(foname);
-            rawPSDFile = foname.removeAllExtensions()+"_raw";
+            rawPSDFile = foname.removeLastExtension()+"_raw";
             String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
                                      foname.c_str(), rawPSDFile.c_str(), psdPieceSize);
             String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
@@ -439,7 +439,7 @@ public:
         {
             Image<double> psdCorr, psdRaw;
             MultidimArray<double> psdCorrArr, psdRawArr;
-            correctedPSDFile = foname.removeAllExtensions()+"_corrected";
+            correctedPSDFile = foname.removeLastExtension()+"_corrected";
             String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
                                      foname.c_str(), correctedPSDFile.c_str(), psdPieceSize);
             String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
