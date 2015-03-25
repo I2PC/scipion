@@ -87,6 +87,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
                   'partSet': 'sets/inputSet.lst',
                   'partFlipSet': 'sets/inputSet__ctf_flip.lst',
                   'data_scipion': self._getExtraPath('data_scipion_it%(iter)02d.sqlite'),
+                  'projections': self._getExtraPath('projections_it%(iter)02d.sqlite'),
                   'volume': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d.hdf'),
                   'classes': 'refine_%(run)02d/classes_%(iter)02d',
                   'classesEven': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d_even.hdf'),
@@ -332,11 +333,11 @@ at each refinement step. The resolution you specify is a target, not the filter 
         args += " --m3dkeep=%(m3dKeep)f --parallel=thread:%(threads)d --threads=%(threads)d"
         
         samplingRate = self.inputParticles.get().getSamplingRate()
-        
+        volume = os.path.relpath(self.input3DReference.get().getFileName(), self._getExtraPath()).replace(":mrc","")
         params = {'imgsFn': self._getParticlesStack(),
                   'resol': self.resol.get(),
                   'speed': int(self.getEnumText('speed')),
-                  'volume': os.path.relpath(self.input3DReference.get().getFileName(), self._getExtraPath()),
+                  'volume': volume,
                   'numberOfIterations': self.numberOfIterations.get(),
                   'sym': self.symmetry.get(),
                   'molMass': self.molMass.get(),
