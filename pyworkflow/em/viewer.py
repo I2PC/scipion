@@ -274,8 +274,7 @@ class ChimeraViewer(Viewer):
             # the first approach is better 
         else:
             raise Exception('ChimeraViewer.visualize: can not visualize class: %s' % obj.getClassName())
-        
-        
+
 class ChimeraClient:
     
     def __init__(self, volfile, **kwargs):
@@ -309,14 +308,9 @@ class ChimeraClient:
                              env=getChimeraEnviron(),).show()
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
-
         self.initVolumeData()
-
-
         self.openVolumeOnServer(self.vol)
         self.initListenThread()
-    
-
             
     def send(self, cmd, data):
         self.client.send(cmd)
@@ -326,10 +320,6 @@ class ChimeraClient:
         self.send('open_volume', volume)
         if not self.voxelSize is None:
             self.send('voxel_size', self.voxelSize)
-        #At some point the following lines should be a "particular" 
-        if self.angularDistFile:
-            self.loadAngularDist()
-            self.send('command_list', self.angulardist)
         if sendEnd:
             self.client.send('end')
 
@@ -391,9 +381,9 @@ class ChimeraAngDistClient(ChimeraClient):
         angleTiltLabel = md.MDL_ANGLE_TILT
         anglePsiLabel = md.MDL_ANGLE_PSI
         mdAngDist = md.MetaData(self.angularDistFile)
-        if not mdAngDist.containsLabel(md.MDL_ANGLE_ROT):
-            angleRotLabel = None
-            if mdAngDist.containsLabel(md.RLN_ORIENT_ROT):
+        if not mdAngDist.containsLabel(md.MDL_ANGLE_PSI):
+            anglePsiLabel = None
+            if mdAngDist.containsLabel(md.RLN_ORIENT_PSI):
                 angleRotLabel = md.RLN_ORIENT_ROT
                 angleTiltLabel = md.RLN_ORIENT_TILT
                 anglePsiLabel = md.RLN_ORIENT_PSI
@@ -415,9 +405,9 @@ class ChimeraAngDistClient(ChimeraClient):
         #cofr does not seem to work!
         #self.angulardist.append('cofr %d,%d,%d'%(x2,y2,z2))
         for id in mdAngDist:
-            rot = mdAngDist.getValue(angleRotLabel, id) if angleRotLabel else 0
+            rot = mdAngDist.getValue(angleRotLabel, id)
             tilt = mdAngDist.getValue(angleTiltLabel, id)
-            psi = mdAngDist.getValue(anglePsiLabel, id)
+            psi = mdAngDist.getValue(anglePsiLabel, id) if anglePsiLabel else 0
             weight = mdAngDist.getValue(md.MDL_WEIGHT, id)
             weight = (weight - minweight)/interval
             x, y, z = xmipp.Euler_direction(rot, tilt, psi)
