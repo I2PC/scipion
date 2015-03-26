@@ -78,6 +78,7 @@ def contextForm(request):
         protocol.setProtocol(protocol_parent)
     
     hosts = project.getHostNames()
+    print "Host in the project: ", hosts
     
     visualize = 0
     
