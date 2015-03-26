@@ -252,7 +252,7 @@ def contentContext(request, project):
     # show the project name in the header.html
     projectNameHeader = 'Project '+ str(project.getName())
     
-    context = {'projectName': projectName,
+    context = {'projectName': project.getName(),
                'view':'protocols',
                'editTool': getResourceIcon('edit_toolbar'),
                'copyTool': getResourceIcon('copy_toolbar'),
