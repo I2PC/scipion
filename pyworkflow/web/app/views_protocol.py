@@ -194,7 +194,8 @@ def contextForm(request):
                'wizard': getResourceIcon('wizard'),
                'protocol_form_utils': getResourceJs('protocol_form_utils'),
                'hosts': hosts,
-               'comment': parseText(protocol.getObjComment())
+               'comment': parseText(protocol.getObjComment()),
+               'showHost': True,
                }
     
     # Update the context dictionary with the special params

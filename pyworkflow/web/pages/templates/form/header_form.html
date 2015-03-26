@@ -73,7 +73,11 @@
 <!-- 				<td> -->
 <!-- 					{{msg.LABEL_HOST}} -->
 <!-- 				</td> -->
+				{% if showHost %}
+				<td>
+				{% else %}
 				<td style="display:none">
+				{% endif %}
 					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
 					{% for h in hosts %}
 						<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
