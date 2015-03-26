@@ -143,7 +143,10 @@ def resmap_content(request):
     path_files = django_settings.ABSOLUTE_URL + '/resources_myresmap/img/'
     
     # Get info about when the project was created
-    project = loadProject(request)
+    manager = getServiceManager('myresmap')
+    project = manager.loadProject(projectName, 
+                                  protocolsConf=manager.protocols,
+                                  hostsConf=manager.hosts)
     daysLeft = prettyDelta(project.getLeftTime(14))
     if daysLeft is None: 
         daysLeft = 14
