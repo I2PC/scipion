@@ -27,7 +27,7 @@
 from os.path import exists, join, basename
 import json
 from views_base import base_grid, base_flex
-from views_util import loadProjectFromPath, getResourceCss, getResourceIcon, getResourceJs, getServiceManager
+from views_util import loadProject, loadProjectFromPath, getResourceCss, getResourceIcon, getResourceJs, getServiceManager
 from views_tree import loadProtTree
 from pyworkflow.manager import Manager
 from pyworkflow.utils.path import copyFile
@@ -289,11 +289,11 @@ def protocol_info(request):
     
     if request.is_ajax():
         jsonStr = ''
-        projectName = request.session['projectName']
+#         projectName = request.session['projectName']
         protId = request.GET.get('protocolId', None)
         
-        projectPath = request.session['projectPath']
-        project = loadProjectFromPath(projectPath)
+#         projectPath = request.session['projectPath']
+        project = loadProject(request)
         
         if len(protId) > 0: 
             protocol = project.getProtocol(int(protId))
