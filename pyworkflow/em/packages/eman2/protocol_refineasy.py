@@ -87,7 +87,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
                   'partSet': 'sets/inputSet.lst',
                   'partFlipSet': 'sets/inputSet__ctf_flip.lst',
                   'data_scipion': self._getExtraPath('data_scipion_it%(iter)02d.sqlite'),
-                  'projections': self._getExtraPath('projections_it%(iter)02d.sqlite'),
+                  'projections': self._getExtraPath('projections_it%(iter)02d_%(half)s.sqlite'),
                   'volume': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d.hdf'),
                   'classes': 'refine_%(run)02d/classes_%(iter)02d',
                   'classesEven': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d_even.hdf'),

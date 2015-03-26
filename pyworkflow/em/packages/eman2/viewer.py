@@ -231,7 +231,26 @@ Examples:
         return views
     
     def _createAngDistChimera(self, it):
-        pass
+        x, _, _ = self.protocol.input3DReference.get().getDim()
+        radius = 0.8 * x
+        volumes = self._getVolumeNames()
+        
+        if len(volumes) > 1:
+            raise Exception("Please, select a single volume to show it's angular distribution")
+        else:
+            if self.showHalves.get() == HALF_EVEN:
+                sqliteFn = self.protocol._getFileName('projections', iter=it, half="even")
+                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "even"))
+            elif self.showHalves.get() == HALF_ODD:
+                sqliteFn = self.protocol._getFileName('projections', iter=it, half="odd")
+                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "odd"))
+            elif self.showHalves.get() == FULL_MAP:
+                sqliteFn = self.protocol._getFileName('projections', iter=it, half="full")
+                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it))
+            else:
+                raise Exception("Please, select a single volume to show it's angular distribution")
+            view = em.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
+        return [view]
     
     def _createAngDist2D(self, it):
         nrefs = self._getNumberOfRefs()
@@ -244,20 +263,32 @@ Examples:
             
             if self.showHalves.get() == HALF_EVEN:
                 title = 'even particles'
-                self._plotter(xplotter, title, angularDist, "even")
+                sqliteFn = self.protocol._getFileName('projections', iter=it, half="even")
+                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "even"))
+                self._plotter(xplotter, title, sqliteFn)
             elif self.showHalves.get() == HALF_ODD:
                 title = 'odd particles'
-                self._plotter(xplotter, title, angularDist, "odd")
+                sqliteFn = self.protocol._getFileName('projections', iter=it, half="odd")
+                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "odd"))
+                self._plotter(xplotter, title, sqliteFn)
             elif self.showHalves.get() == FULL_MAP:
                 title = 'all particles'
-                self._plotter(xplotter, title, angularDist)
+                sqliteFn = self.protocol._getFileName('projections', iter=it, half="full")
+                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it))
+                self._plotter(xplotter, title, sqliteFn)
             else:
                 title = 'even particles'
-                self._plotter(xplotter, title, angularDist, "even")
+                sqliteFn = self.protocol._getFileName('projections', iter=it, half="even")
+                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "even"))
+                self._plotter(xplotter, title, sqliteFn)
                 title = 'odd particles'
-                self._plotter(xplotter, title, angularDist, "odd")
+                sqliteFn = self.protocol._getFileName('projections', iter=it, half="odd")
+                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "odd"))
+                self._plotter(xplotter, title, sqliteFn)
                 title = 'all particles'
-                self._plotter(xplotter, title, angularDist)
+                sqliteFn = self.protocol._getFileName('projections', iter=it, half="full")
+                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it))
+                self._plotter(xplotter, title, sqliteFn)
         
             return xplotter
         else:
@@ -390,28 +421,19 @@ Examples:
             
         return refs
     
-    def _getAngularDistribution(self, pathFile, half):
+    def _getAngularDistribution(self, sqliteFn):
+        import pyworkflow.em.metadata as md
         # Create Angular plot for one iteration
-        file = open(pathFile)
-        phi = []
-        theta = []
+        tilt = []
+        psi = []
+        weight = []
         
-        for i, line in enumerate(file):
-            lineList = line.split()
-            if half == "even":
-                if i%2==0:
-                    phi.append(float(lineList[3]))
-                    theta.append(float(lineList[2]))
-
-            elif half == "odd":
-                if not i%2==0:
-                    phi.append(float(lineList[3]))
-                    theta.append(float(lineList[2]))
-            else:
-                phi.append(float(lineList[3]))
-                theta.append(float(lineList[2]))
-        file.close()
-        return phi, theta
+        mdProj = md.MetaData(sqliteFn)
+        for objId in mdProj:
+            tilt.append(mdProj.getValue(md.MDL_ANGLE_TILT, objId))
+            psi.append(mdProj.getValue(md.MDL_ANGLE_PSI, objId))
+            weight.append(mdProj.getValue(md.MDL_WEIGHT, objId))
+        return psi, tilt, weight
     
     def _getGridSize(self, n=None):
         """ Figure out the layout of the plots given the number of references. """
@@ -427,9 +449,9 @@ Examples:
             
         return gridsize
     
-    def _plotter(self, xplotter, title, angularDist, half="full"):
-        phi, theta = self._getAngularDistribution(angularDist, half)
-        xplotter.plotAngularDistribution(title, phi, theta)
+    def _plotter(self, xplotter, title, sqliteFn):
+        phi, theta, weight = self._getAngularDistribution(sqliteFn)
+        xplotter.plotAngularDistribution(title, phi, theta, weight)
     
     def _getColunmFromFilePar(self, fscFn, col):
         f1 = open(fscFn)
@@ -441,3 +463,27 @@ Examples:
         f1.close()
         return value
 
+    def _iterAngles(self, it, half="full"):
+        f = open(self.protocol._getFileName('angles', iter=it))
+        totLines = int(f.readlines()[-1].split()[0]) + 1
+        f = open(self.protocol._getFileName('angles', iter=it))
+        for i, line in enumerate(f):
+            if half == "even":
+                if i%2==0:
+                    angles = map(float, line.split())
+                    tilt = float("{0:.2f}".format(angles[2]))
+                    psi = float("{0:.2f}".format(angles[3]))
+                    yield tilt, psi, totLines/2
+            elif half == "odd":
+                if not i%2==0:
+                    angles = map(float, line.split())
+                    tilt = float("{0:.2f}".format(angles[2]))
+                    psi = float("{0:.2f}".format(angles[3]))
+                    yield tilt, psi, totLines/2
+            else:
+                angles = map(float, line.split())
+                tilt = float("{0:.2f}".format(angles[2]))
+                psi = float("{0:.2f}".format(angles[3]))
+                yield tilt, psi, totLines
+        
+        f.close()
