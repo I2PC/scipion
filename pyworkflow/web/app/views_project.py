@@ -226,7 +226,7 @@ def project_content(request):
 def contentContext(request, project):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
     
-    projectName = project.getName()
+    projectName = project.getShortName()
     print "ProjectName: ", projectName
     project_settings = project.getSettings()
     request.session['projectPath'] = project.getPath()
