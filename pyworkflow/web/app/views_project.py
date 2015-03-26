@@ -89,7 +89,7 @@ def getNodeStateColor(node):
 
 def update_prot_tree(request):
     projectName = request.session['projectName']
-    project = loadProject(projectName)
+    project = loadProject(request)
     project_settings = project.getSettings()
     index = request.GET.get('index', None)
 
@@ -104,7 +104,7 @@ def update_prot_tree(request):
 def update_graph_view(request):
     status = request.GET.get('status', None)
     projectName = request.session['projectName']
-    project = loadProject(projectName)
+    project = loadProject(request)
     project_settings = project.getSettings()
 
     project_settings.runsView.set(int(status))
@@ -118,7 +118,7 @@ def save_selection(request):
         mark = request.GET.get('mark', None)
         
         projectName = request.session['projectName']
-        project = loadProject(projectName)
+        project = loadProject(request)
         project_settings = project.getSettings()
         
         # Set the selected runs stored in BD    
@@ -131,7 +131,7 @@ def save_selection(request):
 
 def tree_prot_view(request):
     projectName = request.session['projectName'] 
-    project = loadProject(projectName)
+    project = loadProject(request)
      
     # load the protocol tree current active
     htmlTree = loadProtTree(project)
@@ -143,7 +143,7 @@ def run_table_graph(request):
     
     try:
         projectName = request.session['projectName']
-        project = loadProject(projectName)
+        project = loadProject(request)
         project_settings = project.getSettings()
         provider = ProjectRunsTreeProvider(project)
         
@@ -346,8 +346,7 @@ def check_project_id(request):
     
     try:
         if serviceName is None:
-            manager = Manager()
-            project = loadProject(projectName)
+            project = loadProject(request)
         else: 
             manager = getServiceManager(serviceName)
             project = manager.loadProject(projectName, 

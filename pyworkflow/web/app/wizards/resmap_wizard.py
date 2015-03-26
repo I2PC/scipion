@@ -95,7 +95,7 @@ class ResmapPrewhitenWizardWeb(ResmapPrewhitenWizard):
 def get_resmap_plot(request):
     # LOAD Project
     projectName = request.session['projectName']
-    project = loadProject(projectName)
+    project = loadProject(request)
     
     # Create protocol
     newProtocol = project.newProtocol(ProtResMap)

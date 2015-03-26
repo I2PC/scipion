@@ -373,7 +373,7 @@ def save_protocol(request):
 def delete_protocol(request):
     if request.is_ajax():
         projectName = request.session['projectName']
-        project = loadProject(projectName)
+        project = loadProject(request)
         list_id = request.GET.get('id', None).split(",")
         
         list_protocols = []
@@ -395,7 +395,7 @@ def delete_protocol(request):
 def copy_protocol(request):
     if request.is_ajax():
         projectName = request.session['projectName']
-        project = loadProject(projectName)
+        project = loadProject(request)
         list_id = request.GET.get('id', None).split(",")
         
         list_protocols = []
@@ -418,7 +418,7 @@ def copy_protocol(request):
 def stop_protocol(request):
     if request.is_ajax():
         projectName = request.session['projectName']
-        project = loadProject(projectName)
+        project = loadProject(request)
         protId = request.GET.get('protocolId', None)
         protocol = project.getProtocol(int(protId))
      
