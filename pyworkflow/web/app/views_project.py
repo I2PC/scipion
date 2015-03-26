@@ -216,21 +216,16 @@ def project_content(request):
     projectName = request.GET.get('projectName', None)
     if projectName is None:
         projectName = request.POST.get('projectName', None)
-    context = contentContext(request, projectName)
+    project = loadProject(projectName)
+    context = contentContext(request, project)
     context.update({'mode': None,
                    'formUrl':'form'})
     return render_to_response('project_content/project_content.html', context)
 
 
-def contentContext(request, projectName, serviceProject=None):
+def contentContext(request, project):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
         
-    if serviceProject is None:
-        project = loadProject(projectName)
-    else: 
-        project = serviceProject
-        
-    
     project_settings = project.getSettings()
     request.session['projectPath'] = project.getPath()
     request.session['projectName'] = project.getName()

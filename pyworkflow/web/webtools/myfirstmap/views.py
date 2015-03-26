@@ -196,7 +196,7 @@ def service_content(request):
     if daysLeft is None: 
         daysLeft = 14
     
-    context = contentContext(request, projectName, project)
+    context = contentContext(request, project)
     context.update({'importAverages': path_files + 'importAverages.png',
                     'useProtocols': path_files + 'useProtocols.png',
                     'protForm': path_files + 'protForm.png',

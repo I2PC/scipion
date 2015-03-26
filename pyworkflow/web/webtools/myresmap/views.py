@@ -148,7 +148,7 @@ def resmap_content(request):
     if daysLeft is None: 
         daysLeft = 14
     
-    context = contentContext(request, projectName)
+    context = contentContext(request, project)
     context.update({'importVolumes': path_files + 'importVolumes.png',
                     'useResMap': path_files + 'useResMap.png',
                     'protResMap': path_files + 'protResMap.png',
