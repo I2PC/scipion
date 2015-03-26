@@ -225,10 +225,12 @@ def project_content(request):
 
 def contentContext(request, project):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
-        
+    
+    projectName = project.getName()
+    print "ProjectName: ", projectName
     project_settings = project.getSettings()
     request.session['projectPath'] = project.getPath()
-    request.session['projectName'] = project.getName()
+    request.session['projectName'] = projectName
     
     provider = ProjectRunsTreeProvider(project)
     runs = formatProvider(provider, "runs")
@@ -250,9 +252,9 @@ def contentContext(request, project):
     choiceSelected =  choices.index(project.getCurrentProtocolView().text.get())
     
     # show the project name in the header.html
-    projectNameHeader = 'Project '+ str(project.getName())
+    projectNameHeader = 'Project '+ str(projectName)
     
-    context = {'projectName': project.getName(),
+    context = {'projectName': projectName,
                'view':'protocols',
                'editTool': getResourceIcon('edit_toolbar'),
                'copyTool': getResourceIcon('copy_toolbar'),
