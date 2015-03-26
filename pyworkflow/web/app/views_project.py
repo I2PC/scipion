@@ -346,7 +346,7 @@ def check_project_id(request):
     
     try:
         if serviceName is None:
-            project = loadProject(request)
+            project = Manager().loadProject(projectName)
         else: 
             manager = getServiceManager(serviceName)
             project = manager.loadProject(projectName, 
