@@ -39,7 +39,7 @@ def launch_viewer(request):
     from pyworkflow.em import findViewers, EMProtocol, EMObject
     
     projectName = request.session['projectName']
-    project = loadProject(projectName)
+    project = loadProject(request)
     
     objectId = request.GET.get('objectId')
     if '::' in objectId:

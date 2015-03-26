@@ -143,12 +143,15 @@ def resmap_content(request):
     path_files = django_settings.ABSOLUTE_URL + '/resources_myresmap/img/'
     
     # Get info about when the project was created
-    project = loadProject(projectName)
+    manager = getServiceManager('myresmap')
+    project = manager.loadProject(projectName, 
+                                  protocolsConf=manager.protocols,
+                                  hostsConf=manager.hosts)
     daysLeft = prettyDelta(project.getLeftTime(14))
     if daysLeft is None: 
         daysLeft = 14
     
-    context = contentContext(request, projectName)
+    context = contentContext(request, project)
     context.update({'importVolumes': path_files + 'importVolumes.png',
                     'useResMap': path_files + 'useResMap.png',
                     'protResMap': path_files + 'protResMap.png',

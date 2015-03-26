@@ -170,7 +170,7 @@ def movies_content(request):
     if daysLeft is None: 
         daysLeft = 14
     
-    context = contentContext(request, projectName)
+    context = contentContext(request, project)
     context.update({
                     # MODE
                     'formUrl': 'mov_form',
@@ -193,7 +193,8 @@ def movies_form(request):
     from django.shortcuts import render_to_response
     context = contextForm(request)
     context.update({'path_mode':'select',
-                    'formUrl': 'mov_form'})
+                    'formUrl': 'mov_form',
+                    'showHost': True})
     return render_to_response('form/form.html', context)
 
 

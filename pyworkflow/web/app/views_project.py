@@ -27,7 +27,7 @@
 from os.path import exists, join, basename
 import json
 from views_base import base_grid, base_flex
-from views_util import loadProject, getResourceCss, getResourceIcon, getResourceJs, getServiceManager
+from views_util import loadProject, loadProjectFromPath, getResourceCss, getResourceIcon, getResourceJs, getServiceManager
 from views_tree import loadProtTree
 from pyworkflow.manager import Manager
 from pyworkflow.utils.path import copyFile
@@ -89,7 +89,7 @@ def getNodeStateColor(node):
 
 def update_prot_tree(request):
     projectName = request.session['projectName']
-    project = loadProject(projectName)
+    project = loadProject(request)
     project_settings = project.getSettings()
     index = request.GET.get('index', None)
 
@@ -104,7 +104,7 @@ def update_prot_tree(request):
 def update_graph_view(request):
     status = request.GET.get('status', None)
     projectName = request.session['projectName']
-    project = loadProject(projectName)
+    project = loadProject(request)
     project_settings = project.getSettings()
 
     project_settings.runsView.set(int(status))
@@ -118,7 +118,7 @@ def save_selection(request):
         mark = request.GET.get('mark', None)
         
         projectName = request.session['projectName']
-        project = loadProject(projectName)
+        project = loadProject(request)
         project_settings = project.getSettings()
         
         # Set the selected runs stored in BD    
@@ -131,7 +131,7 @@ def save_selection(request):
 
 def tree_prot_view(request):
     projectName = request.session['projectName'] 
-    project = loadProject(projectName)
+    project = loadProject(request)
      
     # load the protocol tree current active
     htmlTree = loadProtTree(project)
@@ -143,7 +143,7 @@ def run_table_graph(request):
     
     try:
         projectName = request.session['projectName']
-        project = loadProject(projectName)
+        project = loadProject(request)
         project_settings = project.getSettings()
         provider = ProjectRunsTreeProvider(project)
         
@@ -216,21 +216,21 @@ def project_content(request):
     projectName = request.GET.get('projectName', None)
     if projectName is None:
         projectName = request.POST.get('projectName', None)
-    context = contentContext(request, projectName)
+    project = Manager().loadProject(projectName)
+    context = contentContext(request, project)
     context.update({'mode': None,
                    'formUrl':'form'})
     return render_to_response('project_content/project_content.html', context)
 
 
-def contentContext(request, projectName):
+def contentContext(request, project):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
-        
-    request.session['projectName'] = projectName
-    manager = Manager()
-    request.session['projectPath'] = manager.getProjectPath(projectName)
-   
-    project = loadProject(projectName)
+    
+    projectName = project.getShortName()
+    print "ProjectName: ", projectName
     project_settings = project.getSettings()
+    request.session['projectPath'] = project.getPath()
+    request.session['projectName'] = projectName
     
     provider = ProjectRunsTreeProvider(project)
     runs = formatProvider(provider, "runs")
@@ -289,10 +289,11 @@ def protocol_info(request):
     
     if request.is_ajax():
         jsonStr = ''
-        projectName = request.session['projectName']
+#         projectName = request.session['projectName']
         protId = request.GET.get('protocolId', None)
-
-        project = loadProject(projectName)
+        
+#         projectPath = request.session['projectPath']
+        project = loadProject(request)
         
         if len(protId) > 0: 
             protocol = project.getProtocol(int(protId))
@@ -345,8 +346,7 @@ def check_project_id(request):
     
     try:
         if serviceName is None:
-            manager = Manager()
-            project = loadProject(projectName)
+            project = Manager().loadProject(projectName)
         else: 
             manager = getServiceManager(serviceName)
             project = manager.loadProject(projectName, 

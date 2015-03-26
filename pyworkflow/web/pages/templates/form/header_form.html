@@ -70,10 +70,14 @@
 					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a>
 				</td>
 <!-- HOST -->
-<!-- 				<td> -->
-<!-- 					{{msg.LABEL_HOST}} -->
-<!-- 				</td> -->
+				{% if showHost %}
+				<td>
+					{{msg.LABEL_HOST}}
+				</td>
+				<td>
+				{% else %}
 				<td style="display:none">
+				{% endif %}
 					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
 					{% for h in hosts %}
 						<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
@@ -83,8 +87,8 @@
 <!-- 				<td> -->
 <!-- 					.ico -->
 <!-- 				</td> -->
-<!-- 			</tr> -->
-<!-- 			<tr> -->
+			</tr>
+			<tr>
 				{% if protocol.allowThreads or protocol.allowMpi %}
 <!-- PARALLEL (THREAD & MPI) -->
 				<td>

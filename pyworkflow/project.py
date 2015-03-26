@@ -68,6 +68,7 @@ class Project(object):
         """Create a project associated with a given path"""
         # To create a Project, a path is required
         self.name = path
+        self.shortName = os.path.basename(path)
         self.path = os.path.abspath(path)
         self.pathList = [] # Store all related paths
         self.dbPath = self.__addPath(PROJECT_DBNAME)
@@ -99,7 +100,10 @@ class Project(object):
         
     def getPath(self, *paths):
         """Return path from the project root"""
-        return os.path.join(*paths)
+        if paths:
+            return os.path.join(*paths)
+        else:
+            return self.path
     
     def getDbPath(self):
         """ Return the path to the sqlite db. """
@@ -141,6 +145,11 @@ class Project(object):
     
     def getName(self):
         return self.name
+    
+    #TODO: maybe it has more sense to use this behaviour
+    # for just getName function...
+    def getShortName(self):
+        return self.shortName
     
     def getTmpPath(self, *paths):
         return self.getPath(PROJECT_TMP, *paths)
