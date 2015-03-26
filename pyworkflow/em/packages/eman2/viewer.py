@@ -421,19 +421,20 @@ Examples:
             
         return refs
     
-    def _getAngularDistribution(self, sqliteFn):
+    def _plotter(self, xplotter, title, sqliteFn):
         import pyworkflow.em.metadata as md
         # Create Angular plot for one iteration
+        rot = []
         tilt = []
-        psi = []
         weight = []
         
         mdProj = md.MetaData(sqliteFn)
         for objId in mdProj:
+            rot.append(mdProj.getValue(md.MDL_ANGLE_ROT, objId))
             tilt.append(mdProj.getValue(md.MDL_ANGLE_TILT, objId))
-            psi.append(mdProj.getValue(md.MDL_ANGLE_PSI, objId))
             weight.append(mdProj.getValue(md.MDL_WEIGHT, objId))
-        return psi, tilt, weight
+        
+        xplotter.plotAngularDistribution(title, rot, tilt, weight)
     
     def _getGridSize(self, n=None):
         """ Figure out the layout of the plots given the number of references. """
@@ -448,10 +449,6 @@ Examples:
             gridsize = [(n+1)/2, 2]
             
         return gridsize
-    
-    def _plotter(self, xplotter, title, sqliteFn):
-        phi, theta, weight = self._getAngularDistribution(sqliteFn)
-        xplotter.plotAngularDistribution(title, phi, theta, weight)
     
     def _getColunmFromFilePar(self, fscFn, col):
         f1 = open(fscFn)
@@ -471,19 +468,19 @@ Examples:
             if half == "even":
                 if i%2==0:
                     angles = map(float, line.split())
+                    rot = float("{0:.2f}".format(angles[1]))
                     tilt = float("{0:.2f}".format(angles[2]))
-                    psi = float("{0:.2f}".format(angles[3]))
-                    yield tilt, psi, totLines/2
+                    yield rot, tilt, totLines/2
             elif half == "odd":
                 if not i%2==0:
                     angles = map(float, line.split())
+                    rot = float("{0:.2f}".format(angles[1]))
                     tilt = float("{0:.2f}".format(angles[2]))
-                    psi = float("{0:.2f}".format(angles[3]))
-                    yield tilt, psi, totLines/2
+                    yield rot, tilt, totLines/2
             else:
                 angles = map(float, line.split())
+                rot = float("{0:.2f}".format(angles[1]))
                 tilt = float("{0:.2f}".format(angles[2]))
-                psi = float("{0:.2f}".format(angles[3]))
-                yield tilt, psi, totLines
+                yield rot, tilt, totLines
         
         f.close()
