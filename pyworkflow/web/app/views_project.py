@@ -250,7 +250,7 @@ def contentContext(request, project):
     choiceSelected =  choices.index(project.getCurrentProtocolView().text.get())
     
     # show the project name in the header.html
-    projectNameHeader = 'Project '+ str(projectName)
+    projectNameHeader = 'Project '+ str(project.getName())
     
     context = {'projectName': projectName,
                'view':'protocols',
