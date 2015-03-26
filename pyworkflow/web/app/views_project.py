@@ -222,15 +222,18 @@ def project_content(request):
     return render_to_response('project_content/project_content.html', context)
 
 
-def contentContext(request, projectName):
+def contentContext(request, projectName, serviceProject=None):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
         
-    request.session['projectName'] = projectName
-    manager = Manager()
-    request.session['projectPath'] = manager.getProjectPath(projectName)
-   
-    project = loadProject(projectName)
+    if serviceProject is None:
+        project = loadProject(projectName)
+    else: 
+        project = serviceProject
+        
+    
     project_settings = project.getSettings()
+    request.session['projectPath'] = project.getPath()
+    request.session['projectName'] = project.getName()
     
     provider = ProjectRunsTreeProvider(project)
     runs = formatProvider(provider, "runs")

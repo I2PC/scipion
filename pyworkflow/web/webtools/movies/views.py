@@ -170,7 +170,7 @@ def movies_content(request):
     if daysLeft is None: 
         daysLeft = 14
     
-    context = contentContext(request, projectName)
+    context = contentContext(request, projectName, project)
     context.update({
                     # MODE
                     'formUrl': 'mov_form',

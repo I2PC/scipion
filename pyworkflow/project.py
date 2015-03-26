@@ -99,7 +99,10 @@ class Project(object):
         
     def getPath(self, *paths):
         """Return path from the project root"""
-        return os.path.join(*paths)
+        if paths:
+            return os.path.join(*paths)
+        else:
+            return self.path
     
     def getDbPath(self):
         """ Return the path to the sqlite db. """
