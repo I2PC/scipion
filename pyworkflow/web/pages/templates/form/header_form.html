@@ -70,10 +70,10 @@
 					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a>
 				</td>
 <!-- HOST -->
-<!-- 				<td> -->
-<!-- 					{{msg.LABEL_HOST}} -->
-<!-- 				</td> -->
 				{% if showHost %}
+				<td>
+					{{msg.LABEL_HOST}}
+				</td>
 				<td>
 				{% else %}
 				<td style="display:none">
@@ -84,11 +84,13 @@
 					{% endfor %}
 					</select>
 				</td>
-<!-- 				<td> -->
-<!-- 					.ico -->
-<!-- 				</td> -->
-<!-- 			</tr> -->
-<!-- 			<tr> -->
+				{% if showHost %}
+				<td>
+					
+				</td>
+			</tr>
+			<tr>
+				{% endif %
 				{% if protocol.allowThreads or protocol.allowMpi %}
 <!-- PARALLEL (THREAD & MPI) -->
 				<td>
