@@ -169,6 +169,11 @@ function createServProject(elm) {
 function goToProject(elm) {
 	var code = elm.val();
 	
+	var URL2 = getSubDomainURL() + "/r_content/?p="+code;
+	window.location.href = URL2;
+	
+	/*
+	
 	// remove the blank spaces
 	code = code.replace(/\s+/g, '');
 	
@@ -188,6 +193,7 @@ function goToProject(elm) {
 			}
 		}
 	});
+	*/
 }
 
 function getRefTestData(id){
