@@ -41,6 +41,7 @@ from threading import Thread
 from multiprocessing.connection import Client
 from numpy import flipud
 import xmipp
+from pyworkflow.em import metadata as md
 import sys
 from pyworkflow.utils import getFreePort
 from os import system
@@ -292,9 +293,7 @@ class ChimeraClient:
             file = file[0: file.rfind(':')]
         if not os.path.exists(file):
             raise Exception("File %s does not exists"%file)
-        self.angularDistFile = self.kwargs.get('angularDistFile', None)
-        if self.angularDistFile and not (os.path.exists(self.angularDistFile) or xmipp.existsBlockInMetaDataFile(self.angularDistFile)):#check blockname:
-            raise Exception("Path %s does not exists"%self.angularDistFile)
+
 
         self.volfile = volfile
         self.voxelSize = self.kwargs.get('voxelSize', None)
@@ -308,70 +307,16 @@ class ChimeraClient:
         command = CommandView("chimera --script '%s %s %s' &" %
                               (serverfile, self.port,serverName),
                              env=getChimeraEnviron(),).show()
-        #is port available?
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
 
         self.initVolumeData()
-        #FIXME: Following lines are particular ROB
-        #there should not be in generic client
-        self.spheresColor = self.kwargs.get('spheresColor', 'red')
-        spheresDistance = self.kwargs.get('spheresDistance', None)
-        spheresMaxRadius = self.kwargs.get('spheresMaxRadius', None)
-        self.spheresDistance = float(spheresDistance) if spheresDistance else 0.75 * max(self.xdim, self.ydim, self.zdim)
-        self.spheresMaxRadius = float(spheresMaxRadius) if spheresMaxRadius else 0.02 * self.spheresDistance
-        #END Of PARTICULAR LINES
 
-        #What is the object of printCmd
+
         self.openVolumeOnServer(self.vol)
         self.initListenThread()
     
-    def loadAngularDist(self):
-        #FIXME do not seems to be a good idea to use
-        # metada instead of native scipon here
-        #print self.angularDistFile
-        md = xmipp.MetaData(self.angularDistFile)
-        if not md.containsLabel(xmipp.MDL_ANGLE_ROT):
-            angleRotLabel = xmipp.RLN_ORIENT_ROT
-            angleTiltLabel = xmipp.RLN_ORIENT_TILT
-            anglePsiLabel = xmipp.RLN_ORIENT_PSI
-        else:
-            angleRotLabel = xmipp.MDL_ANGLE_ROT
-            angleTiltLabel = xmipp.MDL_ANGLE_TILT
-            anglePsiLabel = xmipp.MDL_ANGLE_PSI
 
-        if not md.containsLabel(xmipp.MDL_WEIGHT):
-            md.fillConstant(xmipp.MDL_WEIGHT, 1.)
-            
-        maxweight = md.aggregateSingle(xmipp.AGGR_MAX, xmipp.MDL_WEIGHT)
-        minweight = md.aggregateSingle(xmipp.AGGR_MIN, xmipp.MDL_WEIGHT)
-        interval = maxweight - minweight
-        if interval < 1:
-            interval = 1
-        minweight = minweight - 1#to avoid 0 on normalized weight
-        
-        self.angulardist = []  
-        x2=self.xdim/2
-        y2=self.ydim/2
-        z2=self.zdim/2
-        #cofr does not seem to work!
-        #self.angulardist.append('cofr %d,%d,%d'%(x2,y2,z2))
-        for id in md:
-            rot = md.getValue(angleRotLabel, id)
-            tilt = md.getValue(angleTiltLabel, id)
-            psi = md.getValue(anglePsiLabel, id)
-            weight = md.getValue(xmipp.MDL_WEIGHT, id)
-            weight = (weight - minweight)/interval
-            x, y, z = xmipp.Euler_direction(rot, tilt, psi)
-            radius = weight * self.spheresMaxRadius
-
-            x = x * self.spheresDistance + x2
-            y = y * self.spheresDistance + y2
-            z = z * self.spheresDistance + z2
-            command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheresColor)
-
-            self.angulardist.append(command)    
-            #printCmd(command)
             
     def send(self, cmd, data):
         self.client.send(cmd)
@@ -410,14 +355,82 @@ class ChimeraClient:
 
     def initVolumeData(self):
         self.image = xmipp.Image(self.volfile)
-        self.image.convert2DataType(xmipp.DT_DOUBLE)
+        self.image.convert2DataType(md.DT_DOUBLE)
         self.xdim, self.ydim, self.zdim, self.n = self.image.getDimensions()
-        #printCmd("size %dx %dx %d"%(self.xdim, self.ydim, self.zdim))
         self.vol = self.image.getData()
 
     def answer(self, msg):
         if msg == 'exit_server':
             self.listen = False
+
+class ChimeraAngDistClient(ChimeraClient):
+
+    def __init__(self, volfile, **kwargs):
+        self.angularDistFile = kwargs.get('angularDistFile', None)
+        if self.angularDistFile and not (os.path.exists(self.angularDistFile) or md.existsBlockInMetaDataFile(self.angularDistFile)):#check blockname:
+            raise Exception("Path %s does not exists"%self.angularDistFile)
+        self.spheresColor = kwargs.get('spheresColor', 'red')
+        spheresDistance = kwargs.get('spheresDistance', None)
+        spheresMaxRadius = kwargs.get('spheresMaxRadius', None)
+        self.spheresDistance = float(spheresDistance) if spheresDistance else 0.75 * max(self.xdim, self.ydim, self.zdim)
+        self.spheresMaxRadius = float(spheresMaxRadius) if spheresMaxRadius else 0.02 * self.spheresDistance
+        ChimeraClient.__init__(self, volfile, **kwargs)
+
+    def openVolumeOnServer(self, volume, sendEnd=True):
+        ChimeraClient.openVolumeOnServer(self, volume, sendEnd=False)
+
+        if self.angularDistFile:
+            self.loadAngularDist()
+            self.send('command_list', self.angulardist)
+        if sendEnd:
+            self.client.send('end')
+
+    def loadAngularDist(self):
+        print(self.angularDistFile)
+        angleRotLabel = md.MDL_ANGLE_ROT
+        angleTiltLabel = md.MDL_ANGLE_TILT
+        anglePsiLabel = md.MDL_ANGLE_PSI
+        mdAngDist = md.MetaData(self.angularDistFile)
+        if not mdAngDist.containsLabel(md.MDL_ANGLE_ROT):
+            angleRotLabel = None
+            if mdAngDist.containsLabel(md.RLN_ORIENT_ROT):
+                angleRotLabel = md.RLN_ORIENT_ROT
+                angleTiltLabel = md.RLN_ORIENT_TILT
+                anglePsiLabel = md.RLN_ORIENT_PSI
+
+        if not mdAngDist.containsLabel(md.MDL_WEIGHT):
+            mdAngDist.fillConstant(md.MDL_WEIGHT, 1.)
+
+        maxweight = mdAngDist.aggregateSingle(md.AGGR_MAX, md.MDL_WEIGHT)
+        minweight = mdAngDist.aggregateSingle(md.AGGR_MIN, md.MDL_WEIGHT)
+        interval = maxweight - minweight
+        if interval < 1:
+            interval = 1
+        minweight = minweight - 1#to avoid 0 on normalized weight
+
+        self.angulardist = []
+        x2=self.xdim/2
+        y2=self.ydim/2
+        z2=self.zdim/2
+        #cofr does not seem to work!
+        #self.angulardist.append('cofr %d,%d,%d'%(x2,y2,z2))
+        for id in mdAngDist:
+            rot = mdAngDist.getValue(angleRotLabel, id) if angleRotLabel else 0
+            tilt = mdAngDist.getValue(angleTiltLabel, id)
+            psi = mdAngDist.getValue(anglePsiLabel, id)
+            weight = mdAngDist.getValue(md.MDL_WEIGHT, id)
+            weight = (weight - minweight)/interval
+            x, y, z = xmipp.Euler_direction(rot, tilt, psi)
+            radius = weight * self.spheresMaxRadius
+
+            x = x * self.spheresDistance + x2
+            y = y * self.spheresDistance + y2
+            z = z * self.spheresDistance + z2
+            command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheresColor)
+
+            self.angulardist.append(command)
+            #printCmd(command)
+
 
 class ChimeraVirusClient(ChimeraClient):
 
@@ -524,12 +537,12 @@ class ChimeraVirusClient(ChimeraClient):
                 print ('Lost connection to client')
 
 
-class ChimeraProjectionClient(ChimeraClient):
+class ChimeraProjectionClient(ChimeraAngDistClient):
     
     def __init__(self, volfile, **kwargs):
-        ChimeraClient.__init__(self, volfile, **kwargs)
+        ChimeraAngDistClient.__init__(self, volfile, **kwargs)
         self.projection = xmipp.Image()
-        self.projection.setDataType(xmipp.DT_DOUBLE)
+        self.projection.setDataType(md.DT_DOUBLE)
         #0.5 ->  Niquiest frequency
         #2 -> bspline interpolation
         size = self.kwargs.get('size', None)
