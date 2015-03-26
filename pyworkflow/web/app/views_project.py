@@ -27,7 +27,7 @@
 from os.path import exists, join, basename
 import json
 from views_base import base_grid, base_flex
-from views_util import loadProject, getResourceCss, getResourceIcon, getResourceJs, getServiceManager
+from views_util import loadProjectFromPath, getResourceCss, getResourceIcon, getResourceJs, getServiceManager
 from views_tree import loadProtTree
 from pyworkflow.manager import Manager
 from pyworkflow.utils.path import copyFile
@@ -216,7 +216,7 @@ def project_content(request):
     projectName = request.GET.get('projectName', None)
     if projectName is None:
         projectName = request.POST.get('projectName', None)
-    project = loadProject(projectName)
+    project = Manager().loadProject(projectName)
     context = contentContext(request, project)
     context.update({'mode': None,
                    'formUrl':'form'})
@@ -291,8 +291,9 @@ def protocol_info(request):
         jsonStr = ''
         projectName = request.session['projectName']
         protId = request.GET.get('protocolId', None)
-
-        project = loadProject(projectName)
+        
+        projectPath = request.session['projectPath']
+        project = loadProjectFromPath(projectPath)
         
         if len(protId) > 0: 
             protocol = project.getProtocol(int(protId))

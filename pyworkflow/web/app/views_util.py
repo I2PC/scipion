@@ -165,9 +165,12 @@ def getResourceJs(js):
     return os.path.join(django_settings.STATIC_URL, "js/", jsDict[js])
 
 def loadProject(projectName):
-    manager = Manager()
-    projPath = manager.getProjectPath(projectName)
-    project = Project(projPath)
+#     projectPath = Manager().getProjectPath(projectName)
+    projectPath = request.session['projectPath']
+    return loadProjectFromPath(projectPath)
+
+def loadProjectFromPath(projectPath):
+    project = Project(projectPath)
     project.load()
     return project
 
