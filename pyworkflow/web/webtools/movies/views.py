@@ -194,7 +194,8 @@ def movies_form(request):
     context = contextForm(request)
     context.update({'path_mode':'select',
                     'formUrl': 'mov_form',
-                    'showHost': True})
+                    'showHost': False,
+                    'showParallel': False})
     return render_to_response('form/form.html', context)
 
 

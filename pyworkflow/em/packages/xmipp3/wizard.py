@@ -310,7 +310,7 @@ class XmippVolumeRadiiProjMWizard(XmippVolumeRadiiWizard):
         value = [int(val) for val in value]
 
         protParams = {}
-        protParams['input']= protocol.inputVolumes
+        protParams['input']= protocol.input3DReferences
         protParams['label']= label
         protParams['value']= value
         return protParams
