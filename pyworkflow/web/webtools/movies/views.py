@@ -67,7 +67,7 @@ Movies_Alignment = [
     {"tag": "section", "text": "2. Import your data", "children": [
         {"tag": "protocol", "value": "ProtImportMovies", "text": "Import Movies", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Align your Movies", "children": [
-        {"tag": "protocol", "value": "ProtImportMovies", "text": "xmipp3 - movie alignment"}]}]
+        {"tag": "protocol", "value": "ProtMovieAlingment", "text": "xmipp3 - movie alignment"}]}]
         ''')
         f.close()
 
@@ -170,7 +170,7 @@ def movies_content(request):
     if daysLeft is None: 
         daysLeft = 14
     
-    context = contentContext(request, projectName)
+    context = contentContext(request, project)
     context.update({
                     # MODE
                     'formUrl': 'mov_form',
@@ -193,7 +193,9 @@ def movies_form(request):
     from django.shortcuts import render_to_response
     context = contextForm(request)
     context.update({'path_mode':'select',
-                    'formUrl': 'mov_form'})
+                    'formUrl': 'mov_form',
+                    'showHost': False,
+                    'showParallel': False})
     return render_to_response('form/form.html', context)
 
 

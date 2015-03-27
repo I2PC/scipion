@@ -135,7 +135,7 @@ def _runRemote(protocol, mode):
 	mode: should be either 'run' or 'stop'
     """
     host = protocol.getHostConfig()
-    tpl  = "ssh %(address)s '%(scipion)s/scipion runprotocol pw_protocol_remote.py %(mode)s %(project)s %(protDb)s %(protId)s'"
+    tpl  = "ssh %(address)s '%(scipion)s/scipion --config /home/scipionweb/.config/scipion/movies/scipion.conf runprotocol pw_protocol_remote.py %(mode)s %(project)s %(protDb)s %(protId)s'"
     args = {'address': host.getAddress(),
     	    'mode': mode,
             'scipion': host.getScipionHome(),

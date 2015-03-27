@@ -164,10 +164,13 @@ def getResourceCss(css):
 def getResourceJs(js):
     return os.path.join(django_settings.STATIC_URL, "js/", jsDict[js])
 
-def loadProject(projectName):
-    manager = Manager()
-    projPath = manager.getProjectPath(projectName)
-    project = Project(projPath)
+def loadProject(request):
+#     projectPath = Manager().getProjectPath(projectName)
+    projectPath = request.session['projectPath']
+    return loadProjectFromPath(projectPath)
+
+def loadProjectFromPath(projectPath):
+    project = Project(projectPath)
     project.load()
     return project
 
@@ -182,7 +185,7 @@ def loadProtocolProject(request, requestType='POST'):
     protClass = requestDict.get("protocolClass")
     
     # Load the project
-    project = loadProject(projectName)
+    project = loadProject(request)
     
     # Create the protocol object
     if protId and protId != 'None':  # Case of new protocol
@@ -222,7 +225,7 @@ def browse_relations(request):
     """ Browse relation objects from the database. """
     if request.is_ajax():
         projectName = request.session['projectName']
-        project = loadProject(projectName)
+        project = loadProject(request)
 
         relationName = request.GET.get('relationName')
         attributeName = request.GET.get('attributeName')
@@ -253,7 +256,7 @@ def browse_objects(request):
         objFilterParam = request.GET.get('objFilter', None)
         filterObject = FilterObject(objFilterParam, objClassList)
             
-        project = loadProject(projectName)
+        project = loadProject(request)
         objs = {}
         
         # Object Filter
@@ -320,7 +323,7 @@ def browse_protocol_class(request):
 def get_attributes(request):
     if request.is_ajax():
         projectName = request.session['projectName']
-        project = loadProject(projectName)
+        project = loadProject(request)
         objId = request.GET.get('objId', None)
         
         obj = project.getObject(int(objId))
@@ -339,7 +342,7 @@ def set_attributes(request):
         comment = request.GET.get('comment', None)
 
         projectName = request.session['projectName']
-        project = loadProject(projectName)
+        project = loadProject(request)
 
         obj = project.getObject(int(id))
         if obj is None:
@@ -419,7 +422,7 @@ def get_file(request):
 def download_output(request):
     if request.is_ajax():
         projectName = request.session['projectName']
-        project = loadProject(projectName)
+        project = loadProject(request)
         # This objId is a protocol
         objId = request.GET.get('objId', None)
         

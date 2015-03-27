@@ -68,6 +68,7 @@ class Project(object):
         """Create a project associated with a given path"""
         # To create a Project, a path is required
         self.name = path
+        self.shortName = os.path.basename(path)
         self.path = os.path.abspath(path)
         self.pathList = [] # Store all related paths
         self.dbPath = self.__addPath(PROJECT_DBNAME)
@@ -99,7 +100,10 @@ class Project(object):
         
     def getPath(self, *paths):
         """Return path from the project root"""
-        return os.path.join(*paths)
+        if paths:
+            return os.path.join(*paths)
+        else:
+            return self.path
     
     def getDbPath(self):
         """ Return the path to the sqlite db. """
@@ -141,6 +145,11 @@ class Project(object):
     
     def getName(self):
         return self.name
+    
+    #TODO: maybe it has more sense to use this behaviour
+    # for just getName function...
+    def getShortName(self):
+        return self.shortName
     
     def getTmpPath(self, *paths):
         return self.getPath(PROJECT_TMP, *paths)
@@ -210,14 +219,16 @@ class Project(object):
     def _loadHosts(self, hosts):
         """ Loads hosts configuration from hosts file. """
         # If the host file is not passed as argument...
+        projHosts = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)        
+        
         if hosts is None:
-            # Try first to read it from the project file .pwconfig./hosts.conf
-            projHosts = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)
+            # Try first to read it from the project file .config./hosts.conf
             if os.path.exists(projHosts):
                 hostsFile = projHosts
             else:
                 hostsFile = os.environ['SCIPION_HOSTS']
         else:
+            pwutils.copyFile(hosts, projHosts)
             hostsFile = hosts
             
         self._hosts = pwconfig.loadHostsConf(hostsFile)
@@ -225,14 +236,16 @@ class Project(object):
     def _loadProtocols(self, protocolsConf):
         """ Load protocol configuration from a .conf file. """
         # If the host file is not passed as argument...
+        projProtConf = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
+        
         if protocolsConf is None:
             # Try first to read it from the project file .config/hosts.conf
-            projProtConf = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
             if os.path.exists(projProtConf):
                 protConf = projProtConf
             else:
                 protConf = os.environ['SCIPION_PROTOCOLS']
         else:
+            pwutils.copyFile(protocolsConf, projProtConf)
             protConf = protocolsConf
           
         self._protocolViews = pwconfig.loadProtocolsConf(protConf)

@@ -29,6 +29,7 @@ serve as base for implementing visualization tools(Viewer sub-classes).
 """
 
 from os.path import join
+from itertools import izip
 from protocol import Protocol
 import os
 from pyworkflow.utils.path import cleanPath
@@ -325,37 +326,34 @@ class ProtocolViewer(Protocol, Viewer):
     
     def createAngDistributionSqlite(self, sqliteFn,
                                     itemDataIterator=None):
-        projectionList = [] # List of list of 3 elements containing angleTilt, anglePsi, weight
-        
-        def getCloseProjection(angleTilt, anglePsi):
-            """ Get an existing projection close to angleTilt, anglePsi.
-            Return None if not found close enough.
-            """
-            for projection in projectionList:
-                if abs(projection[0] - angleTilt) <= 0.01 and abs(projection[1] - anglePsi) <= 0.01:
-                    return projection
-            return None            
+        import pyworkflow.em.metadata as md
+        if not os.path.exists(sqliteFn):
+            projectionList = [] # List of list of 3 elements containing angleTilt, anglePsi, weight
             
-        for angleTilt, anglePsi in itemDataIterator:
-            projection = getCloseProjection(angleTilt, anglePsi)
-            if projection is None:
-                projectionList.append([angleTilt, anglePsi, 1])
-            else:
-                projection[2] = projection[2] + 1
+            def getCloseProjection(angleTilt, anglePsi):
+                """ Get an existing projection close to angleTilt, anglePsi.
+                Return None if not found close enough.
+                """
+                for projection in projectionList:
+                    if abs(projection[0] - angleTilt) <= 0.01 and abs(projection[1] - anglePsi) <= 0.01:
+                        return projection
+                return None            
+            
+            for angleTilt, anglePsi, parts in itemDataIterator:
+    #             print "angleTilt, anglePsi, parts", angleTilt, anglePsi, parts
+                projection = getCloseProjection(angleTilt, anglePsi)
+                if projection is None:
+                    projectionList.append([angleTilt, anglePsi, 1./parts])
+                else:
+                    projection[2] = projection[2] + 1./parts
+            
+            mdProj = md.MetaData()
+            
+            for projection in projectionList:
+                mdRow = md.Row()
+                mdRow.setValue(md.MDL_ANGLE_TILT, projection[0])
+                mdRow.setValue(md.MDL_ANGLE_PSI, projection[1])
+                mdRow.setValue(md.MDL_WEIGHT, projection[2])
+                mdRow.writeToMd(mdProj, mdProj.addObject())
+            mdProj.write(sqliteFn)
         
-        
-                
-
-        
-
-
-
-
-
-
-
-
-
-
-
-

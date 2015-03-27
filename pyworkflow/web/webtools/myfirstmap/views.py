@@ -179,7 +179,9 @@ def myfirstmap_form(request):
     from django.shortcuts import render_to_response
     context = contextForm(request)
     context.update({'path_mode':'upload',
-                    'formUrl': 'my_form'})
+                    'formUrl': 'my_form',
+                    'showHost': False,
+                    'showParallel': False})
     return render_to_response('form/form.html', context)
 
  
@@ -196,7 +198,7 @@ def service_content(request):
     if daysLeft is None: 
         daysLeft = 14
     
-    context = contentContext(request, projectName)
+    context = contentContext(request, project)
     context.update({'importAverages': path_files + 'importAverages.png',
                     'useProtocols': path_files + 'useProtocols.png',
                     'protForm': path_files + 'protForm.png',

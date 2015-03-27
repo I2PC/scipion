@@ -114,15 +114,15 @@ function createMovProject(elm) {
 		success : function() {
 			var title = "ACCESS CODE"
 			
-			var msg = "<p>Your <strong>url to access </strong> to this <strong>Project</strong> is:</p>" +
+			var msg = "<p>Your <strong>url to access </strong> this <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
 			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/m_content/?p="+ projName+ "'>" +
 			"http://scipion.cnb.csic.es/m/m_content/?p="+ projName+ "</a>"+
 			"</h3></p><br />" +
 			"<p>The access to this new project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
-			"in order to access to this project in future sessions.</p>"+
-			"<p>In case to lost your url to access, please contact with us by this email: <span style='color:firebrick;'>scipion at cnb.csic.es</span></p>";			
+			"in order to access this project in future sessions.</p>"+
+			"<p>If you experience any problem contact us on this email: <span style='color:firebrick;'>scipion at cnb.csic.es</span></p>";	
 			
 			msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";
 			var funcName = "goToProject"
@@ -135,6 +135,10 @@ function createMovProject(elm) {
 function goToProject(elm) {
 	var code = elm.val();
 	
+	var URL2 = getSubDomainURL() + "/m_content/?p="+code;
+	window.location.href = URL2;
+	
+	/*
 	// remove the blank spaces
 	code = code.replace(/\s+/g, '');
 	
@@ -154,6 +158,7 @@ function goToProject(elm) {
 			}
 		}
 	});
+	*/
 }
 
 function getRefTestData(id){
@@ -163,7 +168,7 @@ function getRefTestData(id){
 			ref = "<strong>S.cereviseae 80S ribosome</strong> (5 movies, (1.77 Å, 1.77 Å), <a href='http://dx.doi.org/10.7554/eLife.00461' style='color:firebrick;' target='_blank'>from Bai XC, Fernandez IS, McMullan G, Scheres SH</a>)"
 			break;
 		case "falcon":
-			ref = "<strong>Falcon 2014</strong>"
+			ref = "<strong>RNQV1 virus (unpublished)</strong>"
 			break;
 	}
 	return ref;

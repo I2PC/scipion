@@ -70,10 +70,14 @@
 					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a>
 				</td>
 <!-- HOST -->
-<!-- 				<td> -->
-<!-- 					{{msg.LABEL_HOST}} -->
-<!-- 				</td> -->
+				{% if showHost %}
+				<td>
+					{{msg.LABEL_HOST}}
+				</td>
+				<td>
+				{% else %}
 				<td style="display:none">
+				{% endif %}
 					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
 					{% for h in hosts %}
 						<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
@@ -83,8 +87,14 @@
 <!-- 				<td> -->
 <!-- 					.ico -->
 <!-- 				</td> -->
-<!-- 			</tr> -->
-<!-- 			<tr> -->
+			</tr>
+			
+			{% if showParallel %}
+			<tr>
+			{% else %}
+			<tr style="display:none;">
+			{% endif %}
+			
 				{% if protocol.allowThreads or protocol.allowMpi %}
 <!-- PARALLEL (THREAD & MPI) -->
 				<td>
@@ -105,6 +115,8 @@
 <!-- 						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;"> -->
 <!-- 						SERVICE MODE -->
 						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;" readonly>
+
+
 					{% endif %}
 				</td>
 				<td>

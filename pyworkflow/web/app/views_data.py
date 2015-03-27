@@ -37,7 +37,7 @@ def data_content(request):
     
     manager = Manager()
     request.session['projectPath'] = manager.getProjectPath(projectName)
-    project = loadProject(projectName)
+    project = loadProject(request)
     
     context = {'projectName': projectName,
                'editTool': getResourceIcon('edit_toolbar'),
@@ -59,7 +59,7 @@ def object_info(request):
     if request.is_ajax():
         projectName = request.session['projectName']
         objId = request.GET.get('objectId', None)
-        project = loadProject(projectName)
+        project = loadProject(request)
         obj = project.mapper.selectById(objId)
         
         ioDict = {'info': str(obj),
@@ -78,7 +78,7 @@ def object_tree(request):
     
     #Get Project
     projectName = request.session['projectName'] 
-    project = loadProject(projectName) 
+    project = loadProject(request) 
     
     #Obtain the classes graph
     classesGraph = getGraphClassesNode(project)
