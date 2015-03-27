@@ -228,7 +228,7 @@ class Project(object):
             else:
                 hostsFile = os.environ['SCIPION_HOSTS']
         else:
-            copyFile(hosts, projHosts)
+            pwutils.copyFile(hosts, projHosts)
             hostsFile = hosts
             
         self._hosts = pwconfig.loadHostsConf(hostsFile)
@@ -245,7 +245,7 @@ class Project(object):
             else:
                 protConf = os.environ['SCIPION_PROTOCOLS']
         else:
-            copyFile(protocolsConf, projProtConf)
+            pwutils.copyFile(protocolsConf, projProtConf)
             protConf = protocolsConf
           
         self._protocolViews = pwconfig.loadProtocolsConf(protConf)
