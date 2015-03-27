@@ -75,20 +75,28 @@
 					{{msg.LABEL_HOST}}
 				</td>
 				<td>
-				{% else %}
-				<td style="display:none">
-				{% endif %}
 					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
 					{% for h in hosts %}
 						<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
 					{% endfor %}
 					</select>
 				</td>
-<!-- 				<td> -->
-<!-- 					.ico -->
-<!-- 				</td> -->
 			</tr>
 			<tr>
+			
+				{% else %}
+				<td style="display:none">
+					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
+					{% for h in hosts %}
+						<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
+					{% endfor %}
+					</select>
+				</td>
+				{% endif %}
+				
+				
+				{% if showParallel %}
+				
 				{% if protocol.allowThreads or protocol.allowMpi %}
 <!-- PARALLEL (THREAD & MPI) -->
 				<td>
@@ -98,24 +106,47 @@
 					{% if protocol.allowThreads %}
 						{{msg.LABEL_THREADS}}
 						&nbsp;		
-<!-- 						<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;"> -->
+						<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;">
 <!-- 						SERVICE MODE -->
-						<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;" readonly>
+<!-- 						<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;" readonly> -->
 					{% endif %}
 						&nbsp;
 					{% if protocol.allowMpi %}
 						{{msg.LABEL_MPI}}
 						&nbsp;		
-<!-- 						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;"> -->
+						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;">
 <!-- 						SERVICE MODE -->
-						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;" readonly>
-
+<!-- 						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;" readonly> -->
+						<td>
+							<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_PARALLEL}}','{{msg.HELP_MPI_THREADS|escapejs}}');"></a>
+						</td>
 
 					{% endif %}
+					
+				{% else %}
+				<td style="display:none">
+					<strong>{{msg.LABEL_PARALLEL}}</strong>
+				</td>
+				<td colspan="4" style="display:none">
+					{% if protocol.allowThreads %}
+						{{msg.LABEL_THREADS}}
+						&nbsp;		
+						<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;">
+					{% endif %}
+						&nbsp;
+					{% if protocol.allowMpi %}
+						{{msg.LABEL_MPI}}
+						&nbsp;		
+						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;">
 				</td>
 				<td>
 					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_PARALLEL}}','{{msg.HELP_MPI_THREADS|escapejs}}');"></a>
 				</td>
+				{% endif %}
+<!-- 				</td>
+				<td>
+					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_PARALLEL}}','{{msg.HELP_MPI_THREADS|escapejs}}');"></a>
+				</td> -->
 				{% else %}
 				<td></td>
 				<td colspan="4"></td>

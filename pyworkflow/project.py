@@ -219,14 +219,16 @@ class Project(object):
     def _loadHosts(self, hosts):
         """ Loads hosts configuration from hosts file. """
         # If the host file is not passed as argument...
+        projHosts = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)        
+        
         if hosts is None:
-            # Try first to read it from the project file .pwconfig./hosts.conf
-            projHosts = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)
+            # Try first to read it from the project file .config./hosts.conf
             if os.path.exists(projHosts):
                 hostsFile = projHosts
             else:
                 hostsFile = os.environ['SCIPION_HOSTS']
         else:
+            copyFile(hosts, projHosts)
             hostsFile = hosts
             
         self._hosts = pwconfig.loadHostsConf(hostsFile)
@@ -234,14 +236,16 @@ class Project(object):
     def _loadProtocols(self, protocolsConf):
         """ Load protocol configuration from a .conf file. """
         # If the host file is not passed as argument...
+        projProtConf = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
+        
         if protocolsConf is None:
             # Try first to read it from the project file .config/hosts.conf
-            projProtConf = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
             if os.path.exists(projProtConf):
                 protConf = projProtConf
             else:
                 protConf = os.environ['SCIPION_PROTOCOLS']
         else:
+            copyFile(protocolsConf, projProtConf)
             protConf = protocolsConf
           
         self._protocolViews = pwconfig.loadProtocolsConf(protConf)
