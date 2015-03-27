@@ -250,7 +250,7 @@ Examples:
             else:
                 raise Exception("Please, select a single volume to show it's angular distribution")
             view = em.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
-        return [view]
+        return view
     
     def _createAngDist2D(self, it):
         nrefs = self._getNumberOfRefs()

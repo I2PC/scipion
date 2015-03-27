@@ -168,7 +168,7 @@ function getRefTestData(id){
 			ref = "<strong>S.cereviseae 80S ribosome</strong> (5 movies, (1.77 Å, 1.77 Å), <a href='http://dx.doi.org/10.7554/eLife.00461' style='color:firebrick;' target='_blank'>from Bai XC, Fernandez IS, McMullan G, Scheres SH</a>)"
 			break;
 		case "falcon":
-			ref = "<strong>Falcon 2014</strong>"
+			ref = "<strong>RNQV1 virus (unpublished)</strong>"
 			break;
 	}
 	return ref;
