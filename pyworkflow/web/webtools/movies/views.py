@@ -67,7 +67,7 @@ Movies_Alignment = [
     {"tag": "section", "text": "2. Import your data", "children": [
         {"tag": "protocol", "value": "ProtImportMovies", "text": "Import Movies", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Align your Movies", "children": [
-        {"tag": "protocol", "value": "ProtImportMovies", "text": "xmipp3 - movie alignment"}]}]
+        {"tag": "protocol", "value": "ProtMovieAlingment", "text": "xmipp3 - movie alignment"}]}]
         ''')
         f.close()
 

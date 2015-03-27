@@ -2,7 +2,9 @@
 	<div id="headerMainContainer">
 		
 		{% block header_title %}
+		{% block header_backlink %}
 		<a href="{{abs_url}}/projects/" id="headerLogoContainer">
+		{% endblock %}
 			<img class="logo" src="{{logo_scipion}}" alt="Scipion logo">
 		</a>
 		<span id="projectName">
