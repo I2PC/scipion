@@ -113,25 +113,20 @@ class Project(object):
         """ Return the time when the project was created. """
         # In project.create method, the first object inserted
         # in the mapper should be the creation time
-        creation = self.mapper.selectFirst()
-        return creation.get()
+        return self.settings.getCreationTime()
     
     def getElapsedTime(self):
         """ Return the time since the project was created. """
-        elapsed = None
-        creationTime = self.getCreationTime()
-        
-        if creationTime is not None:
-            f = "%Y-%m-%d %H:%M:%S.%f"
-            elapsed = dt.datetime.now() - dt.datetime.strptime(creationTime, f)
-        
-        return elapsed
+        return dt.datetime.now() - self.getCreationTime()
     
-    def getLeftTime(self, numDays):
-        elapsedTime = self.getElapsedTime()
-        td = dt.timedelta(days=numDays)
-        diff = td - (elapsedTime)
-        return diff
+    def getLeftTime(self):
+        lifeTime = self.settings.getLifeTime()
+        
+        if lifeTime:
+            td = dt.timedelta(days=lifeTime)
+            return td - self.getElapsedTime()
+        else:
+            return None
     
     def setDbPath(self, dbPath):
         """ Set the project db path.
@@ -200,8 +195,9 @@ class Project(object):
         # It is possible that settings does not exists if 
         # we are loading a project after a Project.setDbName,
         # used when running protocols
-        if os.path.exists(self.settingsPath):
-            self.settings = pwconfig.loadSettings(self.settingsPath)
+        settingsPath = os.path.join(self.path, self.settingsPath) 
+        if os.path.exists(settingsPath):
+            self.settings = pwconfig.loadSettings(settingsPath)
         else:
             self.settings = None
             
