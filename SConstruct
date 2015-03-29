@@ -758,6 +758,8 @@ def addModule(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
     if default or GetOption(name):
         env.Default(tInstall)
 
+    env.Alias(name, tInstall)
+    
     return tInstall
 
 
