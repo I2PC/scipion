@@ -29,7 +29,7 @@ import Tkinter as tk
 import tkFont
 
 import pyworkflow as pw
-from pyworkflow.utils.utils import prettyDate
+from pyworkflow.utils.utils import prettyDate, prettyTime
 from pyworkflow.manager import Manager
 from pyworkflow.utils.properties import Message
 from pyworkflow.gui.widgets import HotButton
@@ -72,6 +72,9 @@ class ProjectsView(tk.Frame):
         parent.columnconfigure(0, weight=1)
         colors = ['white', '#EAEBFF']
         for i, p in enumerate(self.manager.listProjects()):
+            project = self.manager.loadProject(p.getName(), chdir=False)
+            # Add creation time to project info
+            p.cTime = project.getCreationTime()
             frame = self.createProjectLabel(parent, p, color=colors[i%2])
             frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
             r += 1
@@ -85,8 +88,9 @@ class ProjectsView(tk.Frame):
                          justify=tk.LEFT, font=self.projNameFont, cursor='hand1', width=50)
         label.grid(row=0, column=0,  padx=2, pady=2, sticky='nw')
         label.bind('<Button-1>', lambda e: self.openProject(projInfo.projName))
-        dateLabel = tk.Label(frame, text= Message.LABEL_MODIFIED + ' ' + prettyDate(projInfo.mTime),
-                             font=self.projDateFont, bg=color)
+        dateMsg = '%s%s    %s%s' % (Message.LABEL_MODIFIED, prettyDate(projInfo.mTime),
+                                    Message.LABEL_CREATED, prettyTime(projInfo.cTime, time=False))
+        dateLabel = tk.Label(frame, text=dateMsg, font=self.projDateFont, bg=color)
         dateLabel.grid(row=1, column=0, sticky='nw')
         delLabel = tk.Label(frame, text=Message.LABEL_DELETE_PROJECT, font=self.projDelFont, bg=color, cursor='hand1')
         delLabel.grid(row=1, column=1, padx=10)

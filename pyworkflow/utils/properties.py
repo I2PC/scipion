@@ -50,6 +50,7 @@ class Message():
     TITLE_DELETE_PROJECT = 'Confirm project deletion'
     LABEL_RENAME_PROJECT = '[Rename]'
     TITLE_RENAME_PROJECT = 'Confirm project renaming'
+    LABEL_CREATED = 'Created: '
     LABEL_MODIFIED = 'Modified: '
     
     # Project Content Template
