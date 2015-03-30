@@ -436,3 +436,20 @@ def movieCreatePlot(plotType, movie, saveFig):
         if saveFig:
             plotter.savefig(movie.plotCart)
     return plotter
+
+
+
+class ProtMovieAlignmentWeb(ProtMovieAlignment):
+    """ Aligns a set of volumes using cross correlation.
+    Based on Xmipp protocol for aligning volumes, but
+    the parameters are restricted for ease of use.
+    """
+    _label = 'movie alignment web'
+    
+    def _defineParams(self, form):
+        ProtMovieAlignment._defineParams(self, form)
+        
+        gpuParamsGroup = form.getParam('GPU parameters')
+        gpuParamsGroup.config(condition='False')
+        
+        
