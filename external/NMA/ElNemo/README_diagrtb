@@ -1,0 +1,103 @@
+    ----------------------------------------------------------------
+    DIAGRTB: DIAGonalisation of a matrix with the RTB approximation.
+    ----------------------------------------------------------------
+
+    Principles:
+    ***********
+    Required eigenvectors are supposed to be well
+    described by rigid body motions (Rotations-Translations)
+    of blocks of atoms buildt with sets of consecutive
+    residues, as defined in the corresponding coordinate 
+    file. 
+    
+    Coordinates are necessary in order to define this new set of 
+    coordinates (the rotations and translations of the rigid bodies).
+ 
+    The program was designed for treating mass-weighted second-derivatives
+    of the potential energy matrix (the Hessian), obtained
+    for proteins (hence the PDB format for the coordinates).     
+    It should work for any kind of system where consecutive
+    particules (in the coordinate file) are expected to move
+    almost in the same direction and with almost the same amplitude
+    in the modes corresponding to the lowest (or highest) eigenvalues
+    (that is, modes with a collective character). 
+
+    To compile diagrtb: 
+    *******************
+    If you are under Linux, with a FORTRAN compiler available, 
+    just type "make diagrtb". 
+    Otherwise, compile diagrtb.f as you are used to...
+
+    Next, to test the executable, go to the Try_diagrtb directory,
+    and type "TRYME".
+
+    Note that:
+    **********
+    Diagrtb reads its commands in the diagrtb.dat file.
+    Also, each run of diagrtb produces a diagrtb.dat_run file,
+    where all parameter values are given (and commented).
+    diagrtb.dat_run can be used as a diagrtb.dat file,
+    in further runs.
+
+    The input matrix is assumed to be:
+    a) real, square and symmetrical.
+    b) in the following format: i, j, i-j-matrix-element
+
+    The input coordinate file can be in:
+    a) Protein DataBank (PDB) format.
+    b) x, y, z, mass, block-number format.
+
+    Output: 
+    *******
+    diagrtb.eigenrtb, with the eigenvalues and
+    eigenvectors, in x,y,z "CERFACS" format.
+ 
+    Memory requirements:
+    ********************
+    Though diagrtb is designed to handle large matrices,
+    there are some memory limits, mainly related to the
+    size of the largest block in your system.
+
+    Here, in diagrtb.f, "lrwork" has been set to 32000000.
+    You may have to lower this value, if your computer has
+    too little memory. If your system is too large, 
+    you may try to increase "lrwork", or "liwork" 
+    if the program complains about it. 
+    But you may also try to modify the number of residues 
+    per block in diagrtb.dat.
+
+    WARNING:
+    ********
+    Temporary diagrtb_work.* files are created during each
+    program run.
+
+    So, avoid running several diagrtb simultaneously, in the same
+    directory !
+
+    References: 
+    ***********
+    1) P. Durand, G. Trinquier, Y.H. Sanejouand (1994):
+   "A new approach for determining low-frequency
+    normal modes in macromolecules", 
+    Biopolymers vol.34, p759-771.
+ 
+    2) F. Tama, F.X. Gadea, O. Marques, Y.H. Sanejouand (2000):
+   "Building-block approach for determining 
+    low-frequency normal modes of macromolecules", 
+    Proteins: Structure, Function, and Genetics vol.41(1), p1-7.
+
+    3) G. Li, Q. Cui (2002):
+   "A coarse-grained normal mode approach for macromolecules: an
+    efficient implementation and application to Ca(2+)-ATPase",
+    Biophys. J. vol.83, p2457-2474.
+
+    In the later paper, RTB is called BNM (for Block-Normal-Modes).
+    It is more general (flexible blocks are allowed).
+    It is now available in the CHARMm package (since version 32).
+
+    Version 2000 by Florence Tama (ftama@scripps.edu).
+    Modified since then by: Osni Marques, Yves-Henri Sanejouand.
+    November 2004: last modifications.
+ 
+    In case of problem, feel free to contact: 
+    Yves-Henri.Sanejouand@ens-lyon.fr
