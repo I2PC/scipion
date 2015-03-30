@@ -32,6 +32,7 @@ import pyworkflow as pw
 from pyworkflow.utils.utils import prettyDate, prettyTime
 from pyworkflow.manager import Manager
 from pyworkflow.utils.properties import Message
+import pyworkflow.gui as pwgui 
 from pyworkflow.gui.widgets import HotButton
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui.dialog import askString, askYesNo, showError
@@ -46,9 +47,13 @@ class ProjectsView(tk.Frame):
         self.root = windows.root
         
         #tkFont.Font(size=12, family='verdana', weight='bold')
-        self.projNameFont = tkFont.Font(size=12, family='helvetica', weight='bold')
-        self.projDateFont = tkFont.Font(size=8, family='helvetica')
-        self.projDelFont = tkFont.Font(size=8, family='helvetica', weight='bold')
+        bigSize = pwgui.cfgFontSize + 2
+        smallSize = pwgui.cfgFontSize - 2
+        fontName = pwgui.cfgFontName
+        
+        self.projNameFont = tkFont.Font(size=bigSize, family=fontName, weight='bold')
+        self.projDateFont = tkFont.Font(size=smallSize, family=fontName)
+        self.projDelFont = tkFont.Font(size=smallSize, family=fontName, weight='bold')
         self.manager = Manager()
         btn = HotButton(self, text=Message.LABEL_CREATE_PROJECT, font=self.projNameFont, 
                      command=self.createNewProject)
