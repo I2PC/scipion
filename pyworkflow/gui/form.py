@@ -24,7 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.gui.dialog import MessageDialog
 """
 This modules implements the automatic
 creation of protocol form GUI from its
@@ -757,7 +756,10 @@ class ParamWidget():
         **args: extra arguments passed to tk.Radiobutton and tk.Frame constructors.
         """
         var = BoolVar()
-        frame = tk.Frame(parent, **args)
+        frameArgs = dict(args)
+        if 'font' in frameArgs:
+            del frameArgs['font']
+        frame = tk.Frame(parent, **frameArgs)
         rb1 = tk.Radiobutton(frame, text='Yes', variable=var.tkVar, value=1, **args)
         rb1.grid(row=0, column=0, padx=2, sticky='w')
         rb2 = tk.Radiobutton(frame, text='No', variable=var.tkVar, value=0, **args)
@@ -775,18 +777,21 @@ class ParamWidget():
             var = 0
         
         elif t is params.BooleanParam:
-            var, frame = ParamWidget.createBoolWidget(content, bg='white')
+            var, frame = ParamWidget.createBoolWidget(content, bg='white', 
+                                                      font=self.window.font)
             frame.grid(row=0, column=0, sticky='w')
         
         elif t is params.EnumParam:
             var = ComboVar(param)
             if param.display == params.EnumParam.DISPLAY_COMBO:
-                combo = ttk.Combobox(content, textvariable=var.tkVar, state='readonly')
+                combo = ttk.Combobox(content, textvariable=var.tkVar, 
+                                     state='readonly', font=self.window.font)
                 combo['values'] = param.choices
                 combo.grid(row=0, column=0, sticky='w')
             elif param.display == params.EnumParam.DISPLAY_LIST:
                 for i, opt in enumerate(param.choices):
-                    rb = tk.Radiobutton(content, text=opt, variable=var.tkVar, value=opt)
+                    rb = tk.Radiobutton(content, text=opt, variable=var.tkVar, 
+                                        value=opt, font=self.window.font)
                     rb.grid(row=i, column=0, sticky='w')
             else:
                 raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
@@ -803,7 +808,8 @@ class ParamWidget():
         
         elif t is params.PointerParam or t is params.RelationParam:
             var = PointerVar(self._protocol)
-            entry = tk.Entry(content, width=entryWidth, textvariable=var.tkVar, state="readonly")
+            entry = tk.Entry(content, width=entryWidth, textvariable=var.tkVar, 
+                             state="readonly", font=self.window.font)
             entry.grid(row=0, column=0, sticky='w')
             
             if t is params.RelationParam:
@@ -821,7 +827,8 @@ class ParamWidget():
         
         elif t is params.ProtocolClassParam:
             var = tk.StringVar()
-            entry = tk.Entry(content, width=entryWidth, textvariable=var, state="readonly")
+            entry = tk.Entry(content, width=entryWidth, textvariable=var, 
+                             state="readonly", font=self.window.font)
             entry.grid(row=0, column=0, sticky='w')
 
             protClassName = self.param.protocolClassName.get()
@@ -851,7 +858,8 @@ class ParamWidget():
             var = tk.StringVar()
             if issubclass(t, params.FloatParam) or issubclass(t, params.IntParam):
                 entryWidth = self._entryWidth # Reduce the entry width for numbers entries
-            entry = tk.Entry(content, width=entryWidth, textvariable=var)
+            entry = tk.Entry(content, width=entryWidth, textvariable=var, 
+                             font=self.window.font)
             entry.grid(row=0, column=0, sticky='w')
             
             if issubclass(t, params.PathParam):
@@ -1209,7 +1217,8 @@ class FormWindow(Window):
         #self._createHeaderLabel(modeFrame, "Mode", sticky='ne', row=0, pady=0, column=0)
         runMode = self._createBoundOptions(modeFrame, Message.VAR_RUN_MODE, 
                                            params.MODE_CHOICES, self.protocol.runMode.get(),
-                                           self._onRunModeChanged, bg='white')   
+                                           self._onRunModeChanged, 
+                                           bg='white', font=self.font)   
         runMode.grid(row=0, column=0, sticky='new', padx=(0, 5), pady=5)
         btnHelp = IconButton(modeFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
                              command=self._createHelpCommand(Message.HELP_RUNMODE))
@@ -1225,7 +1234,8 @@ class FormWindow(Window):
         protHost = self.protocol.getHostName()
         hostName = protHost if protHost in self.hostList else self.hostList[0]
         self.hostVar.trace('w', self._setHostName)
-        self.hostCombo = ttk.Combobox(runFrame, textvariable=self.hostVar, state='readonly', width=10)
+        self.hostCombo = ttk.Combobox(runFrame, textvariable=self.hostVar, 
+                                      state='readonly', width=10, font=self.font)
         self.hostCombo['values'] = self.hostList
         self.hostVar.set(hostName)
         self.hostCombo.grid(row=r, column=c+1, pady=5, sticky='nw')
@@ -1271,7 +1281,8 @@ class FormWindow(Window):
             else:
                 # THREADS
                 if allowThreads:
-                    self._createHeaderLabel(procFrame, Message.LABEL_THREADS, sticky=sticky, row=r2, column=c2, pady=0)
+                    self._createHeaderLabel(procFrame, Message.LABEL_THREADS, 
+                                            sticky=sticky, row=r2, column=c2, pady=0)
                     entry = self._createBoundEntry(procFrame, Message.VAR_THREADS)
                     entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
                     # Modify values to be used in MPI entry
@@ -1279,7 +1290,8 @@ class FormWindow(Window):
                     sticky = 'nw'
                 # MPI
                 if allowMpi:
-                    self._createHeaderLabel(procFrame, Message.LABEL_MPI, sticky=sticky, row=r2, column=c2, pady=0)
+                    self._createHeaderLabel(procFrame, Message.LABEL_MPI, 
+                                            sticky=sticky, row=r2, column=c2, pady=0)
                     entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
                     entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
                 
@@ -1292,10 +1304,12 @@ class FormWindow(Window):
         # Queue
         self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', 
                                 column=c, padx=(15,5), pady=0)
-        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white')
+        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white', 
+                                                  font=self.font)
         self._addVarBinding(Message.VAR_QUEUE, var)
         frame.grid(row=2, column=c+1, pady=5, sticky='nw')
-        btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, command=self._editQueueParams)
+        btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, 
+                                  command=self._editQueueParams)
         btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
                              command=self._createHelpCommand(Message.HELP_RUNMODE))
@@ -1350,7 +1364,7 @@ class FormWindow(Window):
         expLabel.grid(row=0, column=0, sticky='nw', padx=5)
         expCombo = self._createBoundOptions(expFrame, Message.VAR_EXPERT, params.LEVEL_CHOICES,
                                             self.protocol.expertLevel.get(),
-                                            self._onExpertLevelChanged) 
+                                            self._onExpertLevelChanged, font=self.font) 
         expCombo.grid(row=0, column=1, sticky='nw', pady=5)
         expFrame.grid(row=0, column=0, sticky='nw')
         
@@ -1410,13 +1424,15 @@ class FormWindow(Window):
         self.widgetDict[paramName] = var
         self.bindings.append(binding)
         
-    def _createBoundEntry(self, parent, paramName, width=5, func=None, value=None):
+    def _createBoundEntry(self, parent, paramName, width=5, 
+                          func=None, value=None, **kwargs):
         var = tk.StringVar()
         setattr(self, paramName + 'Var', var)
         self._addVarBinding(paramName, var, func)
         if value is not None:
             var.set(value)
-        return tk.Entry(parent, font=self.font, width=width, textvariable=var)
+        return tk.Entry(parent, font=self.font, width=width, 
+                        textvariable=var, **kwargs)
     
     def _createEnumBinding(self, paramName, choices, value=None, *callbacks):
         param = params.EnumParam(choices=choices)
@@ -1428,11 +1444,16 @@ class FormWindow(Window):
         
     def _createBoundOptions(self, parent, paramName, choices, value, *callbacks, **kwargs):
         param, var = self._createEnumBinding(paramName, choices, value, *callbacks)
-        frame = tk.Frame(parent, **kwargs)
         rbArgs = {}
+        frameArgs = dict(kwargs)
         if 'bg' in kwargs:
             rbArgs['bg'] = kwargs['bg']
             
+        if 'font' in kwargs:
+            rbArgs['font'] = kwargs['font']
+            del frameArgs['font']
+            
+        frame = tk.Frame(parent, **frameArgs)
         for i, opt in enumerate(param.choices):
             rb = tk.Radiobutton(frame, text=opt, variable=var.tkVar, value=opt, **rbArgs)
             rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
