@@ -38,8 +38,9 @@ from pyworkflow.object import Float
 from pyworkflow.em.data import Volume, SetOfClasses3D
 from pyworkflow.utils import getMemoryAvailable, replaceExt, removeExt, cleanPath, makePath, copyFile
 
-from pyworkflow.em.packages.xmipp3.convert import createClassesFromImages
+from pyworkflow.em.packages.xmipp3.convert import createClassesFromImages,  readSetOfParticles
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
+
 
 ctfBlockName = 'ctfGroup'
 refBlockName = 'refGroup'
@@ -709,3 +710,11 @@ def runCreateOutpuStep(self):
         vol.setSamplingRate(imgSet.getSamplingRate())
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(imgSet, vol)
+
+        imgFn = self._getFileName('docfileInputAnglesIters', iter=lastIter, ref=1)
+        #create set of images
+        imgSetOut = self._createSetOfParticles()
+        imgSetOut.setSamplingRate(imgSet.getSamplingRate())
+        #read xmipp and convert
+        readSetOfParticles(imgFn, imgSetOut)
+        self._defineOutputs(outputParticles=imgSet)

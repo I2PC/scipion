@@ -33,6 +33,7 @@ import os
 import json
 from collections import OrderedDict
 from ConfigParser import ConfigParser
+import datetime as dt
 
 import pyworkflow as pw
 import pyworkflow.object as pwobj
@@ -164,6 +165,17 @@ class ProjectSettings(pwobj.OrderedObject):
         self.runsView = pwobj.Integer(1) # by default the graph view
         self.readOnly = pwobj.Boolean(False)
         self.runSelection = pwobj.CsvList(int) # Store selected runs
+        # Some extra settings stored, now mainly used
+        # from the webtools
+        self.creationTime = pwobj.String(dt.datetime.now()) # Time when the project was created
+        # Number of days that this project is active
+        # if None, the project will not expire
+        # This is used in webtools where a limited time
+        # is allowed for each project
+        self.lifeTime = pwobj.Integer()
+        # Set a disk quota for the project (in Gb)
+        # if None, quota is unlimited
+        self.diskQuota = pwobj.Integer()          
 
     def commit(self):
         """ Commit changes made. """
@@ -180,6 +192,21 @@ class ProjectSettings(pwobj.OrderedObject):
     
     def setReadOnly(self, value):
         self.readOnly.set(value)
+        
+    def getCreationTime(self):
+        f = "%Y-%m-%d %H:%M:%S.%f"
+        creationTime = self.creationTime.get()
+
+        return dt.datetime.strptime(creationTime, f)
+    
+    def setCreationTime(self, value):
+        self.creationTime.set(value)
+        
+    def getLifeTime(self):
+        return self.lifeTime.get()
+    
+    def setLifeTime(self, value):
+        self.lifeTime.set(value)
 
     def getConfig(self):
         return self.config
