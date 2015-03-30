@@ -73,8 +73,8 @@ void ProgImageSSNR::preProcess()
 	RaisedCosineMask(maskS,R-Rwidth,R+Rwidth);
 	maskN=1-maskS;
 
-	imin=std::max(3.0,0.5*Xdim*(sampling/fmin));
-	imax=std::min(Xdim-3.0,0.5*Xdim*(sampling/fmax));
+	imin=(size_t)std::max(3.0,0.5*Xdim*(sampling/fmin));
+	imax=(size_t)std::min(Xdim-3.0,0.5*Xdim*(sampling/fmax));
 }
 
 void ProgImageSSNR::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
