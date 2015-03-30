@@ -30,7 +30,7 @@ Protocol to perform high-resolution reconstructions
 from pyworkflow.object import Float
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam
-from pyworkflow.utils.path import cleanPath, makePath, copyFile, moveFile
+from pyworkflow.utils.path import cleanPath, makePath, copyFile, moveFile, createLink
 from pyworkflow.em.protocol import ProtRefine3D
 from pyworkflow.em.data import SetOfVolumes
 from convert import writeSetOfParticles
@@ -47,7 +47,7 @@ from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAM
 #Hacer local a partir de una resolucion
 #Global hasta una resolucion
 #FSC as a filter to avoid overfitting
-#Soft masking to avoid overfitting
+#Jumper weight
         
 class XmippProtReconstructHighRes(ProtRefine3D):
     """Reconstruct a volume at high resolution"""
@@ -96,7 +96,7 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         form.addParam('nextPositivity', BooleanParam, label="Positivity?", default=True,
                       help='Remove from the next reference all negative values')
         form.addParam('nextMask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True,
-                      help='The mask values must be between 0 (remove these pixels) and 1 (let them pass).')
+                      help='The mask values must be between 0 (remove these pixels) and 1 (let them pass). Smooth masks are recommended.')
         # COSS: Falta un script de nextReference
         form.addParam('nextRemove', BooleanParam, label="Remove reference to save space?", default=True, expertLevel=LEVEL_ADVANCED, 
                       help='Remove reference volumes once they are not needed any more.')
@@ -108,7 +108,7 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         line.addParam('angularMinTilt', FloatParam, label="Min.", default=0)
         line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90)
         groupSignificant = form.addGroup('Significant')
-        groupSignificant.addParam('significantIterations', IntParam, label="Number of iterations with global assignment", default=1,
+        groupSignificant.addParam('significantMaxResolution', FloatParam, label="Global assignment if resolution is worse than (A)", default=12,
                       help='Significant assignment is always performed on the first iteration. Starting from the second, you may '\
                       'decide whether to perform it or not. Note that the significant angular assignment is a robust angular assignment '\
                       'meant to avoid local minima, although it may take time to calculate.')
@@ -117,6 +117,8 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                       help='If directions are strict, some images may not participate at all in the 3D reconstruction because they are '\
                       'not significant enough for any of the volume directions')
         groupContinuous = form.addGroup('Continuous')
+        groupContinuous.addParam('continuousMinResolution', IntParam, label="Continuous assignment if resolution is better than (A)", default=15,
+                      help='Continuous assignment can produce very accurate assignments if the initial assignment is correct.')
         groupContinuous.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True,
                       help='Optimize shifts within a limit')
         groupContinuous.addParam('contMaxShift', IntParam, label="Max. shift variation (px)", default=5, expertLevel=LEVEL_ADVANCED)
@@ -147,17 +149,14 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         self.insertIteration(self.iteration)
     
     def insertIteration(self,iteration):
-        print "Inserting iteration ",iteration
-#        self._insertFunctionStep('determineSamplingRate',iteration)
-#        self._insertFunctionStep('calculateReference',iteration)
-#        self._insertFunctionStep('globalAssignment',iteration)
+        self._insertFunctionStep('globalAssignment',iteration)
 #        self._insertFunctionStep('localAssignment',iteration)
 #        self._insertFunctionStep('weightParticles',iteration)
 #        self._insertFunctionStep('reconstruct',iteration)
-#        # COSS: Falta postprocessing
+        # COSS: Falta postprocessing
 #        self._insertFunctionStep('evaluateReconstructions',iteration)
 #        self._insertFunctionStep('cleanDirectory',iteration)
-        self._insertFunctionStep('decideNextIteration',iteration)
+#        self._insertFunctionStep('decideNextIteration',iteration)
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertInputStep(self, inputParticlesId):
@@ -254,63 +253,56 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         md.setValue(label,value,objId)
         md.write("%s@%s"%(block,join(fnDir,"iterInfo.xmd")),MD_APPEND)
     
-    def determineSamplingRate(self,iteration):
-        fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
-        fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
-        makePath(fnDirCurrent)
-        
-        TsPrevious=self.readInfoField(fnDirPrevious,"sampling",MDL_SAMPLINGRATE)
-        ResolutionPrevious=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
-        TsCurrent=max(self.TsOrig,ResolutionPrevious/3)
-        
+    def prepareImages(self,fnDirPrevious,fnDir,TsCurrent):
+        print "Preparing images to sampling rate=",TsCurrent
         Xdim=self.inputParticles.get().getDimensions()[0]
         newXdim=long(round(Xdim*self.TsOrig/TsCurrent))
         if newXdim<40:
             newXdim=long(40)
             TsCurrent=Xdim*(self.TsOrig/newXdim)
-        self.writeInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE,TsCurrent)
-        self.writeInfoField(fnDirCurrent,"size",MDL_XSIZE,newXdim)
+        self.writeInfoField(fnDir,"sampling",MDL_SAMPLINGRATE,TsCurrent)
+        self.writeInfoField(fnDir,"size",MDL_XSIZE,newXdim)
         
-        # Prepare particles
+        # Prepare particlesfnMask
         fnDir0=self._getExtraPath("Iter000")
-        fnNewParticles=join(fnDirCurrent,"images.stk")
+        fnNewParticles=join(fnDir,"images.stk")
         self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"%(self.imgsFn,fnNewParticles,newXdim))
         R=min(round(self.particleRadius.get()*self.TsOrig/TsCurrent*(1+self.angularMaxShift.get()*0.01)),Xdim/2)
         self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnNewParticles,R))
-        self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%(fnNewParticles,TsCurrent/0.4,TsCurrent))
-        fnSource=join(fnDirCurrent,"images.xmd")
+        self.runJob('xmipp_transform_filter','-i %s --fourier fsc %s --sampling %f'%(fnNewParticles,join(fnDirPrevious,"fsc.xmd"),TsCurrent))
+        fnSource=join(fnDir,"images.xmd")
         for i in range(1,3):
             self.runJob('xmipp_metadata_utilities','-i %s --set intersection %s/images%06d.xmd itemId itemId -o %s'%\
-                        (fnSource,fnDir0,i,join(fnDirCurrent,"images%06d.xmd"%i)),numberOfMpi=1)
+                        (fnSource,fnDir0,i,join(fnDir,"images%06d.xmd"%i)),numberOfMpi=1)
         cleanPath(fnSource)
         
-        # Prepare volumes
-        if TsCurrent!=TsPrevious:
-            for i in range(1,3):
-                self.runJob("xmipp_image_resize","-i %s -o %s --dim %d"%\
-                            (join(fnDirPrevious,"volume%06d.vol"%i),join(fnDirCurrent,"volumeRef%06d.vol"%i),newXdim),numberOfMpi=1)
-    
-    def calculateReference(self,iteration):
-        fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
-        fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
-        TsCurrent=self.readInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE)
-        ResolutionPrevious=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
-
+    def prepareReferences(self,fnDirPrevious,fnDir,TsCurrent,targetResolution):
+        print "Preparing references to sampling rate=",TsCurrent
         fnMask=''
+        newXdim=self.readInfoField(fnDir,"size",MDL_XSIZE)
         if self.nextMask.hasValue():
             img = ImageHandler()
-            fnMask=join(fnDirCurrent,"mask.vol")
+            fnMask=join(fnDir,"mask.vol")
             img.convert(self.nextMask.get(), fnMask)
             TsMask=self.nextMask.get().getSamplingRate()
             self.runJob('xmipp_image_resize',"-i %s --factor %f"%(fnMask,TsMask/TsCurrent),numberOfMpi=1)
-            newXdim=self.readInfoField(fnDirCurrent,"size",MDL_XSIZE)
-            if newXdim!=self.nextMask.get().getDim()[0]:
+            maskXdim, _, _, _ =img.getDimensions((1,fnMask))
+            if newXdim!=maskXdim:
                 self.runJob('xmipp_transform_window',"-i %s --size %d"%(fnMask,newXdim),numberOfMpi=1)
+        TsPrevious=self.readInfoField(fnDirPrevious,"sampling",MDL_SAMPLINGRATE)
         for i in range(1,3):
-            fnReferenceVol=join(fnDirCurrent,"volumeRef%06d.vol"%i)
+            fnPreviousVol=join(fnDirPrevious,"volume%06d.vol"%i)
+            fnReferenceVol=join(fnDir,"volumeRef%06d.vol"%i)
+            if TsPrevious!=TsCurrent:
+                self.runJob("xmipp_image_resize","-i %s -o %s --dim %d"%(fnPreviousVol,fnReferenceVol,newXdim),numberOfMpi=1)
+            else:
+                if self.nextLowPass or self.nextSpherical or self.nextPositivity or fnMask!='':
+                    copyFile(fnPreviousVol, fnReferenceVol)
+                else:
+                    createLink(fnPreviousVol, fnReferenceVol)
             if self.nextLowPass:
                 self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%\
-                            (fnReferenceVol,ResolutionPrevious+self.nextResolutionOffset.get(),TsCurrent),numberOfMpi=1)
+                            (fnReferenceVol,targetResolution+self.nextResolutionOffset.get(),TsCurrent),numberOfMpi=1)
             if self.nextSpherical:
                 self.runJob('xmipp_transform_mask','-i %s --mask circular -%d'%\
                             (fnReferenceVol,round(self.particleRadius.get()*self.TsOrig/TsCurrent)),numberOfMpi=1)
@@ -322,11 +314,22 @@ class XmippProtReconstructHighRes(ProtRefine3D):
             cleanPath(fnMask)
 
     def globalAssignment(self,iteration):
-        # COSS: Falta defocus groups
         fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
-        TsCurrent=self.readInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE)
-        if iteration==1 or iteration<=self.significantIterations.get():
+        makePath(fnDirCurrent)
+        previousResolution=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
+
+        if iteration==1 or previousResolution>=self.significantMaxResolution.get():
+            fnGlobal=join(fnDirCurrent,"globalAssignment")
+            makePath(fnGlobal)
+    
+            targetResolution=max(previousResolution,self.significantMaxResolution.get())
+            TsCurrent=max(self.TsOrig,targetResolution/3)
+            self.prepareImages(fnDirPrevious,fnGlobal,TsCurrent)
+            self.prepareReferences(fnDirPrevious,fnGlobal,TsCurrent,targetResolution)
+            return
+
+            # COSS: Falta defocus groups
             ResolutionAlignment=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
             if self.nextLowPass:
                 ResolutionAlignment+=self.nextResolutionOffset.get()
