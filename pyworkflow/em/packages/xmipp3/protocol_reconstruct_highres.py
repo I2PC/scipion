@@ -32,12 +32,22 @@ from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam
 from pyworkflow.utils.path import cleanPath, makePath, copyFile, moveFile
 from pyworkflow.em.protocol import ProtRefine3D
+from pyworkflow.em.data import SetOfVolumes
 from convert import writeSetOfParticles
 from os.path import join
 from pyworkflow.em.convert import ImageHandler
 
 from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAMPLINGRATE, MDL_WEIGHT_SSNR, MDL_WEIGHT_SIGNIFICANT, \
-                  MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_ANGLE_DIFF
+                  MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_ANGLE_DIFF, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_ORIGINAL, \
+                  Image
+
+#Continuar un procesamiento anterior
+#Criterio de convergencia
+#Phase flipping interno para poder corregir por el desenfoque
+#Hacer local a partir de una resolucion
+#Global hasta una resolucion
+#FSC as a filter to avoid overfitting
+#Soft masking to avoid overfitting
         
 class XmippProtReconstructHighRes(ProtRefine3D):
     """Reconstruct a volume at high resolution"""
@@ -51,17 +61,17 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                       pointerClass='SetOfParticles',
                       help='Select a set of images at full resolution')
         form.addParam('inputVolumes', PointerParam, label="Initial volumes", important=True,
-                      pointerClass='Volume',
-                      help='Select a set of volumes with 2 volumes')
+                      pointerClass='Volume, SetOfVolumes',
+                      help='Select a set of volumes with 2 volumes or a single volume')
 
         form.addParam('particleRadius', IntParam, default=-1, 
                      label='Radius of particle (px)',
-                     help='This is the radius (in pixels) of the spherical mask covering the particle')       
+                     help='This is the radius (in pixels) of the spherical mask covering the particle in the input images')       
         form.addParam('symmetryGroup', StringParam, default="c1",
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
                         'If no symmetry is present, give c1')
-        form.addParam('numberOfIterations', StringParam, default=6, label='Max. number of iterations')
+        form.addParam('numberOfIterations', IntParam, default=6, label='Max. number of iterations')
         
         form.addSection(label='Weights')
         form.addParam('weightSSNR', BooleanParam, label="Weight by SSNR?", default=True,
@@ -85,7 +95,7 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                       help='Apply a spherical mask of the size of the particle')
         form.addParam('nextPositivity', BooleanParam, label="Positivity?", default=True,
                       help='Remove from the next reference all negative values')
-        form.addParam('nextMask', PointerParam, label="Mask", pointerClass='VolumeMask',
+        form.addParam('nextMask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True,
                       help='The mask values must be between 0 (remove these pixels) and 1 (let them pass).')
         # COSS: Falta un script de nextReference
         form.addParam('nextRemove', BooleanParam, label="Remove reference to save space?", default=True, expertLevel=LEVEL_ADVANCED, 
@@ -129,42 +139,42 @@ class XmippProtReconstructHighRes(ProtRefine3D):
     def _insertAllSteps(self):
         self.imgsFn=self._getExtraPath('images.xmd')
         self.TsOrig=self.inputParticles.get().getSamplingRate()
-        self._insertFunctionStep('convertInputStep', self.inputParticles)
+        self._insertFunctionStep('convertInputStep', self.inputParticles.getObjId())
         if self.weightSSNR:
             self._insertFunctionStep('doWeightSSNR')
-        self._insertFunctionStep('doIteration000', self.inputVolumes)
+        self._insertFunctionStep('doIteration000', self.inputVolumes.getObjId())
         self.iteration=1
         self.insertIteration(self.iteration)
     
     def insertIteration(self,iteration):
         print "Inserting iteration ",iteration
-        self._insertFunctionStep('determineSamplingRate',iteration)
-        self._insertFunctionStep('calculateReference',iteration)
-        self._insertFunctionStep('globalAssignment',iteration)
-        self._insertFunctionStep('localAssignment',iteration)
-        self._insertFunctionStep('weightParticles',iteration)
-        self._insertFunctionStep('reconstruct',iteration)
-        # COSS: Falta postprocessing
-        self._insertFunctionStep('evaluateReconstructions',iteration)
-        self._insertFunctionStep('cleanDirectory',iteration)
+#        self._insertFunctionStep('determineSamplingRate',iteration)
+#        self._insertFunctionStep('calculateReference',iteration)
+#        self._insertFunctionStep('globalAssignment',iteration)
+#        self._insertFunctionStep('localAssignment',iteration)
+#        self._insertFunctionStep('weightParticles',iteration)
+#        self._insertFunctionStep('reconstruct',iteration)
+#        # COSS: Falta postprocessing
+#        self._insertFunctionStep('evaluateReconstructions',iteration)
+#        self._insertFunctionStep('cleanDirectory',iteration)
         self._insertFunctionStep('decideNextIteration',iteration)
 
     #--------------------------- STEPS functions ---------------------------------------------------
-    def convertInputStep(self, inputParticles):
-        writeSetOfParticles(inputParticles.get(),self.imgsFn)
+    def convertInputStep(self, inputParticlesId):
+        writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
         self.runJob('xmipp_metadata_utilities','-i %s --fill image1 constant noImage'%self.imgsFn,numberOfMpi=1)
         self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "image1=image"'%self.imgsFn,numberOfMpi=1)
 
     def doWeightSSNR(self):
         R=self.particleRadius.get()
         if R<=0:
-            R=self.particleRadius.get().getDimensions()[0]/2
+            R=self.inputVolumes.get().getDimensions()[0]/2
         self.runJob("xmipp_image_ssnr", "-i %s -R %d --sampling %f --normalizessnr"%\
                     (self.imgsFn,R,self.inputParticles.get().getSamplingRate()))
         self.runJob('xmipp_metadata_utilities','-i %s -o %s --operate keep_column "itemId weightSSNR" '%\
                     (self.imgsFn,self._getExtraPath("ssnrWeights.xmd")),numberOfMpi=1)
         
-    def doIteration000(self, inputVolumes):
+    def doIteration000(self, inputVolumesId):
         fnDirCurrent=self._getExtraPath('Iter000')
         makePath(fnDirCurrent)
         
@@ -172,7 +182,7 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         self.runJob("xmipp_metadata_split","-i %s --oroot %s/images -n 2"%(self.imgsFn,fnDirCurrent),numberOfMpi=1)
         
         # Get volume sampling rate
-        TsCurrent=inputVolumes.get().getSamplingRate()
+        TsCurrent=self.inputVolumes.get().getSamplingRate()
         self.writeInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE,TsCurrent)
 
         # Copy reference volumes and window if necessary
@@ -181,13 +191,22 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         self.writeInfoField(fnDirCurrent,"size",MDL_XSIZE,newXdim)
         
         img = ImageHandler()
-        i=1
-        for vol in inputVolumes.get():
-            fnVol=join(fnDirCurrent,"volume%06d.vol"%i)
-            img.convert(vol, fnVol)
+        if isinstance(self.inputVolumes.get(),SetOfVolumes):
+            i=1
+            for vol in self.inputVolumes.get():
+                fnVol=join(fnDirCurrent,"volume%06d.vol"%i)
+                img.convert(vol, fnVol)
+                if newXdim!=vol.getDim()[0]:
+                    self.runJob('xmipp_transform_window',"-i %s --size %d"%(fnVol,newXdim),numberOfMpi=1)
+                i+=1
+        else:
+            fnVol1=join(fnDirCurrent,"volume%06d.vol"%1)
+            fnVol2=join(fnDirCurrent,"volume%06d.vol"%2)
+            vol=self.inputVolumes.get()
+            img.convert(vol, fnVol1)
             if newXdim!=vol.getDim()[0]:
-                self.runJob('xmipp_transform_window',"-i %s --size %d"%(fnVol,newXdim),numberOfMpi=1)
-            i+=1
+                self.runJob('xmipp_transform_window',"-i %s --size %d"%(fnVol1,newXdim),numberOfMpi=1)
+            copyFile(fnVol1, fnVol2)
         
         # Compare both reconstructions
         self.evaluateReconstructions(0)
@@ -243,10 +262,13 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         TsPrevious=self.readInfoField(fnDirPrevious,"sampling",MDL_SAMPLINGRATE)
         ResolutionPrevious=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
         TsCurrent=max(self.TsOrig,ResolutionPrevious/3)
-        self.writeInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE,TsCurrent)
         
         Xdim=self.inputParticles.get().getDimensions()[0]
         newXdim=long(round(Xdim*self.TsOrig/TsCurrent))
+        if newXdim<40:
+            newXdim=long(40)
+            TsCurrent=Xdim*(self.TsOrig/newXdim)
+        self.writeInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE,TsCurrent)
         self.writeInfoField(fnDirCurrent,"size",MDL_XSIZE,newXdim)
         
         # Prepare particles
@@ -344,22 +366,44 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                 fnCurrent=join(fnDirCurrent,"angles%06d.xmd"%i)
                 self.runJob('xmipp_metadata_utilities','-i %s -o %s --operate modify_values "shiftX=%f*shiftX"'%\
                             (fnPrevious,fnCurrent,K),numberOfMpi=1)
-                self.runJob('xmipp_metadata_utilities','-i %s -o %s --operate modify_values "shiftY=%f*shiftY"'%\
-                            (fnPrevious,fnCurrent,K),numberOfMpi=1)
-                self.runJob('xmipp_metadata_utilities','-i %s -o %s --operate modify_values "continuousX=%f*continuousX"'%\
-                            (fnPrevious,fnCurrent,K),numberOfMpi=1)
-                self.runJob('xmipp_metadata_utilities','-i %s -o %s --operate modify_values "continuousY=%f*continuousY"'%\
-                            (fnPrevious,fnCurrent,K),numberOfMpi=1)
+                self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "shiftY=%f*shiftY"'%\
+                            (fnCurrent,K),numberOfMpi=1)
+                self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "continuousX=%f*continuousX"'%\
+                            (fnCurrent,K),numberOfMpi=1)
+                self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "continuousY=%f*continuousY"'%\
+                            (fnCurrent,K),numberOfMpi=1)
 
     def localAssignment(self,iteration):
         fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
         TsCurrent=self.readInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE)
         previousResolution=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
+        fnImages=join(fnDirCurrent,"images.stk")
+        I=Image()
         for i in range(1,3):
             fnGlobal=join(fnDirCurrent,"angles%06d.xmd"%i)
             fnVol=join(fnDirCurrent,"volumeRef%06d.vol"%i)
             fnLocalStk=join(fnDirCurrent,"anglesCont%06d.stk"%i)
+            
+            if iteration!=1 and iteration>self.significantIterations.get():
+                # Adapt images
+                md=MetaData(fnGlobal)
+                
+                # Create an empty file of the appropriate size
+                self.runJob("xmipp_image_operate","-i 1@%s --mult 0 -o %d@%s"%(fnImages,md.size(),fnLocalStk),numberOfMpi=1)
+                imgIdx=1
+                for objId in md:
+                    fnImageOrig = md.getValue(MDL_IMAGE_ORIGINAL,objId)
+                    fnImageOrig=fnImageOrig.replace("Iter%03d"%(iteration-1),"Iter%03d"%iteration)
+                    fnImageCont = "%d@%s"%(imgIdx,fnLocalStk)
+                    print "Copying ",fnImageOrig," into ",fnImageCont
+                    I.read(fnImageOrig)
+                    I.write(fnImageCont)
+                    md.setValue(MDL_IMAGE,fnImageCont,objId)
+                    fnImageOrig = md.getValue(MDL_IMAGE1,objId)
+                    md.setValue(MDL_IMAGE_ORIGINAL,fnImageOrig,objId)
+                md.write(fnGlobal)
+            
             args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f"%\
                (fnGlobal,fnLocalStk,TsCurrent,round(self.particleRadius.get()*self.TsOrig/TsCurrent),self.contPadding.get(),fnVol,previousResolution)
             if self.contShift:
@@ -412,13 +456,13 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         # COSS: Falta un criterio para decidir si otra iteracion
         if iteration<self.numberOfIterations.get():
             self.iteration+=1
-            print "iteration=",iteration
-            print "Max=",self.numberOfIterations.get()
             self.insertIteration(self.iteration)
         
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
+        if isinstance(self.inputVolumes.get(),SetOfVolumes) and self.inputVolumes.get().getSize()!=2:
+            errors.append("The set of input volumes should have exactly 2 volumes")
         return errors    
     
     def _summary(self):
