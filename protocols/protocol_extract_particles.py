@@ -66,23 +66,23 @@ class ProtExtractParticles(ProtParticlesBase):
 
         # Update sampling rate in 'acquisition_info.xmd' if necessary
         if self.downsamplingMode != DownsamplingMode.SameAsPicking:
-            self.insertStep('updateSampling', SamplingMd=self.getFilename('acquisition'), 
+            self.insertStep('updateSampling', SamplingMd=self.getFilename('acquisition'),
                             TsOriginal=self.TsOriginal, Ts=self.TsFinal, TsMode=self.downsamplingMode)
-        
+
         md = MetaData( self.Input['micrographs'])
         md.removeDisabled()
         self.containsCTF = md.containsLabel(MDL_CTF_MODEL)
 
-        # Process each micrograph                        
+        # Process each micrograph
         for id in md:
             micrograph,micrographOriginal,ctf=self.getMicrographInfo(md, id)
             micrographName=removeBasenameExt(micrograph)
             micrographPos=self.PrevRun.extraPath(micrographName+".pos")
             if not os.path.exists(micrographPos):
                 continue
-            
+
             parent_id = XmippProjectDb.FIRST_STEP
-            
+
             # Downsampling?
             if self.downsamplingMode==DownsamplingMode.SameAsPicking:
                 micrographToExtract = micrograph
@@ -102,7 +102,7 @@ class ProtExtractParticles(ProtParticlesBase):
                 args=" -i %(micrographToExtract)s -o %(micrographNoDust)s --bad_pixels outliers %(threshold)f" % locals()
                 parent_id=self.insertParallelRunJobStep("xmipp_transform_filter", args, parent_step_id=parent_id)
                 micrographToExtract=micrographNoDust
-            
+
             # Flipping?
             if self.DoFlip:
                 micrographFlipped = self.tmpPath(micrographName+"_flipped.xmp")
@@ -111,7 +111,7 @@ class ProtExtractParticles(ProtParticlesBase):
                     args+=" --downsampling "+str(self.TsFinal/self.TsOriginal)
                 parent_id=self.insertParallelRunJobStep("xmipp_ctf_phase_flip", args, parent_step_id=parent_id)
                 micrographToExtract=micrographFlipped
-            
+
             # Actually extract
             parent_id = self.insertParallelStep('extractParticles', parent_step_id=parent_id,
                                   ExtraDir=self.ExtraDir,micrographName=micrographName,micrographPos=micrographPos,ctf=ctf,
@@ -130,14 +130,16 @@ class ProtExtractParticles(ProtParticlesBase):
         # Create results metadata
         ImagesFn = self.getFilename('images')
         if self.TiltPairs:
-            self.insertStep('createTiltPairsImagesMd', verifyfiles=[ImagesFn], WorkingDir=self.WorkingDir, ExtraDir=self.ExtraDir, 
+            self.insertStep('createTiltPairsImagesMd'
+                            , verifyfiles=[ImagesFn], WorkingDir=self.WorkingDir, ExtraDir=self.ExtraDir,
                             fnMicrographs=self.micrographs)
         else:
             self.insertStep('createImagesMd', verifyfiles=[ImagesFn], ImagesFn=ImagesFn, ExtraDir=self.ExtraDir)
             if self.DoSort:
                 self.insertStep('sortImages',ImagesFn=ImagesFn,rejectionMethod=self.RejectionMethod, maxZscore=self.MaxZscore, percentage=self.Percentage)
                 self.insertStep('avgZscore',WorkingDir=self.WorkingDir, micrographSelfile=self.micrographs)
-
+        self.insertStep('RemoveTemporaryFiles')
+    
     def validate(self):
         errors = []
         if self.pickingDir:

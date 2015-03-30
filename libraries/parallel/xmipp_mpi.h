@@ -52,7 +52,7 @@ public:
 
     //MPI_Comm *comm;
     size_t rank, size, active;//, activeNodes;
-    MpiNode(int &argc, char ** argv);
+    MpiNode(int &argc, char **& argv);
     ~MpiNode();
 
     /** Check if the node is master */

@@ -120,7 +120,11 @@ def alignSingleMovie1(log,WorkingDir
         else:
             progName = 'xmipp_optical_alignment_cpu'
 
-        runJob(log,progName, args)
+        try:
+            runJob(log,progName, args)
+        except:
+            import sys
+            print >> sys.stderr, progName, " fail for movie ",  inputMovie
                 
 def gatherResults(log, 
                   WorkingDir,
@@ -135,7 +139,7 @@ def gatherResults(log,
                   ):
     
     import glob
-    fnList=glob.glob(os.path.join(extraDir,'*_aligned.spi'))
+    #fnList=glob.glob(os.path.join(extraDir,'*_aligned.spi'))
     copyFile(log,prevProtMicrograph,currProtMicrograph) 
     copyFile(log,prevProtMicroscope,currProtMicroscope) 
     copyFile(log,prevProtAcquisitionInfo,currProtAcquisitionInfo) 
@@ -146,5 +150,11 @@ def gatherResults(log,
         movieName = os.path.splitext(movieNameList)[0]
         file = _getFilename('movieAverage',movieDir=extraDir,baseName=movieName) 
         md.setValue(xmipp.MDL_MICROGRAPH,file,id)
+        if exists(file):
+            enabled = 1
+        else:
+            enabled = -1
+        md.setValue(xmipp.MDL_ENABLED,enabled)
+
     md.sort(xmipp.MDL_MICROGRAPH)
     md.write(currProtMicrographClass,xmipp.MD_APPEND)

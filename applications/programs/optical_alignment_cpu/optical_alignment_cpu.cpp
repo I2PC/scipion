@@ -300,20 +300,21 @@ public:
         {
             II() = avgCurr;
             II.write(foname);
-            rawPSDFile = foname.removeAllExtensions()+"_raw";
+            if (doAverage)
+            	rawPSDFile = foname.removeLastExtension()+"_corrected";
+            else
+            	rawPSDFile = foname.removeLastExtension()+"_raw";
+            std::cerr<<"The file name is"<<rawPSDFile<<std::endl;
             String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
                                      foname.c_str(), rawPSDFile.c_str(), psdPieceSize);
             String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
             std::cerr<<"Computing the raw FFT"<<std::endl;
             if (system(cmd.c_str())==-1)
                 REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-            foname.deleteFile();
-        }
-        if(doAverage)
-        {
-            II() = avgCurr;
-            II.write(foname);
-            return 0;
+            if (doAverage)
+            	return 0;
+            else
+            	foname.deleteFile();
         }
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
 
@@ -439,7 +440,7 @@ public:
         {
             Image<double> psdCorr, psdRaw;
             MultidimArray<double> psdCorrArr, psdRawArr;
-            correctedPSDFile = foname.removeAllExtensions()+"_corrected";
+            correctedPSDFile = foname.removeLastExtension()+"_corrected";
             String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
                                      foname.c_str(), correctedPSDFile.c_str(), psdPieceSize);
             String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;

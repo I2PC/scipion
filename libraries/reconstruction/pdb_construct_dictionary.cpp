@@ -182,7 +182,7 @@ bool ProgConstructPDBDictionary::notInDictionary(const MultidimArray<double> &ca
 			const MultidimArray<double> &dictionaryPatch=dictionaryLow[i];
 			dotProduct=0;
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(dictionaryPatch)
-				dotProduct+=DIRECT_MULTIDIM_ELEM(dictionaryPatch,n)*DIRECT_MULTIDIM_ELEM(auxPatch,n);
+				dotProduct+=DIRECT_MULTIDIM_ELEM(dictionaryPatch,n)*DIRECT_MULTIDIM_ELEM(canonicalPatch,n);
 			if (dotProduct>angleThreshold)
 				return false;
 		}

@@ -268,7 +268,7 @@ void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName 
     static FileName last_ctf;
     static bool firstImage=true;
     last_ctf = fn_ctf;
-    img.readApplyGeo(fnImg, rowIn);
+    img.read(fnImg);
 
     rowIn.getValue(MDL_CTF_MODEL, fn_ctf);
     rowOut.setValue(MDL_CTF_MODEL, fn_ctf);
