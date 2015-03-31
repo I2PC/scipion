@@ -97,7 +97,7 @@ def create_movies_project(request):
         project.getSettings().setLifeTime(14)
         project.saveSettings()
         
-        copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
+#         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # Create symbolic link for uploads
         projectPath = manager.getProjectPath(projectName)
