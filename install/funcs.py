@@ -316,7 +316,7 @@ class Environment():
     # example http://mail.scipy.org/pipermail/scipy-user/2007-January/010773.html)
     # TODO: maybe add an argument to the function to chose if we want them?
                      '%(root)s/bin/python setup.py install %(flags)s > '
-                     '%(name)s.log 2>&1' % {'root': prefixPath,
+                     '%(root)s/log/%(name)s.log 2>&1' % {'root': prefixPath,
                                                        'PATH': os.environ['PATH'],
                                                        'flags': ' '.join(flags),
                                                        'name': name},
