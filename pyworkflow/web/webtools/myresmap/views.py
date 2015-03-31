@@ -34,7 +34,7 @@ from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
 from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
-from pyworkflow.utils import copyFile
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.utils import prettyDelta
 
 def resmap_projects(request):
@@ -89,29 +89,27 @@ def create_resmap_project(request):
                                         protocolsConf=manager.protocols
                                         ) 
          
-#         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
+        project.getSettings().setLifeTime(14)
+        project.saveSettings()
+         
+        projectPath = manager.getProjectPath(projectName)
         
-        # 1. Import volumes
+        # 1. Import movies
+        if testDataKey :
+            attr = getAttrTestFile(testDataKey)
+            source = attr['path'] + attr['file']
+            dest = os.path.join(projectPath,'Uploads')
+            pwutils.createLink(source, dest)        
         
-        
-        # If using test data execute the import averages run
-        # options are set in 'project_utils.js'
-#         dsMDA = DataSet.getDataSet('initial_volume')
-#         
-#         if testDataKey :
-#             fn = dsMDA.getFile(testDataKey)
-#             newFn = join(project.uploadPath, basename(fn))
-#             copyFile(fn, newFn)
-#             
-#             label_import = 'import averages ('+ testDataKey +')'
-#             protImport = project.newProtocol(ProtImportAverages, objLabel=label_import)
-#             protImport.filesPath.set(newFn)
-#             protImport.samplingRate.set(1.)
-# #             protImport.setObjectLabel('import averages (%s)' % testDataKey)
-#             project.launchProtocol(protImport, wait=True)
-#         else:
-        protImport = project.newProtocol(ProtImportVolumes, objLabel='import volumes')
-        project.saveProtocol(protImport)
+            label_import = "import movies ("+ testDataKey +")" 
+            protImport = project.newProtocol(ProtImportVolumes, objLabel=label_import)
+
+            protImport.filesPath.set(os.path.join(dest,attr['file']))
+            
+            project.launchProtocol(protImport, wait=True)
+        else:
+            protImport = project.newProtocol(ProtImportVolumes, objLabel='import volumes')
+            project.saveProtocol(protImport)
             
         
         # 2. ResMap 
@@ -123,12 +121,24 @@ def create_resmap_project(request):
         
     return HttpResponse(mimetype='application/javascript')
 
-# def get_testdata(request):
-#     # Filename to use as test data 
-#     testDataKey = request.GET.get('testData')
-#     dsMDA = DataSet.getDataSet('initial_volume')
-#     fn = dsMDA.getFile(testDataKey)
-#     return HttpResponse(fn, mimetype='application/javascript')
+def getAttrTestFile(key):
+    if(key == "cpv"):
+        attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/", 
+                "file":"cpv.map",
+                }
+    
+    if(key == "mito_ribosome"):
+        attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/",
+                "file": "mito_ribosome.map",
+                }
+        
+    if(key == "t20s_proteasome"):
+        attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/",
+                "file": "t20s_proteasome.map"
+                }
+        
+    return attr
+
 
 def resmap_form(request):
     from django.shortcuts import render_to_response
