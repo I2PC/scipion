@@ -356,14 +356,11 @@ function evalExpertLevel(expLevel, newLevel, row){
 
 function evalRow(row){
 	var evalThis = row.attr("data-cond")
-	console.log("data-cond: " + evalThis)
 	switch (evalThis){
 		case "False":
-			console.log("False")
 			row.css('display', 'none')
 			break;
 		case "True":
-			console.log("True")
 			row.css('display', 'table-row')
 			break;
 	}
@@ -473,6 +470,8 @@ function normalizeConditions(cond){
 	cond = replaceAll("or","||", cond);
 	cond = replaceAll("'0'","false", cond);
 	cond = replaceAll("'1'","true", cond);
+	cond = replaceAll("'False'","false", cond);
+	cond = replaceAll("'True'","true", cond);
 	return cond;
 }
 
