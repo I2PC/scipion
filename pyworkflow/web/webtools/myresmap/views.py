@@ -149,10 +149,9 @@ def resmap_content(request):
     project = manager.loadProject(projectName, 
                                   protocolsConf=manager.protocols,
                                   hostsConf=manager.hosts)
-    daysLeft = prettyDelta(project.getLeftTime(14))
-    if daysLeft is None: 
-        daysLeft = 14
-    
+   
+    daysLeft = prettyDelta(project.getLeftTime())
+
     context = contentContext(request, project)
     context.update({'importVolumes': path_files + 'importVolumes.png',
                     'useResMap': path_files + 'useResMap.png',
