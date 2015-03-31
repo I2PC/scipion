@@ -118,6 +118,33 @@ TEST( MultidimTest, getImagFromComplex)
     EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 3).imag(),DIRECT_MULTIDIM_ELEM(mdTarget,3));
 }
 
+TEST( MultidimTest, coreArrayByArray)
+{
+    MultidimArray<double> m1(2,2);
+    MultidimArray<double> m2(2,2);
+    MultidimArray<double> mOut(2,2);
+    MultidimArray<double> mref(2,2);
+
+    A2D_ELEM(m1,0,0) = 1.;
+    A2D_ELEM(m1,1,0) = 2.;
+    A2D_ELEM(m1,0,1) = 3.;
+    A2D_ELEM(m1,1,1) = 4.;
+
+    A2D_ELEM(m2,0,0) = 11.;
+    A2D_ELEM(m2,1,0) = 22.;
+    A2D_ELEM(m2,0,1) = 33.;
+    A2D_ELEM(m2,1,1) = 44.;
+
+    coreArrayByArray(m1, m2, mOut, '+');
+
+    A2D_ELEM(mref,0,0) = 12.;
+    A2D_ELEM(mref,1,0) = 24.;
+    A2D_ELEM(mref,0,1) = 36.;
+    A2D_ELEM(mref,1,1) = 48.;
+
+    EXPECT_EQ(mOut,mref);
+}
+
 TEST( MultidimTest, sincos)
 {
     MultidimArray<double> mSource(2,2);
@@ -172,8 +199,8 @@ TEST( MultidimTest, modulo)
     ASSERT_NEAR( A2D_ELEM(mTarget,1,2), 4.7124,   1e-2);
 
     ASSERT_NEAR( A2D_ELEM(mTarget,2,0), 3.1416,   1e-3);
-    if (A2D_ELEM(mTarget,2,1) > value - 1e3)
-        ASSERT_NEAR( A2D_ELEM(mTarget,2,1), value,        1e-3);
+    if (A2D_ELEM(mTarget,2,1) > (value - 1e-3))
+    	ASSERT_NEAR( A2D_ELEM(mTarget,2,1), value,        1e-3);
     else
         ASSERT_NEAR( A2D_ELEM(mTarget,2,1), 0,        1e-3);
     ASSERT_NEAR( A2D_ELEM(mTarget,2,2), 0,        1e-3);
