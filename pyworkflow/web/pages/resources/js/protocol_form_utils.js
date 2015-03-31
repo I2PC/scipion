@@ -386,7 +386,7 @@ function evalDependencies(row, newLevel) {
 			// Get params affected with the dependencies
 			var row2 = $("tr#" + arrayDepends[cont]);
 			
-			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
+//			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
 
 			// Evaluate the new parameter affected
 			var res = evalCondition(row2);
@@ -416,13 +416,13 @@ function evalCondition(row) {
 	var res = undefined;
 	var cond = row.attr('data-cond');
 	
-	console.log("data-cond:"+cond)
+//	console.log("data-cond:"+cond)
 	
 	if(cond != undefined){
 	
 		var params = row.attr('data-params');
 		
-		console.log("Params:"+ params + " length:"+params.length + "\n")
+//		console.log("Params:"+ params + " length:"+params.length + "\n")
 		
 		if (params.length > 0){
 			
@@ -447,12 +447,12 @@ function evalCondition(row) {
 				cond_eval = cond_eval.replace(param, value);
 			}
 			
-			console.log("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
+//			console.log("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
 			
 			cond_eval = normalizeConditions(cond_eval)
 			
 			//	To check a good eval
-			console.log(cond_eval + "/" + eval(cond_eval))
+//			console.log(cond_eval + "/" + eval(cond_eval))
 		
 			res = eval(cond_eval);
 		}
