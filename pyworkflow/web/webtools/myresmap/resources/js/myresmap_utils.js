@@ -149,13 +149,13 @@ function getRefTestData(id){
 	var ref = ""
 	switch(id){
 		case "t20s_proteasome":
-			ref = "<strong>T20S Proteasome</strong> (2.8 Å , <a href='http://emsearch.rutgers.edu/atlas/6287_summary.html' style='color:firebrick;' target='_blank'>Authors: Campbell MG, Veesler D, Cheng A, Potter CS, Carragher B</a>)"
+			ref = "<strong>T20S Proteasome</strong> (Resolution 2.8 Å , <a href='http://emsearch.rutgers.edu/atlas/6287_summary.html' style='color:firebrick;' target='_blank'>Authors: Campbell MG, Veesler D, Cheng A, Potter CS, Carragher B</a>)"
 			break;
 		case "cpv":
-			ref = "<strong>cytoplasmic polyhedrosis virus (CPV)</strong> (3.1 Å , <a href='http://emsearch.rutgers.edu/atlas/5256_summary.html' style='color:firebrick;' target='_blank'>Authors: Yu X, Ge P, Jiang J, Atanasov I, Zhou ZH</a>)"
+			ref = "<strong>cytoplasmic polyhedrosis virus (CPV)</strong> (Resolution 3.1 Å , <a href='http://emsearch.rutgers.edu/atlas/5256_summary.html' style='color:firebrick;' target='_blank'>Authors: Yu X, Ge P, Jiang J, Atanasov I, Zhou ZH</a>)"
 			break;
 		case "mito_ribosome":
-			ref = "<strong>Human mitochondrial ribosome</strong> (3.4 Å , <a href='http://emsearch.rutgers.edu/atlas/2762_summary.html' style='color:firebrick;' target='_blank'>Authors: Brown A, Amunts A, Bai XC, Sugimoto Y, Edwards PC, Murshudov G, Scheres SHW, Ramakrishnan V</a>)"
+			ref = "<strong>Human mitochondrial ribosome</strong> (Resolution 3.4 Å , <a href='http://emsearch.rutgers.edu/atlas/2762_summary.html' style='color:firebrick;' target='_blank'>Authors: Brown A, Amunts A, Bai XC, Sugimoto Y, Edwards PC, Murshudov G, Scheres SHW, Ramakrishnan V</a>)"
 			break;
 	}
 	return ref;
