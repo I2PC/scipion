@@ -470,8 +470,8 @@ function normalizeConditions(cond){
 	cond = replaceAll("or","||", cond);
 	cond = replaceAll("'0'","false", cond);
 	cond = replaceAll("'1'","true", cond);
-	cond = replaceAll("'False'","false", cond);
-	cond = replaceAll("'True'","true", cond);
+	cond = replaceAll("False","false", cond);
+	cond = replaceAll("True","true", cond);
 	return cond;
 }
 
