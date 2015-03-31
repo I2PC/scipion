@@ -67,7 +67,7 @@ Movies_Alignment = [
     {"tag": "section", "text": "2. Import your data", "children": [
         {"tag": "protocol", "value": "ProtImportMovies", "text": "Import Movies", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Align your Movies", "children": [
-        {"tag": "protocol", "value": "ProtMovieAlingmentWeb", "text": "xmipp3 - movie alignment"}]}]
+        {"tag": "protocol", "value": "ProtMovieAlignmentWeb", "text": "xmipp3 - movie alignment"}]}]
         ''')
         f.close()
 
@@ -197,7 +197,8 @@ def movies_form(request):
     context.update({'path_mode':'select',
                     'formUrl': 'mov_form',
                     'showHost': False,
-                    'showParallel': False})
+                    'showParallel': False,
+                    'hostSelected': 'clark'})
     return render_to_response('form/form.html', context)
 
 

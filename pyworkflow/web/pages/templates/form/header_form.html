@@ -80,7 +80,7 @@
 				{% endif %}
 					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
 					{% for h in hosts %}
-						<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
+						<option value="{{h}}" {% if h == hostSelected %} selected="selected" {% endif %}>{{h}}</option>
 					{% endfor %}
 					</select>
 				</td>
