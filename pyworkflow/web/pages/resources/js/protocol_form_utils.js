@@ -356,7 +356,7 @@ function evalExpertLevel(expLevel, newLevel, row){
 
 function evalRow(row){
 	var evalThis = row.attr("data-cond")
-	console.log("data-cond: " + data-cond)
+	console.log("data-cond: " + evalThis)
 	switch (evalThis){
 		case "False":
 			console.log("False")
