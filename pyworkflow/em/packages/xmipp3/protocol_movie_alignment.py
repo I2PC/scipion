@@ -449,7 +449,7 @@ class ProtMovieAlignmentWeb(ProtMovieAlignment):
     def _defineParams(self, form):
         ProtMovieAlignment._defineParams(self, form)
         
-        gpuParamsGroup = form.getParam('GPU parameters')
+        gpuParamsGroup = form.getParam('GPU_parameters')
         gpuParamsGroup.config(condition='False')
         
         
