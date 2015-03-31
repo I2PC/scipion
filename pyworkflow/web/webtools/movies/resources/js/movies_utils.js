@@ -134,31 +134,8 @@ function createMovProject(elm) {
 
 function goToProject(elm) {
 	var code = elm.val();
-	
 	var URL2 = getSubDomainURL() + "/m_content/?p="+code;
 	window.location.href = URL2;
-	
-	/*
-	// remove the blank spaces
-	code = code.replace(/\s+/g, '');
-	
-	var URL = getSubDomainURL() + "/check_project_id/?code=" + code +"&service=movies";
-	$.ajax({
-		type : "GET",
-		url : URL,
-		success : function(result) {
-			if (result == 1) {
-				var URL2 = getSubDomainURL() + "/m_content/?p="+code;
-				window.location.href = URL2;
-			} else {
-				var title = "Bad Access";
-				var msg = "<p>Wrong <strong>access code</strong>!</p>" +
-					"<p>If you forgot the code, please contact the <a style='color:firebrick;' href='#'>Scipion group</a>.</p>";
-				errorPopup(title, msg);
-			}
-		}
-	});
-	*/
 }
 
 function getRefTestData(id){

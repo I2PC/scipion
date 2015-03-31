@@ -97,11 +97,12 @@ def create_service_project(request):
                                         hostsConf=manager.hosts,
                                         protocolsConf=manager.protocols
                                         ) 
-#         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
+        project.getSettings().setLifeTime(14)
+        project.saveSettings()
+        #copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # 1. Import averages
-        
         
         # If using test data execute the import averages run
         # options are set in 'project_utils.js'
@@ -194,9 +195,8 @@ def service_content(request):
     project = manager.loadProject(projectName, 
                                   protocolsConf=manager.protocols,
                                   hostsConf=manager.hosts)
-    daysLeft = prettyDelta(project.getLeftTime(14))
-    if daysLeft is None: 
-        daysLeft = 14
+    
+    daysLeft = prettyDelta(project.getLeftTime())
     
     context = contentContext(request, project)
     context.update({'importAverages': path_files + 'importAverages.png',

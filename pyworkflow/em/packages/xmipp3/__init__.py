@@ -72,7 +72,7 @@ from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_kerdensom import XmippProtKerdensom
 
 from protocol_ml2d import XmippProtML2D
-from protocol_movie_alignment import ProtMovieAlignment
+from protocol_movie_alignment import ProtMovieAlignment, ProtMovieAlignmentWeb
 
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_particle_pick import XmippProtParticlePicking 

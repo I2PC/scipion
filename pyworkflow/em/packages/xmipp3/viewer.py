@@ -159,15 +159,20 @@ class XmippViewer(Viewer):
             objCommands = "'%s' '%s'" % (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD)
             self._views.append(ObjectView(self._project, self.protocol.strId(), fn, viewParams={OBJCMDS: objCommands}, **args))
 
+        elif issubclass(cls, SetOfMovies):
+            fn = obj.getFileName()
+            # Enabled for the future has to be available
+            labels = 'id _filename _samplingRate  '
+            self._views.append(ObjectView(self._project, obj.strId(), fn,
+                                          viewParams={ORDER: labels, 
+                                                      VISIBLE: labels, 
+                                                      MODE: MODE_MD,
+                                                      RENDER:'_filename'}))
+
         elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()
             self._views.append(ObjectView(self._project, obj.strId(), fn, **args))
             
-        elif issubclass(cls, SetOfMovies):
-            fn = self._getTmpPath(obj.getName() + '_movies.xmd')
-            writeSetOfMovies(obj, fn)
-            self._views.append(ObjectView(self._project, obj.strId(), fn, **args))
-
 
         elif issubclass(cls, MicrographsTiltPair):          
 #             fnU = obj.getUntilted().getFileName()
