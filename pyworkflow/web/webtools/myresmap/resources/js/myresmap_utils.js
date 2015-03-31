@@ -38,7 +38,7 @@ function serviceProjForm(){
 	accessPopup(title, dialog, funcName, 'Confirm', 'Cancel');
 }
 
-function resMapTestDataForm(){
+function serviceTestDataForm(){
 	var title = 'Test data'
 		var dialog = ""
 			
