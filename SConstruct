@@ -292,7 +292,8 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     for flag in flags:
         newValue = None
         for var, value in [('LD_LIBRARY_PATH', Dir('#software/lib').abspath),
-                       ('PATH', Dir('#software/bin').abspath)]:
+                           ('LD_RUN_PATH', Dir('#software/lib').abspath),
+                           ('PATH', Dir('#software/bin').abspath)]:
             if flag.startswith('%s=' % var):
                 valueOld = flag.split('=', 1)[1] + ':' + os.environ.get(var, '')
                 newValue = '%s=%s:%s' % (var, value, valueOld)
