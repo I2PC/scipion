@@ -97,6 +97,7 @@ def create_service_project(request):
                                         hostsConf=manager.hosts,
                                         protocolsConf=manager.protocols
                                         ) 
+        project.getSettings().setLifeTime(14)
 #         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         

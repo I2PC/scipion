@@ -149,6 +149,8 @@ def resmap_content(request):
     project = manager.loadProject(projectName, 
                                   protocolsConf=manager.protocols,
                                   hostsConf=manager.hosts)
+    
+    project.getSettings().setLifeTime(14)
    
     daysLeft = prettyDelta(project.getLeftTime())
 
