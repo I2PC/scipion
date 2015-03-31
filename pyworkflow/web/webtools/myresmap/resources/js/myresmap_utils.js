@@ -91,13 +91,13 @@ function goExampleForm(){
 function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
-		case "groel":
+		case "cpv":
 			var url = "/r_content/?p=cpvTestData";
 			break;
-		case "bpv":
+		case "mito_ribosome":
 			var url ="/r_content/?p=ribosomeTestData";
 			break;
-		case "ribosome":
+		case "t20s_proteasome":
 			var url ="/r_content/?p=t20TestData";
 			break;
 	}
