@@ -98,13 +98,13 @@ def create_resmap_project(request):
         if testDataKey :
             attr = getAttrTestFile(testDataKey)
             source = attr['path'] + attr['file']
-            dest = os.path.join(projectPath,'Uploads')
+            dest = os.path.join(projectPath,'Uploads', attr['file'])
             pwutils.createLink(source, dest)        
         
             label_import = "import movies ("+ testDataKey +")" 
             protImport = project.newProtocol(ProtImportVolumes, objLabel=label_import)
 
-            protImport.filesPath.set(os.path.join(dest,attr['file']))
+            protImport.filesPath.set(dest)
             
             project.launchProtocol(protImport, wait=True)
         else:
