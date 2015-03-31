@@ -78,7 +78,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                       help='If *0*, use maximum value')
         
         # GROUP GPU PARAMETERS
-        group = form.addGroup('GPU parameters',condition="alignMethod==%d or alignMethod==%d "
+        group = form.addGroup('GPU',condition="alignMethod==%d or alignMethod==%d "
                                                          " or alignMethod==%d "
                                                          % (AL_OPTICAL, AL_DOSEFGPUOPTICAL, AL_DOSEFGPU))
         group.addParam('doGPU', BooleanParam, default=False,
@@ -449,7 +449,7 @@ class ProtMovieAlignmentWeb(ProtMovieAlignment):
     def _defineParams(self, form):
         ProtMovieAlignment._defineParams(self, form)
         
-        gpuParamsGroup = form.getParam('GPU_parameters')
+        gpuParamsGroup = form.getParam('GPU')
         gpuParamsGroup.config(condition='False')
         
         

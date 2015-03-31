@@ -97,12 +97,13 @@ def create_service_project(request):
                                         hostsConf=manager.hosts,
                                         protocolsConf=manager.protocols
                                         ) 
-        project.getSettings().setLifeTime(14)
-#         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
+        NewSettings = project.getSettings()
+        NewSettings.setLifeTime(14)
+        project.saveSettings(NewSettings)
+        #copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # 1. Import averages
-        
         
         # If using test data execute the import averages run
         # options are set in 'project_utils.js'
