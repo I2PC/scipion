@@ -98,9 +98,8 @@ def create_service_project(request):
                                         protocolsConf=manager.protocols
                                         ) 
         
-        NewSettings = project.getSettings()
-        NewSettings.setLifeTime(14)
-        project.saveSettings(NewSettings)
+        project.getSettings().setLifeTime(14)
+        project.saveSettings()
         #copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # 1. Import averages
