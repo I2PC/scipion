@@ -542,6 +542,7 @@ for p in ['angular_commonline',
           'reconstruct_fourier',
           'reconstruct_significant',
           'reconstruct_wbp',
+          'resolution_fsc',
           'resolution_ssnr',
           'score_micrograph',
           
