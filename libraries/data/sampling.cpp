@@ -164,37 +164,13 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     sampling_points_angles.clear();
     sampling_points_vector.clear();
 
-    /* this is wrong, revert to previous code ROB
-    if(min_tilt <= 0.)
-        min_z= -1.;
-    else
-        min_z=-fabs(cos(PI * min_tilt / 180.));
-
-    if(max_tilt >= 180.)
-        max_z=1.;
-    else if (max_tilt<=90)
-    	max_z=-fabs(cos(PI * max_tilt / 180.));
-    else
-        max_z=fabs(cos(PI * max_tilt / 180.));
-    */
-    /*
-    if(max_tilt >= 90.)
-        max_z=10.;
-    else
-        max_z=sin(PI * max_tilt / 180.);
-    if(min_tilt <= -90.)
-        min_z= -10.;
-    else
-        min_z=sin(PI * min_tilt / 180.);
-    */
-
     max_z=cos(PI * max_tilt / 180.);
     min_z=cos(PI * min_tilt / 180.);
     if (min_z>max_z)
     {
-    	double aux=min_z;
-    	min_z=max_z;
-    	max_z=aux;
+        double aux=min_z;
+        min_z=max_z;
+        max_z=aux;
     }
 
     //01a
@@ -349,13 +325,26 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     //#define DEBUG2
 #ifdef  DEBUG2
 
+    std::ofstream filestr1;
+    filestr1.open ("computeSamplingPoints_1.bild");
+
     for (int i = 0;
          i < edge_vector_start.size();
          i++)
     {
-        std::cout  <<  ".sphere " << edge_vector_start[i]  << " 1 1 " << std::endl;
-        std::cout  <<  ".sphere " << edge_vector_end[i]  << " 1 2 " << std::endl;
+        filestr1  <<  ".sphere "
+        << edge_vector_start[i](0) << " "
+        << edge_vector_start[i](1) << " "
+        << edge_vector_start[i](2) << " "
+        << " .025" << std::endl;
+        filestr1  <<  ".sphere "
+        << edge_vector_end[i](0) << " "
+        << edge_vector_end[i](1) << " "
+        << edge_vector_end[i](2) << " "
+        << " .025" << std::endl;
     }
+    filestr1.close();
+
     //std::cout  <<  ending_point.transpose()    << " 1.1 1.5 " << std::endl;
 #endif
 #undef DEBUG2
@@ -414,19 +403,25 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     //#define DEBUG3
 #ifdef  DEBUG3
     std::ofstream filestr;
-    filestr.open ("debug3_1.bild");
+    filestr.open ("computeSamplingPoints_2.bild");
     for (int i = 0;
          i < sampling_points_vector.size();
          i++)
     {
         filestr  <<  ".color 1 0 0" << std::endl
-        <<  ".sphere " << sampling_points_vector[i] <<
-        " .025" << std::endl;
-        sampling_points_vector[i];//.add(0.0, sampling_noise, "gaussian");
+        <<  ".sphere "
+        << sampling_points_vector[i](0) << " "
+        << sampling_points_vector[i](1) << " "
+        << sampling_points_vector[i](2) << " "
+        << " .025" << std::endl;
+        //sampling_points_vector[i];//.add(0.0, sampling_noise, "gaussian");
         sampling_points_vector[i].selfNormalize();
         filestr  <<  ".color 0 0 1" << std::endl
-        <<  ".sphere " << sampling_points_vector[i]  <<
-        " .027" << std::endl;
+        <<  ".sphere "
+        << sampling_points_vector[i](0) << " "
+        << sampling_points_vector[i](1) << " "
+        << sampling_points_vector[i](2) << " "
+        <<" .027" << std::endl;
     }
     filestr.close();
 
@@ -459,15 +454,22 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     }
     //#define DEBUG3
 #ifdef  DEBUG3
+    std::ofstream filestr3;
+    filestr3.open ("computeSamplingPoints_3.bild");
     for (int i = 0;
          i < sampling_points_vector.size();
          i++)
     {
-        std::cout  <<  ".color 1 0 0" << std::endl
-        <<  ".sphere " << sampling_points_vector[i].transpose()  <<
-        " .025" << std::endl;
+        filestr3  <<  ".color 1 0 0" << std::endl
+        <<  ".sphere "
+        << sampling_points_vector[i](0) << " "
+        << sampling_points_vector[i](1) << " "
+        << sampling_points_vector[i](2) << " "
+        << " .025" << std::endl;
     }
+    filestr3.close();
 #endif
+#undef DEBUG3
 
     //noisify angles
     if(sampling_noise!=0.0)
@@ -543,19 +545,23 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
 #endif
     //#define DEBUG3
 #ifdef  DEBUG3
-    std::ofstream filestr;
-    filestr.open ("sampling_file.bild");
+    std::ofstream filestr4;
+    filestr4.open ("computeSamplingPoints_4.bild");
 
-    filestr    << ".color yellow"
+    filestr4    << ".color yellow"
     << std::endl
     ;
     for (int i = 0;
          i < sampling_points_vector.size();
          i++)
     {
-        filestr  <<  ".sphere " << sampling_points_vector[i]  << " 0.018 " << std::endl;
+        filestr4 <<  ".sphere "
+        << sampling_points_vector[i](0) << " "
+        << sampling_points_vector[i](1) << " "
+        << sampling_points_vector[i](2) << " "
+        << " .025" << std::endl;
     }
-    filestr.close();
+    filestr4.close();
 #endif
 #undef DEBUG3
 
@@ -799,9 +805,9 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if ((XX(sampling_points_angles[i]) >=     90. &&
-                XX(sampling_points_angles[i]) <=   150. )||
-                XX(sampling_points_angles[i]) ==     0
-               )
+                 XX(sampling_points_angles[i]) <=   150. )||
+                 XX(sampling_points_angles[i]) ==     0
+                )
                 if (
                     dotProduct(sampling_points_vector[i], _3_fold_axis_1_by_3_fold_axis_2) >= 0 &&
                     dotProduct(sampling_points_vector[i], _3_fold_axis_2_by_3_fold_axis_3) >= 0 &&
@@ -1207,6 +1213,26 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
 
     CREATE_INDEXES();
     numberSamplesAsymmetricUnit=no_redundant_sampling_points_vector.size();
+    //#define DEBUG5
+#ifdef  DEBUG5
+
+    std::ofstream filestr5;
+    filestr5.open ("removeRedundantPoints.bild");
+    filestr5 << ".color 0 0 1" << std::endl;
+    for (int i = 0;
+         i < no_redundant_sampling_points_vector.size();
+         i++)
+    {
+        filestr5  <<  ".color 1 0 0" << std::endl
+        <<  ".sphere "
+        << no_redundant_sampling_points_vector[i](0) << " "
+        << no_redundant_sampling_points_vector[i](1) << " "
+        << no_redundant_sampling_points_vector[i](2) << " "
+        << " .03" << std::endl;
+    }
+    filestr5.close();
+#endif
+#undef DEBUG5
 
 }
 
@@ -1223,8 +1249,8 @@ void Sampling::removeRedundantPointsExhaustive(const int symmetry,
 
     // First call to conventional removeRedundantPoints
     removeRedundantPoints(symmetry, sym_order);
-//    for (int isym = 0; isym < no_redundant_sampling_points_vector.size(); isym++)
-//    	std::cout << "sampling:" << no_redundant_sampling_points_vector[isym];
+    //    for (int isym = 0; isym < no_redundant_sampling_points_vector.size(); isym++)
+    //         std::cout << "sampling:" << no_redundant_sampling_points_vector[isym];
     std::vector <Matrix1D<double> > old_vector = no_redundant_sampling_points_vector;
     std::vector <Matrix1D<double> > old_angles = no_redundant_sampling_points_angles;
 
@@ -1657,8 +1683,8 @@ void Sampling::computeNeighbors(bool only_winner)
 
     if (verbose)
     {
-    	std::cout << "Find valid sampling points based on the neighborhood" <<std::endl;
-    	init_progress_bar(exp_data_projection_direction_by_L_R_size);
+        std::cout << "Find valid sampling points based on the neighborhood" <<std::endl;
+        init_progress_bar(exp_data_projection_direction_by_L_R_size);
     }
     size_t ratio = exp_data_projection_direction_by_L_R_size / 60;
     ratio = XMIPP_MAX(ratio, 1);
@@ -1701,7 +1727,6 @@ void Sampling::computeNeighbors(bool only_winner)
                         new_reference = true;
                         if(only_winner)
                         {
-                            //std::cerr << "DEBUG_JM: In ONLY_WINNER" <<std::endl;
                             if(winner_dotProduct<my_dotProduct)
                             {
                                 if(winner_dotProduct!=-1)
@@ -1771,7 +1796,7 @@ void Sampling::computeNeighbors(bool only_winner)
 
     }//for j
     if (verbose)
-    	progress_bar(exp_data_projection_direction_by_L_R_size);
+        progress_bar(exp_data_projection_direction_by_L_R_size);
 
     //#define DEBUG
 #ifdef DEBUG
@@ -1783,26 +1808,32 @@ void Sampling::computeNeighbors(bool only_winner)
 #endif
 #undef DEBUG
 
-    //#define CHIMERA
+#define CHIMERA
 #ifdef CHIMERA
 
     std::ofstream filestr;
     filestr.open ("compute_neighbors.bild");
     filestr    << ".color white"
-    << std::endl
-    << ".sphere 0 0 0 .95"
-    << std::endl
+    << std::endl << ".sphere 0 0 0 .95" << std::endl
     ;
     int exp_image=1;
     filestr    <<  ".color yellow" << std::endl
-    <<  ".sphere "   << exp_data_projection_direction_by_L_R[exp_image*R_repository.size()]
-    <<  " .021"      << std::endl;
+    <<  ".sphere "
+    << exp_data_projection_direction_by_L_R[exp_image*R_repository.size()](0) << " "
+    << exp_data_projection_direction_by_L_R[exp_image*R_repository.size()](1) << " "
+    << exp_data_projection_direction_by_L_R[exp_image*R_repository.size()](2) << " "
+    <<  " .021"
+    << std::endl;
     for(int i=(exp_image*R_repository.size());
         i< (exp_image+1)*R_repository.size();
         i++)
     {
         filestr    <<  ".color red" << std::endl
-        <<  ".sphere "   << exp_data_projection_direction_by_L_R[i]
+        <<  ".sphere "
+//        << exp_data_projection_direction_by_L_R[i]
+        << exp_data_projection_direction_by_L_R[i](0) << " "
+        << exp_data_projection_direction_by_L_R[i](1) << " "
+        << exp_data_projection_direction_by_L_R[i](2) << " "
         <<  " .017"      << std::endl;
     }
     double blue;
@@ -1818,8 +1849,12 @@ void Sampling::computeNeighbors(bool only_winner)
 #endif
 
         filestr    <<  ".color 0 0 " << blue  << std::endl
-        <<  ".sphere "   <<
-        no_redundant_sampling_points_vector[my_neighbors[exp_image][i]]
+        <<  ".sphere "
+//      << no_redundant_sampling_points_vector[my_neighbors[exp_image][i]]
+        << no_redundant_sampling_points_vector[my_neighbors[exp_image][i]](0) << " "
+        << no_redundant_sampling_points_vector[my_neighbors[exp_image][i]](1) << " "
+        << no_redundant_sampling_points_vector[my_neighbors[exp_image][i]](2) << " "
+
         <<  " .019"      << std::endl;
         //std::cerr << my_neighbors_psi[exp_image][i] << std::endl;
     }
@@ -1906,6 +1941,7 @@ void Sampling::findClosestSamplingPoint(MetaData &DFi,
     Matrix2D<double>  L(4, 4), R(4, 4);
     int winner_sampling=-1;
 #if defined(CHIMERA) || defined(MYPSI)
+
     int winner_exp_L_R=-1;
 #endif
 
@@ -1948,8 +1984,10 @@ void Sampling::findClosestSamplingPoint(MetaData &DFi,
                     my_dotProduct = my_dotProduct_aux;
                     winner_sampling = j;
 #if defined(CHIMERA) || defined(MYPSI)
+
                     winner_exp_L_R  = i;
 #endif
+
                 }
             }//for j
         }//for k
@@ -2134,13 +2172,15 @@ void Sampling::fillLRRepository(void)
         R_repository.push_back(R);
         L_repository.push_back(L);
     }
-    //#define DEBUG3
+//#define DEBUG3
 #ifdef  DEBUG3
+    std::cout << "==============================\n" ;
     for (int isym = 0; isym < R_repository.size(); isym++)
     {
         std::cout << R_repository[isym];
-        std::cout << L_repository[isym];
+        //std::cout << L_repository[isym];
     }
+    std::cout << "-------------------------------\n";
 #endif
 #undef DEBUG3
 }
