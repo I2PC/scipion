@@ -356,12 +356,14 @@ function evalExpertLevel(expLevel, newLevel, row){
 
 function evalRow(row){
 	var evalThis = row.attr("data-cond")
-	
+	console.log("data-cond: " + data-cond)
 	switch (evalThis){
 		case "False":
+			console.log("False")
 			row.css('display', 'none')
 			break;
 		case "True":
+			console.log("True")
 			row.css('display', 'table-row')
 			break;
 	}
