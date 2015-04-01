@@ -630,6 +630,10 @@ void coreScalarByArray(const T& op1, const MultidimArray<T>& op2,
 template<typename T>
 void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
                       MultidimArray<T>& result, char operation);
+template<typename T>
+void coreArrayByArrayMask(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
+                      MultidimArray<T>& result, char operation,
+                      const MultidimArray<T> *mask);
 
 /**
  *  Structure with the dimensions information of an image
@@ -3660,6 +3664,94 @@ public:
         }
     }
 
+    /** Core array by array operation.
+     *
+     * It assumes that the result is already resized.
+     */
+    inline friend void coreArrayByArrayMask(const MultidimArray<T>& op1,
+                                        const MultidimArray<T>& op2, MultidimArray<T>& result,
+                                        char operation, const MultidimArray<T>* mask)
+    {
+        T* ptrResult=NULL;
+        T* ptrOp1=NULL;
+        T* ptrOp2=NULL;
+        T* ptrMask=NULL;
+
+        size_t n;
+        // Loop unrolling
+        const size_t unroll=4;
+        size_t nmax=unroll*(op1.nzyxdim/unroll);
+        switch (operation)
+        {
+        case '+':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data,
+            		  ptrMask=mask->data;
+                 n<nmax; n+=unroll, ptrResult+=unroll,
+                      ptrOp1+=unroll, ptrOp2+=unroll, ptrMask+=unroll)
+            {
+                *ptrResult = *ptrOp1 + *ptrOp2 * (*ptrMask);
+                *(ptrResult+1) = *(ptrOp1+1) + *(ptrOp2+1) * (*(ptrMask+1));
+                *(ptrResult+2) = *(ptrOp1+2) + *(ptrOp2+2) * (*(ptrMask+2));
+                *(ptrResult+3) = *(ptrOp1+3) + *(ptrOp2+3) * (*(ptrMask+3));
+            }
+            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax,
+            		ptrOp2=op2.data+nmax, ptrMask=mask->data+nmax;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2, ++ptrMask)
+                *ptrResult = *ptrOp1 + *ptrOp2 * (*ptrMask);
+            break;
+        case '-':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data,
+            		  ptrMask=mask->data;
+                 n<nmax; n+=unroll, ptrResult+=unroll,
+                      ptrOp1+=unroll, ptrOp2+=unroll, ptrMask+=unroll)
+                {
+                    *ptrResult = *ptrOp1 - *ptrOp2 * (*ptrMask);
+                    *(ptrResult+1) = *(ptrOp1+1) - *(ptrOp2+1) * (*(ptrMask+1));
+                    *(ptrResult+2) = *(ptrOp1+2) - *(ptrOp2+2) * (*(ptrMask+2));
+                    *(ptrResult+3) = *(ptrOp1+3) - *(ptrOp2+3) * (*(ptrMask+3));
+                }
+            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax,
+            		ptrOp2=op2.data+nmax, ptrMask=mask->data+nmax;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2, ++ptrMask)
+                *ptrResult = *ptrOp1 - *ptrOp2;
+            break;
+        //NOTE: not clear if this should be the default case for * and / operators
+        case '*':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data,
+            		  ptrMask=mask->data;
+                 n<nmax; n+=unroll, ptrResult+=unroll,
+                      ptrOp1+=unroll, ptrOp2+=unroll, ptrMask+=unroll)
+                {
+                    *ptrResult = *ptrOp1 * *ptrOp2 * (*ptrMask);
+                    *(ptrResult+1) = *(ptrOp1+1) * *(ptrOp2+1) * (*(ptrMask+1));
+                    *(ptrResult+2) = *(ptrOp1+2) * *(ptrOp2+2) * (*(ptrMask+2));
+                    *(ptrResult+3) = *(ptrOp1+3) * *(ptrOp2+3) * (*(ptrMask+3));
+                }
+            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax,
+            		ptrOp2=op2.data+nmax, ptrMask=mask->data+nmax;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2, ++ptrMask)
+                *ptrResult = *ptrOp1 * *ptrOp2 * (*ptrMask);
+            break;
+        case '/':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data,
+            		  ptrMask=mask->data;
+                 n<nmax; n+=unroll, ptrResult+=unroll,
+                      ptrOp1+=unroll, ptrOp2+=unroll, ptrMask+=unroll)
+                {
+                    *ptrResult = *ptrOp1  * (*ptrMask)/ *ptrOp2;
+                    *(ptrResult+1) = *(ptrOp1+1)  * (*(ptrMask+1))/ *(ptrOp2+1);
+                    *(ptrResult+2) = *(ptrOp1+2)  * (*(ptrMask+2))/ *(ptrOp2+2);
+                    *(ptrResult+3) = *(ptrOp1+3)  * (*(ptrMask+3))/ *(ptrOp2+3);
+                }
+            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax,
+            		ptrOp2=op2.data+nmax, ptrMask=mask->data+nmax;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2, ++ptrMask)
+                *ptrResult = *ptrOp1  * (*ptrMask)/ *ptrOp2;
+            break;
+        }
+    }
+
+
     /** Array by array
      *
      * This function must take two vectors of the same size, and operate element
@@ -3671,14 +3763,21 @@ public:
      */
     inline friend void arrayByArray(const MultidimArray<T>& op1,
                                     const MultidimArray<T>& op2, MultidimArray<T>& result,
-                                    char operation)
+                                    char operation, const MultidimArray<T> *mask=NULL)
     {
         if (!op1.sameShape(op2))
             REPORT_ERROR(ERR_MULTIDIM_SIZE,
                          formatString("Array_by_array: different shapes (%c)", operation));
         if (result.data == NULL || !result.sameShape(op1))
             result.resizeNoCopy(op1);
-        coreArrayByArray(op1, op2, result, operation);
+        if ( (mask)==NULL)
+        {
+            coreArrayByArray(op1, op2, result, operation);
+        }
+        else
+        	{
+            coreArrayByArrayMask(op1, op2, result, operation, mask);
+        	}
     }
 
     /** v3 = v1 + v2.
