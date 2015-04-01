@@ -840,10 +840,10 @@ PyObject *
 Image_resize(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
-    double xDim = 0, yDim = 0, zDim = 1;
+    int xDim = 0, yDim = 0, zDim = 1;
     size_t nDim = 1;
 
-    if (self != NULL && PyArg_ParseTuple(args, "dd|dn", &xDim, &yDim, &zDim, &nDim))
+    if (self != NULL && PyArg_ParseTuple(args, "ii|in", &xDim, &yDim, &zDim, &nDim))
     {
         try
         {
@@ -863,9 +863,9 @@ PyObject *
 Image_scale(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
-    double xDim = 0, yDim = 0, zDim = 1;
+    int xDim = 0, yDim = 0, zDim = 1;
 
-    if (self != NULL && PyArg_ParseTuple(args, "dd|d", &xDim, &yDim, &zDim))
+    if (self != NULL && PyArg_ParseTuple(args, "ii|i", &xDim, &yDim, &zDim))
     {
         try
         {

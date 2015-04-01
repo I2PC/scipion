@@ -304,12 +304,16 @@ void ProgAngularProjectLibrary::run()
     //======================
     //recompute symmetry with neigh symmetry
     // If uncomment neighbour are not OK. BE CAREFULL
-    //    if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))
-    //        REPORT_ERROR(ERR_VALUE_INCORRECT,
-    //                     (std::string)"Invalid neig symmetry" +  fn_sym_neigh);
-    //    mysampling.SL.readSymmetryFile(fn_sym_neigh);
-    //    mysampling.fillLRRepository();
-    //precompute product between symmetry matrices and experimental data
+//#define BREAKSIMMETRY
+#ifdef BREAKSIMMETRY
+    if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
+                         (std::string)"Invalid neig symmetry" +  fn_sym_neigh);
+        mysampling.SL.readSymmetryFile(fn_sym_neigh);
+        mysampling.fillLRRepository();
+#endif
+#undef BREAKSIMMETRY
+        //precompute product between symmetry matrices and experimental data
     if (FnexperimentalImages.size() > 0)
         mysampling.fillExpDataProjectionDirectionByLR(FnexperimentalImages);
 

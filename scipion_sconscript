@@ -284,108 +284,109 @@ def ExtractEnumFromHeader(env, target, source):
     log.close()
     return None
 
-if 'Xmipp-java' in map(str, BUILD_TARGETS):
-    env['JAVADIR'] = 'java'
-    env['JAVA_BUILDPATH'] = 'java/build'
-    env['JAVA_LIBPATH'] = 'java/lib'
-    env['JAVA_SOURCEPATH'] = 'java/src'
-    env['ENV']['LANG'] = 'en_GB.UTF-8'
-    env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
-    # Set -g debug options if debugging
-    if debug:
-        env['JAVAC'] = 'javac -g'  # TODO: check how to add -g without changing JAVAC
-    
-    javaBuild = Execute(Mkdir(Entry('#software/em/xmipp/java/build').abspath))
-    
-    # Update enums from c++ headers, if they don't exist, generate it
-    javaLog = open(File('#software/em/xmipp/java/build/javaLog').abspath, 'w+')
-    for (class_name, class_list) in javaEnumDict.iteritems():
-        java_file = File("#software/em/xmipp/java/src/xmipp/jni/%s.java" % class_name).abspath
-        WriteJavaEnum(class_name, class_list[0], class_list[1], javaLog)
-    
-    javaExtractCommand = env.Command(Entry('#software/em/xmipp/libraries/bindings/java/src/xmipp/jni/enums.changelog').abspath,
-                                     [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, 
-                                      File('#software/em/xmipp/libraries/data/metadata_label.h').abspath],
-                                     ExtractEnumFromHeader)
-    
-    javaEnums = env.Alias('javaEnums', javaExtractCommand)
-    
-    imagejUntar = env.Untar(File('#software/em/xmipp/external/imagej/ij.jar').abspath, 
-                            File('#software/em/xmipp/external/imagej.tgz').abspath, 
-                            cdir=Dir('#software/em/xmipp/external').abspath)
-    #env.Depends(imagejUntar, javaEnums)
-    
-    ijLink = env.SymLink(File('#software/em/xmipp/java/lib/ij.jar').abspath, imagejUntar[0].abspath)
-    env.Depends(ijLink, imagejUntar)
-    env.Default(ijLink)
-    # --- ...to here
-    
-    xmippJavaJNI = env.AddJavaLibrary(
-                 'XmippJNI', 'xmipp/jni',
-                 deps=[ijLink, javaEnums],
-                 )
-    #env.Depends(xmippJavaJNI, ijLink)
-    
-    xmippJavaUtils = env.AddJavaLibrary(
-               'XmippUtils', 'xmipp/utils',
-               deps=[ijLink, xmippJavaJNI],
-               )
-    
-    xmippIJ = env.AddJavaLibrary(
-            'XmippIJ', 'xmipp/ij/commons',
-            deps=[xmippJavaUtils],
-            )
-    
-    xmippViewer = env.AddJavaLibrary(
-                'XmippViewer', 'xmipp/viewer',
-                deps=[xmippIJ],
-                )
-    
-    xmippTest = env.AddJavaLibrary(
-              'XmippTest', 'xmipp/test',
-              deps=[xmippViewer]
-              )
-    
-    # xmippIJPlugin = env.AddJavaLibrary(
-    #               'XmippIJPlugin_MasksToolbar',
-    #               dirs=[Entry('#software/em/xmipp/java/src/xmipp/ij/plugins/maskstoolbar').abspath],
-    #               deps=['XmippJNI']
-    #               )
-    
-    #env.Depends(xmippIJPlugin, ijLink)
-    #pluginLink = env.SymLink(Entry('#software/em/xmipp/external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar').abspath, xmippIJPlugin)
-    #env.Depends(pluginLink, ijLink)
-    #env.Default(pluginLink)
-    
-    
-    # For any yet unkown issue, using the environment used for the rest of the SCons is imposible to compile java code
-    # FIXME: Its needed to guess why and correct this. In the meanwhile we'll use an alternative environment
-    env2 = Environment()
-    env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir('#software/em/xmipp/java/lib').abspath,'*.jar'))))
-    javaExtraFileTypes = env2.Java(Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class').abspath, 
-                                   File('#software/em/xmipp/java/src/HandleExtraFileTypes.java').abspath)
-    env2.Depends(javaExtraFileTypes, Entry('#software/em/xmipp/java/lib/XmippViewer.jar').abspath)
-    env2.Default(javaExtraFileTypes)
-    
-    # FIXME: For any yet unkown issue, java is being compiled putting in -d flag the class name, producing a folder with the same name as the class and putting the class file inside
-    fileTypesInstallation = env.Install(Dir('#software/em/xmipp/external/imagej/plugins/').abspath, 
-                                        Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class/HandleExtraFileTypes.class').abspath)
-    #env.Depends(fileTypesInstallation, pluginLink)
-    env.Default(fileTypesInstallation)
-    
-    # Java tests
-    AddOption('--run-java-tests', dest='run_java_tests', action='store_true',
-              help='Run all Java tests (not only default ones)')
-    
-    env.AddJavaTest('FilenameTest', 'XmippTest.jar')
-    env.AddJavaTest('ImageGenericTest', 'XmippTest.jar')
-    env.AddJavaTest('MetadataTest', 'XmippTest.jar')
 
-    env.Alias('Xmipp-java', [xmippJavaJNI, 
-                             xmippJavaUtils,
-                             xmippIJ,
-                             xmippViewer,
-                             xmippTest])
+env['JAVADIR'] = 'java'
+env['JAVA_BUILDPATH'] = 'java/build'
+env['JAVA_LIBPATH'] = 'java/lib'
+env['JAVA_SOURCEPATH'] = 'java/src'
+env['ENV']['LANG'] = 'en_GB.UTF-8'
+env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
+# Set -g debug options if debugging
+if debug:
+    env['JAVAC'] = 'javac -g'  # TODO: check how to add -g without changing JAVAC
+
+javaBuild = Execute(Mkdir(Entry('#software/em/xmipp/java/build').abspath))
+
+# Update enums from c++ headers, if they don't exist, generate it
+javaLog = open(File('#software/em/xmipp/java/build/javaLog').abspath, 'w+')
+for (class_name, class_list) in javaEnumDict.iteritems():
+    java_file = File("#software/em/xmipp/java/src/xmipp/jni/%s.java" % class_name).abspath
+    WriteJavaEnum(class_name, class_list[0], class_list[1], javaLog)
+
+javaExtractCommand = env.Command(Entry('#software/em/xmipp/libraries/bindings/java/src/xmipp/jni/enums.changelog').abspath,
+                                 [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, 
+                                  File('#software/em/xmipp/libraries/data/metadata_label.h').abspath],
+                                 ExtractEnumFromHeader)
+
+javaEnums = env.Alias('javaEnums', javaExtractCommand)
+
+imagejUntar = env.Untar(File('#software/em/xmipp/external/imagej/ij.jar').abspath, 
+                        File('#software/em/xmipp/external/imagej.tgz').abspath, 
+                        cdir=Dir('#software/em/xmipp/external').abspath)
+#env.Depends(imagejUntar, javaEnums)
+
+ijLink = env.SymLink(File('#software/em/xmipp/java/lib/ij.jar').abspath, 
+                     imagejUntar[0].abspath)
+env.Depends(ijLink, imagejUntar)
+env.Default(ijLink)
+# --- ...to here
+
+xmippJavaJNI = env.AddJavaLibrary(
+             'XmippJNI', 'xmipp/jni',
+             deps=[ijLink, javaEnums],
+             )
+#env.Depends(xmippJavaJNI, ijLink)
+
+xmippJavaUtils = env.AddJavaLibrary(
+           'XmippUtils', 'xmipp/utils',
+           deps=[ijLink, xmippJavaJNI],
+           )
+
+xmippIJ = env.AddJavaLibrary(
+        'XmippIJ', 'xmipp/ij/commons',
+        deps=[xmippJavaUtils],
+        )
+
+xmippViewer = env.AddJavaLibrary(
+            'XmippViewer', 'xmipp/viewer',
+            deps=[xmippIJ],
+            )
+
+xmippTest = env.AddJavaLibrary(
+          'XmippTest', 'xmipp/test',
+          deps=[xmippViewer]
+          )
+
+# xmippIJPlugin = env.AddJavaLibrary(
+#               'XmippIJPlugin_MasksToolbar',
+#               dirs=[Entry('#software/em/xmipp/java/src/xmipp/ij/plugins/maskstoolbar').abspath],
+#               deps=['XmippJNI']
+#               )
+
+#env.Depends(xmippIJPlugin, ijLink)
+#pluginLink = env.SymLink(Entry('#software/em/xmipp/external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar').abspath, xmippIJPlugin)
+#env.Depends(pluginLink, ijLink)
+#env.Default(pluginLink)
+
+
+# For any yet unkown issue, using the environment used for the rest of the SCons is imposible to compile java code
+# FIXME: Its needed to guess why and correct this. In the meanwhile we'll use an alternative environment
+env2 = Environment()
+env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir('#software/em/xmipp/java/lib').abspath,'*.jar'))))
+javaExtraFileTypes = env2.Java(Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class').abspath, 
+                               File('#software/em/xmipp/java/src/HandleExtraFileTypes.java').abspath)
+env2.Depends(javaExtraFileTypes, Entry('#software/em/xmipp/java/lib/XmippViewer.jar').abspath)
+env2.Default(javaExtraFileTypes)
+
+# FIXME: For any yet unkown issue, java is being compiled putting in -d flag the class name, producing a folder with the same name as the class and putting the class file inside
+fileTypesInstallation = env.Install(Dir('#software/em/xmipp/external/imagej/plugins/').abspath, 
+                                    Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class/HandleExtraFileTypes.class').abspath)
+#env.Depends(fileTypesInstallation, pluginLink)
+env.Default(fileTypesInstallation)
+
+# Java tests
+AddOption('--run-java-tests', dest='run_java_tests', action='store_true',
+          help='Run all Java tests (not only default ones)')
+
+env.AddJavaTest('FilenameTest', 'XmippTest.jar')
+env.AddJavaTest('ImageGenericTest', 'XmippTest.jar')
+env.AddJavaTest('MetadataTest', 'XmippTest.jar')
+
+env.Alias('Xmipp-java', [xmippJavaJNI, 
+                         xmippJavaUtils,
+                         xmippIJ,
+                         xmippViewer,
+                         xmippTest])
 
 
 #  ***********************************************************************
@@ -394,8 +395,10 @@ if 'Xmipp-java' in map(str, BUILD_TARGETS):
 
 XMIPP_LIBS = ['XmippData', 'XmippRecons', 'XmippClassif']
 PROG_DEPS = EXT_LIBS + XMIPP_LIBS
-PROG_LIBS = EXT_LIBS + XMIPP_LIBS + ['fftw3', 'fftw3_threads', 
-                                     'tiff', 'jpeg', 'png',
+
+PROG_LIBS = EXT_LIBS + XMIPP_LIBS + ['sqlite3',
+                                     'fftw3', 'fftw3_threads', 
+                                     'tiff', 'jpeg', 'png', 
                                      'hdf5', 'hdf5_cpp']
 
 def addRunTest(testName, prog):
@@ -541,6 +544,7 @@ for p in ['angular_commonline',
           'reconstruct_fourier',
           'reconstruct_significant',
           'reconstruct_wbp',
+          'resolution_fsc',
           'resolution_ssnr',
           'score_micrograph',
           
@@ -803,6 +807,7 @@ env.Default('Xmipp-matlab', matlab)
 
 XmippAlias = env.Alias('Xmipp', ['Xmipp-libs', 
                                  'Xmipp-programs', 
-                                 'Xmipp-batchs'])
+                                 'Xmipp-batchs',
+                                 'Xmipp-java'])
 
 Return('XmippAlias')
