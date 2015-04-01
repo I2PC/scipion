@@ -128,6 +128,12 @@ def getAttrTestFile(key):
                 "file":"cpv.map",
                 "samplingRate": 1.1, 
                 }
+        
+    if(key == "fcv"):
+        attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/", 
+                "file":"fcv.map",
+                "samplingRate": 2.33, 
+                }
     
     if(key == "mito_ribosome"):
         attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/",
