@@ -61,6 +61,8 @@ public:
     bool optimizeScale;
     // Optimize angles
     bool optimizeAngles;
+    // Apply transformation to this image
+    String originalImageLabel;
 public:
     // 2D mask in real space
     MultidimArray<int> mask2D;
@@ -82,6 +84,8 @@ public:
     Matrix2D<double> A;
     // Original angles
     double old_rot, old_tilt, old_psi;
+    // Original shift
+	double old_shiftX, old_shiftY;
 public:
     /// Empty constructor
     ProgAngularContinuousAssign2();
