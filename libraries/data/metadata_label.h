@@ -374,6 +374,7 @@ enum MDLabel
     MDL_VOLUME_SCORE4,/// < Score 4 for volumes
     MDL_WEIGHT, ///< Weight assigned to the image (double)
     MDL_WEIGHT_CONTINUOUS2, ///< Weight due to angular continuous assignment
+    MDL_WEIGHT_JUMPER, ///< Weight due to angular jumping
     MDL_WEIGHT_SIGNIFICANT, ///< Weight due to Angular significance
     MDL_WEIGHT_SSNR, ///< Weight due to SSNR
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
@@ -1706,6 +1707,7 @@ private:
         MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight");
         MDL::addLabelAlias(MDL_WEIGHT, "Weight");
         MDL::addLabel(MDL_WEIGHT_CONTINUOUS2, LABEL_DOUBLE, "weightContinuous2");
+        MDL::addLabel(MDL_WEIGHT_JUMPER, LABEL_DOUBLE, "weightJumper");
         MDL::addLabel(MDL_WEIGHT_SIGNIFICANT, LABEL_DOUBLE, "weightSignificant");
         MDL::addLabel(MDL_WEIGHT_SSNR, LABEL_DOUBLE, "weightSSNR");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
