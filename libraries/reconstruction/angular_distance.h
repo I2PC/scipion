@@ -49,6 +49,10 @@ public:
     bool check_mirrors;
     /** Use object rotations */
     bool object_rotation;
+    /** Compute weights */
+    bool compute_weights;
+    /** Minimum angular sigma */
+    double minSigma;
 public:
     // DocFile 1
     MetaData DF1;
@@ -73,6 +77,9 @@ public:
 
     /** Run */
     void run();
+
+    /** computeWeights */
+    void computeWeights();
 };
 //@}
 #endif

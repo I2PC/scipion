@@ -37,6 +37,9 @@ void ProgAngularDistance::readParams()
     fn_sym = getParam("--sym");
     check_mirrors = checkParam("--check_mirrors");
     object_rotation = checkParam("--object_rotation");
+    compute_weights = checkParam("--compute_weights");
+    if (compute_weights)
+    	minSigma = getDoubleParam("--compute_weights");
 }
 
 // Show ====================================================================
@@ -49,6 +52,7 @@ void ProgAngularDistance::show()
     << "Symmetry file    : " << fn_sym        << std::endl
     << "Check mirrors    : " << check_mirrors << std::endl
     << "Object rotation  : " << object_rotation<<std::endl
+    << "Compute weights  : " << compute_weights << std::endl
     ;
 }
 
@@ -75,6 +79,11 @@ void ProgAngularDistance::defineParams()
     addParamsLine("  [--check_mirrors]          : Check if mirrored projections give better results");
     addParamsLine("  [--object_rotation]        : Use object rotations rather than projection directions");
     addParamsLine("                             : fit (Spider, APMQ)");
+    addParamsLine("  [--compute_weights <minSigma=1>] : If this flag is given, images in ang2 are given a weight according to their ");
+    addParamsLine("                             : distance to the same image in ang1. The ang2 file is rewritten.");
+    addParamsLine("                             : Ang1 and ang2 are supposed to have a label called itemId");
+    addParamsLine("                             : The output is written to oroot+_weights.xmd");
+    addParamsLine("                             : Min sigma is the minimum angular standard deviation, by default, 1 degree");
 }
 
 // Produce side information ================================================
@@ -88,7 +97,7 @@ void ProgAngularDistance::produce_side_info()
     {
         DF1.read(fn_ang1);
         DF2.read(fn_ang2);
-        if (DF1.size() != DF2.size())
+        if (DF1.size() != DF2.size() && !compute_weights)
             REPORT_ERROR(ERR_MD_OBJECTNUMBER,
                          "Angular_distance: Input Docfiles with different number of entries");
     }
@@ -99,6 +108,11 @@ void ProgAngularDistance::produce_side_info()
 void ProgAngularDistance::run()
 {
     produce_side_info();
+    if (compute_weights)
+    {
+    	computeWeights();
+    	return;
+    }
 
     MetaData DF_out;
     double angular_distance=0;
@@ -248,4 +262,166 @@ void ProgAngularDistance::run()
 
     std::cout << "Global angular distance = " << angular_distance << std::endl;
     std::cout << "Global shift   distance = " << shift_distance   << std::endl;
+}
+
+void ProgAngularDistance::computeWeights()
+{
+	MetaData DF1sorted, DF2sorted, DFweights;
+	DF1sorted.sort(DF1,MDL_ITEM_ID);
+	DF2sorted.sort(DF2,MDL_ITEM_ID);
+	std::vector<MDLabel> labels;
+	labels.push_back(MDL_ITEM_ID);
+	labels.push_back(MDL_ANGLE_ROT);
+	labels.push_back(MDL_ANGLE_TILT);
+	labels.push_back(MDL_ANGLE_PSI);
+	labels.push_back(MDL_FLIP);
+    DF1sorted.keepLabels(labels);
+    DF2sorted.keepLabels(labels);
+
+    // for(MDIterator __iter(__md); __iter.hasNext(); __iter.moveNext())
+    MDIterator iter1(DF1sorted), iter2(DF2sorted);
+    std::vector< Matrix1D<double> > ang1, ang2;
+    Matrix1D<double> rotTiltPsi(3);
+	size_t currentId;
+	bool anotherImageIn2=iter2.hasNext();
+	size_t id1, id2;
+	bool mirror;
+    while (anotherImageIn2)
+    {
+    	ang1.clear();
+    	ang2.clear();
+
+    	// Take current id
+    	DF2sorted.getValue(MDL_ITEM_ID,currentId,iter2.objId);
+    	std::cout << "currentId=" << currentId << std::endl;
+
+    	// Grab all the angles in DF2 associated to this id
+    	std::cout << "DF2" << std::endl;
+    	bool anotherIteration=false;
+    	do
+    	{
+    		DF2sorted.getValue(MDL_ITEM_ID,id2,iter2.objId);
+			anotherIteration=false;
+    		if (id2==currentId)
+    		{
+				DF2sorted.getValue(MDL_ANGLE_ROT,XX(rotTiltPsi),iter2.objId);
+				DF2sorted.getValue(MDL_ANGLE_TILT,YY(rotTiltPsi),iter2.objId);
+				DF2sorted.getValue(MDL_ANGLE_PSI,ZZ(rotTiltPsi),iter2.objId);
+				DF2sorted.getValue(MDL_FLIP,mirror,iter2.objId);
+				if (mirror)
+				{
+					double rotp, tiltp, psip;
+					Euler_mirrorX(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
+					XX(rotTiltPsi)=rotp;
+					YY(rotTiltPsi)=tiltp;
+					ZZ(rotTiltPsi)=psip;
+				}
+				std::cout << rotTiltPsi << std::endl;
+				ang2.push_back(rotTiltPsi);
+				iter2.moveNext();
+				if (iter2.hasNext())
+					anotherIteration=true;
+    		}
+    	} while (anotherIteration);
+
+    	// Advance Iter 1 to catch Iter 2
+		DF1sorted.getValue(MDL_ITEM_ID,id1,iter1.objId);
+    	while (id1<currentId && iter1.hasNext())
+    	{
+    		iter1.moveNext();
+    		DF1sorted.getValue(MDL_ITEM_ID,id1,iter1.objId);
+    	}
+
+    	// If we are at the end of DF1, then we did not find id1 such that id1==currentId
+    	if (!iter1.hasNext())
+    		break;
+
+    	// Grab all the angles in DF1 associated to this id
+    	std::cout << "DF1" << std::endl;
+    	anotherIteration=false;
+    	do
+    	{
+    		DF1sorted.getValue(MDL_ITEM_ID,id1,iter1.objId);
+			anotherIteration=false;
+    		if (id1==currentId)
+    		{
+				DF1sorted.getValue(MDL_ANGLE_ROT,XX(rotTiltPsi),iter1.objId);
+				DF1sorted.getValue(MDL_ANGLE_TILT,YY(rotTiltPsi),iter1.objId);
+				DF1sorted.getValue(MDL_ANGLE_PSI,ZZ(rotTiltPsi),iter1.objId);
+				DF1sorted.getValue(MDL_FLIP,mirror,iter1.objId);
+				if (mirror)
+				{
+					double rotp, tiltp, psip;
+					Euler_mirrorX(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
+					XX(rotTiltPsi)=rotp;
+					YY(rotTiltPsi)=tiltp;
+					ZZ(rotTiltPsi)=psip;
+				}
+				std::cout << rotTiltPsi << std::endl;
+				ang1.push_back(rotTiltPsi);
+				iter1.moveNext();
+				if (iter1.hasNext())
+					anotherIteration=true;
+    		}
+    	} while (anotherIteration);
+
+    	// Process both sets of angles
+    	double cumulatedDistance=0;
+    	for (size_t i=0; i<ang2.size(); ++i)
+    	{
+    		const Matrix1D<double> &anglesi=ang2[i];
+    		double rot2=XX(anglesi);
+    		double tilt2=YY(anglesi);
+    		double psi2=ZZ(anglesi);
+    		double bestDistance=1e38;
+    		std::cout << "Ang2: " << rot2 << " " << tilt2 << " " << psi2 << std::endl;
+    		for (size_t j=0; j<ang1.size(); ++j)
+    		{
+        		const Matrix1D<double> &anglesj=ang1[j];
+        		double rot1=XX(anglesj);
+        		double tilt1=YY(anglesj);
+        		double psi1=ZZ(anglesj);
+                double dist = SL.computeDistance(rot1, tilt1, psi1, rot2, tilt2, psi2, false,
+                                                 check_mirrors, object_rotation);
+        		std::cout << "Ang1: " << rot1 << " " << tilt1 << " " << psi1 << std::endl;
+        		std::cout << "   -> " << dist << std::endl;
+                if (dist<bestDistance)
+                	bestDistance=dist;
+    		}
+    		std::cout << "bestDistance=" << bestDistance << std::endl;
+    		cumulatedDistance+=bestDistance;
+    	}
+    	double meanDistance=cumulatedDistance/ang2.size();
+    	size_t newObjId=DFweights.addObject();
+    	DFweights.setValue(MDL_ITEM_ID,currentId,newObjId);
+    	DFweights.setValue(MDL_ANGLE_DIFF,meanDistance,newObjId);
+        anotherImageIn2=iter2.hasNext();
+		std::cout << "meanDistance=" << meanDistance << std::endl;
+    }
+
+    // Calculate the deviation with respect to angleDiff=0 of the angular distances
+    std::vector<double> angleDistances;
+    DFweights.getColumnValues(MDL_ANGLE_DIFF,angleDistances);
+    double sigma2=0, d;
+    for (size_t i=0; i<angleDistances.size(); ++i)
+    {
+    	d=angleDistances[i];
+    	sigma2+=d*d;
+    }
+    sigma2/=angleDistances.size();
+    std::cout << "Standard deviation of angular distances=" << sqrt(sigma2) << std::endl;
+    sigma2=std::max(minSigma*minSigma,sigma2);
+
+    // Adjust the jumper weights according to a Gaussian
+    double isigma2=-0.5/sigma2;
+    FOR_ALL_OBJECTS_IN_METADATA(DFweights)
+    {
+    	DFweights.getValue(MDL_ANGLE_DIFF,d,__iter.objId);
+    	DFweights.setValue(MDL_WEIGHT_JUMPER,exp(d*d*isigma2),__iter.objId);
+    }
+
+    // Transfer these weights to the DF2 metadata
+    MetaData DF2weighted;
+    DF2weighted.join1(DF2,DFweights,MDL_ITEM_ID,INNER);
+    DF2weighted.write(fn_out+"_weights.xmd");
 }
