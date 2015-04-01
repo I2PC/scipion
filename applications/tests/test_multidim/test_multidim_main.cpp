@@ -145,7 +145,7 @@ TEST( MultidimTest, coreArrayByArray)
     EXPECT_EQ(mOut,mref);
 }
 
-TEST( MultidimTest, coreArrayByArrayMask)
+TEST( MultidimTest, selfCoreArrayByArrayMask)
 {
     MultidimArray<double> m1(2,2);
     MultidimArray<double> m2(2,2);
@@ -168,12 +168,17 @@ TEST( MultidimTest, coreArrayByArrayMask)
     A2D_ELEM(mask,0,1) = 1.;
     A2D_ELEM(mask,1,1) = 1.;
 
-    coreArrayByArrayMask(m1, m2, mOut, '+', &mask);
+    A2D_ELEM(mOut,0,0) = 0.;
+    A2D_ELEM(mOut,1,0) = 0.;
+    A2D_ELEM(mOut,0,1) = 0.;
+    A2D_ELEM(mOut,1,1) = 1.;
+
+    selfCoreArrayByArrayMask(m1, m2, mOut, '+', &mask);
 
     A2D_ELEM(mref,0,0) = 1.;
-    A2D_ELEM(mref,1,0) = 24.;
-    A2D_ELEM(mref,0,1) = 36.;
-    A2D_ELEM(mref,1,1) = 48.;
+    A2D_ELEM(mref,1,0) = 22.;
+    A2D_ELEM(mref,0,1) = 33.;
+    A2D_ELEM(mref,1,1) = 45.;
 
     EXPECT_EQ(mOut,mref);
 }
