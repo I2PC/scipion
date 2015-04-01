@@ -105,6 +105,7 @@ def create_resmap_project(request):
             protImport = project.newProtocol(ProtImportVolumes, objLabel=label_import)
 
             protImport.filesPath.set(dest)
+            protImport.samplingRate.set(attr['samplingRate'])
             
             project.launchProtocol(protImport, wait=True)
         else:
@@ -125,16 +126,19 @@ def getAttrTestFile(key):
     if(key == "cpv"):
         attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/", 
                 "file":"cpv.map",
+                "samplingRate": 1.1, 
                 }
     
     if(key == "mito_ribosome"):
         attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/",
                 "file": "mito_ribosome.map",
+                "samplingRate": 1.34, 
                 }
         
     if(key == "t20s_proteasome"):
         attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/",
-                "file": "t20s_proteasome.map"
+                "file": "t20s_proteasome.map",
+                "samplingRate": 0.98, 
                 }
         
     return attr

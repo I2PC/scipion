@@ -91,13 +91,13 @@ function goExampleForm(){
 function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
-		case "groel":
+		case "cpv":
 			var url = "/r_content/?p=cpvTestData";
 			break;
-		case "bpv":
+		case "mito_ribosome":
 			var url ="/r_content/?p=ribosomeTestData";
 			break;
-		case "ribosome":
+		case "t20s_proteasome":
 			var url ="/r_content/?p=t20TestData";
 			break;
 	}
@@ -149,13 +149,13 @@ function getRefTestData(id){
 	var ref = ""
 	switch(id){
 		case "t20s_proteasome":
-			ref = "<strong>T20S Proteasome</strong> (2.8 Å , <a href='http://emsearch.rutgers.edu/atlas/6287_summary.html' style='color:firebrick;' target='_blank'>Authors: Campbell MG, Veesler D, Cheng A, Potter CS, Carragher B</a>)"
+			ref = "<strong>T20S Proteasome</strong> (Resolution 2.8 Å , <a href='http://emsearch.rutgers.edu/atlas/6287_summary.html' style='color:firebrick;' target='_blank'>Authors: Campbell MG, Veesler D, Cheng A, Potter CS, Carragher B</a>)"
 			break;
 		case "cpv":
-			ref = "<strong>cytoplasmic polyhedrosis virus (CPV)</strong> (3.1 Å , <a href='http://emsearch.rutgers.edu/atlas/5256_summary.html' style='color:firebrick;' target='_blank'>Authors: Yu X, Ge P, Jiang J, Atanasov I, Zhou ZH</a>)"
+			ref = "<strong>cytoplasmic polyhedrosis virus (CPV)</strong> (Resolution 3.1 Å , <a href='http://emsearch.rutgers.edu/atlas/5256_summary.html' style='color:firebrick;' target='_blank'>Authors: Yu X, Ge P, Jiang J, Atanasov I, Zhou ZH</a>)"
 			break;
 		case "mito_ribosome":
-			ref = "<strong>Human mitochondrial ribosome</strong> (3.4 Å , <a href='http://emsearch.rutgers.edu/atlas/2762_summary.html' style='color:firebrick;' target='_blank'>Authors: Brown A, Amunts A, Bai XC, Sugimoto Y, Edwards PC, Murshudov G, Scheres SHW, Ramakrishnan V</a>)"
+			ref = "<strong>Human mitochondrial ribosome</strong> (Resolution 3.4 Å , <a href='http://emsearch.rutgers.edu/atlas/2762_summary.html' style='color:firebrick;' target='_blank'>Authors: Brown A, Amunts A, Bai XC, Sugimoto Y, Edwards PC, Murshudov G, Scheres SHW, Ramakrishnan V</a>)"
 			break;
 	}
 	return ref;
