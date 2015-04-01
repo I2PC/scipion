@@ -384,8 +384,7 @@ addModule(
 # extraActions is a list of (target, command) to run after installation.
 
 env.AddPackage('xmipp',
-               tar='xmipp_scipion.tgz',
-               buildDir='xmipp_scipion',
+               tar='xmipp_master.tgz',
                reqs={'mpi': 'cxx',
                      'freetype': 'cxx',
                      'X11': 'cxx',

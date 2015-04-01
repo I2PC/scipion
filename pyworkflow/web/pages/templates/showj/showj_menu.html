@@ -136,10 +136,12 @@
 		</div>
 		{% endif %}
 	
+		{% if form.blockComboBox.value != ''%}
 		<div id="blockSelectorContainer" class="sectionMenu">
 			<span class="textMenu"> {{ form.blockComboBox.label_tag }} </span>
 			{{ form.blockComboBox }} 
 		</div>
+		{% endif %}
 		
 		<div id="metadataSelectorContainer" class="sectionMenu" title="Select the label to render">
 			<span class="textMenu">
