@@ -56,6 +56,7 @@ void ProgAngularContinuousAssign2::readParams()
     optimizeShift = checkParam("--optimizeShift");
     optimizeScale = checkParam("--optimizeScale");
     optimizeAngles = checkParam("--optimizeAngles");
+    originalImageLabel = getParam("--applyTo");
 }
 
 // Show ====================================================================
@@ -77,6 +78,7 @@ void ProgAngularContinuousAssign2::show()
     << "Optimize shifts:     " << optimizeShift      << std::endl
     << "Optimize scale:      " << optimizeScale      << std::endl
     << "Optimize angles:     " << optimizeAngles     << std::endl
+    << "Apply to:            " << originalImageLabel << std::endl
     ;
 }
 
@@ -101,6 +103,7 @@ void ProgAngularContinuousAssign2::defineParams()
     addParamsLine("  [--optimizeShift]            : Optimize shift");
     addParamsLine("  [--optimizeScale]            : Optimize scale");
     addParamsLine("  [--optimizeAngles]           : Optimize angles");
+    addParamsLine("  [--applyTo <label=image>]    : Which is the source of images to apply the final transformation");
     addExampleLine("A typical use is:",false);
     addExampleLine("xmipp_angular_continuous_assign2 -i anglesFromDiscreteAssignment.xmd --ref reference.vol -o assigned_angles.xmd");
 }
@@ -192,8 +195,8 @@ double L1cost(double *x, void *_prm)
 		return 1e38;
 	MAT_ELEM(prm->A,0,0)=1+scalex;
 	MAT_ELEM(prm->A,1,1)=1+scaley;
-	MAT_ELEM(prm->A,0,2)=deltax;
-	MAT_ELEM(prm->A,1,2)=deltay;
+	MAT_ELEM(prm->A,0,2)=prm->old_shiftX+deltax;
+	MAT_ELEM(prm->A,1,2)=prm->old_shiftY+deltay;
 	return tranformImage(*prm->projector,prm->old_rot+deltaRot, prm->old_tilt+deltaTilt, prm->old_psi+deltaPsi,
 			prm->P, prm->I(), prm->Ifiltered(), prm->Ip(), prm->Ifilteredp(), prm->E(),
 			prm->mask2D, prm->iMask2Dsum, a, b, prm->A, LINEAR);
@@ -205,11 +208,11 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 {
     rowOut=rowIn;
 
+    // Read input image and initial parameters
     ApplyGeoParams geoParams;
 	geoParams.only_apply_shifts=true;
 	geoParams.wrap=DONT_WRAP;
 
-	double old_shiftX, old_shiftY;
 	rowIn.getValue(MDL_ANGLE_ROT,old_rot);
 	rowIn.getValue(MDL_ANGLE_TILT,old_tilt);
 	rowIn.getValue(MDL_ANGLE_PSI,old_psi);
@@ -243,44 +246,60 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		p(0)=Pstd/Istd;
 		p(1)=Pavg-Iavg;
 	}
-    p(2)=old_contShiftX+old_shiftX;
-    p(3)=old_contShiftY+old_shiftY;
+    p(2)=old_contShiftX;
+    p(3)=old_contShiftY;
     p(4)=old_scaleX;
     p(5)=old_scaleY;
 
-    double cost=1e38;
-    int iter;
-    steps.initZeros();
-    if (optimizeGrayValues)
-    	steps(0)=steps(1)=1.;
-    if (optimizeShift)
-    	steps(2)=steps(3)=1.;
-    if (optimizeScale)
-    	steps(4)=steps(5)=1.;
-    if (optimizeAngles)
-    	steps(6)=steps(7)=steps(8)=1.;
-    powellOptimizer(p, 1, 9, &L1cost, this, 0.01, cost, iter, steps, false);
-    if (cost>1e30)
+    // Optimize
+	double cost=-1;
+	if (old_contShiftX*old_contShiftX+old_contShiftY*old_contShiftY>maxShift*maxShift ||
+        fabs(old_scaleX)>maxScale || fabs(old_scaleY)>maxScale)
     	rowOut.setValue(MDL_ENABLED,-1);
+	else
+	{
+		cost=1e38;
+		int iter;
+		steps.initZeros();
+		if (optimizeGrayValues)
+			steps(0)=steps(1)=1.;
+		if (optimizeShift)
+			steps(2)=steps(3)=1.;
+		if (optimizeScale)
+			steps(4)=steps(5)=1.;
+		if (optimizeAngles)
+			steps(6)=steps(7)=steps(8)=1.;
+		powellOptimizer(p, 1, 9, &L1cost, this, 0.01, cost, iter, steps, false);
+		if (cost>1e30)
+			rowOut.setValue(MDL_ENABLED,-1);
 
-	I.read(fnImg);
-    A(0,2)=p(2);
-    A(1,2)=p(3);
-    A(0,0)=1+p(4);
-    A(1,1)=1+p(5);
+		// Apply
+		FileName fnOrig;
+		rowIn.getValue(MDL::str2Label(originalImageLabel),fnOrig);
+		I.read(fnImg);
+		if (XSIZE(Ip())!=XSIZE(I()))
+		{
+			scaleToSize(BSPLINE3,Ip(),I(),XSIZE(Ip()),YSIZE(Ip()));
+			I()=Ip();
+		}
+		A(0,2)=p(2);
+		A(1,2)=p(3);
+		A(0,0)=1+p(4);
+		A(1,1)=1+p(5);
 
-    bool flip;
-    rowIn.getValue(MDL_FLIP,flip);
-    if (flip)
-    {
-    	// M*A*M
-    	A(0,1)*=-1;
-    	A(1,0)*=-1;
-    	A(0,2)*=-1;
-    }
-    applyGeometry(BSPLINE3,Ip(),I(),A,IS_NOT_INV,DONT_WRAP);
+		bool flip;
+		rowIn.getValue(MDL_FLIP,flip);
+		if (flip)
+		{
+			// M*A*M
+			A(0,1)*=-1;
+			A(1,0)*=-1;
+			A(0,2)*=-1;
+		}
+		applyGeometry(BSPLINE3,Ip(),I(),A,IS_NOT_INV,DONT_WRAP);
 
-    Ip.write(fnImgOut);
+		Ip.write(fnImgOut);
+	}
     rowOut.setValue(MDL_IMAGE_ORIGINAL, fnImg);
     rowOut.setValue(MDL_IMAGE, fnImgOut);
     rowOut.setValue(MDL_ANGLE_ROT,  old_rot+p(6));
