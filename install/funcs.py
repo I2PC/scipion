@@ -426,5 +426,3 @@ class Environment():
                 self._showTargetTree(targetList)
         else:
             self._executeTargets(targetList)
-
-        sys.exit(0)

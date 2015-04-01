@@ -258,6 +258,7 @@ env.addModule(
 
 
 env.execute()
+sys.exit()  # Up to this point we have this script working.
 
 
 #  ************************************************************************
