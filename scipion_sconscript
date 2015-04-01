@@ -395,9 +395,10 @@ env.Alias('Xmipp-java', [xmippJavaJNI,
 
 XMIPP_LIBS = ['XmippData', 'XmippRecons', 'XmippClassif']
 PROG_DEPS = EXT_LIBS + XMIPP_LIBS
+
 PROG_LIBS = EXT_LIBS + XMIPP_LIBS + ['sqlite3',
                                      'fftw3', 'fftw3_threads', 
-                                     'tiff', 
+                                     'tiff', 'jpeg', 'png', 
                                      'hdf5', 'hdf5_cpp']
 
 def addRunTest(testName, prog):
@@ -506,6 +507,7 @@ for p in ['angular_commonline',
           'image_rotational_spectra',
           'image_sort_by_statistics',
           'image_separate_objects',
+          'image_ssnr',
           'image_statistics',
           'image_vectorize',
           
@@ -599,17 +601,17 @@ for p in ['angular_commonline',
           'mpi_ctf_correct_idr', 
           'mpi_ctf_sort_psds', 
           'mpi_image_operate', 
-          'mpi_image_rotational_pca', 
-          'mpi_performance_test', 
+          'mpi_image_rotational_pca',           
           'mpi_image_resize', 
-          'mpi_image_sort', 
+          'mpi_image_sort',
+	  'mpi_image_ssnr', 
           'mpi_ml_align2d', 
           'mpi_ml_tomo', 
           'mpi_mlf_align2d', 
           'mpi_ml_refine3d', 
           'mpi_mlf_refine3d', 
           'mpi_nma_alignment', 
-          'mpi_xray_project', 
+	  'mpi_performance_test', 
           'mpi_reconstruct_art', 
           'mpi_reconstruct_fourier', 
           'mpi_reconstruct_wbp', 
@@ -622,6 +624,7 @@ for p in ['angular_commonline',
           'mpi_transform_mask', 
           'mpi_transform_normalize', 
           'mpi_transform_threshold',
+          'mpi_xray_project', 
           
           # Unittest for Xmipp libraries
           'test_ctf',
