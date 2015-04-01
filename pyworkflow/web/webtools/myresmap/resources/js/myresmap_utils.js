@@ -47,7 +47,7 @@ function serviceTestDataForm(){
 		dialog += '<div id="testData">';
 		dialog += "<p>Select <strong>Test data</strong>:</p>";
 		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="cpv" checked>';
-		dialog += '&nbsp;&nbsp;' + getRefTestData("cpv");
+		dialog += '&nbsp;&nbsp;' + getRefTestData("fcv");
 		dialog += '<br />';
 		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="mito_ribosome">';
 		dialog += '&nbsp;&nbsp;' + getRefTestData("mito_ribosome");
@@ -73,7 +73,7 @@ function goExampleForm(){
 	dialog += '<div id="exProjects">';
 	dialog += "<p>Select the <strong>Test data</strong>:</p>";
 	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="cpv" checked>';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("cpv");
+	dialog += '&nbsp;&nbsp;' + getRefTestData("fcv");
 	dialog += '<br />';
 	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="mito_ribosome">';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("mito_ribosome");
@@ -92,7 +92,7 @@ function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
 		case "cpv":
-			var url = "/r_content/?p=cpvTestData";
+			var url = "/r_content/?p=fcvTestData";
 			break;
 		case "mito_ribosome":
 			var url ="/r_content/?p=ribosomeTestData";
