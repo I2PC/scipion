@@ -46,7 +46,9 @@ XmippError::XmippError(const ErrorType nerr, const String &what,
     msg = colorString(what.c_str(), RED);
     file = fileArg;
     line = lineArg;
-    std::cout << "DEBUG_JM: " << getMessage() << std::endl;
+    char* path = getenv("XMIPP_DEBUG");
+    if (path != NULL)
+        std::cout << "XMIPP_DEBUG: " << getMessage() << std::endl;
 
     //Store information about the stack calls
 //#ifdef LINUX
