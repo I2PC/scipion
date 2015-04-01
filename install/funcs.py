@@ -40,67 +40,62 @@ SCIPION_URL_SOFTWARE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
 SCIPION_PROCS = 5
 
 
-def greenText(text):
-    return '\x1b[%sm%s\x1b[0m' % ('32', text)
+def ansi(n, bold=False):
+    "Return function that escapes text with ANSI color n."
+    return lambda txt: '\x1b[%d%sm%s\x1b[0m' % (n, ';1' if bold else '', txt)
 
-def printText(text, green=False):
-    if not green:
-        t = text
-    else:
-        t = greenText(text)
-        
-    sys.stdout.write(t + '\n')
-    
+black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
+
 
 class Command():
     def __init__(self, env, cmd, targets=None,  **kwargs):
         self._env = env
         self._cmd = cmd
-        
+
         if targets is None:
             self._targets = []
         elif isinstance(targets, list):
             self._targets = targets
         else:
             self._targets = [targets]
-        
+
         self._environ = kwargs.get('environ', None)
         self._cwd = kwargs.get('cwd', None)
         self._out = kwargs.get('out', None)
         self._always = kwargs.get('always', False)
-        
+
     def _existsAll(self):
         """ Return True if all targets exists. """
         for t in self._targets:
             if not os.path.exists(t):
                 return False
         return True
-    
+
     def execute(self):
         if not self._always and self._targets and self._existsAll():
-            printText("  Skipping command: %s" % self._cmd)
-            printText("  All targets exists.")
-        else:         
+            print("  Skipping command: %s" % self._cmd)
+            print("  All targets exists.")
+        else:
             cwd = os.getcwd()
             if self._cwd is not None:
                 if self._env.doExecute():
                     os.chdir(self._cwd)
-                printText("  cd %s" % self._cwd)
-                
+                print("  cd %s" % self._cwd)
+
             cmd = self._cmd
             if self._out is not None:
                 cmd += ' 1> %s 2>&1' % self._out
-            printText("  %s " % cmd)
+            print("  %s " % cmd)
             if self._env.doExecute():
                 os.system(cmd)
             # Return to working directory, useful
             # when changing dir before executing command
             os.chdir(cwd)
-            
+
     def __str__(self):
         return "Command: %s, targets: %s" % (self._cmd, self._targets)
-        
-        
+
+
 class Target():
     def __init__(self, env, name, *commands, **kwargs):
         self._env = env
@@ -110,18 +105,18 @@ class Target():
         self._deps = [] # list of name of dependency targets
         for c in commands:
             self._commandList.append(c)
-        
+
     def addCommand(self, *args, **kwargs):
         c = Command(self._env, *args, **kwargs)
         self._commandList.append(c)
         return c
-    
+
     def addDep(self, dep):
         self._deps.append(dep)
-        
+
     def getDeps(self):
         return self._deps
-        
+
     def _existsAll(self):
         for command in self._commandList:
             #print ">>> Checking %s" % command
@@ -129,25 +124,25 @@ class Target():
                 #print "   not _existsAll()"
                 return False
         return True
-    
+
     def isDefault(self):
         return self._default
-    
+
     def getName(self):
         return self._name
-        
+
     def execute(self):
         t1 = time.time()
-        
-        printText("> Building '%s'" % self._name, green=True)
+
+        print(green("> Building '%s'" % self._name))
         if self._existsAll():
-            printText("  All targets exists, skipping.")
+            print("  All targets exists, skipping.")
         else:
             for command in self._commandList:
                 command.execute()
-                
+
         t2 = time.time()
-        
+
         if self._env.doExecute():
             e = int(t2 - t1)
             mins = e / 60
@@ -156,49 +151,49 @@ class Target():
                 minStr = '%d min ' % mins
             else:
                 minStr = ''
-            
-            printText('< Elapsed: %s%d secs' % (minStr, secs))
+
+            print('< Elapsed: %s%d secs' % (minStr, secs))
 
     def __str__(self):
         return self._name
-     
-        
+
+
 class Environment():
-    
+
     def __init__(self, **kwargs):
         self._targetList = []
         self._targetDict = {}
         self._args = kwargs.get('args', [])
         self._doExecute = not '--show' in self._args
-        
+
         if LINUX:
             self._libSuffix = 'so' # Shared libraries extension name
         else:
             self._libSuffix = 'dylib'
-            
+
         self._downloadCmd = 'wget -nv -c -O %s %s'
         self._tarCmd = 'tar --recursive-unlink -xzf %s'
-    
+
     def doExecute(self):
         return self._doExecute
-    
+
     def getLib(self, name):
         return 'software/lib/lib%s.%s' % (name, self._libSuffix)
-    
+
     def getBin(self, name):
         return 'software/bin/%s' % name
-    
+
     def addTarget(self, name, *commands, **kwargs):
-        
+
         if name in self._targetDict:
             raise Exception("Duplicated target '%s'" % name)
-        
+
         t = Target(self, name, *commands, **kwargs)
         self._targetList.append(t)
         self._targetDict[name] = t
-        
+
         return t
-    
+
     def _addTargetDeps(self, target, deps):
         """ Add the dependencies to target.
         Check that each dependency correspond to a previous target.
@@ -210,136 +205,136 @@ class Environment():
                 targetName = d.getName()
             else:
                 raise Exception("Dependencies should be either string or Target, received: %s" % d)
-            
+
             if targetName not in self._targetDict:
                 raise Exception("Dependency '%s' does not exists. " % targetName)
-            
+
             target.addDep(targetName)
-        
-    def addLibrary(self, name, **kwargs): 
-                   
-#                    tar=None, buildDir=None, configDir=None, 
+
+    def addLibrary(self, name, **kwargs):
+
+#                    tar=None, buildDir=None, configDir=None,
 #                    targets=[], makeTargets=None, libChecks=[], url=None, flags=[], addPath=True,
 #                    autoConfigTargets='Makefile', deps=[], clean=[], default=True):
         """Add library <name> to the construction process.
-    
+
         This pseudobuilder checks that the needed programs are in PATH,
         downloads the given url, untars the resulting tar file, configures
         the library with the given flags, compiles it (in the given
         buildDir) and installs it. It also tells SCons about the proper
         dependencies (deps).
-    
+
         If addPath=False, we will not pass the variables PATH and
         LD_LIBRARY_PATH pointing to our local installation directory.
-    
+
         If default=False, the library will not be built unless the option
         --with-<name> is used.
-    
+
         Returns the final targets, the ones that Make will create.
-    
+
         """
         # Use reasonable defaults.
         tar = kwargs.get('tar', '%s.tgz' % name)
         url = kwargs.get('url', '%s/external/%s' % (SCIPION_URL_SOFTWARE, tar))
-        buildDir = kwargs.get('buildDir', 
+        buildDir = kwargs.get('buildDir',
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
-        
+
         configDir = kwargs.get('configDir', buildDir)
         configTarget = kwargs.get('configTarget', 'Makefile')
         configAlways = kwargs.get('configAlways', False)
-        
+
         flags = kwargs.get('flags', [])
-        targets = kwargs.get('targets', [self.getLib(name)])    
+        targets = kwargs.get('targets', [self.getLib(name)])
         clean = kwargs.get('clean', False) # Execute make clean at the end??
         cmake = kwargs.get('cmake', False) # Use cmake instead of configure??
         deps = kwargs.get('deps', [])
-                
+
         # Download library tgz
         tarFile = 'software/tmp/%s' % tar
         buildPath = 'software/tmp/%s' % buildDir
         configPath = 'software/tmp/%s' % configDir
         makeFile = '%s/%s' % (configPath, configTarget)
-        
+
         t = self.addTarget(name, default=kwargs.get('default', True))
         self._addTargetDeps(t, deps)
-        
+
         t.addCommand(self._downloadCmd % (tarFile, url),
                      targets=tarFile)
         t.addCommand(self._tarCmd % tar,
                      targets=buildPath,
                      cwd='software/tmp')
-        
+
         prefixPath = os.path.abspath('software')
-        
+
         if not cmake:
             flags.append('--prefix=%s' % prefixPath)
             flags.append('--libdir=%s/lib' % prefixPath)
-        
+
             t.addCommand('./configure %s' % ' '.join(flags),
                          targets=makeFile,
-                         cwd=configPath, 
+                         cwd=configPath,
                          out='%s/log/%s_configure.log' % (prefixPath, name),
                          always=configAlways)
         else:
             flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefixPath)
             t.addCommand('cmake %s' % ' '.join(flags),
                          targets=makeFile,
-                         cwd=configPath, 
+                         cwd=configPath,
                          out='%s/log/%s_cmake.log' % (prefixPath, name))
-        
+
         t.addCommand('make -j %d' % SCIPION_PROCS,
                      cwd=buildPath,
                      out='%s/log/%s_make.log' % (prefixPath, name))
-        
+
         t.addCommand('make install',
                      targets=targets,
-                     cwd=buildPath, 
+                     cwd=buildPath,
                      out='%s/log/%s_make_install.log' % (prefixPath, name))
-        
+
         if clean:
             t.addCommand('make clean',
-                         cwd=buildPath, 
+                         cwd=buildPath,
                          out='%s/log/%s_make_clean.log' % (prefixPath, name))
             t.addCommand('rm %s' % makeFile)
-            
+
         return t
-            
-    def addModule(self, name, **kwargs): 
+
+    def addModule(self, name, **kwargs):
                   #tar=None, buildDir=None, targets=None, libChecks=[],
                   #url=None, flags=[], deps=[], clean=[], default=True):
         """Add Python module <name> to the construction process.
-    
+
         This pseudobuilder downloads the given url, untars the resulting
         tar file, configures the module with the given flags, compiles it
         (in the given buildDir) and installs it. It also tells SCons about
         the proper dependencies (deps).
-    
+
         If default=False, the module will not be built unless the option
         --with-<name> is used.
-    
+
         Returns the final target (software/lib/python2.7/site-packages/<name>).
-    
+
         """
         # Use reasonable defaults.
         tar = kwargs.get('tar', '%s.tgz' % name)
         url = kwargs.get('url', '%s/python/%s' % (SCIPION_URL_SOFTWARE, tar))
-        buildDir = kwargs.get('buildDir', 
+        buildDir = kwargs.get('buildDir',
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
-        
+
         targets = kwargs.get('targets', [name])
         flags = kwargs.get('flags', [])
         deps = kwargs.get('deps', [])
         deps.append('python')
-        
+
         tarFile = 'software/tmp/%s' % tar
         buildPath = 'software/tmp/%s' % buildDir
-        
+
         prefixPath = os.path.abspath('software')
         flags.append('--prefix=%s' % prefixPath)
-    
+
         t = self.addTarget(name, default=kwargs.get('default', True))
         self._addTargetDeps(t, deps)
-        
+
         t.addCommand(self._downloadCmd % (tarFile, url),
                      targets=tarFile)
         t.addCommand(self._tarCmd % tar,
@@ -360,55 +355,55 @@ class Environment():
                                                        'name': name},
                    targets=['software/lib/python2.7/site-packages/%s' % tg for tg in targets],
                    cwd=buildPath)
-        
+
         return t
-        
+
     def _showTargetGraph(self, targetList, dot=False):
-        """ Traverse the targets taking into account 
-        their dependences. 
+        """ Traverse the targets taking into account
+        their dependences.
         Also print output in DOT format if dot=True.
         """
         visited = set()
-        
+
         def _visitTarget(target, indent=''):
             targetName = target.getName()
-            
+
             if not dot:
-                printText("%s - %s" % (indent, targetName))
+                print("%s - %s" % (indent, targetName))
             else:
                 # For dot format we only want to visit once
                 if targetName in visited:
                     return
                 visited.add(targetName)
-                
+
             deps = target.getDeps()
             if deps:
                 for dep in target.getDeps():
                     if dot:
-                        printText("%s -> %s" % (targetName, dep))
+                        print("%s -> %s" % (targetName, dep))
                     _visitTarget(self._targetDict[dep], indent + '   ')
             else:
                 if dot:
-                    printText(targetName)
-                
+                    print(targetName)
+
         if dot:
-            printText('digraph libraries {')
-        
+            print('digraph libraries {')
+
         for target in targetList:
             _visitTarget(target)
-        
+
         if dot:
-            printText('}')
-        
+            print('}')
+
     def _executeTargets(self, targetList):
         visited = set()
-        
+
         def _visitTarget(target):
             if target.getName() in visited:
-                return 
-            
+                return
+
             deps = target.getDeps()
-            
+
             if deps:
                 for d in deps:
                     _visitTarget(self._targetDict[d])
@@ -417,28 +412,26 @@ class Environment():
             # traversing from its childs
             target.execute()
             visited.add(target.getName())
-                
+
         for target in targetList:
             _visitTarget(target)
-        
+
     def execute(self):
-        # Check if there are explicit targets and only install 
+        # Check if there are explicit targets and only install
         # the selected ones
         cmdTargets = [a for a in self._args[2:] if not a.startswith('--')]
-        
+
         if cmdTargets:
             # Grab the targets passed in the command line
             targetList = [self._targetDict[t] for t in cmdTargets]
         else:
             # use all targets marked as default
             targetList = [t for t in self._targetList if t.isDefault()]
-        
-        print "cmdTargets:", cmdTargets
-        
+
         if '--show-tree' in self._args:
             dot = '--dot' in self._args
             self._showTargetGraph(targetList, dot)
         else:
             self._executeTargets(targetList)
-            
+
         sys.exit(0)
