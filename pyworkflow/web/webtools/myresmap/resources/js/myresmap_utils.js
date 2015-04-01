@@ -46,8 +46,8 @@ function serviceTestDataForm(){
 		dialog += "<br />";
 		dialog += '<div id="testData">';
 		dialog += "<p>Select <strong>Test data</strong>:</p>";
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="cpv" checked>';
-		dialog += '&nbsp;&nbsp;' + getRefTestData("cpv");
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="fcv" checked>';
+		dialog += '&nbsp;&nbsp;' + getRefTestData("fcv");
 		dialog += '<br />';
 		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="mito_ribosome">';
 		dialog += '&nbsp;&nbsp;' + getRefTestData("mito_ribosome");
@@ -72,8 +72,8 @@ function goExampleForm(){
 
 	dialog += '<div id="exProjects">';
 	dialog += "<p>Select the <strong>Test data</strong>:</p>";
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="cpv" checked>';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("cpv");
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="fcv" checked>';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("fcv");
 	dialog += '<br />';
 	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="mito_ribosome">';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("mito_ribosome");
@@ -92,7 +92,7 @@ function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
 		case "cpv":
-			var url = "/r_content/?p=cpvTestData";
+			var url = "/r_content/?p=fcvTestData";
 			break;
 		case "mito_ribosome":
 			var url ="/r_content/?p=ribosomeTestData";
@@ -124,7 +124,7 @@ function createResMapProject(elm) {
 			var msg = "<p>Your <strong>url to access </strong> this <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
 			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/r_content/?p="+ projName+ "'>" +
-			"http://scipion.cnb.csic.es/m/r_content/?p="+ projName+ "</a>"+
+			"http://scipion.cnb.csic.es/m/r_content/?p="+ projName + "</a>"+
 			"</h3></p><br />" +
 			"<p>The access to this new project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
@@ -151,11 +151,17 @@ function getRefTestData(id){
 		case "t20s_proteasome":
 			ref = "<strong>T20S Proteasome</strong> (Resolution 2.8 Å , <a href='http://emsearch.rutgers.edu/atlas/6287_summary.html' style='color:firebrick;' target='_blank'>Authors: Campbell MG, Veesler D, Cheng A, Potter CS, Carragher B</a>)"
 			break;
-		case "cpv":
-			ref = "<strong>cytoplasmic polyhedrosis virus (CPV)</strong> (Resolution 3.1 Å , <a href='http://emsearch.rutgers.edu/atlas/5256_summary.html' style='color:firebrick;' target='_blank'>Authors: Yu X, Ge P, Jiang J, Atanasov I, Zhou ZH</a>)"
-			break;
+		
 		case "mito_ribosome":
 			ref = "<strong>Human mitochondrial ribosome</strong> (Resolution 3.4 Å , <a href='http://emsearch.rutgers.edu/atlas/2762_summary.html' style='color:firebrick;' target='_blank'>Authors: Brown A, Amunts A, Bai XC, Sugimoto Y, Edwards PC, Murshudov G, Scheres SHW, Ramakrishnan V</a>)"
+			break;
+			
+//		case "cpv":
+//			ref = "<strong>cytoplasmic polyhedrosis virus (CPV)</strong> (Resolution 3.1 Å , <a href='http://emsearch.rutgers.edu/atlas/5256_summary.html' style='color:firebrick;' target='_blank'>Authors: Yu X, Ge P, Jiang J, Atanasov I, Zhou ZH</a>)"
+//			break;
+			
+		case "fcv":
+			ref = "<strong>Feline calicivirus virus-like particles</strong> (Resolution 14 Å , <a href='http://emsearch.rutgers.edu/atlas/2823_summary.html' style='color:firebrick;' target='_blank'>Authors: Burmeister WP, Buisson M, Estrozi LF, Schoehn G, Billet O, Hannas Z, Sigoillot-Claude C, Poulet H</a>)"
 			break;
 	}
 	return ref;
