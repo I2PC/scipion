@@ -385,25 +385,27 @@ class Environment():
             nodes.extend((lvl + 1, self._targetDict[x]) for x in tgt.getDeps())
 
     def _executeTargets(self, targetList):
-        visited = set()
-
-        def _visitTarget(target):
-            if target.getName() in visited:
-                return
-
-            deps = target.getDeps()
-
-            if deps:
-                for d in deps:
-                    _visitTarget(self._targetDict[d])
-            #TODO: check cyclic dependencies
-            # here we assume that target can not be reached (visited)
-            # traversing from its childs
-            target.execute()
-            visited.add(target.getName())
-
-        for target in targetList:
-            _visitTarget(target)
+        """ Execute the targets in targetList, running all their
+        dependencies first.
+        """
+        executed = set()  # targets already executed
+        exploring = set()  # targets whose dependencies we are exploring
+        targets = targetList[::-1]
+        while targets:
+            tgt = targets.pop()
+            if tgt.getName() in executed:
+                continue
+            deps = tgt.getDeps()
+            if set(deps) - executed:  # there are dependencies not yet executed
+                if tgt.getName() in exploring:
+                    raise RuntimeError("Cyclic dependency on %s" % tgt)
+                exploring.add(tgt.getName())
+                targets.append(tgt)
+                targets.extend(self._targetDict[x] for x in deps)
+            else:
+                tgt.execute()
+                executed.add(tgt.getName())
+                exploring.discard(tgt.getName())
 
     def execute(self):
         # Check if there are explicit targets and only install
