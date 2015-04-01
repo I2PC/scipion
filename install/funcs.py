@@ -358,42 +358,28 @@ class Environment():
 
         return t
 
-    def _showTargetGraph(self, targetList, dot=False):
+    def _showTargetGraph(self, targetList):
         """ Traverse the targets taking into account
-        their dependences.
-        Also print output in DOT format if dot=True.
+        their dependences and print them in DOT format.
         """
-        visited = set()
-
-        def _visitTarget(target, indent=''):
-            targetName = target.getName()
-
-            if not dot:
-                print("%s - %s" % (indent, targetName))
-            else:
-                # For dot format we only want to visit once
-                if targetName in visited:
-                    return
-                visited.add(targetName)
-
-            deps = target.getDeps()
+        print('digraph libraries {')
+        for tgt in targetList:
+            deps = tgt.getDeps()
             if deps:
-                for dep in target.getDeps():
-                    if dot:
-                        print("%s -> %s" % (targetName, dep))
-                    _visitTarget(self._targetDict[dep], indent + '   ')
+                print('\n'.join("  %s -> %s" % (tgt, x) for x in deps))
             else:
-                if dot:
-                    print(targetName)
+                print("  %s" % tgt)
+        print('}')
 
-        if dot:
-            print('digraph libraries {')
-
-        for target in targetList:
-            _visitTarget(target)
-
-        if dot:
-            print('}')
+    def _showTargetTree(self, targetList):
+        """ Print the tree of dependencies for the given targets.
+        """
+        # List of (indent level, target)
+        nodes = [(0, tgt) for tgt in targetList[::-1]]
+        while nodes:
+            lvl, tgt = nodes.pop()
+            print("%s- %s" % ("  " * lvl, tgt))
+            nodes.extend((lvl + 1, self._targetDict[x]) for x in tgt.getDeps())
 
     def _executeTargets(self, targetList):
         visited = set()
@@ -429,8 +415,10 @@ class Environment():
             targetList = [t for t in self._targetList if t.isDefault()]
 
         if '--show-tree' in self._args:
-            dot = '--dot' in self._args
-            self._showTargetGraph(targetList, dot)
+            if '--dot' in self._args:
+                self._showTargetGraph(targetList)
+            else:
+                self._showTargetTree(targetList)
         else:
             self._executeTargets(targetList)
 
