@@ -123,12 +123,12 @@ def create_resmap_project(request):
     return HttpResponse(mimetype='application/javascript')
 
 def getAttrTestFile(key):
-    if(key == "cpv"):
-        attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/", 
-                "file":"cpv.map",
-                "samplingRate": 1.1, 
-                }
-        
+#     if(key == "cpv"):
+#         attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/", 
+#                 "file":"cpv.map",
+#                 "samplingRate": 1.1, 
+#                 }
+#         
     if(key == "fcv"):
         attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/", 
                 "file":"fcv.map",

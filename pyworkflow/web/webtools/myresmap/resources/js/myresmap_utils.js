@@ -46,7 +46,7 @@ function serviceTestDataForm(){
 		dialog += "<br />";
 		dialog += '<div id="testData">';
 		dialog += "<p>Select <strong>Test data</strong>:</p>";
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="cpv" checked>';
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="fcv" checked>';
 		dialog += '&nbsp;&nbsp;' + getRefTestData("fcv");
 		dialog += '<br />';
 		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="mito_ribosome">';
@@ -72,7 +72,7 @@ function goExampleForm(){
 
 	dialog += '<div id="exProjects">';
 	dialog += "<p>Select the <strong>Test data</strong>:</p>";
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="cpv" checked>';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="fcv" checked>';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("fcv");
 	dialog += '<br />';
 	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="mito_ribosome">';
