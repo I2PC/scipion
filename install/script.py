@@ -76,7 +76,7 @@ tk = env.AddLibrary(
 
 
 # Special case: tk does not make the link automatically, go figure.
-tk_wish = env.createTarget('tk_wish')
+tk_wish = env.addTarget('tk_wish')
 tk_wish.addCommand('ln -v -s wish8.6 wish',
                    targets='software/bin/wish',
                    cwd='software/bin')

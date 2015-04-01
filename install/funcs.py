@@ -107,6 +107,7 @@ class Target():
         self._name = name
         self._default = kwargs.get('default', False)
         self._commandList = []
+        self._deps = [] # list of name of dependency targets
         for c in commands:
             self._commandList.append(c)
         
@@ -114,6 +115,12 @@ class Target():
         c = Command(self._env, *args, **kwargs)
         self._commandList.append(c)
         return c
+    
+    def addDep(self, dep):
+        self._deps.append(dep)
+        
+    def getDeps(self):
+        return self._deps
         
     def _existsAll(self):
         for command in self._commandList:
@@ -151,12 +158,16 @@ class Target():
                 minStr = ''
             
             printText('< Elapsed: %s%d secs' % (minStr, secs))
-        
+
+    def __str__(self):
+        return self._name
+     
         
 class Environment():
     
     def __init__(self, **kwargs):
         self._targetList = []
+        self._targetDict = {}
         self._args = kwargs.get('args', [])
         self._doExecute = not '--show' in self._args
         
@@ -179,10 +190,33 @@ class Environment():
     def getBin(self, name):
         return 'software/bin/%s' % name
     
-    def createTarget(self, name, *commands, **kwargs):
+    def addTarget(self, name, *commands, **kwargs):
+        
+        if name in self._targetDict:
+            raise Exception("Duplicated target '%s'" % name)
+        
         t = Target(self, name, *commands, **kwargs)
-        self._targetList.append(t)        
+        self._targetList.append(t)
+        self._targetDict[name] = t
+        
         return t
+    
+    def _addTargetDeps(self, target, deps):
+        """ Add the dependencies to target.
+        Check that each dependency correspond to a previous target.
+        """
+        for d in deps:
+            if isinstance(d, str):
+                targetName = d
+            elif isinstance(d, Target):
+                targetName = d.getName()
+            else:
+                raise Exception("Dependencies should be either string or Target, received: %s" % d)
+            
+            if targetName not in self._targetDict:
+                raise Exception("Dependency '%s' does not exists. " % targetName)
+            
+            target.addDep(targetName)
         
     def addLibrary(self, name, **kwargs): 
                    
@@ -220,7 +254,7 @@ class Environment():
         targets = kwargs.get('targets', [self.getLib(name)])    
         clean = kwargs.get('clean', False) # Execute make clean at the end??
         cmake = kwargs.get('cmake', False) # Use cmake instead of configure??
-        
+        deps = kwargs.get('deps', [])
                 
         # Download library tgz
         tarFile = 'software/tmp/%s' % tar
@@ -228,7 +262,8 @@ class Environment():
         configPath = 'software/tmp/%s' % configDir
         makeFile = '%s/%s' % (configPath, configTarget)
         
-        t = self.createTarget(name, default=kwargs.get('default', True))
+        t = self.addTarget(name, default=kwargs.get('default', True))
+        self._addTargetDeps(t, deps)
         
         t.addCommand(self._downloadCmd % (tarFile, url),
                      targets=tarFile)
@@ -269,6 +304,8 @@ class Environment():
                          out='%s/log/%s_make_clean.log' % (prefixPath, name))
             t.addCommand('rm %s' % makeFile)
             
+        return t
+            
     def addModule(self, name, **kwargs): 
                   #tar=None, buildDir=None, targets=None, libChecks=[],
                   #url=None, flags=[], deps=[], clean=[], default=True):
@@ -293,6 +330,8 @@ class Environment():
         
         targets = kwargs.get('targets', [name])
         flags = kwargs.get('flags', [])
+        deps = kwargs.get('deps', [])
+        deps.append('python')
         
         tarFile = 'software/tmp/%s' % tar
         buildPath = 'software/tmp/%s' % buildDir
@@ -300,7 +339,8 @@ class Environment():
         prefixPath = os.path.abspath('software')
         flags.append('--prefix=%s' % prefixPath)
     
-        t = self.createTarget(name, default=kwargs.get('default', True))
+        t = self.addTarget(name, default=kwargs.get('default', True))
+        self._addTargetDeps(t, deps)
         
         t.addCommand(self._downloadCmd % (tarFile, url),
                      targets=tarFile)
@@ -323,10 +363,84 @@ class Environment():
                    targets=['software/lib/python2.7/site-packages/%s' % tg for tg in targets],
                    cwd=buildPath)
         
+        return t
+        
+    def _showTargetGraph(self, targetList, dot=False):
+        """ Traverse the targets taking into account 
+        their dependences. 
+        Also print output in DOT format if dot=True.
+        """
+        visited = set()
+        
+        def _visitTarget(target, indent=''):
+            targetName = target.getName()
+            
+            if not dot:
+                printText("%s - %s" % (indent, targetName))
+            else:
+                # For dot format we only want to visit once
+                if targetName in visited:
+                    return
+                visited.add(targetName)
+                
+            deps = target.getDeps()
+            if deps:
+                for dep in target.getDeps():
+                    if dot:
+                        printText("%s -> %s" % (targetName, dep))
+                    _visitTarget(self._targetDict[dep], indent + '   ')
+            else:
+                if dot:
+                    printText(targetName)
+                
+        if dot:
+            printText('digraph libraries {')
+        
+        for target in targetList:
+            _visitTarget(target)
+        
+        if dot:
+            printText('}')
+        
+    def _executeTargets(self, targetList):
+        visited = set()
+        
+        def _visitTarget(target):
+            if target.getName() in visited:
+                return 
+            
+            deps = target.getDeps()
+            
+            if deps:
+                for d in deps:
+                    _visitTarget(self._targetDict[d])
+            #TODO: check cyclic dependencies
+            # here we assume that target can not be reached (visited)
+            # traversing from its childs
+            target.execute()
+            visited.add(target.getName())
+                
+        for target in targetList:
+            _visitTarget(target)
+        
     def execute(self):
-        for target in self._targetList:
-            if (target.isDefault() or 
-                target.getName() in self._args): 
-                target.execute()
+        # Check if there are explicit targets and only install 
+        # the selected ones
+        cmdTargets = [a for a in self._args[2:] if not a.startswith('--')]
+        
+        if cmdTargets:
+            # Grab the targets passed in the command line
+            targetList = [self._targetDict[t] for t in cmdTargets]
+        else:
+            # use all targets marked as default
+            targetList = [t for t in self._targetList if t.isDefault()]
+        
+        print "cmdTargets:", cmdTargets
+        
+        if '--show-tree' in self._args:
+            dot = '--dot' in self._args
+            self._showTargetGraph(targetList, dot)
+        else:
+            self._executeTargets(targetList)
             
         sys.exit(0)
