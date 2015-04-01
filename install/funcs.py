@@ -49,7 +49,7 @@ def printText(text, green=False):
     else:
         t = greenText(text)
         
-    print t
+    sys.stdout.write(t + '\n')
     
 
 class Command():
