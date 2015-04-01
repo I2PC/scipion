@@ -224,7 +224,7 @@ def main():
         mode = MODE_MANAGER
 
     # First see if we have a working installation.
-    if mode not in [MODE_INSTALL, MODE_CONFIG, MODE_COMPILE]:
+    if mode not in [MODE_INSTALL, MODE_CONFIG, MODE_COMPILE, 'install2']:
         ok = True
         for d, path in DIRS_GLOBAL.items():
             if not exists(path):
