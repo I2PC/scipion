@@ -312,6 +312,9 @@ def main():
         # this should launch the installation
         import install.script as script
         
+    elif mode == 'clean':
+        import scripts.clean as clean
+        
     elif mode in [MODE_INSTALL, MODE_COMPILE]:
         # We do not os.environ.update(VARS) here. SCons needs to use
         # the python installed in the system by default.
