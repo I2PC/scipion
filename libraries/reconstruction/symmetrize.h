@@ -40,7 +40,13 @@ class ProgSymmetrize : public XmippMetadataProgram
 {
 public:
     /// symmetry file
-    FileName        fn_sym;
+    FileName fn_sym;
+    /// mask file (mask what is inside)
+    FileName fn_Maskin;
+    /// mask file (mask what is outside)
+    FileName fn_Maskout;
+    /// set to true is we should mask
+    bool doMask;
     /// Helical rotation
     double rotHelical;
     /// Helical phase
@@ -81,7 +87,8 @@ public:
 void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
                       MultidimArray<double> &V_out,
                       bool wrap=true, bool do_outside_avg=false, bool sum=false, bool helical=false,
-                      double rotHelical=0.0, double rotPhaseHelical=0.0, double zHelical=0.0);
+                      double rotHelical=0.0, double rotPhaseHelical=0.0, double zHelical=0.0,
+                      const MultidimArray<double> * mask=NULL);
 
 /** Symmetrize image.*/
 void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
