@@ -1,4 +1,6 @@
-set -x XMIPP_HOME /home/jordi/public/active/xmipp
+# Set XMIPP_HOME to the directory where this script is.
+set -x XMIPP_HOME (dirname (status -f))
+
 set -x PATH $XMIPP_HOME/bin $PATH
 set -x LD_LIBRARY_PATH $XMIPP_HOME/lib $LD_LIBRARY_PATH
 
