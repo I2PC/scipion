@@ -30,14 +30,25 @@
 /* Read parameters --------------------------------------------------------- */
 void ProgSymmetrize::readParams()
 {
-	XmippMetadataProgram::readParams();
+    XmippMetadataProgram::readParams();
     fn_sym = getParam("--sym");
+    doMask = false;
+    //    if (checkParam("--mask_in"))
+    //{
+    //        fn_Maskin = getParam("--mask_in");
+    //        doMask = true;
+    //}
+    if (doMask=checkParam("--mask_out"))
+    {
+        fn_Maskout = getParam("--mask_out");
+        doMask = true;
+    }
     helical=(fn_sym=="helical");
     if (helical)
     {
-    	zHelical=getDoubleParam("--helixParams",0);
-    	rotHelical=DEG2RAD(getDoubleParam("--helixParams",1));
-    	rotPhaseHelical=DEG2RAD(getDoubleParam("--helixParams",2));
+        zHelical=getDoubleParam("--helixParams",0);
+        rotHelical=DEG2RAD(getDoubleParam("--helixParams",1));
+        rotPhaseHelical=DEG2RAD(getDoubleParam("--helixParams",2));
     }
     do_not_generate_subgroup = checkParam("--no_group");
     wrap = !checkParam("--dont_wrap");
@@ -63,6 +74,8 @@ void ProgSymmetrize::defineParams()
     addParamsLine("   [--no_group]          : For 3D volumes: do not generate symmetry subgroup");
     addParamsLine("   [--dont_wrap]         : by default, the image/volume is wrapped");
     addParamsLine("   [--sum]               : compute the sum of the images/volumes instead of the average. This is useful for symmetrizing pieces");
+    //    addParamsLine("   [--mask_in <fileName>]: symmetrize only in the masked area");
+    addParamsLine("   [--mask_out]: symmetrize only outside the masked area");
     addExampleLine("Symmetrize a list of images with 6 fold symmetry",false);
     addExampleLine("   xmipp_symmetrize -i input.sel --sym 6");
     addExampleLine("Symmetrize with i3 symmetry and the volume is not wrapped",false);
@@ -72,25 +85,28 @@ void ProgSymmetrize::defineParams()
 /* Show ------------------------------------------------------------------- */
 void ProgSymmetrize::show()
 {
-	if (verbose==0)
-		return;
+    if (verbose==0)
+        return;
     XmippMetadataProgram::show();
     std::cout
     << "Symmetry: " << fn_sym << std::endl
     << "No group: " << do_not_generate_subgroup << std::endl
     << "Wrap:     " << wrap << std::endl
     << "Sum:      " << sum << std::endl;
+    if (doMask)
+        std::cout << "mask_out    " << fn_Maskout << std::endl;
     if (helical)
-    	std::cout << "RotHelical: " << RAD2DEG(rotHelical) << std::endl
-    			  << "RotPhaseHelical: " << RAD2DEG(rotPhaseHelical) << std::endl
-    	    	  << "ZHelical:   " << zHelical << std::endl;
+        std::cout << "RotHelical: " << RAD2DEG(rotHelical) << std::endl
+        << "RotPhaseHelical: " << RAD2DEG(rotPhaseHelical) << std::endl
+        << "ZHelical:   " << zHelical << std::endl;
 }
 
 /* Symmetrize ------------------------------------------------------- */
 void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
                       MultidimArray<double> &V_out,
                       bool wrap, bool do_outside_avg, bool sum, bool helical,
-                      double rotHelical, double rotPhaseHelical, double zHelical)
+                      double rotHelical, double rotPhaseHelical, double zHelical,
+                      const MultidimArray<double> * mask)
 {
     Matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
     MultidimArray<double> V_aux;
@@ -99,35 +115,37 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
 
     if (do_outside_avg)
     {
-        MultidimArray<int> mask;
-        mask.resizeNoCopy(V_in);
-        mask.setXmippOrigin();
+        MultidimArray<int> mask1;
+        mask1.resizeNoCopy(V_in);
+        mask1.setXmippOrigin();
         size_t rad = XMIPP_MIN(XSIZE(V_in), YSIZE(V_in));
         rad = XMIPP_MIN(rad, ZSIZE(V_in));
-        BinaryCircularMask(mask, rad / 2, OUTSIDE_MASK);
+        BinaryCircularMask(mask1, rad / 2, OUTSIDE_MASK);
         double dum;
-        computeStats_within_binary_mask(mask, V_in, dum, dum, avg, dum);
+        computeStats_within_binary_mask(mask1, V_in, dum, dum, avg, dum);
     }
     V_out = V_in;
 
     if (!helical)
     {
-		for (int i = 0; i < SL.symsNo(); i++)
-		{
-			SL.getMatrices(i, L, R);
+        for (int i = 0; i < SL.symsNo(); i++)
+        {
+            SL.getMatrices(i, L, R);
+            /*FIXME: I do not think this make sense since V_aux is empty. ROB
+               SL.getShift(i, sh);
+               R(3, 0) = sh(0) * XSIZE(V_aux);
+               R(3, 1) = sh(1) * YSIZE(V_aux);
+               R(3, 2) = sh(2) * ZSIZE(V_aux);
+            */
+            applyGeometry(BSPLINE3, V_aux, V_in, R.transpose(), IS_NOT_INV, wrap, avg);
+            arrayByArray(V_out, V_aux, V_out, '+',mask);
 
-			SL.getShift(i, sh);
-			R(3, 0) = sh(0) * XSIZE(V_aux);
-			R(3, 1) = sh(1) * YSIZE(V_aux);
-			R(3, 2) = sh(2) * ZSIZE(V_aux);
-			applyGeometry(BSPLINE3, V_aux, V_in, R.transpose(), IS_NOT_INV, wrap, avg);
-			arrayByArray(V_out, V_aux, V_out, '+');
-		}
-	    if (!sum)
-	    	arrayByScalar(V_out, 1.0/(SL.symsNo() + 1.0f), V_out, '*');
+        }
+        if (!sum)
+            arrayByScalar(V_out, 1.0/(SL.symsNo() + 1.0f), V_out, '*');
     }
     else
-    	symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical);
+        symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical);
 }
 
 void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
@@ -145,7 +163,6 @@ void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
         double dum;
         computeStats_within_binary_mask(mask, I_in, dum, dum, avg, dum);
     }
-
     I_out = I_in;
     MultidimArray<double> rotatedImg;
     for (int i = 1; i < symorder; i++)
@@ -154,23 +171,23 @@ void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
         I_out += rotatedImg;
     }
     if (!sum)
-    	I_out *= 1.0/symorder;
+        I_out *= 1.0/symorder;
 }
 
 /* Preprocess ------------------------------------------------------------- */
 void ProgSymmetrize::preProcess()
 {
-	if (!helical)
-	{
-		if (!fn_sym.exists() && isdigit(fn_sym[0]))
-			symorder=textToInteger(fn_sym);
-		else
-		{
-			double accuracy = (do_not_generate_subgroup) ? -1 : 1e-6;
-			SL.readSymmetryFile(fn_sym, accuracy);
-			symorder=-1;
-		}
-	}
+    if (!helical)
+    {
+        if (!fn_sym.exists() && isdigit(fn_sym[0]))
+            symorder=textToInteger(fn_sym);
+        else
+        {
+            double accuracy = (do_not_generate_subgroup) ? -1 : 1e-6;
+            SL.readSymmetryFile(fn_sym, accuracy);
+            symorder=-1;
+        }
+    }
 }
 
 /* Process image ------------------------------------------------------------- */
@@ -178,12 +195,21 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
 {
     Image<double> Iin;
     Image<double> Iout;
+    MultidimArray<double>  *mask = NULL;
+
     Iin.readApplyGeo(fnImg, rowIn);
     Iin().setXmippOrigin();
+    if (doMask)
+    {
+        Image<double> Vmask;
+        Vmask.read(fn_Maskout);
+        mask =  & Vmask.data;
+    }
+
     if (ZSIZE(Iin())==1)
     {
-    	if (helical)
-    		REPORT_ERROR(ERR_ARG_INCORRECT,"Helical symmetrization is not meant for images");
+        if (helical)
+            REPORT_ERROR(ERR_ARG_INCORRECT,"Helical symmetrization is not meant for images");
         if (symorder!=-1)
             symmetrizeImage(symorder,Iin(),Iout(),wrap,!wrap,sum);
         else
@@ -192,7 +218,8 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
     else
     {
         if (SL.symsNo()>0 || helical)
-            symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap,sum,helical,rotHelical,rotPhaseHelical,zHelical);
+            symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap,
+                             sum,helical,rotHelical,rotPhaseHelical,zHelical,mask);
         else
             REPORT_ERROR(ERR_ARG_MISSING,"The symmetry description is not valid for volumes");
     }
