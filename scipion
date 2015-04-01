@@ -311,9 +311,11 @@ def main():
                 
         # this should launch the installation
         import install.script as script
+        sys.exit(0)
         
     elif mode == 'clean':
         import scripts.clean as clean
+        sys.exit(0)
         
     elif mode in [MODE_INSTALL, MODE_COMPILE]:
         # We do not os.environ.update(VARS) here. SCons needs to use
