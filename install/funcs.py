@@ -178,8 +178,6 @@ class Environment():
             
         self._downloadCmd = 'wget -nv -c -O %s %s'
         self._tarCmd = 'tar --recursive-unlink -xzf %s'
-        
-        self.AddLibrary = self.addLibrary
     
     def doExecute(self):
         return self._doExecute
