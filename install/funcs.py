@@ -371,14 +371,17 @@ class Environment():
                 print("  %s" % tgt)
         print('}')
 
-    def _showTargetTree(self, targetList):
-        """ Print the tree of dependencies for the given targets.
+    def _showTargetTree(self, targetList, maxLevel=-1):
+        """ Print the tree of dependencies for the given targets,
+        up to a depth level of maxLevel (-1 for unlimited).
         """
         # List of (indent level, target)
         nodes = [(0, tgt) for tgt in targetList[::-1]]
         while nodes:
             lvl, tgt = nodes.pop()
             print("%s- %s" % ("  " * lvl, tgt))
+            if maxLevel != -1 and lvl >= maxLevel:
+                continue
             nodes.extend((lvl + 1, self._targetDict[x]) for x in tgt.getDeps())
 
     def _executeTargets(self, targetList):
