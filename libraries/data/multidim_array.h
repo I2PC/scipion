@@ -631,9 +631,9 @@ template<typename T>
 void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
                       MultidimArray<T>& result, char operation);
 template<typename T>
-void coreArrayByArrayMask(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
-                      MultidimArray<T>& result, char operation,
-                      const MultidimArray<T> *mask);
+void selfCoreArrayByArrayMask(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
+                          MultidimArray<T>& result, char operation,
+                          const MultidimArray<T> *mask);
 
 /**
  *  Structure with the dimensions information of an image
@@ -657,13 +657,13 @@ struct ArrayDim
 
     ArrayDim()
     {
-    	ndim = 0;
-    	zdim = 0;
-    	ydim = 0;
-    	xdim = 0;
-    	yxdim = 0;
-    	zyxdim = 0;
-    	nzyxdim = 0;
+        ndim = 0;
+        zdim = 0;
+        ydim = 0;
+        xdim = 0;
+        yxdim = 0;
+        zyxdim = 0;
+        nzyxdim = 0;
     }
 
     bool operator==(ArrayDim &adim)
@@ -2989,7 +2989,7 @@ public:
      */
     void maxIndex(int& jmax) const
     {
-    	size_t zeroLong=0;
+        size_t zeroLong=0;
         int zeroInt=0;
         maxIndex(zeroLong,zeroInt,zeroInt,jmax);
     }
@@ -3605,7 +3605,6 @@ public:
         size_t n;
         // Loop unrolling
         const size_t unroll=4;
-//        size_t nmax=unroll*(op1.zyxdim/unroll);
         size_t nmax=unroll*(op1.nzyxdim/unroll);
         switch (operation)
         {
@@ -3668,85 +3667,67 @@ public:
      *
      * It assumes that the result is already resized.
      */
-    inline friend void coreArrayByArrayMask(const MultidimArray<T>& op1,
-                                        const MultidimArray<T>& op2, MultidimArray<T>& result,
-                                        char operation, const MultidimArray<T>* mask)
+    inline friend void selfCoreArrayByArrayMask(const MultidimArray<T>& op1,
+                                            const MultidimArray<T>& op2, MultidimArray<T>& result,
+                                            char operation, const MultidimArray<T>* mask)
     {
         T* ptrResult=NULL;
         T* ptrOp1=NULL;
         T* ptrOp2=NULL;
         T* ptrMask=NULL;
-
+        T zero;
+        zero = T(0);
         size_t n;
-        // Loop unrolling
-        const size_t unroll=4;
-        size_t nmax=unroll*(op1.nzyxdim/unroll);
         switch (operation)
         {
         case '+':
             for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data,
-            		  ptrMask=mask->data;
-                 n<nmax; n+=unroll, ptrResult+=unroll,
-                      ptrOp1+=unroll, ptrOp2+=unroll, ptrMask+=unroll)
+                 ptrMask=mask->data;
+                 n<op1.nzyxdim; n++, ptrResult++,
+                 ptrOp1++, ptrOp2++, ptrMask++)
             {
-                *ptrResult = *ptrOp1 + *ptrOp2 * (*ptrMask);
-                *(ptrResult+1) = *(ptrOp1+1) + *(ptrOp2+1) * (*(ptrMask+1));
-                *(ptrResult+2) = *(ptrOp1+2) + *(ptrOp2+2) * (*(ptrMask+2));
-                *(ptrResult+3) = *(ptrOp1+3) + *(ptrOp2+3) * (*(ptrMask+3));
+                if ((*ptrMask)==zero)
+                    *ptrResult += (*ptrOp1);
+                else
+                    *ptrResult += (*ptrOp2);//(*ptrOp2) * (*ptrMask);
             }
-            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax,
-            		ptrOp2=op2.data+nmax, ptrMask=mask->data+nmax;
-                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2, ++ptrMask)
-                *ptrResult = *ptrOp1 + *ptrOp2 * (*ptrMask);
             break;
         case '-':
             for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data,
-            		  ptrMask=mask->data;
-                 n<nmax; n+=unroll, ptrResult+=unroll,
-                      ptrOp1+=unroll, ptrOp2+=unroll, ptrMask+=unroll)
-                {
-                    *ptrResult = *ptrOp1 - *ptrOp2 * (*ptrMask);
-                    *(ptrResult+1) = *(ptrOp1+1) - *(ptrOp2+1) * (*(ptrMask+1));
-                    *(ptrResult+2) = *(ptrOp1+2) - *(ptrOp2+2) * (*(ptrMask+2));
-                    *(ptrResult+3) = *(ptrOp1+3) - *(ptrOp2+3) * (*(ptrMask+3));
-                }
-            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax,
-            		ptrOp2=op2.data+nmax, ptrMask=mask->data+nmax;
-                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2, ++ptrMask)
-                *ptrResult = *ptrOp1 - *ptrOp2;
+                 ptrMask=mask->data;
+                 n<op1.nzyxdim; n++, ptrResult++,
+                 ptrOp1++, ptrOp2++, ptrMask++)
+            {
+                if ((*ptrMask)==zero)
+                    *ptrResult -= (*ptrOp1);
+                else
+                    *ptrResult -= (*ptrOp2) * (*ptrMask);
+            }
             break;
-        //NOTE: not clear if this should be the default case for * and / operators
+            //NOTE: not clear if this should be the default case for * and / operators
         case '*':
             for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data,
-            		  ptrMask=mask->data;
-                 n<nmax; n+=unroll, ptrResult+=unroll,
-                      ptrOp1+=unroll, ptrOp2+=unroll, ptrMask+=unroll)
-                {
-                    *ptrResult = *ptrOp1 * *ptrOp2 * (*ptrMask);
-                    *(ptrResult+1) = *(ptrOp1+1) * *(ptrOp2+1) * (*(ptrMask+1));
-                    *(ptrResult+2) = *(ptrOp1+2) * *(ptrOp2+2) * (*(ptrMask+2));
-                    *(ptrResult+3) = *(ptrOp1+3) * *(ptrOp2+3) * (*(ptrMask+3));
-                }
-            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax,
-            		ptrOp2=op2.data+nmax, ptrMask=mask->data+nmax;
-                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2, ++ptrMask)
-                *ptrResult = *ptrOp1 * *ptrOp2 * (*ptrMask);
+                 ptrMask=mask->data;
+                 n<op1.nzyxdim; n++, ptrResult++,
+                 ptrOp1++, ptrOp2++, ptrMask++)
+            {
+                if ((*ptrMask)==zero)
+                    *ptrResult *= (*ptrOp1);
+                else
+                    *ptrResult *= (*ptrOp2) * (*ptrMask);
+            }
             break;
         case '/':
             for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data,
-            		  ptrMask=mask->data;
-                 n<nmax; n+=unroll, ptrResult+=unroll,
-                      ptrOp1+=unroll, ptrOp2+=unroll, ptrMask+=unroll)
-                {
-                    *ptrResult = *ptrOp1  * (*ptrMask)/ *ptrOp2;
-                    *(ptrResult+1) = *(ptrOp1+1)  * (*(ptrMask+1))/ *(ptrOp2+1);
-                    *(ptrResult+2) = *(ptrOp1+2)  * (*(ptrMask+2))/ *(ptrOp2+2);
-                    *(ptrResult+3) = *(ptrOp1+3)  * (*(ptrMask+3))/ *(ptrOp2+3);
-                }
-            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax,
-            		ptrOp2=op2.data+nmax, ptrMask=mask->data+nmax;
-                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2, ++ptrMask)
-                *ptrResult = *ptrOp1  * (*ptrMask)/ *ptrOp2;
+                 ptrMask=mask->data;
+                 n<op1.nzyxdim; n++, ptrResult++,
+                 ptrOp1++, ptrOp2++, ptrMask++)
+            {
+                if ((*ptrMask)==zero)
+                    *ptrResult /= (*ptrOp1);
+                else
+                    *ptrResult /= (*ptrOp2) * (*ptrMask);
+            }
             break;
         }
     }
@@ -3762,22 +3743,33 @@ public:
      *
      */
     inline friend void arrayByArray(const MultidimArray<T>& op1,
-                                    const MultidimArray<T>& op2, MultidimArray<T>& result,
-                                    char operation, const MultidimArray<T> *mask=NULL)
+                                    const MultidimArray<T>& op2,
+                                    MultidimArray<T>& result,
+                                    char operation)
     {
         if (!op1.sameShape(op2))
             REPORT_ERROR(ERR_MULTIDIM_SIZE,
                          formatString("Array_by_array: different shapes (%c)", operation));
         if (result.data == NULL || !result.sameShape(op1))
             result.resizeNoCopy(op1);
-        if ( (mask)==NULL)
-        {
-            coreArrayByArray(op1, op2, result, operation);
-        }
-        else
-        	{
-            coreArrayByArrayMask(op1, op2, result, operation, mask);
-        	}
+        coreArrayByArray(op1, op2, result, operation);
+    }
+    /** Self Array by array
+     *
+     * Similar to array by array. requires 4 vectors
+     * the pixel result(i) is calculated as
+     * result(i) += op1(i), if the mask is different from zero
+     * result(i) += op2(i) * mask(i)
+     */
+    inline friend void selfArrayByArrayMask(const MultidimArray<T>& op1,
+                                            const MultidimArray<T>& op2,
+                                            MultidimArray<T>& result,
+                                            char operation, const MultidimArray<T> *mask=NULL)
+    {
+        if (!op1.sameShape(op2) || !result.sameShape(op1))
+            REPORT_ERROR(ERR_MULTIDIM_SIZE,
+                         formatString("Array_by_array: different shapes (%c)", operation));
+        selfCoreArrayByArrayMask(op1, op2, result, operation, mask);
     }
 
     /** v3 = v1 + v2.
@@ -4659,12 +4651,12 @@ public:
                         *ptr = b;
                     break;
                 case 6:
-                	if (*ptr<ma)
-                		*ptr+=a;
-                	else if (*ptr>a)
-                		*ptr-=a;
-                	else
-                		*ptr=0;
+                    if (*ptr<ma)
+                        *ptr+=a;
+                    else if (*ptr>a)
+                        *ptr-=a;
+                    else
+                        *ptr=0;
                 }
             }
         }
@@ -4868,7 +4860,7 @@ public:
      * not an exception is thrown
      */
     friend void MultidimArrayMax(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
-                    MultidimArray<T>& result)
+                                 MultidimArray<T>& result)
     {
         if (!v1.sameShape(v2))
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "MAX: arrays of different shape");
@@ -4887,7 +4879,7 @@ public:
      * not an exception is thrown
      */
     friend void MultidimArrayMIN(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
-                    MultidimArray<T>& result)
+                                 MultidimArray<T>& result)
     {
         if (!v1.sameShape(v2))
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "MIN: arrays of different shape");
