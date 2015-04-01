@@ -25,7 +25,7 @@
 # **************************************************************************
 
 import sys
-from funcs import Environment
+from install.funcs import Environment
 
 
 

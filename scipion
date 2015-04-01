@@ -137,7 +137,8 @@ try:
     VARS.update({
         'PATH': PATH,
         'PYTHONPATH': PYTHONPATH,
-        'LD_LIBRARY_PATH': LD_LIBRARY_PATH})
+        'LD_LIBRARY_PATH': LD_LIBRARY_PATH,
+        'LD_RUN_PATH': LD_LIBRARY_PATH})
 
     VARS.update(DIRS_GLOBAL)
     VARS.update(DIRS_LOCAL)
@@ -223,14 +224,14 @@ def main():
         mode = MODE_MANAGER
 
     # First see if we have a working installation.
-    if mode not in [MODE_INSTALL, MODE_CONFIG, MODE_COMPILE]:
+    if mode not in [MODE_INSTALL, MODE_CONFIG, MODE_COMPILE, 'install2']:
         ok = True
         for d, path in DIRS_GLOBAL.items():
             if not exists(path):
                 sys.stderr.write('Missing %s folder: %s\n' % (d, path))
                 ok = False
-        if not exists(join(VARS['SCIPION_SOFTWARE'], 'log', 'success.log')):
-            ok = False
+#         if not exists(join(VARS['SCIPION_SOFTWARE'], 'log', 'success.log')):
+#             ok = False
         if not ok:
             sys.exit('There is a problem with the installation. Please run:\n'
                      '  %s install' % sys.argv[0])
@@ -298,6 +299,24 @@ def main():
                 pass
         sys.exit(ret)
 
+    elif mode == 'install2':
+        os.environ.update(VARS)
+        args = sys.argv[2:]
+
+        # Create folders if needed.
+        for path in DIRS_GLOBAL.values():
+            if not exists(path):
+                sys.stdout.write("  Creating folder %s ...\n" % path)
+                os.makedirs(path)
+                
+        # this should launch the installation
+        import install.script as script
+        sys.exit(0)
+        
+    elif mode == 'clean':
+        import scripts.clean as clean
+        sys.exit(0)
+        
     elif mode in [MODE_INSTALL, MODE_COMPILE]:
         # We do not os.environ.update(VARS) here. SCons needs to use
         # the python installed in the system by default.
