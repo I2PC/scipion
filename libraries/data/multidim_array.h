@@ -3772,12 +3772,10 @@ public:
             result.resizeNoCopy(op1);
         if ( (mask)==NULL)
         {
-        	std::cerr << "DEBUG_ROB: arrayByArray NULL " << std::endl;
             coreArrayByArray(op1, op2, result, operation);
         }
         else
         	{
-        	std::cerr << "DEBUG_ROB: arrayByArray NULL " << std::endl;
             coreArrayByArrayMask(op1, op2, result, operation, mask);
         	}
     }
