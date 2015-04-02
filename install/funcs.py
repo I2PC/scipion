@@ -211,6 +211,14 @@ class Environment():
 
             target.addDep(targetName)
 
+
+    def progInPath(env, prog):
+        """ Is program prog in PATH? """
+        for base in os.environ.get('PATH', '').split(os.pathsep):
+            if os.path.exists('%s/%s' % (base, prog)):
+                return True
+        return False
+
     def addLibrary(self, name, **kwargs):
 
 #                    tar=None, buildDir=None, configDir=None,
