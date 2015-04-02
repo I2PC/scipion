@@ -179,6 +179,7 @@ setuptools = env.addModule(
 
 scons = env.addModule(
     'scons',
+    targets=[env.getBin('scons')],
     tar='scons-2.3.4.tgz')
 
 numpy = env.addModule(

@@ -67,6 +67,7 @@ class Command():
     def _existsAll(self):
         """ Return True if all targets exists. """
         for t in self._targets:
+            #print(red("  Checking target: %s, exists: %s" % (t, os.path.exists(t))))
             if not os.path.exists(t):
                 return False
         return True
@@ -119,9 +120,9 @@ class Target():
 
     def _existsAll(self):
         for command in self._commandList:
-            #print ">>> Checking %s" % command
+            #print(red(">>> Checking %s" % command))
             if not command._existsAll():
-                #print "   not _existsAll()"
+                #print(red("   not _existsAll()"))
                 return False
         return True
 
@@ -348,6 +349,12 @@ class Environment():
                      targets='%s/setup.py' % buildPath,
                      cwd='software/tmp')
 
+        def path(x):
+            if '/' in x:
+                return x
+            else:
+                return 'software/lib/python2.7/site-packages/%s' % x
+         
         t.addCommand('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                      'PATH="%(root)s/bin:%(PATH)s" '
     #               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
@@ -360,7 +367,7 @@ class Environment():
                                                        'PATH': os.environ['PATH'],
                                                        'flags': ' '.join(flags),
                                                        'name': name},
-                   targets=['software/lib/python2.7/site-packages/%s' % tg for tg in targets],
+                   targets=[path(tg) for tg in targets],
                    cwd=buildPath)
 
         return t
