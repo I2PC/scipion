@@ -203,7 +203,6 @@ MODE_DBBROWSE = 'browser'
 MODE_VIEWER = 'viewer'
 MODE_INSTALL = 'install'
 MODE_UNINSTALL = 'uninstall'
-MODE_COMPILE = 'compile'
 MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
@@ -224,7 +223,7 @@ def main():
         mode = MODE_MANAGER
 
     # First see if we have a working installation.
-    if mode not in [MODE_INSTALL, MODE_CONFIG, MODE_COMPILE]:
+    if mode not in [MODE_INSTALL, MODE_CONFIG]:
         ok = True
         for d, path in DIRS_GLOBAL.items():
             if not exists(path):
@@ -303,7 +302,7 @@ def main():
         import scripts.clean as clean
         sys.exit(0)
         
-    elif mode in [MODE_INSTALL, MODE_COMPILE]:
+    elif mode == MODE_INSTALL:
         os.environ.update(VARS)
         args = sys.argv[2:]
 
@@ -312,9 +311,6 @@ def main():
             if not exists(path):
                 sys.stdout.write("  Creating folder %s ...\n" % path)
                 os.makedirs(path)
-            
-        if mode == MODE_COMPILE:
-            os.environ['SCIPION_COMPILE_MODE'] = 'True'
 
         def build(args):
             # Just importing the script will launch the install actions

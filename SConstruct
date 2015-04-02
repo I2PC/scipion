@@ -79,8 +79,6 @@ if not GetOption('verbose'):
     env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
     env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
-# Check the following flag to see if in compilation mode
-COMPILE_MODE = os.environ.get('SCIPION_COMPILE_MODE', '').lower() in ['1', 'true', 'yes']
 
 
 def progInPath(env, prog):
@@ -586,32 +584,6 @@ def libraryTest(env, name, lang='c'):
     env2 = conf.Finish()
     # conf.Finish() returns the environment it used, and we may want to use it,
     # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
-
-
-def createPackageLink(packageLink, packageFolder):
-    """ Create a link to packageFolder in packageLink, validate
-    that packageFolder exists and if packageLink exists it is 
-    a link.
-    """
-    linkText = "'%s -> %s'" % (packageLink, packageFolder)
-    
-    if not os.path.exists(packageFolder if os.path.isabs(packageFolder) else 'software/em/%s' % packageFolder):
-        Exit("Creating link %s, but '%s' does not exist!!!\n"
-             "INSTALLATION FAILED!!!" % (linkText, packageFolder))
-
-    if os.path.exists(packageLink):
-        if not COMPILE_MODE:
-            if os.path.islink(packageLink):
-                os.remove(packageLink)
-            else:
-                Exit("Creating link %s, but '%s' exists and is not a link!!!\n"
-                     "INSTALLATION FAILED!!!" % (linkText, packageLink))
-        else:
-            print "Link '%s', but not changing because in COMPILATION MODE."
-
-    if not COMPILE_MODE:
-        os.symlink(packageFolder, packageLink)
-        print "Created link: %s" % linkText
 
 
 # Add methods so SConscript can call them.
