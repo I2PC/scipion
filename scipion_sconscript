@@ -49,8 +49,8 @@ debug = False
 # warn = False
 # fast = False
 # quiet = True
-matlab = False
-opencv = True#GetOption('opencv')
+matlab = False  # TODO: change and use something like GetOption('matlab')
+opencv = True  # TODO: change and use something like GetOption('opencv')
 
 
 # Read some flags
