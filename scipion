@@ -316,19 +316,26 @@ def main():
         if mode == MODE_COMPILE:
             os.environ['SCIPION_COMPILE_MODE'] = 'True'
 
+        def build(args):
+            # Just importing the script will launch the install actions
+            import install.script as script
+            from install.funcs import green
+            cmd = 'install/scons.py %s' % ' '.join(args)
+            print(green('> Compiling Xmipp'))
+            print(cmd)
+            return os.system(cmd)
+            
         if args and args[0] == '--binary':
             assert 'LDFLAGS' not in os.environ, "LDFLAGS already set. Refusing."
             os.environ['LDFLAGS'] = '-Wl,-rpath,REPLACE_ME_WITH_FUNNY_'
             # Install external libraries and compile Xmipp
-            import install.script as script
-            ret = os.system('install/build.py %s' % ' '.join(args[1:]))
+            ret = build(args[1:]) # ignore the --binary argument
             if ret == 0:
                 ret = os.system('scripts/change_rpath.py %s/bin %s/lib'
                                 % (SCIPION_SOFTWARE, SCIPION_SOFTWARE))
         else:
             # Install external libraries and compile Xmipp
-            import install.script as script
-            ret = os.system('install/build.py %s' % ' '.join(args[1:]))
+            ret = build(args)
 
         if ret == 0 and not ('--help' in args or '-h' in args or '-H' in args
                              or'-c' in args):

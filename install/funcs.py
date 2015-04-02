@@ -35,9 +35,7 @@ MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
 
-#SCIPION_URL_SOFTWARE = os.environ['SCIPION_URL_SOFTWARE']
-SCIPION_URL_SOFTWARE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
-SCIPION_PROCS = 5
+SCIPION_URL_SOFTWARE = os.environ['SCIPION_URL_SOFTWARE']
 
 
 def ansi(n, bold=False):
@@ -166,7 +164,14 @@ class Environment():
         self._targetDict = {}
         self._args = kwargs.get('args', [])
         self._doExecute = not '--show' in self._args
-
+        
+        # Find if the -j arguments was passed to grap the number of processors
+        if '-j' in self._args:
+            j = self._args.index('-j')
+            self._processors = int(self._args[j+1])
+        else:
+            self._processors = 1
+            
         if LINUX:
             self._libSuffix = 'so' # Shared libraries extension name
         else:
@@ -290,7 +295,7 @@ class Environment():
                              cwd=configPath,
                              out='%s/log/%s_cmake.log' % (prefixPath, name))
     
-            t.addCommand('make -j %d' % SCIPION_PROCS,
+            t.addCommand('make -j %d' % self._processors,
                          cwd=buildPath,
                          out='%s/log/%s_make.log' % (prefixPath, name))
     
@@ -427,7 +432,7 @@ class Environment():
     def execute(self):
         # Check if there are explicit targets and only install
         # the selected ones
-        cmdTargets = [a for a in self._args[2:] if not a.startswith('--')]
+        cmdTargets = [a for a in self._args[2:] if a[0].isalpha()]
 
         if cmdTargets:
             # Grab the targets passed in the command line
