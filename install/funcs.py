@@ -29,6 +29,8 @@ import os
 import sys
 import time
 
+from subprocess import STDOUT, check_call, CalledProcessError
+
 
 # Then we get some OS vars
 MACOSX = (platform.system() == 'Darwin')
@@ -52,6 +54,28 @@ def progInPath(prog):
         if os.path.exists('%s/%s' % (base, prog)):
             return True
     return False
+
+
+def checkLib(lib, target=None):
+    """ See if we have library lib """
+    try:
+        check_call(['pkg-config', '--cflags', '--libs', lib],
+                   stdout=open(os.devnull, 'w'), stderr=STDOUT)
+    except (CalledProcessError, OSError) as e:
+        try:
+            check_call(['%s-config' % lib, '--cflags'])
+        except (CalledProcessError, OSError) as e:
+            print """
+  ************************************************************************
+    Warning: %s not found. Please consider installing it first.
+  ************************************************************************
+
+Continue anyway? (y/n)""" % lib
+            if raw_input().upper() != 'Y':
+                sys.exit(2)
+    # TODO: maybe write the result of the check in
+    # software/log/lib_...log so we don't check again if we already said "no"
+
 
 
 class Command():
