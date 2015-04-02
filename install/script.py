@@ -25,7 +25,7 @@
 # **************************************************************************
 
 import sys
-from install.funcs import Environment
+from install.funcs import Environment, progInPath
 
 
 
@@ -91,7 +91,7 @@ jpeg = env.addLibrary(
     'jpeg',
     tar='libjpeg-turbo-1.3.1.tgz',
     flags=['--without-simd'])
-    #flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
+    #flags=([] if progInPath('nasm') else ['--without-simd']))
 
 png = env.addLibrary(
     'png',
