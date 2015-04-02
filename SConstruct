@@ -79,54 +79,9 @@ if not GetOption('verbose'):
     env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
     env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
-
-
-def progInPath(env, prog):
-    "Is program prog in PATH?"
-    return any(os.path.exists('%s/%s' % (base, prog)) for base in
-               os.environ.get('PATH', '').split(os.pathsep))
     
 def targetInBuild(env, targetName):
     return targetName in map(str, BUILD_TARGETS)
-
-
-# This functions was previously used for checking the presence of a
-# library, with the additional functionality of letting the user decide to
-# continue or not. Now we're using SCons stuff (its CheckLib function). We
-# may want to delete this function in the future
-def checkConfigLib(target, source, env):
-    "See if we have library <name> from software/log/lib_<name>.log"
-
-    # This is used to create the CheckConfigLib builder.
-
-    # source is ignored and must be ''
-    # target must look like 'software/log/lib_<name>.log'
-    for tg in map(str, target):  # "target" is a list of SCons.Node.FS.File
-        name = tg[len('software/log/lib_'):-len('.log')]
-        try:
-            check_call(['pkg-config', '--cflags', '--libs', name],
-                       stdout=open(os.devnull, 'w'), stderr=STDOUT)
-        except (CalledProcessError, OSError) as e:
-            try:
-                check_call(['%s-config' % name, '--cflags'])
-            except (CalledProcessError, OSError) as e:
-                print """
-  ************************************************************************
-    Warning: %s not found. Please consider installing it first.
-  ************************************************************************
-
-Continue anyway? (y/n)""" % name
-                if raw_input().upper() != 'Y':
-                    Exit(2)
-
-                # If we continue without the lib, we write the target log
-                # so scons knows not to ask again.
-                open(tg, 'w').write('%s off\n' % name)
-        # If we do have it, write the tg so we do not ask again either.
-        open(tg, 'w').write('%s on\n' % name)
-
-
-CheckConfigLib = Builder(action=checkConfigLib)
 
 
 # Add the path to dynamic libraries so the linker can find them.
@@ -594,7 +549,6 @@ env.AddMethod(addJavaLibrary, 'AddJavaLibrary')
 env.AddMethod(symLink, 'SymLink')
 env.AddMethod(addJavaTest, 'AddJavaTest')
 env.AddMethod(addProgram, 'AddProgram')
-env.AddMethod(progInPath, 'ProgInPath')
 env.AddMethod(targetInBuild, 'TargetInBuild')
 
 
