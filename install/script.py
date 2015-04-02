@@ -41,13 +41,13 @@ env = Environment(args=sys.argv)
 # In order to get both the float and double libraries of fftw
 # we need to execute ./configure; make; make install twice
 # see: http://www.fftw.org/fftw2_doc/fftw_6.html
-env.AddLibrary(
+env.addLibrary(
     'fftw3',
     tar='fftw-3.3.4.tgz',
     flags=['--enable-threads', '--enable-shared'],
     clean=True) # We need to clean to configure again with --enable-float
     
-env.AddLibrary(
+env.addLibrary(
     'fftw3f',
     tar='fftw-3.3.4.tgz',
     flags=['--enable-threads', '--enable-shared', '--enable-float'])
@@ -55,7 +55,7 @@ env.AddLibrary(
 osBuildDir = 'tcl8.6.1/unix'
 osFlags = ['--enable-threads']
 
-tcl = env.AddLibrary(
+tcl = env.addLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
     buildDir=osBuildDir,
@@ -65,7 +65,7 @@ tcl = env.AddLibrary(
 osBuildDir = 'tk8.6.1/unix'
 osFlags = ['--enable-threads']
 
-tk = env.AddLibrary(
+tk = env.addLibrary(
     'tk',
     tar='tk8.6.1-src.tgz',
     buildDir=osBuildDir,
@@ -76,55 +76,55 @@ tk = env.AddLibrary(
 
 
 # Special case: tk does not make the link automatically, go figure.
-tk_wish = env.createTarget('tk_wish')
+tk_wish = env.addTarget('tk_wish')
 tk_wish.addCommand('ln -v -s wish8.6 wish',
                    targets='software/bin/wish',
                    cwd='software/bin')
 
-zlib = env.AddLibrary(
+zlib = env.addLibrary(
     'zlib',
     targets=[env.getLib('z')],
     tar='zlib-1.2.8.tgz',
     configTarget='zlib.pc')
 
-jpeg = env.AddLibrary(
+jpeg = env.addLibrary(
     'jpeg',
     tar='libjpeg-turbo-1.3.1.tgz',
     flags=['--without-simd'])
     #flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
 
-png = env.AddLibrary(
+png = env.addLibrary(
     'png',
     tar='libpng-1.6.16.tgz',
     deps=[zlib])
 
-tiff = env.AddLibrary(
+tiff = env.addLibrary(
      'tiff',
      tar='tiff-3.9.4.tgz',
      deps=[zlib])
 
-sqlite = env.AddLibrary(
+sqlite = env.addLibrary(
     'sqlite3',
     tar='sqlite-3.6.23.tgz',
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
-hdf5 = env.AddLibrary(
+hdf5 = env.addLibrary(
      'hdf5',
      tar='hdf5-1.8.14.tgz',
-     flags=['--enable-cxx'],
+     flags=['--enable-cxx', '--enable-shared'],
      targets=[env.getLib('hdf5'), env.getLib('hdf5_cpp')],
      configAlways=True,
      deps=[zlib])
 
-python = env.AddLibrary(
+python = env.addLibrary(
     'python',
     tar='Python-2.7.8.tgz',
     targets=[env.getLib('python2.7'), env.getBin('python')],
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
-lapack = env.AddLibrary(
+lapack = env.addLibrary(
     'lapack',
     tar='lapack-3.5.0.tgz',
     flags=['-DBUILD_SHARED_LIBS:BOOL=ON',
@@ -132,11 +132,33 @@ lapack = env.AddLibrary(
     cmake=True, 
     default=False)
 
-opencv = env.AddLibrary(
+opencv = env.addLibrary(
     'opencv',
     tar='opencv-2.4.9.tgz',
     targets=[env.getLib('opencv_core')],
     cmake=True,
+    default=False)
+
+# ---------- Libraries required by PyTom 
+pcre = env.addLibrary(
+    'pcre',
+    tar='pcre-8.36.tgz',
+    targets=[env.getBin('pcretest')],
+    default=False)
+
+swig = env.addLibrary(
+    'swig',
+    tar='swig-3.0.2.tgz',
+    targets=[env.getBin('swig')],
+    makeTargets=['Source/Swig/tree.o'],
+    deps=[pcre],
+    default=False)
+
+boost = env.addLibrary(
+    'boost',
+    tar='boost_1_56_0.tgz',
+    commands=[('cp -rf software/tmp/boost_1_56_0/boost software/include/', 
+               'software/include/boost')],
     default=False)
 
 
@@ -258,6 +280,7 @@ env.addModule(
 
 
 env.execute()
+sys.exit()  # Up to this point we have this script working.
 
 
 #  ************************************************************************
