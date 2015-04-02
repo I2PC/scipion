@@ -45,6 +45,15 @@ def ansi(n):
 black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
 
 
+
+def progInPath(prog):
+    """ Is program prog in PATH? """
+    for base in os.environ.get('PATH', '').split(os.pathsep):
+        if os.path.exists('%s/%s' % (base, prog)):
+            return True
+    return False
+
+
 class Command():
     def __init__(self, env, cmd, targets=None,  **kwargs):
         self._env = env
@@ -210,14 +219,6 @@ class Environment():
                 raise Exception("Dependency '%s' does not exists. " % targetName)
 
             target.addDep(targetName)
-
-
-    def progInPath(env, prog):
-        """ Is program prog in PATH? """
-        for base in os.environ.get('PATH', '').split(os.pathsep):
-            if os.path.exists('%s/%s' % (base, prog)):
-                return True
-        return False
 
     def addLibrary(self, name, **kwargs):
 
