@@ -38,9 +38,9 @@ LINUX = (platform.system() == 'Linux')
 SCIPION_URL_SOFTWARE = os.environ['SCIPION_URL_SOFTWARE']
 
 
-def ansi(n, bold=False):
+def ansi(n):
     "Return function that escapes text with ANSI color n."
-    return lambda txt: '\x1b[%d%sm%s\x1b[0m' % (n, ';1' if bold else '', txt)
+    return lambda txt: '\x1b[%dm%s\x1b[0m' % (n, txt)
 
 black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
 
