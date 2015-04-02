@@ -177,7 +177,7 @@ setuptools = env.addModule(
     tar='setuptools-5.4.1.tgz',
     targets=['setuptools.pth'])
 
-setuptools = env.addModule(
+scons = env.addModule(
     'scons',
     tar='scons-2.3.4.tgz')
 
