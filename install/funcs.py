@@ -381,7 +381,7 @@ class Environment():
         return t
     
     def addPackage(self, *args, **kargs):
-        pass
+        pass  # TODO: this function!
 
     def _showTargetGraph(self, targetList):
         """ Traverse the targets taking into account
