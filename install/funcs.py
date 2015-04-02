@@ -371,6 +371,9 @@ class Environment():
                    cwd=buildPath)
 
         return t
+    
+    def addPackage(self, *args, **kargs):
+        pass
 
     def _showTargetGraph(self, targetList):
         """ Traverse the targets taking into account

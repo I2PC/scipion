@@ -83,24 +83,6 @@ if not GetOption('verbose'):
 COMPILE_MODE = os.environ.get('SCIPION_COMPILE_MODE', '').lower() in ['1', 'true', 'yes']
 
 
-def downloadOrLink(env, urlOrPath, output, downloadDir='software/tmp',
-                   extraDeps=[]):
-    """ Download if urlOrPath is an URL, link if it is a local file.
-    """
-    outputFile = File('%s/%s' % (downloadDir, output))
-
-    if urlOrPath.startswith('file:///'):
-        target = env.SymLink(outputFile.path, urlOrPath[len('file://'):])
-    elif os.path.isfile(urlOrPath):
-        target = env.SymLink(outputFile.path, urlOrPath)
-    else: 
-        target = download(env, outputFile.abspath,
-                          [Value(urlOrPath)] + extraDeps)
-    SideEffect('dummy', target)  # so it works fine in parallel builds
-
-    return target
-
-
 def progInPath(env, prog):
     "Is program prog in PATH?"
     return any(os.path.exists('%s/%s' % (base, prog)) for base in
@@ -230,16 +212,12 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, 
 #  *                                                                      *
 #  ************************************************************************
 
-# We have 6 "Pseudo-Builders" http://www.scons.org/doc/HTML/scons-user/ch20.html
+# We have several "Pseudo-Builders" http://www.scons.org/doc/HTML/scons-user/ch20.html
 #
 # They are:
-#   addLibrary        - install a library
-#   addModule         - install a Python module
-#   addPackage        - install an EM package
 #   addCppLibrary - install a EM package library
 #   addJavaLibrary    - install a java jar
 #   addProgram        - install a EM package program
-#   manualInstall     - install by manually running commands
 #
 # Their structure is similar:
 #   * Define reasonable defaults
@@ -258,130 +236,6 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, 
 # ensure it works in a parallel build (see
 # http://www.scons.org/wiki/SConsMethods/SideEffect), and does not try
 # to do one step while the previous one is still running in the background.
-
-
-def addLibrary(env, name, tar=None, buildDir=None, configDir=None, 
-               targets=[], makeTargets=None, libChecks=[], url=None, flags=[], addPath=True,
-               autoConfigTargets='Makefile', deps=[], clean=[], default=True):
-    """Add library <name> to the construction process.
-
-    This pseudobuilder checks that the needed programs are in PATH,
-    downloads the given url, untars the resulting tar file, configures
-    the library with the given flags, compiles it (in the given
-    buildDir) and installs it. It also tells SCons about the proper
-    dependencies (deps).
-
-    If addPath=False, we will not pass the variables PATH and
-    LD_LIBRARY_PATH pointing to our local installation directory.
-
-    If default=False, the library will not be built unless the option
-    --with-<name> is used.
-
-    Returns the final targets, the ones that Make will create.
-
-    """
-    # Use reasonable defaults.
-    tar = tar or ('%s.tgz' % name)
-    url = url or ('%s/external/%s' % (URL_BASE, tar))
-    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-    configDir = configDir or buildDir
-    targets = targets or [File('#software/lib/lib%s.so' % name).abspath]
-
-    # Add "software/lib" and "software/bin" to LD_LIBRARY_PATH and PATH.
-    newFlags = []
-    for flag in flags:
-        newValue = None
-        for var, value in [('LD_LIBRARY_PATH', Dir('#software/lib').abspath),
-                           ('LD_RUN_PATH', Dir('#software/lib').abspath),
-                           ('PATH', Dir('#software/bin').abspath)]:
-            if flag.startswith('%s=' % var):
-                valueOld = flag.split('=', 1)[1] + ':' + os.environ.get(var, '')
-                newValue = '%s=%s:%s' % (var, value, valueOld)
-                break
-        if newValue is None:
-            newFlags.append(flag)
-        else:
-            newFlags.append(newValue)
-    # Install everything in the appropriate place.
-    newFlags.append('--prefix=%s' % Dir('#software').abspath)
-    newFlags.append('--libdir=%s' % Dir('#software/lib').abspath)  # not lib64
-
-    # We would like to add CFLAGS and LDFLAGS so the libraries find
-    # any dependencies in the right place.
-    # flags += ['CFLAGS=-I%s' % abspath('software/include'),
-    #           'LDFLAGS=-L%s' %  abspath('software/lib')]
-    # but then libraries like zlib will not compile.
-    # TODO: maybe add an argument to the function to chose if we want them?
-
-
-    # Add the option --with-name, so the user can call SCons with this
-    # to activate the library even if it is not on by default.
-    if not default:
-        AddOption('--with-%s' % name, dest=name, action='store_true',
-                  help='Activate library %s' % name)
-
-    # Add all the checks
-    checksTargets = ['software/log/lib_%s.log' % n for n in libChecks]
-    for tg in checksTargets:
-        CheckConfigLib(env, tg, '')
-
-    # Create and concatenate the builders.
-    tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
-
-    tUntar = untar(env, File('#software/tmp/%s/configure' % configDir).abspath,
-                   tDownload, cdir=Dir('#software/tmp').abspath)
-    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-    Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
-    
-    tConfig = env.AutoConfig(
-        target=Dir('#software/tmp/%s' % configDir),
-        source=Dir('#software/tmp/%s' % configDir),
-        AutoConfigTarget=autoConfigTargets,
-        AutoConfigSource='configure',
-        AutoConfigParams=newFlags,
-        AutoConfigStdOut=File('#software/log/%s_config.log' % name).abspath)
-    
-    env.Depends(tConfig, tUntar)
-
-    if not makeTargets:
-        # This should be the normal case
-        lastTarget = tConfig
-    else:
-        # Some libraries (like swig) need to call "make" before "make
-        # install", and so we have to complicate things. Thank you, swig.
-        tMakePreInstall = env.Make(
-            source=tConfig,
-            target=[File('#software/tmp/%s/%s' % (buildDir, t)).abspath for t in makeTargets],
-            MakePath=Dir('#software/tmp/%s' % buildDir).abspath,
-            MakeEnv=os.environ,
-            MakeStdOut=File('#software/log/%s_make_pre-install.log' % name).abspath)
-        SideEffect('dummy', tMakePreInstall)
-        lastTarget = tMakePreInstall
-
-    tMake = env.Make(
-        source=lastTarget,
-        target=targets,
-        MakePath=Dir('#software/tmp/%s' % buildDir).abspath,
-        MakeEnv=os.environ,
-        MakeTargets='install',
-        MakeStdOut=File('#software/log/%s_make.log' % name).abspath)
-    
-    for cFile in clean:
-        Clean(tMake, cFile)
-    
-    # Prevents that several configure, make at done at the same
-    # time for the same library
-    SideEffect('dummy', tMake)
-        
-    env.Depends(name, deps)
-    if default:
-        env.Default(tMake)
-        
-    libTarget = env.Alias(name, [tConfig, tMake])
-    env.Depends(tConfig, deps)
-    env.Alias('Scipion-libs', libTarget)
-
-    return libTarget
 
 
 def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[], 
@@ -689,82 +543,6 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     return program
 
 
-def addModule(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
-              url=None, flags=[], deps=[], clean=[], default=True):
-    """Add Python module <name> to the construction process.
-
-    This pseudobuilder downloads the given url, untars the resulting
-    tar file, configures the module with the given flags, compiles it
-    (in the given buildDir) and installs it. It also tells SCons about
-    the proper dependencies (deps).
-
-    If default=False, the module will not be built unless the option
-    --with-<name> is used.
-
-    Returns the final target (software/lib/python2.7/site-packages/<name>).
-
-    """
-    # Use reasonable defaults.
-    tar = tar or ('%s.tgz' % name)
-    url = url or ('%s/python/%s' % (URL_BASE, tar))
-    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-    targets = targets or [name]
-    flags += ['--prefix=%s' % Dir('#software').abspath]
-
-    # Add the option --with-name, so the user can call SCons with this
-    # to activate the module even if it is not on by default.
-    if not default:
-        AddOption('--with-%s' % name, dest=name, action='store_true',
-                  help='Activate module %s' % name)
-
-    # Add all the checks
-    checksTargets = ['software/log/lib_%s.log' % name for name in libChecks]
-    for tg in checksTargets:
-        CheckConfigLib(env, tg, '')
-
-    # Create and concatenate the builders.
-    tDownload = downloadOrLink(env, url, tar, extraDeps=checksTargets)
-
-    tUntar = untar(env, File('#software/tmp/%s/setup.py' % buildDir).abspath,
-                   tDownload, cdir=Dir('#software/tmp').abspath)
-    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-    Clean(tUntar, 'software/tmp/%s' % buildDir)
-
-    tInstall = env.Command(
-        [Entry('#software/lib/python2.7/site-packages/%s' % t).abspath for t in targets],
-        tUntar,
-        Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
-               'PATH="%(root)s/bin:%(PATH)s" '
-#               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
-# The CFLAGS line is commented out because even if it is needed for modules
-# like libxml2, it causes problems for others like numpy and scipy (see for
-# example http://mail.scipy.org/pipermail/scipy-user/2007-January/010773.html)
-# TODO: maybe add an argument to the function to chose if we want them?
-               '%(root)s/bin/python setup.py install %(flags)s > '
-               '%(root)s/log/%(name)s.log 2>&1' % {'root': Dir('#software').abspath,
-                                                   'PATH': os.environ['PATH'],
-                                                   'flags': ' '.join(flags),
-                                                   'name': name},
-               'Compiling & installing %s > software/log/%s.log' % (name, name),
-               chdir=Dir('#software/tmp/%s' % buildDir).abspath))
-    SideEffect('dummy', tInstall)  # so it works fine in parallel builds
-
-    # Clean the special generated files
-    for cFile in clean:
-        Clean(lastTarget, cFile)
-
-    # Add the dependencies.
-    env.Depends(tInstall, deps)
-    env.Alias('Scipion-modules', tInstall)
-
-    if default or GetOption(name):
-        env.Default(tInstall)
-
-    env.Alias(name, tInstall)
-    
-    return tInstall
-
-
 def compilerConfig(env):
     """Check the good state of the C and C++ compilers and return the proper env."""
 
@@ -836,261 +614,8 @@ def createPackageLink(packageLink, packageFolder):
         print "Created link: %s" % linkText
 
 
-def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
-               extraActions=[], deps=[], clean=[], reqs=[], default=True):
-    """Add external (EM) package <name> to the construction process.
-
-    This pseudobuilder downloads the given url, untars the resulting
-    tar file and copies its content from buildDir into the
-    installation directory <name>. It also tells SCons about the
-    proper dependencies (deps).
-
-    extraActions is a list of (target, command) that should be
-    executed after the package is properly installed.
-
-    If default=False, the package will not be built unless the option
-    --with-<name> or --with-all-packages is used.
-
-    Returns the final target (software/em/<name>).
-
-    """
-    # Use reasonable defaults.
-    tar = tar or ('%s.tgz' % name)
-    url = url or ('%s/em/%s' % (URL_BASE, tar))
-    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-    confPath = File('#software/cfg/%s.cfg' % name).abspath
-    
-
-    # Minimum requirements must be accomplished. To check them, we use
-    # the req list, iterating with SConf CheckLib on it
-    for req in reqs:
-        libraryTest(env, req, reqs[req])
-
-    inBuild = env.TargetInBuild(name)
-    
-    if inBuild:
-        print "Adding package:", name
-
-    # Add the option --with-<name>, so the user can call SCons with this
-    # to get the package even if it is not on by default.
-    AddOption('--with-%s' % name, dest=name, metavar='%s_HOME' % name.upper(),
-              nargs='?', const='unset',
-              help=("Get package %s. With no argument, download and "
-                    "install it. To use an existing installation, pass "
-                    "the package's directory." % name))
-    # So GetOption(name) will be...
-    #   None      if we did *not* pass --with-<name>
-    #   'unset'   if we passed --with-<name> (nargs=0)
-    #   PKG_HOME  if we passed --with-<name>=PKG_HOME (nargs=1)
-
-    # See if we have used the --with-<package> option and exit if appropriate.
-    if GetOption(name):
-        packageHome = GetOption(name) if not COMPILE_MODE else 'unset'
-        
-    elif GetOption('withAllPackages'):
-        packageHome = 'unset'
-        # we asked to install all packages, so it is at least as if we
-        # also did --with-<name>
-    else:
-        packageHome = None
-        # by default it is as if we did not use --with-<name>
-
-    packageLink = os.path.join('software', 'em', name)
-    
-    if not (default or packageHome or COMPILE_MODE):
-        return ''
-    
-    # 'unset' is the default value when calling only --with-package
-    # and a location is not provided
-    if packageHome == 'unset':
-        if not COMPILE_MODE:
-            try:
-                emDir = Dir('#software/em').abspath
-                if os.path.exists('%s/%s' % (emDir, tar)):
-                    print 'Warning: %s already exists. Download anyway? [y/N]' % tar
-                    if raw_input().upper() != 'Y':
-                        Exit('If you just want to compile, use: scipion compile')
-                check_call(['wget', '-nv', '-c', url], cwd=emDir)
-                if os.path.exists('%s/%s' % (emDir, name)):
-                    print 'Warning: %s already exists. Untar anyway? [y/N]' % name
-                    if raw_input().upper() != 'Y':
-                        Exit('If you just want to compile, use: scipion compile')
-                check_call(['tar', '--recursive-unlink', '-xzf', tar], cwd=emDir)
-            except (CalledProcessError, OSError) as e:
-                Exit(e)
-            createPackageLink(packageLink, buildDir)
-    elif packageHome is not None:
-        createPackageLink(packageLink, packageHome)
-        if not COMPILE_MODE:
-            return ''  # when providing packageHome, we only want to create the link
-
-    lastTarget = Entry(packageLink)
-    targets = []
-    #tLink = None
-    # If we do have a local installation, link to it and exit.
-#     if packageHome != 'unset':  # default value when calling only --with-package
-#         #FIXME: only for operating while programming
-#         if not os.path.exists(packageHome):
-#             # If it's a completed local installation. Just link to it and do nothing more.
-#             if os.path.exists()
-#             return env.Command(
-#                 Dir('software/em/%s/bin' % name),
-#                 Dir(packageHome),
-#                 Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
-#                        'Linking package %s to software/em/%s' % (name, name),
-#                        chdir='software/em'))
-
-    # Check that all needed programs are there.
-    if default or GetOption(name):
-        for p in neededProgs:
-            if not progInPath(env, p):
-                print """
-      ************************************************************************
-        Warning: Cannot find program "%s" needed by %s
-      ************************************************************************
-
-    Continue anyway? (y/n)""" % (p, name)
-                if raw_input().upper() != 'Y':
-                    Exit(2)
-
-    # This is not very satisfactory, because if something depends on
-    # this library later on, and the library was not explicitely set
-    # as default or --with-<library>, then the check will not be
-    # done. I don't know how to fix this easily in scons... :(
-
-    #FIXME: REMOVE './' by packageLink when finished compilation tests!!!
-    scriptPath = join(packageLink, 'scipion_sconscript')
-    # If we have specified extraActions, do them and don't try to
-    # compile/install the package in any other way.
-    if extraActions:
-        lastTarget = ''
-        for target, command in extraActions:
-            lastTarget = env.Command(
-                Entry('#software/em/%s/%s' % (name, target)).abspath,
-                lastTarget,
-                Action(command, chdir=Entry('#software/em/%s' % name).abspath))
-            SideEffect('dummy', lastTarget)
-            targets.append(lastTarget)            
-    elif os.path.exists(scriptPath):
-        print "Reading Scipion SCons script file from: '%s'" % scriptPath
-        env.Replace(packageDeps=deps)
-        env['PACKAGE'] = {'NAME': name,
-                          'DEPS': deps,
-                          'SCONSCRIPT': os.path.abspath(packageLink)
-                          }
-        lastTarget = env.SConscript(scriptPath, exports='env')
-        targets.append(lastTarget)
-    else:
-        if inBuild:
-            print "Package '%s' was downloaded and extracted, not further actions. " % name
- 
-    for t in targets:
-        if t is not None:
-            # Make as default all produced targets if needed
-            if default or packageHome:
-                env.Default(t)
-            # Setup properly the dependencies for all targets
-            for d in deps:
-                env.Depends(t, d)
-   
-    # Clean the special generated files passed as argument
-    for cFile in clean:
-        Clean(lastTarget, cFile)
-
-    return lastTarget
-
-
-def manualInstall(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
-                  libChecks=[], extraActions=[], deps=[], clean=[], default=True):
-    """Just download and run extraActions.
-
-    This pseudobuilder downloads the given url, untars the resulting
-    tar file and runs extraActions on it. It also tells SCons about
-    the proper dependencies (deps).
-
-    extraActions is a list of (target, command) that should be
-    executed after the package is properly installed.
-
-    If default=False, the package will not be built unless the option
-    --with-<name> is used.
-
-    Returns the final target in extraActions.
-
-    """
-    # Use reasonable defaults.
-    tar = tar or ('%s.tgz' % name)
-    url = url or ('%s/external/%s' % (URL_BASE, tar))
-    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-
-    # Add the option --with-name, so the user can call SCons with this
-    # to activate it even if it is not on by default.
-    if not default:
-        AddOption('--with-%s' % name, dest=name, action='store_true',
-                  help='Activate %s' % name)
-
-    # Check that all needed programs are there.
-    if default or GetOption(name):
-        for p in neededProgs:
-            if not progInPath(env, p):
-                print """
-      ************************************************************************
-        Warning: Cannot find program "%s" needed by %s
-      ************************************************************************
-
-    Continue anyway? (y/n)""" % (p, name)
-                if raw_input().upper() != 'Y':
-                    Exit(2)
-    # This is not very satisfactory, because if something depends on
-    # this library later on, and the library was not explicitely set
-    # as default or --with-<library>, then the check will not be
-    # done. I don't know how to fix this easily in scons... :(
-
-    # Donload, untar, and execute any extra actions.
-    checksTargets = ['software/log/lib_%s.log' % name for name in libChecks]
-    for tg in checksTargets:
-        CheckConfigLib(env, tg, '')
-
-    # Create and concatenate the builders.
-    if not COMPILE_MODE:
-        tDownload = downloadOrLink(env, url, tar)
-        tUntar = untar(env, File('#software/tmp/%s/README' % buildDir).abspath,
-                       tDownload, cdir=Dir('#software/tmp').abspath)
-        SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-        Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
-        lastTarget = [tUntar] + checksTargets
-    else:
-        lastTarget = ''
-
-    for target, command in extraActions:
-        lastTarget = env.Command(
-            target,
-            lastTarget,
-            Action(command, chdir=Dir('#software/tmp/%s' % buildDir).abspath))
-        SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
-
-    # Clean the special generated files.
-    for cFile in clean:
-        Clean(lastTarget, cFile)
-
-    # Add the dependencies.
-    for dep in deps:
-        env.Depends(tUntar, dep)
-
-    if default or GetOption(name):
-        env.Default(lastTarget)
-
-    env.Alias(name, lastTarget)
-    
-    return lastTarget
-
-
 # Add methods so SConscript can call them.
-env.AddMethod(download, 'Download')
 env.AddMethod(untar, 'Untar')
-env.AddMethod(addLibrary, 'AddLibrary')
-env.AddMethod(addModule, 'AddModule')
-env.AddMethod(addPackage, 'AddPackage')
-env.AddMethod(manualInstall, 'ManualInstall')
 env.AddMethod(compilerConfig, 'CompilerConfig')
 env.AddMethod(addCppLibrary, 'AddCppLibrary')
 env.AddMethod(addJavaLibrary, 'AddJavaLibrary')
@@ -1147,7 +672,12 @@ env['JNI_CPPPATH'] = os.environ.get('JNI_CPPPATH').split(':')
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
           help='Get all EM packages')
 
-env.SConscript(File('#SConscript').abspath, exports='env')
+xmippPath = Dir('#software/em/xmipp').abspath
+env['PACKAGE'] = {'NAME': 'xmipp',
+                  'SCONSCRIPT': xmippPath
+                  }
+
+env.SConscript(os.path.join(xmippPath, 'scipion_sconscript'), exports='env')
 
 # Add original help (the one that we would have if we didn't use
 # Help() before). But remove the "usage:" part (first line).

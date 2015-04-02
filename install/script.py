@@ -281,7 +281,6 @@ env.addModule(
 
 
 env.execute()
-sys.exit()  # Up to this point we have this script working.
 
 
 #  ************************************************************************
@@ -292,7 +291,7 @@ sys.exit()  # Up to this point we have this script working.
 
 # extraActions is a list of (target, command) to run after installation.
 
-env.AddPackage('xmipp',
+env.addPackage('xmipp',
                tar='xmipp_scipion.tgz',
                buildDir='xmipp_scipion',
                reqs={'mpi': 'cxx',
@@ -311,61 +310,62 @@ env.AddPackage('xmipp',
 #                             './install.sh --unattended=true --gui=false -j %s'
 #                              % GetOption('num_jobs'))],
 
-env.AddPackage('bsoft',
+env.addPackage('bsoft',
                tar='bsoft1_8_8_Fedora_12.tgz',
                default=False)
 
-env.AddPackage('ctffind',
+env.addPackage('ctffind',
                tar='ctffind_V3.5.tgz',
                default=False)
 
-env.AddPackage('ctffind4',
+env.addPackage('ctffind4',
                tar='ctffind_V4.0.13.tgz',
                default=False)
 
-env.AddPackage('eman',
+env.addPackage('eman',
                tar='eman2.1.linux64.tgz',
                extraActions=[('eman2.bashrc', './eman2-installer')],
                default=False)
 
-env.AddPackage('frealign',
+env.addPackage('frealign',
                tar='frealign_v9.07.tgz',
                default=False)
 
-env.AddPackage('pytom',
-               tar='pytom_develop0.962.tgz',
-               extraActions=[('pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix,
-                              'PATH=%s/software/bin:%s '
-                              'LD_LIBRARY_PATH=%s/software/lib:%s '
-                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s '
-                              './scipion_installer'
-                              % (shome, environ.get('PATH', ''),
-                                 shome, environ.get('LD_LIBRARY_PATH', ''),
-                                 env['MPI_LIBDIR'], env['MPI_INCLUDE'], shome))],
-               deps=[boost_headers_only, fftw, swig, lxml],
-               default=False)
 
-env.AddPackage('relion',
+# env.addPackage('pytom',
+#                tar='pytom_develop0.962.tgz',
+#                extraActions=[('pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix,
+#                               'PATH=%s/software/bin:%s '
+#                               'LD_LIBRARY_PATH=%s/software/lib:%s '
+#                               'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s '
+#                               './scipion_installer'
+#                               % (shome, environ.get('PATH', ''),
+#                                  shome, environ.get('LD_LIBRARY_PATH', ''),
+#                                  env['MPI_LIBDIR'], env['MPI_INCLUDE'], shome))],
+#                deps=[boost, 'fftw3', 'fftw3f', swig, lxml],
+#                default=False)
+
+env.addPackage('relion',
                tar='relion-1.3.tgz',
                extraActions=[
-                   ('relion_build.log', './INSTALL.sh -j %s'
-                    % GetOption('num_jobs'))],
+                   ('relion_build.log', './INSTALL.sh -j 5'
+                    )],
                default=False)
 
-env.AddPackage('resmap',
+env.addPackage('resmap',
                tar='resmap-1.1.5-scipion.tgz',
                deps=['scipy'],
                default=False)
 
-env.AddPackage('spider',
+env.addPackage('spider',
                tar='spider-web-21.13.tgz',
                neededProgs=['csh'],
                default=False)
 
-env.AddPackage('motioncorr',
+env.addPackage('motioncorr',
                tar='motioncorr_v2.1.tgz',
                default=False)
 
-env.AddPackage('simple',
+env.addPackage('simple',
                tar='simple2.tgz',
                default=False)
