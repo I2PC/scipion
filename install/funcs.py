@@ -280,21 +280,24 @@ class Environment():
         # If passing a command list (of tuples (command, target)) those actions
         # will be performed instead of the normal ./configure / cmake + make
         commands = kwargs.get('commands', []) 
+        downloadDir = kwargs.get('downloadDir', os.path.join('software', 'tmp'))
 
         # Download library tgz
-        tarFile = 'software/tmp/%s' % tar
-        buildPath = 'software/tmp/%s' % buildDir
-        configPath = 'software/tmp/%s' % configDir
+        tarFile = os.path.join(downloadDir, tar)
+        buildPath = os.path.join(downloadDir, buildDir)
+        configPath = os.path.join(downloadDir, configDir)
         makeFile = '%s/%s' % (configPath, configTarget)
 
         t = self.addTarget(name, default=kwargs.get('default', True))
+        t.buildDir = buildDir 
+        
         self._addTargetDeps(t, deps)
 
         t.addCommand(self._downloadCmd % (tarFile, url),
                      targets=tarFile)
         t.addCommand(self._tarCmd % tar,
                      targets=buildPath,
-                     cwd='software/tmp')
+                     cwd=downloadDir)
 
         prefixPath = os.path.abspath('software')
 
@@ -405,8 +408,14 @@ class Environment():
 
         return t
     
-    def addPackage(self, *args, **kargs):
-        pass  # TODO: this function!
+    def addPackage(self, name, *args, **kwargs):
+        libArgs = {'downloadDir': os.path.join('software', 'em'),
+                   'commands': [(lambda: createPackageLink(name, t.buildDir), 
+                                 [])]}
+        libArgs.update(kwargs)
+        t = self.addLibrary(name)
+        t.addCommand(Command(self, lambda: createPackageLink(name, t.buildDir), 
+                             targets='software/em'))
 
     def _showTargetGraph(self, targetList):
         """ Traverse the targets taking into account
@@ -476,3 +485,28 @@ class Environment():
                 self._showTargetTree(targetList)
         else:
             self._executeTargets(targetList)
+            
+            
+def createPackageLink(packageLink, packageFolder):
+    """ Create a link to packageFolder in packageLink, validate
+    that packageFolder exists and if packageLink exists it is 
+    a link.
+    This function is supposed to be executed in software/em folder.
+    """
+    linkText = "'%s -> %s'" % (packageLink, packageFolder)
+    
+    if not os.path.exists(packageFolder):
+        print(red("Creating link %s, but '%s' does not exist!!!\n"
+             "INSTALLATION FAILED!!!" % (linkText, packageFolder)))
+        sys.exit(1)
+
+    if os.path.exists(packageLink):
+        if os.path.islink(packageLink):
+            os.remove(packageLink)
+        else:
+            print(red("Creating link %s, but '%s' exists and is not a link!!!\n"
+                 "INSTALLATION FAILED!!!" % (linkText, packageLink)))
+            sys.exit(1)
+
+    os.symlink(packageFolder, packageLink)
+    print("Created link: %s" % linkText)
