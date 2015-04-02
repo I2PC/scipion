@@ -77,7 +77,7 @@ class Command():
         else:
             cwd = os.getcwd()
             if self._cwd is not None:
-                if self._env.doExecute():
+                if not self._env.showOnly:
                     os.chdir(self._cwd)
                 print(cyan("cd %s" % self._cwd))
 
@@ -86,14 +86,15 @@ class Command():
                 cmd += ' > %s 2>&1' % self._out
                 # TODO: more general, this only works for bash.
             print(cyan(cmd))
-            if self._env.doExecute():
+            if not self._env.showOnly:
                 os.system(cmd)
             # Return to working directory, useful
             # when changing dir before executing command
             os.chdir(cwd)
-            for t in self._targets:
-                assert os.path.exists(t), ("target '%s' not built "
-                                           "(after running '%s')" % (t, cmd))
+            if not self._env.showOnly:
+                for t in self._targets:
+                    assert os.path.exists(t), ("target '%s' not built (after"
+                                               "running '%s')" % (t, cmd))
 
     def __str__(self):
         return "Command: %s, targets: %s" % (self._cmd, self._targets)
@@ -142,7 +143,7 @@ class Target():
             for command in self._commandList:
                 command.execute()
 
-        if self._env.doExecute():
+        if not self._env.showOnly:
             dt = time.time() - t1
             if dt < 60:
                 print(green('Done (%.2f seconds)' % dt))
@@ -159,7 +160,7 @@ class Environment():
         self._targetList = []
         self._targetDict = {}
         self._args = kwargs.get('args', [])
-        self._doExecute = not '--show' in self._args
+        self.showOnly = '--show' in self._args
         
         # Find if the -j arguments was passed to grap the number of processors
         if '-j' in self._args:
@@ -175,9 +176,6 @@ class Environment():
 
         self._downloadCmd = 'wget -nv -c -O %s %s'
         self._tarCmd = 'tar --recursive-unlink -xzf %s'
-
-    def doExecute(self):
-        return self._doExecute
 
     def getLib(self, name):
         return 'software/lib/lib%s.%s' % (name, self._libSuffix)
