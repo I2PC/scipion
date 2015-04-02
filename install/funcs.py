@@ -83,13 +83,17 @@ class Command():
 
             cmd = self._cmd
             if self._out is not None:
-                cmd += ' 1> %s 2>&1' % self._out
+                cmd += ' > %s 2>&1' % self._out
+                # TODO: more general, this only works for bash.
             print(cyan(cmd))
             if self._env.doExecute():
                 os.system(cmd)
             # Return to working directory, useful
             # when changing dir before executing command
             os.chdir(cwd)
+            for t in self._targets:
+                assert os.path.exists(t), ("target '%s' not built "
+                                           "(after running '%s')" % (t, cmd))
 
     def __str__(self):
         return "Command: %s, targets: %s" % (self._cmd, self._targets)
