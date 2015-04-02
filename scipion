@@ -319,7 +319,9 @@ def main():
             cmd = 'install/scons.py %s' % ' '.join(args)
             print(green('Compiling Xmipp ...'))
             print(cmd)
-            return os.system(cmd)
+            # If using some kind of show, do not compile Xmipp
+            if not ('--show' in args or '--show-tree' in args):
+                return os.system(cmd)
             
         if args and args[0] == '--binary':
             assert 'LDFLAGS' not in os.environ, "LDFLAGS already set. Refusing."

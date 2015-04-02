@@ -280,8 +280,6 @@ env.addModule(
     default=False)
 
 
-env.execute()
-
 
 #  ************************************************************************
 #  *                                                                      *
@@ -291,7 +289,7 @@ env.execute()
 
 # extraActions is a list of (target, command) to run after installation.
 
-env.addPackage('xmipp',
+env.addPackage2('xmipp',
                tar='xmipp_scipion.tgz',
                buildDir='xmipp_scipion',
                reqs={'mpi': 'cxx',
@@ -324,7 +322,8 @@ env.addPackage('ctffind4',
 
 env.addPackage('eman',
                tar='eman2.1.linux64.tgz',
-               extraActions=[('eman2.bashrc', './eman2-installer')],
+               commands=[('./eman2-installer', 
+                          'software/em/eman/eman2.bashrc')],
                default=False)
 
 env.addPackage('frealign',
@@ -332,7 +331,7 @@ env.addPackage('frealign',
                default=False)
 
 
-# env.addPackage('pytom',
+# env.addPackage2('pytom',
 #                tar='pytom_develop0.962.tgz',
 #                extraActions=[('pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix,
 #                               'PATH=%s/software/bin:%s '
@@ -345,7 +344,7 @@ env.addPackage('frealign',
 #                deps=[boost, 'fftw3', 'fftw3f', swig, lxml],
 #                default=False)
 
-env.addPackage('relion',
+env.addPackage2('relion',
                tar='relion-1.3.tgz',
                extraActions=[
                    ('relion_build.log', './INSTALL.sh -j 5'
@@ -357,15 +356,18 @@ env.addPackage('resmap',
                deps=['scipy'],
                default=False)
 
-env.addPackage('spider',
+env.addPackage2('spider',
                tar='spider-web-21.13.tgz',
                neededProgs=['csh'],
                default=False)
 
-env.addPackage('motioncorr',
+env.addPackage2('motioncorr',
                tar='motioncorr_v2.1.tgz',
                default=False)
 
-env.addPackage('simple',
+env.addPackage2('simple',
                tar='simple2.tgz',
                default=False)
+
+
+env.execute()

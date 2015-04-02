@@ -120,13 +120,17 @@ class Command():
                 # TODO: more general, this only works for bash.
             print(cyan(cmd))
             if not self._env.showOnly:
-                os.system(cmd)
+                # self._cmd could be a function, in which case just call it
+                if callable(self._cmd):
+                    self._cmd()
+                else: # if not, we assume is a command and we make a system call
+                    os.system(cmd)
             # Return to working directory, useful
             # when changing dir before executing command
             os.chdir(cwd)
             if not self._env.showOnly:
                 for t in self._targets:
-                    assert os.path.exists(t), ("target '%s' not built (after"
+                    assert os.path.exists(t), ("target '%s' not built (after "
                                                "running '%s')" % (t, cmd))
 
     def __str__(self):
@@ -141,8 +145,11 @@ class Target():
         self._commandList = list(commands[:])
         self._deps = [] # list of name of dependency targets
 
-    def addCommand(self, *args, **kwargs):
-        c = Command(self._env, *args, **kwargs)
+    def addCommand(self, cmd, **kwargs):
+        if isinstance(cmd, Command):
+            c = cmd
+        else:
+            c = Command(self._env, cmd, **kwargs)
         self._commandList.append(c)
         return c
 
@@ -215,6 +222,9 @@ class Environment():
 
     def getBin(self, name):
         return 'software/bin/%s' % name
+    
+    def getEm(self, name):
+        return 'software/em/%s' % name
 
     def addTarget(self, name, *commands, **kwargs):
 
@@ -244,6 +254,37 @@ class Environment():
 
             target.addDep(targetName)
 
+    def _addDownloadUntar(self, name, **kwargs):
+        """ Buid a basic target and add commands for Download and Untar.
+        This is the base for addLibrary, addModule and addPackage.
+        """
+        # Use reasonable defaults.
+        tar = kwargs.get('tar', '%s.tgz' % name)
+        urlSuffix = kwargs.get('urlSuffix', 'external')
+        url = kwargs.get('url', '%s/%s/%s' % (SCIPION_URL_SOFTWARE, urlSuffix, tar))
+        downloadDir = kwargs.get('downloadDir', 
+                                 os.path.join('software', 'tmp'))
+        buildDir = kwargs.get('buildDir',
+                              tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
+        deps = kwargs.get('deps', [])
+        
+        # Download library tgz
+        tarFile = os.path.join(downloadDir, tar)
+        buildPath = os.path.join(downloadDir, buildDir)
+        
+        t = self.addTarget(name, default=kwargs.get('default', True))
+        self._addTargetDeps(t, deps)
+        t.buildDir = buildDir
+        t.buildPath = buildPath
+
+        t.addCommand(self._downloadCmd % (tarFile, url),
+                     targets=tarFile)
+        t.addCommand(self._tarCmd % tar,
+                     targets=buildPath,
+                     cwd=downloadDir)
+        
+        return t          
+         
     def addLibrary(self, name, **kwargs):
 
 #                    tar=None, buildDir=None, configDir=None,
@@ -262,43 +303,22 @@ class Environment():
         Returns the final targets, the ones that Make will create.
 
         """
-        # Use reasonable defaults.
-        tar = kwargs.get('tar', '%s.tgz' % name)
-        url = kwargs.get('url', '%s/external/%s' % (SCIPION_URL_SOFTWARE, tar))
-        buildDir = kwargs.get('buildDir',
-                              tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
-
-        configDir = kwargs.get('configDir', buildDir)
         configTarget = kwargs.get('configTarget', 'Makefile')
         configAlways = kwargs.get('configAlways', False)
-
         flags = kwargs.get('flags', [])
         targets = kwargs.get('targets', [self.getLib(name)])
         clean = kwargs.get('clean', False) # Execute make clean at the end??
         cmake = kwargs.get('cmake', False) # Use cmake instead of configure??
-        deps = kwargs.get('deps', [])
+
         # If passing a command list (of tuples (command, target)) those actions
         # will be performed instead of the normal ./configure / cmake + make
         commands = kwargs.get('commands', []) 
-        downloadDir = kwargs.get('downloadDir', os.path.join('software', 'tmp'))
 
-        # Download library tgz
-        tarFile = os.path.join(downloadDir, tar)
-        buildPath = os.path.join(downloadDir, buildDir)
-        configPath = os.path.join(downloadDir, configDir)
+        t = self._addDownloadUntar(name, **kwargs)
+        configDir = kwargs.get('configDir', t.buildDir)
+
+        configPath = os.path.join('software/tmp', configDir)
         makeFile = '%s/%s' % (configPath, configTarget)
-
-        t = self.addTarget(name, default=kwargs.get('default', True))
-        t.buildDir = buildDir 
-        
-        self._addTargetDeps(t, deps)
-
-        t.addCommand(self._downloadCmd % (tarFile, url),
-                     targets=tarFile)
-        t.addCommand(self._tarCmd % tar,
-                     targets=buildPath,
-                     cwd=downloadDir)
-
         prefixPath = os.path.abspath('software')
 
         # If we specified the commands to run to obtain the target,
@@ -327,17 +347,17 @@ class Environment():
                          out='%s/log/%s_cmake.log' % (prefixPath, name))
 
         t.addCommand('make -j %d' % self._processors,
-                     cwd=buildPath,
+                     cwd=t.buildPath,
                      out='%s/log/%s_make.log' % (prefixPath, name))
 
         t.addCommand('make install',
                      targets=targets,
-                     cwd=buildPath,
+                     cwd=t.buildPath,
                      out='%s/log/%s_make_install.log' % (prefixPath, name))
 
         if clean:
             t.addCommand('make clean',
-                         cwd=buildPath,
+                         cwd=t.buildPath,
                          out='%s/log/%s_make_clean.log' % (prefixPath, name))
             t.addCommand('rm %s' % makeFile)
 
@@ -408,14 +428,35 @@ class Environment():
 
         return t
     
-    def addPackage(self, name, *args, **kwargs):
+    def addPackage(self, name, **kwargs):
+        """ This function download a package tar.gz, untar it and 
+        create a link in software/em.
+        Params in kwargs:
+            tar: the package tar file, by default the name + .tgz
+            commands: a list with action to be executed to install the package
+        """
+        # We reuse the download and untar from the addLibrary method
+        # and pass the createLink as a new command 
+        tar = kwargs.get('tar', '%s.tgz' % name)
+        packageDir = tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+        
         libArgs = {'downloadDir': os.path.join('software', 'em'),
-                   'commands': [(lambda: createPackageLink(name, t.buildDir), 
-                                 [])]}
+                   'urlSuffix': 'em'}
         libArgs.update(kwargs)
-        t = self.addLibrary(name)
-        t.addCommand(Command(self, lambda: createPackageLink(name, t.buildDir), 
-                             targets='software/em'))
+        
+        t = self._addDownloadUntar(name, **libArgs)
+        t.addCommand(Command(self, Link(name, packageDir),
+                             targets=[self.getEm(name), 
+                                      self.getEm(packageDir)],
+                             cwd=self.getEm('')))
+        commands = kwargs.get('commands', [])
+        for cmd, tgt in commands:
+            t.addCommand(cmd, targets=tgt, cwd=t.buildPath)            
+        
+        return t
+    
+    def addPackage2(self, *args, **kwargs):
+        pass
 
     def _showTargetGraph(self, targetList):
         """ Traverse the targets taking into account
@@ -486,27 +527,39 @@ class Environment():
         else:
             self._executeTargets(targetList)
             
-            
-def createPackageLink(packageLink, packageFolder):
-    """ Create a link to packageFolder in packageLink, validate
-    that packageFolder exists and if packageLink exists it is 
-    a link.
-    This function is supposed to be executed in software/em folder.
-    """
-    linkText = "'%s -> %s'" % (packageLink, packageFolder)
-    
-    if not os.path.exists(packageFolder):
-        print(red("Creating link %s, but '%s' does not exist!!!\n"
-             "INSTALLATION FAILED!!!" % (linkText, packageFolder)))
-        sys.exit(1)
-
-    if os.path.exists(packageLink):
-        if os.path.islink(packageLink):
-            os.remove(packageLink)
-        else:
-            print(red("Creating link %s, but '%s' exists and is not a link!!!\n"
-                 "INSTALLATION FAILED!!!" % (linkText, packageLink)))
+        
+class Link():
+    def __init__(self, packageLink, packageFolder):
+        self._packageLink = packageLink
+        self._packageFolder = packageFolder
+        
+    def __call__(self):
+        self.createPackageLink(self._packageLink, self._packageFolder)
+        
+    def __str__(self):
+        return "Link '%s -> %s'" % (self._packageLink, self._packageFolder)
+        
+    def createPackageLink(self, packageLink, packageFolder):
+        """ Create a link to packageFolder in packageLink, validate
+        that packageFolder exists and if packageLink exists it is 
+        a link.
+        This function is supposed to be executed in software/em folder.
+        """
+        linkText = "'%s -> %s'" % (packageLink, packageFolder)
+        
+        if not os.path.exists(packageFolder):
+            print(red("Creating link %s, but '%s' does not exist!!!\n"
+                 "INSTALLATION FAILED!!!" % (linkText, packageFolder)))
             sys.exit(1)
-
-    os.symlink(packageFolder, packageLink)
-    print("Created link: %s" % linkText)
+    
+        if os.path.exists(packageLink):
+            if os.path.islink(packageLink):
+                os.remove(packageLink)
+            else:
+                print(red("Creating link %s, but '%s' exists and is not a link!!!\n"
+                     "INSTALLATION FAILED!!!" % (linkText, packageLink)))
+                sys.exit(1)
+    
+        os.symlink(packageFolder, packageLink)
+        print("Created link: %s" % linkText)
+        
