@@ -50,13 +50,8 @@ debug = False
 # fast = False
 # quiet = True
 matlab = False
-opencv = GetOption('opencv')
+opencv = True#GetOption('opencv')
 
-
-packageDeps = env['PACKAGE']['DEPS']
-
-if isinstance(packageDeps, basestring):
-    packageDeps = [packageDeps]
 
 # Read some flags
 CYGWIN = env['PLATFORM'] == 'cygwin'
@@ -85,8 +80,7 @@ def addLib(name, **kwargs):
                                      os.path.join(XMIPP_PATH, 'libraries')]
     kwargs['incs'] = incs 
     
-    # Add always packageDeps as dependencies
-    deps = kwargs.get('deps', []) + packageDeps
+    deps = kwargs.get('deps', [])
     kwargs['deps'] = deps
     
     # Add libraries in libs as deps if not present
@@ -782,30 +776,31 @@ def addMatlabBinding(name):
     
     return cmdTarget
 
-bindings = ['tom_xmipp_adjust_ctf', 
-            'tom_xmipp_align2d', 
-            'tom_xmipp_ctf_correct_phase',
-            'tom_xmipp_mask', 
-            'tom_xmipp_mirror', 
-            'tom_xmipp_morphology', 
-            'tom_xmipp_normalize', 
-            'tom_xmipp_psd_enhance',
-            'tom_xmipp_resolution', 
-            'tom_xmipp_rotate', 
-            'tom_xmipp_scale', 
-            'tom_xmipp_scale_pyramid', 
-            'tom_xmipp_volume_segment',
-            
-            'xmipp_nma_read_alignment',
-            'xmipp_nma_save_cluster',
-            'xmipp_read',
-            'xmipp_read_structure_factor',
-            'xmipp_write',
-            ]
-for b in bindings:
-    addMatlabBinding(b)
+if matlab:
+    bindings = ['tom_xmipp_adjust_ctf', 
+                'tom_xmipp_align2d', 
+                'tom_xmipp_ctf_correct_phase',
+                'tom_xmipp_mask', 
+                'tom_xmipp_mirror', 
+                'tom_xmipp_morphology', 
+                'tom_xmipp_normalize', 
+                'tom_xmipp_psd_enhance',
+                'tom_xmipp_resolution', 
+                'tom_xmipp_rotate', 
+                'tom_xmipp_scale', 
+                'tom_xmipp_scale_pyramid', 
+                'tom_xmipp_volume_segment',
+                
+                'xmipp_nma_read_alignment',
+                'xmipp_nma_save_cluster',
+                'xmipp_read',
+                'xmipp_read_structure_factor',
+                'xmipp_write',
+                ]
+    for b in bindings:
+        addMatlabBinding(b)
     
-env.Default('Xmipp-matlab', matlab)
+    env.Default('Xmipp-matlab', matlab)
 
 XmippAlias = env.Alias('Xmipp', ['Xmipp-libs', 
                                  'Xmipp-programs', 
