@@ -321,7 +321,7 @@ def main():
             import install.script as script
             from install.funcs import green
             cmd = 'install/scons.py %s' % ' '.join(args)
-            print(green('> Compiling Xmipp'))
+            print(green('Compiling Xmipp ...'))
             print(cmd)
             return os.system(cmd)
             

@@ -63,7 +63,7 @@ class Command():
         self._always = kwargs.get('always', False)
 
     def _existsAll(self):
-        """ Return True if all targets exists. """
+        """ Return True if all targets exist. """
         for t in self._targets:
             #print(red("  Checking target: %s, exists: %s" % (t, os.path.exists(t))))
             if not os.path.exists(t):
@@ -72,19 +72,19 @@ class Command():
 
     def execute(self):
         if not self._always and self._targets and self._existsAll():
-            print("  Skipping command: %s" % self._cmd)
-            print("  All targets exists.")
+            print("  Skipping command: %s" % cyan(self._cmd))
+            print("  All targets exist.")
         else:
             cwd = os.getcwd()
             if self._cwd is not None:
                 if self._env.doExecute():
                     os.chdir(self._cwd)
-                print("  cd %s" % self._cwd)
+                print(cyan("cd %s" % self._cwd))
 
             cmd = self._cmd
             if self._out is not None:
                 cmd += ' 1> %s 2>&1' % self._out
-            print("  %s " % cmd)
+            print(cyan(cmd))
             if self._env.doExecute():
                 os.system(cmd)
             # Return to working directory, useful
@@ -133,25 +133,20 @@ class Target():
     def execute(self):
         t1 = time.time()
 
-        print(green("> Building '%s'" % self._name))
+        print(green("Building %s ..." % self._name))
         if self._existsAll():
-            print("  All targets exists, skipping.")
+            print("  All targets exist, skipping.")
         else:
             for command in self._commandList:
                 command.execute()
 
-        t2 = time.time()
+        dt = time.time() - t1
 
         if self._env.doExecute():
-            e = int(t2 - t1)
-            mins = e / 60
-            secs = e % 60
-            if mins > 0:
-                minStr = '%d min ' % mins
+            if dt < 60:
+                print(green('Done (%.2f seconds)' % dt))
             else:
-                minStr = ''
-
-            print('< Elapsed: %s%d secs' % (minStr, secs))
+                print(green('Done (%d m %02d s)' % (dt / 60, int(dt) % 60)))
 
     def __str__(self):
         return self._name
