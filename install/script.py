@@ -112,7 +112,7 @@ sqlite = env.addLibrary(
 hdf5 = env.addLibrary(
      'hdf5',
      tar='hdf5-1.8.14.tgz',
-     flags=['--enable-cxx'],
+     flags=['--enable-cxx', '--enable-shared'],
      targets=[env.getLib('hdf5'), env.getLib('hdf5_cpp')],
      configAlways=True,
      deps=[zlib])
@@ -137,6 +137,28 @@ opencv = env.addLibrary(
     tar='opencv-2.4.9.tgz',
     targets=[env.getLib('opencv_core')],
     cmake=True,
+    default=False)
+
+# ---------- Libraries required by PyTom 
+pcre = env.addLibrary(
+    'pcre',
+    tar='pcre-8.36.tgz',
+    targets=[env.getBin('pcretest')],
+    default=False)
+
+swig = env.addLibrary(
+    'swig',
+    tar='swig-3.0.2.tgz',
+    targets=[env.getBin('swig')],
+    makeTargets=['Source/Swig/tree.o'],
+    deps=[pcre],
+    default=False)
+
+boost = env.addLibrary(
+    'boost',
+    tar='boost_1_56_0.tgz',
+    commands=[('cp -rf software/tmp/boost_1_56_0/boost software/include/', 
+               'software/include/boost')],
     default=False)
 
 

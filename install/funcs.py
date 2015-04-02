@@ -248,6 +248,9 @@ class Environment():
         clean = kwargs.get('clean', False) # Execute make clean at the end??
         cmake = kwargs.get('cmake', False) # Use cmake instead of configure??
         deps = kwargs.get('deps', [])
+        # If passing a command list (of tuples (command, target))
+        # that actions will be performed instead of normal ./configure/cmake + make
+        commands = kwargs.get('commands', []) 
 
         # Download library tgz
         tarFile = 'software/tmp/%s' % tar
@@ -266,36 +269,40 @@ class Environment():
 
         prefixPath = os.path.abspath('software')
 
-        if not cmake:
-            flags.append('--prefix=%s' % prefixPath)
-            flags.append('--libdir=%s/lib' % prefixPath)
-
-            t.addCommand('./configure %s' % ' '.join(flags),
-                         targets=makeFile,
-                         cwd=configPath,
-                         out='%s/log/%s_configure.log' % (prefixPath, name),
-                         always=configAlways)
+        if commands:
+            for cmd, tgt in commands:
+                t.addCommand(cmd, targets=tgt)
         else:
-            flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefixPath)
-            t.addCommand('cmake %s' % ' '.join(flags),
-                         targets=makeFile,
-                         cwd=configPath,
-                         out='%s/log/%s_cmake.log' % (prefixPath, name))
-
-        t.addCommand('make -j %d' % SCIPION_PROCS,
-                     cwd=buildPath,
-                     out='%s/log/%s_make.log' % (prefixPath, name))
-
-        t.addCommand('make install',
-                     targets=targets,
-                     cwd=buildPath,
-                     out='%s/log/%s_make_install.log' % (prefixPath, name))
-
-        if clean:
-            t.addCommand('make clean',
+            if not cmake:
+                flags.append('--prefix=%s' % prefixPath)
+                flags.append('--libdir=%s/lib' % prefixPath)
+    
+                t.addCommand('./configure %s' % ' '.join(flags),
+                             targets=makeFile,
+                             cwd=configPath,
+                             out='%s/log/%s_configure.log' % (prefixPath, name),
+                             always=configAlways)
+            else:
+                flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefixPath)
+                t.addCommand('cmake %s' % ' '.join(flags),
+                             targets=makeFile,
+                             cwd=configPath,
+                             out='%s/log/%s_cmake.log' % (prefixPath, name))
+    
+            t.addCommand('make -j %d' % SCIPION_PROCS,
                          cwd=buildPath,
-                         out='%s/log/%s_make_clean.log' % (prefixPath, name))
-            t.addCommand('rm %s' % makeFile)
+                         out='%s/log/%s_make.log' % (prefixPath, name))
+    
+            t.addCommand('make install',
+                         targets=targets,
+                         cwd=buildPath,
+                         out='%s/log/%s_make_install.log' % (prefixPath, name))
+    
+            if clean:
+                t.addCommand('make clean',
+                             cwd=buildPath,
+                             out='%s/log/%s_make_clean.log' % (prefixPath, name))
+                t.addCommand('rm %s' % makeFile)
 
         return t
 
