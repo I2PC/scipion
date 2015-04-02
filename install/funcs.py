@@ -104,10 +104,8 @@ class Target():
         self._env = env
         self._name = name
         self._default = kwargs.get('default', False)
-        self._commandList = []
+        self._commandList = list(commands[:])
         self._deps = [] # list of name of dependency targets
-        for c in commands:
-            self._commandList.append(c)
 
     def addCommand(self, *args, **kwargs):
         c = Command(self._env, *args, **kwargs)
@@ -144,9 +142,8 @@ class Target():
             for command in self._commandList:
                 command.execute()
 
-        dt = time.time() - t1
-
         if self._env.doExecute():
+            dt = time.time() - t1
             if dt < 60:
                 print(green('Done (%.2f seconds)' % dt))
             else:
@@ -229,11 +226,7 @@ class Environment():
         buildDir) and installs it. It also tells SCons about the proper
         dependencies (deps).
 
-        If addPath=False, we will not pass the variables PATH and
-        LD_LIBRARY_PATH pointing to our local installation directory.
-
-        If default=False, the library will not be built unless the option
-        --with-<name> is used.
+        If default=False, the library will not be built.
 
         Returns the final targets, the ones that Make will create.
 
@@ -253,8 +246,8 @@ class Environment():
         clean = kwargs.get('clean', False) # Execute make clean at the end??
         cmake = kwargs.get('cmake', False) # Use cmake instead of configure??
         deps = kwargs.get('deps', [])
-        # If passing a command list (of tuples (command, target))
-        # that actions will be performed instead of normal ./configure/cmake + make
+        # If passing a command list (of tuples (command, target)) those actions
+        # will be performed instead of the normal ./configure / cmake + make
         commands = kwargs.get('commands', []) 
 
         # Download library tgz
