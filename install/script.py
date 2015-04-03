@@ -328,7 +328,6 @@ env.addPackage('relion',
                tar='relion-1.3.tgz',
                commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
-                           'lib/librelion-1.3.so',
                            'bin/relion'])],
                default=False)
 
