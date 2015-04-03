@@ -323,11 +323,13 @@ def main():
             # options for scons and our own install script
             sconsArgs = [a for a in args if not script.env.hasTarget(a)]
             cmd = 'install/scons.py %s' % ' '.join(sconsArgs)
-            print(green('Compiling Xmipp ...'))
-            print(cmd)
-            # If using some kind of show, do not compile Xmipp
-            if not ('--show' in args or '--show-tree' in args):
-                return os.system(cmd)
+            
+            if 'xmipp' in sconsArgs:
+                print(green('Compiling Xmipp ...'))
+                print(cmd)
+                # If using some kind of show, do not compile Xmipp
+                if not ('--show' in args or '--show-tree' in args):
+                    return os.system(cmd)
             
         if args and args[0] == '--binary':
             assert 'LDFLAGS' not in os.environ, "LDFLAGS already set. Refusing."
