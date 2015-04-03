@@ -661,20 +661,19 @@ for p in ['angular_commonline',
 
 # Optical Alignment program, that depends on opencv (cpu version)
 if opencv:
-    addProg('optical_alignment_cpu',
-            libs=['opencv_core', 
+    opencvLibs = ['opencv_core', 
                   'opencv_legacy', 
                   'opencv_imgproc', 
-                  'opencv_video'],
+                  'opencv_video']
+    
+    addProg('optical_alignment_cpu',
+            libs=opencvLibs,
             deps=['opencv'])
 
     if cuda: # also the gpu version
+        opencvLibs.append('opencv_gpu')
         addProg('optical_alignment_gpu',
-                libs=['cudart', 'cublas', 
-                      'cufft', 'curand', 
-                      'cusparse', 'npp', 
-                      'nvToolsExt', 
-                      'opencv_gpu'],
+                libs=opencvLibs,
                 deps=['opencv'], cuda=True)
 
 # Some special programs not ready for release
