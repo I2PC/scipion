@@ -94,7 +94,7 @@ def addLib(name, **kwargs):
     kwargs['patterns'] = patterns
     
     lib = env.AddCppLibrary(name, **kwargs)
-    env.Alias('Xmipp-libs', lib)
+    env.Alias('xmipp-libs', lib)
     
     return lib
 
@@ -195,12 +195,12 @@ addLib('XmippParallel',
               mpi=True)
 
 # Python binding
-addLib('xmipp',
+addLib('xmipp.so',
        dirs=['libraries/bindings'],
        patterns=['python/*.cpp'],
        incs=python_incs,
        libs=['python2.7', 'XmippData', 'XmippRecons', 'XmippBilib'],
-       prefix='')
+       prefix='', target='xmipp')
 
 # Java binding
 addLib('XmippJNI',
@@ -356,7 +356,7 @@ xmippTest = env.AddJavaLibrary(
 # For any yet unkown issue, using the environment used for the rest of the SCons is imposible to compile java code
 # FIXME: Its needed to guess why and correct this. In the meanwhile we'll use an alternative environment
 env2 = Environment()
-env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir('#software/em/xmipp/java/lib').abspath,'*.jar'))))
+env2.AppendUnique(JAVACLASSPATH='"%s/*"' % Dir('#software/em/xmipp/java/lib').abspath)
 javaExtraFileTypes = env2.Java(Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class').abspath, 
                                File('#software/em/xmipp/java/src/HandleExtraFileTypes.java').abspath)
 env2.Depends(javaExtraFileTypes, Entry('#software/em/xmipp/java/lib/XmippViewer.jar').abspath)
@@ -376,7 +376,7 @@ env.AddJavaTest('FilenameTest', 'XmippTest.jar')
 env.AddJavaTest('ImageGenericTest', 'XmippTest.jar')
 env.AddJavaTest('MetadataTest', 'XmippTest.jar')
 
-env.Alias('Xmipp-java', [xmippJavaJNI, 
+env.Alias('xmipp-java', [xmippJavaJNI, 
                          xmippJavaUtils,
                          xmippIJ,
                          xmippViewer,
@@ -407,7 +407,7 @@ def addRunTest(testName, prog):
                           "%s/scipion run $SOURCE --gtest_output=xml:$TARGET" % os.environ['SCIPION_HOME'])
     env.Alias('run_' + testName, testCase)
     env.Depends(testCase, prog)
-    env.Alias('Xmipp-runtests', testCase)
+    env.Alias('xmipp-runtests', testCase)
     
     AlwaysBuild(testCase)
     
@@ -446,14 +446,14 @@ def addProg(progName, **kwargs):
     
     if progName.startswith('test_'):
         kwargs['libs'] += ['XmippGtest']
-        env.Alias('Xmipp-tests', xmippProgName)
+        env.Alias('xmipp-tests', xmippProgName)
         addRunTest(progName, xmippProgName)
         
     prog = env.AddProgram(xmippProgName, **kwargs)
     
     # Add some aliases before return
     env.Alias(xmippProgName, prog)
-    env.Alias('Xmipp-programs', prog)
+    env.Alias('xmipp-programs', prog)
     
     
     return prog
@@ -668,14 +668,14 @@ if opencv:
                   'opencv_video'],
             deps=['opencv'])
 
-if cuda:
-    addProg('optical_alignment_gpu',
-            libs=['cudart', 'cublas', 
-                  'cufft', 'curand', 
-                  'cusparse', 'npp', 
-                  'nvToolsExt', 
-                  'opencv_gpu'],
-            deps=['opencv'])
+    if cuda: # also the gpu version
+        addProg('optical_alignment_gpu',
+                libs=['cudart', 'cublas', 
+                      'cufft', 'curand', 
+                      'cusparse', 'npp', 
+                      'nvToolsExt', 
+                      'opencv_gpu'],
+                deps=['opencv'], cuda=True)
 
 # Some special programs not ready for release
 if not release:
@@ -705,7 +705,7 @@ def addBatch(batchName, script, scriptFolder='applications/scripts'):
     batchLink = env.SymLink(os.path.join(XMIPP_PATH, 'bin', xmippBatchName),
                             os.path.join(XMIPP_PATH, scriptFolder, script)
                             )
-    env.Alias('Xmipp-batchs', batchLink)
+    env.Alias('xmipp-batchs', batchLink)
     
     return batchLink
                             
@@ -766,13 +766,13 @@ def compileMatlabBinding(target, source, env):
 
 # Matlab programs
 def addMatlabBinding(name):
-    """ Add options to compile Xmipp-Matlab bindings. """
+    """ Add options to compile xmipp-Matlab bindings. """
     matlabDir = os.path.join(XMIPP_PATH, 'libraries', 'bindings', 'matlab')
     source = os.path.join(matlabDir, name + ".cpp")
     target = os.path.join(matlabDir, name + ".mexa64")
 
     cmdTarget = env.Command(target, source, compileMatlabBinding)
-    env.Alias('Xmipp-matlab', cmdTarget)        
+    env.Alias('xmipp-matlab', cmdTarget)        
     
     return cmdTarget
 
@@ -800,11 +800,11 @@ if matlab:
     for b in bindings:
         addMatlabBinding(b)
     
-    env.Default('Xmipp-matlab', matlab)
+    env.Default('xmipp-matlab', matlab)
 
-XmippAlias = env.Alias('Xmipp', ['Xmipp-libs', 
-                                 'Xmipp-programs', 
-                                 'Xmipp-batchs',
-                                 'Xmipp-java'])
+XmippAlias = env.Alias('xmipp', ['xmipp-libs', 
+                                 'xmipp-programs', 
+                                 'xmipp-batchs',
+                                 'xmipp-java'])
 
 Return('XmippAlias')
