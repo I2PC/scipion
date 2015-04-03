@@ -427,7 +427,8 @@ class Environment():
         packageDir = tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
         
         libArgs = {'downloadDir': os.path.join('software', 'em'),
-                   'urlSuffix': 'em'}
+                   'urlSuffix': 'em',
+                   'default': False} # This will be updated with value in kwargs
         libArgs.update(kwargs)
         
         t = self._addDownloadUntar(name, **libArgs)
