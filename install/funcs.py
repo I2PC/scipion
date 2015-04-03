@@ -497,8 +497,8 @@ class Environment():
 
     def execute(self):
         # Check if there are explicit targets and only install
-        # the selected ones
-        cmdTargets = [a for a in self._args[2:] if a[0].isalpha()]
+        # the selected ones, ignore starting with 'xmipp'
+        cmdTargets = [a for a in self._args[2:] if a[0].isalpha() and not a.startswith('xmipp')]
 
         if cmdTargets:
             # Grab the targets passed in the command line
