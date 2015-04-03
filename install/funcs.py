@@ -236,6 +236,15 @@ class Environment():
         self._targetDict[name] = t
 
         return t
+    
+    def getTarget(self, name):
+        return self._targetDict[name]
+    
+    def hasTarget(self, name):
+        return name in self._targetDict
+    
+    def getTargets(self):
+        return self._targetList
 
     def _addTargetDeps(self, target, deps):
         """ Add the dependencies to target.
@@ -451,7 +460,8 @@ class Environment():
                              cwd=self.getEm('')))
         commands = kwargs.get('commands', [])
         for cmd, tgt in commands:
-            t.addCommand(cmd, targets=tgt, cwd=t.buildPath)            
+            t.addCommand(cmd, targets=tgt, 
+                         cwd=t.buildPath)            
         
         return t
     

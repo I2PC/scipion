@@ -193,7 +193,7 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, 
 
 def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[], 
                       libs=[], prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], 
-                      mpi=False, cuda=False, default=True):
+                      mpi=False, cuda=False, default=True, target=None):
     """Add self-made and compiled shared library to the compilation process
     
     This pseudobuilder access given directory, compiles it
@@ -212,7 +212,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     suffix = '.so' if suffix is None else suffix
     
     basedir = 'lib'
-    fullname = prefix + name
+    targetName = join(basedir, target if target else prefix + name)
     sources = []
 
     _libpath.append(Dir('#software/lib').abspath)
@@ -229,7 +229,6 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
 
     mpiArgs = {}
     if mpi:
-        print "addCppLibrary: %s, mpi=True" % name
         _libpath.append(env['MPI_LIBDIR'])
         _libs.append(env['MPI_LIB']) 
         _incs.append(env['MPI_INCLUDE'])
@@ -251,7 +250,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     _incs.append('#software/include')
 
     library = env2.SharedLibrary(
-              target=join(basedir, fullname),
+              target=targetName,
               #source=lastTarget,
               source=sources,
               CPPPATH=_incs,
