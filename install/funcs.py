@@ -220,6 +220,9 @@ class Environment():
     def getLibSuffix(self):
         return self._libSuffix
     
+    def getProcessors(self):
+        return self._processors
+    
     def getLib(self, name):
         return 'software/lib/lib%s.%s' % (name, self._libSuffix)
 
@@ -434,17 +437,21 @@ class Environment():
                    'default': False} # This will be updated with value in kwargs
         libArgs.update(kwargs)
         
-        t = self._addDownloadUntar(name, **libArgs)
-        t.addCommand(Command(self, Link(name, packageDir),
+        target = self._addDownloadUntar(name, **libArgs)
+        target.addCommand(Command(self, Link(name, packageDir),
                              targets=[self.getEm(name), 
                                       self.getEm(packageDir)],
                              cwd=self.getEm('')))
         commands = kwargs.get('commands', [])
         for cmd, tgt in commands:
-            t.addCommand(cmd, targets=tgt, 
-                         cwd=t.buildPath)            
+            if not isinstance(tgt, list):
+                tgt = [tgt]
+            # Take all package targets relative to package build dir
+            target.addCommand(cmd, targets=[os.path.join(target.buildPath, t) 
+                                            for t in tgt], 
+                         cwd=target.buildPath)            
         
-        return t
+        return target
     
     def _showTargetGraph(self, targetList):
         """ Traverse the targets taking into account

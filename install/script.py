@@ -304,7 +304,7 @@ env.addPackage('ctffind4',
 env.addPackage('eman',
                tar='eman2.1.linux64.tgz',
                commands=[('./eman2-installer', 
-                          'software/em/eman/eman2.bashrc')],
+                          'eman2.bashrc')],
                default=False)
 
 env.addPackage('frealign',
@@ -326,7 +326,10 @@ env.addPackage('pytom',
 
 env.addPackage('relion',
                tar='relion-1.3.tgz',
-               commands=[('./INSTALL.sh -j 5', 'relion_build.log')],
+               commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
+                          ['relion_build.log',
+                           'lib/librelion-1.3.so',
+                           'bin/relion'])],
                default=False)
 
 env.addPackage('resmap',
