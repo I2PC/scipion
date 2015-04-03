@@ -295,10 +295,6 @@ class Environment():
         return t          
          
     def addLibrary(self, name, **kwargs):
-
-#                    tar=None, buildDir=None, configDir=None,
-#                    targets=[], makeTargets=None, libChecks=[], url=None, flags=[], addPath=True,
-#                    autoConfigTargets='Makefile', deps=[], clean=[], default=True):
         """Add library <name> to the construction process.
 
         This pseudobuilder checks that the needed programs are in PATH,
@@ -373,46 +369,27 @@ class Environment():
         return t
 
     def addModule(self, name, **kwargs):
-                  #tar=None, buildDir=None, targets=None, libChecks=[],
-                  #url=None, flags=[], deps=[], clean=[], default=True):
-        """Add Python module <name> to the construction process.
-
-        This pseudobuilder downloads the given url, untars the resulting
-        tar file, configures the module with the given flags, compiles it
-        (in the given buildDir) and installs it. It also tells SCons about
-        the proper dependencies (deps).
-
-        If default=False, the module will not be built unless the option
-        --with-<name> is used.
-
-        Returns the final target (software/lib/python2.7/site-packages/<name>).
-
+        """Add a new module to our built Python .
+        Params in kwargs:
+            targets: targets that should be generated after building the module.
+            flags: special flags passed to setup.py 
+            deps: dependencies of this modules.
+            default: True if this module is build by default.
         """
         # Use reasonable defaults.
-        tar = kwargs.get('tar', '%s.tgz' % name)
-        url = kwargs.get('url', '%s/python/%s' % (SCIPION_URL_SOFTWARE, tar))
-        buildDir = kwargs.get('buildDir',
-                              tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
-
         targets = kwargs.get('targets', [name])
         flags = kwargs.get('flags', [])
+        
         deps = kwargs.get('deps', [])
         deps.append('python')
-
-        tarFile = 'software/tmp/%s' % tar
-        buildPath = 'software/tmp/%s' % buildDir
 
         prefixPath = os.path.abspath('software')
         flags.append('--prefix=%s' % prefixPath)
 
-        t = self.addTarget(name, default=kwargs.get('default', True))
+        modArgs = {'urlSuffix': 'python'}
+        modArgs.update(kwargs)
+        t = self._addDownloadUntar(name, **modArgs )
         self._addTargetDeps(t, deps)
-
-        t.addCommand(self._downloadCmd % (tarFile, url),
-                     targets=tarFile)
-        t.addCommand(self._tarCmd % tar,
-                     targets='%s/setup.py' % buildPath,
-                     cwd='software/tmp')
 
         def path(x):
             if '/' in x:
@@ -433,7 +410,7 @@ class Environment():
                                                        'flags': ' '.join(flags),
                                                        'name': name},
                    targets=[path(tg) for tg in targets],
-                   cwd=buildPath)
+                   cwd=t.buildPath)
 
         return t
     
