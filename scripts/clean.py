@@ -17,4 +17,4 @@ cmd('rm -rf software/tmp/*')
 cmd('rm -rf software/log/*')
 
 for ext in ['so', 'os', 'o']:
-    cmd('find sotware/em/xmipp -name "*.%s" -exec rm -rf {} \;' % ext)
+    cmd('find software/em/xmipp -name "*.%s" -exec rm -rf {} \;' % ext)
