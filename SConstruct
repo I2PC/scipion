@@ -445,7 +445,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     libPathsCopy = libPaths + [Dir('lib').abspath, Dir('#software/lib').abspath]
     incs = incs or []
     if cuda:
-        libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
+        libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt']
         incs += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
                  join(env['CUDA_SDK_PATH'], "shared","inc"),
                  join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib","linux"),
