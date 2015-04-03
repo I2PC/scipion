@@ -101,7 +101,7 @@ png = env.addLibrary(
 tiff = env.addLibrary(
      'tiff',
      tar='tiff-3.9.4.tgz',
-     deps=[zlib])
+     deps=[zlib, jpeg])
 
 sqlite = env.addLibrary(
     'sqlite3',
