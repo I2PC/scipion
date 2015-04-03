@@ -443,9 +443,6 @@ class Environment():
         
         return t
     
-    def addPackage2(self, *args, **kwargs):
-        pass
-
     def _showTargetGraph(self, targetList):
         """ Traverse the targets taking into account
         their dependences and print them in DOT format.

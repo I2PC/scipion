@@ -287,26 +287,8 @@ env.addModule(
 #  *                                                                      *
 #  ************************************************************************
 
-# extraActions is a list of (target, command) to run after installation.
+# 'commands' is a list of (command, [targets]) to run after installation.
 
-env.addPackage2('xmipp',
-               tar='xmipp_scipion.tgz',
-               buildDir='xmipp_scipion',
-               reqs={'mpi': 'cxx',
-                     'freetype': 'cxx',
-                     'X11': 'cxx',
-                     'png': 'cxx',
-                     'ncurses': 'cxx',
-                     'ssl': 'cxx',
-                     'readline': 'cxx'},
-               #deps=[opencv],
-               default=False)
-# In case you want to install an older version of Xmipp, you can use
-# the extraActions parameter instead of using its own SConscript, like this:
-# 
-#               extraActions=[('xmipp.bashrc',
-#                             './install.sh --unattended=true --gui=false -j %s'
-#                              % GetOption('num_jobs'))],
 
 env.addPackage('bsoft',
                tar='bsoft1_8_8_Fedora_12.tgz',
@@ -333,7 +315,7 @@ env.addPackage('frealign',
 
 # env.addPackage2('pytom',
 #                tar='pytom_develop0.962.tgz',
-#                extraActions=[('pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix,
+#                commands=[('pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix,
 #                               'PATH=%s/software/bin:%s '
 #                               'LD_LIBRARY_PATH=%s/software/lib:%s '
 #                               'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s '
@@ -344,11 +326,9 @@ env.addPackage('frealign',
 #                deps=[boost, 'fftw3', 'fftw3f', swig, lxml],
 #                default=False)
 
-env.addPackage2('relion',
+env.addPackage('relion',
                tar='relion-1.3.tgz',
-               extraActions=[
-                   ('relion_build.log', './INSTALL.sh -j 5'
-                    )],
+               commands=[('./INSTALL.sh -j 5', 'relion_build.log')],
                default=False)
 
 env.addPackage('resmap',
@@ -356,16 +336,16 @@ env.addPackage('resmap',
                deps=['scipy'],
                default=False)
 
-env.addPackage2('spider',
+env.addPackage('spider',
                tar='spider-web-21.13.tgz',
                neededProgs=['csh'],
                default=False)
 
-env.addPackage2('motioncorr',
+env.addPackage('motioncorr',
                tar='motioncorr_v2.1.tgz',
                default=False)
 
-env.addPackage2('simple',
+env.addPackage('simple',
                tar='simple2.tgz',
                default=False)
 
