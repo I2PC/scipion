@@ -217,6 +217,9 @@ class Environment():
         self._downloadCmd = 'wget -nv -c -O %s %s'
         self._tarCmd = 'tar --recursive-unlink -xzf %s'
 
+    def getLibSuffix(self):
+        return self._libSuffix
+    
     def getLib(self, name):
         return 'software/lib/lib%s.%s' % (name, self._libSuffix)
 

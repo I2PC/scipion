@@ -41,13 +41,13 @@ env = Environment(args=sys.argv)
 # In order to get both the float and double libraries of fftw
 # we need to execute ./configure; make; make install twice
 # see: http://www.fftw.org/fftw2_doc/fftw_6.html
-env.addLibrary(
+fftw3 = env.addLibrary(
     'fftw3',
     tar='fftw-3.3.4.tgz',
     flags=['--enable-threads', '--enable-shared'],
     clean=True) # We need to clean to configure again with --enable-float
     
-env.addLibrary(
+fftw3f = env.addLibrary(
     'fftw3f',
     tar='fftw-3.3.4.tgz',
     flags=['--enable-threads', '--enable-shared', '--enable-float'])
@@ -189,13 +189,12 @@ numpy = env.addModule(
 six = env.addModule(
     'six',
     tar='six-1.7.3.tgz',
-    targets=['six.py'],
-    flags=['--old-and-unmanageable'])
+    targets=['six.py', 'six-1.7.3-py2.7.egg-info'])
 
 dateutil = env.addModule(
     'dateutil',
     tar='python-dateutil-1.5.tgz',
-    flags=['--old-and-unmanageable'],
+    targets=['python_dateutil-1.5-py2.7.egg'],
     deps=[setuptools, six])
 
 pyparsing = env.addModule(
@@ -206,25 +205,25 @@ pyparsing = env.addModule(
 matplotlib = env.addModule(
     'matplotlib',
     tar='matplotlib-1.3.1.tgz',
-    flags=['--old-and-unmanageable'],
+    targets=['matplotlib-1.3.1-py2.7-linux-x86_64.egg'],
     deps=[numpy, png, dateutil, pyparsing])
 
-env.addModule(
+psutil = env.addModule(
     'psutil',
-    tar='psutil-2.1.1.tgz',
-    flags=['--old-and-unmanageable'])
+    targets=['psutil-2.1.1-py2.7-linux-x86_64.egg'],
+    tar='psutil-2.1.1.tgz')
 
-env.addModule(
+mpi4py = env.addModule(
     'mpi4py',
     tar='mpi4py-1.3.1.tgz')
 
-env.addModule(
+scipy = env.addModule(
     'scipy',
     tar='scipy-0.14.0.tgz',
     default=False,
     deps=[lapack, numpy, matplotlib])
 
-env.addModule(
+bibtexparser = env.addModule(
     'bibtexparser',
     tar='bibtexparser-0.5.tgz')
 
@@ -232,19 +231,18 @@ django = env.addModule(
     'django',
     tar='Django-1.5.5.tgz')
 
-env.addModule(
+paramiko = env.addModule(
     'paramiko',
     tar='paramiko-1.14.0.tgz',
     default=False)
 
-env.addModule(
+pillow = env.addModule(
     'Pillow',
     tar='Pillow-2.5.1.tgz',
-    targets=['PIL'],
-    flags=['--old-and-unmanageable'],
+    targets=['Pillow-2.5.1-py2.7-linux-x86_64.egg'],
     deps=[setuptools, jpeg])
 
-env.addModule(
+winpdb = env.addModule(
     'winpdb',
     tar='winpdb-1.4.8.tgz',
     default=False)
@@ -267,13 +265,14 @@ tornado = env.addModule(
 lxml = env.addModule(
     'lxml',
     tar='lxml-3.4.1.tgz',
+    targets=['lxml-3.4.1-py2.7-linux-x86_64.egg'],
     libChecks=['libxml-2.0', 'libxslt'],
     deps=[], # libxml2, libxslt],
     default=False)
 # libxml2 and libxslt are checked instead of compiled because
 # they are so hard to compile right.
 
-env.addModule(
+ipython = env.addModule(
     'ipython',
     tar='ipython-2.1.0.tar.gz',
     deps=[pyzmq, jinja2, tornado],
@@ -312,19 +311,18 @@ env.addPackage('frealign',
                tar='frealign_v9.07.tgz',
                default=False)
 
+libSuffix = env.getLibSuffix()
 
-# env.addPackage2('pytom',
-#                tar='pytom_develop0.962.tgz',
-#                commands=[('pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix,
-#                               'PATH=%s/software/bin:%s '
-#                               'LD_LIBRARY_PATH=%s/software/lib:%s '
-#                               'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s '
-#                               './scipion_installer'
-#                               % (shome, environ.get('PATH', ''),
-#                                  shome, environ.get('LD_LIBRARY_PATH', ''),
-#                                  env['MPI_LIBDIR'], env['MPI_INCLUDE'], shome))],
-#                deps=[boost, 'fftw3', 'fftw3f', swig, lxml],
-#                default=False)
+env.addPackage('pytom',
+               tar='pytom-0.963beta-scipion.tgz',
+               commands=[('./scipion_installer', 
+                          ['pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix] + 
+                          ['pytomc/swigModules/_pytom_%s.%s' % (s, libSuffix) 
+                           for s in ['mpi', 'freqweight', 'volume', 'fftplan', 'numpy']])],
+               deps=[boost, fftw3, fftw3f, 
+                     swig, lxml, numpy, scipy, 
+                     matplotlib, mpi4py, pillow],
+               default=False)
 
 env.addPackage('relion',
                tar='relion-1.3.tgz',
