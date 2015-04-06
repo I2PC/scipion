@@ -190,7 +190,7 @@ numpy = env.addModule(
 six = env.addModule(
     'six',
     tar='six-1.7.3.tgz',
-    targets=['six.py', 'six-1.7.3-py2.7.egg'])
+    targets=['six-1.7.3-py2.7.egg'])
 
 dateutil = env.addModule(
     'dateutil',
