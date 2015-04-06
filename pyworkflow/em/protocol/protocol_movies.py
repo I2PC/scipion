@@ -103,8 +103,11 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                     self.runJob('bzip2', '-d -f %s' % movieName, cwd=movieFolder)
             else:
                 movieMrc = movieName
-    
-            self.info("Processing movie: %s" % movieMrc) 
+            
+            self.info("Processing movie: %s" % movieMrc)
+            
+            if movieMrc.endswith('.em'):
+                movieMrc = movieMrc + ":ems"
             
             self._processMovie(movieId, movieMrc, movieFolder)
             
