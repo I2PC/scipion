@@ -85,10 +85,10 @@ class Command():
 
         if targets is None:
             self._targets = []
-        elif isinstance(targets, list):
-            self._targets = targets
-        else:
+        elif isinstance(targets, basestring):
             self._targets = [targets]
+        else:
+            self._targets = targets
 
         self._environ = kwargs.get('environ', None)
         self._cwd = kwargs.get('cwd', None)
@@ -444,13 +444,13 @@ class Environment():
                              cwd=self.getEm('')))
         commands = kwargs.get('commands', [])
         for cmd, tgt in commands:
-            if not isinstance(tgt, list):
+            if isinstance(tgt, basestring):
                 tgt = [tgt]
             # Take all package targets relative to package build dir
             target.addCommand(cmd, targets=[os.path.join(target.buildPath, t) 
                                             for t in tgt], 
                          cwd=target.buildPath)            
-        
+
         return target
     
     def _showTargetGraph(self, targetList):
