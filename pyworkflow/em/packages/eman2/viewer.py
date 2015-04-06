@@ -232,7 +232,7 @@ Examples:
     
     def _createAngDistChimera(self, it):
         x, _, _ = self.protocol.input3DReference.get().getDim()
-        radius = 0.8 * x
+        radius = 1.1 * x
         volumes = self._getVolumeNames()
         
         if len(volumes) > 1:
