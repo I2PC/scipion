@@ -184,7 +184,8 @@ scons = env.addModule(
 
 numpy = env.addModule(
     'numpy',
-    tar='numpy-1.8.1.tgz')
+    tar='numpy-1.8.1.tgz',
+    deps=[lapack])
 
 six = env.addModule(
     'six',
