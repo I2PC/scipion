@@ -28,6 +28,7 @@ import platform
 import os
 import sys
 import time
+from glob import glob
 
 from subprocess import STDOUT, check_call, CalledProcessError
 
@@ -98,8 +99,7 @@ class Command():
     def _existsAll(self):
         """ Return True if all targets exist. """
         for t in self._targets:
-            #print(red("  Checking target: %s, exists: %s" % (t, os.path.exists(t))))
-            if not os.path.exists(t):
+            if not glob(t):
                 return False
         return True
 
@@ -130,8 +130,8 @@ class Command():
             os.chdir(cwd)
             if not self._env.showOnly:
                 for t in self._targets:
-                    assert os.path.exists(t), ("target '%s' not built (after "
-                                               "running '%s')" % (t, cmd))
+                    assert glob(t), ("target '%s' not built (after "
+                                     "running '%s')" % (t, cmd))
 
     def __str__(self):
         return "Command: %s, targets: %s" % (self._cmd, self._targets)
@@ -161,9 +161,7 @@ class Target():
 
     def _existsAll(self):
         for command in self._commandList:
-            #print(red(">>> Checking %s" % command))
             if not command._existsAll():
-                #print(red("   not _existsAll()"))
                 return False
         return True
 
@@ -557,4 +555,3 @@ class Link():
     
         os.symlink(packageFolder, packageLink)
         print("Created link: %s" % linkText)
-        
