@@ -44,6 +44,7 @@ from protocol_helical_parameters import XmippProtHelicalParameters
 from pyworkflow.em.protocol.protocol_import.coordinates import ProtImportCoordinates
 from protocol_particle_pick_consensus import XmippProtConsensusPicking
 from protocol_rotational_spectra import XmippProtRotSpectra
+from protocol_reconstruct_highres import XmippProtReconstructHighRes
 
 from pyworkflow.em.wizard import *
 
@@ -179,7 +180,8 @@ class XmippCL2DNumberOfClassesWizard(Wizard):
 
 class XmippParticleMaskRadiusWizard(ParticleMaskRadiusWizard):
     _targets = [(XmippProtMaskParticles, ['radius']),
-                (XmippProtPreprocessParticles, ['backRadius'])]
+                (XmippProtPreprocessParticles, ['backRadius']),
+                (XmippProtReconstructHighRes, ['particleRadius'])]
     
     def _getParameters(self, protocol):
         
@@ -310,7 +312,7 @@ class XmippVolumeRadiiProjMWizard(XmippVolumeRadiiWizard):
         value = [int(val) for val in value]
 
         protParams = {}
-        protParams['input']= protocol.inputVolumes
+        protParams['input']= protocol.input3DReferences
         protParams['label']= label
         protParams['value']= value
         return protParams

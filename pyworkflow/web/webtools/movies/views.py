@@ -67,7 +67,7 @@ Movies_Alignment = [
     {"tag": "section", "text": "2. Import your data", "children": [
         {"tag": "protocol", "value": "ProtImportMovies", "text": "Import Movies", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Align your Movies", "children": [
-        {"tag": "protocol", "value": "ProtMovieAlingment", "text": "xmipp3 - movie alignment"}]}]
+        {"tag": "protocol", "value": "ProtMovieAlignmentWeb", "text": "xmipp3 - movie alignment"}]}]
         ''')
         f.close()
 
@@ -79,7 +79,7 @@ def create_movies_project(request):
         import os
         from pyworkflow.object import Pointer
         from pyworkflow.em.protocol import ProtImportMovies
-        from pyworkflow.em.packages.xmipp3 import ProtMovieAlignment
+        from pyworkflow.em.packages.xmipp3 import ProtMovieAlignmentWeb
         
         # Create a new project
         projectName = request.GET.get('projectName')
@@ -93,6 +93,10 @@ def create_movies_project(request):
                                         hostsConf=manager.hosts,
                                         protocolsConf=manager.protocols
                                         )   
+        
+        project.getSettings().setLifeTime(14)
+        project.saveSettings()
+        
 #         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
         # Create symbolic link for uploads
@@ -130,7 +134,7 @@ def create_movies_project(request):
             project.saveProtocol(protImport)
         
         # 2. Movie Alignment 
-        protMovAlign = project.newProtocol(ProtMovieAlignment)
+        protMovAlign = project.newProtocol(ProtMovieAlignmentWeb)
         protMovAlign.setObjLabel('xmipp - movie alignment')
         protMovAlign.inputMovies.set(protImport)
         protMovAlign.inputMovies.setExtendedAttribute('outputMovies')
@@ -166,9 +170,7 @@ def movies_content(request):
     project = manager.loadProject(projectName, 
                                   protocolsConf=manager.protocols,
                                   hostsConf=manager.hosts)
-    daysLeft = prettyDelta(project.getLeftTime(14))
-    if daysLeft is None: 
-        daysLeft = 14
+    daysLeft = prettyDelta(project.getLeftTime())
     
     context = contentContext(request, project)
     context.update({
@@ -194,7 +196,9 @@ def movies_form(request):
     context = contextForm(request)
     context.update({'path_mode':'select',
                     'formUrl': 'mov_form',
-                    'showHost': True})
+                    'showHost': False,
+                    'showParallel': False,
+                    'hostSelected': 'clark'})
     return render_to_response('form/form.html', context)
 
 

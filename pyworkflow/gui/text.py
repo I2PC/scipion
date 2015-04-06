@@ -125,6 +125,7 @@ class Text(tk.Text, Scrollable):
             self.handlers = opts.pop('handlers')
         else:
             self.handlers = {}
+        opts['font'] = gui.fontNormal
         defaults = self.getDefaults()
         defaults.update(opts)
         Scrollable.__init__(self, master, tk.Text, wrap=tk.WORD, **opts)
@@ -301,7 +302,7 @@ class TaggedText(Text):
         # this file from running. Apparently there is no fontNormal in gui.
 
     def configureTags(self):
-        self.tag_config('normal', justify=tk.LEFT)
+        self.tag_config('normal', justify=tk.LEFT, font=gui.fontNormal)
         self.tag_config(HYPER_BOLD, justify=tk.LEFT, font=gui.fontBold)
         self.tag_config(HYPER_ITALIC, justify=tk.LEFT, font=gui.fontItalic)
         if self.colors:            
@@ -421,7 +422,8 @@ class TextFileViewer(tk.Frame):
     LabelBgColor = "white"
     
     def __init__(self, master, fileList=[],
-                 allowSearch=True, allowRefresh=True, allowOpen=False):
+                 allowSearch=True, allowRefresh=True, allowOpen=False,
+                 font=None):
         tk.Frame.__init__(self, master)
         self.searchList = None
         self.lastSearch = None
@@ -433,6 +435,7 @@ class TextFileViewer(tk.Frame):
         self._allowSearch = allowSearch
         self._allowRefresh = allowRefresh
         self._allowOpen = allowOpen
+        self._font = font # allow a font to be passed as argument to be used
 
         self.createWidgets(fileList)
         self.master = master
@@ -453,7 +456,13 @@ class TextFileViewer(tk.Frame):
         tab = tk.Frame(self.notebook)
         tab.rowconfigure(0, weight=1)
         tab.columnconfigure(0, weight=1)
-        t = OutputText(tab, filename, width=100, height=30, bg='black', fg='white')
+        kwargs = {'bg': 'black',
+                  'fg': 'white'}
+        
+        if self._font is not None:
+            kwargs['font'] = self._font
+            
+        t = OutputText(tab, filename, width=100, height=30, **kwargs)
         t.frame.grid(column=0, row=0, padx=5, pady=5, sticky='nsew')
         self.taList.append(t)
         tabText = "   %s   " % os.path.basename(filename)

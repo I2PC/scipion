@@ -33,47 +33,37 @@ function serviceProjForm(){
 	
     dialog += "<p>Confirm to generate it.</p>";
 
-	var funcName = 'createServProject';
+	var funcName = 'createResMapProject';
 
 	accessPopup(title, dialog, funcName, 'Confirm', 'Cancel');
 }
 
 function serviceTestDataForm(){
 	var title = 'Test data'
-	var dialog = ""
-		
-	dialog += "<p>You have two options to use <strong>Test data</strong> :<br />" +
-        "1.- <strong>Create a project</strong> with <strong>Test data</strong> already imported inside.<br />" +	
-		"2.- <strong>Download</strong> test files to your computer, to be manually imported into an already created project.</p>";
-	dialog += "<br />";
-	dialog += '<div id="testData">';
-	dialog += "<p>Select <strong>Test data</strong>:</p>";
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
-	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
-	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome">';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
-	dialog += '<br />';
-	dialog += "</div>";
-	dialog += "<br />";
-    dialog += "<p>After selection, choose your option.</p>";
+		var dialog = ""
+			
+		dialog += "<p><strong>Create a project</strong> with <strong>Test data</strong> already imported inside.<br /></p>";
+		dialog += "<br />";
+		dialog += '<div id="testData">';
+		dialog += "<p>Select <strong>Test data</strong>:</p>";
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="fcv" checked>';
+		dialog += '&nbsp;&nbsp;' + getRefTestData("fcv");
+		dialog += '<br />';
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="mito_ribosome">';
+		dialog += '&nbsp;&nbsp;' + getRefTestData("mito_ribosome");
+		dialog += '<br />';
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="t20s_proteasome">';
+		dialog += '&nbsp;&nbsp;' + getRefTestData("t20s_proteasome");
+		dialog += '<br />';
+		dialog += "</div>";
+		dialog += "<br />";
 
-    
-    var btn1 = 'Create project'
-	var ico1 = 'fa-check'
-	var funcName1 = 'createServProject';	
+	    
+	    var btn1 = 'Create project'
+		var ico1 = 'fa-check'
+		var funcName1 = 'createResMapProject';	
 		
-	var btn2 = 'Download'
-	var ico2 = 'fa-download';
-	var funcName2 = 'downloadTestdata';
-	
-	accessPopup2opt(title, dialog, 
-					 btn1, ico1, funcName1, 
-					 btn2, ico2, funcName2, 
-					 "Cancel")
+	    accessPopup(title, dialog, funcName1, btn1, "Cancel")
 }
 
 function goExampleForm(){
@@ -82,14 +72,14 @@ function goExampleForm(){
 
 	dialog += '<div id="exProjects">';
 	dialog += "<p>Select the <strong>Test data</strong>:</p>";
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="fcv" checked>';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("fcv");
 	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="mito_ribosome">';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("mito_ribosome");
 	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome">';
-	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="t20s_proteasome">';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("t20s_proteasome");
 	dialog += '<br />';
 	dialog += "</div>";
 	dialog += "<br />";
@@ -101,38 +91,21 @@ function goExampleForm(){
 function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
-		case "groel":
-			var url = "/r_content/?p=GroelTestData";
+		case "cpv":
+			var url = "/r_content/?p=fcvTestData";
 			break;
-		case "bpv":
-			var url ="/r_content/?p=BpvTestData";
+		case "mito_ribosome":
+			var url ="/r_content/?p=ribosomeTestData";
 			break;
-		case "ribosome":
-			var url ="/r_content/?p=RiboTestData";
+		case "t20s_proteasome":
+			var url ="/r_content/?p=t20TestData";
 			break;
 	}
 	goWithSubDomainURL(url);
 }
 
-function downloadTestdata(elm){
-	var selected = $("#testData input[type='radio']:checked").val();
-	var URL = getSubDomainURL() + "/get_testdata/?testData="+ selected;
-	
-	$.ajax({
-		type : "GET",
-		url : URL,
-		dataType: "text",
-		async: false,
-		success : function(text) {
-			var str = text.split("/")
-			var fn = str[str.length-1]
-			var URL = getSubDomainURL() + '/get_file/?path='+text+'&filename='+fn
-			window.location.href = URL;
-		}
-	});
-}
 
-function createServProject(elm) {
+function createResMapProject(elm) {
 	var projName = "res"+randomString(32, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
 
@@ -148,15 +121,15 @@ function createServProject(elm) {
 		success : function() {
 			var title = "ACCESS CODE"
 			
-			var msg = "<p>Your <strong>url to access </strong> to this <strong>Project</strong> is:</p>" +
+			var msg = "<p>Your <strong>url to access </strong> this <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
 			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/r_content/?p="+ projName+ "'>" +
-			"http://scipion.cnb.csic.es/m/r_content/?p="+ projName+ "</a>"+
+			"http://scipion.cnb.csic.es/m/r_content/?p="+ projName + "</a>"+
 			"</h3></p><br />" +
 			"<p>The access to this new project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
-			"in order to access to this project in future sessions.</p>"+
-			"<p>In case to lost your url to access, please contact with us by this email: <span style='color:firebrick;'>scipion at cnb.csic.es</span></p>";			
+			"in order to access this project in future sessions.</p>"+
+			"<p>If you experience any problem contact us on this email: <span style='color:firebrick;'>scipion at cnb.csic.es</span></p>";
 			
 			msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";
 			var funcName = "goToProject"
@@ -168,45 +141,27 @@ function createServProject(elm) {
 
 function goToProject(elm) {
 	var code = elm.val();
-	
 	var URL2 = getSubDomainURL() + "/r_content/?p="+code;
 	window.location.href = URL2;
-	
-	/*
-	
-	// remove the blank spaces
-	code = code.replace(/\s+/g, '');
-	
-	var URL = getSubDomainURL() + "/check_project_id/?code=" + code+"&service=myresmap";
-	$.ajax({
-		type : "GET",
-		url : URL,
-		success : function(result) {
-			if (result == 1) {
-				var URL2 = getSubDomainURL() + "/r_content/?p="+code;
-				window.location.href = URL2;
-			} else {
-				var title = "Bad Access";
-				var msg = "<p>Wrong <strong>access code</strong>!</p>" +
-					"<p>If you forgot the code, please contact the <a style='color:firebrick;' href='#'>Scipion group</a>.</p>";
-				errorPopup(title, msg);
-			}
-		}
-	});
-	*/
 }
 
 function getRefTestData(id){
 	var ref = ""
 	switch(id){
-		case "bpv":
-			ref = "<strong>Bovine Papillomavirus</strong> (8 averages, 100x100 pixels, <a href='http://dx.doi.org/10.1073/pnas.0914604107' style='color:firebrick;' target='_blank'>from Wolf,M. et al. (2010)</a>)"
+		case "t20s_proteasome":
+			ref = "<strong>T20S Proteasome</strong> (Resolution 2.8 Å , <a href='http://emsearch.rutgers.edu/atlas/6287_summary.html' style='color:firebrick;' target='_blank'>Authors: Campbell MG, Veesler D, Cheng A, Potter CS, Carragher B</a>)"
 			break;
-		case "groel":
-			ref = "<strong>GroEL</strong> (44 averages, 64x64 pixels, <a href='http://dx.doi.org/10.1016/j.str.2004.05.006' style='color:firebrick;' target='_blank'>from Ludtke, S.J. et al. (2004)</a>)"
+		
+		case "mito_ribosome":
+			ref = "<strong>Human mitochondrial ribosome</strong> (Resolution 3.4 Å , <a href='http://emsearch.rutgers.edu/atlas/2762_summary.html' style='color:firebrick;' target='_blank'>Authors: Brown A, Amunts A, Bai XC, Sugimoto Y, Edwards PC, Murshudov G, Scheres SHW, Ramakrishnan V</a>)"
 			break;
-		case "ribosome":
-			ref = "<strong>Eukaryotic Ribosome</strong> (32 averages, 64x64 pixels, <a href='ftp://ftp.ebi.ac.uk/pub/databases/emtest/SPIDER_FRANK_data/' style='color:firebrick;' target='_blank'>from J.Frank lab</a>)"
+			
+//		case "cpv":
+//			ref = "<strong>cytoplasmic polyhedrosis virus (CPV)</strong> (Resolution 3.1 Å , <a href='http://emsearch.rutgers.edu/atlas/5256_summary.html' style='color:firebrick;' target='_blank'>Authors: Yu X, Ge P, Jiang J, Atanasov I, Zhou ZH</a>)"
+//			break;
+			
+		case "fcv":
+			ref = "<strong>Feline calicivirus virus-like particles</strong> (Resolution 14 Å , <a href='http://emsearch.rutgers.edu/atlas/2823_summary.html' style='color:firebrick;' target='_blank'>Authors: Burmeister WP, Buisson M, Estrozi LF, Schoehn G, Billet O, Hannas Z, Sigoillot-Claude C, Poulet H</a>)"
 			break;
 	}
 	return ref;

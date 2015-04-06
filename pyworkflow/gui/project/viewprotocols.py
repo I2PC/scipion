@@ -566,7 +566,7 @@ class ProtocolsView(tk.Frame):
         label = tk.Label(dframe, text='SUMMARY', bg='white', font=self.windows.fontBold)
         label.grid(row=1, column=0, sticky='nw', padx=(15, 0))
 
-        self.summaryText = pwgui.text.TaggedText(dframe, width=40, height=5, bg='white', bd=0,
+        self.summaryText = pwgui.text.TaggedText(dframe, width=40, height=5, bg='white', bd=0, font=self.windows.font,
                                       handlers={'sci-open': self._viewObject})
         self.summaryText.grid(row=2, column=0, sticky='news', padx=(30, 0))        
         
@@ -580,24 +580,11 @@ class ProtocolsView(tk.Frame):
         #Logs 
         ologframe = tk.Frame(tab)
         pwgui.configureWeigths(ologframe)
-        self.outputViewer = pwgui.text.TextFileViewer(ologframe, allowOpen=True)
+        self.outputViewer = pwgui.text.TextFileViewer(ologframe, allowOpen=True, font=self.windows.font)
         self.outputViewer.grid(row=0, column=0, sticky='news')
         self.outputViewer.windows = self.windows
         
         self._updateSelection()
-#         self.outputLogText = pwgui.text.TaggedText(ologframe, width=40, height=15, 
-#                                         bg='black', foreground='white')
-#         self.outputLogText.grid(row=0, column=0, sticky='news')
-#         elogframe = tk.Frame(tab)
-#         pwgui.configureWeigths(elogframe)
-#         self.errorLogText = pwgui.text.TaggedText(elogframe, width=40, height=15, 
-#                                        bg='black', foreground='white')
-#         self.errorLogText.grid(row=0, column=0, sticky='news')  
-#         slogframe = tk.Frame(tab)
-#         pwgui.configureWeigths(slogframe)
-#         self.scipionLogText = pwgui.text.TaggedText(slogframe, width=40, height=15, 
-#                                          bg='black', foreground='white')
-#         self.scipionLogText.grid(row=0, column=0, sticky='news')
         
         # Add all tabs
         tab.add(dframe, text=Message.LABEL_SUMMARY)   

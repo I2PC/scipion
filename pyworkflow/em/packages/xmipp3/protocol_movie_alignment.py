@@ -78,7 +78,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                       help='If *0*, use maximum value')
         
         # GROUP GPU PARAMETERS
-        group = form.addGroup('GPU parameters',condition="alignMethod==%d or alignMethod==%d "
+        group = form.addGroup('GPU',condition="alignMethod==%d or alignMethod==%d "
                                                          " or alignMethod==%d "
                                                          % (AL_OPTICAL, AL_DOSEFGPUOPTICAL, AL_DOSEFGPU))
         group.addParam('doGPU', BooleanParam, default=False,
@@ -436,3 +436,23 @@ def movieCreatePlot(plotType, movie, saveFig):
         if saveFig:
             plotter.savefig(movie.plotCart)
     return plotter
+
+
+
+class ProtMovieAlignmentWeb(ProtMovieAlignment):
+    """ Aligns a set of volumes using cross correlation.
+    Based on Xmipp protocol for aligning volumes, but
+    the parameters are restricted for ease of use.
+    """
+    _label = 'movie alignment web'
+    
+    def _defineParams(self, form):
+        ProtMovieAlignment._defineParams(self, form)
+        
+        gpuParamsGroup = form.getParam('GPU')
+        gpuParamsGroup.config(condition='False')
+        
+    def getOutputFiles(self):
+        # Redefine the default method to avoid download of movie files
+        return self.outputMicrographs.getFiles()
+        

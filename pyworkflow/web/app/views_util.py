@@ -432,18 +432,14 @@ def download_output(request):
             
         import zipfile
         z = zipfile.ZipFile("output.zip", "w")
-        
-        from pyworkflow.em.data import EMObject 
-        for name, attr in protocol.iterOutputAttributes(EMObject):
-            id = attr.getObjId()
-            obj = project.getObject(int(id))
-            files = obj.getFiles()
             
-            if files is not None:
-                for f in files:
-                    z.write(f, arcname=os.path.basename(f))
-            else:
-                print "Problem getting files for the object: ", obj
+        files = protocol.getOutputFiles()
+            
+        if files is not None:
+            for f in files:
+                z.write(f, arcname=os.path.basename(f))
+        else:
+            print "Problem getting files for the protocol: ", protocol.getRunName()
                 
         z.close()
         

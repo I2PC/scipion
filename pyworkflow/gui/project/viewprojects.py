@@ -29,9 +29,10 @@ import Tkinter as tk
 import tkFont
 
 import pyworkflow as pw
-from pyworkflow.utils.utils import prettyDate
+from pyworkflow.utils.utils import prettyDate, prettyTime
 from pyworkflow.manager import Manager
 from pyworkflow.utils.properties import Message
+import pyworkflow.gui as pwgui 
 from pyworkflow.gui.widgets import HotButton
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui.dialog import askString, askYesNo, showError
@@ -46,9 +47,13 @@ class ProjectsView(tk.Frame):
         self.root = windows.root
         
         #tkFont.Font(size=12, family='verdana', weight='bold')
-        self.projNameFont = tkFont.Font(size=12, family='helvetica', weight='bold')
-        self.projDateFont = tkFont.Font(size=8, family='helvetica')
-        self.projDelFont = tkFont.Font(size=8, family='helvetica', weight='bold')
+        bigSize = pwgui.cfgFontSize + 2
+        smallSize = pwgui.cfgFontSize - 2
+        fontName = pwgui.cfgFontName
+        
+        self.projNameFont = tkFont.Font(size=bigSize, family=fontName, weight='bold')
+        self.projDateFont = tkFont.Font(size=smallSize, family=fontName)
+        self.projDelFont = tkFont.Font(size=smallSize, family=fontName, weight='bold')
         self.manager = Manager()
         btn = HotButton(self, text=Message.LABEL_CREATE_PROJECT, font=self.projNameFont, 
                      command=self.createNewProject)
@@ -72,6 +77,9 @@ class ProjectsView(tk.Frame):
         parent.columnconfigure(0, weight=1)
         colors = ['white', '#EAEBFF']
         for i, p in enumerate(self.manager.listProjects()):
+            project = self.manager.loadProject(p.getName(), chdir=False)
+            # Add creation time to project info
+            p.cTime = project.getCreationTime()
             frame = self.createProjectLabel(parent, p, color=colors[i%2])
             frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
             r += 1
@@ -85,8 +93,9 @@ class ProjectsView(tk.Frame):
                          justify=tk.LEFT, font=self.projNameFont, cursor='hand1', width=50)
         label.grid(row=0, column=0,  padx=2, pady=2, sticky='nw')
         label.bind('<Button-1>', lambda e: self.openProject(projInfo.projName))
-        dateLabel = tk.Label(frame, text= Message.LABEL_MODIFIED + ' ' + prettyDate(projInfo.mTime),
-                             font=self.projDateFont, bg=color)
+        dateMsg = '%s%s    %s%s' % (Message.LABEL_MODIFIED, prettyDate(projInfo.mTime),
+                                    Message.LABEL_CREATED, prettyTime(projInfo.cTime, time=False))
+        dateLabel = tk.Label(frame, text=dateMsg, font=self.projDateFont, bg=color)
         dateLabel.grid(row=1, column=0, sticky='nw')
         delLabel = tk.Label(frame, text=Message.LABEL_DELETE_PROJECT, font=self.projDelFont, bg=color, cursor='hand1')
         delLabel.grid(row=1, column=1, padx=10)

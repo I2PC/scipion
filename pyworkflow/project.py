@@ -113,25 +113,20 @@ class Project(object):
         """ Return the time when the project was created. """
         # In project.create method, the first object inserted
         # in the mapper should be the creation time
-        creation = self.mapper.selectFirst()
-        return creation.get()
+        return self.settings.getCreationTime()
     
     def getElapsedTime(self):
         """ Return the time since the project was created. """
-        elapsed = None
-        creationTime = self.getCreationTime()
-        
-        if creationTime is not None:
-            f = "%Y-%m-%d %H:%M:%S.%f"
-            elapsed = dt.datetime.now() - dt.datetime.strptime(creationTime, f)
-        
-        return elapsed
+        return dt.datetime.now() - self.getCreationTime()
     
-    def getLeftTime(self, numDays):
-        elapsedTime = self.getElapsedTime()
-        td = dt.timedelta(days=numDays)
-        diff = td - (elapsedTime)
-        return diff
+    def getLeftTime(self):
+        lifeTime = self.settings.getLifeTime()
+        
+        if lifeTime:
+            td = dt.timedelta(days=lifeTime)
+            return td - self.getElapsedTime()
+        else:
+            return None
     
     def setDbPath(self, dbPath):
         """ Set the project db path.
@@ -200,8 +195,9 @@ class Project(object):
         # It is possible that settings does not exists if 
         # we are loading a project after a Project.setDbName,
         # used when running protocols
-        if os.path.exists(self.settingsPath):
-            self.settings = pwconfig.loadSettings(self.settingsPath)
+        settingsPath = os.path.join(self.path, self.settingsPath) 
+        if os.path.exists(settingsPath):
+            self.settings = pwconfig.loadSettings(settingsPath)
         else:
             self.settings = None
             
@@ -219,14 +215,16 @@ class Project(object):
     def _loadHosts(self, hosts):
         """ Loads hosts configuration from hosts file. """
         # If the host file is not passed as argument...
+        projHosts = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)        
+        
         if hosts is None:
-            # Try first to read it from the project file .pwconfig./hosts.conf
-            projHosts = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)
+            # Try first to read it from the project file .config./hosts.conf
             if os.path.exists(projHosts):
                 hostsFile = projHosts
             else:
                 hostsFile = os.environ['SCIPION_HOSTS']
         else:
+            pwutils.copyFile(hosts, projHosts)
             hostsFile = hosts
             
         self._hosts = pwconfig.loadHostsConf(hostsFile)
@@ -234,14 +232,16 @@ class Project(object):
     def _loadProtocols(self, protocolsConf):
         """ Load protocol configuration from a .conf file. """
         # If the host file is not passed as argument...
+        projProtConf = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
+        
         if protocolsConf is None:
             # Try first to read it from the project file .config/hosts.conf
-            projProtConf = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
             if os.path.exists(projProtConf):
                 protConf = projProtConf
             else:
                 protConf = os.environ['SCIPION_PROTOCOLS']
         else:
+            pwutils.copyFile(protocolsConf, projProtConf)
             protConf = protocolsConf
           
         self._protocolViews = pwconfig.loadProtocolsConf(protConf)

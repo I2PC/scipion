@@ -39,8 +39,9 @@ from widgets import Button
 """
 Some GUI CONFIGURATION parameters
 """
-cfgFontName = "Helvetica"
-cfgFontSize = 10  
+#TODO: read font size and name from config file
+cfgFontName = os.environ.get('SCIPION_FONT_NAME', "Helvetica")
+cfgFontSize = int(os.environ.get('SCIPION_FONT_SIZE', 10))  
 
 #TextColor
 cfgCitationTextColor = "dark olive green"

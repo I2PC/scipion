@@ -197,6 +197,7 @@ def contextForm(request):
                'hosts': hosts,
                'comment': parseText(protocol.getObjComment()),
                'showHost': True,
+               'showParallel': True,
                }
     
     # Update the context dictionary with the special params
