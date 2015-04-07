@@ -32,7 +32,7 @@ import pyworkflow.em as em
 from pyworkflow.em.packages.eman2.eman2 import getEmanProgram
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, EnumParam,
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
-from pyworkflow.utils.path import cleanPattern
+from pyworkflow.utils.path import cleanPattern, makePath
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtReconstruct3D
 
@@ -80,7 +80,8 @@ class EmanProtReconstruct(ProtReconstruct3D):
         """ Centralize the names of the files. """
         
         myDict = {
-                  'particles': self._getTmpPath('input_particles.hdf'),
+                  'partSet': 'sets/inputSet.lst',
+                  'partFlipSet': 'sets/inputSet__ctf_flip.lst',
                   'volume': self._getExtraPath('volume.hdf'),
                   }
         
@@ -147,6 +148,10 @@ class EmanProtReconstruct(ProtReconstruct3D):
                                'experimental'],
                       label="Mode to Fourier method:", default=FOURIER_GAUSS2,
                       display=EnumParam.DISPLAY_COMBO)
+        form.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
+              label='Have data been phase-flipped?',
+              help='Set this to Yes if the images have been ctf-phase corrected during the '
+                   'pre-processing steps.')       
         form.addParam('keepSense', EnumParam, expertLevel=LEVEL_ADVANCED,
                       choices=['percentage', 'standard deviation', 'absolute quality'],
                       label="Sense of keep:", default=KEEP_PERCENTAGE,
@@ -186,8 +191,27 @@ class EmanProtReconstruct(ProtReconstruct3D):
     def convertImagesStep(self):
         from pyworkflow.em.packages.eman2.convert import writeSetOfParticles
         
+        strFn = ""
         partSet = self.inputParticles.get()
-        writeSetOfParticles(partSet, self._getFileName("particles"), alignType=em.ALIGN_PROJ)
+        partAlign = partSet.getAlignment()
+        storePath = self._getExtraPath("particles")
+        makePath(storePath)
+        writeSetOfParticles(partSet, storePath, alignType=em.ALIGN_PROJ)
+        if partSet.hasCTF():
+            program = getEmanProgram('e2ctf.py')
+            acq = partSet.getAcquisition()
+             
+            args = " --voltage %3d" % acq.getVoltage()
+            args += " --cs %f" % acq.getSphericalAberration()
+            args += " --ac %f" % (100 * acq.getAmplitudeContrast())
+            if not self.haveDataBeenPhaseFlipped:
+                args += " --phaseflip"
+            args += " --apix %f --allparticles --autofit --curdefocusfix --storeparm -v 8" % (partSet.getSamplingRate())
+            self.runJob(program, args, cwd=self._getExtraPath())
+        
+        program = getEmanProgram('e2buildsets.py')
+        args = " --setname=inputSet --allparticles --minhisnr=-1"
+        self.runJob(program, args, cwd=self._getExtraPath())
     
     def reconstructVolumeStep(self, args):
         """ Run the EMAN program to reconstruct a volume. """
@@ -228,7 +252,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
         if reconsMethod == 'fourier' or reconsMethod == 'fourier_plane' or reconsMethod == 'fouriersimple2D' or reconsMethod == 'wiener_fourier':
             reconsMethod = reconsMethod + ':mode=' + self.getEnumText('fourierMode')
                 
-        params = {'imgsFn': self._getRelativeName("particles"),
+        params = {'imgsFn': self._getParticlesStack(),
                   'OutputVol': self._getBaseName("volume"),
                   'numberOfIterations': self.numberOfIterations.get(),
                   'sym': self.symmetry.get(),
@@ -272,7 +296,13 @@ class EmanProtReconstruct(ProtReconstruct3D):
         """ Remove the folders and return the file from the filename. """
         return os.path.basename(self._getFileName(key))
 
-    def _getRelativeName(self, key):
-        """ Remove the folders and return the file from the filename. """
-        return os.path.relpath(self._getFileName(key), self._getExtraPath())
+    def _getParticlesStack(self):
+        if not self.haveDataBeenPhaseFlipped and self.inputParticles.get().hasCTF():
+            return self._getFileName("partFlipSet")
+        else:
+            return self._getFileName("partSet")
+
+#     def _getRelativeName(self, key):
+#         """ Remove the folders and return the file from the filename. """
+#         return os.path.relpath(self._getFileName(key), self._getExtraPath())
     
