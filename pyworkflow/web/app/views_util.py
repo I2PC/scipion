@@ -274,7 +274,8 @@ def browse_objects(request):
             objParent = project.mapper.selectById(obj.getObjParentId())
             
             context = {"type":"set", 
-                       "nameId":obj.getNameId(),
+                       "nam
+                       eId":obj.getNameId(),
                        "objParentName": objParent.getRunName(),
                        "objId": obj.getObjId(),
                        "info": str(obj),
@@ -739,9 +740,15 @@ def parseText(text, func=replacePattern):
 
 
 def getImageUrl(filename):
-    url_plot = django_settings.ABSOLUTE_URL + "get_image_path/?image=" + filename
-    return url_plot
+    abs_url = django_settings.ABSOLUTE_URL
+    if len(abs_url) > 0:
+        url_plot = "get_image_path/?image=" + filename
+    else:
+        url_plot = django_settings.ABSOLUTE_URL + "/get_image_path/?image=" + filename
     
+    print "URL PLOT: ", url_plot
+    return url_plot
+
     
 def savePlot(request, plot):
     projectPath = request.session['projectPath']
