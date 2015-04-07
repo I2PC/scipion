@@ -261,7 +261,6 @@ void ProgAngularProjectLibrary::run()
     /////////////////////////////
     // PreRun for all nodes but not for all works
     /////////////////////////////
-    //all ranks
     //only rank 0
 	mysampling.verbose=verbose;
     show();
@@ -304,7 +303,7 @@ void ProgAngularProjectLibrary::run()
     //======================
     //recompute symmetry with neigh symmetry
     // If uncomment neighbour are not OK. BE CAREFULL
-//#define BREAKSIMMETRY
+#define BREAKSIMMETRY
 #ifdef BREAKSIMMETRY
     if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))
             REPORT_ERROR(ERR_VALUE_INCORRECT,
