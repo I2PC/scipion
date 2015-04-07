@@ -87,6 +87,7 @@ def loadHostsConf(hostsConf):
                     return default
 
             host.setScipionHome(get('SCIPION_HOME', os.environ['SCIPION_HOME']))
+            host.setScipionConfig(get('SCIPION_CONFIG'))
             # Read the address of the remote hosts, 
             # using 'localhost' as default for backward compatibility
             host.setAddress(get('ADDRESS', 'localhost'))

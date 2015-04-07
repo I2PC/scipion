@@ -135,10 +135,14 @@ def _runRemote(protocol, mode):
 	mode: should be either 'run' or 'stop'
     """
     host = protocol.getHostConfig()
-    tpl  = "ssh %(address)s '%(scipion)s/scipion --config /home/scipionweb/.config/scipion/movies/scipion.conf runprotocol pw_protocol_remote.py %(mode)s %(project)s %(protDb)s %(protId)s'"
+    tpl  = "ssh %(address)s '%(scipion)s/scipion "
+    if host.getScipionConfig() is not None:
+        tpl += "--config %(config)s "
+    tpl += "runprotocol pw_protocol_remote.py %(mode)s %(project)s %(protDb)s %(protId)s'"
     args = {'address': host.getAddress(),
     	    'mode': mode,
             'scipion': host.getScipionHome(),
+            'config': host.getScipionConfig(),
             'project': os.path.basename(protocol.getProject().path), # use project base name, in remote SCIPION_USER_DATA/projects should be prepended
             'protDb': protocol.getDbPath(),
             'protId': protocol.getObjId()
@@ -148,7 +152,6 @@ def _runRemote(protocol, mode):
     p = Popen(cmd, shell=True, stdout=PIPE)
 
     return p
-    
     
     
 def _launchRemote(protocol, wait):
@@ -162,7 +165,6 @@ def _launchRemote(protocol, wait):
         jobId = int(s.group(1))
     else:
         raise Exception("** Couldn't parse ouput: %s" % redStr(out))
-		
              
     return jobId    
 
