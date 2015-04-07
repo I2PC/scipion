@@ -1478,7 +1478,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
 			// Display
 			addItem(DISPLAY, "Display");
-                        addItem(DISPLAY_INVERTY, "Invert Y");
+                        addItem(DISPLAY_INVERTY, "Render positive Y axis up");
                         
                         addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
