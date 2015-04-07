@@ -348,6 +348,8 @@ class Environment():
                          out='%s/log/%s_configure.log' % (prefixPath, name),
                          always=configAlways)
         else:
+            assert progInPath('cmake'), ("Cannot run 'cmake'. Please install "
+                                         "it in your system first.")
             flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefixPath)
             t.addCommand('cmake %s' % ' '.join(flags),
                          targets=makeFile,
