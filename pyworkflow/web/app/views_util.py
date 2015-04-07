@@ -274,8 +274,7 @@ def browse_objects(request):
             objParent = project.mapper.selectById(obj.getObjParentId())
             
             context = {"type":"set", 
-                       "nam
-                       eId":obj.getNameId(),
+                       "nameId":obj.getNameId(),
                        "objParentName": objParent.getRunName(),
                        "objId": obj.getObjId(),
                        "info": str(obj),
@@ -748,7 +747,7 @@ def getImageUrl(filename):
     
     print "URL PLOT: ", url_plot
     return url_plot
-
+    
     
 def savePlot(request, plot):
     projectPath = request.session['projectPath']
