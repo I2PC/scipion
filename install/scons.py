@@ -35,20 +35,19 @@ Execute scons in order to compile Xmipp code.
 
 import sys
 import os
-from os.path import join
 
 import subprocess
 
 
 SCIPION_HOME = os.environ['SCIPION_HOME']
-LOGFILE = join(SCIPION_HOME, 'software', 'log', 'scons.log')
+LOGFILE = os.path.join(SCIPION_HOME, 'software', 'log', 'scons.log')
 
 
 
 def build(args):
-    """ Download SCons if needed and run it (with args) """
+    """ Run scons with our python (and with the passed args) """
     # Call SCons and show the output on the screen and logfile.
-    proc = subprocess.Popen([sys.executable, 'software/bin/scons'] + args,
+    proc = subprocess.Popen(['python', 'software/bin/scons'] + args,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             cwd=SCIPION_HOME)
     with open(LOGFILE, 'a') as logFile:
