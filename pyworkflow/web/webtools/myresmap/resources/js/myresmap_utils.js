@@ -91,7 +91,7 @@ function goExampleForm(){
 function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
-		case "cpv":
+		case "fcv":
 			var url = "/r_content/?p=fcvTestData";
 			break;
 		case "mito_ribosome":

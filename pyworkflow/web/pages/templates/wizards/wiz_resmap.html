@@ -44,14 +44,15 @@
             var maxRes = $('input#maxRes').val() 
             var stepRes = $('input#stepRes').val() 
                        
-			var URL = "/" + setSubDomainURL("get_resmap_plot/?" +
+            var abs_url = getSubDomainURL()
+			var URL = abs_url + "/" + "get_resmap_plot/?" +
 					"ang=" + ang_val +
 					"&ramp=" + ramp_val +
 					"&pValue="+pValue +
 					"&minRes="+minRes +
 					"&maxRes="+maxRes +
 					"&inputId="+inputId
-					)
+					
 
 			if (useSplit == 1){
 				var splitId = $('input#splitId').val()

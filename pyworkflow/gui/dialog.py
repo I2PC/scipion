@@ -333,14 +333,14 @@ class EntryDialog(Dialog):
     
 class EditObjectDialog(Dialog):
     """Dialog to edit some text"""
-    def __init__(self, parent, title, obj, mapper):
+    def __init__(self, parent, title, obj, mapper, **kwargs):
         
         self.obj = obj
         self.mapper = mapper
         
-        self.textLabel = Message.TITLE_LABEL
         self.textWidth = 5
         self.textHeight = 1
+        self.labelText = kwargs.get('labelText', Message.TITLE_LABEL)
         self.valueText= self.obj.getObjLabel()
         
         self.commentLabel = Message.TITLE_COMMENT
@@ -356,7 +356,7 @@ class EditObjectDialog(Dialog):
         frame.grid(row=0, column=0, padx=20, pady=20)
         
         # Label
-        label_text = tk.Label(bodyFrame, text=self.textLabel, bg='white', bd=0)
+        label_text = tk.Label(bodyFrame, text=self.labelText, bg='white', bd=0)
         label_text.grid(row=0, column=0, sticky='nw', padx=(15, 10), pady=15)
         # Label box
         var = tk.StringVar()

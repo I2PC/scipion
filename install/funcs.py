@@ -28,6 +28,7 @@ import platform
 import os
 import sys
 import time
+from glob import glob
 
 from subprocess import STDOUT, check_call, CalledProcessError
 
@@ -85,12 +86,11 @@ class Command():
 
         if targets is None:
             self._targets = []
-        elif isinstance(targets, list):
-            self._targets = targets
-        else:
+        elif isinstance(targets, basestring):
             self._targets = [targets]
+        else:
+            self._targets = targets
 
-        self._environ = kwargs.get('environ', None)
         self._cwd = kwargs.get('cwd', None)
         self._out = kwargs.get('out', None)
         self._always = kwargs.get('always', False)
@@ -98,8 +98,7 @@ class Command():
     def _existsAll(self):
         """ Return True if all targets exist. """
         for t in self._targets:
-            #print(red("  Checking target: %s, exists: %s" % (t, os.path.exists(t))))
-            if not os.path.exists(t):
+            if not glob(t):
                 return False
         return True
 
@@ -130,8 +129,8 @@ class Command():
             os.chdir(cwd)
             if not self._env.showOnly:
                 for t in self._targets:
-                    assert os.path.exists(t), ("target '%s' not built (after "
-                                               "running '%s')" % (t, cmd))
+                    assert glob(t), ("target '%s' not built (after "
+                                     "running '%s')" % (t, cmd))
 
     def __str__(self):
         return "Command: %s, targets: %s" % (self._cmd, self._targets)
@@ -161,9 +160,7 @@ class Target():
 
     def _existsAll(self):
         for command in self._commandList:
-            #print(red(">>> Checking %s" % command))
             if not command._existsAll():
-                #print(red("   not _existsAll()"))
                 return False
         return True
 
@@ -351,6 +348,8 @@ class Environment():
                          out='%s/log/%s_configure.log' % (prefixPath, name),
                          always=configAlways)
         else:
+            assert progInPath('cmake'), ("Cannot run 'cmake'. Please install "
+                                         "it in your system first.")
             flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefixPath)
             t.addCommand('cmake %s' % ' '.join(flags),
                          targets=makeFile,
@@ -444,13 +443,13 @@ class Environment():
                              cwd=self.getEm('')))
         commands = kwargs.get('commands', [])
         for cmd, tgt in commands:
-            if not isinstance(tgt, list):
+            if isinstance(tgt, basestring):
                 tgt = [tgt]
             # Take all package targets relative to package build dir
             target.addCommand(cmd, targets=[os.path.join(target.buildPath, t) 
                                             for t in tgt], 
                          cwd=target.buildPath)            
-        
+
         return target
     
     def _showTargetGraph(self, targetList):
@@ -557,4 +556,3 @@ class Link():
     
         os.symlink(packageFolder, packageLink)
         print("Created link: %s" % linkText)
-        
