@@ -282,11 +282,13 @@ ipython = env.addModule(
 cython = env.addModule(
     'cython',
     tar='Cython-0.22.tgz',
+    targets=['Cython-0.22*'],
     default=False)
 
 cythongsl = env.addModule(
     'cythongsl',
     tar='CythonGSL-0.2.1.tgz',
+    targets=['CythonGSL-0.2.1*'],
     default=False,
     deps=[cython])
 # TODO: add checks for dependencies: GSL
