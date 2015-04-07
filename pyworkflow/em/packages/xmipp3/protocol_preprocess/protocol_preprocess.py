@@ -80,16 +80,12 @@ class XmippPreprocessHelper():
     def _insertCommonSteps(cls, protocol, changeInserts):
         if protocol.doInvert:
             args = protocol._argsInvert()
-            if protocol.isFirstStep:
-                protocol.isFirstStep = False
             protocol._insertFunctionStep("invertStep", args, changeInserts)
 
         if protocol.doThreshold:
             args = protocol._argsThreshold()
-            if protocol.isFirstStep:
-                protocol.isFirstStep = False
             protocol._insertFunctionStep("thresholdStep", args, changeInserts)
-
+    
     #--------------------------- UTILS functions ---------------------------------------------------
     @classmethod
     def _argsCommonInvert(cls):
@@ -105,7 +101,7 @@ class XmippPreprocessHelper():
         if protocol.fillType == MASK_FILL_VALUE:
             args += " %f" % protocol.fillValue.get()
         return args
-
+    
 
 class XmippProtPreprocessParticles(XmippProcessParticles):
     """ Preprocess a set of particles. You can remove dust, normalize, apply threshold, etc """
@@ -159,14 +155,10 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
         
         if self.doRemoveDust:
             args = self._argsRemoveDust()
-            if self.isFirstStep:
-                self.isFirstStep = False
             self._insertFunctionStep("removeDustStep", args, changeInserts)
         
         if self.doNormalize:
             args = self._argsNormalize()
-            if self.isFirstStep:
-                self.isFirstStep = False
             self._insertFunctionStep("normalizeStep", args, changeInserts)
         
         XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
@@ -174,6 +166,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
     #--------------------------- STEPS functions ---------------------------------------------------
     def invertStep(self, args, changeInserts):
         self.runJob('xmipp_image_operate', args)
+
     
     def thresholdStep(self, args, changeInserts):
         self.runJob("xmipp_transform_threshold", args)
@@ -212,8 +205,6 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
     
     def _methods(self):
         methods = []
-
-        
         if hasattr(self, 'outputParticles'):
             methods.append("Input particles %s of %s elements" % (self.getObjectTag('inputParticles'), self.inputParticles.get().getSize()))
             if self.doNormalize:
@@ -229,6 +220,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
     def _argsRemoveDust(self):
         if self.isFirstStep:
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+            self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
         args += " --bad_pixels outliers %f" % self.thresholdDust.get()
@@ -237,6 +229,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
     def _argsNormalize(self):
         if self.isFirstStep:
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+            self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
         
@@ -257,6 +250,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
     def _argsInvert(self):
         if self.isFirstStep:
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+            self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
         args += XmippPreprocessHelper._argsCommonInvert()
@@ -265,6 +259,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
     def _argsThreshold(self):
         if self.isFirstStep:
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+            self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
         args += XmippPreprocessHelper._argsCommonThreshold(self)
@@ -275,7 +270,10 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
         Xdim = self.inputParticles.get().getDimensions()[0]
         size = int(Xdim/2)
         return size
-
+    
+    def _setFalseFirstStep(self):
+        if self.isFirstStep:
+                self.isFirstStep = False
 
 class XmippProtPreprocessVolumes(XmippProcessVolumes):
     """ Protocol for Xmipp-based preprocess for volumes """
@@ -359,38 +357,26 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
 
         if self.doChangeHand:
             args = self._argsChangeHand()
-            if self.isFirstStep:
-                self.isFirstStep = False
             self._insertFunctionStep("changeHandStep", args, changeInserts)
         
         if self.doRandomize:
             args = self._argsRandomize()
-            if self.isFirstStep:
-                self.isFirstStep = False
             self._insertFunctionStep("randomizeStep", args, changeInserts)
         
         if self.doSymmetrize:
             args = self._argsSymmetrize()
-            if self.isFirstStep:
-                self.isFirstStep = False
             self._insertFunctionStep("symmetrizeStep", args, changeInserts)
         
         if self.doAdjust:
             args = self._argsAdjust()
             self._insertFunctionStep("adjustStep", args, changeInserts)
-            if self.isFirstStep:
-                self.isFirstStep = False
 
         if self.doSegment:
             args = self._argsSegment()
             self._insertFunctionStep("segmentStep", args, changeInserts)
-            if self.isFirstStep:
-                self.isFirstStep = False
         
         if self.doNormalize:
             args = self._argsNormalize()
-            if self.isFirstStep:
-                self.isFirstStep = False
             self._insertFunctionStep("normalizeStep", args, changeInserts)
         
         XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
@@ -459,9 +445,11 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 args = "-i %s -o %s" % (self.inputFn, self.outputStk)
             else:
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+            self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
         args += " --flipX"
+        
         return args
     
     def _argsRandomize(self):
@@ -470,6 +458,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 args = "-i %s -o %s" % (self.inputFn, self.outputStk)
             else:
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+            self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
         
@@ -484,6 +473,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 args = "-i %s -o %s" % (self.inputFn, self.outputStk)
             else:
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+            self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
         
@@ -496,7 +486,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         
         if symmetryAggregation == "sum":
             args += " --sum"
-                
+        
         return args
     
     def _argsAdjust(self):
@@ -508,6 +498,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
     def _adjustLocalArgs(self, inputVol, outputVol, args):
             if self.isFirstStep:
                 localArgs = "-i %s -o %s" % (inputVol, outputVol) + args
+                self._setFalseFirstStep()
             else:
                 localArgs = "-i %s" % outputVol + args
             return localArgs
@@ -526,19 +517,20 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             args += "dalton_mass %d %f" % (int(segmentationMass),float(ts))
         else:
             args += "otsu"
-        
         return args
     
     def _segmentLocalArgs(self, inputVol, fnMask, args):
         return "-i %s -o %s " % (inputVol, fnMask) + args
     
     def _segMentMaskArgs(self, inputVol, outputVol, fnMask):
-            if self.isFirstStep:
-                maskArgs = "-i %s -o %s" % (inputVol, outputVol)
-            else:
-                maskArgs = "-i %s" % outputVol
-            maskArgs += " --mask binary_file %s" % fnMask
-            return maskArgs
+        print "self.isFirstStep, ", self.isFirstStep
+        if self.isFirstStep:
+            maskArgs = "-i %s -o %s" % (inputVol, outputVol)
+            self._setFalseFirstStep()
+        else:
+            maskArgs = "-i %s" % outputVol
+        maskArgs += " --mask binary_file %s" % fnMask
+        return maskArgs
     
     def _argsNormalize(self):
         if self.isFirstStep:
@@ -546,6 +538,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 args = "-i %s -o %s" % (self.inputFn, self.outputStk)
             else:
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+            self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
         
@@ -563,6 +556,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 args = "-i %s -o %s" % (self.inputFn, self.outputStk)
             else:
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+            self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
         args += XmippPreprocessHelper._argsCommonInvert()
@@ -619,3 +613,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         else:
             Xdim = self.inputVolumes.get().getDimensions()[0]
         return Xdim
+    
+    def _setFalseFirstStep(self):
+        if self.isFirstStep:
+                self.isFirstStep = False
