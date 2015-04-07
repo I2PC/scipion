@@ -102,8 +102,8 @@ def checkConf(fpath, ftemplate):
     ct = ConfigParser()
     ct.optionxform = str
     assert ct.read(ftemplate) != [], 'Missing file %s' % ftemplate
-    df = {s: set(cf.options(s)) for s in cf.sections()}
-    dt = {s: set(ct.options(s)) for s in ct.sections()}
+    df = dict([(s, set(cf.options(s))) for s in cf.sections()])
+    dt = dict([(s, set(ct.options(s))) for s in ct.sections()])
     if df == dt:
         print('The configuration file %s looks fine.' % fpath)
     else:
