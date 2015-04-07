@@ -408,6 +408,14 @@ class Environment():
     # The CFLAGS line is commented out because even if it is needed for modules
     # like libxml2, it causes problems for others like numpy and scipy (see for
     # example http://mail.scipy.org/pipermail/scipy-user/2007-January/010773.html)
+
+    # TODO: actually, to compile against numpy (as cryoem does), one
+    # needs to have:
+    #   software/lib/python2.7/site-packages/numpy/core/include
+    #   software/lib/python2.7/site-packages/numpy/core/include/numpy
+    # as part of their CFLAGS="-I...."
+    # So we should add it somehow.
+
     # TODO: maybe add an argument to the function to chose if we want them?
                      '%(root)s/bin/python setup.py install %(flags)s > '
                      '%(root)s/log/%(name)s.log 2>&1' % {'root': prefixPath,
