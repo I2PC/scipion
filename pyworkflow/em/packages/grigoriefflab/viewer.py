@@ -215,16 +215,7 @@ Examples:
     
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
-        volumes = []
-        if self.protocol.IS_REFINE:
-            for it in self._iterations:
-                volFn = self.protocol._getFileName('iter_vol', iter=it)
-                volumes.append(volFn)
-        else:
-            for it in self._iterations:
-                for ref3d in self._refsList:
-                    volFn = self.protocol._getFileName('iter_vol_class', iter=it, ref3d=ref3d)
-                    volumes.append(volFn)
+        volumes = self._getVolumeNames()
         
         if len(volumes) > 1:
             cmdFile = self.protocol._getExtraPath('chimera_volumes.cmd')
@@ -261,32 +252,27 @@ Examples:
         return views
     
     def _createAngDistChimera(self, it):
-        pass
-#         # FIXME
-#         #outerRadius = int(float(self.maskDiameterA)/self.SamplingRate)
-#         outerRadius = 30
-#         radius = float(outerRadius) * 1.1
-#         # Common variables to use
-#         sphere = self.spheresScale.get()
-#         prefixes = self._getPrefixes()
-# 
-#         data_angularDist = self.protocol._getIterAngularDist(it)
-# 
-#         if len(self._refsList) == 1:
-#             # If just one reference we can show the angular distribution
-#             ref3d = self._refsList[0]
-#             for prefix in prefixes:
-#                 volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-#                 if exists(volFn.replace(":mrc","")):
-#                     angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
-#                     from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
-#                     return ChimeraClient(volFn, angularDist=angDistFile, radius=radius, sphere=sphere)
-#                 else:
-#                     raise Exception("This class is Empty. Please try with other class")
-#         
-#         else:
-#             return self.infoMessage("Please select only one class to display angular distribution",
-#                                     "Input selection") 
+        x, _, _ = self.protocol.input3DReference.get().getDim()
+        radius = 1.1 * x
+        volumes = self._getVolumeNames()
+        
+        if len(volumes) > 1:
+            raise Exception("Please, select a single volume to show it's angular distribution")
+        else:
+            if self.protocol.IS_REFINE:
+                data_angularDist = self.protocol._getFileName("output_par", iter=it)
+                if exists(data_angularDist):
+                    sqliteFn = self.protocol._getFileName('projections', iter=it)
+                    self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
+                    view = em.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
+            else:
+                for ref3d in self._refsList:
+                    data_angularDist = self.protocol._getFileName("output_par_class", iter=it, ref=ref3d)
+                    if exists(data_angularDist):
+                        sqliteFn = self.protocol._getFileName('projectionsClass', iter=it, ref=ref3d)
+                        self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
+                        view = em.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
+        return view
     
     def _createAngDist2D(self, it):
         nrefs = len(self._refsList)
@@ -297,9 +283,10 @@ Examples:
             if exists(data_angularDist):
                 xplotter = EmPlotter(x=gridsize[0], y=gridsize[1],
                                     mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
-                plot_title = 'iter %d' % it
-                phi, theta = self._getAngularDistribution(data_angularDist)
-                xplotter.plotAngularDistribution(plot_title, phi, theta)
+                title = 'iter %d' % it
+                sqliteFn = self.protocol._getFileName('projections', iter=it)
+                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
+                self._plotter(xplotter, title, sqliteFn)
                 return xplotter
             else:
                 return
@@ -310,6 +297,9 @@ Examples:
                     xplotter = EmPlotter(x=gridsize[0], y=gridsize[1],
                                         mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
                     plot_title = 'class %d' % ref3d
+                    sqliteFn = self.protocol._getFileName('projectionsClass', iter=it, ref=ref3d)
+                    self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
+                    self._plotter(xplotter, title, sqliteFn)
                     phi, theta = self._getAngularDistribution(data_angularDist)
                     xplotter.plotAngularDistribution(plot_title, phi, theta)
             return xplotter
@@ -522,6 +512,18 @@ Examples:
             
         return imgSqlite
     
+    def _iterAngles(self, it, dataAngularDist):
+        f = open(dataAngularDist)
+        particles = self.protocol.inputParticles.get().getSize()
+        for line in f:
+            if not line.startswith('C'):
+                angles = map(float, line.split())
+                rot = angles[1]
+                tilt = angles[2]
+                yield rot, tilt, particles
+        
+        f.close()
+    
     def _getAngularDistribution(self, pathFile):
         # Create Angular plot for one iteration
         file = open(pathFile)
@@ -555,22 +557,33 @@ Examples:
         f1.close()
         return value
 
-#     def _getIterationFile(self, filePath):
-#         self.setVisualizeIterations()
-#         
-#         path = []
-#         for i, iter in enumerate(self.visualizeIters):
-#             pathDir = self.protocol._getExtraPath("iter_%03d" % iter)
-#             pathNew = join(pathDir, filePath % iter)
-# #             print "path=%s" % pathNew
-#             
-#             if os.path.exists(pathNew):
-#                 path.append(pathNew)
-# #                runShowJ(path)
-#             else:
-#                 self.formWindow.showError('Iteration %s does not exist.' % iter)
-#         
-#         return path
+    def _plotter(self, xplotter, title, sqliteFn):
+        import pyworkflow.em.metadata as md
+        # Create Angular plot for one iteration
+        rot = []
+        tilt = []
+        weight = []
+        
+        mdProj = md.MetaData(sqliteFn)
+        for objId in mdProj:
+            rot.append(mdProj.getValue(md.MDL_ANGLE_ROT, objId))
+            tilt.append(mdProj.getValue(md.MDL_ANGLE_TILT, objId))
+            weight.append(mdProj.getValue(md.MDL_WEIGHT, objId))
+        
+        xplotter.plotAngularDistribution(title, rot, tilt, weight)
+
+    def _getVolumeNames(self):
+        volumes = []
+        if self.protocol.IS_REFINE:
+            for it in self._iterations:
+                volFn = self.protocol._getFileName('iter_vol', iter=it)
+                volumes.append(volFn)
+        else:
+            for it in self._iterations:
+                for ref3d in self._refsList:
+                    volFn = self.protocol._getFileName('iter_vol_class', iter=it, ref3d=ref3d)
+                    volumes.append(volFn)
+        return volumes
 
 
 class ProtCTFFindViewer(Viewer):

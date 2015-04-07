@@ -184,33 +184,34 @@ scons = env.addModule(
 
 numpy = env.addModule(
     'numpy',
-    tar='numpy-1.8.1.tgz')
+    tar='numpy-1.8.1.tgz',
+    deps=[lapack])
 
 six = env.addModule(
     'six',
     tar='six-1.7.3.tgz',
-    targets=['six.py', 'six-1.7.3-py2.7.egg-info'])
+    targets=['six-1.7.3*'])
 
 dateutil = env.addModule(
     'dateutil',
     tar='python-dateutil-1.5.tgz',
-    targets=['python_dateutil-1.5-py2.7.egg'],
+    targets=['python_dateutil-1.5*'],
     deps=[setuptools, six])
 
 pyparsing = env.addModule(
     'pyparsing',
-    targets=['pyparsing.py'],
-    tar='pyparsing-2.0.2.tgz')
+    tar='pyparsing-2.0.2.tgz',
+    targets=['pyparsing.py'])
 
 matplotlib = env.addModule(
     'matplotlib',
     tar='matplotlib-1.3.1.tgz',
-    targets=['matplotlib-1.3.1-py2.7-linux-x86_64.egg'],
+    targets=['matplotlib-1.3.1*'],
     deps=[numpy, png, dateutil, pyparsing])
 
 psutil = env.addModule(
     'psutil',
-    targets=['psutil-2.1.1-py2.7-linux-x86_64.egg'],
+    targets=['psutil-2.1.1*'],
     tar='psutil-2.1.1.tgz')
 
 mpi4py = env.addModule(
@@ -239,7 +240,7 @@ paramiko = env.addModule(
 pillow = env.addModule(
     'Pillow',
     tar='Pillow-2.5.1.tgz',
-    targets=['Pillow-2.5.1-py2.7-linux-x86_64.egg'],
+    targets=['Pillow-2.5.1*'],
     deps=[setuptools, jpeg])
 
 winpdb = env.addModule(
@@ -265,7 +266,7 @@ tornado = env.addModule(
 lxml = env.addModule(
     'lxml',
     tar='lxml-3.4.1.tgz',
-    targets=['lxml-3.4.1-py2.7-linux-x86_64.egg'],
+    targets=['lxml-3.4.1*'],
     libChecks=['libxml-2.0', 'libxslt'],
     deps=[], # libxml2, libxslt],
     default=False)
