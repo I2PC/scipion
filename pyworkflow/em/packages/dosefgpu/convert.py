@@ -37,7 +37,7 @@ def getEnviron():
     """ Setup the environment variables needed to launch Relion. """
     environ = Environ(os.environ)
     environ.update({
-            'PATH': join(os.environ['DOSEFGPU_HOME']),
+            'PATH': join(os.environ['DOSEFGPU_HOME'], 'bin'),
             'LD_LIBRARY_PATH': join(os.environ['DOSEFGPU_CUDA_LIB'])
             }, position=Environ.BEGIN)
     return environ  

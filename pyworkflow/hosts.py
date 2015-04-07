@@ -64,6 +64,7 @@ class HostConfig():
         self.hostPath = String()
         self.mpiCommand = String()
         self.scipionHome = String()
+        self.scipionConfig = String()
         self.address = String()
         self.queueSystem = QueueSystemConfig()
     
@@ -122,10 +123,22 @@ class HostConfig():
         self.queueSystem = queueSystem
         
     def getScipionHome(self):
+        """ Return the path where Scipion is installed in 
+        the host. This is useful when launching remote jobs.
+        """ 
         return self.scipionHome.get()
     
     def setScipionHome(self, newScipionHome):
         self.scipionHome.set(newScipionHome)
+        
+    def getScipionConfig(self):
+        """ From which file to read the configuration file in 
+        this hosts. Useful for remote jobs.
+        """
+        return self.scipionConfig.get()
+    
+    def setScipionConfig(self, newConfig):
+        self.scipionConfig.set(newConfig)
         
     def getAddress(self):
         return self.address.get()

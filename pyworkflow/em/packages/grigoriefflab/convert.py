@@ -35,7 +35,6 @@ import numpy
 from collections import OrderedDict
 from numpy import rad2deg
 from numpy.linalg import inv
-#from itertools import izip
 
 from pyworkflow.em.packages.grigoriefflab import *
 
