@@ -66,6 +66,33 @@ TEST_F(SamplingTest, computeDistance)
     XMIPP_CATCH
 }
 
+TEST_F(SamplingTest, BreakSymmetry)
+{
+    XMIPP_TRY
+    FileName fn_sym("i3");
+    SL.readSymmetryFile(fn_sym);
+    double rot2=0.;
+    double tilt2=0.;
+    double psi2=0.;
+    //DEBUG
+    //Matrix1D<double>  direction(3);
+    //
+    for (int i=0; i<100;i++)
+    {
+        SL.breakSymmetry(0., 5., 0., rot2, tilt2, psi2);
+        Euler_direction(rot2, tilt2, psi2, direction);
+        /*std::cerr << ".sphere " << XX(direction) << " "
+        << YY(direction) << " "
+        << ZZ(direction) << " "
+        << "0.05" << std::endl;
+        */
+    double total = SL.computeDistance(0., 5., 0., rot2, tilt2, psi2,false,false,false);
+    EXPECT_NEAR (0, total,0.001);
+    }
+    XMIPP_CATCH
+}
+
+
 TEST_F(SamplingTest, computeDistanceMetadata)
 {
     XMIPP_TRY
