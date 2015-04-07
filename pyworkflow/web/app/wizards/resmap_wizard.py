@@ -159,7 +159,7 @@ def getPlotResMap(request, protocol):
     #3rd step: Save to png image
     
 #     plotUrl = "/" + savePlot(request, plotter)
-    plotUrl = savePlot(request, plotter)
+    plotUrl = savePlot(request, plotter) 
     return plotUrl, min_ang
 
 def _beforePreWhitening(protocol, dir):
