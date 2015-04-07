@@ -44,7 +44,6 @@ MODE_READ = 'read'
 def writeParticles(outputFile):
     i = 0
     line = sys.stdin.readline()
-    
     while line:
     #for line in sys.stdin:
         objDict=json.loads(line)
@@ -57,6 +56,7 @@ def writeParticles(outputFile):
         else:
             raise Exception('ERROR (e2converter): Cannot process a particle without filename')
         imageData = eman.EMData()
+        imageData.read_image(filename, index)
         
         ctf = None
         if '_ctfModel._defocusU' in objDict.keys():
@@ -88,12 +88,10 @@ def writeParticles(outputFile):
                                              "tz": shifts[2],
                                              "mirror": 0,  ####TODO: test flip
                                              "scale": 1.0})
+        
         if transformation is not None:
             imageData.set_attr('xform.projection', transformation)
         
-        imageData.read_image(filename, index)
-        
-    
         imageData.write_image(outputFile, i, eman.EMUtil.ImageType.IMAGE_HDF, False)
         i += 1
         print "OK"

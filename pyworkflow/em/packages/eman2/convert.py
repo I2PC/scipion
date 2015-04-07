@@ -189,7 +189,6 @@ def writeSetOfParticles(partSet, path, **kwargs):
     
         if alignType != em.ALIGN_NONE:
             shift, angles = alignmentToRow(part.getTransform(), alignType)
-        
             #json cannot encode arrays so I convert them to lists
             #json fail if has -0 as value
             objDict['_shifts'] = shift.tolist()

@@ -255,7 +255,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
             self.runJob(program, args, cwd=self._getExtraPath())
         
         program = getEmanProgram('e2buildsets.py')
-        args = " --setname=inputSet --allparticles"
+        args = " --setname=inputSet --allparticles --minhisnr=-1"
         self.runJob(program, args, cwd=self._getExtraPath())
     
     def refineStep(self, args):
