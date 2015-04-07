@@ -29,7 +29,10 @@ import sys
 import os
 from os.path import join, exists, dirname, basename
 import time
-import argparse
+import optparse
+# We use optparse instead of argparse because we want this script to
+# be compatible with python >= 2.3
+
 try:
     from ConfigParser import ConfigParser
 except ImportError:
@@ -37,11 +40,11 @@ except ImportError:
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    add = parser.add_argument  # shortcut
+    parser = optparse.OptionParser(description=__doc__)
+    add = parser.add_option  # shortcut
     add('--overwrite', action='store_true',
         help=('Rewrite the configuration files using the original templates.'))
-    args = parser.parse_args()
+    options, args = parser.parse_args()
 
     try:
         settingsDir = join(os.environ['SCIPION_HOME'], 'settings')
@@ -49,7 +52,7 @@ def main():
                 (os.environ['SCIPION_CONFIG'], 'scipion.conf'),
                 (os.environ['SCIPION_PROTOCOLS'], 'protocols.conf'),
                 (os.environ['SCIPION_HOSTS'], 'hosts.conf')]:
-            if not exists(fpath) or args.overwrite:
+            if not exists(fpath) or options.overwrite:
                 createConf(fpath, join(settingsDir, tmplt))
             else:
                 checkConf(fpath, join(settingsDir, tmplt))
@@ -102,8 +105,11 @@ def checkConf(fpath, ftemplate):
     ct = ConfigParser()
     ct.optionxform = str
     assert ct.read(ftemplate) != [], 'Missing file %s' % ftemplate
+
     df = dict([(s, set(cf.options(s))) for s in cf.sections()])
     dt = dict([(s, set(ct.options(s))) for s in ct.sections()])
+    # That funny syntax to create the dictionaries works with old pythons.
+
     if df == dt:
         print('The configuration file %s looks fine.' % fpath)
     else:
