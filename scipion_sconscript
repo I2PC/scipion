@@ -466,7 +466,8 @@ def addProg(progName, **kwargs):
 
 
 # Define the list of all programs
-for p in ['angular_commonline',
+for p in ['angular_break_symmetry',
+          'angular_commonline',
           'angular_continuous_assign',
           'angular_continuous_assign2',
           'angular_discrete_assign',
