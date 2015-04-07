@@ -131,6 +131,7 @@ lapack = env.addLibrary(
            '-DLAPACKE:BOOL=ON'],
     cmake=True, 
     default=False)
+# TODO: add check for gfortran
 
 opencv = env.addLibrary(
     'opencv',
