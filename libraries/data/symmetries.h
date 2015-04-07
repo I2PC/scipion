@@ -340,7 +340,15 @@ public:
  _image
      */
     void computeDistance(MetaData &md,
-                           bool projdir_mode, bool check_mirrors, bool object_rotation=false);
+                           bool projdir_mode, bool check_mirrors,
+                           bool object_rotation=false);
+/** Return equivalent set of angles for a given symmetry
+ *
+ */
+    void breakSymmetry(double rot1, double tilt1, double psi1,
+                                  double &rot2, double &tilt2, double &psi2
+                                  );
+
 };
 
 /** Applies to the crystal vectors de n-th symmetry  matrix, It also
