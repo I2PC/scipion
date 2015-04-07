@@ -1196,7 +1196,8 @@ class FormWindow(Window):
         r = 0 # Run name
         self._createHeaderLabel(runFrame, Message.LABEL_RUNNAME, bold=True, sticky='ne')
         self.runNameVar = tk.StringVar()
-        entry = tk.Entry(runFrame, font=self.font, width=25, textvariable=self.runNameVar)
+        entry = tk.Entry(runFrame, font=self.font, width=25, textvariable=self.runNameVar, 
+                         state='readonly')
         entry.grid(row=r, column=1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
         btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
         btn.grid(row=r, column=2, padx=(10,0), pady=5, sticky='nw')
@@ -1204,12 +1205,13 @@ class FormWindow(Window):
         c = 3 # Comment
         self._createHeaderLabel(runFrame, Message.TITLE_COMMENT, sticky='ne', column=c)
         self.commentVar = tk.StringVar()
-        entry = tk.Entry(runFrame, font=self.font, width=25, textvariable=self.commentVar)
+        entry = tk.Entry(runFrame, font=self.font, width=25, textvariable=self.commentVar, 
+                         state='readonly')
         entry.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
         btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
         btn.grid(row=r, column=c+2, padx=(10,0), pady=5, sticky='nw')
         
-        self.updateLabelAndComment()
+        self.updateLabelAndCommentVars()
                 
         r = 1 # Execution
         self._createHeaderLabel(runFrame, Message.LABEL_EXECUTION, bold=True, sticky='ne', row=r, pady=0)
@@ -1331,12 +1333,13 @@ class FormWindow(Window):
     
     def _editObjParams(self, e=None):
         """ Show a Text area to edit the protocol label and comment. """
-        self.setProtocolLabel()        
+        self.updateProtocolLabel()        
         d = EditObjectDialog(self.root, Message.TITLE_EDIT_OBJECT, 
-                             self.protocol, self.protocol.mapper)
+                             self.protocol, self.protocol.mapper,
+                             labelText=Message.LABEL_RUNNAME)
         
         if d.resultYes():
-            self.updateLabelAndComment()
+            self.updateLabelAndCommentVars()
             if self.updateProtocolCallback:
                 self.updateProtocolCallback(self.protocol)
                 
@@ -1512,7 +1515,7 @@ class FormWindow(Window):
     def _close(self, onlySave=False):
         try:
             # Set the protocol label
-            self.setProtocolLabel()
+            self.updateProtocolLabel()
             
             message = self.callback(self.protocol, onlySave)
             if not self.visualizeMode:
@@ -1725,7 +1728,7 @@ class FormWindow(Window):
                     print ">>> ERROR: setting param for: ", paramName, "value: '%s'" % var.get()
                 param.set(None)
                 
-    def updateLabelAndComment(self):
+    def updateLabelAndCommentVars(self):
         """ Read the label and comment first line to update
         the entry boxes in the form.
         """
@@ -1738,7 +1741,7 @@ class FormWindow(Window):
                 comment = lines[0]
         self.commentVar.set(comment)
         
-    def setProtocolLabel(self):
+    def updateProtocolLabel(self):
         self.protocol.setObjLabel(self.runNameVar.get())
              
     def updateProtocolParams(self):
