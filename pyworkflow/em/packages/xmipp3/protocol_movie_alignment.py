@@ -452,4 +452,7 @@ class ProtMovieAlignmentWeb(ProtMovieAlignment):
         gpuParamsGroup = form.getParam('GPU')
         gpuParamsGroup.config(condition='False')
         
+    def getOutputFiles(self):
+        # Redefine the default method to avoid download of movie files
+        return self.outputMicrographs.getFiles()
         

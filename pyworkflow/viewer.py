@@ -330,20 +330,20 @@ class ProtocolViewer(Protocol, Viewer):
         if not os.path.exists(sqliteFn):
             projectionList = [] # List of list of 3 elements containing angleTilt, anglePsi, weight
             
-            def getCloseProjection(angleTilt, anglePsi):
-                """ Get an existing projection close to angleTilt, anglePsi.
+            def getCloseProjection(angleRot, angleTilt):
+                """ Get an existing projection close to angleRot, angleTilt.
                 Return None if not found close enough.
                 """
                 for projection in projectionList:
-                    if abs(projection[0] - angleTilt) <= 0.01 and abs(projection[1] - anglePsi) <= 0.01:
+                    if abs(projection[0] - angleRot) <= 0.01 and abs(projection[1] - angleTilt) <= 0.01:
                         return projection
                 return None            
             
-            for angleTilt, anglePsi, parts in itemDataIterator:
+            for angleRot, angleTilt, parts in itemDataIterator:
     #             print "angleTilt, anglePsi, parts", angleTilt, anglePsi, parts
-                projection = getCloseProjection(angleTilt, anglePsi)
+                projection = getCloseProjection(angleRot, angleTilt)
                 if projection is None:
-                    projectionList.append([angleTilt, anglePsi, 1./parts])
+                    projectionList.append([angleRot, angleTilt, 1./parts])
                 else:
                     projection[2] = projection[2] + 1./parts
             
@@ -351,8 +351,8 @@ class ProtocolViewer(Protocol, Viewer):
             
             for projection in projectionList:
                 mdRow = md.Row()
-                mdRow.setValue(md.MDL_ANGLE_TILT, projection[0])
-                mdRow.setValue(md.MDL_ANGLE_PSI, projection[1])
+                mdRow.setValue(md.MDL_ANGLE_ROT, projection[0])
+                mdRow.setValue(md.MDL_ANGLE_TILT, projection[1])
                 mdRow.setValue(md.MDL_WEIGHT, projection[2])
                 mdRow.writeToMd(mdProj, mdProj.addObject())
             mdProj.write(sqliteFn)

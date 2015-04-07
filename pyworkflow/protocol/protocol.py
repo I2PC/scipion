@@ -462,13 +462,31 @@ class Protocol(Step):
         for key, attr in self.getAttributes():
             if isinstance(attr, outputClass):
                 yield key, attr
+                
+    def iterOutputEM(self):
+        """ Iterate over the outputs that are EM objects. """
+        from pyworkflow.em.data import EMObject
+        for paramName, attr in self.iterOutputAttributes(EMObject):
+            yield paramName, attr
     
     def getOutputsSize(self):
-        from pyworkflow.em.data import EMObject
         count = 0
-        for key, output in self.iterOutputAttributes(EMObject):
+        for _ in self.iterOutputEM():
             count += 1
         return count;
+    
+    def getOutputFiles(self):
+        """ Return the output files produced by this protocol.
+        This can be used in web to download or in remote 
+        executions to copy results back.
+        """
+        # By default return the output file of each output attribute
+        s = set()
+        
+        for _, attr in self.iterOutputEM():
+            s.update(attr.getFiles())
+            
+        return s
             
     def copyDefinitionAttributes(self, other):
         """ Copy definition attributes to other protocol. """

@@ -25,7 +25,7 @@
 # **************************************************************************
 
 import sys
-from install.funcs import Environment
+from install.funcs import Environment, progInPath
 
 
 
@@ -41,13 +41,13 @@ env = Environment(args=sys.argv)
 # In order to get both the float and double libraries of fftw
 # we need to execute ./configure; make; make install twice
 # see: http://www.fftw.org/fftw2_doc/fftw_6.html
-env.AddLibrary(
+fftw3 = env.addLibrary(
     'fftw3',
     tar='fftw-3.3.4.tgz',
     flags=['--enable-threads', '--enable-shared'],
     clean=True) # We need to clean to configure again with --enable-float
     
-env.AddLibrary(
+fftw3f = env.addLibrary(
     'fftw3f',
     tar='fftw-3.3.4.tgz',
     flags=['--enable-threads', '--enable-shared', '--enable-float'])
@@ -55,7 +55,7 @@ env.AddLibrary(
 osBuildDir = 'tcl8.6.1/unix'
 osFlags = ['--enable-threads']
 
-tcl = env.AddLibrary(
+tcl = env.addLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
     buildDir=osBuildDir,
@@ -65,7 +65,7 @@ tcl = env.AddLibrary(
 osBuildDir = 'tk8.6.1/unix'
 osFlags = ['--enable-threads']
 
-tk = env.AddLibrary(
+tk = env.addLibrary(
     'tk',
     tar='tk8.6.1-src.tgz',
     buildDir=osBuildDir,
@@ -76,55 +76,55 @@ tk = env.AddLibrary(
 
 
 # Special case: tk does not make the link automatically, go figure.
-tk_wish = env.createTarget('tk_wish')
+tk_wish = env.addTarget('tk_wish')
 tk_wish.addCommand('ln -v -s wish8.6 wish',
                    targets='software/bin/wish',
                    cwd='software/bin')
 
-zlib = env.AddLibrary(
+zlib = env.addLibrary(
     'zlib',
     targets=[env.getLib('z')],
     tar='zlib-1.2.8.tgz',
     configTarget='zlib.pc')
 
-jpeg = env.AddLibrary(
+jpeg = env.addLibrary(
     'jpeg',
     tar='libjpeg-turbo-1.3.1.tgz',
     flags=['--without-simd'])
-    #flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
+    #flags=([] if progInPath('nasm') else ['--without-simd']))
 
-png = env.AddLibrary(
+png = env.addLibrary(
     'png',
     tar='libpng-1.6.16.tgz',
     deps=[zlib])
 
-tiff = env.AddLibrary(
+tiff = env.addLibrary(
      'tiff',
      tar='tiff-3.9.4.tgz',
-     deps=[zlib])
+     deps=[zlib, jpeg])
 
-sqlite = env.AddLibrary(
+sqlite = env.addLibrary(
     'sqlite3',
     tar='sqlite-3.6.23.tgz',
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
-hdf5 = env.AddLibrary(
+hdf5 = env.addLibrary(
      'hdf5',
      tar='hdf5-1.8.14.tgz',
-     flags=['--enable-cxx'],
+     flags=['--enable-cxx', '--enable-shared'],
      targets=[env.getLib('hdf5'), env.getLib('hdf5_cpp')],
      configAlways=True,
      deps=[zlib])
 
-python = env.AddLibrary(
+python = env.addLibrary(
     'python',
     tar='Python-2.7.8.tgz',
     targets=[env.getLib('python2.7'), env.getBin('python')],
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
-lapack = env.AddLibrary(
+lapack = env.addLibrary(
     'lapack',
     tar='lapack-3.5.0.tgz',
     flags=['-DBUILD_SHARED_LIBS:BOOL=ON',
@@ -132,11 +132,33 @@ lapack = env.AddLibrary(
     cmake=True, 
     default=False)
 
-opencv = env.AddLibrary(
+opencv = env.addLibrary(
     'opencv',
     tar='opencv-2.4.9.tgz',
     targets=[env.getLib('opencv_core')],
     cmake=True,
+    default=False)
+
+# ---------- Libraries required by PyTom 
+pcre = env.addLibrary(
+    'pcre',
+    tar='pcre-8.36.tgz',
+    targets=[env.getBin('pcretest')],
+    default=False)
+
+swig = env.addLibrary(
+    'swig',
+    tar='swig-3.0.2.tgz',
+    targets=[env.getBin('swig')],
+    makeTargets=['Source/Swig/tree.o'],
+    deps=[pcre],
+    default=False)
+
+boost = env.addLibrary(
+    'boost',
+    tar='boost_1_56_0.tgz',
+    commands=[('cp -rf software/tmp/boost_1_56_0/boost software/include/', 
+               'software/include/boost')],
     default=False)
 
 
@@ -155,53 +177,54 @@ setuptools = env.addModule(
     tar='setuptools-5.4.1.tgz',
     targets=['setuptools.pth'])
 
-setuptools = env.addModule(
+scons = env.addModule(
     'scons',
+    targets=[env.getBin('scons')],
     tar='scons-2.3.4.tgz')
 
 numpy = env.addModule(
     'numpy',
-    tar='numpy-1.8.1.tgz')
+    tar='numpy-1.8.1.tgz',
+    deps=[lapack])
 
 six = env.addModule(
     'six',
     tar='six-1.7.3.tgz',
-    targets=['six.py'],
-    flags=['--old-and-unmanageable'])
+    targets=['six-1.7.3*'])
 
 dateutil = env.addModule(
     'dateutil',
     tar='python-dateutil-1.5.tgz',
-    flags=['--old-and-unmanageable'],
+    targets=['python_dateutil-1.5*'],
     deps=[setuptools, six])
 
 pyparsing = env.addModule(
     'pyparsing',
-    targets=['pyparsing.py'],
-    tar='pyparsing-2.0.2.tgz')
+    tar='pyparsing-2.0.2.tgz',
+    targets=['pyparsing.py'])
 
 matplotlib = env.addModule(
     'matplotlib',
     tar='matplotlib-1.3.1.tgz',
-    flags=['--old-and-unmanageable'],
+    targets=['matplotlib-1.3.1*'],
     deps=[numpy, png, dateutil, pyparsing])
 
-env.addModule(
+psutil = env.addModule(
     'psutil',
-    tar='psutil-2.1.1.tgz',
-    flags=['--old-and-unmanageable'])
+    targets=['psutil-2.1.1*'],
+    tar='psutil-2.1.1.tgz')
 
-env.addModule(
+mpi4py = env.addModule(
     'mpi4py',
     tar='mpi4py-1.3.1.tgz')
 
-env.addModule(
+scipy = env.addModule(
     'scipy',
     tar='scipy-0.14.0.tgz',
     default=False,
     deps=[lapack, numpy, matplotlib])
 
-env.addModule(
+bibtexparser = env.addModule(
     'bibtexparser',
     tar='bibtexparser-0.5.tgz')
 
@@ -209,19 +232,18 @@ django = env.addModule(
     'django',
     tar='Django-1.5.5.tgz')
 
-env.addModule(
+paramiko = env.addModule(
     'paramiko',
     tar='paramiko-1.14.0.tgz',
     default=False)
 
-env.addModule(
+pillow = env.addModule(
     'Pillow',
     tar='Pillow-2.5.1.tgz',
-    targets=['PIL'],
-    flags=['--old-and-unmanageable'],
+    targets=['Pillow-2.5.1*'],
     deps=[setuptools, jpeg])
 
-env.addModule(
+winpdb = env.addModule(
     'winpdb',
     tar='winpdb-1.4.8.tgz',
     default=False)
@@ -244,20 +266,19 @@ tornado = env.addModule(
 lxml = env.addModule(
     'lxml',
     tar='lxml-3.4.1.tgz',
+    targets=['lxml-3.4.1*'],
     libChecks=['libxml-2.0', 'libxslt'],
     deps=[], # libxml2, libxslt],
     default=False)
 # libxml2 and libxslt are checked instead of compiled because
 # they are so hard to compile right.
 
-env.addModule(
+ipython = env.addModule(
     'ipython',
     tar='ipython-2.1.0.tar.gz',
     deps=[pyzmq, jinja2, tornado],
     default=False)
 
-
-env.execute()
 
 
 #  ************************************************************************
@@ -266,82 +287,68 @@ env.execute()
 #  *                                                                      *
 #  ************************************************************************
 
-# extraActions is a list of (target, command) to run after installation.
+# 'commands' is a list of (command, [targets]) to run after installation.
 
-env.AddPackage('xmipp',
-               tar='xmipp_scipion.tgz',
-               buildDir='xmipp_scipion',
-               reqs={'mpi': 'cxx',
-                     'freetype': 'cxx',
-                     'X11': 'cxx',
-                     'png': 'cxx',
-                     'ncurses': 'cxx',
-                     'ssl': 'cxx',
-                     'readline': 'cxx'},
-               #deps=[opencv],
-               default=False)
-# In case you want to install an older version of Xmipp, you can use
-# the extraActions parameter instead of using its own SConscript, like this:
-# 
-#               extraActions=[('xmipp.bashrc',
-#                             './install.sh --unattended=true --gui=false -j %s'
-#                              % GetOption('num_jobs'))],
 
-env.AddPackage('bsoft',
+env.addPackage('bsoft',
                tar='bsoft1_8_8_Fedora_12.tgz',
                default=False)
 
-env.AddPackage('ctffind',
+env.addPackage('ctffind',
                tar='ctffind_V3.5.tgz',
                default=False)
 
-env.AddPackage('ctffind4',
+env.addPackage('ctffind4',
                tar='ctffind_V4.0.13.tgz',
                default=False)
 
-env.AddPackage('eman',
+env.addPackage('eman',
                tar='eman2.1.linux64.tgz',
-               extraActions=[('eman2.bashrc', './eman2-installer')],
+               commands=[('./eman2-installer', 
+                          'eman2.bashrc')],
                default=False)
 
-env.AddPackage('frealign',
+env.addPackage('frealign',
                tar='frealign_v9.07.tgz',
                default=False)
 
-env.AddPackage('pytom',
-               tar='pytom_develop0.962.tgz',
-               extraActions=[('pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix,
-                              'PATH=%s/software/bin:%s '
-                              'LD_LIBRARY_PATH=%s/software/lib:%s '
-                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s '
-                              './scipion_installer'
-                              % (shome, environ.get('PATH', ''),
-                                 shome, environ.get('LD_LIBRARY_PATH', ''),
-                                 env['MPI_LIBDIR'], env['MPI_INCLUDE'], shome))],
-               deps=[boost_headers_only, fftw, swig, lxml],
+libSuffix = env.getLibSuffix()
+
+env.addPackage('pytom',
+               tar='pytom-0.963beta-scipion.tgz',
+               commands=[('./scipion_installer', 
+                          ['pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix] + 
+                          ['pytomc/swigModules/_pytom_%s.%s' % (s, libSuffix) 
+                           for s in ['mpi', 'freqweight', 'volume', 'fftplan', 'numpy']])],
+               deps=[boost, fftw3, fftw3f, 
+                     swig, lxml, numpy, scipy, 
+                     matplotlib, mpi4py, pillow],
                default=False)
 
-env.AddPackage('relion',
+env.addPackage('relion',
                tar='relion-1.3.tgz',
-               extraActions=[
-                   ('relion_build.log', './INSTALL.sh -j %s'
-                    % GetOption('num_jobs'))],
+               commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
+                          ['relion_build.log',
+                           'bin/relion'])],
                default=False)
 
-env.AddPackage('resmap',
+env.addPackage('resmap',
                tar='resmap-1.1.5-scipion.tgz',
                deps=['scipy'],
                default=False)
 
-env.AddPackage('spider',
+env.addPackage('spider',
                tar='spider-web-21.13.tgz',
                neededProgs=['csh'],
                default=False)
 
-env.AddPackage('motioncorr',
+env.addPackage('motioncorr',
                tar='motioncorr_v2.1.tgz',
                default=False)
 
-env.AddPackage('simple',
+env.addPackage('simple',
                tar='simple2.tgz',
                default=False)
+
+
+env.execute()

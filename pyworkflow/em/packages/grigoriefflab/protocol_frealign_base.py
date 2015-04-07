@@ -71,6 +71,7 @@ class ProtFrealignBase(EMProtocol):
             'output_vol_par': iterFile('output_vol_iter_%(iter)03d.par'),
             # dictionary for all set
             'output_par': iterFile('particles_iter_%(iter)03d.par'),
+            'projections':  self._getExtraPath('projections_iter_%(iter)03d.sqlite'),
             'classes_scipion': iterFile('classes_scipion.sqlite'),
             'data_scipion': iterFile('data_scipion.sqlite'),
             'shift' : 'particles_shifts_iter_%(iter)03d.shft',
@@ -96,6 +97,7 @@ class ProtFrealignBase(EMProtocol):
             'output_vol_par_class': iterFile('output_vol_iter_%(iter)03d_class_%(ref)02d.par'),
             # dictionary for each class
             'output_par_class': iterFile('particles_iter_%(iter)03d_class_%(ref)02d.par'),
+            'projectionsClass':  self._getExtraPath('projections_iter_%(iter)03d_class_%(ref)02d.sqlite'),
             'output_par_class_tmp': iterFile('particles_iter_%(iter)03d_class_0.par'),
             'shift_class' : 'particles_shifts_iter_%(iter)03d_class_%(ref)02d.shft',
             'match_class' : 'particles_match_iter_%(iter)03d_class_%(ref)02d.mrc',
