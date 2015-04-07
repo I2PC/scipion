@@ -91,7 +91,6 @@ class Command():
         else:
             self._targets = targets
 
-        self._environ = kwargs.get('environ', None)
         self._cwd = kwargs.get('cwd', None)
         self._out = kwargs.get('out', None)
         self._always = kwargs.get('always', False)
