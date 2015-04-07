@@ -64,6 +64,7 @@ class HostConfig():
         self.hostPath = String()
         self.mpiCommand = String()
         self.scipionHome = String()
+        self.scipionConfig = String()
         self.address = String()
         self.queueSystem = QueueSystemConfig()
     
