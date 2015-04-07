@@ -279,6 +279,13 @@ ipython = env.addModule(
     deps=[pyzmq, jinja2, tornado],
     default=False)
 
+cryoem = env.addModule(
+    'cryoem',
+    tar='cryoem-1.0.tgz',
+    default=False,
+    deps=[numpy, scipy, matplotlib])
+# TODO: add checks for dependencies: Cython version 0.21.2, GSL, CythonGSL
+
 
 
 #  ************************************************************************
