@@ -80,8 +80,8 @@ TEST_F(SamplingTest, BreakSymmetry)
     for (int i=0; i<100;i++)
     {
         SL.breakSymmetry(0., 5., 0., rot2, tilt2, psi2);
-        Euler_direction(rot2, tilt2, psi2, direction);
-        /*std::cerr << ".sphere " << XX(direction) << " "
+        /*Euler_direction(rot2, tilt2, psi2, direction);
+        std::cerr << ".sphere " << XX(direction) << " "
         << YY(direction) << " "
         << ZZ(direction) << " "
         << "0.05" << std::endl;
