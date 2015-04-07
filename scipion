@@ -46,15 +46,6 @@ __version__ = 'v.0.1.5 Phosphorus'
 # no inline "if ... else ...", etc.), and we better avoid things like
 # "print" (we use sys.stdout.write()) and be careful with exceptions.
 
-if sys.version_info < (2, 5):
-    sys.stdout.write('Warning: running with old Python.\n')
-    # But we'll try anyway. Unless...
-
-    if len(sys.argv) > 1 and sys.argv[1] not in ['install', 'compile']:
-        sys.exit('Please run this script with Python 2.5 or above.')
-        # That's too much, because SCons doesn't work with an earlier version!
-        # Also, the tarfile module works badly, etc. Not worth it.
-
 
 SCIPION_HOME = dirname(os.path.realpath(__file__))
 
