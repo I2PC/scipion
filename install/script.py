@@ -131,6 +131,7 @@ lapack = env.addLibrary(
            '-DLAPACKE:BOOL=ON'],
     cmake=True, 
     default=False)
+# TODO: add check for gfortran
 
 opencv = env.addLibrary(
     'opencv',
@@ -278,6 +279,26 @@ ipython = env.addModule(
     tar='ipython-2.1.0.tar.gz',
     deps=[pyzmq, jinja2, tornado],
     default=False)
+
+cython = env.addModule(
+    'cython',
+    tar='Cython-0.22.tgz',
+    targets=['Cython-0.22*'],
+    default=False)
+
+cythongsl = env.addModule(
+    'cythongsl',
+    tar='CythonGSL-0.2.1.tgz',
+    targets=['CythonGSL-0.2.1*'],
+    default=False,
+    deps=[cython])
+# TODO: add checks for dependencies: GSL
+
+cryoem = env.addModule(
+    'cryoem',
+    tar='cryoem-1.0.tgz',
+    default=False,
+    deps=[numpy, scipy, matplotlib, cythongsl])
 
 
 
