@@ -726,11 +726,12 @@ def convertBinaryVol(vol, outputDir):
         fn = convertToMrc(vol.getFileName())
     else:
         fn = vol.getFileName()
-        
     return fn
+
 
 def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
+
 
 def readCoordinates(mic, fileName, coordsSet):
         for row in md.iterRows(fileName):
