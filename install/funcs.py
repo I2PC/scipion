@@ -141,7 +141,7 @@ class Target():
         self._env = env
         self._name = name
         self._default = kwargs.get('default', False)
-        self._commandList = list(commands[:])
+        self._commandList = list(commands)  # copy the list/tuple of commands
         self._deps = [] # list of name of dependency targets
 
     def addCommand(self, cmd, **kwargs):
@@ -160,7 +160,9 @@ class Target():
 
     def _existsAll(self):
         # Check if the last command target exists
-        return self._commandList[-1]._existsAll()        
+        if not self._commandList:
+            return True
+        return self._commandList[-1]._existsAll()
 
     def isDefault(self):
         return self._default
