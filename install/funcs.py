@@ -159,10 +159,17 @@ class Target():
         return self._deps
 
     def _existsAll(self):
-        # Check if the last command target exists
-        if not self._commandList:
-            return True
-        return self._commandList[-1]._existsAll()
+        for c in self._commandList:
+            if not c._existsAll():
+                return False
+        return True
+        # TODO: Only check for the last target, but make sure that
+        # both fftw3 and fftw3f are compiled and installed in that case.
+        # It would look more like:
+        # # Check if the last command target exists
+        # if not self._commandList:
+        #     return True
+        # return self._commandList[-1]._existsAll()
 
     def isDefault(self):
         return self._default
