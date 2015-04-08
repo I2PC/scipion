@@ -600,14 +600,14 @@ for p in ['angular_commonline',
           'mpi_image_rotational_pca',           
           'mpi_image_resize', 
           'mpi_image_sort',
-	  'mpi_image_ssnr', 
+          'mpi_image_ssnr', 
           'mpi_ml_align2d', 
           'mpi_ml_tomo', 
           'mpi_mlf_align2d', 
           'mpi_ml_refine3d', 
           'mpi_mlf_refine3d', 
           'mpi_nma_alignment', 
-	  'mpi_performance_test', 
+          'mpi_performance_test', 
           'mpi_reconstruct_art', 
           'mpi_reconstruct_fourier', 
           'mpi_reconstruct_wbp', 
@@ -653,11 +653,10 @@ for p in ['angular_commonline',
 
 
 # Programs with specials needs
-
 # This programs need python lib to compile
-# addProg('volume_align_prog',
-#         incs=python_incs,
-#         libs=['python'])
+addProg('volume_align_prog',
+         incs=python_incs,
+         libs=['python2.7', 'XmippInterface'])
 
 # Optical Alignment program, that depends on opencv (cpu version)
 if opencv:
