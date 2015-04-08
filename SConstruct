@@ -443,11 +443,11 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     installDir = installDir or 'bin'
     libs = libs or []
     libPathsCopy = libPaths + [Dir('lib').abspath, Dir('#software/lib').abspath]
-    incs = incs or []
+    incsCopy = list(incs) or []
     if cuda:
         libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt']
-        incs += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
-                 join(env['CUDA_SDK_PATH'], "shared","inc")]
+        incsCopy += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
+                     join(env['CUDA_SDK_PATH'], "shared","inc")]
         libPathsCopy += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib","linux"),
                          join("/usr","local","cuda","lib64"), env['CUDA_LIB_PATH']]
     sources = []
@@ -457,7 +457,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     ccCopy = env['MPI_CC'] if mpi else env['CC']
     cxxCopy = env['MPI_CXX'] if mpi else env['CXX']
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
-    incsCopy = incs + env['CPPPATH'] + ['libraries', Dir('#software/include').abspath, 
+    incsCopy += env['CPPPATH'] + ['libraries', Dir('#software/include').abspath, 
                                         Dir('#software/include/python2.7').abspath]
     libsCopy = libs
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
