@@ -2702,6 +2702,7 @@ void SymList::computeDistance(MetaData &md,
     }
 
 }
+
 double SymList::computeDistance(double rot1, double tilt1, double psi1,
                                 double &rot2, double &tilt2, double &psi2,
                                 bool projdir_mode, bool check_mirrors,
@@ -2766,32 +2767,66 @@ double SymList::computeDistance(double rot1, double tilt1, double psi1,
     return best_ang_dist;
 }
 
-void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
-		double rot0, MultidimArray<int> *mask)
+void SymList::breakSymmetry(double rot1, double tilt1, double psi1,
+                              double &rot2, double &tilt2, double &psi2
+                              )
 {
-	Vout.initZeros(Vin);
-	double izHelical=1.0/zHelical;
-	FOR_ALL_ELEMENTS_IN_ARRAY3D(Vin)
-	{
-		if (mask!=NULL && !A3D_ELEM(*mask,k,i,j))
-			continue;
-		double rot=atan2((double)i,(double)j)+rot0;
-		double rho=sqrt((double)i*i+(double)j*j);
-		double l0=ceil((STARTINGZ(Vin)-k)*izHelical);
-		double lF=floor((FINISHINGZ(Vin)-k)*izHelical);
-		double finalValue=0;
-		double L=0;
-		for (double l=l0; l<=lF; ++l)
-		{
-			double kp=k+l*zHelical;
-			double rotp=rot+l*rotHelical;
-			double ip, jp;
-			sincos(rotp,&ip,&jp);
-			ip*=rho;
-			jp*=rho;
-			finalValue+=Vin.interpolatedElement3D(jp,ip,kp,0.0);
-			L+=1.0;
-		}
-		A3D_ELEM(Vout,k,i,j)=finalValue/L;
-	}
+    Matrix2D<double> E1;
+    Euler_angles2matrix(rot1, tilt1, psi1, E1, true);
+    static bool doRandomize=true;
+    Matrix2D<double>  L(3, 3), R(3, 3);  // A matrix from the list
+
+    int i;
+    if (doRandomize)
+    {
+        srand ( time(NULL) );
+        doRandomize=false;
+    }
+    int symOrder = symsNo()+1;
+    //std::cerr << "DEBUG_ROB: symOrder: " << symOrder << std::endl;
+    i = rand() % symOrder;//59+1
+    //std::cerr << "DEBUG_ROB: i: " << i << std::endl;
+    if (i < symOrder-1)
+    {
+        getMatrices(i, L, R);
+        //std::cerr  << R << std::endl;
+        Euler_matrix2angles(E1 * R, rot2, tilt2, psi2);
+    }
+    else
+    	{
+    	//std::cerr << "else" <<std::endl;
+    	rot2=rot1; tilt2=tilt1;psi2=psi1;
+    	}
+//    if (rot2==0)
+//:    	std::cerr << "rot2  is zero " << i << R << L << std::endl;
+}
+
+void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
+                      double rot0, MultidimArray<int> *mask)
+{
+    Vout.initZeros(Vin);
+    double izHelical=1.0/zHelical;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(Vin)
+    {
+        if (mask!=NULL && !A3D_ELEM(*mask,k,i,j))
+            continue;
+        double rot=atan2((double)i,(double)j)+rot0;
+        double rho=sqrt((double)i*i+(double)j*j);
+        double l0=ceil((STARTINGZ(Vin)-k)*izHelical);
+        double lF=floor((FINISHINGZ(Vin)-k)*izHelical);
+        double finalValue=0;
+        double L=0;
+        for (double l=l0; l<=lF; ++l)
+        {
+            double kp=k+l*zHelical;
+            double rotp=rot+l*rotHelical;
+            double ip, jp;
+            sincos(rotp,&ip,&jp);
+            ip*=rho;
+            jp*=rho;
+            finalValue+=Vin.interpolatedElement3D(jp,ip,kp,0.0);
+            L+=1.0;
+        }
+        A3D_ELEM(Vout,k,i,j)=finalValue/L;
+    }
 }

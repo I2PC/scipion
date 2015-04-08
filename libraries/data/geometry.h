@@ -633,7 +633,7 @@ void Euler_direction2angles(Matrix1D< double >& v,
 void Euler_matrix2angles(const Matrix2D< double >& A,
                          double& alpha,
                          double& beta,
-                         double& gamma);
+                         double& gamma,bool homogeneous=false);
 
 /** Up-Down projection equivalence
  *
