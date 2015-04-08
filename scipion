@@ -111,6 +111,7 @@ try:
 
     PATH = os.pathsep.join(
         [join(SCIPION_SOFTWARE, 'bin'),
+         BUILD['MPI_BINDIR'],
          os.environ.get('PATH', '')]
     )
     LD_LIBRARY_PATH = os.pathsep.join(
@@ -387,11 +388,10 @@ def main():
 
     elif mode == MODE_RUN:
         # Run any command with the environment of scipion loaded.
-        cmd = ' '.join(['"%s"' % p for p in sys.argv[2:]])
-        runCmd(cmd)
-    
+        runCmd(' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
+
     elif mode == MODE_TUTORIAL:
-        runApp('pw_tutorial.py', sys.argv[2])
+        runApp('pw_tutorial.py', sys.argv[2:])
 
     elif mode == MODE_HELP:
         sys.stdout.write("""\
