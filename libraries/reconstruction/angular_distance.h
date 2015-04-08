@@ -53,6 +53,8 @@ public:
     bool compute_weights;
     /** Minimum angular sigma */
     double minSigma;
+    // Identification label
+    String idLabel;
 public:
     // DocFile 1
     MetaData DF1;

@@ -39,7 +39,10 @@ void ProgAngularDistance::readParams()
     object_rotation = checkParam("--object_rotation");
     compute_weights = checkParam("--compute_weights");
     if (compute_weights)
+    {
     	minSigma = getDoubleParam("--compute_weights");
+    	idLabel = getParam("--idLabel",1);
+    }
 }
 
 // Show ====================================================================
@@ -53,6 +56,7 @@ void ProgAngularDistance::show()
     << "Check mirrors    : " << check_mirrors << std::endl
     << "Object rotation  : " << object_rotation<<std::endl
     << "Compute weights  : " << compute_weights << std::endl
+    << "IdLabel          : " << idLabel << std::endl
     ;
 }
 
@@ -79,7 +83,7 @@ void ProgAngularDistance::defineParams()
     addParamsLine("  [--check_mirrors]          : Check if mirrored projections give better results");
     addParamsLine("  [--object_rotation]        : Use object rotations rather than projection directions");
     addParamsLine("                             : fit (Spider, APMQ)");
-    addParamsLine("  [--compute_weights <minSigma=1>] : If this flag is given, images in ang2 are given a weight according to their ");
+    addParamsLine("  [--compute_weights <minSigma=1> <idLabel=particleId>] : If this flag is given, images in ang2 are given a weight according to their ");
     addParamsLine("                             : distance to the same image in ang1. The ang2 file is rewritten.");
     addParamsLine("                             : Ang1 and ang2 are supposed to have a label called itemId");
     addParamsLine("                             : The output is written to oroot+_weights.xmd");
@@ -267,10 +271,11 @@ void ProgAngularDistance::run()
 void ProgAngularDistance::computeWeights()
 {
 	MetaData DF1sorted, DF2sorted, DFweights;
-	DF1sorted.sort(DF1,MDL_ITEM_ID);
-	DF2sorted.sort(DF2,MDL_ITEM_ID);
+	MDLabel label=MDL::str2Label(idLabel);
+	DF1sorted.sort(DF1,label);
+	DF2sorted.sort(DF2,label);
 	std::vector<MDLabel> labels;
-	labels.push_back(MDL_ITEM_ID);
+	labels.push_back(label);
 	labels.push_back(MDL_ANGLE_ROT);
 	labels.push_back(MDL_ANGLE_TILT);
 	labels.push_back(MDL_ANGLE_PSI);
@@ -292,7 +297,7 @@ void ProgAngularDistance::computeWeights()
     	ang2.clear();
 
     	// Take current id
-    	DF2sorted.getValue(MDL_ITEM_ID,currentId,iter2.objId);
+    	DF2sorted.getValue(label,currentId,iter2.objId);
     	std::cout << "currentId=" << currentId << std::endl;
 
     	// Grab all the angles in DF2 associated to this id
@@ -300,7 +305,7 @@ void ProgAngularDistance::computeWeights()
     	bool anotherIteration=false;
     	do
     	{
-    		DF2sorted.getValue(MDL_ITEM_ID,id2,iter2.objId);
+    		DF2sorted.getValue(label,id2,iter2.objId);
 			anotherIteration=false;
     		if (id2==currentId)
     		{
@@ -325,11 +330,11 @@ void ProgAngularDistance::computeWeights()
     	} while (anotherIteration);
 
     	// Advance Iter 1 to catch Iter 2
-		DF1sorted.getValue(MDL_ITEM_ID,id1,iter1.objId);
+		DF1sorted.getValue(label,id1,iter1.objId);
     	while (id1<currentId && iter1.hasNext())
     	{
     		iter1.moveNext();
-    		DF1sorted.getValue(MDL_ITEM_ID,id1,iter1.objId);
+    		DF1sorted.getValue(label,id1,iter1.objId);
     	}
 
     	// If we are at the end of DF1, then we did not find id1 such that id1==currentId
@@ -341,7 +346,7 @@ void ProgAngularDistance::computeWeights()
     	anotherIteration=false;
     	do
     	{
-    		DF1sorted.getValue(MDL_ITEM_ID,id1,iter1.objId);
+    		DF1sorted.getValue(label,id1,iter1.objId);
 			anotherIteration=false;
     		if (id1==currentId)
     		{
@@ -393,7 +398,7 @@ void ProgAngularDistance::computeWeights()
     	}
     	double meanDistance=cumulatedDistance/ang2.size();
     	size_t newObjId=DFweights.addObject();
-    	DFweights.setValue(MDL_ITEM_ID,currentId,newObjId);
+    	DFweights.setValue(label,currentId,newObjId);
     	DFweights.setValue(MDL_ANGLE_DIFF,meanDistance,newObjId);
         anotherImageIn2=iter2.hasNext();
 		std::cout << "meanDistance=" << meanDistance << std::endl;
@@ -422,6 +427,6 @@ void ProgAngularDistance::computeWeights()
 
     // Transfer these weights to the DF2 metadata
     MetaData DF2weighted;
-    DF2weighted.join1(DF2,DFweights,MDL_ITEM_ID,INNER);
+    DF2weighted.join1(DF2,DFweights,label,INNER);
     DF2weighted.write(fn_out+"_weights.xmd");
 }
