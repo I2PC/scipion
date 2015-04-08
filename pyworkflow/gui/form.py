@@ -1795,7 +1795,7 @@ class QueueDialog(Dialog):
             w.destroy()
             
         selected = self.queueVar.get()
-        params = self.queueDict[selected]
+        params = self.queueDict.get(selected, {})
         
         self.widgets = [] # clear the widget list
         self.vars = []
@@ -1840,14 +1840,17 @@ class QueueDialog(Dialog):
         # with the values of each parameter
         selected = self.queueVar.get()
         paramsDict = {}
-        params = self.queueDict[selected]
-        for p, v in izip(params, self.vars):
-            if len(p) == 3:
-                name, value, label = p
-            else: 
-                name, value, label, _ = p 
-            paramsDict[name] = v.get() # get the value from the corresponding tk var
-        self.value = selected, paramsDict
+        if selected in self.queueDict:
+            params = self.queueDict[selected]
+            for p, v in izip(params, self.vars):
+                if len(p) == 3:
+                    name, value, label = p
+                else: 
+                    name, value, label, _ = p 
+                paramsDict[name] = v.get() # get the value from the corresponding tk var
+            self.value = selected, paramsDict
+        else:
+            self.value = '', {}
         
     def validate(self):
         return True
