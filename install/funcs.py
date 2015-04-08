@@ -91,7 +91,6 @@ class Command():
         else:
             self._targets = targets
 
-        self._environ = kwargs.get('environ', None)
         self._cwd = kwargs.get('cwd', None)
         self._out = kwargs.get('out', None)
         self._always = kwargs.get('always', False)
@@ -349,6 +348,8 @@ class Environment():
                          out='%s/log/%s_configure.log' % (prefixPath, name),
                          always=configAlways)
         else:
+            assert progInPath('cmake'), ("Cannot run 'cmake'. Please install "
+                                         "it in your system first.")
             flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefixPath)
             t.addCommand('cmake %s' % ' '.join(flags),
                          targets=makeFile,
@@ -407,6 +408,14 @@ class Environment():
     # The CFLAGS line is commented out because even if it is needed for modules
     # like libxml2, it causes problems for others like numpy and scipy (see for
     # example http://mail.scipy.org/pipermail/scipy-user/2007-January/010773.html)
+
+    # TODO: actually, to compile against numpy (as cryoem does), one
+    # needs to have:
+    #   software/lib/python2.7/site-packages/numpy/core/include
+    #   software/lib/python2.7/site-packages/numpy/core/include/numpy
+    # as part of their CFLAGS="-I...."
+    # So we should add it somehow.
+
     # TODO: maybe add an argument to the function to chose if we want them?
                      '%(root)s/bin/python setup.py install %(flags)s > '
                      '%(root)s/log/%(name)s.log 2>&1' % {'root': prefixPath,
