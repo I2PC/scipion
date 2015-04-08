@@ -111,6 +111,7 @@ try:
 
     PATH = os.pathsep.join(
         [join(SCIPION_SOFTWARE, 'bin'),
+         BUILD['MPI_BINDIR'],
          os.environ.get('PATH', '')]
     )
     LD_LIBRARY_PATH = os.pathsep.join(
