@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # Author: Carlos Oscar Sorzano, October 2011
 

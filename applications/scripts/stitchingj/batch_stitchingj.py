@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 
 from protlib_xmipp import XmippScript, estimateFilenamesListMemory, convertBytes
 from protlib_utils import runJavaJar

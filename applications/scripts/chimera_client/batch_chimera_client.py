@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 
 from protlib_chimera import XmippChimeraClient, XmippProjectionExplorer
 from optparse import OptionParser

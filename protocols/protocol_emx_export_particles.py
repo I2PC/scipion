@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 
 #------------------------------------------------------------------------------------------------
 #   General script for exporting particles to EMX format

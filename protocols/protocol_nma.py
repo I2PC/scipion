@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # Protocol for Normal Mode analysis of atomic and EM structures
 # Author: Carlos Oscar Sanchez Sorzano, May 2013

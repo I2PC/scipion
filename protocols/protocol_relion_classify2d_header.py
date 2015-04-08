@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # Protocol for Relion-based 3D classification (relion 1.2)
 #

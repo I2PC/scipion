@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 """/***************************************************************************
  *
  * Authors:     Roberto Marabini          (roberto@cnb.csic.es)
@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 """
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 
 from os.path import basename, splitext
 from protlib_xmipp import XmippScript

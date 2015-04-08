@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 
 #------------------------------------------------------------------------------------------------
 #   General script for importing particles from EMX format

@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 '''
 #/***************************************************************************
 # * Authors:     C.O.S Sorzano (coss@cnb.csic.es)

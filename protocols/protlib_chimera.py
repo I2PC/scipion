@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 '''
 #/***************************************************************************
 # * Authors:     Airen Zaldivar (azaldivar@cnb.csic.es)

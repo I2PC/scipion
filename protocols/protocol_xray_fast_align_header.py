@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # General script for Xmipp-based fast alignment of x-ray tomograms using IMOD.
 #

@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 '''
 #/***************************************************************************
 # * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -229,7 +229,7 @@ def getXmippPrograms():
 #FIXME: this is only while development
 def skipProgram(programName):
     if programName in ['xmipp_sqlite3', 'xmipp_mpi_steps_runner',
-                       'xmipp_angular_commonline', 'xmipp_python',
+                       'xmipp_angular_commonline', 'python',
                        'xmipp_transform_threshold', 'xmipp_mpi_write_test', 'xmipp_chimera_client',
                        'xmipp_imagej','xmipp_mpi_image_common_lines', 'xmipp_mpi_classify_CLTomo', 'xmipp_classify_CLTomo']:
         return True

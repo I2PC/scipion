@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 '''
 #/***************************************************************************
 # * Authors:     Javier Vargas (jvargas@cnb.csic.es)

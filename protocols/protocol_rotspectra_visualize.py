@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # Protocol for visualization of the results of protocol_rotspectra.py
 #

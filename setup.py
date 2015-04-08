@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 '''
 /***************************************************************************
  * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -304,7 +304,7 @@ def run(notebook):
     if options.hasOption('configure'):        
         opts = notebook.getConfigOptions()
         cmd += 'echo "*** RUNNING SCONS CONFIGURE..." >> %(out)s 2>&1 \n'
-        cmd1 = "xmipp_python %(scons)s mode=configure -j %(procs)s --config=force %(opts)s >> %(out)s 2>&1 " % locals()
+        cmd1 = "python %(scons)s mode=configure -j %(procs)s --config=force %(opts)s >> %(out)s 2>&1 " % locals()
         cmd += 'echo "%(cmd1)s" >> %(out)s \n'
         cmd += cmd1 + '\n'
         if WINDOWS:
@@ -313,7 +313,7 @@ def run(notebook):
     if options.hasOption('compile'):
         opts = ' '.join(options.getOption('compile'))
         cmd += 'echo "*** RUNNING SCONS COMPILE..." >> %(out)s \n'
-        cmd2 = "xmipp_python %(scons)s mode=compile -j %(procs)s  %(opts)s >> %(out)s 2>&1 "% locals()
+        cmd2 = "python %(scons)s mode=compile -j %(procs)s  %(opts)s >> %(out)s 2>&1 "% locals()
         cmd += 'echo "%(cmd2)s" >> %(out)s \n'
         cmd += cmd2 + '\n'
         if WINDOWS:
@@ -322,7 +322,7 @@ def run(notebook):
     if options.hasOption('clean'):
         opts = ' '.join(options.getOption('clean'))
         cmd += 'echo "*** RUNNING SCONS CLEAN..." >> %(out)s \n'
-        cmd2 = "xmipp_python %(scons)s mode=compile -j %(procs)s  --clean %(opts)s >> %(out)s 2>&1 "% locals()
+        cmd2 = "python %(scons)s mode=compile -j %(procs)s  --clean %(opts)s >> %(out)s 2>&1 "% locals()
         cmd += 'echo "%(cmd2)s" >> %(out)s \n'
         cmd += cmd2 + '\n'
         if WINDOWS:
@@ -453,9 +453,9 @@ if options.hasOption('configure'):
     if not pid:
         print "*** CHECKING EXTERNAL DEPENDENCIES..."
         if options.hasOption('unattended'):
-            os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies","unattended=yes"))
+            os.execvp('python',('python', "%(scons)s" % locals(), "mode=dependencies","unattended=yes"))
         else:
-            outputval = os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies"))            
+            outputval = os.execvp('python',('python', "%(scons)s" % locals(), "mode=dependencies"))            
     outputval = os.wait()[1]
     if outputval != 0:
         exit(1) 

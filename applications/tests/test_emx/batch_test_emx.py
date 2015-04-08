@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 '''
 /***************************************************************************
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)

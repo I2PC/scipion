@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 '''
 /***************************************************************************
  * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -411,7 +411,7 @@ class XmippProjectGUI():
                 lastHost = ''
                 for c in self.process_childs:
                     c.info['pname'] = pname = os.path.basename(c.args.split()[0])
-                    if pname not in ['grep', 'python', 'sh', 'bash', 'xmipp_python', 'mpirun']:
+                    if pname not in ['grep', 'python', 'sh', 'bash', 'python', 'mpirun']:
                         #line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
                         
                         if c.host != lastHost:

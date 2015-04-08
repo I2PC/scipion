@@ -1,4 +1,4 @@
-#!bin/xmipp_python
+#!bin/python
 '''
 /***************************************************************************
  * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)

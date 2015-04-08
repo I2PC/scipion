@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # General script for Xmipp-based reconstruction of X-ray tomograms
 # Author: Joaquin Oton, Oct 2013

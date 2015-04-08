@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 '''
 #/***************************************************************************
 # * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -701,7 +701,7 @@ class ProtocolGUI(BasicGUI):
                     msg = "There are some warnings:\n%s\n\nDo you want to proceed?" % '\n'.join(warnings)
                     doRun = askYesNo("Confirm execution", msg, self.master)
                 if doRun:
-                    args = 'xmipp_python %s --no_confirm &' % self.run['script']
+                    args = 'python %s --no_confirm &' % self.run['script']
                     Popen(args, shell=True)
                     self.master.destroy()
     

@@ -1,4 +1,4 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 '''
 #/***************************************************************************
 # * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -880,7 +880,7 @@ class ProtocolExecutor():
         # Save protocol script with updated settings
         self.parser.save(self.run['script'])
         #Execute command
-        cmd = 'xmipp_python %s --no_confirm ' % self.run['script']
+        cmd = 'python %s --no_confirm ' % self.run['script']
         if not wait:
             cmd += ' &'
         
@@ -1061,7 +1061,7 @@ def protocolMain(ProtocolClass, script=None):
                                    nodes = NumberOfMPI,
                                    threads = NumberOfThreads,
                                    hours = mod.QueueHours,
-                                   command = 'xmipp_python %s --no_check' % script
+                                   command = 'python %s --no_check' % script
                                    )
                     project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED, run_id)
                     doRun = False
