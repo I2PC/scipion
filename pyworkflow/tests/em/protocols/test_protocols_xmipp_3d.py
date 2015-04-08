@@ -604,6 +604,8 @@ class TestXmippProtHelicalParameters(TestXmippBase):
         self.proj.launchProtocol(protHelical, wait=True)
 
         self.assertIsNotNone(protHelical.outputVolume, "There was a problem with Helical output volume")
+        self.assertIsNotNone(protHelical.deltaRot.get(), "Output delta rot is None")
+        self.assertIsNotNone(protHelical.deltaZ.get(), "Output delta Z is None")
         self.assertAlmostEqual(protHelical.deltaRot.get(), 59.4, places=1, msg="Output delta rot is wrong")
         self.assertAlmostEqual(protHelical.deltaZ.get(), 6.7, places=1, msg="Output delta Z is wrong")
 
