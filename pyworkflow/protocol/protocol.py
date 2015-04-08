@@ -1142,7 +1142,10 @@ class Protocol(Step):
         return self._useQueue.get()
     
     def getQueueParams(self):
-        return json.loads(self._queueParams.get())
+        if self._queueParams.hasValue():
+            return json.loads(self._queueParams.get())
+        else:
+            return '', {}
     
     def setQueueParams(self, queueParams):
         self._queueParams.set(json.dumps(queueParams))
