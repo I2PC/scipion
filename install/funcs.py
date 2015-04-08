@@ -160,7 +160,9 @@ class Target():
 
     def _existsAll(self):
         # Check if the last command target exists
-        return self._commandList[-1]._existsAll()        
+        if not self._commandList:
+            return True
+        return self._commandList[-1]._existsAll()
 
     def isDefault(self):
         return self._default
