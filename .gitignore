@@ -67,3 +67,7 @@ Debug/
 # Matlab
 *.mexa64
 *.mexa32
+
+# Generated source files
+xmipp.bashrc
+xmipp.csh
