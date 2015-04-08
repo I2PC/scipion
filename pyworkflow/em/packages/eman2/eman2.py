@@ -41,53 +41,12 @@ def getEnviron():
     environ.update({
             'PATH': join(EMAN2DIR, 'bin'),
             'LD_LIBRARY_PATH': os.pathsep.join(pathList),
-            'PYTHONPATH': os.pathsep.join(pathList) + os.pathsep + os.environ.get('PYTHONPATH',''),
+            'PYTHONPATH': os.pathsep.join(pathList),
             'EMAN_PYTHON': os.path.join(EMAN2DIR, 'Python/bin/python')
-            }, position=Environ.BEGIN)
+            }, position=Environ.REPLACE)
     return environ
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-#     
-#     
-#     
-#     
-#     
-#     """ Load the environment variables needed for use EMAN2 tools. """
-#     # TODO: Read EMAN2DIR from the host config.
-#     
-#     if 'EMAN_LD_LIBRARY_PATH' in os.environ:
-#         
-#         # Add this variable to $HOME/.config/scipion/scipion.conf
-#         
-#         
-#         os.environ['LD_LIBRARY_PATH'] = os.environ['EMAN_LD_LIBRARY_PATH'] + os.pathsep + os.environ.get('LD_LIBRARY_PATH','')
-#     
-#     
-#     
-#     os.environ['PATH'] = "%(EMAN2DIR)s/bin" % locals() + os.pathsep + os.environ.get('PATH','')
-#     
-#     
-#     
-#     os.environ['PYTHONPATH'] = os.pathsep.join(pathList) + os.pathsep + os.environ.get('PYTHONPATH','')
-#     os.environ['EMAN_PYTHON'] = os.path.join(EMAN2DIR, 'Python/bin/python')
-#     
-#     
-#     
-#     # Undo the xmipp_python additions to LD_LIBRARY_PATH
-#     if 'OLD_LD_LIBRARY_PATH' in os.environ:
-#         print 'OLD_LD_LIBRARY_PATH', os.environ['OLD_LD_LIBRARY_PATH']
-#         os.environ['LD_LIBRARY_PATH'] = os.environ['OLD_LD_LIBRARY_PATH']
-#     #sys.path += pathList
-    
-    
+
 def getEmanProgram(program):
     if not 'EMAN_PYTHON' in os.environ:
         os.environ['EMAN_PYTHON'] = os.path.join(os.environ['EMAN2DIR'], 'Python/bin/python')
