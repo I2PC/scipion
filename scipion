@@ -115,7 +115,7 @@ try:
     )
     LD_LIBRARY_PATH = os.pathsep.join(
         [join(SCIPION_SOFTWARE, 'lib'),
-         XMIPP_LIB,
+         BUILD['MPI_LIBDIR'],
          os.environ.get('LD_LIBRARY_PATH', '')]
     )
     PYTHONPATH = os.pathsep.join(
@@ -150,6 +150,11 @@ except Exception:
 # scripts, or one of our "apps"
 #
 
+def envOn(varName):
+    value = os.environ.get(varName, '').lower()
+    return value in ['1', 'true', 'on', 'yes']
+
+
 def runCmd(cmd):
     os.environ.update(VARS)    
     sys.stdout.write(">>>>> %s\n" % cmd)
@@ -159,12 +164,11 @@ def runCmd(cmd):
     sys.exit(result)
 
 # The following functions require a working SCIPION_PYTHON
-
 def runScript(scriptCmd, chdir=True):
     if chdir:
         os.chdir(SCIPION_HOME)
-    doProfile = os.environ.get('SCIPION_PROFILE', '0').lower()
-    if doProfile in ['1', 'true', 'on', 'yes']:
+
+    if envOn('SCIPION_PROFILE'):
         profileStr = '-m cProfile -o output.profile'
     else:
         profileStr = ''
@@ -306,16 +310,16 @@ def main():
         def build(args):
             # Just importing the script will launch the install actions
             import install.script as script
-            from install.funcs import green
-            
             # Remove targets names from environment, that are
             # not recognized by Scons.
             # TODO: think more deeply in a way to separate
             # options for scons and our own install script
             sconsArgs = [a for a in args if not script.env.hasTarget(a)]
+                
             cmd = 'install/scons.py %s' % ' '.join(sconsArgs)
             
             if 'xmipp' in sconsArgs:
+                from install.funcs import green
                 print(green('Compiling Xmipp ...'))
                 print(cmd)
                 # If using some kind of show, do not compile Xmipp
