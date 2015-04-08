@@ -708,6 +708,7 @@ def convertBinaryVol(vol, outputDir):
     Return:
         new file name of the volume (convrted or not).
     """
+    
     ih = em.ImageHandler()
     # This approach can be extended when
     # converting from a binary file format that
