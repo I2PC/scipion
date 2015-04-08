@@ -41,7 +41,7 @@ from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import convertBinaryFiles, writeSqliteIterData, writeSetOfParticles
+from convert import convertBinaryVol, writeSqliteIterData, writeSetOfParticles
 
 
 class ProtRelionBase(EMProtocol):
@@ -456,7 +456,7 @@ class ProtRelionBase(EMProtocol):
             args['--K'] = self.numberOfClasses.get()
         
         if self.IS_3D:
-            args['--ref'] = self.referenceVolume.get().getFileName()
+            args['--ref'] = convertBinaryVol(self.referenceVolume.get(), self._getTmpPath())
             if not self.isMapAbsoluteGreyScale:
                 args['--firstiter_cc']=''
             args['--ini_high'] = self.initialLowPassFilterA.get()

@@ -700,6 +700,35 @@ def convertBinaryFiles(imgSet, outputDir):
     return filesDict
 
 
+def convertBinaryVol(vol, outputDir):
+    """ Convert binary volume to a format read by Relion.
+    Params:
+        vol: input volume object to be converted.
+        outputDir: where to put the converted file(s)
+    Return:
+        new file name of the volume (convrted or not).
+    """
+    ih = em.ImageHandler()
+    # This approach can be extended when
+    # converting from a binary file format that
+    # is not read from Relion
+    def convertToMrc(fn):
+        """ Convert from a format that is not read by Relion
+        to mrc format.
+        """
+        newFn = join(outputDir, replaceBaseExt(fn, 'mrc'))
+        ih.convert(fn, newFn)
+        return newFn
+        
+    ext = vol.getFileName()
+    
+    if not ext.endswith('.mrc'):
+        fn = convertToMrc(vol.getFileName())
+    else:
+        fn = vol.getFileName()
+        
+    return fn
+
 def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
 
