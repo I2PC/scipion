@@ -115,7 +115,7 @@ try:
     )
     LD_LIBRARY_PATH = os.pathsep.join(
         [join(SCIPION_SOFTWARE, 'lib'),
-         XMIPP_LIB,
+         BUILD['MPI_LIBDIR'],
          os.environ.get('LD_LIBRARY_PATH', '')]
     )
     PYTHONPATH = os.pathsep.join(
