@@ -141,7 +141,7 @@ class Target():
         self._env = env
         self._name = name
         self._default = kwargs.get('default', False)
-        self._commandList = list(commands[:])
+        self._commandList = list(commands)  # copy the list/tuple of commands
         self._deps = [] # list of name of dependency targets
 
     def addCommand(self, cmd, **kwargs):
