@@ -309,15 +309,12 @@ def main():
 
         def build(args):
             # Just importing the script will launch the install actions
-            if not envOn('SCIPION_COMPILE'):
-                import install.script as script
-                # Remove targets names from environment, that are
-                # not recognized by Scons.
-                # TODO: think more deeply in a way to separate
-                # options for scons and our own install script
-                sconsArgs = [a for a in args if not script.env.hasTarget(a)]
-            else:
-                sconsArgs = args
+            import install.script as script
+            # Remove targets names from environment, that are
+            # not recognized by Scons.
+            # TODO: think more deeply in a way to separate
+            # options for scons and our own install script
+            sconsArgs = [a for a in args if not script.env.hasTarget(a)]
                 
             cmd = 'install/scons.py %s' % ' '.join(sconsArgs)
             

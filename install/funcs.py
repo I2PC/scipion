@@ -159,10 +159,8 @@ class Target():
         return self._deps
 
     def _existsAll(self):
-        for command in self._commandList:
-            if not command._existsAll():
-                return False
-        return True
+        # Check if the last command target exists
+        return self._commandList[-1]._existsAll()        
 
     def isDefault(self):
         return self._default
