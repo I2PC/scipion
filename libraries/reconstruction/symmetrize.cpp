@@ -133,10 +133,10 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
             */
             applyGeometry(BSPLINE3, V_aux, V_in, R.transpose(), IS_NOT_INV, wrap, avg);
 
-            if ( (mask)==NULL)
+            if ( mask==NULL)
                 arrayByArray(V_out, V_aux, V_out, '+');
             else               // op1, op2 ,  result
-                selfArrayByArrayMask(V_in, V_aux, V_out, '+',mask);
+                selfArrayByArrayMask(V_in, V_aux, V_out, '+', mask);
         }
 
         if (!sum)
@@ -197,24 +197,16 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
     Image<double> Iin;
     Image<double> Iout;
     Image<double> mask;
+    MultidimArray<double> *mmask=NULL;
 
     Iin.readApplyGeo(fnImg, rowIn);
     Iin().setXmippOrigin();
     Iout().resize(Iin());
+
     if (doMask)
     {
-        Image<double> Vmask;
-        Vmask.read(fn_Maskin);
-        mask =  Vmask();
-        //#define DEBUG
-#ifdef DEBUG
-        //Image<double> save;
-        //save()=*mask;
-        //save.write("mask.vol");
-        mask.write("mask.vol");
-#endif
-#undef DEBUG
-
+    	mask.read(fn_Maskin);
+    	mmask=&(mask());
     }
 
     if (ZSIZE(Iin())==1)
@@ -222,7 +214,7 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
         if (helical)
             REPORT_ERROR(ERR_ARG_INCORRECT,"Helical symmetrization is not meant for images");
         if (symorder!=-1)
-            symmetrizeImage(symorder,Iin(),Iout(),wrap,!wrap,sum,&mask());
+            symmetrizeImage(symorder,Iin(),Iout(),wrap,!wrap,sum,mmask);
         else
             REPORT_ERROR(ERR_ARG_MISSING,"The symmetry order is not valid for images");
     }
@@ -231,11 +223,10 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
         if (SL.symsNo()>0 || helical)
         {
             symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap,
-                             sum,helical,rotHelical,rotPhaseHelical,zHelical,&mask());
+                             sum,helical,rotHelical,rotPhaseHelical,zHelical,mmask);
         }
         else
             REPORT_ERROR(ERR_ARG_MISSING,"The symmetry description is not valid for volumes");
     }
-    Iout.write("requetetfinal.vol");
     Iout.write(fnImgOut);
 }
