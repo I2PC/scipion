@@ -205,17 +205,21 @@ function colRenderImg(mode, id, nRow, aData, columnId, columnIdReal, columnLayou
 
 
 function colRenderable(id, aData, columnId, renderFunc, extraRenderFunc){
+	src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc;
+	if(extraRenderFunc.length > 0){
+		src += '&'	+ extraRenderFunc
+	}
+	src += '&image=' + aData[columnId] + '\"';
+	
 	var content_html = '<span style="display:none">' 
 			+ aData[columnId] + '</span>'
 			+ '<img class=\"tableImages\" id=\"'
 			+ id + '___' + aData[0]
-			+ '\" src=\"' + getSubDomainURL() + '/render_column/?renderFunc='
-			+ renderFunc;
+			+ '\" src=' + src
+			+ '\" data-real_src=' +src
+			+ '/>'
 			
-	if(extraRenderFunc.length > 0){
-		content_html += '&'	+ extraRenderFunc
-	}
-	content_html += '&image=' + aData[columnId] + '\"/>';
+	
 	
 	return content_html;
 }
