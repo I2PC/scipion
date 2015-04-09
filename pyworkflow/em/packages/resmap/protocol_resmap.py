@@ -137,6 +137,7 @@ class ProtResMap(ProtAnalysis3D):
         sys.path.append(os.environ['RESMAP_HOME'])
         # This is needed right now because we are having
         # some memory problem with matplotlib plots right now in web
+        Plotter.setBackend('Agg')
         self._plotVolumeSlices().savefig(self._getExtraPath('volume1.map.png'))
         self._plotResMapSlices().savefig(self._getExtraPath('volume1_resmap.map.png'))
         self._plotHistogram().savefig(self._getExtraPath('histogram.png'))
