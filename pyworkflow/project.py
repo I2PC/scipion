@@ -239,7 +239,9 @@ class Project(object):
             if os.path.exists(projProtConf):
                 protConf = projProtConf
             else:
-                protConf = os.environ['SCIPION_PROTOCOLS']
+                localDir = os.path.dirname(os.environ['SCIPION_LOCAL_CONFIG'])
+                protConf = [os.environ['SCIPION_PROTOCOLS'],
+                            os.path.join(localDir, 'protocols.conf')]
         else:
             pwutils.copyFile(protocolsConf, projProtConf)
             protConf = protocolsConf
