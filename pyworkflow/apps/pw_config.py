@@ -47,15 +47,15 @@ def main():
     options, args = parser.parse_args()
 
     try:
-        settingsDir = join(os.environ['SCIPION_HOME'], 'settings')
+        templatesDir = join(os.environ['SCIPION_HOME'], 'config', 'templates')
         for fpath, tmplt in [
-                (os.environ['SCIPION_CONFIG'], 'scipion.conf'),
-                (os.environ['SCIPION_PROTOCOLS'], 'protocols.conf'),
-                (os.environ['SCIPION_HOSTS'], 'hosts.conf')]:
+                (os.environ['SCIPION_CONFIG'], 'scipion'),
+                (os.environ['SCIPION_PROTOCOLS'], 'protocols'),
+                (os.environ['SCIPION_HOSTS'], 'hosts')]:
             if not exists(fpath) or options.overwrite:
-                createConf(fpath, join(settingsDir, tmplt))
+                createConf(fpath, join(templatesDir, tmplt + '.template'))
             else:
-                checkConf(fpath, join(settingsDir, tmplt))
+                checkConf(fpath, join(templatesDir, tmplt + '.template'))
         # After all, check some extra things are fine in scipion.conf
         checkPaths(os.environ['SCIPION_CONFIG'])
         # TODO: say that we are checking scipion.conf, and be more

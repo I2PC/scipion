@@ -55,7 +55,8 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 #
 
 # Default values for configuration files.
-SCIPION_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
+SCIPION_CONFIG = join(SCIPION_HOME, 'config', 'scipion.conf')
+LOCAL_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
 
 # Allow the user to override them (and remove them from sys.argv).
 while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
