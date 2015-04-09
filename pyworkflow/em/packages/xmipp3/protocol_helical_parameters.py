@@ -28,6 +28,7 @@ from pyworkflow.em.packages.xmipp3.convert import locationToXmipp
 This sub-package contains protocols for performing subtomogram averaging.
 """
 
+import pyworkflow.object as pwobj
 from pyworkflow.em import *  
 from xmipp import MetaData, MDL_ANGLE_ROT, MDL_SHIFT_Z
 
@@ -120,18 +121,18 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
         self.runJob("xmipp_transform_mask","-i %s "%(fnOut)+maskArgs)
     
     def createOutput(self):
-        volume=Volume()
+        volume = Volume()
         volume.setFileName(self._getPath('volume_symmetrized.vol'))
         #volume.setSamplingRate(self.inputVolume.get().getSamplingRate())
         volume.copyInfo(self.inputVolume.get())
         self._defineOutputs(outputVolume=volume)
         self._defineTransformRelation(self.inputVolume, self.outputVolume)
         
-        md=MetaData(self._getExtraPath('fineParams.xmd'))
-        objId=md.firstObject()
-        self.deltaRot.set(md.getValue(MDL_ANGLE_ROT,objId))
-        self.deltaZ.set(md.getValue(MDL_SHIFT_Z,objId))
-              
+        md = MetaData(self._getExtraPath('fineParams.xmd'))
+        objId = md.firstObject()
+        self._defineOutputs(deltaRot=pwobj.Float(md.getValue(MDL_ANGLE_ROT, objId)),
+                            deltaZ=pwobj.Float(md.getValue(MDL_SHIFT_Z, objId)))
+
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         messages = []

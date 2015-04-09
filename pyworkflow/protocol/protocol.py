@@ -1125,16 +1125,19 @@ class Protocol(Step):
         """ Return a dictionary with the necessary keys to
         launch the job to a queue system.
         """
+        queueName, queueParams = self.getQueueParams()
+        
         script = self._getLogsPath(self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
              'JOB_NODEFILE': script.replace('.job', '.nodefile'),
              'JOB_NAME': self.strId(),
-             'JOB_QUEUE': 'default',
+             'JOB_QUEUE': queueName,
              'JOB_NODES': self.numberOfMpi.get(),
              'JOB_THREADS': self.numberOfThreads.get(),
              'JOB_CORES': self.numberOfMpi.get() * self.numberOfThreads.get(),
              'JOB_HOURS': 72,
              }
+        d.update(queueParams)
         return d
     
     def useQueue(self):
@@ -1142,7 +1145,10 @@ class Protocol(Step):
         return self._useQueue.get()
     
     def getQueueParams(self):
-        return json.loads(self._queueParams.get())
+        if self._queueParams.hasValue():
+            return json.loads(self._queueParams.get())
+        else:
+            return '', {}
     
     def setQueueParams(self, queueParams):
         self._queueParams.set(json.dumps(queueParams))

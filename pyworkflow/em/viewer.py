@@ -362,9 +362,9 @@ class ChimeraAngDistClient(ChimeraClient):
         self.spheresColor = kwargs.get('spheresColor', 'red')
         spheresDistance = kwargs.get('spheresDistance', None)
         spheresMaxRadius = kwargs.get('spheresMaxRadius', None)
+        ChimeraClient.__init__(self, volfile, **kwargs)
         self.spheresDistance = float(spheresDistance) if spheresDistance else 0.75 * max(self.xdim, self.ydim, self.zdim)
         self.spheresMaxRadius = float(spheresMaxRadius) if spheresMaxRadius else 0.02 * self.spheresDistance
-        ChimeraClient.__init__(self, volfile, **kwargs)
 
     def openVolumeOnServer(self, volume, sendEnd=True):
         ChimeraClient.openVolumeOnServer(self, volume, sendEnd=False)
