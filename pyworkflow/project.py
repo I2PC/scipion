@@ -222,7 +222,9 @@ class Project(object):
             if os.path.exists(projHosts):
                 hostsFile = projHosts
             else:
-                hostsFile = os.environ['SCIPION_HOSTS']
+                localDir = os.path.dirname(os.environ['SCIPION_LOCAL_CONFIG'])
+                hostsFile = [os.environ['SCIPION_HOSTS'],
+                             os.path.join(localDir, 'hosts.conf')]
         else:
             pwutils.copyFile(hosts, projHosts)
             hostsFile = hosts
