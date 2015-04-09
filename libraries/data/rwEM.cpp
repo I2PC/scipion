@@ -54,12 +54,14 @@ int ImageBase::readEM(size_t select_img, bool isStack)
         swapPage((char *) &header, EMHEADERSIZE - 256, DT_UInt); // EMHEADERSIZE - 256 is to exclude userdata from swapping
 
     // Setting image dimensions
-    replaceNsize = 1;
 
     ArrayDim aDim;
     if (isStack)
     {
-        aDim.ndim = header.zdim;
+        if ( select_img > header.zdim )
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readEM: %s Image number %lu exceeds stack size %lu", this->filename.c_str(), select_img, header.zdim));
+
+        aDim.ndim = (select_img > ALL_IMAGES)? 1 : header.zdim;
         aDim.zdim = 1;
     }
     else
@@ -71,6 +73,7 @@ int ImageBase::readEM(size_t select_img, bool isStack)
     aDim.xdim = header.xdim;
     aDim.ydim= header.ydim;
 
+    replaceNsize = aDim.ndim;
     setDimensions(aDim);
 
 
