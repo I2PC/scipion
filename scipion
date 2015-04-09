@@ -56,14 +56,14 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 
 # Default values for configuration files.
 SCIPION_CONFIG = join(SCIPION_HOME, 'config', 'scipion.conf')
-LOCAL_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
+SCIPION_LOCAL_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
 
 # Allow the user to override them (and remove them from sys.argv).
 while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
     arg = sys.argv.pop(1)
     value = sys.argv.pop(1)
     if arg == '--config':
-        SCIPION_CONFIG = os.path.abspath(os.path.expanduser(value))
+        SCIPION_LOCAL_CONFIG = os.path.abspath(os.path.expanduser(value))
     else:
         sys.exit('Unknown argument: %s' % arg)
 SCIPION_PROTOCOLS = join(dirname(SCIPION_CONFIG), 'protocols.conf')
@@ -73,7 +73,8 @@ SCIPION_HOSTS = join(dirname(SCIPION_CONFIG), 'hosts.conf')
 # Initialize variables from config file.
 #
 
-for confFile in [SCIPION_CONFIG, SCIPION_PROTOCOLS, SCIPION_HOSTS]:
+for confFile in [SCIPION_CONFIG, SCIPION_LOCAL_CONFIG,
+                 SCIPION_PROTOCOLS, SCIPION_HOSTS]:
     if not exists(confFile) and (len(sys.argv) == 1 or sys.argv[1] != 'config'):
         sys.exit('Missing file %s\nPlease run\n  %s config\nto fix your '
                  'configuration' % (confFile, sys.argv[0]))
@@ -85,13 +86,14 @@ VARS = {
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
     'SCIPION_PYTHON': 'python',
     'SCIPION_CONFIG': SCIPION_CONFIG,
+    'SCIPION_LOCAL_CONFIG': SCIPION_LOCAL_CONFIG,
     'SCIPION_PROTOCOLS': SCIPION_PROTOCOLS,
     'SCIPION_HOSTS': SCIPION_HOSTS}
 
 try:
     config = ConfigParser()
     config.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    config.read([SCIPION_CONFIG, LOCAL_CONFIG])
+    config.read([SCIPION_CONFIG, SCIPION_LOCAL_CONFIG])
 
     def getPaths(section):
         return dict([(key, join(SCIPION_HOME, os.path.expanduser(path)))

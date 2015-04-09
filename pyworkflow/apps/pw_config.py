@@ -57,9 +57,9 @@ def main():
             else:
                 checkConf(fpath, join(templatesDir, tmplt + '.template'))
         # After all, check some extra things are fine in scipion.conf
-        checkPaths(os.environ['SCIPION_CONFIG'])
-        # TODO: say that we are checking scipion.conf, and be more
-        # nice to the user.
+        print('Checking global and local scipion.conf files...')
+        checkPaths([os.environ['SCIPION_CONFIG'],
+                    os.environ['SCIPION_LOCAL_CONFIG']])
     except Exception:
         # This way of catching exceptions works with Python 2 & 3
         sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
@@ -79,16 +79,16 @@ def createConf(fpath, ftemplate):
                       '%s.%d' % (basename(fpath), int(time.time())))
         print('* Creating backup: %s' % backup)
         os.rename(fpath, backup)
-    print('* Creating local configuration file: %s' % fpath)
+    print('* Creating configuration file: %s' % fpath)
     open(fpath, 'w').write(open(ftemplate).read())  # cp ftemplate fpath
     print('Edit it to reflect the configuration of your system.')
 
 
 def checkPaths(conf):
-    "Check that some paths in the config file actually make sense"
+    "Check that some paths in the config file(s) actually make sense"
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    assert cf.read(conf) != [], 'Missing file %s' % conf
+    assert cf.read(conf) != [], 'Missing file: %s' % conf
     for var in ['MPI_LIBDIR', 'MPI_INCLUDE', 'MPI_BINDIR',
                 'JAVA_HOME', 'JAVA_BINDIR']:
         path = cf.get('BUILD', var)
