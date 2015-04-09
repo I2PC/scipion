@@ -865,7 +865,7 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
     }
 
     // Load Phantom and set working mode
-    if (prog_prm.fnPhantom.getExtension()=="descr")
+    if (prog_prm.fnPhantom.isMetaData())
     {
         phantomDescr.read(prog_prm.fnPhantom);
         phantomMode = XMIPP;
@@ -922,7 +922,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
     int NumProjs = 0;
     SF.clear();
     if (!fnOut.isInStack())
-        fnOut.deleteFile();
+    	fnOut.deleteFile();
     std::cerr << "Projecting ...\n";
     init_progress_bar(side.DF.size());
     SF.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
@@ -961,7 +961,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         Vshears=new RealShearsInfo(side.phantomVol());
     if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)//////////////////////
         Vfourier=new FourierProjector(side.phantomVol(),side.paddFactor,side.maxFrequency,side.BSplineDeg);
-    ///                   1              .5                        NEAREST
+                                     ///                   1              .5                        NEAREST
     fn_proj=fnOut;
     if (side.doCrystal)
         createEmptyFile(fn_proj, prm_crystal.crystal_Xdim, prm_crystal.crystal_Ydim,
