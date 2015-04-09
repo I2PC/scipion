@@ -91,7 +91,7 @@ VARS = {
 try:
     config = ConfigParser()
     config.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    config.read(SCIPION_CONFIG)
+    config.read([SCIPION_CONFIG, LOCAL_CONFIG])
 
     def getPaths(section):
         return dict([(key, join(SCIPION_HOME, os.path.expanduser(path)))
