@@ -344,8 +344,7 @@ def main():
                     writeSourceFile('xmipp.bashrc.template')
                     writeSourceFile('xmipp.csh.template')
                     
-                    #return os.system(cmd)
-                    return 0
+                    return os.system(cmd)
             
         if args and args[0] == '--binary':
             assert 'LDFLAGS' not in os.environ, "LDFLAGS already set. Refusing."
