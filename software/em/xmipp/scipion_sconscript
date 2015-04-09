@@ -1,0 +1,809 @@
+#!/usr/bin/env python
+
+# **************************************************************************
+# *
+# * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
+# *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'ifoche@cnb.csic.es'
+# *
+# **************************************************************************
+
+import os
+from os.path import join
+from glob import glob
+
+
+Import('env')
+
+# Define some variables used by Scons, note that some of 
+# the variables will be passed by Scipion in the environment (env) by
+# 
+
+env['CUDA_SDK_PATH'] = os.environ.get('CUDA_SDK_PATH', '')
+env['CUDA_LIB_PATH'] = os.environ.get('CUDA_LIB_PATH', '')
+
+gtest = False#True
+cuda = False
+release = True
+debug = False
+# profile = False
+# warn = False
+# fast = False
+# quiet = True
+matlab = False  # TODO: change and use something like GetOption('matlab')
+opencv = True  # TODO: change and use something like GetOption('opencv')
+
+
+# Read some flags
+CYGWIN = env['PLATFORM'] == 'cygwin'
+MACOSX = env['PLATFORM'] == 'darwin'
+MINGW = env['PLATFORM'] == 'win32'
+
+XMIPP_PATH = Dir('.').abspath
+
+
+
+#  ***********************************************************************
+#  *                      Xmipp C++ Libraries                            *
+#  ***********************************************************************
+
+ALL_LIBS = set(['fftw3', 'tiff', 'jpeg', 
+             'sqlite3', 'hdf5'])
+
+# Create a shortcut and customized function
+# to add the Xmipp CPP libraries
+def addLib(name, **kwargs):
+    ALL_LIBS.add(name)
+    # Install all libraries in scipion/software/lib
+    kwargs['installDir'] = '#software/lib' 
+    # Add always the xmipp path as -I for include and also xmipp/libraries
+    incs = kwargs.get('incs', []) + [os.path.join(XMIPP_PATH, 'external'),
+                                     os.path.join(XMIPP_PATH, 'libraries')]
+    kwargs['incs'] = incs 
+    
+    deps = kwargs.get('deps', [])
+    kwargs['deps'] = deps
+    
+    # Add libraries in libs as deps if not present
+    libs = kwargs.get('libs', [])
+    for lib in libs:
+        if lib in ALL_LIBS and lib not in deps:
+            deps.append(lib)
+    
+    # If pattern not provided use *.cpp as default
+    patterns = kwargs.get('patterns', '*.cpp')
+    kwargs['patterns'] = patterns
+    
+    lib = env.AddCppLibrary(name, **kwargs)
+    env.Alias('xmipp-libs', lib)
+    
+    return lib
+
+
+# Includes of bilib library
+bilib_incs = ['external/bilib' + s for s in ['', '/headers', '/types']]
+alglib_incs = ['external/alglib/src']
+
+# Add first external libraries (alglib, bilib, condor)
+#NOTE: for alglib and condor, the dir can not be where the source
+# code is because try to use .h files to make the final .so library
+
+addLib('XmippAlglib', 
+       dirs=['external/alglib'], 
+       patterns=['src/*.cpp'])
+
+addLib('XmippBilib', 
+       dirs=['external/bilib/sources'], 
+       patterns=['*.cc'],
+       incs=bilib_incs
+       )
+
+addLib('XmippCondor',
+       dirs=['external'], 
+       patterns=['condor/*.cpp'])
+
+addLib('XmippSqliteExt',
+       dirs=['external/sqliteExt'],
+       patterns=['extension-functions.c'],
+       libs=['m'])
+
+# Gtest
+addLib('XmippGtest',
+       dirs=['external'],
+       patterns=['gtest/*.cc'],
+       default=gtest,
+       libs=['pthread']
+       )
+
+EXT_LIBS = ['XmippAlglib', 'XmippBilib', 'XmippCondor']
+EXT_LIBS2 = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippSqliteExt']
+env.Alias('XmippExternal', EXT_LIBS)
+
+
+# Data
+#TODO: checklib rt?????
+addLib('XmippData',
+       dirs=['libraries'],
+       patterns=['data/*.cpp'],
+       libs=['fftw3', 'fftw3_threads', 
+             'hdf5','hdf5_cpp', 
+             'tiff', 
+             'jpeg', 
+             'sqlite3',     
+             'pthread',
+             'rt', 
+             'XmippAlglib', 'XmippBilib'])
+
+# Classification
+addLib('XmippClassif',
+       dirs=['libraries'],
+       patterns=['classification/*.cpp'],
+       libs=['XmippData', 'XmippAlglib', 'XmippBilib'])
+
+# Dimred
+addLib('XmippDimred',
+       dirs=['libraries'],
+       patterns=['dimred/*.cpp'],
+       libs=['XmippData', 'XmippBilib'])
+
+# Reconstruction
+addLib('XmippRecons',
+       dirs=['libraries'],
+       patterns=['reconstruction/*.cpp'],
+       incs=bilib_incs,
+       libs=['hdf5', 'hdf5_cpp', 'pthread',
+             'fftw3_threads',
+             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor'])
+
+# Interface
+python_incs = ['#software/include/python2.7',
+               '#software/lib/python2.7/site-packages',
+               '#software/lib/python2.7/site-packages/numpy/core/include']
+
+addLib('XmippInterface',
+       dirs=['libraries'],
+       patterns=['interface/*.cpp'],
+       incs=python_incs,
+       libs=[ 'pthread', 'python2.7', 
+             'XmippData', 'XmippBilib'])
+
+# Parallelization
+addLib('XmippParallel',
+              dirs=['libraries'],
+              patterns=['parallel/*.cpp'],
+              libs=['pthread', 'fftw3_threads',
+                    'XmippData', 'XmippClassif', 'XmippRecons', 'XmippBilib'],
+              mpi=True)
+
+# Python binding
+addLib('xmipp.so',
+       dirs=['libraries/bindings'],
+       patterns=['python/*.cpp'],
+       incs=python_incs,
+       libs=['python2.7', 'XmippData', 'XmippRecons', 'XmippBilib'],
+       prefix='', target='xmipp')
+
+# Java binding
+addLib('XmippJNI',
+       dirs=['libraries/bindings'],
+       patterns=['java/*.cpp'],
+       incs=env['JNI_CPPPATH'],
+       libs=[ 'pthread', 'XmippData', 'XmippRecons','XmippClassif', 'XmippBilib'],
+       )
+
+
+
+
+#  ***********************************************************************
+#  *                      Java Libraries                                 *
+#  ***********************************************************************
+
+javaEnumDict = {
+            'ImageWriteMode': [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, 'WRITE_'],
+            'CastWriteMode': [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, 'CW_'],
+            'MDLabel': [File('#software/em/xmipp/libraries/data/metadata_label.h').abspath, ['MDL_', 'RLN_', 'BSOFT']],
+            'XmippError': [File('#software/em/xmipp/libraries/data/xmipp_error.h').abspath, 'ERR_']
+            }
+
+
+def WriteJavaEnum(class_name, header_file, pattern, log):
+    java_file = File('#software/em/xmipp/java/src/xmipp/jni/%s.java' % class_name).abspath
+    env.Depends(java_file, header_file)
+    f = open(header_file)
+    fOut = open(java_file, 'w+')
+    counter = 0;
+    if isinstance(pattern, basestring):
+        patternList = [pattern]
+    elif isinstance(pattern, list):
+        patternList = pattern
+    else:
+        raise Exception("Invalid input pattern type: %s" % type(pattern))
+    last_label_pattern = patternList[0] + "LAST_LABEL"
+    fOut.write("package xmipp.jni; \n")
+    fOut.write("public class " + class_name + " {\n")
+
+    for line in f:
+        l = line.strip();
+        for p in patternList:
+            if l.startswith(p):
+                if '///' in l:
+                    l, comment = l.split('///')
+                else:
+                    comment = ''
+                if l.startswith(last_label_pattern):
+                    l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")
+                if (l.find("=") == -1):
+                    l = l.replace(",", " = %d;" % counter)
+                    counter = counter + 1;
+                else:
+                    l = l.replace(",", ";")
+
+                fOut.write("   public static final int %s ///%s\n" % (l, comment))
+    fOut.write("}\n")
+    fOut.close()
+    f.close()
+    # Write log file
+    if log:
+        from datetime import datetime
+        d = str(datetime.now())
+        #d = date.today();
+        log.write("Java file '%s' successful generated at %s\n" % (java_file, d))
+
+
+#def ExtractEnumFromHeader(source, target, env):
+def ExtractEnumFromHeader(env, target, source):
+    log = open(str(target[0]), 'w+')
+    for (class_name, list) in javaEnumDict.iteritems():
+        WriteJavaEnum(class_name, list[0], list[1], log)
+
+    log.close()
+    return None
+
+
+env['JAVADIR'] = 'java'
+env['JAVA_BUILDPATH'] = 'java/build'
+env['JAVA_LIBPATH'] = 'java/lib'
+env['JAVA_SOURCEPATH'] = 'java/src'
+env['ENV']['LANG'] = 'en_GB.UTF-8'
+env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
+# Set -g debug options if debugging
+if debug:
+    env['JAVAC'] = 'javac -g'  # TODO: check how to add -g without changing JAVAC
+
+javaBuild = Execute(Mkdir(Entry('#software/em/xmipp/java/build').abspath))
+
+# Update enums from c++ headers, if they don't exist, generate it
+javaLog = open(File('#software/em/xmipp/java/build/javaLog').abspath, 'w+')
+for (class_name, class_list) in javaEnumDict.iteritems():
+    java_file = File("#software/em/xmipp/java/src/xmipp/jni/%s.java" % class_name).abspath
+    WriteJavaEnum(class_name, class_list[0], class_list[1], javaLog)
+
+javaExtractCommand = env.Command(Entry('#software/em/xmipp/libraries/bindings/java/src/xmipp/jni/enums.changelog').abspath,
+                                 [File('#software/em/xmipp/libraries/data/xmipp_image_base.h').abspath, 
+                                  File('#software/em/xmipp/libraries/data/metadata_label.h').abspath],
+                                 ExtractEnumFromHeader)
+
+javaEnums = env.Alias('javaEnums', javaExtractCommand)
+
+imagejUntar = env.Untar(File('#software/em/xmipp/external/imagej/ij.jar').abspath, 
+                        File('#software/em/xmipp/external/imagej.tgz').abspath, 
+                        cdir=Dir('#software/em/xmipp/external').abspath)
+#env.Depends(imagejUntar, javaEnums)
+
+ijLink = env.SymLink(File('#software/em/xmipp/java/lib/ij.jar').abspath, 
+                     imagejUntar[0].abspath)
+env.Depends(ijLink, imagejUntar)
+env.Default(ijLink)
+# --- ...to here
+
+xmippJavaJNI = env.AddJavaLibrary(
+             'XmippJNI', 'xmipp/jni',
+             deps=[ijLink, javaEnums],
+             )
+#env.Depends(xmippJavaJNI, ijLink)
+
+xmippJavaUtils = env.AddJavaLibrary(
+           'XmippUtils', 'xmipp/utils',
+           deps=[ijLink, xmippJavaJNI],
+           )
+
+xmippIJ = env.AddJavaLibrary(
+        'XmippIJ', 'xmipp/ij/commons',
+        deps=[xmippJavaUtils],
+        )
+
+xmippViewer = env.AddJavaLibrary(
+            'XmippViewer', 'xmipp/viewer',
+            deps=[xmippIJ],
+            )
+
+xmippTest = env.AddJavaLibrary(
+          'XmippTest', 'xmipp/test',
+          deps=[xmippViewer]
+          )
+
+# xmippIJPlugin = env.AddJavaLibrary(
+#               'XmippIJPlugin_MasksToolbar',
+#               dirs=[Entry('#software/em/xmipp/java/src/xmipp/ij/plugins/maskstoolbar').abspath],
+#               deps=['XmippJNI']
+#               )
+
+#env.Depends(xmippIJPlugin, ijLink)
+#pluginLink = env.SymLink(Entry('#software/em/xmipp/external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar').abspath, xmippIJPlugin)
+#env.Depends(pluginLink, ijLink)
+#env.Default(pluginLink)
+
+
+# For any yet unkown issue, using the environment used for the rest of the SCons is imposible to compile java code
+# FIXME: Its needed to guess why and correct this. In the meanwhile we'll use an alternative environment
+env2 = Environment()
+env2.AppendUnique(JAVACLASSPATH='"%s/*"' % Dir('#software/em/xmipp/java/lib').abspath)
+javaExtraFileTypes = env2.Java(Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class').abspath, 
+                               File('#software/em/xmipp/java/src/HandleExtraFileTypes.java').abspath)
+env2.Depends(javaExtraFileTypes, Entry('#software/em/xmipp/java/lib/XmippViewer.jar').abspath)
+env2.Default(javaExtraFileTypes)
+
+# FIXME: For any yet unkown issue, java is being compiled putting in -d flag the class name, producing a folder with the same name as the class and putting the class file inside
+fileTypesInstallation = env.Install(Dir('#software/em/xmipp/external/imagej/plugins/').abspath, 
+                                    Entry('#software/em/xmipp/java/build/HandleExtraFileTypes.class/HandleExtraFileTypes.class').abspath)
+#env.Depends(fileTypesInstallation, pluginLink)
+env.Default(fileTypesInstallation)
+
+# Java tests
+AddOption('--run-java-tests', dest='run_java_tests', action='store_true',
+          help='Run all Java tests (not only default ones)')
+
+env.AddJavaTest('FilenameTest', 'XmippTest.jar')
+env.AddJavaTest('ImageGenericTest', 'XmippTest.jar')
+env.AddJavaTest('MetadataTest', 'XmippTest.jar')
+
+env.Alias('xmipp-java', [xmippJavaJNI, 
+                         xmippJavaUtils,
+                         xmippIJ,
+                         xmippViewer,
+                         xmippTest])
+
+
+#  ***********************************************************************
+#  *                      Xmipp Programs and Tests                       *
+#  ***********************************************************************
+
+XMIPP_LIBS = ['XmippData', 'XmippRecons', 'XmippClassif']
+PROG_DEPS = EXT_LIBS + XMIPP_LIBS
+
+PROG_LIBS = EXT_LIBS + XMIPP_LIBS + ['sqlite3',
+                                     'fftw3', 'fftw3_threads', 
+                                     'tiff', 'jpeg', 'png', 
+                                     'hdf5', 'hdf5_cpp']
+
+def addRunTest(testName, prog):
+    """ Add a Scons target for running xmipp tests. """
+    xmippTestName = 'xmipp_' + testName
+    xmlFileName = os.path.join(XMIPP_PATH, 'applications', 
+                               'tests', 'OUTPUT', xmippTestName+".xml")
+    if  os.path.exists(xmlFileName):
+        os.remove(xmlFileName)
+    testCase = env.Command(xmlFileName, 
+                          os.path.join(XMIPP_PATH, 'bin/%s' % xmippTestName), 
+                          "%s/scipion run $SOURCE --gtest_output=xml:$TARGET" % os.environ['SCIPION_HOME'])
+    env.Alias('run_' + testName, testCase)
+    env.Depends(testCase, prog)
+    env.Alias('xmipp-runtests', testCase)
+    
+    AlwaysBuild(testCase)
+    
+    return testCase
+
+
+# Shortcut function to add the Xmipp programs.
+def addProg(progName, **kwargs):
+    """ Shortcut to add the Xmipp programs easily.
+    Params:
+        progName: the name of the program without xmipp_ prefix that will be added.
+        if 'src' not in kwargs, add: 'applications/programs/progName' by default.
+        if progName starts with 'mpi_' then mpi will be set to True.
+    """
+    isTest = progName.startswith('test_')
+    
+    progsFolder = 'tests' if isTest else 'programs'
+    
+    src = kwargs.get('src', [os.path.join('applications', progsFolder, progName)])
+
+    kwargs['src'] = src
+    # Add all xmipp libraries just in case
+    kwargs['libs'] = kwargs.get('libs', []) + PROG_LIBS
+    kwargs['deps'] = PROG_DEPS
+    
+    # Add always the xmipp path as -I for include and also xmipp/libraries
+    incs = kwargs.get('incs', []) + [os.path.join(XMIPP_PATH, 'external'),
+                                     os.path.join(XMIPP_PATH, 'libraries')]
+    kwargs['incs'] = incs 
+    
+    if progName.startswith('mpi_'):
+        kwargs['mpi'] = True
+        kwargs['libs'] += ['mpi', 'mpi_cxx', 'XmippParallel']
+    
+    xmippProgName = 'xmipp_%s' % progName
+    
+    if progName.startswith('test_'):
+        kwargs['libs'] += ['XmippGtest']
+        env.Alias('xmipp-tests', xmippProgName)
+        addRunTest(progName, xmippProgName)
+        
+    prog = env.AddProgram(xmippProgName, **kwargs)
+    
+    # Add some aliases before return
+    env.Alias(xmippProgName, prog)
+    env.Alias('xmipp-programs', prog)
+    
+    
+    return prog
+
+
+# Define the list of all programs
+for p in ['angular_break_symmetry',
+          'angular_commonline',
+          'angular_continuous_assign',
+          'angular_continuous_assign2',
+          'angular_discrete_assign',
+          'angular_distance',
+          'angular_distribution_show',
+          'angular_neighbourhood',
+          'angular_projection_matching',
+          'angular_project_library',
+          'angular_rotate',
+          
+          'classify_analyze_cluster',
+          'classify_compare_classes',
+          'classify_evaluate_classes',
+          'classify_kerdensom',
+          
+          'ctf_correct_wiener3d',
+          'ctf_correct_idr',
+          'ctf_create_ctfdat',
+          'ctf_enhance_psd',
+          'ctf_estimate_from_micrograph',
+          'ctf_estimate_from_psd',
+          'ctf_group',
+          'ctf_phase_flip',
+          'ctf_show',
+          'ctf_sort_psds',
+          
+          'flexible_alignment',
+          'image_align',
+          'image_align_tilt_pairs',
+          'image_common_lines',
+          'image_convert',
+          'image_find_center',
+          'image_header',
+          'image_histogram',
+          'image_operate',
+          'image_rotational_pca',
+          'image_residuals',
+          'image_resize',
+          'image_rotational_spectra',
+          'image_sort_by_statistics',
+          'image_separate_objects',
+          'image_ssnr',
+          'image_statistics',
+          'image_vectorize',
+          
+          ('matrix_dimred', ['XmippDimred']),
+          #'metadata_convert_to_spider',
+          'metadata_histogram',
+          'metadata_import',
+          'metadata_split',
+          'metadata_split_3D',
+          'metadata_utilities',
+          'metadata_xml',
+          'micrograph_scissor',
+          'micrograph_automatic_picking',          
+          'ml_align2d',
+          'mlf_align2d',
+          'ml_refine3d',
+          'mlf_refine3d',
+          'ml_tomo',
+          'mrc_create_metadata',
+          'nma_alignment',
+          'nma_alignment_vol',
+          
+          'pdb_analysis',
+          'pdb_construct_dictionary',
+          'pdb_nma_deform',
+          'pdb_restore_with_dictionary',
+          'phantom_create',
+          'phantom_project',
+          'phantom_simulate_microscope',
+          'phantom_transform',
+          
+          'reconstruct_art',
+          'reconstruct_art_pseudo',
+          'reconstruct_fourier',
+          'reconstruct_significant',
+          'reconstruct_wbp',
+          'resolution_fsc',
+          'resolution_ssnr',
+          'score_micrograph',
+          
+          'transform_add_noise',
+          'transform_adjust_volume_grey_levels',
+          'transform_center_image',
+          ('transform_dimred', ['XmippDimred']),
+          'transform_downsample',
+          'transform_filter',
+          'transform_geometry',
+          'transform_mask',
+          'transform_mirror',
+          'transform_morphology',
+          'transform_normalize',
+          'transform_randomize_phases',
+          'transform_range_adjust',
+          'transform_symmetrize',
+          'transform_threshold',
+          'transform_window',
+          
+          'tomo_align_tilt_series',
+          'tomo_detect_missing_wedge',
+          'tomo_project',
+          'tomo_remove_fluctuations',
+          'tomo_extract_subvolume',
+          
+          #'volume_align_prog',
+          'volume_center',
+          'volume_correct_bfactor',
+          'volume_enhance_contrast',
+          'volume_find_symmetry',
+          'volume_from_pdb',
+          'volume_initial_simulated_annealing',
+          'volume_validate_pca',
+          'volume_reslice',
+          'volume_segment',
+          'volume_structure_factor',
+          'volume_to_pseudoatoms',
+          'volume_to_web',
+          
+          'xray_import',
+          'xray_psf_create',
+          'xray_project',
+
+          # MPI programs, the mpi_ prefix set mpi=True flag.
+          'mpi_angular_class_average', 
+          'mpi_angular_continuous_assign', 
+          'mpi_angular_continuous_assign2', 
+          'mpi_angular_discrete_assign', 
+          'mpi_angular_projection_matching', 
+          'mpi_angular_project_library', 
+          'mpi_classify_CL2D',
+          #'mpi_classify_CLTomo_prog', # DEPRECATED
+          'mpi_classify_CL2D_core_analysis', 
+          'mpi_ctf_correct_idr', 
+          'mpi_ctf_sort_psds', 
+          'mpi_image_operate', 
+          'mpi_image_rotational_pca',           
+          'mpi_image_resize', 
+          'mpi_image_sort',
+          'mpi_image_ssnr', 
+          'mpi_ml_align2d', 
+          'mpi_ml_tomo', 
+          'mpi_mlf_align2d', 
+          'mpi_ml_refine3d', 
+          'mpi_mlf_refine3d', 
+          'mpi_nma_alignment', 
+          'mpi_performance_test', 
+          'mpi_reconstruct_art', 
+          'mpi_reconstruct_fourier', 
+          'mpi_reconstruct_wbp', 
+          'mpi_reconstruct_significant', 
+          'mpi_run', 
+          'mpi_tomo_extract_subvolume', 
+          'mpi_transform_filter', 
+          'mpi_transform_symmetrize', 
+          'mpi_transform_geometry', 
+          'mpi_transform_mask', 
+          'mpi_transform_normalize', 
+          'mpi_transform_threshold',
+          'mpi_xray_project', 
+          
+          # Unittest for Xmipp libraries
+          'test_ctf',
+          ('test_dimred', ['XmippDimred']),
+          'test_euler',
+          'test_fftw',
+          'test_filename',
+          'test_filters',
+          'test_fringe_processing',
+          'test_funcs',
+          'test_geometry',
+          'test_image',
+          'test_image_generic',
+          'test_matrix',
+          'test_metadata',
+          'test_multidim',
+          'test_polar',
+          'test_polynomials',
+          'test_sampling',
+          'test_symmetries',
+          'test_transformation',
+          'test_wavelets'         
+          ]:
+    # Allow to add specific libs for indiviual programs
+    # by using a tuple instead of string
+    if isinstance(p, tuple):
+        addProg(p[0], libs=p[1])
+    else:
+        addProg(p)
+
+
+# Programs with specials needs
+# This programs need python lib to compile
+addProg('volume_align_prog',
+         incs=python_incs,
+         libs=['python2.7', 'XmippInterface'])
+
+# Optical Alignment program, that depends on opencv (cpu version)
+if opencv:
+    opencvLibs = ['opencv_core', 
+                  'opencv_legacy', 
+                  'opencv_imgproc', 
+                  'opencv_video']
+    
+    addProg('optical_alignment_cpu',
+            libs=opencvLibs,
+            deps=['opencv'])
+
+    if cuda: # also the gpu version
+        opencvLibs.append('opencv_gpu')
+        addProg('optical_alignment_gpu',
+                libs=opencvLibs,
+                deps=['opencv'], cuda=True)
+
+# Some special programs not ready for release
+if not release:
+    for p in ['idr_xray_tomo',
+              'reconstruct_art_xray',
+              'resolution_ibw',
+              'tomo_align_dual_tilt_series',
+              'tomo_align_refinement',
+              'xray_volume_correct',
+              'mpi_write_test'
+              ]:
+        addProg(p)
+
+
+
+#  ***********************************************************************
+#  *                      Xmipp Scripts                                  *
+#  ***********************************************************************
+
+
+def addBatch(batchName, script, scriptFolder='applications/scripts'):
+    """ Add a link to xmipp/bin folder prepending xmipp_ prefix.
+    The script should be located in from xmipp root, 
+    by default in 'applications/scripts/'
+    """
+    xmippBatchName = 'xmipp_%s' % batchName
+    batchLink = env.SymLink(os.path.join(XMIPP_PATH, 'bin', xmippBatchName),
+                            os.path.join(XMIPP_PATH, scriptFolder, script)
+                            )
+    env.Alias('xmipp-batchs', batchLink)
+    
+    return batchLink
+                            
+
+# Batches (apps)
+
+addBatch('apropos', 'apropos/batch_apropos.py')
+addBatch('compile', 'compile/batch_compile.py')
+addBatch('export_emx', 'export_emx/batch_export_emx.py')
+addBatch('import_box', 'import_box/batch_import_box.py')
+addBatch('import_ctfparam', 'import_ctfparam/batch_import_ctfparam.py')
+addBatch('import_ctfdat', 'import_ctfdat/batch_import_ctfdat.py')
+addBatch('import_emx', 'import_emx/batch_import_emx.py')
+addBatch('metadata_plot', 'metadata_plot/batch_metadata_plot.py')
+addBatch('metadata_selfile_create', 'metadata_selfile_create/batch_metadata_selfile_create.py')
+addBatch('browser', 'browser/batch_browser.py')
+addBatch('micrograph_particle_picking', 'micrograph_particle_picking/batch_micrograph_particle_picking.py')
+addBatch('chimera_client', 'chimera_client/batch_chimera_client.py')
+addBatch('micrograph_tiltpair_picking', 'micrograph_tiltpair_picking/batch_micrograph_tiltpair_picking.py')
+addBatch('projections_explorerj', 'projections_explorerj/batch_projections_explorerj.py')
+addBatch('showj', 'showj/batch_showj.py')
+addBatch('tomoj', 'tomoj/batch_tomoj.py')
+addBatch('visualize_preprocessing_micrographj', 'visualize_preprocessing_micrograph/batch_visualize_preprocessing_micrographj.py')
+addBatch('volume_align', 'volume_align/batch_volume_align.sh')
+addBatch('imagej', 'runImageJ', 'external')
+
+# # Python tests
+# testPythonInterface = env.SymLink('bin/xmipp_test_pythoninterface', 'applications/tests/test_pythoninterface/batch_test_pythoninterface.py')
+# Depends(testPythonInterface, packageDeps)
+# AddXmippTest('test_pythoninterface', testPythonInterface, "$SOURCE $TARGET")
+# 
+# testPySqlite = env.SymLink('bin/xmipp_test_pysqlite', 'applications/tests/test_pysqlite/batch_test_pysqlite.py')
+# Depends(testPySqlite, packageDeps)
+# AddXmippTest('test_pysqlite', testPySqlite, "$SOURCE $TARGET")
+# 
+# testEMX = env.SymLink('bin/xmipp_test_emx', 'applications/tests/test_emx/batch_test_emx.py')
+# Depends(testEMX, packageDeps)
+# AddXmippTest('test_emx', testEMX, "$SOURCE $TARGET")
+
+
+def compileMatlabBinding(target, source, env):
+    matlabDir = os.path.join(XMIPP_PATH, 'libraries', 'bindings', 'matlab')
+
+    incStr = ' '.join('-I%s' % p for p in [os.path.join(XMIPP_PATH, 'libraries'),
+                                            os.path.join(XMIPP_PATH, 'external'), 
+                                            Dir('#software/include').abspath] )
+    libStr = ' '.join('-L%s' % p for p in [Dir('#software/lib').abspath])
+    
+    libs = ' '.join('-l%s' % lib for lib in ['XmippData',
+                                             'XmippRecons',
+                                             'XmippBilib',
+                                             'XmippAlglib'])
+    
+    mex = os.path.join(env['MATLAB_DIR'], 'bin', 'mex')
+    command = '%s -O -outdir %s %s %s %s %s ' % (mex, matlabDir, incStr, libStr, libs, source[0])
+    print command
+    os.system(command)    
+
+# Matlab programs
+def addMatlabBinding(name):
+    """ Add options to compile xmipp-Matlab bindings. """
+    matlabDir = os.path.join(XMIPP_PATH, 'libraries', 'bindings', 'matlab')
+    source = os.path.join(matlabDir, name + ".cpp")
+    target = os.path.join(matlabDir, name + ".mexa64")
+
+    cmdTarget = env.Command(target, source, compileMatlabBinding)
+    env.Alias('xmipp-matlab', cmdTarget)        
+    
+    return cmdTarget
+
+if matlab:
+    bindings = ['tom_xmipp_adjust_ctf', 
+                'tom_xmipp_align2d', 
+                'tom_xmipp_ctf_correct_phase',
+                'tom_xmipp_mask', 
+                'tom_xmipp_mirror', 
+                'tom_xmipp_morphology', 
+                'tom_xmipp_normalize', 
+                'tom_xmipp_psd_enhance',
+                'tom_xmipp_resolution', 
+                'tom_xmipp_rotate', 
+                'tom_xmipp_scale', 
+                'tom_xmipp_scale_pyramid', 
+                'tom_xmipp_volume_segment',
+                
+                'xmipp_nma_read_alignment',
+                'xmipp_nma_save_cluster',
+                'xmipp_read',
+                'xmipp_read_structure_factor',
+                'xmipp_write',
+                ]
+    for b in bindings:
+        addMatlabBinding(b)
+    
+    env.Default('xmipp-matlab', matlab)
+
+XmippAlias = env.Alias('xmipp', ['xmipp-libs', 
+                                 'xmipp-programs', 
+                                 'xmipp-batchs',
+                                 'xmipp-java'])
+
+Return('XmippAlias')

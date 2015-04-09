@@ -1,0 +1,14 @@
+# Bits per sample
+bitspersample= 32
+# Samples per pixel
+samplesperpixel= 1
+# Image width
+Xdim= 3
+# Image length
+Ydim= 3
+# offset in bytes (zero by default)
+offset= 0
+# Is a signed or Unsigned int (by default true)
+is_signed= false
+# Byte order
+endianess= little

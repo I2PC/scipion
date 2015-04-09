@@ -1,0 +1,5 @@
+# XMIPP_STAR_1 * 
+# 
+data_noname
+ _image 000001@Images/proj_ctf_1.stk
+ _ctfModel CTFs/10.ctfparam
