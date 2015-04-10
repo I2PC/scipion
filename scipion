@@ -329,31 +329,30 @@ def main():
             sconsArgs = [a for a in args if not script.env.hasTarget(a)]
 
             # Special argument to skip Xmipp compilation, mainly for debugging            
-            if not '--no-xmipp' in args:
-                cmd = 'install/scons.py %s' % ' '.join(sconsArgs)
-                from install.funcs import green
-                print(green('Compiling Xmipp ...'))
-                print(cmd)
-                # If using some kind of show, do not compile Xmipp
-                if not ('--show' in args or '--show-tree' in args):
-                    # Write xmipp.bashrc and xmipp.csh
-                    # TODO: maybe consider to move this logic to an script
-                    # under install/ module
-                    def writeSourceFile(filename):
-                        fIn = open(join(SCIPION_HOME, 'config', 'templates', filename))
-                        filenameOut = join(PACKAGES['XMIPP_HOME'], filename.replace('.template', ''))
-                        fOut = open(filenameOut, 'w')
-                        print("Writing file: %s" % filenameOut)
-                        for line in fIn:
-                            fOut.write(line % VARS)
-                        fIn.close()
-                        fOut.close()
-                        
-                    writeSourceFile('xmipp.bashrc.template')
-                    writeSourceFile('xmipp.csh.template')
-                    
-                    return os.system(cmd)
-            
+            if '--no-xmipp' in args:
+                return 0
+
+            cmd = 'install/scons.py %s' % ' '.join(sconsArgs)
+            from install.funcs import green, yellow
+            print(green('Compiling Xmipp ...'))
+            print(cmd)
+
+            # If using some kind of show, do not compile Xmipp
+            if '--show' in args or '--show-tree' in args:
+                return 0
+
+            # Write xmipp.bashrc, xmipp.csh and xmipp.fish
+            # TODO: maybe consider to move this logic to an script
+            # under install/ module
+            tmpltDir = join(SCIPION_HOME, 'config', 'templates')
+            for fname in os.listdir(tmpltDir):
+                if fname.startswith('xmipp.'):
+                    out = join(PACKAGES['XMIPP_HOME'], fname[:-len('.template')])
+                    print(yellow("Writing sourceable shell file: %s" % out))
+                    open(out, 'w').write(open(join(tmpltDir, fname)).read() % VARS)
+
+            return os.system(cmd)
+
         if args and args[0] == '--binary':
             assert 'LDFLAGS' not in os.environ, "LDFLAGS already set. Refusing."
             os.environ['LDFLAGS'] = '-Wl,-rpath,REPLACE_ME_WITH_FUNNY_'
