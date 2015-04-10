@@ -346,7 +346,7 @@ def main():
             # under install/ module
             tmpltDir = join(SCIPION_HOME, 'config', 'templates')
             for fname in os.listdir(tmpltDir):
-                if fname.startswith('xmipp.'):
+                if fname.startswith('xmipp.') and fname.endswith('.template'):
                     out = join(PACKAGES['XMIPP_HOME'], fname[:-len('.template')])
                     print(yellow("Writing sourceable shell file: %s" % out))
                     open(out, 'w').write(open(join(tmpltDir, fname)).read() % VARS)
