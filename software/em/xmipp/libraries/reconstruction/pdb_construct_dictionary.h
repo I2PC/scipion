@@ -30,17 +30,11 @@
 /**@defgroup PDBConstructDictionary Construct a low and high resolution dictionary
    @ingroup ReconsLibrary */
 //@{
-/** Construct Low and High resolution dictionary*/
-class ProgConstructPDBDictionary: public XmippProgram
+/** Generic class to handle PDB Low and High resolution dictionary*/
+class ProgPDBDictionary: public XmippProgram
 {
 public:
-	/** Metadata with the low resolution volumes */
-    FileName fnLow;
-
-    /** Metadata with the high resolution volumes */
-    FileName fnHigh;
-
-    /** Output rootname */
+	/** Dictionary rootname */
     FileName fnRoot;
 
     /** Patch is of size size x size x size */
@@ -50,6 +44,7 @@ public:
     double stdThreshold;
 
     double angleThreshold;
+
 public:
     /** Low resolution and high resolution dictionary */
     std::vector< MultidimArray<double> > dictionaryLow, dictionaryHigh;
@@ -65,11 +60,12 @@ public:
 
     /** Signature */
     Matrix1D<double> auxSignature;
+
 public:
-    void defineParams();
-    void readParams();
-    void show();
-    void run();
+    virtual void defineParams();
+    virtual void readParams();
+    virtual void show();
+    virtual void run()=0;
 
     /** Construct rotation group */
     void constructRotationGroup();
@@ -87,6 +83,22 @@ public:
 
     /** Save dictionaries */
     void saveDictionaries() const;
+};
+
+/** Construct Low and High resolution dictionary*/
+class ProgConstructPDBDictionary: public ProgPDBDictionary
+{
+	/** Metadata with the low resolution volumes */
+    FileName fnLow;
+
+    /** Metadata with the high resolution volumes */
+    FileName fnHigh;
+
+public:
+    void defineParams();
+    void readParams();
+    void show();
+    void run();
 };
 //@}
 #endif

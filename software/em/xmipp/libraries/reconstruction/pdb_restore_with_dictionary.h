@@ -25,33 +25,22 @@
 #ifndef _PROG_RESTORE_WITH_DICTIONARY_HH
 #define _PROG_RESTORE_WITH_DICTIONARY_HH
 
-#include <data/xmipp_program.h>
+#include "pdb_construct_dictionary.h"
 
 /**@defgroup PDBRestoreWithDictionary Restore a volume with a low/high dictionary
    @ingroup ReconsLibrary */
 //@{
 /** Restore with Low and High resolution dictionary*/
-class ProgRestoreWithPDBDictionary: public XmippProgram
+class ProgRestoreWithPDBDictionary: public ProgPDBDictionary
 {
 public:
 	/** Input and output volume names */
 	FileName fnIn, fnOut;
 
-    /** Dictionary rootname */
-    FileName fnDictionaryRoot;
-
-    /** A patch is candidate if its standard deviation is at least this factor of the total standard deviation */
-    double stdThreshold;
-
-    double angleThreshold;
-
     double lambda;
 
-    int iterator;
+    int iterations;
 public:
-    /** Low resolution and high resolution dictionary */
-    Image<double> dictionaryLow, dictionaryHigh;
-
     Matrix2D<double> Ui, UitUi;
 	Matrix1D<double> wi, v1, v2, y, yp;
 
@@ -61,14 +50,14 @@ public:
     void show();
     void run();
 
-    void selectDictionaryPatches(const MultidimArray<double> &lowResolutionPatch, std::vector<size_t> &idx,
-    		std::vector<double> &weight);
+    void selectDictionaryPatches(const MultidimArray<double> &lowResolutionPatch, Matrix1D<double> &lowResolutionPatchSignature,
+    		std::vector<size_t> &selectedPatchesIdx, std::vector<double> &weight);
 
-    double approximatePatch(const MultidimArray<double> &lowResolutionPatch, std::vector<size_t> &idx,
-    		std::vector<double> &weight, Matrix1D<double> &alpha);
+    double approximatePatch(const MultidimArray<double> &lowResolutionPatch,
+    		std::vector< size_t > &selectedPatchesIdx, std::vector<double> &weight, Matrix1D<double> &alpha);
 
-    void reconstructPatch(std::vector<size_t> &idx, Matrix1D<double> &alpha,
-    		   MultidimArray<double> &highResolutionPatch);
+    void reconstructPatch(size_t idxTransf, std::vector< size_t > &selectedPatchesIdx, Matrix1D<double> &alpha,
+    		MultidimArray<double> &highResolutionPatch);
 };
 //@}
 #endif
