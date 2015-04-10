@@ -63,11 +63,31 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
     arg = sys.argv.pop(1)
     value = sys.argv.pop(1)
     if arg == '--config':
-        SCIPION_LOCAL_CONFIG = os.path.abspath(os.path.expanduser(value))
+        # If we pass the arguments "--config some_path/scipion.conf",
+        # only the config files in that path will be read.
+        SCIPION_CONFIG = os.path.abspath(os.path.expanduser(value))
+        SCIPION_LOCAL_CONFIG = SCIPION_CONFIG  # global and local are the same!
     else:
         sys.exit('Unknown argument: %s' % arg)
 SCIPION_PROTOCOLS = join(dirname(SCIPION_CONFIG), 'protocols.conf')
 SCIPION_HOSTS = join(dirname(SCIPION_CONFIG), 'hosts.conf')
+
+
+# Check for old configuration files and tell the user to update.
+if SCIPION_LOCAL_CONFIG != SCIPION_CONFIG and exists(SCIPION_LOCAL_CONFIG):
+    cf = ConfigParser()
+    cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    cf.read(SCIPION_LOCAL_CONFIG)
+    if 'BUILD' in cf.sections():
+        print("""***
+Warning: you seem to be running Scipion with the old (pre-April 9 2015)
+configuration files. You may want to remove the configuration files in
+the directory %s
+and then run "scipion config". Please contact the Scipion developers for
+any doubt.
+***""" % dirname(SCIPION_LOCAL_CONFIG))
+
+
 
 #
 # Initialize variables from config file.
@@ -114,6 +134,7 @@ try:
 
     PATH = os.pathsep.join(
         [join(SCIPION_SOFTWARE, 'bin'),
+         BUILD['JAVA_BINDIR'],
          BUILD['MPI_BINDIR'],
          os.environ.get('PATH', '')]
     )
@@ -305,6 +326,10 @@ def main():
         sys.exit(0)
         
     elif mode == MODE_INSTALL:
+        # Always move to SCIPION_HOME dir before installing
+        cwd = os.getcwd()
+        os.chdir(SCIPION_HOME)
+        
         os.environ.update(VARS)
         args = sys.argv[2:]
 
@@ -324,31 +349,33 @@ def main():
             sconsArgs = [a for a in args if not script.env.hasTarget(a)]
 
             # Special argument to skip Xmipp compilation, mainly for debugging            
-            if not '--no-xmipp' in args:
-                cmd = 'install/scons.py %s' % ' '.join(sconsArgs)
-                from install.funcs import green
-                print(green('Compiling Xmipp ...'))
-                print(cmd)
-                # If using some kind of show, do not compile Xmipp
-                if not ('--show' in args or '--show-tree' in args):
-                    # Write xmipp.bashrc and xmipp.csh
-                    # TODO: maybe consider to move this logic to an script
-                    # under install/ module
-                    def writeSourceFile(filename):
-                        fIn = open(join(SCIPION_HOME, 'config', 'templates', filename))
-                        filenameOut = join(PACKAGES['XMIPP_HOME'], filename.replace('.template', ''))
-                        fOut = open(filenameOut, 'w')
-                        print("Writing file: %s" % filenameOut)
-                        for line in fIn:
-                            fOut.write(line % VARS)
-                        fIn.close()
-                        fOut.close()
-                        
-                    writeSourceFile('xmipp.bashrc.template')
-                    writeSourceFile('xmipp.csh.template')
-                    
-                    return os.system(cmd)
-            
+            if '--no-xmipp' in args:
+                return 0
+
+            cmd = 'install/scons.py %s' % ' '.join(sconsArgs)
+            from install.funcs import green, yellow
+            print(green('Compiling Xmipp ...'))
+            print(cmd)
+
+            # If using some kind of show, do not compile Xmipp
+            if '--show' in args or '--show-tree' in args:
+                return 0
+
+            # Write xmipp.bashrc, xmipp.csh and xmipp.fish
+            # TODO: maybe consider moving this logic to an script
+            # under install/ module
+            tDir = join(SCIPION_HOME, 'config', 'templates')
+            for fname in os.listdir(tDir):
+                if fname.startswith('xmipp.') and fname.endswith('.template'):
+                    out = join(PACKAGES['XMIPP_HOME'], fname[:-len('.template')])
+                    if exists(out):
+                        print(yellow("File %s exists -- keeping it." % out))
+                        continue
+                    print(yellow("Writing sourceable shell file: %s" % out))
+                    open(out, 'w').write(open(join(tDir, fname)).read() % VARS)
+
+            return os.system(cmd)
+
         if args and args[0] == '--binary':
             assert 'LDFLAGS' not in os.environ, "LDFLAGS already set. Refusing."
             os.environ['LDFLAGS'] = '-Wl,-rpath,REPLACE_ME_WITH_FUNNY_'
@@ -374,6 +401,7 @@ def main():
   ************************************************************************
 
 """)
+        os.chdir(cwd) # Go back to original folder
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:

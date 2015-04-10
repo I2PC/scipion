@@ -669,6 +669,15 @@ void ProgReconstructSignificant::produceSideinfo()
 	size_t Ydim,Zdim,Ndim;
 	getImageSize(mdIn,Xdim,Ydim,Zdim,Ndim);
 
+	// Adjust alpha
+	if (fnSym!="c1")
+	{
+		SymList SL;
+		SL.readSymmetryFile(fnSym);
+		alpha0*=SL.true_symNo;
+		alphaF*=SL.true_symNo;
+	}
+
 	// If there is not any input volume, create a random one
 	if (fnFirstGallery=="")
 	{

@@ -41,7 +41,7 @@ void ProgAngularDistance::readParams()
     if (compute_weights)
     {
     	minSigma = getDoubleParam("--compute_weights");
-    	idLabel = getParam("--idLabel",1);
+    	idLabel = getParam("--compute_weights",1);
     }
 }
 
@@ -298,10 +298,8 @@ void ProgAngularDistance::computeWeights()
 
     	// Take current id
     	DF2sorted.getValue(label,currentId,iter2.objId);
-    	std::cout << "currentId=" << currentId << std::endl;
 
     	// Grab all the angles in DF2 associated to this id
-    	std::cout << "DF2" << std::endl;
     	bool anotherIteration=false;
     	do
     	{
@@ -321,7 +319,6 @@ void ProgAngularDistance::computeWeights()
 					YY(rotTiltPsi)=tiltp;
 					ZZ(rotTiltPsi)=psip;
 				}
-				std::cout << rotTiltPsi << std::endl;
 				ang2.push_back(rotTiltPsi);
 				iter2.moveNext();
 				if (iter2.hasNext())
@@ -342,7 +339,6 @@ void ProgAngularDistance::computeWeights()
     		break;
 
     	// Grab all the angles in DF1 associated to this id
-    	std::cout << "DF1" << std::endl;
     	anotherIteration=false;
     	do
     	{
@@ -362,7 +358,6 @@ void ProgAngularDistance::computeWeights()
 					YY(rotTiltPsi)=tiltp;
 					ZZ(rotTiltPsi)=psip;
 				}
-				std::cout << rotTiltPsi << std::endl;
 				ang1.push_back(rotTiltPsi);
 				iter1.moveNext();
 				if (iter1.hasNext())
@@ -379,7 +374,6 @@ void ProgAngularDistance::computeWeights()
     		double tilt2=YY(anglesi);
     		double psi2=ZZ(anglesi);
     		double bestDistance=1e38;
-    		std::cout << "Ang2: " << rot2 << " " << tilt2 << " " << psi2 << std::endl;
     		for (size_t j=0; j<ang1.size(); ++j)
     		{
         		const Matrix1D<double> &anglesj=ang1[j];
@@ -388,12 +382,9 @@ void ProgAngularDistance::computeWeights()
         		double psi1=ZZ(anglesj);
                 double dist = SL.computeDistance(rot1, tilt1, psi1, rot2, tilt2, psi2, false,
                                                  check_mirrors, object_rotation);
-        		std::cout << "Ang1: " << rot1 << " " << tilt1 << " " << psi1 << std::endl;
-        		std::cout << "   -> " << dist << std::endl;
                 if (dist<bestDistance)
                 	bestDistance=dist;
     		}
-    		std::cout << "bestDistance=" << bestDistance << std::endl;
     		cumulatedDistance+=bestDistance;
     	}
     	double meanDistance=cumulatedDistance/ang2.size();
@@ -401,7 +392,6 @@ void ProgAngularDistance::computeWeights()
     	DFweights.setValue(label,currentId,newObjId);
     	DFweights.setValue(MDL_ANGLE_DIFF,meanDistance,newObjId);
         anotherImageIn2=iter2.hasNext();
-		std::cout << "meanDistance=" << meanDistance << std::endl;
     }
 
     // Calculate the deviation with respect to angleDiff=0 of the angular distances
@@ -414,7 +404,6 @@ void ProgAngularDistance::computeWeights()
     	sigma2+=d*d;
     }
     sigma2/=angleDistances.size();
-    std::cout << "Standard deviation of angular distances=" << sqrt(sigma2) << std::endl;
     sigma2=std::max(minSigma*minSigma,sigma2);
 
     // Adjust the jumper weights according to a Gaussian
