@@ -114,6 +114,7 @@ try:
 
     PATH = os.pathsep.join(
         [join(SCIPION_SOFTWARE, 'bin'),
+         BUILD['JAVA_BINDIR'],
          BUILD['MPI_BINDIR'],
          os.environ.get('PATH', '')]
     )
