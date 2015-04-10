@@ -302,7 +302,7 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         self.writeInfoField(fnDirCurrent,"resolution",MDL_RESOLUTION_FREQREAL,resolution)
         
         # Filter the average to that resolution
-        self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%(fnVolAvg,resolution,TsCurrent))
+        self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%(fnVolAvg,resolution,TsCurrent),numberOfMpi=1)
         self.runJob('xmipp_image_header','-i %s --sampling_rate %f'%(fnVolAvg,TsCurrent),numberOfMpi=1)
         
         # A little bit of statistics (accepted and rejected particles, number of directions, ...)
@@ -744,7 +744,21 @@ class XmippProtReconstructHighRes(ProtRefine3D):
 
     def cleanDirectory(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
-        # COSS: Falta clean
+        if self.saveSpace:
+            fnGlobal=join(fnDirCurrent,"globalAssignment")
+            fnLocal=join(fnDirCurrent,"localAssignment")
+            if exists(fnGlobal):
+                cleanPath(join(fnGlobal,"images.stk"))
+            for i in range(1,3):
+                if exists(fnGlobal):
+                    cleanPath(join(fnGlobal,"images%02d.xmd"%i))
+                    cleanPath(join(fnGlobal,"significant%02d"%i))
+                    cleanPath(join(fnGlobal,"volumeRef%02d.vol"%i))
+                if exists(fnLocal):
+                    cleanPath(join(fnGlobal,"images%02d.xmd"%i))
+                    cleanPath(join(fnGlobal,"anglesCont%02d.stk"%i))
+                    cleanPath(join(fnGlobal,"anglesDisc%02d.xmd"%i))
+                    cleanPath(join(fnGlobal,"volumeRef%02d.vol"%i))
     
     def decideNextIteration(self, iteration):
         # COSS: Falta un criterio para decidir si otra iteracion
