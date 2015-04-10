@@ -342,14 +342,17 @@ def main():
                 return 0
 
             # Write xmipp.bashrc, xmipp.csh and xmipp.fish
-            # TODO: maybe consider to move this logic to an script
+            # TODO: maybe consider moving this logic to an script
             # under install/ module
             tmpltDir = join(SCIPION_HOME, 'config', 'templates')
             for fname in os.listdir(tmpltDir):
                 if fname.startswith('xmipp.') and fname.endswith('.template'):
                     out = join(PACKAGES['XMIPP_HOME'], fname[:-len('.template')])
-                    print(yellow("Writing sourceable shell file: %s" % out))
-                    open(out, 'w').write(open(join(tmpltDir, fname)).read() % VARS)
+                    if exists(out):
+                        print(yellow("Existing file %s will not be rewritten." % out))
+                    else:
+                        print(yellow("Writing sourceable shell file: %s" % out))
+                        open(out, 'w').write(open(join(tmpltDir, fname)).read() % VARS)
 
             return os.system(cmd)
 
