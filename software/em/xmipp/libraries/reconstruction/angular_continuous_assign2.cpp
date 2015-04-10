@@ -209,9 +209,9 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     rowOut=rowIn;
 
     // Read input image and initial parameters
-    ApplyGeoParams geoParams;
-	geoParams.only_apply_shifts=true;
-	geoParams.wrap=DONT_WRAP;
+//  ApplyGeoParams geoParams;
+//	geoParams.only_apply_shifts=false;
+//	geoParams.wrap=DONT_WRAP;
 
 	rowIn.getValue(MDL_ANGLE_ROT,old_rot);
 	rowIn.getValue(MDL_ANGLE_TILT,old_tilt);
@@ -229,7 +229,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		rowIn.getValue(MDL_CONTINUOUS_Y,old_contShiftY);
 	}
 
-	I.readApplyGeo(fnImg,rowIn,geoParams);
+	I.read(fnImg);
 	I().setXmippOrigin();
 
     Ifiltered()=I();
@@ -282,8 +282,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			scaleToSize(BSPLINE3,Ip(),I(),XSIZE(Ip()),YSIZE(Ip()));
 			I()=Ip();
 		}
-		A(0,2)=p(2);
-		A(1,2)=p(3);
+		A(0,2)=p(2)+old_shiftX;
+		A(1,2)=p(3)+old_shiftY;
 		A(0,0)=1+p(4);
 		A(1,1)=1+p(5);
 
