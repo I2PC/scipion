@@ -10,9 +10,9 @@ else
 endif
 
 if($?PYTHONPATH) then
-  setenv PYTHONPATH ${XMIPP_HOME}/protocols:${SCIPION_HOME}/software/lib:${PYTHONPATH}
+  setenv PYTHONPATH ${XMIPP_HOME}/protocols:${SCIPION_HOME}:${SCIPION_HOME}/software/lib:${PYTHONPATH}
 else
-  setenv PYTHONPATH ${XMIPP_HOME}/protocols:${SCIPION_HOME}/software/lib
+  setenv PYTHONPATH ${XMIPP_HOME}/protocols:${SCIPION_HOME}:${SCIPION_HOME}/software/lib
 endif
 
 test -s ${XMIPP_HOME}/.xmipp.alias && source ${XMIPP_HOME}/.xmipp.alias || true
@@ -26,9 +26,9 @@ alias xa 'xmipp_apropos'
 alias xb 'xmipp_browser'               
 alias xp 'xmipp_protocols'             
 alias xmipp 'xmipp_protocols'          
-alias xs 'xmipp_showj'                 
-alias xmipp_show 'xmipp_showj'         
-alias xsj 'xmipp_showj'                
+alias xs 'scipion viewer'                 
+alias xmipp_show 'scipion viewer'         
+alias xsj 'scipion viewer'                
 ## Image ##                            
 alias xic 'xmipp_image_convert'        
 alias xih 'xmipp_image_header'         

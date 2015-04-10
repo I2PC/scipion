@@ -306,6 +306,10 @@ def main():
         sys.exit(0)
         
     elif mode == MODE_INSTALL:
+        # Always move to SCIPION_HOME dir before installing
+        cwd = os.getcwd()
+        os.chdir(SCIPION_HOME)
+        
         os.environ.update(VARS)
         args = sys.argv[2:]
 
@@ -375,6 +379,7 @@ def main():
   ************************************************************************
 
 """)
+        os.chdir(cwd) # Go back to original folder
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:

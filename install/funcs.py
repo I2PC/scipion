@@ -436,7 +436,8 @@ class Environment():
                                                        'flags': ' '.join(flags),
                                                        'name': name},
                    targets=[path(tg) for tg in targets],
-                   cwd=t.buildPath)
+                   cwd=t.buildPath,
+                   final=True)
 
         return t
     
@@ -461,7 +462,8 @@ class Environment():
         target.addCommand(Command(self, Link(name, packageDir),
                              targets=[self.getEm(name), 
                                       self.getEm(packageDir)],
-                             cwd=self.getEm('')))
+                             cwd=self.getEm('')),
+                          final=True)
         commands = kwargs.get('commands', [])
         for cmd, tgt in commands:
             if isinstance(tgt, basestring):
@@ -469,7 +471,8 @@ class Environment():
             # Take all package targets relative to package build dir
             target.addCommand(cmd, targets=[os.path.join(target.buildPath, t) 
                                             for t in tgt], 
-                         cwd=target.buildPath)            
+                         cwd=target.buildPath, 
+                         final=True)            
 
         return target
     

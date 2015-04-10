@@ -3,7 +3,7 @@ export XMIPP_HOME=$SCIPION_HOME/software/em/xmipp
 
 export PATH=$SCIPION_HOME/software/bin:$XMIPP_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$SCIPION_HOME/software/lib:$LD_LIBRARY_PATH
-export PYTHONPATH=$XMIPP_HOME/protocols:$SCIPION_HOME/software/lib:$PYTHONPATH
+export PYTHONPATH=$XMIPP_HOME/protocols:$SCIPION_HOME:$SCIPION_HOME/software/lib:$PYTHONPATH
 
 if [ "$BASH" != "" ]; then
 # Load global autocomplete file 
@@ -21,9 +21,9 @@ alias xa='xmipp_apropos'
 alias xb='xmipp_browser'               
 alias xp='xmipp_protocols'             
 alias xmipp='xmipp_protocols'          
-alias xs='xmipp_showj'                 
-alias xmipp_show='xmipp_showj'         
-alias xsj='xmipp_showj'                
+alias xs='scipion viewer'                 
+alias xmipp_show='scipion viewer'         
+alias xsj='scipion viewer'                
 alias xij='xmipp_imagej'               
 ## Image ##                            
 alias xic='xmipp_image_convert'        
