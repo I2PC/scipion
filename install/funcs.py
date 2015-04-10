@@ -31,7 +31,16 @@ import time
 from glob import glob
 
 from subprocess import STDOUT, check_call, CalledProcessError
-
+#Python 3 compatibility: How to overcome Python NameError: name 'basestring' is not defined
+try:
+    unicode = unicode
+except NameError:
+    # 'unicode' is undefined, must be Python 3
+    unicode = str
+    basestring = (str,bytes)
+else:
+    # 'unicode' exists, must be Python 2
+    basestring = basestring
 
 # Then we get some OS vars
 MACOSX = (platform.system() == 'Darwin')
@@ -66,12 +75,12 @@ def checkLib(lib, target=None):
         try:
             check_call(['%s-config' % lib, '--cflags'])
         except (CalledProcessError, OSError) as e:
-            print """
+            print("""
   ************************************************************************
     Warning: %s not found. Please consider installing it first.
   ************************************************************************
 
-Continue anyway? (y/n)""" % lib
+Continue anyway? (y/n)""" % lib)
             if raw_input().upper() != 'Y':
                 sys.exit(2)
     # TODO: maybe write the result of the check in
