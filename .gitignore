@@ -63,6 +63,8 @@ build/
 lib/
 documentation/
 software/
+!software/em/xmipp/
+
 data/
 gmon.out
 *~
@@ -78,7 +80,6 @@ pw.cshrc
 pyworkflow/web/static/
 pyworkflow/resources/uploads/
 static/
-software/em/
 data
 
 # Scipion
