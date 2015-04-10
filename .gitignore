@@ -5,6 +5,10 @@
 *.o
 *.os
 
+### Python binaries
+*.pyc
+*.pyo
+
 # Compiled Dynamic libraries
 *.so
 *.dylib
@@ -76,6 +80,9 @@ pyworkflow/resources/uploads/
 static/
 software/em/
 data
+
+# Scipion
+config/*.conf
 
 # Configuration for servers
 pyworkflow/web/pages/resources/js/templates_libs/config.js
