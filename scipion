@@ -63,7 +63,10 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
     arg = sys.argv.pop(1)
     value = sys.argv.pop(1)
     if arg == '--config':
-        SCIPION_LOCAL_CONFIG = os.path.abspath(os.path.expanduser(value))
+        # If we pass the arguments "--config some_path/scipion.conf",
+        # only the config files in that path will be read.
+        SCIPION_CONFIG = os.path.abspath(os.path.expanduser(value))
+        SCIPION_LOCAL_CONFIG = SCIPION_CONFIG  # global and local are the same!
     else:
         sys.exit('Unknown argument: %s' % arg)
 SCIPION_PROTOCOLS = join(dirname(SCIPION_CONFIG), 'protocols.conf')
