@@ -80,13 +80,6 @@ def getEnviron():
     SPIDER = join(env['SPBIN_DIR'], env.get('SPIDER', 'spider_linux_mp_intel64'))
     # expand ~ and vars
     SPIDER = abspath(os.path.expanduser(os.path.expandvars(SPIDER)))
-    # Check that executable exists
-    if not os.path.exists(SPIDER):
-        msg = "SPIDER executable not found at:\n   '%s'" % SPIDER
-        msg += "\nPlease create a link inside the bin folder: \n   '%s'" % env['SPBIN_DIR']
-        msg += "\n named 'spider' or define the SPIDER environment variable"
-        print msg
-        return None
         
     env.set('PATH', env['SPBIN_DIR'], env.END)
     
