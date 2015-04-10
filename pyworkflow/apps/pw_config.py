@@ -46,27 +46,39 @@ def main():
         help=('Rewrite the configuration files using the original templates.'))
     options, args = parser.parse_args()
 
+    globalIsLocal = (os.environ['SCIPION_CONFIG'] ==
+                     os.environ['SCIPION_LOCAL_CONFIG'])  # if we used --config
+    if globalIsLocal:
+        localSections = []
+    else:
+        localSections = ['DIRS_LOCAL']
+
     try:
         templatesDir = join(os.environ['SCIPION_HOME'], 'config', 'templates')
+        # Global installation configuration files.
         for fpath, tmplt in [
                 (os.environ['SCIPION_CONFIG'], 'scipion'),
                 (os.environ['SCIPION_PROTOCOLS'], 'protocols'),
                 (os.environ['SCIPION_HOSTS'], 'hosts')]:
             if not exists(fpath) or options.overwrite:
                 createConf(fpath, join(templatesDir, tmplt + '.template'),
-                           remove=['DIRS_LOCAL'])
+                           remove=localSections)
             else:
                 checkConf(fpath, join(templatesDir, tmplt + '.template'),
-                          remove=['DIRS_LOCAL'])
-        if not exists(os.environ['SCIPION_LOCAL_CONFIG']):
-            #  It might make sense to add   "or options.overwrite" ...
-            createConf(os.environ['SCIPION_LOCAL_CONFIG'],
-                       join(templatesDir, 'scipion.template'),
-                       keep=['DIRS_LOCAL'])
-        else:
-            checkConf(os.environ['SCIPION_LOCAL_CONFIG'],
-                      join(templatesDir, 'scipion.template'),
-                      keep=['DIRS_LOCAL'])
+                          remove=localSections)
+
+        if not globalIsLocal:  # which is normally the case
+            # Local user configuration files (well, only "scipion.conf").
+            if not exists(os.environ['SCIPION_LOCAL_CONFIG']):
+                #  It might make sense to add   "or options.overwrite" ...
+                createConf(os.environ['SCIPION_LOCAL_CONFIG'],
+                           join(templatesDir, 'scipion.template'),
+                           keep=localSections)
+            else:
+                checkConf(os.environ['SCIPION_LOCAL_CONFIG'],
+                          join(templatesDir, 'scipion.template'),
+                          keep=localSections)
+
         # After all, check some extra things are fine in scipion.conf
         print('Checking paths in %s ...' % os.environ['SCIPION_CONFIG'])
         checkPaths(os.environ['SCIPION_CONFIG'])
