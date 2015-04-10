@@ -34,10 +34,9 @@ void ProgRestoreWithPDBDictionary::defineParams()
     addParamsLine(" -i <volume>      : Volume to restore");
     addParamsLine(" [-o <volume=\"\">] : Restored volume");
     addParamsLine(" [--root <root=dictionary>] : Rootname of the dictionary");
-    addParamsLine(" [--stdThreshold <s=0.15>] : Threshold on the standard deviation to include a patch");
-    addParamsLine(" [--angleThreshold <s=5>] : Threshold in degrees on the angle to include a patch");
     addParamsLine(" [--regularization <lambda=0.01>] : Regularization factor for the approximation phase");
-    addParamsLine(" [--iterator <s=50>] : Number of iterations");
+    addParamsLine(" [--iter <s=50>] : Number of iterations");
+	ProgPDBDictionary::defineParams();
 }
 
 void ProgRestoreWithPDBDictionary::readParams()
@@ -46,35 +45,32 @@ void ProgRestoreWithPDBDictionary::readParams()
 	fnOut=getParam("-o");
 	if (fnOut=="")
 		fnOut=fnIn;
-	fnDictionaryRoot=getParam("--root");
-	stdThreshold=getDoubleParam("--stdThreshold");
-	angleThreshold=cos(DEG2RAD(getDoubleParam("--angleThreshold")));
+	fnRoot=getParam("--root");
 	lambda=getDoubleParam("--regularization");
-	iterator=getIntParam("--iterator");
+	iterations=getIntParam("--iter");
+	ProgPDBDictionary::readParams();
 }
 
 /* Show -------------------------------------------------------------------- */
 void ProgRestoreWithPDBDictionary::show()
 {
     if (verbose)
+    {
 		std::cout
 		<< "Input volume:        " << fnIn              << std::endl
 		<< "Output volume:       " << fnOut             << std::endl
-		<< "Dictionary rootname: " << fnDictionaryRoot  << std::endl
-		<< "Standard deviation:  " << stdThreshold      << std::endl
-		<< "Angle:               " << angleThreshold    << std::endl
-		<< "Iterator:            " << iterator          << std::endl
+		<< "Iterations:          " << iterations        << std::endl
 		;
+		ProgPDBDictionary::show();
+    }
 }
 
 //#define DEBUG
 void ProgRestoreWithPDBDictionary::run()
 {
     show();
-
-    dictionaryLow.read(fnDictionaryRoot+"_low.mrcs");
-    dictionaryHigh.read(fnDictionaryRoot+"_high.mrcs");
-	const MultidimArray<double> &mDictionaryLow=dictionaryLow();
+    loadDictionaries();
+    constructRotationGroup();
 
     Image<double> V, Vhigh;
     MultidimArray<double> weightHigh;
@@ -83,14 +79,13 @@ void ProgRestoreWithPDBDictionary::run()
 	double min, max, mean, std=0;
 	mV.computeStats(mean,std,min,max);
 
-    MultidimArray<double> patchLow, patchLowNormalized, patchHigh;
-    int patchSize=XSIZE(mDictionaryLow);
+    MultidimArray<double> patchLow, patchLowNormalized, canonicalPatch, patchHigh;
     int patchSize_2=patchSize/2;
 	size_t Npatches=0, NcandidatePatches=0;
 
-	std::vector<size_t> idx;
+	std::vector< size_t > selectedPatchesIdx;
 	std::vector<double> weight;
-	Matrix1D<double> alpha;
+	Matrix1D<double> alpha, canonicalSignature;
 	init_progress_bar(ZSIZE(mV));
 	patchHigh.resizeNoCopy(patchSize,patchSize,patchSize);
 	Vhigh().initZeros(mV);
@@ -107,28 +102,30 @@ void ProgRestoreWithPDBDictionary::run()
 
 				double minPatchLow, maxPatchLow, meanPatchLow, stdPatchLow=0;
 				patchLow.computeStats(meanPatchLow,stdPatchLow,minPatchLow,maxPatchLow);
-				double R2=1;
+				double R2=0;
 				patchHigh.initZeros(patchLow);
 
 				if (stdPatchLow > stdThreshold*std)
 				{
 					++NcandidatePatches;
-					patchLowNormalized=patchLow/sqrt(patchLow.sum2());
-					selectDictionaryPatches(patchLowNormalized,idx,weight);
-					if (idx.size()>0)
+					patchLowNormalized=patchLow;
+					patchLowNormalized*=1.0/sqrt(patchLow.sum2());
+					size_t idxTransf=canonicalOrientation(patchLowNormalized,canonicalPatch,canonicalSignature);
+					selectDictionaryPatches(canonicalPatch, canonicalSignature, selectedPatchesIdx, weight);
+					if (selectedPatchesIdx.size()>0)
 					{
-						R2=approximatePatch(patchLow,idx,weight,alpha);
-					    reconstructPatch(idx,alpha,patchHigh);
+						R2=approximatePatch(canonicalPatch,selectedPatchesIdx,weight,alpha);
+					    reconstructPatch(idxTransf,selectedPatchesIdx,alpha,patchHigh);
 //						Image<double> save;
 //						save()=patchLow;
 //						save.write("PPPlow.vol");
 //						save()=patchHigh;
 //						save.write("PPPhigh.vol");
+//						std::cout << "R2=" << R2 << " alpha=" << alpha << std::endl;
 //						std::cout << "Press any key" << std::endl;
 //						char c; std::cin >> c;
 					}
 				}
-
 				// Insert patchHigh in Vhigh
 				for (int kk=0; kk<patchSize; ++kk)
 					for (int ii=0; ii<patchSize; ++ii)
@@ -143,6 +140,11 @@ void ProgRestoreWithPDBDictionary::run()
 	progress_bar(ZSIZE(mV));
 
 	// Correct by the Vhigh weights
+	Image<double> save;
+	save()=weightHigh;
+	save.write("PPPweightHigh.vol");
+	save()=mVhigh;
+	save.write("PPPVHigh.vol");
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(mVhigh)
 	if (A3D_ELEM(weightHigh,k,i,j)>0)
 		A3D_ELEM(mVhigh,k,i,j)/=A3D_ELEM(weightHigh,k,i,j);
@@ -152,34 +154,49 @@ void ProgRestoreWithPDBDictionary::run()
 
 //#define DEBUG
 void ProgRestoreWithPDBDictionary::selectDictionaryPatches(const MultidimArray<double> &lowResolutionPatch,
-		std::vector<size_t> &idx, std::vector<double> &weight)
+		Matrix1D<double> &lowResolutionPatchSignature, std::vector<size_t> &selectedPatchesIdx, std::vector<double> &weight)
 {
-	idx.clear();
+	selectedPatchesIdx.clear();
 	weight.clear();
-	const MultidimArray<double> &mDictionaryLow=dictionaryLow();
-	for (size_t i=0; i<NSIZE(mDictionaryLow); ++i)
+	size_t imax=dictionaryLow.size();
+	for (size_t i=0; i<imax; ++i)
 	{
-		const double *ptrDictionaryPatch=&DIRECT_NZYX_ELEM(mDictionaryLow,i,0,0,0);
-		double dotProduct=0;
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(lowResolutionPatch)
-			dotProduct+=(*ptrDictionaryPatch++)*DIRECT_MULTIDIM_ELEM(lowResolutionPatch,n);
+		const Matrix1D<double> &dictSignature=dictionarySignature[i];
+		double dotProduct=XX(lowResolutionPatchSignature)*XX(dictSignature)+
+                          YY(lowResolutionPatchSignature)*YY(dictSignature)+
+                          ZZ(lowResolutionPatchSignature)*ZZ(dictSignature);
 		if (dotProduct>angleThreshold)
 		{
-			idx.push_back(i);
-			weight.push_back(1/dotProduct);
-#ifdef DEBUG
-			Image<double> save;
-			save()=lowResolutionPatch;
-			save.write("PPPexperimentalPatch.vol");
-			memcpy(&DIRECT_MULTIDIM_ELEM(save(),0),&DIRECT_NZYX_ELEM(mDictionaryLow,i,0,0,0),
-					MULTIDIM_SIZE(lowResolutionPatch)*sizeof(double));
-			save.write("PPPdictionaryPatch.vol");
-			std::cout << RAD2DEG(acos(dotProduct)) << ". Press any key" << std::endl;
-			char c; std::cin >> c;
-#endif
+			const double *ptrDictionaryPatch=MULTIDIM_ARRAY(dictionaryLow[i]);
+			dotProduct=0;
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(lowResolutionPatch)
+				dotProduct+=(*ptrDictionaryPatch++)*DIRECT_MULTIDIM_ELEM(lowResolutionPatch,n);
+			if (dotProduct>angleThreshold)
+			{
+				if (dotProduct>1)
+					dotProduct=1;
+				selectedPatchesIdx.push_back(i);
+				weight.push_back(1/dotProduct);
+	#ifdef DEBUG
+				Image<double> save;
+				save()=lowResolutionPatch;
+				save.write("PPPexperimentalPatch.vol");
+				memcpy(&DIRECT_MULTIDIM_ELEM(save(),0),MULTIDIM_ARRAY(dictionaryLow[i]),
+						MULTIDIM_SIZE(lowResolutionPatch)*sizeof(double));
+				save.write("PPPdictionaryPatch.vol");
+				std::cout << RAD2DEG(acos(dotProduct)) << ". Press any key" << std::endl;
+				char c; std::cin >> c;
+	#endif
+			}
 		}
 	}
-//	std::cout << idx.size() << std::endl;
+#ifdef DEBUG
+	std::cout << "Size idx=" << selectedPatchesIdx.size() << std::endl;
+	std::cout << "Weights=";
+	for (size_t i=0; i<weight.size(); ++i)
+		std::cout << weight[i] << " ";
+	std::cout << std::endl;
+#endif
 }
 #undef DEBUG
 
@@ -187,11 +204,9 @@ void ProgRestoreWithPDBDictionary::selectDictionaryPatches(const MultidimArray<d
  *    and denoising of medical images. IEEE Trans. Image Processing, 23: 1882-1895 (2014)
  */
 double ProgRestoreWithPDBDictionary::approximatePatch(const MultidimArray<double> &lowResolutionPatch,
-		std::vector<size_t> &idx, std::vector<double> &weight, Matrix1D<double> &alpha)
+		std::vector< size_t > &selectedPatchesIdx, std::vector<double> &weight, Matrix1D<double> &alpha)
 {
-	const MultidimArray<double> &mDictionaryLow=dictionaryLow();
-
-	alpha.initZeros(idx.size());
+	alpha.initZeros(selectedPatchesIdx.size());
     wi=alpha;
 	Ui.initZeros(MULTIDIM_SIZE(lowResolutionPatch),VEC_XSIZE(alpha));
 
@@ -202,7 +217,7 @@ double ProgRestoreWithPDBDictionary::approximatePatch(const MultidimArray<double
 	// Prepare Ui
 	for (size_t j=0; j<MAT_XSIZE(Ui); ++j)
 	{
-		const double *ptr=&DIRECT_NZYX_ELEM(mDictionaryLow,idx[j],0,0,0);
+		const double *ptr=MULTIDIM_ARRAY(dictionaryLow[selectedPatchesIdx[j]]);
 		for (size_t i=0; i<MAT_YSIZE(Ui); ++i, ++ptr)
 			MAT_ELEM(Ui,i,j)=*ptr;
 	}
@@ -216,7 +231,7 @@ double ProgRestoreWithPDBDictionary::approximatePatch(const MultidimArray<double
 	alpha.initConstant(1);
 
 	// Iterate
-	for (int iter=0; iter<iterator; ++iter)
+	for (int iter=0; iter<iterations; ++iter)
 	{
 		matrixOperation_Atx(Ui,y,v1);
 		matrixOperation_Ax(UitUi,alpha,v2);
@@ -237,13 +252,14 @@ double ProgRestoreWithPDBDictionary::approximatePatch(const MultidimArray<double
 	return 1-diff2/norm2;
 }
 
-void ProgRestoreWithPDBDictionary::reconstructPatch(std::vector<size_t> &idx, Matrix1D<double> &alpha,
-		   MultidimArray<double> &highResolutionPatch)
+void ProgRestoreWithPDBDictionary::reconstructPatch(size_t idxTransf, std::vector<size_t> &selectedPatchesIdx,
+		Matrix1D<double> &alpha, MultidimArray<double> &highResolutionPatch)
 {
-	const MultidimArray<double> &mDictionaryHigh=dictionaryHigh();
+	const Matrix2D<double> &A=rotationGroup[idxTransf];
 	for (size_t j=0; j<VEC_XSIZE(alpha); ++j)
 	{
-		const double *ptr=&DIRECT_NZYX_ELEM(mDictionaryHigh,idx[j],0,0,0);
+		applyGeometry(LINEAR,auxPatch,dictionaryHigh[selectedPatchesIdx[j]],A,IS_NOT_INV,DONT_WRAP);
+		const double *ptr=MULTIDIM_ARRAY(auxPatch);
 		for (size_t n=0; n<MULTIDIM_SIZE(highResolutionPatch); ++n, ++ptr)
 			DIRECT_MULTIDIM_ELEM(highResolutionPatch,n)+=VEC_ELEM(alpha,j)*(*ptr);
 	}

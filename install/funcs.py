@@ -462,7 +462,8 @@ class Environment():
         target.addCommand(Command(self, Link(name, packageDir),
                              targets=[self.getEm(name), 
                                       self.getEm(packageDir)],
-                             cwd=self.getEm('')))
+                             cwd=self.getEm('')),
+                          final=True)
         commands = kwargs.get('commands', [])
         for cmd, tgt in commands:
             if isinstance(tgt, basestring):
