@@ -151,6 +151,7 @@ class Target():
         self._name = name
         self._default = kwargs.get('default', False)
         self._commandList = list(commands)  # copy the list/tuple of commands
+        self._finalCommands = [] # This commands results will be used to check if need to re-build 
         self._deps = [] # list of name of dependency targets
 
     def addCommand(self, cmd, **kwargs):
@@ -159,6 +160,8 @@ class Target():
         else:
             c = Command(self._env, cmd, **kwargs)
         self._commandList.append(c)
+        if kwargs.get('final', False):
+            self._finalCommands.append(c)
         return c
 
     def addDep(self, dep):
@@ -168,17 +171,10 @@ class Target():
         return self._deps
 
     def _existsAll(self):
-        for c in self._commandList:
+        for c in self._finalCommands:
             if not c._existsAll():
                 return False
         return True
-        # TODO: Only check for the last target, but make sure that
-        # both fftw3 and fftw3f are compiled and installed in that case.
-        # It would look more like:
-        # # Check if the last command target exists
-        # if not self._commandList:
-        #     return True
-        # return self._commandList[-1]._existsAll()
 
     def isDefault(self):
         return self._default
@@ -349,7 +345,7 @@ class Environment():
         # that's the only thing we will do.
         if commands:
             for cmd, tgt in commands:
-                t.addCommand(cmd, targets=tgt)
+                t.addCommand(cmd, targets=tgt, final=True)
             return t
 
         # If we didnt' specify the commands, we can either compile
@@ -379,7 +375,8 @@ class Environment():
         t.addCommand('make install',
                      targets=targets,
                      cwd=t.buildPath,
-                     out='%s/log/%s_make_install.log' % (prefixPath, name))
+                     out='%s/log/%s_make_install.log' % (prefixPath, name),
+                     final=True)
 
         if clean:
             t.addCommand('make clean',
@@ -439,7 +436,8 @@ class Environment():
                                                        'flags': ' '.join(flags),
                                                        'name': name},
                    targets=[path(tg) for tg in targets],
-                   cwd=t.buildPath)
+                   cwd=t.buildPath,
+                   final=True)
 
         return t
     
@@ -472,7 +470,8 @@ class Environment():
             # Take all package targets relative to package build dir
             target.addCommand(cmd, targets=[os.path.join(target.buildPath, t) 
                                             for t in tgt], 
-                         cwd=target.buildPath)            
+                         cwd=target.buildPath, 
+                         final=True)            
 
         return target
     
