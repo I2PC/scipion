@@ -1,3 +1,5 @@
+# -*- sh -*-
+
 export SCIPION_HOME=%(SCIPION_HOME)s
 export XMIPP_HOME=$SCIPION_HOME/software/em/xmipp
 
