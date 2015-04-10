@@ -72,6 +72,23 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
 SCIPION_PROTOCOLS = join(dirname(SCIPION_CONFIG), 'protocols.conf')
 SCIPION_HOSTS = join(dirname(SCIPION_CONFIG), 'hosts.conf')
 
+
+# Check for old configuration files and tell the user to update.
+if SCIPION_LOCAL_CONFIG != SCIPION_CONFIG and exists(SCIPION_LOCAL_CONFIG):
+    cf = ConfigParser()
+    cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    cf.read(SCIPION_LOCAL_CONFIG)
+    if 'BUILD' in cf.sections():
+        print("""***
+Warning: you seem to be running Scipion with the old (pre-April 9 2015)
+configuration files. You may want to remove the configuration files in
+the directory %s
+and then run "scipion config". Please contact the Scipion developers for
+any doubt.
+***""" % dirname(SCIPION_LOCAL_CONFIG))
+
+
+
 #
 # Initialize variables from config file.
 #
