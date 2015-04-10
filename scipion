@@ -322,9 +322,9 @@ def main():
             # TODO: think more deeply in a way to separate
             # options for scons and our own install script
             sconsArgs = [a for a in args if not script.env.hasTarget(a)]
-                
-            
-            if 'xmipp' in sconsArgs:
+
+            # Special argument to skip Xmipp compilation, mainly for debugging            
+            if not '--no-xmipp' in args:
                 cmd = 'install/scons.py %s' % ' '.join(sconsArgs)
                 from install.funcs import green
                 print(green('Compiling Xmipp ...'))
@@ -335,7 +335,7 @@ def main():
                     # TODO: maybe consider to move this logic to an script
                     # under install/ module
                     def writeSourceFile(filename):
-                        fIn = open(join(SCIPION_HOME, 'settings', filename))
+                        fIn = open(join(SCIPION_HOME, 'config', 'templates', filename))
                         filenameOut = join(PACKAGES['XMIPP_HOME'], filename.replace('.template', ''))
                         fOut = open(filenameOut, 'w')
                         print("Writing file: %s" % filenameOut)
