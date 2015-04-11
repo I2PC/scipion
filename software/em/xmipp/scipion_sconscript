@@ -55,7 +55,7 @@ debug = False
 # fast = False
 # quiet = True
 matlab = False  # TODO: change and use something like GetOption('matlab')
-opencv = True  # TODO: change and use something like GetOption('opencv')
+opencv = env.GetOption('opencv')  # TODO: change and use something like GetOption('opencv')
 
 
 # Read some flags
