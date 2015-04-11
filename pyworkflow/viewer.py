@@ -289,8 +289,15 @@ class ProtocolViewer(Protocol, Viewer):
                 
     def _citations(self):
         return self.protocol._citations()
-
-
+    
+    def getObjectView(self, filename, **kwargs):
+        """ This is a wrapper around the ObjectView constructor, just to 
+        avoid passing the project and protocol, since both are know
+        here in the ProtocolViewer.
+        """
+        # We can not import em globally
+        from pyworkflow.em import ObjectView
+        return ObjectView(self._project, self.protocol.strId(), filename, **kwargs)
     
     #TODO: This method should not be necessary, instead NumericListParam should return a list and not a String 
     def _getListFromRangeString(self, rangeStr):
