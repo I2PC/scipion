@@ -31,7 +31,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em  
 
-from convert import printLicense, writeVolumesSqlite
+from convert import printLicense, writeVolumesSqlite, writeSetOfVolumes
 
 
 
