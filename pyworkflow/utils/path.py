@@ -207,6 +207,14 @@ def getLastFile(pattern):
         return files[-1]
     return None
 
+def commonPath(*paths):
+    """ Return the common longest prefix path.
+    It uses the python os.path.commonprefix and 
+    then the direname over it since the former is
+    implemented in char-by-char base.
+    """
+    return os.path.dirname(os.path.commonprefix(*paths))
+
 
 # Console (and XMIPP) escaped colors, and the related tags that we create
 # with Text.tag_config(). This dict is used in OutputText:addLine()
