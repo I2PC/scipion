@@ -37,7 +37,6 @@ import xmipp.viewer.models.ColumnInfo;
 public class ScipionMetaData extends MetaData {
 
     private List<ColumnInfo> columns;
-    private String self, selfalias;
     private List<EMObject> emobjects;
     private ScipionMetaData parent;
     private boolean haschilds;
@@ -73,8 +72,6 @@ public class ScipionMetaData extends MetaData {
                     childblocks.add(emo.childmd.getBlock());
                 }
             }
-        
-         
             blocks = new String[childblocks.size() + 1];
             blocks[0] = getBlock();
             for (int i = 0; i < childblocks.size(); i++) {
@@ -95,12 +92,10 @@ public class ScipionMetaData extends MetaData {
         this.preffix = preffix;
         loadData();
         blocks = new String[]{getBlock()};
-        
 
     }
 
     public void loadData() {
-        StopWatch.getInstance().printElapsedTime("loading data");
         Connection c = null;
         Statement stmt = null;
         try {
@@ -142,15 +137,11 @@ public class ScipionMetaData extends MetaData {
                 name = rs.getString("label_property");
                 alias = rs.getString("column_name");
                 clsname = rs.getString("class_name");
-                if (name.equals("self")) {
-                    self = clsname;
-                    selfalias = alias;
-                    continue;
-                }
+                
                 type = getTypeMapping(clsname);
 
                 labelscount++;
-                allowRender = isImage(self, name);
+                allowRender = isImage(name);
                 ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
                 columns.add(ci);
             }
@@ -231,12 +222,15 @@ public class ScipionMetaData extends MetaData {
         return blocks;
 
     }
+    
 
     public String getBlock() {
+    	String block = getSetType().replace("SetOf", "");
+    	
         if (preffix == null) {
-            return self + "s";
+            return block;
         }
-        return preffix + self + "s";
+        return preffix + block;
     }
 
    
@@ -336,23 +330,24 @@ public class ScipionMetaData extends MetaData {
         return columns;
     }
 
-    public boolean isImage(String self, String label) {
+    public boolean isImage(String label) {
+    	String setType = getSetType();
         if(label.contains("_filename"))
         {
             String indexLabel = label.replace("_filename", "_index");
             if(getColumnInfo(indexLabel) != null)
                 return true;
         }
-        if (self.equals("Micrograph") || self.equals("Particle") || self.equals("Volume")) {
+        if (setType.equals("SetOfMicrographs") || setType.equals("SetOfParticles") || setType.equals("SetOfVolumes")) {
             if (label.equals("_filename")) {
                 return true;
             }
-        } else if (self.equals("CTFModel")) {
+        } else if (setType.equals("SetOfCTFModel")) {
             if (label.equals("_micObj._filename") || label.equals("_psdFile") || label.equals("_xmipp_enhanced_psd") 
                     ||label.equals("_xmipp_ctfmodel_quadrant") ||label.equals("_xmipp_ctfmodel_halfplane")) {
                 return true;
             }
-        } else if (self.equals("Class2D") || self.equals("Class3D")) {
+        } else if (setType.equals("SetOfClasses2D") || setType.equals("SetOfClasses3D")) {
             if (label.equals("_representative._filename")) {
                 return true;
             }
@@ -405,10 +400,7 @@ public class ScipionMetaData extends MetaData {
         return value.toString();
     }
 
-    public String getSelf() {
-        return self;
-    }
-
+    
     @Override
     public int size() {
         return emobjects.size();
@@ -490,62 +482,7 @@ public class ScipionMetaData extends MetaData {
         }
     }
 
-    public String toString() {
-        String sql = String.format("DROP TABLE IF EXISTS %1$sClasses; CREATE TABLE %1$sClasses(\n"
-                + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + "                      label_property      TEXT UNIQUE,\n"
-                + "                      column_name TEXT UNIQUE,\n"
-                + "                      class_name TEXT DEFAULT NULL\n"
-                + "                      )", preffix);
-
-        sql += String.format(";INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", preffix, selfalias, self);
-        String line = ", (%s, \'%s\', \'%s\', \'%s\')";
-        ColumnInfo ci;
-        String createcols = "", cols = "id, label, comment", type;
-        for (int i = 0; i < columns.size(); i++) {
-            ci = columns.get(i);
-            type = getTypeMapping(ci.type);
-            sql += String.format(line, i + 2, ci.labelName, ci.comment, type);
-            createcols += String.format(",\n%s %s DEFAULT NULL", ci.comment, type);
-            cols += String.format(", %s", ci.comment);
-        }
-        sql += String.format(";DROP TABLE IF EXISTS %1$sObjects; CREATE TABLE %1$sObjects(\n"
-                + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + "                      label      TEXT DEFAULT NULL,\n"
-                + "                      comment TEXT DEFAULT NULL"
-                + "                      %2$s)", preffix, createcols);
-        if (size() == 0) {
-            return sql;
-        }
-        sql += String.format(";INSERT INTO %sObjects(%s) VALUES ", preffix, cols);
-        Object value;
-        for (EMObject emo : emobjects) {
-            sql += String.format("(%s, '', ''", emo.getId());
-            for (ColumnInfo column : columns) {
-                value = emo.getValue(column);
-                if (value != null) {
-                    if (column.type == MetaData.LABEL_STRING) {
-
-                        String str = (String) value;
-                        if (str.contains("@")) {
-                            str = str.substring(str.lastIndexOf("@") + 1);
-                        }
-                        value = str;
-                        sql += String.format(", '%s'", value);
-
-                    } else {
-                        sql += String.format(", %s", value);
-                    }
-                } else {
-                    sql += ", NULL";
-                }
-            }
-            sql += "),";
-        }
-        sql = sql.substring(0, sql.length() - 1);//remove first comma
-        System.out.println(sql);
-        return sql;
-    }
+   
 
     public void writeBlock(String path) {
         //Might fail if some fixed column was added
@@ -567,7 +504,6 @@ public class ScipionMetaData extends MetaData {
                     + "                      )", preffix);
             stmt.executeUpdate(sql);
 
-            sql = String.format("INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", preffix, selfalias, self);
             String line = ", (%s, \'%s\', \'%s\', \'%s\')";
             ColumnInfo ci;
             String createcols = "", cols = "", type;
@@ -660,7 +596,6 @@ public class ScipionMetaData extends MetaData {
     }
 
     public void sort(int sortLabel, boolean ascending) {
-        StopWatch.getInstance().printElapsedTime("sorting");
         ColumnInfo ci = getColumnInfo(sortLabel);
         try {
             loadNeighborhoodValues(0, ci, size());
@@ -674,12 +609,7 @@ public class ScipionMetaData extends MetaData {
         for (int i = 0; i < emobjects.size() - 1; i++) 
             emobjects.get(i).setIndex(i);
 
-        StopWatch.getInstance().printElapsedTime("sort done");
     }
-
-    
-    
-    
 
     public void overwrite(String src, String path, boolean[] selection) throws SQLException {
         try {
@@ -759,7 +689,7 @@ public class ScipionMetaData extends MetaData {
 
     @Override
     public boolean isCTFMd() {
-        return getSelf().equals("CTFModel");
+        return getSetType().equals("SetOfCTF");
     }
 
     @Override
@@ -948,7 +878,8 @@ public class ScipionMetaData extends MetaData {
     }
 
     boolean isClassificationMd() {
-        return self.equals("Class2D") || self.equals("Class3D");
+    	String setType = getSetType();
+        return setType.equals("SetOfClasses2D") || setType.equals("SetOfClasses3D");
     }
     
     

@@ -1553,9 +1553,8 @@ Image_applyCTF(PyObject *obj, PyObject *args, PyObject *kwargs)
 		        ctf.enable_CTF=true;
 		        ctf.enable_CTFnoise=false;
 		        ctf.read(fnCTF);
-		        ctf.Tm=Ts;
 		        ctf.produceSideInfo();
-		        ctf.applyCTF(*pImage);
+		        ctf.applyCTF(*pImage,Ts);
 		        Py_RETURN_NONE;
 			}
         }

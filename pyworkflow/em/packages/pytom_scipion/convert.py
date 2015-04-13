@@ -63,9 +63,9 @@ def getEnviron():
                '$SCIPION_HOME/software/em/pytom instead.')
         PYTOM_HOME = '%s/software/em/pytom' % os.environ['SCIPION_HOME']
     environ.update({
-                    'LD_LIBRARY_PATH': os.pathsep.join([
-                                       os.path.join(PYTOM_HOME, 'pytomc/libs/libtomc/libs'),
-                                       os.path.join(PYTOM_HOME, 'pytomc/sh_alignment/SpharmonicKit27')]),
+#                    'LD_LIBRARY_PATH': os.pathsep.join([
+#                                       os.path.join(PYTOM_HOME, 'pytomc/libs/libtomc/libs'),
+#                                       os.path.join(PYTOM_HOME, 'pytomc/sh_alignment/SpharmonicKit27')]),
                     'PATH': os.path.join(PYTOM_HOME, 'bin'),
                     'PYTHONPATH': os.pathsep.join(getPyTomPaths())
                     }, 
@@ -75,10 +75,11 @@ def getEnviron():
 
 def writeSetOfVolumes(volSet, volXml, volDir):
     """ Convert a SetOfVolumes to a xml file used by PyTom.
+    The volumes will be converted to .mrc format if not are '.em' or '.mrc' 
     Params:
         volSet: input SetOfVolumes.
         volXml: filename where to write the xml file.
-        volDir: where to create links or copies (converted to em or mrc).
+        volDir: where to create links or copies (converted to mrc).
     """
     # Add to the path the root to pytom
     backupPath = list(sys.path)
@@ -123,11 +124,10 @@ def writeSetOfVolumes(volSet, volXml, volDir):
         
     pl.toXMLFile(volXml)
     #pl.setWedgeAllParticles(w)
-    
     sys.path = backupPath
     
     
-def readSetOfVolumes(volsXml, volSet):
+def readSetOfVolumes(volsXml, volSet, **kwargs):
     """ Populate a Scipion set of volumes from a given
     xml file from PyTom.
     """
@@ -151,6 +151,16 @@ def readSetOfVolumes(volsXml, volSet):
         volSet.append(vol)
     
     sys.path = backupPath
+    
+
+def writeVolumesSqlite(volsXml, volsSqlite, **kwargs):
+    """ Convert a volume list from PyTom xml format to Scipion sqlite file.
+    If the volSqlite exists, it will be deleted.
+    """
+    pwutils.cleanPath(volsSqlite)
+    volSet = em.SetOfVolumes(filename=volsSqlite)    
+    readSetOfVolumes(volsXml, volSet, **kwargs)
+    volSet.write()
     
     
 def readPyTomInfo(particle):

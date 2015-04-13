@@ -31,7 +31,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em  
 
-from convert import printLicense, writeSetOfVolumes
+from convert import printLicense, writeVolumesSqlite, writeSetOfVolumes
 
 
 
@@ -148,8 +148,11 @@ class ProtFrmAlign(em.ProtAlignVolume):
         f.write(jobTemplate % args)
         f.close()
         script = self._getScript("frm", "FRMAlignment.py")
-        self.runJob('python', '%s -j %s' % (script, jobName), 
+        # Run the alignment with the job script (-j option) 
+        # and in verbose mode (-v option)
+        self.runJob('python', '%s -j %s -v ' % (script, jobName), 
                     cwd=self._getExtraPath())
+        #print('python', '%s -j %s' % (script, jobName))
         # scipion run python /home/coss/usb_linux/scipion/scipion/software/em/pytom/classification/auto_focus_classify.py -p volumes.xml -k 1 -f 2 -m ../phantom.mrc -s 5 -i 10 -n 0.2 -g -2 -t 0.4
 
     def createOutputStep(self):
@@ -194,8 +197,21 @@ class ProtFrmAlign(em.ProtAlignVolume):
     def _methods(self):
         return []
     
+    
     #--------------------------- UTILS functions --------------------------------------------   
     
     def _getScript(self, *paths):
         return os.path.join(os.environ['PYTOM_HOME'], *paths)
+    
+    def getAverageMap(self, it):
+        return self._getExtraPath('average_iter%d.em' % it)
+    
+    def getVolumesSqlite(self, it):
+        volsXml = self._getExtraPath('aligned_pl_iter%d.xml' % it)
+        volsSqlite = volsXml + '.sqlite'
+        
+        if not os.path.exists(volsSqlite):
+            writeVolumesSqlite(volsXml, volsSqlite)
+            
+        return volsSqlite
     

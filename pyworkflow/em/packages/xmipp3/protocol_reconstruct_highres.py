@@ -208,6 +208,12 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         self._insertFunctionStep('doIteration000', self.inputVolumes.getObjId())
         self.iteration=1
         self.insertIteration(self.iteration)
+        self.iteration=2
+        self.insertIteration(self.iteration)
+        self.iteration=3
+        self.insertIteration(self.iteration)
+        self.iteration=4
+        self.insertIteration(self.iteration)
     
     def insertIteration(self,iteration):
         self._insertFunctionStep('globalAssignment',iteration)
@@ -225,6 +231,8 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         self.runJob('xmipp_metadata_utilities','-i %s --fill image1 constant noImage'%self.imgsFn,numberOfMpi=1)
         self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "image1=image"'%self.imgsFn,numberOfMpi=1)
         self.runJob('xmipp_metadata_utilities','-i %s --operate rename_column "itemId particleId"'%self.imgsFn,numberOfMpi=1)
+        imgsFnId=self._getExtraPath('imagesId.xmd')
+        self.runJob('xmipp_metadata_utilities','-i %s --operate keep_column particleId -o %s'%(self.imgsFn,imgsFnId),numberOfMpi=1)
 
     def doWeightSSNR(self):
         R=self.particleRadius.get()
@@ -302,35 +310,44 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         self.writeInfoField(fnDirCurrent,"resolution",MDL_RESOLUTION_FREQREAL,resolution)
         
         # Filter the average to that resolution
-        self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%(fnVolAvg,resolution,TsCurrent))
+        self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%(fnVolAvg,resolution,TsCurrent),numberOfMpi=1)
         self.runJob('xmipp_image_header','-i %s --sampling_rate %f'%(fnVolAvg,TsCurrent),numberOfMpi=1)
         
         # A little bit of statistics (accepted and rejected particles, number of directions, ...)
         if iteration>0:
             from xmipp import AGGR_MAX
             for i in range(1,3):
-                fnAngles = join(fnDirCurrent,"angles%02d.xmd"%i)
-                mdAngles = MetaData(fnAngles)
+                fnAnglesi = join(fnDirCurrent,"angles%02d.xmd"%i)
+                mdAngles = MetaData(fnAnglesi)
                 mdUnique    = MetaData()
-                mdUnique.aggregateMdGroupBy(mdAngles, AGGR_MAX, [MDL_WEIGHT], MDL_PARTICLE_ID, MDL_WEIGHT) 
+                mdUnique.aggregateMdGroupBy(mdAngles, AGGR_MAX, [MDL_PARTICLE_ID], MDL_WEIGHT, MDL_WEIGHT) 
                 mdUnique.sort(MDL_PARTICLE_ID)
-                fnAnglesUnique = join(fnDirCurrent,"anglesProjectionMatching%02d.xmd"%i)
+                fnAnglesUnique = join(fnDirCurrent,"imagesUsed%02d.xmd"%i)
                 mdUnique.write(fnAnglesUnique)
     
-            fnAnglesPM=join(fnDirCurrent,"anglesProjectionMatching.xmd")
-            fnAnglesPM1=join(fnDirCurrent,"anglesProjectionMatching01.xmd")
-            fnAnglesPM2=join(fnDirCurrent,"anglesProjectionMatching02.xmd")
-            self.runJob('xmipp_metadata_utilities',"-i %s --set union_all %s -o %s"%(fnAnglesPM1,fnAnglesPM2,fnAnglesPM),numberOfMpi=1)
+            fnUsed=join(fnDirCurrent,"imagesUsed.xmd")
+            fnUsed1=join(fnDirCurrent,"imagesUsed01.xmd")
+            fnUsed2=join(fnDirCurrent,"imagesUsed02.xmd")
+            self.runJob('xmipp_metadata_utilities',"-i %s --set union_all %s -o %s"%(fnUsed1,fnUsed2,fnUsed),numberOfMpi=1)
+            cleanPath(fnUsed1)
+            cleanPath(fnUsed2)
+            fnAngles=join(fnDirCurrent,"angles.xmd")
+            fnUsedId=join(fnDirCurrent,"imagesUsedId.xmd")
+            self.runJob('xmipp_metadata_utilities',"-i %s --operate keep_column particleId -o %s"%(fnUsed,fnUsedId),numberOfMpi=1)
+            self.runJob('xmipp_metadata_utilities',"-i %s --set natural_join %s"%(fnUsed,fnAngles),numberOfMpi=1)
     
             fnImages=self._getExtraPath("images.xmd")
-            fnAnglesRejected=join(fnDirCurrent,"anglesRejected.xmd")
-            self.runJob('xmipp_metadata_utilities',"-i %s --set subtraction %s -o %s"%(fnImages,fnAnglesPM,fnAnglesRejected),numberOfMpi=1)
+            fnImagesId=self._getExtraPath('imagesId.xmd')
+            fnImagesRejected=join(fnDirCurrent,"imagesRejected.xmd")
+            self.runJob('xmipp_metadata_utilities',"-i %s --set subtraction %s particleId -o %s"%(fnImagesId,fnUsedId,fnImagesRejected),numberOfMpi=1)
+            self.runJob('xmipp_metadata_utilities',"-i %s --set natural_join %s"%(fnImagesRejected,fnImages),numberOfMpi=1)
+            cleanPath(fnUsedId)
     
             from pyworkflow.em.metadata.utils import getSize
             Nimages=getSize(fnImages)
             Nrepeated=getSize(join(fnDirCurrent,"angles.xmd"))
-            Nunique=getSize(fnAnglesPM)
-            Nrejected=getSize(fnAnglesRejected)
+            Nunique=getSize(fnUsed)
+            Nrejected=getSize(fnImagesRejected)
             
             fh=open(join(fnDirCurrent,"statistics.txt"),'w')
             fh.write("Number of input    images: %d\n"%Nimages)
@@ -744,7 +761,21 @@ class XmippProtReconstructHighRes(ProtRefine3D):
 
     def cleanDirectory(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
-        # COSS: Falta clean
+        if self.saveSpace:
+            fnGlobal=join(fnDirCurrent,"globalAssignment")
+            fnLocal=join(fnDirCurrent,"localAssignment")
+            if exists(fnGlobal):
+                cleanPath(join(fnGlobal,"images.stk"))
+            for i in range(1,3):
+                if exists(fnGlobal):
+                    cleanPath(join(fnGlobal,"images%02d.xmd"%i))
+                    cleanPath(join(fnGlobal,"significant%02d"%i))
+                    cleanPath(join(fnGlobal,"volumeRef%02d.vol"%i))
+                if exists(fnLocal):
+                    cleanPath(join(fnGlobal,"images%02d.xmd"%i))
+                    cleanPath(join(fnGlobal,"anglesCont%02d.stk"%i))
+                    cleanPath(join(fnGlobal,"anglesDisc%02d.xmd"%i))
+                    cleanPath(join(fnGlobal,"volumeRef%02d.vol"%i))
     
     def decideNextIteration(self, iteration):
         # COSS: Falta un criterio para decidir si otra iteracion

@@ -301,8 +301,13 @@ class Environment():
         t.buildDir = buildDir
         t.buildPath = buildPath
 
-        t.addCommand(self._downloadCmd % (tarFile, url),
-                     targets=tarFile)
+        if url.startswith('file:'):
+            t.addCommand('ln -s %s %s' % (url.replace('file:', ''), tar),
+                         targets=tarFile,
+                         cwd=downloadDir)
+        else:
+            t.addCommand(self._downloadCmd % (tarFile, url),
+                         targets=tarFile)
         t.addCommand(self._tarCmd % tar,
                      targets=buildPath,
                      cwd=downloadDir)

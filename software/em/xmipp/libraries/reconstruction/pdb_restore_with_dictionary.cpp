@@ -97,7 +97,7 @@ void ProgRestoreWithPDBDictionary::run()
 			for (int j=patchSize_2; j<(int)ZSIZE(mV)-patchSize_2; ++j)
 			{
 				 ++Npatches;
-				 mV.window(patchLow,k,i,j,k+patchSize-1,i+patchSize-1,j+patchSize-1);
+				 mV.window(patchLow,k-patchSize_2,i-patchSize_2,j-patchSize_2,k+patchSize_2,i+patchSize_2,j+patchSize_2);
 				 STARTINGX(patchLow)=STARTINGY(patchLow)=STARTINGZ(patchLow)=0;
 
 				double minPatchLow, maxPatchLow, meanPatchLow, stdPatchLow=0;
@@ -109,13 +109,16 @@ void ProgRestoreWithPDBDictionary::run()
 				{
 					++NcandidatePatches;
 					patchLowNormalized=patchLow;
-					patchLowNormalized*=1.0/sqrt(patchLow.sum2());
+					double norm=sqrt(patchLow.sum2());
+					patchLowNormalized*=1.0/norm;
 					size_t idxTransf=canonicalOrientation(patchLowNormalized,canonicalPatch,canonicalSignature);
 					selectDictionaryPatches(canonicalPatch, canonicalSignature, selectedPatchesIdx, weight);
 					if (selectedPatchesIdx.size()>0)
 					{
 						R2=approximatePatch(canonicalPatch,selectedPatchesIdx,weight,alpha);
 					    reconstructPatch(idxTransf,selectedPatchesIdx,alpha,patchHigh);
+					    patchHigh*=norm;
+					    R2*=norm;
 //						Image<double> save;
 //						save()=patchLow;
 //						save.write("PPPlow.vol");

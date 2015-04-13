@@ -36,9 +36,11 @@ from convert import readSetOfVolumes
 
 
 class ProtPyTomImport(em.ProtImport):
-    """ Subtomogram averaging using pytom autofocus """
-    _label = 'frm 3d align'
-
+    """ Import a particle list of subtomograms
+    in the PyTom format. (xml file).
+    """
+    _label = 'import'
+    
     #--------------------------- DEFINE param functions --------------------------------------------
     
     def _defineParams(self, form):
@@ -80,9 +82,6 @@ class ProtPyTomImport(em.ProtImport):
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
-        """ Check that some preconditions are met before launching 
-        the auto-focus classification run. 
-        """
         errors = []
         return errors
         

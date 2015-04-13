@@ -72,8 +72,6 @@ public class XmippWindowUtil
 	public static void setLocation(double positionx, double positiony, Window w)
 	{
             GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-            
-            
             setLocation(positionx, positiony, w, gd.getDefaultConfiguration().getBounds());
 	}
 

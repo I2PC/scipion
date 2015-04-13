@@ -123,9 +123,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
     def _processMovie(self, movieId, movieName, movieFolder):
         
         movieName = os.path.join(movieFolder, movieName)
-        if self.doRemoveDust:
-            self._runNoDust(movieName)
-        
+
         boxSize = self.boxSize.get()
         # Read movie dimensions to iterate through each frame
         imgh = ImageHandler()
@@ -170,7 +168,11 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
             if hasCoordinates:
                 self.info("Writing frame: %s" % frameName)
                 imgh.convert(tuple([i, movieName]), frameName)
-                 
+
+                if self.doRemoveDust:
+                    self.info("Removing Dust")
+                    self._runNoDust(frameName)
+
                 self.info("Extracting particles")
                 frameImages = frameRoot + '_images'
                 args = '-i %(frameName)s --pos %(coordinatesName)s -o %(frameRoot)s --Xdim %(boxSize)d' % locals()
@@ -214,13 +216,10 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
             self._runNormalize(movieStk)
 
     
-    def _runNoDust(self, movieName):
-        fnNoDust = movieName + "_noDust.stk"
-        thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
-        args=" -i %(movieName)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f" % locals()
+    def _runNoDust(self, frameName):
+        args=" -i %s -o %s --bad_pixels outliers %f" % (frameName,frameName,self.thresholdDust.get())
         self.runJob("xmipp_transform_filter", args)
-        ImageHandler().convertStack(fnNoDust, movieName)
-    
+
     def _runNormalize(self, stack):
         program = "xmipp_transform_normalize"
         args = "-i %(stack)s "

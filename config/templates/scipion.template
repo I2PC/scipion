@@ -1,3 +1,5 @@
+# -*- conf -*-
+
 # All relative paths will have $SCIPION_HOME as their root.
 
 [DIRS_LOCAL]
@@ -36,13 +38,10 @@ CHIMERA_HEADLESS_HOME = %(EM_ROOT)s/chimera_headless
 VMD_HOME = %(EM_ROOT)s/vmd
 
 
-
-# This section of the configuration file is used to setup
-# variable to compile from sources, in most cases you don't 
-# want to change it.
+# This section of the configuration file is used to setup variables to
+# compile from sources. Most of them you won't want to change.
 
 [BUILD]
-
 # C++ variables
 CC = gcc
 CXX = g++
@@ -67,3 +66,11 @@ JAVA_BINDIR = %(JAVA_HOME)s/bin
 JAVAC = %(JAVA_BINDIR)s/javac
 JAR = %(JAVA_BINDIR)s/jar
 JNI_CPPPATH = %(JAVA_HOME)s/include:%(JAVA_HOME)s/include/linux
+
+# Modules to compile
+GTEST = False
+CUDA = False
+RELEASE = True
+DEBUG = False
+MATLAB = False
+OPENCV = True
