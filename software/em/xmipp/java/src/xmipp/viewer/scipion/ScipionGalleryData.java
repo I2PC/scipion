@@ -6,11 +6,13 @@
 package xmipp.viewer.scipion;
 
 import xmipp.utils.ScipionParams;
+
 import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import xmipp.ij.commons.Geometry;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
@@ -194,7 +196,7 @@ public class ScipionGalleryData extends GalleryData {
 
     public boolean hasClasses()//for Scipion usage only
     {
-        return mdBlocks.length > 1 && ((ScipionMetaData) md).getSelf().contains("Class");
+        return mdBlocks.length > 1 && ((ScipionMetaData) md).getSetType().contains("SetOfClasses");
     }
 
     public boolean hasMicrographParticles() {
@@ -204,8 +206,6 @@ public class ScipionGalleryData extends GalleryData {
     public List<ScipionMetaData.EMObject> getEMObjects() {
         return ((ScipionMetaData)md).getEMObjects();
     }
-
-    
 
     /**
      * This is only needed for metadata table galleries
@@ -223,27 +223,12 @@ public class ScipionGalleryData extends GalleryData {
         ((ScipionMetaData) md).overwrite(filename, path, selection);
     }
 
-    public String getScipionType() {
-        if (hasClasses()) {
-            return "Particle";
-        }
-        String self = ((ScipionMetaData) md).getSelf();
-        
-        return self;
-    }
-
-    public String getSelf() {
-
-        return ((ScipionMetaData) md).getSelf();
-    }
+    
 
     public String getPreffix() {
         return ((ScipionMetaData) md).getPreffix();
     }
     
-   
-    
-        
     @Override
     public void removeCTF(int row) {
         ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObjects().get(row);
@@ -252,8 +237,6 @@ public class ScipionGalleryData extends GalleryData {
         super.removeCTF(row);
         window.fireTableRowsUpdated(row, row);
     }
-
-    
 
     public String createSortFile(String psdFile, int row) {
         return null;
@@ -284,8 +267,6 @@ public class ScipionGalleryData extends GalleryData {
     {
         return ((ScipionMetaData)md).getGeoMatrixColumn();
     }
-    
-   
     
     public Geometry getGeometry(long id)
     {
@@ -465,6 +446,8 @@ public class ScipionGalleryData extends GalleryData {
         String command = String.format("rotate_matrix '%s'", geo.getMatrix());
         return command;
     }
+
+	
     
     
     
