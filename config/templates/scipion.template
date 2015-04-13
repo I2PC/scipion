@@ -66,3 +66,11 @@ JAVA_BINDIR = %(JAVA_HOME)s/bin
 JAVAC = %(JAVA_BINDIR)s/javac
 JAR = %(JAVA_BINDIR)s/jar
 JNI_CPPPATH = %(JAVA_HOME)s/include:%(JAVA_HOME)s/include/linux
+
+# Modules to compile
+GTEST = False
+CUDA = False
+RELEASE = True
+DEBUG = False
+MATLAB = False
+OPENCV = True

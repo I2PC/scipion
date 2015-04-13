@@ -34,29 +34,20 @@ from glob import glob
 
 Import('env')
 
-AddOption('--no-opencv', dest='opencv', action='store_false',
-          help='Avoid compilation of opencv programs')
-AddOption('--no-scipy', dest='scipy', action='store_false',
-          help='Avoid compilation with scipy support')
-
-# Define some variables used by Scons, note that some of 
-# the variables will be passed by Scipion in the environment (env) by
-# 
+# Define some variables used by Scons. Note that some of
+# the variables will be passed by Scipion in the environment (env).
 
 env['CUDA_SDK_PATH'] = os.environ.get('CUDA_SDK_PATH', '')
 env['CUDA_LIB_PATH'] = os.environ.get('CUDA_LIB_PATH', '')
 
-gtest = False#True
-cuda = False
-release = True
-debug = False
-# profile = False
-# warn = False
-# fast = False
-# quiet = True
-matlab = False  # TODO: change and use something like GetOption('matlab')
-opencv = env.GetOption('opencv')  # TODO: change and use something like GetOption('opencv')
+get = lambda x: os.environ.get(x, '0').lower() in ['true', 'yes', 'y', '1']
 
+gtest = get('GTEST')
+cuda = get('CUDA')
+release = get('RELEASE')
+debug = get('DEBUG')
+matlab = get('MATLAB')
+opencv = get('OPENCV')
 
 # Read some flags
 CYGWIN = env['PLATFORM'] == 'cygwin'
