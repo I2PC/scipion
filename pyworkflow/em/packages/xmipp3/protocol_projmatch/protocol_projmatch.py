@@ -213,6 +213,8 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         errors = []
         if self.doCTFCorrection and not self.doAutoCTFGroup and not exists(self.setOfDefocus.get()):
             errors.append("Error: for non-automated ctf grouping, please provide a docfile!")
+        if self.numberOfMpi<=1:
+            errors.append("The number of MPI processes has to be larger than 1")
         return errors
     
     def _citations(self):
