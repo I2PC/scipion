@@ -1,0 +1,88 @@
+_______________________
+
+Analyzing normal modes.
+_______________________
+
+The normal mode file format must be the "CERFACS" one,
+as produced by the programs diagstd, diagrtb or Blzpack.
+(diagstd is provided with pdbmat, for computing modes
+using Tirion's model)
+
+*****************
+A few references:
+*****************
+
+M.M. Tirion (1996):
+"Large amplitude elastic motions in proteins from
+a single-parameter, atomic analysis",
+Phys. Rev. letters vol.77(9), p1905-1908.
+
+I. Bahar, A.R., Atilgan, B. Erman, B (1997):
+"Direct evaluation of thermal fluctuations in proteins
+using a single-parameter harmonic potential",
+Folding & Design vol.2, p173-181.
+
+K. Hinsen (1998):
+"Analysis of domain motions by approximate normal mode calculations",
+Proteins vol.33, p417-429.
+
+F. Tama, Y.H. Sanejouand (2001):
+"Conformational change of proteins arising 
+from normal modes calculations"
+Protein Engineering vol.14, p1-6.
+
+M. Delarue , Y.H. Sanejouand (2002): 
+"Simplified normal mode analysis of conformational transitions in
+DNA-dependant polymerases: the Elastic Network Model", 
+J. Mol. Biol. vol.320, p1011-1024. 
+ 
+*********
+PROGRAMS: 
+*********
+
+To compile them:
+----------------
+Under Linux, just type:
+COMPILE
+Otherwise, you have to modify the Makefile:
+Get rid of the "#" corresponding to your computer, and add some
+to the lines corresponding to the Linux case.
+
+What they do:
+-------------
+
+bfactors:
+       Harmonic B-factors from modes.
+       Output: "bfactors.pred".
+
+rms_mode:
+       Pick a normal mode.
+       Outputs: "rmsmod.res" and "eigvec.res".
+
+proj_modes: 
+       Project a "reference structure->other conformer vector" on modes.
+       Can displace a structure along a given normal mode.
+       Outputs: "dr.res" and "projmod.res".
+
+       Remember that if the reference structure is the one for which 
+       modes have been calculated -with the same associated atomic masses !-
+       and if there is not net global translation or rotation
+       between the "other conformer" and the "reference structure",
+       that is, if the "other conformer" has been fitted on the
+       "reference structure", using the Profit program for instance,
+       which is available on the Web, then, projections on the six 
+       rotation-tranlation modes should be numerically null)
+
+check_modes:
+       Check eigenvector norms (has to be one).
+       Yields the degree of collectivity for each eigenvector. 
+       Output: "Chkmod.res".
+
+traj_modes:
+       Yields trajectories corresponding to normal mode motions,
+       in "CHARMM" format (.DCD).
+      (this is an old program, presently in a bad shape)
+
+trans_modes:
+       Translates a "CHARMM" normal mode file into a "CERFACS" one.
+
