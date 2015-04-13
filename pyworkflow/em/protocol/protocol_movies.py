@@ -90,7 +90,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 from pyworkflow.em.convert import ImageHandler
                 from os.path import join
                 movieFolder = self._getMovieFolder(movie.getObjId())
-                movieName = join(movieFolder, movie.getFileName())
+                print("self._getPath()",self._getPath())
+                movieName = join(self._getPath(),movieFolder, movie.getFileName())
                 imgh = ImageHandler()
                 print("movieFolder",movieFolder)
                 print("movieName",movieName)
