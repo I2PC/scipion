@@ -108,8 +108,20 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             
             if movieMrc.endswith('.em'):
                 movieMrc = movieMrc + ":ems"
-            
-            self._processMovie(movieId, movieMrc, movieFolder)
+
+            #retrive shifts here so there is no conflict
+            #if the object is accessed inside at the same time by multiple threads
+            movie = self.inputMovies.get()[movieId]
+            if self.applyAlignment and movie.hasAlignment():
+                shifts = movie.getAlignment().getShifts()
+            else:
+                # Read movie dimensions to iterate through each frame
+                from pyworkflow.em.convert import ImageHandler
+                imgh = ImageHandler()
+                x, y, z, n = imgh.getDimensions(movieName)
+                shifts = [0] * (2*n)
+            ####end of thread
+            self._processMovie(movieId, movieMrc, movieFolder,shifts)
             
             if self.cleanMovieData:
                 cleanPath(movieFolder)
