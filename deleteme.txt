@@ -1,0 +1,2 @@
+total 0
+-rw-r--r-- 1 joton bioinfo 0 Apr 13 12:09 deleteme.txt
