@@ -203,7 +203,7 @@ class ProtMovieAlignment(ProtProcessMovies):
 
     #--------------------------- UTILS functions ---------------------------------------------------
 
-    def _processMovie(self, movieId, movieName, movieFolder):
+    def _processMovie(self, movieId, movieName, movieFolder,shifts):
         """ Process the movie actions, remember to:
         1) Generate all output files inside movieFolder (usually with cwd in runJob)
         2) Copy the important result files after processing (movieFolder will be deleted!!!)
@@ -439,20 +439,20 @@ def movieCreatePlot(plotType, movie, saveFig):
 
 
 
-class ProtMovieAlignmentWeb(ProtMovieAlignment):
-    """ Aligns a set of volumes using cross correlation.
-    Based on Xmipp protocol for aligning volumes, but
-    the parameters are restricted for ease of use.
-    """
-    _label = 'movie alignment web'
-    
-    def _defineParams(self, form):
-        ProtMovieAlignment._defineParams(self, form)
-        
-        gpuParamsGroup = form.getParam('GPU')
-        gpuParamsGroup.config(condition='False')
-        
-    def getOutputFiles(self):
-        # Redefine the default method to avoid download of movie files
-        return self.outputMicrographs.getFiles()
+#class ProtMovieAlignmentWeb(ProtMovieAlignment):
+#    """ Aligns a set of volumes using cross correlation.
+#    Based on Xmipp protocol for aligning volumes, but
+#    the parameters are restricted for ease of use.
+#    """
+#    _label = 'movie alignment web'
+#    
+#    def _defineParams(self, form):
+#        ProtMovieAlignment._defineParams(self, form)
+#        
+#        gpuParamsGroup = form.getParam('GPU')
+#        gpuParamsGroup.config(condition='False')
+#        
+#    def getOutputFiles(self):
+#        # Redefine the default method to avoid download of movie files
+#        return self.outputMicrographs.getFiles()
         
