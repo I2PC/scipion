@@ -505,31 +505,32 @@ void CTFDescription::lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> 
 #undef DEBUG
 
 /* Apply the CTF to an image ----------------------------------------------- */
-void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI)
+void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI, double Ts)
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
     if ( ZSIZE(FFTI) > 1 )
         REPORT_ERROR(ERR_MULTIDIM_DIM,"ERROR: Apply_CTF only works on 2D images, not 3D.");
 
+    double iTs=1.0/Ts;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(FFTI)
     {
         XX(idx) = j;
         YY(idx) = i;
         FFT_idx2digfreq(FFTI, idx, freq);
-        precomputeValues(XX(freq), YY(freq));
+        precomputeValues(XX(freq)*iTs, YY(freq)*iTs);
         double ctf = getValueAt();
         A2D_ELEM(FFTI, i, j) *= ctf;
     }
 }
 
-void CTFDescription::applyCTF(MultidimArray <double> &I)
+void CTFDescription::applyCTF(MultidimArray <double> &I, double Ts)
 {
 	FourierTransformer transformer;
 	MultidimArray<double> FFTI;
 	transformer.setReal(I);
 	transformer.FourierTransform();
-	applyCTF(transformer.fFourier);
+	applyCTF(transformer.fFourier, Ts);
 	transformer.inverseFourierTransform();
 }
 

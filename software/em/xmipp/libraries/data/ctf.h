@@ -640,10 +640,10 @@ public:
     void lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> &freq, int iwhat=0);
 
     /// Apply CTF to an image
-    void applyCTF(MultidimArray < std::complex<double> > &FFTI);
+    void applyCTF(MultidimArray < std::complex<double> > &FFTI, double Ts);
 
     /// Apply CTF to an image
-    void applyCTF(MultidimArray <double> &I);
+    void applyCTF(MultidimArray <double> &I, double Ts);
 
     /** Generate CTF image.
         The sample image is used only to take its dimensions. */
