@@ -125,28 +125,28 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			int type = ci.type;
 			MetaData md = data.md;
 			switch (type) {
-			case MetaData.LABEL_INT:
-                            
-				int value = md.getValueInt(label, id);
-				// treat special case of MDL_ENABLED
-				if (ci.isEnable())
-					return (value > 0);
-				return value;
-			case MetaData.LABEL_BOOL:
-				return md.getValueBoolean(label, id);
-			case MetaData.LABEL_DOUBLE:
-				return md.getValueDouble(label, id);
-			case MetaData.LABEL_SIZET:
-				return md.getValueLong(label, id);
-			case MetaData.LABEL_STRING:
-                                String str = md.getValueString(label, data.ids[row]);
-                                if (ci.labelName.contains("_transform._matrix"))
-                                    return String.format("<html>%s</html>", XmippUtil.formatNumbers(str).replace("],", "]<br>"));
-
-				return str;
-			case MetaData.LABEL_VECTOR_DOUBLE:
-			case MetaData.LABEL_VECTOR_SIZET:
-				return md.getValueString(label, data.ids[row]);
+				case MetaData.LABEL_INT:
+	                            
+					int value = md.getValueInt(label, id);
+					// treat special case of MDL_ENABLED
+					if (ci.isEnable())
+						return (value > 0);
+					return value;
+				case MetaData.LABEL_BOOL:
+					return md.getValueBoolean(label, id);
+				case MetaData.LABEL_DOUBLE:
+					return md.getValueDouble(label, id);
+				case MetaData.LABEL_SIZET:
+					return md.getValueLong(label, id);
+				case MetaData.LABEL_STRING:
+	                                String str = md.getValueString(label, data.ids[row]);
+	                                if (ci.labelName.contains("_transform._matrix"))
+	                                    return String.format("<html>%s</html>", XmippUtil.formatNumbers(str).replace("],", "]<br>"));
+	
+					return str;
+				case MetaData.LABEL_VECTOR_DOUBLE:
+				case MetaData.LABEL_VECTOR_SIZET:
+					return md.getValueString(label, data.ids[row]);
 
 			}
 			return null;
@@ -220,11 +220,11 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	public boolean isCellEditable(int row, int column) {
-            ColumnInfo ci = visibleLabels.get(column);
-            if(ci.isEnable())
-                return ci.allowEdit;//maybe on metadatas sometimes is disabled
-            if(data.isScipionInstance() || data.isChimeraClient())
-                    return false;
+        ColumnInfo ci = visibleLabels.get(column);
+        if(ci.isEnable())
+            return ci.allowEdit;//maybe on metadatas sometimes is disabled
+        if(data.isScipionInstance() || data.isChimeraClient())
+                return false;
 		
 		return ci.allowEdit && !ci.render;
 	}
@@ -241,25 +241,24 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			ColumnInfo ci = visibleLabels.get(col);
                         
 			if (ci.allowRender && data.isImageFile(ci)) {
-                                int index = getIndex(row, col);
-                                String file = getImageFilename(index, renderLabel.label);
-                                if(Filename.isVolume(file))
-                                    ImagesWindowFactory.openMetadata(file, new Params(), Params.OPENING_MODE_GALLERY);
-                                else
-                                    openXmippImageWindow(index, ci.label);
+                int index = getIndex(row, col);
+                String file = getImageFilename(index, renderLabel.label);
+                if(Filename.isVolume(file))
+                    ImagesWindowFactory.openMetadata(file, new Params(), Params.OPENING_MODE_GALLERY);
+                else
+                    openXmippImageWindow(index, ci.label);
 				return true;
 			}
-                        if(data.isChimeraClient())//
-                        {
-                            String cmd = data.getChimeraProjectionCmd(row);
-                            
-                            XmippWindowUtil.runCommand(cmd, data.parameters.getChimeraPort());
-                        }
+            if(data.isChimeraClient())//
+            {
+                String cmd = data.getChimeraProjectionCmd(row);
+                XmippWindowUtil.runCommand(cmd, data.parameters.getChimeraPort());
+            }
 		} catch (Exception e) {
-                        if(e.getMessage() == null)
-                            e.printStackTrace();
-                        else
-                            XmippDialog.showError(null, e.getMessage());
+            if(e.getMessage() == null)
+                e.printStackTrace();
+            else
+                XmippDialog.showError(null, e.getMessage());
 			
 		}
 		return false;

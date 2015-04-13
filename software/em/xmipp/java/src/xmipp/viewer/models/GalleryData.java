@@ -1921,4 +1921,23 @@ public class GalleryData {
         {
             return parameters.getChimeraPort() != null;
         }
+        
+        public boolean hasDisabled()
+        {
+        	for(int i = 0; i < ids.length; i ++)
+        		if(!isEnabled(i))
+        			return true;
+        	return false;
+        }
+
+		public int getEnabledCount()
+		{
+			int count = 0;
+			for(int i = 0; i < ids.length; i ++)
+        		if(isEnabled(i))
+        			count ++;
+			return count;
+		}
+        
+        
 }// class GalleryDaa
