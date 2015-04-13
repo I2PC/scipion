@@ -83,24 +83,27 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             #retrive shifts here so there is no conflict
             #if the object is accessed inside at the same time by multiple threads
             #NOTE self.applyAlignment only exists in extract movies
-            if self.applyAlignment and movie.hasAlignment():
-                shifts = movie.getAlignment().getShifts()
-                print("movie name", movie.getFileName())
-                print("shifts",shifts)
-            else:
-                # Read movie dimensions to iterate through each frame
-                from pyworkflow.em.convert import ImageHandler
-                from os.path import join
-                movieFolder = self._getMovieFolder(movie.getObjId())
-                from os import getcwd
-                print("getcwd()",getcwd())
-                movieName = join(movieFolder, movie.getFileName())
-                imgh = ImageHandler()
-                print("movieFolder",movieFolder)
-                print("movieName",movieName)
-                x, y, z, n = imgh.getDimensions(movieName)
-                print("x, y, z, n",x, y, z, n)
-                shifts = [0] * (2*n)
+            try:
+                if self.applyAlignment and movie.hasAlignment():
+                    shifts = movie.getAlignment().getShifts()
+                    print("movie name", movie.getFileName())
+                    print("shifts",shifts)
+                else:
+                    # Read movie dimensions to iterate through each frame
+                    from pyworkflow.em.convert import ImageHandler
+                    from os.path import join
+                    movieFolder = self._getMovieFolder(movie.getObjId())
+                    from os import getcwd
+                    print("getcwd()",getcwd())
+                    movieName =  movie.getFileName()
+                    imgh = ImageHandler()
+                    print("movieName",movieName)
+                    x, y, z, n = imgh.getDimensions(movieName)
+                    print("x, y, z, n",x, y, z, n)
+                    shifts = [0] * (2*n)
+            except NameError:
+                shifts=None
+
             ####end of thread
 
             movieStepId = self._insertFunctionStep('processMovieStep',
@@ -171,7 +174,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def _getLogFile(self, movieId):
         return 'micrograph_%06d_Log.txt' % movieId
 
-    def _processMovie(self, movieId, movieName, movieFolder):
+    def _processMovie(self, movieId, movieName, movieFolder,shifts):
         """ Process the movie actions, remember to:
         1) Generate all output files inside movieFolder (usually with cwd in runJob)
         2) Copy the important result files after processing (movieFolder will be deleted!!!)
