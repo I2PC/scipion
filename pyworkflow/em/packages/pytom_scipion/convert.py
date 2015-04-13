@@ -63,9 +63,9 @@ def getEnviron():
                '$SCIPION_HOME/software/em/pytom instead.')
         PYTOM_HOME = '%s/software/em/pytom' % os.environ['SCIPION_HOME']
     environ.update({
-                    'LD_LIBRARY_PATH': os.pathsep.join([
-                                       os.path.join(PYTOM_HOME, 'pytomc/libs/libtomc/libs'),
-                                       os.path.join(PYTOM_HOME, 'pytomc/sh_alignment/SpharmonicKit27')]),
+#                    'LD_LIBRARY_PATH': os.pathsep.join([
+#                                       os.path.join(PYTOM_HOME, 'pytomc/libs/libtomc/libs'),
+#                                       os.path.join(PYTOM_HOME, 'pytomc/sh_alignment/SpharmonicKit27')]),
                     'PATH': os.path.join(PYTOM_HOME, 'bin'),
                     'PYTHONPATH': os.pathsep.join(getPyTomPaths())
                     }, 
