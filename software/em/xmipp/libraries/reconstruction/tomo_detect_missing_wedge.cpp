@@ -48,7 +48,7 @@ double evaluatePlane(double rot, double tilt,
         Euler_angles2matrix(rotPos,tiltPos,0,Epos);
         double angle=acos(E(2,0)*Epos(2,0)+E(2,1)*Epos(2,1)+E(2,2)*Epos(2,2));
         angle=RAD2DEG(angle);
-        if (ABS(angle)<20 || ABS(180-angle)<20)
+        if (fabs(angle)<20 || fabs(180-angle)<20)
             return 0;
     }
 
@@ -65,7 +65,9 @@ double evaluatePlane(double rot, double tilt,
     {
         XX(freq)=ix*df;
         double fx2=XX(freq)*XX(freq);
-        for (double iy=-N; iy<=N; iy++)
+        if (fx2>maxFreq2)
+            continue;
+        for (double iy=-(int)N; iy<=N; iy++)
         {
             YY(freq)=iy*df;
             double fx2fy2=fx2+YY(freq)*YY(freq);
@@ -107,7 +109,7 @@ double evaluatePlane(double rot, double tilt,
                 else
                     negativeSum=iz>0;
                 double val=A3D_ELEM(*Vmag,ZZ(idx),YY(idx),XX(idx));
-                if (negativeSum ^ inverted) // XOR
+                if ((negativeSum && !inverted) || (!negativeSum && inverted)) // XOR
                 {
                     sumNeg+=val;
                     Nneg++;
