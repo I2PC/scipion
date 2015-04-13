@@ -141,14 +141,14 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         #this section has been moved to the main part to avoid
         # conflicts between threads
         ###DELETE
-        movie = self.inputMovies.get()[movieId]
+        #movie = self.inputMovies.get()[movieId]
         #### move this to main
-        if self.applyAlignment and movie.hasAlignment():
-            shifts = movie.getAlignment().getShifts()
-            print("movieName shift", movieName, shifts)
-        else:
-            shifts = [0] * (2*n)
-            print("movieName shift", movieName, shifts)
+        #if self.applyAlignment and movie.hasAlignment():
+        #    shifts = movie.getAlignment().getShifts()
+        #    print("movieName shift", movieName, shifts)
+        #else:
+        #    shifts = [0] * (2*n)
+        #    print("movieName shift", movieName, shifts)
         ####  END delete
         stkIndex = 0
         movieStk = self._getMovieName(movieId, '.stk')
@@ -292,7 +292,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         ##### import em abre una nueva conexion?
         #TODO ROB move this import to the header
         from pyworkflow.em import SetOfCoordinates
-        coordinates = SetOfCoordinates(filename=self.inputCoordinates.get().getFilename())
+        coordinates = SetOfCoordinates(filename=self.inputCoordinates.get().getFileName())
         #####coordinates = self.inputCoordinates.get()
         #####micrograph = coordinates.getMicrographs()[movieId]
          
