@@ -34,7 +34,6 @@ import xmipp.viewer.windows.GalleryJFrame;
 public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private String type;
-    private String self;
     private int port;
     private JButton cmdbutton;
     private String sqlitefile;
@@ -51,30 +50,23 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private static final String runProtCreateSubset = "run protocol ProtUserSubSet inputObject=%s sqliteFile='%s','%s' outputClassName=%s other='%s' label='%s'";
     
    
-
-    
-    
     public ScipionGalleryJFrame(ScipionGalleryData data) {
         super(data);
         readScipionParams((ScipionParams)data.parameters);
         setScipionImageIcon();
-        
     }
       
     private void setScipionImageIcon()
     {
-        
             Image img = XmippResource.getIcon("scipion_logo.png").getImage();
             setIconImage(img);
-
     }
 
     protected void readScipionParams(ScipionParams parameters)
     {
         try {
-            self = ((ScipionGalleryData)data).getSelf();
             setType = ((ScipionMetaData)data.getMd()).getSetType();
-            type = ((ScipionGalleryData)data).getScipionType() + "s";
+            type = data.hasClasses()? "Particles": setType.replace("SetOf", "");
             port = parameters.port;
             inputid = parameters.inputid;
             String filename = data.getFileName();
@@ -88,11 +80,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
             throw new IllegalArgumentException(ex.getMessage());
         }
-    }
-    
-    protected boolean isClass2D()
-    {
-        return self.equals("Class2D");
     }
     
     protected void initComponents() {
@@ -135,7 +122,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     }
                 });
                 
-                String repText = isClass2D() ? "Create Averages": "Create Volumes";
+                String repText = setType.equals("SetOfClasses2D") ? "Create Averages": "Create Volumes";
                 representativesbt = XmippWindowUtil.getScipionIconButton(repText);
                 representativesbt.addActionListener(new ActionListener() {
 
@@ -186,7 +173,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 buttonspn.add(ctfsubsetbt);
                 buttonspn.add(recalculatectfbt);
             }
-            if(self.equals("Volume") || self.equals("Class3D"))
+            if(setType.equals("SetOfVolumes") || setType.equals("SetOfClasses3D"))
             {
                 createvolbt = XmippWindowUtil.getScipionIconButton("Create Volume");
                 createvolbt.addActionListener(new ActionListener() {
@@ -244,15 +231,16 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             boolean[] selection = gallery.getSelection();
             for(ScipionMetaData.EMObject emo: ((ScipionGalleryData)data).getEMObjects())
             {
-                if(gallery.hasSelection())
-                { if(selection[emo.index] && emo.childmd != null)
-                    size += emo.childmd.size();
+                if(gallery.hasSelection() && !data.hasDisabled())
+                { 
+                	if(selection[emo.index] && emo.childmd != null)
+                		size += emo.childmd.size();
                 }
                 else if(emo.isEnabled() && emo.childmd != null)
                     size += emo.childmd.getEnabledCount();
             }
         }
-        else if (gallery.hasSelection())
+        else if (gallery.hasSelection() && !data.hasDisabled())
             size = gallery.getSelectionCount();
         else
             size = ((ScipionGalleryData)data).getEnabledCount();
@@ -268,8 +256,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     protected void createSubsetFromClasses()
     {
-        int size = ((ScipionGalleryData)data).getEnabledCount();
-                       
         if (confirmCreate("Classes")) {
             String command = String.format(runProtCreateSubset, 
                 inputid, sqlitefile, "", setType , other, getRunLabel());
@@ -280,7 +266,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     protected void createRepresentativesSubset()
     {
         if (confirmCreate("Representatives")) {
-            String output = isClass2D()? "SetOfAverages,Representatives":"SetOfVolumes,Representatives";
+            String output = setType.equals("SetOfClasses2D")? "SetOfAverages,Representatives":"SetOfVolumes,Representatives";
             String command = String.format(runProtCreateSubset, 
             inputid, sqlitefile, "", output , other, getRunLabel());
             runCommand(command, "Creating set ...");
@@ -289,14 +275,19 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     public boolean confirmCreate(String output)
     {
-        int size = gallery.hasSelection()? gallery.getSelectionCount(): ((ScipionGalleryData)data).getEnabledCount();
+    	int size;
+    	if(!data.hasDisabled())
+    	{
+    		size = gallery.hasSelection()? gallery.getSelectionCount(): data.size();
+    	}
+    	else
+    		size = data.getEnabledCount();
         return confirmCreate(output, size);
     }
     
     public boolean confirmCreate(String output, int size)
     {
         String msg = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size == 1)?"element":"elements");
-        
         dlg = new InputFieldsMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
         return dlg.action == InputFieldsMessageDialog.OK_OPTION;
     }
@@ -336,7 +327,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         super.changeView();
         
-        if(self.equals("Volume") || self.equals("Class3D"))
+        if(setType.equals("SetOfVolumes") || setType.equals("SetOfClasses3D"))
         {
             cmdbutton.setVisible(data.isTableMode());
             createvolbt.setVisible(!data.isTableMode());
@@ -352,7 +343,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         try {
             boolean[] selection = null;
-            if(gallery.hasSelection())
+            
+            if(gallery.hasSelection() && !data.hasDisabled())
                 selection = gallery.getSelection();
             ((ScipionGalleryData)data).overwrite(sqlitefile, selection);
             XmippWindowUtil.runCommand(command, port);
