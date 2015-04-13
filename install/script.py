@@ -273,6 +273,7 @@ lxml = env.addModule(
     targets=['lxml-3.4.1*'],
     libChecks=['libxml-2.0', 'libxslt'],
     deps=[], # libxml2, libxslt],
+    incs=['/usr/include/libxml2'],
     default=False)
 # libxml2 and libxslt are checked instead of compiled because
 # they are so hard to compile right.
