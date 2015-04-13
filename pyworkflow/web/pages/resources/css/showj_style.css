@@ -1,0 +1,506 @@
+/* CSS Document */
+
+/* body > #mainContainer { height: auto; min-height: 100%; }  */
+
+/* HEADER */
+
+
+
+/* NAV (TOP MENU) */
+/* nav {
+	height: 55px;
+	width: 100%;
+	background-color: #7a0000;
+	color: #fff;
+	font: 16px Tahoma;
+}
+
+nav ul {
+	padding: 20px 15px 20px 20px;
+}
+
+nav ul li {
+	padding: 5px 10px 5px 0px;
+	display: inline;
+} */
+
+/* FOOTER */
+
+
+
+/* ASIDE (BOTTOM MENU) */
+aside {
+	height: 55px;
+ 	background: #e3e3e3; /* Old browsers */
+	background: -moz-linear-gradient(top, #e3e3e3 0%, #cccccc 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e3e3e3), color-stop(100%,#cccccc)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* IE10+ */
+	background: linear-gradient(to bottom, #e3e3e3 0%,#cccccc 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e3', endColorstr='#cccccc',GradientType=0 ); /* IE6-9 */
+	
+/* 	padding-left: 20px; */
+	
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
+	display: -webkit-flex;
+	display: flex;
+	
+	-webkit-flex-flow: row;
+	-moz-flex-flow: row;
+	-ms-flex-flow: row;
+	-o-flex-flow: row;
+	flex-flow: row;
+	
+	-webkit-flex-wrap: wrap;
+	-moz-flex-wrap: wrap;
+	-o-flex-wrap: wrap;
+	-ms-flex-wrap: wrap;
+	flex-wrap: wrap; 
+}
+
+aside button {
+	border: 0px;
+	cursor: pointer;
+	height: 27px;
+}
+
+aside form{
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
+	display: -webkit-flex;
+	display: flex;
+}
+
+aside .sectionMenu {
+	margin-right: 5px;
+	margin-left: 5px;
+	/* display: inline-block; */
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
+	display: -webkit-flex;
+	/* 	display: flex; */
+	
+	display:inline-fixed;
+	
+	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
+	
+/* 	max-height: 10px; */
+/* 	width:auto; */
+/* 	background-color: blue; */
+/* 	border: 2px solid black; */
+/* 	padding: 10px 0px; */
+}
+
+aside .subSectionMenu {
+	margin-right: 10px;
+	
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
+	display: -webkit-flex;
+/* 	display: flex; */
+	
+/* 	position: fixed; */
+	
+	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
+}
+
+aside .textMenu {
+	color: #000;
+	font: 14px Helvetica;
+/* 	margin-right: 8px; */
+}
+
+.sectionMenu>select {
+	width:7em;
+}
+
+aside #colRowMode {
+/* 	margin-right: 15px; */
+}
+
+aside .menuIcon {
+	margin-right: 5px;
+/* 	width: 17px;
+    height: 17px; */
+}
+
+aside .menuInputNumber {
+	width: 28px;
+	background-color: #FFF;
+	font: 11px Helvetica;
+	color: #000;
+	text-align: center;
+	height: 20px;
+	/* border-color: #9c0101; */
+	border-color: #A7;
+/* 	padding-right: 3px; */
+}
+
+aside .submitButton{
+    background-position:  0px 0px;
+    background-repeat: no-repeat;
+    width: 27px;
+    height: 27px; 
+	border: 0px;
+	font-size: 0px;
+	line-height: 0px
+}
+
+aside .tableOn{
+	background-image: url(/resources/showj/tableViewOn.png);
+}
+
+aside .tableOff{
+	background-image: url(/resources/showj/tableViewOff.png);
+}
+
+aside .galleryOn{
+	background-image: url(/resources/showj/galleryViewOn.png);
+}
+
+aside .galleryOff{
+	background-image: url(/resources/showj/galleryViewOff.png);
+}
+
+aside .visualizeVolOn{
+	background-image: url(/resources/showj/volumeOn.png);
+}
+
+aside .visualizeVolOff{
+	background-image: url(/resources/showj/volumeOff.png);
+}
+
+aside .arrowSectionMenu{
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
+	display: -webkit-flex;
+/* 	display: flex; */
+	
+	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
+	
+	-webkit-flex-flow: column;
+	-moz-flex-flow: column;
+	-o-flex-flow: column;
+	-ms-flex-flow: column;
+	flex-flow: column;
+	margin: 4px;
+}
+
+
+/* aside #optionsSubSectionMenu{
+	z-index: 999;
+	display:none;
+} */
+aside .arrowImage{
+	margin: 1px;
+}
+
+aside div>ul{
+	display: none;
+	list-style: none;
+ 	position: relative;
+	left: -200px;
+	float: left;
+	width: 230px;
+	top:20px;
+}
+
+aside .optionsListOn{
+	display: block;
+	z-index:1;
+} 
+aside li{
+	list-style: none;
+	float:left;
+	margin: 0 0.5em;
+	display: block;
+	width: 220px;
+	height: 20px;
+	background-color: #EAEBEC;
+	padding: 2px 10px;
+}
+
+aside li:first-child{
+	padding-top: 10px;
+}	
+aside li:last-child{
+	padding-bottom: 10px;
+}
+
+/* MAIN SECTION */
+section {
+	padding: 20px;
+	
+/* 	display: -webkit-box !important;      OLD - iOS 6-, Safari 3.1-6
+  	display: -moz-box !important;         OLD - Firefox 19- (buggy but mostly works)
+  	display: -ms-flexbox !important;      TWEENER - IE 10
+	display: -moz-flex !important;
+	display: -ms-flex !important;
+	display: -o-flex !important;
+	display: -webkit-flex !important;
+	display: flex !important;
+	
+	-webkit-flex-flow: row;
+	-moz-flex-flow: row;
+	-o-flex-flow: row;
+	-ms-flex-flow: row;
+	flex-flow: row;
+	
+	-webkit-flex-wrap: wrap;
+	-moz-flex-wrap: wrap;
+	-o-flex-wrap: wrap;
+	-ms-flex-wrap: wrap;
+	flex-wrap: wrap; */
+	
+}
+
+section .img_container {
+	padding: 2px;
+	display: inline-block;
+}
+
+section .img_container:hover {
+	border:1px solid black;
+	margin: -1px;
+/* 	background-color:black; */
+}
+
+
+section .img_inner_container{
+	position: relative; 
+}
+
+
+section .enabledGallery {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	z-index: 999;
+	display: none;
+}
+
+section .imageTitle{
+	/* position: absolute;
+	bottom: 0px;
+	left: 0;
+	z-index: 998;
+	display:none; 
+	width: 100%;*/
+	/* background-color: rgb(50, 1, 1); */
+	height: 20px;
+	color: #FFF;
+}
+
+.image_selected {
+/* 	background-color: #000; */
+	background-color: Firebrick;
+}
+
+
+.tableImages{
+	display: block;
+	margin: 0 auto;
+}
+
+.multipleSelectionToolContainer{
+	display:none;
+	z-index:999;
+/* 	background-color: #eaebec; */
+	background-color: Firebrick;;
+/* 	color: #6e6e6e; */
+	color: black;
+	
+	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
+	
+	-webkit-flex-flow: column;
+	-moz-flex-flow: column;
+	-o-flex-flow: column;
+	-ms-flex-flow: column;
+	flex-flow: column;
+
+	position: absolute;
+	
+	border:2px solid Firebrick;
+/* 	border-radius: 0.5em; */
+	
+}
+
+.optionListTitle{
+	background-color:Firebrick;
+	color:white;
+	display:block;
+	text-align: center;
+	
+}
+
+.multipleSelectionTitle{
+	background-color:Firebrick;
+	color:white;
+	width:100%;
+	display:block;
+	text-align: center;
+	
+}
+
+.multipleSelectionToolItem{
+	cursor: pointer;
+	padding: 5px;
+	margin: 1px;
+	border: 1px solid black;
+	background-color: white;
+}
+
+.multipleSelectionToolItem:hover{
+	color:Firebrick;
+	background-color: #eaebec;
+}
+
+.pressedButton{
+	opacity:0.5;
+}
+
+/* GALLERY VIEW */
+#column_label {
+	background-color: #eaebec;
+	font: 12px Helvetica;
+	text-align: center;
+}
+
+/* TABLE VIEW */
+.row_selected{
+	background-color: #F3CBCB !important;
+}
+
+#data_table {
+	width: 100%;
+	border-spacing: 4px;
+	text-align: center;
+}
+
+#table_container thead tr{
+	height: 20px;
+	
+}
+
+#table_container th{
+	font-family: Helvetica;
+	white-space: nowrap;
+	padding: 8px;
+	border: 0px;
+}
+
+#table_container tbody td{
+	font-family: Helvetica;
+}
+.iconHeader{
+	width:20px;
+	height:20px;
+}
+
+#table_container tbody tr.odd{
+	background-color: #FFF;
+}
+
+#table_container { /* 	overflow:auto;*/
+	width: 100%;
+}
+
+/* TABLE COLUMN VIEW */
+#data_table_transpose td{
+	font-family: Helvetica;
+	padding: 8px;
+	border: 0px;
+}
+
+/* DATATABLE STYLE */
+#data_table_filter input{
+	font-size:16px;
+	padding: 2px 2px 0px 3px;
+}
+#data_table_length{
+	margin-bottom: 10px;
+	
+}
+
+#data_table_filter{
+	margin-bottom: 10px;
+	width:20%;
+}
+
+#displayTableContainer{
+	display: inline;
+}
+
+#data_table_info{
+	margin: 10px 0px;
+}
+
+#data_table_paginate{
+	margin: 10px 0px;
+}
+
+/* TABLE CONFIGURATION */
+#tableConfigurationContainer{
+	overflow: hidden;
+}
+#configurationContainer{
+	display:none;
+	margin: 20px;
+	width: 60%;
+}
+
+#tableConfigurationButtonBar{
+	text-align: center;
+}
+
+#firstTableConfiguration{
+	float:left;
+}
+
+#secondTableConfiguration{
+	float:right;
+}
+
+/* FIX FOR DATABLE ARROW BUTTON FIT IN ONE LINE */
+.css_left {float: left;}
+.css_right {float: right;}
+
+.DataTables_sort_icon{float: left;}

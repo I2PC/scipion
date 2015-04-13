@@ -1,0 +1,143 @@
+{% extends 'base_flex.html' %}
+{% block title %} - Data {% endblock %}
+
+{% block head %}
+<!-- CSS -->
+<link href={{project_content_css}} rel="stylesheet" type="text/css">
+<script src={{jquery_treeview}} type="text/javascript"></script>
+<style>
+	.ui-state-active {
+		background: FireBrick !important;
+		font-size: 0.9em !important;
+		font-weight: bold !important;
+		text-align: center !important;
+		padding: 2px !important;
+	}
+	.ui-tabs-anchor{
+		color: #000 !important;
+		padding: .3em 1em !important;
+	}
+	.ui-state-active .ui-tabs-anchor{
+		color: white !important;
+	} 
+	
+	{% if mode != 'service' %}
+	.layout-outer>.west {
+	/* 	Mode default */
+		overflow-y: auto;
+		width: 20%;
+	}
+	{% endif %}
+</style>
+
+<!-- JS Libs -->
+<script src={{jquery_cookie}} type="text/javascript"></script>
+<script src={{project_content_utils}} type="text/javascript"></script>
+<script src={{data_content_utils}} type="text/javascript"></script>
+<script src={{graph_utils}} type="text/javascript"></script>
+<script type="text/javascript">
+	$(function() {
+		$("#tabs").tabs();
+		callPaintObjGraph();
+		callPaintObjTree();
+	});
+	
+	jQuery(function($) {
+		// Just call the inner layout once to initialize it. This
+		// must happen before the outer layout is initialized. It
+		// will be automatically resized when the outer layout is
+		// resized.
+		$('.layout-inner').layout();
+
+		var outerContainer = $('.layout-outer');
+
+		function layout() {
+			outerContainer.layout({resize: false});
+		}
+		layout();
+
+		$(window).resize(layout);
+		
+		$('.layout-inner > .north').resizable({handles: 's'});
+		$('.layout-outer > .west').resizable({handles: 'e',	stop: layout});
+	});
+</script>
+{% endblock %} 
+
+{% block sideLeft %}
+<div id="westContainer">	
+	<div class="protFieldsetTree">
+		<ul id="browser" class="filetree">
+			<!-- Tree Object View ---------------------->
+		</ul>
+	</div>
+</div>
+{% endblock %} 
+
+
+{% block headerNorth %}
+<div id="headerToolbar">
+	<span id="toolbar" style="float:right;">
+		<span id="refreshTool" style="display:both;">
+<!-- 			<a href="javascript:refreshRuns(1);"><i class="fa fa-refresh" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a> -->
+			<a href="#"><i class="fa fa-refresh" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a>
+		</span>
+	</span>
+	<div id="toolbar" style="display:none;">
+<!-- 		EDIT BUTTON -->
+		<span id="editTool" style="display:none;">
+			<a id="editTool" href="">
+				<i class="fa fa-pencil" style="margin-right:5px"></i>
+				{{msg.LABEL_EDIT}}
+			</a>
+		</span>
+	</div>
+</div>
+{% endblock %}
+
+{% block contentNorth %}
+<div id="runsInfo">
+	<div id="runGraph">
+		<div id="graphActiv" data-time="first" data-project="{{projectName}}">
+			<!-- Data Graph ---------------------->
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block contentCenter %}
+<div class="tabContaier" id="tabs" style="height:100%;overflow-y:auto;">
+	<div id="listTabsHeader">
+		<ul class="listTabs" id="tabs">
+			<li><a href="#tab-data">{{msg.LABEL_OBJSUMMARY}}</a></li>
+		</ul>
+	</div>
+	<div id="listTabsContent">
+		<div id="tab-data" class="tabContents"> 
+			<div id="listEx">
+				<ul>
+					<li>
+						<strong>{{msg.LABEL_OBJLABEL}}</strong>
+						<ul id='obj_label'></ul>
+					</li>
+					<br />
+					<li>
+						<strong>{{msg.LABEL_OBJINFO}}</strong>
+						<ul id='obj_info'></ul>
+					</li>
+					<br />
+					<li>
+						<strong>{{msg.LABEL_OBJCREATED}}</strong>
+						<ul id='obj_created'></ul>
+					</li>
+					<br />
+					<li>
+						<strong>{{msg.LABEL_COMMENT}}</strong>
+						<ul id='obj_comment'></ul>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

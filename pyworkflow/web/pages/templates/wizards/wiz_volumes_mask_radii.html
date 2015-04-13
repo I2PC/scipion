@@ -1,0 +1,104 @@
+{% extends 'wizards/wiz_base.html' %} 
+{% block title %} Volume Mask Radius Radii {% endblock %} 
+{% block name %} Volume Mask Radius Radii {% endblock %} 
+{% block head %}
+	<script type="text/javascript" src="{{raphael}}"></script>
+	<script>
+	
+		function initialLoad(){
+			compositeVol($("tr#"+firstElm));putCircle(({{params.value.1}}*125)/{{xdim}}, "canvas_high", "blue");putCircle(({{params.value.0}}*125)/{{xdim}}, "canvas_low", "red");$("#slider_outer_radius").html({{params.value.1}});$("#slider_inner_radius").html({{params.value.0}});
+		}
+		
+		function returnParams(){
+			putSelection('input#inner_val', '{{params.label.0}}_input');
+			putSelection('input#outer_val', '{{params.label.1}}_input');
+		}		
+		
+	</script>
+{% endblock %} 
+{% block list %}
+
+{% for obj in objects %}
+	{% if forloop.counter0 == 0 %} 
+	<script>
+		firstElm  = {{obj.getObjId}};
+	</script>
+	{% endif %}
+<tr id="{{obj.getObjId}}" class="no-selected"
+	onclick="compositeVol($(this));" value="{{obj.getFileName}}">
+	<td>{{obj.basename}}</td>
+</tr>
+{% endfor %} {% endblock %} {% block images %}
+<tr>
+	<td>Central Slice
+		<div id="wrapper" class="image">
+			<div id="mic"></div>
+			<div id="canvas_high"></div>
+			<div id="canvas_low"></div>
+		</div>
+	</td>
+</tr>
+{% endblock %} 
+{% block options %}
+<fieldset id="sliderOptionsLite">
+	<div id="sliderUni">
+		<span id="title">Inner radius<span>
+		<div id="slider" class="slider_inner"></div>
+		<div id="slider_inner_radius">{{params.value.0}}</div>
+		<input id="inner_val" type="hidden" value="{{params.value.0}}"/>
+	</div>
+	<div id="sliderUni">
+		<span id="title">Outer radius<span>
+		<div id="slider" class="slider_outer"></div>
+		<div id="slider_outer_radius">{{params.value.1}}</div>
+		<input id="outer_val" type="hidden" value="{{params.value.1}}"/>
+	</div>
+</fieldset>
+
+<script>
+$(".slider_inner").slider({
+	animate : true,
+	range : "min",
+	value : {{params.value.0}},
+	min : 0,
+	max : {{xdim}},
+	step : 1,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_inner_radius").html(ui.value);
+		
+		//update the circle
+ 		putCircle((ui.value*125)/{{xdim}}, "canvas_low", "red");
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#inner_val').attr('value', ui.value);
+	}
+});
+
+$(".slider_outer").slider({
+	animate : true,
+	range : "min",
+	value : {{params.value.1}},
+	min : 0,
+	max : {{xdim}},
+	step : 1,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_outer_radius").html(ui.value);
+		
+		//update the circle
+ 		putCircle((ui.value*125)/{{xdim}}, "canvas_high", "blue");
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#outer_val').attr('value', ui.value);
+	}
+});
+//Load the First Element of the list
+window.onload = initialLoad();
+</script>
+{% endblock %}
+{% block function %}
+	onclick="returnParams()"
+{% endblock %}

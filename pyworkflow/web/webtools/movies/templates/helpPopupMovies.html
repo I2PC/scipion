@@ -1,0 +1,107 @@
+<script type="text/javascript">
+	jQuery(function($) {
+		launchHelp();
+		var html = '<span id="helpTool">'
+				+ '<a href="javascript:launchHelp();"><i class="fa fa-question-circle" style="margin-right:5px"></i>Help</a>'
+				+ '</span>'
+		$("span#toolbar").append(html)
+	});
+
+	function launchHelp() {
+		$("#dialog").dialog({
+			resizable : false,
+			position : [ 'right', '50%' ],
+			height : '400',
+			width : '500'
+		});
+	}
+</script>
+
+<div id="dialog" title="Let's start!" style="font-size: 0.9em;">
+	<div id="contentDialog">
+
+		<div id="step1">
+			<p>
+				<strong>Step 1:</strong> In order to upload your movies into the web platform, you have to run the following command in your terminal, note that USER_FOLDER is the location where your movies are stored:
+				</p> 
+				<p style='font-family:Monospace;padding:1em;font-size:110%;'> 
+				{{command}}
+				</p> 
+				<p> 
+				Note that this Web Portal may run in two configurations: Guest/Demo and as an Instruct Access Project. 
+				In a Guest/Demo configuration, we limit the size of your total set of uploaded movies to 25 GigaBytes  
+				(this mode is intended to provide just with a quick look on the Web Portal capabilities). 
+				As an Instruct Access Project, I2PC staff will have already take care of the correct uploading of 
+				your entire project. To demo the maximum size to storage in the upload space is 25 gigabytes.
+				</p>
+			<br />
+		</div>
+
+		<br />
+		
+		<div id="step2">
+			<p>
+				<strong>Step 2:</strong> Import your files to the Web Portal clicking on the graph on the left hand side of this panel, on the <strong>Import Movies</strong> box.
+			</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{importMovies}}" />
+			</p>
+			<br />
+			<p>Finally press "Execute"!</p>
+		</div>
+
+		<br />
+
+		<div id="step3">
+			<p>
+				<strong>Step 3:</strong> Select the method <strong>Xmipp - Movie Alignment</strong>.
+			</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{movieAlignment}}" />
+			</p>
+			<br />
+			<p>Parameters can be easily user customized. Two level of usages are supported (Normal and Advanced), 
+			which should be chosen according to your experience. The difference is the set of parameters you are allowed 
+			to change
+				</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{protMovieAlign}}" />
+			</p>
+			<br />
+			<p>Finally press "Execute"!</p>
+		</div>
+
+		<br />
+
+		<div id="step4">
+			<p>
+				<strong>Step 4:</strong> Once the method has finished processing, clicking on its box shows a <strong>summary</strong> of Inputs and Outputs at the bottom.
+			</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{summary}}" />
+			</p>
+			<br />
+			<p>Further analyze of the results of the method can be achieved by first clicking on its corresponding box and then clicking on the <strong>Analyze Results</strong> button.
+			</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{showj}}" />
+			</p>
+			<br />
+		</div>
+
+		<br />
+
+		<div id="step5">
+			<p>
+				<strong>Step 5:</strong> The corrected averaged micrographs can be downloaded using the corresponding button
+				 <img src="{{download}}" style="height: 1.5em; width: auto;" />
+				.
+			</p>
+		</div>
+	</div>
+</div>

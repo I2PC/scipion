@@ -1,0 +1,124 @@
+{% extends 'wizards/wiz_base.html' %} 
+{% block title %} CTF {% endblock %} 
+{% block name %} CTF {% endblock %} 
+{% block head %}
+	<script type="text/javascript" src="{{raphael}}"></script>
+	<script>
+		function returnParams(){
+			putSelection('input#high_val', '{{params.label.2}}_input');
+			putSelection('input#low_val', '{{params.label.1}}_input');
+			putSelection('input#downsampling', '{{params.label.0}}_input')
+		}
+	</script>
+{% endblock %} 
+{% block list %}
+
+{% for obj in objects %}
+{% if forloop.counter0 == 0 %} 
+<script>
+	var firstElm  = {{obj.getObjId}};
+</script>
+{% endif %}
+<tr id="{{obj.getObjId}}" class="no-selected"
+	onclick="previewCTF(($(this)));" value="{{obj.getFileName}}">
+	<td>{{obj.basename}}</td>
+</tr>
+{% endfor %} {% endblock %} {% block images %}
+<tr>
+	<td>
+		<div class="image">
+			<img id="loadingMic" src="{{loading}}"
+				style="display: none;" /> <img id="mic" src="" />
+		</div>Micrograph
+	</td>
+	<td>
+		<div id="wrapper" class="image">
+			<img id="loadingPsd" src="{{loading}}"
+				style="display: none;"/> 
+			<div id="psd_freq"> </div>
+			<div id="canvas_high"></div>
+			<div id="canvas_low"></div>
+		</div>PSD
+	</td>
+</tr>
+{% endblock %} 
+{% block options %}
+<table>
+	<tr>
+		<td>
+			Downsample		
+		</td>
+		<td>
+			<input id="downsampling" type="text" value="{{params.value.0}}"/>
+		</td>
+		<td>
+			<a href="javascript:doCTF();" class="buttonGrey">Preview</a>
+		</td>
+	</tr>
+</table>
+<script>
+	//Load the First Element of the list
+	window.onload = previewDownsampling($("tr#"+firstElm));
+</script>
+<fieldset id="sliderOptions">
+	<legend>Frequencies</legend>
+	<div id="lowFreq">
+		<span id="title_freq">Low freq<span>
+		<div id="slider" class="slider_low"></div>
+		<div id="slider_low_result">{{params.value.1}}</div>
+		<input id="low_val" type="hidden" value="{{params.value.1}}"/>
+	</div>
+	<div id="highFreq">
+		<span id="title_freq">High freq<span>
+		<div id="slider" class="slider_high"></div>
+		<div id="slider_high_result">{{params.value.2}}</div>
+		<input id="high_val" type="hidden" value="{{params.value.2}}"/>
+	</div>
+</fieldset>
+
+<script>
+$(".slider_low").slider({
+	animate : true,
+	range : "min",
+	value : "{{params.value.1}}",
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_low_result").html(ui.value);
+		
+		//update the circle
+		putCircle(ui.value*250, "canvas_low", "red");
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#low_val').attr('value', ui.value);
+	}
+});
+$(".slider_high").slider({
+	animate : true,
+	range : "min",
+	value : "{{params.value.2}}",
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_high_result").html(ui.value);
+		
+		//update the circle
+		putCircle(ui.value*250, "canvas_high", "blue");
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#high_val').attr('value', ui.value);
+	}
+});
+//Load the First Element of the list
+window.onload = previewCTF($("tr#"+firstElm));putCircle({{params.value.1}}*250, "canvas_low", "red");putCircle({{params.value.2}}*250, "canvas_high", "blue");
+</script>
+{% endblock %}
+{% block function %}
+	onclick="returnParams()"
+{% endblock %}

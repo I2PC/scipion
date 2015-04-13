@@ -1,0 +1,165 @@
+<div id="main">
+	{% if visualize == 0 %}
+	<div id="mainNode1" class="mainNode">
+		<div class="title">
+			{{msg.TITLE_RUN}}
+		</div>
+<!-- HEADER FORM -->
+		<table>
+			<tr>
+<!-- RUN NAME -->
+				<td  colspan="1">
+					<strong>{{msg.LABEL_RUNNAME}}</strong>
+				</td>
+				<td colspan="4">
+					<input type="text" id="{{msg.VAR_RUN_NAME}}" name="{{msg.VAR_RUN_NAME}}" value="{{protocol.getObjLabel}}">
+				</td>
+				<td class="">
+					<a id="editTool" 
+					href="javascript:processObjParam(
+							{% if protocol.getObjId == None %}
+											'new',
+							{% else %}
+											{{protocol.getObjId}},
+							{% endif %}		
+											'{{msg.TITLE_LABEL}}',
+											'{{msg.TITLE_COMMENT}}',
+											'{{msg.LABEL_OPT_COMMENT}}',
+											'protocol');">				
+						<i class="fa fa-pencil"></i>
+					</a>
+				</td>
+<!-- COMMENT -->
+				<td>
+					{{msg.TITLE_COMMENT}}
+				</td>
+				<td>
+					<input type="text" id="{{msg.VAR_COMMENT}}" name="{{msg.VAR_COMMENT}}" value="{{comment}}">
+				</td>
+				<td>
+					<a id="editTool" 
+					href="javascript:processObjParam(
+							{% if protocol.getObjId == None %}
+											'new',
+							{% else %}
+											{{protocol.getObjId}},
+							{% endif %}		
+											'{{msg.TITLE_LABEL}}',
+											'{{msg.TITLE_COMMENT}}',
+											'{{msg.LABEL_OPT_COMMENT}}',
+											'protocol');">				
+						<i class="fa fa-pencil"></i>
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<strong>{{msg.LABEL_EXECUTION}}</strong>
+				</td>
+<!-- RUN MODE -->
+				<td>
+					{{msg.LABEL_RUNMODE}}
+				</td>
+				<td colspan="3">
+					<select id="{{msg.VAR_RUN_MODE}}_select" name="{{msg.VAR_RUN_MODE}}" size="1" onchange="javascript:onChangeEnumParamCombo('runMode_select', '{{msg.VAR_RUN_MODE}}');">
+						<option value="0" selected="selected">{{msg.LABEL_RUN_MODE_RESUME}}</option>
+						<option value="1">{{msg.LABEL_RUN_MODE_RESTART}}</option>
+					</select>		
+				</td>
+				<td>
+					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a>
+				</td>
+<!-- HOST -->
+				{% if showHost %}
+				<td>
+					{{msg.LABEL_HOST}}
+				</td>
+				<td>
+				{% else %}
+				<td style="display:none">
+				{% endif %}
+					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
+					{% for h in hosts %}
+						<option value="{{h}}" {% if h == hostSelected %} selected="selected" {% endif %}>{{h}}</option>
+					{% endfor %}
+					</select>
+				</td>
+<!-- 				<td> -->
+<!-- 					.ico -->
+<!-- 				</td> -->
+			</tr>
+			
+			{% if showParallel %}
+			<tr>
+			{% else %}
+			<tr style="display:none;">
+			{% endif %}
+			
+				{% if protocol.allowThreads or protocol.allowMpi %}
+<!-- PARALLEL (THREAD & MPI) -->
+				<td>
+					<strong>{{msg.LABEL_PARALLEL}}</strong>
+				</td>
+				<td colspan="4">
+					{% if protocol.allowThreads %}
+						{{msg.LABEL_THREADS}}
+						&nbsp;		
+<!-- 						<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;"> -->
+<!-- 						SERVICE MODE -->
+						<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;" readonly>
+					{% endif %}
+						&nbsp;
+					{% if protocol.allowMpi %}
+						{{msg.LABEL_MPI}}
+						&nbsp;		
+<!-- 						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;"> -->
+<!-- 						SERVICE MODE -->
+						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;" readonly>
+
+
+					{% endif %}
+				</td>
+				<td>
+					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_PARALLEL}}','{{msg.HELP_MPI_THREADS|escapejs}}');"></a>
+				</td>
+				{% else %}
+				<td></td>
+				<td colspan="4"></td>
+				<td></td>
+				{% endif %}
+<!-- QUEUE -->
+<!-- 				<td> -->
+<!-- 					{{msg.LABEL_QUEUE}} -->
+<!-- 				</td> -->
+<!-- 				<td> -->
+<!-- 					<input type="radio" id="queue_yes" name="{{msg.VAR_QUEUE}}" value=True {% if protocol.useQueue == True %} checked {% endif %} />{{msg.LABEL_QUEUE_YES}} -->
+<!-- 					<input type="radio" id="queue_no" name="{{msg.VAR_QUEUE}}" value=False {% if protocol.useQueue == False %} checked {% endif %} />{{msg.LABEL_QUEUE_NO}} -->
+<!-- 				</td> -->
+<!-- 				<td> -->
+<!-- 					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a> -->
+<!-- 				</td> -->
+			</tr>
+		</table>
+	</div>
+	{% endif %}
+	
+<!-- EXPERT LEVEL -->
+	<table>
+		<tr>
+			<td>
+				<strong>{{msg.LABEL_EXPERT}}</strong>
+			</td>
+			<td>
+				<input type="radio" id="" name={{msg.VAR_EXPERT}} onChange="javascript:evalElements();" value="0"
+			  	{% if expertLevel == 0 %} checked {% endif %}/>{{msg.LABEL_EXPERT_NORMAL}}
+			  	&nbsp;
+			  	<input type="radio" id="" name={{msg.VAR_EXPERT}} onChange="javascript:evalElements();" value="1"
+			  	{% if expertLevel == 1 %} checked {% endif %}/>{{msg.LABEL_EXPERT_ADVANCE}}
+			  
+			</td>
+		</tr>
+	</table>
+	
+</div>
+			
+ 

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+<title>
+	Scipion {% block title %} {% endblock %}
+</title>
+<meta charset='utf-8'>
+<link rel="icon" type="image/png" href="{{favicon}}" />
+<!-- CSS -->
+<link href="{{general_css}}" rel="stylesheet"	type="text/css"> 
+<link href="{{general_flex}}" rel="stylesheet"	type="text/css"> 
+<link href="{{jquery_ui_css}}" rel="stylesheet" type="text/css"/>
+<link href="{{messi_css}}" rel="stylesheet" type="text/css"/>
+<link href="{{font_awesome}}" rel="stylesheet" type="text/css">
+
+<!-- JS -->
+<script type="text/javascript" src="{{jquery}}"></script>
+<script type="text/javascript" src="{{jsplumb}}"></script>
+<script type="text/javascript" src="{{jquery_ui}}"></script>
+<script type="text/javascript" src="{{jquery_ui_touch}}"></script>
+<script type="text/javascript" src="{{messi_js}}"></script>
+<script type="text/javascript" src="{{jquery_sizes}}"></script>
+<script type="text/javascript" src="{{jlayout_border}}"></script>
+<script type="text/javascript" src="{{jquery_layout}}"></script>
+<script type="text/javascript" src="{{jquery_splitter}}"></script>
+<script type="text/javascript" src="{{utils}}"></script>
+<script type="text/javascript" src="{{config}}"></script>
+
+<script>
+// Fix to move UI elements in touch displays
+$('#widget').draggable();
+</script>	
+
+{% block head %} 
+{% endblock %}
+
+</head>
+
+<body>
+	<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer">
+		
+		{% block header %}	
+			{% include "header.html" %}
+		{% endblock %}
+		
+		<aside class="west">
+			{% block sideLeft %}	
+			{% endblock %}
+		</aside>
+		
+		<section class="center layout-inner" data-layout='{"type": "border", "hgap": 1, "vgap": 1}'>
+			
+			<!-- UTILS VARS -->
+			<input type="hidden" id="formUrl" value="{{formUrl}}">
+			
+			{% block headerNorth %}	
+	        {% endblock %}			
+	        	        
+			<div class="north">
+			 	<div class="text" style="">
+					{% block contentNorth %}	
+			        {% endblock %}
+				</div>
+			</div>
+		    
+		    <div class="center">
+		        {% block contentCenter %}	
+		        {% endblock %}
+		    </div>
+		</section>
+	</div>
+	
+<!-- 	{% include "footer.html" %} -->
+
+</body>
+</html>

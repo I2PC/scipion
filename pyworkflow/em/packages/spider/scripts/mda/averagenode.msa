@@ -1,0 +1,163 @@
+([node-num],[max-class-digits],[max-parts-digits])
+;([node-num])
+;;([node-num],[first-terminus],[last-terminus],[label-dim])
+
+rr [first-terminus]
+?first terminus?
+
+rr [last-terminus]
+?last terminus?
+
+md
+results off
+
+rr [label-dim]
+?temporary dimension of labelling?
+
+; --- Input Parameters ---
+; [node-num]        node number
+; [label-dim]       minimum width for labeling
+; [first-terminus]  first terminus
+; [last-terminus]   last terminus
+; -------- Input --------
+; [particles]       particle template
+; [node_doc]        list of particle in each node (modified/labelled)
+; ------- Outputs -------
+; [node_avg]        output average
+; [class_list]      class list
+
+; label node doc (at bottom)
+if([node-num].eq.1) then
+    ; is a copy of the dendrogram
+    SD /        PARTNUM   DENDRO_HEIGHT
+    [node_doc][node-num]
+else
+    SD /       PARTNUM      DENDROKEY
+    [node_doc][node-num]
+endif
+
+sd e  ; close doc
+[node_doc][node-num]
+
+; get number of particles
+ud n,[num-parts-node]
+[node_doc][node-num]
+
+; update class list
+sd [node-num], [node-num],[num-parts-node]
+[class_list]
+
+; average images
+as r
+[particles]
+[node_doc][node-num]
+A                     ; _A_ll
+[node_avg][node-num]  ; OUTPUT
+_2                    ; dummy file: variance
+
+
+; CHECK IF AVERAGE NEEDS TO BE RESIZED FOR LABELING
+
+; get image dimension
+fi [orig-img-dim]
+_2    ; INPUT: variance
+(12)  ; header position for x-dim
+
+; if smaller than minimum, interpolate
+if([orig-img-dim].lt.[label-dim]) then
+    ip
+    [node_avg][node-num]
+    _1
+    [label-dim],[label-dim]
+else
+    cp
+    [node_avg][node-num]
+    _1
+endif
+
+
+md
+results on
+
+; LABEL
+
+; get #particles
+[num-particles] = [last-terminus] - [first-terminus] + 1
+; *should* be the same as [num-parts-node], but...
+
+; DETERMINE FORMAT OF LABEL
+
+if([max-class-digits].le.3) then
+    if([max-parts-digits].le.3) then
+	la b
+	_1  ; INPUT: average
+	_4
+	{***[node-num]},n={***[num-particles]}
+    endif
+
+    if([max-parts-digits].eq.4) then
+	la b
+	_1  ; INPUT: average
+	_4
+	{***[node-num]},n={****[num-particles]}
+    endif
+
+    if([max-parts-digits].ge.5) then
+	la b
+	_1  ; INPUT: average
+	_4
+	{***[node-num]},n={****[num-particles]}
+    endif
+    ; (Not considering 10,000+ particles)
+else
+    if([max-parts-digits].le.3) then
+	la b
+	_1  ; INPUT: average
+	_4
+	{****[node-num]},n={***[num-particles]}
+    endif
+
+    if([max-parts-digits].eq.4) then
+	la b
+	_1  ; INPUT: average
+	_4
+	{****[node-num]},n={****[num-particles]}
+    endif
+    ; (Not considering 10,000+ particles)
+endif
+; (Not considering 10,000+ classes)
+
+;; label average w/#particles
+;la b
+;_1  ; INPUT: average
+;_4
+;{****[node-num]},n={****[num-particles]}
+;;{***[node-num]},n={*****[num-particles]}
+
+; if average was resized, then re-resize
+if([orig-img-dim].lt.[label-dim]) then
+    ; get new y-dimension (should be +36)
+    fi [labeled-ydim]
+    _4
+    (2)  ; header position for y-dim
+
+    ; calculate new y-dimension
+    [new-ydim] = [labeled-ydim] * [orig-img-dim] / [label-dim] 
+
+    ; interpolate back to original width
+    ip
+    _4  ; INPUT: labelled average
+    [labeled_avg][node-num]
+    [orig-img-dim],[new-ydim]
+else
+    cp
+    _4
+    [labeled_avg][node-num]
+endif
+
+re
+
+; Modified 2012-12-14
+;    2012-12-14 (trs) -- intelligent label-dimension
+;    2012-12-14 (trs) -- writes to class list
+;    2009-06-02 (trs) -- improved annotation

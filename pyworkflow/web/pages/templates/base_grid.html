@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+<title>
+	Scipion {% block title %} {% endblock %}
+</title>
+<meta charset='utf-8'>
+<link rel="icon" type="image/png" href="{{favicon}}" />
+<!-- CSS -->
+<link href="{{general_css}}" rel="stylesheet"	type="text/css"> 
+<link href="{{general_grid}}" rel="stylesheet"	type="text/css"> 
+<link href="{{messi_css}}" rel="stylesheet" type="text/css"/>
+<link href="{{font_awesome}}" rel="stylesheet" type="text/css">
+<!-- JS -->
+<script type="text/javascript" src="{{jquery}}"></script>
+<script type="text/javascript" src="{{messi_js}}"></script>
+<script type="text/javascript" src="{{jquery_sizes}}"></script>
+<script type="text/javascript" src="{{jlayout_border}}"></script>
+<script type="text/javascript" src="{{jquery_layout}}"></script>
+<script type="text/javascript" src="{{utils}}"></script>
+<script type="text/javascript" src="{{config}}"></script>
+
+{% block content_head %} {% endblock %}
+</head>
+
+<body>
+
+	<div data-layout='{"type": "flexGrid", "columns": 1, "hgap": 1, "vgap": 1}' class="layout-outer">
+		
+		<!-- UTILS VARS -->
+		<input type="hidden" id="formUrl" value="{{formUrl}}">
+		
+		{% block header %}	
+			{% include "header.html" %}
+		{% endblock %}
+		
+		<aside>
+			{% block menu %} 
+			{% endblock %}
+		</aside>
+	
+		<section id="grid_section">
+<!-- 		<section> -->
+			{% block content %}	{% endblock %}
+		</section>
+			
+			{% block content_end_page %}{% endblock %}
+			
+		<aside>
+			{% block bottom_menu %}{% endblock %}
+		</aside>
+			
+<!-- 		{% include "footer.html" %} -->
+	</div>
+
+</body>
+</html>

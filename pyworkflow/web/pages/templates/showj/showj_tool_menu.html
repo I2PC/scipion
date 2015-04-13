@@ -1,0 +1,27 @@
+<script>
+$(document).ready(function(){
+	
+	//After push Enabled, Disabled or Close the windows is closed.
+    $("i#closeMenuTool, .buttonMirror, .buttonTransf, .buttonShift, .buttonWrap").click(function(){
+    	showHideOptionMenu();
+    });
+	
+	//To be able move the div around the windows containter.
+	$("ul#optionsList").draggable();
+});
+</script>
+
+<script type="text/javascript" src="{{jquery_ui}}"></script>
+
+<ul id="optionsList">
+	<li class=optionListTitle>
+		<strong>Tools Menu</strong>
+		<span style="float:right;">
+		<i id="closeMenuTool" class="fa fa-times"></i>
+		</span>
+	</li>
+	<li class="buttonMirror">{{ form.mirrorY }} {{ form.mirrorY.label_tag }}</li>
+	<li class="buttonTransf">{{ form.applyTransformMatrix }} {{ form.applyTransformMatrix.label_tag }}</li>
+	<li class="buttonShift">{{ form.onlyShifts }} {{ form.onlyShifts.label_tag }}</li>
+	<li class="buttonWrap">{{ form.wrap }} {{ form.wrap.label_tag }}</li>
+</ul>

@@ -1,0 +1,73 @@
+<script type="text/javascript">
+	jQuery(function($) {
+		launchHelp();
+		var html = '<span id="helpTool">'
+				+ '<a href="javascript:launchHelp();"><i class="fa fa-question-circle" style="margin-right:5px"></i>Help</a>'
+				+ '</span>'
+		$("span#toolbar").append(html)
+	});
+
+	function launchHelp() {
+		$("#dialog").dialog({
+			resizable : false,
+			position : [ 'right', '50%' ],
+			height : '400',
+			width : '500'
+		});
+	}
+</script>
+
+<div id="dialog" title="Let's start!" style="font-size: 0.9em;">
+	<div id="contentDialog">
+
+		<div id="step1">
+			<p>
+				<strong>Step 1:</strong> Upload and import your files to the web
+				portal clicking on the graph on the left hand side of this panel, on the <strong>Import Volumes</strong> box.
+			</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{importVolumes}}" />
+			</p>
+			<br />
+			<p>Once uploaded, press "Execute"!</p>
+		</div>
+
+		<br />
+
+		<div id="step2">
+			<p>
+				<strong>Step 2:</strong> Select the method <strong>resmap - local resolution</strong>.
+			</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{useResMap}}" />
+			</p>
+			<br />
+			<p>Parameters can be easily user customized. Two level of usages are supported (Normal and Advanced), which 
+			 should be chosen according to your experience.
+				</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{protResMap}}" />
+			</p>
+			<br />
+			<p>Finally press "Execute"!</p>
+		</div>
+
+		<br />
+
+		<div id="step3">
+			<p>Methods results can be further analyzed by first clicking on the corresponding Method box and then 
+			clicking on the <strong>Analyze Results</strong> button.
+			</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{analyzeResults}}" />
+			</p>
+			<br />
+		</div>
+
+		<br />
+	</div>
+</div>

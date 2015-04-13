@@ -1,0 +1,69 @@
+# All relative paths will have $SCIPION_HOME as their root.
+
+[DIRS_LOCAL]
+SCIPION_USER_DATA = ~/ScipionUserData
+SCIPION_LOGS = %(SCIPION_USER_DATA)s/logs
+SCIPION_TMP = %(SCIPION_USER_DATA)s/tmp
+
+[DIRS_GLOBAL]
+SCIPION_TESTS = data/tests
+SCIPION_SOFTWARE = software
+
+[REMOTE]
+SCIPION_URL = http://scipionwiki.cnb.csic.es/files/scipion
+SCIPION_URL_SOFTWARE = %(SCIPION_URL)s/software
+SCIPION_URL_TESTDATA = %(SCIPION_URL)s/data/tests
+
+[PACKAGES]
+EM_ROOT = software/em
+XMIPP_HOME = %(EM_ROOT)s/xmipp
+SPIDER_DIR = %(EM_ROOT)s/spider/spider
+EMAN2DIR = %(EM_ROOT)s/eman
+FREALIGN_HOME = %(EM_ROOT)s/frealign
+CTFFIND_HOME = %(EM_ROOT)s/ctffind
+CTFFIND4_HOME = %(EM_ROOT)s/ctffind4
+RELION_HOME = %(EM_ROOT)s/relion
+RESMAP_HOME = %(EM_ROOT)s/resmap
+BSOFT_HOME = %(EM_ROOT)s/bsoft
+DOSEFGPU_HOME = %(EM_ROOT)s/dosefgpu
+DOSEFGPU_CUDA_LIB = None
+SIMPLE_HOME = %(EM_ROOT)s/simple
+PYTOM_HOME = %(EM_ROOT)s/pytom
+DOGPICKER_HOME = %(EM_ROOT)s/dogpicker
+# Some visualization packages
+CHIMERA_HOME = %(EM_ROOT)s/chimera
+CHIMERA_HEADLESS_HOME = %(EM_ROOT)s/chimera_headless
+VMD_HOME = %(EM_ROOT)s/vmd
+
+
+
+# This section of the configuration file is used to setup
+# variable to compile from sources, in most cases you don't 
+# want to change it.
+
+[BUILD]
+
+# C++ variables
+CC = gcc
+CXX = g++
+LINKERFORPROGRAMS = g++
+CCFLAGS = -std=c99
+CXXFLAGS = 
+LINKFLAGS = 
+
+# MPI variables
+MPI_CC = mpicc
+MPI_CXX = mpiCC
+MPI_LINKERFORPROGRAMS = mpiCC
+MPI_LIB = mpi
+MPI_LIBDIR = /usr/lib
+MPI_INCLUDE = /usr/include/mpi
+MPI_BINDIR = /usr/bin
+MATLAB_DIR = /usr/local/MATLAB/R2011a
+
+# Java variables
+JAVA_HOME = /usr/lib64/jvm/java-1.7.0-openjdk-1.7.0
+JAVA_BINDIR = %(JAVA_HOME)s/bin
+JAVAC = %(JAVA_BINDIR)s/javac
+JAR = %(JAVA_BINDIR)s/jar
+JNI_CPPPATH = %(JAVA_HOME)s/include:%(JAVA_HOME)s/include/linux

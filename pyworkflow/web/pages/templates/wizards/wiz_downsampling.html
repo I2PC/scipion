@@ -1,0 +1,57 @@
+{% extends 'wizards/wiz_base.html' %} 
+{% block title %} Downsampling {% endblock %}
+{% block name %} Downsampling {% endblock %}
+{% block head %}{% endblock %}	
+{% block list %}			
+
+{% for obj in objects %}
+	{% if forloop.counter0 == 0 %} 
+	<script>
+		firstElm  = {{obj.getObjId}};
+	</script>
+	{% endif %}
+	<tr id="{{obj.getObjId}}" class="no-selected" 
+	onclick="previewDownsampling(($(this)));" 
+	value="{{obj.getFileName}}">
+		<td>{{obj.basename}}</td>
+	</tr>
+	{% endfor %}
+{% endblock %}		
+{% block images %}
+<tr>
+	<td>
+		<div class="image">
+			<img id="loadingMic" src="{{loading}}" style="display:none;"/>
+			<img id="mic" src=""/>
+		</div>Image
+	</td>
+	<td>
+		<div class="image">
+			<img id="loadingPsd" src="{{loading}}" style="display:none;"/>
+			<img id="psd" src=""/>
+		</div>PSD
+	</td> 	
+</tr>	
+{% endblock %}
+{% block options %}
+<table>
+	<tr>
+		<td>
+			Downsample		
+		</td>
+		<td>
+			<input id="downsampling" type="text" value="{{params.value}}"/>
+		</td>
+		<td>
+			<a href="javascript:previewDownsampling();" class="buttonGrey">Preview</a>
+		</td>
+	</tr>
+</table>
+<script>
+	//Load the First Element of the list
+	window.onload = previewDownsampling($("tr#"+firstElm));
+</script>
+{% endblock %}
+{% block function %}
+	onclick="putSelection('input#downsampling', '{{params.label}}_input')"
+{% endblock %}

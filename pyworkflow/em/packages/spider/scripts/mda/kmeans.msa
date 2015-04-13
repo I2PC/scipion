@@ -1,0 +1,90 @@
+; RUNS K-MEANS CLASSIFICATION
+
+; -------------- Parameters --------------
+x20 = 4   ; desired number of classes
+x27 = 9   ; number of eigenfactors to use
+
+; ---------------- Inputs ----------------
+fr l
+[cas_prefix]CA/cas                        ; correspondence-analysis output prefix
+fr l
+[particles]stkfiltered@*****              ; particle file-pattern
+
+; ---------------- Outputs ---------------- 
+fr l
+[class_dir]KM                             ; output directory
+fr l
+[dendrogram_doc][class_dir]/docassign     ; particle-assignment doc
+fr l
+[class_doc][class_dir]/docclass           ; class-membership doc prefix, for each class
+fr l
+[class_avg][class_dir]/classavg           ; class-average prefix, for each class
+fr l
+[class_var][class_dir]/classvar           ; class-variance prefix, for each class
+fr l
+[class_stats_doc][class_dir]/listclasses  ; class-size document
+
+; ----------- END BATCH HEADER -----------
+
+vm
+echo "if(! -d [class_dir]) mkdir [class_dir]"|csh
+
+md
+set mp
+0
+
+vm
+echo "Running k-means classification"; date
+
+; run k-means classification
+cl km x21,x22,x23,x24,x25
+[cas_prefix]_IMC
+x20             ; number of classes
+(1-x27)         ; eigenfactors to use
+(0)             ; no factor weighting
+(0)             ; no random seed
+[class_doc]***  ; OUTPUT (temp): class-list doc
+[dendrogram_doc]
+
+sd -1,x21,x22,x23,x24,x25
+dockm
+
+; GENERATE CLASS AVERAGES
+vm
+echo "Generating class averages"; date
+
+de
+[class_stats_doc]
+
+; loop through classes
+do lb2 x16=1,x20
+    ; calculate average
+    as r
+    [particles]
+    [class_doc]{***x16}  ; INPUT: class list
+    A                    ; _A_ll images
+    [class_avg]{***x16}  ; OUTPUT: class average
+    [class_var]{***x16}  ; OUTPUT: class variance
+
+    ; get class size
+    ud n,x15
+    [class_doc]{***x16}
+
+    ; write to doc file
+    sd x16,x16,x15
+    [class_stats_doc]
+lb2
+; end class-loop
+
+sd e  ; close doc
+[class_stats_doc]
+
+vm
+echo; echo "Done"; date
+
+en d
+
+; Modified 2014-04-11
+;    2014-04-11 (trs) -- Using stacks
+;    2008-04-06 (trs) -- added doc file with class size
+;    2005-08-24 (trs) -- adapted from classify.spi

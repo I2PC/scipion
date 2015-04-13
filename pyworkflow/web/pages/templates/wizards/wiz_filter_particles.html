@@ -1,0 +1,187 @@
+{% extends 'wizards/wiz_base.html' %} 
+{% block title %} Particles Filter {% endblock %} 
+{% block name %} Particles Filter {% endblock %} 
+{% block head %}
+	<script>
+		function returnParams(){
+			putSelection('input#high_val', '{{params.label.1}}_input');
+			putSelection('input#low_val', '{{params.label.0}}_input');
+			putSelection('input#decay_val', '{{params.label.2}}_input');
+		}
+		
+		function compositeLoad(elm, samplingRate){
+// 			var first = $("tr#"+firstElm);
+			var low = $('#low_val').attr('value')
+			var high = $('#high_val').attr('value')
+			var decay = $('#decay_val').attr('value')
+
+			var a = convertBandPass(low, high, decay, samplingRate)
+
+			compositeBandpass(elm, a[0], a[1], a[2]);
+		}
+		
+		function loadPreview(type, value, samplingRate){
+			
+			switch (type){
+			
+				case "low":
+					var low = value;
+					var high = $('#high_val').attr('value');
+					var decay = $('#decay_val').attr('value');
+					break;
+					
+				case "high":
+					var low = $('#low_val').attr('value');
+					var high = value
+					var decay = $('#decay_val').attr('value');
+					break;
+					
+				case "decay":
+					var low = $('#low_val').attr('value');
+					var high = $('#high_val').attr('value');
+					var decay = value;
+					break;
+				}
+
+			var a = convertBandPass(low, high, decay, samplingRate)
+
+			previewBandpassFilter(a[0], a[1], a[2]);
+		}
+		
+	</script>
+{% endblock %} 
+{% block list %}
+
+{% for obj in objects %}
+{% if forloop.counter0 == 0 %} 
+<script>
+	firstElm  = {{obj.getObjId}};
+</script>
+{% endif %}
+<tr id="{{obj.getObjId}}" class="no-selected"
+	onclick="compositeLoad($(this), {{params.samplingRate}});" value="{{obj.text}}">
+	<td>{{obj.basename}}</td>
+</tr>
+{% endfor %} {% endblock %} {% block images %}
+<tr>
+	<td>
+		<div id="wrapper" class="image">
+			<img id="particle"/>
+		</div>Image
+	</td>
+	<td>
+		<div id="wrapper" class="image">
+			<img id="imgFiltered"/>
+		</div>Filtered
+	</td>
+</tr>
+{% endblock %} 
+{% block options %}
+<fieldset id="sliderOptions">
+	<legend>Frequencies ({{params.unit}})</legend>
+	<table id="fourierTable">
+		<tr>
+			<td>
+				<div id="lowFou">
+					{% if params.mode == 1 or params.mode == 2 or params.mode == 5 %}
+					<span id="title_freq">Low freq<span>
+					<div id="sliderLite" class="slider_low"></div>
+					<div id="slider_low_result">{{params.value.0}}</div>
+					{% else %}
+					<div id="slider_low_result" style="display:none;">{{params.value.0}}</div>
+					{% endif %}
+					<input id="low_val" type="hidden" value="{{params.value.0}}"/>
+				</div>
+			</td>
+			<td>
+				<div id="highFou">
+					{% if params.mode == 0 or params.mode == 2 or params.mode == 3 or params.mode == 4 or params.mode == 5 %}
+					<span id="title_freq">High freq<span>
+					<div id="sliderLite" class="slider_high"></div>
+					<div id="slider_high_result">{{params.value.1}}</div>
+					{% else %}
+					<div id="slider_high_result" style="display:none;">{{params.value.1}}</div>
+					{% endif %}
+					<input id="high_val" type="hidden" value="{{params.value.1}}"/>
+				</div>
+			</td>
+			<td>
+				<div id="decayFou">
+					{% if params.mode == 0  or params.mode == 1 or params.mode == 2 %}
+					<span id="title_freq">Decay<span>
+					<div id="sliderLite" class="slider_decay"></div>
+					<div id="slider_decay_result">{{params.value.2}}</div>
+					{% else %}
+					<div id="slider_decay_result" style="display:none;">{{params.value.2}}</div>
+					{% endif %}
+					<input id="decay_val" type="hidden" value="{{params.value.2}}"/>
+				</div>
+			</td>
+		</tr>
+	</table>
+</fieldset>
+<script>
+$(".slider_low").slider({
+	animate : true,
+	range : "min",
+	value : "{{params.value.0}}",
+	min : {{params.min}},
+	max : {{params.max}},
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_low_result").html(ui.value);
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#low_val').attr('value', ui.value);
+		
+		//update the image filtered
+		loadPreview("low", ui.value, {{params.samplingRate}});
+	}
+});
+$(".slider_high").slider({
+	animate : true,
+	range : "min",
+	value : "{{params.value.1}}",
+	min : {{params.min}},
+	max : {{params.max}},
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_high_result").html(ui.value);
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#high_val').attr('value', ui.value);
+		
+		//update the image filtered
+		loadPreview("high", ui.value, {{params.samplingRate}});
+	}
+});
+$(".slider_decay").slider({
+	animate : true,
+	range : "min",
+	value : "{{params.value.2}}",
+	min : {{params.min}},
+	max : {{params.max}},
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_decay_result").html(ui.value);
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#decay_val').attr('value', ui.value);
+		
+		//update the image filtered
+		loadPreview("decay", ui.value, {{params.samplingRate}});
+	}
+});
+//Load the First Element of the list
+window.onload =  compositeLoad($("tr#"+firstElm), {{params.samplingRate}});
+</script>
+{% endblock %}
+{% block function %}
+	onclick="returnParams()"
+{% endblock %}

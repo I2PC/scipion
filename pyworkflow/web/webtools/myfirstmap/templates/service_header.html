@@ -1,0 +1,11 @@
+{% extends 'header.html' %}
+
+{% block header_backlink %}
+	<a href="{{abs_url}}/myfirstmap/" id="headerLogoContainer">
+{% endblock %}
+
+{% block infotitle %}[ {{daysLeft}} left ]&nbsp;{% endblock %}
+
+{% block header_menu %}
+	<a href="{{abs_url}}/intro/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}"><i class="fa fa-home"></i> Home</a>
+{% endblock %}

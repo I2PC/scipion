@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+	<title>Wizard - ResMap</title>
+	<meta charset='utf-8'>
+	<!-- CSS -->
+	<link href="{{general_style}}" rel="stylesheet" type="text/css">
+	<link href="{{wizard_style}}" rel="stylesheet" type="text/css">
+	<link href="{{jquery_ui_style}}" rel="stylesheet" type="text/css"/>
+	<link href="{{font_awesome}}" rel="stylesheet" type="text/css">
+	<link href="{{messi_css}}" rel="stylesheet" type="text/css">
+	<!-- JS -->
+	<script type="text/javascript" src="{{jquery}}"></script>
+	<script type="text/javascript" src="{{jquery_ui}}"></script>
+	<script type="text/javascript" src="{{jquery_ui_touch}}"></script>
+	<script type="text/javascript" src="{{wizard_utils}}"></script>
+	<script type="text/javascript" src={{config}}></script>
+	<script type="text/javascript" src="{{raphael}}"></script>
+	<script type="text/javascript" src="{{messi_js}}"></script>
+	<script>
+		// Fix to move UI elements in touch displays
+		$('#widget').draggable();
+
+		function putSelection(input_ori, input_des){
+			var value = $(input_ori).val();
+			window.opener.document.getElementById(input_des).value = value;
+			window.close();
+		}
+
+		function returnParams(){
+			putSelection('input#ang_val', 'prewhitenAng_input');
+			putSelection('input#ramp_val', 'prewhitenRamp_input');
+		}
+	
+		function updatePlotResMap(){
+			
+			var inputId = $('input#inputId').val()
+			var ang_val = $('input#ang_val').val()
+			var ramp_val = $('input#ramp_val').val()
+			var useSplit = $('input#useSplit').val()
+			var useMask = $('input#useMask').val()
+			var pValue = $('input#pValue').val()
+            var minRes = $('input#minRes').val()
+            var maxRes = $('input#maxRes').val() 
+            var stepRes = $('input#stepRes').val() 
+                       
+            var abs_url = getSubDomainURL()
+			var URL = abs_url + "/" + "get_resmap_plot/?" +
+					"ang=" + ang_val +
+					"&ramp=" + ramp_val +
+					"&pValue="+pValue +
+					"&minRes="+minRes +
+					"&maxRes="+maxRes +
+					"&inputId="+inputId
+					
+
+			if (useSplit == 1){
+				var splitId = $('input#splitId').val()
+				URL += "&useSplit="+useSplit+"&splitId="+splitId
+			} 
+			
+			if (useMask == 1){
+				var splitId = $('input#maskId').val()
+				URL += "&useMask="+useMask+"&maskId="+splitId
+			}
+			
+			new Messi("<i class='fa fa-refresh'/> Updating Plot...",{
+				modal : true
+			});
+			
+			$.ajax({
+				type : "GET",
+				url : URL,
+				dataType : "text",
+				success : function(text) {
+					$("img#plot").attr("src", text)
+					$('.messi').remove();
+					$('.messi-modal').remove();			
+				}
+			});
+		}
+	</script>
+</head>
+<body style="background-color:white;">
+	<div class="layout">
+		<div>
+			<input id="inputId" type="hidden" value="{{inputId}}" />
+			<input id="useSplit" type="hidden" value="{{useSplit}}" />
+			<input id="splitId" type="hidden" value="{{splitId}}" />
+			<input id="useMask" type="hidden" value="{{useMask}}" />
+			<input id="maskId" type="hidden" value="{{maskId}}" />
+			<input id="pValue" type="hidden" value="{{pValue}}" />
+			<input id="minRes" type="hidden" value="{{minRes}}" />
+			<input id="maxRes" type="hidden" value="{{maxRes}}" />
+			<input id="stepRes" type="hidden" value="{{stepRes}}" />
+			<img id="plot" src="{{plot}}" style="width:790px;height:auto;"/>
+			
+			<div class="options">
+				<div id="sliderOptions" style="background-color:white;">
+					<div id="lowFreq">
+						<span id="title_freq">Ang<span>
+						<div id="slider" class="slider_low"></div>
+						<div id="slider_low_result">{{ang}}</div>
+						<input id="ang_val" type="hidden" value="{{ang}}"/>
+					</div>
+					
+					<div id="highFreq">
+						<span id="title_freq">Ramp<span>
+						<div id="slider" class="slider_high"></div>
+						<div id="slider_high_result">{{ramp}}</div>
+						<input id="ramp_val" type="hidden" value="{{ramp}}"/>
+					</div>
+				</div>
+				
+				<script>
+				$(".slider_low").slider({
+					animate : true,
+					range : "min",
+					value : "{{ang}}",
+					min : {{min_ang}},
+					max : 100,
+					step : 0.01,
+					//this gets a live reading of the value and prints it on the page
+					slide : function(event, ui) {
+						$("#slider_low_result").html(ui.value);
+					},
+					//this updates the hidden form field so we can submit the data using a form
+					change : function(event, ui) {
+						$('#ang_val').attr('value', ui.value);
+					}
+				});
+				
+				$(".slider_high").slider({
+					animate : true,
+					range : "min",
+					value : "{{ramp}}",
+					min : 0.00,
+					max : 1.00,
+					step : 0.01,
+					//this gets a live reading of the value and prints it on the page
+					slide : function(event, ui) {
+						$("#slider_high_result").html(ui.value);
+					},
+					//this updates the hidden form field so we can submit the data using a form
+					change : function(event, ui) {
+						$('#ramp_val').attr('value', ui.value);
+					}
+				});
+				</script>
+				
+			</div>
+		</div>
+	</div>	
+	<div class="buttons">
+		<a href="javascript:updatePlotResMap();" class="buttonRed">Update</a>
+		<a href="#" onclick="returnParams()" class="btn buttonGrey"><i class="fa fa-check"></i>Select</a>
+		<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>Close</a>
+	</div>
+</body>
+</html>
+
+

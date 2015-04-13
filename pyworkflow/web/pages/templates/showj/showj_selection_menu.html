@@ -1,0 +1,50 @@
+<script>
+$(document).ready(function(){
+	
+	//After push Enabled, Disabled or Close the windows is closed.
+    $("i#closeMenuSelect, div#enabledSelection, div#disabledSelection").click(function(){
+		$("div#multipleSelectionTool").css("display", "none");
+    });
+	
+	//To be able move the div around the windows containter.
+	$("div#multipleSelectionTool").draggable();
+    
+});
+</script>
+
+<script type="text/javascript" src="{{jquery_ui}}"></script>
+
+<!-- Hidden menu for multiple selection tool -->
+<div class="multipleSelectionToolContainer" id="multipleSelectionTool">
+	<span class="multipleSelectionTitle">
+		<strong>Menu</strong>
+		<span style="float:right;">
+		<i id="closeMenuSelect" class="fa fa-times"></i>
+		</span>
+	</span>
+	
+	{% if dataset.getTable.hasEnabledColumn %}
+	<div class="multipleSelectionToolItem" id="enabledSelection" onclick="multipleEnableDisableImage('enable')">
+		<i class="fa fa-check"></i>
+		{{msg.LABEL_ENABLE}}
+	</div>
+	<div class="multipleSelectionToolItem" id="disabledSelection" onclick="multipleEnableDisableImage('disable')">
+		<i class="fa fa-times"></i>
+		{{msg.LABEL_DISABLE}}
+	</div>
+	{% endif %}
+	
+	<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">
+		<i class="fa fa-expand"></i>
+		{{msg.LABEL_SELECT_ALL}}
+	</div>
+	<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">
+		<i class="fa fa-arrow-up"></i>
+		{{msg.LABEL_SELECT_FROM}}
+	</div>
+	<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">
+		<i class="fa fa-arrow-down"></i>
+		{{msg.LABEL_SELECT_TO}}
+	</div>
+
+</div>	

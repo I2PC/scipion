@@ -1,0 +1,603 @@
+; PAIRWISE REFERENCE-FREE ALIGNMENT
+; 
+; Adapted from Michael Radermacher's rfreeprepdoc.rec and rfreeal2001.rec
+;
+; Described in Marco S, Chagoyen M, de la Fraga LG, Carazo JM, Carrascosa JL (1996)
+; "A variant to the Random Approximation of the reference-free algorithm."
+; Ultramicroscopy. Vol 66: pg. 5-10.
+
+; ---------------- Parameters ----------------
+[idim-header]  = 100                     ; image dimension
+[cg-option]    = 1                       ; center-of-gravity option (0==None, 1==CG PH, 2=RT180)
+[inner-rad]    = 1                       ; inner radius for alignment, pixels
+[outer-rad]    = -1                      ; object radius, pixels (<0 == use whole image)
+;;[obj-diam]     = -1                      ; object diameter, pixels (<0 == get from PARAMS)
+[search-range] = 8                       ; translation search range, for AP SH (for alignment to final average)
+[step-size]    = 2                       ; translation step size, for AP SH
+[nummps]       = 0                       ; number of processors to use
+
+; --------------- Input files ---------------
+;;fr l
+;;[parameter_doc]params                        ; parameter doc file
+fr l
+[selection_list]listparticles                ; particle list
+fr l 
+[unaligned_image]stkfiltered@*****           ; particle template
+
+; --------------- Output files ---------------
+fr l
+[pair_dir]pairwise                         ; toplevel output directory
+fr l
+[pair_doc][pair_dir]/pairdoc****           ; pair-document template
+fr l
+[depth_dir][pair_dir]/Depth                ; directory prefix for each depth of binary tree
+fr l
+[pair_align_doc][pair_dir]/alignpair       ; intermediate, reference-free alignment doc
+fr l
+[intermed_avg_stack]avgpair                ; intermediate-average stack, in DEPTH_DIR
+fr l
+[intermed_avg][intermed_avg_stack]@****    ; intermediate-average template, in DEPTH_DIR
+;;[intermed_avg]avgpair****    ; intermediate-average template, in DEPTH_DIR
+fr l
+[centered_avg]interim_avg****              ; intermediate-average, centered
+fr l
+[final_avg][pair_dir]/rfreeavg001          ; reference-free alignment average
+fr l
+[final_var][pair_dir]/rfreevar001          ; reference-free alignment average
+fr l
+[final_align_doc][pair_dir]/docpairalign   ; final, reference-based alignment doc
+fr l
+[aligned_stack][pair_dir]/stkaligned       ; aligned-image stack (w/o "@")
+fr l
+[aligned_images][aligned_stack]@*****      ; aligned-image template (check number of digits)
+;;fr l
+;;[master_aligned]Zerodegr/stk3-aligned      ; master aligned-image stack (w/o "@")
+
+; ------------ END BATCH HEADER ------------
+
+; Temporary files
+fr l
+[temp_unmirrored7]_71
+fr l
+[temp_aligned7]_72
+fr l
+[temp_unmirrored5]_51
+fr l
+[temp_aligned5]_52
+fr l
+[temp_unmirrored3]_31
+
+md
+vb off
+
+;; get parameters
+;ud 17,[idim-header]    ; window dimension
+;[parameter_doc]
+
+;;if([obj-diam].le.0) then
+if([outer-rad].le.0) then
+;    ud 18,[obj-diam]   ; particle diameter
+;    [parameter_doc]
+;    
+    [obj-diam] = [idim-header]
+else
+    [obj-diam] = [outer-rad]*2
+endif
+; (Will check later that outer ring remains within image.)
+
+ud e
+
+[one] = 1  ; dummy register
+
+; get first-particle#
+ud ic [one],[first-particle]
+[selection_list]
+
+; get image-dimension from first particle
+fs
+[unaligned_image][first-particle]
+fi [idim-first]
+[unaligned_image][first-particle]
+(2)   ; header position for NROW
+
+; compare image-dimensions from params and header, make sure not downsampled
+if([idim-header].ne.[idim-first]) then
+    ; compute ratio
+    [ratio] = [idim-header]/[idim-first]
+
+    ; if ratio is an integer, images are probably shrunk
+    if([ratio].eq.int([ratio])) then
+        ; use shrunken image-dimension
+        [img-dim] = [idim-first]
+
+        ; reduce object diameter
+        [obj-diam] = [obj-diam]/[ratio]
+
+        vm
+        echo "WARNING:"
+        vm
+        echo "Image dimension {***[idim-header]} {*[ratio]} times that from first particle [unaligned_image][first-particle]"
+        vm
+        echo "Reducing object diameter by a factor of {*[ratio]} also, to {***[obj-diam]}" ; echo
+    ; if ratio is not an integer
+    else
+        ; don't know what to do
+        vm
+        echo "ERROR"
+        vm
+        echo "Image dimension from  {***[idim-header]} different from first particle [unaligned_image][first-particle], {***[idim-first]}"
+        vm
+        echo "Fix and re-start"
+
+        en
+    endif
+else
+    [img-dim] = [idim-header]
+endif
+
+; calculate alignment radius
+[align-radius] = ([obj-diam] - 1)/1.4   ; padding it a bit
+
+; check outer alignment radius
+[check-radius] = int([img-dim]/2) - [align-radius] - [search-range]
+
+; fix outer alignment radius, if necessary
+if([check-radius].lt.2) then
+;    vm
+;    echo "WARNING"
+;    vm
+;    echo "Tested alignment radius of {***[align-radius]} from specified object diameter of {***[obj-diam]} too big"
+;    
+    ; re-set alignment radius
+    [align-radius] = int([img-dim]/2) - [search-range] - 3
+endif
+
+vm
+echo "Using outer alignment radius of {***[align-radius]} pixels" ; echo
+
+; get #particles
+ud n [num-particles]
+[selection_list]
+
+[max-pairs]  = int(([num-particles]+1)/2)
+[dummy]      = 0
+[pair-depth] = 1
+
+vm
+echo "Preparing pairing docs"; date
+vm
+echo "if(! -d [pair_dir]) mkdir [pair_dir]"|csh
+
+de
+[pair_doc][pair-depth]
+SD /   FIRST_PARTICLE SECOND_PARTICLE
+[pair_doc][pair-depth]
+
+;vm
+;echo "Working on depth 001"
+
+; loop through pairs
+do lb1 [pair-key1] = 1,[max-pairs]
+    [first-key] = [pair-key1]*2 - 1
+
+    ; get first-particle#
+    ud ic [first-key],[first-particle]
+    [selection_list]
+
+    ; get second-particle# in pair
+    [second-key] = [first-key] + 1
+
+    ; if there are particles left, then read next one
+    if([second-key].le.[num-particles]) then
+        ud ic [second-key],[second-particle]
+        [selection_list]
+
+        ; save to pairing doc
+        sd [pair-key1], [first-particle],[second-particle]
+        [pair_doc][pair-depth]
+    ; else if there is an unpaired particle, pair it with particle "0"
+    else
+        ; save to pairing doc
+        sd [pair-key1], [first-particle],[dummy]
+        [pair_doc][pair-depth]
+    endif
+
+    ; increment particle counter
+    [first-key] = [second-key] + 1
+lb1
+; end pair-loop
+
+; close docs
+ud ice
+[selection_list]
+sd e
+[pair_doc][pair-depth]
+
+
+; ALIGNMENT
+
+; use all processors
+md
+set mp
+[nummps]
+
+; loop through pair-depths
+do lb4 [pair-depth] = 1,999
+    ; get number of pairs
+    ud n [old-pairs]
+    [pair_doc][pair-depth]
+
+    ; exit loop if there is a single pair
+    if([old-pairs].eq.1) goto lb16
+
+    [new-pairs]   = int(([old-pairs]+1)/2)
+    [full-pairs]  = int([old-pairs]/2)
+    [next-depth] = [pair-depth] + 1
+
+;    vm
+;    echo "Working on depth {***[next-depth]}"
+
+    de
+    [pair_doc][next-depth]
+    SD /     FIRST_PAIR  SECOND_PAIR
+    [pair_doc][next-depth]
+
+    ; loop through pairs of pairs
+    do lb6 [pair-key6] = 1,[full-pairs]
+        [first-pair]  = 2*[pair-key6] - 1
+        [second-pair] = 2*[pair-key6]
+
+        ; get particle #s
+        ud ic [first-pair],[first-particle]
+        [selection_list]
+        ud ic [second-pair],[second-particle]
+        [selection_list]
+
+        ; save to pair-of-pair doc
+        sd [pair-key6], [first-pair],[second-pair]
+        [pair_doc][next-depth]
+    lb6
+    ; exit pair-of-pair loop
+
+    ; if there is an unpaired pair, pair it with zero
+    if([new-pairs].ne.[full-pairs]) then
+        ; get first-particle #
+        ud ic [first-pair],[first-particle]
+        [selection_list]
+
+        sd [new-pairs], [old-pairs],[dummy]
+        [pair_doc][next-depth]
+    endif
+
+    ud ice
+    [selection_list]
+    sd e
+    [pair_doc][next-depth]
+lb4
+; end pair-depth loop
+
+; jump here if there is a single pair
+lb16
+
+[last-depth] = [next-depth] - 1
+
+
+vm
+echo ; echo "Aligning particles pairwise"; date
+
+de
+[pair_align_doc]
+SD /    PAIR_DEPTH   FIRST_PAIR   SECOND_PAIR    CCROT       IN_PLANE     X_SHIFT      Y_SHIFT       MIRROR
+[pair_align_doc]
+
+[pair-depth] = 1
+
+; the alignment for the first pairing file is done 
+; separately, because the input images are not yet 
+; the intermediate images.
+
+vm
+echo "Depth=001"
+vm
+echo "if(! -d [depth_dir]{***[pair-depth]}) mkdir [depth_dir]{***[pair-depth]}"|csh
+
+de
+[depth_dir]{***[pair-depth]}/[intermed_avg_stack]@
+
+; loop through pairs
+do lb7 [pair-key7] = 1,[max-pairs]
+    ; get particle #s from pair doc
+    ud ic [pair-key7], [first-particle],[second-particle]
+    [pair_doc][pair-depth]
+
+    ; if particle is paired then...
+    if([second-particle].ne.0) then
+        ; align ("reference" is first particle in pair)
+        or sh [inplane-angle7],[xshift7],[yshift7],[mirror-flag7],[ccrot7]
+        [unaligned_image][first-particle]  ; "reference"
+        [search-range],[step-size]
+        [inner-rad],[align-radius]
+        [unaligned_image][second-particle]  ; image to be aligned
+
+        ; if necessary, mirror after shift+rotate
+        if([mirror-flag7].eq.1) then
+            rt sq
+            [unaligned_image][second-particle]
+            [temp_unmirrored7]   ; OUTPUT
+            [inplane-angle7]
+            [xshift7],[yshift7]
+ 
+            mr
+            [temp_unmirrored7]  ; INPUT: rotated+shifted, unmirrored image
+            [temp_aligned7]     ; OUTPUT
+            Y                   ; mirror around y-axis
+        else
+            rt sq
+            [unaligned_image][second-particle]
+            [temp_aligned7]   ; OUTPUT
+            [inplane-angle7]
+            [xshift7],[yshift7]
+        endif
+ 
+        ; add pair together
+        ad
+        [temp_aligned7]
+        [unaligned_image][first-particle]
+        [depth_dir]{***[pair-depth]}/[intermed_avg][pair-key7]
+        *  ; no more images to add
+
+        ; save to alignment doc
+        sd [pair-key7], [pair-depth],[first-particle],[second-particle],[ccrot7],[inplane-angle7],[xshift7],[yshift7],[mirror-flag7]
+        [pair_align_doc]
+    ; else if unpaired
+    else
+        ; copy
+        cp
+        [unaligned_image][first-particle]
+        [depth_dir]{***[pair-depth]}/[intermed_avg][pair-key7]
+
+        ; save zeroes to alignment doc
+        sd [pair-key7], [pair-depth],[first-particle],[dummy],[dummy],[dummy],[dummy],[dummy],[dummy]
+        [pair_align_doc]
+    endif
+lb7
+; end pair-of-particles loop
+
+; close docs
+ud ice
+[pair_doc][pair-depth]
+sd e
+[pair_align_doc]
+
+; loop through pairing docs
+do lb8 [pair-depth] = 1,[last-depth]
+    [next-depth] = [pair-depth] + 1
+
+    vm
+    echo "Depth={***[next-depth]}"
+    vm
+    echo "if(! -d [depth_dir]{***[next-depth]}) mkdir [depth_dir]{***[next-depth]}"|csh
+    
+;    de
+;    [depth_dir]{***[pair-depth]}/[intermed_avg]@
+    de
+    [depth_dir]{***[next-depth]}/[intermed_avg_stack]@
+
+
+    ; get number of pairs
+    ud n [num-pairs]
+    [pair_doc][next-depth]
+
+    ; loop through pairs
+    do lb5 [pair-key5] = 1,[num-pairs]
+        ; get pair #s 
+        ud ic [pair-key5], [first-pair],[second-pair]
+        [pair_doc][next-depth]
+
+        ; if pair is paired then...
+        if([second-pair].ne.0) then
+            ; align
+            or sh [inplane-angle5],[xshift5],[yshift5],[mirror-flag5],[ccrot5]
+            [depth_dir]{***[pair-depth]}/[intermed_avg][first-pair]  ; "reference"
+            [search-range],[step-size]
+            [inner-rad],[align-radius]
+            [depth_dir]{***[pair-depth]}/[intermed_avg][second-pair]  ; image to be aligned
+ 
+            ; if necessary, mirror after shift+rotate
+            if([mirror-flag5].eq.1) then
+                rt sq
+                [depth_dir]{***[pair-depth]}/[intermed_avg][second-pair]
+                [temp_unmirrored5]   ; OUTPUT
+                [inplane-angle5]
+                [xshift5],[yshift5]
+ 
+                mr
+                [temp_unmirrored5]  ; INPUT: rotated+shifted, unmirrored image
+                [temp_aligned5]     ; OUTPUT
+                Y                   ; mirror around y-axis
+            else
+                rt sq
+                [depth_dir]{***[pair-depth]}/[intermed_avg][second-pair]
+                [temp_aligned5]   ; OUTPUT
+                [inplane-angle5]
+                [xshift5],[yshift5]
+            endif
+ 
+            ; add pair together
+            ad
+            [temp_aligned5]  ; INPUT: aligned second pair
+            [depth_dir]{***[pair-depth]}/[intermed_avg][first-pair]
+            [depth_dir]{***[next-depth]}/[intermed_avg][pair-key5]
+            *  ; no more images to add
+
+            ; save to alignment doc
+            sd [pair-key5], [next-depth],[first-pair],[second-pair],[ccrot5],[inplane-angle5],[xshift5],[yshift5],[mirror-flag5]
+            [pair_align_doc]
+        ; else if unpaired
+        else
+            ; copy first pair
+            cp
+            [depth_dir]{***[pair-depth]}/[intermed_avg][first-pair]
+            [depth_dir]{***[next-depth]}/[intermed_avg][pair-key5]
+
+            ; save zeroes to alignment doc
+            sd [pair-key5], [next-depth],[first-pair],[dummy],[dummy],[dummy],[dummy],[dummy],[dummy]
+            [pair_align_doc]
+        endif
+    lb5
+    ; end pair-of-pair loop
+
+    ; close docs    
+    ud ice
+    [pair_doc][pair-depth]
+lb8
+; end pairing-doc loop
+
+sd e
+[pair_align_doc]
+
+;; center last intermediate average
+;cg ph x21,x22,[xshift-cg],[yshift-cg]
+;[depth_dir]{***[next-depth]}/[intermed_avg][one]
+
+if([cg-option].eq.1) then
+    vm
+    echo "Centering average using CG PH"
+    
+    ; Search the center of gravity of the global average map AVSTX71
+    cg ph X21,X22,[xshift-cg],[yshift-cg]
+    [depth_dir]{***[next-depth]}/[intermed_avg][one]
+elseif([cg-option].eq.2) then
+    vm
+    echo "Centering average by rotating 180 degrees and aligning"
+    
+    ; center by rotating by 180 degrees and self-alignment
+    @center1(-xshift-cg],[yshift-cg])
+    [depth_dir]{***[next-depth]}/[intermed_avg][one]
+    [pair_dir]/[centered_avg][one]
+else
+    vm
+    echo "Not centering average"
+    
+    ; no centering
+    [xshift-cg] = 0   ; x-shift
+    [yshift-cg] = 0   ; y-shift
+endif
+
+sh
+[depth_dir]{***[next-depth]}/[intermed_avg][one]
+[pair_dir]/[centered_avg][one]
+-[xshift-cg],-[yshift-cg]  ; x,y-shifts
+
+
+vm
+echo ; echo "Aligning to final average"; date
+
+; clean up pre-existing file
+de
+[final_align_doc]
+
+; align to centered average
+ap sh
+[pair_dir]/[centered_avg]  ; INPUT: reference template
+[one]                      ; reference image#
+[search-range],[step-size]
+[inner-rad],[align-radius]
+*                          ; INPUT: reference angles
+[unaligned_image]          ; INPUT: experimental-image template
+[selection_list]           ; INPUT: selection doc
+*                          ; INPUT: previous alignment doc
+(0)                        ; no angular restriction
+(1)                        ; check mirrored positions
+[final_align_doc]          ; OUTPUT: alignment doc
+
+;ap mq
+;[pair_dir]/[centered_avg]   ; INPUT: reference template
+;(1)                         ; reference-image#
+;[search-range],[step-size]
+;[inner-rad],[align-radius]
+;[unaligned_image]           ; INPUT: experimental-image template
+;[selection_list]            ; INPUT: selection doc
+;[final_align_doc]           ; OUTPUT: alignment doc
+
+;vm
+;echo "if(! -d [aligned_dir]) mkdir [aligned_dir]"|csh
+de
+[aligned_stack]@
+
+; get #particles
+ud n [num-particles]
+[selection_list]
+
+; loop through particles
+do lb3 [part-key3] = 1,[num-particles]
+    ud ic [part-key3], [part-num]
+    [selection_list]
+
+    ; read alignment parameters
+;    ud ic [part-key3], [mirror-flag3],x32,[inplane-angle3],[xshift3],[yshift3],[part-num]  ; for AP MQ
+    ud ic [part-num], x81,x82,x83,x84,x85,[inplane-angle3],[xshift3],[yshift3],x89,x90,x91,x92,x93,x94,[mirror-flag3]
+    [final_align_doc]
+
+    ; if necessary, mirror after shift+rotate
+    if([mirror-flag3].lt.0) then
+        rt sq
+        [unaligned_image][part-num]
+        [temp_unmirrored3]   ; OUTPUT
+        [inplane-angle3]
+        [xshift3],[yshift3]
+
+        mr
+        [temp_unmirrored3]   ; INPUT: rotated, shifted image
+        [aligned_images][part-num]
+        Y                    ; mirror around y-axis
+    else
+        rt sq
+        [unaligned_image][part-num]
+        [aligned_images][part-num]
+        [inplane-angle3]
+        [xshift3],[yshift3]
+    endif
+lb3
+; end particle-loop
+
+; close docs
+ud ice
+[final_align_doc]
+ud ice
+[selection_list]
+
+;; copy aligned images to central location (will be overwritten by subsequent alignments)
+;cp
+;[aligned_stack]@
+;[master_aligned]@
+
+; Computation of the average and variance maps of the last cycle
+as dc
+[aligned_images]  ; INPUT: aligned-image template
+[selection_list]  ; INPUT: selection file
+A                 ; average _A_ll images
+[final_avg]       ; OUTPUT: average
+[final_var]       ; OUTPUT: variance
+
+vm
+echo "Done"; date
+
+en 
+
+; Modified 2014-05-20
+;    2014-05-22 (trs) -- added input variable for number of processors to use
+;    2014-05-20 (trs) -- using radii consistently as input parameters (had mixed inner radius and outer diameter previously)
+;    2014-03-25 (trs) -- can override object diameter from PARAMS
+;    2014-03-05 (trs) -- making master copy of aligned stack
+;    2014-03-05 (trs) -- writing images in stacks
+;    2014-02-27 (trs) -- added centering options
+;    2014-02-06 (trs) -- added digit for more than 999 pairs of images
+;    2014-01-24 (trs) -- uses all processors
+;    2013-05-06 (trs) -- uses named registers
+;    2013-05-06 (trs & svd) -- gets image-dimension from first image
+;    2010-08-24 (trs) -- AP MQ and OR MQ replaced with AP SH and OR SH
+;    2010-02-08 (trs) -- fits outer alignment radius to image
+;    2009-06-12 (trs) -- centers penultimate average
+;    2008-11-25 (trs) -- computes variance
+;    2008-11-24 (trs) -- adapted from pairwise.spi

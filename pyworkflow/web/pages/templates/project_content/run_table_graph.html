@@ -1,0 +1,65 @@
+
+<script type="text/javascript">
+	$(function() {
+		// by default list mode is active.
+		
+		{% if runsView == 1 %}
+			switchMode(1);
+		{% elif runsView == 2 %}
+			switchMode(2);
+		{% endif %}
+		
+		preloadToolbar({{selectedRuns}});
+	});
+</script>
+
+<!-- Run Table (List) ---------------------->
+<div id="runTable" style="display:inline;">
+	<table id="data" cellspacing="0">
+		<tr>
+			{% for colName, colWidth in columns %}
+			<th>
+				{{colName}}
+			</th>
+			{% endfor %}
+		</tr>
+		{% for k, obj in runs %}
+		<tr id="{{obj.0}}" 
+			{% if obj.0 in selectedRuns %}
+				class="runtr selected"
+			{% else %}
+				class="runtr"
+			{% endif %}
+		data-name="{{obj.1}}" data-label="{{obj.1}}"
+			onclick='javascript:launchToolbarList("{{obj.0}}", ($(this)), isCtrlPress(event));'>
+			<td>
+				<a class="nameId" href="javascript:customPopup('/form/?protocolId={{obj.0}}',620,591)">
+					{{obj.1}} 
+				</a>
+			</td>
+			<td class="status">{{obj.2}}</td>
+			<td class="time">{{obj.3}}</td>
+		</tr>
+		{% endfor %}
+	</table>
+</div>
+
+
+<!-- Run Graph ---------------------->
+<div id="runGraph">
+	<div id="graphActiv" style="display:none;" data-mode="inactive"
+		data-time="first" data-project="{{projectName}}" data-option="">
+		<!-- data-option: Used to remove the last highlighted node. -->
+	</div>
+	
+	
+	
+<!-- Run Small Graph ---------------------->
+	<div id="graphSmallActiv" style="display:none;" data-mode="inactive"
+		data-time="first" data-project="{{projectName}}" data-option="">
+		<!-- data-option: Used to remove the last highlighted node. -->
+	</div>
+	
+</div>
+
+

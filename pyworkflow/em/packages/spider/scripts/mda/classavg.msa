@@ -1,0 +1,147 @@
+; PARES DENDROGRAM TO DESIRED NUMBER OF CLASSES
+
+; -------------- Parameters --------------
+[desired-classes] = 16                   ; desired number of classes
+
+; ---------------- Inputs ----------------
+fr l
+[class_dir]HC                            ; input/output directory
+fr l
+[dendrogram_doc][class_dir]/docdendro    ; particle-assignment doc
+fr l
+[particles]stkfiltered@*****             ; particle file-pattern
+
+; --------------- Outputs ---------------
+fr l
+[threshold_doc][class_dir]/docthreshold  ; threshold doc, showing threshold-attempts vs. number of classes
+fr l
+[class_doc][class_dir]/docclass***       ; class-membership doc template, for each class
+fr l
+[class_avg][class_dir]/classavg***       ; class average prefix, for each class
+fr l
+[class_var][class_dir]/classvar***       ; class variance prefix, for each class
+
+; ----------- END BATCH HEADER -----------
+
+; Temporary files
+fr l
+[temp_sorted_dendrogram]tmpsortdendro
+fr l
+[temp_class_size_doc]tmpdocclasssize
+
+doc sort
+[dendrogram_doc]
+[temp_sorted_dendrogram]
+(-2)  ; column# to sort: height (<0 == highest to lowest)
+Y,Y   ; renumber keys?, remove duplicates
+; (Removing the duplicates will get rid of all but one of the branches with height=0.)
+
+[key] = [desired-classes] - 1
+; (Truncating the dendrogram at the (x20)th highest node will result in (x20+1) classes.)
+
+
+; TRAP FOR MORE KEYS THAN HEIGHTS
+
+; get first zero-height line in sorted doc file (i.e., last line after removing duplicates)
+ud n [first-zero]
+[temp_sorted_dendrogram]
+; (If non-zero heights are identical to 7 significant figures, one will be removed as a duplicate.)
+
+if([desired-classes].gt.[first-zero]+1) then
+    [key] = [first-zero]
+    [capped-classes] = [key] + 1
+    
+    vm
+    echo "Capping at {%i3%[capped-classes]} classes; the rest have heights of zero..."
+endif
+
+
+; get height of [key]th class
+ud [key], x21,[cutoff-height]
+[temp_sorted_dendrogram]
+
+ud e  ; close doc
+
+; get class sizes for given height
+cl hd
+[cutoff-height]
+[dendrogram_doc]
+[temp_class_size_doc]
+
+; check #classes
+ud n [clhd-classes]
+[temp_class_size_doc]
+
+de  ; clean up
+[temp_sorted_dendrogram]
+
+vm
+echo "Target number of classes: {%i3%[desired-classes]};  Actual number: {%i3%[clhd-classes]}"
+
+; sum number of particles classified (in case some got left out)
+doc stat [nval],[min],[max],[sum]
+[temp_class_size_doc]
+(1)  ; column# to calculate statistics
+
+; count number of particles (entries in dendrogram)
+ud n [num-parts]
+[dendrogram_doc]
+
+vm
+echo "Classified {%i6%[sum]} out of {%i6%[num-parts]} particles"; echo
+
+;; diagnostic
+;vm
+;cat [temp_class_size_doc].$DATEXT
+
+; clean up
+[one] = 1
+de  
+[temp_class_size_doc]
+de a
+[class_doc][one]
+de a
+[class_avg][one]
+de a
+[class_var][one]
+
+; generate class-lists
+cl he
+[cutoff-height]
+[dendrogram_doc]  ; INPUT: dendrogram doc
+[class_doc]       ; OUTPUT: class-list file-pattern
+
+md
+set mp
+0
+
+
+; GENERATE CLASS AVERAGES
+
+vm
+echo "Generating class averages"
+
+; loop through classes
+do lb2 [class-num] = 1,[clhd-classes]  ; WAS [desired-classes]
+    ; calculate unlabeled average
+    as r
+    [particles]
+    [class_doc][class-num]  ; INPUT: class-list doc
+    A                       ; _A_ll images
+    [class_avg][class-num]  ; OUTPUT: class average
+    [class_var][class-num]  ; OUTPUT: class variance
+lb2
+; end class-loop
+
+;; DIAGNOSTIC
+;vm
+;montage-spi -a [class_avg] &
+
+vm
+echo "Done"; date
+
+en d
+
+; Modified 2014-05-20
+;    2014-05-19 (trs) -- Finds number of requested classes by sorting the dendrogram rather than a binary search
+;    2004-04-09 (trs) -- Adapted from M.Radermacher's evalclacla2.two

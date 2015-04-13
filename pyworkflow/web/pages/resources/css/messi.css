@@ -1,0 +1,125 @@
+/* Messi CSS */
+.messi-modal {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background-color: #000;
+	opacity: 0
+}
+
+.messi {
+	position: absolute;
+	padding: 0;
+	margin: 0;
+	text-shadow: none
+}
+
+.messi-box {
+	position: relative;
+	padding: 1px;
+	overflow: hidden;
+	background-color: black;
+/* 	border-radius: 6px; */
+	opacity: 1;
+	box-shadow: 0 0 1em #6e6e6e;
+}
+
+.messi-wrapper {
+	position: relative;
+	background-color: #fff;
+/* 	border-radius: 5px; */
+}
+
+.messi-titlebox {
+	padding: 2px;
+	overflow: hidden;
+	text-shadow: 0 -2px 1px rgba(0, 0, 0, 0.25);
+/* 	-webkit-border-radius: 5px 5px 0 0; */
+/* 	border-radius: 5px 5px 0 0; */
+/* 	-moz-border-radius-topright: 5px; */
+/* 	-moz-border-radius-bottomright: 0; */
+/* 	-moz-border-radius-bottomleft: 0; */
+/* 	-moz-border-radius-topleft: 5px; */
+	color: white;
+	font-size: 0.9em;
+	font-weight: bold;
+	text-align: center;
+	background: Firebrick;
+}
+
+/* .messi-titlebox.info {
+	background-color: #4ea5cd;
+	background-image: none
+}
+
+.messi-titlebox.error {
+	background-color: #de4343;
+	background-image: none
+}
+
+.messi-titlebox.warning {
+	background-color: #eaaf51;
+	background-image: none
+} 
+
+.messi-titlebox.success {
+	background-color: #61b832;
+	background-image: none
+}*/
+/* 
+.messi .btn-success:hover,.messi .btn-success:active,.messi .btn-success.active,.messi .btn-success.disabled,.messi .btn-success[disabled]
+	{
+	background-color: #51a351;
+	*background-color: #499249;
+}
+
+.messi .btn-success:active,.messi .btn-success.active {
+	background-color: #408140 \9;
+} */
+
+.messi-content {
+	overflow: hidden;
+}
+
+.messi-content p { /* 	margin: 0 0 1.3em; */
+	/* 	line-height: 1.3em */
+	
+}
+
+.messi-content .messi-closebtn {
+	top: 7px;
+	color: #fff;
+	background-color: #333;
+	opacity: 0;
+	-webkit-transition: opacity .25s linear, visibility .1s linear .5s;
+	-moz-transition: opacity .25s linear, visibility .1s linear .5s;
+	-o-transition: opacity .25s linear, visibility .1s linear .5s;
+	transition: opacity .25s linear, visibility .1s linear .5s
+}
+
+/* .messi-content:hover .messi-closebtn {
+	opacity: 1
+} */
+
+.messi-footbox {
+	width: auto;
+	overflow: hidden;
+	background: #eaebec;
+}
+
+.messi-actions {
+	margin: 10px;
+	-webkit-box-orient: horizontal;
+	-moz-box-orient: horizontal;
+	text-align: center;
+}
+
+.btnbox{
+	margin: 10px;
+}
+.btn i{
+	margin-right: 5px;
+}
