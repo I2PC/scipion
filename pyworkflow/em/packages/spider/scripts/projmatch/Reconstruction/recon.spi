@@ -1,0 +1,247 @@
+; <html><head><title>Computes Initial Reconstruction</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/recon.spi 
+;         'FSC', 'BP RP 3'                         ArDean Leith  Aug 2012
+;
+; PURPOSE: Computes initial reconstruction using multiple defocus groups.
+;          For each defocus group in the reconstruction:
+;             Divides particle data randomly into two subsets.
+;             Computes two subset reconstructions for the group reconstructions.
+;             Computes Fourier Shell Correlation curve for the group.
+;             Creates CTF correction file for the group reconstruction.
+;          For overall reconstruction:
+;          Applies  CTF correction to the defocus group subset volumes.
+;          Combines all defocus group subset volumes.
+;          Computes resolution of the combined reconstruction at 0.5 threshold.
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; --------------------- Parameters -----------------------------------
+
+ [rad]        = -1        ; Radius of restored object (Use: -1 for 95% winsize / 2)
+ [bpweight]   = 0.2e-5    ; Back projection weighting factor 
+ [bplimit]    = 0.0       ; Back projection correction limit
+ [iterlimit]  = 60        ; Back projection iteration limit
+ [snr]        = 3         ; SNR for CTF correction using 'TF CTS'
+
+ [do_bp]      = 1         ; Skip group back projections    (if = zero)
+ [do_combine] = 1         ; Skip computing combined volume (if = zero)
+
+ ; -------------------- Input files -----------------------------------
+
+ [params]   = '../params'                             ; Reconstruction parameter file
+
+ [sel_grp]  = 'sel_group_cclim'                       ; Defocus group selection file
+ [sel_part] = 'sel_particles_{***[grp]}'              ; Particle selection files (one / defocus group)
+
+ [ali]      = '../Alignment/dala01_{***[grp]}@******' ; Aligned particle images (one stack / defocus group)
+ [angles]   = '../Alignment/align_01_{***[grp]}'      ; Alignment parameter doc files (one / defocus group)
+
+ ; -------------------------- Output files ---------------------------
+
+ [vol_sub1] = 'vol01_sub1'                   ; Volume created from subset 1 particles (one)
+ [vol_sub2] = 'vol01_sub2'                   ; Volume created from subset 2 particles (one)
+
+ [grpvol_1] = 'df{***[grp]}/[vol_sub1]'      ; Group volumes for subset 1 particles (one per group)
+ [grpvol_2] = 'df{***[grp]}/[vol_sub2]'      ; Group volumes for subset 2 particles (one per group)
+ [grpfsc]   = 'df{***[grp]}/fscdoc'          ; Group FSC curve doc  files (one per group)
+ [ctf]      = 'df***/ctffile'                ; Group CTF correction files (one per group)
+
+ [vol]      = 'vol01'                        ; CTF-corrected overall volume  
+ [combfsc]  = 'combires'                     ; FSC curve doc  file for overall volume
+ [res_file] = 'resolution'                   ; Resolution doc file for all volumes
+
+ ; -------------- END BATCH HEADER -------------------------------------------</b>
+
+ MD
+   TR OFF                         ; Decrease results file output
+ MD
+   VB OFF                         ; Decrease results file output
+ MD 
+   SET MP 
+   0                              ; 0 = use all available processors  
+
+ ; Get parameters from reconstruction parameter file -----------------------------
+ UD 5,[sp_pixsiz]                 ; Get pixelsize (A)  
+   [params]                       ; Parameter doc file      (input)
+ UD 6,[sp_kev]                    ; Electron energy (kV)
+   [params]                       ; Parameter doc file      (input)
+ UD 7,[sp_sph_abb]                ; Spherical Abberation
+   [params]                       ; Parameter doc file      (input)
+ UD 8,[sp_sourcesiz]              ; Source size
+   [params]                       ; Parameter doc file      (input)
+ UD 9,[sp_def_spr]                ; Defocus spread
+   [params]                       ; Parameter doc file      (input)
+ UD 12,[sp_acr]                   ; Amplitude contrast ratio
+   [params]                       ; Parameter doc file      (input)
+ UD 13,[sp_geh]                   ; Gaussian envelope
+   [params]                       ; Parameter doc file      (input)
+ UD 14,[sp_lambda]                ; Lambda (electron wavelength)
+   [params]                       ; Parameter doc file      (input)
+ UD 15,[sp_maxspfreq]             ; Max. spatial frequency
+   [params]                       ; Parameter doc file      (input)
+ UD 17,[sp_winsiz]                ; Window size
+   [params]                       ; Parameter doc file      (input)
+
+ ; Calculate lambda (A) from electron voltage now 
+ [sp_lambda] = 12.398 / SQR([sp_kev] * (1022.0 + [sp_kev]))
+
+ IF ([rad] .EQ. -1) THEN          ; Check reconstruction radius
+   [rad] = INT( (0.95*[sp_winsiz])/2.0 )
+ ENDIF
+
+ IF ([do_bp].LE.0) GOTO LB98      ; Can skip group back-projections
+
+ [grploop] = 1                    ; Set flag for looping over groups
+
+ ; ----------------------  Extract PubSub group number (When given) ------------
+ IF ([grp] .GT. 0) THEN           ; Group # sent on invocation line
+   UD FIND [key],[grp],[p],[def]  ; Find defocus value for given group   
+     [sel_grp]                    ; Group selection file       (input)
+     1,[grp]                      ; Search col. & value
+
+   UD FIND E                      ; End doc file use   
+     [sel_grp]                    ; Group selection file       (ends)
+   [grploop]    = 0               ; Set flag for NOT looping over groups
+
+ ELSEIF ([grp] .LT. 0) THEN       ; Negative group # sent on invocation line
+    GOTO LB98                     ; Skip computing group back-projections 
+
+ ELSE
+    ; Make header for  resolution doc file
+    SD /        GROUP,       NORM FREQ,  RESOLUTION (ANG.)   (CUTOFF=50%) 
+      [res_file]                  ; Resolution doc file      (output)
+    VM
+      echo  ' '"Commencing back projection, please wait." ; echo  ' '    
+
+ ENDIF
+
+ MY FL
+
+ DO   ; -----------------------------  Loop over all defocus groups ---------------
+
+   IF ([grploop] .GT. 0) THEN        ; Loop over defocus groups 
+      UD NEXT [key],[grp],[p],[def]  ; Get group from group sel. file
+        [sel_grp]                    ; Group selection file          (input)
+      IF ([key] .LE. 0) EXIT         ; End of groups in doc file
+   ENDIF
+
+   VM                                ; Create output dir if needed
+     mkdir -p df{***[grp]}          
+
+   MY FL
+
+md
+set seed
+12345
+
+   ; Compute the group subset reconstructions. --------------------------------
+   BP RP 3 [niter]                ; [niter] returns number of iterations used
+     [ali]                        ; Template for input image files  (input)
+     [sel_part]                   ; Selection file for images       (input)
+     [rad]                        ; Radius of restored object
+     [angles]                     ; Angles doc file                 (input)
+     *                            ; Symmetries doc file (* = none)  (input)
+     *                            ; NO overall reconstructed volume (none)
+     [grpvol_1]                   ; Reconstructed subset volume 1   (output)
+     [grpvol_2]                   ; Reconstructed subset volume 2   (output)
+     [bpweight],[bplimit]         ; Weight lambda, limit
+     [iterlimit], 0               ; Iteration limit, constraint mode
+     .5, .5                       ; Minimum, maximum constraints
+     .5                           ; Smoothing constant (unused value)
+
+   MY FL                          ; Flush results file
+
+   ; Compute  Fourier Shell Correlation for group reconstruction -----------------
+   FSC [half],[spfreq],[res]      ; Find phase residual &  shell correl.
+     [grpvol_1]                   ; First input volume              (input)
+     [grpvol_2]                   ; Second input volume             (input)
+     0.5                          ; Shell width
+     [sp_pixsiz]                  ; Pixel size
+     [grpfsc]                     ; FSC doc file                    (output)
+     *                            ; No Gnuplot file
+   VM                                      
+      echo  ' 'Group: {****[grp]}'  'Defocus: {%f7.0%[def]}'  'Particles: {******[p]}'  'Resolution: {%f7.2%[res]}    
+
+   ; Save group reconstruction resolution in doc file  
+   SD [grp], [grp],[spfreq],[res]
+     [res_file]                   ; Resolution doc file             (output)
+   SD E 
+     [res_file]                   ; Resolution doc file             (closed)
+
+   MY FL
+
+   TF C3                         ; Create CTF correction file for this group ----
+     [ctf][grp]                  ; CTF correction file               (output)
+     [sp_sph_abb]                ; Spherical abberation
+     [def],[sp_lambda]           ; Defocus, electron wavelength 
+     [sp_winsiz]                 ; Dimension of volume
+     [sp_maxspfreq]              ; Max. spatial frequency
+     [sp_sourcesiz],[sp_def_spr] ; Source size, defocus spread
+     0, 0                        ; Astigmatism, azimuth
+     [sp_acr],[sp_geh]           ; Amplitude contrast ratio, Gaussian halfwidth
+     -1                          ; Sign
+
+   IF ([grploop] .LE. 0) GOTO LB99 ; For handling single defocus group only
+
+ ENDDO                           ; End of defocus group loop -----------------------
+
+
+ UD NEXT END                     ; Finished  with group selection file
+   [sel_grp]                     ; Group selection file         
+
+ VM                                      
+   echo ' '
+
+ LB98                            ; Entry point after skipping back projections
+
+ IF ([do_combine].LE.0) GOTO LB99  ; Can skip combination & resolution 
+
+ ; Apply CTF correction to the defocus group subset volumes  -----------------------
+ TF CTS                          ; CTF correction 
+   df***/[vol_sub1]              ; Template for image file      (input)
+   [sel_grp]                     ; Group selection file          (input)
+   [ctf]                         ; Template for ctf file         (input)
+   [snr]                         ; SNR
+   _1                            ; Temp. inline file             (output)
+
+ TF CTS
+   df***/[vol_sub2]              ; Template for image file       (input)
+   [sel_grp]                     ; Group selection file          (input)
+   [ctf]                         ; Template for ctf file         (input)
+   [snr]                         ; SNR
+   _2                            ; Temp. inline file             (output)
+
+ ; Add  CTF corrected subset volumes to get combined overall volume   --------------
+ AD                              ; Add  volumes
+   _1                            ; Volume                        (input)
+   _2                            ; Volume                        (input)
+   [vol]                         ; Volume                        (output) 
+   *                             ; Finished adding
+
+ ; Compute combined FSC resolution curve ------------------------------------------
+ FSC [half],[spfreq],[res]       ; Find phase residual &  shell correl.
+   _1                            ; First sample volume           (input)
+   _2                            ; Second sample volume          (input)
+   0.5                           ; Shell width
+   [sp_pixsiz]                   ; Pixel size
+   [combfsc]                     ; FSC doc. file                 (output)
+   *                             ; No Gnuplot file
+ VM                                      
+   echo ' 'Reconstruction: [vol].$DATEXT'   'Resolution: {%f5.2%[res]} Angstroms  ; echo ' '
+
+ [key] = [grp]+1
+ if ([grp] < 0) [key] = 999
+
+ [grt] = 0
+ SD // '      OVERALL,    NORM FREQ,    RESOLUTION (ANG.)   (CUTOFF=50%)' 
+   [res_file]                    ; Resolution doc file        (output)
+
+ SD [key],[grt][spfreq],[res]    ; Put resolution in file
+   [res_file]                    ; Resolution doc file        (output)
+
+
+ LB99
+ EN 
+
+; </body></pre></html>

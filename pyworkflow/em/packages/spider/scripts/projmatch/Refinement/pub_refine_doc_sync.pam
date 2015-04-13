@@ -1,0 +1,30 @@
+([type],[iter-stop],[grp],[rn])
+; <html><head><title>Creates alignment sync file.</title></head><body><pre>
+; pub_refine_doc_sync.pam            ArDean Leith Feb 2002
+;                            [rn]   ArDean Leith Feb 2005
+;                            []      ArDean Leith Dec 2005
+; PURPOSE: Creates alignment sync file
+;
+; INPUT PARAMETERS:                
+;     [type]      - Job type flag
+;     [iter-stop] - Iteration stopping flag
+;     [grp]       - Group
+;     [rn]        - unique number 
+;
+; OUTPUT FILE:  jnkdocparamout{***group}    (Doc  file)
+
+; Signal master to awaken (when it sees jnkdocparamout{***[grp]}_{****[rn])
+
+SD 11,[type]                    ; Set sync file output
+t_jnkdocparamout{***[grp]}
+SD 47,[iter-stop]                    
+t_jnkdocparamout{***[grp]}
+
+SD E
+t_jnkdocparamout{***[grp]}
+
+VM
+mv t_jnkdocparamout{***[grp]}.$DATEXT jnkdocparamout{***[grp]}_{****[rn]}.$DATEXT
+
+RE
+; </body></pre></html>

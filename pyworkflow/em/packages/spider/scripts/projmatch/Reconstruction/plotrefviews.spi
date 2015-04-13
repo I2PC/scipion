@@ -1,0 +1,89 @@
+; <html><head><title>Plots number of particles from each reference view</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/plotrefviews.spi 
+;
+; PURPOSE: Plots number of particles for each projection view, group by group.
+;          Then creates overall summary of views for all defocus groups.
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; <b> ------------ Parameters ----------------------------------------
+
+[wantgrpplots] = 0   ; Set this to zero if you do not want to view group plots now
+
+; <b> ------------ Input files ----------------------------------------
+
+[defgrps]         = '../Alignment/sel_group'         ; Defocus groups selection file
+
+[overall_howmany] = 'how_many.$DATEXT'               ; Overall view histogram 
+
+[group_howmany]   = 'df{***[grp]}/how_many.$DATEXT'  ; View histograms by defocus groups
+
+; --------------- Output files  -------------------------------------
+
+[gnuplot_overall] = 'gnuplot_view.$DATEXT'           ; Overall gnuplot script
+
+[displaydir]      = 'display'                        ; Directory for group gnuplot command script
+
+[gnuplot_grp]     = '[displaydir]/gnuplot_hist_{***[grp]}.$DATEXT' ; Group gnuplot scripts
+
+; -------------- END BATCH HEADER ---------------------------------- </b>
+
+VM
+mkdir -p [displaydir]
+
+DO                                ; Loop over all defocus group(s) -------
+
+   UD NEXT [key],[grp],[p],[def]  ; Get group from group sel. file
+   [defgrps]                      ; Group selection file       (input)
+   IF ([key] .LE. 0) EXIT         ; End of groups in doc file
+   
+   VM                             ; Delete the group script output file
+   rm -f [gnuplot_grp]
+ 
+    VM 
+    echo set ylabel \"Particles\" >  [gnuplot_grp]
+
+    VM 
+    echo set xlabel \"View\" >> [gnuplot_grp]
+
+    VM 
+    echo set title \"Particles vs Views for Group {****[grp]}\" >> [gnuplot_grp]
+
+    VM 
+    echo plot \'[group_howmany]\' using 1:3 notitle with boxes >> [gnuplot_grp]
+
+   IF ([wantgrpplots] .EQ. 1) THEN
+      VM                           ; Plot the histogram file                       
+      gnuplot -persist [gnuplot_grp] 
+   ENDIF
+   VM                                 
+   echo ' 'Show histogram for group: {***[grp]} using:'   'gnuplot -persist [gnuplot_grp]
+ENDDO
+
+VM                                ; Delete the group script output file
+rm -f  [gnuplot_overall]        
+
+VM                                ; Create gnuplot script file
+echo ' 'set ylabel \"Particles\" >  [gnuplot_overall]
+VM 
+echo ' 'set xlabel \"View\" >> [gnuplot_overall]
+VM 
+echo ' 'set title \"Particles vs View\" >> [gnuplot_overall]
+VM 
+echo ' 'plot \'[overall_howmany]\' using 1:3 notitle with boxes >> [gnuplot_overall]
+
+VM                                 
+echo ' '  
+VM                                 
+echo ' 'Displaying overall histogram of views using: gnuplot -persist [gnuplot_overall] 
+VM                                 
+echo ' '  
+
+VM                         
+gnuplot -persist [gnuplot_overall]
+
+EN
+ 
+; </body></pre></html>
+

@@ -1,0 +1,137 @@
+; <html><head><title>Create selection files listing particles by defocus group</title></head><body><pre>
+;
+; PURPOSE: Create particle selection doc files listing particles by defocus group.
+;          There is one selection file for each defocus groups listing original
+;          particle numbers which fall in that defocus group.  Also creates a defocus
+;          group selection file with number of particles and avg. defocus for each group.
+;
+; SOURCE: spider/docs/techs/recon/newprogs/sel_by_group.spi 
+;
+; <b> --------------------- Input files ----------------------------------
+
+[sel_micro]           = '../Power_Spectra/def_avg'     ; Micrograph selection file (with defocus, group, avg. defocus)
+
+[defgrps]             = '../Power_Spectra/sel_group'   ; Defocus group selection file (with defocus) 
+ 
+[sel_particles_bymic] = '../Particles/good/ngood****'  ; Particle selection files (by micrograph)
+
+; --------------------- Output files -------------------------------
+
+[sel_particles_bygrp] = 'sel_particles_{***[grp]}'     ; Particle selection files (by defocus group)
+
+[sel_group]           = 'sel_group'                    ; Group selection file (with particles, avg. defocus)
+
+; -------------- END BATCH HEADER ---------------------------------</b>
+
+MD
+TR OFF                              ; Decreases results file output
+MD                                   
+VB OFF                              ; Decreases results file output
+
+VM
+mkdir -p ../Reconstruction
+
+UD N [mcgraphs]                     ; Get number of micrographs from defocus file
+[sel_micro]                         ; Micrograph selection doc file     (input)
+
+UD N [numgrps]                      ; Get number of defocus groups
+[defgrps]                           ; Defocus group selection file      (input)
+
+VM
+echo ' 'Number of micrographs: {****[mcgraphs]}  Defocus groups: {****[numgrps]}
+
+DE                                  ; Remove existing output file.
+[sel_group]                         ; Doc file                          (removed)
+
+; Title for defocus group selection output doc file
+SD /     GROUP   #PARTICLES    AVG.DEFOCUS 
+[sel_group]                         ; Defocus group selection file      (output)
+ 
+[tot] = 0                           ; Total particle counter
+
+DO [key]=1,[numgrps]                ; Loop over all defocus groups ----------------------
+
+    ; Get current defocus group number from defocus group selection file
+    ; Regs:  DEF.GROUP  DEFOCUS                        
+    UD IC [key], [grp],[defocus]    ; Get current group number & avg. CTF
+    [defgrps]                       ; Defocus group selection file      (input)
+
+    VM
+    echo ' '
+
+    DE                              ; Remove any existing output file.
+    [sel_particles_bygrp]           ; Particle selection file          (removed)       
+
+    [parts] = 0                     ; Zero particle key number for this defocus group
+
+    DO [key]=1,[mcgraphs]           ; Loop over all micrographs (key not micrograph) 
+    
+       ;Regs:  MICROGRAPH  DEFOCUS  DEF.GROUP   DEF.GRP.AVG                       
+       UD IC [key] ,[mic], [d],  [thisgrp] ; Get defocus group number for this micrograph  
+       [sel_micro]                         ; Micrograph selection doc file   (input)
+
+       IF ([thisgrp].EQ.[grp]) THEN
+          ; Current micrograph's group is in the current defocus group 
+
+          IQ FI [exist]
+          [sel_particles_bymic][mic]      ; Images by micrograph selection doc file
+
+          IF ([exist].GT.0) THEN
+
+             UD N [numparts]              ; Get # of images 
+             [sel_particles_bymic][mic]   ; Image selection doc file    (input)
+
+             ; Title for particle selection output doc file
+             SD / STACKED_PARTICLE_NO.  OLD_PARTICLE_NO.   GROUP   MICROGRAPH 
+             [sel_particles_bygrp]
+
+             VM
+             echo ' 'Group: {****[grp]} Particles: {*****[numparts]} from Micrograph: {****[mic]}
+
+             ; Loop over all images in this micrograph -----------------------------------
+             DO [key1]=1,[numparts]
+
+                ;     Key     image 
+                UD IC [key1], [img]   
+                [sel_particles_bymic][mic] ; Image selection doc file    (input)
+
+                [parts] = [parts] + 1
+
+                SD [parts], [parts],[img],[grp],[mic]
+                [sel_particles_bygrp]     ; Image selection doc file    (output)
+             ENDDO
+
+             UD ICE                       ; Finished with doc file
+             [sel_particles_bymic][mic]   ; Image selection doc file    (input)
+
+             [tot] = [tot] + [numparts]   ; Increment cumulative total particles counter
+
+          ELSE
+             VM
+             echo ' 'Group: {****[grp]}  Particles: 00000 from micrograph: {****[mic]}  
+          ENDIF
+      ENDIF
+   ENDDO
+
+   UD ICE                                ; Finished with doc file input
+   [sel_micro]
+   SD E                                  ; Finished with doc file output
+   [sel_particles_bygrp]
+
+   ;            GROUP   #PARTICLES   AVG.DEFOCUS   
+   SD [key], [grp],   [parts],    [defocus]    
+   [sel_group]                           ; Summary file               (output)
+
+ENDDO
+
+SD E                                     ; Finished with doc file output
+[sel_group]
+
+VM
+echo ' ' ; echo ' 'Groups: {****[numgrps]}  Total particles: {******[tot]}  
+VM
+echo ' '   
+ 
+EN 
+; </body></pre></html>
+

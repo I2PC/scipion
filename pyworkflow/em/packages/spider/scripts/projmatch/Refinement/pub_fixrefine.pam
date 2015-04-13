@@ -1,0 +1,164 @@
+; <html><head><title>Fixes refinement if a group(s) is missing</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/pub_fixrefine.pam
+;         New                                   Sep 2004  ArDean Leith 
+;         [var]                                 Dec 2005  ArDean Leith
+;         [pixsiz],fsc                          Aug 2012  ArDean Leith
+;
+; PURPOSE: Fix refinement for missing defocus groups
+;
+; Files are set in: refine settings <a href="./refine settings.pam">refine settings.pam</a>)
+;
+; INPUT REGISTERS: None
+;
+; '##' denotes iteration,  '##+' denotes next iteration, and '***' denotes group
+; INPUT FILES:
+;    input/data***@        [unaligned_images]   Unaligned stacked image file  
+;    input/dala##_***@     [aligned_images]     Aligned stacked image files
+;    input/align##_***     [group_align]        Original alignment parameters 
+;    input/undone_select   [undone_select]      Group selection doc. file
+;    input/vol##           [initial_vol]        Initial volume
+;    final/vft##           [vft_for_iter]           
+;    input/params          [params]             Reconstruction parameters file         
+;
+; OUTPUT FILES 
+;    final/vol##+          [next_vol]           Final output volume for each iter.
+;    final/align##+_***    [next_group_align] 
+;    final/fscdoc##+_***   [next_group_fsc]     Resolution doc. file
+;    jnkdoc***                                  Sync doc file from pubsub tasks
+;
+; PROCEDURES CALLED:
+;    refine_settings          <a href="./refine_settings.pam">refine_settings.pam</a>
+;    publish                  <a href="./publish.perl">publish</a>
+;    ... pub_refine_start     <a href="./pub_refine_start.pam"> pub_refine_start</a>          
+;    ....... refine_settings  <a href="./refine_settings.pam">refine_settings.pam</a>            
+;    ....... grploop          <a href="./grploop.pam">grploop.pam</a>            
+;    ....... smangloop        <a href="./smangloop.pam">smangloop.pam</a>            
+;    ....pub_refine_doc_sync  <a href="./pub_refine_doc_sync.pam">pub_refine_doc_sync.pam</a>
+;    pub_refine_wait          <a href="./pub_refine_wait.pam">pub_refine_wait.pam</a>
+;    mergegroups              <a href="./mergegroups.pam">mergegroups.pam</a>
+;
+; -------------------------------- Edit this data --------------------------
+
+ [iter]    = 15    ; Iteration (Set this)
+ [rn]      = 7498  ; random number appended to jnkdocparamout*** files
+ [task]    = 0     ; Pub_starter selector flag 
+ ;                 ; (0 for regular refinement, 1 for small-angle, 2 for endmerge)
+
+ ;[winsize] = 155 ; Image size (Set this) 
+ ; (PARAMS sets this?)
+
+ FR G
+   [temp_jnkdoc]jnkdocparamout{***[grp]}_{****[rn]}   ; For existing and output files
+ ;FR G      ; Output selection file containing list of groups to be run in reg. 1
+ ;[undone_select]undone
+
+; ---------------------------------------------------------------------
+
+ MD
+   TR OFF   ; Loop info turned off
+ MD
+   VB OFF   ; File info turned off
+
+ ; Get global parameters (x41 & x42 depend on [iter]) & set filenames
+ @refine_settings([pixsiz],[r2],[alignsh],[prj-radius],[iter1],[iter-end],[lambda],[small-ang],[winsize],[converg])
+
+ [next-iter] = [iter] + 1
+
+ ;[undone-counter] = 0
+
+ FT                         ; Fourier on volume 
+   [current_vol]              ; Volume produced by previous iter.   
+   [iter_vft]                 ; Used by all groups on this iter. in xoop - vft
+
+ RR S [ampenhance]          ; Amplitude enhancement reg. setting (varies with iteration)
+   [amp-enhance-flags]
+   [iter]
+
+ UD N [num-grps]           ; Find number of defocus groups              
+   [sel_group]             ; WAS [undone_select]
+
+ ;[task] = [small-ang]      ; Pub_starter selector flag
+
+ ; Process all defocus groups in parallel
+ DO  [grp-key] = 1,[num-grps]
+   ;UD IC i,[grp]        
+   ;   [undone_select]
+   UD IC [grp-key],[grp]  ; Get this defocus group number
+     [sel_group]
+   
+   DE
+     [temp_jnkdoc]  ; WAS jnkdocparamout{***[grp]}_{****[rn]}
+
+   ; Check for FSC curves
+   IF([task].lt.2) then   ; For regular/small-angle refinement
+      IQ FI [fsc-exists]
+        [next_group_fsc]
+   ELSE                   ; For endmerge
+      IQ FI [fsc-exists]
+        [next_group_ofsc]
+   ENDIF
+   
+   MY FL
+   
+   ; If FSC curve doesn't exist, note down group# and start refinement
+   IF([FSC-EXISTS].EQ.0) THEN
+      ;[undone-counter] = [undone-counter] + 1
+      ; SD [undone-counter], [grp]
+      ;   [undone_select]
+      
+      VM
+        publish './spider pam/$DATEXT @pub_refine_start {***[grp]} task={*[task]} iter={**[iter]} grp={**[grp]} rn={****[rn]}' 
+      
+   ; Create a jnkdoc file
+   ELSE
+      ;[stop] = 0   ; dummy register
+      UD -2,[percent-greater]
+        [next_group_align]            ; Alignment parameter doc file     (input)
+      UD E
+      
+      [stop] = [percent-greater]* 100
+      
+      ; Create a placeholder for PUB_REFINE_WAIT
+      @pub_refine_doc_sync([task],[stop],[grp],[rn])
+   endif
+ ENDDO
+
+ ; close docs
+ UD ICE
+   [sel_group]
+ ;sd e
+ ;[undone_select]
+
+ ;VM
+ ;echo "Waiting for iteration: {**[iter]}"
+ MY FL                    ; Flush results file
+
+ DE                       ; Delete existing iterations Fourier vol.
+   [iter_vft]                 
+
+ ;  Wait for all subscribers to finish grploop, returns [num-big]
+ [task] = 0               ; When [task]=0, pub_refine_start starts: grploop
+ @pub_refine_wait([task],[num-big],[num-grps],[iter],[converg],[rn])
+
+ ; [num-big] returns number of groups having excessive changes
+ ; (this is summed in: pub_refine_wait)
+ VM
+   echo " After pub_refine_wait, Excessive changes in: {***[num-big]} groups"
+
+ VM
+   echo "Merging groups now"
+ MY FL   ; flush results
+
+ ; Consolidate data for CTF corrections
+ IF([task].LT.2) THEN   ; for regular/small-angle refinement
+   @mergegroups([pixsiz],[iter],[ampenhance],[r2])
+ else
+   @endrefine([r2],[pixsiz],[iter])    
+ endif
+
+ VM
+   echo "Alignment finished for iteration: {***[iter]}"
+
+ EN
+; </body></pre></html>

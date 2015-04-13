@@ -1,0 +1,117 @@
+; <html><head><title>Stack particles by defocus groups</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/nat2stk.spi     
+;
+; PURPOSE: Stack original particles by group, renumbering the 
+;          original particles. Reads serially listed individual particles
+;          provided in the Nature Protocols paper and stacks them.
+;          Not used with current versions of particle picking procedures!!!
+;          Renames: Micrographs/raw*** -- raw****
+;          Renumbers:  good/ngood*** -- Alignment/sel_particles_***
+; NOTE:    The Nature protocols data lacks info necessary to recreate the
+;          whole original micrograph series, only four micrographs are 
+;          included in the data set although the windowed particles 
+;          appear to come from 7 micrographs?, so this just 
+;          creates defocus group stacks not micrograph stacks.
+;
+; <b> ------------ Input files ---------------------------------------
+
+[sel_micrograph]  = 'sel_micrograph'               ; Micrograph selection file
+
+[microg]          = 'Micrographs/raw{***[mic]}'    ; Original micrograph files
+
+[ord_sel]         = 'Particles/order_select'       ; Doc file listing particle series in group
+
+[win]             = 'Particles/win/ser*****'       ; Individual particle images (not stacked)
+
+; --------------- Output files  -------------------------------------
+
+[newmicrog]       = 'Micrographs/raw{****[mic]}'  ; Renamed Original micrographs
+
+[sel_part_by_grp] = 'Alignment/sel_particles_***'  ; Renumbered doc files of selected particle numbers
+
+[stk]             = 'Alignment/data{***[grp]}'     ; Particle images stacked by group
+
+[sel_grp]         = 'Alignment/sel_group'          ; Group selection doc file
+
+; -------------- END BATCH HEADER ------------------------------</b>
+
+MD
+TR OFF                               ; Decreases results file output
+MD
+VB OFF                               ; Decreases results file output
+VM
+echo " Results file omitted for speed" ; echo ' '
+MD
+RESULTS OFF                          ; Omits any results file output
+
+DO                                   ; Loop over all micrographs  ----------------
+   UD NEXT [keym],[mic]              ; Get a micrograph number               
+   [sel_micrograph]                  ; Micrograph listing                (input)
+   IF ([keym].LE.0) EXIT             ; End of groups in doc file
+
+   VM                                ; Add digit to name
+   \mv  [microg].$DATEXT [newmicrog].$DATEXT
+
+   VM
+   echo ' 'Renamed files for micrograph: {*****[mic]}
+ENDDO
+UD NEXT END                          ; Finished with this micrograph
+[sel_micrograph] 
+
+VM                                   ; Rename
+\cp -p   Power_Spectra/defocus.dat  Power_Spectra/sel_group.dat
+
+VM
+echo ' '
+
+DE
+[sel_grp]                             ; Group selection doc file       (output)
+
+VM
+echo ' 'Slow stacking step, please wait
+
+[totparts] = 0
+[igo]      = 1
+DO                                    ; Loop over all defocus groups  ----------------
+   UD NEXT [grp],[npart],[iend],[def] ; Get group number and ending particle number
+   [ord_sel]
+   IF ([grp].LE.0) EXIT              ; End of groups in doc file
+   [num] = 0
+
+   !VM
+   !echo ' ' grp: {***[grp]} npart: {****[npart]} iend: {*****[iend]}
+ 
+   DE
+   [sel_part_by_grp][grp]            ; Renumbered files of sel. particles (output)
+
+   DO [ipart]=[igo],[iend]           ; Loop over all particles in this group -------------
+      [num] = [num] + 1
+
+      CP                             ; Copy particle image to output stack
+      [win][ipart]                   ; Original image for this particle  (input)                  
+      [stk]@{*****[num]}             ; Stacked image                     (output)
+
+      SD [num],[num]              
+      [sel_part_by_grp][grp]         ; Renumbered files of sel. particles (output)
+   ENDDO
+
+   [totparts] = [totparts] + [num]
+
+   SD [grp],[grp],[num],[def]              
+   [sel_grp]                        ; Group selection doc file       (output)
+
+   VM
+   echo ' 'Group: {***[grp]}'   ' Particles: {****[num]}'  ' In: [stk]
+
+   [igo]= [iend] + 1                ; Next starting number
+ENDDO
+
+UD NEXT END                         ; Finished with this defocus group
+[ord_sel] 
+
+VM
+echo ' '; echo ' 'Total particles: {*****[totparts]} ; echo ' '
+
+EN
+; </body></pre></html>

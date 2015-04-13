@@ -1,0 +1,83 @@
+([r2],[pixsiz],[iter])
+;
+; <html><head><title>End of refinement</title></head><body><pre>
+; 
+; SOURCE: spider/docs/techs/recon/newprogs/endrefine.pam     
+;         New                                  Nov 2000  ArDean Leith
+;         Filenames                            Dec 2009  ArDean Leith
+;         softmask call                        Nov 2010  ArDean Leith  
+;         softmask active, nodala              Jan 2012  ArDean Leith  
+;         FSC                                  Aug 2012  ArDean Leith
+;         FSC mask                             Sep 2012  ArDean Leith
+; 
+; PURPOSE:  Corrects group volumes for CTF and merges them into a 
+;           final output volume. Computes final reconstruction resolution.
+;
+; CALLED FROM: <a href="./refine.pam">refine.pam</a>
+;
+; INPUT REGISTERS (SENT FROM CALLER):
+;    [r2]                       Radius of object 
+;    [pixsiz]                   Pixel size         
+;    [iter]                     Current iteration
+;
+;  '##' denotes iteration,  '##+' denotes next iteration, '***' denotes group
+; INPUT FILES 
+;    [sel_group]                input/sel_group         Group selection file             
+;    [temp_ctf_file_template]   work/ctf***             Group CTF correction files                      
+;    [group_bpr_template]       final/bpr##+_***        Group overall volumes     
+;    [group_bpr_template]_sub1  final/bpr##+_***_sub1   Group subset volumes-1  
+;    [group_bpr_template]_sub2  final/bpr##+_***_sub2   Group subset volumes-2
+;
+; OUTPUT FILES: 
+;    [bpr]                      final/bpr##+            Final overall volume               
+;    [bpr]_sub1                 final/bpr1##+_sub1      Final subset volume-1        
+;    [bpr]_sub2                 final/bpr2##+_sub2      Final subset volume-2          
+;    [ofsc]                     final/ofscdoc_##+       Overall FSC  doc file
+;    [iter_resol]               final/resolutions       Resolution doc file 
+; 
+;......................................................................
+
+ [next-iter] = [iter] + 1
+
+ VM
+   echo ' '; echo -n " Starting endrefine, Iteration: {**[iter]} --- "; date '+ %x  %X'
+
+ TF CTS                       ; CTF correction & vol. merge
+   [group_bpr_template]       ; Group volumes              (input)
+   [sel_group]                ; Group file numbers         (input) 
+   [temp_ctf_file_template]   ; Volume ctf files           (input)
+   3.0                        ; SNR
+   [bpr]                      ; Final overall volume       (output)
+
+ TF CTS                       ; CTF correction & vol. merge 
+   [group_bpr_template]_sub1  ; Group volume-1             (input)
+   [sel_group]                ; Group file numbers         (input)
+   [temp_ctf_file_template]   ; Volume ctf files           (input) 
+   3.0                        ; SNR
+   [bpr]_sub1                 ; Final subset volume-1      (output)
+
+ TF CTS                       ; CTF correction & vol. merge 
+   [group_bpr_template]_sub2  ; Group volume-2             (input)
+   [sel_group]                ; Group file numbers         (input) 
+   [temp_ctf_file_template]   ; Volume ctf files           (input) 
+   3.0                        ; SNR
+   [bpr]_sub2                 ; Final subset volume-2      (output)
+
+ ; Resolution calculation
+ FSC [half],[spfreq],[res]    ; Find phase residual &  shell correl.
+   [bpr]_sub1                 ; Final subset volume-1      (input)
+   [bpr]_sub2                 ; Final subset volume-2      (input)
+   0.5,[r2]                   ; Shell width, mask radius
+   [pixsiz]                   ; Pixel size
+   [ofsc]                     ; Overall FSC doc file       (output)
+   *                          ; No Gnuplot file
+
+ ; Record final volume resolution in doc. file
+ [gr] = 0                     ; Not for a defocus group 
+ SD [iter],[iter],[gr],[res]  ; Save resolution  
+   [iter_resol]               ; Resolution doc file        (output)
+
+ RE
+
+; </body></pre></html>
+

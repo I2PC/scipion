@@ -1,0 +1,95 @@
+([prj-radius],[grp],[iter],[pixsiz],[rm])
+
+; <html><head><title>Merge volumes at end of defocus group loop</title></head><body><pre>
+; SOURCE: spider/docs/techs/recon/newprogs/endmerge.pam
+;         new                                Nov 2000  ArDean Leith
+;         []                                 Dec 2005  ArDean Leith
+;         maxim                              Dec 2006  ArDean Leith
+;         group sel. filename                Dec 2009  ArDean Leith
+;         echo format                        Aug 2010  ArDean Leith  
+;         'BP CG 3'                          Jan 2011  ArDean Leith
+;         FSC                                Aug 2012  ArDean Leith
+;
+; INPUT REGISTERS: (Read from caller)
+;   [prj-radius]           Radius of restored object 
+;   [grp]                  Group number
+;   [next-iter]            Iteration number
+;   [rm]                   Mask radius
+;
+;  '##' denotes iteration,  '##+' denotes next iteration,  '***' denotes group
+; INPUT FILES:
+;   [sel_particles]        input/select_***        Group particle selection doc file
+;   [next_group_align]     final/align##+***       Alignment parameter doc file 
+;
+; OUTPUT FILES:
+;   [next_group_bpr]       final/bpr##+_***        Reconstructed group volume
+;   [next_group_bpr]_sub1  final/bpr##+_***_sub1   Group volume-sub1 
+;   [next_group_bpr]_sub2  final/bpr##+_***_sub2   Group volume-sub2 
+;   [next_group_ofsc]      final/ofscdoc_##+       Overall group resolution doc file 
+;
+; Uses inline stack file: _8
+;......................................................................
+
+ [next-iter] = [iter]+1
+
+ VM
+   echo -n " Starting endmerge, Group: {***[grp]} ---  " ; date '+ %x  %X'
+
+ DE
+  _8@                       ; If not deleted may overflow existing stack
+
+ FI H [maxim]               ; Find total number of images (not same as in group selection)
+   [unaligned_images]@      ; Aligned images                    (input)
+   MAXIM                    ; Number of images in file 
+
+ ; If the aligned projections don't fit in _8@, use disk stack.
+ CP                         ; Load unaligned images into inline stack #8
+   [unaligned_images]@      ; Aligned images                    (input)
+   _8@                      ; Inline stack                      (output)
+   [maxim]                  ; Number of images (Not all in use)
+
+ ; Align particle images 
+ RT SF                      ; Rotate & shift operation
+   _8@******                ; Unaligned original stacked images 
+   [sel_particles]          ; Particle selection file           (input) 
+   6,0,7,8                  ; Reg. #s for angle, scale, & shift
+   [next_group_align]       ; Alignment parameter doc file      (input)
+   _8@******                ; Current aligned images            (output)
+
+ ; Create group volumes using 'BP CG 3' (Better than 'BP 32F').
+ BP CG 3                    ; Back Projection - CG
+   _8@******                ; Template for image files          (input)
+   [sel_particles]          ; Group particle selection doc file (input)
+   [prj-radius]             ; Radius of restored object
+   [next_group_align]       ; Alignment parameters doc file     (input)
+   L                        ; Linear interpolation 
+   [next_group_bpr]         ; Reconstructed group volume        (output)
+   [next_group_bpr]_sub1    ; Reconstructed group volume 1      (output)
+   [next_group_bpr]_sub2    ; Reconstructed group volume 2      (output)
+   1.0E-5, 0.0              ; Error limit, chi^2 limit
+   25, 1                    ; Iteration limit, mode
+   2000                     ; Weighting
+
+ MY FL
+
+ ; Determine group reconstruction resolution
+ FSC [half],[spfreq],[res]  ; Find phase residual &  shell correl.
+   [next_group_bpr]_sub1    ; Reconstructed group volume 1      (output)
+   [next_group_bpr]_sub2    ; Reconstructed group volume 2      (output)
+   0.5, [rm]                ; Shell width, mask radius
+   [pixsiz]                 ; Pixel size 
+   [next_group_ofsc]        ; Overall group FSC doc file        (output)
+   *                        ; No Gnuplot file wanted
+
+ ; Record group reconstruction resolution in doc file
+ SD [iter],[iter],[grp],[res] ; Save resolution
+   [grp_resol]                ; Resolution doc file             (output)
+
+ DE
+   _8@
+
+ MY FL
+
+ RE
+; </body></pre></html>
+

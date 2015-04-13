@@ -1,0 +1,68 @@
+([task],[num-big],[num-grps],[iter],[converg],[rn])
+;
+; SOURCE: spider/docs/techs/recon/newprogs/pub_refine_wait.pam
+;         New                           ArDean Leith Nov 2000
+;         [rn]                          ArDean Leith Feb 2005
+;         []                            ArDean Leith Dec 2005
+;         echo date change              ArDean Leith Sep 2010
+;         wait message                  ArDean Leith Dec 2010
+;
+; PURPOSE:  Waits for all subscriber processes to finish
+;           [task]=0  Runs grploop 
+;           [task]=1  Runs smangloop 
+;           [task]=2  Runs endmerge, accumulates [num-big] contents from sync doc file.
+;
+; CALLED FROM: <a href=./pub_refine.pam">pub_refine.pam</a> 
+;  
+; INPUT REGISTERS (FROM CALLER):
+;    [task]       Task id 
+;    [num-grps]   Number of tasks 
+;    [iter]       Iteration number 
+;    [converg]    Convergence %  
+;    [rn]         4 digit random number to append to DOC_SYNC files
+;
+; OUTPUT REGISTER:  [num-big]   Acummulated number of groups with large changes 
+;
+; INPUT FILE:  jnkdocparamout{***group}_{****[rn]}*
+
+IF ([task] .LE. 1) THEN
+   VM
+   echo -n " Waiting for iteration: {**[iter]}   " ; date '+ TIME: %x  %X'
+ELSE
+   VM                      ; Echo current time 
+   echo -n " Waiting for endmerge for iteration: {**[iter]}  " ; date '+ TIME: %x  %X'
+ENDIF
+
+MY FL                      ; Flush results
+
+[num-big]=0                ; Initialize return value
+
+DO I=1,[num-grps]          ; Wait for all groups/parallel tasks 
+
+   UD S I,[grp]            ; Get group number
+   [sel_group_sorted]
+
+   UD E
+
+   IQ SYNC                 ; Wait for file existence
+   jnkdocparamout{***[grp]}_{****[rn]}
+   (10 3600000)            ; Check time, max. time
+
+   VM
+   echo -n " Synced iter: {**[iter]} Group: {**[grp]} --- "; date '+ TIME: %x  %X'
+
+   IF ([task] .EQ. 0) THEN
+      ; grploop/smangloop returns [num-big] in jnkdocparamout{***[grp]} key:47 
+      ; Key 47 has % of images whose proj. angle moved by >1.5*[ang-step]
+      UD 47,[percent]
+      jnkdocparamout{***[grp]}_{****[rn]}
+      IF([percent].GT.[converg]) [num-big]=[num-big]+1  ; Excessive ang. change for this group  
+      UD E
+   ENDIF
+   DE
+   jnkdocparamout{***[grp]}_{****[rn]}
+
+   MY FL                   ; Flush results
+ENDDO                      ; End wait loop over tasks
+
+RE

@@ -1,0 +1,54 @@
+([iter],[grp])
+; <html><head><title>DeCloning group loop</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/pub_ref_loop_declone.pam
+;         New                                    ArDean Leith Jan 2009
+;         grp_resol removed                      ArDean Leith Jun 2010
+;         'dala' files removed                   ArDean Leith Jan 2011
+;         New variable definitions               ArDean Leith Jan 2011
+;         Dala removal, doc files not cloned     ArDean Leith Jan 2012
+;
+; PURPOSE: Runs on compute nodes to copy local 'grploop files' backto master disk
+;
+; CALLED FROM: <a href="./pub_refine_start.pam">pub_refine_start</a> 
+;
+; INPUT REGISTERS:
+;    [iter]                 Alignment step iteration counter  (varies with iter)
+;    [grp]                  Defocus group                     (varies with group)
+;
+; I/O Registers & files are set in: <a href="./refine settings.pam">refine settings.pam</a>
+;
+; '##' denotes iteration,  '##+' denotes next iteration, and '***' denotes group
+;
+; OUTPUT FILES (SET IN: refine_settings <a href="./refine_settings.pam">refine_settings.pam</a>.pam):
+;    [next_group_fsc]       final/fscdoc_##+_***   FSC curve doc file
+;    [next_group_vol]       work/vol##+            Next group volume
+;    [next_group_vol]_sub1  work/vol##+_***_sub1   Next group volume-sub1
+;    [next_group_vol]_sub2  work/vol##+_***_sub2   Next group volume-sub2
+;
+; ---------------------------------------------------------------------
+
+[next-iter] = [iter]+1
+
+; Copy local files back onto master disk
+VM
+\cp [next_group_fsc].$DATEXT       [master_next_group_fsc].$DATEXT 
+VM
+\cp [next_group_vol].$DATEXT       [master_next_group_vol].$DATEXT 
+VM
+\cp [next_group_vol]_sub1.$DATEXT  [master_next_group_vol]_sub1.$DATEXT 
+VM
+\cp [next_group_vol]_sub2.$DATEXT  [master_next_group_vol]_sub2.$DATEXT 
+
+; Clear temp directory with no longer needed files
+VM
+\rm -r [temp_local_dir]/input [temp_local_dir]/work [temp_local_dir]/final >& /dev/null
+          
+RE
+; </body></pre></html>
+
+
+
+
+
+

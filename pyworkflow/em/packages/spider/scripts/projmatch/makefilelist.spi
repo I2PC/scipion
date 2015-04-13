@@ -1,0 +1,60 @@
+; <html><head><title>Create selection file</title></head><body><pre>
+;
+; PURPOSE: Interactively create a selection doc. file listing 
+;          NON-consecutive file numbers. 
+;
+; SOURCE: spider/docs/techs/recon/newprogs/makefilelist.spi 
+; 
+
+ ; ---------------------- Input files -------------------------------
+
+ [micrographs] = 'raw****'         ; Micrograph name template
+
+ ; --------------------- Output files -------------------------------
+
+ [out-file] = '../sel_micrograph'  ; Selection file name
+
+ ; -------------- END BATCH HEADER ---------------------------------</b>
+
+ RR [first]
+   ?Starting file number?
+
+ RR [last]
+   ?Ending file number?
+
+ DE                ; If output doc file already exists, delete it
+   [out-file]
+
+ SYS
+   echo "  Finding micrographs...."
+
+ ; Initialize micrograph-counter
+ [mic-counter] = 0
+
+ ; Loop through micrographs
+
+ ; Check if micrograph exists
+ DO  [mic-num] = [first],[last]
+    ; Check if micrograph exists
+    IQ FI [mic-exists]
+      [micrographs][mic-num]
+
+    ; If micrograph exists...
+    IF ([mic-exists].EQ.1) THEN
+        ; Increment micrograph counter
+        [mic-counter] = [mic-counter] + 1
+
+        ; Write to selection doc
+        SD [mic-counter], [mic-num]
+          [out-file]
+    ENDIF
+ ENDDO       ; End micrograph-loop
+
+ ; Close doc
+ SD E
+   [out-file]
+
+ SYS
+   echo ; echo "  Found {***[mic-counter]} micrographs" ; echo
+
+ EN 
