@@ -48,7 +48,7 @@ SCRIPTS_DIR = 'scripts'
 
 # Match strings of the type
 # key = value ; some comment
-REGEX_KEYVALUE = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<s1>\s*)=(?P<s2>\s*)(?P<value>\S+)(?P<rest>\s+.*)")
+REGEX_KEYVALUE = re.compile("(?P<prefix>[^[]*)(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<s1>\s*)=(?P<s2>\s*)(?P<value>\S+)(?P<suffix>\s+.*)")
 # Match strings of the type [key]value
 # just before a 'fr l' line
 REGEX_KEYFRL = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<value>\S+)(?P<rest>\s+.*)")
@@ -105,6 +105,37 @@ def __substituteVar(match, paramsDict, lineTemplate):
     return None
     
     
+def writeScript(inputScript, outputScript, paramsDict):
+    """ Create a new Spider script by substituting 
+    params in the input 'paramsDict'.
+    """
+    fIn = open(getScript(inputScript), 'r')
+    fOut = open(outputScript, 'w')
+    inHeader = True # After the end of header, not more value replacement
+    inFrL = False
+    
+    for i, line in enumerate(fIn):
+        if END_HEADER in line:
+            inHeader = False
+        if inHeader:
+            try:
+                newLine = __substituteVar(REGEX_KEYVALUE.match(line), paramsDict, 
+                                          "%(prefix)s%(var)s%(s1)s=%(s2)s%(value)s%(suffix)s\n")
+                if newLine is None and inFrL:
+                    newLine = __substituteVar(REGEX_KEYFRL.match(line), paramsDict, 
+                                              "%(prefix)s%(var)s%(value)s%(suffix)s\n")
+                if newLine:
+                    line = newLine
+            except Exception, ex:
+                print ex, "on line (%d): %s" % (i+1, line)
+                raise ex
+            inFrL = line.lower().startswith("fr ")
+        fOut.write(line)
+    fIn.close()
+    fOut.close()    
+     
+    
+    
 def runScript(inputScript, ext, paramsDict, log=None, cwd=None):
     """ This function will create a valid Spider script
     by copying the template and replacing the values in dictionary.
@@ -117,31 +148,8 @@ def runScript(inputScript, ext, paramsDict, log=None, cwd=None):
     if cwd is not None:
         outputScript = join(cwd, outputScript)
 
-    fIn = open(getScript(inputScript), 'r')
-    fOut = open(outputScript, 'w')
-    inHeader = True # After the end of header, not more value replacement
-    inFrL = False
-    
-    for i, line in enumerate(fIn):
-        if END_HEADER in line:
-            inHeader = False
-        if inHeader:
-            try:
-                newLine = __substituteVar(REGEX_KEYVALUE.match(line), paramsDict, 
-                                          "%(var)s%(s1)s=%(s2)s%(value)s%(rest)s\n")
-                if newLine is None and inFrL:
-                    newLine = __substituteVar(REGEX_KEYFRL.match(line), paramsDict, 
-                                              "%(var)s%(value)s%(rest)s\n")
-                if newLine:
-                    line = newLine
-            except Exception, ex:
-                print ex, "on line (%d): %s" % (i+1, line)
-                raise ex
-            inFrL = line.lower().startswith("fr ")
-        fOut.write(line)
-    fIn.close()
-    fOut.close()    
-
+    writeScript(inputScript, outputScript, paramsDict)
+        
     scriptName = removeBaseExt(outputScript)
     args = " %s @%s" % (ext, scriptName)
     
@@ -213,6 +221,10 @@ class SpiderDocFile(object):
     def __init__(self, filename, mode='r'):
         self._file = open(filename, mode)
         self._count = 0
+        
+    def writeComment(self, comment):
+        line = ' ;%s' % comment
+        print >> self._file, line 
         
     def writeValues(self, *values):
         """ Write values in spider docfile. """
