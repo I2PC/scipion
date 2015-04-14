@@ -426,7 +426,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         protected void saveSelection(String path) {
             try {
                 boolean[] selection = null;
-                if(gallery.hasSelection())
+                if(gallery.hasSelection() && !data.hasDisabled())
                     selection = gallery.getSelection();
                 ((ScipionGalleryData)data).overwrite(path, selection);
             } catch (SQLException ex) {
