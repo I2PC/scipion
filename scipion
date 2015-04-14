@@ -348,7 +348,7 @@ def main():
             # options for scons and our own install script
             sconsArgs = [a for a in args if not script.env.hasTarget(a)]
 
-            # Special argument to skip Xmipp compilation, mainly for debugging            
+            # Special argument to skip Xmipp compilation, mainly for debugging
             if '--no-xmipp' in args:
                 return 0
 

@@ -1,0 +1,44 @@
+; <html><head><title>Filter the 3D reconstruction</title></head><body><pre>
+;
+; SOURCE:  spider/docs/techs/recon/newprogs/filt.spi 
+;
+; PURPOSE: Filter the 3D reconstruction to the resolution determined 
+;          by the Fourier Shell Correlation test. Use a low-pass 
+;          Butterworth filter, setting the upper/lower frequency 
+;          limits to the cutoff value +/- 0.05.
+;
+; <b> I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; --------------- Input files ---------------------------------------
+
+ [res] = 'resolution'    ; Doc file containing overall resolution data
+
+ [vol] = 'vol01'         ; Initial reconstruction vol. (from ctf.spi)
+
+ ; --------------- Output files  -------------------------------------
+
+ [fvol] = 'volfq01'      ; Filtered volume
+
+ ; -------------- END BATCH HEADER ---------------------------------</b>
+
+ UD 1,[cutoff]           ; Get cutoff freq. value from resolution doc file
+   [res]
+
+ [lo] = [cutoff] - 0.05  ; Lower freq. limit
+ [hi] = [cutoff] + 0.05  ; Upper freq. limit
+
+ VM
+   echo  ' Filtered: [vol] to create: [fvol]  with freq. limits: {%f6.2%[lo]} ... {%f6.2%[hi]}'
+
+ FQ                      ; Filter quick
+   [vol]                 ; Input volume                        (input)
+   [fvol]                ; Output volume                       (output)
+   7                     ; Filter type = Butterworth low-pass
+   [lo],[hi]             ; Upper, lower frequency limits
+
+ VM
+   echo  ' '; echo  " Use the 'Surface' operation in WEB to view: [fvol] " ; echo  ' '
+
+ EN
+ ; </body></pre></html>
+

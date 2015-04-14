@@ -1,0 +1,130 @@
+([pixsiz],[iter],[ampenhance],[rm])
+;
+; <html><head><title>Merges groups at end of each refinement iteration</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/mergegroups.pam
+;         New                                ArDean Leith  Nov 2000
+;         Enhance                            ArDean Leith  Apr 2005
+;         CofG centering now done here       ArDean Leith  Sep 2010
+;         Ampl. enhancement moved out        ArDean Leith  Oct 2010
+;         FSC, pixsiz                        ArDean Leith  Aug 2012
+;
+; PURPOSE: Consolidates goup volumes with CTF correction at end of each 
+;          iteration into overeall volumes. Filters to limit resolution.
+;          (This is not done in parallel).
+;
+; CALLED FROM: pub_refine  <a href="./pub_refine.pam">pub_refine.pam</a>
+;
+; INPUT REGISTERS:
+;    [pixsiz]                        Pixel size        
+;    [iter]                          Refinement step iteration counter  
+;    [ampenhance]                    Flag to use amplitude enhancement  
+;    [rm]                            Radius of object 
+;
+; '##' denotes iteration,  '##+' denotes next iteration,  '***' denotes group
+; INPUT FILES:
+;    [sel_group]                     input/sel_group      List of groups                
+;    [temp_ctf_file_template]        work/ctf***          3D CTF files
+;    [next_group_vol_template]       work/vol_##          Group volume    
+;    [next_group_vol_template]_sub1  work/vol_##_sub1     Group volume, deleted at end   
+;    [next_group_vol_template]_sub2  work/vol_##_sub2     Group volume, deleted at end 
+;    [mask]                          input/mask           (Optional) Mask from original input volume 
+
+; OUTPUT FILES:
+;    [next_val]                      final/val##          Unfiltered volume
+;    [next_vol]_sub1                 final/vol##_sub1     Unfiltered volume - subset 1
+;    [next_vol]_sub2                 final/vol##_sub2     Unfiltered volume - subset 2
+;    [next_vol]_filtered             final/vol##_filtered Filtered volume
+;    [next_vol]                      final/vol##          Shifted, filtered volume
+;    [next_fsc]                      final/fscdoc##       Resolution doc.
+;    [enhance_doc]                   work/enhance_doc_##+ (Optional) Ampl filter doc. file
+;    [next_val]_amps                 final/val##+_amps    (Optional) Ampl enhanced vol., unfiltered
+;;
+;.......................................................................
+
+ ; All defocus groups must be present here for "TF CTS" use!
+
+ [next-iter] = [iter] + 1          ; Next iteration
+
+ TF CTS                            ; CTF Correction
+   [next_group_vol_template]       ; Overall group volumes             (input)
+   [sel_group]                     ; Group selection file              (input)
+   [temp_ctf_file_template]        ; 3D CTF files                      (input)
+   3                               ; SNR
+   [next_val]                      ; Overall CTF'd volume              (output)
+
+ TF CTS                            ; CTF Correction
+   [next_group_vol_template]_sub1  ; Subset 1 group volumes            (input)
+   [sel_group]                     ; Group selection file              (input)
+   [temp_ctf_file_template]        ; 3D CTF files                      (input)
+   3                               ; SNR
+   [next_vol]_sub1                 ; CTF'd volume - subset 1           (output)
+
+ TF CTS                            ; CTF Correction
+   [next_group_vol_template]_sub2  ; Subset 2 group volumes            (input)
+   [sel_group]                     ; Group Selection File              (input)
+   [temp_ctf_file_template]        ; 3D CTF files                      (input)
+   3                               ; SNR
+   [next_vol]_sub2                 ; CTF'd volume - subset 2           (output)
+
+ ; Resolution calculation
+ DE
+   [next_fsc]                      ; FSC doc file                      (removed) 
+
+ FSC [half],[spfreq],[res]         ; Find phase residual &  shell correl.
+   [next_vol]_sub1                 ; Volume - subset 1                  (input)
+   [next_vol]_sub2                 ; Volume - subset 2                 (input)
+   0.5,[rm]                        ; Shell width
+   [pixsiz]                        ; Pixel size
+   [next_fsc]                      ; FSC doc file                      (output)
+   *                               ; No Gnuplot file
+
+ VM
+   echo " Iteration: {**[iter]}  Resolution:  {%f6.2%[res]}" 
+
+ [gr] = 0                          ; Defocus group is zero now (none)
+ SD [iter], [iter],[gr],[res]      ; Save in doc file
+   [iter_resol]                    ; Resolution doc file             (output)
+
+ IF ([ampenhance] .EQ. 0) THEN     
+    ; Usual case. No amplitude enhancement.  Filter to limit resolution
+
+    IF([spfreq] .GT. 0.35)[spfreq] = 0.4 ; Limits pass-band
+
+    [stop-band] = [spfreq]+0.15    ; Stop band frequency
+
+    ; Filter output volume to limit resolution
+    FQ                             ; Quick filter          
+      [next_val]                   ; CTF'd reconstructed volume       (input)
+      [next_vol]_filtered          ; Filtered volume                  (output)
+      7                            ; Butterworth Low pass filter
+      [spfreq],[stop-band]         ; Pass-band and stop-band freq.
+
+ ELSE                               
+    ; Apply amplitude enhancement filter and filter to limit resolution
+    @enhance([p69],[pixsiz],[next-iter],[spfreq])  
+      [next_val]                   ; CTF'd reconstructed volume       (input)
+      [next_vol]_filtered          ; Filtered volume                  (output)
+
+ ENDIF
+
+ ; Find center of gravity of overall filtered volume
+ CG PH [unused],[unused],[unused],[xcg],[ycg],[zcg]  
+   [next_vol]_filtered             ; Filtered volume                  (input)
+
+ ; Shift filtered vol to its Center of Gravity
+ SH F                              ; Shift filtered vol 
+   [next_vol]_filtered             ; Filtered volume                  (input)
+   [next_vol]                      ; Shifted filtered volume          (output)
+   -[xcg],-[ycg],-[zcg]            ; Shift distances for CofG
+ 
+ VM                                ; Delete files to save space
+   \rm [next_group_vol_template]_sub1* [next_group_vol_template]_sub2*   
+
+ VM
+   echo -n " Iter: {**[iter]}"   Shift: -{%F4.1%[xcg]},-{%F4.1%[ycg]},-{%F4.1%[zcg]} ; date '+ Time: %x  %X' 
+
+ MY FL
+ RE
+
+; </body></pre></html>

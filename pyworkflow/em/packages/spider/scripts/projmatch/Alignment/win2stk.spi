@@ -1,0 +1,109 @@
+; <html><head><title>Stack particles by defocus groups</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/dev/win2stk.spi     
+;                       Added header mic number       Jul 2011 ArDean Leith
+;
+; PURPOSE: Stack original particles by defocus groups, renumbering the 
+;          original particles. Stores micrograph number and original
+;          windowed particle number in particle file header
+;
+; <b> ------------ Input data ----------------------------------------
+
+[projnum]        = 0;                                           ; Project id number
+
+; <b> ------------ Input files ---------------------------------------
+                                     
+[sel_group]      = 'sel_group'                                  ; Defocus group selection file
+
+[sel_micrograph] = '../Power_Spectra/def_avg'                   ; Micrograph selection file
+                      
+[sel_particles]  = '../Particles/good/ngood{****[mic]}'         ; Doc file lists selected particles by micrograph
+
+[win]            = '../Particles/win/winser_{****[mic]}@******' ; Particle images stacked by micrograph
+
+; --------------- Output files  -------------------------------------
+
+[stk]            = 'data{***[grp]}@******'                       ; Particle images stacked by defocus group
+
+; -------------- END BATCH HEADER ------------------------------</b>
+
+MD
+TR OFF                                ; Decreases results file output
+MD
+VB OFF                                ; Decreases results file output
+VM
+echo " Results file omitted for speed" ; echo ' '
+MD
+RESULTS OFF                           ; Omits any results file output
+
+UD N [nummics]                        ; Get number of micrographs from defocus file
+[sel_micrograph]                      ; Micrograph selection doc file     (input)
+; /     MICROGRAPH  DEFOCUS    DEF.GROUP   DEF.GRP.AVG                        
+
+UD N [numgrps]                        ; Get number of defocus groups 
+[sel_group]                           ; Defocus group selection file      (input)
+
+DO [keyg]=1,[numgrps]                 ; Loop over all defocus groups --------------
+
+    [numingrp] = 0
+
+    ; Get current defocus group number from defocus group selection file
+    UD IC [keyg], [grp]               ; Get current group number & avg. CTF
+    [sel_group]                       ; Defocus group selection file      (input)
+
+    DO [keym]=1,[nummics]             ; Loop over all micrographs  ----------------
+
+      UD IC [keym], [mic],[d],[grpt]  ; Get a micrograph number and its group number
+      [sel_micrograph]                ; Micrograph listing                (input)
+
+      IF ([grpt].EQ.[grp]) THEN
+         ; This micrograph's group is the current defocus group 
+
+         IQ FI [exist]                ; See if there are any particles from this group
+         [sel_particles]              ; Images by micrograph selection doc file
+
+         IF ([exist].GT.0) THEN
+
+            UD N [numparts]           ; Get number of particles
+            [sel_particles]           ; Image selection doc file    (input)
+
+
+            ; Loop over all particles in this micrograph --------------------------
+            DO [keyp]=1,[numparts]
+
+               UD IC [keyp], [part]   ; Get particle number by micrograph
+               [sel_particles]        ; Image selection doc file    (input)
+
+               [numingrp] = [numingrp] + 1
+
+               CP                      ; Copy particle image to output stack
+               [win][part]             ; Original image for this part.  (input)                  
+               [stk][numingrp]         ; Stacked image                  (output)
+
+               ST H                    ; Set header values
+               [stk][numingrp]         ; Stacked image                  (output)
+               PROJ,MIC,NUM
+               [projnum],[mic],[part]  ; Header values
+
+            ENDDO
+
+            VM
+            echo ' 'Group: {****[grp]} Particles: {*****[numparts]} from Micrograph: {****[mic]}
+
+            UD ICE                    ; Finished with this micrograph
+            [sel_particles][mic]
+         ENDIF
+      ENDIF
+   ENDDO
+
+   UD ICE                             ; Finished with this defocus group
+   [sel_micrograph] 
+
+   VM
+   echo ' 'Stacked group: {***[grp]} with: {*****[numingrp]} particles
+ENDDO
+VM
+echo ' ' 
+
+EN
+; </body></pre></html>

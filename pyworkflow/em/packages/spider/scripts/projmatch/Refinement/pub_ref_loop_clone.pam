@@ -1,0 +1,85 @@
+([iter],[grp])
+; <html><head><title>Cloning group loop</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/pub_ref_loop_clone.pam
+;         New                                    ArDean Leith Jan 2009
+;         New variable definitions               ArDean Leith Mar 2010
+;         recursive bug                          ArDean Leith May 2010
+;         null copy on [iter_vft]                ArDean Leith Aug 2010
+;         New variable definitions               ArDean Leith Jan 2011
+;         Dala removal, doc files not cloned     ArDean Leith Jan 2012
+;
+; PURPOSE: Runs on compute nodes to copy 'grploop files' to local disk
+;
+; CALLED FROM: <a href="./pub_refine_start.pam">pub_refine_start</a> 
+;
+; Files are set in: refine settings <a href="./refine settings.pam">refine settings.pam</a>
+; 
+; INPUT REGISTERS:
+;    [iter]               Iteration counter      (Varies with iter)
+;    [grp]                Defocus group          (Varies with group)
+;
+; '##' denotes iteration,  '##+' denotes next iteration, and '***' denotes group
+; INPUT FILES:  (Copied from master node or created/used on compute node)
+;    [sel_group]          input/sel_group         Group selection doc file
+;    [sel_particles]      input/select_***        Particle selection file          
+;    [unaligned_images]   input/data***           Unaligned stacked image files      
+;    [iter_refangs]       work/ref_angs_##        Ref. angles doc file                  
+;    [temp_ctf_file]      work/ctf***             CTF corrected volume from prepare  
+;    [iter_vft]           final/vft##             Current filtered volume     (Optional)
+;    [grp_resol]                                  Group resolution file       (Optional)
+; ---------------------------------------------------------------------
+
+; Clear temp directory and create temp local dir., divert errors to junk
+ VM
+   \rm -rf [temp_local_dir]/input [temp_local_dir]/final [temp_local_dir]/work >& /dev/null
+
+ ; Create temp local dir., Divert errors to junk
+ VM
+   mkdir -p [temp_local_dir] [temp_local_dir]/input [temp_local_dir]/final [temp_local_dir]/work >& /dev/null
+
+ VM                                 ; So anyone can delete it
+   chmod 777 [temp_local_dir]/input [temp_local_dir]/final [temp_local_dir]/work >& /dev/null
+
+ VM                                 ; Not used for small angle refinement
+   \cp [iter_vft].$DATEXT             [temp_local_dir][iter_vft].$DATEXT >& /dev/null
+ VM
+   \cp [iter_refangs].$DATEXT         [temp_local_dir][iter_refangs].$DATEXT 
+ VM
+   \cp [temp_ctf_file].$DATEXT        [temp_local_dir][temp_ctf_file].$DATEXT 
+ VM
+   \cp [sel_particles].$DATEXT        [temp_local_dir][sel_particles].$DATEXT 
+ VM
+   \cp [group_align].$DATEXT          [temp_local_dir][group_align].$DATEXT 
+ VM
+   \cp [unaligned_images].$DATEXT     [temp_local_dir][unaligned_images].$DATEXT 
+
+ ;;VM ; NECESSARY??
+ ;;  \cp [grp_resol].$DATEXT            [temp_local_dir][grp_resol].$DATEXT >& /dev/null
+
+ ; Save current output file locations for declone (Saves current value of variable)
+
+ GLO [master_next_group_vol]    = [next_group_vol] 
+ GLO [master_next_group_fsc]    = [next_group_fsc] 
+
+ ; Redefine current file locations for input files
+
+ GLO [iter_vft]                = '[temp_local_dir]/'[iter_vft] 
+ GLO [iter_refangs]            = '[temp_local_dir]/'[iter_refangs] 
+ GLO [temp_ctf_file]           = '[temp_local_dir]/'[temp_ctf_file] 
+ GLO [sel_particles]           = '[temp_local_dir]/'[sel_particles] 
+ GLO [group_align]             = '[temp_local_dir]/'[group_align] 
+ GLO [unaligned_images]        = '[temp_local_dir]/'[unaligned_images] 
+          
+ ; Redefine current file locations for output files from compute node
+
+ GLO [next_group_vol]          = '[temp_local_dir]/'[next_group_vol] 
+ GLO [next_group_fsc]          = '[temp_local_dir]/'[next_group_fsc] 
+
+ RE
+; </body></pre></html>
+
+
+
+
+

@@ -1,0 +1,286 @@
+ ; <html><head><title>Creates parameter file for reconstruction</title></head><body><pre>
+ ;
+ ; SOURCE: spider/docs/techs/recon/newprogs/makeparams.spi 
+ ;
+ ; PURPOSE: Creates parameter file, including values for 
+ ;    lambda, spatial frequency, window size, particle size 
+                                                                 
+ ; ----------- Registers ------------------------
+ ; Default values for ribosomes (only used if zero is input for query below)
+ [ws] = 368                  ; Angstroms, default typical window size for ribosome projects
+ [diam] = 250                ; Angstroms, default actual ribosome particle diameter
+
+ ; Following values may be converted to interactive mode
+
+ ;?Spherical aberration constant (mm)?
+ [sp_sph_abb] = 2.00
+
+ ;?Source size (1/A)?
+ [sp_sourcesiz] = 0.000
+
+ ;?Defocus spread (A)?
+ [sp_def_spr] = 0.000
+
+ ;?Astigmatism (A)?
+ [sp_astig] = 0.000
+
+ ;?Azimuth (degrees)?
+ [sp_az_astig] = 0.000
+
+ ;?Amplitude contrast ratio (0..1)?
+ [sp_acr] = 0.1
+
+ ;?Gaussian envelope halfwidth (1/A)?
+ [sp_geh] = 10000.00
+
+ ; ----------- Input files ----------------------
+ ; ----------- Output files ---------------------
+
+ [docfile] = 'params'
+
+ [lisfile] = 'params_lis'
+
+ ; -------------- END BATCH HEADER --------------------------
+
+ ; -------------- Interactive input --------------------------
+
+ RR [sp_zipflag]
+   ?Do the micrographs need to be unzipped (1 = yes, 0 = no)?
+
+ RR [sp_format]
+   ?File format (0 = SPIDER, 1 = TIF, 2 = PerkinElmer, 3 = ZI, 4 = Nikon)?
+
+ [sp_xm] = 0  ; These values are left blank for SPIDER & ZI formats
+ [sp_ym] = 0  ;
+
+ IF ([sp_format].NE.0) THEN
+   IF ([sp_format].NE.3) THEN
+      RR [sp_xm]
+      ?X dimension (width) in pixels?
+      RR [sp_ym]
+      ?Y dimension (height) in pixels?
+   ENDIF
+ ENDIF
+
+ ; For ZI files, pixelsize refers to overview sampling, not original sampling
+ RR [sp_pixsiz]
+   ?Pixel size (in Angstroms)?
+
+ RR [sp_kev]
+   ?Electron energy (keV)?
+
+ RR [sp_winsiz]
+   ?Window size (pixels)?
+
+ IF ([sp_winsiz].EQ.0) THEN      ; Use default window size 
+   [sp_winsiz]   = INT([ws]/[sp_pixsiz])       ; Compute window size (pixels)
+   ; Ensure window size is odd
+   [xwt] = INT([sp_winsiz]/2.0)
+   [v90] = [sp_winsiz] - (2*[xwt])
+   IF ([v90].EQ.0) [sp_winsiz] = [sp_winsiz] + 1
+ ENDIF
+
+ RR [sp_partsiz]
+   ?Actual size (pixels)?
+
+ IF ([sp_partsiz].EQ.0) THEN      ; Use default particle size
+   [sp_partsiz] = INT([diam]/[sp_pixsiz])     ; Compute particle size (pixels)
+ ENDIF
+
+ RR [sp_mag]
+   ?Magnification?
+
+ RR [sp_scanres]
+   ?Scanning resolution (7, 14, etc)?
+
+ RR [sp_dec]
+   ?Decimation factor?
+
+ ; -------------- Compute dependent  parameters ---------------------------------
+ ; Compute lambda from kev
+ [sp_lambda] = 12.398 / SQR([sp_kev] * (1022.0 + [sp_kev]))
+
+ ; Compute max. spatial freq. from pixel size
+ [sp_maxspfreq] = 1.0 / (2.0 * [sp_pixsiz])
+
+ ; -------------- Output parameters to procedure file --------------------------
+
+ ; Delete existing output files
+ DE
+   [lisfile]
+
+ SYS
+   echo '; Parameters for single particle reconstruction'   >> [lisfile].$DATEXT              
+ SYS
+   echo -n  '; $PRJEXT/$DATEXT    ' >> [lisfile].$DATEXT                
+ SYS
+   date >> [lisfile].$DATEXT                
+ SYS
+   echo ' ' >> [lisfile].$DATEXT  
+              
+ SYS
+   echo [sp_zipflag] = '    ' {%f8.3%[sp_zipflag]}  \; Zip flag \(0: Do not unzip, 1: Must unzip\) >> [lisfile].$DATEXT
+ SYS
+   echo [sp_format] = '     ' {%f8.3%[sp_format]}  \; File format \(0:SPIDER, 1:HiScan TIF, 2:PE, 3:ZI \) >> [lisfile].$DATEXT
+ SYS
+   echo [sp_xm] = '         ' {%f8.3%[sp_xm]}  \; Micrograph width, pixels \(ignored if present in header\) >> [lisfile].$DATEXT
+ SYS
+   echo [sp_ym] = '         ' {%f8.3%[sp_ym]}  \; Micrograph height, pixels \(ignored if present in header\) >> [lisfile].$DATEXT
+ SYS
+   echo [sp_pixsiz] = '     ' {%f8.3%[sp_pixsiz]}  \; Pixel size, A >> [lisfile].$DATEXT
+ SYS
+   echo [sp_kev] = '      ' {%f8.3%[sp_kev]}  \; Electron energy, KeV >> [lisfile].$DATEXT
+ SYS
+   echo [sp_sph_abb] = '    ' {%f8.3%[sp_sph_abb]}  \; Spherical aberration, mm >> [lisfile].$DATEXT
+ SYS
+   echo [sp_sourcesiz] = '  ' {%f8.3%[sp_sourcesiz]}  \; Source size, 1/A >> [lisfile].$DATEXT
+ SYS
+   echo [sp_def_spr] = '    ' {%f8.3%[sp_def_spr]}  \; Defocus spread, A >> [lisfile].$DATEXT
+ SYS
+   echo [sp_astig] = '      ' {%f8.3%[sp_astig]}  \; Astigmatism, A >> [lisfile].$DATEXT
+ SYS
+   echo [sp_az_astig] = '   ' {%f8.3%[sp_az_astig]}  \; Azimuth of astigmatism, degrees >> [lisfile].$DATEXT
+ SYS
+   echo [sp_acr] = '        ' {%f8.3%[sp_acr]}  \; Amplitude contrast ratio >> [lisfile].$DATEXT
+ SYS
+   echo [sp_geh] = '   ' {%f11.4%[sp_geh]}  \;  Gaussian envelope halfwidth, 1/A >> [lisfile].$DATEXT
+ SYS
+   echo [sp_lambda] = '     ' {%f8.3%[sp_lambda]}  \;  Lambda >> [lisfile].$DATEXT
+ SYS
+   echo [sp_maxspfreq] = '  ' {%f8.3%[sp_maxspfreq]}  \;  Maximum spatial frequency, 1/A >> [lisfile].$DATEXT
+ SYS
+   echo [sp_dec] = '        ' {%f8.3%[sp_dec]}  \;  Decimation factor >> [lisfile].$DATEXT
+ SYS
+   echo [sp_winsiz] = '   ' {%f8.3%[sp_winsiz]}  \;  Particle window size, pixels >> [lisfile].$DATEXT
+ SYS
+   echo [sp_partsiz] = '  ' {%f8.3%[sp_partsiz]}  \;  Size of particle, pixels >> [lisfile].$DATEXT
+ SYS
+   echo [sp_mag] = '        ' {%f9.1%[sp_mag]}  \;  Magnification >> [lisfile].$DATEXT
+ SYS
+   echo [sp_scanres] = '   ' {%f8.3%[sp_scanres]}  \;  Scanning resolution \(7 or 14 microns\) >> [lisfile].$DATEXT
+ SYS
+   echo ' RE' >> [lisfile].$DATEXT
+
+ SYS
+   echo ' 'Reconstruction Parameters saved to [lisfile].$DATEXT
+
+
+; -------------- Output parameters to doc file --------------------------
+
+ ; Delete existing output files
+ DE
+   [docfile]
+
+ SD / Key:      Parameters for single particle reconstruction
+   [docfile]
+
+ SD /1) Zip flag (0 = Do not unzip, 1 = Needs to be unzipped)
+    [docfile]
+ SD 1,[sp_zipflag]
+   [docfile]
+
+ SD /2) File format (0:SPIDER, 1:HiScan tif, 2:PerkinElmer, 3:ZI Scanner)
+   [docfile]
+ SD 2,[sp_format]
+   [docfile]
+
+ SD /3) Micrograph width, in pixels (ignored if present in header)
+   [docfile]
+ SD 3,[xm]
+   [docfile]
+
+ SD /4) Micrograph height, pixels (ignored if present in header)
+   [docfile]
+ SD 4,[sp_ym]
+   [docfile]
+
+ SD /5) Pixel size, A
+   [docfile]
+ SD 5,[sp_pixsiz]
+   [docfile]
+
+ SD /6) Electron energy, KeV
+   [docfile]
+ SD 6,[sp_kev]
+   [docfile]
+
+ SD /7) Spherical aberration, mm
+   [docfile]
+ SD 7,[sp_sph_abb]
+   [docfile]
+
+ SD /8) Source size, 1/A
+   [docfile]
+ SD 8,[sp_sourcesiz]
+   [docfile]
+
+ SD /9) Defocus spread, A
+   [docfile]
+ SD 9,[sp_def_spr]
+   [docfile]
+
+ SD /10) Astigmatism, A
+   [docfile]
+ SD 10,[sp_astig]
+   [docfile]
+
+ SD /11) Azimuth of astigmatism, degrees
+   [docfile]
+ SD 11,[sp_az_astig]
+   [docfile]
+
+ SD /12) Amplitude contrast ratio
+   [docfile]
+ SD 12,[sp_acr]
+   [docfile]
+
+ SD /13) Gaussian envelope halfwidth, 1/A
+   [docfile]
+ SD 13,[sp_geh]
+   [docfile]
+
+ SD /14) Lambda, A
+   [docfile]
+ SD 14,[sp_lambda]
+   [docfile]
+
+ SD /15) Maximum spatial frequency, 1/A
+   [docfile]
+ SD 15,[sp_maxspfreq]
+   [docfile]
+
+ SD /16) Decimation factor
+   [docfile]
+ SD 16,[sp_dec]
+   [docfile]
+
+ SD /17) Particle window size, pixels 
+   [docfile]
+ SD 17,[sp_winsiz]
+   [docfile]
+
+ SD /18) Actual size of particle, pixels
+   [docfile]
+ SD 18,[sp_partsiz]
+   [docfile]
+
+ SD /19) Magnification
+  [docfile]
+ SD 19,[sp_mag]
+   [docfile]
+
+ SD /20) Scanning resolution (7 or 14 microns)
+   [docfile]
+ SD 20,[sp_scanres]
+   [docfile]
+
+ SD E
+   [docfile]
+
+ SYS
+   echo ' 'Reconstruction Parameters saved to [docfile].$DATEXT
+ SYS
+   echo ' ' 
+
+ RE
+ 

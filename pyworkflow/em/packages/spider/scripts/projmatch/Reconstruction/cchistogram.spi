@@ -1,0 +1,126 @@
+; <html><head><title>Creates histogram of CC values</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/cchistogram.spi
+;
+; PURPOSE: For each defocus group:
+;             Creates a histogram showing number of
+;             particles vs. cross correlation value. 
+;          Creates additional histogram of all combined defocus groups. 
+;          Optionally creates gnuplot commands for plotting
+;             the combined overall histogram and displays plot.
+;          All histograms have 128 bins.
+;
+;          To view individual defocus group plots use:  plotviews.bat
+;
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+;<b>------------ Edit next  Input parameter ------------------------------ 
+
+[doplot] = 1             ; If >0 create plot scripts and display overall histogram  
+
+;------------ Input files ----------------------------------------
+
+[defgrps]          = '../Alignment/sel_group'    ; List of defocus groups (selection   file)
+
+[docalign]         = '../Alignment/align_01_***' ; Alignment files from 'AP SH'
+
+[doccombine]       = 'align_01_all'              ; Combined output from 'AP SH' 
+
+; --------------- Output files  -------------------------------------
+
+[histdir]          = 'hist'
+
+[cchist]           = '[histdir]/cchist{***[grp]}'                   ; Group histogram doc files
+
+[cchistall]        = '[histdir]/cchist_all'                         ; Overall histogram doc file
+
+[gnuplot_commands] = '[histdir]/gnuplot_cchist_{***[grp]}.$DATEXT'   ; Gnuplot script files (one / group)
+
+[gnuplot_command]  = '[histdir]/gnuplot_cchist_all.$DATEXT'         ; Gnuplot script file (overall)
+
+; -------------- END BATCH HEADER ---------------------------------- </b>
+
+
+VM                          ; Make directory for histograms
+mkdir -p [histdir]
+
+DO                          ; Loop over all defocus group(s) ---------------------------
+
+   UD NEXT [key],[grp]      ; Get group from group sel. file
+   [defgrps]                ; Group selection doc file     (input)
+   IF ([key] .LE. 0) EXIT   ; End of groups in doc file
+
+   DE                       ; Delete any existing histogram doc file
+   [cchist]{***[grp]}
+
+   ; PHI,THE,PSI, MIR-REF#,IMG#,INPLANE, SX,SY,NPROJ, DIFF,CCROT,INPLANE,SX,SY
+
+   HD D                     ; Create histogram doc file
+   [docalign][grp]          ; Doc file                             (input)
+   (11)                     ; Column to plot ('AP SH' specific)
+   (128)                    ; Number of bins
+   [cchist][grp]            ; Histogram Doc. file                  (output)
+
+   IF ([doplot] .GT. 0) THEN
+      ; Create gnuplot command file
+      VM                   ; Delete any existing script file first
+      \rm -f [gnuplot_commands]
+ 
+      VM 
+      echo ' 'set ylabel \"# Particles\" >> [gnuplot_commands]
+      VM 
+      echo ' 'set xlabel \"cross correlation value\" >> [gnuplot_commands]
+      VM 
+      echo ' 'set title \"Histogram group: {***[grp]} \" >> [gnuplot_commands]
+      VM               
+      echo ' 'plot \'[cchist].$DATEXT\' using 3:4 notitle  with boxes >> [gnuplot_commands]
+
+      ; VM               ; UNCOMMENT TO DISPLAY PLOT                       
+      ;gnuplot -persist [gnuplot_commands] &
+
+      VM                                  
+      echo ' 'View group correlation histogram using:  gnuplot -persist [gnuplot_commands]
+   ENDIF
+
+ENDDO
+
+DE                  ; Delete any existing combined histogram doc file
+[cchistall]
+
+HD D                ; Create the combined histogram doc file
+[doccombine]        ; Combined alignment parameter file     (input)
+(11)                ; Column to plot ('AP SH' specific)
+(128)               ; Number of bins
+[cchistall]         ; Doc file                             (output)
+
+IF ([doplot] .GT. 0) THEN
+   ; Create gnuplot script file
+   VM               ; Delete any existing file first
+   \rm -f [gnuplot_command]
+ 
+   VM 
+   echo set ylabel \"# Particles\" >> [gnuplot_command]
+   VM 
+   echo set xlabel \"cross correlation value\" >> [gnuplot_command]
+   VM 
+   echo set title \"Histogram of all groups\" >> [gnuplot_command]
+   VM               ; Gnuplot graph
+   echo plot \'[cchistall].$DATEXT\' using 3:4 notitle  with boxes >> [gnuplot_command]
+
+   VM
+   echo  ' ' ; echo  ' 'Displaying overall histogram doc file: [cchistall].$DATEXT ; echo  ' '     
+
+   VM               ; Display plot                       
+   gnuplot -persist [gnuplot_command] &
+
+   VM                                      
+   echo ' ' 
+
+ENDIF
+
+EN
+ 
+; </body></pre></html>
+
+

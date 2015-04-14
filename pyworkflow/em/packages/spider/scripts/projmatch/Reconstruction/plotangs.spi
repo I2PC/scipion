@@ -1,0 +1,75 @@
+ ; <html><head><title>Angular assignment plotting</title></head><body><pre>
+ ;
+ ; SOURCE: spider/docs/techs/recon/newprogs/plotangs.spi
+ ;
+ ; PURPOSE: Creates a circular plot (as a SPIDER image) containing smaller 
+ ;          circles representing the angular orientations for a list of groups.
+ ;          The radii of the small
+ ;          circles are proportional to the number of particles in each group.
+ ;          Creates displays for all defocus groups listed in a selection file.
+
+ ; <b>I/O PARAMETERS AND FILES ARE SET HERE:
+
+ [type] =  1    ;  1 = Put projection numbers in display
+                ;  0 = Don't put in numbers
+                ; -1 = Numbers only, no circles!
+
+ [back] = 1     ; 1 = white background, 0 = black background
+
+ [margin] = 55  ; Margin around plots
+
+ ;  ------------ Input files ---------------------------------------
+
+ [refangles] = '../Alignment/refangles'          ; Doc file containing projection angles
+
+ [defgrps]   = '../Alignment/sel_group'          ; Defocus group selection file
+
+ [how_many]  = 'how_many'                        ; Number of particles per projection
+
+ ; --------------- Output files  -----------------------------------
+
+ [displaydir] = 'display'                        ; Directory for group gnuplot script
+
+ [display]    = '[displaydir]/angdis_by_group'    ; Stacked plot images
+
+ [displayall] = '[displaydir]/angdis_all_groups'  ; All group plot image
+
+ ; -------------- END BATCH HEADER ---------------------------------</b>
+
+ VM
+   mkdir -p [displaydir]
+
+ VM
+   echo " Computing images of reference view usage" ; echo ' '
+
+ DO                                      ; Loop over all defocus group(s)
+    UD NEXT [key],[grp]                  ; Get group from group sel. file
+      [defgrps]
+    IF ([key] .LE. 0) EXIT               ; End of groups in doc file
+
+    @plotangs_p([type],[back],[margin])
+      [refangles]                        ; Reference angles file                 (input)
+      df{***[grp]}/[how_many]            ; Doc file of particles per projection  (input)
+      [display]@{***[grp]}               ; Stacked image file                    (output)
+ ENDDO
+
+ VM
+   echo " Use Web Montage to display stacked images of reference view usage from: [display].$DATEXT"
+
+ ; Put sum of all defocus groups in [displayall]
+
+ [grp]    = 0
+ [margin] = 55   ; Margin around plots
+
+ @plotangs_p([type],[back],[margin])
+   [refangles]                          ; Reference angles file                 (input)
+   [how_many]                           ; Doc file # of particles / projection  (input)
+   [displayall]                         ; Output file                           (input)
+
+ VM
+   echo ' '
+ VM
+   echo " Use Web to show  image of overall reference view usage:  [displayall].$DATEXT" ; echo ' '
+ 
+ EN 
+ ; </body></pre></html>

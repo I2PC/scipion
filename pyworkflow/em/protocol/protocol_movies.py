@@ -154,15 +154,19 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         return self._getExtraPath('movie_%06d%s' % (movieId, ext)) 
     
     def _getNameExt(self, movieName, postFix, ext):
-        #return 'micrograph_%06d.mrc' % movieId
-        #return removeBaseExt(movieName) + '_aligned.' + ext
-        return removeBaseExt(movieName) + postFix + '.' + ext
+        if movieName.endswith("bz2"):
+            # removeBaseExt function only eliminate the last extension,
+            # but if files are compressed, we need to eliminate two extensions:
+            # bz2 and its own image extension (e.g: mrcs, em, etc)
+            return removeBaseExt(removeBaseExt(movieName)) + postFix + '.' + ext
+        else:
+            return removeBaseExt(movieName) + postFix + '.' + ext
+    
     def _getPlotName(self, movieName, plotType):
         if plotType == PLOT_CART:
             return removeBaseExt(movieName) + '_plot_cart.png'
         else:
             return removeBaseExt(movieName) + '_plot_polar.png'
-
 
     def _getCorrMovieName(self, movieId, ext='.mrcs'):
         return 'movie_%06d%s' % (movieId, ext)

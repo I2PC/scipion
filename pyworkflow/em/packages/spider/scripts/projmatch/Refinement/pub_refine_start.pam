@@ -1,0 +1,113 @@
+; <html><head><title>Runs defocus group loop & endmerge loop in parallel</title></head><body><pre>
+;
+; SOURCE:  spider/docs/techs/recon/newprogs/pub_refine_start.pam 
+;          New                                   Feb 2002 ArDean Leith
+;          [rn]                                  Feb 2005 ArDean Leith
+;          []                                    Dec 2005 ArDean Leith
+;          Clone                                 Jan 2009 ArDean Leith
+;          Removed cpang, has_scratch            Jan 2010 Ardean Leith
+;          smangloop has_scratch                 Aug 2010 Ardean Leith
+;          [pixsiz],[r2]                         Aug 2012 Ardean Leith
+;
+; PURPOSE: Runs defocus group loop & endmerge     
+;          Calls grploop/smangloop, or endmerge in parallel 
+;          Run directly in SPIDER 
+;
+; INPUT REGISTERS (Set On operation line):
+;          [task]     Task selector
+;          [iter]     Current iteration 
+;          [grp]      Current group number 
+;          [rn]       Random number for unique DOC_SYNC files
+
+ MD
+   TR OFF                   ; Loop info turned off
+ MD
+   VB OFF                   ; File info turned off
+ MD                          
+   SET MP                   ; Set OMP processors to all available
+   0
+
+ ; Input global parameters & file names 
+ @refine_settings([pixsiz],[r2],[alignsh],[prj-radius],[iter1],[iter-end],[lambda],[small-ang],[winsize],[converg])
+ 
+ IQ DIR [has-scratch]       ; See if there is a local scratch dir.
+   [temp_local_dir]         ; Dir name
+
+ MY FL
+ IF([task].EQ.0)THEN        ; Runs main refinement  grploop tasks
+
+   RR S [ang-limit]         ;  Restriction on ang. search (varies with iteration)
+     [ang-limits]
+     [iter]
+
+   RR S [ang-step]          ; Angular step (varies with iteration)
+     [ang-steps]
+     [iter]
+
+   IF ([has-scratch].GT.0) THEN
+      ; Copy files to local disk  
+      @pub_ref_loop_clone([iter],[grp])
+
+      ; Returns [stop] which is communicated via document files
+      @grploop([ang-step],[ang-limit],[r2],[alignsh],[prj-radius],[iter],[grp],[stop],[pixsiz])
+
+      ; Copy local disk files to server disk  
+      @pub_ref_loop_declone([iter],[grp])
+   ELSE
+      ; Redefine [temp_local_dir] to work directory 
+      GLO [temp_local_dir] = '[temp_work_dir]'
+
+      ; Returns [stop] which is communicated via document files
+      @grploop([ang-step],[ang-limit],[r2],[alignsh],[prj-radius],[iter],[grp],[stop],[pixsiz])
+   ENDIF
+ ENDIF
+
+
+ IF([task].EQ.1)THEN          ; Runs main refinement smangloop tasks
+
+   IF ([has-scratch].GT.0) THEN
+      ; Copy files to local disk  
+      @pub_ref_loop_clone([iter],[grp])
+
+      ; Returns [stop] which is communicated via document files
+      @smangloop([r2],[alignsh],[prj-radius],[iter],[grp],[stop],[pixsiz])
+
+      ; Copy local disk files to server disk  
+      @pub_ref_loop_declone([iter],[grp])
+   ELSE
+      ; Redefine [temp_local_dir] to work directory 
+      GLO [temp_local_dir] = '[temp_work_dir]'
+
+      ; Returns [stop] which is communicated via document files
+      @smangloop([r2],[alignsh],[prj-radius],[iter],[grp],[stop],[pixsiz])
+   ENDIF
+ ENDIF
+
+ IF([task].EQ.2)THEN            ; Runs endmerge consolidation task
+   [next-iter] = [iter]         ; Operates on current iteration
+
+   IF ([has-scratch].GT.0) THEN
+      ; Copy files to local disk  
+      @pub_ref_merge_clone([iter],[grp])
+
+      @endmerge([prj-radius],[grp],[next-iter],[pixsiz],[r2])
+
+      ; Copy local disk files to server disk  
+      @pub_ref_merge_declone([iter],[grp])
+
+   ELSE
+      ; Redefine [temp_local_dir] to work directory 
+      GLO [temp_local_dir] = '[temp_work_dir]'
+
+      @endmerge([prj-radius],[grp],[next-iter],[pixsiz],[r2])
+   ENDIF
+ ENDIF
+
+ MY FL
+
+ ; Signal master SPIDER that this task is finished
+ @pub_refine_doc_sync([task],[stop],[grp],[rn])
+
+ EN                           ; This SPIDER ends now
+; </body></pre></html>
+

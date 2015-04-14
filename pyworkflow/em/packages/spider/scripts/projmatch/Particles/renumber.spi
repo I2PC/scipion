@@ -1,0 +1,126 @@
+; <html><head><title>Remove duplicates from particle selection doc files</title></head><body><pre>
+;
+; PURPOSE: Sorts the particle selection files (from Web or elsewhere) 
+;          and saves list of selected particles into a new selection file.
+;          Ignores any duplicate particle selections. 
+;          Finds statistics for picked and selected particles by micrograph.
+;
+; SOURCE:  spider/docs/techs/recon/newprogs/renumber.spi  
+; 
+; ------------------ Input files -----------------------
+
+[sel_micrograph] = '../sel_micrograph'  ; Micrograph selection file
+
+[sel_particles]  = 'good/good****'      ; Picked particle selection files  
+
+; ----------------- Output files -----------------------
+
+[ngood]          = 'good/ngood****'     ; Good particle selection files
+
+[percent]        = 'percent_selected'   ; Statistics file of picked vs selected 
+
+[tmp1]           = 'tmpa{****[mic]}'    ; Temporary files
+
+; -------------- END BATCH HEADER -------------------------------
+
+MD                                  ; Skip unnecessary output 
+VB OFF
+MD                                  ; Skip unnecessary output 
+TR OFF
+
+VM
+echo ' '"Removing duplicates from particle selection doc files."
+VM
+echo ' '
+
+DE                                 ; Remove any existing statistics file
+[percent]
+
+SD /     MICROGRAPH    PICKED   SELECTED    %
+[percent]                          ; Statistics doc file comment  (output)
+
+[ntot]=0  
+[ntotpick]=0                       ; Overall cumulative total
+[ntotsel] =0                       ; Overall cumulative total
+
+DO                                 ; Loop over all micrographs ------------
+
+   UD NEXT [key], [mic]            ; Get next micrograph number
+   [sel_micrograph]                ; Micrograph selection doc file (input)
+   IF ([key] .LE. 0) EXIT
+
+   [selected] = 0                  ; Zero the selected counter
+   [picked]   = 0                  ; Zero the picked counter
+
+   DE                              ; Remove any existing output file
+   [ngood][mic]
+   SD /    PARTICLE #
+   [ngood][mic]                         ; Doc file title             (output)
+
+   DOC SORT                        ; Renumber lines in doc file
+   [sel_particles][mic]            ; Doc file                    (input)  
+   [tmp1]                          ; Renumbered list            (output) 
+   (1)                             ; Sorted column
+   Y                               ; Compress and renumber keys
+
+   DO                              ; Loop over all particles ----------
+      ;      KEY,   PART-#, CATEGORY
+      UD NEXT [key2],[npart],[cat] ; Retrieve lines from: tmp1
+      [tmp1]                       ; Doc file              (input)
+      IF ([key2] .LE. 0) EXIT
+
+      [picked]= [picked]+1         ; Total from this micrograph
+
+      IF([cat].EQ.1) THEN          ; Save particles from category: 1
+         [selected]=[selected]+1   ; Increment number of selected particles
+
+         SD [selected],[npart],[cat]  ; Put particle in: tmp2
+         [ngood][mic]
+      ENDIF
+   ENDDO
+
+   [perc] = 100 * [selected] / [picked] 
+   ;          MICROGRAPH    PICKED  SELECTED   %
+   SD [key], [mic],[picked],[selected],[pcent]
+   [percent]
+
+   [ntotpick]=[ntotpick]+[picked]   ; Overall cumulative total
+   [ntotsel] =[ntotsel]+[selected]  ; Overall cumulative total
+
+   VM
+   echo ' '"Micrograph: {******[mic]}  Keeping: {******[selected]} particles   From: {******[picked]}"
+
+   SD E
+   [ngood][mic]                    ; Finished writing to this file 
+
+   UD NEXT E                       ; Finished with doc file
+   [tmp1]                          ; Doc file              (input)
+
+   DE                              ; Delete temp file
+   [tmp1]
+ENDDO
+
+UD NEXT E                          ; Finished with doc file
+[sel_micrograph]                   ; Micrograph selection doc file (input)
+
+; Put overall statistics in comment key in doc file
+[perc]  = 100 * [ntotsel] / [ntotpick]
+
+SD /      TOTALs: PICKED      SELECTED     FRACTION
+[percent]                          ; Doc file               (output)
+
+SD -1, [ntotpick],[ntotsel],[perc]
+[percent]                          ; Doc file                (output)
+
+SD E
+[percent]                          ; Finished with this file 
+
+VM
+echo " "
+VM
+echo ' '"Overall Kept: {******[ntotsel]}  Percent: {***[perc]%}"
+VM
+echo " "
+
+EN
+; </body></pre></html>

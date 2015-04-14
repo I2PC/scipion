@@ -1,0 +1,189 @@
+; <html><head><title>Choose best images per direction</title></head><body><pre>
+;
+; SOURCE:      spider/docs/techs/recon/newprogs/bestim.spi      ArDean Leith
+;
+; PURPOSE:     Limits particles from each reference direction  
+;
+; NOTE:        Continue with reconstruction following this limitation using:
+;              <i><a href="recon.spi">recon.spi</a></i>
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; <b> -------------- Parameters -------------------------------------
+
+[maxim] = 40                                      ; Max number of images / reference view to retain 
+
+; -------------- Input files -------------------------------------
+
+[defgrps]     = '../Alignment/sel_group'          ; Defocus groups selection file
+
+[imgperview]  = 'df{***[grp]}/how_many'           ; Listing of  number of images for each view
+
+[grp_sel_sel] = 'df{***[grp]}/ref_sel{***[view]}' ; Selection & CCC files for each view
+
+; ----------------- Output files  -------------------------------------
+
+[sel_particles]      = 'sel_particles_{***[grp]}' ; Output file (one for each defocus group)
+;                                                 ; Contains the selected particle numbers
+
+[sel_particles_prev] = '[sel_particles]_prev'     ; Renamed existing selection file
+
+[defgrps_lim]        = 'sel_group_cclim'          ; Defocus groups selection file
+
+[defgrps_lim_sorted] = 'sel_group_cclim_sorted'   ; Defocus groups selection file
+
+[jnk_seltotal]       = 'df{***[grp]}/jnk_seltotal'  ; Temp file (DELETED)
+
+; -------------- END BATCH HEADER -----------------------------------</b>
+
+MD
+TR OFF                                ; Decrease results file output
+MD
+VB OFF                                ; Decrease results file output
+
+VM
+echo  ' 'Choosing: {****[maxim]} particles from each reference direction ; echo  ' '     
+
+DE
+[defgrps_lim]                         ; Delete any existing defocus group sel. file
+
+[totall] = 0
+[totold] = 0
+
+UD N [numgrps]                        ; Find number of defocus groups
+[defgrps]                             ; Group selection file       (input)
+
+DO [numgrp] = 1,[numgrps]             ; Loop over all defocus groups
+
+   UD [numgrp], [grp],[oldnum],[def]  ; Get current group number and particles 
+   [defgrps]                          ; Group selection doc file     (input)
+   
+   [totold] = [totold] + [oldnum]     ; Total of old selected particles
+
+   VM                                 ; Rename existing selection file 
+   \mv [sel_particles].$DATEXT [sel_particles_prev].$DATEXT
+
+   UD N [views]                       ; Get number of views
+   [imgperview]                       ; Doc file                    (input)
+
+   [totgrp] = 0
+   [keyout] = 0                       ; Output key counter
+
+   DO [view]=1,[views]                ; Loop over all views for this group
+
+      UD N [images]                   ; Get number of images for this view
+      [grp_sel_sel]                   ; Listing file                (input)
+
+      IF ([images] .LE. 0) CYCLE
+     
+      IF ([images] .LE. [maxim]) THEN
+
+         DO [image]=1,[images]
+            UD IC [image],[part],[cc] ; Get particle number & CC
+            [grp_sel_sel]             ; Listing file                 (input)
+
+            [keyout] = [keyout] + 1
+
+            SD [keyout],[part],[cc]   ; Save particle number & CC
+            [sel_particles]           ; Overall limited listing file  (output)
+         ENDDO
+
+         [totgrp] = [totgrp] + [images]
+
+         UD ICE
+         [grp_sel_sel]                ; Temp sorted listing file
+
+      ELSE
+
+         DE
+         [jnk_seltotal]               ; Temp sorted listing file
+  
+         DOC SORT
+         [grp_sel_sel]                ; Particle listing file
+         [jnk_seltotal]               ; Temp sorted listing file
+         (2)                          ; Column to be sorted by (CCC for this view)
+         Y                            ; Compress & renumber keys
+
+         DO [image]=1,[maxim]
+            UD IC [image],[part],[cc] ; Get particle number             (input)
+            [jnk_seltotal]            ; Temp sorted listing file
+
+            [keyout] = [keyout] + 1
+            SD [keyout],[part],[cc]   ; Save particle number & CC
+            [sel_particles]           ; Overall limited listing file   (output)
+         ENDDO
+
+         [totgrp] = [totgrp] + [maxim]
+
+         UD ICE
+         [jnk_seltotal]               ; Temp sorted listing file
+      ENDIF
+   ENDDO
+
+   SD E
+   [sel_particles]                     ; Limited listing file
+
+   DE
+   [jnk_seltotal]                     ; Temp listing working file
+
+   [totall] = [totall] + [totgrp]
+
+   VM
+   echo  ' 'Group: {****[grp]}  Saved: {******[totgrp]}  Out of: {******[oldnum]}    
+
+   SD [numgrp], [grp],[totgrp],[def]  ; Save group number and particles & defocus
+   [defgrps_lim]                      ; Group selection doc file     (output)
+
+ENDDO
+
+SD E
+[defgrps_lim]                            ; Finished with this file
+
+FR L
+[tmp1]order_select_jnk1                  ; Temp output file (deleted)
+
+DOC SORT                                 ; DOC file sorting
+[defgrps_lim]                            ; Defocus selection doc file   (input)
+[tmp1]                                   ; Sorted Temp file             (output)
+2                                        ; Sort column
+Yes                                      ; Renumber keys
+
+DE                                       ; Remove any existing output file
+[defgrps_lim_sorted]
+
+UD N, [nkey]                             ; Get number of keys in sorted     
+[tmp1]                                   ; Temp file                  (input)
+
+; Reverse sorting order of output doc file
+DO [i]=1,[nkey]                          ; Loop over defocus groups 
+   [grp]=[nkey]-[i]+1                    ; Reverse order
+
+   ;            GROUP, PARTICLES, DEFOCUS              
+   UD IC [grp], [grp],  [part],   [def]
+   [tmp1]                                ; Doc file                  (input)
+
+   SD    [i],   [grp],  [part],   [def]
+   [defgrps_lim_sorted]                  ; Reverse sorted doc file  (output)
+ENDDO
+
+SD E
+[defgrps_lim_sorted]
+
+UD ICE                                   ; Close doc files
+[tmp1]
+DE                                       ; Destroy temp. doc files
+[tmp1]
+
+[percent] = 100.0 * [totall] / [totold]
+VM
+echo  ' 'Overall Saved: {******[totall]}  Out of: {******[totold]} = {***[percent]}% 
+VM
+echo  ' '     
+
+EN
+
+
+
+
+
+

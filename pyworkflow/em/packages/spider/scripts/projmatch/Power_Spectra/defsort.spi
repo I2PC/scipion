@@ -1,0 +1,100 @@
+; <html><head><title>Assign micrographs to defocus groups</title></head><body><pre>
+;
+; PURPOSE: Assign micrographs to defocus groups
+;
+; SOURCE: spider/docs/techs/recon/newprogs/defsort.spi 
+;
+; Input : Defocus doc file with 2 register columns:
+;         (1) Micrograph#, (2) Defocus value
+;         Micrograph selection doc file with 1 register column:
+;         (1) micrograph#
+;
+; Output : Defocus group doc file with 3 register columns
+;          (1) Micrograph#, (2) Defocus value, (3) Defocus group number
+;          OUTPUT FILE IS SORTED BY DEFOCUS VALUE!
+
+; ----------- Parameters --------------
+
+[maxdiff] = 1000                ; Max. difference for defocus values in same group
+
+; ----------- Input files --------------
+
+[mic_sel] = '../sel_micrograph' ; Micrograph selection doc. file
+
+[defocus] = 'defocus'           ; Micrograph defocus doc. file
+
+; ----------- Output files --------------
+
+[defsort] = 'def_sort'          ; Defocus group doc. file
+
+; -------------------- END BATCH HEADER ----------------------------
+
+MD                              ; Skip unnecessary output 
+VB OFF
+MD                              ; Skip unnecessary output 
+TR OFF
+
+[tmp]='tmpdefsort'              ; Create name for temp output doc file
+DE                              ; Delete temp output doc file
+[tmp]                           ; Temp file            (removed)
+
+DE                              ; Delete any existing output doc file
+[defsort]                       ; Doc  file            (removed)
+
+DOC SORT                        ; Sort the defocus file by defocus col
+[defocus]                       ; Doc file             (input)
+[tmp]                           ; Doc file             (output)
+2                               ; Sort column
+Y                               ; Renumber doc file
+
+; Put column labels in output doc file
+SD /     Micrograph    Defocus     Def.Group
+[defsort]
+
+[def1]  = -1.0e20               ; So that it starts a new group
+[grp]   = 0                     ; Initialize group
+[nmics] = 0                     ; Initialize output key
+
+VM
+echo ' 'Assigning defocus groups ; echo ' '
+
+DO                              ; Loop over all micrographs --------------
+
+   UD NEXT [key],[mic],[def]     ; Read micrgraph # & defocus
+   [tmp]                         ; Doc file          (input)
+   IF ([key].LE. 0) EXIT
+
+   UD FIND [selkey]              ; See if micrograph is in selection file
+   [mic_sel]                     ; Selection file    (input)
+   (1,[mic])                     ; Col. & micrograph to be selected
+
+   IF ([selkey] .LE. 0) CYCLE    ; Skip if micrograph not selected
+
+   [def-diff] = ([def] - [def1]) ; Defocus difference
+   IF ([def-diff].GT.[maxdiff]) THEN
+      [grp]  = [grp] + 1         ; Start new group
+      [def1] = [def]             ; Lowest defocus value in new group
+   ENDIF
+   [nmics] = [nmics]+1           ; Output key number
+
+   ; Save mic, defocus, group in doc file
+   SD [nmics], [mic],[def],[grp]
+   [defsort]                     ; Defocus doc file  (output)
+
+   VM
+   echo ' 'Micrograph: {*****[mic]}'    'Group: {****[grp]}
+
+ENDDO                            ; End Loop -------------------------------
+
+VM
+echo ' ' ; echo ' 'Created: {****[grp]} groups from: {******[nmics]} micrographs ; echo ' '
+
+UD NEXT E          
+[tmp]
+UD FIND E
+[mic_sel]
+DE
+[tmp]
+
+EN
+; </body></pre></html>
