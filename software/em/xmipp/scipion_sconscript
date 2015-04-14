@@ -679,7 +679,7 @@ if not release:
               'resolution_ibw',
               'tomo_align_dual_tilt_series',
               'tomo_align_refinement',
-              'xray_volume_correct',
+              #'xray_volume_correct',
               'mpi_write_test'
               ]:
         addProg(p)
