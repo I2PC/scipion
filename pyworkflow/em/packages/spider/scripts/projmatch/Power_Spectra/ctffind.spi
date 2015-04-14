@@ -1,0 +1,168 @@
+; <html><head><title>Estimates defocus values from power spectra</title></head><b>
+;
+; SOURCE:   spider/docs/techs/recon/newprogs/ctffind.spi 
+;           New                                                            Bill Baxter
+;           Pixel size bug and total rewrite                  Sept 2010 ArDean Leith
+;           Rewrite from mrcctf.spi                           May  2012 ArDean Leith
+;
+; PURPOSE:  Get defocus using  'CTF FIND'
+;    
+; REQUIRES:  loadmic.spi    SPIDER procedure to load micrographs
+;
+; INPUTS:   Micrographs (in SPIDER format)
+;           SPIDER Parameter doc file 
+;           Selection doc file containing micrograph numbers
+;           Boundary for windowing edges of micrographs
+;           Parameters for 'CTF FIND', including
+;              - CS     (mm)    : Spherical aberration of objective 
+;              - HT     (kv)    : Electron beam voltage
+;              - AmpCnst        : Amplitude contrast ratio 
+;              - MAG            : Magnification on original image
+;              - DStep (microns): Pixel size on scanner (microns)
+;              - Box   (pixels) : Tile size in ctffind (must be even)
+;              - minRes (A)     : Low resolution end of data to be fitted
+;              - maxRes (A)     : High resolution end of data to be fitted
+;              - minDef (A)     : Starting defocus value for grid search 
+;              - maxDef (A)     : End defocus value for grid search
+;              - dStep  (A)     : Step width for grid search
+;                
+; OUTPUTS: Doc file of defocus and astigmatism information.
+;          Power spectrum from 'CTF FIND' (in SPIDER format).
+;
+; --------------------- Albany Standard Parameters ---------------------------------
+
+; Exclude edges of the micrograph
+[xb]      =   500                             ; X distance from border
+[yb]      =   500                             ; Y distance from border
+
+[box]     =   500                             ; Box size for CTFFIND3 (must be even)
+[minRes]  =    35                             ; minRes (A)
+[maxRes]  =   7.5                             ; maxRes (A)
+[minDef]  = 10000                             ; minDef (A)
+[maxDef]  = 40000                             ; maxDef (A)
+[dStep]   =  5000                             ; dStep  (A) 
+
+; ----------- Input files ---------------
+
+[params]  = '../params'                       ; Reconstruction parameters file
+
+[raw]     = '../Micrographs/raw{****[n]}'     ; Micrographs
+
+[sel_mic] = '../sel_micrograph'               ; Micrograph selection doc file 
+
+; ----------- Output files --------------
+
+[output_dir] = 'power'                        ; Dir. for output files
+
+[ps-spi]     = '[output_dir]/powchk{****[n]}' ; Power spectrum files 
+
+[defocus]    = 'defocus-mrc'                  ; Summary defocus doc file
+
+; Temporary files
+[spi]        = '_1'                           ; SPIDER temp files from conversion 
+[win-spi]    = 'jnk-win-spi'                  ; Windowed temp files
+
+; -------------------- END BATCH HEADER -----------------------
+
+MD                             ; Skip unnecessary output 
+  VB OFF
+MD                             ; Skip unnecessary output 
+  TR OFF
+MD
+  SET MP                       ; Use single processor
+  1
+
+VM                             ; Create output directory
+  mkdir -p  [output_dir]
+
+; Parameters for loading
+
+UD 1,[zflag]                   ; Get zip flag
+  [params]                     ; Params file           (input)
+UD 2,[fflag]                   ; Get tif flag
+  [params]                     ; Params file           (input)
+UD 3,[nx]                      ; HiScan  X parameters 
+  [params]                     ; Params file           (input)
+UD 4,[ny]                      ; HiScan  Y dimension        
+  [params]                     ; Params file           (input)
+
+; Parameters for CTFFIND3
+UD 6,[sp_kev]                  ; Electron beam voltage (kV)
+  [params]                     ; Params file           (input)
+UD 7,[sp_sph_abb]              ; Spherical aberration
+  [params]                     ; Params file           (input)
+UD 12,[sp_acr]                 ; Amplitude contrast ratio
+  [params]                     ; Params file           (input)
+UD 19,[sp_mag]                 ; Magnification of original image (final mag on F30)
+  [params]                     ; Params file           (input)
+UD 20,[sp_scanres]             ; Scanning resolution (microns) = Pixel size on scanner
+  [params]                     ; Params file           (input)
+
+[deci]     = 1                 ; No decimation 
+[keepspi]  = 0                 ; Do not keep temp Spider file
+
+[sp_sph_abb]
+[sp_kev]
+[sp_acr]
+[sp_mag]
+[sp_scanres]
+
+DE                                  ; Delete output summary doc file
+  [defocus]                         ; Doc file              (removed)
+
+DO      ; Loop over all files --------------------------------------------
+
+   UD NEXT [key],[n]                ; Get micrograph  number from sel. file
+     [sel_mic]                      ; [n] is now the micrograph file number
+   IF ([key] .LE. 0) EXIT           ; End of images in selection doc file
+
+   ; Convert micrograph to SPIDER format (if necessary)
+   @loadmic([n],[zflag],[fflag],[deci],[nx],[ny],[keepspi])
+     [raw]                          ; Micrograph                  (input)
+     [spi]                          ; SPIDER file                 (output)
+     _2                             ; Scratch file                (output)
+
+   FI H [nxt],[nyt]                 ; Get decimated size
+     [spi]                          ; SPIDER file                 (input)
+     nx,ny
+
+   ; Window the micrograph, removing borders
+   [x] = [nxt] - (2*[xb])          ; Dimensions without border
+   [y] = [nyt] - (2*[yb])
+
+   VM
+     echo " Micrograph: {*****[n]} : {*****[nxt]} x {*****[nyt]} windowed to: {*****[x]} x {*****[y]}"
+   WI                               ; Window 
+     [spi]                          ; Micrograph                 (input)
+     [win-spi]                      ; Windowed micrograph        (output)
+     [x],[y]                        ; Dimensions
+     [xb],[yb]                      ; Start coords
+
+   FS                               ; CTF FIND3 needs min & max                         
+     [win-spi]                      ; Windowed micrograph        (output)
+
+   MY FL
+   CTF FIND [def],[ang],[mag]
+     [win-spi]                      ; Windowed micrograph        (input)
+     [ps-spi]                       ; Power spectrum files       (output)
+     [defocus]                      ; Summary defocus doc file   (output)
+     [n]                            ; Micrograph  number 
+     [sp_sph_abb],[sp_kev],[sp_acr] ; CS, voltage, & ACR
+     [sp_mag],[sp_scanres],[box]    ; Mag., pixel size, & box size
+     [minRes],[maxRes]              ; Lower and upper resolution
+     [minDef],[maxDef],[dStep]      ; Lower and upper defocus & step
+  VM
+    echo " Defocus: {%F8.2%[def]}   Angle:{%F8.2%[ang]}  Astig:{%F8.2%[mag]}"; echo " "
+
+ENDDO
+
+VM                                  ; Type the defocus doc file
+  echo ' '  ; cat [defocus].$DATEXT ; echo ' ' 
+
+DE
+  [spi]                             ; Temp SPIDER file            (deleted)
+DE
+  [win-spi]                         ; Windowed SPIDER micrograph  (deleted)
+
+EN
+

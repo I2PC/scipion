@@ -1,0 +1,49 @@
+([iter],[grp])
+; <html><head><title>DeCloning end merge</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/pub_ref_merge_declone.pam
+;         New                                    ArDean Leith Jan 2009
+;         New variable definitions               ArDean Leith Jan 2011
+;
+; PURPOSE: Runs on compute nodes to copy local 'endmerge files' back to master disk
+;
+; CALLED FROM: <a href="./pub_refine_start.pam">pub_refine_start</a> 
+;
+; INPUT REGISTERS:
+;    [iter]               Iteration counter        (Varies with iter)
+;    [grp]                Defocus group            (Varies with group)
+;
+; I/O Registers & files are set in: <a href="./refine settings.pam">refine settings.pam</a>
+;
+;  '##' denotes iteration,  '##+' denotes next iteration, and '***' denotes group
+; OUTPUT FILES:     (Copied back to master node)  
+;   [next_group_bpr]       final/bpr##+        Final group volume
+;   [next_group_bpr]_sub1  final/bpr##+_sub1   Final group volume-sub1 
+;   [next_group_bpr]_sub2  final/bpr##+_sub2   Final group volume-sub2 
+;   [next_group_ofsc]      final/ofscdoc_##+   Final group resolution doc file 
+;
+; ---------------------------------------------------------------------
+
+[next-iter]=[iter]+1
+
+VM
+\cp [next_group_bpr].$DATEXT       [master_next_group_bpr].$DATEXT 
+VM
+\cp [next_group_bpr]_sub1.$DATEXT  [master_next_group_bpr]_sub1.$DATEXT 
+VM
+\cp [next_group_bpr]_sub2.$DATEXT  [master_next_group_bpr]_sub2.$DATEXT 
+VM
+\cp [next_group_ofsc].$DATEXT      [master_next_group_ofsc].$DATEXT 
+
+; Clear temp directory on compute node
+VM
+\rm -r [tmp_local_dir]/input [tmp_local_dir]/work [tmp_local_dir]/final >& /dev/null
+          
+RE
+; </body></pre></html>
+
+
+
+
+
+

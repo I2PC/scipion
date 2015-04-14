@@ -1,0 +1,112 @@
+; <html><head><title>Controls reconstruction</title></head><body><pre>
+;
+; FILE: spider/docs/techs/recon/newprogs/pub_recon.pam
+;       New                                       ArDean Leith  Dec 2009
+;       'FSC', 'BP RP 3' in recon.spi             ArDean Leith  Aug 2012
+;
+; PURPOSE: Runs on master node to control reconstrtuction
+;
+; INPUT 
+;   [params]     ../params                          ; Reconstruction parameter file
+;   [sel_grp]    sel_group_cclim                    ; Defocus group selection file
+;   [sel_part]   sel_particles_{***[grp]}           ; Particle selection files (one / defocus group)
+;   [ali]        ../Alignment/dala01_{***[grp]}@**  ; Aligned particle images (one stack / defocus group)
+;   [angles]     ../Alignment/align_01_{***[grp]}   ; Alignment parameter doc files (one / defocus group)
+;
+; OUTPUT:
+;   [vol_sub1] = 'vol01_sub1'                  ; Volume created from subset 1 particles (one)
+;   [vol_sub2] = 'vol01_sub2'                  ; Volume created from subset 2 particles (one)
+;   [grpvol_1] = 'df{***[grp]}/[vol_sub1]'     ; Volumes for subset 1 particles (one per group)
+;   [grpvol_2] = 'df{***[grp]}/[vol_sub2]'     ; Volumes for subset 2 particles (one per group)
+;   [grpfsc]   = 'df{***[grp]}/fscdoc'         ; FSC curve doc  files           (one per group)
+;   [ctf]      = 'df***/ctffile'               ; CTF correction files           (one per group)
+;   [vol]      = 'vol01'                       ; CTF-corrected overall volume           (one)
+;   [combfsc]  = 'combires'                    ; FSC curve doc  file for overall volume (one)
+;   [resfile]  = 'resolution'                  ; Resolution doc file for all volumes    (one)
+;
+; PROCEDURES CALLED:
+;    recon                    <a href="./recon.spi">recon.spi</a>
+;    publish                  <a href="./publish.perl">publish</a>
+;
+; -------------------- Input files (From recon.spi) ---------------------------
+
+ [sel_grp]  = 'sel_group_cclim'       ; Defocus group selection file
+
+ ; -------------------- Output files (From recon.spi) ---------------------------
+
+ [ctf]      = 'df{***[grp]}/ctffile'  ; CTF correction files (completion flag)
+ [combfsc]  = 'combires'              ; FSC doc file with FSC curve for overall volume
+ [res_file] = 'resolution'            ; Resolution doc file for all volumes
+
+ ; -------------- END BATCH HEADER -------------------------------------------</b>
+
+ MD
+   TR OFF                       ; Loop info turned off
+ MD
+   VB OFF                       ; File info turned off
+ MD
+   SET MP                       ; Use single OMP processor
+   1
+
+ DE                             ; Delete existing file
+   [combfsc]                    ; FSC doc file file used as completion flag
+
+ ; Make header for  resolution doc file
+ SD /        GROUP,       NORM FREQ,  RESOLUTION (ANG.)   (CUTOFF=50%) 
+   [res_file]                   ; Resolution doc file      (output)
+ SD E 
+   [res_file]                   ; Resolution doc file      (output)
+
+ DO   ; ---------------------------  Loop starts group back projections --------------
+
+   UD NEXT [key],[grp],[p],[def]; Get group from group sel. file
+     [sel_grp]                  ; Group selection file       (input)
+   IF ([key] .LE. 0) EXIT       ; End of groups in selection file
+
+   DE                           ; Delete existing file
+     [ctf]                      ; CTF correction file used as completion flag
+
+   VM                           ; Process all defocus groups in parallel
+     publish './spider spi/$DATEXT @recon {***[grp]}  grp={***[grp]}' 
+      
+ ENDDO
+
+ UD NEXT END                    ; Reset group sel. file
+   [sel_grp]                    ; Group selection file       (ends)
+
+ VM                             ; Echo start time
+   date '+ TIME: %x  %X'
+
+ DO   ; ---------------------------  Loop waits for group back projections ------------
+
+   UD NEXT [key],[grp]          ; Get group from group sel. file
+     [sel_grp]                  ; Group selection file       (input)
+   IF ([key] .LE. 0) EXIT       ; End of groups in selection file
+
+   VM
+     echo " Waiting for group: {**[grp]}"
+   MY FL                        ; Flush results file
+
+   ;  Wait for all subscribers to finish back projections
+   IQ SYNC                      ; Wait for CTF file creation 
+     [ctf]                      ; CTF finished flag file    (input)
+     10 3600000 
+
+   VM
+     echo " Finished group:    {**[grp]}" ; date '+ TIME: %x  %X'
+ ENDDO
+
+ ; --------------------------------- Start volume combination & resolution calc. -----
+
+ VM                              ; Combine group volumes and find resolution
+   publish './spider spi/$DATEXT @recon 0  grp=-99' 
+      
+ IQ SYNC                         ; Wait for FSC file creation signal 
+   [combfsc]                     ; Doc file                 (input)
+   10 3600000 
+
+ VM
+   date '+ TIME: %x  %X'; echo " RECONSTRUCTION FINISHED"
+
+ EN
+; </body></pre></html>

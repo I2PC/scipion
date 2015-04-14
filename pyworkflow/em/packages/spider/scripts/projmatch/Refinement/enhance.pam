@@ -1,0 +1,166 @@
+([p69],[pixsiz],[next-iter],[spfreq])  
+;
+; SOURCE: spider/docs/techs/recon/newprogs/enhance.pam       
+;         pixsiz                       ArDean Leith  Aug 2012
+;
+; PURPOSE: Calculate 1D PW, then create scattering curve in the same format,
+;          Search for close frequences -- intensity can be normalized / 
+;          multiplied or divided to get it closer to PW values.
+;          Filters to limit resolution.
+;
+; INPUT REGISTERS:
+;    [p69]              Freq. (pixel) at when FSC falls below  0.5,
+;    [pixsiz]           Pixel_size
+;    [next-iter]        Iteration counter
+;    [spfreq]           Spatial frequency 
+; 
+; '##' denotes iteration, '##+' denotes next iteration, '***' denotes group
+; INPUT FILES:
+;    [volin]            final/val**+          Volume to be enhanced
+;    [scattering_doc]   input/scattering      X-ray scattering power spectrum
+;    [mask]             input/mask            Mask from ribosome
+;
+; OUTPUT FILES:
+;    [enhance_doc]      work/enhance_doc_**+  Enhancement doc file
+;    [vol_power_spec]   work/vol_ps_**+       Temp file (deleted)
+;    [enhance_doc]      work/enhance_doc_##+  Ampl filter doc file
+;    [next_val]_amps    final/val##+_amps     Ampl enhanced vol., unfiltered)
+;    [volout]           final/vol##_filtered
+;    [vol_power_spec]   rojo##+               Temp output file
+;.......................................................................
+
+ FR                                      ; Volume  (input)
+   ?Volume to be corrected?[volin]
+
+ FR                                      ; Volume  (output)
+   ?Output volume?[volout]
+
+ [vol_power_spec] = 'rojo{**[next-iter]}'  ; Temp output file
+
+ [ring] = 0.5                            ; FSC ring width
+ [filter-limit] = int([p69]*[ring])      ; Filter limit
+ [filter-limit]                          ; Echo value to results 
+
+ IF ([spfreq] .GT. 0.35) [spfreq] = 0.4  ; Limits pass-band
+ [stop-band]= [spfreq] + 0.15            ; Stop band frequency
+
+ ; Create doc file with 1D power spectrum of input volume
+
+ PW                     ; Power spectrum of input volume
+   [volin]              ; Volume                    (input)
+  _1                    ; Power spectrum            (input)
+
+ SQ                     ; Square the values in vol
+   _1                   ; Power spectrum            (input)  
+   _2                   ; Squared power spectrum    (output) 
+
+ RO                     ; Rotational average
+   _2                   ; Squared power spectrum    (input)
+   _3                   ; Rotational average of PS  (output)
+
+ DE                     ; Delete existing file
+   [vol_power_spec]     ; Doc file                  (removed)
+
+ LI D                   ; List volume to doc file
+   _3
+   [vol_power_spec]     ; Doc file                   (output)
+   R                    ; Real format
+   1                    ; Register number
+
+ UD N [size]            ; Find size of doc file
+   [vol_power_spec]     ; Doc file                   (input)
+
+ ; Create output enhancement curve
+ [x55] = 0.0
+ [x56] = 100
+
+ DE
+   [enhance_doc]                ; Doc file         (removed)
+ 
+ DO [x21]=2,[filter-limit]      ; Curve goes out to filter limit
+
+   UD IC [x21], x54
+     [vol_power_spec]           ; Power spectrum   (input)
+
+   [x55] = ([x21]-1)/(2*([size]-1))
+   [x56] = [pixsiz]/[x55]       ; Spatial frequency in Angstroms,
+   ; Output [x77]: corresponding intensity (from 2nd col in scatter doc file)
+   ; The filter is scaled to have 1 at 100A
+
+   UD N [npts]                  ; Number of points in scattering file
+     [scattering_doc]           ; Doc file           (input)
+
+   [x52] = INT([npts]/2)
+
+   DO  [ipt]=1,[npts]
+
+      UD IC [x52], [x31],[x22]
+        [scattering_doc]        ; Doc file           (input)
+
+      [x52] = [x52] + 1
+
+      IF ([x52] .GT. 1500) EXIT
+
+      UD IC [x52], [x32],x23
+        [scattering_doc]        ; Doc file           (input)
+
+      IF ([x56] .LE. [x31]) THEN
+         IF ([x56] .GE.[x32])  THEN
+            [x77] = ([x31]-[x56])**2
+            [x78] = ([x32]-[x56])**2
+            IF ([x78] .LT. ]x77]) [x22] = x23
+            EXIT
+         ENDIF
+      ENDIF
+
+      IF ([x56] .LT.[x32]) THEN
+         [ipt]  = [x52]
+         [x52]  = INT(([npts]-[x52])/2+[x52])
+      ELSE
+         [npts] = [x52]
+         [x52]  = INT(([x52]-[ipt])/2+[ipt])
+      ENDIF
+
+   ENDDO
+
+   [x22] = [x22] / 37891.
+
+   ; Xray/EM
+   [x22] = SQR([x22]/x54)
+   [x78] = LON([x22])
+
+   SD [x21], [x22],[x55],[x56],[x78]
+     [enhance_doc]            ; Doc file           (output)
+
+ ENDDO
+
+ UD ICE
+   [vol_power_spec]           ; Use finished 
+ UD ICE
+   [scattering_doc]           ; Use finished
+
+ DE                           ; No longer needed
+   [vol_power_spec]           ; Temp output file  (removed)
+
+ FD                           ; Filter using enhancement doc. file
+   [next_val]                 ; Reconstructed volume             (input)
+   [next_val]_amps            ; Amp-enhanced volume, unfiltered  (output)
+   [enhance_doc]              ; Input enhancement document file  (input)
+
+ FQ                           ; Quick Filter          
+   [next_val]_amps            ; Amp-enhanced volume              (input)
+   [volout]                   ; Amp-enhanced, filtered volume    (output)
+   7                          ; Butterworth low pass filter
+   [spfreq],[stop-band]       ; Pass-band and stop-band frequency
+      
+ IQ FI [masked]               ; See if mask file exists
+   [mask]                     ; Mask created from ribosome       (input)
+
+ IF ([masked] .GE. 1) THEN    ; Use mask file
+   MM C                       ; Mask multiply to eliminate high freq.
+     [mask]                   ; Mask created from ribosome       (input)
+     [volout]                 ; Volume for next iteration
+ ENDIF
+
+ RE
+

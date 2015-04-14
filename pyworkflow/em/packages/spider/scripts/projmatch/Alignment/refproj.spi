@@ -1,0 +1,183 @@
+; <html><head><title>Multiplies reference volume by CTF & creates ref projections</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/refproj.spi
+;
+; PURPOSE:  Creates reference projections from a reference volume.
+;           If desired, separate references can be created for each
+;           defocus group. In that case, the reference volume is first
+;           multiplied by the CTF for each defocus group 
+;           (Set [usectf] = 1).
+;
+;           If [usectf] = 0, then a single set of reference projections 
+;           is created, with no modification by the CTF.
+;
+; The following values are retrieved from the params file
+;   [numgrp]   = Number of defocus groups
+;   [pix_size] = Pixel size, Angstroms
+;   [pixels]   = Array dimension, pixels
+;   [ee]       = Electron energy
+;   [spab]     = Spherical aberration
+;   [ss]       = Source size
+;   [defspr]   = Defocus spread
+;   [acr]      = Amplitude contrast ratio
+;   [geh]      = Gaussian envelope halfwidth
+;
+; <b> ------------ Parameters ---------------------------------------
+
+[dtheta] = 15  ; Delta theta: 15 gives 83 projections
+[radius] = -1  ; Radius: use -1 for default value
+
+[usectf] = 1   ; Multiply references by CTF (0= Do not, use non-CTF references)  
+
+;    ------------ Input files ---------------------------------------
+
+[params]      = '../params'            ; Parameter doc. file
+
+[refvol]      = '../reference_volume'  ; Reference volume
+
+[sel_group]   = 'sel_group'            ; Defocus group selection file
+
+; --------------- Output files  -------------------------------------
+
+[refangles]   = 'refangles'            ; projection angles doc file
+
+[proj_dir]    = 'projs'               ; Dir for projection stacks 
+
+[prj]         = '[proj_dir]/prj_'     ; Template for projections (stack files)
+
+[usectf_file] = 'ctf_refs'            ; Signal File indicates refs are multiplied by CTF
+
+; -------------- END BATCH HEADER ---------------------------------</b>
+
+MD
+TR OFF                     ; Decrease results file output
+MD
+VB OFF                     ; Decrease results file output
+MD 
+SET MP 
+0                          ; Use all available processors  
+
+VM
+mkdir -p [proj_dir]
+
+; Delete output document files and get parameters
+DE   
+[refangles]
+DE
+[usectf_file]
+
+; Get parameters
+IF ([radius].LT.0) THEN    ; Get actual size and compute radius
+   UD 18,[size]
+   [params] 
+   [radius] = 0.69 * [size]
+ENDIF
+
+IF ([usectf].GT.0) THEN
+   ; Create "CTF in-use flag" file for 'AP SH'.  
+   SD 1,[usectf]           ; 
+   [usectf_file]           ; USE-CTF file           (input)
+
+   UD 5,[pix_size]         ; Pixel size
+   [params]
+   [spfreq]=0.5/[pix_size] ; Max. spatial frequency
+
+   UD 6,[ee]               ; Electron energy
+   [params]
+   [lambda] = 12.398 / SQR([ee] * (1022.0 + [ee]))  ; Lambda
+
+   UD 7,[spab]             ; Spherical aberration
+   [params]
+   UD 8,[ss]               ; Source size
+   [params]
+   UD 9,[defspr]           ; Defocus spread
+   [params]
+   UD 12,[acr]             ; Amplitude contrast ratio
+   [params]
+   UD 13,[geh]             ; Gaussian envelope halfwidth
+   [params]
+   UD 17,[pixels]          ; Window size
+   [params]
+
+   UD N [numgrp]           ; Number of defocus groups
+   [sel_group]
+ENDIF
+
+; Create the reference angles document file
+VO EA [numang]             ; Create equally dispersed angles
+[dtheta]                   ; Delta theta
+0,0                        ; Range of theta
+0,0                        ; Range of phi
+[refangles]                ; Doc file of angles       (output)
+
+[numang] = [numang] - 1
+
+
+;------------------------------------------
+; For each defocus group, multiply the reference volume by the
+; appropriate defocus, then use this ctf-reference to generate
+; 83 projection images
+
+IF ([usectf].GT.0) THEN
+   VM
+   echo ' 'Slow CTF correction on reference volume using: \'TF C3\' ; echo ' '
+
+   ; CTF correction
+   FT                      ; Fourier transform  
+   [refvol]                ; Ref volume                       (input)
+   _2                      ; Fourier of ref volume            (output)
+
+   DO [key]=1,[numgrp]      ; Loop over all defocus groups --------------
+      UD [key],[grp],[idum],[def] ; Get defocus group & defocus value
+      [sel_group]          ; Group selection file             (input)
+
+      TF C3                ; Transfer Function, create CTF 
+      _7                   ; CTF file                        (output)
+      [spab]               ; Spherical aberration
+      [def],[lambda]       ; Defocus, lambda
+      [pixels]             ; Array dimension
+      [spfreq]             ; Maximum spatial frequency
+      [ss],[defspr]        ; Source size, defocus spread
+      (0,0)                ; Astigmatism, azimuth
+      [acr],[geh]          ; ACR, envelope 1/2-width
+      (-1)                 ; Sign
+
+      TF COR               ; CTF correction 
+      _2                   ; Fourier transformed ref volume    (input)
+      _7                   ; Complex model CTF                 (input)
+      _7                   ; CTF multiplied volume             (output)
+
+      VM
+      echo ' 'Group: {***[grp]}'   'Defocus: {%f7.1%[def]}'   'Projections: {***[numang]}  
+
+      ; Create projections of the ref volume
+      PJ 3Q                ; Generate projections 
+      _7                   ; Volume to be projected           (input)
+      [radius]             ; Radius
+      (1-[numang])         ; List of file numbers
+      [refangles]          ; Proj. angles doc file            (input)
+      [prj]{***[grp]}@**** ; Template for projection stack    (output)
+   ENDDO
+
+ELSE
+   ; No CTF correction e.g. single defocus group
+
+   [grp]=1                 ; Group number
+
+   VM
+   echo  ' 'Creating: {***[numang]} reference projections
+
+   ; Create projections of the ref volume
+   PJ 3Q                   ; Generate projections 
+   [refvol]                ; Volume to be projected          (input)
+   [radius]                ; Radius
+   (1-[numang])            ; List of file numbers
+   [refangles]             ; Proj. angles doc file           (input)
+   [prj]{***[grp]}@****    ; Template for projection stack   (output)
+ENDIF
+VM
+echo ' '   
+
+EN 
+; </body></pre></html>
+

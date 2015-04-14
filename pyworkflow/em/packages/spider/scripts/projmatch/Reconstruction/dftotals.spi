@@ -1,0 +1,150 @@
+; <html><head><title>>Create group and particle selection files</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/dftotals.spi 
+;                         More stacks, merged with sort.pam      Dec. 2006 ArDean Leith
+;                         Removed sorted output                  Jan. 2010 ArDean Leith
+;
+; PURPOSE: Creates particle selection files by applying cutoff. Creates an
+;          updated group selection file with current particle numbers and defocus
+;          values.
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; <b> ------------ Input files ---------------------------------------
+
+[defgrps] = '../Alignment/sel_group'            ; Defocus groups selection file
+
+[docapsh] = '../Alignment/align_01_{***[grp]}'  ; Document file from 'AP SH' command
+
+[thresh]  = 'thresh'                            ; [optional] Doc file with CC thresholds
+
+; --------------- Output files  -------------------------------------
+
+[sel_particles] = 'sel_particles_{***[grp]}'    ; Output file (one for each defocus group)
+                                                ; Contains the particle numbers whose correlation  
+                                                ;   coefficients are greater than the threshold
+
+[defgrps_lim] = 'sel_group_cclim'               ; New defocus groups selection file
+
+; -------------- END BATCH HEADER ---------------------------------</b>
+
+MD
+TR OFF                                    ; Decrease results file output
+MD
+VB OFF                                    ; Decrease results file output
+
+DE                                        ; Remove any existing output doc file
+[defgrps_lim] 
+
+SD / GROUP   PARTICLES   DEFOCUS
+[defgrps_lim]                             ; Group election file          (output)
+
+IQ FI [exists]                            ; If thresh file exists, use thresh
+[thresh]                                  ; Threshold doc file           (input) 
+
+UD N [numgrps]                            ; Get number of groups 
+[defgrps]                                 ; Group selection doc file     (input)
+
+[all]   = 0
+[saved] = 0
+
+IF ([exists].LE.0) THEN
+   ; ***** No threshold doc file : Keep all particles ********************************
+
+   DO [numgrp]=1,[numgrps]                ; Loop over all defocus group(s)
+
+      UD [numgrp], [grp],[numparts],[def] ; Get current group number and particles 
+      [defgrps]                           ; Group selection doc file     (input)
+
+      ; Create particle selection file
+      DE                                  ; Remove any existing output doc file
+      [sel_particles]                     ; Selection file                 
+
+      SD / PARTICLE NUMBER  
+      [sel_particles]                     ; Selection file                (output)
+
+      DO [part]=1,[numparts]              ; Loop over particles in this defocus group
+
+         ;            PHI,THE,PSI, REF#,IMG#,INPLANE, SX,SY,NPROJ, DIFF,CCROT,INPLANE,SX,SY
+         UD IC [part], [d],[d],[d], [d],[d],[d],      [d],[d],[d], [d],[cc]
+         [docapsh]
+
+         SD [part], [part]                ; Save: Particle #, CC value, Defocus
+         [sel_particles]                  ; Selection file                 (output)
+      ENDDO
+      UD ICE
+      [docapsh]
+      SD E                                ; Free doc file 
+      [sel_particles]
+
+      SD [numgrp], [grp],[numparts],[def] ; Save: Group, Particle #, Defocus
+      [defgrps_lim]                       ; Selection file                (output)
+ 
+      [all] = [all] + [numparts]
+   ENDDO
+
+   VM
+   echo  ' ' ; echo ' 'Overall particles: {******[all]}   
+
+ELSE
+   ; ********* Apply cuttoff  threshold  **************************************************
+
+
+   DO [numgrp]=1,[numgrps]                ; Loop over all defocus group(s)
+
+      UD [numgrp], [grp],[numparts],[def] ; Get current group number and particles 
+      [defgrps]                           ; Group selection doc file     (input)
+
+      [all] = [all] + [numparts]
+      [key] = 0
+
+      ; Create particle selection file
+      DE                                  ; Remove any existing output doc file
+      [sel_particles]                     ; Selection file                 
+
+      SD / PARTICLE NUMBER   
+      [sel_particles]                     ; Selection file                (output)
+
+      DO [part]=1,[numparts]              ; Loop over particles in this defocus group
+
+         ;            PHI,THE,PSI, REF#,IMG#,INPLANE,  SX,SY,NPROJ, DIFF,CCROT,INPLANE,SX,SY
+         UD IC [part], [d],[d],[d], [d],[d],[d],       [d],[d],[d],  [d],[cc]
+         [docapsh]                        ; Alignment doc file             (input)
+
+         UD [grp],[ccthresh]              ; Get CC threshold for this defocus group
+         [thresh]                         ; Threshold doc file             (input) 
+
+         IF ([cc].GE.[ccthresh]) THEN     ; CC above threshold for this particle
+            [key]=[key]+1                 ; Increment new particle counter = key
+
+            SD [key], [part]              ; Save:  Particle #
+            [sel_particles]               ; Selection file                 (output)
+         ENDIF
+      ENDDO
+
+      UD ICE
+      [docapsh]
+      SD E                               ; Free doc file 
+      [sel_particles]
+
+      SD [numgrp], [grp],[key],[def]     ; Save: Group, Particle #, Defocus
+      [defgrps_lim]                      ; Selection file                (output)
+
+      VM
+      echo ' In: [sel_particles]  Cutoff: {%F8.2%[ccthresh]}   Keeps: {******[key]}  Out of: {******[numparts]}'  
+      [saved] = [saved] + [key]   
+   ENDDO
+
+   VM
+   echo  ' '; echo ' 'Overall keeping: {******[saved]} Out of: {******[all]} particles  
+ENDIF
+
+SD E
+[defgrps_lim]                            ; Selection file                (ends)
+
+VM
+echo  ' '
+    
+EN
+; </body></pre></html>
+

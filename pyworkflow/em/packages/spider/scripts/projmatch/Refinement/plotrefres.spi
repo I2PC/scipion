@@ -1,0 +1,131 @@
+; <html><head><title>Creates gnuplot file of refinement resolution curves</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/plotrefres.spi 
+;             Previously named: plotref.spi        Jan 2010 ArDean Leith
+;
+; PURPOSE: Plots FSC resolution curves for each iteration of refinement 
+;          Plots RSC resolution curves for each group at final iteration of refinement 
+;   
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; <b> ------------ Input files ----------------------------------------
+
+[sel_group]= 'input/sel_group'                          ; Defocus group selection doc file
+
+[resol]    = 'final/resolutions'                        ; Doc file with resolution for each iterations
+
+[fsc]      = 'final/fscdoc_{**[next-iter]}'             ; FSC curves file for iterations
+
+[ofsc]     = 'final/ofscdoc_{**[next-iter]}_{***[grp]}' ; Overall FSC curves by defocus groups
+
+[combined] = 'final/ofscdoc_{**[next-iter]}'            ; Overall combined FSC curve 
+
+; --------------- Output files  -------------------------------------
+
+ [gnuplot_iter] = 'gnuplot_refi'       ; Text file of gnuplot commands (iterations)
+ [gnuplot_dfgr] = 'gnuplot_refd'       ; Text file of gnuplot commands (def groups)
+
+ ; -------------- END BATCH HEADER ---------------------------------- </b>
+
+ UD N [niter]               ; Number of iterations
+   [resol]
+
+ VM
+   \rm -f [gnuplot_iter]
+ 
+ VM 
+   echo ' 'set title \"$DATEXT refinement: iterations \" >> [gnuplot_iter]
+
+ VM 
+   echo ' 'set xlabel \"Frequency\" >> [gnuplot_iter]
+
+ VM 
+   echo ' 'set data style lines >> [gnuplot_iter]
+
+ ; Use a black line (color = -1) for the final curve
+ VM 
+   echo ' 'set style line 32 lt 1 >> [gnuplot_iter]
+
+ VM                         ; 0.5 resolution line
+   echo ' '"f(x) = 0.5" >> [gnuplot_iter]
+
+ VM 
+   echo ' 'plot \\ >> [gnuplot_iter]
+
+ DO                         ; Loop over all groups
+   UD NEXT [key],[iter]     ; Get iteration number from  file
+     [resol]                ; Iteration resolution file            (input)
+   IF ([key] .LE. 0) EXIT   ; End of doc file
+
+   [next-iter] = [iter] + 1    ; Output from this iteration is +1
+   IF ([iter].EQ.[niter]) THEN   ; Last curve gets a thick black line (ls 32)
+      VM
+        echo ' '\"[fsc].$DATEXT\" using 3:5 title \"[fsc]\" ls 32, \\ >> [gnuplot_iter]
+   ELSE
+      VM
+        echo ' '\"[fsc].$DATEXT\" using 3:5 title \"[fsc]\" , \\ >> [gnuplot_iter]
+   ENDIF
+ ENDDO
+
+ VM
+   echo ' '"f(x) notitle" >> [gnuplot_iter]
+
+ VM                         
+   gnuplot -persist [gnuplot_iter] &
+
+ VM 
+   echo ' '; cat [gnuplot_iter] 
+
+ ; ==================================================================
+
+ VM
+   \rm -f [gnuplot_dfgr]
+ 
+ VM 
+   echo ' 'set title \"$DATEXT refinement: defocus groups \" >> [gnuplot_dfgr]
+ VM 
+   echo ' 'set xlabel \"Frequency\" >> [gnuplot_dfgr]
+
+ VM 
+   echo ' 'set data style lines >> [gnuplot_dfgr]
+
+ VM            ; Use a black line (color = -1) for the combined curve
+   echo ' 'set style line 31 lt -1 >> [gnuplot_dfgr]
+
+ ;VM 
+ ;echo "f(x) = 0.5" >> [gnuplot_dfgr]
+
+ VM 
+   echo ' 'plot \\ >> [gnuplot_dfgr]
+
+ DO                         ; Loop over all groups
+   UD NEXT [key],[grp]      ; Get group number from sel. file
+     [sel_group]            ; Group selection file            (input)
+  IF ([key] .LE. 0) EXIT    ; End of selection doc file
+ 
+   VM
+     echo \"[ofsc].$DATEXT\" using 3:5 title \"[ofsc]\", \\ >> [gnuplot_dfgr]
+ ENDDO
+
+ ; Combined curve, uses linestyle defined above (ls 31)
+ VM
+   echo \"[combined].$DATEXT\" using 3:5 title \"[combined]\" ls 31 >> [gnuplot_dfgr]
+
+ ;VM
+ ;echo "f(x) notitle" >> [gnuplot_dfgr]
+
+ VM                         
+   gnuplot -persist [gnuplot_dfgr] &
+
+ VM                         
+   cat [gnuplot_dfgr] 
+
+ MY FL
+
+ EN
+ 
+; </body></pre></html>
+
+
+
+
