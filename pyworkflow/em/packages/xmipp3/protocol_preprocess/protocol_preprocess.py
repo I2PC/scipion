@@ -35,7 +35,7 @@ from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.constants import *
 
 from ..constants import *
-from ..convert import locationToXmipp
+from ..convert import locationToXmipp, writeSetOfParticles
 
 
 
@@ -275,6 +275,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
         if self.isFirstStep:
                 self.isFirstStep = False
 
+
 class XmippProtPreprocessVolumes(XmippProcessVolumes):
     """ Protocol for Xmipp-based preprocess for volumes """
     _label = 'preprocess volumes'
@@ -323,10 +324,14 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         form.addParam('doAdjust', BooleanParam, default=False,
                       label="Adjust gray values", 
                       help='Adjust input gray values so that it is compatible with a set of projections.') 
-        form.addParam('setOfProjections', PointerParam, pointerClass='SetOfParticles',
-                      label="Set of projections", condition='doAdjust',
+        form.addParam('inputImages', PointerParam, pointerClass='SetOfParticles, SetOfAverages, SetOfClasses2D',
+                      label="Set of particles", condition='doAdjust',
                       help='Set of images to which the model should conform. The set of images should have the'
                       'final pixel size and the final size of the model.')
+        form.addParam('sigSymGroup', TextParam, default='c1',
+                      label="Symmetry group", condition='doAdjust',
+                      help='See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]'
+                      'for a description of the symmetry groups format, If no symmetry is present, give c1.')  
         # Segment
         form.addParam('doSegment', BooleanParam,
                       default=False, label="Segment", 
@@ -404,6 +409,19 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         self.runJob("xmipp_transform_symmetrize", args)
     
     def adjustStep(self, args, changeInserts):
+        imgsFn = self._getExtraPath('input_images.xmd')
+        
+        partSet = self._getRandomSubset(self.inputImages.get(), 200)
+        writeSetOfParticles(partSet, imgsFn)
+        
+        params = {'imgsFn': imgsFn,
+                        'dir': self._getTmpPath(),
+                        'symmetryGroup': self.sigSymGroup.get(),
+                        }
+        sigArgs = '-i %(imgsFn)s --odir %(dir)s --sym %(symmetryGroup)s'\
+        ' --iter 1 --dontReconstruct' % params
+        self.runJob("xmipp_reconstruct_significant", sigArgs)
+        
         if self._isSingleInput():
             localArgs = self._adjustLocalArgs(self.inputFn, self.outputStk, args)
             self.runJob("xmipp_transform_adjust_volume_grey_levels", localArgs)
@@ -490,9 +508,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         return args
     
     def _argsAdjust(self):
-        # ToDo Fix
-        projFn = self.setOfProjections.get()
-        args = " -m %s" % projFn
+        args = " -m %s" % self._getTmpPath("gallery_iter001_00.doc")
         return args
     
     def _adjustLocalArgs(self, inputVol, outputVol, args):
@@ -617,3 +633,29 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
     def _setFalseFirstStep(self):
         if self.isFirstStep:
                 self.isFirstStep = False
+
+    def _getRandomSubset(self, imgSet, numOfParts):
+        if isinstance(imgSet, SetOfClasses2D):
+            partSet = self._createSetOfParticles("_averages")
+            for i, cls in enumerate(imgSet):
+                img = cls.getRepresentative()
+                img.setSamplingRate(cls.getSamplingRate())
+                img.setObjId(i+1)
+                partSet.append(img)
+        else:
+            partSet = imgSet
+        
+        if partSet.getSize() > numOfParts:
+            newPartSet = SetOfParticles(filename=self._getTmpPath("particles_tmp.sqlite"))
+            counter = 0
+            for part in partSet.iterItems(orderBy='RANDOM()', direction='ASC'):
+                if counter < numOfParts:
+                    newPartSet.append(part)
+                    counter =+ 1
+                else:
+                    break
+        else:
+            newPartSet = partSet
+        
+        return newPartSet
+    
