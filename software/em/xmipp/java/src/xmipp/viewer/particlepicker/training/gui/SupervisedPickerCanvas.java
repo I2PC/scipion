@@ -50,8 +50,8 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 	public void mousePressed(MouseEvent e)
 	{
 		super.mousePressed(e);
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
+		int x = offScreenX(e.getX());
+		int y = offScreenY(e.getY());
 
 		if (frame.isPickingAvailable(e))
 		{
@@ -103,8 +103,8 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		super.mouseDragged(e);
 		if (SwingUtilities.isLeftMouseButton(e))
 		{
-			int x = super.offScreenX(e.getX());
-			int y = super.offScreenY(e.getY());
+			int x = offScreenX(e.getX());
+			int y = offScreenY(e.getY());
 			if (frame.isPickingAvailable(e))
 			{
 				if (frame.isEraserMode())
@@ -141,8 +141,8 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 	{
 
 		super.mouseReleased(e);
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
+		int x = offScreenX(e.getX());
+		int y = offScreenY(e.getY());
 		if (frame.isPickingAvailable(e))
 		{
 			if (frame.isEraserMode())

@@ -64,12 +64,13 @@ public class XmippMenuBar extends MenuBar
 	private Menu helpmn;
 	private MenuItem keyassistmi;
 	private QuickHelpJDialog keyassistdlg;
-    private final CheckboxMenuItem invertymi;
+	private boolean invertx;
+	private boolean inverty;
         
 
 	enum IJRequirement
 	{
-		BINARY, EIGHTBIT, IMAGEJ, STACK, THIRTYTWOBIT, RGB, VOLUME
+		BINARY, EIGHTBIT, IMAGEJ, STACK, THIRTYTWOBIT, RGB, VOLUME, INVERTX, INVERTY
 
 	};
 
@@ -202,18 +203,7 @@ public class XmippMenuBar extends MenuBar
 				
 			}
 		});
-                invertymi = new CheckboxMenuItem("Invert Y");
-		invertymi.setState(xw.getImagePlusLoader().isInvertY());
-		invertymi.addItemListener(new ItemListener()
-		{
-
-			@Override
-			public void itemStateChanged(ItemEvent e)
-			{
-				invertY(invertymi.getState());
-				
-			}
-		});
+        
 		
 		exitmi = new MenuItem("Exit");
 		exitmi.setShortcut(new MenuShortcut(KeyEvent.VK_Q));
@@ -235,7 +225,6 @@ public class XmippMenuBar extends MenuBar
 		filemn.add(pollmi);
 		filemn.add(ugmi);
 		filemn.add(wrapmi);
-                filemn.add(invertymi);
 		filemn.add(exitmi);
 
 		// menubar image menu
@@ -268,8 +257,8 @@ public class XmippMenuBar extends MenuBar
 		addIJMenuItem(adjustmn, "Reslice", "Reslice [/]...", IJRequirement.VOLUME);
 
 		// image transform menu
-		addIJMenuItem(transformmn, "Flip Horizontally", "Flip Horizontally");
-		addIJMenuItem(transformmn, "Flip Vertically", "Flip Vertically");
+		addIJMenuItem(transformmn, "Flip Horizontally", "Flip Horizontally", IJRequirement.INVERTX);
+		addIJMenuItem(transformmn, "Flip Vertically", "Flip Vertically", IJRequirement.INVERTY);
 		addIJMenuItem(transformmn, "Rotate 90 Degrees Left", "Rotate 90 Degrees Left");
 		addIJMenuItem(transformmn, "Rotate 90 Degrees Right", "Rotate 90 Degrees Right");
 
@@ -419,11 +408,7 @@ public class XmippMenuBar extends MenuBar
 		xw.loadData();
 	}
         
-        protected void invertY(boolean value)
-	{
-		xw.getImagePlusLoader().setInvertY(value);
-		xw.loadData();
-	}
+   
 	
 	public static void openImagePlusAs3D(ImagePlus ip) {
 		try {
@@ -521,6 +506,14 @@ public class XmippMenuBar extends MenuBar
 				case RGB:
 					IJ.run("RGB Color");
 					XmippDialog.showInfo(null, "RGB color applied");
+					break;
+				case INVERTX:
+					invertx = !invertx;
+					xw.getCanvas().setInvertX(invertx);
+					break;
+				case INVERTY:
+					inverty = !inverty;
+					xw.getCanvas().setInvertY(inverty);
 					break;
 				
 				}

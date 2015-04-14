@@ -14,7 +14,8 @@ import javax.swing.SwingUtilities;
 public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 {
 	
-
+	private boolean invertx;
+	private boolean inverty;
 
 	public Tool getTool()
 	{
@@ -137,8 +138,8 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		if(getParent() instanceof XmippImageWindow)
 		{
 			int[] pixels = imp.getPixel(x, y);
-                        if(pixels != null)
-                            ((XmippImageWindow)getParent()).showPixels(x, y, pixels);
+            if(pixels != null)
+                ((XmippImageWindow)getParent()).showPixels(x, y, pixels);
 		}
 		if (getTool() == Tool.IMAGEJ)
 			super.mouseMoved(e);
@@ -146,6 +147,22 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		imp.mouseMoved(x, y);
 		imp.updateStatusbarValue();
 		
+	}
+	
+	public int offScreenX(int x)
+	{
+		x = super.offScreenX(x);
+		if(invertx)
+			x = imp.getWidth() - x;
+		return x;
+	}
+	
+	public int offScreenY(int y)
+	{
+		y = super.offScreenY(y);
+		if(inverty)
+			y = imp.getHeight() - y;
+		return y;
 	}
 
 	public void loadData(XmippIJWindow xiw)
@@ -197,6 +214,16 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 				iw.pack();
 			}
 		}
+	}
+	
+	public void setInvertX(boolean value)
+	{
+		invertx = value;
+	}
+	
+	public void setInvertY(boolean value)
+	{
+		inverty = value;
 	}
 
 
