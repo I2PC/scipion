@@ -86,20 +86,16 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             try:
                 if self.applyAlignment and movie.hasAlignment():
                     shifts = movie.getAlignment().getShifts()
-                    print("movie name", movie.getFileName())
-                    print("shifts",shifts)
                 else:
+                    #TODO: I do not think this option is ever used
                     # Read movie dimensions to iterate through each frame
                     from pyworkflow.em.convert import ImageHandler
                     from os.path import join
                     movieFolder = self._getMovieFolder(movie.getObjId())
                     from os import getcwd
-                    print("getcwd()",getcwd())
                     movieName =  movie.getFileName()
                     imgh = ImageHandler()
-                    print("movieName",movieName)
                     x, y, z, n = imgh.getDimensions(movieName)
-                    print("x, y, z, n",x, y, z, n)
                     shifts = [0] * (2*n)
             except NameError:
                 shifts=None
