@@ -113,7 +113,7 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
                              })
         self._updateParams()
 
-        self.runScript(self.getScript(), self.getExt(), self._params)   
+        self.runTemplate(self.getScript(), self.getExt(), self._params)   
         
         
 class SpiderProtClassifyCluster(SpiderProtClassify):

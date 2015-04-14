@@ -143,7 +143,7 @@ class SpiderProtCAPCA(SpiderProtocol):
                              '[reconstituted_img]': self._params['reconstituted']
                              })
                    
-        self.runScript('mda/ca-pca.msa', self.getExt(), self._params)
+        self.runTemplate('mda/ca-pca.msa', self.getExt(), self._params)
         
     def createOutputStep(self):
         # Generate outputs

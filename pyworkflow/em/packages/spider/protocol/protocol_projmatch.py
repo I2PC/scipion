@@ -34,7 +34,7 @@ import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtRefine3D
 
-from ..spider import SpiderDocFile, writeScript, getScript
+from ..spider import SpiderDocFile, writeScript, getScript, runScript
 from protocol_base import SpiderProtocol
 
 
@@ -83,16 +83,11 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
     def _insertAllSteps(self):        
         # Create new stacks and selfiles per defocus groups
         self._insertFunctionStep('convertInputStep', self.inputParticles.get().getObjId())
-        # Create the set of 2D projections from the input reference
-        # to be used in 2D alignment
-        self._insertFunctionStep('projectStep', self.input3DReference.get().getObjId()) 
-        # Align all experimental images agains the 2D projections
-        self._insertFunctionStep('alignStep') # 
-        # Create reconstructions for each of the defocus groups
-        self._insertFunctionStep('reconstructStep') 
-        # Merge all reconstructions into a single 3D volume
-        self._insertFunctionStep('mergeStep')
-        
+
+        for s in ['refine', 'prepare', 'grploop', 'mergegroups', 
+                  'enhance', 'endmerge', 'smangloop', 'endrefine']:
+            self._insertFunctionStep('runScriptStep', '%s.pam' % s)
+                
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions --------------------------------------------
@@ -111,26 +106,36 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
         volPath = self._getExtraPath(volName)
         em.ImageHandler().convert(self.input3DReference.get(), volPath)
         
+        self._writeRefinementScripts(volName)
+                
+    def _writeRefinementScripts(self, volName):
+        """ Write the needed scripts to run refinement
+        and substitute some values.
+        """
+        
         refPath = self._getExtraPath('Refinement')
         pwutils.makePath(refPath)
-        
-        writeScript(getScript('projmatch', 'Refinement', 'refine.pam'),
-                    join(refPath, 'refine.pam'), {})
         
         def path(p):
             """ Escape path with '' and add ../ """
             return "'%s'" % join('..', p)
         
-        params = {'[vol_orig]': path(volName),
+        def script(name, paramsDict={}):
+            outputScript=join(refPath, name)
+            writeScript(getScript('projmatch', 'Refinement',name), outputScript, paramsDict)
+            
+        
+        params = {'[iter-end]': self.numberOfIterations.get(),
+                  '[vol_orig]': path(volName),
                   '[sel_group_orig]': path('sel_group'),
                   '[sel_particles_orig]': path('group_{***[grp]}_selfile'),
                   '[group_align_orig]': path('group_{***[grp]}_align'),
                   '[unaligned_images_orig]': path('group_{***[grp]}_stack'),
-                  }
-        writeScript(getScript('projmatch', 'Refinement', 'refine_settings.pam'),
-                    join(refPath, 'refine_settings.pam'), params)
-        
-        
+                  }        
+        script('refine_settings.pam', params)
+        for s in ['refine', 'prepare', 'grploop', 'mergegroups', 
+                  'enhance', 'endmerge', 'smangloop', 'endrefine']:
+            script('%s.pam' % s)
         
     def _writeParamsFile(self, partSet):
         acq = partSet.getAcquisition()
@@ -183,13 +188,20 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
         
 #         fn, ext = splitext(stackFn)
 #         # Change to BigEndian
-#         runScript('cp_endian.spi', ext[1:], 
+#         runTemplate('cp_endian.spi', ext[1:], 
 #                   {'[particles]': fn + '@******', 
 #                    '[particles_big]': fn + '_big@******',
 #                    '[numberOfParticles]': imgSet.getSize()
 #                    })
 #         moveFile(fn + '_big' + ext, stackFn)
     
+    def runScriptStep(self, script):
+        """ Just run the script that was generated in convertInputStep. """
+        refPath = self._getExtraPath('Refinement')
+        #runScript(script, 'stk', cwd=refPath)
+        print ">>> Running script: ", script
+        
+        
     def projectStep(self, volumeId):
         pass
      

@@ -135,8 +135,7 @@ def writeScript(inputScript, outputScript, paramsDict):
     fOut.close()    
      
     
-    
-def runScript(inputScript, ext, paramsDict, log=None, cwd=None):
+def runTemplate(inputScript, ext, paramsDict, log=None, cwd=None):
     """ This function will create a valid Spider script
     by copying the template and replacing the values in dictionary.
     After the new file is read, the Spider interpreter is invoked.
@@ -147,12 +146,16 @@ def runScript(inputScript, ext, paramsDict, log=None, cwd=None):
     
     if cwd is not None:
         outputScript = join(cwd, outputScript)
-
-    writeScript(inputScript, outputScript, paramsDict)
         
-    scriptName = removeBaseExt(outputScript)
-    args = " %s @%s" % (ext, scriptName)
+    # First write the script from the template with the substitutions
+    writeScript(inputScript, outputScript, paramsDict)
+    # Then proceed to run the script
+    runScript(outputScript, ext, log, cwd)
     
+
+def runScript(inputScript, ext, log=None, cwd=None):
+    scriptName = removeBaseExt(inputScript)
+    args = " %s @%s" % (ext, scriptName)
     runJob(log, SPIDER, args, env=dict(environment), cwd=cwd)
     
 
@@ -173,7 +176,7 @@ def runCustomMaskScript(filterRadius1, sdFactor,
               '[output_mask]': outputMask,
               } 
     # Run the script with the given parameters
-    runScript('mda/custommask.msa', ext, params, cwd=workingDir)
+    runTemplate('mda/custommask.msa', ext, params, cwd=workingDir)
     
     
 class SpiderShell(object):

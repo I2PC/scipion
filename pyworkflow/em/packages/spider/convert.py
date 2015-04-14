@@ -31,7 +31,7 @@ from pyworkflow.em.constants import NO_INDEX
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.utils.path import moveFile
 
-from spider import SpiderDocFile, runScript
+from spider import SpiderDocFile, runTemplate
 from os.path import splitext
    
     
@@ -73,7 +73,7 @@ def writeSetOfImages(imgSet, stackFn, selFn):
     
     fn, ext = splitext(stackFn)
     # Change to BigEndian
-    runScript('cp_endian.spi', ext[1:], 
+    runTemplate('cp_endian.spi', ext[1:], 
               {'[particles]': fn + '@******', 
                '[particles_big]': fn + '_big@******',
                '[numberOfParticles]': imgSet.getSize()

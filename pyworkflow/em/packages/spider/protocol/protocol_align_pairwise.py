@@ -85,7 +85,7 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
                              '[nummps]': self.numberOfThreads.get(),
                             })
         
-        self.runScript(self.getScript(), self.getExt(), self._params)
+        self.runTemplate(self.getScript(), self.getExt(), self._params)
                 
     def getAverage(self):
         return self._getPath(self.getAlignDir(), 'rfreeavg001.%s' % self.getExt()) 
