@@ -29,7 +29,7 @@ Some Spider protocol base classes.
 
 from pyworkflow.em import EMProtocol
 
-from ..spider import runScript
+from ..spider import runTemplate
 from ..convert import writeSetOfImages
 
 
@@ -64,7 +64,7 @@ class SpiderProtocol(EMProtocol):
     def getScript(self):
         return getattr(self, '_script', None)
     
-    def runScript(self, inputScript, ext, paramsDict):
+    def runTemplate(self, inputScript, ext, paramsDict):
         """ This function will create a valid Spider script
         by copying the template and replacing the values in dictionary.
         After the new file is read, the Spider interpreter is invoked.
@@ -72,7 +72,7 @@ class SpiderProtocol(EMProtocol):
         self._enterWorkingDir()
         
         log = getattr(self, '_log', None)        
-        runScript(inputScript, ext, paramsDict, log)
+        runTemplate(inputScript, ext, paramsDict, log)
         
         self._leaveWorkingDir()
     

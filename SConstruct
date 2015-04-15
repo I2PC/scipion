@@ -566,8 +566,13 @@ env['CC'] = os.environ.get('CC')
 env['CXX'] = os.environ.get('CXX')
 env['LINKERFORPROGRAMS'] = os.environ.get('LINKERFORPROGRAMS')
 env['CCFLAGS'] = os.environ.get('CCFLAGS', '').split()
-env['CXXFLAGS'] = os.environ.get('CXXFLAGS', '').split()
+cxxFlags = os.environ.get('CXXFLAGS', '')
+if os.environ.get('DEBUG', '0') == 'True': #FIXME, use 1, true, yes...
+   cxxFlags += ' -g'
+env['CXXFLAGS'] = cxxFlags.split()
+os.environ['CXXFLAGS'] = cxxFlags # FIXME use only env or os.environ in the rest of the code
 env['LINKFLAGS'] = os.environ.get('LINKFLAGS', '').split()
+
 
 for path in ['MPI_LIBDIR', 'MPI_INCLUDE', 'MPI_BINDIR',
              'JAVA_HOME', 'JAVA_BINDIR']:

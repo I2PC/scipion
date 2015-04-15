@@ -268,7 +268,7 @@ class SpiderViewerDiday(SpiderViewerClassify):
                   '[class_var]': join(classDir, classVar + '***'),        
                   }
         
-        prot.runScript('mda/classavg.msa', prot.getExt(), params)
+        prot.runTemplate('mda/classavg.msa', prot.getExt(), params)
 
         particles = prot.inputParticles.get()
         particles.load()

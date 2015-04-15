@@ -41,7 +41,7 @@ from pyworkflow.em.wizard import (EmWizard, ParticleMaskRadiusWizard, ParticlesM
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider, HotButton
 
-from spider import SpiderShell, runScript, runCustomMaskScript
+from spider import SpiderShell, runTemplate, runCustomMaskScript
 from constants import FILTER_SPACE_REAL, FILTER_FERMI
 from convert import locationToSpider
 from protocol import (SpiderProtCAPCA, SpiderProtAlignAPSR, SpiderProtAlignPairwise, 

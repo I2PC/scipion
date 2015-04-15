@@ -49,6 +49,8 @@ debug = get('DEBUG')
 matlab = get('MATLAB')
 opencv = get('OPENCV')
 
+del os.environ['MATLAB'] # Must be removed to avoid problems in Matlab compilation
+
 # Read some flags
 CYGWIN = env['PLATFORM'] == 'cygwin'
 MACOSX = env['PLATFORM'] == 'darwin'
@@ -795,11 +797,13 @@ if matlab:
     for b in bindings:
         addMatlabBinding(b)
     
-    env.Default('xmipp-matlab', matlab)
+    env.Default('xmipp-matlab')
+    env.Alias('xmipp', 'xmipp-matlab') 
 
 XmippAlias = env.Alias('xmipp', ['xmipp-libs', 
                                  'xmipp-programs', 
                                  'xmipp-batchs',
                                  'xmipp-java'])
+				 
 
 Return('XmippAlias')
