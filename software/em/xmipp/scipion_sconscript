@@ -50,7 +50,10 @@ debug = get('DEBUG')
 matlab = get('MATLAB')
 opencv = get('OPENCV')
 
-del os.environ['MATLAB'] # Must be removed to avoid problems in Matlab compilation
+if 'MATLAB' in os.environ:
+    # Must be removed to avoid problems in Matlab compilation.
+    del os.environ['MATLAB']
+    # Yeah, nice
 
 # Read some flags
 CYGWIN = env['PLATFORM'] == 'cygwin'
@@ -205,10 +208,7 @@ addLib('XmippJNI',
        dirs=['libraries/bindings'],
        patterns=['java/*.cpp'],
        incs=env['JNI_CPPPATH'],
-       libs=[ 'pthread', 'XmippData', 'XmippRecons','XmippClassif', 'XmippBilib'],
-       )
-
-
+       libs=['pthread', 'XmippData', 'XmippRecons','XmippClassif', 'XmippBilib'])
 
 
 #  ***********************************************************************
