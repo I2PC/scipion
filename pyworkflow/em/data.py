@@ -487,7 +487,20 @@ class Image(EMObject):
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
-    pass
+    def __init__(self, **args):
+        Image.__init__(self, **args)
+        self._micName = String()
+    
+    def setMicName(self, micName):
+        self._micName.set(micName)
+    
+    def getMicName(self):
+        return self._micName.get()
+    
+    def copyInfo(self, other):
+        """ Copy basic information """
+        Image.copyInfo(self, other)
+        self.setMicName(other.getMicName())
 
 
 class Particle(Image):
