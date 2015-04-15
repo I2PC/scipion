@@ -33,6 +33,8 @@ from pyworkflow.manager import Manager
 from pyworkflow.utils.path import copyFile
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render_to_response
+import pyworkflow
+from pyworkflow.em import getProtocols
 
 
 def projects(request):
@@ -221,6 +223,23 @@ def project_content(request):
     context.update({'mode': None,
                    'formUrl':'form'})
     return render_to_response('project_content/project_content.html', context)
+
+def search_protocol(request):
+    context = base_flex(request, {})
+    return render_to_response('project_content/search_protocol.html', context)
+
+def get_protocols(request):
+    search = request.GET.get('search', None)
+    result = []
+    emProtocolsDict = getProtocols()
+    for key, prot in emProtocolsDict.iteritems():
+        label = prot.getClassLabel()
+        className = prot.__name__
+        if  search is None or search in label:
+            result.append((label, className))
+    
+    jsonStr = json.dumps(result, ensure_ascii=False)    
+    return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
 def contentContext(request, project):
