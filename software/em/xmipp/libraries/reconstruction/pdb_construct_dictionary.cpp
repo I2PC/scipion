@@ -98,6 +98,8 @@ void ProgPDBDictionary::loadDictionaries()
 			dictionarySignature.push_back(auxSignature);
 	}
 	fclose(fhSignature);
+	if (dictionarySignature.size()!=dictionaryLow.size())
+		REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,"The dictionary is corrupted: the number of signatures does not correspond to the number of patches");
 }
 
 void ProgPDBDictionary::saveDictionaries() const

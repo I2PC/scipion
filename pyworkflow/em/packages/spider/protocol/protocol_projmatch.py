@@ -24,6 +24,8 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.spider.convert import convertEndian
+from pyworkflow.utils.path import moveFile
 """
 """
 
@@ -84,9 +86,7 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
         # Create new stacks and selfiles per defocus groups
         self._insertFunctionStep('convertInputStep', self.inputParticles.get().getObjId())
 
-        for s in ['refine', 'prepare', 'grploop', 'mergegroups', 
-                  'enhance', 'endmerge', 'smangloop', 'endrefine']:
-            self._insertFunctionStep('runScriptStep', '%s.pam' % s)
+        self._insertFunctionStep('runScriptStep', 'refine.pam')
                 
         self._insertFunctionStep('createOutputStep')
     
@@ -101,14 +101,13 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
         self._writeGroupFiles(partSet)
         
         # Convert the input volume
-        reconsPath = self._getExtraPath('Reconstruction')
-        volName = 'vol001.stk'
-        volPath = self._getExtraPath(volName)
+        volPath = self._getExtraPath('vol001.vol')
         em.ImageHandler().convert(self.input3DReference.get(), volPath)
+        moveFile(volPath, volPath.replace('.vol', '.stk'))
         
-        self._writeRefinementScripts(volName)
+        self._writeRefinementScripts()
                 
-    def _writeRefinementScripts(self, volName):
+    def _writeRefinementScripts(self):
         """ Write the needed scripts to run refinement
         and substitute some values.
         """
@@ -126,11 +125,11 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
             
         
         params = {'[iter-end]': self.numberOfIterations.get(),
-                  '[vol_orig]': path(volName),
+                  '[vol_orig]': path('vol001'),
                   '[sel_group_orig]': path('sel_group'),
-                  '[sel_particles_orig]': path('group_{***[grp]}_selfile'),
-                  '[group_align_orig]': path('group_{***[grp]}_align'),
-                  '[unaligned_images_orig]': path('group_{***[grp]}_stack'),
+                  '[sel_particles_orig]': path('group{***[grp]}_selfile'),
+                  '[group_align_orig]': path('group{***[grp]}_align'),
+                  '[unaligned_images_orig]': path('group{***[grp]}_stack'),
                   }        
         script('refine_settings.pam', params)
         for s in ['refine', 'prepare', 'grploop', 'mergegroups', 
@@ -182,25 +181,17 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
         groupsDoc = SpiderDocFile(self._getExtraPath('sel_group.stk'), 'w+')
         for gi in groupDict.values():
             groupsDoc.writeValues(gi.number, gi.counter, gi.defocus)
+            # Convert the endianness of the stack
+            convertEndian(gi.stackfile, gi.counter)
             # Close each group docfile
             gi.close()
+
         groupsDoc.close()
         
-#         fn, ext = splitext(stackFn)
-#         # Change to BigEndian
-#         runTemplate('cp_endian.spi', ext[1:], 
-#                   {'[particles]': fn + '@******', 
-#                    '[particles_big]': fn + '_big@******',
-#                    '[numberOfParticles]': imgSet.getSize()
-#                    })
-#         moveFile(fn + '_big' + ext, stackFn)
-    
     def runScriptStep(self, script):
         """ Just run the script that was generated in convertInputStep. """
         refPath = self._getExtraPath('Refinement')
-        #runScript(script, 'stk', cwd=refPath)
-        print ">>> Running script: ", script
-        
+        runScript(script, 'pam/stk', cwd=refPath, log=self._log)
         
     def projectStep(self, volumeId):
         pass
@@ -261,7 +252,7 @@ class DefocusGroupInfo():
         #FIXME: use real alignmet/projection parameters, now using DUMMY values
         rot = tilt = psi = 0.00
         shiftX = shiftY = 0.00
-        values = [0.00, tilt,  rot, -1, self.counter, -1, psi, shiftX, shiftY, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]
+        values = [0.00, tilt,  rot, 0.00, self.counter, -1, psi, shiftX, shiftY, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]
         self.doc.writeValues(*values)
         
     def close(self):
