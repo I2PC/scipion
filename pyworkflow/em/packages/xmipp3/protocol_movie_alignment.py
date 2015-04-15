@@ -170,6 +170,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             mic = em.Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
             mic.setFileName(self._getExtraPath(micName))
+            mic.setMicName(micName)
             if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
                 mic.plotPolar = em.Image()
                 mic.plotCart = em.Image()
