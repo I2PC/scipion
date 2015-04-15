@@ -51,7 +51,7 @@ SCRIPTS_DIR = 'scripts'
 REGEX_KEYVALUE = re.compile("(?P<prefix>[^[]*)(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<s1>\s*)=(?P<s2>\s*)(?P<value>\S+)(?P<suffix>\s+.*)")
 # Match strings of the type [key]value
 # just before a 'fr l' line
-REGEX_KEYFRL = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<value>\S+)(?P<rest>\s+.*)")
+REGEX_KEYFRL = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<value>\S+)(?P<suffix>\s+.*)")
 
 
 def getEnviron():
@@ -123,7 +123,7 @@ def writeScript(inputScript, outputScript, paramsDict):
                                           "%(prefix)s%(var)s%(s1)s=%(s2)s%(value)s%(suffix)s\n")
                 if newLine is None and inFrL:
                     newLine = __substituteVar(REGEX_KEYFRL.match(line), paramsDict, 
-                                              "%(prefix)s%(var)s%(value)s%(suffix)s\n")
+                                              "%(var)s%(value)s%(suffix)s\n")
                 if newLine:
                     line = newLine
             except Exception, ex:
