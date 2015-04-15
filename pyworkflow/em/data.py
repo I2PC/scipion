@@ -198,7 +198,8 @@ class CTFModel(EMObject):
         """
         return (self._defocusU == other._defocusU and
                 self._defocusV == other._defocusV and
-                self._defocusAngle == other._defocusAngle
+                self._defocusAngle == other._defocusAngle and
+                self._micName == other._micName
                 )
 
 
