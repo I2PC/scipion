@@ -67,7 +67,7 @@ Movies_Alignment = [
     {"tag": "section", "text": "2. Import your data", "children": [
         {"tag": "protocol", "value": "ProtImportMovies", "text": "Import Movies", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Align your Movies", "children": [
-        {"tag": "protocol", "value": "ProtMovieAlignmentWeb", "text": "xmipp3 - movie alignment"}]}]
+        {"tag": "protocol", "value": "ProtMovieAlignment", "text": "xmipp3 - movie alignment"}]}]
         ''')
         f.close()
 
@@ -79,7 +79,7 @@ def create_movies_project(request):
         import os
         from pyworkflow.object import Pointer
         from pyworkflow.em.protocol import ProtImportMovies
-        from pyworkflow.em.packages.xmipp3 import ProtMovieAlignmentWeb
+        from pyworkflow.em.packages.xmipp3 import ProtMovieAlignment
         
         # Create a new project
         projectName = request.GET.get('projectName')
@@ -134,7 +134,7 @@ def create_movies_project(request):
             project.saveProtocol(protImport)
         
         # 2. Movie Alignment 
-        protMovAlign = project.newProtocol(ProtMovieAlignmentWeb)
+        protMovAlign = project.newProtocol(ProtMovieAlignment)
         protMovAlign.setObjLabel('xmipp - movie alignment')
         protMovAlign.inputMovies.set(protImport)
         protMovAlign.inputMovies.setExtendedAttribute('outputMovies')

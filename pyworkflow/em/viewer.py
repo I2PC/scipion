@@ -277,7 +277,7 @@ class ChimeraViewer(Viewer):
 
 class ChimeraClient:
     
-    def __init__(self, volfile, **kwargs):
+    def __init__(self, volfile, sendEnd=True,**kwargs):
         if volfile.endswith('.mrc'):
             volfile += ':mrc'
 
@@ -292,7 +292,6 @@ class ChimeraClient:
             file = file[0: file.rfind(':')]
         if not os.path.exists(file):
             raise Exception("File %s does not exists"%file)
-
 
         self.volfile = volfile
         self.voxelSize = self.kwargs.get('voxelSize', None)
@@ -309,7 +308,7 @@ class ChimeraClient:
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
         self.initVolumeData()
-        self.openVolumeOnServer(self.vol)
+        self.openVolumeOnServer(self.vol,sendEnd)
         self.initListenThread()
             
     def send(self, cmd, data):
@@ -362,21 +361,19 @@ class ChimeraAngDistClient(ChimeraClient):
         self.spheresColor = kwargs.get('spheresColor', 'red')
         spheresDistance = kwargs.get('spheresDistance', None)
         spheresMaxRadius = kwargs.get('spheresMaxRadius', None)
-        ChimeraClient.__init__(self, volfile, **kwargs)
+        ChimeraClient.__init__(self, volfile, sendEnd=False, **kwargs)
         self.spheresDistance = float(spheresDistance) if spheresDistance else 0.75 * max(self.xdim, self.ydim, self.zdim)
         self.spheresMaxRadius = float(spheresMaxRadius) if spheresMaxRadius else 0.02 * self.spheresDistance
+        self.loadAngularDist(True)
 
-    def openVolumeOnServer(self, volume, sendEnd=True):
-        ChimeraClient.openVolumeOnServer(self, volume, sendEnd=False)
-
+    def loadAngularDist(self,  sendEnd=True):
         if self.angularDistFile:
-            self.loadAngularDist()
+            self.readAngularDistFile()
             self.send('command_list', self.angulardist)
         if sendEnd:
             self.client.send('end')
 
-    def loadAngularDist(self):
-        print(self.angularDistFile)
+    def readAngularDistFile(self):
         angleRotLabel = md.MDL_ANGLE_ROT
         angleTiltLabel = md.MDL_ANGLE_TILT
         anglePsiLabel = md.MDL_ANGLE_PSI
