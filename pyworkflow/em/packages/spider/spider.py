@@ -71,9 +71,9 @@ def getEnviron():
         if len(errors):
             print "ERRORS: " + errors
     else: 
-        env.update({'SPBIN_DIR': join(SPIDER_DIR, 'bin', ''),
-                    'SPMAN_DIR': join(SPIDER_DIR, 'man', ''),
-                    'SPPROC_DIR': join(SPIDER_DIR, 'proc', '')
+        env.update({'SPBIN_DIR': join(SPIDER_DIR, 'bin') + '/', # Spider needs this extra slash at the end
+                    'SPMAN_DIR': join(SPIDER_DIR, 'man') + '/',
+                    'SPPROC_DIR': join(SPIDER_DIR, 'proc') + '/'
                     })
     
     # Get the executable or 'spider' by default
