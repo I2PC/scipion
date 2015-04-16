@@ -23,12 +23,12 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from collections import OrderedDict
 """
 This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
 
+from collections import OrderedDict
 import json
 
 from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
