@@ -32,7 +32,8 @@ This module contains the protocol for CTF estimation with ctffind3
 from pyworkflow.utils.path import replaceBaseExt, cleanPattern
 from pyworkflow.em import *
 from pyworkflow.em.packages.grigoriefflab import CTFFIND_PATH, CTFFIND4_PATH
-from pyworkflow.em.packages.grigoriefflab.convert import readCtfModel
+from pyworkflow.em.packages.grigoriefflab.convert import (readCtfModel, parseCtffindOutput,
+                                                          parseCtffind4Output)
 
 class ProtCTFFind(ProtCTFMicrographs):
     """Estimates CTF on a set of micrographs
@@ -262,18 +263,18 @@ eof
     def _getCtfOutPath(self, micDir):
         return join(micDir, 'ctfEstimation.txt')
     
-#     def _parseOutput(self, filename):
-#         """ Try to find the output estimation parameters
-#         from filename. It search for a line containing: Final Values.
-#         """
-#         if not self.useCftfind4:
-#             return parseCtffindOutput(filename)
-#         else:
-#             return parseCtffind4Output(filename)
+    def _parseOutput(self, filename):
+        """ Try to find the output estimation parameters
+        from filename. It search for a line containing: Final Values.
+        """
+        if not self.useCftfind4:
+            return parseCtffindOutput(filename)
+        else:
+            return parseCtffind4Output(filename)
     
-#     def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
-#         ctf = CTFModel()
-#         ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
-#         ctf.setPsdFile(psdFile)
-#         
-#         return ctf
+    def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
+        ctf = CTFModel()
+        ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
+        ctf.setPsdFile(psdFile)
+         
+        return ctf

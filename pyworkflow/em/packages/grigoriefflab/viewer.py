@@ -608,6 +608,7 @@ class ProtCTFFindViewer(Viewer):
          
         def _getMicrographDir(mic):
             """ Return an unique dir name for results of the micrograph. """
+            from pyworkflow.utils.path import removeBaseExt
             return obj._getExtraPath(removeBaseExt(mic.getFileName()))
          
         def iterMicrographs(mics):
@@ -620,23 +621,34 @@ class ProtCTFFindViewer(Viewer):
                 yield (micFn, micDir, mic)
          
         def visualizeObjs(obj, setOfMics):
-                 
+            from pyworkflow.em.packages.grigoriefflab.convert import readCtfModel
+            
             if exists(obj._getPath("ctfs_temporary.sqlite")):
                 os.remove(obj._getPath("ctfs_temporary.sqlite"))
              
             ctfSet = self.protocol._createSetOfCTF("_temporary")
             for fn, micDir, mic in iterMicrographs(setOfMics):
+                
+                
+                
+                samplingRate = mic.getSamplingRate() * self.ctfDownFactor.get()
+                mic.setSamplingRate(samplingRate)
                 out = self.protocol._getCtfOutPath(micDir)
                 psdFile = self.protocol._getPsdPath(micDir)
-                 
+                
                 if exists(out) and exists(psdFile):
-                    result = self.protocol._parseOutput(out)
-                    defocusU, defocusV, defocusAngle = result
-                    # save the values of defocus for each micrograph in a list
-                    ctfModel = self.protocol._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
+                    ctfModel = em.CTFModel()
+                
+                    if not self.useCftfind4:
+                        readCtfModel(ctfModel, out)
+                    else:
+                        readCtfModel(ctfModel, out, True)
+                    
+                    ctfModel.setPsdFile(psdFile)
                     ctfModel.setMicrograph(mic)
+                    
                     ctfSet.append(ctfModel)
-             
+            
             if ctfSet.getSize() < 1:
                 raise Exception("Has not been completed the CTF estimation of any micrograph")
             else:
