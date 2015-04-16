@@ -60,6 +60,18 @@
 //     	window.location.reload(true)
 	});	
 	
+	$(window).bind('keydown', function(event) {
+	    if (event.ctrlKey || event.metaKey) {
+	        switch (String.fromCharCode(event.which).toLowerCase()) {
+	        
+	        case 'f':
+	            event.preventDefault();
+	            openSearchProtocolPopup('');
+	            break;
+	        }	        
+	    }
+	});
+	
 </script>
 
 {% endblock %} 
