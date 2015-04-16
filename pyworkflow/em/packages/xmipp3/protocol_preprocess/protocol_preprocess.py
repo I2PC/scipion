@@ -85,7 +85,7 @@ class XmippPreprocessHelper():
         if protocol.doThreshold:
             args = protocol._argsThreshold()
             protocol._insertFunctionStep("thresholdStep", args, changeInserts)
-    
+
     #--------------------------- UTILS functions ---------------------------------------------------
     @classmethod
     def _argsCommonInvert(cls):
@@ -145,13 +145,15 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
                       'is set to 1. Radius for background circle definition (in pix.). '
                       'If this value is 0, then half the box size is used.', 
                       expertLevel=LEVEL_ADVANCED)
+        form.addParam('doCenter', BooleanParam, default=False,
+                      label='Center images')
         XmippPreprocessHelper._defineProcessParams(form)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertProcessStep(self):
         self.isFirstStep = True
         # this is for when the options selected has changed and the protocol is resumed
-        changeInserts = [self.doRemoveDust, self.doNormalize, self.doInvert, self.doThreshold]
+        changeInserts = [self.doRemoveDust, self.doNormalize, self.doInvert, self.doThreshold, self.doCenter]
         
         if self.doRemoveDust:
             args = self._argsRemoveDust()
@@ -161,13 +163,16 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
             args = self._argsNormalize()
             self._insertFunctionStep("normalizeStep", args, changeInserts)
         
+        if self.doCenter:
+            args = self._argsCenter()
+            self._insertFunctionStep("centerStep", args, changeInserts)
+        
         XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
         
     #--------------------------- STEPS functions ---------------------------------------------------
     def invertStep(self, args, changeInserts):
         self.runJob('xmipp_image_operate', args)
 
-    
     def thresholdStep(self, args, changeInserts):
         self.runJob("xmipp_transform_threshold", args)
         
@@ -176,6 +181,9 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
     
     def normalizeStep(self, args, changeInserts):
         self.runJob("xmipp_transform_normalize", args % locals())
+    
+    def centerStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_center_image", args % locals())
     
     def sortImages(self, outputFn, outputMd):
         pass
@@ -263,6 +271,14 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
         else:
             args = "-i %s" % self.outputStk
         args += XmippPreprocessHelper._argsCommonThreshold(self)
+        return args
+    
+    def _argsCenter(self):
+        if self.isFirstStep:
+            args = "-i %s -o %s --save_metadata_stack %s" % (self.inputFn, self.outputStk, self.outputMd)
+            self._setFalseFirstStep()
+        else:
+            args = "-i %s" % self.outputStk
         return args
     
     def _getSize(self):
