@@ -198,8 +198,7 @@ class CTFModel(EMObject):
         """
         return (self._defocusU == other._defocusU and
                 self._defocusV == other._defocusV and
-                self._defocusAngle == other._defocusAngle and
-                self._micName == other._micName
+                self._defocusAngle == other._defocusAngle
                 )
 
 
@@ -496,7 +495,10 @@ class Micrograph(Image):
         self._micName.set(micName)
     
     def getMicName(self):
-        return self._micName.get()
+        if self._micName is not None:
+            return self._micName.get()
+        else:
+            self.getFileName()
     
     def copyInfo(self, other):
         """ Copy basic information """
