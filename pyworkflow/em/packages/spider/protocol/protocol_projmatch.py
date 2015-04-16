@@ -24,8 +24,6 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.spider.convert import convertEndian
-from pyworkflow.utils.path import moveFile
 """
 """
 
@@ -35,8 +33,10 @@ import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtRefine3D
+from pyworkflow.em.constants import ALIGN_PROJ
 
 from ..spider import SpiderDocFile, writeScript, getScript, runScript
+from ..convert import ANGLE_PHI, ANGLE_PSI, ANGLE_THE, SHIFTX, SHIFTY, convertEndian, alignmentToRow
 from protocol_base import SpiderProtocol
 
 
@@ -133,7 +133,7 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
         # Convert the input volume
         volPath = self._getExtraPath('vol001.vol')
         em.ImageHandler().convert(self.input3DReference.get(), volPath)
-        moveFile(volPath, volPath.replace('.vol', '.stk'))
+        pwutils.moveFile(volPath, volPath.replace('.vol', '.stk'))
         
         self._writeRefinementScripts()
                 
@@ -297,9 +297,20 @@ class DefocusGroupInfo():
         self.ih.convert(img, (self.counter, self.stackfile))
         self.sel.writeValues(self.counter)
         #FIXME: use real alignmet/projection parameters, now using DUMMY values
-        rot = tilt = psi = 0.00
-        shiftX = shiftY = 0.00
-        values = [0.00, tilt,  rot, 0.00, self.counter, -1, psi, shiftX, shiftY, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]
+        alignRow = {ANGLE_PSI: 0.,
+                    ANGLE_THE: 0.,
+                    ANGLE_PHI: 0.,
+                    SHIFTX: 0.,
+                    SHIFTY: 0.}
+        alignment = img.getTransform()
+        
+        if alignment is not None:
+            alignmentToRow(alignment, alignRow, ALIGN_PROJ)
+            
+        values = [0.00, alignRow[ANGLE_THE], alignRow[ANGLE_PHI], 
+                  0.00, self.counter, 
+                  alignRow[ANGLE_PSI], alignRow[SHIFTX], alignRow[SHIFTY], 
+                  0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.0]
         self.doc.writeValues(*values)
         
     def close(self):
