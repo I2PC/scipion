@@ -69,15 +69,51 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
                            'and allows for the exclusion of the poorer quality'
                            'images.')
         
-#         form.addParam('symmetry', StringParam, default='c1',
-#                       condition='not doContinue',
-#                       label='Symmetry group',
-#                       help='Set the symmetry; if no value is given then the model'
-#                            'is assumed to have no symmetry. Choices are: i(n),'
-#                            ' c(n), d(n), tet, icos, or oct.'
-#                            'See http://blake.bcm.edu/emanwiki/EMAN2/Symmetry'
-#                            'for a detailed descript of symmetry in Eman.')
+        form.addParam('alignmentShift', params.IntParam, default=6,
+                      label='Alignment shift',
+                      help="Alignment shift (pixels) searched is +- this value")
 
+        #TODO: Add a wizard for this param
+        form.addParam('diameter', params.IntParam, default=349,
+                      label='Particle diameter (A)',
+                      help="Diameter of the structure (A) used in alignment search\n"
+                           "(Default is for ribosome. EDIT as needed.)\n"
+                           "Diameter is used to find radius for last alignment ring.\n")  
+        
+        form.addParam('winFrac', params.FloatParam, default=0.95,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Window fraction',
+                      help="Fraction of window diameter used in projection\n"
+                           " (.95= use 95% window size)\n")         
+        
+        form.addParam('convergence', params.FloatParam, default=0.05,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Convergence criterion fraction',
+                      help="Converges when this fraction of all images move < 1.5 * stepsize.")  
+        
+        form.addParam('smallAngle', params.BooleanParam, default=False,
+                      label='Use small angle refinement?',
+                      help="")
+        
+        form.addParam('angSteps', params.StringParam, default='3.x2 2.x3 1.5',
+                      condition='not smallAngle',
+                      label='Angular degree steps',
+                      help="")  
+        
+        form.addParam('angLimits', params.StringParam, default='3.x2 2.x3 1.5',
+                      condition='not smallAngle',
+                      label='Angular limits',
+                      help="")     
+        
+        form.addParam('angStepSm', params.StringParam, default='(0.5)',
+                      condition='smallAngle',
+                      label='Angular degree steps',
+                      help="")  
+        
+        form.addParam('thetaRange', params.StringParam, default='(2.0)',
+                      condition='smallAngle',
+                      label='Theta range ',
+                      help="")          
 
         form.addParallelSection(threads=4, mpi=0)
     
@@ -124,7 +160,13 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
             writeScript(getScript('projmatch', 'Refinement',name), outputScript, paramsDict)
             
         
-        params = {'[iter-end]': self.numberOfIterations.get(),
+        params = {'[shrange]': self.alignmentShift.get(),
+                  '[iter-end]': self.numberOfIterations.get(),
+                  '[diam]': self.diameter.get(),
+                  '[win-frac]': self.winFrac.get(),
+                  '[converg]': self.convergence.get(),
+                  '[small-ang]': '1' if self.smallAngle else '0',
+                  
                   '[vol_orig]': path('vol001'),
                   '[sel_group_orig]': path('sel_group'),
                   '[sel_particles_orig]': path('group{***[grp]}_selfile'),
@@ -231,8 +273,8 @@ class DefocusGroupInfo():
     def __init__(self, defocusGroup, template, ih):
         self.ih = ih
         self.number = defocusGroup
-        self.selfile = template % (defocusGroup, 'selfile') 
-        self.docfile = template % (defocusGroup, 'align') 
+        self.selfile = template % (defocusGroup, 'selfile')
+        self.docfile = template % (defocusGroup, 'align')
         self.stackfile = template % (defocusGroup, 'stack')
         self.counter = 0 # number of particles in this group
         # 
