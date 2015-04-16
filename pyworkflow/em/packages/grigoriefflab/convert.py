@@ -186,7 +186,7 @@ def parseCtffind4Output(filename):
     result = None
     for line in f:
         if not line.startswith("#"):
-            result = tuple(map(line.split()[1:]))
+            result = tuple(map(float, line.split()[1:]))
     f.close()
     return result
 
