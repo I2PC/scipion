@@ -608,6 +608,7 @@ class ProtCTFFindViewer(Viewer):
          
         def _getMicrographDir(mic):
             """ Return an unique dir name for results of the micrograph. """
+            from pyworkflow.utils.path import removeBaseExt
             return obj._getExtraPath(removeBaseExt(mic.getFileName()))
          
         def iterMicrographs(mics):
