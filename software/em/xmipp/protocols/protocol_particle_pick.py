@@ -1,0 +1,108 @@
+#!/usr/bin/env python
+#------------------------------------------------------------------------------------------------
+# General script for Xmipp-based particle picking
+#
+# Author: Carlos Oscar Sorzano, August, 2011
+#
+#------------------------------------------------------------------------------------------------
+
+from config_protocols import protDict
+from protlib_base import *
+from protlib_utils import runJob
+from protlib_filesystem import createLink, copyFile
+from protlib_xmipp import redStr
+from protlib_particles import countParticles
+import xmipp
+from glob import glob
+from os.path import exists, join
+
+# Picking modes
+PM_MANUAL, PM_READONLY, PM_REVIEW = ('manual', 'readonly', 'review')
+
+# Create a GUI automatically from a selfile of micrographs
+class ProtParticlePicking(XmippProtocol):
+    def __init__(self, scriptname, project):
+        XmippProtocol.__init__(self, protDict.particle_pick.name, scriptname, project)
+        self.Import = "from protocol_particle_pick import *"
+        self.setPreviousRun(self.ImportRun)
+        self.importDir = self.PrevRun.WorkingDir
+        self.inputProperty('TiltPairs')
+        self.MicrographsMd = self.PrevRun.getFilename('micrographs')
+        self.Input['micrographs'] = self.MicrographsMd
+        self.inputFilename('microscope', 'acquisition')
+        self.MicrographsMd = self.getEquivalentFilename(self.PrevRun, self.MicrographsMd)
+
+    def defineSteps(self):
+        self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
+        self.insertImportOfFiles([self.Input['micrographs'], self.Input['acquisition']])
+        if getattr(self, 'LaunchGUI', True):
+            self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
+                           InputMicrographs=self.MicrographsMd, ExtraDir=self.ExtraDir,
+                           TiltPairs=self.TiltPairs, Memory=self.Memory)       
+    
+    def createFilenameTemplates(self):
+        return {
+                 'training': join('%(ExtraDir)s', '%(model)s_training.txt'), 
+                 'pca': join('%(ExtraDir)s', '%(model)s_pca_model.stk'),
+                 'rotpca': join('%(ExtraDir)s', '%(model)s_rotpca_model.stk'),
+                 'svm': join('%(ExtraDir)s', '%(model)s_svm.txt'),
+                 'average': join('%(ExtraDir)s', '%(model)s_particle_avg.xmp'),
+                 'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
+                 'templates': join('%(ExtraDir)s', 'templates.stk'),
+                 'config': join('%(ExtraDir)s','config.xmd')
+            }  
+          
+    def summary(self):
+        micrographs, particles = countParticles(self.ExtraDir)
+        if self.TiltPairs: 
+            suffix = "tilt pairs"
+            items = "pairs"
+            micrographs /= 2
+            particles /= 2
+        else: 
+            suffix = "micrographs"
+            items = "particles"        
+        from protlib_xmipp import getMdSize
+        size = getMdSize(self.MicrographsMd)
+        summary = ["Input: [%s] with <%u> %s" % (self.importDir, size, suffix),         
+                   "Number of %(items)s manually picked: <%(particles)d> (from <%(micrographs)d> micrographs)" % locals()]
+        md=xmipp.MetaData(self.MicrographsMd)
+        if not md.containsLabel(xmipp.MDL_CTF_MODEL):
+            summary.append(redStr("There is no CTF information in the input micrographs: "))
+            summary.append("[%s]"%self.MicrographsMd)
+        
+        return summary
+    
+    def papers(self):
+        papers=[]
+        if os.path.exists(self.extraPath('model_svm.txt')):
+            papers.append('Abrishami, Bioinformatics (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23958728]')
+        return papers
+
+    def validate(self):
+        errors = []
+        if not exists(self.Input['micrographs']):
+            errors.append("Cannot find input micrographs: \n   <%s>" % self.Input['micrographs'])
+        return errors
+    
+    def visualize(self):
+        launchParticlePickingGUI(None, self.MicrographsMd, self.ExtraDir, PM_READONLY, self.TiltPairs)
+
+def launchParticlePickingGUI(log, InputMicrographs, ExtraDir, PickingMode=PM_MANUAL,
+                             TiltPairs=False, Memory=2):
+    ''' Utility function to launch the Particle Picking application '''
+    if TiltPairs:
+        program = "xmipp_micrograph_tiltpair_picking "
+        args="-i micrographPairs@%(InputMicrographs)s"%locals()
+    else:
+        program = "xmipp_micrograph_particle_picking"
+        args="-i %(InputMicrographs)s"%locals()
+    args += " -o %(ExtraDir)s --mode %(PickingMode)s --memory %(Memory)dg"%locals()
+   
+    runJob(log, program, args, RunInBackground=False)
+
+#		
+# Main
+#     
+if __name__ == '__main__':
+    protocolMain(ProtParticlePicking)

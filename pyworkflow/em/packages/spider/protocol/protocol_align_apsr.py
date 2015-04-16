@@ -63,7 +63,7 @@ class SpiderProtAlignAPSR(SpiderProtAlign):
                              '[aligned_stack]': self._params['particlesAligned'],
                             })
         
-        self.runScript(self.getScript(), self.getExt(), self._params)
+        self.runTemplate(self.getScript(), self.getExt(), self._params)
                 
     def getAverage(self):
         pattern = self._getPath(self.getAlignDir(), 'iteravg*.%s' % self.getExt())

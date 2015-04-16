@@ -1,0 +1,90 @@
+; <html><head><title>Apply low pass filter to set of particle image stacks</title></head><body><pre>
+;
+; PURPOSE:  Apply low pass filter to set of particle image stacks.
+;
+; SOURCE:   spider/docs/techs/recon/newprogs/pfilt.spi    
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; <b> ------------ Parameters ----------------------------------------
+
+[filter-type] = 7        ; Filter type: Butterworth low-pass
+                         ; Reasonable ranges for Butterworth parameters:
+                         ; (0.05,0.3) for high defocus;  (0.02,0.15) for low defocus
+[par1] = 0.05            ; Filter parameter 1 = passband for Butterworth, 
+                         ;    filter radius for all others)
+[par2] = 0.3             ; Filter parameter 2 = stopband for Butterworth, 
+                         ;    temperature for Fermi, ignored for all others)
+
+; ----------- Input files --------------
+
+[sel_micrograph] = '../sel_micrograph' ; Micrograph selection file
+
+[ser] = 'win/winser_****'              ; Unfiltered particle image stacks
+
+; ----------- Output files --------------
+
+[fltdir] = 'flt'                       ; Directory for output images
+
+[flt] = 'winser_****'                  ; Filtered particle image stacks
+
+; -------------- END BATCH HEADER -------------
+
+MD                             ; Use all available processors
+SET MP
+0 
+MD                             ; Skip unnecessary output 
+VB OFF
+
+VM                             ; Make directory for output
+mkdir -p [fltdir]
+
+FR L                           ; Set output location
+[out] [fltdir]/[flt] 
+
+VM
+echo ' 'Applying Low pass filter to images from micrograph stacks
+VM
+echo ' ' 
+
+DO                             ; Loop over all micrographs -----------------
+
+   UD NEXT [key],[mic]         ; Get the micrograph number
+   [sel_micrograph]            ; Micrograph selection file (input)
+   IF ([key] .LE. 0) EXIT
+
+   FI X [maxim]                ; Get number of particles in micrograph
+   [ser]@[mic]                 ; Raw images stack               (input)
+   (26)                        ; Header location for # of images in file 
+
+   DO [part] = 1,[maxim]       ; Loop over all particle numbers --------
+
+      IF ([filter-type].GE.5) THEN
+         FQ
+         [ser]@******[mic][part] ; Raw images file              (input)
+         [out]@******[mic][part] ; Filtered images file         (output)
+         [filter-type]           ; Filter type = Butterworth, Fermi
+         ([par1],[par2])         ; Passband, stopband
+
+      ELSE 
+         FQ
+         [ser]@******[mic][part] ; Raw images file              (input)
+         [out]@******[mic][part] ; Filtered images file         (output)
+         [filter-type]           ; Filter type = top hat, Gaussian
+         [par1]                  ; Filter radius
+      ENDIF
+   ENDDO
+
+   VM
+   echo ' 'Filtered: {*****[maxim]} images from micrograph: {****[mic]}
+
+ENDDO
+UD NEXT END                   ; End doc file use
+[sel_micrograph]
+
+VM
+echo ' ' 
+
+EN
+
+; </body></pre></html>

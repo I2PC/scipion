@@ -29,10 +29,12 @@
 """
 This sub-package contains the XmippProtExtractParticles protocol
 """
- 
+from fileinput import filename
+
 import os
 
 import pyworkflow.em.metadata as md
+from pyworkflow.em.packages.appion.convert import readSetOfCoordinates
 from pyworkflow.em.packages.xmipp3.convert import readSetOfMovieParticles, xmippToLocation
 
 from pyworkflow.em.convert import ImageHandler
@@ -117,15 +119,14 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                       'If this value is 0, then half the box size is used.', 
                       expertLevel=LEVEL_ADVANCED)
 
-        form.addParallelSection(threads=0, mpi=0)
+        #form.addParallelSection(threads=0, mpi=0)
+        form.addParallelSection(threads=2, mpi=1)
     
     #--------------------------- STEPS functions --------------------------------------------------
-    def _processMovie(self, movieId, movieName, movieFolder):
+    def _processMovie(self, movieId, movieName, movieFolder,shifts):###pasar shifts
         
         movieName = os.path.join(movieFolder, movieName)
-        if self.doRemoveDust:
-            self._runNoDust(movieName)
-        
+
         boxSize = self.boxSize.get()
         # Read movie dimensions to iterate through each frame
         imgh = ImageHandler()
@@ -137,12 +138,18 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         if last == 0:
             last = n-1
         
-        movie = self.inputMovies.get()[movieId]
-        if self.applyAlignment and movie.hasAlignment():
-            shifts = movie.getAlignment().getShifts()
-        else:
-            shifts = [0] * (2*n)
-        
+        #this section has been moved to the main part to avoid
+        # conflicts between threads
+        ###DELETE
+        #movie = self.inputMovies.get()[movieId]
+        #### move this to main
+        #if self.applyAlignment and movie.hasAlignment():
+        #    shifts = movie.getAlignment().getShifts()
+        #    print("movieName shift", movieName, shifts)
+        #else:
+        #    shifts = [0] * (2*n)
+        #    print("movieName shift", movieName, shifts)
+        ####  END delete
         stkIndex = 0
         movieStk = self._getMovieName(movieId, '.stk')
         movieMdFile = self._getMovieName(movieId, '.xmd')
@@ -169,15 +176,21 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
             
             if hasCoordinates:
                 self.info("Writing frame: %s" % frameName)
+                #TODO: there is no need to write the frame and then operate
+                #the input of the first operation should be the movie
                 imgh.convert(tuple([i, movieName]), frameName)
-                 
+
+                if self.doRemoveDust:
+                    self.info("Removing Dust")
+                    self._runNoDust(frameName)
+
                 self.info("Extracting particles")
                 frameImages = frameRoot + '_images'
                 args = '-i %(frameName)s --pos %(coordinatesName)s -o %(frameRoot)s --Xdim %(boxSize)d' % locals()
                 
                 if self.doInvert:
                     args += " --invert"
-                
+
                 self.runJob('xmipp_micrograph_scissor', args)
                 cleanPath(frameName)
                 
@@ -214,13 +227,10 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
             self._runNormalize(movieStk)
 
     
-    def _runNoDust(self, movieName):
-        fnNoDust = movieName + "_noDust.stk"
-        thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
-        args=" -i %(movieName)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f" % locals()
+    def _runNoDust(self, frameName):
+        args=" -i %s -o %s --bad_pixels outliers %f" % (frameName,frameName,self.thresholdDust.get())
         self.runJob("xmipp_transform_filter", args)
-        ImageHandler().convertStack(fnNoDust, movieName)
-    
+
     def _runNormalize(self, stack):
         program = "xmipp_transform_normalize"
         args = "-i %(stack)s "
@@ -274,20 +284,26 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         self._defineSourceRelation(inputMovies, particleSet)
     
     #--------------------------- UTILS functions --------------------------------------------------
+    #ROB: here
     def _writeXmippPosFile(self, movieId, movieName, coordinatesName, shiftX, shiftY):
         """ Create an Xmipp coordinates files to be extracted
         from the frames of the movie.
         """
-        coordinates = self.inputCoordinates.get()
-        micrograph = coordinates.getMicrographs()[movieId]
+        ##### import em abre una nueva conexion?
+        #TODO ROB move this import to the header
+        from pyworkflow.em import SetOfCoordinates
+        coordinates = SetOfCoordinates(filename=self.inputCoordinates.get().getFileName())
+        #####coordinates = self.inputCoordinates.get()
+        #####micrograph = coordinates.getMicrographs()[movieId]
          
-        if micrograph is None:
-            raise Exception("Micrograph with id %d was not found in SetOfCoordinates!!!" % movieId)
+        ####if micrograph is None:
+            #####raise Exception("Micrograph with id %d was not found in SetOfCoordinates!!!" % movieId)
          
         mData = md.MetaData()
         coordRow = XmippMdRow()
          
-        for coord in coordinates.iterCoordinates(micrograph):
+####        for coord in coordinates.iterCoordinates(micrograph):
+        for coord in coordinates.iterCoordinates(movieId):
             coord.shiftX(1 * int(round(float(shiftX))))
             coord.shiftY(1 * int(round(float(shiftY))))
             coordinateToRow(coord, coordRow)

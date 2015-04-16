@@ -98,37 +98,37 @@ class EmanProtReconstruct(ProtReconstruct3D):
                       help='Select the input images from the project.')
         form.addParam('numberOfIterations', IntParam, default=2,
                       label='Number of iterations:',
-                      help='Set the number of iterations. Iterative reconstruction'
-                           'improves the overall normalization of the 2D images'
-                           'as they are inserted into the reconstructed volume,'
-                           'and allows for the exclusion of the poorer quality'
-                           'images.')
+                      help='Set the number of iterations. Iterative reconstruction '
+                           'improves the overall normalization of the 2D images '
+                           'as they are inserted into the reconstructed volume, '
+                           'and allows for the exclusion of the poorer quality '
+                           'images. ')
         form.addParam('symmetry', StringParam, default='c1',
                       label='Symmetry group',
-                      help='Set the symmetry; if no value is given then the model'
-                           'is assumed to have no symmetry. Choices are: i, c, d,'
-                           'tet, icos, or oct.'
-                           'See http://blake.bcm.edu/emanwiki/EMAN2/Symmetry'
+                      help='Set the symmetry; if no value is given then the model '
+                           'is assumed to have no symmetry. \n'
+                           'Choices are: *i, c, d, tet, icos, or oct* \n'
+                           'See http://blake.bcm.edu/emanwiki/EMAN2/Symmetry \n'
                            'for a detailed descript of symmetry in Eman.')
         line = form.addLine('Padding to Reconstruct: ', expertLevel=LEVEL_ADVANCED,
-                            help='Will zero-pad images to the specifed size (x,y) or'
-                                 '(x,x) prior to reconstruction. If not specified no'
+                            help='Will zero-pad images to the specifed size (x,y) or '
+                                 '(x,x) prior to reconstruction. If not specified no '
                                  'padding occurs.')
         line.addParam('padX', IntParam, default=0, label='X ')
         line.addParam('padY', IntParam, default=0, label='Y ')
                     
         line = form.addLine('Dimensions Volume: ', expertLevel=LEVEL_ADVANCED,
-                            help='Defines the dimensions (x,y,z) or (x,x,x) of the'
-                                 'reconstructed volume. If ommitted, implied value based'
-                                 'on padded 2D images is used.')
+                            help='Defines the dimensions (x,y,z) or (x,x,x) of the '
+                                 'reconstructed volume. If ommitted, implied value based '
+                                 'on padded 2D images is used. ')
         line.addParam('dimVolX', IntParam, default=0, label='X')
         line.addParam('dimVolY', IntParam, default=0, label='Y')            
         line.addParam('dimVolZ', IntParam, default=0, label='Z')
 
         line = form.addLine('Dimensions to Write Volume: ', expertLevel=LEVEL_ADVANCED,
-                            help='Defines the dimensions (x,y,z) or (x,x,x) of the final'
-                                 'volume written to disk, if ommitted, size will be'
-                                 'based on unpadded input size.')
+                            help='Defines the dimensions (x,y,z) or (x,x,x) of the final '
+                                 'volume written to disk, if ommitted, size will be '
+                                 'based on unpadded input size. ')
         line.addParam('dimWriteVolX', IntParam, default=0, label='X')
         line.addParam('dimWriteVolY', IntParam, default=0, label='Y')            
         line.addParam('dimWriteVolZ', IntParam, default=0, label='Z')
@@ -156,14 +156,14 @@ class EmanProtReconstruct(ProtReconstruct3D):
                       choices=['percentage', 'standard deviation', 'absolute quality'],
                       label="Sense of keep:", default=KEEP_PERCENTAGE,
                       display=EnumParam.DISPLAY_COMBO,
-                      help="If *percentage* is selected, *keep* parameter will be"
+                      help="If *percentage* is selected, *keep* parameter will be "
                            "interpreted as a percentage. Is the default option.\n"
-                           "If *standard deviation* is selected, *keep* parameter"
-                           "will be interpreted as a standard deviation coefficient"
+                           "If *standard deviation* is selected, *keep* parameter "
+                           "will be interpreted as a standard deviation coefficient "
                            " instead of as a percentage.\n"
-                           "If *absolute quality* is selected, *keep* parameter"
-                           "will refer to the absolute quality of the class-average,"
-                           " not a local quality relative to other similar sized"
+                           "If *absolute quality* is selected, *keep* parameter "
+                           "will refer to the absolute quality of the class-average, "
+                           " not a local quality relative to other similar sized "
                            "classes.")
         form.addParam('keep', FloatParam, default=1.0, expertLevel=LEVEL_ADVANCED,
                       label="Fraction of slices to keep",
@@ -171,11 +171,11 @@ class EmanProtReconstruct(ProtReconstruct3D):
                            ' based on quality scores (1.0 = use all slices).') 
         form.addParam('doNotAutoWt', BooleanParam, default=False,
                        label='Do not automatic weighting?',
-                       help='This argument turns automatic weighting off causing'
-                            'all images to be weighted by 1. If this argument is'
+                       help='This argument turns automatic weighting off causing '
+                            'all images to be weighted by 1. If this argument is '
                             'False images inserted into the reconstructed volume '
-                            'are weighted by the number of particles that contributed'
-                            'to them (i.e. as in class averages), which is extracted'
+                            'are weighted by the number of particles that contributed '
+                            'to them (i.e. as in class averages), which is extracted '
                             'from the image header.')
 
         form.addParallelSection(threads=0, mpi=0)

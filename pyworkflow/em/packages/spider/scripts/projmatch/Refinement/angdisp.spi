@@ -1,0 +1,175 @@
+; <html><head><title>Makes view of angular distribution of projections used in reconstruction</title></head><body><pre>
+;
+; SOURCE:  spider/docs/techs/recon/newprogs/angdisp.spi 
+;                Added lower hemisphere   Feb 2005 al
+;                VAR                      Feb 2010 al
+;
+; Purpose: Makes SPIDER image views of angular data output from refinement.
+;          Creates two side by side images showing the angular direction 
+;          assigned to each of the sample images in the reconstruction.
+;          Left hemisphere is for projections from above and right hemisphere
+;          is for projections from the lower direction. These are
+;          essentially polar coordinate plots. Both plots are viewed 
+;          from above on the sphere.
+;          For a given defocus group, makes maps for each refinement iteration.
+;          User may select which defocus groups to compute.
+;          DEFAULT: does all iterations for 1st defocus group.
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; <b> ----------- Input Parameters ---------------------------------------
+
+[g1] = 1       ; First defocus group
+[g2] = 1       ; Last defocus group (-1 = do all groups)
+
+[i1] = 1       ; First iteration
+[i2] = -1      ; Last iteration (-1 = do all iterations) 
+
+;  ----------- Input files ---------------------------------------
+
+[angles] = 'final/align_{**[iter]}_{***[grp]}'   ; Expects psi,theta,phi in register 1,2,3
+
+; --------------- Output files  -------------------------------------
+
+[dir]    = 'display'                       ; Output directory
+
+[disp]   = 'disp_{**[iter]}_{***[grp]}'    ; Output image file name template
+
+; -------------- END BATCH HEADER ------------------------------</b>
+
+[r1]    = 2                         ; Radius of the small circles in plot
+[siz]   = 607                       ; Single image size
+[sizm1] = [siz] - 2                 ; Single image size - 1 pixel border
+[rp]    = 303                       ; Plot radius
+[dfs]   = 2 * [siz]                 ; Double frame size
+
+VM                                  ; Make output directory if necessary
+mkdir -p [dir]
+
+[out] = '[dir]/[disp]'              ; Create output file names
+
+
+IF ([g2].EQ.-1) [g2] = 1000         ; Do all defocus groups
+
+DO [grp] = [g1],[g2]                ; Loop over defocus groups
+
+   [iter] = [i1]                    ; First iteration number
+
+   IQ FI [exists]                   ; See if passed last defocus group
+   [angles]
+
+   IF ([exists].NE.1) EXIT          ; Quit loop if def group not found
+
+   IF ([i2].EQ.-1) [i2] = 1000      ; Do all iterations
+
+   DO [iter] = [i1],[i2]            ; Loop over refinement iterations
+
+      IQ FI [exists]                ; see if passed last iteration number
+      [angles]
+
+      IF ([exists].NE.1)  EXIT      ; Quit inner loop if iteration not found
+
+      BL                            ; Create a blank image
+      _1
+      ([dfs],[siz])                 ; Dual frame size
+      N
+      (0.0)
+
+      PT                            ; Draw large circle on left frame
+      _1
+      CL
+      ([rp],[rp])
+      (302)
+      N
+
+      [v1] = [rp] + [siz]
+      PT                            ; Draw large circle on right frame
+      _1
+      CL
+      ([v1],[rp])
+      (302)
+      N
+
+      PT                            ; Draw axes lines on left frame
+      _1
+      L
+      (1,[rp])
+      ([sizm1],[rp])
+      Y
+      L
+      ([rp],1)
+      ([rp],[sizm1])
+      N
+
+      [v1] = [rp] + [siz]
+      [v2] = [sizm1] + [siz]
+      PT                            ; Draw axes lines on right frame
+      _1
+      L
+      (1,[rp])
+      ([v2],[rp])
+      Y
+      L
+      ([v1],1)
+      ([v1],[sizm1])
+      N
+
+      UD N [npr]                    ; Get number of projections in this group
+      [angles]
+
+      [rit] = 0                     ; Projections on right frame hemisphere
+
+      DO                            ; Loop over projections in the group
+         UD NEXT [k],[a],[b],[c]    ; Doc file with  angles
+         [angles]                   ; Angle file      (input) 
+         IF ([k] .LE. 0) EXIT       ; End of angles file
+
+         [rfo] = 0
+         IF ([b] .GT. 90.0) THEN    ; Lower hemisphere projection
+            [b] = 180.0 - [b]
+
+            IF ([c] .GT. 360.0) [c] = [c] - 360.0
+            [rfo] = [siz]           ; Right frame offset
+            [rit] = [rit] + 1       ; Projections on right frame hemisphere
+         ENDIF
+
+         [v61] = [b]/90
+         [v61] = [v61]*300
+         [v81] = cos([c])
+         [v82] = sin([c])
+         [v81] = [v81]*[v61]
+         [v82] = [v82]*[v61]
+         [v81] = [v81]+[rp]+[rfo]   ; Location plus frame offset
+         [v82] = [v82]+[rp]
+   
+         PT                         ; Mark location in image 
+         _1                         ; Image file
+         CL                         ; Circle (Looks like square due to small radius)
+         [v81],[v82]                ; Center coordinates
+         [r1]                       ; Radius
+         N                          ; No more 
+      ENDDO
+
+      UD ICE
+      [angles]
+
+      FS                           ; Get max/min
+      _1
+
+      NEG                          ; Reverse contrast
+      _1
+      _2
+
+      CP
+      _2
+      [out]                         ; Output image file
+
+
+     VM
+     echo " Iteration: {**[iter]}, Group: {***[grp]} Images: {*****[npr]} Lower hemisphere: {*****[rit]}"
+
+   ENDDO
+ENDDO
+
+EN
+; </body></pre></html>

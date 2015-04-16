@@ -183,7 +183,9 @@ class XmippImport():
             micBase = basename(micFile)
             micDst = self.protocol._getExtraPath(micBase)
             self.copyOrLink(join(self._imgPath, micFile), micDst)
+            
             imgRow.setValue(md.MDL_MICROGRAPH, micDst)
+            self._fillMicName(img, micBase)
 
         if self._ctfPath:
             # Read Xmipp ctfModel parameters and add
@@ -286,3 +288,6 @@ class XmippImport():
         ctf.setPsdFile(replaceExt(fileName, 'psd'))
         return ctf
 
+    def _fillMicName(self, mic, filename):
+        micName = filename.replace("/", "_")
+        mic.setMicName(micName)

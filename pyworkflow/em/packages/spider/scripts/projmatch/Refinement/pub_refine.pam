@@ -1,0 +1,200 @@
+; <html><head><title>Controls and synchronizes refinement</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/pub_refine.pam
+;
+;         New                              ArDean Leith  Nov 2000
+;         [rn] for endmerge                ArDean Leith  May 2005
+;         [] from publish                  ArDean Leith  Feb 2006
+;         Ampenhance                       ArDean Leith  May 2006
+;         More stacks                      ArDean Leith  Dec 2006
+;         Existing iter_refangs bug        ArDean Leith  Aug 2010
+;         COG centering                    ArDean Leith  Sep 2010
+;         Dala files removed               ArDean Leith  Jan 2012
+;         pixsiz, resol headers,...        ArDean Leith  Aug 2012
+;
+; PURPOSE: Runs on master node to control PubSub refinement
+;
+; I/O Registers & files are set in: <a href="./refine settings.pam">refine settings.pam</a>
+;
+; INPUT REGISTERS:
+;   [maxspfreq]              Maximum spatial freq (1/A) (used in prepare)
+;   [r2]                     Radius of object 
+;   [alignsh]                Translation shift allowed is +-[alignsh]
+;   [iter-end]               Ending iteration
+;   [lambda]                 Lambda (A) (used in prepare)
+;
+; '##' denotes iteration,  '##+' denotes next iteration, and '***' denotes group
+; INPUT FILES:
+;   [params]                ../params                             Params file  
+;   [vol_orig]              ../Reconstruction/vol01               Starting volume file  
+;   [sel_group_orig]        ../Reconstruction/sel_group_cclim     Group selection file
+;   [sel_particles_orig]    ../Reconstruction/sel_particles_***   Particle selection files 
+;   [group_align_orig]      ../Alignment/align_01_***             Initial alignment parameter files 
+;   [unaligned_images]      ../Alignment/data***                  Original unaligned images stacks
+;
+; PROCEDURES CALLED:
+;    refine_settings          <a href="./refine_settings.pam">refine_settings.pam</a>
+;    prepare                  <a href="./prepare.pam">prepare.pam</a>
+;
+;    publish                  <a href="./publish.perl">publish</a>
+;    ... pub_refine_start     <a href="./pub_refine_start.pam"> pub_refine_start</a>          
+;    ....... refine_settings  <a href="./refine_settings.pam">refine_settings.pam</a>            
+;    ....... grploop          <a href="./grploop.pam">grploop.pam</a>            
+;    ....... smangloop        <a href="./smangloop.pam">smangloop.pam</a>            
+;    ....pub_refine_doc_sync  <a href="./pub_refine_doc_sync.pam">pub_refine_doc_sync.pam</a>
+;    pub_refine_wait          <a href="./pub_refine_wait.pam">pub_refine_wait.pam</a>
+;
+;    mergegroups              <a href="./mergegroups.pam">mergegroups.pam</a>
+;    ... enhance              <a href="./enhance.pam">enhance.pam</a>
+;    publish                  <a href="./publish.perl">publish</a>
+;    ...  pub_refine_start    <a href="./pub_refine_start.pam">pub_refine_start</a>        
+;    ...... refine_settings   <a href="./refine_settings.pam">refine_settings.pam</a>            
+;    ...... endmerge          <a href="./endmerge.pam">endmerge.pam</a>
+;    ....pub_refine_doc_sync  <a href="./pub_refine_doc_sync.pam">pub_refine_doc_sync.pam</a>
+;    pub_refine_wait          <a href="./pub_refine_wait.pam">pub_refine_wait.pam</a>
+; 
+;    endrefine                <a href="./endrefine.pam">endrefine.pam</a>  
+;
+; ---------------------------------------------------------------------
+
+ MD
+   TR OFF                    ; Loop info turned off
+ MD
+   VB OFF                    ; File info turned off
+ MD
+   SET MP                    ; Use single processor on master node!!
+   1
+
+ ; Input initial parameters & file names but not angular steps
+ @refine_settings([pixsiz],[r2],[alignsh],[prj-radius],[iter1],[iter-end],[lambda],[small-ang],[winsize],[converg])
+
+ IF([iter1].LE.1)THEN 
+    ; Prepare input files (only needs to be done once)  
+    @prepare([pixsiz],[lambda],[iter1])   
+    SD /     Iteration       group        resolution
+      [iter_resol]          ; Resolution doc file               (output)
+    SD /     Iteration       group        resolution
+      [grp_resol]           ; Resolution doc file               (output)
+    SD E     
+      [grp_resol]           ; Resolution doc file              (finished)
+ ENDIF
+
+ UD N [num-grps]             ; Find number of defocus groups
+   [sel_group_sorted]        ; Defocus group selection file      (input)
+
+ DO [iter]=[iter1],[iter-end]; Loop over all iterations ----------------------------------
+
+   FT                        ; Fourier on volume 
+     [current_vol]           ; Volume produced by previous iter. (input)  
+     [iter_vft]              ; For all groups on this iter.      (output)
+
+   RR S [ampenhance]         ; Amplitude enhancement reg. setting (varies with iteration)
+     [amp-enhance-flags]
+     [iter]
+ 
+   DE
+     [iter_refangs]          ; Reference angles doc file         (removed)
+
+   ; Create reference angle doc file for this iteration 
+
+    IF([small-ang] .EQ. 0) THEN  
+      ; Usual case.  For normal angle refinement
+      RR S [ang-step]
+        [ang-steps]           ; Angular step for projection angle  (varies with iteration)
+        [iter]
+
+      VO EA [num-angles]      ; Sets [num-angles] to number of reference projections
+        [ang-step]            ; Theta angular step          (varies with iteration)
+        0, 90.0               ; Theta range, 90 is for use with 'Check Mirrored Positions'
+        0, 359.9              ; Phi range
+        [iter_refangs]        ; Reference angles doc file       (output)
+
+      RR S [ang-limit]        ; Restriction on angular search   (varies with iteration)
+        [ang-limits] 
+        [iter]
+
+   ELSE                       
+      ; For Small angle refinement
+      VO EA [num-angles]      ; Sets [num-angles] to number of reference projections
+        [ang-step-sm]         ; Theta angular step     
+        0,[theta-range]       ; Theta range 
+        0, 359.9              ; Phi range
+        [iter_refangs]        ; Reference angles doc file       (output)
+ 
+    ENDIF
+
+   ; Generate 4 digit random number for semi-unique DOC_SYNC file numbering
+   [rn] = int(ran(0.0)*9999)
+
+   ; Process all defocus groups in parallel
+   [task] = [small-ang]       ; Pub_starter selector flag
+
+   DO [i]=1,[num-grps]        ; Loop over all groups ---------------------------
+      UD IC [i],[grp]         ; Get this defocus group number
+        [sel_group_sorted]    ; Defocus group selection file     (input)
+
+      ; Use pub_refine_start to create parallel grploop for each defocus group   
+      VM
+        publish './spider $PRJEXT/$DATEXT @pub_refine_start {***[grp]} task={*[task]} iter={**[iter]} grp={***[grp]} rn={****[rn]}' 
+      
+   ENDDO
+
+   UD ICE                     ; End doc file 'UD IC' use
+     [sel_group_sorted]
+
+   ;  Wait for all subscribers to finish grploop, returns [num-big]
+   [task] = 0                 ; When [task]=0, pub_refine_start starts: grploop
+   @pub_refine_wait([task],[num-big],[num-grps],[iter],[converg],[rn])
+
+   ; [num-big] returns number of groups having excessive changes
+   ; (this is summed in: pub_refine_wait)
+   VM
+     echo " After pub_refine_wait, Excessive changes in: {***[num-big]} groups"
+
+   ; If angular changes were small in all groups, can stop iterating now
+   IF([num-big].EQ.0) EXIT  
+
+   ; Consolidate data for CTF corrections, create iteration's output volume
+   @mergegroups([pixsiz],[iter],[ampenhance],[r2])
+
+   DE                         ; Delete existing iterations Fourier vol.
+     [iter_vft]               ; Fourier file                          (removed)                
+
+   VM
+     echo " Iteration: {**[iter]} Finished"
+
+   MY FL                      ; Flush results
+ ENDDO
+
+ VM                           ; Echo current time 
+   echo -n " Alignment halting after iteration: {**[iter]}   " ; date '+ TIME: %x  %X' ; echo " " 
+
+ ; Start up endmerge using PubSub
+ DO [i]=1,[num-grps]          ; Loop over all groups ----------------------
+    UD IC [i],[grp]           ; Get this defocus group number
+      [sel_group_sorted]      ; Defocus group selection file  (input)
+
+    VM                        ; When [task]=2, pub_refine_start starts: endmerge 
+      publish './spider $PRJEXT/$DATEXT @pub_refine_start {***[grp]} task=2 iter={**[iter]} grp={***[grp]} rn={****[rn]}' 
+ ENDDO
+
+ UD ICE                       ; End doc file incore use for [sel_group_sorted]
+   [sel_group_sorted]
+
+ ; Wait for all parallel endmerge tasks
+ [task]=2
+ @pub_refine_wait([task],[num-big],[num-grps],[iter],[converg],[rn])
+
+ ; Prepare final resolution files
+ @endrefine([r2],[pixsiz],[iter])    
+
+ VM                          ; Echo current time 
+   echo -n " REFINEMENT FINISHED   " ; date '+ TIME: %x  %X'
+
+ EN
+; </body></pre></html>
+
+
+
+
+ 

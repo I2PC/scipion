@@ -31,7 +31,16 @@ import time
 from glob import glob
 
 from subprocess import STDOUT, check_call, CalledProcessError
-
+#Python 3 compatibility: How to overcome Python NameError: name 'basestring' is not defined
+try:
+    unicode = unicode
+except NameError:
+    # 'unicode' is undefined, must be Python 3
+    unicode = str
+    basestring = (str,bytes)
+else:
+    # 'unicode' exists, must be Python 2
+    basestring = basestring
 
 # Then we get some OS vars
 MACOSX = (platform.system() == 'Darwin')
@@ -66,12 +75,12 @@ def checkLib(lib, target=None):
         try:
             check_call(['%s-config' % lib, '--cflags'])
         except (CalledProcessError, OSError) as e:
-            print """
+            print("""
   ************************************************************************
     Warning: %s not found. Please consider installing it first.
   ************************************************************************
 
-Continue anyway? (y/n)""" % lib
+Continue anyway? (y/n)""" % lib)
             if raw_input().upper() != 'Y':
                 sys.exit(2)
     # TODO: maybe write the result of the check in
@@ -142,6 +151,7 @@ class Target():
         self._name = name
         self._default = kwargs.get('default', False)
         self._commandList = list(commands)  # copy the list/tuple of commands
+        self._finalCommands = [] # This commands results will be used to check if need to re-build 
         self._deps = [] # list of name of dependency targets
 
     def addCommand(self, cmd, **kwargs):
@@ -150,6 +160,8 @@ class Target():
         else:
             c = Command(self._env, cmd, **kwargs)
         self._commandList.append(c)
+        if kwargs.get('final', False):
+            self._finalCommands.append(c)
         return c
 
     def addDep(self, dep):
@@ -159,17 +171,10 @@ class Target():
         return self._deps
 
     def _existsAll(self):
-        for c in self._commandList:
+        for c in self._finalCommands:
             if not c._existsAll():
                 return False
         return True
-        # TODO: Only check for the last target, but make sure that
-        # both fftw3 and fftw3f are compiled and installed in that case.
-        # It would look more like:
-        # # Check if the last command target exists
-        # if not self._commandList:
-        #     return True
-        # return self._commandList[-1]._existsAll()
 
     def isDefault(self):
         return self._default
@@ -296,8 +301,13 @@ class Environment():
         t.buildDir = buildDir
         t.buildPath = buildPath
 
-        t.addCommand(self._downloadCmd % (tarFile, url),
-                     targets=tarFile)
+        if url.startswith('file:'):
+            t.addCommand('ln -s %s %s' % (url.replace('file:', ''), tar),
+                         targets=tarFile,
+                         cwd=downloadDir)
+        else:
+            t.addCommand(self._downloadCmd % (tarFile, url),
+                         targets=tarFile)
         t.addCommand(self._tarCmd % tar,
                      targets=buildPath,
                      cwd=downloadDir)
@@ -340,7 +350,7 @@ class Environment():
         # that's the only thing we will do.
         if commands:
             for cmd, tgt in commands:
-                t.addCommand(cmd, targets=tgt)
+                t.addCommand(cmd, targets=tgt, final=True)
             return t
 
         # If we didnt' specify the commands, we can either compile
@@ -370,7 +380,8 @@ class Environment():
         t.addCommand('make install',
                      targets=targets,
                      cwd=t.buildPath,
-                     out='%s/log/%s_make_install.log' % (prefixPath, name))
+                     out='%s/log/%s_make_install.log' % (prefixPath, name),
+                     final=True)
 
         if clean:
             t.addCommand('make clean',
@@ -430,7 +441,8 @@ class Environment():
                                                        'flags': ' '.join(flags),
                                                        'name': name},
                    targets=[path(tg) for tg in targets],
-                   cwd=t.buildPath)
+                   cwd=t.buildPath,
+                   final=True)
 
         return t
     
@@ -455,7 +467,8 @@ class Environment():
         target.addCommand(Command(self, Link(name, packageDir),
                              targets=[self.getEm(name), 
                                       self.getEm(packageDir)],
-                             cwd=self.getEm('')))
+                             cwd=self.getEm('')),
+                          final=True)
         commands = kwargs.get('commands', [])
         for cmd, tgt in commands:
             if isinstance(tgt, basestring):
@@ -463,7 +476,8 @@ class Environment():
             # Take all package targets relative to package build dir
             target.addCommand(cmd, targets=[os.path.join(target.buildPath, t) 
                                             for t in tgt], 
-                         cwd=target.buildPath)            
+                         cwd=target.buildPath, 
+                         final=True)            
 
         return target
     

@@ -30,6 +30,7 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 import sys
 from os.path import basename
 
+from pyworkflow.utils.path import commonPath
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.params import FloatParam, IntParam, LabelParam
 from pyworkflow.em.convert import ImageHandler
@@ -111,7 +112,6 @@ class ProtImportImages(ProtImportFiles):
         img.setAcquisition(acquisition)
         n = 1
         copyOrLink = self.getCopyOrLink()
-        
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
             dst = self._getExtraPath(basename(fileName))
             copyOrLink(fileName, dst)
@@ -129,6 +129,7 @@ class ProtImportImages(ProtImportFiles):
             else:
                 img.setObjId(fileId)
                 img.setFileName(dst)
+                self._fillMicName(img, fileName) # fill the micName if img is a Micrograph.
                 imgSet.append(img)
             outFiles.append(dst)
             
@@ -207,4 +208,12 @@ class ProtImportImages(ProtImportFiles):
         """ Override to import acquisition from the specified format. """
         return None 
 
-
+    def _fillMicName(self, img, filename):
+        from pyworkflow.em import Micrograph
+        if isinstance(img, Micrograph):
+            filePaths = self.getMatchFiles()
+            commPath = commonPath(filePaths)
+            micName = filename.replace(commPath + "/", "").replace("/", "_")
+            img.setMicName(micName)
+    
+    

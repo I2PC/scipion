@@ -23,13 +23,17 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
-
+import os
 import sys
 from install.funcs import Environment, progInPath
 
+get = lambda x: os.environ.get(x, '0').lower() in ['true', 'yes', 'y', '1']
 
 
 env = Environment(args=sys.argv)
+
+noOpencv = '--no-opencv' in sys.argv or not get('OPENCV')
+noScipy = '--no-scipy' in sys.argv
 
 
 #  ************************************************************************
@@ -138,7 +142,7 @@ opencv = env.addLibrary(
     tar='opencv-2.4.9.tgz',
     targets=[env.getLib('opencv_core')],
     cmake=True,
-    default=False)
+    default=not noOpencv)
 
 # ---------- Libraries required by PyTom 
 pcre = env.addLibrary(
@@ -222,7 +226,7 @@ mpi4py = env.addModule(
 scipy = env.addModule(
     'scipy',
     tar='scipy-0.14.0.tgz',
-    default=False,
+    default=not noScipy,
     deps=[lapack, numpy, matplotlib])
 
 bibtexparser = env.addModule(
@@ -270,6 +274,7 @@ lxml = env.addModule(
     targets=['lxml-3.4.1*'],
     libChecks=['libxml-2.0', 'libxslt'],
     deps=[], # libxml2, libxslt],
+    incs=['/usr/include/libxml2'],
     default=False)
 # libxml2 and libxslt are checked instead of compiled because
 # they are so hard to compile right.

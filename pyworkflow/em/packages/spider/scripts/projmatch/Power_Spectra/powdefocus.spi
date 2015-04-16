@@ -1,0 +1,173 @@
+ ; <html><head><title>Calculates average power spectra and defocus values for set of micrographs</title></head><body><pre>
+ ;
+ ; PURPOSE: Calculates average power spectra for a set of micrographs, 
+ ;          estimates defocus from the power spectra, and places defocus
+ ;          value in a doc. file.
+
+ ; PURPOSE: First converts a scanned micrograph file to SPIDER format.
+ ;          Computes 2D power spectrum and places in: power/roo****
+ ;          Estimates defocus from 2D power spectra and places in: defocus
+ ;          Inputs: Window size, Percentage of the overlap distance 
+ ;                  of the window from the micrograph border,
+ ;          Uses SPIDER operation 'CTF ED'
+ ;
+ ; SOURCE:  spider/docs/techs/recon/newprogs/powdefocus.spi 
+ ;          RO SD                               May 2012 ArDean Leith
+ ;          CTF                                 Apr 2013 ArDean Leith
+ ;
+ ; Edit following parameters and filenames as needed.
+ ;
+ ; [deci] = Decimation factor for 'DC S' operation
+ ;      0 = Get value from params file (key=16)
+ ;      1 = Full sized image
+ ;      2 = 1/2 size
+ ;      4 = 1/4 size
+ [deci]      = 0      ; Decimation factor (0 = Get value from params file)
+
+ [tilesiz]   = 500    ; Size of tiles (square)
+ [xover]     = 50     ; X tile overlap % 
+ [yover]     = 50     ; Y tile overlap % 
+ [xd]        = 500    ; X tile dist. from the edge 
+ [yd]        = 500    ; Y tile dist. from the edge 
+
+ [dodefocus] = 1      ; Find defocus values 
+ [keepspi]   = 1      ; Keep the on-disk temp spider file (0 = discard) 
+
+ ; ----------- Input files --------------
+
+ [params]   = '../params'                     ; Parameter doc file
+
+ [sel_mic]  = '../sel_micrograph'             ; Micrograph selection doc file 
+
+ [micgr]    = '../Micrographs/raw{****[mic]}' ; Micrograph images
+
+ ; ----------- Output files --------------
+
+ [outdir]   = 'power'                      ; Power spectra directory
+
+ [pow]      = '[outdir]/pw_avg{****[mic]}' ; Power spectra images
+
+ [ctf]      = '[outdir]/ctf{****[mic]}'    ; Noise doc files (one / micrograph)
+
+ [roo]      = '[outdir]/roo{****[mic]}'    ; Rotational average doc file
+
+ [out]      = 'defocus'                    ; Defocus values doc file (one)
+
+ [roo]      = '[outdir]/roo{****[mic]}'    ; Rotational average doc file
+ ; ----------- Temp file --------------
+
+ [spi] = '_1'                              ; Temp Spider file
+
+ ; -------------- END BATCH HEADER --------------------------
+
+ MD
+   TR OFF                           ; Loop info turned off
+ MD
+   VB OFF                           ; File info turned off
+ MD
+   SET MP                           ; Use all available OMP processors
+   0
+
+ VM                                 ; Make sure output dir. present
+   mkdir -p [outdir]
+
+ ;  -----  Get zip & format flags (can params vary??)
+ UD 1,[zflag]                       ; Get zip flag
+   [params]                         ; Params file           (input)
+ UD 2,[fflag]                       ; Get tif flag
+   [params]                         ; Params file           (input)
+ UD 3,[nx]                          ; HiScan  X parameters 
+   [params]                         ; Params file           (input)
+ UD 4,[ny]                          ; HiScan  Y dimension        
+   [params]                         ; Params file           (input)
+ UD 5,[sp_pixsiz]                   ; Get pixel size
+   [params]                         ; Params file           (input)
+
+ IF ([deci].LT.1) THEN
+    UD 16,[deci]                    ; Get decimation factor  
+      [params]                      ; Params file           (input)
+    IF ([deci].LT.1) [deci] = 1.0   ; Should not be zero
+ ENDIF
+
+ IF ([deci].LE.0) THEN
+    UD 16,[deci]                    ; Get decimation factor  
+      [params]                      ; Params file           (input)
+    IF ([deci].LT.1) [deci] = 1.0   ; Should not be zero
+ ELSE
+    [sp_pixsiz]=[sp_pixsiz]*[deci]  ; Adjust pixel size for decimation
+    ; (Don't need this multiplcation factor if decimation supplied by PARAMS)
+ ENDIF
+
+
+ IF ([dodefocus] .GT. 0) THEN
+   ; Want to determine defocus parameters
+
+   UD 6,[sp_kev]                    ; Electron voltage (kev)
+     [params]                       ; Params file           (input)
+   UD 7,[sp_sph_abb]                ; Spherical aberration (mm)
+     [params]                       ; Params file           (input)
+   UD 12,[sp_acr]                   ; Amplitude contrast ratio
+     [params]                       ; Params file           (input)
+
+   ; Put defocus parameters title in doc file
+   DE
+     [out]                            ; Defocus file           (removed)
+
+ ENDIF
+
+ UD N [nummics]                     ; Get number of micrographs
+   [sel_mic]
+
+ DO [key]=1,[nummics]               ; Loop over all micrographs -------------------
+
+   UD [key], [mic]                  ; Get micrograph number
+     [sel_mic]                      ; Micrograph select doc file  (input)
+
+   ;VM
+   ;  echo ' 'Loading Micrograph:   {*****[mic]}  
+
+   ; Convert micrographs and load into incore file
+   @loadmic([mic],[zflag],[fflag],[deci],[nx],[ny],[keepspi])
+     [micgr]                       ; Micrograph template     (input)
+     [spi]                         ; SPIDER file             (output)
+     _4                            ; Hiscan & Nikon scratch  (output)
+
+   IF ([dodefocus] .GT. 0) THEN
+     ; ----------- Get defocus value  -------------------
+     ; Save defocus parameters for each group in doc file
+
+     DE                          ; Delete group doc file
+      [ctf]                      ;                             (removed)
+
+     ; Estimate CTF defocus parameters & save in summary doc file
+     CTF ED [def],[cutoff],[ntiles] 
+       [spi]                     ; Micrograph image             (input)
+       [tilesiz],[xover],[yover] ; Tile size, x & y tile % overlap:
+       [xd],[yd]                 ; X & Y tiling border
+       [sp_pixsiz],[sp_sph_abb]  ; Pixel size, Spherical aberration
+       [sp_kev]                  ; Electron voltage [kev]
+       [sp_acr]                  ; Ampl. contrast ratio
+       [ctf]                     ; Noise doc file               (output)
+       [out]                     ; Defocus doc file             (output)
+       [mic]                     ; Key/image number for doc file
+       [pow]                     ; 2D power spectrum            (output)
+
+     VM
+       echo ' 'Micrograph: {*****[mic]}' ' Tiles: {%i4%[ntiles]}' '  Defocus: {%f8.2%[def]} ; echo ' '
+
+     RO SD                       ; Rotational average
+       [pow]                     ; 2D CTF file                  (input)
+       [roo]                     ; 1D rotational average        (output)
+       *                         ; No PS Doc file               (output)
+
+   ENDIF
+ ENDDO
+
+ SD E
+   [out]                          ; Doc file           (closed)
+
+ VM
+   cat [out].$DATEXT ; echo ' '
+ 
+ EN
+ ; </body></pre></html>

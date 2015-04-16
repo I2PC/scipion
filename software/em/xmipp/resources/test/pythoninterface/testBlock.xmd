@@ -1,0 +1,36 @@
+# XMIPP_STAR_1 * 
+# CAREFULL if re3d is last label this does not work
+data_b1
+loop_
+ _image
+ _CTFModel
+ _CTF_Defocus_U
+ _count
+ _classificationData
+ _ref3d
+ 000001@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000	      10  ' 1.000000	 2.000000     3.000000 '     -1    
+ 000002@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000	      20  ' 1.000000	 4.000000     9.000000 '     2    
+ 000003@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000	      30  ' 1.000000	 8.000000    27.000000 '     -3   
+data_b2
+loop_
+ _image
+ _CTFModel
+ _CTF_Defocus_U
+ _count
+ _classificationData
+ _ref3d
+ 000001@pythoninterface/proj_ctf_2.stk  CTFs/10.ctfparam  -100.000000	      10  ' 1.000000	 2.000000     3.000000 '     -1    
+ 000002@pythoninterface/proj_ctf_2.stk  CTFs/10.ctfparam   200.000000	      20  ' 1.000000	 4.000000     9.000000 '     2    
+ 000003@pythoninterface/proj_ctf_2.stk  CTFs/10.ctfparam  -300.000000	      30  ' 1.000000	 8.000000    27.000000 '     -3   
+data_b3
+loop_
+ _image
+ _CTFModel
+ _CTF_Defocus_U
+ _count
+ _classificationData
+ _ref3d
+ 000001@pythoninterface/proj_ctf_3.stk  CTFs/10.ctfparam  -100.000000	      10  ' 1.000000	 2.000000     3.000000 '     -1    
+ 000002@pythoninterface/proj_ctf_3.stk  CTFs/10.ctfparam   200.000000	      20  ' 1.000000	 4.000000     9.000000 '     2    
+ 000003@pythoninterface/proj_ctf_3.stk  CTFs/10.ctfparam  -300.000000	      30  ' 1.000000	 8.000000    27.000000 '     -3   
+

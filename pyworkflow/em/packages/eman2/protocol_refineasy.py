@@ -35,8 +35,8 @@ from glob import glob
 import pyworkflow.em as em
 from pyworkflow.em.packages.eman2.eman2 import getEmanProgram
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, EnumParam,
-                                        StringParam, BooleanParam, LEVEL_ADVANCED)
-from pyworkflow.utils.path import cleanPattern, makePath
+                                        StringParam, BooleanParam)
+from pyworkflow.utils.path import cleanPattern, makePath, createLink
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtRefine3D
 
@@ -126,17 +126,11 @@ at each refinement step. The resolution you specify is a target, not the filter 
                       condition='doContinue', allowsNull=True,
                       label='Select previous run',
                       help='Select a previous run to continue from.')
-        form.addParam('continueIter', StringParam, default='last',
-                      condition='doContinue', 
-                      label='Continue from iteration',
-                      help='Select from which iteration do you want to continue.'
-                           'if you use *last*, then the last iteration will be used.'
-                           'otherwise, a valid iteration number should be provided.')
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True,
-                      pointerClass='SetOfParticles', condition='not doContinue',
+                      pointerClass='SetOfParticles', condition='not doContinue', allowsNull=True,
                       help='Select the input particles.\n')  
         form.addParam('input3DReference', PointerParam,
-                      pointerClass='Volume',
+                      pointerClass='Volume', allowsNull=True,
                       label='Initial 3D reference volume:',
                       condition='not doContinue',
                       help='Input 3D reference reconstruction.\n')
@@ -168,7 +162,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
                            'This is used to runnormalize.bymass. Due to'
                            'resolution effects, not always the true mass.')
         form.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
-                      label='Have data been phase-flipped?',
+                      label='Have data been phase-flipped?', condition='not doContinue',
                       help='Set this to Yes if the images have been ctf-phase corrected during the '
                            'pre-processing steps.')       
         form.addParam('doBreaksym', BooleanParam, default=False,
@@ -225,19 +219,34 @@ at each refinement step. The resolution you specify is a target, not the filter 
     def _insertAllSteps(self):        
         self._createFilenameTemplates()
         self._createIterTemplates(self._getRun())
-        self._insertFunctionStep('convertImagesStep')
         if self.doContinue:
-            pass
+            self._insertFunctionStep('createLinkSteps')
+            args = self._prepareContinueParams()
         else:
+            self._insertFunctionStep('convertImagesStep')
             args = self._prepareParams()
         self._insertFunctionStep('refineStep', args)
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions --------------------------------------------
+    def createLinkSteps(self):
+        continueRun = self.continueRun.get()
+        prevPartDir = continueRun._getExtraPath("particles")
+        currPartDir = self._getExtraPath("particles")
+        runN = self._getRun() - 1
+        prevRefDir = continueRun._getExtraPath("refine_%02d" % runN)
+        currRefDir = self._getExtraPath("refine_%02d" % runN)
+        prevSetsDir = continueRun._getExtraPath("sets")
+        currSetsDir = self._getExtraPath("sets")
+
+#         createLink(prevInfoDir, currInfoDir)
+        createLink(prevPartDir, currPartDir)
+        createLink(prevRefDir, currRefDir)
+        createLink(prevSetsDir, currSetsDir)
+    
     def convertImagesStep(self):
         from pyworkflow.em.packages.eman2.convert import writeSetOfParticles
-        strFn = ""
-        partSet = self.inputParticles.get()
+        partSet = self._getInputParticles()
         partAlign = partSet.getAlignment()
         storePath = self._getExtraPath("particles")
         makePath(storePath)
@@ -249,7 +258,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
             args = " --voltage %3d" % acq.getVoltage()
             args += " --cs %f" % acq.getSphericalAberration()
             args += " --ac %f" % (100 * acq.getAmplitudeContrast())
-            if not self.haveDataBeenPhaseFlipped:
+            if not self._isPhaseFlipped():
                 args += " --phaseflip"
             args += " --apix %f --allparticles --autofit --curdefocusfix --storeparm -v 8" % (partSet.getSamplingRate())
             self.runJob(program, args, cwd=self._getExtraPath())
@@ -269,7 +278,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
         from pyworkflow.utils.path import cleanPath
         
         iterN = self.numberOfIterations.get()
-        partSet = self.inputParticles.get()
+        partSet = self._getInputParticles()
         numRun = self._getRun()
         
         vol = Volume()
@@ -282,7 +291,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
         
         if exists(angles):
             cleanPath(angles)
-        proc = createEmanProcess(args='read %s %s %s %s' 
+        proc = createEmanProcess(args='read %s %s %s %s'
                                  % (self._getParticlesStack(), clsFn, classesFn,
                                     self._getBaseName('angles', iter=iterN)),
                                  direc=self._getExtraPath())
@@ -302,12 +311,12 @@ at each refinement step. The resolution you specify is a target, not the filter 
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
-        samplingRate = self.inputParticles.get().getSamplingRate()
+        samplingRate = self._getInputParticles().getSamplingRate()
         if self.resol.get() < 2*samplingRate:
             errors.append("Target resolution is smaller than 2*samplingRate value. This is impossible.")
         
         if not self.doContinue:
-            partSizeX, _, _ = self.inputParticles.get().getDim()
+            partSizeX, _, _ = self._getInputParticles().getDim()
             volSizeX, _, _ = self.input3DReference.get().getDim()
             if partSizeX != volSizeX:
                 errors.append('Volume and particles dimensions must be equal!!!')
@@ -325,19 +334,32 @@ at each refinement step. The resolution you specify is a target, not the filter 
         return summary
     
     #--------------------------- UTILS functions --------------------------------------------
-    
     def _prepareParams(self):
-        args = "--input=%(imgsFn)s --model=%(volume)s --targetres=%(resol)f"
-        args += " --speed=%(speed)d --sym=%(sym)s --iter=%(numberOfIterations)d"
+        args1 = "--input=%(imgsFn)s --model=%(volume)s"
+        args2 = self._commonParams()
+        
+        volume = os.path.relpath(self.input3DReference.get().getFileName(), self._getExtraPath()).replace(":mrc","")
+        params = {'imgsFn': self._getParticlesStack(),
+                  'volume': volume,
+                  }
+        
+        args = args1 % params + args2
+        return args
+    
+    def _prepareContinueParams(self):
+        args1 = "--startfrom=refine_%02d" % (self._getRun() - 1)
+        args2 = self._commonParams()
+        args = args1 + args2
+        return args
+    
+    def _commonParams(self):
+        args = " --targetres=%(resol)f --speed=%(speed)d --sym=%(sym)s --iter=%(numberOfIterations)d"
         args += " --mass=%(molMass)f --apix=%(samplingRate)f --classkeep=%(classKeep)f"
         args += " --m3dkeep=%(m3dKeep)f --parallel=thread:%(threads)d --threads=%(threads)d"
         
-        samplingRate = self.inputParticles.get().getSamplingRate()
-        volume = os.path.relpath(self.input3DReference.get().getFileName(), self._getExtraPath()).replace(":mrc","")
-        params = {'imgsFn': self._getParticlesStack(),
-                  'resol': self.resol.get(),
+        samplingRate = self._getInputParticles().getSamplingRate()
+        params = {'resol': self.resol.get(),
                   'speed': int(self.getEnumText('speed')),
-                  'volume': volume,
                   'numberOfIterations': self.numberOfIterations.get(),
                   'sym': self.symmetry.get(),
                   'molMass': self.molMass.get(),
@@ -347,7 +369,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
                   'threads': self.numberOfThreads.get()
                   }
         args = args % params
-        
+         
         if self.doBreaksym:
             args += " --breaksym"
         if self.useE2make3d:
@@ -363,17 +385,22 @@ at each refinement step. The resolution you specify is a target, not the filter 
         return args
     
     def _getRun(self):
+        
         if not self.doContinue:
             return 1
         else:
-            return 2
+            files = sorted(glob(self.continueRun.get()._getExtraPath("refine*")))
+            if files:
+                f = files[-1]
+                refineNumber = int(f.split("_")[-1]) + 1
+            return refineNumber
     
     def _getBaseName(self, key, **args):
         """ Remove the folders and return the file from the filename. """
         return os.path.basename(self._getFileName(key, **args))
     
     def _getParticlesStack(self):
-        if not self.haveDataBeenPhaseFlipped and self.inputParticles.get().hasCTF():
+        if not self._isPhaseFlipped() and self._getInputParticles().hasCTF():
             return self._getFileName("partFlipSet")
         else:
             return self._getFileName("partSet")
@@ -409,7 +436,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
     def _getIterData(self, it):
         from convert import writeSqliteIterData
         data_sqlite = self._getFileName('data_scipion', iter=it)
-        partSet = self.inputParticles.get()
+        partSet = self._getInputParticles()
         if not exists(data_sqlite):
             clsFn = self._getFileName("cls", run=self._getRun(), iter=it)
             classesFn = self._getFileName("classes", run=self._getRun(), iter=it)
@@ -421,3 +448,13 @@ at each refinement step. The resolution you specify is a target, not the filter 
             proc.wait()
             writeSqliteIterData(partSet, data_sqlite, self._createItemMatrix, self._iterTextFile(it))
         return data_sqlite
+    
+    def _getInputParticles(self):
+        if self.doContinue and not self.inputParticles:
+            self.inputParticles.set(self.continueRun.get().inputParticles.get())
+        return self.inputParticles.get()
+
+    def _isPhaseFlipped(self):
+        if self.doContinue:
+            self.haveDataBeenPhaseFlipped.set(self.continueRun.get().haveDataBeenPhaseFlipped.get())
+        return self.haveDataBeenPhaseFlipped.get()

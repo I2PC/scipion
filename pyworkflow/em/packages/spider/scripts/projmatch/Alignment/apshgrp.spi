@@ -1,0 +1,154 @@
+; <html><head><title>Compute alignment parameters and optionally apply them</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/apshgrp.spi   
+;                   New                                 Nov 2004 ArDean Leith
+;                   Rewritten                           Feb 2005 ArDean Leith
+;                   Added alignment option & stack op   Nov 2006 ArDean Leith
+;                   SET MP location                     Feb 2008 ArDean Leith
+;                   VAR name                            Feb 2010 ArDean Leith
+;                   VAR names changed                   Dec 2010 ArDean Leith
+;
+; PURPOSE: Multi-reference alignment of an image series. 
+;          Sample images are aligned with reference projections via
+;          shifts (translations) and rotations.  
+;          FOR PROJECTS WITH MULTIPLE GROUPS- WITH OR WITHOUT PUBSUB.
+;
+;<b>------------ Edit next 7 Input parameters ------------------------------ 
+
+[pubsub]  = 0   ; If >0 use PubSub
+[doalign] = 1   ; If >0 apply alignment to images
+
+[shrange] = 8   ; Translation search range (must be divisible by step size)
+[step]    = 2   ; Translation step size
+
+[diam]    = 276 ; Diameter of object (Angstroms) for alignment search.
+                ;   (EDIT as needed!) Used to find last rotational alignment radius.
+
+[r1]      = 5   ; First rotation alignment ring, only radii > this will be analyzed
+[r2]      = 0   ; Last rotation ring (If zero, compute from object diameter)
+
+; ----------------- Input files --------------------------------------------
+
+[params]            = '../params'             ; Parameter setting file
+
+[defgrps]           = 'sel_group'             ; List of defocus groups (doc. file)
+
+[ref_images]        = 'projs/prj_{***[grp]}@' ; Reference images  
+
+[ref_images_angles] = 'refangles'             ; Reference images angles doc. file
+
+[unaligned_images]  = 'data{***[grp]}@'       ; Unaligned particles images 
+
+; ----------------- Output files ------------------------------------------------
+
+[align_parameters]  = 'align_01_{***[grp]}'   ; Alignment parameters doc. file 
+
+[aligned_images]    = 'dala01_{***[grp]}@'    ; Rotated, shifted (aligned) particles
+
+; ----------------- END BATCH HEADER ------------------------------------------- </b>
+
+MD
+TR OFF                                     ; Decrease results file output
+MD
+VB OFF                                     ; Decrease results file output
+MD
+() OFF                                     ; No () necessary in loops
+
+
+; DO NOT WORRY IF [grp] IS UNDEFINED HERE, IT IS TAKEN CARE OF BY PUBSUB
+IF ([grp] .GT. 0) [pubsub] = 0             ; Secondary PubSub run 
+
+UD N [numgrps]                             ; Get number of groups 
+[defgrps]                                  ; Groups selection file        (input)
+
+IF ([pubsub] .EQ. 0) THEN                  ; Main loop runs 'AP SH'
+                                           ; Used for Non-PubSub & PubSub runs 
+  
+   MD                 
+   SET MP                                  ; Use all processors (needed here for secondary runs)
+   0
+
+   ; Get rotational alignment radius from object size if needed 
+   IF ([r2].LE.0) THEN                       
+      UD 5,[sp_pixsiz]                     ; Get pixel size (A) 
+      [params]                             ; Reconstruction parameters   (input)
+ 
+      UD 17,[sp_winsiz]                    ; Get window size (pixels) 
+      [params]                             ; Reconstruction parameters   (input)
+
+      [r2] = INT([diam]/(2.0*[sp_pixsiz])) ; Object radius (pixels) for last alignment ring
+      [ring-sh] = [r2] + [shrange]         ; Last ring + translation range
+      [maxrad]  = INT([sp_winsiz]/2) - 2   ; Max. radius of object in window
+
+      IF ([ring-sh] .GE. [maxrad]) THEN
+         [r2] = [maxrad] - [shrange] - 1   ; Reduce radius of outer  ring to fit window
+      ENDIF
+   ENDIF
+
+   IF ([grp] .GT. 0) [numgrps] = 1    ; Group listed on command line, overides list        
+
+   DO  [numgrp]=1,[numgrps]           ; Loop over all group(s)
+
+      IF ([grp] .LT. 1) THEN          ; Group not on command line, use selection file        
+         UD [numgrp],[grp]            ; Get current group number 
+         [defgrps]                    ; Group selection file                  (input)
+      ENDIF
+
+      DE                              ; Delete existing  output doc. files.
+      [align_parameters]
+ 
+      FI H [numpart]                  ; Get number of particles 
+      [unaligned_images]              ; Unaligned particle images              (input)
+      MAXIM                           ; Max. image number in stack      
+
+      FI H [numproj]                  ; Get number of projections 
+      [ref_images]                    ; Reference images                       (input)
+      MAXIM                           ; Max. image number in stack      
+
+      VM
+      echo ' 'Aligning group: {****[grp]} with: {******[numpart]} particles  
+
+      AP SH                           ; Find Alignment using multiple references  
+      [ref_images]*****               ; Reference image file name template     (input)
+      (1-[numproj])                   ; List of reference images       
+      [shrange],[step]                ; Shift search range, step size  
+      [r1],[r2]                       ; First and last ring      
+      [ref_images_angles]             ; Ref. angles doc file                   (input)
+      [unaligned_images]*****         ; Unaligned particle images              (input)
+      (1-[numpart])                   ; List of particles  
+      *                               ; No unaligned particles align. doc file        
+      (0)                             ; No restriction on angular proj. search 
+      (1)                             ; Check mirrored positions
+      [align_parameters]              ; Alignment angles doc. file             (output)
+
+      IF ([doalign] .GT. 0) THEN
+         ; Apply alignment parameters to unaligned particles
+         ; Order in doc file: PHI,THETA,PSI, REF#,IMG#,  ROT,SX,SY
+
+         RT SQ                        ; Rotate & shift whole stack operation
+         [unaligned_images]           ; Unaligned particles stack              (input) 
+         [aligned_images]             ; Aligned particles stack                (output)
+         (6,0,7,8)                    ; Reg. numbers for angle, scale,& shifts
+         [align_parameters]           ; Alignment angles doc. file             (input)
+      ENDIF
+
+      MY FL                           ; Flush results file
+      [grp] = 0                       ; Reset default group for next group
+   ENDDO                              ; End loop for multiple groups
+    
+ELSE                                  ; Used only to intiate master PubSub run 
+   DO  [numgrp]=1,[numgrps]           ; Loop over all groups
+   
+       UD [numgrp],[grp]              ; Get current group number 
+       [defgrps]                      ; Group selection file                   (input)
+   
+       ; Create PubSub run for this group
+       VM                             ; Use PubSub to manage parallel processes   
+       publish './spider spi/$DATEXT @apshgrp {***[grp]} grp={***[grp]}'
+    ENDDO
+ENDIF
+
+EN                              
+
+; </body></pre></html>
+

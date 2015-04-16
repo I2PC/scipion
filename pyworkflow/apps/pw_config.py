@@ -46,30 +46,52 @@ def main():
         help=('Rewrite the configuration files using the original templates.'))
     options, args = parser.parse_args()
 
+    globalIsLocal = (os.environ['SCIPION_CONFIG'] ==
+                     os.environ['SCIPION_LOCAL_CONFIG'])  # if we used --config
+    if globalIsLocal:
+        localSections = []
+    else:
+        localSections = ['DIRS_LOCAL']
+
     try:
-        settingsDir = join(os.environ['SCIPION_HOME'], 'settings')
+        templatesDir = join(os.environ['SCIPION_HOME'], 'config', 'templates')
+        # Global installation configuration files.
         for fpath, tmplt in [
-                (os.environ['SCIPION_CONFIG'], 'scipion.conf'),
-                (os.environ['SCIPION_PROTOCOLS'], 'protocols.conf'),
-                (os.environ['SCIPION_HOSTS'], 'hosts.conf')]:
+                (os.environ['SCIPION_CONFIG'], 'scipion'),
+                (os.environ['SCIPION_PROTOCOLS'], 'protocols'),
+                (os.environ['SCIPION_HOSTS'], 'hosts')]:
             if not exists(fpath) or options.overwrite:
-                createConf(fpath, join(settingsDir, tmplt))
+                createConf(fpath, join(templatesDir, tmplt + '.template'),
+                           remove=localSections)
             else:
-                checkConf(fpath, join(settingsDir, tmplt))
+                checkConf(fpath, join(templatesDir, tmplt + '.template'),
+                          remove=localSections)
+
+        if not globalIsLocal:  # which is normally the case
+            # Local user configuration files (well, only "scipion.conf").
+            if not exists(os.environ['SCIPION_LOCAL_CONFIG']):
+                #  It might make sense to add   "or options.overwrite" ...
+                createConf(os.environ['SCIPION_LOCAL_CONFIG'],
+                           join(templatesDir, 'scipion.template'),
+                           keep=localSections)
+            else:
+                checkConf(os.environ['SCIPION_LOCAL_CONFIG'],
+                          join(templatesDir, 'scipion.template'),
+                          keep=localSections)
+
         # After all, check some extra things are fine in scipion.conf
         checkPaths(os.environ['SCIPION_CONFIG'])
-        # TODO: say that we are checking scipion.conf, and be more
-        # nice to the user.
     except Exception:
         # This way of catching exceptions works with Python 2 & 3
         sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
         sys.exit(1)
 
 
-def createConf(fpath, ftemplate):
+def createConf(fpath, ftemplate, remove=[], keep=[]):
     "Create config file in fpath following the template in ftemplate"
+    # Remove from the template the sections in "remove", and if "keep"
+    # is used only keep those sections.
     dname = dirname(fpath)
-    print('')
     if not exists(dname):
         os.makedirs(dname)
     elif exists(fpath):
@@ -79,32 +101,67 @@ def createConf(fpath, ftemplate):
                       '%s.%d' % (basename(fpath), int(time.time())))
         print('* Creating backup: %s' % backup)
         os.rename(fpath, backup)
-    print('* Creating local configuration file: %s' % fpath)
-    open(fpath, 'w').write(open(ftemplate).read())  # cp ftemplate fpath
-    print('Edit it to reflect the configuration of your system.')
+    print('* Creating configuration file: %s' % fpath)
+    cf = ConfigParser()
+    cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    assert cf.read(ftemplate) != [], 'Missing file: %s' % ftemplate
+    for section in set(remove) - set(keep):
+        cf.remove_section(section)
+    if keep:
+        for section in set(cf.sections()) - set(keep):
+            cf.remove_section(section)
+    cf.write(open(fpath, 'w'))
+    print('Please edit it to reflect the configuration of your system.\n')
 
 
 def checkPaths(conf):
     "Check that some paths in the config file actually make sense"
+    print('Checking paths in %s ...' % conf)
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    assert cf.read(conf) != [], 'Missing file %s' % conf
+    assert cf.read(conf) != [], 'Missing file: %s' % conf
+    get = lambda x: cf.get('BUILD', x)  # short notation
+    allOk = True
     for var in ['MPI_LIBDIR', 'MPI_INCLUDE', 'MPI_BINDIR',
                 'JAVA_HOME', 'JAVA_BINDIR']:
-        path = cf.get('BUILD', var)
-        if not os.path.isdir(path):
-            print('Path to %s (%s) should exist but it does not.' % (var, path))
-    # TODO: also check that some libraries and header files are actually there.
+        if not os.path.isdir(get(var)):
+            print("  Path to %s (%s) should exist but it doesn't." %
+                  (var, get(var)))
+            allOk = False
+    for fname in [join(get('JAVA_BINDIR'), 'java'),
+                  get('JAVAC'), get('JAR'),
+                  join(get('MPI_BINDIR'), get('MPI_CC')),
+                  join(get('MPI_BINDIR'), get('MPI_CXX')),
+                  join(get('MPI_BINDIR'), get('MPI_LINKERFORPROGRAMS')),
+                  join(get('MPI_INCLUDE'), 'mpi.h')]:
+        if not exists(fname):
+            print("  Cannot find file: %s" % fname)
+            allOk = False
+    if allOk:
+        print("All seems fine with %s" % conf)
+    else:
+        print("Errors found. Please edit %s and check again." % conf)
 
 
-def checkConf(fpath, ftemplate):
+def checkConf(fpath, ftemplate, remove=[], keep=[]):
     "Check that all the variables in the template are in the config file too"
+    # Remove from the checks the sections in "remove", and if "keep"
+    # is used only check those sections.
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     assert cf.read(fpath) != [], 'Missing file %s' % fpath
     ct = ConfigParser()
     ct.optionxform = str
     assert ct.read(ftemplate) != [], 'Missing file %s' % ftemplate
+
+    # Keep only the sections we want to compare from the files.
+    for section in set(remove) - set(keep):
+        ct.remove_section(section)
+        cf.remove_section(section)
+    if keep:
+        for section in set(ct.sections()) - set(keep):
+            ct.remove_section(section)
+            cf.remove_section(section)
 
     df = dict([(s, set(cf.options(s))) for s in cf.sections()])
     dt = dict([(s, set(ct.options(s))) for s in ct.sections()])
