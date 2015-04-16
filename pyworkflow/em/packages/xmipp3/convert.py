@@ -24,7 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 """
 This module contains converter functions that will serve to:
 1. Write from base classes to Xmipp specific files
@@ -32,15 +31,16 @@ This module contains converter functions that will serve to:
 """
 
 import os
+from os.path import join, dirname
 from collections import OrderedDict
 from itertools import izip
 import numpy
 
 import xmipp
+from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 from xmipp3 import XmippMdRow, getLabelPythonType, RowMetaData
 from pyworkflow.em import *
-from pyworkflow.utils.path import join, dirname, replaceBaseExt, removeExt,\
-    findRootFrom
+from pyworkflow.utils.path import replaceBaseExt, removeExt, findRootFrom
 
 
 # This dictionary will be used to map
@@ -1100,14 +1100,12 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
 
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
-    from numpy import rad2deg
     if inverseTransform:
-        from numpy.linalg import inv
-        matrix = inv(matrix)
+        matrix = numpy.linalg.inv(matrix)
         shifts = -translation_from_matrix(matrix)
     else:
         shifts = translation_from_matrix(matrix)
-    angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
+    angles = -numpy.rad2deg(euler_from_matrix(matrix, axes='szyz'))
     return shifts, angles
 
 
@@ -1116,14 +1114,12 @@ def matrixFromGeometry(shifts, angles, inverseTransform):
     2D shifts in X and Y...and the 3 euler angles.
     """
     from pyworkflow.em.transformations import euler_matrix
-    from numpy import deg2rad
-    radAngles = -deg2rad(angles)
+    radAngles = -numpy.deg2rad(angles)
 
     M = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
     if inverseTransform:
-        from numpy.linalg import inv
         M[:3, 3] = -shifts[:3]
-        M = inv(M)
+        M = numpy.linalg.inv(M)
     else:
         M[:3, 3] = shifts[:3]
 
@@ -1154,7 +1150,7 @@ def rowToAlignment(alignmentRow, alignType):
             psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             rot = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
             if rot !=0. and psi !=0:
-                print "HORROR rot and psi are different from zero"
+                print "HORROR rot and psi are different from zero in 2D case"
             angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.) +\
                         alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
         flip = alignmentRow.getValue(xmipp.MDL_FLIP)
