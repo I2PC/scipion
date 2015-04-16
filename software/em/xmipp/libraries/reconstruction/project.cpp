@@ -953,6 +953,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
      */
 #endif
 
+    bool existFlip = false;
     int projIdx=FIRST_IMAGE;
     FileName fn_proj;              // Projection name
     RealShearsInfo *Vshears=NULL;
@@ -969,6 +970,12 @@ int PROJECT_Effectively_project(const FileName &fnOut,
     else
         createEmptyFile(fn_proj, prm.proj_Xdim, prm.proj_Ydim,
                         1, side.DF.size(), true,WRITE_OVERWRITE);
+
+    std::cout << SF << std::endl;
+
+    if (side.DF.containsLabel(MDL_FLIP))
+    	existFlip = true;
+
     FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
         size_t DFmov_objId=SF.addObject();
@@ -979,6 +986,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
 
         // Choose angles .....................................................
         double rot, tilt, psi, x=0, y=0;    // Actual projecting angles
+        bool flip;
         side.DF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         side.DF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
         side.DF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
@@ -987,9 +995,28 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         if (side.DF.containsLabel(MDL_SHIFT_Y))
         	side.DF.getValue(MDL_SHIFT_Y,y,__iter.objId);
 
-        SF.setValue(MDL_ANGLE_ROT,realWRAP(rot, 0, 360),DFmov_objId);
-        SF.setValue(MDL_ANGLE_TILT,realWRAP(tilt, 0, 360),DFmov_objId);
-        SF.setValue(MDL_ANGLE_PSI,realWRAP(psi, 0, 360),DFmov_objId);
+        realWRAP(rot, 0, 360);
+        realWRAP(tilt, 0, 360);
+        realWRAP(psi, 0, 360);
+
+        if (existFlip)
+        {
+        	side.DF.getValue(MDL_FLIP,flip,__iter.objId);
+
+        	if (flip==true)
+        	{
+        		double nrot, ntilt, npsi;
+        		Euler_mirrorX(rot, tilt, psi, nrot, ntilt, npsi);
+        		Euler_mirrorY(nrot, ntilt, npsi, nrot, ntilt, npsi);
+        		rot = nrot;
+        		tilt = ntilt;
+        		psi = npsi;
+        	}
+        }
+
+        SF.setValue(MDL_ANGLE_ROT,rot,DFmov_objId);
+        SF.setValue(MDL_ANGLE_TILT,tilt,DFmov_objId);
+        SF.setValue(MDL_ANGLE_PSI,psi,DFmov_objId);
 
         if ((NumProjs % XMIPP_MAX(1, side.DF.size() / 60)) == 0)
             progress_bar(NumProjs);
