@@ -353,9 +353,10 @@ xmippTest = env.AddJavaLibrary(
 #env.Default(pluginLink)
 
 
-# For any yet unkown issue, using the environment used for the rest of the SCons is imposible to compile java code
-# FIXME: Its needed to guess why and correct this. In the meanwhile we'll use an alternative environment
-env2 = Environment()
+# FIXME: the environment used for the rest of SCons is imposible to
+# use to compile java code. Why?
+# In the meanwhile we'll use an alternative environment.
+env2 = Environment(ENV=os.environ)
 env2.AppendUnique(JAVACLASSPATH='"%s/*"' % dpath('java/lib'))
 javaExtraFileTypes = env2.Java(epath('java/build/HandleExtraFileTypes.class'),
                                fpath('java/src/HandleExtraFileTypes.java'))
