@@ -151,7 +151,7 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
         
         def script(name, paramsDict={}):
             outputScript=join(refPath, name)
-            writeScript(getScript('projmatch', 'Refinement',name), outputScript, paramsDict)
+            writeScript(getScript('projmatch', 'Refinement', name), outputScript, paramsDict)
             
         nIter = self.numberOfIterations.get()
         
