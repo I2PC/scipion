@@ -371,13 +371,7 @@ public class GalleryData {
             loadClassesInfo();
         }
 
-        if (isRotSpectraMd() && mode == Mode.GALLERY_ROTSPECTRA) {
-            if (zoom == 0) {
-                zoom = 100;
-            }
-            return;
-        }
-
+        
         if (!md.isColumnFormat() ) {
             mode = Mode.TABLE_MD;
             if (zoom == 0) {
