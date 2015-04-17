@@ -142,14 +142,14 @@
    ENDDO
    UD E                    ; Finished with incore doc file
 
+   ; Consolidate data for CTF corrections
+   @mergegroups([pixsiz],[iter],[ampenhance],[r2])
+
    VM
      echo " Iteration: {**[iter]} Excessive proj. ang. changes in: {***[num-big]} groups"
  
    ; If projection angular changes small in all groups, can stop now
    IF([num-big].EQ.0) EXIT  
-
-   ; Consolidate data for CTF corrections
-   @mergegroups([pixsiz],[iter],[ampenhance],[r2])
 
    DE                       ; Delete vft file.
      [iter_vft]             ; Current iteration Fourier vol   (removed)
