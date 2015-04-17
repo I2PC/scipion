@@ -252,8 +252,6 @@ public class GalleryData {
 //                if(renderLabel.equals("first") && isScipionInstance())
 //                    renderImages = false;
             }
-            else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
-                mode = Mode.GALLERY_ROTSPECTRA;
         if(parameters.getBlock().equals(selectedBlock))
         {
         
@@ -373,13 +371,7 @@ public class GalleryData {
             loadClassesInfo();
         }
 
-        if (isRotSpectraMd() && mode == Mode.GALLERY_ROTSPECTRA) {
-            if (zoom == 0) {
-                zoom = 100;
-            }
-            return;
-        }
-
+        
         if (!md.isColumnFormat() ) {
             mode = Mode.TABLE_MD;
             if (zoom == 0) {
@@ -674,8 +666,7 @@ public class GalleryData {
                     }
 
                     return new MetadataTableModel(this);
-                case GALLERY_ROTSPECTRA:
-                    return new RotSpectraGalleryTableModel(this);
+                
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -738,9 +729,7 @@ public class GalleryData {
         return md.isColumnFormat();
     }
 
-    public boolean isRotSpectraMode() {
-        return mode == Mode.GALLERY_ROTSPECTRA;
-    }
+    
 
     public boolean isMicrographsMode() {
         return md.containsMicrographsInfo();
@@ -751,8 +740,7 @@ public class GalleryData {
         if (isGalleryMode()) {
             mode = Mode.TABLE_MD;
            
-        } else if (isRotSpectraMd() && parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
-            mode = Mode.GALLERY_ROTSPECTRA;
+        } 
         else if ( isVolumeMd) 
             mode = Mode.GALLERY_VOL;
         else
