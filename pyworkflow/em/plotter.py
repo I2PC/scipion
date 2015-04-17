@@ -26,9 +26,11 @@
 """
 This module implement the classes to create plots on xmipp.
 """
-from pyworkflow.gui.plotter import Plotter
 from itertools import izip
 import matplotlib.pyplot as plt 
+
+import pyworkflow.em.metadata as md
+from pyworkflow.gui.plotter import Plotter
 
 
 
@@ -53,7 +55,27 @@ class EmPlotter(Plotter):
             a = self.createSubPlot(title, 'Empty plot', '', projection='polar')
             for r, t in izip(rot, tilt):
                 a.plot(r, t, markerfacecolor=color, marker='.', markersize=10)
-      
+                
+    def plotAngularDistributionFromMd(self, mdFile, title, **kwargs):
+        """ Read the values of rot, tilt and weights from
+        the medata and plot the angular distribution.
+        In the metadata:
+            rot: MDL_ANGLE_ROT
+            tilt: MDL_ANGLE_TILT
+            weight: MDL_WEIGHT
+        """
+        angMd = md.MetaData(mdFile)
+        rot = []
+        tilt = []
+        weight = []
+        
+        for row in md.iterRows(angMd):
+            rot.append(row.get(md.MDL_ANGLE_ROT))
+            tilt.append(row.get(md.MDL_ANGLE_TILT))
+            weight.append(row.get(md.MDL_WEIGHT))
+            
+        return self.plotAngularDistribution(title, rot, tilt, weight, **kwargs)
+        
     def plotHist(self, yValues, nbins, color='blue', **kwargs):
         """ Create an histogram. """
         self.hist(yValues, nbins, facecolor=color, **kwargs)
