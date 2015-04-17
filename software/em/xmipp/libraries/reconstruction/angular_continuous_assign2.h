@@ -27,6 +27,7 @@
 #define _PROG_ANGULAR_PREDICT_CONTINUOUS2
 
 #include <data/xmipp_program.h>
+#include <data/ctf.h>
 #include "fourier_projection.h"
 #include "fourier_filter.h"
 
@@ -63,6 +64,8 @@ public:
     bool optimizeAngles;
     // Apply transformation to this image
     String originalImageLabel;
+    // Phase Flipped
+    bool phaseFlipped;
 public:
     // 2D mask in real space
     MultidimArray<int> mask2D;
@@ -86,6 +89,10 @@ public:
     double old_rot, old_tilt, old_psi;
     // Original shift
 	double old_shiftX, old_shiftY;
+	// Has CTF
+	bool hasCTF;
+	// CTF
+	CTFDescription ctf;
 public:
     /// Empty constructor
     ProgAngularContinuousAssign2();

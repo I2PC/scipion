@@ -44,11 +44,6 @@ from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAM
 
 #Continuar un procesamiento anterior
 #Criterio de convergencia
-#Phase flipping interno para poder corregir por el desenfoque
-#Hacer local a partir de una resolucion
-#Global hasta una resolucion
-#FSC as a filter to avoid overfitting
-#Jumper weight
         
 class XmippProtReconstructHighRes(ProtRefine3D):
     """Reconstruct a volume at high resolution"""
@@ -602,6 +597,8 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                     args+=" --optimizeScale --max_scale %f"%self.contMaxScale.get() 
                 if self.contAngles:
                     args+=" --optimizeAngles --max_angular_change %f"%maxAngle
+                if self.phaseFlipped:
+                    args+=" --phaseFlipped"
                 self.runJob("xmipp_angular_continuous_assign2",args)
                 self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnLocalStk,R))
                 # COSS: Falta continuous con CTF y flipped y gray

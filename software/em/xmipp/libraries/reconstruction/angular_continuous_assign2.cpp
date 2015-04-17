@@ -57,6 +57,7 @@ void ProgAngularContinuousAssign2::readParams()
     optimizeScale = checkParam("--optimizeScale");
     optimizeAngles = checkParam("--optimizeAngles");
     originalImageLabel = getParam("--applyTo");
+    phaseFlipped = checkParam("--phaseFlipped");
 }
 
 // Show ====================================================================
@@ -79,6 +80,7 @@ void ProgAngularContinuousAssign2::show()
     << "Optimize scale:      " << optimizeScale      << std::endl
     << "Optimize angles:     " << optimizeAngles     << std::endl
     << "Apply to:            " << originalImageLabel << std::endl
+    << "Phase flipped:       " << phaseFlipped       << std::endl
     ;
 }
 
@@ -104,6 +106,7 @@ void ProgAngularContinuousAssign2::defineParams()
     addParamsLine("  [--optimizeScale]            : Optimize scale");
     addParamsLine("  [--optimizeAngles]           : Optimize angles");
     addParamsLine("  [--applyTo <label=image>]    : Which is the source of images to apply the final transformation");
+    addParamsLine("  [--phaseFlipped]             : Input images have been phase flipped");
     addExampleLine("A typical use is:",false);
     addExampleLine("xmipp_angular_continuous_assign2 -i anglesFromDiscreteAssignment.xmd --ref reference.vol -o assigned_angles.xmd");
 }
@@ -143,12 +146,16 @@ void ProgAngularContinuousAssign2::preProcess()
     A.initIdentity(3);
 }
 
-double tranformImage(FourierProjector &projector, double rot, double tilt, double psi,
+double tranformImage(FourierProjector &projector, double rot, double tilt, double psi, bool hasCTF, CTFDescription &ctf, double Ts,
 		Projection &P, const MultidimArray<double> &I, const MultidimArray<double> &Ifiltered,
 		MultidimArray<double> &Ip, MultidimArray<double> &Ifilteredp, MultidimArray<double> &E,
 		const MultidimArray<int> &mask2D, double iMask2Dsum, double a, double b, Matrix2D<double> &A, int degree)
 {
     projectVolume(projector, P, (int)XSIZE(I), (int)XSIZE(I),  rot, tilt, psi);
+    if (hasCTF)
+    {
+    	ctf.applyCTF(P(),Ts);
+    }
 
     double cost=0;
 	applyGeometry(degree,Ip,I,A,IS_NOT_INV,DONT_WRAP,0.);
@@ -177,8 +184,8 @@ double tranformImage(FourierProjector &projector, double rot, double tilt, doubl
 
 double L1cost(double *x, void *_prm)
 {
-	double a=x[1];
-	double b=x[2];
+	double a=x[2];
+	double b=x[1];
 	double deltax=x[3];
 	double deltay=x[4];
 	double scalex=x[5];
@@ -193,17 +200,20 @@ double L1cost(double *x, void *_prm)
 		return 1e38;
 	if (fabs(deltaRot)>prm->maxAngularChange || fabs(deltaTilt)>prm->maxAngularChange || fabs(deltaPsi)>prm->maxAngularChange)
 		return 1e38;
+	if (fabs(a-1)>0.1)
+		return 1e38;
 	MAT_ELEM(prm->A,0,0)=1+scalex;
 	MAT_ELEM(prm->A,1,1)=1+scaley;
 	MAT_ELEM(prm->A,0,2)=prm->old_shiftX+deltax;
 	MAT_ELEM(prm->A,1,2)=prm->old_shiftY+deltay;
 	return tranformImage(*prm->projector,prm->old_rot+deltaRot, prm->old_tilt+deltaTilt, prm->old_psi+deltaPsi,
+			prm->hasCTF, prm->ctf, prm->Ts,
 			prm->P, prm->I(), prm->Ifiltered(), prm->Ip(), prm->Ifilteredp(), prm->E(),
 			prm->mask2D, prm->iMask2Dsum, a, b, prm->A, LINEAR);
 }
 
 // Predict =================================================================
-//#define DEBUG
+#define DEBUG
 void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     rowOut=rowIn;
@@ -229,6 +239,13 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		rowIn.getValue(MDL_CONTINUOUS_Y,old_contShiftY);
 	}
 
+	if (rowIn.containsLabel(MDL_CTF_DEFOCUSU) || rowIn.containsLabel(MDL_CTF_MODEL))
+	{
+		hasCTF=true;
+		ctf.readFromMdRow(rowIn);
+		ctf.produceSideInfo();
+	}
+
 	I.read(fnImg);
 	I().setXmippOrigin();
 
@@ -236,16 +253,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     filter.applyMaskSpace(Ifiltered());
 
     Matrix1D<double> p(9), steps(9);
-    p(0)=old_grayA; // a in I'=a*I+b
-    p(1)=old_grayB; // b in I'=a*I+b
-    if (optimizeGrayValues && !rowIn.containsLabel(MDL_CONTINUOUS_GRAY_A))
-	{
-        double Iavg, Istd, Pavg, Pstd;
-        I().computeAvgStdev(Iavg,Istd);
-        P().computeAvgStdev(Pavg,Pstd);
-		p(0)=Pstd/Istd;
-		p(1)=Pavg-Iavg;
-	}
+    p(1)=old_grayA; // a in I'=a*I+b
+    p(0)=old_grayB; // b in I'=a*I+b
     p(2)=old_contShiftX;
     p(3)=old_contShiftY;
     p(4)=old_scaleX;
@@ -269,7 +278,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			steps(4)=steps(5)=1.;
 		if (optimizeAngles)
 			steps(6)=steps(7)=steps(8)=1.;
-		powellOptimizer(p, 1, 9, &L1cost, this, 0.01, cost, iter, steps, false);
+		powellOptimizer(p, 1, 9, &L1cost, this, 0.01, cost, iter, steps, true);
 		if (cost>1e30)
 			rowOut.setValue(MDL_ENABLED,-1);
 
@@ -297,6 +306,11 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			A(0,2)*=-1;
 		}
 		applyGeometry(BSPLINE3,Ip(),I(),A,IS_NOT_INV,DONT_WRAP);
+		MultidimArray<double> &mIp=Ip();
+		double a=p(1);
+		double b=p(0);
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mIp)
+			DIRECT_MULTIDIM_ELEM(mIp,n)=a*DIRECT_MULTIDIM_ELEM(mIp,n)+b;
 
 		Ip.write(fnImgOut);
 	}

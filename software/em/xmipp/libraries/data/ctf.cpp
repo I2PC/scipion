@@ -505,7 +505,7 @@ void CTFDescription::lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> 
 #undef DEBUG
 
 /* Apply the CTF to an image ----------------------------------------------- */
-void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI, double Ts)
+void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI, double Ts, bool absPhase)
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
@@ -520,17 +520,19 @@ void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI, doub
         FFT_idx2digfreq(FFTI, idx, freq);
         precomputeValues(XX(freq)*iTs, YY(freq)*iTs);
         double ctf = getValueAt();
+        if (absPhase)
+        	ctf=fabs(ctf);
         A2D_ELEM(FFTI, i, j) *= ctf;
     }
 }
 
-void CTFDescription::applyCTF(MultidimArray <double> &I, double Ts)
+void CTFDescription::applyCTF(MultidimArray <double> &I, double Ts, bool absPhase)
 {
 	FourierTransformer transformer;
 	MultidimArray<double> FFTI;
 	transformer.setReal(I);
 	transformer.FourierTransform();
-	applyCTF(transformer.fFourier, Ts);
+	applyCTF(transformer.fFourier, Ts, absPhase);
 	transformer.inverseFourierTransform();
 }
 
