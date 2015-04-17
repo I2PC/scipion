@@ -325,14 +325,15 @@ class ProtocolViewer(Protocol, Viewer):
         volSet.setSamplingRate(samplingRate)
 
         for volFn in files:
-                    vol = Volume()
-                    vol.setFileName(volFn)
-                    volSet.append(vol)
+            vol = Volume()
+            vol.setFileName(volFn)
+            volSet.append(vol)
         volSet.write()
+        volSet.close()
+        
         return volSet
     
-    def createAngDistributionSqlite(self, sqliteFn,
-                                    itemDataIterator=None):
+    def createAngDistributionSqlite(self, sqliteFn, numberOfParticles, itemDataIterator):
         import pyworkflow.em.metadata as md
         if not os.path.exists(sqliteFn):
             projectionList = [] # List of list of 3 elements containing angleTilt, anglePsi, weight
@@ -346,13 +347,15 @@ class ProtocolViewer(Protocol, Viewer):
                         return projection
                 return None            
             
-            for angleRot, angleTilt, parts in itemDataIterator:
+            weight = 1./numberOfParticles
+            
+            for angleRot, angleTilt in itemDataIterator:
     #             print "angleTilt, anglePsi, parts", angleTilt, anglePsi, parts
                 projection = getCloseProjection(angleRot, angleTilt)
                 if projection is None:
-                    projectionList.append([angleRot, angleTilt, 1./parts])
+                    projectionList.append([angleRot, angleTilt, weight])
                 else:
-                    projection[2] = projection[2] + 1./parts
+                    projection[2] = projection[2] + weight
             
             mdProj = md.MetaData()
             
