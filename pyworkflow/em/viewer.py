@@ -232,7 +232,7 @@ class ChimeraClientView(View):
         if self._kwargs.get('showProjection', False):
             ChimeraProjectionClient(self._inputFile, **self._kwargs)
         else:
-            ChimeraClient(self._inputFile, **self._kwargs)
+            ChimeraAngDistClient(self._inputFile, **self._kwargs)
 
 
 class ChimeraDataView(ChimeraClientView):
@@ -356,8 +356,13 @@ class ChimeraAngDistClient(ChimeraClient):
 
     def __init__(self, volfile, **kwargs):
         self.angularDistFile = kwargs.get('angularDistFile', None)
-        if self.angularDistFile and not (os.path.exists(self.angularDistFile) or md.existsBlockInMetaDataFile(self.angularDistFile)):#check blockname:
-            raise Exception("Path %s does not exists"%self.angularDistFile)
+        
+        if self.angularDistFile:
+            fileName = self.angularDistFile
+            if '@' in self.angularDistFile:
+                fileName = self.angularDistFile.split("@")[1]
+            if not (os.path.exists(fileName)):#check blockname:
+                raise Exception("Path %s does not exists"%self.angularDistFile)
         self.spheresColor = kwargs.get('spheresColor', 'red')
         spheresDistance = kwargs.get('spheresDistance', None)
         spheresMaxRadius = kwargs.get('spheresMaxRadius', None)
@@ -414,7 +419,6 @@ class ChimeraAngDistClient(ChimeraClient):
             y = y * self.spheresDistance + y2
             z = z * self.spheresDistance + z2
             command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheresColor)
-
             self.angulardist.append(command)
             #printCmd(command)
 
@@ -527,6 +531,7 @@ class ChimeraVirusClient(ChimeraClient):
 class ChimeraProjectionClient(ChimeraAngDistClient):
     
     def __init__(self, volfile, **kwargs):
+        print("on chimera projection client")
         ChimeraAngDistClient.__init__(self, volfile, **kwargs)
         self.projection = xmipp.Image()
         self.projection.setDataType(md.DT_DOUBLE)
