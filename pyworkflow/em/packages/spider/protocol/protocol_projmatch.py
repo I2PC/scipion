@@ -329,7 +329,7 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
         return ['Penczek1992']
     
     def _methods(self):
-        msg  = "Input particles %s " % self.getObjectTag('inputParticles')
+        msg  = "\nInput particles %s " % self.getObjectTag('inputParticles')
         msg += "were subjected to refinement of orientations ([Penczek1992]) "
         msg += "for %s iterations " % self.numberOfIterations
         msg += "using %s as an initial reference. " % self.getObjectTag('input3DReference')
