@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.eman2.viewer import ANGDIST_CHIMERA
 """
 This module implement the wrappers around xmipp_showj
 visualization program.
@@ -100,18 +101,19 @@ Examples:
                       label='Display angular distribution',
                       help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                            '*chimera*: display angular distribution using Chimera with red spheres.') 
+        group.addParam('spheresScale', params.IntParam, default=-1, 
+                       condition="displayAngDist == %d" % ANGDIST_CHIMERA,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       label='Spheres size',
+                       help='')
 
         group = form.addGroup('Volumes')
         group.addParam('displayVol', params.EnumParam, 
                        choices=['slices', 'chimera'], 
-                      default=VOLUME_SLICES, display=params.EnumParam.DISPLAY_HLIST, 
-                      label='Display volume with',
-                      help='*slices*: display volumes as 2D slices along z axis.\n'
-                           '*chimera*: display volumes as surface with Chimera.')
-        group.addParam('spheresScale', params.IntParam, default=-1, 
-                      expertLevel=params.LEVEL_ADVANCED,
-                      label='Spheres size',
-                      help='')
+                       default=VOLUME_SLICES, display=params.EnumParam.DISPLAY_HLIST, 
+                       label='Display volume with',
+                       help='*slices*: display volumes as 2D slices along z axis.\n'
+                            '*chimera*: display volumes as surface with Chimera.')
         group.addParam('showVolumes', params.EnumParam, default=VOL,
                        choices=['reconstructed', 'half1', 'half2', 'filtered'],
                        label='Volume to visualize',
@@ -184,12 +186,16 @@ Examples:
         
         return [self.getObjectView(volSqlite)]
         
-    def getVolumeNames(self):
+    def getVolumeNames(self, it=None):
+        """ If it is not none, return the volume of this iteration only. """
+        if it is None:
+            iterations = self._getIterations()
+        else:
+            iterations = [it]
+            
         volTemplate = VOLNAMES[self.showVolumes.get()]
-        volumes = [self._getFinalPath(volTemplate % it) + '.stk'
-                   for it in self._getIterations()]
-        
-        print "getVolumeNames: ", volumes
+        volumes = [self._getFinalPath(volTemplate % i) + '.stk'
+                   for i in iterations]
         
         return volumes
 
@@ -294,19 +300,31 @@ Examples:
                 yield values[1], values[2]
             fscDoc.close()
         
-    def _displayAngDist(self):
+    def _displayAngDist(self, *args):
         iterations = self._getIterations()
         nparts = self.protocol.inputParticles.get().getSize()
         views = []
         
-        for it in iterations:
+        if self.displayAngDist == ANGDIST_2DPLOT:
+            for it in iterations:
+                anglesSqlite = self._getFinalPath('angular_dist_%03d.sqlite' % it)
+                title = 'Angular distribution iter %03d' % it
+                plotter = EmPlotter(x=1, y=1, windowTitle=title)
+                self.createAngDistributionSqlite(anglesSqlite, nparts, 
+                                                 itemDataIterator=self._iterAngles(it))
+                plotter.plotAngularDistributionFromMd(anglesSqlite, title)
+                views.append(plotter)
+        else:
+            it = iterations[-1]
+            print "Using last iteration: ", it
             anglesSqlite = self._getFinalPath('angular_dist_%03d.sqlite' % it)
-            title = 'Angular distribution iter %03d' % it
-            plotter = EmPlotter(x=1, y=1, windowTitle=title)
             self.createAngDistributionSqlite(anglesSqlite, nparts, 
-                                             itemDataIterator=self._iterAngles(it))
-            plotter.plotAngularDistributionFromMd(anglesSqlite, title)
-            views.append(plotter)
+                                                 itemDataIterator=self._iterAngles(it))
+            volumes = self.getVolumeNames(it)
+            views.append(em.ChimeraClientView(volumes[0], 
+                                              showProjection=True, 
+                                              angularDistFile=anglesSqlite, 
+                                              spheresDistance=2))#self.spheresScale.get()))
             
         return views
     
