@@ -420,21 +420,6 @@ Examples:
             
         return refs
     
-    def _plotter(self, xplotter, title, sqliteFn):
-        import pyworkflow.em.metadata as md
-        # Create Angular plot for one iteration
-        rot = []
-        tilt = []
-        weight = []
-        
-        mdProj = md.MetaData(sqliteFn)
-        for objId in mdProj:
-            rot.append(mdProj.getValue(md.MDL_ANGLE_ROT, objId))
-            tilt.append(mdProj.getValue(md.MDL_ANGLE_TILT, objId))
-            weight.append(mdProj.getValue(md.MDL_WEIGHT, objId))
-        
-        xplotter.plotAngularDistribution(title, rot, tilt, weight)
-    
     def _getGridSize(self, n=None):
         """ Figure out the layout of the plots given the number of references. """
         if n is None:
