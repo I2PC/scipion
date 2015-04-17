@@ -140,24 +140,26 @@ Examples:
                       label='Display angular distribution',
                       help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                            '*chimera*: display angular distribution using Chimera with red spheres.')
-        group.addParam('showBFactorCorrectedVolume', LabelParam, default=False,
-                       label='Show a b_factor corrected volume',
-                       help=""" This utility boost up the high frequencies. Do not use the automated 
-                            mode [default] for maps with resolutions lower than 12-15 Angstroms.
-                            It does not make sense to apply the Bfactor to the firsts iterations
-                            see http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor.
-                            NOTE: bfactor will be applied ONLY to the reconstructed volumes NOT to
-                            the reference ones
-                            """)
-        group.addParam('maxRes', FloatParam, default=12, 
-                      condition='showBFactorCorrectedVolume',
-                      label='Maximum resolution to apply B-factor (in Angstroms)')
-        group.addParam('correctBfactorExtraCommand', StringParam, default='--auto',
-                       condition='showBFactorCorrectedVolume', 
-                       label='User defined flags for the correct_bfactor program',
-                       help=""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
-                            for details. DEFAULT behaviour is --auto
-                            """)
+#         group.addParam('showBFactorCorrectedVolume', LabelParam, default=False,
+#                        label='Show a b_factor corrected volume',
+#                        help=""" This utility boost up the high frequencies. Do not use the automated 
+#                             mode [default] for maps with resolutions lower than 12-15 Angstroms.
+#                             It does not make sense to apply the Bfactor to the firsts iterations
+#                             see http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor.
+#                             NOTE: bfactor will be applied ONLY to the reconstructed volumes NOT to
+#                             the reference ones
+#                             """)
+#         group.addParam('maxRes', FloatParam, default=12, 
+#                       condition='showBFactorCorrectedVolume',
+#                       label='Maximum resolution to apply B-factor (in Angstroms)')
+#         group.addParam('correctBfactorExtraCommand', StringParam, default='--auto',
+#                        condition='showBFactorCorrectedVolume', 
+#                        label='User defined flags for the correct_bfactor program',
+#                        help=""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
+#                             for details. DEFAULT behaviour is --auto
+#                             """)
+
+        group = form.addGroup('Resolution')
 
         group.addParam('showResolutionPlots', LabelParam, default=True,
                       label='Display resolution plots (FSC)',
@@ -386,8 +388,6 @@ Examples:
 #===============================================================================
 # Show Library, Classes and Images
 #===============================================================================
-
-
     def _showLibraryOrClasses(self, paramName=None):
         choice = self.displayLibraryOrClasses.get()
         print choice
@@ -397,7 +397,6 @@ Examples:
             return self._showProjMatchClasses(paramName)
         else:
             return self._showProjMatchLibAndClasses(paramName)
-
 
     def _showProjMatchLibrary(self, paramName=None):
         print '_show library'
@@ -592,24 +591,10 @@ Examples:
                 else:
                     print "File %s does not exist" % file_name
                     return []
-
-    # def createChimeraDataView(self, view):
-    #
-    #     volumes = self._volFileNames('reconstructedFileNamesIters')
-    #     if len(volumes) > 1:#one reference and one iteration allowed
-    #         self.showError('you cannot display more than one volume with images')
-    #         return []
-    #     else:
-    #         vol = Volume()
-    #         vol.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
-    #         vol.setFileName(volumes[0])
-    #
-    #         return [ChimeraDataView(view, vol)]
-
+    
 #===============================================================================
 # Convergence
 #===============================================================================
-
     def _plotHistogramAngularMovement(self, paramName=None):
         from numpy import arange
         from matplotlib.ticker import FormatStrFormatter
@@ -677,58 +662,10 @@ Examples:
         return plots
     
 #===============================================================================
-# Angular distribution and resolution plots
+# showAngularDistribution
 #===============================================================================
-    
-    def _createAngDistChimera(self, it):
-        arguments = []
-        outerRadius = self.protocol._outerRadius[it]
-        radius = float(outerRadius) * 1.1
-
-        if len(self._refsList) == 1:
-            ref3d = self._refsList[0]
-            file_name = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
-            file_name_rec_filt = self.protocol._getFileName('reconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
-            #args = "--input '%s' --mode projector 256 -a %s red %f" %(file_name_rec_filt, file_name, radius)
-            if exists(file_name):
-                return ChimeraClientView(file_name_rec_filt, showProjection=True, angularDistFile=file_name, spheresDistance=radius)
-            else:
-                print "File %s does not exist" % file_name
-                return None
-        else:
-            return self.infoMessage('Please select only one class to display angular distribution')
-    
-    def _createAngDist2D(self, it):
-        # Common variables to use
-        nrefs = len(self._refsList)
-        gridsize = self._getGridSize(nrefs)
-        xplotter = XmippPlotter(*gridsize, mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
-        for ref3d in self._refsList:
-            file_name = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
-            if exists(file_name):
-                md = xmipp.MetaData(file_name)
-                plot_title = 'Ref3D_%d' % ref3d
-                xplotter.plotMdAngularDistribution(plot_title, md)
-            else:
-                print "File %s does not exist" % file_name
-                return None
-        
-        return xplotter
-    
-    def _plotFSC(self, a, mdFn):
-        md = xmipp.MetaData(mdFn)
-        resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
-        frc = [md.getValue(xmipp.MDL_RESOLUTION_FRC, id) for id in md]
-        self.maxFrc = max(frc)
-        self.minInv = min(resolution_inv)
-        self.maxInv = max(resolution_inv)
-        a.plot(resolution_inv, frc)
-        a.xaxis.set_major_formatter(self._plotFormatter)
-        a.set_ylim([-0.1, 1.1])
-    
     def _showAngularDistribution(self, paramName=None):
         views = []
-        
         if self.showAngDist == ANGDIST_CHIMERA:
             for it in self._iterations:
                 angDist = self._createAngDistChimera(it)
@@ -740,8 +677,54 @@ Examples:
                 angDist = self._createAngDist2D(it)
                 if angDist is not None:
                     views.append(angDist)
-                
         return views
+    
+    def _createAngDistChimera(self, it):
+        outerRadius = self.protocol._outerRadius[it]
+        radius = float(outerRadius) * 1.1
+
+        if len(self._refsList) == 1:
+            ref3d = self._refsList[0]
+            classesFn = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
+            vol = self.protocol._getFileName('reconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
+            if exists(classesFn):
+                return ChimeraClientView(vol, showProjection=True, angularDistFile=classesFn, spheresDistance=radius)
+            else:
+                print "File %s does not exist" % classesFn
+                return None
+        else:
+            return self.infoMessage('Please select only one class to display angular distribution')
+    
+    def _createAngDist2D(self, it):
+        # Common variables to use
+        nrefs = len(self._refsList)
+        gridsize = self._getGridSize(nrefs)
+        xplotter = XmippPlotter(*gridsize, mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
+        for ref3d in self._refsList:
+            classesFn = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
+            if exists(classesFn):
+                md = xmipp.MetaData(classesFn)
+                title = 'Ref3D_%d' % ref3d
+                xplotter.plotMdAngularDistribution(title, md)
+            else:
+                print "File %s does not exist" % classesFn
+                return None
+        
+        return xplotter
+    
+#===============================================================================
+# plotFSC
+#===============================================================================
+    def _plotFSC(self, a, mdFn):
+        md = xmipp.MetaData(mdFn)
+        resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
+        frc = [md.getValue(xmipp.MDL_RESOLUTION_FRC, id) for id in md]
+        self.maxFrc = max(frc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
     
     def _showFSC(self, paramName=None):
         threshold = self.resolutionThreshold.get()
