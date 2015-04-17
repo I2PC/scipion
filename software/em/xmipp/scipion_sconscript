@@ -52,7 +52,6 @@ get = lambda x: os.environ.get(x, '0').lower() in ['true', 'yes', 'y', '1']
 
 gtest = get('GTEST')
 cuda = get('CUDA')
-release = get('RELEASE')
 debug = get('DEBUG')
 matlab = get('MATLAB')
 opencv = env.GetOption('opencv') and get('OPENCV')
@@ -690,19 +689,6 @@ if opencv:
         addProg('optical_alignment_gpu',
                 libs=opencvLibs,
                 deps=['opencv'], cuda=True)
-
-# Some special programs not ready for release
-if not release:
-    for p in ['idr_xray_tomo',
-              'reconstruct_art_xray',
-              'resolution_ibw',
-              'tomo_align_dual_tilt_series',
-              'tomo_align_refinement',
-              #'xray_volume_correct',
-              'mpi_write_test'
-              ]:
-        addProg(p)
-
 
 
 #  ***********************************************************************
