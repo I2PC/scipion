@@ -71,3 +71,4 @@ Debug/
 # Generated source files
 xmipp.bashrc
 xmipp.csh
+xmipp.fish

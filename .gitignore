@@ -62,8 +62,17 @@ bin/
 build/
 lib/
 documentation/
-software/
-!software/em/xmipp/
+software/tmp
+software/bin
+software/cfg
+software/include
+software/install
+software/lib
+software/log
+software/man
+software/share
+software/em/*
+!software/em/xmipp
 
 data/
 gmon.out

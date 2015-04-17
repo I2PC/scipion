@@ -1232,34 +1232,46 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public Object getElementAt(int index)
 			{
-                                String volume = data.getVolumeAt(index);
+                String volume = data.getVolumeAt(index);
 				return getVolumeName(volume);
 			}
 
 			@Override
 			public void setSelectedItem(Object anItem)
 			{
-                                for(int i = 0; i < getSize(); i ++)
-                                    if(getElementAt(i).equals(anItem))
-                                        data.selectVolumeAt(i);
-				reloadTableData();
+				try
+				{
+					String file;
+	                for(int i = 0; i < getSize(); i ++)
+	                    if(getElementAt(i).equals(anItem))
+	                    {
+	                		data.selectVolumeAt(i);
+	                		reloadTableData();
+	                    	break;
+	                    }
+				}
+                catch(Exception e)
+                {
+                	XmippDialog.showError(GalleryJFrame.this, e.getMessage());
+                }
+				
 			}
                         
-                        public String getVolumeName(String volume)
-                        {
+            public String getVolumeName(String volume)
+            {
 
-                                if(Filename.hasPrefix(volume))//is stack
-                                    return volume;
-                                String base = Filename.getBaseName(volume);
-                                int count = 0;
-                                for(int i = 0; i < getSize(); i ++)
-                                    if(base.equals(Filename.getBaseName(data.getVolumeAt(i))))
-                                        count ++;
-                                if(count == 1)
-                                    return base;
-                                
-				return volume;//needs full path to differentiate volumes
-                        } 
+                    if(Filename.hasPrefix(volume))//is stack
+                        return volume;
+                    String base = Filename.getBaseName(volume);
+                    int count = 0;
+                    for(int i = 0; i < getSize(); i ++)
+                        if(base.equals(Filename.getBaseName(data.getVolumeAt(i))))
+                            count ++;
+                    if(count == 1)
+                        return base;
+                    
+                    return volume;//needs full path to differentiate volumes
+            } 
 
 			@Override
 			public Object getSelectedItem()
