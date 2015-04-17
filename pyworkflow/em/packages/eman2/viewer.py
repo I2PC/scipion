@@ -35,7 +35,7 @@ import pyworkflow.em as em
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
-                                        EnumParam, FloatParam)
+                                        EnumParam, FloatParam, IntParam)
 
 from protocol_boxing import EmanProtBoxing
 from protocol_initialmodel import EmanProtInitModel
@@ -120,8 +120,12 @@ Examples:
               label='Display angular distribution',
               help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                    '*chimera*: display angular distribution using Chimera with red spheres.') 
-        
-        group = form.addGroup('Resolution plots')
+        group.addParam('spheresScale', IntParam, default=100, 
+              expertLevel=LEVEL_ADVANCED,
+              label='Spheres size',
+              help='')
+
+        group = form.addGroup('Resolution')
         
         group.addParam('resolutionPlotsFSC', EnumParam, choices=['unmasked', 'masked', 'masked tight', 'all'], 
               default=FSC_UNMASK, display=EnumParam.DISPLAY_COMBO, 
@@ -231,33 +235,38 @@ Examples:
         return views
     
     def _createAngDistChimera(self, it):
-        x, _, _ = self.protocol.input3DReference.get().getDim()
-        radius = 1.1 * x
+        radius = self.spheresScale.get()
         volumes = self._getVolumeNames()
-        sqliteFn = None
+        self.protocol._execEmanProcess(self.protocol._getRun(), it)
+        angularDist = self.protocol._getFileName("angles", iter=it)        
         
         def createSqlite(prefix):
-            nparts = self._getNumberOfParticles(prefix)
+            nparts = self._getNumberOfParticles(it, prefix)
             sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
             self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, prefix))
+            return sqliteFn
                     
         if len(volumes) > 1:
             raise Exception("Please, select a single volume to show it's angular distribution")
+        elif not os.path.exists(angularDist):
+            raise Exception("Please, select a valid iteration to show the angular distribution")
         else:
             if self.showHalves.get() == HALF_EVEN:
-                createSqlite('even')
+                sqliteFn = createSqlite('even')
             elif self.showHalves.get() == HALF_ODD:
-                createSqlite('odd')
+                sqliteFn = createSqlite('odd')
             elif self.showHalves.get() == FULL_MAP:
-                createSqlite('full')
+                sqliteFn = createSqlite('full')
             else:
                 raise Exception("Please, select a single volume to show it's angular distribution")
+            
             view = em.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
         return view
     
     def _createAngDist2D(self, it):
         nrefs = self._getNumberOfRefs()
         gridsize = self._getGridSize(nrefs)
+        self.protocol._execEmanProcess(self.protocol._getRun(), it)
         angularDist = self.protocol._getFileName("angles", iter=it)
         
         if os.path.exists(angularDist):
@@ -265,7 +274,7 @@ Examples:
                                 mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
             
             def plot(prefix):
-                nparts = self._getNumberOfParticles(prefix)
+                nparts = self._getNumberOfParticles(it, prefix)
                 title = '%s particles' % prefix
                 sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
                 self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, prefix))
@@ -450,7 +459,7 @@ Examples:
         f1.close()
         return value
 
-    def _getNumberOfParticles(self, prefix='full'):
+    def _getNumberOfParticles(self, it, prefix='full'):
         f = open(self.protocol._getFileName('angles', iter=it))
         nLines = int(f.readlines()[-1].split()[0]) + 1
         

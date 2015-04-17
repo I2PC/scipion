@@ -70,9 +70,9 @@ class EmPlotter(Plotter):
         weight = []
         
         for row in md.iterRows(angMd):
-            rot.append(row.get(md.MDL_ANGLE_ROT))
-            tilt.append(row.get(md.MDL_ANGLE_TILT))
-            weight.append(row.get(md.MDL_WEIGHT))
+            rot.append(row.getValue(md.MDL_ANGLE_ROT))
+            tilt.append(row.getValue(md.MDL_ANGLE_TILT))
+            weight.append(row.getValue(md.MDL_WEIGHT))
             
         return self.plotAngularDistribution(title, rot, tilt, weight, **kwargs)
         

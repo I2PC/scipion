@@ -140,6 +140,10 @@ Examples:
                       label='Display angular distribution',
                       help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                            '*chimera*: display angular distribution using Chimera with red spheres.')
+        group.addParam('spheresScale', IntParam, default=100, 
+              expertLevel=LEVEL_ADVANCED,
+              label='Spheres size',
+              help='')
 #         group.addParam('showBFactorCorrectedVolume', LabelParam, default=False,
 #                        label='Show a b_factor corrected volume',
 #                        help=""" This utility boost up the high frequencies. Do not use the automated 
@@ -680,8 +684,7 @@ Examples:
         return views
     
     def _createAngDistChimera(self, it):
-        outerRadius = self.protocol._outerRadius[it]
-        radius = float(outerRadius) * 1.1
+        radius = self.spheresScale.get()
 
         if len(self._refsList) == 1:
             ref3d = self._refsList[0]
