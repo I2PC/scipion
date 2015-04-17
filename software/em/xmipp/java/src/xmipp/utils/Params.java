@@ -28,7 +28,6 @@ public class Params {
     public final static String OPENING_MODE_IMAGE = "image";
     public final static String OPENING_MODE_GALLERY = "gallery";
     public final static String OPENING_MODE_METADATA = "metadata";
-    public final static String OPENING_MODE_ROTSPECTRA = "rotspectra";
     public final static String RENDER_IMAGES = "render";
     public final static String VISIBLE_LABELS = "visible";
     public final static String ORDER_LABELS = "order";
