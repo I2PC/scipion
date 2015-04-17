@@ -15,7 +15,7 @@ function openProtocol(url)
 function getProtocols() 
 {
 	console.log("searching protocol" + $("#searchInput").val())
-	var URL =  '/get_protocols/?search=' + $("#searchInput").val()
+	var URL =  getSubDomainURL() + '/get_protocols/?search=' + $("#searchInput").val()
 	$.ajax({
 		type : "GET",
 		url : URL,
@@ -26,8 +26,6 @@ function getProtocols()
 				html += '<a href="javascript:openProtocol(\'/form/?protocolClass=' + list[i][1] + '\')" >' + list[i][0] + '</a><br>'
 			}
 			$("#protocolsDiv").html(html)
-
-		
 			
 		},
 		error : function() {
