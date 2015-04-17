@@ -234,19 +234,22 @@ Examples:
         x, _, _ = self.protocol.input3DReference.get().getDim()
         radius = 1.1 * x
         volumes = self._getVolumeNames()
+        sqliteFn = None
         
+        def createSqlite(prefix):
+            nparts = self._getNumberOfParticles(prefix)
+            sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
+            self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, prefix))
+                    
         if len(volumes) > 1:
             raise Exception("Please, select a single volume to show it's angular distribution")
         else:
             if self.showHalves.get() == HALF_EVEN:
-                sqliteFn = self.protocol._getFileName('projections', iter=it, half="even")
-                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "even"))
+                createSqlite('even')
             elif self.showHalves.get() == HALF_ODD:
-                sqliteFn = self.protocol._getFileName('projections', iter=it, half="odd")
-                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "odd"))
+                createSqlite('odd')
             elif self.showHalves.get() == FULL_MAP:
-                sqliteFn = self.protocol._getFileName('projections', iter=it, half="full")
-                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it))
+                createSqlite('full')
             else:
                 raise Exception("Please, select a single volume to show it's angular distribution")
             view = em.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
@@ -261,35 +264,22 @@ Examples:
             xplotter = EmPlotter(x=gridsize[0], y=gridsize[1],
                                 mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
             
+            def plot(prefix):
+                nparts = self._getNumberOfParticles(prefix)
+                title = '%s particles' % prefix
+                sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
+                self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, prefix))
+                xplotter.plotAngularDistributionFromMd(sqliteFn, title)
+                
             if self.showHalves.get() == HALF_EVEN:
-                title = 'even particles'
-                sqliteFn = self.protocol._getFileName('projections', iter=it, half="even")
-                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "even"))
-                self._plotter(xplotter, title, sqliteFn)
+                plot('even')
             elif self.showHalves.get() == HALF_ODD:
-                title = 'odd particles'
-                sqliteFn = self.protocol._getFileName('projections', iter=it, half="odd")
-                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "odd"))
-                self._plotter(xplotter, title, sqliteFn)
+                plot('odd')
             elif self.showHalves.get() == FULL_MAP:
-                title = 'all particles'
-                sqliteFn = self.protocol._getFileName('projections', iter=it, half="full")
-                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it))
-                self._plotter(xplotter, title, sqliteFn)
+                plot('full')
             else:
-                title = 'even particles'
-                sqliteFn = self.protocol._getFileName('projections', iter=it, half="even")
-                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "even"))
-                self._plotter(xplotter, title, sqliteFn)
-                title = 'odd particles'
-                sqliteFn = self.protocol._getFileName('projections', iter=it, half="odd")
-                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, "odd"))
-                self._plotter(xplotter, title, sqliteFn)
-                title = 'all particles'
-                sqliteFn = self.protocol._getFileName('projections', iter=it, half="full")
-                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it))
-                self._plotter(xplotter, title, sqliteFn)
-        
+                for prefix in ['even', 'odd', 'full']:
+                    plot(prefix)
             return xplotter
         else:
             return
@@ -460,27 +450,24 @@ Examples:
         f1.close()
         return value
 
+    def _getNumberOfParticles(self, prefix='full'):
+        f = open(self.protocol._getFileName('angles', iter=it))
+        nLines = int(f.readlines()[-1].split()[0]) + 1
+        
+        if prefix == 'full':
+            return nLines
+        else:
+            return nLines/2
+        
     def _iterAngles(self, it, half="full"):
         f = open(self.protocol._getFileName('angles', iter=it))
-        totLines = int(f.readlines()[-1].split()[0]) + 1
-        f = open(self.protocol._getFileName('angles', iter=it))
-        for i, line in enumerate(f):
-            if half == "even":
-                if i%2==0:
-                    angles = map(float, line.split())
-                    rot = float("{0:.2f}".format(angles[1]))
-                    tilt = float("{0:.2f}".format(angles[2]))
-                    yield rot, tilt, totLines/2
-            elif half == "odd":
-                if not i%2==0:
-                    angles = map(float, line.split())
-                    rot = float("{0:.2f}".format(angles[1]))
-                    tilt = float("{0:.2f}".format(angles[2]))
-                    yield rot, tilt, totLines/2
-            else:
-                angles = map(float, line.split())
-                rot = float("{0:.2f}".format(angles[1]))
-                tilt = float("{0:.2f}".format(angles[2]))
-                yield rot, tilt, totLines
+        rest = 0 if half == 'even' else 1
         
+        for i, line in enumerate(f):
+            angles = map(float, line.split())
+            rot = float("{0:.2f}".format(angles[1]))
+            tilt = float("{0:.2f}".format(angles[2]))
+            if half == 'full' or i%2==rest:
+                yield rot, tilt
+                
         f.close()
