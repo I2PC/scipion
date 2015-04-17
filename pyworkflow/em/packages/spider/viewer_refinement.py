@@ -248,8 +248,6 @@ Examples:
         threshold = self.resolutionThresholdFSC.get()
         iterations = self._getIterations()
         groups = self._getGroups()
-        plotter = EmPlotter(x=1, y=1, windowTitle='Resolution FSC')
-        a = plotter.createSubPlot("FSC", 'Angstroms^-1', 'FSC', yformat=False)
         
         if self.groupFSC == 0: # group by iterations           
             files = [(it, self._getFinalPath('fscdoc_%02d.stk' % it)) for it in iterations]
@@ -266,6 +264,8 @@ Examples:
                 return [self.errorMessage("Please select valid groups to display", 
                                           title="Wrong groups selection")]
                 
+        plotter = EmPlotter(x=1, y=1, windowTitle='Resolution FSC')
+        a = plotter.createSubPlot("FSC", 'Angstroms^-1', 'FSC', yformat=False)
         #fscFile = self._getFinalPath('fscdoc_%02d.stk' % iterations[0])
         legends = []
         for it, fscFile in files:
