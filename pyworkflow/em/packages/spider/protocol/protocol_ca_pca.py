@@ -49,7 +49,7 @@ class SpiderProtCAPCA(SpiderProtocol):
     between images, eliminating the need to rescale between images.
     
     For more info see:
-    [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/classification/tutorial.html#CAPCA][Spider documentation]] 
+    [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/classification/tutorial.html#CAPCA][SPIDER documentation]] 
     """
     _label = 'capca'
     

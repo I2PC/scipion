@@ -43,7 +43,16 @@ from protocol_base import SpiderProtocol
 
                                
 class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
-    """
+    """Iterative reference-based refinement of orientations
+    
+    Iterative refinement improves the accuracy in the determination of orientations.
+    This improvement is accomplished by successive use of 
+    more finely-sampled reference projections.
+    
+    For more information, see:
+    [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/recon/mr.html]
+    [SPIDER documentation on projection-matching]]
+    
     """
     _label = 'refinement'
     
@@ -63,51 +72,74 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
         
         form.addParam('numberOfIterations', params.IntParam, default=10,
                       label='Number of iterations:',
-                      help='Set the number of iterations. Iterative reconstruction'
-                           'improves the overall normalization of the 2D images'
-                           'as they are inserted into the reconstructed volume,'
-                           'and allows for the exclusion of the poorer quality'
-                           'images.')
+                      help='Set the number of iterations. \n\n'
+                           'Multi-reference alignment is computationally intensive, '
+                           'so rather than use the finest-spaced reference projections immediately, '
+                           'we start out with a coarse spacing, and '
+                           'then search a restricted range of orientations '
+                           'a set of gradually more finely-spaced reference projections.')
         
-        form.addParam('alignmentShift', params.IntParam, default=6,
-                      label='Alignment shift',
-                      help="Alignment shift (pixels) searched is +- this value")
+        form.addParam('alignmentShift', params.IntParam, default=7,
+                      label='Shift range',
+                      help="Alignments are tested in the range +- this value")
 
         #TODO: Add a wizard for this param
         form.addParam('diameter', params.IntParam, default=349,
                       label='Particle diameter (A)',
                       help="Diameter of the structure (A) used in alignment search\n"
                            "(Default is for ribosome. EDIT as needed.)\n"
-                           "Diameter is used to find radius for last alignment ring.\n")
+                           "Diameter is used to find radius for last alignment radius.\n")
         form.addParam('winFrac', params.FloatParam, default=0.95,
                       expertLevel=params.LEVEL_ADVANCED,
-                      label='Window fraction',
+                      label='Projection diameter',
                       help="Fraction of window diameter used in projection\n"
                            " (.95= use 95% window size)\n")
         form.addParam('convergence', params.FloatParam, default=0.05,
                       expertLevel=params.LEVEL_ADVANCED,
                       label='Convergence criterion fraction',
-                      help="Converges when this fraction of all images move < 1.5 * stepsize.")  
+                      help="Refinment has converged when this fraction of all images move < 1.5 * stepsize.")  
         
         form.addParam('smallAngle', params.BooleanParam, default=False,
                       label='Use small angle refinement?',
-                      help="")        
-        form.addParam('angSteps', params.StringParam, default='3x2 2x3 1.5',
+                      help="In regular, non-small-angle refinement, "
+                           "a set of reference projections is computed for all experimental images. \n\n"
+                           "In small-angle refinement, "
+                           "a set of reference projections is computed for each particle on the fly, "
+                           "using the SPIDER command "
+                           "[[http://spider.wadsworth.org/spider_doc/spider/docs/man/voras.html][VO RAS]]. ")        
+        #GLO [ang-steps]  = '3.3,3.,2.,2.,2.,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5'  ; Angular degree steps   
+        #GLO [ang-limits] = '0.,0.,15.,8.,6.,5.,5.,5.,5.,5.,5.,5.,5.,5.,5.,5.'            ; Angular limits
+        form.addParam('angSteps', params.StringParam, default='3.3 3 3x2 1.5',
                       condition='not smallAngle',
-                      label='Angular degree steps',
-                      help="")          
+                      label='Angular increment',
+                      help="This parameter determines how finely spaced the reference will be projected. "
+                           "Each value in the list corresponds to the value for a given iteration. "
+                           "A value *V* can be repeated *N* times by using the notation *NxV*. "
+                           "If more iterations are requested than the number of values specified here, "
+                           "the last value will be repeated. \n\n"
+                           "For example, in the default *3.3 3 3x2 1.5*, "
+                           "the value of 2 degrees will be repeated three times, "
+                           "and iterations from the sixth onward will use 1.5 degrees.")
         form.addParam('angLimits', params.StringParam, default='2x0 15 8 6 5',
                       condition='not smallAngle',
-                      label='Angular limits',
-                      help="")             
-        form.addParam('angStepSm', params.StringParam, default='(0.5)',
+                      label='Angular range',
+                      help="This parameter determines the range of reference projections that will be searched. "
+                           "A value of *0* corresponds to an unrestricted search. "
+                           "A small value will result in a faster alignment, but may not find the correct orientation. "
+                           "A value *V* can be repeated *N* times by using the notation *NxV*. "
+                           "If more iterations are requested than the number of values specified here, "
+                           "the last value will be repeated. \n\n"
+                           "For example, in the default *2x0 15 8 6 5*, "
+                           "and iterations from the sixth onward will use 5 degrees, "
+                           "an unrestricted search will be performed twice.")
+        form.addParam('angStepSm', params.FloatParam, default=0.5,
                       condition='smallAngle',
-                      label='Angular degree steps',
-                      help="")          
-        form.addParam('thetaRange', params.StringParam, default='(2.0)',
+                      label='Angular increment',
+                      help="This parameter determines how finely spaced the reference will be projected.")          
+        form.addParam('thetaRange', params.FloatParam, default=2.0,
                       condition='smallAngle',
-                      label='Theta range ',
-                      help="")          
+                      label='Angular range ',
+                      help="This parameter determines the range of reference projections that will be searched.")          
 
         form.addParallelSection(threads=4, mpi=0)
     
@@ -166,6 +198,8 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
                   '[small-ang]': '1' if self.smallAngle else '0',
                   '[ang-steps]': getListStr(self.angSteps.get()),
                   '[ang-limits]': getListStr(self.angLimits.get()),
+                  '[ang-step-sm]': '(%0.2f)' % self.angStepSm.get(),
+                  '[theta-range]': '(%0.2f)' % self.thetaRange.get(),
                   
                   '[vol_orig]': path('vol001'),
                   '[sel_group_orig]': path('sel_group'),
@@ -254,17 +288,54 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
-        if (self.smallAngle and 
-            not self.inputParticles.get().hasAlignmentProj()):
-            errors.append('*Small angle* option can only be used if '
-                          'the particles have angular assignment.')
-            
+        if self.smallAngle:
+            if not self.inputParticles.get().hasAlignmentProj():
+                errors.append('*Small angle* option can only be used if '
+                            'the particles have angular assignment.')
         return errors
+        
+    def _warnings(self):
+        print
+        print "protocol_projmatch._warning"
+        print
+        warns = []
+        if not self.smallAngle:
+            niter = self.numberOfIterations.get()
+            if niter < len(pwutils.getListFromValues(self.angSteps.get())):
+                warns.append('*Angular steps* have more values than iterations')           
+    
+        return warns
     
     def _summary(self):
         summary = []
+        summary.append('Number of iterations: *%s*' % self.numberOfIterations)
+        
+        if self.smallAngle:
+            summary.append('Small-angle refinement: ')
+            summary.append('    Angular increment: *%s* degrees' % self.angStepSm)
+            summary.append('    Angular range: *%s* degrees' % self.thetaRange)
+        else:
+            summary.append('Angular increments: *%s*' % self.angSteps)
+            summary.append('Angular range: *%s*' % self.angLimits)
+        
+        summary.append('Particle diameter: *%s* Angstroms' % self.diameter)
+        summary.append('Shift range: *%s* pixels' % self.alignmentShift)
+        summary.append('Projection diameter: *%s* of window size' % self.winFrac)
+        summary.append('Convergence criterion: *%s* of particles' % self.convergence)
+
         return summary
+        
+    def _citations(self):
+        return ['Penczek1992']
     
+    def _methods(self):
+        msg  = "Input particles %s " % self.getObjectTag('inputParticles')
+        msg += "were subjected to refinement of orientations ([Penczek1992]) "
+        msg += "for %s iterations " % self.numberOfIterations
+        msg += "using %s as an initial reference. " % self.getObjectTag('input3DReference')
+        
+        return [msg]
+        
     #--------------------------- UTILS functions --------------------------------------------
     def _getDefocusGroup(self, img):
         return img.getMicId()

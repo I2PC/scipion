@@ -119,7 +119,7 @@
  ; Find reference projection matching current aligned image
  ;   (For large images change 'skip' to 2 or 3 to decrease memory)
  
- IF ([iter] .LE. 2) THEN
+ IF ([iter] .LE. 99) THEN
    AP SHC                           ; (Can change this)  
      [temp_ref_projs]@******        ; Template for ref. projections    (input)
      1-[num-refs]                   ; Ref. projection file numbers

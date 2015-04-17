@@ -33,7 +33,7 @@ from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO, View
 import pyworkflow.em as em
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
+from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,IntParam,
                                         EnumParam, BooleanParam, FloatParam)
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
@@ -112,6 +112,10 @@ Examples:
               label='Display angular distribution',
               help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                    '*chimera*: display angular distribution using Chimera with red spheres.')
+        group.addParam('spheresScale', IntParam, default=100, 
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Spheres size',
+                      help='')
         
         group = form.addGroup('Resolution')
         group.addParam('resolutionPlotsSSNR', LabelParam, default=True,
@@ -252,9 +256,9 @@ Examples:
         return views
     
     def _createAngDistChimera(self, it):
-        x, _, _ = self.protocol.input3DReference.get().getDim()
         nparts = self.protocol.inputParticles.get().getSize()
-        radius = 1.1 * x
+        radius = self.spheresScale.get()
+
         volumes = self._getVolumeNames()
         
         if len(volumes) > 1:
@@ -598,10 +602,7 @@ class ProtCTFFindViewer(Viewer):
              
             ctfSet = self.protocol._createSetOfCTF("_temporary")
             for fn, micDir, mic in iterMicrographs(setOfMics):
-                
-                
-                
-                samplingRate = mic.getSamplingRate() * self.ctfDownFactor.get()
+                samplingRate = mic.getSamplingRate() * self.protocol.ctfDownFactor.get()
                 mic.setSamplingRate(samplingRate)
                 out = self.protocol._getCtfOutPath(micDir)
                 psdFile = self.protocol._getPsdPath(micDir)
@@ -609,7 +610,7 @@ class ProtCTFFindViewer(Viewer):
                 if exists(out) and exists(psdFile):
                     ctfModel = em.CTFModel()
                 
-                    if not self.useCftfind4:
+                    if not self.protocol.useCftfind4:
                         readCtfModel(ctfModel, out)
                     else:
                         readCtfModel(ctfModel, out, True)
