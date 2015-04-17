@@ -1517,6 +1517,10 @@ class FormWindow(Window):
         if len(errors):
             self.showError(errors)
         else:
+            warns = self.protocol.warnings()
+#             if len(warns):
+#                 self.showWarning('\n'.join(warns))
+#             else:
             self._close()
         
     def _close(self, onlySave=False):

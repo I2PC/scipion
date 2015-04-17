@@ -119,15 +119,20 @@ Examples:
         
         group = form.addGroup('Resolution')
 
-        group.addParam('groupFSC', params.EnumParam, default=0,
-                       choices=['iterations', 'defocus'],
+        group.addParam('showFSC', params.LabelParam, default=True,
+                       important=True,
+                       label='Display resolution plots (FSC)',
+                       help='')
+        group.addParam('groupFSC', params.EnumParam, default=1,
+                       choices=['iterations', 'defocus groups'],
                        display=params.EnumParam.DISPLAY_HLIST,
                        label='Group FSC plots by',
                        help='Select which FSC curve you want to '
                             'show together in the same plot.')
-        group.addParam('showFSC', params.LabelParam, default=True,
-                      label='Display resolution plots (FSC)',
-                      help='')
+        group.addParam('groupSelection', params.NumericRangeParam, 
+                      condition='groupFSC==%d' % 1, 
+                      label="Groups list", 
+                      help="Write the group list to visualize. See examples in iteration list")        
         group.addParam('resolutionThresholdFSC', params.FloatParam, default=0.5, 
                       expertLevel=params.LEVEL_ADVANCED,
                       label='Threshold in resolution plots',
@@ -153,10 +158,13 @@ Examples:
         return "1/%0.2f" % inv
     
     def _getIterations(self):
-        if self.viewIter.get() == ITER_LAST:
+        if self.viewIter == ITER_LAST:
             return [self.protocol.numberOfIterations.get()] # FIXME: return the last completed iteration
         else:
-            return self._getListFromRangeString(self.iterSelection.get())
+            return self._getListFromRangeString(self.iterSelection.get(''))
+        
+    def _getGroups(self):
+        return self._getListFromRangeString(self.groupSelection.get(''))
     
     def _getFinalPath(self, *paths):
         return self.protocol._getExtraPath('Refinement', 'final', *paths)
@@ -182,8 +190,6 @@ Examples:
                    for it in self._getIterations()]
         
         print "getVolumeNames: ", volumes
-        
-        volumes.reverse()
         
         return volumes
 
@@ -241,6 +247,7 @@ Examples:
     def _showFSC(self, paramName=None):
         threshold = self.resolutionThresholdFSC.get()
         iterations = self._getIterations()
+        groups = self._getGroups()
         plotter = EmPlotter(x=1, y=1, windowTitle='Resolution FSC')
         a = plotter.createSubPlot("FSC", 'Angstroms^-1', 'FSC', yformat=False)
         
@@ -254,7 +261,11 @@ Examples:
                 return int(f.split('_')[-1].split('.')[0])
             groupFiles = glob(self._getFinalPath('fscdoc_%02d_???.stk' % it))
             groupFiles.sort()
-            files = [(group(f), f) for f in groupFiles]
+            files = [(group(f), f) for f in groupFiles if group(f) in groups]
+            if not files: #empty files
+                return [self.errorMessage("Please select valid groups to display", 
+                                          title="Wrong groups selection")]
+                
         #fscFile = self._getFinalPath('fscdoc_%02d.stk' % iterations[0])
         legends = []
         for it, fscFile in files:
