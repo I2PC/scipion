@@ -253,6 +253,7 @@ Examples:
     
     def _createAngDistChimera(self, it):
         x, _, _ = self.protocol.input3DReference.get().getDim()
+        nparts = self.protocol.inputParticles.get().getSize()
         radius = 1.1 * x
         volumes = self._getVolumeNames()
         
@@ -263,46 +264,45 @@ Examples:
                 data_angularDist = self.protocol._getFileName("output_par", iter=it)
                 if exists(data_angularDist):
                     sqliteFn = self.protocol._getFileName('projections', iter=it)
-                    self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
+                    self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, data_angularDist))
                     view = em.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
             else:
                 for ref3d in self._refsList:
                     data_angularDist = self.protocol._getFileName("output_par_class", iter=it, ref=ref3d)
                     if exists(data_angularDist):
                         sqliteFn = self.protocol._getFileName('projectionsClass', iter=it, ref=ref3d)
-                        self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
+                        self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, data_angularDist))
                         view = em.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
         return view
     
     def _createAngDist2D(self, it):
         nrefs = len(self._refsList)
+        nparts = self.protocol.inputParticles.get().getSize()
         gridsize = self._getGridSize(nrefs)
         
         if self.protocol.IS_REFINE:
             data_angularDist = self.protocol._getFileName("output_par", iter=it)
             if exists(data_angularDist):
-                xplotter = EmPlotter(x=gridsize[0], y=gridsize[1],
+                plotter = EmPlotter(x=gridsize[0], y=gridsize[1],
                                     mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
                 title = 'iter %d' % it
                 sqliteFn = self.protocol._getFileName('projections', iter=it)
-                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
-                self._plotter(xplotter, title, sqliteFn)
-                return xplotter
+                self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, data_angularDist))
+                plotter.plotAngularDistributionFromMd(sqliteFn, title)
+                return plotter
             else:
                 return
         else:
             for ref3d in self._refsList:
                 data_angularDist = self.protocol._getFileName("output_par_class", iter=it, ref=ref3d)
                 if exists(data_angularDist):
-                    xplotter = EmPlotter(x=gridsize[0], y=gridsize[1],
+                    plotter = EmPlotter(x=gridsize[0], y=gridsize[1],
                                         mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
-                    plot_title = 'class %d' % ref3d
+                    title = 'class %d' % ref3d
                     sqliteFn = self.protocol._getFileName('projectionsClass', iter=it, ref=ref3d)
-                    self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
-                    self._plotter(xplotter, title, sqliteFn)
-                    phi, theta = self._getAngularDistribution(data_angularDist)
-                    xplotter.plotAngularDistribution(plot_title, phi, theta)
-            return xplotter
+                    self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, data_angularDist))
+                    plotter.plotAngularDistributionFromMd(sqliteFn, title)
+            return plotter
     
 #===============================================================================
 # plotFSC
@@ -514,30 +514,15 @@ Examples:
     
     def _iterAngles(self, it, dataAngularDist):
         f = open(dataAngularDist)
-        particles = self.protocol.inputParticles.get().getSize()
         for line in f:
             if not line.startswith('C'):
                 angles = map(float, line.split())
                 rot = angles[1]
                 tilt = angles[2]
-                yield rot, tilt, particles
+                yield rot, tilt
         
         f.close()
     
-    def _getAngularDistribution(self, pathFile):
-        # Create Angular plot for one iteration
-        file = open(pathFile)
-        phi = []
-        theta = []
-        
-        for line in file:
-            if not line.startswith('C'):
-                lineList = line.split()
-                phi.append(float(lineList[3]))
-                theta.append(float(lineList[2]))
-        file.close()
-        return phi, theta
-
     def _getColunmFromFilePar(self, parFn, col, invert=False):
         f1 = open(parFn)
         
@@ -556,21 +541,6 @@ Examples:
                 readLines = True
         f1.close()
         return value
-
-    def _plotter(self, xplotter, title, sqliteFn):
-        import pyworkflow.em.metadata as md
-        # Create Angular plot for one iteration
-        rot = []
-        tilt = []
-        weight = []
-        
-        mdProj = md.MetaData(sqliteFn)
-        for objId in mdProj:
-            rot.append(mdProj.getValue(md.MDL_ANGLE_ROT, objId))
-            tilt.append(mdProj.getValue(md.MDL_ANGLE_TILT, objId))
-            weight.append(mdProj.getValue(md.MDL_WEIGHT, objId))
-        
-        xplotter.plotAngularDistribution(title, rot, tilt, weight)
 
     def _getVolumeNames(self):
         volumes = []
