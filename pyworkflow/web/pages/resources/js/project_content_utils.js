@@ -1095,7 +1095,7 @@ function openSearchProtocolPopup(search)
 {
 	$.ajax({
 		type : "GET",
-		url : "/search_protocol/",
+		url : getSubDomainURL() + "/search_protocol/",
 		success : function(html) {
 			new Messi(html, 
 			{

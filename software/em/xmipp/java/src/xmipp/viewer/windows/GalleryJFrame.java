@@ -461,11 +461,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	private void setInitialValues()
 	{
-		boolean adjust = false;
+		boolean adjust = true;
 		if (data.parameters.columns > 0 || data.parameters.rows > 0)
 			adjust = false;
-		else if (!data.isRotSpectraMode())
-			adjust = true;
+
 
 		if (data.isMicrographsMode())
 		{

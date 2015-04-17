@@ -24,20 +24,15 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.spider.convert import convertEndian
-from pyworkflow.utils.path import moveFile
 """
 """
 
-from os.path import join
-
-import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtRefine3D
 from pyworkflow.em.constants import ALIGN_PROJ
 
-from ..spider import SpiderDocFile, writeScript, getScript, runScript, runTemplate
+from ..spider import SpiderDocFile, writeScript, runScript
 from ..convert import ANGLE_PHI, ANGLE_PSI, ANGLE_THE, SHIFTX, SHIFTY, convertEndian, alignmentToRow
 from protocol_base import SpiderProtocol
 
