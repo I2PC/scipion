@@ -66,6 +66,8 @@ public:
     String originalImageLabel;
     // Phase Flipped
     bool phaseFlipped;
+    // Penalization for the average
+    double penalization;
 public:
     // 2D mask in real space
     MultidimArray<int> mask2D;
@@ -93,6 +95,8 @@ public:
 	bool hasCTF;
 	// CTF
 	CTFDescription ctf;
+	// Covariance matrices
+	Matrix2D<double> C0, C;
 public:
     /// Empty constructor
     ProgAngularContinuousAssign2();
