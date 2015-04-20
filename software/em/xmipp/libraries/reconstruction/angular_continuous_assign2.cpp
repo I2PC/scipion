@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "angular_continuous_assign2.h"
+#include "program_image_residuals.h"
 #include <data/mask.h>
 #include <data/numerical_tools.h>
 
@@ -58,6 +59,7 @@ void ProgAngularContinuousAssign2::readParams()
     optimizeAngles = checkParam("--optimizeAngles");
     originalImageLabel = getParam("--applyTo");
     phaseFlipped = checkParam("--phaseFlipped");
+    penalization = getDoubleParam("--penalization");
 }
 
 // Show ====================================================================
@@ -81,6 +83,7 @@ void ProgAngularContinuousAssign2::show()
     << "Optimize angles:     " << optimizeAngles     << std::endl
     << "Apply to:            " << originalImageLabel << std::endl
     << "Phase flipped:       " << phaseFlipped       << std::endl
+    << "Penalization:        " << penalization       << std::endl
     ;
 }
 
@@ -107,6 +110,7 @@ void ProgAngularContinuousAssign2::defineParams()
     addParamsLine("  [--optimizeAngles]           : Optimize angles");
     addParamsLine("  [--applyTo <label=image>]    : Which is the source of images to apply the final transformation");
     addParamsLine("  [--phaseFlipped]             : Input images have been phase flipped");
+    addParamsLine("  [--penalization <l=100>]     : Penalization for the average term");
     addExampleLine("A typical use is:",false);
     addExampleLine("xmipp_angular_continuous_assign2 -i anglesFromDiscreteAssignment.xmd --ref reference.vol -o assigned_angles.xmd");
 }
@@ -134,6 +138,20 @@ void ProgAngularContinuousAssign2::preProcess()
     mask2D=mask.get_binary_mask();
     iMask2Dsum=1.0/mask2D.sum();
 
+    // Construct reference covariance
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mask2D)
+    if (DIRECT_MULTIDIM_ELEM(mask2D,n))
+    	DIRECT_MULTIDIM_ELEM(E(),n)=rnd_gaus(0,1);
+    covarianceMatrix(E(),C0);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(C0)
+    {
+    	double val=MAT_ELEM(C0,i,j);
+    	if (val<0.5)
+    		MAT_ELEM(C0,i,j)=0;
+    	else
+    		MAT_ELEM(C0,i,j)=1;
+    }
+
     // Construct projector
     projector = new FourierProjector(V(),pad,Ts/maxResol,BSPLINE3);
 
@@ -149,7 +167,8 @@ void ProgAngularContinuousAssign2::preProcess()
 double tranformImage(FourierProjector &projector, double rot, double tilt, double psi, bool hasCTF, CTFDescription &ctf, double Ts,
 		Projection &P, const MultidimArray<double> &I, const MultidimArray<double> &Ifiltered,
 		MultidimArray<double> &Ip, MultidimArray<double> &Ifilteredp, MultidimArray<double> &E,
-		const MultidimArray<int> &mask2D, double iMask2Dsum, double a, double b, Matrix2D<double> &A, int degree)
+		const MultidimArray<int> &mask2D, double iMask2Dsum, const Matrix2D<double> &C0, Matrix2D<double> &C, double penalization,
+		double a, double b, Matrix2D<double> &A, int degree)
 {
     projectVolume(projector, P, (int)XSIZE(I), (int)XSIZE(I),  rot, tilt, psi);
     if (hasCTF)
@@ -157,7 +176,7 @@ double tranformImage(FourierProjector &projector, double rot, double tilt, doubl
     	ctf.applyCTF(P(),Ts);
     }
 
-    double cost=0;
+    double cost=0, avg=0;
 	applyGeometry(degree,Ip,I,A,IS_NOT_INV,DONT_WRAP,0.);
 	applyGeometry(degree,Ifilteredp,Ifiltered,A,IS_NOT_INV,DONT_WRAP,0.);
 	const MultidimArray<double> &mP=P();
@@ -170,19 +189,42 @@ double tranformImage(FourierProjector &projector, double rot, double tilt, doubl
 			DIRECT_MULTIDIM_ELEM(E,n)=DIRECT_MULTIDIM_ELEM(mP,n)-DIRECT_MULTIDIM_ELEM(Ifilteredp,n);
 			//DIRECT_MULTIDIM_ELEM(E,n)=DIRECT_MULTIDIM_ELEM(mP,n)-DIRECT_MULTIDIM_ELEM(Ip,n);
 			cost+=fabs(DIRECT_MULTIDIM_ELEM(E,n));
+			avg+=DIRECT_MULTIDIM_ELEM(E,n);
 		}
 		else
 		{
 			DIRECT_MULTIDIM_ELEM(Ip,n)=0;
 			DIRECT_MULTIDIM_ELEM(Ifilteredp,n)=0;
+			DIRECT_MULTIDIM_ELEM(E,n)=0;
 		}
 	}
 	cost*=iMask2Dsum;
-	return cost;
+	avg*=iMask2Dsum;
+
+	covarianceMatrix(E, C);
+	double div=computeCovarianceMatrixDivergence(C0,C)/MAT_XSIZE(C);
+#ifdef DEBUG
+	Image<double> save;
+	save()=P();
+	save.write("PPPtheo.xmp");
+	save()=Ifilteredp;
+	save.write("PPPfiltered.xmp");
+	save()=E;
+	save.write("PPPe.xmp");
+	save()=C;
+	save.write("PPPc.xmp");
+	E.initRandom(0,1,RND_GAUSSIAN);
+	save()=C0;
+	save.write("PPPcrandom.xmp");
+	std::cout << "Cost=" << cost << " Div=" << div << " avg=" << avg << std::endl;
+	std::cout << "Press any key" << std::endl;
+	char c; std::cin >> c;
+#endif
+	return div+penalization*fabs(avg);
 }
 
 
-double L1cost(double *x, void *_prm)
+double continuous2cost(double *x, void *_prm)
 {
 	double a=x[2];
 	double b=x[1];
@@ -209,11 +251,11 @@ double L1cost(double *x, void *_prm)
 	return tranformImage(*prm->projector,prm->old_rot+deltaRot, prm->old_tilt+deltaTilt, prm->old_psi+deltaPsi,
 			prm->hasCTF, prm->ctf, prm->Ts,
 			prm->P, prm->I(), prm->Ifiltered(), prm->Ip(), prm->Ifilteredp(), prm->E(),
-			prm->mask2D, prm->iMask2Dsum, a, b, prm->A, LINEAR);
+			prm->mask2D, prm->iMask2Dsum, prm->C0, prm->C, prm->penalization, a, b, prm->A, LINEAR);
 }
 
 // Predict =================================================================
-#define DEBUG
+//#define DEBUG
 void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     rowOut=rowIn;
@@ -278,7 +320,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			steps(4)=steps(5)=1.;
 		if (optimizeAngles)
 			steps(6)=steps(7)=steps(8)=1.;
-		powellOptimizer(p, 1, 9, &L1cost, this, 0.01, cost, iter, steps, true);
+		powellOptimizer(p, 1, 9, &continuous2cost, this, 0.01, cost, iter, steps, true);
 		if (cost>1e30)
 			rowOut.setValue(MDL_ENABLED,-1);
 
