@@ -30,7 +30,7 @@ import sys
 import time
 from glob import glob
 
-from subprocess import STDOUT, check_call, CalledProcessError
+from subprocess import STDOUT, call
 #Python 3 compatibility: How to overcome Python NameError: name 'basestring' is not defined
 try:
     unicode = unicode
@@ -69,12 +69,16 @@ def progInPath(prog):
 def checkLib(lib, target=None):
     """ See if we have library lib """
     try:
-        check_call(['pkg-config', '--cflags', '--libs', lib],
+        ret = call(['pkg-config', '--cflags', '--libs', lib],
                    stdout=open(os.devnull, 'w'), stderr=STDOUT)
-    except (CalledProcessError, OSError) as e:
+        if ret != 0:
+            raise OSError
+    except OSError, e:
         try:
-            check_call(['%s-config' % lib, '--cflags'])
-        except (CalledProcessError, OSError) as e:
+            ret = call(['%s-config' % lib, '--cflags'])
+            if ret != 0:
+                raise OSError
+        except OSError, e:
             print("""
   ************************************************************************
     Warning: %s not found. Please consider installing it first.
@@ -88,7 +92,7 @@ Continue anyway? (y/n)""" % lib)
 
 
 
-class Command():
+class Command:
     def __init__(self, env, cmd, targets=None,  **kwargs):
         self._env = env
         self._cmd = cmd
@@ -145,7 +149,7 @@ class Command():
         return "Command: %s, targets: %s" % (self._cmd, self._targets)
 
 
-class Target():
+class Target:
     def __init__(self, env, name, *commands, **kwargs):
         self._env = env
         self._name = name
@@ -203,7 +207,7 @@ class Target():
         return self._name
 
 
-class Environment():
+class Environment:
 
     def __init__(self, **kwargs):
         self._targetList = []
@@ -551,7 +555,7 @@ class Environment():
             self._executeTargets(targetList)
             
         
-class Link():
+class Link:
     def __init__(self, packageLink, packageFolder):
         self._packageLink = packageLink
         self._packageFolder = packageFolder
