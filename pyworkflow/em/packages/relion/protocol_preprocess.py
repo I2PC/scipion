@@ -50,21 +50,21 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       label="Input particles", important=True, 
                       help='Select the input images from the project.')   
-        
+
         form.addParam('doNormalize', BooleanParam, default=True,
                       label='Normalize', important=True,
                       help='If set to True, particles will be normalized in the way RELION prefers it.\n'
-                           'Is recommended to *always normalize your particles*, and use a reasonable \n'
-                           'radius for the circle around your particles outside of which the standard \n'
+                           'It is recommended to *always normalize your particles*, and use a reasonable\n'
+                           'radius for the circle around your particles outside of which the standard\n'
                            'deviation and average values for the noise are calculated.\n\n'
-                           '*Note*: if the particles are re-scaled, the radius for normalize will be  \n'
+                           '*Note*: if the particles are re-scaled, the radius for normalize will be\n'
                            'taken over the new dimensions.')
         form.addParam('backRadius', IntParam, default=-1,
                       condition='doNormalize',
                       label='Background radius (px)',
                       help='Pixels outside this circle are assumed to be noise and their stddev '
                       'is set to 1. Radius for background circle definition (in pixel).')        
-        
+
         form.addParam('doRemoveDust', BooleanParam, default=False,
                       label='Remove dust from particles', 
                       help='If there are white or black artefacts on the micrographs \n'
@@ -79,11 +79,11 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
                                  '(negative value means no dust removal)')
         line.addParam('whiteDust', FloatParam, default=-1., label='White')
         line.addParam('blackDust', FloatParam, default=-1., label='Black')
-           
+
         form.addParam('doInvert', BooleanParam, default=False,
                       label='Invert contrast', 
                       help='Invert the contrast if your particles are black over a white background.')
-        
+
         form.addSection('Scale and window')
         form.addParam('doScale', BooleanParam, default=False,
                       label='Scale particles?',
@@ -98,8 +98,8 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         form.addParam('windowSize', IntParam, default=0, validators=[Positive],
                       condition='doWindow',
                       label='Window size (px)',
-                      help='New particles windows size (in pixels).')  
-        
+                      help='New particles windows size (in pixels).')
+
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):

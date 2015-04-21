@@ -605,42 +605,52 @@ class TestXmippProtCL2DAlign(TestXmippBase):
 
 
 class TestXmippDenoiseParticles(TestXmippBase):
-    """This class checks if the protocol Denoise Particles works properly"""
+    """Check protocol Denoise Particles"""
     @classmethod
     def setUpClass(cls):
-        from pyworkflow.em.packages.relion import ProtRelionClassify2D
-        # For denoise particles we need to import particles, and classes, and 
-        # particles must be aligned with classes. As this is the usual 
-        # situation after a CL2D, we just run this protocol
+        from pyworkflow.em.packages.relion import ProtRelionClassify2D, ProtRelionPreprocessParticles
+        # To denoise particles we need to import the particles and the
+        # classes, and particles must be aligned with classes. As this
+        # is the usual situation after a CL2D, we just run that protocol.
+
         # Set project and data
         setupTestProject(cls)
         cls.setData('mda')
+
         # Import particles
-        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        psize = 3.50  # pixel size ("sampling rate"), in A/pixel
+        cls.protImport = cls.runImportParticles(cls.particlesFn, psize)
+
         # Normalize them
-        cls.protNormalize = cls.newProtocol(XmippProtPreprocessParticles, doNormalize=True)
+        radiusInPixel = 42
+        cls.protNormalize = cls.newProtocol(ProtRelionPreprocessParticles,
+                                            doNormalize=True, backRadius=radiusInPixel)
         cls.protNormalize.inputParticles.set(cls.protImport.outputParticles)
         cls.launchProtocol(cls.protNormalize)
+        diameterInA = 2 * radiusInPixel * psize
         cls.protCL2D = cls.newProtocol(ProtRelionClassify2D,
-                                  doCTF=False, maskRadiusA=170,
-                                  numberOfMpi=4, numberOfThreads=1)
+                                       doCTF=False, maskDiameterA=diameterInA,
+                                       numberOfMpi=4, numberOfThreads=1)
         cls.protCL2D.numberOfClasses.set(4)
         cls.protCL2D.numberOfIterations.set(3)
         cls.protCL2D.inputParticles.set(cls.protNormalize.outputParticles)
         cls.launchProtocol(cls.protCL2D)
-    
+
     def test_denoiseparticles(self):
-        print ''
-        print '*****************************'
-        print '| ATTENTION: This part of the test may last for several minutes, building PCA basis for denoising is time expensive.'
-        print '*****************************'
-        print ''
+        print """
+*****************************
+| Note: This part of the test may last for several minutes,
+|       building a PCA basis for denoising is time expensive.
+*****************************
+"""
         protDenoise = self.newProtocol(XmippProtDenoiseParticles)
         protDenoise.inputParticles.set(self.protImport.outputParticles)
         protDenoise.inputClasses.set(self.protCL2D.outputClasses)
         self.launchProtocol(protDenoise)
         # We check that protocol generates output
-        self.assertIsNotNone(protDenoise.outputParticles, "There was a problem generating output particles")
+        self.assertIsNotNone(protDenoise.outputParticles,
+                             "There was a problem generating output particles")
+
 
 class TestXmippApplyAlignment(TestXmippBase):
     """This class checks if the protocol Apply Alignment works properly"""
