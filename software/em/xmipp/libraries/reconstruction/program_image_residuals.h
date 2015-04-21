@@ -45,6 +45,8 @@ public:
 }
 ;//end of class ProgFilter
 
+/// Compute the divergence between two covariance matrices
+double computeCovarianceMatrixDivergence(const Matrix2D<double> &C1, const Matrix2D<double> &C2);
 
 
 

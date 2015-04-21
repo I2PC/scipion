@@ -62,10 +62,14 @@ public:
     bool optimizeScale;
     // Optimize angles
     bool optimizeAngles;
+    // Optimize defocus
+    bool optimizeDefocus;
     // Apply transformation to this image
     String originalImageLabel;
     // Phase Flipped
     bool phaseFlipped;
+    // Penalization for the average
+    double penalization;
 public:
     // 2D mask in real space
     MultidimArray<int> mask2D;
@@ -91,8 +95,12 @@ public:
 	double old_shiftX, old_shiftY;
 	// Has CTF
 	bool hasCTF;
+	// Original defocus
+	double old_defocusU, old_defocusV, old_defocusAngle;
 	// CTF
 	CTFDescription ctf;
+	// Covariance matrices
+	Matrix2D<double> C0, C;
 public:
     /// Empty constructor
     ProgAngularContinuousAssign2();
