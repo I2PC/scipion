@@ -483,6 +483,12 @@ public:
         return -K*E;
     }
 
+    /// Get Phase of the CTF
+    inline double getPhaseAt() const
+    {
+        return K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
+    }
+
     /// Compute CTF pure at (U,V). Continuous frequencies
     inline double getValuePureAt(bool show = false) const
     {
