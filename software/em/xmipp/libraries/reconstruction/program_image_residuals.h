@@ -35,6 +35,9 @@ public:
     void postProcess();
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
+    // Normalize divergence
+    bool normalizeDivergence;
+
     // Autocorrelation
     Matrix2D<double> R;
     Image<double> IR;

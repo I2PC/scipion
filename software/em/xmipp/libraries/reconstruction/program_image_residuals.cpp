@@ -30,14 +30,17 @@
 void ProgImageResiduals::defineParams()
 {
     each_image_produces_an_output = true;
+    produces_an_output = true;
     addUsageLine("Analyze image residuals");
     XmippMetadataProgram::defineParams();
+    addParamsLine(" [--normalizeDivergence]    : Normalize the divergence measure");
     addExampleLine("xmipp_image_residuals -i residuals.stk -o autocorrelations.stk --save_metadata_stack autocorrelations.xmd");
 }
 
 void ProgImageResiduals::readParams()
 {
     XmippMetadataProgram::readParams();
+    normalizeDivergence=checkParam("--normalizeDivergence");
 }
 
 void ProgImageResiduals::preProcess()
@@ -49,11 +52,21 @@ void ProgImageResiduals::preProcess()
 
 void ProgImageResiduals::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
+	rowOut=rowIn;
+
     Image<double> img;
-    img.read(fnImg);
+    if (!rowIn.containsLabel(MDL_IMAGE_RESIDUAL))
+    	img.read(fnImg);
+    else
+    {
+    	FileName fnResidual;
+    	rowIn.getValue(MDL_IMAGE_RESIDUAL,fnResidual);
+    	img.read(fnResidual);
+    }
     covarianceMatrix(img(), R);
     IR()=R;
     IR.write(fnImgOut);
+    rowOut.setValue(MDL_IMAGE_COVARIANCE,fnImgOut);
 
     img().computeAvgStdev(A1D_ELEM(resmean,i),A1D_ELEM(resvar,i));
     i++;
@@ -70,7 +83,7 @@ void updateRavg(MetaData &mdR, Matrix2D<double> &Ravg)
 	newRavg.initZeros(Ravg);
 	FOR_ALL_OBJECTS_IN_METADATA(mdR)
 	{
-		mdR.getValue(MDL_IMAGE,fnR,__iter.objId);
+		mdR.getValue(MDL_IMAGE_COVARIANCE,fnR,__iter.objId);
 		IR.read(fnR);
 		IR().copy(R);
 
@@ -112,7 +125,8 @@ double computeCovarianceMatrixDivergence(const Matrix2D<double> &C1, const Matri
 
 void ProgImageResiduals::postProcess()
 {
-	MetaData mdR(fn_out);
+	FileName fnMDout=fn_out.replaceExtension("xmd");
+	MetaData mdR(fnMDout);
 
 	// Ravg
 	Matrix2D<double> Ravg;
@@ -141,13 +155,16 @@ void ProgImageResiduals::postProcess()
 	std::cerr << "Calculating covariance divergence ..." << std::endl;
 	init_progress_bar(mdR.size());
 	size_t n=0;
+	double minD=1e38;
 	FOR_ALL_OBJECTS_IN_METADATA(mdR)
 	{
-		mdR.getValue(MDL_IMAGE,fnR,__iter.objId);
+		mdR.getValue(MDL_IMAGE_COVARIANCE,fnR,__iter.objId);
 		IR.read(fnR);
 		IR().copy(R);
 
 		double d=computeCovarianceMatrixDivergence(Ravg,R);
+		if (d<minD)
+			minD=d;
 		mdR.setValue(MDL_ZSCORE_RESMEAN,fabs(A1D_ELEM(resmean,n)),__iter.objId);
 		mdR.setValue(MDL_ZSCORE_RESVAR,fabs(A1D_ELEM(resvar,n)),__iter.objId);
 		mdR.setValue(MDL_ZSCORE_RESCOV,d,__iter.objId);
@@ -156,6 +173,12 @@ void ProgImageResiduals::postProcess()
 			progress_bar(n);
 	}
 	progress_bar(mdR.size());
-	mdR.renameColumn(MDL_IMAGE,MDL_IMAGE2);
-	mdR.write(fn_out.replaceExtension("xmd"));
+	if (normalizeDivergence)
+		FOR_ALL_OBJECTS_IN_METADATA(mdR)
+		{
+			double d;
+			mdR.getValue(MDL_ZSCORE_RESCOV,d,__iter.objId);
+			mdR.setValue(MDL_ZSCORE_RESCOV,d/minD-1,__iter.objId);
+		}
+	mdR.write(fnMDout);
 }
