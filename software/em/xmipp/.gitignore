@@ -60,6 +60,7 @@ bin/
 build/
 lib/
 documentation/
+libraries/bindings/java/src/
 gmon.out
 Debug/
 *~
