@@ -202,6 +202,7 @@ enum MDLabel
     MDL_FRAME_ID, ///< Unique id of frame inside a Movie
     MDL_IDX, ///< Index within a list (size_t)
     MDL_IMAGE, ///< Name of an image (std::string)
+    MDL_IMAGE_COVARIANCE, ///< Name of the covariance imagee associated to this image
     MDL_IMAGE_IDX, ///< Index of an image within a list (size_t)
     MDL_IMAGE_ORIGINAL, ///< Name of an image from which MDL_IMAGE is coming from
     MDL_IMAGE_REF, ///< Name of of the class image from which MDL_IMAGE is coming from
@@ -1504,6 +1505,7 @@ private:
         MDL::addLabelAlias(MDL_IMAGE5, "associatedImage5"); //3.0
 
         MDL::addLabel(MDL_IMAGE, LABEL_STRING, "image", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE_COVARIANCE, LABEL_STRING, "imageCovariance", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_IDX, LABEL_SIZET, "imageIndex");
         MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "imageOriginal", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_REF, LABEL_STRING, "imageRef", TAGLABEL_IMAGE);
