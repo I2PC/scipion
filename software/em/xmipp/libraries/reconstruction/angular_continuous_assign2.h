@@ -40,6 +40,8 @@ class ProgAngularContinuousAssign2: public XmippMetadataProgram
 public:
     /** Filename of the reference volume */
     FileName fnVol;
+    /** Filename of residuals */
+    FileName fnResiduals;
     /** Maximum shift allowed */
     double maxShift;
     /** Maximum scale allowed */
@@ -116,6 +118,9 @@ public:
 
     /// Define parameters
     void defineParams();
+
+    /** Start processing */
+    void startProcessing();
 
     /** Produce side info.
         An exception is thrown if any of the files is not found*/

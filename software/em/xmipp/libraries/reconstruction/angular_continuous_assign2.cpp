@@ -61,6 +61,7 @@ void ProgAngularContinuousAssign2::readParams()
     originalImageLabel = getParam("--applyTo");
     phaseFlipped = checkParam("--phaseFlipped");
     penalization = getDoubleParam("--penalization");
+    fnResiduals = getParam("--oresiduals");
 }
 
 // Show ====================================================================
@@ -86,6 +87,7 @@ void ProgAngularContinuousAssign2::show()
     << "Apply to:            " << originalImageLabel << std::endl
     << "Phase flipped:       " << phaseFlipped       << std::endl
     << "Penalization:        " << penalization       << std::endl
+    << "Output residuals:    " << fnResiduals        << std::endl
     ;
 }
 
@@ -114,8 +116,16 @@ void ProgAngularContinuousAssign2::defineParams()
     addParamsLine("  [--applyTo <label=image>]    : Which is the source of images to apply the final transformation");
     addParamsLine("  [--phaseFlipped]             : Input images have been phase flipped");
     addParamsLine("  [--penalization <l=100>]     : Penalization for the average term");
+    addParamsLine("  [--oresiduals <stack=\"\">]  : Output stack for the residuals");
     addExampleLine("A typical use is:",false);
     addExampleLine("xmipp_angular_continuous_assign2 -i anglesFromDiscreteAssignment.xmd --ref reference.vol -o assigned_angles.xmd");
+}
+
+void ProgAngularContinuousAssign2::startProcessing()
+{
+	XmippMetadataProgram::startProcessing();
+	if (fnResiduals!="")
+		createEmptyFile(fnResiduals, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE);
 }
 
 // Produce side information ================================================
@@ -338,7 +348,27 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 				steps(9)=steps(10)=steps(11)=1.;
 			powellOptimizer(p, 1, 12, &continuous2cost, this, 0.01, cost, iter, steps, true);
 			if (cost>1e30)
+			{
 				rowOut.setValue(MDL_ENABLED,-1);
+				p.initZeros();
+			    p(1)=old_grayA; // a in I'=a*I+b
+			    p(0)=old_grayB; // b in I'=a*I+b
+			    p(2)=old_contShiftX;
+			    p(3)=old_contShiftY;
+			    p(4)=old_scaleX;
+			    p(5)=old_scaleY;
+			}
+			else
+			{
+				//continuous2cost(p.adaptForNumericalRecipes(),this);
+				if (fnResiduals!="")
+				{
+					FileName fnResidual;
+					fnResidual.compose(fnImgOut.getPrefixNumber(),fnResiduals);
+					E.write(fnResidual,true,WRITE_REPLACE);
+					rowOut.setValue(MDL_IMAGE_RESIDUAL,fnResidual);
+				}
+			}
 
 			// Apply
 			FileName fnOrig;
@@ -374,6 +404,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		}
 		catch (XmippError XE)
 		{
+			std::cerr << XE << std::endl;
 			std::cerr << "Warning: Cannot refine " << fnImg << std::endl;
 			rowOut.setValue(MDL_ENABLED,-1);
 		}
