@@ -53,10 +53,10 @@ class ProtCTFAssign(ProtCTFMicrographs):
         form.addParam('inputType', params.EnumParam, choices=self._unionTypes, default=0, # Micrographs
                       label='Input type:',
                       help='Select the type of objects that you want to assign the CTF.')
-        form.addParam('inputSet', params.PointerParam, pointerClass='EMSet',
-                      label='Input set',
-                      help='Select the images (micrographs or particles) '
-                           'that you want to update the CTF parameters.')        
+        self.inputSetsParam = form.addParam('inputSet', params.PointerParam, pointerClass='EMSet',
+                              label='Input set',
+                              help='Select the images (micrographs or particles) '
+                                   'that you want to update the CTF parameters.')        
         form.addParam('inputCTF', params.PointerParam, pointerClass='SetOfCTF',
                       label="Input CTF",
                       help='Select the CTF that will be used to update particles.')  

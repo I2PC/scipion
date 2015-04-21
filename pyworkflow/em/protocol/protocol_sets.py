@@ -72,8 +72,10 @@ class ProtUnionSet(ProtSets):
             # For relatively small set we usually want to include
             # the single element type, this will allow, for example
             # to union SetOfVolumes and Volumes in the final set
-            if inputText in ['Volumes', 'Averages', 'CTFs']:
+            if inputText in ['Volumes', 'Averages']:
                 pointerClass += ',%s' % inputText[:-1] # remove last 's'
+            elif inputText in ['CTFs']:
+                pointerClass = '%s,CTFModel' % pointerClass[:-1] # remove last 's'
                 
             self.inputSetsParam.setPointerClass(pointerClass)
         
