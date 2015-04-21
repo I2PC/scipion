@@ -166,6 +166,12 @@ boost = env.addLibrary(
                'software/include/boost')],
     default=False)
 
+nfft = env.addLibrary(
+    'nfft3',
+    tar='nfft-3.2.3.tgz',
+    deps=[fftw3],
+    default=False)
+
 
 #  ************************************************************************
 #  *                                                                      *
