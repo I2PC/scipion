@@ -346,7 +346,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 				steps(6)=steps(7)=steps(8)=1.;
 			if (optimizeDefocus)
 				steps(9)=steps(10)=steps(11)=1.;
-			powellOptimizer(p, 1, 12, &continuous2cost, this, 0.01, cost, iter, steps, true);
+			powellOptimizer(p, 1, 12, &continuous2cost, this, 0.01, cost, iter, steps, verbose>=2);
 			if (cost>1e30)
 			{
 				rowOut.setValue(MDL_ENABLED,-1);
@@ -365,7 +365,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 				{
 					FileName fnResidual;
 					fnResidual.compose(fnImgOut.getPrefixNumber(),fnResiduals);
-					E.write(fnResidual,true,WRITE_REPLACE);
+					E.write(fnResidual);
 					rowOut.setValue(MDL_IMAGE_RESIDUAL,fnResidual);
 				}
 			}
