@@ -107,6 +107,7 @@ class Command:
         self._cwd = kwargs.get('cwd', None)
         self._out = kwargs.get('out', None)
         self._always = kwargs.get('always', False)
+        self._env = kwargs.get('env', None)
 
     def _existsAll(self):
         """ Return True if all targets exist. """
@@ -136,7 +137,7 @@ class Command:
                 if callable(self._cmd):
                     self._cmd()
                 else: # if not, we assume is a command and we make a system call
-                    os.system(cmd)
+                    call(cmd, shell=True, env=self._env)
             # Return to working directory, useful
             # when changing dir before executing command
             os.chdir(cwd)
