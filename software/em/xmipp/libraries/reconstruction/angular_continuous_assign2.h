@@ -62,6 +62,8 @@ public:
     bool optimizeScale;
     // Optimize angles
     bool optimizeAngles;
+    // Optimize defocus
+    bool optimizeDefocus;
     // Apply transformation to this image
     String originalImageLabel;
     // Phase Flipped
@@ -93,6 +95,8 @@ public:
 	double old_shiftX, old_shiftY;
 	// Has CTF
 	bool hasCTF;
+	// Original defocus
+	double old_defocusU, old_defocusV, old_defocusAngle;
 	// CTF
 	CTFDescription ctf;
 	// Covariance matrices
