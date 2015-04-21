@@ -27,11 +27,12 @@
 #### Python
 *.pyc
 
-#### Eclipse
+#### Eclipse and so on
 .project
 .cproject
 .pydevproject
 .classpath
+.idea
 
 #### Xmipp
 # Config files
@@ -75,6 +76,7 @@ data
 
 # Scipion
 config/*.conf
+config/backups/
 
 # Configuration for servers
 pyworkflow/web/pages/resources/js/templates_libs/config.js
