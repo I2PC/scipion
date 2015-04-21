@@ -284,7 +284,7 @@ def setRowId(mdRow, obj, label=xmipp.MDL_ITEM_ID):
 
 def micrographToCTFParam(mic, ctfparam):
     """ This function is used to convert a Micrograph object
-    to the .ctfparam metadata needed by some Xmipp protograms.
+    to the .ctfparam metadata needed by some Xmipp programs.
     If the micrograph already comes from xmipp, the ctfparam
     will be returned, if not, the new file. 
     """
