@@ -205,6 +205,7 @@ enum MDLabel
     MDL_IMAGE_IDX, ///< Index of an image within a list (size_t)
     MDL_IMAGE_ORIGINAL, ///< Name of an image from which MDL_IMAGE is coming from
     MDL_IMAGE_REF, ///< Name of of the class image from which MDL_IMAGE is coming from
+    MDL_IMAGE_RESIDUAL, ///< Name of a residual image associated to this image
     MDL_IMAGE_TILTED, ///< Name of the tilted images associated to MDL_IMAGE
     MDL_IMGMD, ///< Name of Metadata file for all images (string)
     MDL_IMAGE1, ///< Image associated to this object (std::string)
@@ -1506,6 +1507,7 @@ private:
         MDL::addLabel(MDL_IMAGE_IDX, LABEL_SIZET, "imageIndex");
         MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "imageOriginal", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_REF, LABEL_STRING, "imageRef", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE_RESIDUAL, LABEL_STRING, "imageResidual", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_TILTED, LABEL_STRING, "imageTilted", TAGLABEL_IMAGE);
 
         MDL::addLabelAlias(MDL_IMAGE_ORIGINAL, "original_image"); //3.0
