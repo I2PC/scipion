@@ -130,9 +130,10 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         groupContinuous.addParam('contMaxScale', FloatParam, label="Max. scale variation", default=0.02, expertLevel=LEVEL_ADVANCED)
         groupContinuous.addParam('contAngles', BooleanParam, label="Optimize angles?", default=True,
                       help='Optimize angles within a limit')
-        groupContinuous.addParam('contGrayValues', BooleanParam, label="Optimize gray values?", default=False,
+        groupContinuous.addParam('contGrayValues', BooleanParam, label="Optimize gray values?", default=True,
                       help='Optimize gray values. Do not perform this unless the reconstructed volume is gray-compatible with the projections,'\
                       ' i.e., the volumes haven been produced from projections')
+        groupContinuous.addParam('contDefocus', BooleanParam, label="Optimize defocus?", default=True)
         groupContinuous.addParam('contPadding', IntParam, label="Fourier padding factor", default=2, expertLevel=LEVEL_ADVANCED,
                       help='The volume is zero padded by this factor to produce projections')
         
@@ -272,7 +273,7 @@ class XmippProtReconstructHighRes(ProtRefine3D):
             img.convert(vol, fnVol1)
             if newXdim!=vol.getDim()[0]:
                 self.runJob('xmipp_transform_window',"-i %s --size %d"%(fnVol1,newXdim),numberOfMpi=1)
-            copyFile(fnVol1, fnVol2)
+            self.runJob('xmipp_transform_randomize_phases',"-i %s -o %s --freq discrete 0.25"%(fnVol1,fnVol2),numberOfMpi=1)
         
         # Compare both reconstructions
         self.evaluateReconstructions(0)
@@ -565,48 +566,53 @@ class XmippProtReconstructHighRes(ProtRefine3D):
             maxAngle=3*self.calculateAngStep(newXdim, TsCurrent, ResolutionAlignment)
 
             for i in range(1,3):
-                fnLocalImages=join(fnDirLocal,"images%02d.xmd"%i)
-
-                # Starting angles
-                fnLocalAssignment=join(fnDirLocal,"anglesDisc%02d.xmd"%i)
-                if exists(fnDirGlobal):
-                    fnGlobalAssignment=join(fnDirGlobal,"anglesDisc%02d.xmd"%i)
-                    TsGlobal=self.readInfoField(fnDirGlobal,"sampling",MDL_SAMPLINGRATE)
-                    if TsGlobal==TsCurrent:
-                        copyFile(fnGlobalAssignment,fnLocalAssignment)
+                fnLocalXmd=join(fnDirLocal,"anglesCont%02d.xmd"%i)
+                if not exists(fnLocalXmd):
+                    fnLocalImages=join(fnDirLocal,"images%02d.xmd"%i)
+    
+                    # Starting angles
+                    fnLocalAssignment=join(fnDirLocal,"anglesDisc%02d.xmd"%i)
+                    if exists(fnDirGlobal):
+                        fnGlobalAssignment=join(fnDirGlobal,"anglesDisc%02d.xmd"%i)
+                        TsGlobal=self.readInfoField(fnDirGlobal,"sampling",MDL_SAMPLINGRATE)
+                        if TsGlobal==TsCurrent:
+                            copyFile(fnGlobalAssignment,fnLocalAssignment)
+                        else:
+                            self.adaptShifts(fnGlobalAssignment,TsGlobal,fnLocalAssignment,TsCurrent)
                     else:
-                        self.adaptShifts(fnGlobalAssignment,TsGlobal,fnLocalAssignment,TsCurrent)
-                else:
-                    TsPrevious=self.readInfoField(fnDirPrevious,"sampling",MDL_SAMPLINGRATE)
-                    self.adaptShifts(join(fnDirPrevious,"anglesDisc%02d.xmd"%i),TsPrevious,fnLocalAssignment,TsCurrent)
-                self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column image"%fnLocalAssignment,numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%(fnLocalAssignment,fnLocalImages),numberOfMpi=1)
-
-                fnVol=join(fnDirLocal,"volumeRef%02d.vol"%i)
-                fnLocalStk=join(fnDirLocal,"anglesCont%02d.stk"%i)
-                
-                R=self.particleRadius.get()
-                if R<=0:
-                    R=self.inputParticles.get().getDimensions()[0]/2
-                R=round(R*self.TsOrig/TsCurrent)
-                args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --applyTo image1"%\
-                   (fnLocalAssignment,fnLocalStk,TsCurrent,R,self.contPadding.get(),fnVol,previousResolution)
-                if self.contShift:
-                    args+=" --optimizeShift --max_shift %d"%round(self.angularMaxShift.get()*newXdim*0.01)
-                if self.contScale:
-                    args+=" --optimizeScale --max_scale %f"%self.contMaxScale.get() 
-                if self.contAngles:
-                    args+=" --optimizeAngles --max_angular_change %f"%maxAngle
-                if self.phaseFlipped:
-                    args+=" --phaseFlipped"
-                self.runJob("xmipp_angular_continuous_assign2",args)
-                self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnLocalStk,R))
-                # COSS: Falta continuous con CTF y flipped y gray
+                        TsPrevious=self.readInfoField(fnDirPrevious,"sampling",MDL_SAMPLINGRATE)
+                        self.adaptShifts(join(fnDirPrevious,"anglesDisc%02d.xmd"%i),TsPrevious,fnLocalAssignment,TsCurrent)
+                    self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column image"%fnLocalAssignment,numberOfMpi=1)
+                    self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%(fnLocalAssignment,fnLocalImages),numberOfMpi=1)
+    
+                    fnVol=join(fnDirLocal,"volumeRef%02d.vol"%i)
+                    fnLocalStk=join(fnDirLocal,"anglesCont%02d.stk"%i)
+                    
+                    R=self.particleRadius.get()
+                    if R<=0:
+                        R=self.inputParticles.get().getDimensions()[0]/2
+                    R=round(R*self.TsOrig/TsCurrent)
+                    args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --applyTo image1"%\
+                       (fnLocalAssignment,fnLocalStk,TsCurrent,R,self.contPadding.get(),fnVol,previousResolution)
+                    if self.contShift:
+                        args+=" --optimizeShift --max_shift %d"%round(self.angularMaxShift.get()*newXdim*0.01)
+                    if self.contScale:
+                        args+=" --optimizeScale --max_scale %f"%self.contMaxScale.get() 
+                    if self.contAngles:
+                        args+=" --optimizeAngles --max_angular_change %f"%maxAngle
+                    if self.contGrayValues:
+                        args+=" --optimizeGray"
+                    if self.contDefocus:
+                        args+=" --optimizeDefocus"
+                        if self.phaseFlipped:
+                            args+=" --phaseFlipped"
+                    self.runJob("xmipp_angular_continuous_assign2",args)
+                    self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnLocalStk,R))
 
     def weightParticles(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
         # COSS: Falta outliers
-        # COSS: Falta clusterability
+        # COSS: Falta astigmatismo
         for i in range(1,3):
             # Grab file
             fnDirGlobal=join(fnDirCurrent,"globalAssignment")
