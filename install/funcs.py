@@ -107,7 +107,7 @@ class Command:
         self._cwd = kwargs.get('cwd', None)
         self._out = kwargs.get('out', None)
         self._always = kwargs.get('always', False)
-        self._env = kwargs.get('env', None)
+        self._environ = kwargs.get('environ', None)
 
     def _existsAll(self):
         """ Return True if all targets exist. """
@@ -137,7 +137,7 @@ class Command:
                 if callable(self._cmd):
                     self._cmd()
                 else: # if not, we assume is a command and we make a system call
-                    call(cmd, shell=True, env=self._env)
+                    call(cmd, shell=True, env=self._environ)
             # Return to working directory, useful
             # when changing dir before executing command
             os.chdir(cwd)
@@ -364,11 +364,12 @@ class Environment:
             flags.append('--prefix=%s' % prefixPath)
             flags.append('--libdir=%s/lib' % prefixPath)
 
+            environ = os.environ.update({'CFLAGS': '-I%s/include' % prefixPath,
+                                         'LDFLAGS': '-L%s/lib' % prefixPath})
             t.addCommand('./configure %s' % ' '.join(flags),
-                         targets=makeFile,
-                         cwd=configPath,
+                         targets=makeFile, cwd=configPath,
                          out='%s/log/%s_configure.log' % (prefixPath, name),
-                         always=configAlways)
+                         always=configAlways, environ=environ)
         else:
             assert progInPath('cmake'), ("Cannot run 'cmake'. Please install "
                                          "it in your system first.")
