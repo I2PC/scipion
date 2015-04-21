@@ -81,6 +81,11 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                       help='Weight input images by angular assignment cost')
         form.addParam('weightJumper', BooleanParam, label="Weight by angular stability?", default=True,
                       help='Weight input images by angular stability between iterations')
+        form.addParam('weightAstigmatism', BooleanParam, label="Weight by astigmatism?", default=True,
+                      help='Give lower weight to those images whose astigmatic CTF would not allow to reach high resolution.' \
+                           'This weight is calculated by the continuous assignment.')
+        form.addParam('weightAstigmatismSigma', FloatParam, label="Astigmatism sigma", default=10, expertLevel=LEVEL_ADVANCED, 
+                        condition="weightAstigmatism", help="Sigma in degrees for the CTF phase");
 
         form.addSection(label='Next Reference')
         form.addParam('nextResolutionCriterion',FloatParam, label="FSC criterion", default=0.143, 
@@ -612,7 +617,6 @@ class XmippProtReconstructHighRes(ProtRefine3D):
     def weightParticles(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
         # COSS: Falta outliers
-        # COSS: Falta astigmatismo
         for i in range(1,3):
             # Grab file
             fnDirGlobal=join(fnDirCurrent,"globalAssignment")
@@ -660,6 +664,11 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                     weight*=aux
                 md.setValue(MDL_WEIGHT,weight,objId)
             md.write(fnAngles)
+            
+            # Weight by Astigmatism
+            if self.weightAstigmatism:
+                self.runJob("xmipp_transform_filter","-i %s --fourier astigmatism %f --sampling %f"%\
+                            (fnAngles,self.weightAstigmatismSigma.get(),TsCurrent))
         fnAngles=join(fnDirCurrent,"angles.xmd")
         fnAngles1=join(fnDirCurrent,"angles01.xmd")
         fnAngles2=join(fnDirCurrent,"angles02.xmd")
