@@ -40,7 +40,8 @@ from pyworkflow.em.convert import ImageHandler
 
 from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAMPLINGRATE, MDL_WEIGHT_SSNR, MDL_WEIGHT_SIGNIFICANT, \
                   MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_ANGLE_DIFF, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_ORIGINAL, \
-                  MDL_COUNT, MDL_SHIFT_X, MDL_CONTINUOUS_X, MDL_WEIGHT_JUMPER, MDL_CTF_DEFOCUSU, MDL_CTF_MODEL, MDL_PARTICLE_ID, Image
+                  MDL_COUNT, MDL_SHIFT_X, MDL_CONTINUOUS_X, MDL_WEIGHT_JUMPER, MDL_CTF_DEFOCUSU, MDL_CTF_MODEL, MDL_PARTICLE_ID, \
+                  MDL_ZSCORE_RESCOV, MDL_ZSCORE_RESVAR, MDL_ZSCORE_RESMEAN, Image
 
 #Continuar un procesamiento anterior
 #Criterio de convergencia
@@ -86,6 +87,8 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                            'This weight is calculated by the continuous assignment.')
         form.addParam('weightAstigmatismSigma', FloatParam, label="Astigmatism sigma", default=10, expertLevel=LEVEL_ADVANCED, 
                         condition="weightAstigmatism", help="Sigma in degrees for the CTF phase");
+        form.addParam('weightResiduals', BooleanParam, label="Weight by residuals?", default=True,
+                      help="Analyze how different are the image residuals, it only works after running the continuous assignment");
 
         form.addSection(label='Next Reference')
         form.addParam('nextResolutionCriterion',FloatParam, label="FSC criterion", default=0.143, 
@@ -611,12 +614,14 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                         args+=" --optimizeDefocus"
                         if self.phaseFlipped:
                             args+=" --phaseFlipped"
+                    if self.weightResiduals:
+                        args+=" --oresiduals %s"%join(fnDirLocal,"residuals%02i.stk"%i)
                     self.runJob("xmipp_angular_continuous_assign2",args)
                     self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnLocalStk,R))
 
     def weightParticles(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
-        # COSS: Falta outliers
+        from math import exp
         for i in range(1,3):
             # Grab file
             fnDirGlobal=join(fnDirCurrent,"globalAssignment")
@@ -647,6 +652,12 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s"%\
                             (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper"),numberOfMpi=1)
                 moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
+
+            if self.weightResiduals and exists(fnAnglesCont):
+                fnCovariance=join(fnDirLocal,"covariance%02d.stk"%i)
+                self.runJob("xmipp_image_residuals","-i %s -o %s --normalizeDivergence"%(fnAngles,fnCovariance),numberOfMpi=1)
+                moveFile(join(fnDirLocal,"covariance%02d.xmd"%i),fnAngles)
+            
             md=MetaData(fnAngles)
             for objId in md:
                 weight=1
@@ -659,6 +670,16 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                 if self.weightContinuous and exists(fnAnglesCont):
                     aux=md.getValue(MDL_WEIGHT_CONTINUOUS2,objId)
                     weight*=aux
+                if self.weightResiduals and exists(fnAnglesCont):
+                    aux=md.getValue(MDL_ZSCORE_RESCOV,objId)
+                    aux/=3
+                    weight*=exp(-0.5*aux*aux)
+                    aux=md.getValue(MDL_ZSCORE_RESMEAN,objId)
+                    aux/=3
+                    weight*=exp(-0.5*aux*aux)
+                    aux=md.getValue(MDL_ZSCORE_RESVAR,objId)
+                    aux/=3
+                    weight*=exp(-0.5*aux*aux)
                 if self.weightJumper and iteration>1:
                     aux=md.getValue(MDL_WEIGHT_JUMPER,objId)
                     weight*=aux
@@ -784,11 +805,14 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                     cleanPath(join(fnGlobal,"significant%02d"%i))
                     cleanPath(join(fnGlobal,"volumeRef%02d.vol"%i))
                 if exists(fnLocal):
-                    cleanPath(join(fnGlobal,"images%02d.xmd"%i))
-                    cleanPath(join(fnGlobal,"anglesCont%02d.stk"%i))
-                    cleanPath(join(fnGlobal,"anglesDisc%02d.xmd"%i))
-                    cleanPath(join(fnGlobal,"volumeRef%02d.vol"%i))
-    
+                    cleanPath(join(fnLocal,"images%02d.xmd"%i))
+                    cleanPath(join(fnLocal,"anglesCont%02d.stk"%i))
+                    cleanPath(join(fnLocal,"anglesDisc%02d.xmd"%i))
+                    cleanPath(join(fnLocal,"volumeRef%02d.vol"%i))
+                    if self.weightResiduals:
+                        cleanPath(join(fnDirLocal,"covariance%02d.stk"%i))
+                        cleanPath(join(fnDirLocal,"residuals%02i.stk"%i))
+
     def decideNextIteration(self, iteration):
         # COSS: Falta un criterio para decidir si otra iteracion
         if iteration<self.numberOfIterations.get():
