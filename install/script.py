@@ -27,13 +27,13 @@ import os
 import sys
 from install.funcs import Environment, progInPath
 
-get = lambda x: os.environ.get(x, '0').lower() in ['true', 'yes', 'y', '1']
+get = lambda x: os.environ.get(x, 'y').lower() in ['true', 'yes', 'y', '1']
 
 
 env = Environment(args=sys.argv)
 
 noOpencv = '--no-opencv' in sys.argv or not get('OPENCV')
-noScipy = '--no-scipy' in sys.argv
+noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
 
 
 #  ************************************************************************
@@ -166,7 +166,7 @@ boost = env.addLibrary(
                'software/include/boost')],
     default=False)
 
-nfft = env.addLibrary(
+nfft3 = env.addLibrary(
     'nfft3',
     tar='nfft-3.2.3.tgz',
     deps=[fftw3],
@@ -352,8 +352,8 @@ env.addPackage('pytom',
                           ['pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix] + 
                           ['pytomc/swigModules/_pytom_%s.%s' % (s, libSuffix) 
                            for s in ['mpi', 'freqweight', 'volume', 'fftplan', 'numpy']])],
-               deps=[boost, fftw3, fftw3f, 
-                     swig, lxml, numpy, scipy, 
+               deps=[boost, fftw3, fftw3f, nfft3,
+                     swig, lxml, numpy, scipy,
                      matplotlib, mpi4py, pillow],
                default=False)
 
