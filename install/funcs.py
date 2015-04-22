@@ -349,7 +349,7 @@ class Environment:
 
         configPath = os.path.join('software/tmp', configDir)
         makeFile = '%s/%s' % (configPath, configTarget)
-        prefixPath = os.path.abspath('software')
+        prefix = os.path.abspath('software')
 
         # If we specified the commands to run to obtain the target,
         # that's the only thing we will do.
@@ -361,38 +361,38 @@ class Environment:
         # If we didnt' specify the commands, we can either compile
         # with autotools (so we have to run "configure") or cmake.
         if not cmake:
-            flags.append('--prefix=%s' % prefixPath)
-            flags.append('--libdir=%s/lib' % prefixPath)
+            flags.append('--prefix=%s' % prefix)
+            flags.append('--libdir=%s/lib' % prefix)
 
-            environ = os.environ.update({'CFLAGS': '-I%s/include' % prefixPath,
-                                         'LDFLAGS': '-L%s/lib' % prefixPath})
+            environ = os.environ.update({'CPPFLAGS': '-I%s/include' % prefix,
+                                         'LDFLAGS': '-L%s/lib' % prefix})
             t.addCommand('./configure %s' % ' '.join(flags),
                          targets=makeFile, cwd=configPath,
-                         out='%s/log/%s_configure.log' % (prefixPath, name),
+                         out='%s/log/%s_configure.log' % (prefix, name),
                          always=configAlways, environ=environ)
         else:
             assert progInPath('cmake'), ("Cannot run 'cmake'. Please install "
                                          "it in your system first.")
-            flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefixPath)
+            flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefix)
             t.addCommand('cmake %s' % ' '.join(flags),
                          targets=makeFile,
                          cwd=configPath,
-                         out='%s/log/%s_cmake.log' % (prefixPath, name))
+                         out='%s/log/%s_cmake.log' % (prefix, name))
 
         t.addCommand('make -j %d' % self._processors,
                      cwd=t.buildPath,
-                     out='%s/log/%s_make.log' % (prefixPath, name))
+                     out='%s/log/%s_make.log' % (prefix, name))
 
         t.addCommand('make install',
                      targets=targets,
                      cwd=t.buildPath,
-                     out='%s/log/%s_make_install.log' % (prefixPath, name),
+                     out='%s/log/%s_make_install.log' % (prefix, name),
                      final=True)
 
         if clean:
             t.addCommand('make clean',
                          cwd=t.buildPath,
-                         out='%s/log/%s_make_clean.log' % (prefixPath, name))
+                         out='%s/log/%s_make_clean.log' % (prefix, name))
             t.addCommand('rm %s' % makeFile)
 
         return t
