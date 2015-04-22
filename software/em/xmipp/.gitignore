@@ -37,11 +37,11 @@
 moc_*.cc
 
 # External libs
-applications/programs/*
-!applications/programs/*.cpp
-applications/tests/*
-!applications/tests/*.cpp
-!applications/tests/*.py
+applications/programs/*/*
+!applications/programs/*/*.cpp
+applications/tests/*/*
+!applications/tests/*/*.cpp
+!applications/tests/*/*.py
 
 # Java compilation
 java/lib/Xmipp*.jar
