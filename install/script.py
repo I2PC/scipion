@@ -27,13 +27,13 @@ import os
 import sys
 from install.funcs import Environment, progInPath
 
-get = lambda x: os.environ.get(x, '0').lower() in ['true', 'yes', 'y', '1']
+get = lambda x: os.environ.get(x, 'y').lower() in ['true', 'yes', 'y', '1']
 
 
 env = Environment(args=sys.argv)
 
 noOpencv = '--no-opencv' in sys.argv or not get('OPENCV')
-noScipy = '--no-scipy' in sys.argv
+noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
 
 
 #  ************************************************************************
