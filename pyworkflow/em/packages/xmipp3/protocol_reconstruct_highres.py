@@ -42,11 +42,12 @@ from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAM
                   MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_ANGLE_DIFF, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_ORIGINAL, \
                   MDL_COUNT, MDL_SHIFT_X, MDL_CONTINUOUS_X, MDL_WEIGHT_JUMPER, MDL_CTF_DEFOCUSU, MDL_CTF_MODEL, MDL_PARTICLE_ID, \
                   MDL_ZSCORE_RESCOV, MDL_ZSCORE_RESVAR, MDL_ZSCORE_RESMEAN, Image
+from xmipp3 import HelicalFinder
 
 #Continuar un procesamiento anterior
 #Criterio de convergencia
         
-class XmippProtReconstructHighRes(ProtRefine3D):
+class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     """Reconstruct a volume at high resolution"""
     _label = 'highres'
     
@@ -210,14 +211,8 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         if self.weightSSNR:
             self._insertFunctionStep('doWeightSSNR')
         self._insertFunctionStep('doIteration000', self.inputVolumes.getObjId())
-        self.iteration=1
-        self.insertIteration(self.iteration)
-        self.iteration=2
-        self.insertIteration(self.iteration)
-        self.iteration=3
-        self.insertIteration(self.iteration)
-        self.iteration=4
-        self.insertIteration(self.iteration)
+        for self.iteration in range(1,self.numberOfIterations.get()+1):
+            self.insertIteration(self.iteration)
     
     def insertIteration(self,iteration):
         self._insertFunctionStep('globalAssignment',iteration)
@@ -227,6 +222,7 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         self._insertFunctionStep('postProcessing',iteration)
         self._insertFunctionStep('evaluateReconstructions',iteration)
         self._insertFunctionStep('cleanDirectory',iteration)
+        # COSS: Falta llamar a esta funcion
 #        self._insertFunctionStep('decideNextIteration',iteration)
 
     #--------------------------- STEPS functions ---------------------------------------------------
@@ -772,8 +768,22 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                 cleanPath(fnMask)
         
         if self.postSymmetryHelical:
-            pass
-            # COSS: Falta helical symmetry
+            z0=float(self.postSymmetryHelicalMinZ.get())
+            zF=float(self.postSymmetryHelicalMaxZ.get())
+            zStep=(zF-z0)/10
+            rot0=float(self.postSymmetryHelicalMinRot.get())
+            rotF=float(self.postSymmetryHelicalMaxRot.get())
+            rotStep=(rotF-rot0)/10
+            fnCoarse=join(fnDirCurrent,"coarseHelical%02d.xmd"%i)
+            fnFine=join(fnDirCurrent,"fineHelical%02d.xmd"%i)
+            radius=int(self.postSymmetryHelicalRadius.get())
+            height=int(volXdim)
+            self.runCoarseSearch(fnVol, z0, zF, zStep, rot0, rotF, rotStep, 1, fnCoarse, radius, height)
+            self.runFineSearch(fnVol, fnCoarse, fnFine, z0, zF, rot0, rotF, radius, height)
+            cleanPath(fnCoarse)
+            self.runSymmetrize(fnVol, fnFine, fnVol, radius, height)
+            if self.postSymmetryHelicalDihedral:
+                self.runApplyDihedral(fnVol, fnFine, join(fnDirCurrent,"rotatedHelix.vol"), radius, height)
 
         if self.postDoPseudo:
             fnPseudo=join(fnDirCurrent,"pseudo")

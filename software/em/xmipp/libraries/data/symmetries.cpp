@@ -2801,6 +2801,54 @@ void SymList::breakSymmetry(double rot1, double tilt1, double psi1,
 //:    	std::cerr << "rot2  is zero " << i << R << L << std::endl;
 }
 
+// Forward declaration
+double interpolatedElement3DHelical(const MultidimArray<double> &Vin, double x, double y, double z, double zHelical);
+
+double interpolatedElement3DHelicalInt(const MultidimArray<double> &Vin, int x, int y, int z, double zHelical)
+{
+	if (x<STARTINGX(Vin) || x>FINISHINGX(Vin) || y<STARTINGY(Vin) || y>FINISHINGY(Vin))
+		return 0.0;
+	if (z>=STARTINGZ(Vin) && z<=FINISHINGZ(Vin))
+		return A3D_ELEM(Vin,z,y,x);
+	else if (z<STARTINGZ(Vin))
+		return interpolatedElement3DHelical(Vin,x,y,z+zHelical,zHelical);
+	else
+		return interpolatedElement3DHelical(Vin,x,y,z-zHelical,zHelical);
+}
+
+double interpolatedElement3DHelical(const MultidimArray<double> &Vin, double x, double y, double z, double zHelical)
+{
+	int x0 = floor(x);
+    double fx = x - x0;
+    int x1 = x0 + 1;
+
+    int y0 = floor(y);
+    double fy = y - y0;
+    int y1 = y0 + 1;
+
+    int z0 = floor(z);
+    double fz = z - z0;
+    int z1 = z0 + 1;
+
+    double d000 = interpolatedElement3DHelicalInt(Vin, x0, y0, z0, zHelical);
+    double d001 = interpolatedElement3DHelicalInt(Vin, x1, y0, z0, zHelical);
+    double d010 = interpolatedElement3DHelicalInt(Vin, x0, y1, z0, zHelical);
+    double d011 = interpolatedElement3DHelicalInt(Vin, x1, y1, z0, zHelical);
+    double d100 = interpolatedElement3DHelicalInt(Vin, x0, y0, z1, zHelical);
+    double d101 = interpolatedElement3DHelicalInt(Vin, x1, y0, z1, zHelical);
+    double d110 = interpolatedElement3DHelicalInt(Vin, x0, y1, z1, zHelical);
+    double d111 = interpolatedElement3DHelicalInt(Vin, x1, y1, z1, zHelical);
+
+    double dx00 = LIN_INTERP(fx, d000, d001);
+    double dx01 = LIN_INTERP(fx, d100, d101);
+    double dx10 = LIN_INTERP(fx, d010, d011);
+    double dx11 = LIN_INTERP(fx, d110, d111);
+    double dxy0 = LIN_INTERP(fy, dx00, dx10);
+    double dxy1 = LIN_INTERP(fy, dx01, dx11);
+
+    return LIN_INTERP(fz, dxy0, dxy1);
+}
+
 void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
                       double rot0, MultidimArray<int> *mask)
 {
@@ -2824,9 +2872,37 @@ void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &
             sincos(rotp,&ip,&jp);
             ip*=rho;
             jp*=rho;
-            finalValue+=Vin.interpolatedElement3D(jp,ip,kp,0.0);
+            finalValue+=interpolatedElement3DHelical(Vin,jp,ip,kp,zHelical);
             L+=1.0;
         }
         A3D_ELEM(Vout,k,i,j)=finalValue/L;
     }
+}
+
+void symmetry_HelicalLowRes(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
+                      double rot0, MultidimArray<int> *mask)
+{
+	MultidimArray<double> Vaux;
+    Vout.initZeros(Vin);
+    double helicalStep=rotHelical/zHelical;
+    Matrix2D<double> A;
+
+    for (int k=0; k<(int)ZSIZE(Vin); ++k)
+    {
+    	double angle=RAD2DEG(helicalStep*k)+rot0;
+        rotation3DMatrix(angle,'Z',A,true);
+    	MAT_ELEM(A,2,3)=-k;
+    	applyGeometry(LINEAR,Vaux,Vin,A,IS_NOT_INV,false,0.0);
+    	Vout+=Vaux;
+
+        rotation3DMatrix(-angle,'Z',A,true);
+    	MAT_ELEM(A,2,3)=k;
+    	applyGeometry(LINEAR,Vaux,Vin,A,IS_NOT_INV,false,0.0);
+    	Vout+=Vaux;
+    }
+    Vout/=2*ZSIZE(Vin);
+    if (mask!=NULL)
+    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vout)
+    	if (!DIRECT_MULTIDIM_ELEM(*mask,n))
+    		DIRECT_MULTIDIM_ELEM(Vout,n)=0.0;
 }
