@@ -85,21 +85,17 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             #NOTE self.applyAlignment only exists in extract movies
             if self.applyAlignment and movie.hasAlignment():
                 shifts = movie.getAlignment().getShifts()
-                print("movie name", movie.getFileName())
-                print("shifts",shifts)
+                print("applyAlignment")
             else:
                 # Read movie dimensions to iterate through each frame
                 from pyworkflow.em.convert import ImageHandler
                 from os.path import join
                 movieFolder = self._getMovieFolder(movie.getObjId())
                 from os import getcwd
-                print("getcwd()",getcwd())
-                movieName = join(movieFolder, movie.getFileName())
+                movieName = movie.getFileName()
                 imgh = ImageHandler()
-                print("movieFolder",movieFolder)
-                print("movieName",movieName)
                 x, y, z, n = imgh.getDimensions(movieName)
-                print("x, y, z, n",x, y, z, n)
+                print("NO applyAlignment")
                 shifts = [0] * (2*n)
             ####end of thread
 
