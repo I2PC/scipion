@@ -123,7 +123,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         form.addParallelSection(threads=2, mpi=1)
     
     #--------------------------- STEPS functions --------------------------------------------------
-    def _processMovie(self, movieId, movieName, movieFolder,shifts):###pasar shifts
+    def _processMovie(self, movieId, movieName, movieFolder,shifts,factor):###pasar shifts
         
         movieName = os.path.join(movieFolder, movieName)
 
@@ -173,7 +173,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
             
             hasCoordinates = self._writeXmippPosFile(movieId, movieName, coordinatesName, 
                                                      shiftX, shiftY)
-            
             if hasCoordinates:
                 self.info("Writing frame: %s" % frameName)
                 #TODO: there is no need to write the frame and then operate
@@ -186,11 +185,13 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
 
                 self.info("Extracting particles")
                 frameImages = frameRoot + '_images'
-                args = '-i %(frameName)s --pos %(coordinatesName)s -o %(frameRoot)s --Xdim %(boxSize)d' % locals()
+                args = '-i %(frameName)s --pos %(coordinatesName)s ' \
+                       '-o %(frameRoot)s --Xdim %(boxSize)d' % locals()
                 
                 if self.doInvert:
                     args += " --invert"
 
+                args += " --downsampling %f "%factor
                 self.runJob('xmipp_micrograph_scissor', args)
                 cleanPath(frameName)
                 
@@ -263,7 +264,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
           
         for movie in inputMovies:
             movieId = movie.getObjId()
-#             print "modieId: ", movieId
             movieName = self._getMovieName(movieId)
             movieStk = movieName.replace('.mrc', '.stk')
             movieMdFile = movieName.replace('.mrc', '.xmd')
@@ -275,7 +275,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
               
         particleMd = self._getPath('movie_particles.xmd')
         mdAll.addItemId()
-#         print "mdAll: ", mdAll
         mdAll.write(particleMd)
         readSetOfMovieParticles(particleMd, particleSet, removeDisabled=False,
                            postprocessImageRow=self._postprocessImageRow)
@@ -292,23 +291,25 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         ##### import em abre una nueva conexion?
         #TODO ROB move this import to the header
         from pyworkflow.em import SetOfCoordinates
-        coordinates = SetOfCoordinates(filename=self.inputCoordinates.get().getFileName())
+        inputCoords = self.inputCoordinates.get()
+        coordinates = SetOfCoordinates(filename=inputCoords.getFileName())
+
         #####coordinates = self.inputCoordinates.get()
         #####micrograph = coordinates.getMicrographs()[movieId]
-         
+
         ####if micrograph is None:
-            #####raise Exception("Micrograph with id %d was not found in SetOfCoordinates!!!" % movieId)
-         
+        #####raise Exception("Micrograph with id %d was not found in SetOfCoordinates!!!" % movieId)
+
         mData = md.MetaData()
         coordRow = XmippMdRow()
-         
-####        for coord in coordinates.iterCoordinates(micrograph):
+
+        ####        for coord in coordinates.iterCoordinates(micrograph):
         for coord in coordinates.iterCoordinates(movieId):
-            coord.shiftX(1 * int(round(float(shiftX))))
-            coord.shiftY(1 * int(round(float(shiftY))))
+            coord.shiftX( int(round(float(shiftX))))
+            coord.shiftY( int(round(float(shiftY))))
             coordinateToRow(coord, coordRow)
             coordRow.writeToMd(mData, mData.addObject())
-             
+
         if mData.isEmpty():
             return False
         else:
