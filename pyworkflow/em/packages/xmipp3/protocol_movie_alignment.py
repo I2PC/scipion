@@ -444,7 +444,7 @@ class ProtMovieAlignmentWeb(ProtMovieAlignment):
     Based on Xmipp protocol for aligning volumes, but
     the parameters are restricted for ease of use.
     """
-    _label = 'movie alignment web'
+    _label = 'movie alignment'
     
     def _defineParams(self, form):
         ProtMovieAlignment._defineParams(self, form)
