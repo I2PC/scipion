@@ -173,8 +173,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
             
             hasCoordinates = self._writeXmippPosFile(movieId, movieName, coordinatesName, 
                                                      shiftX, shiftY)
-            print ("name , pos",coordinatesName,shiftX, shiftY)
-            
             if hasCoordinates:
                 self.info("Writing frame: %s" % frameName)
                 #TODO: there is no need to write the frame and then operate
@@ -266,7 +264,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
           
         for movie in inputMovies:
             movieId = movie.getObjId()
-#             print "modieId: ", movieId
             movieName = self._getMovieName(movieId)
             movieStk = movieName.replace('.mrc', '.stk')
             movieMdFile = movieName.replace('.mrc', '.xmd')
@@ -278,7 +275,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
               
         particleMd = self._getPath('movie_particles.xmd')
         mdAll.addItemId()
-#         print "mdAll: ", mdAll
         mdAll.write(particleMd)
         readSetOfMovieParticles(particleMd, particleSet, removeDisabled=False,
                            postprocessImageRow=self._postprocessImageRow)
@@ -312,7 +308,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
             coord.shiftX( int(round(float(shiftX))))
             coord.shiftY( int(round(float(shiftY))))
             coordinateToRow(coord, coordRow)
-            print()
             coordRow.writeToMd(mData, mData.addObject())
 
         if mData.isEmpty():
@@ -320,7 +315,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         else:
             self.info("Writing coordinates metadata: %s, with shifts: %s %s" % (coordinatesName, shiftX, shiftY))
             mData.write('particles@' + coordinatesName)
-            print("writting metadata file", 'particles@' + coordinatesName )
             return True
     
     def _filterMovie(self, movieId, movieFn):
