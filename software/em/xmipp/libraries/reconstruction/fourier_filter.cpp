@@ -222,7 +222,6 @@ void FourierFilter::readParams(XmippProgram *program)
         FilterShape = FilterBand = ASTIGMATISMPROFILE;
         w1 = program->getDoubleParam("--fourier", 1);
         w1 = DEG2RAD(w1);
-        std::cout << "Reading w1=" << w1 << std::endl;
     }
     else
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't happen, check argument parser or params definition");
