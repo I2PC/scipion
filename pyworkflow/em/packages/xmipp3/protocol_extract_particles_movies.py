@@ -193,7 +193,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                 if self.doInvert:
                     args += " --invert"
 
-                args += "--downsampling %f"%factor
+                args += " --downsampling %f "%factor
                 self.runJob('xmipp_micrograph_scissor', args)
                 cleanPath(frameName)
                 
