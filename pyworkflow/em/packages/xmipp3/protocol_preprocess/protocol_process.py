@@ -33,7 +33,7 @@ from pyworkflow.em.data import Volume
 from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 from ..convert import writeSetOfParticles, xmippToLocation
 from ..convert import writeSetOfVolumes, readSetOfVolumes, getImageLocation
-import xmipp
+import pyworkflow.em.metadata as md
 
 
 
@@ -73,7 +73,7 @@ class XmippProcessParticles(ProtProcessParticles):
         """
         # By default update the item location (index, filename)
         # with the new binary data location (after preprocessing)
-        newFn = row.getValue(xmipp.MDL_IMAGE)
+        newFn = row.getValue(md.MDL_IMAGE)
         newLoc = xmippToLocation(newFn)
         item.setLocation(newLoc)
             
@@ -165,13 +165,16 @@ class XmippProcessVolumes(ProtPreprocessVolumes):
             # ToDo: createSetOfVolumes not work properly when the protocol is resumed.
             volumes = self._createSetOfVolumes()
             volumes.copyInfo(volInput)
-            
             self._preprocessOutput(volumes)
-            readSetOfVolumes(self.outputMd, volumes)
+            numberOfVols = self.inputVolumes.get().getSize()
+            for i in range(1, numberOfVols + 1):
+                vol = Volume()
+                vol.setLocation(i, self.outputStk)
+                volumes.append(vol)
+#             readSetOfVolumes(self.outputMd, volumes)
             self._postprocessOutput(volumes)
-            
             self._defineOutputs(outputVol=volumes)
-        
+            
         self._defineTransformRelation(volInput, self.outputVol)
     
     #--------------------------- UTILS functions ---------------------------------------------------
