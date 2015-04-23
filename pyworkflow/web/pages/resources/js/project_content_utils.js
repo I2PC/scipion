@@ -1090,3 +1090,30 @@ function checkStatusRow(id, status, time) {
 	row.find(".status").html(status);
 	row.find(".time").html(time);
 }
+
+function openSearchProtocolPopup(search)
+{
+	$.ajax({
+		type : "GET",
+		url : getSubDomainURL() + "/search_protocol/",
+		success : function(html) {
+			new Messi(html, 
+			{
+				title : 'Search protocol',
+				modal : true,
+				buttons : [ {
+					id : 1,
+					label : 'Ok',
+					val : 'C'
+				}]
+			});
+		}
+	});
+	    
+		
+	
+}
+
+
+
+

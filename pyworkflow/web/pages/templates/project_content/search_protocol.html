@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Search protocol</title>
+<script type="text/javascript" src="{{jquery}}"></script>
+<script>
+
+function openProtocol(url)
+{
+	popup(url)
+	$('.messi').remove();
+}
+
+function getProtocols() 
+{
+	console.log("searching protocol" + $("#searchInput").val())
+	var URL =  getSubDomainURL() + '/get_protocols/?search=' + $("#searchInput").val()
+	$.ajax({
+		type : "GET",
+		url : URL,
+		dataType : "json",
+		success : function(list) {
+			html = ''
+			for (var i = 0; i < list.length; i++) {
+				html += '<a href="javascript:openProtocol(\'/form/?protocolClass=' + list[i][1] + '\')" >' + list[i][0] + '</a><br>'
+			}
+			$("#protocolsDiv").html(html)
+			
+		},
+		error : function() {
+			console.log("ERROR IN REQUEST")
+		}
+	});
+}
+
+$(document).ready(function() {
+	getProtocols()
+	$('#searchInput').focus()
+});	
+
+$('#searchInput').change(getProtocols);
+</script>
+
+</head>
+<body>
+
+Search
+<input type="text" name="search" id="searchInput"/>
+<br>
+<div id="protocolsDiv" style="height:150px;overflow-y: scroll">
+				
+	
+	
+</div>
+</body>
+</html>

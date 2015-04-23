@@ -27,11 +27,12 @@
 #### Python
 *.pyc
 
-#### Eclipse
+#### Eclipse and so on
 .project
 .cproject
 .pydevproject
 .classpath
+.idea
 
 #### Xmipp
 # Config files
@@ -40,30 +41,21 @@
 # Qt files
 moc_*.cc
 
-# External libs
-external/*
-applications/programs/*
-!applications/programs/*.cpp
-applications/tests/*
-!applications/tests/*.cpp
-
-# Java compilation
-java/lib/Xmipp*.jar
-java/build/
-java/lib/ij.jar
-java/src/xmipp/jni/MDLabel.java
-java/src/xmipp/jni/XmippError.java
-
 # Scons auxiliary files
 .sconsign.dblite
 
 # Other
-bin/
-build/
-lib/
-documentation/
-software/
-!software/em/xmipp/
+software/tmp
+software/bin
+software/cfg
+software/include
+software/install
+software/lib
+software/log
+software/man
+software/share
+software/em/*
+!software/em/xmipp
 
 data/
 gmon.out
@@ -84,6 +76,7 @@ data
 
 # Scipion
 config/*.conf
+config/backups/
 
 # Configuration for servers
 pyworkflow/web/pages/resources/js/templates_libs/config.js

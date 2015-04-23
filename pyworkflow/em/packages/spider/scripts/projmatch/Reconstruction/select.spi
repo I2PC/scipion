@@ -1,0 +1,131 @@
+; <html><head><title>Create selection files with number of particles for each projection</head></title><body><pre>
+;
+; PURPOSE: Create selection files with number of particles for each reference projection
+;
+; SOURCE: /spider/docs/techs/recon/newprogs/select.spi 
+;                         Merged with combine.spi       Nov 2006 ArDean Leith
+;                         Reformatted output            Jan 2010 ArDean Leith
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; <b>-------------------------- Parameters  --------------------------
+
+[docombine] = 1             ; If >0 combine alignment parameters also 
+
+[ccthresh]  = 0.0           ; CCC threshold. Use 0 to include all particles.
+                            ;   Describes relative similiarity of
+                            ;   the particle to the reference projection. 
+
+[numrefs]   = 83            ; Number of reference views (projections)
+
+; --------------------- Input files ----------------------------------
+
+[defgrps]          = '../Alignment/sel_group'    ; Defocus group selection doc file
+
+[align_parameters] = '../Alignment/align_01_***' ; Alignment parameter files from 'AP SH'  
+                            
+; --------------------- Output files -------------------------------
+
+[how_many]       = 'how_many'           ; Overall doc file listing # of particles in each ref. view.
+
+[dfdir]          = 'df{***[grp]}'       ; New select directories. 
+
+[group_how_many] = '[dfdir]/how_many'   ; Group doc file listing # of particles in each ref. view. 
+
+[select]         = '[dfdir]/ref_sel***' ; Doc file listing particles assigned to each ref. view 
+
+[docaligncom]    = 'align_01_all'       ; Combined (merged) alignment file (large)
+
+; -------------- END BATCH HEADER ---------------------------------</b>
+
+UD N [numgrps]              ; Get number of groups 
+[defgrps]                   ; Groups selection file                  (input)
+
+DO [numgrp]=1,[numgrps]     ; Loop over all group(s) ----------------
+
+   UD [numgrp],[grp]        ; Get current group number 
+   [defgrps]                ; Group selection file                   (input)
+
+   VM
+   echo  ' Creating files for  particles/view in: [group_how_many]  and  particle sel. files:  [select]'
+
+   VM                      ; Make sure output dir. present
+   mkdir -p [dfdir]
+
+   VM                      ; Remove any existing group output files.
+   \rm -f [select]
+
+   DE                      ; Remove any existing group output files.
+   [group_how_many]
+
+   VO MQ                   ; Create doc. files from 'AP SH' doc. file
+   ([ccthresh])            ; CCC threshold
+   [align_parameters][grp] ; Output from 'AP SH' (has current CC value) (input)
+   ([numrefs])             ; Number of references used                  (input)
+   [select]                ; Template for selection document files      (output)
+   [group_how_many]        ; Group howmany document file                (output)
+ENDDO
+VM
+echo  ' ' ------------- Overall Particles/Reference View --------------------------   
+VM
+echo  ' '   
+
+; Create summed top-level doc file
+
+DE                             ; Remove any existing  top-level howmany file.
+[how_many]
+
+SD /    # PARTICLES
+[how_many]                     ; Initialize top-level howmany file with comment line
+
+DO  [numref] = 1,[numrefs]     ; Loop over all references
+   [sum] = 0                   ; Initialize sum
+
+   DO [numgrp]=1,[numgrps]     ; Loop over all group(s)
+
+      UD [numgrp],[grp]        ; Get current group number 
+      [defgrps]                ; Group selection file                    (input)
+
+      UD [numref], [n]         ; Get number for this reference
+      [group_how_many]                                                   (input)
+
+      [sum] = [sum] + [n]      ; Sum the numbers for all the references
+   ENDDO
+
+   SD [numref],[sum]
+   [how_many]                  ; Top-level howmany file                  (output)
+
+   VM
+   echo  ' 'View: {***[numref]}'   ' Particles: {*****[sum]}   
+ENDDO
+
+SD E
+[how_many]                     ; Top-level howmany file                  (output)
+
+IF ([docombine] .GT. 0) THEN
+   VM
+   echo  ' ' 
+   VM
+   echo  ' Created overall combined alignment parameters file: [docaligncom].$DATEXT'   
+
+   DE                         ; Remove existing output doc. file
+   [docaligncom]
+
+   ; Put header comment in new output doc file
+   SD / PHI,THE,PSI, MIR-REF#,IMG#,INPLANE , SX,SY,NPROJ, DIFF,CCROT,INPLANE ,SX,SY
+   [docaligncom]
+
+   SD E
+   [docaligncom]
+
+   DOC COMBINE                ; Combine contents of a series of document files
+   [align_parameters]         ; Template for doc. file series              (input)
+   [defgrps]                  ; Selection doc. file with file numbers      (input)
+   [docaligncom]              ; Combined document file                     (output)
+ENDIF
+VM
+echo  ' '   
+
+EN 
+; </body></pre></html>
+

@@ -1,0 +1,69 @@
+; <html><head><title>Extract slices from volumes</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/slices.spi 
+;         Filenames, etc                      ArDean Leith Aug 2012
+;
+; PURPOSE: Extract central slices from defocus group volumes. 
+;          Used to assess the quality of the volumes.
+;          Currently set to use one of the two subset volumes from recon.spi.
+;          If groups are missing then stacked images are consecutive not by
+;          the original group numbers!.
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; <b> -------------------- Input files -----------------------------------
+
+ [defgrps] = 'sel_group_cclim'          ; Defocus groups selection file
+
+ [vol]     = 'df{***[grp]}/vol01_sub1'  ; Volume (one from each defocus group)
+
+ ; -------------------------- Output files ---------------------------
+
+ [slices]  = 'central_slices'           ; Stack of central slices from volumes
+
+ ; -------------- END BATCH HEADER ---------------------------------</b>
+
+ DE
+   [slices]                   ; Stack of central slices        (removed)
+
+ UD NEXT [key],[grp]          ; Get group from group sel. file
+   [defgrps]                  ; Group selection file           (input)
+ IF ([key].LE.0) GOTO LB99    ; End of file (ERROR)
+
+ FI H [diam]                  ; Get diameter of the volume
+   [vol]                      ; First volume                   (input)
+   NX                         ; NX location in file header
+
+ [mid] = INT([diam]/2) + 1 ; Central slice number
+ [num] = 0
+
+ DO                           ; Loop over all defocus groups
+   [num] = [num] + 1          ; File counter
+
+   PS                         ; Pick slice
+     [vol]                    ; Input volume                   (input)
+     [slices]@{***[num]}      ; Output slice                   (output)
+     [mid]                    ; Slice number
+
+   VM                                      
+     echo ' 'Stacked central slice for group: {***[grp]} into image: {***[num]}
+ 
+   UD NEXT [key],[grp]        ; Get group from group sel. file
+     [defgrps]                ; Group selection file           (input)
+   IF ([key].LE.0) EXIT       ; End of groups in doc file
+ ENDDO
+
+ UD NEXT END                  ; Close group sel. file
+   [defgrps]                  ; Group selection file          
+
+ VM                                      
+   echo ' '; echo ' 'Stacked central slices from: {***[num]} volumes 
+ VM                                      
+   echo ' '; echo ' 'View central slice stack: [slices].$DATEXT  using Web 
+ VM                                      
+   echo ' '
+
+ LB99
+ EN
+ ; </body></pre></html>
+

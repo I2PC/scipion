@@ -40,15 +40,11 @@ from pyworkflow.em.convert import ImageHandler
 
 from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAMPLINGRATE, MDL_WEIGHT_SSNR, MDL_WEIGHT_SIGNIFICANT, \
                   MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_ANGLE_DIFF, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_ORIGINAL, \
-                  MDL_COUNT, MDL_SHIFT_X, MDL_CONTINUOUS_X, MDL_WEIGHT_JUMPER, MDL_CTF_DEFOCUSU, MDL_CTF_MODEL, MDL_PARTICLE_ID, Image
+                  MDL_COUNT, MDL_SHIFT_X, MDL_CONTINUOUS_X, MDL_WEIGHT_JUMPER, MDL_CTF_DEFOCUSU, MDL_CTF_MODEL, MDL_PARTICLE_ID, \
+                  MDL_ZSCORE_RESCOV, MDL_ZSCORE_RESVAR, MDL_ZSCORE_RESMEAN, Image
 
 #Continuar un procesamiento anterior
 #Criterio de convergencia
-#Phase flipping interno para poder corregir por el desenfoque
-#Hacer local a partir de una resolucion
-#Global hasta una resolucion
-#FSC as a filter to avoid overfitting
-#Jumper weight
         
 class XmippProtReconstructHighRes(ProtRefine3D):
     """Reconstruct a volume at high resolution"""
@@ -86,6 +82,13 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                       help='Weight input images by angular assignment cost')
         form.addParam('weightJumper', BooleanParam, label="Weight by angular stability?", default=True,
                       help='Weight input images by angular stability between iterations')
+        form.addParam('weightAstigmatism', BooleanParam, label="Weight by astigmatism?", default=True,
+                      help='Give lower weight to those images whose astigmatic CTF would not allow to reach high resolution.' \
+                           'This weight is calculated by the continuous assignment.')
+        form.addParam('weightAstigmatismSigma', FloatParam, label="Astigmatism sigma", default=10, expertLevel=LEVEL_ADVANCED, 
+                        condition="weightAstigmatism", help="Sigma in degrees for the CTF phase");
+        form.addParam('weightResiduals', BooleanParam, label="Weight by residuals?", default=True,
+                      help="Analyze how different are the image residuals, it only works after running the continuous assignment");
 
         form.addSection(label='Next Reference')
         form.addParam('nextResolutionCriterion',FloatParam, label="FSC criterion", default=0.143, 
@@ -135,9 +138,10 @@ class XmippProtReconstructHighRes(ProtRefine3D):
         groupContinuous.addParam('contMaxScale', FloatParam, label="Max. scale variation", default=0.02, expertLevel=LEVEL_ADVANCED)
         groupContinuous.addParam('contAngles', BooleanParam, label="Optimize angles?", default=True,
                       help='Optimize angles within a limit')
-        groupContinuous.addParam('contGrayValues', BooleanParam, label="Optimize gray values?", default=False,
+        groupContinuous.addParam('contGrayValues', BooleanParam, label="Optimize gray values?", default=True,
                       help='Optimize gray values. Do not perform this unless the reconstructed volume is gray-compatible with the projections,'\
                       ' i.e., the volumes haven been produced from projections')
+        groupContinuous.addParam('contDefocus', BooleanParam, label="Optimize defocus?", default=True)
         groupContinuous.addParam('contPadding', IntParam, label="Fourier padding factor", default=2, expertLevel=LEVEL_ADVANCED,
                       help='The volume is zero padded by this factor to produce projections')
         
@@ -277,7 +281,7 @@ class XmippProtReconstructHighRes(ProtRefine3D):
             img.convert(vol, fnVol1)
             if newXdim!=vol.getDim()[0]:
                 self.runJob('xmipp_transform_window',"-i %s --size %d"%(fnVol1,newXdim),numberOfMpi=1)
-            copyFile(fnVol1, fnVol2)
+            self.runJob('xmipp_transform_randomize_phases',"-i %s -o %s --freq discrete 0.25"%(fnVol1,fnVol2),numberOfMpi=1)
         
         # Compare both reconstructions
         self.evaluateReconstructions(0)
@@ -570,46 +574,54 @@ class XmippProtReconstructHighRes(ProtRefine3D):
             maxAngle=3*self.calculateAngStep(newXdim, TsCurrent, ResolutionAlignment)
 
             for i in range(1,3):
-                fnLocalImages=join(fnDirLocal,"images%02d.xmd"%i)
-
-                # Starting angles
-                fnLocalAssignment=join(fnDirLocal,"anglesDisc%02d.xmd"%i)
-                if exists(fnDirGlobal):
-                    fnGlobalAssignment=join(fnDirGlobal,"anglesDisc%02d.xmd"%i)
-                    TsGlobal=self.readInfoField(fnDirGlobal,"sampling",MDL_SAMPLINGRATE)
-                    if TsGlobal==TsCurrent:
-                        copyFile(fnGlobalAssignment,fnLocalAssignment)
+                fnLocalXmd=join(fnDirLocal,"anglesCont%02d.xmd"%i)
+                if not exists(fnLocalXmd):
+                    fnLocalImages=join(fnDirLocal,"images%02d.xmd"%i)
+    
+                    # Starting angles
+                    fnLocalAssignment=join(fnDirLocal,"anglesDisc%02d.xmd"%i)
+                    if exists(fnDirGlobal):
+                        fnGlobalAssignment=join(fnDirGlobal,"anglesDisc%02d.xmd"%i)
+                        TsGlobal=self.readInfoField(fnDirGlobal,"sampling",MDL_SAMPLINGRATE)
+                        if TsGlobal==TsCurrent:
+                            copyFile(fnGlobalAssignment,fnLocalAssignment)
+                        else:
+                            self.adaptShifts(fnGlobalAssignment,TsGlobal,fnLocalAssignment,TsCurrent)
                     else:
-                        self.adaptShifts(fnGlobalAssignment,TsGlobal,fnLocalAssignment,TsCurrent)
-                else:
-                    TsPrevious=self.readInfoField(fnDirPrevious,"sampling",MDL_SAMPLINGRATE)
-                    self.adaptShifts(join(fnDirPrevious,"anglesDisc%02d.xmd"%i),TsPrevious,fnLocalAssignment,TsCurrent)
-                self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column image"%fnLocalAssignment,numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%(fnLocalAssignment,fnLocalImages),numberOfMpi=1)
-
-                fnVol=join(fnDirLocal,"volumeRef%02d.vol"%i)
-                fnLocalStk=join(fnDirLocal,"anglesCont%02d.stk"%i)
-                
-                R=self.particleRadius.get()
-                if R<=0:
-                    R=self.inputParticles.get().getDimensions()[0]/2
-                R=round(R*self.TsOrig/TsCurrent)
-                args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --applyTo image1"%\
-                   (fnLocalAssignment,fnLocalStk,TsCurrent,R,self.contPadding.get(),fnVol,previousResolution)
-                if self.contShift:
-                    args+=" --optimizeShift --max_shift %d"%round(self.angularMaxShift.get()*newXdim*0.01)
-                if self.contScale:
-                    args+=" --optimizeScale --max_scale %f"%self.contMaxScale.get() 
-                if self.contAngles:
-                    args+=" --optimizeAngles --max_angular_change %f"%maxAngle
-                self.runJob("xmipp_angular_continuous_assign2",args)
-                self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnLocalStk,R))
-                # COSS: Falta continuous con CTF y flipped y gray
+                        TsPrevious=self.readInfoField(fnDirPrevious,"sampling",MDL_SAMPLINGRATE)
+                        self.adaptShifts(join(fnDirPrevious,"anglesDisc%02d.xmd"%i),TsPrevious,fnLocalAssignment,TsCurrent)
+                    self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column image"%fnLocalAssignment,numberOfMpi=1)
+                    self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%(fnLocalAssignment,fnLocalImages),numberOfMpi=1)
+    
+                    fnVol=join(fnDirLocal,"volumeRef%02d.vol"%i)
+                    fnLocalStk=join(fnDirLocal,"anglesCont%02d.stk"%i)
+                    
+                    R=self.particleRadius.get()
+                    if R<=0:
+                        R=self.inputParticles.get().getDimensions()[0]/2
+                    R=round(R*self.TsOrig/TsCurrent)
+                    args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --applyTo image1"%\
+                       (fnLocalAssignment,fnLocalStk,TsCurrent,R,self.contPadding.get(),fnVol,previousResolution)
+                    if self.contShift:
+                        args+=" --optimizeShift --max_shift %d"%round(self.angularMaxShift.get()*newXdim*0.01)
+                    if self.contScale:
+                        args+=" --optimizeScale --max_scale %f"%self.contMaxScale.get() 
+                    if self.contAngles:
+                        args+=" --optimizeAngles --max_angular_change %f"%maxAngle
+                    if self.contGrayValues:
+                        args+=" --optimizeGray"
+                    if self.contDefocus:
+                        args+=" --optimizeDefocus"
+                        if self.phaseFlipped:
+                            args+=" --phaseFlipped"
+                    if self.weightResiduals:
+                        args+=" --oresiduals %s"%join(fnDirLocal,"residuals%02i.stk"%i)
+                    self.runJob("xmipp_angular_continuous_assign2",args)
+                    self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnLocalStk,R))
 
     def weightParticles(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
-        # COSS: Falta outliers
-        # COSS: Falta clusterability
+        from math import exp
         for i in range(1,3):
             # Grab file
             fnDirGlobal=join(fnDirCurrent,"globalAssignment")
@@ -640,6 +652,12 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s"%\
                             (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper"),numberOfMpi=1)
                 moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
+
+            if self.weightResiduals and exists(fnAnglesCont):
+                fnCovariance=join(fnDirLocal,"covariance%02d.stk"%i)
+                self.runJob("xmipp_image_residuals","-i %s -o %s --normalizeDivergence"%(fnAngles,fnCovariance),numberOfMpi=1)
+                moveFile(join(fnDirLocal,"covariance%02d.xmd"%i),fnAngles)
+            
             md=MetaData(fnAngles)
             for objId in md:
                 weight=1
@@ -652,11 +670,26 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                 if self.weightContinuous and exists(fnAnglesCont):
                     aux=md.getValue(MDL_WEIGHT_CONTINUOUS2,objId)
                     weight*=aux
+                if self.weightResiduals and exists(fnAnglesCont):
+                    aux=md.getValue(MDL_ZSCORE_RESCOV,objId)
+                    aux/=3
+                    weight*=exp(-0.5*aux*aux)
+                    aux=md.getValue(MDL_ZSCORE_RESMEAN,objId)
+                    aux/=3
+                    weight*=exp(-0.5*aux*aux)
+                    aux=md.getValue(MDL_ZSCORE_RESVAR,objId)
+                    aux/=3
+                    weight*=exp(-0.5*aux*aux)
                 if self.weightJumper and iteration>1:
                     aux=md.getValue(MDL_WEIGHT_JUMPER,objId)
                     weight*=aux
                 md.setValue(MDL_WEIGHT,weight,objId)
             md.write(fnAngles)
+            
+            # Weight by Astigmatism
+            if self.weightAstigmatism:
+                self.runJob("xmipp_transform_filter","-i %s --fourier astigmatism %f --sampling %f"%\
+                            (fnAngles,self.weightAstigmatismSigma.get(),TsCurrent))
         fnAngles=join(fnDirCurrent,"angles.xmd")
         fnAngles1=join(fnDirCurrent,"angles01.xmd")
         fnAngles2=join(fnDirCurrent,"angles02.xmd")
@@ -772,11 +805,14 @@ class XmippProtReconstructHighRes(ProtRefine3D):
                     cleanPath(join(fnGlobal,"significant%02d"%i))
                     cleanPath(join(fnGlobal,"volumeRef%02d.vol"%i))
                 if exists(fnLocal):
-                    cleanPath(join(fnGlobal,"images%02d.xmd"%i))
-                    cleanPath(join(fnGlobal,"anglesCont%02d.stk"%i))
-                    cleanPath(join(fnGlobal,"anglesDisc%02d.xmd"%i))
-                    cleanPath(join(fnGlobal,"volumeRef%02d.vol"%i))
-    
+                    cleanPath(join(fnLocal,"images%02d.xmd"%i))
+                    cleanPath(join(fnLocal,"anglesCont%02d.stk"%i))
+                    cleanPath(join(fnLocal,"anglesDisc%02d.xmd"%i))
+                    cleanPath(join(fnLocal,"volumeRef%02d.vol"%i))
+                    if self.weightResiduals:
+                        cleanPath(join(fnDirLocal,"covariance%02d.stk"%i))
+                        cleanPath(join(fnDirLocal,"residuals%02i.stk"%i))
+
     def decideNextIteration(self, iteration):
         # COSS: Falta un criterio para decidir si otra iteracion
         if iteration<self.numberOfIterations.get():

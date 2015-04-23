@@ -23,16 +23,17 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
-
+import os
 import sys
 from install.funcs import Environment, progInPath
 
+get = lambda x: os.environ.get(x, 'y').lower() in ['true', 'yes', 'y', '1']
 
 
 env = Environment(args=sys.argv)
 
-noOpencv = '--no-opencv' in sys.argv
-noScipy = '--no-scipy' in sys.argv
+noOpencv = '--no-opencv' in sys.argv or not get('OPENCV')
+noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
 
 
 #  ************************************************************************
@@ -163,6 +164,12 @@ boost = env.addLibrary(
     tar='boost_1_56_0.tgz',
     commands=[('cp -rf software/tmp/boost_1_56_0/boost software/include/', 
                'software/include/boost')],
+    default=False)
+
+nfft3 = env.addLibrary(
+    'nfft3',
+    tar='nfft-3.2.3.tgz',
+    deps=[fftw3],
     default=False)
 
 
@@ -345,8 +352,8 @@ env.addPackage('pytom',
                           ['pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix] + 
                           ['pytomc/swigModules/_pytom_%s.%s' % (s, libSuffix) 
                            for s in ['mpi', 'freqweight', 'volume', 'fftplan', 'numpy']])],
-               deps=[boost, fftw3, fftw3f, 
-                     swig, lxml, numpy, scipy, 
+               deps=[boost, fftw3, fftw3f, nfft3,
+                     swig, lxml, numpy, scipy,
                      matplotlib, mpi4py, pillow],
                default=False)
 

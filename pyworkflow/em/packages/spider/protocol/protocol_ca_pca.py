@@ -45,11 +45,13 @@ class SpiderProtCAPCA(SpiderProtocol):
     CA is the preferred method of finding inter-image variations. 
     PCA computes the distance between data vectors with Euclidean 
     distances, while CA uses Chi-squared distance.     
-    CA is superior here because it ignores differences in exposure 
-    between images, eliminating the need to rescale between images.
+    CA is superior because it ignores differences in exposure 
+    between images, eliminating the need to rescale between images. 
+    In contrast, PCA seems to be more robust: 
+    less likely to be trapped in an infinite loop of numerical inaccuracy.
     
     For more info see:
-    [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/classification/tutorial.html#CAPCA][Spider documentation]] 
+    [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/classification/tutorial.html#CAPCA][SPIDER MDA documentation]] 
     """
     _label = 'capca'
     
@@ -80,23 +82,33 @@ class SpiderProtCAPCA(SpiderProtocol):
         
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles',
-                      help='Select the input particles to perform CA or PCA.')        
+                      help='Select the input particles to perform CA, PCA, or IPCA.')        
         form.addParam('analysisType', EnumParam, default=CA, choices=['CA', 'PCA', 'IPCA'],
                       label='Analysis type',
-                      help='Select which type of analysis you want to perform')
+                      help='Select which type of analysis you want to perform: \n'
+                           'correspondence analysis (CA), principal component analysis (PCA), '
+                           'or iterative principal component analysis (IPCA)')
         form.addParam('addConstant', FloatParam, default=0,
                       condition="analysisType==%d" % CA, 
                       label='Additive constant',
-                      help='Additive constant, 0 means automatic.')       
+                      help='Correspondence analysis requires the data to be positive. '
+                           'In the case of negative values, a constant needs to be added. '
+                           'An additive constant of *0* means automatic.')       
         form.addParam('numberOfFactors', IntParam, default=25,
-                      label='Number of eigenfactors',
-                      help='Number of eigenfactors to calculate.')
+                      label='Number of factors',
+                      help='A 64x64 image can be expressed as a vector of 4096 dimensions. '
+                           'In this step, we will reduce this number of dimensions to the number of factors specified here. '
+                           'These factors will represent the largest systematic variations in the data.')
         form.addParam('maskType', EnumParam, choices=['circular', 'file'], default=0,
                       label='Mask type', 
-                      help='Select which type of mask do you want to apply.')
+                      help='Select which type of mask do you want to apply. '
+                           'Only the pixels beneath this mask will be analyzed. '
+                           'In the simplest case, a circular mask can be used. '
+                           'Alternatively, a custom mask can be used '
+                           'which follows the contour of the particle (but not too tightly).')
         form.addParam('radius', IntParam, default=-1,
                       label='Mask radius (px)', condition='maskType==0',
-                      help='If -1, the entire radius (in pixels) will be considered.')
+                      help='If -1, the entire image (in pixels) will be considered.')
         form.addParam('maskImage', PointerParam, label="Mask image", condition='maskType==1',
                       pointerClass='Mask', 
                       help="Select a mask file")       
@@ -143,7 +155,7 @@ class SpiderProtCAPCA(SpiderProtocol):
                              '[reconstituted_img]': self._params['reconstituted']
                              })
                    
-        self.runScript('mda/ca-pca.msa', self.getExt(), self._params)
+        self.runTemplate('mda/ca-pca.msa', self.getExt(), self._params)
         
     def createOutputStep(self):
         # Generate outputs
@@ -162,6 +174,54 @@ class SpiderProtCAPCA(SpiderProtocol):
     
     def _summary(self):
         summary = []
+        
+        if self.analysisType == 0:
+            summary.append(    'Analysis type: *Correspondence analysis*')
+            if self.addConstant != 0:
+                summary.append('    Additive constant: *%s*' % self.addConstant)
+            else:
+                summary.append('    Additive constant: *Auto*')
+        if self.analysisType == 1:
+            summary.append(    'Analysis type: *Principal component analysis*')
+        if self.analysisType == 2:
+            summary.append(    'Analysis type: *Iterative principal component analysis*')
+
+        summary.append('Number of factors: *%s*' % self.numberOfFactors)
+        
+        if self.maskType == 0:  # circular mask
+            if self.radius == -1:
+                summary.append('Mask: *Circular, of radius 1/2 image dimension*')
+            else:
+                summary.append('Mask: *Circular, of radius: %s*' % self.radius)
+        else:  # custom mask
+            summary.append('Mask: *Custom file*')
+
         return summary
     
+    def _methods(self):
+        #print
+        #print "protocol_ca_pca._methods.analysisType: %s" % self.analysisType 
+        #print 
+        
+        msg  = "\nInput particles %s were subjected to " % self.getObjectTag('inputParticles')
+        
+        if self.analysisType == 0:
+            msg += "correspondence analysis, "
+        if self.analysisType == 1:
+            msg += "principal component analysis, "
+        if self.analysisType == 2:
+            msg += "iterative principal component analysis, "
+        
+        msg += "computing %s factors, and using a " % self.numberOfFactors
 
+        if self.maskType == 0:  # circular mask
+            if self.radius == -1:
+                msg += "circular mask of radius half the image dimension."
+            else:
+                msg += "circular mask of radius %s pixels." % self.radius
+        else:  # custom mask
+            msg += "custom mask %s." % self.getObjectTag('maskImage')
+        
+        return [msg]
+
+        

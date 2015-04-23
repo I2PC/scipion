@@ -48,8 +48,15 @@ class SpiderProtClassifyDiday(SpiderProtClassifyCluster):
     
     def _summary(self):
         summary = []
+        summary.append('Number of factors: *%s*' % self.numberOfFactors)
         return summary
     
     def _methods(self):
-        return self._summary()  # summary is quite explicit and serve as methods
+        msg  = "\nInput particles %s " % self.getObjectTag('inputParticles')
+        msg += "were subjected to Diday's method of moving centers "
+        msg += "(SPIDER command [[http://spider.wadsworth.org/spider_doc/spider/docs/man/clcla.html][CL CLA]]) "
+        msg += "using %s factors. " % self.numberOfFactors
+        return [msg]
+#        # I don't know what's he's talking about.  The summary is totally empty as of now.
+#        return self._summary()  # summary is quite explicit and serve as methods
     

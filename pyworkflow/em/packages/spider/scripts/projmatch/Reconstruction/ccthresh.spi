@@ -1,0 +1,176 @@
+; <html><head><title>Determine and test threshold for the cross correlation</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/ccthresh.spi
+;                       Merged with dftotals.spi     Nov 2006 ArDean Leith
+;                       Selection bugs               Feb 2008 Magali
+;                       Reject file                  Jan 2010 ArDean Leith
+;
+; PURPOSE: Given a threshold for the % of files in each group that should be
+;           eliminated, determines the corresponding threshold for the cross 
+;          correlation value and stores threshold in a doc file. 
+;          Applies the theshold to the coreelation values from the aligned particles 
+;          and creates partilcel selection files listing particles with 
+;          correlation values above the theshold. Also makes a listing of rejected
+;          particles sorted by correlation value.
+;
+; NOTE:     Particle totals are approximate due to binning of data in histograms.
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; <b> ------------ Parameters ---------------------------------------
+
+[cutoff]  = 0.15                                      ; Percentage of particles to eliminate
+
+;    ------------ Input files ---------------------------------------
+
+[defgrps] = '../Alignment/sel_group'               ; Defocus groups selection file
+
+[docapsh] = '../Alignment/align_01_{***[grp]}'     ; Document file created by 'AP SH'
+
+[cchist]  = 'hist/cchist{***[grp]}'                ; Histogram doc files 
+
+; --------------- Output files  -------------------------------------
+
+[thresh]        = 'thresh'                         ; Doc file with CC thresholds
+
+[sel_particles] = 'hist/sav_particles_{***[grp]}'  ; Contains sorted particle numbers whose   
+                                                   ;   correlation values are above threshold
+
+[rej_particles] = 'hist/rej_particles_{***[grp]}'  ; Contains sorted rejected particle numbers    
+
+; -------------- END BATCH HEADER ---------------------------------</b>
+
+MD
+TR OFF                               ; Decrease results file output
+MD
+VB OFF                               ; Decrease results file output
+
+DE                                   ; Remove any existing output doc file
+[thresh]
+
+SD /    CC_THRESH,   N_ABOVE_THR,   N_BELOW_THR,   N_TOTAL
+[thresh]
+
+VM
+echo  ' 'Correlation cutoff: {%f5.2%[cutoff]} ; echo  ' '     
+
+[all]   = 0
+[saved] = 0
+
+DO                                  ; Loop over all defocus group(s) ---------
+   UD NEXT [k],[grp],[numparts]     ; Get current group number and particles
+   [defgrps]                        ; Group selection doc file    (input)
+   IF ([k] .LE. 0) EXIT             ; End of groups in doc file
+
+   ; Determines the number of particles below the percent cutoff ([cutoff]),
+   ; [cutoff] = Percent cutoff
+   ; [grp]    = Defocus group
+   ; Gets the total number of particles (from column 2 in histogram),
+   ; Determines the number of particles below the percent cutoff,
+   ; Finds the corresponding CC value (column 1 in histogram).
+
+   [ncum]    = 0                    ; Cumulative no. of particles
+   [Nbelow]  = 0     
+   [nbad]    = [cutoff]*[numparts]  ; Number of particles to eliminate
+
+   UD N [nbins]                     ; Find number of bins in histogram
+   [cchist]                         ; Histogram doc file      (input)  
+
+   DO [key] = 1,[nbins]             ; Loop over all bins
+
+      UD [key],[CC_threshold],[parts]
+      [cchist]                      ; Histogram doc file      (input)
+
+      [ncum] = [ncum] + [parts]     ; Number of particles below cuttof
+
+      IF ([ncum].GT.[nbad]) THEN
+         [cuttoffbin] = [key]
+         IF ([key].NE.1) [cuttoffbin] = [key]-1     ; Last bin to discard
+
+         UD [cuttoffbin],[CC_threshold]  ; Get the cuttoff
+         [cchist]                        ; Histogram doc file     (input)
+
+         EXIT                       ; Leave the loop now
+      ENDIF
+
+      [Nbelow] = [ncum]             ; No. of particles from previous bins
+   ENDDO
+
+   [Nabove] = [numparts] - [Nbelow] ; Number above threshold
+
+   ; Save [CC_threshold], N_above_threshold, N_below_threshold, total_N
+   SD [grp],[CC_threshold],[Nabove],[Nbelow],[numparts]
+   [thresh]
+
+   [all]   = [all] + [numparts]
+   [saved] = [saved] + [Nabove]]
+
+   ; Create selection file
+   [key]    = 0
+   [rejkey] = 0
+
+   DE                                 ; Remove any existing output doc file
+   [sel_particles]                    ; Selection file                 
+   DE                                 ; Remove any existing output doc file
+   [rej_particles]                    ; Selection file                 
+
+   SD /    PART_NUMBER,   CC_VALUE
+   [sel_particles]                    ; Selection file             (output)               
+   SD /    PART_NUMBER,   CC_VALUE
+   [rej_particles]                    ; Selection file              (output)               
+
+   DO [part]=1,[numparts]             ; Loop over particles in this group -----
+
+      ;            PHI,THE,PSI, REF#,IMG#,INPLANE,  SX,SY,NPROJ, DIFF,CCROT,INPLANE,SX,SY
+      UD IC [part], [d],[d],[d], [d],[img],[d],     [d],[d],[d],  [d],[cc]
+      [docapsh]                       ; Alignment parameter file  (input)
+
+      IF ([cc].GE.[CC_threshold])THEN ; CC above threshold for this particle
+         [key]=[key]+1                ; Increment new particle counter
+
+         SD [key],[img],[cc]          ; Save: Particle #, CC value
+         [sel_particles]              ; Selection file                 (output)
+
+      ELSE
+         [rejkey]=[rejkey]+1          ; Increment new particle counter y
+
+         SD [rejkey],[img],[cc]       ; Save: Particle #, CC value
+         [rej_particles]              ; Selection file                 (output)
+
+      ENDIF
+   ENDDO
+
+   UD ICE                            ; Free doc file pointer
+   [docapsh]     
+   SD E                              ; Free doc file pointer
+   [sel_particles]     
+   SD E                              ; Free doc file pointer
+   [rej_particles] 
+
+   DOC SORT                          ; Saved doc file sorting
+   [sel_particles]                   ; Saved selection doc file          (input)
+   [sel_particles]                   ; Sorted saved selection doc file   (output)
+   (2)                               ; Sort column = CC value
+   Yes                               ; Renumber keys
+
+   IF ([cutoff].ne.0) THEN
+
+   DOC SORT                          ; Reject doc file sorting
+   [rej_particles]                   ; Reject selection doc file        (input)
+   [rej_particles]                   ; Sorted reject selection doc file (output)
+   (2)                               ; Sort column = CC value
+   Yes                               ; Renumber keys
+
+   ENDIF
+
+   VM
+   echo ' 'Saved: {******[Nabove]} in: [sel_particles]'   'Rejected: {******[Nbelow]} in [rej_particles]
+
+ENDDO
+
+VM
+echo  ' '; echo ' 'Overall keeping: {******[saved]} Out of: {******[all]} ; echo  ' '
+    
+EN
+; </body></pre></html>
+

@@ -83,20 +83,22 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             #retrive shifts here so there is no conflict
             #if the object is accessed inside at the same time by multiple threads
             #NOTE self.applyAlignment only exists in extract movies
-            if self.applyAlignment and movie.hasAlignment():
-                shifts = movie.getAlignment().getShifts()
-                print("applyAlignment")
-            else:
-                # Read movie dimensions to iterate through each frame
-                from pyworkflow.em.convert import ImageHandler
-                from os.path import join
-                movieFolder = self._getMovieFolder(movie.getObjId())
-                from os import getcwd
-                movieName = movie.getFileName()
-                imgh = ImageHandler()
-                x, y, z, n = imgh.getDimensions(movieName)
-                print("NO applyAlignment")
-                shifts = [0] * (2*n)
+            try:
+                if self.applyAlignment and movie.hasAlignment():
+                    shifts = movie.getAlignment().getShifts()
+                else:
+                    #TODO: I do not think this option is ever used
+                    # Read movie dimensions to iterate through each frame
+                    from pyworkflow.em.convert import ImageHandler
+                    from os.path import join
+                    movieFolder = self._getMovieFolder(movie.getObjId())
+                    from os import getcwd
+                    movieName =  movie.getFileName()
+                    imgh = ImageHandler()
+                    x, y, z, n = imgh.getDimensions(movieName)
+                    shifts = [0] * (2*n)
+            except NameError:
+                shifts=None
             ####end of thread
 
             movieStepId = self._insertFunctionStep('processMovieStep',
@@ -151,15 +153,19 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         return self._getExtraPath('movie_%06d%s' % (movieId, ext)) 
     
     def _getNameExt(self, movieName, postFix, ext):
-        #return 'micrograph_%06d.mrc' % movieId
-        #return removeBaseExt(movieName) + '_aligned.' + ext
-        return removeBaseExt(movieName) + postFix + '.' + ext
+        if movieName.endswith("bz2"):
+            # removeBaseExt function only eliminate the last extension,
+            # but if files are compressed, we need to eliminate two extensions:
+            # bz2 and its own image extension (e.g: mrcs, em, etc)
+            return removeBaseExt(removeBaseExt(movieName)) + postFix + '.' + ext
+        else:
+            return removeBaseExt(movieName) + postFix + '.' + ext
+    
     def _getPlotName(self, movieName, plotType):
         if plotType == PLOT_CART:
             return removeBaseExt(movieName) + '_plot_cart.png'
         else:
             return removeBaseExt(movieName) + '_plot_polar.png'
-
 
     def _getCorrMovieName(self, movieId, ext='.mrcs'):
         return 'movie_%06d%s' % (movieId, ext)
@@ -167,7 +173,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def _getLogFile(self, movieId):
         return 'micrograph_%06d_Log.txt' % movieId
 
-    def _processMovie(self, movieId, movieName, movieFolder):
+    def _processMovie(self, movieId, movieName, movieFolder,shifts):
         """ Process the movie actions, remember to:
         1) Generate all output files inside movieFolder (usually with cwd in runJob)
         2) Copy the important result files after processing (movieFolder will be deleted!!!)

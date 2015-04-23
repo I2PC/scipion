@@ -1,0 +1,256 @@
+([r2],[alignsh],[prj-radius],[iter],[grp],[toobig],[pixsiz])
+; <html><head><title>Small angle refinement group loop</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/smangloop.pam
+;         New                              ArDean Leith  Nov  2002
+;         Rewrite                          ArDean Leith  Oct  2004
+;         Avg CCROT degredations           ArDean Leith  Feb  2005
+;         More stacks                      ArDean Leith  Dec  2006
+;         Filenames & UD NEXT              ArDean Leith  Dec  2009
+;         COG centering removed            ArDean Leith  Sep  2010
+;         TF COR                           ArDean Leith  Nov  2010
+;         UD NEXT E                        ArDean Leith  Sep  2011
+;         Dala removal                     ArDean Leith  Jan  2012
+;         pixsiz, resol headers,...        ArDean Leith  Aug 2012
+; 
+; PURPOSE: Small angle refinement group loop.  Runs for each defocus 
+;          group on each iteration
+;
+; CALLED FROM: <a href="./pub_refine_start.pam">pub_refine_start</a> or   
+;              <a href="./refine.pam">refine.pam</a>  
+;
+; REGISTERS AND FILES ARE SET IN: <a href="refine settings.pam">refine settings.pam</a>
+;
+; INPUT REGISTERS:
+;   [r2]                    Radius (pixels) of the object
+;   [alignsh]               Shift allowed is +-[alignsh]
+;   [prj-radius]            Radius (pixels) of object for projection
+;   [iter]                  Alignment step iteration counter  
+;   [grp]                   Current defocus group                      
+;   [toobig]                Iteration ending flag   (returned)
+;   [ang-step]              Angular difference stopping limit (String)   
+;
+; '##' denotes iteration,  '##+' denotes next iteration, and '***' denotes group
+; INPUT FILES:
+;   [sel_particles]         input/select_***       Particle selection doc file
+;   [iter_vft]              final/vft##            Current filtered volume (From refine)
+;   [temp_ctf_file]         work/ctf***            CTF corrected volume (From prepare)
+;   [group_align]           final/align##+_***     Alignment parameter doc file
+;   [unaligned_images]      input/data***@         Unaligned stacked image file  
+;   [iter_refangs]          work/ang_refs_##       Reference angles doc    file        
+;
+; OUTPUT FILES:
+;   [img_ang_vora]          final/angvora_##_***   Projection angles doc file         
+;   [next_group_vol]        work/vol##+            Reconstructed group volume
+;   [next_group_align]      final/align##+_***     Alignment parameter  doc file
+;   [next_group_fsc]        final/fscdoc_##+_***   FSC resolution curve doc file
+;
+;   [next_group_vol]_sub1   work/vol_##+_sub1      (Created & deleted)  
+;   [next_group_vol]_sub2   work/vol_##+_sub2      (Created & deleted) 
+;   [temp_ref_projs]                               (Created & deleted)
+; 
+; INLINE BUFFERS USED: _1, _13
+
+ VM
+   echo -n " In smangloop, Iteration: {**[iter]}  Group: {***[grp]}  " ; date '+ Time: %x  %X'
+
+ [radius1]   = 5.0                   ; First radius for 'AP REF' (Can alter this)
+ [converg]   = 10000                 ; Dummy angular distance limit for stopping iters.
+
+ [next-iter] = [iter]+1
+ 
+ UD N [num-refs]                     ; Get number of reference images used
+   [iter_refangs]                    ; Reference images angles doc. file (input)
+
+ MY FL                               ; Flush results file
+
+ ; Multiply Fourier of current vol. by CTF file for this group
+ TF COR                              ; CTF correction
+   [iter_vft]                        ; Fourier of current volume         (input}
+   [temp_ctf_file]                   ; CTF  file                         (input)
+   _1                                ; _1 created here                   (output)
+
+ FI H [nx]                           ; Find image size
+   _1                                ; CTF corrected current volume      (input) 
+   NX                                ; Get NX from header
+
+ MS                                  ; Make MT inline stack for ref. projections
+   [temp_ref_projs]                  ; Empty stack                       (output)
+   [nx],[nx],1                       ; Image size
+   [num-refs]                        ; Number of images allowed in stack
+
+ DE                                  ; Remove existing align parameter doc file 
+ [next_group_align]
+
+ ; Make header for next group align doc file 
+ SD /PSI, THE, PHI, REF, EXP, ANG, SX, SY, NPROJ, DIFF, CCROT, ANG, SX, SY, MIR-CC
+   [next_group_align]                ; (output)
+
+ [num-big]    = 0                    ; Number of angular changes above iter. stop limit
+ [toobig]     = 0                    ; Not OK to stop iterating
+ [sum-ccrot]  = 0.0                  ; Sum of CCROT correlation coefficients
+ [num-degred] = 0.0                  ; Number of CCROT degredations
+ [sum-degred] = 0.0                  ; Sum of CCROT degredations
+ [num-impr]   = 0.0                  ; Number of CCROT improvements
+ [sum-impr]   = 0.0                  ; Sum of CCROT improvements
+ [sum-diff]   = 0.0
+ [num-imgs]   = 0                    ; Number of images in current group
+
+ DO                                  ; Loop over all particles
+    UD NEXT [key],[img]              ; Get particle image number from sel. file
+      [sel_particles]                ; Group particle selection file      (input) 
+    IF ([key] .LE. 0) EXIT           ; End of images in selection doc file
+    [num-imgs] = [num-imgs] + 1      ; # of images in current group
+
+    ; Format of alignment parameters doc file is:
+    ;         PSI,THE,PHI,          REF#,EXP#, ANG,SX,SY,   NPROJ,DIFF,CCROT
+    UD IC [img], [psi],[the],[phi], [d],[exp], [d],[d],[d], [d],[d],[old-ccrot]
+      [group_align]                  ; Input alignment parameters doc file
+
+    DE                               ; Remove existing angles doc file  
+      [img_ang_vora]                 ;                                  (removed)
+
+    VO RAS                           ; Rotate projection dir.   
+      [iter_refangs]                 ; Relative angles file             (input)
+      -[phi],-[the],-[psi]           ; Offset
+      1, 0                           ; Psi set to zero
+      [img_ang_vora]                 ; Doc file for angles to search    (output)
+
+    ; Create stack holding set of reference projections from input volume.
+    PJ 3F                            ; Create ref. projections
+      _1                             ; CTF corrected current volume     (input)              
+      [prj-radius]                   ; Radius of computed object
+      (1-[num-refs])                 ; Ref. projection file numbers 
+      [img_ang_vora]                 ; Angles in search area doc file   (input)
+      [temp_ref_projs]******         ; Template for ref. projections    (output)
+
+    MY FL                            ; Flush results file
+
+    ; Find ref. image matching exp. image.  Output to registers not doc file
+    ;       PSI,THE,PHI,       REF#,EXP#, ANG,  SX, SY,    NPROJ,DIFF,     CCROT,  CURRENT_ALIGN
+    AP REF  [psi],[the],[phi], [ref],[exp], [inp],[sx],[sy], [nproj],[diff], [ccrot], x70,x71,x72,x73
+      [temp_ref_projs]******         ; Template of existing ref. projections (input) 
+      (1-[num-refs])                 ; Ref. projection file numbers
+      [alignsh]                      ; Shift search range
+      [radius1],[r2],1           ; First, last ring, & skip
+      [img_ang_vora]                 ; Ref. angles file                  (input)
+      [ref_rings].{******[grp]}      ; No scratch file (usually will fit in-core)
+      [unaligned_images]@******      ; Aligned original image stack      (input)
+      [img]                          ; Current exp. image file number
+      [group_align]                  ; Alignment parameters doc file     (input)
+      0, 0                           ; Angular projection search restriction
+      N,Y                            ; Check mir projections, align first
+
+    ;         PSI,THE,PHI,         REF#,EXP#, ANG,  SX,  SY,   NPROJ,DIFF,CCROT
+    SD [img], [psi],[the],[phi],  [ref],[img],[inp],[sx],[sy], [num-refs],[diff],[ccrot], x70,x71,x72,x73
+      [next_group_align]                               ; Next align. doc file (output)
+
+    IF ([ccrot] .LT. [old-ccrot]) THEN
+       [sum-degred]=[sum-degred]+([old-ccrot]-[ccrot]) ; Sum average CCROT degredation
+       [num-degred]=[num-degred]+1                     ; Increment   CCROT degredations counter
+    ELSE
+       [sum-impr]=[sum-impr]+([ccrot]-[old-ccrot])     ; Sum average CCROT improvement
+       [num-impr]=[num-impr]+1                         ; Increment   CCROT improvements counter
+    ENDIF
+
+    IF ([diff] .GT.[converg]) [num-big]=[num-big]+1    ; Increment large displacement counter
+    [sum-ccrot]=[sum-ccrot]+[ccrot]                    ; Sum rotational CCC (for average).
+    [sum-diff]=[sum-diff]+[diff]                       ; Sum of angular differences
+      
+ ENDDO
+
+ UD ICE                         ; Close this file here
+   [group_align]                ; Doc file                         (closed) 
+                 
+ UD NEXT E                      ; Close this file here 
+   [sel_particles]              ; Group particle selection file    (closed) 
+
+ FI H [maxim]                   ; Find total number of images (not [numparts])
+   [unaligned_images]@;         ; Input file needed                (input)
+   MAXIM                        ; Max. image number header position
+
+ ; Note: If 'INLN_WRTLIN ARRAY OVERFLOW',  replace: _2 with disk based stack file     
+ MS                             ; Make empty inline stack  
+   _2@                          ; Empty stack                        (output)
+   [nx],[nx],1                  ; Image size
+   [maxim]                      ; Number of images allowed in stack
+
+ ; Apply new alignments to original particle images
+ RT SF                          ; Rotate & shift operation
+   [unaligned_images]@******    ; Unaligned original stacked images 
+   [sel_particles]              ; Particle selection file             (input) 
+   6,0,7,8                      ; Reg. #s for angle, scale, & shift
+   [next_group_align]           ; Alignment parameter doc file        (input)
+   _2@******                    ; Current aligned images              (output)
+ 
+ ; Calculate refined 3D structure using centered projections and new angles. 
+ BP 32F                         ; Back projection, Fourier space
+   _2@******                    ; Aligned stacked images              (input)
+   [sel_particles]              ; Particle selection doc file         (input)
+   [next_group_align]           ; Align parameters doc file           (input)
+   *                            ; No symmetries file  
+   [next_group_vol]             ; Reconstructed vol - overall         (output)
+   [next_group_vol]_sub1        ; Reconstructed vol - subset 1        (output)
+   [next_group_vol]_sub2        ; Reconstructed vol - subset 2        (output)
+
+ DE                             ; Delete  file
+   _2@                          ; Image file                          (removed) 
+
+ DE                             ; Delete  file
+   [next_group_fsc]             ; FSC doc file                        (removed) 
+
+ FSC [half],[spfreq],[res]      ; Find phase residual &  shell correl.
+   [next_group_vol]_sub1        ; Reconstructed group vol - subset 1  (input)
+   [next_group_vol]_sub2        ; Reconstructed group vol - subset 2  (input)
+   0.5, [r2]                    ; Shell width, mask radius
+   [pixsiz]                     ; Pixel size
+   [next_group_fsc]             ; FSC group doc file                  (output)
+   *                            ; No Gnuplot file wanted
+
+ VM
+   echo " Group: {**[grp]}        Resolution:  {%f6.2%[res]}" 
+ SD [iter], [iter],[grp],[res]  ; Save in doc file
+   [grp_resol]                  ; Group resolution summary file      (output)
+
+ DE                             ; Remove ref. projections file        (removed)
+ [temp_ref_projs] 
+
+ IF ([iter] .GT. 1) THEN        ; Not first iteration
+    DE                          ; Remove previous group vol. 
+      [group_vol]              
+    DE                          ; Remove previous subset 1 group vol.
+      [group_vol]_sub1
+    DE                          ; Remove previous subset 2 group vol.
+      [group_vol]_sub2
+ ENDIF
+
+ ; Find % of images showing excessive change in angular displacement
+ [toobig] = 100*[num-big]/[num-imgs]  ; % of images with excessive 
+
+ VM
+   echo " Iteration: {**[iter]} Group: {***[grp]}   Excessive changes: {***[toobig]}%"
+
+ [avg-ccrot]  = [sum-ccrot]/[num-imgs]                           ; Average CCROT 
+ [avg-degred] = 0.0                                              ; Average CCROT degredation
+ IF ([num-degred] .GT. 0)[avg-degred]=[sum-degred] /[num-degred] ; Average CCROT degredation
+ [avg-impr]   = 0.0                                              ; Average CCROT improvement
+ IF ([num-impr] .GT. 0) [avg-impr]=[sum-impr]/[num-impr]         ; Average CCROT improvement
+ [per-degred] = 100*[num-degred]/[num-imgs]                      ; Percent images with CCROT degredation
+ [avg-diff]   = [sum-diff]/[num-imgs]                            ; Average angular difference
+
+ VM
+   echo " CCROT degred.: {***[per-degred]}%  Avg degred.: {%F8.2%[avg-degred]}  Avg improve: {%F8.2%[avg-impr]}"
+
+ SD / %Large angles, Avg. Ang-diff,  Avg. CCROT, % degred.,  Avg degred.,  Avg improv.
+   [next_group_align]                 ; Next align. doc file   (output)
+
+ SD -2, [toobig],[avg-diff],[avg-ccrot],[per-degred],[avg-degred],[avg-impr]
+   [next_group_align]                 ; Next align. doc file   (output)
+
+ SD E                                 ; Close doc file  
+   [next_group_align]                 ; Next align. doc file   (output)
+ 
+ MY FL
+ RE
+</body></pre></html>
+

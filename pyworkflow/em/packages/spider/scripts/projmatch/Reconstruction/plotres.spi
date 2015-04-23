@@ -1,0 +1,77 @@
+; <html><head><title>Creates gnuplot plot of resolution curves</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/plotres.spi 
+;
+; PURPOSE: Creates gnuplot plot of reconstruction resolution curves
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+; <b> ------------ Input files ----------------------------------------
+
+ [sel_grp]  = 'sel_group_cclim'  ; Defocus groups selection file
+
+ [docresol] = 'resolution'       ; Doc file with resolution in Angstroms
+
+ [dfcurve]  = 'df{***[grp]}/fscdoc.$DATEXT'  ; Doc file of FSC curves
+
+ [combires] = 'combires'         ; Doc file with combined FSC curve
+
+; --------------- Output file   -------------------------------------
+
+ [gnuplot_file] = 'gnuplot_res'  ; Text file of gnuplot commands
+
+ ; -------------- END BATCH HEADER ---------------------------------- </b>
+
+ UD FIND [key],[grp],[spfreq],[resol]    
+   [docresol]                ; Doc file                   (input)
+   1, 0                      ; Search col. & value
+ UD FIND E    
+   [docresol]                ; Doc file                   (input)
+
+ VM
+   echo ' FSC: 0.5 Resolution: {%f5.2%[resol]} Angstroms'
+
+ VM
+   \rm -f [gnuplot_file]
+ 
+ ;VM 
+ ;echo set ylabel \" (your ad here)\" > [gnuplot_file]
+
+ VM 
+   echo ' 'set xlabel \"Frequency\" >> [gnuplot_file]
+
+ VM 
+   echo ' 'set title \"FSC: 0.5  Resolution = {%F5.2%[resol]} Angstroms\" >> [gnuplot_file]
+
+ VM 
+   echo ' 'plot \\ >> [gnuplot_file]
+
+ DO                               ; Loop over all defocus groups
+   UD NEXT [key],[grp]            ; Get group from group sel. file
+     [sel_grp]                    ; Group selection file             (input)
+   IF ([key] .LE. 0) EXIT         ; End of groups in doc file
+
+   VM
+     echo ' '\"[dfcurve]\" using 3:5 title \"dfg{***[grp]}\" with lines, \\ >> [gnuplot_file]
+ ENDDO
+
+ VM
+   echo ' '\"[combires].$DATEXT\" using 3:5 title \"Combined\" with lines >> [gnuplot_file]
+
+ VM                         
+   gnuplot -persist [gnuplot_file] 
+
+ VM                                 
+   echo ' 'Plotted with: gnuplot script --------
+ VM                         
+   cat [gnuplot_file] 
+ VM                                 
+   echo ' '-------------------------------------
+
+ VM                                 
+   echo ' '; echo ' 'To view plot use: gnuplot -persist [gnuplot_file] ; echo ' '  
+
+ EN
+ 
+ ; </body></pre></html>
+

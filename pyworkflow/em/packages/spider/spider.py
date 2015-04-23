@@ -48,10 +48,10 @@ SCRIPTS_DIR = 'scripts'
 
 # Match strings of the type
 # key = value ; some comment
-REGEX_KEYVALUE = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<s1>\s*)=(?P<s2>\s*)(?P<value>\S+)(?P<rest>\s+.*)")
+REGEX_KEYVALUE = re.compile("(?P<prefix>[^[]*)(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<s1>\s*)=(?P<s2>\s*)(?P<value>\S+)(?P<suffix>\s+.*)")
 # Match strings of the type [key]value
 # just before a 'fr l' line
-REGEX_KEYFRL = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<value>\S+)(?P<rest>\s+.*)")
+REGEX_KEYFRL = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<value>\S+)(?P<suffix>\s+.*)")
 
 
 def getEnviron():
@@ -71,9 +71,9 @@ def getEnviron():
         if len(errors):
             print "ERRORS: " + errors
     else: 
-        env.update({'SPBIN_DIR': join(SPIDER_DIR, 'bin', ''),
-                    'SPMAN_DIR': join(SPIDER_DIR, 'man', ''),
-                    'SPPROC_DIR': join(SPIDER_DIR, 'proc', '')
+        env.update({'SPBIN_DIR': join(SPIDER_DIR, 'bin') + '/', # Spider needs this extra slash at the end
+                    'SPMAN_DIR': join(SPIDER_DIR, 'man') + '/',
+                    'SPPROC_DIR': join(SPIDER_DIR, 'proc') + '/'
                     })
     
     # Get the executable or 'spider' by default
@@ -105,18 +105,10 @@ def __substituteVar(match, paramsDict, lineTemplate):
     return None
     
     
-def runScript(inputScript, ext, paramsDict, log=None, cwd=None):
-    """ This function will create a valid Spider script
-    by copying the template and replacing the values in dictionary.
-    After the new file is read, the Spider interpreter is invoked.
-    Usually the execution should be done where the results will
-    be left.
+def writeScript(inputScript, outputScript, paramsDict):
+    """ Create a new Spider script by substituting 
+    params in the input 'paramsDict'.
     """
-    outputScript = replaceBaseExt(inputScript, ext)
-    
-    if cwd is not None:
-        outputScript = join(cwd, outputScript)
-
     fIn = open(getScript(inputScript), 'r')
     fOut = open(outputScript, 'w')
     inHeader = True # After the end of header, not more value replacement
@@ -128,10 +120,10 @@ def runScript(inputScript, ext, paramsDict, log=None, cwd=None):
         if inHeader:
             try:
                 newLine = __substituteVar(REGEX_KEYVALUE.match(line), paramsDict, 
-                                          "%(var)s%(s1)s=%(s2)s%(value)s%(rest)s\n")
+                                          "%(prefix)s%(var)s%(s1)s=%(s2)s%(value)s%(suffix)s\n")
                 if newLine is None and inFrL:
                     newLine = __substituteVar(REGEX_KEYFRL.match(line), paramsDict, 
-                                              "%(var)s%(value)s%(rest)s\n")
+                                              "%(var)s%(value)s%(suffix)s\n")
                 if newLine:
                     line = newLine
             except Exception, ex:
@@ -141,10 +133,29 @@ def runScript(inputScript, ext, paramsDict, log=None, cwd=None):
         fOut.write(line)
     fIn.close()
     fOut.close()    
-
-    scriptName = removeBaseExt(outputScript)
-    args = " %s @%s" % (ext, scriptName)
+     
     
+def runTemplate(inputScript, ext, paramsDict, log=None, cwd=None):
+    """ This function will create a valid Spider script
+    by copying the template and replacing the values in dictionary.
+    After the new file is read, the Spider interpreter is invoked.
+    Usually the execution should be done where the results will
+    be left.
+    """
+    outputScript = replaceBaseExt(inputScript, ext)
+    
+    if cwd is not None:
+        outputScript = join(cwd, outputScript)
+        
+    # First write the script from the template with the substitutions
+    writeScript(inputScript, outputScript, paramsDict)
+    # Then proceed to run the script
+    runScript(outputScript, ext, log, cwd)
+    
+
+def runScript(inputScript, ext, log=None, cwd=None):
+    scriptName = removeBaseExt(inputScript)
+    args = " %s @%s" % (ext, scriptName)
     runJob(log, SPIDER, args, env=dict(environment), cwd=cwd)
     
 
@@ -165,7 +176,7 @@ def runCustomMaskScript(filterRadius1, sdFactor,
               '[output_mask]': outputMask,
               } 
     # Run the script with the given parameters
-    runScript('mda/custommask.msa', ext, params, cwd=workingDir)
+    runTemplate('mda/custommask.msa', ext, params, cwd=workingDir)
     
     
 class SpiderShell(object):
@@ -214,6 +225,10 @@ class SpiderDocFile(object):
         self._file = open(filename, mode)
         self._count = 0
         
+    def writeComment(self, comment):
+        line = ' ;%s' % comment
+        print >> self._file, line 
+        
     def writeValues(self, *values):
         """ Write values in spider docfile. """
         self._count += 1
@@ -230,6 +245,9 @@ class SpiderDocFile(object):
             if not line.startswith(';'):
                 values = [float(s) for s in line.split()[2:]]
                 yield values
+                
+    def __iter__(self):
+        return self.iterValues()
 
     def close(self):
         self._file.close()

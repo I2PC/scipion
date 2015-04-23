@@ -1,0 +1,197 @@
+([plot_type], [back],[margin])
+ FR
+   ?Angles file?[refangles]
+
+ FR
+   ?List of particles for each angle?[how_many]
+
+ FR
+   ?Plot output file?[out]
+
+ [label-it] = 1                   ; Want label below plot
+
+ ;; If [plot_type] > 0, numbered labels are added
+ ;; They're drawn with lower left corner at (x,y), so they need to be shifted.
+ ;; Digits from the 'LA' operation are approx 13 pixels high,
+ ;;     10 pix wide (single digit),23 p wide (2 digits)
+ [v44] = INT(13/2)
+ [v45] = INT(10/2)
+ [v46] = INT(23/2)
+
+ [siz] = 2 * [margin] + 607      ; Output size
+ 
+ BL                              ; Create a blank image
+   _1                            ; Temp file          (output)
+   [siz],[siz]                   ; Size
+   N
+   0.0                           ; Intensity
+
+ ; Draw lines 
+ PT                              ; Pattern operation 
+   _1                            ; Temp file          (output)
+   L                             ; Draw lines
+   [margin]+1,[margin]+303       ; Start
+   [margin]+605,[margin]+303     ; End
+   Y                             ; Continue
+   L
+   [margin]+303,[margin]+1
+   [margin]+303,[margin]+605
+   N
+
+ ; Draw the large circles
+ PT                              ; Pattern operation
+   _1                            ; Temp file          (output)
+   CL                            ; Draw circles
+   [margin]+303,[margin]+303     ; Center
+   302         ; Radius
+   N
+
+ ; '''''''''''''''''''''''''''''''''''''''''''''''''''''
+ ; If they want labels, do them first
+ ; '''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+ IF ([plot_type].EQ.0) GOTO LB8
+
+ DO [v91]=1,83
+
+   UD IC,[v91],[v51],[v52],[v53]      ; Doc file with angles
+     [refangles]
+
+   IF([v52].le.90.0) GOTO LB12
+   [v52] = 180.0-[v52]
+   [v53] = [v53]+180.0
+
+   IF([v53].lt.360.0) GOTO LB12
+   [v53] = [v53]-360.0
+
+   LB12
+
+   [v61] = [v52]/90
+   [v61] = [v61]*300
+   [v81] = cos([v53])
+   [v82] = sin([v53])
+   [v81] = [v81]*[v61]
+   [v82] = [v82]*[v61]
+   [v81] = [v81]+303
+   [v82] = [v82]+303
+
+   ; add a label-----------------
+   [v48] = [v82]+[v44]                       ; Y coord
+
+   IF ([v91].LT.10) THEN                     ; Single digit 
+      [v49] = [v81]-[v45]
+      LA L   
+        _1                                   ; Temp file          (input)
+        _2                                   ; Temp file          (output)
+        {*[v91]}
+        [margin]+[v49],[margin]+[v48]        ; Coord
+
+   ELSE
+      [v49] = [v81]-[v46]
+      LA L   
+        _1                                   ; Temp file          (input)
+        _2                                   ; Temp file          (output)
+        {**[v91]}
+        [margin]+[v49],[margin]+[v48]        ; Coord
+
+   ENDIF
+
+   CP
+     _2                                      ; Temp file          (input)
+     _1                                      ; Temp file          (output)
+
+ ENDDO
+
+ IF ([plot_type].LT.0) CYCLE                 ; Skip the circles
+
+ LB8
+
+ AR
+   _1                                        ; Temp file          (input)
+   _2                                        ; Temp file          (output)
+   p1/2
+
+ RP                                          ; Hack keeps the max=1 for subsequent graphix
+   _2                                        ; Temp file          (output)
+   1,1
+   1
+
+ CP
+   _2                                        ; Temp file          (input)
+   _1                                   ; Temp file          (output)
+     
+ ; '''''''''''''''''''''''''''''''''''''''''''''''''''''
+ ; Main loop that draws the circles
+ 
+ DO [v91]=1,83
+
+   UD IC,[v91],[v51],[v52],[v53]   ; Doc file with reference angles
+     [refangles]                   ; Angles file  (input)
+
+   IF ([v52].LE.90.0) GOTO LB2
+   [v52] = 180.0-[v52]
+   [v53] = [v53]+180.0
+
+   IF([v53].LT.360.0) GOTO LB2
+   [v53] = [v53]-360.0
+
+   LB2
+
+   [v61] = [v52]/90
+   [v61] = [v61]*300
+   [v81] = cos([v53])
+   [v82] = sin([v53])
+   [v81] = [v81]*[v61]
+   [v82] = [v82]*[v61]
+   [v81] = [v81]+303
+   [v82] = [v82]+303
+
+   IF ([plot_type] .NE. 0) THEN
+     UD IC,[v91],[v71]        ; Read Doc file
+       [how_many]             ; Has how many particles in each view (input)
+
+     IF ([v71].EQ.0) CYCLE    ; No particles
+   ELSE
+     [v71] = 1                ; Default is single number
+   ENDIF
+
+   [v72] = [v71] * 9
+   [v72] = sqr([v72])
+
+   PT                         ; Draw a circle
+     _1                       ; Temp file          (output)
+     CL                       ; Circle
+     [margin]+[v81],[margin]+[v82]  ; Center coords
+     [v72]                    ; Radius
+     N                        ; 
+
+ ENDDO
+
+ RP      ; Undo the little hack
+   _1                         ; Temp file          (output)
+   1,1
+   0
+
+ IF ([label-it] .EQ. 1) THEN
+    LA                        ; Label  
+      _1                      ; Temp file          (input)
+      _2                      ; Temp file          (output)
+      Angular distribution on sphere
+ ENDIF
+
+ IF ([back].GT.0) THEN
+   NEG                        ; Set backround
+     _2                       ; Temp file          (output)
+     [out]
+ ELSE
+   CP
+     _2                       ; Temp file          (output)
+     [out]                    ; Plot file       (output)
+ ENDIF
+
+ UD ICE
+   [refangles]
+ UD ICE
+   [how_many]
+
+RE

@@ -676,6 +676,8 @@ void ProgReconstructSignificant::produceSideinfo()
 		SL.readSymmetryFile(fnSym);
 		alpha0*=SL.true_symNo;
 		alphaF*=SL.true_symNo;
+		if (alpha0>1)
+			REPORT_ERROR(ERR_ARG_INCORRECT,"Alpha values are too large: reduce the error such that the error times the symmetry number is smaller than 1");
 	}
 
 	// If there is not any input volume, create a random one

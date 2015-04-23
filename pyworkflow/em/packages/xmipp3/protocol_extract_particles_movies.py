@@ -141,14 +141,14 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         #this section has been moved to the main part to avoid
         # conflicts between threads
         ###DELETE
-        movie = self.inputMovies.get()[movieId]
+        #movie = self.inputMovies.get()[movieId]
         #### move this to main
-        if self.applyAlignment and movie.hasAlignment():
-            shifts = movie.getAlignment().getShifts()
-            print("movieName shift", movieName, shifts)
-        else:
-            shifts = [0] * (2*n)
-            print("movieName shift", movieName, shifts)
+        #if self.applyAlignment and movie.hasAlignment():
+        #    shifts = movie.getAlignment().getShifts()
+        #    print("movieName shift", movieName, shifts)
+        #else:
+        #    shifts = [0] * (2*n)
+        #    print("movieName shift", movieName, shifts)
         ####  END delete
         stkIndex = 0
         movieStk = self._getMovieName(movieId, '.stk')
@@ -302,6 +302,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         #factor = samplingMic / samplingCoords
         factor = samplingCoords / samplingMic
         print("factor",factor,samplingMic,samplingCoords)
+
         #####coordinates = self.inputCoordinates.get()
         #####micrograph = coordinates.getMicrographs()[movieId]
 

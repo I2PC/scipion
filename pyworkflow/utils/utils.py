@@ -461,8 +461,8 @@ def getListFromValues(valuesStr, length=None):
     If length is not None, then the last element will be repeated
     until the desired length is reached.
     Examples:
-    '1 1 2x2 4 4' -> [1, 1, 2, 2, 4, 4]
-    '2x3, 3x4, 1' -> [3, 3, 4, 4, 4, 1]
+    '1 1 2x2 4 4' -> ['1', '1', '2', '2', '4', '4']
+    '2x3, 3x4, 1' -> ['3', '3', '4', '4', '4', '1']
     """
     result = []
     
@@ -476,6 +476,8 @@ def getListFromValues(valuesStr, length=None):
         else:
             raise Exception("More than one 'x' is not allowed in list string value.")
             
+    # If length is passed, we fill the list with 
+    # the last element until lenght is reached
     if length is not None and length > len(result):
         item = result[-1]
         result += [item] * (length - len(result))

@@ -1,0 +1,69 @@
+([iter],[grp])
+; <html><head><title>Cloning endmerge</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/pub_ref_clone.pam
+;         New                                    ArDean Leith Jan 2009
+;         New variable definitions               ArDean Leith Jun 2010
+;         New variable definitions               ArDean Leith Jan 2011
+;         Dala removal                           ArDean Leith Jan 2012
+;
+; PURPOSE: Runs on compute nodes to copy 'endmerge files' from master disk to local disk
+;
+; CALLED FROM: <a href="./pub_refine_start.pam">pub_refine_start</a> 
+;
+; INPUT REGISTERS:
+;    [iter]                 Alignment step iteration counter  (Varies with iter)
+;    [grp]                  Defocus group                     (Varies with group)
+;
+;  '##' denotes iteration,  '##+' denotes next iteration, and '***' denotes group
+; INPUT FILES:  (Copied from master node or created/used on compute node)
+;   [sel_group]            input/sel_group         Group selection doc file  
+;   [sel_particles]        work/select_***         Particle selection doc file
+;   [next_group_align]     final/align_##+_***     Alignment parameter doc file 
+;
+; ---------------------------------------------------------------------
+
+[next-iter] = [iter] + 1
+
+; Clear temp directory and create temp local dir., divert errors to junk
+VM
+\rm -rf [temp_local_dir]/input [temp_local_dir]/work [temp_local_dir]/final >& /dev/null
+
+; Create temp local dir.  Divert errors to junk
+VM
+mkdir -p [temp_local_dir] [temp_local_dir]/input [temp_local_dir]/work [temp_local_dir]/final >& /dev/null
+
+VM                                 ; So anyone can delete it
+chmod 777 [temp_local_dir]/input [temp_local_dir]/work [temp_local_dir]/final >& /dev/null
+ 
+; Copy files from master disk to local disk
+VM
+\cp [sel_group].$DATEXT            [temp_local_dir][sel_group].$DATEXT 
+VM
+\cp [sel_particles].$DATEXT        [temp_local_dir][sel_particles].$DATEXT 
+VM
+\cp [next_group_align].$DATEXT     [temp_local_dir][next_group_align].$DATEXT  
+
+; Save current output file locations for declone ------------
+
+GLO [master_next_group_bpr]  = [next_group_bpr] 
+GLO [master_next_group_ofsc] = [next_group_ofsc] 
+
+; Redefine current file locations for input files -----------
+
+GLO [sel_group]           = '[temp_local_dir]'[sel_group] 
+GLO [sel_particles]       = '[temp_local_dir]'[sel_particles] 
+GLO [next_group_align]    = '[temp_local_dir]'[next_group_align] 
+
+; Redefine current file locations for output files ---------
+
+GLO [next_group_bpr]  = '[temp_local_dir]'[next_group_bpr] 
+GLO [next_group_ofsc] = '[temp_local_dir]'[next_group_ofsc] 
+       
+RE
+; </body></pre></html>
+
+
+
+
+

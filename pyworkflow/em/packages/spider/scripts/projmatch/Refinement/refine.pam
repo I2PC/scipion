@@ -1,0 +1,180 @@
+; <html><head><title>Controls serial reconstruction refinement</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/refine.pam    
+;         New                              ArDean Leith Nov 2000
+;         Rewritten                        ArDean Leith Mar 2004
+;         [] variables                     ArDean Leith Dec 2005
+;         Ampenhance                       ArDean Leith May 2006
+;         More stacks                      ArDean Leith Dec 2006
+;         Small angles limits              ArDean Leith Oct 2010
+;         pixsiz, resol headers,r2,...     ArDean Leith Aug 2012
+;
+; PURPOSE: Controls serial reconstruction refinement 
+;
+; I/O Registers and files are set in: <a href="./refine settings.pam">refine settings.pam</a>
+;
+; INPUT REGISTERS:
+;   [pixsiz]                 Pixel size 
+;   [r2]                     Radius of object
+;   [alignsh]                Shift allowed is +- this value
+;   [prj-radius]             Radius of object for projection
+;   [iter1]                  Starting iteration
+;   [iter-end]               Ending   iteration
+;   [lambda]                 Lambda (A)            (Used in prepare)
+;   [small-ang]              Small angle refinement flag (1 is true) 
+;   [converg]                Convergence criterion percentage
+;
+; INPUT FILES:
+;   [params]                ../params                             Input params file  
+;   [vol_orig]              ../Reconstruction/vol01               Input volume file  
+;   [sel_group_orig]        ../Reconstruction/sel_group_cclim     Group selection file
+;   [sel_particles_orig]    ../Reconstruction/sel_particles_***   Particle selection files 
+;   [group_align_orig]      ../Alignment/align_01_***             Alignment parameter files 
+;   [unaligned_images]      ../Alignment/data***                  Original unaligned images stack
+;
+; PROCEDURES CALLED:
+;    refine_settings          <a href="./refine_settings.pam">refine_settings.pam</a>
+;    prepare                  <a href="./prepare.pam">prepare.pam</a>
+;
+;    grploop                  <a href="./grploop.pam">grploop.pam</a>    OR           
+;    smangloop                <a href="./smangloop.pam">smangloop.pam</a>            
+;
+;    mergegroups              <a href="./mergegroups.pam">mergegroups.pam</a>
+;    ... enhance (optional)   <a href="./enhance.pam">enhance.pam</a>
+;    endmerge                 <a href="./endmerge.pam">endmerge.pam</a>
+; 
+;    endrefine                <a href="./endrefine.pam">endrefine.pam</a>  
+;
+; ---------------------------------------------------------------------
+
+ MD
+   TR OFF                     ; Loop info turned off
+ MD
+   VB OFF                     ; File info turned off
+ MD
+   SET MP                     ; Use all available OMP processors
+   0
+
+ ; Input initial parameters & file names
+ @refine_settings([pixsiz],[r2],[alignsh],[prj-radius],[iter1],[iter-end],[lambda],[small-ang],[winsize],[converg])
+
+ ; Redefine [temp_local_dir] location to current work directory for non-PubSub run
+ GLO [temp_local_dir] = '[temp_work_dir]'
+
+ IF ([iter1].LE.1) THEN
+   ; Prepare input files (only needs to be done once) 
+   @prepare([pixsiz],[lambda],[iter1])
+   SD /     Iteration       group        resolution 
+     [iter_resol]          ; Resolution doc file              (output)
+   SD /     Iteration       group        resolution 
+     [grp_resol]           ; Resolution doc file              (output)
+ ENDIF
+
+
+ MY FL
+
+ UD N [num-grps]            ; Get number of defocus groups
+   [sel_group]              ; Group selection doc file         (input)
+
+ DO [iter]=[iter1],[iter-end] ; Loop over all iterations ----------------------------------
+
+   RR S [ampenhance]       ; Amplitude enhancement flag (varies with iteration)
+     [amp-enhance-flags]   ; Global string variable
+     [iter]
+
+   FT                      ; Fourier on volume 
+     [current_vol]         ; Volume produced by previous iter. (input)  
+     [iter_vft]            ; For all groups on this iter.      (output)
+
+   DE
+     [iter_refangs]        ; Reference angles doc file         (removed)
+
+   ; Create reference angle doc file for this iteration 
+
+   IF([small-ang].EQ.0) THEN  
+
+      ; For normal angle refinement
+      RR S [ang-step]
+        [ang-steps]        ; Angular step for projection angle  (varies with iteration)
+        [iter]
+
+      VO EA [num-angles]   ; Sets [num-angles] to number of reference projections
+        [ang-step]         ; Theta angular step          (varies with iteration)
+        0, 90              ; Theta range, 90 is for use with 'Check Mirrored Positions'
+        0, 359.9           ; Phi range
+        [iter_refangs]     ; Reference angles doc file       (output)
+
+      RR S [ang-limit]     ; Restriction on angular search      (varies with iteration)
+        [ang-limits]
+        [iter]
+   ELSE                    ; Small angle refinement
+
+      ; For Small angle refinement
+      VO EA [num-angles]   ; Sets [num-angles] to number of reference projections
+        [ang-step-sm]      ; Theta angular step     
+        0, [theta-range]   ; Theta range 
+        0, 359.9           ; Phi range
+        [iter_refangs]     ; Reference angles doc file       (output)
+   ENDIF
+
+   ; Process all defocus groups one by one
+   [num-big] = 0           ; Number of large proj. angle displacements
+   DO [i]=1,[num-grps]
+      UD S [i],[grp]       ; Get defocus group number from list  
+        [sel_group]        ; Group selection file            (input)
+
+      VM
+        echo -n " Processing group: {***[grp]}   " ; date  '+ TIME: %x  %X'
+      MY FL                ; Flush results file
+ 
+      ; grploop/smangloop returns [stop] 
+      IF([small-ang].EQ.0)THEN  ; Runs main refinement grploop tasks
+         @grploop([ang-step],[ang-limit],[r2],[alignsh],[prj-radius],[iter],[grp],[stop],[pixsiz])
+      ELSE
+         @smangloop([r2],[alignsh],[prj-radius],[iter],[grp],[stop],[pixsiz])
+      ENDIF
+
+      ; Check size of projection angular changes
+      ; [stop] returns % of images whose proj. angle moved by >1.5*[ang-step]
+      IF([stop].GT.[converg])  [num-big]=[num-big]+1  ; Excessive ang. change for this group  
+
+      MY FL                ; Flush results file
+   ENDDO
+   UD E                    ; Finished with incore doc file
+
+   ; Consolidate data for CTF corrections
+   @mergegroups([pixsiz],[iter],[ampenhance],[r2])
+
+   VM
+     echo " Iteration: {**[iter]} Excessive proj. ang. changes in: {***[num-big]} groups"
+ 
+   ; If projection angular changes small in all groups, can stop now
+   IF([num-big].EQ.0) EXIT  
+
+   DE                       ; Delete vft file.
+     [iter_vft]             ; Current iteration Fourier vol   (removed)
+
+   MY FL                    ; Flush results file
+ ENDDO
+
+ VM
+   echo ' ' ; echo -n " Alignment halting after iteration: {**[iter]}  " ; date '+ TIME: %x  %X' ; echo ' '
+
+ DO [i]=1,[num-grps]     
+   UD IC [i], [grp]         ; Get defocus group number from list
+     [sel_group]            ; Group selection doc file         (input)
+
+   @endmerge([prj-radius],[grp],[iter],[pixsiz],[r2])
+ ENDDO
+
+ UD ICE                     ; End doc file 'UD IC' use
+  [sel_group]               ; Group selection doc file        (finished)
+
+ ; Prepare final resolution files
+ @endrefine([r2],[pixsiz],[iter])    
+
+ VM
+   echo " " ; echo -n  " FINISHED REFINEMENT    " ; date '+ TIME: %x  %X'
+
+ EN
+; </body></pre></html>

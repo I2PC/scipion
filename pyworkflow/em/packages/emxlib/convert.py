@@ -382,6 +382,7 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir,
             mic.setLocation(newFn)
         else:
             mic.setLocation(micFn)
+        _fillMicName(mic, fn)
         micSet.append(mic)
         emxMic._micId = mic.getObjId()
         mic.cleanObjId()
@@ -399,6 +400,11 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir,
             protocol._defineOutputs(outputCTF=ctfSet)
             ctfSet.setMicrographs(micSet)
             protocol._defineCtfRelation(micSet, ctfSet)
+
+
+def _fillMicName(mic, filename):
+    micName = filename.replace("/", "_")
+    mic.setMicName(micName)
 
 
 def _particlesFromEmx(protocol

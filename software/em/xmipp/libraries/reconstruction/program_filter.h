@@ -33,6 +33,9 @@ private:
     ///Pointers to selected operation
     XmippFilter * filter;
 
+    // Read CTF
+    bool readCTF;
+
 protected:
     void defineParams();
     void readParams();

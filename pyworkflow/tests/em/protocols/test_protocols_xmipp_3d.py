@@ -719,11 +719,12 @@ class TestXmippProjMatching(TestXmippBase):
 #         self.validateFiles('protExtract', protExtract)
 
         print "Run Projection Matching"
-        protProjMatch = self.newProtocol(XmippProtProjMatch, ctfGroupMaxDiff=0.00001)
+        protProjMatch = self.newProtocol(XmippProtProjMatch, ctfGroupMaxDiff=0.00001,
+                                         numberOfIterations=2, symmetry="i1")
         protProjMatch.inputParticles.set(protExtract.outputParticles)
         protProjMatch.input3DReferences.set(protImportVol.outputVolume)
         self.launchProtocol(protProjMatch)
-        self.assertIsNotNone(protProjMatch.outputVolumes, "There was a problem with Projection Matching")
+        self.assertIsNotNone(protProjMatch.outputVolume, "There was a problem with Projection Matching")
 
 
 if __name__ == "__main__":

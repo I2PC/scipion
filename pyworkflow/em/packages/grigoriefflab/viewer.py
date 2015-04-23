@@ -33,7 +33,7 @@ from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO, View
 import pyworkflow.em as em
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
+from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,IntParam,
                                         EnumParam, BooleanParam, FloatParam)
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
@@ -112,6 +112,10 @@ Examples:
               label='Display angular distribution',
               help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                    '*chimera*: display angular distribution using Chimera with red spheres.')
+        group.addParam('spheresScale', IntParam, default=100, 
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Spheres size',
+                      help='')
         
         group = form.addGroup('Resolution')
         group.addParam('resolutionPlotsSSNR', LabelParam, default=True,
@@ -252,8 +256,9 @@ Examples:
         return views
     
     def _createAngDistChimera(self, it):
-        x, _, _ = self.protocol.input3DReference.get().getDim()
-        radius = 1.1 * x
+        nparts = self.protocol.inputParticles.get().getSize()
+        radius = self.spheresScale.get()
+
         volumes = self._getVolumeNames()
         
         if len(volumes) > 1:
@@ -263,46 +268,45 @@ Examples:
                 data_angularDist = self.protocol._getFileName("output_par", iter=it)
                 if exists(data_angularDist):
                     sqliteFn = self.protocol._getFileName('projections', iter=it)
-                    self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
+                    self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, data_angularDist))
                     view = em.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
             else:
                 for ref3d in self._refsList:
                     data_angularDist = self.protocol._getFileName("output_par_class", iter=it, ref=ref3d)
                     if exists(data_angularDist):
                         sqliteFn = self.protocol._getFileName('projectionsClass', iter=it, ref=ref3d)
-                        self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
+                        self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, data_angularDist))
                         view = em.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
         return view
     
     def _createAngDist2D(self, it):
         nrefs = len(self._refsList)
+        nparts = self.protocol.inputParticles.get().getSize()
         gridsize = self._getGridSize(nrefs)
         
         if self.protocol.IS_REFINE:
             data_angularDist = self.protocol._getFileName("output_par", iter=it)
             if exists(data_angularDist):
-                xplotter = EmPlotter(x=gridsize[0], y=gridsize[1],
+                plotter = EmPlotter(x=gridsize[0], y=gridsize[1],
                                     mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
                 title = 'iter %d' % it
                 sqliteFn = self.protocol._getFileName('projections', iter=it)
-                self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
-                self._plotter(xplotter, title, sqliteFn)
-                return xplotter
+                self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, data_angularDist))
+                plotter.plotAngularDistributionFromMd(sqliteFn, title)
+                return plotter
             else:
                 return
         else:
             for ref3d in self._refsList:
                 data_angularDist = self.protocol._getFileName("output_par_class", iter=it, ref=ref3d)
                 if exists(data_angularDist):
-                    xplotter = EmPlotter(x=gridsize[0], y=gridsize[1],
+                    plotter = EmPlotter(x=gridsize[0], y=gridsize[1],
                                         mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
-                    plot_title = 'class %d' % ref3d
+                    title = 'class %d' % ref3d
                     sqliteFn = self.protocol._getFileName('projectionsClass', iter=it, ref=ref3d)
-                    self.createAngDistributionSqlite(sqliteFn, itemDataIterator=self._iterAngles(it, data_angularDist))
-                    self._plotter(xplotter, title, sqliteFn)
-                    phi, theta = self._getAngularDistribution(data_angularDist)
-                    xplotter.plotAngularDistribution(plot_title, phi, theta)
-            return xplotter
+                    self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, data_angularDist))
+                    plotter.plotAngularDistributionFromMd(sqliteFn, title)
+            return plotter
     
 #===============================================================================
 # plotFSC
@@ -514,30 +518,15 @@ Examples:
     
     def _iterAngles(self, it, dataAngularDist):
         f = open(dataAngularDist)
-        particles = self.protocol.inputParticles.get().getSize()
         for line in f:
             if not line.startswith('C'):
                 angles = map(float, line.split())
                 rot = angles[1]
                 tilt = angles[2]
-                yield rot, tilt, particles
+                yield rot, tilt
         
         f.close()
     
-    def _getAngularDistribution(self, pathFile):
-        # Create Angular plot for one iteration
-        file = open(pathFile)
-        phi = []
-        theta = []
-        
-        for line in file:
-            if not line.startswith('C'):
-                lineList = line.split()
-                phi.append(float(lineList[3]))
-                theta.append(float(lineList[2]))
-        file.close()
-        return phi, theta
-
     def _getColunmFromFilePar(self, parFn, col, invert=False):
         f1 = open(parFn)
         
@@ -556,21 +545,6 @@ Examples:
                 readLines = True
         f1.close()
         return value
-
-    def _plotter(self, xplotter, title, sqliteFn):
-        import pyworkflow.em.metadata as md
-        # Create Angular plot for one iteration
-        rot = []
-        tilt = []
-        weight = []
-        
-        mdProj = md.MetaData(sqliteFn)
-        for objId in mdProj:
-            rot.append(mdProj.getValue(md.MDL_ANGLE_ROT, objId))
-            tilt.append(mdProj.getValue(md.MDL_ANGLE_TILT, objId))
-            weight.append(mdProj.getValue(md.MDL_WEIGHT, objId))
-        
-        xplotter.plotAngularDistribution(title, rot, tilt, weight)
 
     def _getVolumeNames(self):
         volumes = []
@@ -608,6 +582,7 @@ class ProtCTFFindViewer(Viewer):
          
         def _getMicrographDir(mic):
             """ Return an unique dir name for results of the micrograph. """
+            from pyworkflow.utils.path import removeBaseExt
             return obj._getExtraPath(removeBaseExt(mic.getFileName()))
          
         def iterMicrographs(mics):
@@ -620,23 +595,31 @@ class ProtCTFFindViewer(Viewer):
                 yield (micFn, micDir, mic)
          
         def visualizeObjs(obj, setOfMics):
-                 
+            from pyworkflow.em.packages.grigoriefflab.convert import readCtfModel
+            
             if exists(obj._getPath("ctfs_temporary.sqlite")):
                 os.remove(obj._getPath("ctfs_temporary.sqlite"))
              
             ctfSet = self.protocol._createSetOfCTF("_temporary")
             for fn, micDir, mic in iterMicrographs(setOfMics):
+                samplingRate = mic.getSamplingRate() * self.protocol.ctfDownFactor.get()
+                mic.setSamplingRate(samplingRate)
                 out = self.protocol._getCtfOutPath(micDir)
                 psdFile = self.protocol._getPsdPath(micDir)
-                 
+                
                 if exists(out) and exists(psdFile):
-                    result = self.protocol._parseOutput(out)
-                    defocusU, defocusV, defocusAngle = result
-                    # save the values of defocus for each micrograph in a list
-                    ctfModel = self.protocol._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
+                    ctfModel = em.CTFModel()
+                
+                    if not self.protocol.useCftfind4:
+                        readCtfModel(ctfModel, out)
+                    else:
+                        readCtfModel(ctfModel, out, True)
+                    
+                    ctfModel.setPsdFile(psdFile)
                     ctfModel.setMicrograph(mic)
+                    
                     ctfSet.append(ctfModel)
-             
+            
             if ctfSet.getSize() < 1:
                 raise Exception("Has not been completed the CTF estimation of any micrograph")
             else:

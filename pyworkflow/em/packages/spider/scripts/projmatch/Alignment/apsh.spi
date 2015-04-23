@@ -1,0 +1,118 @@
+; <html><head><title>Computes alignment parameters for sample images</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/apsh.spi 
+;          New                                            Nov 2004 ArDean Leith  
+;          Added alignment option & stack op              Nov 2006 ArDean Leith
+;          Var naming                                     Jan 2010 ArDean Leith
+;
+; PURPOSE: Multi-reference alignment of an image series. 
+;          Sample images are aligned with reference projections via
+;          shifts (translations) and rotations.  
+;          THIS PROCEDURE IS FOR PROJECTS WITH A SINGLE  GROUP. 
+;          USE: apshgrp.spi FOR ALIGNING MULTIPLE GROUPS
+;
+;<b>------------ Edit next 7 Input parameters ------------------------------ 
+
+[grp]     = 1   ; Group number  (If used in your file name)
+
+[doalign] = 1   ; If >0 apply alignment to images
+
+[range]   = 8 	; Translation search range (must be divisible by step size)
+[step]    = 2   ; Translation step size
+
+[diam]    = 366 ; Diameter of object (Angstroms) for alignment search.
+                ;   (EDIT as needed!) Used to find last alignment radius.
+
+[r1]      = 5	; First rotation alignment ring, only radii > this will be analyzed
+[r2]      = 0   ; Last rotation ring (If zero, compute from object diameter)
+
+; ----------------- Input files --------------------------------------------
+
+[parameters]        = '../params'              ; Reconstruction parameter file
+
+[ref_images]        = 'projs/prj_{***[grp]}@'  ; Reference image   
+
+[ref_images_angles] = 'refangles'              ; Reference images angles doc. file
+
+[unaligned_images]  = 'data{***[grp]}@'        ; Unaligned particles name template
+
+; ----------------- Output files -------------------------------------------------
+
+[align_parameters] = 'align_01_{***[grp]}'    ; Alignment parameters doc. file 
+
+[aligned_images]   = 'dala01_{***[grp]}@'     ; Rotated, shifted (aligned) particles
+
+; ----------------- END BATCH HEADER ------------------------------------------- </b>
+
+   MD
+   TR OFF                             ; Decrease results file output
+   MD
+   VB OFF                             ; Decrease results file output
+
+   IF ([r2] .LE. 0) THEN              ; Compute alignment radius from object size  
+      UD 5,[pxsz]                     ; Get pixel size (A) from this file
+      [parameters]
+ 
+      UD 17,[winsz]                   ; Get window size (pixels) from this file
+      [parameters]
+
+      [r2] = INT([diam]/(2.0*[pxsz])) ; Compute object radius (pixels) for last alignment ring
+      [tp] = [r2] + [range]           ; Compute last ring + translation range
+      [t]  = INT([winsz]/2) - 2       ; Compute max. radius of object within window
+
+      IF ([tp] .GE. [t]) THEN
+         [r2] = [t] - [range] - 1     ; Reduce radius of last alignment ring to fit window
+      ENDIF
+   ENDIF
+
+   DE                           ; Delete existing alignment parameter output doc. files.
+   [align_parameters]
+
+   FI X [numpart]               ; Get number of particles 
+   [unaligned_images]           ; Unaligned particles name template       (input)
+   (26)                         ; Max. image number in stack      
+
+   FI X [numproj]               ; Get number of projections 
+   [ref_images]                 ; Unaligned particles name template       (input)
+   (26)                         ; Max. image number in stack      
+
+   VM
+   echo ' 'Finding alignment for: {******[numpart]} particles  
+
+   AP SH                        ; Align sample images using multiple references  
+   [ref_images]****             ; Reference image name template           (input)
+   (1-[numproj])                ; List of reference images       
+   [range],[step]               ; Search range, step size  
+   [r1],[r2]                    ; First and last ring      
+   [ref_images_angles]          ; Ref. angles doc file                    (input)
+   [unaligned_images]*****      ; Unaligned particles name template       (input)
+   (1-[numpart])                ; Number of particles  
+   *                            ; No unaligned images align. doc file  
+   (0)                          ; No restriction on angular proj. search 
+   (1)                          ; Check mirrored positions
+   [align_parameters]           ; Alignment angles doc. file              (output)
+
+   IF ([doalign] .GT. 0) THEN
+      ; Apply alignment parameters to unaligned images
+      ; Order in doc file: PHI,THETA,PSI, REF#,IMG#,  ROT,SX,SY
+
+      VM
+      echo " Applying alignment parameters"
+
+      RT SQ                     ; Rotate & shift whole stack operation
+      [unaligned_images]        ; Unaligned particles stack              (input) 
+      [aligned_images]          ; Aligned particles stack                (output)
+      (6,0,7,8)                 ; Reg. numbers for angle, scale,& shifts
+      [align_parameters]        ; Alignment angles doc. file             (input)
+   ENDIF
+   VM
+   echo " "
+
+   EN                              
+
+; </body></pre></html>
+
+
+
+
+

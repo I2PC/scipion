@@ -174,7 +174,7 @@ Examples:
                           label='Display angular distribution',
                           help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                                '*chimera*: display angular distribution using Chimera with red spheres.') 
-            group.addParam('spheresScale', IntParam, default=-1, 
+            group.addParam('spheresScale', IntParam, default=100, 
                           expertLevel=LEVEL_ADVANCED,
                           label='Spheres size',
                           help='')
@@ -218,6 +218,318 @@ Examples:
     def _viewAll(self, *args):
         pass
     
+#===============================================================================
+# showImagesInClasses     
+#===============================================================================
+    def _showImagesInClasses(self, paramName=None):
+        """ Read Relion _data.star images file and 
+        generate a new metadata with the Xmipp classification standard:
+        a 'classes' block and a 'class00000?_images' block per class.
+        If the new metadata was already written, it is just shown.
+        """
+        views = []
+        
+        for it in self._iterations:
+            fn = self.protocol._getIterClasses(it)
+            v = self.createScipionView(fn)
+            views.append(v)
+        
+        return views
+
+#===============================================================================
+# showImagesAngularAssignment     
+#===============================================================================
+    def _showImagesAngularAssignment(self, paramName=None):
+        
+        views = []
+        
+        for it in self._iterations:
+            fn = self.protocol._getIterData(it, alignType=em.ALIGN_PROJ)
+            v = self.createScipionPartView(fn)
+            views.append(v)
+        
+        return views
+    
+#=====================================================================
+# showLLRelion
+#=====================================================================
+    def _showLL(self, paramName=None):
+        views = []
+        for it in self._iterations:
+            fn = self.protocol._getIterData(it)
+            views.append(self.createScipionView(fn))
+            
+        return views
+
+#===============================================================================
+# ShowPMax
+#===============================================================================
+    def _showPMax(self, paramName=None):
+        labels = [md.RLN_MLMODEL_AVE_PMAX, md.RLN_PARTICLE_PMAX]
+        
+        mdIters = md.MetaData()
+        iterations = range(self.firstIter, self.lastIter+1)
+        
+        for it in iterations: # range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
+            objId = mdIters.addObject()
+            mdIters.setValue(md.MDL_ITER, it, objId)
+            for i, prefix in enumerate(self.protocol.PREFIXES):
+                fn = 'model_general@'+ self.protocol._getFileName(prefix + 'model', iter=it)
+                mdModel = md.RowMetaData(fn)
+                pmax = mdModel.getValue(md.RLN_MLMODEL_AVE_PMAX)
+                mdIters.setValue(labels[i], pmax, objId)
+        fn = self.protocol._getFileName('all_avgPmax_xmipp')
+        mdIters.write(fn)
+            
+        colors = ['g', 'b']
+
+        xplotter = RelionPlotter()
+        xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
+        
+        for label, color in zip(labels, colors):
+            xplotter.plotMd(mdIters, md.MDL_ITER, label, color)
+        
+        if len(self.protocol.PREFIXES) > 1:
+            xplotter.showLegend(self.protocol.PREFIXES)
+
+        return [self.createDataView(fn), xplotter]
+    
+#===============================================================================
+# ShowChanges    
+#===============================================================================    
+    def _showChanges(self, paramName=None):
+        
+        mdIters = md.MetaData()
+        iterations = range(self.firstIter, self.lastIter+1)
+        
+        print " Computing average changes in offset, angles, and class membership"
+        for it in iterations:
+            print "Computing data for iteration; %03d" % it
+            objId = mdIters.addObject()
+            mdIters.setValue(md.MDL_ITER, it, objId)
+            #agregar por ref3D
+            fn = self.protocol._getFileName('optimiser', iter=it )
+            mdOptimiser = md.RowMetaData(fn)
+            for label in self.protocol.CHANGE_LABELS:
+                mdIters.setValue(label, mdOptimiser.getValue(label), objId)
+        fn = self.protocol._getFileName('all_changes_xmipp')
+        mdIters.write(fn)
+        
+        return [self.createDataView(fn)]
+    
+#===============================================================================
+# ShowVolumes
+#===============================================================================
+    def _createVolumesSqlite(self):
+        """ Write an sqlite with all volumes selected for visualization. """
+
+        prefixes = self._getPrefixes()
+
+        path = self.protocol._getExtraPath('relion_viewer_volumes.sqlite')
+        samplingRate = self.protocol.inputParticles.get().getSamplingRate()
+
+        files = []
+        for it in self._iterations:
+            for ref3d in self._refsList:
+                for prefix in prefixes:
+                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                    if exists(volFn.replace(':mrc', '')):
+                        files.append(volFn)
+        self.createVolumesSqlite(files, path, samplingRate)
+        return [em.ObjectView(self._project, self.protocol.strId(), path)]
+
+
+    def getVolumeNames(self):
+
+        vols = []
+        prefixes = self._getPrefixes()
+        for it in self._iterations:
+            for ref3d in self._refsList:
+                for prefix in prefixes:
+                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                    vols.append(volFn)
+        return vols
+
+    def _showVolumesChimera(self):
+        """ Create a chimera script to visualize selected volumes. """
+        prefixes = self._getPrefixes()
+        volumes = []
+        
+        for volFn in self.getVolumeNames():
+            volumes.append(volFn)
+                    
+        if len(volumes) > 1:
+            cmdFile = self.protocol._getExtraPath('chimera_volumes.cmd')
+            f = open(cmdFile, 'w+')
+            for volFn in volumes:
+                # We assume that the chimera script will be generated
+                # at the same folder than relion volumes
+                vol = volFn.replace(':mrc', '')
+                localVol = os.path.basename(vol)
+                if exists(vol):
+                    f.write("open %s\n" % localVol)
+            f.write('tile\n')
+            f.close()
+            view = em.ChimeraView(cmdFile)
+        else:
+            #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
+            view = em.ChimeraClientView(volumes[0])
+            
+        return [view]
+            
+    def _showVolumes(self, paramName=None):
+        if self.displayVol == VOLUME_CHIMERA:
+            return self._showVolumesChimera()
+        
+        elif self.displayVol == VOLUME_SLICES:
+            return self._createVolumesSqlite()
+    
+#===============================================================================
+# showAngularDistribution
+#===============================================================================
+    def _showAngularDistribution(self, paramName=None):
+        views = []
+        
+        if self.displayAngDist == ANGDIST_CHIMERA:
+            for it in self._iterations:
+                views.append(self._createAngDistChimera(it))
+                        
+        elif self.displayAngDist == ANGDIST_2DPLOT:
+            for it in self._iterations:
+                plot = self._createAngDist2D(it)
+                if isinstance(plot, RelionPlotter):
+                    views.append(plot)
+        return views
+    
+    def _createAngDistChimera(self, it):
+        # Common variables to use
+        nparts = self.protocol.inputParticles.get().getSize()
+        radius = self.spheresScale.get()
+        if radius < 0:
+            radius = self.protocol.maskDiameterA.get()/2
+            
+        prefixes = self._getPrefixes()
+        if len(self._refsList) == 1:
+            # If just one reference we can show the angular distribution
+            ref3d = self._refsList[0]
+            for prefix in prefixes:
+                volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                if exists(volFn.replace(":mrc","")):
+                    sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
+                    self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, prefix, ref3d))
+                    return em.ChimeraClientView(volFn, angularDistFile=sqliteFn, spheresDistance=radius)
+                else:
+                    raise Exception("This class is Empty. Please try with other class")
+        else:
+            return self.infoMessage("Please select only one class to display angular distribution",
+                                    "Input selection") 
+    
+    def _createAngDist2D(self, it):
+        # Common variables to use
+        nparts = self.protocol.inputParticles.get().getSize()
+        prefixes = self._getPrefixes()
+        nrefs = len(self._refsList)
+        n = nrefs * len(prefixes)
+        gridsize = self._getGridSize(n)
+        
+        data_angularDist = self.protocol._getIterAngularDist(it)
+        if exists(data_angularDist):
+            plotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
+                                     mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
+            for ref3d in self._refsList:
+                for prefix in prefixes:
+                    title = '%s class %d' % (prefix, ref3d)
+                    sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
+                    self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, prefix, ref3d))
+                    plotter.plotAngularDistributionFromMd(sqliteFn, title)
+            return plotter
+        else:
+            return
+    
+#===============================================================================
+# plotSSNR              
+#===============================================================================
+    def _plotSSNR(self, a, fn):
+        mdOut = md.MetaData(fn)
+        mdSSNR = md.MetaData()
+        # only cross by 1 is important
+        mdSSNR.importObjects(mdOut, md.MDValueGT(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, 0.9))
+        mdSSNR.operate("rlnSsnrMap=log(rlnSsnrMap)")
+        resolution_inv = [mdSSNR.getValue(md.RLN_RESOLUTION, id) for id in mdSSNR]
+        frc = [mdSSNR.getValue(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, id) for id in mdSSNR]
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)               
+ 
+    def _showSSNR(self, paramName=None):
+        prefixes = self._getPrefixes()        
+        nrefs = len(self._refsList)
+        n = nrefs * len(prefixes)
+        gridsize = self._getGridSize(n)
+        md.activateMathExtensions()
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1])
+        
+        for prefix in prefixes:
+            for ref3d in self._refsList:
+                plot_title = 'Resolution SSNR %s, for Class %s' % (prefix, ref3d)
+                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'log(SSNR)', yformat=False)
+                blockName = 'model_class_%d@' % ref3d
+                legendName = []
+                for it in self._iterations:
+                    fn = self.protocol._getFileName(prefix + 'model', iter=it)
+                    if exists(fn):
+                        self._plotSSNR(a, blockName+fn)
+                    legendName.append('iter %d' % it)
+                xplotter.showLegend(legendName)
+                a.grid(True)
+        
+        return [xplotter]
+        
+#===============================================================================
+# plotFSC            
+#===============================================================================
+    def _plotFSC(self, a, model_star):
+        mdStar = md.MetaData(model_star)
+        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
+        frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
+        self.maxFrc = max(frc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
+            
+    def _showFSC(self, paramName=None):
+        threshold = self.resolutionThresholdFSC.get()
+        prefixes = self._getPrefixes()        
+        nrefs = len(self._refsList)
+        n = nrefs * len(prefixes)
+        gridsize = self._getGridSize(n)
+        
+        md.activateMathExtensions()
+        
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
+
+        for prefix in prefixes:
+            for ref3d in self._refsList:
+                plot_title = prefix + 'class %s' % ref3d
+                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'FSC', yformat=False)
+                legends = []
+                blockName = 'model_class_%d@' % ref3d
+                for it in self._iterations:
+                    model_star = self.protocol._getFileName(prefix + 'model', iter=it)
+                    if exists(model_star):
+                        self._plotFSC(a, blockName + model_star)
+                        legends.append('iter %d' % it)
+                xplotter.showLegend(legends)
+                if threshold < self.maxFrc:
+                    a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+                a.grid(True)
+        
+        return [xplotter]
+    
+#===============================================================================
+# Utils Functions
+#===============================================================================
     def _validate(self):
         if self.lastIter is None:
             return ['There are not iterations completed.'] 
@@ -235,21 +547,6 @@ Examples:
 
         return view
 
-    # def createChimeraDataView(self, filename):
-    #
-    #     volumes = self.getVolumeNames()
-    #     if len(volumes) > 1:#one reference and one iteration allowed
-    #         self.showError('you cannot display more than one volume with images')
-    #         return []
-    #     else:
-    #         preffix = 'Class%03d_Particles@'%int(self.class3DSelection.get())
-    #         filename = preffix + filename
-    #         view = DataView(filename, env=self._env)
-    #         vol = Volume()
-    #         vol.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
-    #         vol.setFileName(volumes[0])
-    #         return ChimeraDataView(view, vol)
-        
     def createScipionPartView(self, filename, viewParams={}):
         inputParticlesId = self.protocol._getInputParticles().strId()
         
@@ -312,327 +609,16 @@ Examples:
             elif halves == 1:
                 prefixes = ['half2_']
         return prefixes
-
-#===============================================================================
-# showImagesInClasses     
-#===============================================================================
-            
-    def _showImagesInClasses(self, paramName=None):
-        """ Read Relion _data.star images file and 
-        generate a new metadata with the Xmipp classification standard:
-        a 'classes' block and a 'class00000?_images' block per class.
-        If the new metadata was already written, it is just shown.
-        """
-        views = []
-        
-        for it in self._iterations:
-            fn = self.protocol._getIterClasses(it)
-            v = self.createScipionView(fn)
-            views.append(v)
-        
-        return views
-
-#===============================================================================
-# showImagesAngularAssignment     
-#===============================================================================
-
-    def _showImagesAngularAssignment(self, paramName=None):
-        
-        views = []
-        
-        for it in self._iterations:
-            fn = self.protocol._getIterData(it, alignType=em.ALIGN_PROJ)
-            v = self.createScipionPartView(fn)
-            views.append(v)
-        
-        return views
     
-#=====================================================================
-# showLLRelion
-#=====================================================================
-          
-    def _showLL(self, paramName=None):
-        views = []
-        for it in self._iterations:
-            fn = self.protocol._getIterData(it)
-            views.append(self.createScipionView(fn))
-            
-        return views
-
-#===============================================================================
-# ShowPMax
-#===============================================================================
-        
-    def _showPMax(self, paramName=None):
-        labels = [md.RLN_MLMODEL_AVE_PMAX, md.RLN_PARTICLE_PMAX]
-        
-        mdIters = md.MetaData()
-        iterations = range(self.firstIter, self.lastIter+1)
-        
-        for it in iterations: # range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
-            objId = mdIters.addObject()
-            mdIters.setValue(md.MDL_ITER, it, objId)
-            for i, prefix in enumerate(self.protocol.PREFIXES):
-                fn = 'model_general@'+ self.protocol._getFileName(prefix + 'model', iter=it)
-                mdModel = md.RowMetaData(fn)
-                pmax = mdModel.getValue(md.RLN_MLMODEL_AVE_PMAX)
-                mdIters.setValue(labels[i], pmax, objId)
-        fn = self.protocol._getFileName('all_avgPmax_xmipp')
-        mdIters.write(fn)
-            
-        colors = ['g', 'b']
-
-        xplotter = RelionPlotter()
-        xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
-        
-        for label, color in zip(labels, colors):
-            xplotter.plotMd(mdIters, md.MDL_ITER, label, color)
-        
-        if len(self.protocol.PREFIXES) > 1:
-            xplotter.showLegend(self.protocol.PREFIXES)
-
-        return [self.createDataView(fn), xplotter]
-    
-#===============================================================================
-# ShowChanges    
-#===============================================================================    
-
-    def _showChanges(self, paramName=None):
-        
-        mdIters = md.MetaData()
-        iterations = range(self.firstIter, self.lastIter+1)
-        
-        print " Computing average changes in offset, angles, and class membership"
-        for it in iterations:
-            print "Computing data for iteration; %03d" % it
-            objId = mdIters.addObject()
-            mdIters.setValue(md.MDL_ITER, it, objId)
-            #agregar por ref3D
-            fn = self.protocol._getFileName('optimiser', iter=it )
-            mdOptimiser = md.RowMetaData(fn)
-            for label in self.protocol.CHANGE_LABELS:
-                mdIters.setValue(label, mdOptimiser.getValue(label), objId)
-        fn = self.protocol._getFileName('all_changes_xmipp')
-        mdIters.write(fn)
-        
-        return [self.createDataView(fn)]
-        
-#===============================================================================
-# ShowVolumes
-#===============================================================================
-    def _createVolumesSqlite(self):
-        """ Write an sqlite with all volumes selected for visualization. """
-
-        prefixes = self._getPrefixes()
-
-        path = self.protocol._getExtraPath('relion_viewer_volumes.sqlite')
-        samplingRate = self.protocol.inputParticles.get().getSamplingRate()
-
-        files = []
-        for it in self._iterations:
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    if exists(volFn.replace(':mrc', '')):
-                        files.append(volFn)
-        self.createVolumesSqlite(files, path, samplingRate)
-        return [em.ObjectView(self._project, self.protocol.strId(), path)]
-
-
-    def getVolumeNames(self):
-
-        vols = []
-        prefixes = self._getPrefixes()
-        for it in self._iterations:
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    vols.append(volFn)
-        return vols
-
-
-    def _showVolumesChimera(self):
-        """ Create a chimera script to visualize selected volumes. """
-        prefixes = self._getPrefixes()
-        volumes = []
-        
-        for volFn in self.getVolumeNames():
-            volumes.append(volFn)
-                    
-        if len(volumes) > 1:
-            cmdFile = self.protocol._getExtraPath('chimera_volumes.cmd')
-            f = open(cmdFile, 'w+')
-            for volFn in volumes:
-                # We assume that the chimera script will be generated
-                # at the same folder than relion volumes
-                vol = volFn.replace(':mrc', '')
-                localVol = os.path.basename(vol)
-                if exists(vol):
-                    f.write("open %s\n" % localVol)
-            f.write('tile\n')
-            f.close()
-            view = em.ChimeraView(cmdFile)
-        else:
-            #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
-            view = em.ChimeraClientView(volumes[0])
-            
-        return [view]
-            
-    def _showVolumes(self, paramName=None):
-        if self.displayVol == VOLUME_CHIMERA:
-            return self._showVolumesChimera()
-        
-        elif self.displayVol == VOLUME_SLICES:
-            return self._createVolumesSqlite()#self._createVolumesMd()
-            
-#===============================================================================
-# showAngularDistribution
-#===============================================================================
-                            
-    def _showAngularDistribution(self, paramName=None):
-        views = []
-        
-        if self.displayAngDist == ANGDIST_CHIMERA:
-            for it in self._iterations:
-                views.append(self._createAngDistChimera(it))
-                        
-        elif self.displayAngDist == ANGDIST_2DPLOT:
-            for it in self._iterations:
-                plot = self._createAngDist2D(it)
-                if isinstance(plot, RelionPlotter):
-                    views.append(plot)
-        return views
-    
-    def _createAngDistChimera(self, it):
-        # FIXME
-        #outerRadius = int(float(self.maskDiameterA)/self.SamplingRate)
-        outerRadius = 30
-        radius = float(outerRadius) * 1.1
-        # Common variables to use
-        sphere = self.spheresScale.get()
-        prefixes = self._getPrefixes()
-
+    def _iterAngles(self, it, prefix, ref3d):
         data_angularDist = self.protocol._getIterAngularDist(it)
+        angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
+        angMd = md.MetaData(angDistFile)
+        for objId in  angMd:
+            rot = angMd.getValue(md.RLN_ORIENT_ROT, objId)
+            tilt = angMd.getValue(md.RLN_ORIENT_TILT, objId)
+            yield rot, tilt
 
-        if len(self._refsList) == 1:
-            # If just one reference we can show the angular distribution
-            ref3d = self._refsList[0]
-            for prefix in prefixes:
-                volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                if exists(volFn.replace(":mrc","")):
-                    angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
-                    return em.ChimeraClientView(volFn, angularDistFile=angDistFile, spheresDistance=radius)
-                else:
-                    raise Exception("This class is Empty. Please try with other class")
-        
-        else:
-            return self.infoMessage("Please select only one class to display angular distribution",
-                                    "Input selection") 
-    
-    def _createAngDist2D(self, it):
-        # Common variables to use
-        prefixes = self._getPrefixes()
-        nrefs = len(self._refsList)
-        n = nrefs * len(prefixes)
-        gridsize = self._getGridSize(n)
-        
-        data_angularDist = self.protocol._getIterAngularDist(it)
-        if exists(data_angularDist):
-            xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
-                                     mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                        mdAng = md.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
-                        plot_title = '%s class %d' % (prefix, ref3d)
-                        xplotter.plotMdAngularDistribution(plot_title, mdAng)
-            
-            return xplotter
-        else:
-            return
-                
-#===============================================================================
-# plotSSNR              
-#===============================================================================
-               
-    def _plotSSNR(self, a, fn):
-        mdOut = md.MetaData(fn)
-        mdSSNR = md.MetaData()
-        # only cross by 1 is important
-        mdSSNR.importObjects(mdOut, md.MDValueGT(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, 0.9))
-        mdSSNR.operate("rlnSsnrMap=log(rlnSsnrMap)")
-        resolution_inv = [mdSSNR.getValue(md.RLN_RESOLUTION, id) for id in mdSSNR]
-        frc = [mdSSNR.getValue(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, id) for id in mdSSNR]
-        a.plot(resolution_inv, frc)
-        a.xaxis.set_major_formatter(self._plotFormatter)               
- 
-    def _showSSNR(self, paramName=None):
-        prefixes = self._getPrefixes()        
-        nrefs = len(self._refsList)
-        n = nrefs * len(prefixes)
-        gridsize = self._getGridSize(n)
-        md.activateMathExtensions()
-        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1])
-        
-        for prefix in prefixes:
-            for ref3d in self._refsList:
-                plot_title = 'Resolution SSNR %s, for Class %s' % (prefix, ref3d)
-                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'log(SSNR)', yformat=False)
-                blockName = 'model_class_%d@' % ref3d
-                legendName = []
-                for it in self._iterations:
-                    fn = self.protocol._getFileName(prefix + 'model', iter=it)
-                    if exists(fn):
-                        self._plotSSNR(a, blockName+fn)
-                    legendName.append('iter %d' % it)
-                xplotter.showLegend(legendName)
-                a.grid(True)
-        
-        return [xplotter]
-        
-#===============================================================================
-# plotFSC            
-#===============================================================================
-
-    def _plotFSC(self, a, model_star):
-        mdStar = md.MetaData(model_star)
-        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
-        frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
-        self.maxFrc = max(frc)
-        self.minInv = min(resolution_inv)
-        self.maxInv = max(resolution_inv)
-        a.plot(resolution_inv, frc)
-        a.xaxis.set_major_formatter(self._plotFormatter)
-        a.set_ylim([-0.1, 1.1])
-            
-    def _showFSC(self, paramName=None):
-        threshold = self.resolutionThresholdFSC.get()
-        prefixes = self._getPrefixes()        
-        nrefs = len(self._refsList)
-        n = nrefs * len(prefixes)
-        gridsize = self._getGridSize(n)
-        
-        md.activateMathExtensions()
-        
-        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
-
-        for prefix in prefixes:
-            for ref3d in self._refsList:
-                plot_title = prefix + 'class %s' % ref3d
-                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'FSC', yformat=False)
-                legends = []
-                blockName = 'model_class_%d@' % ref3d
-                for it in self._iterations:
-                    model_star = self.protocol._getFileName(prefix + 'model', iter=it)
-                    if exists(model_star):
-                        self._plotFSC(a, blockName + model_star)
-                        legends.append('iter %d' % it)
-                xplotter.showLegend(legends)
-                if threshold < self.maxFrc:
-                    a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
-                a.grid(True)
-        
-        return [xplotter]
-        
 
 class PostprocessViewer(ProtocolViewer):
     """ Class to visualize Relion postprocess protocol """
@@ -744,3 +730,4 @@ class PostprocessViewer(ProtocolViewer):
         a.grid(True)
         
         return [xplotter]
+    

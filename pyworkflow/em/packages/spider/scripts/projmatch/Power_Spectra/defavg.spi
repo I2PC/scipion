@@ -1,0 +1,165 @@
+; <html><head><title>Compute average defocus values for defocus groups</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/defavg.spi  
+;         simplifed, grpout input parameter    ArDean Leith Nov 2010
+;
+; PURPOSE: Compute average defocus values for the defocus groups
+;
+; Input : Defocus doc file with 2 register columns:
+;         (1) Micrograph#, (2) Defocus value, (3) Defocus group
+;
+; Output : Doc file with 2 register columns
+;          (1) Defocus group, (2) Average defocus
+
+;          Micrograph group doc file with 4 register columns
+;          (1) Micrograph#, (2) Defocus value, (3) Defocus group, (4)Average defocus
+;
+;<b>------------ Edit  Input parameters ------------------------------
+
+[firstoldgrp] = 1        ; First defocus group to include
+[firstnewgrp] = 1        ; Starting number for output defocus groups
+
+; ----------- Input files --------------
+
+[defsort] = 'def_sort'   ; Doc file with: Micrograph, Defocus, Defocus group                                                                                                                       
+ 
+; ----------- Output files --------------
+
+[selgrp]  = 'sel_group'  ; Doc file for: Defocus group, Average defocus                                                                                                                                    
+
+[defavg]  = 'def_avg'    ; Doc file for: Micrograph, Defocus, Defocus group, Average defocus                                                                                                        
+
+; -------------------- END BATCH HEADER ----------------------------
+
+MD                                      ; Skip unnecessary output 
+VB OFF
+MD                                      ; Skip unnecessary output 
+TR OFF
+
+DE                                      ; Delete doc file
+[defavg]                                ; Doc file      (removed)
+DE                                      ; Delete doc file
+[selgrp]                                ; Doc file      (removed)
+
+[tmp2] = 'jnktmp502'                    ; Temp doc file
+DE                                      ; Delete doc file
+[tmp2]                                  ; Doc file      (removed)
+
+; -------------------------------------------------
+
+UD N [nummics]                          ; Get total number of micrographs
+[defsort]
+VM
+echo ' 'Computing average group defocus values from: {******[nummics]} micrographs
+
+; Create doc file listing average defocus for each defocus group.
+SD /   DEFOCUS_GROUP   AVG.DEFOCUS
+[selgrp]                                ; Doc file      (output)
+
+[sum]        = 0                        ; Sum
+[num]        = 0                        ; No. in group
+[avg-def]    = 0                        ; Current group average
+[currgrp]    = [firstoldgrp]            ; Numbering scheme of input
+[grpout]     = [firstnewgrp]            ; Numbering scheme of output
+[grpcounter] = 1
+
+DO [key] = 1,[nummics]                  ; Loop over all micrographs
+
+   ; Regs:    mic#,  defocus,  group
+   UD [key], [mic], [defocus], [grp]    ; Read doc file
+   [defsort]                            ; Micrograph doc file (input)
+   
+   IF ([grp].lt.[firstoldgrp]) CYCLE    ; Skip to next micrograph
+
+   IF ([grp].EQ.[currgrp]) THEN         ; Micrograph is in this group
+      [sum] = [sum] + [defocus]         ; Cumulative defocus
+      [num] = [num] + 1                 ; # in group
+
+   ELSE                                 ; Micrograph in next group
+      IF ([num].ne.0) THEN              ; Needed if skipping first groups
+         [avg-def] = [sum] / [num]      ; Compute group avg.
+
+         SD [grpcounter], [grpout], [avg-def]  ; Save avg. for this group
+         [selgrp]                       ; Avg. file          (output)
+
+         ;VM
+         ;echo ' 'Group: {****[grpout]}  Avg defocus: {******[avg-def]}
+      ENDIF
+
+      [sum]    = [defocus]              ; Initialize 
+      [num]    = 1                      ; # in group
+
+      [currgrp] = [currgrp] + 1         ; New current group
+      [grpcounter] = [grpcounter] + 1
+      [grpout] = [grpout] + 1
+      
+   ENDIF
+ENDDO
+
+; Compute the avg. defocus for last group
+[avg-def] = [sum] / [num]              ; Compute group avg.
+SD [grpcounter], [grpout],[avg-def]        ; Save avg. for last group
+[selgrp]                               ; Avg. file     (output)  
+
+;VM
+;echo ' 'Group: {****[grpout]}  Avg defocus: {******[avg-def]}
+
+UD E                                   ; Finished with: [defsort] 
+
+SD E                                   ; Finished doc file writing
+[selgrp]                               ; Doc file     (output)
+
+
+; -------------------------------------------------
+; Read the micrograph defocus doc file, and append averages.
+
+[miccounter] = 0
+
+DO [mic-key] = 1,[nummics]                 ; Loop over all micrographs
+   ; Get     mic#,   defocus,  group
+   UD [mic-key], [mic], [defocus], [oldgrp]
+   [defsort]                           ; Doc file       (input)
+   UD E                                ; Finished 
+   
+   IF ([oldgrp].ge.[firstoldgrp]) THEN
+
+         [newgrp] = [oldgrp] - [firstoldgrp] + [firstnewgrp]
+
+         UD FIND [grpkey], [unused], [avg-def]       ; Get group average
+         [selgrp]                            ; Doc file       (input)
+         (1,[newgrp])
+
+         [miccounter] = [miccounter] + 1
+
+         SD [miccounter], [mic], [defocus], [newgrp], [avg-def]
+         [tmp2]                              ; Doc file       (output)
+
+   ENDIF
+ENDDO
+
+; -------------------------------------------------
+;VM
+;echo ' 'Sorting micrograph dofocus doc file by micrograph number
+
+UD FIND E
+[selgrp]
+SD /     Micrograph    Defocus     Def.group   Def.grp.avg
+[defavg]                               ; Doc file     (output)
+SD E                                   ; Finished doc file 
+[defavg]                               ; Doc file     (output)
+
+DOC SORT A                             ; Sort doc file
+[tmp2]                                 ; Doc file     (input)
+[defavg]                               ; Doc file     (output)
+1                                      ; Sort col.
+Y                                      ; Renumber
+
+; Delete temporary file
+DE                  
+[tmp2]
+
+VM
+echo ' 'Computed average group defocus values from:  {******[miccounter]} micrographs ; echo
+
+EN
+; </body></pre></html>

@@ -1,0 +1,151 @@
+; <html><head><title>Creates average and variance images</title></head><body><pre>
+;
+; SOURCE:  spider/docs/techs/recon/newprogs/average.spi 
+;
+; PURPOSE: Creates average and variance for images which come from a 
+;          each reference projection view.  Works for a <b>single</b>
+;          specified group!
+;
+; I/O PARAMETERS AND FILES ARE SET HERE:
+;
+;  ------------ Input files ---------------------------------------
+
+[params]        = '../params '                            ; The parameter file
+
+[dfdir]         = 'df{***[grp]}'                          ; An input directory
+
+[defgrps]       = '../Alignment/sel_group'                ; Defocus group selection doc file
+
+[part_per_proj] = '[dfdir]/how_many'                      ; # of particles for each projection for group
+
+[select]        = '[dfdir]/ref_sel***'                    ; Particle numbers assigned to each projection set
+
+[ali]           = '../Alignment/dala01_{***[grp]}@******' ; Aligned particle images
+
+; --------------- Output files  -----------------------------------
+
+[dir]           = 'avg'                                   ; Output directory
+
+[avg]           = '[dir]/avg_{***[grp]}@*****'           ; Average image stack  (one image per reference view)
+
+[var]           = '[dir]/var_{***[grp]}@*****'           ; Variance image stack (one image per reference view)
+
+
+; -------------- END BATCH HEADER ---------------------------------</b>
+
+MD
+TR OFF                                   ; Decrease results file output
+MD
+VB OFF                                   ; Decrease results file output
+
+UD 17,[sp_winsiz]                        ; Get image size
+[params]
+
+VM                                       ; Create output directory if necessary                            
+mkdir -p [dir]                   
+
+[grp]=1                                  ; Assume all groups have same # of projections
+UD N [numprojs]                          ; Get number of projections
+[part_per_proj]
+
+DO                                       ; Loop over all defocus groups -------------------
+   UD NEXT [k],[grp]                     ; Get group from group sel. file
+   [defgrps]                             ; Group selection file           (input)
+   IF ([k].LE.0) EXIT                    ; End of input
+
+   VM
+   echo " Creating avg. and var. images for group: {***[grp]}    Projections: {***[numprojs]}"
+
+   DO                                    ; Loop over all projections ------------------
+
+      UD NEXT [proj], [part]             ; Get number of particles for current projection
+      [part_per_proj]                    ; Number of particles per projection (input)
+      IF ([proj].LE.0) EXIT              ; End of input
+
+      IF ([part] .EQ. 0) THEN            ; Zero particles for this projection
+         BL
+         [avg][proj]                     ; Average output                    (output)
+         [sp_winsiz],[sp_winsiz]         ; Size
+         N                               ; No background
+         (0.0)                           ; Value
+
+         BL
+         [var][proj]                     ; Variance output                   (output)
+         [sp_winsiz],[sp_winsiz]         ; Size
+         N                               ; No background
+         (0.0)                           ; Value
+
+         CYCLE                           ; Zero particle (should not occur!)
+      ENDIF
+  
+      UD IC 1, [pn],[cc],[mir]           ; Retrieve particle number, CC, & mirror flag
+      [select][proj]                     ; Selection file                   (input)
+
+      IF ([part] .EQ. 1) THEN            ; Only a single particle for this projection
+         IF ([mir] .LT. 0.0) THEN
+            MR                           ; Must mirror the image
+            [ali][pn]                    ; Image file
+            [avg][proj]                  ; Average file                     (output)
+            Y                            ; Y axis
+         ELSE
+            CP                           ; Copy image to average
+            [ali][pn]                    ; Image file                       (input)
+            [avg][proj]                  ; Average file                     (output)
+         ENDIF
+
+         BL
+         [var][proj]                     ; Variance                         (output) 
+         [sp_winsiz],[sp_winsiz]         ; Size
+         N                               ; No background
+         (0.0)                           ; Value
+
+      ELSE                               ; Multiple particles for this projection
+         MS
+         _1@
+         [sp_winsiz],[sp_winsiz]         ; Dimensions
+         [part]                          ; Num. slices
+
+         DO [partorder]=1,[part]         ; Loop over particles ----------------
+            UD IC [partorder],[pn],[cc],[mir]
+            [select][proj]
+
+            IF ([mir] .LT. 0.0) THEN
+               MR                        ; Must mirror the image
+               [ali][pn]                 ; Image file                     (input)
+               _1@{*****[partorder]}     ; Temp. mirrored file            (output)
+               Y                         ; Y axis
+            ELSE
+               CP
+               [ali][pn]                 ; Image file                     (input)
+               _1@{*****[partorder]}     ; Temp. mirrored file            (output)
+            ENDIF
+         ENDDO                           ; End particle-loop
+
+         AS R                            ; Add to average/variance
+         _1@******
+         (1-[part])                      ; Selection file
+         A
+         [avg][proj]                     ; Average input
+         [var][proj]                     ; Average output                  (output)
+
+         DE
+         _1@
+      ENDIF
+
+      UD ICE
+      [select][proj]                     ; Selection file                  (input)
+
+   ENDDO
+
+   UD NEXT END                
+   [part_per_proj]                     
+ENDDO
+
+UD NEXT END                        
+[defgrps]                                 ; Group selection file           (ends)
+
+VM
+echo ' '
+
+EN
+; </body></pre></html>

@@ -68,10 +68,16 @@ void ProgFilter::defineParams()
 
 void ProgFilter::readParams()
 {
+	readCTF=false;
     XmippMetadataProgram::readParams();
 
     if (checkParam("--fourier"))
+    {
         filter = new FourierFilter();
+        String filterType=getParam("--fourier");
+        if (filterType=="astigmatism")
+        	readCTF=true;
+    }
     else if (checkParam("--wavelet"))
         filter = new WaveletFilter();
     else if (checkParam("--bad_pixels"))
@@ -103,7 +109,13 @@ void ProgFilter::preProcess()
 void ProgFilter::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     Image<double> img;
-    img.readApplyGeo(fnImg, rowIn);
+    img.read(fnImg);
+    if (readCTF)
+    {
+    	((FourierFilter *)filter)->ctf.readFromMdRow(rowIn);
+    	((FourierFilter *)filter)->ctf.produceSideInfo();
+    	((FourierFilter *)filter)->generateMask(img());
+    }
     filter->apply(img());
     img.write(fnImgOut);
 }

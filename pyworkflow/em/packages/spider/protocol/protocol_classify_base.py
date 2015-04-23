@@ -71,8 +71,10 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
                       pointerClass='SetOfParticles',
                       help='Input images to perform PCA')
         form.addParam('pcaFile', PointerParam, pointerClass='PcaFile',
-                      label="PCA file", 
-                      help='IMC or SEQ file generated in CA-PCA')        
+                      label="IMC/SEQ file", 
+                      help='The IMC file contains the coordinates of each image '
+                           'in the reduced-dimension space. '
+                           'The SEQ file contains, for all images, the pixel values under the mask. ')
         form.addParam('numberOfFactors', IntParam, default=10,
                       label='Number of factors',
                       help='After running, examine the eigenimages and decide which ones to use.\n'
@@ -113,7 +115,7 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
                              })
         self._updateParams()
 
-        self.runScript(self.getScript(), self.getExt(), self._params)   
+        self.runTemplate(self.getScript(), self.getExt(), self._params)   
         
         
 class SpiderProtClassifyCluster(SpiderProtClassify):

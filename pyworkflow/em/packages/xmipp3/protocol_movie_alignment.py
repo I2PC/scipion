@@ -162,7 +162,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
             alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
-            if exists(str(alignedMovie.alignMetaData)):
+            if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
                 movieCreatePlot(PLOT_POLAR, alignedMovie, True)
                 movieCreatePlot(PLOT_CART, alignedMovie, True)
             movieSet.append(alignedMovie)
@@ -170,12 +170,16 @@ class ProtMovieAlignment(ProtProcessMovies):
             mic = em.Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
             mic.setFileName(self._getExtraPath(micName))
-            mic.plotPolar = em.Image()
-            mic.plotCart = em.Image()
-            mic.psdCorr = em.Image()
-            mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
-            mic.plotCart.setFileName(self._getExtraPath(plotCartName))
-            mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
+            mic.setMicName(micName)
+            if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
+                mic.plotPolar = em.Image()
+                mic.plotCart = em.Image()
+                mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
+                mic.plotCart.setFileName(self._getExtraPath(plotCartName))
+            if alMethod != AL_DOSEFGPU:
+                mic.psdCorr = em.Image()
+                mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
+                print psdCorrName
             micSet.append(mic)
 
 
@@ -203,7 +207,7 @@ class ProtMovieAlignment(ProtProcessMovies):
 
     #--------------------------- UTILS functions ---------------------------------------------------
 
-    def _processMovie(self, movieId, movieName, movieFolder):
+    def _processMovie(self, movieId, movieName, movieFolder,shifts):
         """ Process the movie actions, remember to:
         1) Generate all output files inside movieFolder (usually with cwd in runJob)
         2) Copy the important result files after processing (movieFolder will be deleted!!!)
@@ -225,7 +229,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         # For simple average execution
         if alMethod == AL_AVERAGE:
             command = '-i %(movieName)s -o %(micName)s' % locals()
-            command += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
+            command += ' --nst %d --ned %d --simpleAverage --psd' % (firstFrame, lastFrame)
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
@@ -285,14 +289,17 @@ class ProtMovieAlignment(ProtProcessMovies):
             except:
                 import sys
                 print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
-            moveFile(join(movieFolder, metadataName), self._getExtraPath())
-            moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
+            if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
+                moveFile(join(movieFolder, metadataName), self._getExtraPath())
 
         # Move output micrograph and related information to 'extra' folder
         moveFile(join(movieFolder, micName), self._getExtraPath())
         if alMethod == AL_DOSEFGPU:
             # Copy the log file to have shifts information
             moveFile(join(movieFolder, logFile), self._getExtraPath())
+        else:
+            moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
+
 
     def _getProgram(self):
         alMethod = self.alignMethod.get()
@@ -439,20 +446,19 @@ def movieCreatePlot(plotType, movie, saveFig):
 
 
 
-class ProtMovieAlignmentWeb(ProtMovieAlignment):
-    """ Aligns a set of volumes using cross correlation.
-    Based on Xmipp protocol for aligning volumes, but
-    the parameters are restricted for ease of use.
-    """
-    _label = 'movie alignment'
-    
-    def _defineParams(self, form):
-        ProtMovieAlignment._defineParams(self, form)
-        
-        gpuParamsGroup = form.getParam('GPU')
-        gpuParamsGroup.config(condition='False')
-        
-    def getOutputFiles(self):
-        # Redefine the default method to avoid download of movie files
-        return self.outputMicrographs.getFiles()
-        
+#class ProtMovieAlignmentWeb(ProtMovieAlignment):
+#    """ Aligns a set of volumes using cross correlation.
+#    Based on Xmipp protocol for aligning volumes, but
+#    the parameters are restricted for ease of use.
+#    """
+#    _label = 'movie alignment web'
+#    
+#    def _defineParams(self, form):
+#        ProtMovieAlignment._defineParams(self, form)
+#        
+#        gpuParamsGroup = form.getParam('GPU')
+#        gpuParamsGroup.config(condition='False')
+#        
+#    def getOutputFiles(self):
+#        # Redefine the default method to avoid download of movie files
+#        return self.outputMicrographs.getFiles()

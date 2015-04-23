@@ -791,8 +791,15 @@ class ParamWidget():
             elif param.display == params.EnumParam.DISPLAY_LIST:
                 for i, opt in enumerate(param.choices):
                     rb = tk.Radiobutton(content, text=opt, variable=var.tkVar, 
-                                        value=opt, font=self.window.font)
+                                        value=opt, font=self.window.font, bg='white')
                     rb.grid(row=i, column=0, sticky='w')
+            elif param.display == params.EnumParam.DISPLAY_HLIST:
+                rbFrame = tk.Frame(content, bg='white')
+                rbFrame.grid(row=0, column=0, sticky='w')
+                for i, opt in enumerate(param.choices):                    
+                    rb = tk.Radiobutton(rbFrame, text=opt, variable=var.tkVar, 
+                                        value=opt, font=self.window.font, bg='white')
+                    rb.grid(row=0, column=i, sticky='w', padx=(0, 5))                
             else:
                 raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
         
@@ -1510,6 +1517,10 @@ class FormWindow(Window):
         if len(errors):
             self.showError(errors)
         else:
+            warns = self.protocol.warnings()
+#             if len(warns):
+#                 self.showWarning('\n'.join(warns))
+#             else:
             self._close()
         
     def _close(self, onlySave=False):

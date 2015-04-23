@@ -1,0 +1,134 @@
+([pixsiz],[lambda],[iter1])
+; <html><head><title>Prepare for refinement by initializing input, etc.</title></head><body><pre>
+;
+; SOURCE:  spider/docs/techs/recon/newprogs/prepare.pam
+;          New                                           ArDean Leith  Nov 2000
+;          Declining group sort                          ArDean Leith  Oct 2010
+;          CS from params, DOC STAT                      ArDean Leith  Jan 2011
+;          Dala removal                                  ArDean Leith  Jan 2012
+;
+; PURPOSE: Prepare various initial files, CTF correction, etc.
+;
+; CALLED FROM: refine & pub_refine <a href="./refine.pam">refine.pam</a> & <a href="./pub_refine.pam">pub_refine.pam</a>
+;
+; Register variables & files are set in: <a href="./refine settings.pam">refine settings.pam</a>
+;
+; INPUT REGISTERS (SET ABOVE):
+;   [pixsiz]                Pixel size (A)
+;   [lambda]                Lambda(A)
+;   [iter]                  Initial iteration (Usually 1)
+;
+; '***' denotes group number
+; INPUT FILES:
+;   [params]                ../params                            Params file  
+;   [vol_orig]              ../Reconstruction/vol01              Initial volume file  
+;   [sel_group_orig]        ../Reconstruction/sel_group_cclim    Group selection file
+;   [sel_particles_orig]    ../Reconstruction/sel_particles_***  Group particle selection files 
+;   [group_align_orig]      ../Alignment/align_01_***            Alignment parameter files 
+;   [unaligned_images_orig] ../Alignment/input/data***           Unaligned image stacks 
+;
+; OUTPUT FILES:
+;   [input_dir]             input                                Directory
+;   [temp_work_dir]         work                                 Directory
+;   [final_dir]             final                                Directory
+;   [current_vol]           final/vol01                          Starting volume file  
+;   [sel_particles]         input/sel_particles_***              Group particle selection files 
+;   [sel_group]             input/sel_group                      Group selection file
+;   [sel_group_sorted]      input/sel_group_sort                 Sorted group selection file
+;   [group_align]           final/align_01_***                   Group alignment parameter files 
+;   [unaligned_images]      input/data***                        Unaligned image stacks  (LINKS!)
+;   [temp_ctf_file]         input/ctf***                         Group CTF correction files
+;
+; INLINE FILES USED: _1
+
+ [iter]=[iter1]              ; Needed for naming initial files
+
+ ; Create dir. for temp and output files
+ VM                          
+   mkdir -p [temp_work_dir] [final_dir] [input_dir]
+   
+ ; Copy initial volume to input directory 
+ CP                          ; Copy volume  
+   [vol_orig]                ; Initial volume file            (input)
+   [current_vol]             ; Current volume file            (output)
+
+; Copy group selection doc file to input dir. 
+ VM                                   ; Copy group selection file to input dir. 
+   \cp -p [sel_group_orig].$DATEXT   [sel_group].$DATEXT 
+
+ ; Sort defocus groups by number of particles
+ DOC SORT                    ; Sort doc file in descending order
+   [sel_group]               ; Group selection file            (input)
+   [sel_group_sorted]        ; Sorted group selection file     (output)
+    -2                       ; Register col for sorting (descending)
+   YES                       ; Compress and renumber keys?
+
+ FI H [nx]                   ; Query nsam value (nrow must be = nsam)
+   [current_vol]             ; Initial reference volume        (input)
+   NX                        ; X dimension location
+
+ ; Sum total number of particles in all groups
+ DOC STAT [nv],[minv],[maxv],[totp]
+   [sel_group]               ; Doc file listing groups        (input)    
+   2
+
+ UD 7,[cs]                   ; Get CS from params file
+   [params]                  ; Parameter doc. file
+
+ UD N [num-grp]              ; Get total number of defocus groups
+   [sel_group]               ; Group selection doc file        (input)
+
+ DO [i]=1,[num-grp]          ; Loop over defocus groups  --------------------
+
+   ;         GROUP, PART.,     DEFOCUS              
+   UD IC [i],[grp],[num-part],[defocus] ; Get # of particles & defocus
+     [sel_group]                        ; Group sel. doc file (input)  
+
+   ; Copy starting alignment parameter files to final dir. 
+   VM                        
+     \cp -p [group_align_orig].$DATEXT [group_align].$DATEXT
+
+   ; Link starting unaligned images to input dir  (large files) 
+   VM                        
+     ln -sf  ../[unaligned_images_orig].$DATEXT  [unaligned_images].$DATEXT  
+
+   ; Copy particle selection files to input dir. (one/group)
+   VM                       
+     \cp -p [sel_particles_orig].$DATEXT  [sel_particles].$DATEXT
+
+   ; Create group CTF correction file 
+   [maxspfreq] = 1.0 / (2.0 * [pixsiz])
+   TF C3                    ; Compute phase contrast transfer function 
+     _1                     ; Inline CTF file             (output)
+     [cs]                   ; CS 
+     [defocus], [lambda]    ; Defocus(A), lambda(A)
+     [nx]                   ; # of spatial freq. points
+     [maxspfreq]            ; Max spatial freq.(1/A)
+     0.005, 0               ; Source size(1/A), defocus spread(A)
+     0,0                    ; Astigmatism(A), azimuth(deg)
+     0.1, 10000             ; ACR(0-1), Gaussian env halfw(1/A)  
+     -1                     ; Sign
+
+   ; Weight the group CTF volume file for # of particles  
+   [wt] = [num-grp] * [num-part] / [totp] 
+
+   AR                       ; Arithmetic operation 
+     _1                     ; Inline CTF file             (input)
+     [temp_ctf_file]        ; Weighted CTF volume         (output)
+     P1*[wt]                ; Does the weighting
+
+   VM                                      
+     echo ' 'Group: {***[grp]}  CTF weighting: {%f10.5%[wt]} 
+ ENDDO
+
+ UD ICE                      ; Finished with this doc file 
+   [sel_group]
+
+ DE                          ; Remove temp. inline file
+  _1
+ 
+ VM
+   echo ' Finished initial file preparation' ; echo ' '
+
+ RE
+; </body></pre></html>

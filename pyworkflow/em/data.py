@@ -23,12 +23,12 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from collections import OrderedDict
 """
 This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
 
+from collections import OrderedDict
 import json
 
 from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
@@ -487,7 +487,23 @@ class Image(EMObject):
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
-    pass
+    def __init__(self, **args):
+        Image.__init__(self, **args)
+        self._micName = String()
+    
+    def setMicName(self, micName):
+        self._micName.set(micName)
+    
+    def getMicName(self):
+        if self._micName is not None:
+            return self._micName.get()
+        else:
+            self.getFileName()
+    
+    def copyInfo(self, other):
+        """ Copy basic information """
+        Image.copyInfo(self, other)
+        self.setMicName(other.getMicName())
 
 
 class Particle(Image):

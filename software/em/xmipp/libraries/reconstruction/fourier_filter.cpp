@@ -79,6 +79,9 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("            binary_file <file>               : Binary file with the filter");
     program->addParamsLine("                                             :+The filter must be defined in the whole Fourier space (not only the nonredundant part).");
     program->addParamsLine("                                             :+This filter is produced, for instance, by xmipp_ctf_group");
+    program->addParamsLine("            astigmatism <sigma=10>           : Filter images according to the astigmatism of their CTF");
+    program->addParamsLine("                                             :+sigma is the standard deviation of a Gaussian in degrees for the CTF phase");
+    program->addParamsLine("               requires --sampling;                                                         ");
     program->addParamsLine("         alias -f;");
     program->addParamsLine("  [--sampling <sampling_rate>]               : If provided pass frequencies are taken in Ang and for the CTF case");
     program->addParamsLine("                                             : and for the CTF case this is the sampling used to compute the CTF");
@@ -214,10 +217,17 @@ void FourierFilter::readParams(XmippProgram *program)
         FilterShape = FilterBand = BINARYFILE;
         fnFilter = program->getParam("--fourier", "binary_file");
     }
+    else if (filter_type == "astigmatism")
+    {
+        FilterShape = FilterBand = ASTIGMATISMPROFILE;
+        w1 = program->getDoubleParam("--fourier", 1);
+        w1 = DEG2RAD(w1);
+        std::cout << "Reading w1=" << w1 << std::endl;
+    }
     else
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't happen, check argument parser or params definition");
 
-    if (!(FilterBand == BFACTOR) && sampling_rate > 0.)
+    if (!(FilterBand == BFACTOR || FilterBand==ASTIGMATISMPROFILE) && sampling_rate > 0.)
     {
         if (w1 != 0)
             w1 = sampling_rate / w1;
@@ -273,6 +283,9 @@ void FourierFilter::show()
             break;
         case BINARYFILE:
             std::cout << "Filter file " << fnFilter << std::endl;
+            break;
+        case ASTIGMATISMPROFILE:
+            std::cout << "Astigmatism sigma " << RAD2DEG(w1) << std::endl;
             break;
         }
         if(FilterShape!=CONE && FilterShape!=WEDGE)
@@ -473,6 +486,17 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
 			}
 			return 0;
 		}
+    case ASTIGMATISMPROFILE:
+    	{
+			double R = absw / sampling_rate;
+	        ctf.precomputeValues(R,0.0);
+	        double phaseU=ctf.getPhaseAt();
+	        ctf.precomputeValues(0.0,R);
+	        double phaseV=ctf.getPhaseAt();
+	        double diff=phaseV-phaseU;
+	        return exp(-0.5*diff*diff/(w1*w1));
+    	}
+        break;
     default:
         REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown mask type");
     }
@@ -491,7 +515,7 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
         mdFSC.getColumnValues(MDL_RESOLUTION_FREQ,freqContFSC);
         mdFSC.getColumnValues(MDL_RESOLUTION_FRC,FSC);
     }
-    std::cout << "Generating mask " << do_generate_3dmask << std::endl;
+    // std::cout << "Generating mask " << do_generate_3dmask << std::endl;
 
     if (do_generate_3dmask)
     {

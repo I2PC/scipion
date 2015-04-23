@@ -1,0 +1,249 @@
+([ang-step],[ang-limit],[r2],[alignsh],[prj-radius],[iter],[grp],[toobig],[pixsiz])
+
+; <html><head><title>Main refinement group loop</title></head><body><pre>
+;
+; SOURCE: spider/docs/techs/recon/newprogs/grploop.pam    
+;         Original                                ArDean Leith  Nov 2000
+;         %degredations                           ArDean Leith  Feb 2005
+;         []                                      ArDean Leith  Dec 2005
+;         More stacks & 'RT SQ' selection         ArDean Leith  Dec 2006
+;         'AP SH' use                             ArDean Leith  Feb 2007
+;         Group sel. filename                     ArDean Leith  Dec 2009
+;         Echo formatting                         ArDean Leith  Aug 2010
+;         COG centering removed                   ArDean Leith  Sep 2010
+;         'AP SH' for 2 iters, Skip=2             ArDean Leith  Sep 2010
+;         TF COR                                  ArDean Leith  Nov 2010
+;         Dala removal                            ArDean Leith  Jan 2012
+;         AP SHC, skip=1, FSC mask                ArDean Leith  Sep 2012
+;         Denoise exp images, mask befor bp       ArDean Leith  Dec 2012
+; 
+; PURPOSE: Main refinement loop. Runs for each defocus group on each iteration
+;
+; CALLED FROM: <a href="./pub_refine_start.pam">pub_refine_start</a>  or   
+;              <a href="./refine.pam">refine.pam</a>  
+;
+; I/O Registers & files are set in: <a href="./refine settings.pam">refine settings.pam</a>)
+;
+; INPUT REGISTERS:
+;    [ang-step]             Angular steps                     (Varies with iter)
+;    [ang-limit]            Restrict angular search           (Varies with iter)
+;    [r2]                   Radius of object used in alignment (pixels)
+;    [alignsh]              Shift allowed is +-[alignsh]
+;    [prj-radius]           Radius of object used in projection
+;    [iter]                 Alignment step iteration counter  (Varies with iter)
+;    [grp]                  Defocus group                     (Varies with group)
+;
+; OUTPUT REGISTERS:
+;    [toobig]               % of images whose proj. angle moved by > 1.5*[ang-step]
+;
+;  '##' denotes iteration,  '##+' denotes next iteration,  '***' denotes group
+; INPUT FILES:
+;    [sel_particles]        input/select_***        Group particle selection files
+;    [iter_vft]             final/vft##             Current iteration's filtered volume 
+;    [temp_ctf_file]        work/ctf***             CTF corrected group volume from prepare
+;    [group_align]          final/align##_***       Alignment parameter doc files     
+;    [unaligned_images]     input/data***           Unaligned stacked image files  
+;    [iter_refangs]         work/ang_refs_##        Ref. angles doc file for this iteration        
+;
+; OUTPUT FILES:
+;    [next_group_align]     final/align##+_***      Alignment parameter doc file
+;    [next_group_vol]       work/vol##+_***         Reconstructed group volume
+;    [next_group_fsc]       final/fscdoc##+_***     Group FSC curve doc file
+;
+;    [next_group_vol]_sub1  work/vol_##+_***_sub1   (Created & later deleted)
+;    [next_group_vol]_sub2  work/vol_##+_***_sub2   (Created & later deleted)
+;    [temp_ref_projs]       tmp/refproj##_***       (Created & later deleted)
+;    [temp_gmask]           work/gmask_***          (Created & later deleted)
+; 
+; PROCEDURES CALLED: 
+;
+; INLINE BUFFERS USED: _1, _8
+
+ VM
+   echo -n " Start grploop for iteration: {**[iter]}  Group: {***[grp]} --- " ; date '+ %x  %X'
+ 
+ [r1] = 5.0                         ; First radius for AP (Can alter this)
+ [ang-change-thr] = 1.5*[ang-step]  ; Convergence criterion ang. distance limit.
+ [next-iter] = [iter]+1
+
+ FI H [maxim],[nx],[ny]             ; Find total number of images (not [numparts])
+   [unaligned_images]@;             ; Input file needed                 (input)
+   MAXIM,NX,NY                      ; Max. image number, image size
+
+ ; Create temporary Gaussian mask 
+ MO                                 ; Mask
+   [temp_gmask]                     ; Mask file                         (output)
+   [nx],[ny]                        ; Size 
+   G1                               ; Super-gaussian 1
+   *                                ; Use image center
+   [prj-radius],[prj-radius]        ; Radius
+
+ UD N [num-refs]                    ; Get number of reference images used
+   [iter_refangs]                   ; Reference images angles file      (input)
+
+ ; Multiply Fourier of current volume by CTF file for this group
+ TF COR
+   [iter_vft]                       ; Fourier of current volume         (input}
+   [temp_ctf_file]                  ; CTF file                          (input)
+   _1                               ; CTF corrected volume              (output) 
+ 
+ MY FL                              ; Flush results file
+
+ DE                                 ; Remove existing ref projections  
+   [temp_ref_projs]@                ; Template for ref. projections    (output) 
+
+ ; Create stack holding angular reference projections from CTF corrected volume.
+ PJ 3F                              ; Projection operation
+   _1                               ; CTF corrected volume             (input)
+   [prj-radius]                     ; Radius of object
+   1-[num-refs]                     ; Ref. angles used    
+   [iter_refangs]                   ; Ref. angles doc file             (input)
+   [temp_ref_projs]@******          ; Template for ref. projections    (output) 
+
+ DE                                 ; _1 can be deleted here
+   _1                               ; CTF corrected current volume     (removed)
+ DE                                 ; Remove existing alignment doc file  
+   [next_group_align]               ; Alignment parameter doc file
+ DE                                 ; Remove existing scratch file    (rare)  
+   [ref_rings]                      ; Reference rings scratch file 
+
+ MY FL                              ; Flush results file
+
+ ; Copy to inline file to increase access speed a little
+ ; Note: If INLN_WRTLIN ARRAY OVERFLOWS,  remove: _8@ and just use [unaligned_images]@     
+ CP                                 ; Copy unaligned images to inline stack
+   [unaligned_images]@              ; Input file needed                (input)
+   _8@                              ; Unaligned images stack           (output)
+   [maxim]                          ; Number of images in stack _8@
+
+ ; Find reference projection matching current aligned image
+ ;   (For large images change 'skip' to 2 or 3 to decrease memory)
+ 
+ IF ([iter] .LE. 99) THEN
+   AP SHC                           ; (Can change this)  
+     [temp_ref_projs]@******        ; Template for ref. projections    (input)
+     1-[num-refs]                   ; Ref. projection file numbers
+     [alignsh],1                    ; Shift search range, Step size
+     [r1],[r2],1                    ; First, last radial ring, & skip
+     [iter_refangs]                 ; Ref. angles file                 (input)
+     _8@******                      ; Template for unaligned images    (input)
+     [sel_particles]                ; Particle selection files         (input)
+     [group_align]                  ; Alignment parameter doc file     (input)
+     [ang-limit],[ang-change-thr]   ; Angular search restriction
+     Y, F, Y                        ; Check mir, align first, denoise
+     [next_group_align]             ; Alignment parameter doc file     (output)
+
+     ; Default for  unknown return value
+     [toobig] = 100
+
+   VM
+     echo " Iteration: {**[iter]} Group: {*****[grp]}"
+
+ ELSE
+   AP REF                           ; Poorer search than 'AP SH' but 4-5x faster
+     [temp_ref_projs]@******        ; Template for ref. projections    (input)
+     1-[num-refs]                   ; Ref. projection file numbers
+     [alignsh]                      ; Shift search range
+     [r1],[r2],1                    ; First, last radial ring, & skip
+     [iter_refangs]                 ; Ref. angles file                   (input)
+     [ref_rings]                    ; No such file if rings fit in-core  (rare output)
+     _8@******                      ; Template for unaligned images      (input)
+     [sel_particles]                ; Particle selection files           (input)
+     [group_align]                  ; Alignment parameter doc file       (input)
+     [ang-limit],[ang-change-thr]   ; Angular search restriction
+     Y, Y                           ; Check mir projections, align first
+     [next_group_align]             ; Alignment parameter doc file     (output)
+
+   ; Check size of change in proj. angle
+   ;     %BIG-ANGDIF,       AVG-ANGDIF,  AVG-CCROT, %WORSE,  AVG-WORSE,   AVG-BETTER      
+   UD -2,[percent-greater],[AVG-ANGDIF],[avg-ccrot],[degred],[avg-degred],[avg-impr]
+     [next_group_align]             ; Alignment parameter doc file     (input)
+   UD E                             ; Close doc file access
+
+   ; Return % of image whose proj. angle moved by > 1.5*[ang-step] criterion
+   [toobig] = [percent-greater]* 100
+
+   IF ([iter] .GE. 4) THEN
+     VM
+       echo " Iter: {**[iter]} Group: {***[grp]}  Excessive changes: {%F6.2%[percent-greater]}% "
+     VM
+       echo " CCROT degred.: {***[degred]}%   Avg. degred.:{%F6.2%[avg-degred]}  Avg. improve.:{%F6.2%[avg-impr]}"
+   ENDIF
+ ENDIF
+
+ ; Apply new alignments to original particle images
+ RT SF                          ; Rotate & shift operation
+   [unaligned_images]@******    ; Unaligned original stacked images 
+   [sel_particles]              ; Particle selection file            (input) 
+   6,0,7,8                      ; Reg. #s for angle, scale, & shift
+   [next_group_align]           ; Alignment parameter doc file       (input)
+   _8@******                    ; Current aligned images             (output)
+ 
+;  ; Soft masking of particle prior to back projection
+;  MUL 2
+;   [temp_gmask]                      ; Mask image                 (input)
+;    _8@*                        ; Template for image series  (input)   
+;   [sel_particles]              ; Particle selection file            (input) 
+;    _8@*                        ; Template for image series  (output)   
+;   [sel_particles]              ; Particle selection file            (input) 
+
+ 
+ VM                             ; Echo for isolating stack overflow
+   echo " Back projecting group: {****[grp]}"
+
+ MY FL
+
+ ; Calculate new, refined volume using centered projections and 
+ ; angles from align doc. file.  Creates two additional volumes from 
+ ; random half subsets of images for use in resolution calculation.
+
+ ; (If you have large images which give problems allocating memory in 'BP 32F', 
+ ;     substitute operation 'BP 3F'.  Use that operation three times (with 3 
+ ;     appropriate selection files for the images to be included) to create 
+ ;     the three output volumes one by one.)
+ BP 32F                         ; Back Projection - 3D Fourier
+   _8@******                    ; Current aligned images template     (input)
+   [sel_particles]              ; Particle selection doc file         (input)
+   [next_group_align]           ; Alignment parameter doc file        (input)
+   *                            ; No symmetries  
+   [next_group_vol]             ; Reconstructed group vol - overall   (output)
+   [next_group_vol]_sub1        ; Reconstructed group vol - subset 1  (output)
+   [next_group_vol]_sub2        ; Reconstructed group vol - subset 2  (output)
+
+ DE                             ; _8 no longer needed
+   _8
+
+ MY FL                          ; Flush results file
+
+ FSC [half],[spfreq],[res]      ; Find phase residual &  shell correl.
+   [next_group_vol]_sub1        ; Reconstructed group vol - subset 1  (input)
+   [next_group_vol]_sub2        ; Reconstructed group vol - subset 2  (input)
+   0.5, [r2]                    ; Shell width, mask radius
+   [pixsiz]                     ; Pixel size
+   [next_group_fsc]             ; FSC group doc file                  (output)
+   *                            ; No Gnuplot file wanted
+
+ SD [iter], [iter],[grp],[res]  ; Save in doc file
+   [grp_resol]                  ; Group resolution summary file      (output)
+
+ VM                             ; Remove ref. projections (no longer needed)
+   \rm -f [temp_ref_projs]*.$DATEXT 
+
+
+ DE                             ; Remove soft mask file 
+   [temp_gmask]                 ;  
+        
+ IF ([iter] .GT. 1) THEN        ; Not first iteration
+   DE                           ; Remove previous group volume 
+     [group_vol]                ;          
+   DE                           ; Remove previous subset 1 group vol.
+     [group_vol]_sub1           ;    
+   DE                           ; Remove previous subset 2 group vol.
+     [group_vol]_sub2           ;    
+ ENDIF
+
+ MY FL
+ RE
+
+; </body></pre></html>
+

@@ -1,0 +1,209 @@
+([v31],[decim],[v92],[v79],[v27]) 
+;
+; SOURCE: spider/docs/techs/recon/newprogs/pick_p.spi
+; CALLER: pick.spi
+;                                     
+FR                   ; SPIDER FORMAT micrograph image (input)
+?Converted micrograph image?[conv-micrograph]
+                                          
+FR                   ; Peak coordinate doc file       (output)
+?Doc file of micrograph image?[docfile]
+
+FR                   ; Particle stack file            (output)
+?Auto selected paticles?[selected] 
+
+FR                   ; Coordinate doc file            (output)
+?Doc file with corrected upper-left corner coord for particles?[ulcoord]
+
+; Find project id.
+RR [proj]
+? Project id number?
+
+; Find micrograph number.
+RR [mic]
+? Micrograph number?
+
+
+; Column labels for the sndc file
+SD /     X-coord     Y-coord    Particle #   (coord of particle center)
+  [ulcoord]
+                                                                 
+[v73]=INT([v92]/2)
+[v63]=INT([v92]/[decim])+1 
+                   
+DC S                      ; Decimate by [decim]                                                                    
+  [conv-micrograph]                                                                          
+  _5                                                                              
+  [decim],[decim]                                                                         
+
+CE                         ; Contrast enhancement
+  _5
+  _6
+  L
+  G
+  (30,30) 
+                                                                                                        
+DE                         ; Delete file
+  _5
+
+FQ NP                      ; Filtration                                                                         
+  _6                                
+  _4                                                                              
+  (3)                                                                             
+  [v31]                                                                                                                                                         
+
+; Filter radius ~ (particle size/2)+1)/interpolated x dimension                  
+AT PK                                                                           
+  _4                         ; Image           (input)                                                                           
+  [v79]                      ; Search neighborhood                                                                            
+  (0.75)                     ; Peak threshold                                                                         
+  [v63],[v63]                ; Edge exclusion                                                                       
+  [docfile]                  ; Doc. file       (output)          
+                                                                      
+DE                                                                              
+  _4 
+                                                                             
+; 1/[decim] of particle size and window size                                         
+
+UD -1,[npeak]               ; Number of peaks found                                                                      
+  [docfile] 
+SD E                                                                            
+  [docfile]                                                                     
+ 
+DE                         ; Finished with inline file
+_6
+                                                                
+;---------------------------------------                                        
+IF([npeak].EQ.0) GOTO LB1  ; Skip                                                        
+
+MS                         ; Create inline image stack                                                                             
+  _6@                                                                             
+  [v92],[v92],1                                                                     
+  [npeak]
+                                                                             
+DO [v77]=1,[npeak]         ; Loop over all peaks                                                                
+   UD IC,[v77],[v21],[v22]                                                               
+     [docfile]
+                                                                      
+   [v21]=[v21]*[decim]-[v73]                                                                 
+   [v22]=[v22]*[decim]-[v73]
+                                                                 
+   ; Subtract half particle size                                                    
+
+   WI                      ; Window                                                                            
+     [conv-micrograph]     ; Micrograph           (input)                                                                        
+     _9                                                                              
+     [v92],[v92]                                                                         
+     [v21],[v22] 
+                                                                        
+   ; Window size is particle size                                                   
+   RA                      ; Ramp                                                                              
+     _9                                                                              
+     _2                                                                              
+
+   CE FIT                                                                          
+     _7                                                                              
+     _2                                                                              
+     _8                                                                              
+     _6@{******[v77]}                                                                         
+ENDDO                                                                             
+
+; Selected particles have been put in stack for alignment                             
+
+[part] = 0                  ; Initialize particle number
+ 
+DO [v41] = 1, [npeak]       ; Loop over all peaks                                                               
+   CP
+     _6@{******[v41]}
+     _2
+
+   [v21]=0
+   [v22]=0
+
+   DO [pk]=1,100            ; Use  first 100 images
+      SH                    ; Shift image
+        _2
+        _5
+        -[v21],-[v22]
+
+      RO I                  ; Rotational average
+        _5
+        _4
+
+      CC N                  ; Normalized cross correlation
+        _5
+        _4
+        _3
+
+      PK [v11],[v12]        ; Find peak coordinates
+        _3
+        (1,0)
+
+      [vsum] = ABS([v11]) + ABS([v12]) ; X and Y peak locations
+      IF([vsum].EQ.0.0) EXIT
+
+      [v21]=[v21]+[v11]
+      [v22]=[v22]+[v12]
+   ENDDO
+
+   IF([v21].GT.[v27]) THEN
+      [v21]=0
+      [v22]=0
+   ENDIF
+
+   IF([v22].GT.[v27]) THEN
+      [v21]=0
+      [v22]=0
+   ENDIF
+
+   UD IC [v41], [v48], [v49]                                                             
+     [docfile]
+
+   [v61] = [v48]*[decim] - [v73] + [v21]                                                    
+   [v62] = [v49]*[decim] - [v73] + [v22] 
+                                                                         
+   [part] = [part] + 1            ; Increment particle number
+
+   SD [v41], [v61], [v62], [part] ; Save coordinates   
+     [ulcoord]                    ; Coordinate file (output)                                                                    
+         
+   WI                             ; Window from micrograph                                                                             
+     [conv-micrograph]                                                                          
+     _9                                                                              
+     [v92],[v92]                                                                         
+     [v61],[v62]
+                                                                   
+   RA                            ; Ramp                                                                            
+     _9                                                                              
+     _2  
+                                                                               
+   CE FIT                        ; Contast enhance hist.                                                                         
+     _7                                                                              
+     _2                                                                              
+     _8                                                                              
+     [selected][part]            ; Particle file    (output)
+
+   ST H                          ; Save mic. # and img. # in header aug 2011
+     [selected][part]
+   PROJ,MIC,NUM
+     [proj],[mic],[part]
+
+ENDDO   
+ 
+VM
+  echo " Picked: {*****[part]}  images from micrograph: [conv-micrograph]"
+VM
+  echo ' '
+                                                                         
+DE                                                                              
+  _6                                                                              
+UD ICE                                                                          
+  [docfile]
+SD E
+  [ulcoord]                                                                      
+DE                                                                              
+  [conv-micrograph] 
+                                                                        
+LB1                                                                             
+RE                                                                           
+
