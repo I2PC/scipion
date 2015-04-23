@@ -133,7 +133,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 movieMrc = movieName.replace('.bz2', '') # we assume that if compressed the name ends with .mrc.bz2
                 toDelete.append(movieMrc)
                 if not exists(movieMrc):
-                    print "movieName", movieName, movieFolder
                     self.runJob('bzip2', '-d -f %s' % movieName, cwd=movieFolder)
             else:
                 movieMrc = movieName
