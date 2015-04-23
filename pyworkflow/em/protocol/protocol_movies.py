@@ -84,8 +84,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         samplingCoords = inputCoords.getMicrographs().getSamplingRate()
         #coordinates sampling input mic
         samplingMic    = self.inputMovies.get().getSamplingRate()
-        #factor = samplingMic / samplingCoords
-        factor = samplingCoords / samplingMic
+        factor = samplingMic / samplingCoords
+        #factor = samplingCoords / samplingMic
 
         allMovies = []
         for movie in self.inputMovies.get():
