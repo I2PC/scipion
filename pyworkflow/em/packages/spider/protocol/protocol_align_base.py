@@ -70,7 +70,12 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
         form.addParam('cgOption', EnumParam, default=CG_PH, 
                       choices=['None', 'CG PH', 'RT180'], 
                       label='Center of gravity option',
-                      help='help needed')
+                      help='The penultimate average will be centered before a a final alignment. '
+                           'One centering strategy uses the SPIDER command '
+                           '[[http://spider.wadsworth.org/spider_doc/spider/docs/man/cgph.html][CG PH]]'
+                           'This command sometimes fails, '
+                           'so another strategy is to rotate the particle by 180 degrees and align it to itself.'
+                           'Sometimes, both of these strategies are worse than doing nothing.')
         
     def _insertAllSteps(self):
         # Insert processing steps

@@ -17,7 +17,7 @@
   ************************************************************************/
 
 #include "situs.h"
-#include "../fftw-3.3.3/api/fftw3.h"
+#include "fftw3.h"
 #define SQT2 sqrt(2.0)
 
 #include "cospmls.h"

@@ -1,5 +1,10 @@
 #!/bin/sh
 
+echo Warning: we do not use this script to build sh_alignment anymore.
+echo Please use instead the Makefile in $(cd "$(dirname "$0")" && pwd)
+echo or edit this file if you dare: $0
+exit 1
+
 swig -python frm/swig/frm.i 
 
 CCFLAGS="-O3 -fPIC -I. -c"

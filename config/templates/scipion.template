@@ -70,7 +70,6 @@ JNI_CPPPATH = %(JAVA_HOME)s/include:%(JAVA_HOME)s/include/linux
 # Modules to compile
 GTEST = False
 CUDA = False
-RELEASE = True
 DEBUG = False
 MATLAB = False
 OPENCV = True

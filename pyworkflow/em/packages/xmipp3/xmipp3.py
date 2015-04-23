@@ -43,7 +43,7 @@ from pyworkflow.dataset import COL_RENDER_CHECKBOX, COL_RENDER_TEXT, COL_RENDER_
 
 from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, \
         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, MDL_CTF_MODEL, MDL_SAMPLINGRATE, DT_DOUBLE, \
-        Euler_angles2matrix, Image, FileName, getBlocksInMetaDataFile, label2Str
+        MDL_ANGLE_ROT, MDL_SHIFT_Z, Euler_angles2matrix, Image, FileName, getBlocksInMetaDataFile, label2Str
 
 LABEL_TYPES = { 
                xmipp.LABEL_SIZET: long,
@@ -535,4 +535,54 @@ class ProjMatcher():
             imgDiff = img-imgRef
             imgDiff.write(MDout.getValue(xmipp.MDL_IMAGE1,i))
 
+class HelicalFinder():
+    """ Base class for protocols that find helical symmetry """
 
+    def runCoarseSearch(self,fnVol,z0,zF,zStep,rot0,rotF,rotStep,Nthr,fnOut,cylinderRadius,height):
+        args="-i %s --sym helical -z %f %f %f --rotHelical %f %f %f --thr %d -o %s"%(fnVol,z0,zF,zStep,rot0,rotF,rotStep,Nthr,fnOut)
+        if cylinderRadius>0:
+            args+=" --mask cylinder %d %d"%(-cylinderRadius,-height)
+        self.runJob('xmipp_volume_find_symmetry',args)
+
+    def runFineSearch(self, fnVol, fnCoarse, fnFine, z0, zF, rot0, rotF, cylinderRadius, height):
+        md=MetaData(fnCoarse)
+        objId=md.firstObject()
+        rotInit=md.getValue(MDL_ANGLE_ROT,objId)
+        zInit=md.getValue(MDL_SHIFT_Z,objId)
+        args="-i %s --sym helical --localHelical %f %f -o %s -z %f %f 1 --rotHelical %f %f 1 "%(fnVol,zInit,rotInit,fnFine,z0,zF,rot0,rotF)
+        if cylinderRadius>0:
+            args+=" --mask cylinder %d %d"%(-cylinderRadius,-height)
+        self.runJob('xmipp_volume_find_symmetry',args)
+
+    def runSymmetrize(self, fnVol, fnParams, fnOut, cylinderRadius, height):
+        md=MetaData(fnParams)
+        objId=md.firstObject()
+        rot0=md.getValue(MDL_ANGLE_ROT,objId)
+        z0=md.getValue(MDL_SHIFT_Z,objId)
+        args="-i %s --sym helical --helixParams %f %f -o %s"%(fnVol,z0,rot0,fnOut)
+        self.runJob('xmipp_transform_symmetrize',args)
+        if cylinderRadius>0:
+            args="-i %s --mask cylinder %d %d"%(fnOut,-cylinderRadius,-height)
+            self.runJob('xmipp_transform_mask',args)
+
+    def runApplyDihedral(self, fnOut, fnParams, fnAux, cylinderRadius, height):
+        md=MetaData(fnParams)
+        objId=md.firstObject()
+        z0=md.getValue(MDL_SHIFT_Z,objId)
+        from math import ceil
+        maxZ=ceil(0.5*z0)
+
+        from pyworkflow.utils.path import cleanPath
+        self.runJob("xmipp_transform_geometry","-i %s -o %s --rotate_volume axis 180 1 0 0"%(fnOut,fnAux))
+        if cylinderRadius>0:
+            maskArgs=" --mask cylinder %d %d"%(int(-cylinderRadius),int(-height))
+        else:
+            maskArgs=""
+        self.runJob("xmipp_volume_align","--i1 %s --i2 %s --rot 0 360 3 -z %f %f 0.5 --apply"%(fnOut,fnAux,-maxZ,maxZ)+maskArgs)
+        self.runJob("xmipp_volume_align","--i1 %s --i2 %s --local --apply"%(fnOut,fnAux)+maskArgs)
+        self.runJob("xmipp_image_operate","-i %s --plus %s -o %s"%(fnOut,fnAux,fnOut))
+        self.runJob("xmipp_image_operate","-i %s --divide 2"%(fnOut))
+        if cylinderRadius>0:
+            self.runJob("xmipp_transform_mask","-i %s "%(fnOut)+maskArgs)
+        cleanPath(fnAux)
+        

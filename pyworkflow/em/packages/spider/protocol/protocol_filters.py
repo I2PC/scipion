@@ -204,7 +204,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
     
     def _methods(self):
         methods = []
-        msg = '\nIput particles %s were %s filtered using a %s filter' % (self.getObjectTag('inputParticles') ,
+        msg = '\nInput particles %s were %s filtered using a %s filter' % (self.getObjectTag('inputParticles') ,
                                                                           self.getEnumText('filterMode'),
                                                                           self.getEnumText('filterType'))
 

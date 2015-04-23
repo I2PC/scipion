@@ -388,6 +388,7 @@ class EnumParam(IntParam):
     # Possible values for display
     DISPLAY_LIST = 0
     DISPLAY_COMBO = 1
+    DISPLAY_HLIST = 2 # horizontal list, save space
     
     def __init__(self, **args):
         IntParam.__init__(self, **args)

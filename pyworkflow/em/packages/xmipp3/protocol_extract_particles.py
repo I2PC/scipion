@@ -163,81 +163,56 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it
         """
-        # Set sampling rate and inputMics according to downsample type
-        self.inputCoords = self.inputCoordinates.get() 
-        
-        self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
-        
-        if self.downsampleType.get() == SAME_AS_PICKING:
-            # If 'same as picking' get samplingRate from input micrographs  
-            self.inputMics = self.inputCoords.getMicrographs()
-            self.samplingFinal = self.samplingInput
-        else:
-            self.inputMics = self.inputMicrographs.get()
-            self.samplingOriginal = self.inputMics.getSamplingRate()
-            if self.downsampleType.get() == ORIGINAL:
-                # If 'original' get sampling rate from original micrographs
-                self.samplingFinal = self.samplingOriginal
-            else:
-                # IF 'other' multiply the original sampling rate by the factor provided
-                self.samplingFinal = self.samplingOriginal*self.downFactor.get()
-                
+        self._defineBasicParams()
         # Write pos files for each micrograph
         firstStepId = self._insertFunctionStep('writePosFilesStep')
-                
-        #if self.doFlip.get():
-        ctfSet = self.ctfRelations.get()
-           
+        
         # For each micrograph insert the steps
         #run in parallel
-        
         deps = []
+        
         for mic in self.inputMics:
             localDeps = [firstStepId]
             micrographToExtract = mic.getFileName()
-            micName = removeBaseExt(mic.getFileName())
-            micId = mic.getObjId()
+            baseMicName = removeBaseExt(mic.getFileName())
 
-            #if self.doFlip.get():
             if self.ctfRelations.hasValue():
-                mic.setCTF(ctfSet[micId])
-
-                # If downsample type is 'other' perform a downsample
+                micName = mic.getMicName()
+                mic.setCTF(self.ctfDict[micName])
+            
+            # If downsample type is 'other' perform a downsample
             downFactor = self.downFactor.get()
             if self.downsampleType == OTHER and abs(downFactor - 1.) > 0.0001:
-                fnDownsampled = self._getTmpPath(micName+"_downsampled.xmp")
+                fnDownsampled = self._getTmpPath(baseMicName+"_downsampled.xmp")
                 args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
-                localDeps=[self._insertRunJobStep("xmipp_transform_downsample", args % locals(),prerequisites=localDeps)]
+                localDeps = [self._insertRunJobStep("xmipp_transform_downsample", args % locals(),prerequisites=localDeps)]
                 micrographToExtract = fnDownsampled
             # If remove dust 
             if self.doRemoveDust:
-                fnNoDust = self._getTmpPath(micName+"_noDust.xmp")
-
+                fnNoDust = self._getTmpPath(baseMicName+"_noDust.xmp")
                 thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
                 args=" -i %(micrographToExtract)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f"
-                localDeps=[self._insertRunJobStep("xmipp_transform_filter", args % locals(),prerequisites=localDeps)]
+                localDeps = [self._insertRunJobStep("xmipp_transform_filter", args % locals(),prerequisites=localDeps)]
                 micrographToExtract = fnNoDust
 
-
-            #self._insertFunctionStep('getCTF', micId, micName, micrographToExtract)
-            micName = removeBaseExt(mic.getFileName())
+            #self._insertFunctionStep('getCTF', micId, baseMicName, micrographToExtract)
             #FIXME: Check only if mic has CTF when implemented ok
             #if self.doFlip or mic.hasCTF():
             fnCTF=None
             if self.ctfRelations.hasValue():
                 # If the micrograph doesn't come from Xmipp, we need to write
                 # a Xmipp ctfparam file to perform the phase flip on the micrograph                     
-                fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % micName))
+                fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % baseMicName))
                 # Insert step to flip micrograph
                 if self.doFlip:
                     localDeps = [self._insertFunctionStep('flipMicrographStep',
-                                                          micName, fnCTF, micrographToExtract,
+                                                          baseMicName, fnCTF, micrographToExtract,
                                                           prerequisites=localDeps)]
-                    micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
+                    micrographToExtract = self._getTmpPath(baseMicName +"_flipped.xmp")
             else:
                 fnCTF = None
                 # Actually extract
-            deps.append(self._insertFunctionStep('extractParticlesStep', micId, micName,
+            deps.append(self._insertFunctionStep('extractParticlesStep', mic.getObjId(), baseMicName,
                                                  fnCTF, micrographToExtract, prerequisites=localDeps))
         # Insert step to create output objects
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
@@ -247,10 +222,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         """ Write the pos file for each micrograph on metadata format. """
         #self.posFiles = writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
         writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
-               
-    def flipMicrographStep(self, micName, fnCTF, micrographToExtract):
+    
+    def downsamplingStep(self):
+        pass
+    
+    def flipMicrographStep(self, baseMicName, fnCTF, micrographToExtract):
         """ Flip micrograph. """           
-        fnFlipped = self._getTmpPath(micName +"_flipped.xmp")
+        fnFlipped = self._getTmpPath(baseMicName +"_flipped.xmp")
 
         args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s --downsampling %(downFactor)f"
         # xmipp_ctf_phase_flip expects the sampling rate of the micrographs, that has been used
@@ -259,15 +237,15 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         downFactor = self.samplingFinal
         self.runJob("xmipp_ctf_phase_flip", args % locals())
         
-    def extractParticlesStep(self, micId, micName, fnCTF, micrographToExtract):
+    def extractParticlesStep(self, micId, baseMicName, fnCTF, micrographToExtract):
         """ Extract particles from one micrograph """
         #If flip selected and exists CTF model use the flip output
 #        if self.doFlip and self.fnCTF:
-#            micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
+#            micrographToExtract = self._getTmpPath(baseMicName +"_flipped.xmp")
                 
-        outputRoot = str(self._getExtraPath(micName))
+        outputRoot = str(self._getExtraPath(baseMicName))
         #fnPosFile = self.getConvertedInput('inputCoords').getMicrographCoordFile(micId)
-        fnPosFile =  self._getExtraPath(micName + ".pos")
+        fnPosFile =  self._getExtraPath(baseMicName + ".pos")
 
         # If it has coordinates extract the particles      
         particlesMd = 'particles@%s' % fnPosFile
@@ -296,7 +274,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 md.operate("Ycoor=Ycoor*%f" % downsamplingFactor)
                 md.write(selfile)
         else:
-            self.warning(" The micrograph %s hasn't coordinate file! Maybe you picked over a subset of micrographs" % micName)
+            self.warning(" The micrograph %s hasn't coordinate file! Maybe you picked over a subset of micrographs" % baseMicName)
                 
     def runNormalize(self, stack, normType, bgRadius):
         program = "xmipp_transform_normalize"
@@ -441,6 +419,32 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         return methodsMsgs
 
     #--------------------------- UTILS functions --------------------------------------------
+    def _defineBasicParams(self):
+        # Set sampling rate and inputMics according to downsample type
+        self.inputCoords = self.inputCoordinates.get() 
+        self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
+        
+        if self.downsampleType.get() == SAME_AS_PICKING:
+            # If 'same as picking' get samplingRate from input micrographs
+            self.inputMics = self.inputCoords.getMicrographs()
+            self.samplingFinal = self.samplingInput
+        else:
+            self.inputMics = self.inputMicrographs.get()
+            self.samplingOriginal = self.inputMics.getSamplingRate()
+            if self.downsampleType.get() == ORIGINAL:
+                # If 'original' get sampling rate from original micrographs
+                self.samplingFinal = self.samplingOriginal
+            else:
+                # IF 'other' multiply the original sampling rate by the factor provided
+                self.samplingFinal = self.samplingOriginal*self.downFactor.get()
+        
+        if self.ctfRelations.hasValue():
+            self.ctfDict = {}
+            for ctf in self.ctfRelations.get():
+                ctfName = ctf.getMicrograph().getMicName()
+                self.ctfDict[ctfName] = ctf
+
+    
     def getInputMicrographs(self):
         """ Return the micrographs associated to the SetOfCoordinates or to the 
         Selected micrographs if Same as Picking not chosen. """
@@ -492,7 +496,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
     def getBoxSize(self):
         # This function is needed by the wizard
-
         # Get input coordinates from protocol and if they have not value leave the existing boxSize value
         inputCoords = self.getCoords()
         if  inputCoords is None:

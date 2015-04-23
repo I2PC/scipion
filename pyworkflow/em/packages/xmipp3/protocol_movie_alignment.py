@@ -462,4 +462,3 @@ def movieCreatePlot(plotType, movie, saveFig):
 #    def getOutputFiles(self):
 #        # Redefine the default method to avoid download of movie files
 #        return self.outputMicrographs.getFiles()
-        

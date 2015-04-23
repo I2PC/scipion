@@ -119,6 +119,7 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         args2 = " -i %s --set merge %s"
         outClasses = 'classes_aligned@' + outImgsFn
         self.runJob("xmipp_image_residuals", args1 % (stkDiff, stkAutoCorrelations, fnAutoCorrelations), numberOfMpi=1)
+        self.runJob("xmipp_metadata_utilities", '-i %s --operate rename_column "image image1"' % fnAutoCorrelations, numberOfMpi=1)
         self.runJob("xmipp_metadata_utilities", args2 % (outClasses, fnAutoCorrelations), numberOfMpi=1)
         cleanPath(fnAutoCorrelations)
     
@@ -193,7 +194,8 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         objLoc = locationToXmipp(index, fn)
         mdLoc = row.getValue(xmipp.MDL_IMAGE)
         if objLoc != mdLoc:
-            raise Exception("The the image isn't the same. Please, sort the metadata.")
+            print objLoc+" "+mdLoc
+            raise Exception("The image isn't the same. Please, sort the metadata.")
 
         item._xmipp_maxCC = Float(row.getValue(xmipp.MDL_MAXCC))
         item._xmipp_zScoreResCov = Float(row.getValue(xmipp.MDL_ZSCORE_RESCOV))

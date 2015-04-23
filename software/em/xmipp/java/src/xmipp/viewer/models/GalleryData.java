@@ -26,6 +26,7 @@
 package xmipp.viewer.models;
 
 import ij.ImagePlus;
+
 import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import xmipp.ij.commons.Geometry;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippImageConverter;
@@ -49,6 +51,7 @@ import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
@@ -157,7 +160,11 @@ public class GalleryData {
     }
 
     public void selectVolumeAt(int selectedIndex) {
-        selectedVolFn = getVolumeAt(selectedIndex);
+    	String volfile = getVolumeAt(selectedIndex);
+    	if(new File(volfile).exists())
+    		selectedVolFn = volfile;
+    	else
+    		throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(volfile));
     }
 
     public boolean isAutoAdjust()
@@ -189,7 +196,7 @@ public class GalleryData {
 
     public enum Mode {
 
-        GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
+        GALLERY_MD, GALLERY_VOL, TABLE_MD
     };
 
     // define min and max render dimensions
@@ -252,8 +259,6 @@ public class GalleryData {
 //                if(renderLabel.equals("first") && isScipionInstance())
 //                    renderImages = false;
             }
-            else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
-                mode = Mode.GALLERY_ROTSPECTRA;
         if(parameters.getBlock().equals(selectedBlock))
         {
         
@@ -373,13 +378,7 @@ public class GalleryData {
             loadClassesInfo();
         }
 
-        if (isRotSpectraMd() && mode == Mode.GALLERY_ROTSPECTRA) {
-            if (zoom == 0) {
-                zoom = 100;
-            }
-            return;
-        }
-
+        
         if (!md.isColumnFormat() ) {
             mode = Mode.TABLE_MD;
             if (zoom == 0) {
@@ -394,7 +393,7 @@ public class GalleryData {
         if (hasRenderLabel()) {
             int renderLabel = ciFirstRender.label;
             ImageGeneric image = null;
-            String imageFn;
+            String imageFn = null;
 
 
 			// Try to find at least one image to render
@@ -409,8 +408,9 @@ public class GalleryData {
                     } catch (Exception e) {
                         image = null;
                     }
+                    break;
                 }
-                break;
+                
             }
             if (image != null) { // Image file was found to render
                 if (zoom == 0) { // if default value, calculate zoom
@@ -422,16 +422,15 @@ public class GalleryData {
                     zoom = getDefaultZoom(image.getXDim());
                     
                 }
-
                 if (image.isVolume()) { // We are assuming all are volumes
                     // or images, dont mix it
-                    if (isGalleryMode()) {
+                    if (isGalleryMode()) 
                         mode = Mode.GALLERY_VOL;
-                    }
+                    
                     isVolumeMd = true;
 
                     if (selectedVolFn.isEmpty()) {
-                        selectedVolFn = getVolumeAt(0);
+                        selectedVolFn = imageFn;
                     }
 
                 }
@@ -674,8 +673,7 @@ public class GalleryData {
                     }
 
                     return new MetadataTableModel(this);
-                case GALLERY_ROTSPECTRA:
-                    return new RotSpectraGalleryTableModel(this);
+                
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -719,8 +717,8 @@ public class GalleryData {
 
     // some mode shortcuts
     public boolean isGalleryMode() {
-        return mode == Mode.GALLERY_MD || mode == Mode.GALLERY_VOL
-                || mode == Mode.GALLERY_ROTSPECTRA;
+        return mode == Mode.GALLERY_MD || mode == Mode.GALLERY_VOL;
+                
     }
 
     public boolean isVolumeMode() {
@@ -738,9 +736,7 @@ public class GalleryData {
         return md.isColumnFormat();
     }
 
-    public boolean isRotSpectraMode() {
-        return mode == Mode.GALLERY_ROTSPECTRA;
-    }
+    
 
     public boolean isMicrographsMode() {
         return md.containsMicrographsInfo();
@@ -751,8 +747,7 @@ public class GalleryData {
         if (isGalleryMode()) {
             mode = Mode.TABLE_MD;
            
-        } else if (isRotSpectraMd() && parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
-            mode = Mode.GALLERY_ROTSPECTRA;
+        } 
         else if ( isVolumeMd) 
             mode = Mode.GALLERY_VOL;
         else

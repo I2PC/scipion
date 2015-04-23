@@ -245,6 +245,9 @@ class SpiderDocFile(object):
             if not line.startswith(';'):
                 values = [float(s) for s in line.split()[2:]]
                 yield values
+                
+    def __iter__(self):
+        return self.iterValues()
 
     def close(self):
         self._file.close()
