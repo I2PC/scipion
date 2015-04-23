@@ -173,6 +173,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
             
             hasCoordinates = self._writeXmippPosFile(movieId, movieName, coordinatesName, 
                                                      shiftX, shiftY)
+            print ("name , pos",coordinatesName,shiftX, shiftY)
             
             if hasCoordinates:
                 self.info("Writing frame: %s" % frameName)
@@ -292,28 +293,38 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         ##### import em abre una nueva conexion?
         #TODO ROB move this import to the header
         from pyworkflow.em import SetOfCoordinates
-        coordinates = SetOfCoordinates(filename=self.inputCoordinates.get().getFilename())
+        inputCoords = self.inputCoordinates.get()
+        coordinates = SetOfCoordinates(filename=inputCoords.getFileName())
+        #coordinates sampling mic used for picking
+        samplingCoords = inputCoords.getMicrographs().getSamplingRate()
+        #coordinates sampling input mic
+        samplingMic    = self.inputMovies.get().getSamplingRate()
+        #factor = samplingMic / samplingCoords
+        factor = samplingCoords / samplingMic
+        print("factor",factor,samplingMic,samplingCoords)
         #####coordinates = self.inputCoordinates.get()
         #####micrograph = coordinates.getMicrographs()[movieId]
-         
+
         ####if micrograph is None:
-            #####raise Exception("Micrograph with id %d was not found in SetOfCoordinates!!!" % movieId)
-         
+        #####raise Exception("Micrograph with id %d was not found in SetOfCoordinates!!!" % movieId)
+
         mData = md.MetaData()
         coordRow = XmippMdRow()
-         
-####        for coord in coordinates.iterCoordinates(micrograph):
+
+        ####        for coord in coordinates.iterCoordinates(micrograph):
         for coord in coordinates.iterCoordinates(movieId):
-            coord.shiftX(1 * int(round(float(shiftX))))
-            coord.shiftY(1 * int(round(float(shiftY))))
+            coord.shiftX( int(round(factor * float(shiftX))))
+            coord.shiftY( int(round(factor * float(shiftY))))
             coordinateToRow(coord, coordRow)
+            print()
             coordRow.writeToMd(mData, mData.addObject())
-             
+
         if mData.isEmpty():
             return False
         else:
             self.info("Writing coordinates metadata: %s, with shifts: %s %s" % (coordinatesName, shiftX, shiftY))
             mData.write('particles@' + coordinatesName)
+            print("writting metadata file", 'particles@' + coordinatesName )
             return True
     
     def _filterMovie(self, movieId, movieFn):
