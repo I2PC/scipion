@@ -28,14 +28,13 @@
 This sub-package contains wrapper around XmippProtPreprocessVolumes protocol
 """
 from pyworkflow.em import *  
-from pyworkflow.utils import *  
-import xmipp
+from pyworkflow.utils import *
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.constants import *
-
-from ..constants import *
+from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from ..convert import locationToXmipp, writeSetOfParticles
+
 
 
 
@@ -336,6 +335,12 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                       display=EnumParam.DISPLAY_COMBO,
                       default=0, label='Aggregation mode', condition = 'doSymmetrize',
                       help='Symmetrized volumes can be averaged or summed.')
+        form.addParam('volumeMask', PointerParam, pointerClass='VolumeMask',
+                      label='Mask volume', condition='doSymmetrize'
+                      )
+        form.addParam('doWrap', BooleanParam, default=True,
+                      label="Wrap", condition='doSymmetrize',
+                      help='by default, the image/volume is wrapped')
         # Adjust gray values
         form.addParam('doAdjust', BooleanParam, default=False,
                       label="Adjust gray values", 
@@ -504,23 +509,35 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
     def _argsSymmetrize(self):
         if self.isFirstStep:
             if self._isSingleInput():
-                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
+                args = "-i %s -o %s" % (self.inputFn, self.outputStk. self.wrap)
             else:
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
             self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
-        
-        symmetry = self.symmetryGroup.get()
+
+        symmetry   = self.symmetryGroup.get()
+        doWrap     = self.doWrap.get()
+        print("volumeMask",self.volumeMask.get())
+        fnMask = getImageLocation(self.volumeMask.get())
+
+
+        ###########FILEFILEFILE
         symmetryAggregation = self.aggregation.get()
-        
+
         # Validation done in the _validate function
-#         if symmetry != 'c1':
-        args += " --sym %s" % symmetry
-        
+        #         if symmetry != 'c1':
+        args += " --sym %s " % symmetry
+
         if symmetryAggregation == "sum":
             args += " --sum"
-        
+
+        if not doWrap:
+            args += " --dont_wrap "
+
+        if exists(fnMask):
+            args += " --mask_in %s "%fnMask
+
         return args
     
     def _argsAdjust(self):

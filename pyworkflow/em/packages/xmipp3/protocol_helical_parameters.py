@@ -31,8 +31,9 @@ This sub-package contains protocols for performing subtomogram averaging.
 import pyworkflow.object as pwobj
 from pyworkflow.em import *  
 from xmipp import MetaData, MDL_ANGLE_ROT, MDL_SHIFT_Z
+from xmipp3 import HelicalFinder
 
-class XmippProtHelicalParameters(ProtPreprocessVolumes):
+class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
     """ Estimate helical parameters and symmetrize.
     
          Helical symmetry is defined as V(r,rot,z)=V(r,rot+k*DeltaRot,z+k*Deltaz)."""
@@ -64,61 +65,29 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
         if self.dihedral.get():
             self._insertFunctionStep('applyDihedral')
         self._insertFunctionStep('createOutput')
+        self.fnVol=locationToXmipp(*self.inputVolume.get().getLocation())
+        [self.height,_,_]=self.inputVolume.get().getDim()
     
     #--------------------------- STEPS functions --------------------------------------------
     def coarseSearch(self):
-        fnVol=locationToXmipp(*self.inputVolume.get().getLocation())
-        args="-i %s --sym helical -z %f %f %f --rotHelical %f %f %f --thr %d -o %s"%(fnVol,
-                                                                                     float(self.z0.get()),float(self.zF.get()),
-                                                                                     float(self.zStep.get()),float(self.rot0.get()),
-                                                                                     float(self.rotF.get()),float(self.rotStep.get()),
-                                                                                     self.numberOfThreads.get(),
-                                                                                     self._getExtraPath('coarseParams.xmd'))
-        if self.cylinderRadius.get()>0:
-            [xdim,_,_]=self.inputVolume.get().getDim()
-            args+=" --mask cylinder %d %d"%(int(-self.cylinderRadius.get()),int(-xdim))
-        self.runJob('xmipp_volume_find_symmetry',args)
+        self.runCoarseSearch(self.fnVol,float(self.z0.get()),float(self.zF.get()),float(self.zStep.get()),
+                             float(self.rot0.get()),float(self.rotF.get()),float(self.rotStep.get()),
+                             self.numberOfThreads.get(),self._getExtraPath('coarseParams.xmd'),
+                             int(self.cylinderRadius.get()),int(self.height))
 
     def fineSearch(self):
-        md=MetaData(self._getExtraPath('coarseParams.xmd'))
-        objId=md.firstObject()
-        rot0=md.getValue(MDL_ANGLE_ROT,objId)
-        z0=md.getValue(MDL_SHIFT_Z,objId)
-        fnVol=locationToXmipp(*self.inputVolume.get().getLocation())
-        args="-i %s --sym helical --localHelical %f %f -o %s"%(fnVol,z0,rot0,self._getExtraPath('fineParams.xmd'))
-        if self.cylinderRadius.get()>0:
-            [xdim,_,_]=self.inputVolume.get().getDim()
-            args+=" --mask cylinder %d %d"%(int(-self.cylinderRadius.get()),int(-xdim))
-        self.runJob('xmipp_volume_find_symmetry',args)
+        self.runFineSearch(self.fnVol, self._getExtraPath('coarseParams.xmd'), self._getExtraPath('fineParams.xmd'), 
+                           float(self.z0.get()),float(self.zF.get()),float(self.rot0.get()),float(self.rotF.get()),
+                             int(self.cylinderRadius.get()),int(self.height))
 
     def symmetrize(self):
-        md=MetaData(self._getExtraPath('fineParams.xmd'))
-        objId=md.firstObject()
-        rot0=md.getValue(MDL_ANGLE_ROT,objId)
-        z0=md.getValue(MDL_SHIFT_Z,objId)
-        fnOut=self._getPath('volume_symmetrized.vol')
-        fnVol=locationToXmipp(*self.inputVolume.get().getLocation())
-        args="-i %s --sym helical --helixParams %f %f -o %s"%(fnVol,z0,rot0,fnOut)
-        self.runJob('xmipp_transform_symmetrize',args)
-        if self.cylinderRadius.get()>0:
-            [xdim,_,_]=self.inputVolume.get().getDim()
-            args="-i %s --mask cylinder %d %d"%(fnOut,int(-self.cylinderRadius.get()),int(-xdim))
-            self.runJob('xmipp_transform_mask',args)
+        self.runSymmetrize(self.fnVol, self._getExtraPath('fineParams.xmd'), self._getPath('volume_symmetrized.vol'), 
+                           self.cylinderRadius.get(), self.height)
 
     def applyDihedral(self):
-        fnRotated=self._getTmpPath('volume_rotated.vol')
-        fnOut=self._getPath('volume_symmetrized.vol')
-        self.runJob("xmipp_transform_geometry","-i %s -o %s --rotate_volume axis 180 1 0 0"%(fnOut,fnRotated))
-        if self.cylinderRadius.get()>0:
-            [xdim,_,_]=self.inputVolume.get().getDim()
-            maskArgs=" --mask cylinder %d %d"%(int(-self.cylinderRadius.get()),int(-xdim))
-        else:
-            maskArgs=""
-        self.runJob("xmipp_volume_align","--i1 %s --i2 %s --rot 0 360 3 -z -2 2 0.5 --apply"%(fnOut,fnRotated)+maskArgs)
-        self.runJob("xmipp_volume_align","--i1 %s --i2 %s --local --apply"%(fnOut,fnRotated)+maskArgs)
-        self.runJob("xmipp_image_operate","-i %s --plus %s -o %s"%(fnOut,fnRotated,fnOut))
-        self.runJob("xmipp_image_operate","-i %s --divide 2"%(fnOut))
-        self.runJob("xmipp_transform_mask","-i %s "%(fnOut)+maskArgs)
+        self.runApplyDihedral(self._getPath('volume_symmetrized.vol'),self._getExtraPath('fineParams.xmd'),
+                              self._getTmpPath('volume_rotated.vol'),
+                              self.cylinderRadius.get(), self.height)
     
     def createOutput(self):
         volume = Volume()
