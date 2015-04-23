@@ -123,7 +123,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         form.addParallelSection(threads=2, mpi=1)
     
     #--------------------------- STEPS functions --------------------------------------------------
-    def _processMovie(self, movieId, movieName, movieFolder,shifts):###pasar shifts
+    def _processMovie(self, movieId, movieName, movieFolder,shifts,factor):###pasar shifts
         
         movieName = os.path.join(movieFolder, movieName)
 
@@ -187,11 +187,13 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
 
                 self.info("Extracting particles")
                 frameImages = frameRoot + '_images'
-                args = '-i %(frameName)s --pos %(coordinatesName)s -o %(frameRoot)s --Xdim %(boxSize)d' % locals()
+                args = '-i %(frameName)s --pos %(coordinatesName)s ' \
+                       '-o %(frameRoot)s --Xdim %(boxSize)d' % locals()
                 
                 if self.doInvert:
                     args += " --invert"
 
+                args += "--downsampling %f"%factor
                 self.runJob('xmipp_micrograph_scissor', args)
                 cleanPath(frameName)
                 
@@ -295,13 +297,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         from pyworkflow.em import SetOfCoordinates
         inputCoords = self.inputCoordinates.get()
         coordinates = SetOfCoordinates(filename=inputCoords.getFileName())
-        #coordinates sampling mic used for picking
-        samplingCoords = inputCoords.getMicrographs().getSamplingRate()
-        #coordinates sampling input mic
-        samplingMic    = self.inputMovies.get().getSamplingRate()
-        #factor = samplingMic / samplingCoords
-        factor = samplingCoords / samplingMic
-        print("factor",factor,samplingMic,samplingCoords)
 
         #####coordinates = self.inputCoordinates.get()
         #####micrograph = coordinates.getMicrographs()[movieId]
@@ -314,8 +309,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
 
         ####        for coord in coordinates.iterCoordinates(micrograph):
         for coord in coordinates.iterCoordinates(movieId):
-            coord.shiftX( int(round(factor * float(shiftX))))
-            coord.shiftY( int(round(factor * float(shiftY))))
+            coord.shiftX( int(round(float(shiftX))))
+            coord.shiftY( int(round(float(shiftY))))
             coordinateToRow(coord, coordRow)
             print()
             coordRow.writeToMd(mData, mData.addObject())

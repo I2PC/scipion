@@ -77,6 +77,16 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
+        #ROB: deal with the case in which sampling rate use for picking and movies
+        #is different
+        inputCoords = self.inputCoordinates.get()
+        #coordinates sampling mic used for picking
+        samplingCoords = inputCoords.getMicrographs().getSamplingRate()
+        #coordinates sampling input mic
+        samplingMic    = self.inputMovies.get().getSamplingRate()
+        #factor = samplingMic / samplingCoords
+        factor = samplingCoords / samplingMic
+
         allMovies = []
         for movie in self.inputMovies.get():
 
@@ -99,16 +109,18 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                     shifts = [0] * (2*n)
             except NameError:
                 shifts=None
+
             ####end of thread
 
             movieStepId = self._insertFunctionStep('processMovieStep',
-                                                   movie.getObjId(), movie.getFileName(),shifts,
+                                                   movie.getObjId(), movie.getFileName(),
+                                                   shifts, factor,
                                                    prerequisites=[])
             allMovies.append(movieStepId)
         self._insertFunctionStep('createOutputStep', prerequisites=allMovies)
 
     #--------------------------- STEPS functions ---------------------------------------------------
-    def processMovieStep(self, movieId, movieFn,shifts):
+    def processMovieStep(self, movieId, movieFn,shifts, factor):
         movieFolder = self._getMovieFolder(movieId)
         movieName = basename(movieFn)
         
@@ -132,7 +144,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 movieMrc = movieMrc + ":ems"
 
 
-            self._processMovie(movieId, movieMrc, movieFolder,shifts)
+            self._processMovie(movieId, movieMrc, movieFolder,shifts, factor)
             
             if self.cleanMovieData:
                 cleanPath(movieFolder)
