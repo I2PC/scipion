@@ -367,6 +367,7 @@ void ProgAngularDistance::computeWeights()
 
     	// Process both sets of angles
     	double cumulatedDistance=0;
+    	double N=0;
     	for (size_t i=0; i<ang2.size(); ++i)
     	{
     		const Matrix1D<double> &anglesi=ang2[i];
@@ -385,12 +386,22 @@ void ProgAngularDistance::computeWeights()
                 if (dist<bestDistance)
                 	bestDistance=dist;
     		}
-    		cumulatedDistance+=bestDistance;
+    		if (bestDistance<360)
+    		{
+    			cumulatedDistance+=bestDistance;
+    			N++;
+    		}
     	}
-    	double meanDistance=cumulatedDistance/ang2.size();
-    	size_t newObjId=DFweights.addObject();
-    	DFweights.setValue(label,currentId,newObjId);
-    	DFweights.setValue(MDL_ANGLE_DIFF,meanDistance,newObjId);
+		size_t newObjId=DFweights.addObject();
+		DFweights.setValue(label,currentId,newObjId);
+		DFweights.setValue(label,currentId,newObjId);
+    	if (N>0)
+    	{
+			double meanDistance=cumulatedDistance/ang2.size();
+			DFweights.setValue(MDL_ANGLE_DIFF,meanDistance,newObjId);
+    	}
+    	else
+			DFweights.setValue(MDL_ANGLE_DIFF,-1.0,newObjId);
         anotherImageIn2=iter2.hasNext();
     }
 
@@ -416,6 +427,18 @@ void ProgAngularDistance::computeWeights()
 
     // Transfer these weights to the DF2 metadata
     MetaData DF2weighted;
+    if (DF2.containsLabel(MDL_ANGLE_DIFF))
+    	DF2.removeLabel(MDL_ANGLE_DIFF);
+    if (DF2.containsLabel(MDL_WEIGHT_JUMPER))
+    	DF2.removeLabel(MDL_WEIGHT_JUMPER);
     DF2weighted.join1(DF2,DFweights,label,INNER);
+    FOR_ALL_OBJECTS_IN_METADATA(DF2weighted)
+    {
+    	double angleDiff;
+    	DF2weighted.getValue(MDL_ANGLE_DIFF,angleDiff,__iter.objId);
+    	if (angleDiff<0)
+    		DF2weighted.setValue(MDL_ENABLED,-1,__iter.objId);
+    }
+    DF2weighted.removeDisabled();
     DF2weighted.write(fn_out+"_weights.xmd");
 }
