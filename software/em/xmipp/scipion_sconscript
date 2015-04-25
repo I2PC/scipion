@@ -529,6 +529,7 @@ for p in ['angular_break_symmetry',
           'mlf_refine3d',
           'ml_tomo',
           'mrc_create_metadata',
+          'multireference_aligneability',
           'nma_alignment',
           'nma_alignment_vol',
 

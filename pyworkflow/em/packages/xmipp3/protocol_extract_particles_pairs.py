@@ -326,12 +326,6 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         else:
             return None
 
-    def getOutput(self):
-        if self.outputParticlesTiltPair.hasValue():
-            return self.outputParticlesTiltPair.getUntilted()
-        else:
-            return None
-
     def _storeMethodsInfo(self, fnImages):
         """ Store some information when the protocol finishes. """
         self.methodsVar.set("")

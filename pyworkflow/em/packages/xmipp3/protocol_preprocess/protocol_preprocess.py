@@ -27,16 +27,13 @@
 """
 This sub-package contains wrapper around XmippProtPreprocessVolumes protocol
 """
-from pyworkflow.em import *  
+from pyworkflow.em import *
 from pyworkflow.utils import *  
-import xmipp
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.em.constants import *
-
 from ..constants import *
+from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from ..convert import locationToXmipp, writeSetOfParticles
-
 
 
 class XmippPreprocessHelper():
@@ -336,6 +333,12 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                       display=EnumParam.DISPLAY_COMBO,
                       default=0, label='Aggregation mode', condition = 'doSymmetrize',
                       help='Symmetrized volumes can be averaged or summed.')
+        form.addParam('volumeMask', PointerParam, pointerClass='VolumeMask',
+                      label='Mask volume', condition='doSymmetrize'
+                      )
+        form.addParam('doWrap', BooleanParam, default=True,
+                      label="Wrap", condition='doSymmetrize',
+                      help='by default, the image/volume is wrapped')
         # Adjust gray values
         form.addParam('doAdjust', BooleanParam, default=False,
                       label="Adjust gray values", 
@@ -389,8 +392,8 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             self._insertFunctionStep("symmetrizeStep", args, changeInserts)
         
         if self.doAdjust:
-            args = self._argsAdjust()
-            self._insertFunctionStep("adjustStep", args, changeInserts)
+            self._insertFunctionStep("projectionStep", changeInserts)
+            self._insertFunctionStep("adjustStep", changeInserts)
 
         if self.doSegment:
             args = self._argsSegment()
@@ -424,30 +427,44 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
     def symmetrizeStep(self, args, changeInserts):
         self.runJob("xmipp_transform_symmetrize", args)
     
-    def adjustStep(self, args, changeInserts):
-        imgsFn = self._getExtraPath('input_images.xmd')
+    def projectionStep(self, changeInserts):
+        partSet = self.inputImages.get()
+        imgsFn = self._getTmpPath('input_images.xmd')
         
-        partSet = self._getRandomSubset(self.inputImages.get(), 200)
-        writeSetOfParticles(partSet, imgsFn)
+        if partSet.getSize() > 200:
+            newPartSet = self._getRandomSubset(partSet, 200)
+        else:
+            newPartSet = partSet
+            
+        writeSetOfParticles(newPartSet, imgsFn)
         
-        params = {'imgsFn': imgsFn,
-                        'dir': self._getTmpPath(),
-                        'symmetryGroup': self.sigSymGroup.get(),
-                        }
-        sigArgs = '-i %(imgsFn)s --odir %(dir)s --sym %(symmetryGroup)s'\
-        ' --iter 1 --dontReconstruct' % params
-        self.runJob("xmipp_reconstruct_significant", sigArgs)
-        
+        if not partSet.hasAlignmentProj():
+            params = {'imgsFn': imgsFn,
+                      'dir': self._getTmpPath(),
+                      'vols': self.inputFn,
+                      'symmetryGroup': self.sigSymGroup.get(),
+                      }
+            sigArgs = '-i %(imgsFn)s --initvolumes %(vols)s --odir %(dir)s --sym %(symmetryGroup)s'\
+            ' --alpha0 0.005 --dontReconstruct' % params
+            self.runJob("xmipp_reconstruct_significant", sigArgs)
+    
+    def adjustStep(self, changeInserts):
+        import pyworkflow.em.metadata as md
         if self._isSingleInput():
+            args = self._argsAdjust(0)
             localArgs = self._adjustLocalArgs(self.inputFn, self.outputStk, args)
             self.runJob("xmipp_transform_adjust_volume_grey_levels", localArgs)
         else:
             numberOfVols = self.inputVolumes.get().getSize()
-            
-            for i in range(1, numberOfVols + 1):
-                inputVol = locationToXmipp(i, self.inputFn)
-                outputVol = locationToXmipp(i, self.outputStk)
-                localArgs = self._adjustLocalArgs(self.inputFn, self.outputStk, args)
+            volMd = md.MetaData(self.inputFn)
+            firstStep = self.isFirstStep
+            for objId in volMd:
+                args = self._argsAdjust(objId-1)
+                inputVol = volMd.getValue(md.MDL_IMAGE, objId)
+                outputVol = locationToXmipp(objId, self.outputStk)
+                localArgs = self._adjustLocalArgs(inputVol, outputVol, args)
+                if firstStep and objId < numberOfVols:
+                    self.isFirstStep = True
                 self.runJob("xmipp_transform_adjust_volume_grey_levels", localArgs)
     
     def segmentStep(self, args, changeInserts):
@@ -504,27 +521,43 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
     def _argsSymmetrize(self):
         if self.isFirstStep:
             if self._isSingleInput():
-                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
+                args = "-i %s -o %s" % (self.inputFn, self.outputStk. self.wrap)
             else:
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
             self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
-        
-        symmetry = self.symmetryGroup.get()
+
+        symmetry   = self.symmetryGroup.get()
+        doWrap     = self.doWrap.get()
+        print("volumeMask",self.volumeMask.get())
+        fnMask = getImageLocation(self.volumeMask.get())
+
+
+        ###########FILEFILEFILE
         symmetryAggregation = self.aggregation.get()
-        
+
         # Validation done in the _validate function
-#         if symmetry != 'c1':
-        args += " --sym %s" % symmetry
-        
+        #         if symmetry != 'c1':
+        args += " --sym %s " % symmetry
+
         if symmetryAggregation == "sum":
             args += " --sum"
-        
+
+        if not doWrap:
+            args += " --dont_wrap "
+
+        if exists(fnMask):
+            args += " --mask_in %s "%fnMask
+
         return args
     
-    def _argsAdjust(self):
-        args = " -m %s" % self._getTmpPath("gallery_iter001_00.doc")
+    def _argsAdjust(self, number):
+        if self.inputImages.get().hasAlignmentProj():
+            fn = "input_images.xmd"
+        else:
+            fn = "images_iter001_%02d.xmd" % number
+        args = " -m %s" % self._getTmpPath(fn)
         return args
     
     def _adjustLocalArgs(self, inputVol, outputVol, args):

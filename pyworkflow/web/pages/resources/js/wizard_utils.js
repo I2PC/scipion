@@ -498,28 +498,32 @@ function previewSpiderCustomMask(path, radius1, sdFactor, radius2, maskThreshold
 	 */
 	
 	// load and set the image
-	var uri = "/run_custom_mask_spider/?" + 
-				"image=" + path + 
-				"&radius1=" + radius1 + 
-				"&sdFactor=" + sdFactor + 
+	var URL = getSubDomainURL() + "/run_custom_mask_spider/?" +
+				"image=" + path +
+				"&radius1=" + radius1 +
+				"&sdFactor=" + sdFactor +
 				"&radius2=" + radius2 +
-				"&maskThreshold="+ maskThreshold;
-	var URL = getSubDomainURL() + uri
-	
-	var canvasList = ['image1', 'image2', 'image3', 
+				"&maskThreshold="+ maskThreshold
+
+
+	 //	Generate the images
+	$.ajax({
+		type : "GET",
+		url : URL,
+		async : false
+	});
+
+	var canvasList = ['image1', 'image2', 'image3',
 	                  'image4', 'image5', 'image6',
 	                  'image7', 'image8']
 
-	 //	Generate the images               		  
-	 $.ajax({type : "GET", URL : uri, async: false});
-	
 	// Put the images in his canvas associated
-	var URL = getSubDomainURL() + "/get_image/?image=" + path + "&dim=100";
-	putImageSrc(URL, canvasList[0]);
+	var URL2 = getSubDomainURL() + "/get_image/?image=" + path + "&dim=100";
+	putImageSrc(URL2, canvasList[0]);
 	
 	for (var i=1;i < canvasList.length;i++){
-		var URL = getSubDomainURL() + "/get_image/?image=" + i + "@stkmask.stk&dim=100";
-		putImageSrc(URL, canvasList[i]);
+		URL2 = getSubDomainURL() + "/get_image/?image=" + i + "@stkmask.stk&dim=100";
+		putImageSrc(URL2, canvasList[i]);
 	}
 }
 
