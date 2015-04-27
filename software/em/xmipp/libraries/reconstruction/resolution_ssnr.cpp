@@ -272,7 +272,9 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
 #endif
 
         Is() -= Iths();
-        In() -= Ithn();
+        In() -= Ithn(); // According to the article: should we not subtract here (simply remove this line)
+                        // "...except that there is no subtraction in the denominator because the
+        				// underlying signal is zero by definition."
 
         if (dim == 2)
         {

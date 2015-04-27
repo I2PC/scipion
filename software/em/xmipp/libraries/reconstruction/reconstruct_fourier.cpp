@@ -319,7 +319,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 	bool hasCTF=(threadParams->selFile->containsLabel(MDL_CTF_MODEL) || threadParams->selFile->containsLabel(MDL_CTF_DEFOCUSU)) &&
 			parent->useCTF;
 	if (hasCTF)
+        {
 		threadParams->ctf.enable_CTF=true;
+                threadParams->ctf.enable_CTFnoise=false;
+        }
     do
     {
         barrier_wait( barrier );
@@ -577,6 +580,8 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 	YY(contFreq)=YY(freq)*iTs;
                                 	threadParams->ctf.precomputeValues(XX(contFreq),YY(contFreq));
                                 	wCTF=threadParams->ctf.getValueAt();
+                                        if (std::isnan(wCTF))
+                                           wCTF=0.0;
                                 	if (fabs(wCTF)<parent->minCTF)
                                 		wCTF=1;
                                 	else
