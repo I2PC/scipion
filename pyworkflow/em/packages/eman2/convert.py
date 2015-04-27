@@ -166,7 +166,9 @@ def writeSetOfParticles(partSet, path, **kwargs):
     the images in the set are available.
     """
 #     from math import fabs
-    isMrcs, fnDict = convertBinaryFiles(partSet, path)
+    pathMrcs = path.split("/particles")[0]
+    isMrcs, fnDict = convertBinaryFiles(partSet, pathMrcs)
+    
     
     partSet.getFirstItem().getFileName()
     fileName = ""
