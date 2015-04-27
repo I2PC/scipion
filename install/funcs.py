@@ -364,8 +364,9 @@ class Environment:
             flags.append('--prefix=%s' % prefix)
             flags.append('--libdir=%s/lib' % prefix)
 
-            environ = os.environ.update({'CPPFLAGS': '-I%s/include' % prefix,
-                                         'LDFLAGS': '-L%s/lib' % prefix})
+            environ = os.environ.copy()
+            environ.update({'CPPFLAGS': '-I%s/include' % prefix,
+                            'LDFLAGS': '-L%s/lib' % prefix})
             t.addCommand('./configure %s' % ' '.join(flags),
                          targets=makeFile, cwd=configPath,
                          out='%s/log/%s_configure.log' % (prefix, name),
