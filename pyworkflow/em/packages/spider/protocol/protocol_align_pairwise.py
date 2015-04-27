@@ -97,7 +97,7 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
     
     def _summary(self):
         summary = []
-        summary.append('Radius range: *%s - %s*' % (self.innerRadius, self.outerRadius))
+        summary.append('Radius range (px): *%s - %s*' % (self.innerRadius, self.outerRadius))
         summary.append('Search range (px): *%s*' % self.searchRange)
         summary.append('Step size (px): *%s*' % self.stepSize)
         
@@ -106,7 +106,7 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
     def _methods(self):
         msg  = "Input particles %s " % self.getObjectTag('inputParticles')
         msg += "were subjected to a pairwise reference-free alignment using the "
-        msg += "'pyramidal system for prealignment construction' [Marco1996], "
+        msg += "'pyramidal system for prealignment construction' ([Marco1996]), "
         msg += "using radii %s to %s pixels. " % (self.innerRadius, self.outerRadius)
         msg += "Particles were then aligned to this initial reference-free average "
         msg += "using SPIDER command _AP SH_ using a "

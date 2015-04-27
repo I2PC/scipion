@@ -48,8 +48,14 @@ class SpiderProtClassifyWard(SpiderProtClassifyCluster):
     
     def _summary(self):
         summary = []
+        summary.append('Number of factors: *%s*' % self.numberOfFactors)
         return summary
     
     def _methods(self):
-        return self._summary()  # summary is quite explicit and serve as methods
+        msg  = "\nInput particles %s " % self.getObjectTag('inputParticles')
+        msg += "were subjected to Ward's method  "
+        msg += "(SPIDER command [[http://spider.wadsworth.org/spider_doc/spider/docs/man/clhc.html][CL HC]]) "
+        msg += "using %s factors. " % self.numberOfFactors
+        return [msg]
+#        return self._summary()  # summary is quite explicit and serve as methods
     

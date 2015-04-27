@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     J.M.de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+ * Authors:     AUTHOR_NAME (jvargas@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -23,31 +23,47 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#ifndef MULTIREFERENCE_ALIGNEABILITY_H_
+#define MULTIREFERENCE_ALIGNEABILITY_H_
+#define PI 3.14159265
+
 #include <data/xmipp_program.h>
-#include <data/filters.h>
+#include "reconstruct_significant.h"
+#include <math.h>
+#include <data/metadata.h>
+#include <string.h>
 
-/** Apply some filter operation on images, or selfiles */
-class ProgFilter: public XmippMetadataProgram
+
+class MultireferenceAligneability: public XmippProgram
 {
-private:
-    ///Pointers to selected operation
-    XmippFilter * filter;
 
-    // Read CTF
-    bool readCTF;
-
-protected:
-    void defineParams();
-    void readParams();
-    void preProcess();
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
 public:
-    ProgFilter();
-    ~ProgFilter();
-}
-;//end of class ProgFilter
+    /** Filenames */
+    FileName fnDir, fnSym, fnInit;
 
 
+    /** Sampling rate of the volume and projections */
+    //double sampling_rate   //COMMENTED
 
 
+public:
+
+    void readParams();
+
+    void defineParams();
+
+    void run();
+
+private:
+    void obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
+
+    void obtainSumW(const MetaData & tempMd,std::vector<double> & sum_W,std::vector<double> & sum_u,std::vector<double> & H);
+
+    void writeparams();
+
+    void H0andHk_calculus(FileName &fnMd_signif,FileName &fnMdProj_signif,
+    		FileName &fnMd,FileName &fnMdProj, MetaData &mdOut);
+
+};
+#endif /* MULTIREFERENCE_ALIGNEABILITY_H_ */

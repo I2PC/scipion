@@ -688,7 +688,7 @@ def runCreateOutpuStep(self):
         
         classes = self._createSetOfClasses3D(imgSet)
         clsSet = SetOfClasses3D(dataClasses)
-        classes3DSet.appendFromClasses(classes, clsSet)
+        classes.appendFromClasses(clsSet)
         
         volumes = self._createSetOfVolumes()
         volumes.setSamplingRate(imgSet.getSamplingRate())

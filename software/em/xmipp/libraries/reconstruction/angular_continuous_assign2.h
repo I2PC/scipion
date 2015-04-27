@@ -27,6 +27,7 @@
 #define _PROG_ANGULAR_PREDICT_CONTINUOUS2
 
 #include <data/xmipp_program.h>
+#include <data/ctf.h>
 #include "fourier_projection.h"
 #include "fourier_filter.h"
 
@@ -39,6 +40,8 @@ class ProgAngularContinuousAssign2: public XmippMetadataProgram
 public:
     /** Filename of the reference volume */
     FileName fnVol;
+    /** Filename of residuals */
+    FileName fnResiduals;
     /** Maximum shift allowed */
     double maxShift;
     /** Maximum scale allowed */
@@ -61,8 +64,14 @@ public:
     bool optimizeScale;
     // Optimize angles
     bool optimizeAngles;
+    // Optimize defocus
+    bool optimizeDefocus;
     // Apply transformation to this image
     String originalImageLabel;
+    // Phase Flipped
+    bool phaseFlipped;
+    // Penalization for the average
+    double penalization;
 public:
     // 2D mask in real space
     MultidimArray<int> mask2D;
@@ -86,6 +95,14 @@ public:
     double old_rot, old_tilt, old_psi;
     // Original shift
 	double old_shiftX, old_shiftY;
+	// Has CTF
+	bool hasCTF;
+	// Original defocus
+	double old_defocusU, old_defocusV, old_defocusAngle;
+	// CTF
+	CTFDescription ctf;
+	// Covariance matrices
+	Matrix2D<double> C0, C;
 public:
     /// Empty constructor
     ProgAngularContinuousAssign2();
@@ -101,6 +118,9 @@ public:
 
     /// Define parameters
     void defineParams();
+
+    /** Start processing */
+    void startProcessing();
 
     /** Produce side info.
         An exception is thrown if any of the files is not found*/

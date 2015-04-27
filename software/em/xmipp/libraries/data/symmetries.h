@@ -418,8 +418,14 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
                  const MultidimArray<int> &mask, int volume_no,
                  int grid_type);
 
-/** Symmetrize with a helical symmetry */
+/** Symmetrize with a helical symmetry. */
 void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
+		double rot0=0, MultidimArray<int> *mask=NULL);
+
+/** Symmetrize with a helical symmetry Low resolution.
+ * This function applies the helical symmetry in such a way that only the low resolution information is kept (i.e.,
+ * the general shape of the helices). */
+void symmetry_HelicalLowRes(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
 		double rot0=0, MultidimArray<int> *mask=NULL);
 
 //@}

@@ -35,6 +35,13 @@ from datetime import datetime
 
 Import('env')
 
+
+AddOption('--no-opencv', dest='opencv', action='store_false', default=True,
+          help='Avoid compilation of opencv programs')
+AddOption('--no-scipy', dest='scipy', action='store_false', default=True,
+          help='Avoid compilation with scipy support')
+
+
 # Define some variables used by Scons. Note that some of
 # the variables will be passed by Scipion in the environment (env).
 
@@ -45,10 +52,9 @@ get = lambda x: os.environ.get(x, '0').lower() in ['true', 'yes', 'y', '1']
 
 gtest = get('GTEST')
 cuda = get('CUDA')
-release = get('RELEASE')
 debug = get('DEBUG')
 matlab = get('MATLAB')
-opencv = get('OPENCV')
+opencv = env.GetOption('opencv') and get('OPENCV')
 
 if 'MATLAB' in os.environ:
     # Must be removed to avoid problems in Matlab compilation.
@@ -346,9 +352,10 @@ xmippTest = env.AddJavaLibrary(
 #env.Default(pluginLink)
 
 
-# For any yet unkown issue, using the environment used for the rest of the SCons is imposible to compile java code
-# FIXME: Its needed to guess why and correct this. In the meanwhile we'll use an alternative environment
-env2 = Environment()
+# FIXME: the environment used for the rest of SCons is imposible to
+# use to compile java code. Why?
+# In the meanwhile we'll use an alternative environment.
+env2 = Environment(ENV=os.environ)
 env2.AppendUnique(JAVACLASSPATH='"%s/*"' % dpath('java/lib'))
 javaExtraFileTypes = env2.Java(epath('java/build/HandleExtraFileTypes.class'),
                                fpath('java/src/HandleExtraFileTypes.java'))
@@ -485,6 +492,8 @@ for p in ['angular_break_symmetry',
           'ctf_show',
           'ctf_sort_psds',
 
+          'idr_xray_tomo',
+
           'flexible_alignment',
           'image_align',
           'image_align_tilt_pairs',
@@ -498,8 +507,8 @@ for p in ['angular_break_symmetry',
           'image_residuals',
           'image_resize',
           'image_rotational_spectra',
-          'image_sort_by_statistics',
           'image_separate_objects',
+          'image_sort_by_statistics',
           'image_ssnr',
           'image_statistics',
           'image_vectorize',
@@ -520,6 +529,7 @@ for p in ['angular_break_symmetry',
           'mlf_refine3d',
           'ml_tomo',
           'mrc_create_metadata',
+          'multireference_aligneability',
           'nma_alignment',
           'nma_alignment_vol',
 
@@ -532,12 +542,15 @@ for p in ['angular_break_symmetry',
           'phantom_simulate_microscope',
           'phantom_transform',
 
+          'reconstruct_admm',
           'reconstruct_art',
           'reconstruct_art_pseudo',
+          'reconstruct_art_xray',
           'reconstruct_fourier',
           'reconstruct_significant',
           'reconstruct_wbp',
           'resolution_fsc',
+          'resolution_ibw',
           'resolution_ssnr',
           'score_micrograph',
 
@@ -557,14 +570,17 @@ for p in ['angular_break_symmetry',
           'transform_symmetrize',
           'transform_threshold',
           'transform_window',
+          'tomo_align_dual_tilt_series',
+          'tomo_align_refinement',
 
           'tomo_align_tilt_series',
           'tomo_detect_missing_wedge',
           'tomo_project',
           'tomo_remove_fluctuations',
           'tomo_extract_subvolume',
+          'validation_nontilt',
 
-          #'volume_align_prog',
+          #'volume_align_prog',  ['XmippInterface']),  --> it is done elsewhere
           'volume_center',
           'volume_correct_bfactor',
           'volume_enhance_contrast',
@@ -610,6 +626,7 @@ for p in ['angular_break_symmetry',
           'mpi_reconstruct_fourier',
           'mpi_reconstruct_wbp',
           'mpi_reconstruct_significant',
+          'mpi_reconstruct_admm',
           'mpi_run',
           'mpi_tomo_extract_subvolume',
           'mpi_transform_filter',
@@ -619,6 +636,7 @@ for p in ['angular_break_symmetry',
           'mpi_transform_normalize',
           'mpi_transform_threshold',
           'mpi_xray_project',
+          'mpi_write_test',
 
           # Unittest for Xmipp libraries
           'test_ctf',
@@ -672,19 +690,6 @@ if opencv:
         addProg('optical_alignment_gpu',
                 libs=opencvLibs,
                 deps=['opencv'], cuda=True)
-
-# Some special programs not ready for release
-if not release:
-    for p in ['idr_xray_tomo',
-              'reconstruct_art_xray',
-              'resolution_ibw',
-              'tomo_align_dual_tilt_series',
-              'tomo_align_refinement',
-              #'xray_volume_correct',
-              'mpi_write_test'
-              ]:
-        addProg(p)
-
 
 
 #  ***********************************************************************

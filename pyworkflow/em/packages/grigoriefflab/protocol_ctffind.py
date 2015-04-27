@@ -80,7 +80,6 @@ class ProtCTFFind(ProtCTFMicrographs):
             raise
         cleanPath(micFnMrc)
     
-    #--------------------------- STEPS functions ---------------------------------------------------
     def _restimateCTF(self, id):
         """ Run ctffind3 with required parameters """
 

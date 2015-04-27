@@ -30,7 +30,7 @@ import sys
 import time
 from glob import glob
 
-from subprocess import STDOUT, check_call, CalledProcessError
+from subprocess import STDOUT, call
 #Python 3 compatibility: How to overcome Python NameError: name 'basestring' is not defined
 try:
     unicode = unicode
@@ -69,12 +69,16 @@ def progInPath(prog):
 def checkLib(lib, target=None):
     """ See if we have library lib """
     try:
-        check_call(['pkg-config', '--cflags', '--libs', lib],
+        ret = call(['pkg-config', '--cflags', '--libs', lib],
                    stdout=open(os.devnull, 'w'), stderr=STDOUT)
-    except (CalledProcessError, OSError) as e:
+        if ret != 0:
+            raise OSError
+    except OSError, e:
         try:
-            check_call(['%s-config' % lib, '--cflags'])
-        except (CalledProcessError, OSError) as e:
+            ret = call(['%s-config' % lib, '--cflags'])
+            if ret != 0:
+                raise OSError
+        except OSError, e:
             print("""
   ************************************************************************
     Warning: %s not found. Please consider installing it first.
@@ -88,7 +92,7 @@ Continue anyway? (y/n)""" % lib)
 
 
 
-class Command():
+class Command:
     def __init__(self, env, cmd, targets=None,  **kwargs):
         self._env = env
         self._cmd = cmd
@@ -103,6 +107,7 @@ class Command():
         self._cwd = kwargs.get('cwd', None)
         self._out = kwargs.get('out', None)
         self._always = kwargs.get('always', False)
+        self._environ = kwargs.get('environ', None)
 
     def _existsAll(self):
         """ Return True if all targets exist. """
@@ -132,7 +137,7 @@ class Command():
                 if callable(self._cmd):
                     self._cmd()
                 else: # if not, we assume is a command and we make a system call
-                    os.system(cmd)
+                    call(cmd, shell=True, env=self._environ)
             # Return to working directory, useful
             # when changing dir before executing command
             os.chdir(cwd)
@@ -145,7 +150,7 @@ class Command():
         return "Command: %s, targets: %s" % (self._cmd, self._targets)
 
 
-class Target():
+class Target:
     def __init__(self, env, name, *commands, **kwargs):
         self._env = env
         self._name = name
@@ -203,7 +208,7 @@ class Target():
         return self._name
 
 
-class Environment():
+class Environment:
 
     def __init__(self, **kwargs):
         self._targetList = []
@@ -344,7 +349,7 @@ class Environment():
 
         configPath = os.path.join('software/tmp', configDir)
         makeFile = '%s/%s' % (configPath, configTarget)
-        prefixPath = os.path.abspath('software')
+        prefix = os.path.abspath('software')
 
         # If we specified the commands to run to obtain the target,
         # that's the only thing we will do.
@@ -356,37 +361,38 @@ class Environment():
         # If we didnt' specify the commands, we can either compile
         # with autotools (so we have to run "configure") or cmake.
         if not cmake:
-            flags.append('--prefix=%s' % prefixPath)
-            flags.append('--libdir=%s/lib' % prefixPath)
+            flags.append('--prefix=%s' % prefix)
+            flags.append('--libdir=%s/lib' % prefix)
 
+            environ = os.environ.update({'CPPFLAGS': '-I%s/include' % prefix,
+                                         'LDFLAGS': '-L%s/lib' % prefix})
             t.addCommand('./configure %s' % ' '.join(flags),
-                         targets=makeFile,
-                         cwd=configPath,
-                         out='%s/log/%s_configure.log' % (prefixPath, name),
-                         always=configAlways)
+                         targets=makeFile, cwd=configPath,
+                         out='%s/log/%s_configure.log' % (prefix, name),
+                         always=configAlways, environ=environ)
         else:
             assert progInPath('cmake'), ("Cannot run 'cmake'. Please install "
                                          "it in your system first.")
-            flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefixPath)
+            flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefix)
             t.addCommand('cmake %s' % ' '.join(flags),
                          targets=makeFile,
                          cwd=configPath,
-                         out='%s/log/%s_cmake.log' % (prefixPath, name))
+                         out='%s/log/%s_cmake.log' % (prefix, name))
 
         t.addCommand('make -j %d' % self._processors,
                      cwd=t.buildPath,
-                     out='%s/log/%s_make.log' % (prefixPath, name))
+                     out='%s/log/%s_make.log' % (prefix, name))
 
         t.addCommand('make install',
                      targets=targets,
                      cwd=t.buildPath,
-                     out='%s/log/%s_make_install.log' % (prefixPath, name),
+                     out='%s/log/%s_make_install.log' % (prefix, name),
                      final=True)
 
         if clean:
             t.addCommand('make clean',
                          cwd=t.buildPath,
-                         out='%s/log/%s_make_clean.log' % (prefixPath, name))
+                         out='%s/log/%s_make_clean.log' % (prefix, name))
             t.addCommand('rm %s' % makeFile)
 
         return t
@@ -551,7 +557,7 @@ class Environment():
             self._executeTargets(targetList)
             
         
-class Link():
+class Link:
     def __init__(self, packageLink, packageFolder):
         self._packageLink = packageLink
         self._packageFolder = packageFolder

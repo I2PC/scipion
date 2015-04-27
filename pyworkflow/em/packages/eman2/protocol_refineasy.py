@@ -275,8 +275,6 @@ at each refinement step. The resolution you specify is a target, not the filter 
         self.runJob(program, args, cwd=self._getExtraPath())
     
     def createOutputStep(self):
-        from pyworkflow.utils.path import cleanPath
-        
         iterN = self.numberOfIterations.get()
         partSet = self._getInputParticles()
         numRun = self._getRun()
@@ -285,17 +283,8 @@ at each refinement step. The resolution you specify is a target, not the filter 
         vol.setFileName(self._getFileName("volume",run=numRun, iter=iterN))
         vol.copyInfo(partSet)
         
-        clsFn = self._getFileName("cls", run=numRun, iter=iterN)
-        classesFn = self._getFileName("classes", run=numRun, iter=iterN)
-        angles = self._getFileName('angles', iter=iterN)
+        self._execEmanProcess(numRun, iterN)
         
-        if exists(angles):
-            cleanPath(angles)
-        proc = createEmanProcess(args='read %s %s %s %s'
-                                 % (self._getParticlesStack(), clsFn, classesFn,
-                                    self._getBaseName('angles', iter=iterN)),
-                                 direc=self._getExtraPath())
-        proc.wait()
         newPartSet = self._createSetOfParticles()
         newPartSet.copyInfo(partSet)
         newPartSet.setAlignment(em.ALIGN_PROJ)
@@ -458,3 +447,17 @@ at each refinement step. The resolution you specify is a target, not the filter 
         if self.doContinue:
             self.haveDataBeenPhaseFlipped.set(self.continueRun.get().haveDataBeenPhaseFlipped.get())
         return self.haveDataBeenPhaseFlipped.get()
+    
+    def _execEmanProcess(self, numRun, iterN):
+        from pyworkflow.utils.path import cleanPath
+        clsFn = self._getFileName("cls", run=numRun, iter=iterN)
+        classesFn = self._getFileName("classes", run=numRun, iter=iterN)
+        angles = self._getFileName('angles', iter=iterN)
+        
+        if not exists(angles) and exists(self._getFileName('clsEven', run=numRun, iter=iterN)):
+            proc = createEmanProcess(args='read %s %s %s %s'
+                                     % (self._getParticlesStack(), clsFn, classesFn,
+                                        self._getBaseName('angles', iter=iterN)),
+                                     direc=self._getExtraPath())
+            proc.wait()
+

@@ -1,0 +1,45 @@
+
+ GLO [unaligned_images]       = 'input02/data003'                      ; Unaligned images stack (usually links)
+ GLO [next_group_align]       = 'input02/align_01_003'    ; Alignment parameter output file 
+ GLO [next_group_vol]         = 'volume'       ; Next group volumes   
+
+; ----------------- END BATCH HEADER ---------------------------------
+
+; Get number of images 
+ FI H [maxim],[nx],[ny]             ; Find total number of images (not [numparts])
+   [unaligned_images]@;             ; Input file needed                 (input)
+   MAXIM,NX,NY                      ; Max. image number, image size
+
+; Copy to inline file to increase access speed a little
+ ; Note: If INLN_WRTLIN ARRAY OVERFLOWS,  remove: _8@ and just use [unaligned_images]@     
+ CP                                 ; Copy unaligned images to inline stack
+   [unaligned_images]@              ; Input file needed                (input)
+   _8@                              ; Unaligned images stack           (output)
+   [maxim]                          ; Number of images in stack _8@
+
+ ; Apply new alignments to original particle images
+ RT SF                          ; Rotate & shift operation
+   [unaligned_images]@******    ; Unaligned original stacked images 
+   1-[maxim]              ; Particle selection file            (input) 
+   6,0,7,8                      ; Reg. #s for angle, scale, & shift
+   [next_group_align]           ; Alignment parameter doc file       (input)
+   _8@******                    ; Current aligned images             (output)
+ 
+ ; Calculate new, refined volume using centered projections and 
+ ; angles from align doc. file.  Creates two additional volumes from 
+ ; random half subsets of images for use in resolution calculation.
+
+ ; (If you have large images which give problems allocating memory in 'BP 32F', 
+ ;     substitute operation 'BP 3F'.  Use that operation three times (with 3 
+ ;     appropriate selection files for the images to be included) to create 
+ ;     the three output volumes one by one.)
+ BP 32F                         ; Back Projection - 3D Fourier
+   _8@******                    ; Current aligned images template     (input)
+   1-[maxim]              ; Particle selection doc file         (input)
+   [next_group_align]           ; Alignment parameter doc file        (input)
+   *                            ; No symmetries  
+   [next_group_vol]             ; Reconstructed group vol - overall   (output)
+   [next_group_vol]_sub1        ; Reconstructed group vol - subset 1  (output)
+   [next_group_vol]_sub2        ; Reconstructed group vol - subset 2  (output)
+
+EN

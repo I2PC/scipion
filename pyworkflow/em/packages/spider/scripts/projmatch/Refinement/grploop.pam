@@ -119,7 +119,7 @@
  ; Find reference projection matching current aligned image
  ;   (For large images change 'skip' to 2 or 3 to decrease memory)
  
- IF ([iter] .LE. 2) THEN
+ IF ([iter] .LE. 99) THEN
    AP SHC                           ; (Can change this)  
      [temp_ref_projs]@******        ; Template for ref. projections    (input)
      1-[num-refs]                   ; Ref. projection file numbers
@@ -179,13 +179,13 @@
    [next_group_align]           ; Alignment parameter doc file       (input)
    _8@******                    ; Current aligned images             (output)
  
-  ; Soft masking of particle prior to back projection
-  MUL 2
-   [temp_gmask]                      ; Mask image                 (input)
-    _8@*                        ; Template for image series  (input)   
-   [sel_particles]              ; Particle selection file            (input) 
-    _8@*                        ; Template for image series  (output)   
-   [sel_particles]              ; Particle selection file            (input) 
+;  ; Soft masking of particle prior to back projection
+;  MUL 2
+;   [temp_gmask]                      ; Mask image                 (input)
+;    _8@*                        ; Template for image series  (input)   
+;   [sel_particles]              ; Particle selection file            (input) 
+;    _8@*                        ; Template for image series  (output)   
+;   [sel_particles]              ; Particle selection file            (input) 
 
  
  VM                             ; Echo for isolating stack overflow

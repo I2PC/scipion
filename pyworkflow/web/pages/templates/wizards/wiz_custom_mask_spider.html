@@ -5,10 +5,10 @@
 	<script type="text/javascript" src="{{raphael}}"></script>
 	<script>
 		function returnParams(){
-			putSelection('input#firstRadius_val', '{{params.label.0}}_input');
-			putSelection('input#sdFactor_val', '{{params.label.1}}_input');
-			putSelection('input#secondRadius_val', '{{params.label.2}}_input');
-			putSelection('input#maskThreshold_val', '{{params.label.3}}_input');
+			putSelection('input#firstRadius_val', '{{params.label.2}}_input');
+			putSelection('input#sdFactor_val', '{{params.label.0}}_input');
+			putSelection('input#secondRadius_val', '{{params.label.3}}_input');
+			putSelection('input#maskThreshold_val', '{{params.label.1}}_input');
 		};
 		
 		function previewCustomMask(){
@@ -94,21 +94,21 @@
 	<tr>
 		<td>
 			First Radius
-			<input id="firstRadius_val" type="text" value="{{params.value.0}}"/>
+			<input id="firstRadius_val" type="text" value="{{params.value.2}}"/>
 		</td>
 		<td>
 			First Threshold
-			<input id="sdFactor_val" type="text" value="{{params.value.1}}"/>
+			<input id="sdFactor_val" type="text" value="{{params.value.0}}"/>
 		</td>
 	</tr>
 	<tr>
 		<td>
 			Second Radius
-			<input id="secondRadius_val" type="text" value="{{params.value.2}}"/>
+			<input id="secondRadius_val" type="text" value="{{params.value.3}}"/>
 		</td>
 		<td>
 			Mask Threshold
-			<input id="maskThreshold_val" type="text" value="{{params.value.3}}"/>
+			<input id="maskThreshold_val" type="text" value="{{params.value.1}}"/>
 		</td>
 	</tr>
 	<tr>

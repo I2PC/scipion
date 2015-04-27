@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     J.M.de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+ * Authors:     AUTHOR_NAME (jlvilas@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -23,31 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/xmipp_program.h>
-#include <data/filters.h>
+#include <reconstruction/multireference_aligneability.h>
 
-/** Apply some filter operation on images, or selfiles */
-class ProgFilter: public XmippMetadataProgram
+int main(int argc, char **argv)
 {
-private:
-    ///Pointers to selected operation
-    XmippFilter * filter;
-
-    // Read CTF
-    bool readCTF;
-
-protected:
-    void defineParams();
-    void readParams();
-    void preProcess();
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
-
-public:
-    ProgFilter();
-    ~ProgFilter();
+	MultireferenceAligneability prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }
-;//end of class ProgFilter
-
-
-
-
