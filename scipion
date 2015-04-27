@@ -369,7 +369,7 @@ def main():
                 if fname.startswith('xmipp.') and fname.endswith('.template'):
                     out = join(PACKAGES['XMIPP_HOME'], fname[:-len('.template')])
                     if exists(out):
-                        print(yellow("File %s exists -- keeping it." % out))
+                        print(yellow("Keeping existing file: %s" % out))
                         continue
                     print(yellow("Writing sourceable shell file: %s" % out))
                     open(out, 'w').write(open(join(tDir, fname)).read() % VARS)
