@@ -121,7 +121,20 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
 
         #form.addParallelSection(threads=0, mpi=0)
         form.addParallelSection(threads=2, mpi=1)
-    
+
+    def _insertAllSteps(self):
+        #ROB: deal with the case in which sampling rate use for picking and movies
+        #is different
+        inputCoords = self.inputCoordinates.get()
+        #coordinates sampling mic used for picking
+        samplingCoords = inputCoords.getMicrographs().getSamplingRate()
+        #coordinates sampling input mic
+        samplingMic    = self.inputMovies.get().getSamplingRate()
+        factor = samplingMic / samplingCoords
+        #factor = samplingCoords / samplingMic
+        ProtProcessMovies._insertAllSteps(factor)
+
+
     #--------------------------- STEPS functions --------------------------------------------------
     def _processMovie(self, movieId, movieName, movieFolder,shifts,factor):###pasar shifts
         
