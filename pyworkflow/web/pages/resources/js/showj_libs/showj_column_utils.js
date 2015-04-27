@@ -94,9 +94,10 @@ function getColumnsDefinition(){
 //				dataRowForTable["sClass"]= sClass_Tmp +" editable"
 //			} 
 //		} 
-		
+
  		if(!columnLayoutConfiguration.columnLayoutProperties.visible){
-			dataRowForTable["bVisible"] = false
+ 			
+ 			dataRowForTable["bVisible"] = false
 		} 
 		
 		dataRowForTable["sTitle"]= i
