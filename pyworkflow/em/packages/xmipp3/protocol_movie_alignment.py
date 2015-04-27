@@ -29,7 +29,8 @@
 In this module are protocol base classes related to EM Micrographs
 """
 
-from os.path import join, exists
+import sys
+from os.path import join
 
 from pyworkflow.object import String
 from pyworkflow.protocol.params import IntParam, StringParam, BooleanParam, LEVEL_ADVANCED, LEVEL_ADVANCED, EnumParam
@@ -207,7 +208,7 @@ class ProtMovieAlignment(ProtProcessMovies):
 
     #--------------------------- UTILS functions ---------------------------------------------------
 
-    def _processMovie(self, movieId, movieName, movieFolder,shifts):
+    def _processMovie(self, movieId, movieName, movieFolder):
         """ Process the movie actions, remember to:
         1) Generate all output files inside movieFolder (usually with cwd in runJob)
         2) Copy the important result files after processing (movieFolder will be deleted!!!)
@@ -233,7 +234,6 @@ class ProtMovieAlignment(ProtProcessMovies):
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
-                import sys
                 print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
 
         # For DosefGPU Execution (and combination with optical flow)
@@ -264,7 +264,6 @@ class ProtMovieAlignment(ProtProcessMovies):
                 self.runJob(program, command, cwd=movieFolder,
                             env=dosefgpu.getEnviron())
             except:
-                import sys
                 print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
 
 
@@ -287,7 +286,6 @@ class ProtMovieAlignment(ProtProcessMovies):
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
-                import sys
                 print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
             if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
                 moveFile(join(movieFolder, metadataName), self._getExtraPath())
@@ -313,7 +311,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         elif alMethod == AL_DOSEFGPU:
             return 'dosefgpu_driftcorr'
 
-  #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
         numThreads = self.numberOfThreads;
