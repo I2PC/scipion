@@ -94,8 +94,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             #if the object is accessed inside at the same time by multiple threads
             #NOTE self.applyAlignment only exists in extract movies
             try:
-                if self.applyAlignment and movie.hasAlignment():
-                    shifts = movie.getAlignment().getShifts()
+                if movie.hasAlignment():
+                    if self.applyAlignment:
+                        shifts = movie.getAlignment().getShifts()
                 else:
                     #TODO: I do not think this option is ever used
                     # Read movie dimensions to iterate through each frame
