@@ -76,16 +76,16 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                            'If set to *No*, the folder will not be deleted.')
 
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-        #ROB: deal with the case in which sampling rate use for picking and movies
-        #is different
-        inputCoords = self.inputCoordinates.get()
-        #coordinates sampling mic used for picking
-        samplingCoords = inputCoords.getMicrographs().getSamplingRate()
-        #coordinates sampling input mic
-        samplingMic    = self.inputMovies.get().getSamplingRate()
-        factor = samplingMic / samplingCoords
-        #factor = samplingCoords / samplingMic
+    def _insertAllSteps(self, factor=1.0):
+#        #ROB: deal with the case in which sampling rate use for picking and movies
+#        #is different
+#        inputCoords = self.inputCoordinates.get()
+#        #coordinates sampling mic used for picking
+#        samplingCoords = inputCoords.getMicrographs().getSamplingRate()
+#        #coordinates sampling input mic
+#        samplingMic    = self.inputMovies.get().getSamplingRate()
+#        factor = samplingMic / samplingCoords
+#        #factor = samplingCoords / samplingMic
 
         allMovies = []
         for movie in self.inputMovies.get():
