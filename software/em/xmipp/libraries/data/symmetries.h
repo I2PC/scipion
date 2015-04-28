@@ -428,5 +428,8 @@ void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &
 void symmetry_HelicalLowRes(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
 		double rot0=0, MultidimArray<int> *mask=NULL);
 
+/** Find dihedral symmetry and apply it */
+void symmetry_Dihedral(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double rotStep=1,
+		double zmin=-3, double zmax=3, double zStep=0.5, MultidimArray<int> *mask=NULL);
 //@}
 #endif
