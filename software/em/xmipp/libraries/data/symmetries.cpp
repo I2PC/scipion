@@ -2851,7 +2851,7 @@ double interpolatedElement3DHelical(const MultidimArray<double> &Vin, double x, 
 }
 
 void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
-                      double rot0, MultidimArray<int> *mask)
+                      double rot0, MultidimArray<int> *mask, bool dihedral)
 {
     Vout.initZeros(Vin);
     double izHelical=1.0/zHelical;
@@ -2875,6 +2875,11 @@ void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &
             jp*=rho;
             finalValue+=interpolatedElement3DHelical(Vin,jp,ip,kp,zHelical);
             L+=1.0;
+            if (dihedral)
+            {
+                finalValue+=interpolatedElement3DHelical(Vin,jp,-ip,-kp,zHelical);
+                L+=1.0;
+            }
         }
         A3D_ELEM(Vout,k,i,j)=finalValue/L;
     }
