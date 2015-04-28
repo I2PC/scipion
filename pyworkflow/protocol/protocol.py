@@ -909,6 +909,7 @@ class Protocol(Step):
         if 'env' not in kwargs:
             #self._log.info("calling self._getEnviron...")
             kwargs['env'] = self._getEnviron()
+            print "Executing with env:", kwargs['env']
                        
         #self._log.info("runJob: cwd = %s" % kwargs.get('cwd', ''))
         #self._log.info("runJob: env = %s " % str(kwargs['env']))
