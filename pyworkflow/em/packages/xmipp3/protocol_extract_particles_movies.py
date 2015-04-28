@@ -121,7 +121,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
 
         #form.addParallelSection(threads=0, mpi=0)
         form.addParallelSection(threads=2, mpi=1)
-    
+
     def _insertAllSteps(self):
         #ROB: deal with the case in which sampling rate use for picking and movies
         #is different
