@@ -200,7 +200,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
         if partSet.hasCTF():
             program = getEmanProgram('e2ctf.py')
             acq = partSet.getAcquisition()
-             
+            
             args = " --voltage %3d" % acq.getVoltage()
             args += " --cs %f" % acq.getSphericalAberration()
             args += " --ac %f" % (100 * acq.getAmplitudeContrast())
@@ -210,7 +210,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
             self.runJob(program, args, cwd=self._getExtraPath())
         
         program = getEmanProgram('e2buildsets.py')
-        args = " --setname=inputSet --allparticles --minhisnr=-1"
+        args = " --setname=inputSet --allparticles"# --minhisnr=-1"
         self.runJob(program, args, cwd=self._getExtraPath())
     
     def reconstructVolumeStep(self, args):

@@ -364,8 +364,9 @@ class Environment:
             flags.append('--prefix=%s' % prefix)
             flags.append('--libdir=%s/lib' % prefix)
 
-            environ = os.environ.update({'CPPFLAGS': '-I%s/include' % prefix,
-                                         'LDFLAGS': '-L%s/lib' % prefix})
+            environ = os.environ.copy()
+            environ.update({'CPPFLAGS': '-I%s/include' % prefix,
+                            'LDFLAGS': '-L%s/lib' % prefix})
             t.addCommand('./configure %s' % ' '.join(flags),
                          targets=makeFile, cwd=configPath,
                          out='%s/log/%s_configure.log' % (prefix, name),
@@ -431,9 +432,14 @@ class Environment:
     #               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
     # The CFLAGS line is commented out because even if it is needed for modules
     # like libxml2, it causes problems for others like numpy and scipy (see for
-    # example http://mail.scipy.org/pipermail/scipy-user/2007-January/010773.html)
+    # example https://github.com/numpy/numpy/issues/2411
 
-    # TODO: actually, to compile against numpy (as cryoem does), one
+    # Yes, that behavior of numpy is *crazy*. We now modify the
+    # original source, and it should be safe to use our CFLAGS and
+    # LDFLAGS. TODO: actually use them again, and check that all the
+    # compilation works fine.
+
+    # TODO: to compile against numpy (as cryoem does), one
     # needs to have:
     #   software/lib/python2.7/site-packages/numpy/core/include
     #   software/lib/python2.7/site-packages/numpy/core/include/numpy

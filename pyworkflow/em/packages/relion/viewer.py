@@ -138,13 +138,15 @@ Examples:
         group = form.addGroup('Particles')
         if self.protocol.IS_CLASSIFY:
 
-            group.addParam('showImagesInClasses', LabelParam, default=True,
+            group.addParam('showImagesInClasses', LabelParam, 
                           label='Particles assigned to each Class',
                           help='Display the classes and the images associated.')
             changesLabel = 'Changes in Offset, Angles and Classes'
         else:
-            group.addParam('showImagesAngularAssignment', LabelParam, default=True,
+            group.addParam('showImagesAngularAssignment', LabelParam, 
                            label='Particles angular assignment')
+        group.addParam('showOptimiserFile', LabelParam, 
+                       label='Show optimizer file')
         
         if self.protocol.IS_3D:
             group = form.addGroup('Volumes')
@@ -206,6 +208,7 @@ Examples:
         self._load()
         return {'showImagesInClasses': self._showImagesInClasses,
                 'showImagesAngularAssignment' : self._showImagesAngularAssignment,
+                'showOptimiserFile': self._showOptimiserFile,
                 'showLL': self._showLL,
                 'showPMax': self._showPMax,
                 'showChanges': self._showChanges,
@@ -240,7 +243,6 @@ Examples:
 # showImagesAngularAssignment     
 #===============================================================================
     def _showImagesAngularAssignment(self, paramName=None):
-        
         views = []
         
         for it in self._iterations:
@@ -250,6 +252,14 @@ Examples:
         
         return views
     
+    def _showOptimiserFile(self,  paramName=None):
+        views = []
+        
+        for it in self._iterations:
+            optimiserFile = self.protocol._getFileName('optimiser', iter=it)
+            v = self.createDataView(optimiserFile)
+            views.append(v)
+        return views
 #=====================================================================
 # showLLRelion
 #=====================================================================
@@ -535,7 +545,7 @@ Examples:
             return ['There are not iterations completed.'] 
     
     def createDataView(self, filename, viewParams={}):
-        return em.DataView(filename, env=self._env, viewParams=viewParams)
+        return em.DataView(filename, viewParams=viewParams)
 
     def createScipionView(self, filename, viewParams={}):
 
@@ -543,7 +553,7 @@ Examples:
         ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
         view = ViewClass(self._project,
                           self.protocol.strId(), filename, other=inputParticlesId,
-                          env=self._env, viewParams=viewParams)
+                          viewParams=viewParams)
 
         return view
 
@@ -557,7 +567,7 @@ Examples:
                       }
         return em.ObjectView(self._project, 
                           self.protocol.strId(), filename, other=inputParticlesId,
-                          env=self._env, viewParams=viewParams)
+                          viewParams=viewParams)
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
