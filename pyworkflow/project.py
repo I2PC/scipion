@@ -511,10 +511,17 @@ class Project(object):
         Used from self.copyProtocol
         """
         matches = []
-        for oKey, oAttr in node.run.iterOutputAttributes(em.EMObject):
-            for iKey, iAttr in childNode.run.iterInputAttributes():
-                if oAttr is iAttr.get():
+        for iKey, iAttr in childNode.run.iterInputAttributes():
+            value = iAttr.get()
+            if value is None:
+                if iAttr.getObjValue() is node.run:
+                    oKey = iAttr.getExtendedValue()
                     matches.append((oKey, iKey))
+            else:
+                for oKey, oAttr in node.run.iterOutputAttributes(em.EMObject):
+                    if oAttr is iAttr.get():
+                        matches.append((oKey, iKey))
+                
         
         return matches                    
         
@@ -550,14 +557,13 @@ class Project(object):
                     if newChildProt:
                         # Get the matches between outputs/inputs of node and childNode
                         matches = self.__getIOMatches(node, childNode)
-                        #print "%s -> %s, matches: %s" % (prot.getRunName(), childNode.runmatches
                         # For each match, set the pointer and the extend attribute
                         # to reproduce the dependencies in the new workflow
                         for oKey, iKey in matches:
                             childPointer = getattr(newChildProt, iKey)
                             childPointer.set(newProt)
                             childPointer.setExtendedAttribute(oKey)
-                        self.mapper.store(newChildProt)                   
+                        self.mapper.store(newChildProt)  
 
             self.mapper.commit()
         else:

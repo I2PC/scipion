@@ -160,11 +160,14 @@ public class GalleryData {
     }
 
     public void selectVolumeAt(int selectedIndex) {
-    	String volfile = getVolumeAt(selectedIndex);
-    	if(new File(volfile).exists())
-    		selectedVolFn = volfile;
+    	String vol = getVolumeAt(selectedIndex);
+    	String file = vol;
+    	if (vol.contains(":"))
+    		file = vol.substring(0, vol.lastIndexOf(":"));
+    	if(new File(file).exists())
+    		selectedVolFn = vol;
     	else
-    		throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(volfile));
+    		throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(file));
     }
 
     public boolean isAutoAdjust()

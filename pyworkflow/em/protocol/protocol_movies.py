@@ -32,11 +32,11 @@ In this module are protocol base classes related to EM Micrographs
 
 from os.path import join, basename, exists
 
-from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_ADVANCED
+from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
 from pyworkflow.protocol.constants import STEPS_PARALLEL
-from pyworkflow.utils.path import createLink, removeBaseExt, makePath, cleanPath, moveFile, getExt
+from pyworkflow.utils.path import createLink, removeBaseExt, makePath, cleanPath
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.data import Micrograph
+from pyworkflow.em.convert import ImageHandler
 
 from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
@@ -45,6 +45,7 @@ from protocol_particles import ProtExtractParticles
 
 PLOT_CART = 0
 PLOT_POLAR = 1
+
 
 class ProtProcessMovies(ProtPreprocessMicrographs):
     """
@@ -76,52 +77,26 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                            'If set to *No*, the folder will not be deleted.')
 
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self, factor=1.0):
-#        #ROB: deal with the case in which sampling rate use for picking and movies
-#        #is different
-#        inputCoords = self.inputCoordinates.get()
-#        #coordinates sampling mic used for picking
-#        samplingCoords = inputCoords.getMicrographs().getSamplingRate()
-#        #coordinates sampling input mic
-#        samplingMic    = self.inputMovies.get().getSamplingRate()
-#        factor = samplingMic / samplingCoords
-#        #factor = samplingCoords / samplingMic
-
-        allMovies = []
-        for movie in self.inputMovies.get():
-
-            #retrive shifts here so there is no conflict
-            #if the object is accessed inside at the same time by multiple threads
-            #NOTE self.applyAlignment only exists in extract movies
-            try:
-                if movie.hasAlignment():
-                    if self.applyAlignment:
-                        shifts = movie.getAlignment().getShifts()
-                else:
-                    #TODO: I do not think this option is ever used
-                    # Read movie dimensions to iterate through each frame
-                    from pyworkflow.em.convert import ImageHandler
-                    from os.path import join
-                    movieFolder = self._getMovieFolder(movie.getObjId())
-                    from os import getcwd
-                    movieName =  movie.getFileName()
-                    imgh = ImageHandler()
-                    x, y, z, n = imgh.getDimensions(movieName)
-                    shifts = [0] * (2*n)
-            except NameError:
-                shifts=None
-
-            ####end of thread
-
-            movieStepId = self._insertFunctionStep('processMovieStep',
-                                                   movie.getObjId(), movie.getFileName(),
-                                                   shifts, factor,
-                                                   prerequisites=[])
-            allMovies.append(movieStepId)
+    def _insertAllSteps(self):
+        # Build the list of all processMovieStep ids by 
+        # inserting each of the steps for each movie
+        allMovies = [self._insertMovieStep(movie) for movie in self.inputMovies.get()]
         self._insertFunctionStep('createOutputStep', prerequisites=allMovies)
 
+    def _insertMovieStep(self, movie):
+        """ Insert the processMovieStep for a given movie. """
+        # Note that at this point is safe to pass the movie, since this
+        # is not executed in parallel, here we get the params
+        # to pass to the actual step that is gone to be executed later on
+        movieStepId = self._insertFunctionStep('processMovieStep',
+                                               movie.getObjId(), movie.getFileName(),
+                                               prerequisites=[])  
+        
+        return movieStepId      
+        
+        
     #--------------------------- STEPS functions ---------------------------------------------------
-    def processMovieStep(self, movieId, movieFn,shifts, factor):
+    def processMovieStep(self, movieId, movieFn, *args):
         movieFolder = self._getMovieFolder(movieId)
         movieName = basename(movieFn)
         
@@ -144,7 +119,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 movieMrc = movieMrc + ":ems"
 
 
-            self._processMovie(movieId, movieMrc, movieFolder,shifts, factor)
+            self._processMovie(movieId, movieMrc, movieFolder, *args)
             
             if self.cleanMovieData:
                 cleanPath(movieFolder)
@@ -197,5 +172,6 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
     """ Extract a set of Particles from each frame of a set of Movies.
     """
     pass
-        
+
          
+

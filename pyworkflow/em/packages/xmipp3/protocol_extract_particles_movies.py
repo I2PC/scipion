@@ -130,13 +130,35 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         samplingCoords = inputCoords.getMicrographs().getSamplingRate()
         #coordinates sampling input mic
         samplingMic    = self.inputMovies.get().getSamplingRate()
-        factor = samplingMic / samplingCoords
+        self.factor = samplingMic / samplingCoords
         #factor = samplingCoords / samplingMic
-        ProtProcessMovies._insertAllSteps(factor)
+        ProtExtractMovieParticles._insertAllSteps(self)
 
 
+    def _insertMovieStep(self, movie):
+        # Redefine this function to add the shifts and factor
+        # to the processMovieStep function and run properly in parallel with threads
+
+        #retrive shifts here so there is no conflict
+        #if the object is accessed inside at the same time by multiple threads
+        if self.applyAlignment and movie.hasAlignment():
+            shifts = movie.getAlignment().getShifts()
+        else:
+            #TODO: I do not think this option is ever used
+            # Read movie dimensions to iterate through each frame
+            movieName =  movie.getFileName()
+            imgh = ImageHandler()
+            _, _, _, n = imgh.getDimensions(movieName)
+            shifts = [0] * (2*n)
+                 
+        movieStepId = self._insertFunctionStep('processMovieStep',
+                                               movie.getObjId(), movie.getFileName(),
+                                               shifts, prerequisites=[])  
+        
+        return movieStepId 
+    
     #--------------------------- STEPS functions --------------------------------------------------
-    def _processMovie(self, movieId, movieName, movieFolder,shifts,factor):###pasar shifts
+    def _processMovie(self, movieId, movieName, movieFolder, shifts):###pasar shifts
         
         movieName = os.path.join(movieFolder, movieName)
 
@@ -151,18 +173,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         if last == 0:
             last = n-1
         
-        #this section has been moved to the main part to avoid
-        # conflicts between threads
-        ###DELETE
-        #movie = self.inputMovies.get()[movieId]
-        #### move this to main
-        #if self.applyAlignment and movie.hasAlignment():
-        #    shifts = movie.getAlignment().getShifts()
-        #    print("movieName shift", movieName, shifts)
-        #else:
-        #    shifts = [0] * (2*n)
-        #    print("movieName shift", movieName, shifts)
-        ####  END delete
         stkIndex = 0
         movieStk = self._getMovieName(movieId, '.stk')
         movieMdFile = self._getMovieName(movieId, '.xmd')
@@ -204,7 +214,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                 if self.doInvert:
                     args += " --invert"
 
-                args += " --downsampling %f "%factor
+                args += " --downsampling %f " % self.factor
                 self.runJob('xmipp_micrograph_scissor', args)
                 cleanPath(frameName)
                 
