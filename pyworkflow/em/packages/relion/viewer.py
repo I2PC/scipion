@@ -545,7 +545,7 @@ Examples:
             return ['There are not iterations completed.'] 
     
     def createDataView(self, filename, viewParams={}):
-        return em.DataView(filename, viewParams=viewParams)
+        return em.DataView(filename, env=self._env, viewParams=viewParams)
 
     def createScipionView(self, filename, viewParams={}):
 
@@ -553,6 +553,7 @@ Examples:
         ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
         view = ViewClass(self._project,
                           self.protocol.strId(), filename, other=inputParticlesId,
+                          env=self._env,
                           viewParams=viewParams)
 
         return view
@@ -567,6 +568,7 @@ Examples:
                       }
         return em.ObjectView(self._project, 
                           self.protocol.strId(), filename, other=inputParticlesId,
+                          env=self._env,
                           viewParams=viewParams)
 
     def _load(self):
@@ -641,7 +643,8 @@ class PostprocessViewer(ProtocolViewer):
         ProtocolViewer.setProtocol(self, protocol)
         self.__defineParams(self._form)
         self._createVarsFromDefinition()
-        self._env = os.environ.copy()
+        from pyworkflow.em.packages.xmipp3 import getEnviron
+        self._env = dict(getEnviron())
 #        self._load()
         
     def _defineParams(self, form):
