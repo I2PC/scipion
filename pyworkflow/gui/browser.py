@@ -149,10 +149,13 @@ class FileInfo(object):
     def __init__(self, path, filename):
         self._fullpath = os.path.join(path, filename)
         self._filename = filename
-        self._stat = os.stat(self._fullpath)
+        if os.path.exists(self._fullpath):
+            self._stat = os.stat(self._fullpath)
+        else:
+            self._stat = None
         
     def isDir(self):
-        return stat.S_ISDIR(self._stat.st_mode)
+        return stat.S_ISDIR(self._stat.st_mode) if self._stat else False
     
     def getFileName(self):
         return self._filename
@@ -162,10 +165,10 @@ class FileInfo(object):
     
     def getSize(self):
         """ Return a human readable string of the file size."""
-        return prettySize(self._stat.st_size)
+        return prettySize(self._stat.st_size) if self._stat else 0
     
     def getDate(self):
-        return dateStr(self._stat.st_mtime)
+        return dateStr(self._stat.st_mtime) if self._stat else 0
     
     
 class FileHandler(object):

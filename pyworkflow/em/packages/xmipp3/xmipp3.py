@@ -382,10 +382,7 @@ class XmippDataSet(ds.DataSet):
         
     def _convertMdToTable(self, md):
         """ Convert a metatada into a table. """
-        if self._filename.endswith('.star'):
-            from pyworkflow.em.packages.relion import addRelionLabels#DEPRECATED function???
-            addRelionLabels()
-            
+           
         labels = md.getActiveLabels()
         hasTransformation = self._hasTransformation(labels)  
         columns = [self._convertLabelToColumn(l) for l in labels]        
