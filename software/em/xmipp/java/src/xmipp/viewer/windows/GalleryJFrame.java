@@ -746,7 +746,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void goToImage(int index)
 	{
 		gallery.gotoItem(index);
-		makeVisible(index, 0);
+		Point coords = gallery.getCoords(index);
+		makeVisible(coords.y, coords.x);
 	}
 
 	

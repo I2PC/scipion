@@ -39,7 +39,9 @@ void ProgSymmetrize::readParams()
         doMask = true;
     }
     helical=(fn_sym=="helical");
-    if (helical)
+    dihedral=(fn_sym=="dihedral");
+    helicalDihedral=(fn_sym=="helicalDihedral");
+    if (helical || helicalDihedral)
     {
         zHelical=getDoubleParam("--helixParams",0);
         rotHelical=DEG2RAD(getDoubleParam("--helixParams",1));
@@ -61,7 +63,7 @@ void ProgSymmetrize::defineParams()
     addParamsLine("                         : Valid point-group descriptions are:");
     addParamsLine("                         : C1, Ci, Cs, Cn (from here on n must be an integer number with no more than 2 digits)");
     addParamsLine("                         : Cnv, Cnh, Sn, Dn, Dnv, Dnh, T, Td, Th, O, Oh");
-    addParamsLine("                         : I, I1, I2, I3, I4, I5, Ih, helical");
+    addParamsLine("                         : I, I1, I2, I3, I4, I5, Ih, helical, dihedral, helicalDihedral");
     addParamsLine("                         :+ For a full description of symmetries look at");
     addParamsLine("                         :+ http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry");
     addParamsLine("   [--helixParams <z> <rot> <rotPhase=0>]: Helical parameters z(pixels), rot(degrees), rotPhase(degrees)");
@@ -98,7 +100,7 @@ void ProgSymmetrize::show()
 /* Symmetrize ------------------------------------------------------- */
 void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
                       MultidimArray<double> &V_out,
-                      bool wrap, bool do_outside_avg, bool sum, bool helical,
+                      bool wrap, bool do_outside_avg, bool sum, bool helical, bool dihedral, bool helicalDihedral,
                       double rotHelical, double rotPhaseHelical, double zHelical,
                       const MultidimArray<double> * mask)
 {
@@ -120,7 +122,7 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
     }
     V_out = V_in;
 
-    if (!helical)
+    if (!helical && !dihedral && !helicalDihedral)
     {
         for (int i = 0; i < SL.symsNo(); i++)
         {
@@ -142,8 +144,15 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
         if (!sum)
             arrayByScalar(V_out, 1.0/(SL.symsNo() + 1.0f), V_out, '*');
     }
-    else
+    else if (helical)
         symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical);
+    else if (helicalDihedral)
+        symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical,NULL,true);
+    else if (dihedral)
+    {
+    	int zmax=(int)(0.1*ZSIZE(V_in));
+        symmetry_Dihedral(V_out,V_in,1,-zmax,zmax,0.5);
+    }
 }
 
 void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
@@ -178,7 +187,7 @@ void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
 /* Preprocess ------------------------------------------------------------- */
 void ProgSymmetrize::preProcess()
 {
-    if (!helical)
+    if (!helical && !dihedral & !helicalDihedral)
     {
         if (!fn_sym.exists() && isdigit(fn_sym[0]))
             symorder=textToInteger(fn_sym);
@@ -220,10 +229,10 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
     }
     else
     {
-        if (SL.symsNo()>0 || helical)
+        if (SL.symsNo()>0 || helical || dihedral || helicalDihedral)
         {
             symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap,
-                             sum,helical,rotHelical,rotPhaseHelical,zHelical,mmask);
+                             sum,helical,dihedral,helicalDihedral,rotHelical,rotPhaseHelical,zHelical,mmask);
         }
         else
             REPORT_ERROR(ERR_ARG_MISSING,"The symmetry description is not valid for volumes");

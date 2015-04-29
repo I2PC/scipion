@@ -81,12 +81,17 @@ public:
     int symorder;
     // Helical symmetry
     bool helical;
+    // Dihedral symmetry
+    bool dihedral;
+    // Helical dihedral
+    bool helicalDihedral;
 };
 
 /** Symmetrize volume.*/
 void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
                       MultidimArray<double> &V_out,
-                      bool wrap=true, bool do_outside_avg=false, bool sum=false, bool helical=false,
+                      bool wrap=true, bool do_outside_avg=false, bool sum=false, bool helical=false, bool dihedral=false,
+                      bool helicalDihedral=false,
                       double rotHelical=0.0, double rotPhaseHelical=0.0, double zHelical=0.0,
                       const MultidimArray<double> * mask=NULL);
 

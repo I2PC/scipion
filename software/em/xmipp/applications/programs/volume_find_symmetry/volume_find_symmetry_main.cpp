@@ -47,7 +47,7 @@ public:
     double   tilt0, tiltF, step_tilt;
     double   z0, zF, step_z, zLocal;
     bool     local;
-    bool     helical;
+    bool     helical, helicalDihedral;
     Mask mask_prm;
     int numberOfThreads;
 
@@ -74,6 +74,7 @@ public:
         addParamsLine("    where <mode>");
         addParamsLine("           rot <n>              : Order of the rotational axis");
         addParamsLine("           helical              : Helical symmetry.");
+        addParamsLine("           helicalDihedral      : Helical-Dihedral symmetry.");
         addParamsLine("==Locate rotational axis==");
         addParamsLine("[--rot  <rot0=0>  <rotF=355> <step=5>]: Limits for rotational angle search");
         addParamsLine("[--tilt <tilt0=0> <tiltF=90> <step=5>]: Limits for tilt angle search");
@@ -102,13 +103,15 @@ public:
         mode=getParam("--sym");
         if (mode=="helical")
             helical=true;
+        else if (mode=="helicalDihedral")
+        	helicalDihedral=true;
         else
         {
             helical=false;
             rot_sym = getIntParam("--sym",1);
         }
         useSplines = checkParam("--useSplines");
-        if (helical)
+        if (helical || helicalDihedral)
         {
             local=checkParam("--localHelical");
             if (local)
@@ -152,7 +155,7 @@ public:
         Matrix1D<double> p(2);
         DIRECT_A1D_ELEM(vbest_corr,thrId) = 0;
         DIRECT_A1D_ELEM(vbest_rot,thrId)  = 0;
-        if (helical)
+        if (helical || helicalDihedral)
             DIRECT_A1D_ELEM(vbest_z,thrId) = 0;
         else
             DIRECT_A1D_ELEM(vbest_tilt,thrId) = 0;
@@ -164,18 +167,18 @@ public:
             for (size_t i=first; i<=last; i++)
             {
                 XX(p)=rotVector[i];
-                if (helical)
+                if (helical || helicalDihedral)
                     YY(p)=zVector[i];
                 else
                     YY(p)=tiltVector[i];
                 double corr=-evaluateSymmetry(MATRIX1D_ARRAY(p)-1);
-                if (helical)
+                if (helical || helicalDihedral)
                     DIRECT_MULTIDIM_ELEM(helicalCorrelation(),i)=corr;
                 if (corr > DIRECT_A1D_ELEM(vbest_corr,thrId))
                 {
                     DIRECT_A1D_ELEM(vbest_corr,thrId) = corr;
                     DIRECT_A1D_ELEM(vbest_rot,thrId) = XX(p);
-                    if (helical)
+                    if (helical || helicalDihedral)
                         DIRECT_A1D_ELEM(vbest_z,thrId) = YY(p);
                     else
                         DIRECT_A1D_ELEM(vbest_tilt,thrId) = YY(p);
@@ -197,7 +200,7 @@ public:
         double best_corr, best_rot, best_tilt, best_z;
         td=NULL;
 
-        if (!helical)
+        if (!helical && !helicalDihedral)
         {
             // Look for the rotational symmetry axis
             if (!local)
@@ -263,7 +266,7 @@ public:
         }
         else
         {
-            // If helical
+            // If helical or helical dihedral
             if (!local)
             {
                 int ydim=0, xdim=0;
@@ -374,7 +377,7 @@ public:
             	return 1e38;
             if (zHelical<z0 || zHelical>zF || rotHelical<rot0 || rotHelical>rotF)
             	return 1e38;
-            symmetry_Helical(volume_sym, mVolume, zHelical, DEG2RAD(rotHelical), 0, &mask_prm.get_binary_mask());
+            symmetry_Helical(volume_sym, mVolume, zHelical, DEG2RAD(rotHelical), 0, &mask_prm.get_binary_mask(), helicalDihedral);
 			double corr=correlationIndex(mVolume, volume_sym, &mask_prm.get_binary_mask());
 //#define DEBUG
 #ifdef DEBUG
