@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
@@ -48,6 +49,8 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
+
+import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.ColorEditor;
 import xmipp.utils.ColorRenderer;
@@ -250,7 +253,15 @@ public class PlotJDialog extends XmippDialog {
                         }
                         else
                         {
-                            argsBasic = new String[]{ "xmipp_metadata_plot",
+//                        	String scipionHome = System.getenv().get("SCIPION_HOME");
+//                          if(scipionHome == null)
+//                          {
+//                                XmippDialog.showError(null, "Scipion is not available");
+//                                return;
+//                          }
+//                          String plotcmd = Filename.join(scipionHome, "software", "em", "xmipp", "bin", "xmipp_metadata_plot");
+                        	String plotcmd = "xmipp_metadata_plot"; 
+                            argsBasic = new String[]{ plotcmd,
                                             gallery.data.getMdFilename(), "-y", labels, "--colors", colors,
                                             "--style", styles, "--markers", markers, "--title",
                                             tfTitle.getText().trim(), "--ytitle", ylabel, "--xtitle",
