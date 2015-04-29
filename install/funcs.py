@@ -156,8 +156,8 @@ class Target:
         self._name = name
         self._default = kwargs.get('default', False)
         self._commandList = list(commands)  # copy the list/tuple of commands
-        self._finalCommands = [] # This commands results will be used to check if need to re-build 
-        self._deps = [] # list of name of dependency targets
+        self._finalCommands = [] # their targets will be used to check if we need to re-build
+        self._deps = [] # names of dependency targets
 
     def addCommand(self, cmd, **kwargs):
         if isinstance(cmd, Command):
@@ -276,7 +276,8 @@ class Environment:
             elif isinstance(d, Target):
                 targetName = d.getName()
             else:
-                raise Exception("Dependencies should be either string or Target, received: %s" % d)
+                raise Exception("Dependencies should be either string or "
+                                "Target, received: %s" % d)
 
             if targetName not in self._targetDict:
                 raise Exception("Dependency '%s' does not exists. " % targetName)
