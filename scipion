@@ -33,9 +33,9 @@ import os
 from os.path import join, exists, dirname, basename
 import time
 try:
-    from ConfigParser import ConfigParser
+    from ConfigParser import ConfigParser, ParsingError
 except ImportError:
-    from configparser import ConfigParser  # Python 3
+    from configparser import ConfigParser, ParsingError  # Python 3
 
 
 __version__ = 'v.0.1.5 Phosphorus'
@@ -77,7 +77,10 @@ SCIPION_HOSTS = join(dirname(SCIPION_CONFIG), 'hosts.conf')
 if SCIPION_LOCAL_CONFIG != SCIPION_CONFIG and exists(SCIPION_LOCAL_CONFIG):
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    cf.read(SCIPION_LOCAL_CONFIG)
+    try:
+        cf.read(SCIPION_LOCAL_CONFIG)
+    except ParsingError, e:
+        sys.exit("%s\nPlease fix the configuration file." % e)
     if 'BUILD' in cf.sections():
         print("""***
 Warning: you seem to be running Scipion with the old (pre-April 9 2015)
