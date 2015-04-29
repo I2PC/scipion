@@ -361,13 +361,13 @@ class Environment:
 
         # If we didnt' specify the commands, we can either compile
         # with autotools (so we have to run "configure") or cmake.
+
+        environ = os.environ.copy()
+        environ.update({'CPPFLAGS': '-I%s/include' % prefix,
+                        'LDFLAGS': '-L%s/lib' % prefix})
         if not cmake:
             flags.append('--prefix=%s' % prefix)
             flags.append('--libdir=%s/lib' % prefix)
-
-            environ = os.environ.copy()
-            environ.update({'CPPFLAGS': '-I%s/include' % prefix,
-                            'LDFLAGS': '-L%s/lib' % prefix})
             t.addCommand('./configure %s' % ' '.join(flags),
                          targets=makeFile, cwd=configPath,
                          out='%s/log/%s_configure.log' % (prefix, name),
@@ -377,9 +377,9 @@ class Environment:
                                          "it in your system first.")
             flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefix)
             t.addCommand('cmake %s' % ' '.join(flags),
-                         targets=makeFile,
-                         cwd=configPath,
-                         out='%s/log/%s_cmake.log' % (prefix, name))
+                         targets=makeFile, cwd=configPath,
+                         out='%s/log/%s_cmake.log' % (prefix, name),
+                         environ=environ)
 
         t.addCommand('make -j %d' % self._processors,
                      cwd=t.buildPath,
