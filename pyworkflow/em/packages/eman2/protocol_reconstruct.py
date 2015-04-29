@@ -210,7 +210,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
             self.runJob(program, args, cwd=self._getExtraPath())
         
         program = getEmanProgram('e2buildsets.py')
-        args = " --setname=inputSet --allparticles"# --minhisnr=-1"
+        args = " --setname=inputSet --allparticles --minhisnr=-1"
         self.runJob(program, args, cwd=self._getExtraPath())
     
     def reconstructVolumeStep(self, args):

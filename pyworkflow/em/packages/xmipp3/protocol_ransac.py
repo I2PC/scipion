@@ -148,8 +148,7 @@ class XmippProtRansac(ProtInitialVolume):
                     self._insertFunctionStep('reconstructStep',fnRoot)
                 self._insertFunctionStep('projMatchStep',fnBase)
             
-            stepId =  self._insertRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
-                                          %(fnRoot,fnRoot,self.Xdim,self.Xdim))
+            stepId =  self._insertFunctionStep("resizeStep",fnRoot,self.Xdim)
             
             deps.append(stepId)
         
@@ -251,9 +250,16 @@ class XmippProtRansac(ProtInitialVolume):
             cleanPattern(self._getTmpPath("gallery_InitialVolume*"))
     
     def reconstructStep(self, fnRoot):
-        self.runJob("xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))
-        self.runJob("xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,self.Xdim2/2))
-     
+        from pyworkflow.em.metadata.utils import getSize
+        Nimages=getSize(fnRoot+".xmd")
+        if Nimages>0:
+            self.runJob("xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))
+            self.runJob("xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,self.Xdim2/2))
+    
+    def resizeStep(self,fnRoot,Xdim):
+        if os.path.exists(fnRoot+".vol"):
+            self.runJob("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" %(fnRoot,fnRoot,Xdim,Xdim))
+        
      
     def getCorrThreshStep(self):
         corrVector = []
@@ -344,21 +350,21 @@ class XmippProtRansac(ProtInitialVolume):
              
     def projMatchStep(self,fnBase):
         fnRoot=self._getPath(fnBase)
-        fnGallery=self._getTmpPath('gallery_'+fnBase+'.stk')
-        fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd") 
+        if os.path.exists(fnRoot+".vol"):
+            fnGallery=self._getTmpPath('gallery_'+fnBase+'.stk')
+            fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd") 
+            
+            AngularSampling=int(max(floor(self.angularSampling.get()/2.0),2));
+            self.runJob("xmipp_angular_project_library", "-i %s.vol -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
+                                  %(fnRoot,fnGallery,float(AngularSampling),self.symmetryGroup.get(),fnOutputReducedClass))
         
-        AngularSampling=int(max(floor(self.angularSampling.get()/2.0),2));
-        self.runJob("xmipp_angular_project_library", "-i %s.vol -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
-                              %(fnRoot,fnGallery,float(AngularSampling),self.symmetryGroup.get(),fnOutputReducedClass))
-    
-        self.runJob("xmipp_angular_projection_matching", "-i %s.xmd -o %s.xmd --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
-               %(fnRoot,fnRoot,fnGallery,str(self.Xdim/2),str(self.Xdim/20)))
-                
-        cleanPath(self._getTmpPath('gallery_'+fnBase+'_sampling.xmd'))
-        cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
-        cleanPath(self._getTmpPath('gallery_'+fnBase+'.stk'))
-             
-    
+            self.runJob("xmipp_angular_projection_matching", "-i %s.xmd -o %s.xmd --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
+                   %(fnRoot,fnRoot,fnGallery,str(self.Xdim/2),str(self.Xdim/20)))
+                    
+            cleanPath(self._getTmpPath('gallery_'+fnBase+'_sampling.xmd'))
+            cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
+            cleanPath(self._getTmpPath('gallery_'+fnBase+'.stk'))
+                 
     def scoreFinalVolumes(self):
         threshold=self.getCCThreshold()
         mdOut=xmipp.MetaData()

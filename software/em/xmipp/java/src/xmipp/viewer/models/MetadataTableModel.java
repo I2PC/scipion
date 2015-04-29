@@ -90,8 +90,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	public Point getCoords(int index) {
 		Point p = new Point();
-		p.x = index;
-		p.y = 0;
+		p.x = 0;
+		p.y = index;
 		return p;
 	}
 
