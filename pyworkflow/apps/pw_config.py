@@ -38,13 +38,22 @@ try:
 except ImportError:
     from configparser import ConfigParser  # Python 3
 
+def ansi(n):
+    "Return function that escapes text with ANSI color n."
+    return lambda txt: '\x1b[%dm%s\x1b[0m' % (n, txt)
+
+black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
+
 
 def main():
     parser = optparse.OptionParser(description=__doc__)
     add = parser.add_option  # shortcut
     add('--overwrite', action='store_true',
-        help=('Rewrite the configuration files using the original templates.'))
+        help=("Rewrite the configuration files using the original templates."))
     options, args = parser.parse_args()
+
+    if args:  # no args which aren't options
+        sys.exit(parser.format_help())
 
     globalIsLocal = (os.environ['SCIPION_CONFIG'] ==
                      os.environ['SCIPION_LOCAL_CONFIG'])  # if we used --config
@@ -99,9 +108,9 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
             os.makedirs(join(dname, 'backups'))
         backup = join(dname, 'backups',
                       '%s.%d' % (basename(fpath), int(time.time())))
-        print('* Creating backup: %s' % backup)
+        print(yellow("* Creating backup: %s" % backup))
         os.rename(fpath, backup)
-    print('* Creating configuration file: %s' % fpath)
+    print(yellow("* Creating configuration file: %s" % fpath))
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     assert cf.read(ftemplate) != [], 'Missing file: %s' % ftemplate
@@ -111,12 +120,12 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
         for section in set(cf.sections()) - set(keep):
             cf.remove_section(section)
     cf.write(open(fpath, 'w'))
-    print('Please edit it to reflect the configuration of your system.\n')
+    print("Please edit it to reflect the configuration of your system.\n")
 
 
 def checkPaths(conf):
     "Check that some paths in the config file actually make sense"
-    print('Checking paths in %s ...' % conf)
+    print("Checking paths in %s ..." % conf)
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     assert cf.read(conf) != [], 'Missing file: %s' % conf
@@ -126,7 +135,7 @@ def checkPaths(conf):
                 'JAVA_HOME', 'JAVA_BINDIR']:
         if not os.path.isdir(get(var)):
             print("  Path to %s (%s) should exist but it doesn't." %
-                  (var, get(var)))
+                  (var, red(get(var))))
             allOk = False
     for fname in [join(get('JAVA_BINDIR'), 'java'),
                   get('JAVAC'), get('JAR'),
@@ -135,12 +144,13 @@ def checkPaths(conf):
                   join(get('MPI_BINDIR'), get('MPI_LINKERFORPROGRAMS')),
                   join(get('MPI_INCLUDE'), 'mpi.h')]:
         if not exists(fname):
-            print("  Cannot find file: %s" % fname)
+            print("  Cannot find file: %s" % red(fname))
             allOk = False
     if allOk:
-        print("All seems fine with %s" % conf)
+        print(green("All seems fine with %s" % conf))
     else:
-        print("Errors found. Please edit %s and check again." % conf)
+        print(red("Errors found."))
+        print("Please edit %s and check again." % conf)
 
 
 def checkConf(fpath, ftemplate, remove=[], keep=[]):
@@ -168,25 +178,25 @@ def checkConf(fpath, ftemplate, remove=[], keep=[]):
     # That funny syntax to create the dictionaries works with old pythons.
 
     if df == dt:
-        print('The configuration file %s looks fine.' % fpath)
+        print(green("All the expected sections and options found in " + fpath))
     else:
-        print('Found differences between the configuration file\n  %s\n'
-              'and the template file\n  %s' % (fpath, ftemplate))
+        print("Found differences between the configuration file\n  %s\n"
+              "and the template file\n  %s" % (fpath, ftemplate))
         sf = set(df.keys())
         st = set(dt.keys())
         for s in sf - st:
-            print('Section %s exists in the configuration file but '
-                  'not in the template.' % s)
+            print("Section %s exists in the configuration file but "
+                  "not in the template." % red(s))
         for s in st - sf:
-            print('Section %s exists in the template but '
-                  'not in the configuration file.' % s)
+            print("Section %s exists in the template but "
+                  "not in the configuration file." % red(s))
         for s in st & sf:
             for o in df[s] - dt[s]:
-                print('In section %s, option %s exists in the configuration '
-                      'file but not in the template.' % (s, o))
+                print("In section %s, option %s exists in the configuration "
+                      "file but not in the template." % (red(s), red(o)))
             for o in dt[s] - df[s]:
-                print('In section %s, option %s exists in the template '
-                      'but not in the configuration file.' % (s, o))
+                print("In section %s, option %s exists in the template "
+                      "but not in the configuration file." % (red(s), red(o)))
 
 
 if __name__ == '__main__':
