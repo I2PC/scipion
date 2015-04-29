@@ -156,8 +156,8 @@ class Target:
         self._name = name
         self._default = kwargs.get('default', False)
         self._commandList = list(commands)  # copy the list/tuple of commands
-        self._finalCommands = [] # This commands results will be used to check if need to re-build 
-        self._deps = [] # list of name of dependency targets
+        self._finalCommands = [] # their targets will be used to check if we need to re-build
+        self._deps = [] # names of dependency targets
 
     def addCommand(self, cmd, **kwargs):
         if isinstance(cmd, Command):
@@ -276,7 +276,8 @@ class Environment:
             elif isinstance(d, Target):
                 targetName = d.getName()
             else:
-                raise Exception("Dependencies should be either string or Target, received: %s" % d)
+                raise Exception("Dependencies should be either string or "
+                                "Target, received: %s" % d)
 
             if targetName not in self._targetDict:
                 raise Exception("Dependency '%s' does not exists. " % targetName)
@@ -360,13 +361,13 @@ class Environment:
 
         # If we didnt' specify the commands, we can either compile
         # with autotools (so we have to run "configure") or cmake.
+
+        environ = os.environ.copy()
+        environ.update({'CPPFLAGS': '-I%s/include' % prefix,
+                        'LDFLAGS': '-L%s/lib' % prefix})
         if not cmake:
             flags.append('--prefix=%s' % prefix)
             flags.append('--libdir=%s/lib' % prefix)
-
-            environ = os.environ.copy()
-            environ.update({'CPPFLAGS': '-I%s/include' % prefix,
-                            'LDFLAGS': '-L%s/lib' % prefix})
             t.addCommand('./configure %s' % ' '.join(flags),
                          targets=makeFile, cwd=configPath,
                          out='%s/log/%s_configure.log' % (prefix, name),
@@ -376,9 +377,9 @@ class Environment:
                                          "it in your system first.")
             flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefix)
             t.addCommand('cmake %s' % ' '.join(flags),
-                         targets=makeFile,
-                         cwd=configPath,
-                         out='%s/log/%s_cmake.log' % (prefix, name))
+                         targets=makeFile, cwd=configPath,
+                         out='%s/log/%s_cmake.log' % (prefix, name),
+                         environ=environ)
 
         t.addCommand('make -j %d' % self._processors,
                      cwd=t.buildPath,
