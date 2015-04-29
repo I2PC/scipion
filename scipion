@@ -79,8 +79,8 @@ if SCIPION_LOCAL_CONFIG != SCIPION_CONFIG and exists(SCIPION_LOCAL_CONFIG):
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     try:
         cf.read(SCIPION_LOCAL_CONFIG)
-    except ParsingError, e:
-        sys.exit("%s\nPlease fix the configuration file." % e)
+    except ParsingError:
+        sys.exit("%s\nPlease fix the configuration file." % sys.exc_info()[1])
     if 'BUILD' in cf.sections():
         print("""***
 Warning: you seem to be running Scipion with the old (pre-April 9 2015)
