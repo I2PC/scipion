@@ -59,36 +59,37 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
+        self._insertFunctionStep('copyInput')
         self._insertFunctionStep('coarseSearch')
         self._insertFunctionStep('fineSearch')
         self._insertFunctionStep('symmetrize')
-        if self.dihedral.get():
-            self._insertFunctionStep('applyDihedral')
         self._insertFunctionStep('createOutput')
         self.fnVol=locationToXmipp(*self.inputVolume.get().getLocation())
+        self.fnVolSym=self._getPath('volume_symmetrized.vol')
         [self.height,_,_]=self.inputVolume.get().getDim()
     
     #--------------------------- STEPS functions --------------------------------------------
+    def copyInput(self):
+        if self.dihedral:
+            self.runJob("xmipp_transform_symmetrize","-i %s -o %s --sym dihedral"%(self.fnVol,self.fnVolSym))
+        else:
+            self.runJob("xmipp_image_convert","-i %s -o %s"%(self.fnVol,self.fnVolSym))
+                        
     def coarseSearch(self):
-        self.runCoarseSearch(self.fnVol,float(self.z0.get()),float(self.zF.get()),float(self.zStep.get()),
+        self.runCoarseSearch(self.fnVol,self.dihedral.get(),float(self.z0.get()),float(self.zF.get()),float(self.zStep.get()),
                              float(self.rot0.get()),float(self.rotF.get()),float(self.rotStep.get()),
                              self.numberOfThreads.get(),self._getExtraPath('coarseParams.xmd'),
                              int(self.cylinderRadius.get()),int(self.height))
 
     def fineSearch(self):
-        self.runFineSearch(self.fnVol, self._getExtraPath('coarseParams.xmd'), self._getExtraPath('fineParams.xmd'), 
+        self.runFineSearch(self.fnVol, self.dihedral.get(), self._getExtraPath('coarseParams.xmd'), self._getExtraPath('fineParams.xmd'), 
                            float(self.z0.get()),float(self.zF.get()),float(self.rot0.get()),float(self.rotF.get()),
                              int(self.cylinderRadius.get()),int(self.height))
 
     def symmetrize(self):
-        self.runSymmetrize(self.fnVol, self._getExtraPath('fineParams.xmd'), self._getPath('volume_symmetrized.vol'), 
+        self.runSymmetrize(self.fnVolSym, self.dihedral.get(), self._getExtraPath('fineParams.xmd'), self.fnVolSym, 
                            self.cylinderRadius.get(), self.height)
 
-    def applyDihedral(self):
-        self.runApplyDihedral(self._getPath('volume_symmetrized.vol'),self._getExtraPath('fineParams.xmd'),
-                              self._getTmpPath('volume_rotated.vol'),
-                              self.cylinderRadius.get(), self.height)
-    
     def createOutput(self):
         volume = Volume()
         volume.setFileName(self._getPath('volume_symmetrized.vol'))

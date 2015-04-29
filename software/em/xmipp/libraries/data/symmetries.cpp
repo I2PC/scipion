@@ -26,6 +26,7 @@
 #include <stdio.h>
 
 #include "symmetries.h"
+#include "filters.h"
 
 // Read Symmetry file ======================================================
 // crystal symmetry matices from http://cci.lbl.gov/asu_gallery/
@@ -2850,7 +2851,7 @@ double interpolatedElement3DHelical(const MultidimArray<double> &Vin, double x, 
 }
 
 void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
-                      double rot0, MultidimArray<int> *mask)
+                      double rot0, MultidimArray<int> *mask, bool dihedral)
 {
     Vout.initZeros(Vin);
     double izHelical=1.0/zHelical;
@@ -2874,6 +2875,11 @@ void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &
             jp*=rho;
             finalValue+=interpolatedElement3DHelical(Vin,jp,ip,kp,zHelical);
             L+=1.0;
+            if (dihedral)
+            {
+                finalValue+=interpolatedElement3DHelical(Vin,jp,-ip,-kp,zHelical);
+                L+=1.0;
+            }
         }
         A3D_ELEM(Vout,k,i,j)=finalValue/L;
     }
@@ -2905,4 +2911,40 @@ void symmetry_HelicalLowRes(MultidimArray<double> &Vout, const MultidimArray<dou
     	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vout)
     	if (!DIRECT_MULTIDIM_ELEM(*mask,n))
     		DIRECT_MULTIDIM_ELEM(Vout,n)=0.0;
+}
+
+void symmetry_Dihedral(MultidimArray<double> &Vout, const MultidimArray<double> &Vin,
+		double rotStep, double zmin, double zmax, double zStep, MultidimArray<int> *mask)
+{
+	// Find the best rotation
+	MultidimArray<double> V180;
+	Matrix2D<double> AZ, AX;
+	rotation3DMatrix(180,'X',AX,true);
+	applyGeometry(LINEAR,V180,Vin,AX,IS_NOT_INV,DONT_WRAP);
+	double bestCorr=-1e38, bestRot, bestZ;
+	for (double rot=-180; rot<180; rot+=rotStep)
+	{
+		rotation3DMatrix(rot,'Z',AZ,true);
+		for (double z=zmin; z<=zmax; z+=zStep)
+		{
+			MAT_ELEM(AZ,2,3)=z;
+			applyGeometry(LINEAR,Vout,Vin,AZ,IS_NOT_INV,DONT_WRAP);
+			double corr=correlationIndex(Vout,V180,mask);
+			if (corr>bestCorr)
+			{
+				bestCorr=corr;
+				bestRot=rot;
+				bestZ=z;
+			}
+		}
+	}
+
+	rotation3DMatrix(-bestRot/2,'Z',AZ,true);
+	MAT_ELEM(AZ,2,3)=-bestZ/2;
+	applyGeometry(BSPLINE3,V180,Vin,AZ*AX,IS_NOT_INV,DONT_WRAP);
+	rotation3DMatrix(bestRot/2,'Z',AZ,true);
+	MAT_ELEM(AZ,2,3)=bestZ/2;
+	applyGeometry(BSPLINE3,Vout,Vin,AZ,IS_NOT_INV,DONT_WRAP);
+	Vout+=V180;
+	Vout*=0.5;
 }
