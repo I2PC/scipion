@@ -119,145 +119,104 @@ var COL_RENDER_SLICE = 5;
 
 /** METHODS ***************************************************************** */
 
-function renderElements(nRow, aData) {
+
+
+function getColumnsDefinition() {
+	var jsonColumnsLayout = jsonTableLayoutConfiguration.columnsLayout;
 	var columnId = 0;
-	var invisibleColumns = 0;
+	var dataForTable = [];
 	
-	for (var i in jsonTableLayoutConfiguration.columnsLayout) {
-		var columnLayoutConfiguration = jsonTableLayoutConfiguration.columnsLayout[i]
-
-		if (columnLayoutConfiguration.visible) {
-			if (typeof oTable != 'undefined') {
-				columnId = oTable.fnGetColumnIndex(i)
-				var columnIdReal = oTable.fnColumnIndexToVisible(columnId)
-			} else {
-				var columnIdReal = columnId - invisibleColumns
-			}
-
-			if (columnIdReal != null) {
-				
-				// columnType = 4 
-				if (columnLayoutConfiguration.columnType == COL_RENDER_CHECKBOX) {
-//					console.log("id:"+columnIdReal+" checkbox!")
-					colRenderCheckbox(i, nRow, aData, columnId, columnIdReal);
-				
-				} else if (columnLayoutConfiguration.renderable) {
-//					console.log("id:"+columnIdReal+" renderable!")
-					colRenderImg('colRenderable', i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
-				
-				// columnType = 3
-				} else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
-//					console.log("id:"+columnIdReal+" render!")
-					colRenderImg('colRenderImage', i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
-				
-				// columnType = 5
-				} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
-//					console.log("id:"+columnIdReal+" render slice!")
-					colRenderImg('colRenderSlice', i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
-				
-				// None
-				} else if (columnLayoutConfiguration.columnType == COL_RENDER_NONE) {
-//					console.log("id:"+columnIdReal+ " nothing to render!")
-				}
-			}
-		} else {
-			invisibleColumns++;
+	for ( var i in jsonColumnsLayout) {
+		var dataRowForTable = [];
+		var columnLayoutConfiguration = jsonColumnsLayout[i];
+		
+		dataRowForTable["bVisible"] = columnLayoutConfiguration.visible;             
+		dataRowForTable["sTitle"] = columnLayoutConfiguration.columnLabel;
+		dataRowForTable["sSubTitle"] = columnLayoutConfiguration.columnName;
+		dataRowForTable["aTargets"] = [columnId];
+		if (columnLayoutConfiguration.columnType == COL_RENDER_CHECKBOX) {
+//			console.log("id:"+columnIdReal+" checkbox!")
+			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderCheckbox(meta.col, data)}
+		
+		} 
+		else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
+//			console.log("id:"+columnIdReal+" render!")
+			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderImage(meta.col, data)}
+		
+		// columnType = 5
+		} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
+//			console.log("id:"+columnIdReal+" render slice!")
+			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderSlice(meta.col, data)}
+		
+		// None
 		}
+		else if (columnLayoutConfiguration.renderable) {
+//			console.log("id:"+columnIdReal+" renderable!")
+			html = colRenderImg('colRenderable', i, aData, columnLayoutConfiguration)
+		
+		// columnType = 3
+		}
+		dataForTable.push(dataRowForTable);
+		
 		columnId++;
 	}
+	console.log(dataForTable)
+	return dataForTable;
 }
 
-
-function colRenderCheckbox(id, nRow, aData, columnId, columnIdReal){
+function colRenderCheckbox(id, aData){
 	var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"'
-			+ id + '___' + aData[0] + '\" '
+			+ id + '___' + aData + '\" '
 	
-	var data = aData[columnId]
+	var data = aData
 			
 	if (data == "True" || data == 1 || data == true) {
 		checkbox_element += 'checked>'
 	} else {
 		checkbox_element += '>'
 	}
-	$('td:eq(' + columnIdReal + ')', nRow).html(checkbox_element);
-}
-
-function colRenderImg(mode, id, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration){
-	var renderFunc = columnLayoutConfiguration.renderFunc
-	var extraRenderFunc = columnLayoutConfiguration.extraRenderFunc
-	var content_html = "";
+	return checkbox_element
 	
-	switch(mode){
-		case "colRenderable":
-			content_html += colRenderable(id, aData, columnId, renderFunc, extraRenderFunc)
-			break;
-			
-		case "colRenderImage":
-			content_html += colRenderImage(id, aData, columnId, renderFunc, extraRenderFunc)
-			break;
-		
-		case "colRenderSlice":
-			content_html += colRenderSlice(id, aData, columnId, renderFunc, extraRenderFunc)
-			break;
-	}
-	$('td:eq(' + columnIdReal + ')', nRow).html(content_html);
 }
 
 
-function colRenderable(id, aData, columnId, renderFunc, extraRenderFunc){
+function colRenderable(id, aData, renderFunc){
+	
 	src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc;
-	if(extraRenderFunc.length > 0){
-		src += '&'	+ extraRenderFunc
-	}
-	src += '&image=' + aData[columnId] + '\"';
+	src += '&image=' + aData + '\"';
 	
 	var content_html = '<span style="display:none">' 
-			+ aData[columnId] + '</span>'
+			+ aData + '</span>'
 			+ '<img class=\"tableImages\" id=\"'
-			+ id + '___' + aData[0]
+			+ id + '___' + aData
 			+ '\" src=' + src
-			+ '\" data-real_src=' +src
+			+ ' data-real_src=' +src
 			+ '/>'
 			
-	
-	
 	return content_html;
 }
 
 
-function colRenderImage(id, aData, columnId, renderFunc, extraRenderFunc){
-	var content_html = '<span>' 
-			+ aData[columnId] + '</span>'
-			+ '<img style="display:none" class=\"tableImages\" id=\"'
-			+ id + '___' + aData[0]
-			+ '\" data-real_src=\"'+ getSubDomainURL() +'/render_column/?renderFunc='
-			+ renderFunc;
-			
-	if(extraRenderFunc.length > 0){
-		content_html += '&'	+ extraRenderFunc
-	}
-	content_html += '&image=' + aData[columnId] + '\"/>';
-
-	return content_html;
+function colRenderImage(id, aData){
+	
+	return colRenderable(id, aData, "get_image")
 }
 
-function colRenderSlice(id, aData, columnId, renderFunc, extraRenderFunc){
-	var content_html = '<span>' 
-			+ aData[columnId] + '</span>'
-			+ '<img style="display:none" class=\"tableImages\" id=\"'
-			+ id + '___' + aData[0]
-			+ '\" data-real_src=\"'+ getSubDomainURL() +'/render_column/?renderFunc='
-			+ renderFunc;
-			
-	if(extraRenderFunc.length > 0){
-		content_html += '&'	+ extraRenderFunc
-	}
-	
-	var volName = aData[columnId].split(".")
+function colRenderSlice(id, aData){
+	var volName = aData.split(".")
 	volName = volName[0] + "_tmp.mrc"
 	
-	content_html += '&image=' + volName + '\"/>';
-
+	src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=get_slice' ;
+	src += '&image=' + volName + '\"';
+	
+	var content_html = '<span style="display:none">' 
+			+ aData + '</span>'
+			+ '<img class=\"tableImages\" id=\"'
+			+ id + '___' + aData
+			+ '\" src=' + src
+			+ ' data-real_src=' +src
+			+ '/>'
+			
 	return content_html;
 }
 
@@ -327,25 +286,6 @@ function getHeaderWithIcon(text, columnLayoutProperties) {
 	return iconElements;
 }
 
-function getColumnsDefinition() {
-	var jsonColumnsLayout = jsonTableLayoutConfiguration.columnsLayout;
-	var columnId = 0;
-	var dataForTable = [];
-	
-	for ( var i in jsonColumnsLayout) {
-		var dataRowForTable = [];
-		var columnLayoutConfiguration = jsonColumnsLayout[i];
-		
-		dataRowForTable["bVisible"] = columnLayoutConfiguration.visible;             
-		dataRowForTable["sTitle"] = columnLayoutConfiguration.columnLabel;
-		dataRowForTable["sSubTitle"] = columnLayoutConfiguration.columnName;
-		dataRowForTable["aTargets"] = [columnId];
-		dataForTable.push(dataRowForTable);
-		
-		columnId++;
-	}
-	return dataForTable;
-}
 
 function enableDisableColumn(event, element) {
 	// From the image element we get the column header index

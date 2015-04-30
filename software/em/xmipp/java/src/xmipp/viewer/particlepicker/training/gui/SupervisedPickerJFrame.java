@@ -433,7 +433,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         // in sup mode size cannot be changed
         sizetf.setEnabled(!selected);
         importmi.setEnabled(!selected);
-        autopickpercenttf.setEnabled(selected);
+        //autopickpercenttf.setEnabled(selected);
         
         pack();
 

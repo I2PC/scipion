@@ -75,41 +75,6 @@ function getHeaderWithIcon(text, columnLayoutProperties){
 	return iconElements; 
 }
 
-//Create column definition (class, title, visible) from table layout configuration
-function getColumnsDefinition(){
-	jsonColumnsLayout=jsonTableLayoutConfiguration.columnsLayout
-	columnId=0;
-	var dataForTable = []
-	for (var i in jsonColumnsLayout){ 
-		
-		var dataRowForTable = []
-		
- 		var columnLayoutConfiguration = jsonColumnsLayout[i]
-//		if (columnLayoutConfiguration.typeOfColumn == "text" && columnLayoutConfiguration.columnLayoutProperties.editable){
-//			dataRowForTable["sClass"]= "editable" 
-//		}
-//		else if(columnLayoutConfiguration.typeOfColumn == "image"){
-//			sClass_Tmp = "imageColumn"
-//			if (columnLayoutConfiguration.columnLayoutProperties.renderable){
-//				dataRowForTable["sClass"]= sClass_Tmp +" editable"
-//			} 
-//		} 
-
- 		if(!columnLayoutConfiguration.columnLayoutProperties.visible){
- 			
- 			dataRowForTable["bVisible"] = false
-		} 
-		
-		dataRowForTable["sTitle"]= i
-		dataRowForTable["aTargets"]=[columnId]
-		dataRowForTable["bSortable"]= false
-		dataForTable.push(dataRowForTable)
-		columnId++;
-		
-	}
-	
-	return dataForTable;
-}
 
 
 /* Enable/disable column 
