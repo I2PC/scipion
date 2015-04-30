@@ -490,6 +490,9 @@ def get_image(request):
     # TO DO: Change the way to obtain the separate string of the imagePath
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
+
+    # This prefix can be passed to avoid that image is not refresh when cached by browser (name does not change)
+    prefix = request.GET.get('prefix', "")
     
     mirrorY = 'mirrorY' in request.GET
     
@@ -502,7 +505,7 @@ def get_image(request):
     try:
         # PAJM: Como vamos a gestionar lsa imagen    
         if imagePath.endswith('png') or imagePath.endswith('gif'):
-            imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+            imagePathTmp = os.path.join(request.session['projectPath'], prefix + imagePath)
             img = getImage(imagePathTmp, tkImage=False)
         else:
             if '@' in imagePath:

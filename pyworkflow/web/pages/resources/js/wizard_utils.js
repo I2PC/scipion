@@ -520,9 +520,10 @@ function previewSpiderCustomMask(path, radius1, sdFactor, radius2, maskThreshold
 	// Put the images in his canvas associated
 	var URL2 = getSubDomainURL() + "/get_image/?image=" + path + "&dim=100";
 	putImageSrc(URL2, canvasList[0]);
-	
+
+    // Pass current time as prefix to avoid that image is not refresh when cached by browser
 	for (var i=1;i < canvasList.length;i++){
-		URL2 = getSubDomainURL() + "/get_image/?image=" + i + "@stkmask.stk&dim=100";
+		URL2 = getSubDomainURL() + "/get_image/?image=" + i + "@stkmask.stk&dim=100&prefix=" + new Date().getTime();
 		putImageSrc(URL2, canvasList[i]);
 	}
 }
