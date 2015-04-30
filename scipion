@@ -235,7 +235,7 @@ MODE_STATS = 'stats'
 MODE_ENV = 'printenv'
 MODE_RUN = 'run'
 MODE_TUTORIAL = 'tutorial'
-MODE_DEPENDENCIES = 'dependencies'
+MODE_DEPENDENCIES = 'deps'
 
 
 def main():
