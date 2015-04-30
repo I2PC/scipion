@@ -298,7 +298,7 @@ class ProtFrealignBase(EMProtocol):
 
         form.addSection(label='General Parameters')
 
-        line = form.addLine('Reconstruction radius (A):',
+        line = form.addLine('Reconstruction radius (A)',
                             help='Parameters *RI* and *RO* in FREALIGN\n\n'
                                  'In Angstroms from centre of particle.\n'
                                  'Enter the inner and outer radius of the volume to be reconstructed.\n'

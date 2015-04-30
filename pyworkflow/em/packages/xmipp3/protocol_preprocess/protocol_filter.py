@@ -127,12 +127,12 @@ class XmippFilterHelper():
                             condition=fourierCondition + ' and freqInAngstrom',
                             help='Range of resolutions to use in the filter')
         line.addParam('lowFreqA', FloatParam, default=60,
-                      condition=cls.getModesCondition('filterModeFourier',
-                                                       cls.FM_BAND_PASS, cls.FM_HIGH_PASS),
+                      condition='(' + cls.getModesCondition('filterModeFourier',
+                                                       cls.FM_BAND_PASS, cls.FM_HIGH_PASS) + ') and freqInAngstrom',
                       label='Lowest')
         line.addParam('highFreqA', FloatParam, default=10,
-                      condition=cls.getModesCondition('filterModeFourier',
-                                                       cls.FM_BAND_PASS, cls.FM_LOW_PASS),
+                      condition='(' + cls.getModesCondition('filterModeFourier',
+                                                       cls.FM_BAND_PASS, cls.FM_LOW_PASS) + ') and freqInAngstrom',
                       label='Highest')
 
         form.addParam('freqDecayA', FloatParam, default=2,
@@ -146,12 +146,12 @@ class XmippFilterHelper():
                             condition=fourierCondition + ' and (not freqInAngstrom)',
                             help='Range of frequencies to use in the filter')
         line.addParam('lowFreqDig', DigFreqParam, default=0.02,
-                      condition=cls.getModesCondition('filterModeFourier',
-                                                       cls.FM_BAND_PASS, cls.FM_HIGH_PASS),
+                      condition='(' + cls.getModesCondition('filterModeFourier',
+                                                       cls.FM_BAND_PASS, cls.FM_HIGH_PASS) + ') and (not freqInAngstrom)',
                       label='Lowest')
         line.addParam('highFreqDig', DigFreqParam, default=0.35,
-                      condition=cls.getModesCondition('filterModeFourier',
-                                                       cls.FM_BAND_PASS, cls.FM_LOW_PASS),
+                      condition='(' + cls.getModesCondition('filterModeFourier',
+                                                       cls.FM_BAND_PASS, cls.FM_LOW_PASS) + ') and (not freqInAngstrom)',
                       label='Highest')
 
         form.addParam('freqDecayDig', FloatParam, default=0.02,
