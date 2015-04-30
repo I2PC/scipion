@@ -73,12 +73,12 @@ def checkLib(lib, target=None):
                    stdout=open(os.devnull, 'w'), stderr=STDOUT)
         if ret != 0:
             raise OSError
-    except OSError, e:
+    except OSError:
         try:
             ret = call(['%s-config' % lib, '--cflags'])
             if ret != 0:
                 raise OSError
-        except OSError, e:
+        except OSError:
             print("""
   ************************************************************************
     Warning: %s not found. Please consider installing it first.
