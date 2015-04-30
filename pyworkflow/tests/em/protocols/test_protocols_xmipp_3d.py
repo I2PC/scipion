@@ -236,6 +236,15 @@ class TestXmippPreprocessVolumes(TestXmippBase):
         TestXmippBase.setData()
         cls.protImport1 = cls.runImportVolumes(cls.volumes, 9.896)
         cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
+        cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
+        #test symmetryze with mask
+#        dataProject='SymVirus'
+#        dataset = DataSet.getDataSet(dataProject)
+#        virusVol  = dataset.getFile('virusVol.vol')
+#        virusMask = dataset.getFile('virusMask1.vol')
+#        cls.protImportVirus = cls.runImportVolumes(virusVol, 1)
+#        cls.protImportVirusMask = cls.runImportVolumes(virusMask, 1)
+
 
     def testPreprocessVolumes(self):
         print "Run preprocess a volume"
@@ -254,6 +263,16 @@ class TestXmippPreprocessVolumes(TestXmippBase):
         self.proj.launchProtocol(protPreprocessVol2, wait=True)
         self.assertIsNotNone(protPreprocessVol2.outputVol, "There was a problem with preprocess a SetOfVolumes")
 
+#        print "Run preprocess a volume using mask in the symmetrization"
+#        protPreprocessVol3 = XmippProtPreprocessVolumes(doChangeHand=False, doRandomize=False,
+#                                                        doSymmetrize=True, symmetryGroup='i3',
+#                                                        doSegment=False, doNormalize=False,
+#                                                        doInvert=False, doThreshold=False,
+#                                                        )
+#        protPreprocessVol3.inputVolumes.set(self.protImportVirus.outputVolume)
+#        protPreprocessVol3.volumeMask.set(self.protImportVirusMask.outputVolume)
+#        self.proj.launchProtocol(protPreprocessVol3, wait=True)
+#        self.assertIsNotNone(protPreprocessVol3.outputVol, "There was a problem with a volume")
 
 class TestXmippResolution3D(TestXmippBase):
     @classmethod

@@ -333,7 +333,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                       display=EnumParam.DISPLAY_COMBO,
                       default=0, label='Aggregation mode', condition = 'doSymmetrize',
                       help='Symmetrized volumes can be averaged or summed.')
-        form.addParam('volumeMask', PointerParam, pointerClass='VolumeMask',
+        form.addParam('volumeMask', PointerParam, pointerClass='VolumeMask', allowsNull=True,
                       label='Mask volume', condition='doSymmetrize'
                       )
         form.addParam('doWrap', BooleanParam, default=True,
@@ -521,7 +521,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
     def _argsSymmetrize(self):
         if self.isFirstStep:
             if self._isSingleInput():
-                args = "-i %s -o %s" % (self.inputFn, self.outputStk. self.wrap)
+                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
             else:
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
             self._setFalseFirstStep()
@@ -530,9 +530,11 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
 
         symmetry   = self.symmetryGroup.get()
         doWrap     = self.doWrap.get()
-        print("volumeMask",self.volumeMask.get())
-        fnMask = getImageLocation(self.volumeMask.get())
-
+        if self.volumeMask.get() is not None:
+            fnVolumeMask = self.volumeMask.get().getFileName()
+            doVolumeMask = True
+        else:
+            doVolumeMask = False
 
         ###########FILEFILEFILE
         symmetryAggregation = self.aggregation.get()
@@ -547,9 +549,11 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         if not doWrap:
             args += " --dont_wrap "
 
-        if exists(fnMask):
-            args += " --mask_in %s "%fnMask
-
+        if doVolumeMask:
+            if exists(fnVolumeMask):
+                args += " --mask_in %s "%fnVolumeMask
+            else:
+                print('Error: mask %s does not exists'%fnVolumeMask)
         return args
     
     def _argsAdjust(self, number):
