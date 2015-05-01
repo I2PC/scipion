@@ -77,62 +77,19 @@ $(document).ready(function() {
 	initializeSelectionRowEvent()
 	initializeGoToEvent()
 	initializeTableWidth()
-	var order = []
-
-	var count = 0
 	
 
+	
+	
+	var order = []
+	var count = 0
 	$.each(jsonTableLayoutConfiguration.columnsLayout, function(k, i) {
 		order.push(count)
 		count ++
 	});
 	
-	function getVisibleColumn(n)
-	{
-		count = 0;
-		visibles  = 0 
-		for (column in jsonTableLayoutConfiguration.columnsLayout)
-		{
-			if(jsonTableLayoutConfiguration.columnsLayout[column].visible)
-			{
-				if(visibles == n)
-					return count
-				visibles ++
-			}
-			count ++
-		}	
-	}
-	
-	function orderColumns()
-	{
-		orderColumns = jsonTableLayoutConfiguration.colsOrder.trim().split(" ")
-		var i = 0;
-		for(orderColumn in orderColumns)
-		{
-			j = 0
-			for (column in jsonTableLayoutConfiguration.columnsLayout)
-			{
-				if(jsonTableLayoutConfiguration.columnsLayout[column].columnLabel == orderColumns[orderColumn])
- 				{
-					pos = getVisibleColumn(i)
-					if(pos != order[j] && pos != -1)
-					{
-						pos2 = order.indexOf(j)
-						aux = order[pos]
-	 					order[pos] = order[pos2]
-	 					order[pos2] = aux
-					}
-					i ++
-					break
- 				}
- 				j ++
-			}
-		}
-	}
-	
-	
 	if (jsonTableLayoutConfiguration.colsOrder)
-		orderColumns()
+		order = orderColumns(order)
 	
 	
 	/* Init the table */

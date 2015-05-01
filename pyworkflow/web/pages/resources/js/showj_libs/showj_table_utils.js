@@ -141,7 +141,7 @@ function getColumnsDefinition() {
 		} 
 		else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
 //			console.log("id:"+columnIdReal+" render!")
-			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderImage(meta.col, data)}
+			dataRowForTable["mRender"] = function (data, type, row, meta){	return colRenderImage(meta.col, data)}
 		
 		// columnType = 5
 		} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
@@ -150,24 +150,15 @@ function getColumnsDefinition() {
 		
 		// None
 		}
-		else if (columnLayoutConfiguration.renderable) {
-//			console.log("id:"+columnIdReal+" renderable!")
-			html = colRenderImg('colRenderable', i, aData, columnLayoutConfiguration)
 		
-		// columnType = 3
-		}
 		dataForTable.push(dataRowForTable);
-		
 		columnId++;
 	}
-	console.log(dataForTable)
 	return dataForTable;
 }
 
 function colRenderCheckbox(id, aData){
-	var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"'
-			+ id + '___' + aData + '\" '
-	
+	var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" '
 	var data = aData
 			
 	if (data == "True" || data == 1 || data == true) {
@@ -181,25 +172,24 @@ function colRenderCheckbox(id, aData){
 
 
 function colRenderable(id, aData, renderFunc){
-	
-	src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc;
-	src += '&image=' + aData + '\"';
-	
-	var content_html = '<span style="display:none">' 
-			+ aData + '</span>'
-			+ '<img class=\"tableImages\" id=\"'
-			+ id + '___' + aData
-			+ '\" src=' + src
-			+ ' data-real_src=' +src
-			+ '/>'
-			
-	return content_html;
+		src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc;
+		src += '&image=' + aData + '\"';
+		
+		var content_html = '<span style="display:none">' 
+				+ aData + '</span>'
+				+ '<img class=\"tableImages\"'
+				+ ' src=' + src
+				+ ' data-real_src=' +src
+				+ '/>'
+				
+		return content_html;
 }
 
 
 function colRenderImage(id, aData){
 	
-	return colRenderable(id, aData, "get_image")
+	html = colRenderable(id, aData, "get_image")
+	return html
 }
 
 function colRenderSlice(id, aData){
@@ -211,15 +201,69 @@ function colRenderSlice(id, aData){
 	
 	var content_html = '<span style="display:none">' 
 			+ aData + '</span>'
-			+ '<img class=\"tableImages\" id=\"'
-			+ id + '___' + aData
-			+ '\" src=' + src
+			+ '<img class=\"tableImages\" '
+			+ ' src=' + src
 			+ ' data-real_src=' +src
 			+ '/>'
 			
 	return content_html;
 }
 
+function getVisibleColumn(n)
+{
+	count = 0;
+	visibles  = 0 
+	for (column in jsonTableLayoutConfiguration.columnsLayout)
+	{
+		if(jsonTableLayoutConfiguration.columnsLayout[column].visible)
+		{
+			if(visibles == n)
+				return count
+			visibles ++
+		}
+		count ++
+	}	
+}
+
+function getJsonFromIndex(json, index)
+{
+	var i = 0, key;
+    for (key in json) {
+        if (i == index) {
+            return json[key];
+        }
+        i++;
+    }
+    return null;
+}
+
+function orderColumns(order)
+{
+	orderColumns = jsonTableLayoutConfiguration.colsOrder.trim().split(" ")
+	var i = 0;
+	for(orderColumn in orderColumns)
+	{
+		j = 0
+		for (column in jsonTableLayoutConfiguration.columnsLayout)
+		{
+			if(jsonTableLayoutConfiguration.columnsLayout[column].columnLabel == orderColumns[orderColumn])
+			{
+				pos = getVisibleColumn(i)
+				if(pos != order[j] && pos != -1)
+				{
+					pos2 = order.indexOf(j)
+					aux = order[pos]
+ 					order[pos] = order[pos2]
+ 					order[pos2] = aux
+				}
+				i ++
+				break
+			}
+			j ++
+		}
+	}
+	return order
+}
 
 function initializeColumnHeader() {
 	var headerRow = $("#data_table thead tr")
@@ -625,8 +669,9 @@ function saveTableConfiguration() {
 				'checked')
 
 		// From the image element we get the column header index
-		columnId = oTable.fnGetColumnIndex(label)
-		oTable.fnSetColumnVis(columnId, columnLayoutProperties.visible);
+		columnId = oTable.fnGetColumnIndex(columnLayoutProperties.columnLabel)
+		if(columnId != -1)
+			oTable.fnSetColumnVis(columnId, columnLayoutProperties.visible);
 
 		var newValue = ""
 
