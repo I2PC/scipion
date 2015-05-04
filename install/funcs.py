@@ -458,13 +458,12 @@ class Environment:
                    final=True)
 
         return t
-    
+
     def addPackage(self, name, **kwargs):
-        """ This function download a package tar.gz, untar it and 
-        create a link in software/em.
+        """ Download a package tgz, untar it and create a link in software/em.
         Params in kwargs:
             tar: the package tar file, by default the name + .tgz
-            commands: a list with action to be executed to install the package
+            commands: a list with actions to be executed to install the package
         """
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
