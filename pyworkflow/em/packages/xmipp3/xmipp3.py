@@ -569,3 +569,63 @@ class HelicalFinder():
         if cylinderRadius>0:
             args="-i %s --mask cylinder %d %d"%(fnOut,-cylinderRadius,-height)
             self.runJob('xmipp_transform_mask',args)
+            
+            
+class XmippScript():
+    ''' This class will serve as wrapper around the XmippProgram class
+    to have same facilities from Python scripts'''
+    def __init__(self, runWithoutArgs=False):
+        self._prog = xmipp.Program(runWithoutArgs)
+        
+    def defineParams(self):
+        ''' This function should be overwrited by subclasses for 
+        define its own parameters'''
+        pass
+    
+    def readParams(self):
+        ''' This function should be overwrited by subclasses for 
+        and take desired params from command line'''
+        pass
+    
+    def checkParam(self, param):
+        return self._prog.checkParam(param)
+    
+    def getParam(self, param, index=0):
+        return self._prog.getParam(param, index)
+    
+    def getIntParam(self, param, index=0):
+        return int(self._prog.getParam(param, index))
+    
+    def getDoubleParam(self, param, index=0):
+        return float(self._prog.getParam(param, index))
+    
+    def getListParam(self, param):
+        return self._prog.getListParam(param)
+    
+    def addUsageLine(self, line, verbatim=False):
+        self._prog.addUsageLine(line, verbatim)
+
+    def addExampleLine(self, line, verbatim=True):
+        self._prog.addExampleLine(line, verbatim)
+        
+    def addParamsLine(self, line):
+        self._prog.addParamsLine(line)
+    
+    def run(self):
+        ''' This function should be overwrited by subclasses and
+        it the main body of the script'''   
+        pass
+     
+    def tryRun(self):
+        ''' This function should be overwrited by subclasses and
+        it the main body of the script'''
+        try:
+            import sys
+            self.defineParams()
+            doRun = self._prog.read(sys.argv)
+            if doRun:
+                self.readParams()
+                self.run()
+        except Exception:
+            import traceback
+            traceback.print_exc(file=sys.stderr)

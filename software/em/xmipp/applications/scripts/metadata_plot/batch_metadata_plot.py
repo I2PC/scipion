@@ -27,7 +27,8 @@
 """
 
 import os
-from protlib_xmipp import XmippScript
+from pyworkflow.em.packages.xmipp3 import XmippScript
+
 
 class ScriptPlotMetadata(XmippScript):
     def __init__(self):
@@ -131,6 +132,7 @@ class ScriptPlotMetadata(XmippScript):
         if legendLocation != 'none':
             xplotter.showLegend(ylabels, loc=legendLocation.replace('_', ' '))
         xplotter.show()
+
 
 if __name__ == '__main__':
     ScriptPlotMetadata().tryRun()
