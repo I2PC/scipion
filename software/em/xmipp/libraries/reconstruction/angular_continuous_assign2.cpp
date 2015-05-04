@@ -399,7 +399,6 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			double b=p(0);
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mIp)
 				DIRECT_MULTIDIM_ELEM(mIp,n)=a*DIRECT_MULTIDIM_ELEM(mIp,n)+b;
-
 			Ip.write(fnImgOut);
 		}
 		catch (XmippError XE)
@@ -431,6 +430,9 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     }
 
 #ifdef DEBUG
+    MetaData MDaux;
+    MDaux.addRow(rowOut);
+    MDaux.write("PPPmd.xmd");
     Image<double> save;
     save()=P();
     save.write("PPPprojection.xmp");
