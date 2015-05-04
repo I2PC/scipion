@@ -558,6 +558,10 @@ class Environment:
         cmdTargets = [a for a in self._args[2:] if a[0].isalpha() and not a.startswith('xmipp')]
 
         if cmdTargets:
+            # Check that they are all command targets
+            for t in cmdTargets:
+                if t not in self._targetDict:
+                    raise RuntimeError("Unknown target: %s" % t)
             # Grab the targets passed in the command line
             targetList = [self._targetDict[t] for t in cmdTargets]
         else:
