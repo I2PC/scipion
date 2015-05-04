@@ -241,11 +241,15 @@ def guessJavaHome():
         if allExist:
             return javaHome
 
+    print(red("Warning: could not detect a suitable JAVA_HOME."))
+    if candidates:
+        print(red("Our candidates were:\n  %s" % '\n  '.join(candidates)))
     return '/usr/lib64/jvm/java-1.7.0-openjdk-1.7.0'  # not found, default value
 
 
 def unref(path):
     "Return the final file or directory to which the symbolic link path points"
+    # If the path is not a symbolic link, it just returns it.
 
     for i in range(100):
         if islink(path):
