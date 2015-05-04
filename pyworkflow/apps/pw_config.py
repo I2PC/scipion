@@ -27,7 +27,7 @@ or if they do not exist.
 
 import sys
 import os
-from os.path import join, exists, dirname, basename
+from os.path import join, exists, dirname, basename, islink, isdir
 import time
 import optparse
 # We use optparse instead of argparse because we want this script to
@@ -197,6 +197,51 @@ def checkConf(fpath, ftemplate, remove=[], keep=[]):
             for o in dt[s] - df[s]:
                 print("In section %s, option %s exists in the template "
                       "but not in the configuration file." % (red(s), red(o)))
+
+
+def guessJavaHome():
+    "Guess the system's JAVA_HOME"
+    candidates = []
+    # First check if the system has a favorite one.
+    if 'JAVA_HOME' in os.environ:
+        candidates.append(os.environ['JAVA_HOME'])
+    # Add also all the ones related to a "java" program.
+    for d in os.environ.get('PATH', '').split(':'):
+        if not isdir(d) or 'java' not in os.listdir(d):
+            continue
+        javaBin = unref(join(d, 'java'))
+        if javaBin.endswith('/bin/java'):
+            javaHome = javaBin[:-len('/bin/java')]
+            candidates.append(javaHome)
+            if javaHome.endswith('/jre'):
+                candidates.append(javaHome[:-len('/jre')])
+    # Check in order if for any of our candidates, all related
+    # directories and files exist. If they do, that'd be our best guess.
+    for javaHome in candidates:
+        allExist = True
+        for path in ['include', join('bin', 'javac'), join('bin', 'jar')]:
+            if not exists(join(javaHome, path)):
+                allExist = False
+        if allExist:
+            return javaHome
+
+    return '/usr/lib64/jvm/java-1.7.0-openjdk-1.7.0'  # not found, default value
+
+
+
+def unref(path):
+    "Return the final file or directory to which the symbolic link path points"
+    for i in range(100):
+        if islink(path):
+            path = os.readlink(path)
+        elif exists(path):
+            break
+        else:
+            continue
+    else:  # too many iterations (> 100)
+        raise RuntimeError("Link screwed: %s" % path)
+    return path
+
 
 
 if __name__ == '__main__':
