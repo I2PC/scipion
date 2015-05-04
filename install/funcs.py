@@ -323,11 +323,10 @@ class Environment:
     def addLibrary(self, name, **kwargs):
         """Add library <name> to the construction process.
 
-        This pseudobuilder checks that the needed programs are in PATH,
-        downloads the given url, untars the resulting tar file, configures
-        the library with the given flags, compiles it (in the given
-        buildDir) and installs it. It also tells SCons about the proper
-        dependencies (deps).
+        Checks that the needed programs are in PATH, needed libraries
+        can be found, downloads the given url, untars the resulting
+        tar file, configures the library with the given flags,
+        compiles it (in the given buildDir) and installs it.
 
         If default=False, the library will not be built.
 
@@ -340,6 +339,17 @@ class Environment:
         targets = kwargs.get('targets', [self.getLib(name)])
         clean = kwargs.get('clean', False) # Execute make clean at the end??
         cmake = kwargs.get('cmake', False) # Use cmake instead of configure??
+        default = kwargs.get('default', True)
+        neededProgs = kwargs.get('neededProgs', [])
+        neededLibs = kwargs.get('neededLibs', [])
+
+        if default or name in sys.argv[2:]:
+            # Check that we have the necessary programs and libraries in place.
+            for prog in neededProgs:
+                assert progInPath(prog), ("Cannot find necessary program: %s\n"
+                                          "Please install and try again" % prog)
+            for lib in neededLibs:
+                checkLib(lib)
 
         # If passing a command list (of tuples (command, target)) those actions
         # will be performed instead of the normal ./configure / cmake + make
@@ -492,7 +502,7 @@ class Environment:
                          final=True)            
 
         return target
-    
+
     def _showTargetGraph(self, targetList):
         """ Traverse the targets taking into account
         their dependences and print them in DOT format.
