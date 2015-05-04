@@ -123,12 +123,19 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
     if keep:
         for section in set(cf.sections()) - set(keep):
             cf.remove_section(section)
+
+    # Update with our guesses.
+    if 'BUILD' in cf.sections() and 'JAVA_HOME' in cf.options('BUILD'):
+        cf.set('BUILD', 'JAVA_HOME', guessJavaHome())
+
+    # Create the actual configuration file.
     cf.write(open(fpath, 'w'))
     print("Please edit it to reflect the configuration of your system.\n")
 
 
 def checkPaths(conf):
     "Check that some paths in the config file actually make sense"
+
     print("Checking paths in %s ..." % conf)
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
