@@ -566,7 +566,7 @@ def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
 
     focusGroup = 1
     counter=0
-    print("imgStar",imgStar)
+    ####print("imgStar",imgStar)
     oldDefocusU = mdAll.getValue(md.RLN_CTF_DEFOCUSU, mdAll.firstObject())
     groupName = '%s_%06d_%05d'%('ctfgroup',oldDefocusU,focusGroup)
     for objId in mdAll:
