@@ -100,6 +100,8 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
     "Create config file in fpath following the template in ftemplate"
     # Remove from the template the sections in "remove", and if "keep"
     # is used only keep those sections.
+
+    # Create directory and backup if necessary.
     dname = dirname(fpath)
     if not exists(dname):
         os.makedirs(dname)
@@ -110,6 +112,8 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
                       '%s.%d' % (basename(fpath), int(time.time())))
         print(yellow("* Creating backup: %s" % backup))
         os.rename(fpath, backup)
+
+    # Read the template configuration file.
     print(yellow("* Creating configuration file: %s" % fpath))
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
@@ -155,6 +159,7 @@ def checkPaths(conf):
 
 def checkConf(fpath, ftemplate, remove=[], keep=[]):
     "Check that all the variables in the template are in the config file too"
+
     # Remove from the checks the sections in "remove", and if "keep"
     # is used only check those sections.
     cf = ConfigParser()
@@ -201,10 +206,13 @@ def checkConf(fpath, ftemplate, remove=[], keep=[]):
 
 def guessJavaHome():
     "Guess the system's JAVA_HOME"
+
     candidates = []
+
     # First check if the system has a favorite one.
     if 'JAVA_HOME' in os.environ:
         candidates.append(os.environ['JAVA_HOME'])
+
     # Add also all the ones related to a "java" program.
     for d in os.environ.get('PATH', '').split(':'):
         if not isdir(d) or 'java' not in os.listdir(d):
@@ -215,6 +223,7 @@ def guessJavaHome():
             candidates.append(javaHome)
             if javaHome.endswith('/jre'):
                 candidates.append(javaHome[:-len('/jre')])
+
     # Check in order if for any of our candidates, all related
     # directories and files exist. If they do, that'd be our best guess.
     for javaHome in candidates:
@@ -228,9 +237,9 @@ def guessJavaHome():
     return '/usr/lib64/jvm/java-1.7.0-openjdk-1.7.0'  # not found, default value
 
 
-
 def unref(path):
     "Return the final file or directory to which the symbolic link path points"
+
     for i in range(100):
         if islink(path):
             path = os.readlink(path)
@@ -240,6 +249,7 @@ def unref(path):
             continue
     else:  # too many iterations (> 100)
         raise RuntimeError("Link screwed: %s" % path)
+
     return path
 
 
