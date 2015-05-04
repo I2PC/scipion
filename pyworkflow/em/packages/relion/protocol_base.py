@@ -648,7 +648,7 @@ class ProtRelionBase(EMProtocol):
         return program
     
     def _getInputParticles(self):
-        if self.doContinue:# and not self.inputParticles:
+        if self.doContinue:
             self.inputParticles.set(self.continueRun.get().inputParticles.get())
         return self.inputParticles.get()
     
