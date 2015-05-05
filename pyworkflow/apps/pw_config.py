@@ -253,6 +253,9 @@ def guessJavaHome():
 def guessMPI():
     "Guess the system's MPI installation"
 
+    # TODO: instad of finding a single MPI_HOME, find separately
+    # MPI_LIBDIR, MPI_INCLUDE and MPI_BINDIR. Return it as a dictionary.
+    
     candidates = []
 
     # First check if the system has a favorite one.
@@ -269,11 +272,14 @@ def guessMPI():
             mpiHome = mpiBin[:-len('/bin/mpicc')]
             candidates.append(mpiHome)
 
+    # Add some extra that are commonly found.
+    candidates += ['/usr/lib/openmpi', '/usr/lib64/mpi/gcc/openmpi']
+
     # Check in order if for any of our candidates, all related
     # directories and files exist. If they do, that'd be our best guess.
     for mpiHome in candidates:
         allExist = True
-        for path in ['include', 'lib', join('bin', 'mpiCC')]:
+        for path in ['include', 'lib']:
             if not exists(join(mpiHome, path)):
                 allExist = False
         if allExist:
