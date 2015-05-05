@@ -220,13 +220,13 @@ def guessJavaHome():
     if 'JAVA_HOME' in os.environ:
         candidates.append(os.environ['JAVA_HOME'])
 
-    # Add also all the ones related to a "java" program.
+    # Add also all the ones related to a "javac" program.
     for d in os.environ.get('PATH', '').split(':'):
-        if not isdir(d) or 'java' not in os.listdir(d):
+        if not isdir(d) or 'javac' not in os.listdir(d):
             continue
-        javaBin = unref(join(d, 'java'))
-        if javaBin.endswith('/bin/java'):
-            javaHome = javaBin[:-len('/bin/java')]
+        javaBin = unref(join(d, 'javac'))
+        if javaBin.endswith('/bin/javac'):
+            javaHome = javaBin[:-len('/bin/javac')]
             candidates.append(javaHome)
             if javaHome.endswith('/jre'):
                 candidates.append(javaHome[:-len('/jre')])

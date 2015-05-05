@@ -186,4 +186,23 @@ class ImageHandler(object):
         else:
             return None
         
-        
+    def invertStack(self, inputFn, outputFn):
+        #get input dim
+        (x,y,z,n) = xmipp.getImageSize(inputFn)
+        #Create empty output stack for efficiency
+        xmipp.createEmptyFile(outputFn,x,y,z,n)
+        # handle image formats
+        for i in range(1, n+1):
+            self.invert((i, inputFn), (i, outputFn))
+    
+    def invert(self, inputObj, outputObj):
+        """ invert the pixels.
+        inputObj and outputObj can be: tuple, string, or Image subclass 
+        (see self._convertToLocation)
+        """
+        # Read from input
+        self._img.read(self._convertToLocation(inputObj))
+        self._img.inplaceMultiply(-1)
+        # Write to output
+        self._img.write(self._convertToLocation(outputObj))
+

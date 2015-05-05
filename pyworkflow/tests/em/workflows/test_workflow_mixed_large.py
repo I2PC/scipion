@@ -185,7 +185,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         
         # Classify the SetOfParticles.
         print "Running Frealign Classification..."
-        protFrealign = self.newProtocol(ProtFrealignClassify, numberOfClasses=3, itRefineAngles=2, itRefineShifts=3, angStepSize=20, numberOfIterations=6, mode=1, doExtraRealSpaceSym=True,
+        protFrealign = self.newProtocol(ProtFrealignClassify, doInvert=False, numberOfClasses=3, itRefineAngles=2, itRefineShifts=3, angStepSize=20, numberOfIterations=6, mode=1, doExtraRealSpaceSym=True,
                                     outerRadius=180, PhaseResidual=65, lowResolRefine=300, highResolRefine=15,
                                     resolution=15, runMode=1, numberOfMpi=16)
         protFrealign.inputParticles.set(protExtract.outputParticles)
