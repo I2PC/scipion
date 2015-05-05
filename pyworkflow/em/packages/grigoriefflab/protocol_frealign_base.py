@@ -29,7 +29,7 @@ import os
 from os.path import join, exists, basename
 
 from pyworkflow.object import Integer
-from pyworkflow.utils.path import copyFile, createLink, makePath
+from pyworkflow.utils.path import copyFile, createLink, makePath, moveFile
 from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
 from pyworkflow.protocol.params import (StringParam, BooleanParam, IntParam, PointerParam,
                                         EnumParam, FloatParam, TextParam)
@@ -145,6 +145,9 @@ class ProtFrealignBase(EMProtocol):
                       pointerClass='SetOfParticles',pointerCondition='hasCTF',
                       condition='not doContinue',
                       help='Select the input particles.\n')
+        form.addParam('doInvert', BooleanParam, default=True,
+                      label='Invert contrast',
+                      help='Invert the contrast if your particles are white over a black background.')
         form.addParam('input3DReference', PointerParam,
                       pointerClass='Volume',
                       label='Initial 3D reference volume:',
@@ -478,7 +481,6 @@ class ProtFrealignBase(EMProtocol):
         self._insertContinueStep()
         self._insertItersSteps()
         self._insertFunctionStep("createOutputStep")
-
 
     def _insertContinueStep(self):
         if self.doContinue:
@@ -1196,11 +1198,16 @@ eot
         for i, part in enumerate(self.inputParticles.get().iterItems(orderBy=['_micId', 'id'],
                                                                      direction='ASC')):
             yield i, part
-
+    
     def writeParticlesByMic(self, stackFn):
         self.inputParticles.get().writeStack(stackFn,
                                              orderBy=['_micId', 'id'],
                                              direction='ASC')
+        if self.doInvert:
+            tmpFile = self._getTmpPath("kk.mrc")
+            ih = ImageHandler()
+            ih.invertStack(stackFn, tmpFile)
+            moveFile(tmpFile, stackFn)
     
     def _getMicIdList(self):
         return self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
