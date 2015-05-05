@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors: J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 
