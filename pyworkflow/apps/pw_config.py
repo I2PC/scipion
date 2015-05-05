@@ -27,7 +27,7 @@ or if they do not exist.
 
 import sys
 import os
-from os.path import join, exists, dirname, basename
+from os.path import join, exists, dirname, basename, islink, isdir
 import time
 import optparse
 # We use optparse instead of argparse because we want this script to
@@ -100,6 +100,8 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
     "Create config file in fpath following the template in ftemplate"
     # Remove from the template the sections in "remove", and if "keep"
     # is used only keep those sections.
+
+    # Create directory and backup if necessary.
     dname = dirname(fpath)
     if not exists(dname):
         os.makedirs(dname)
@@ -110,6 +112,8 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
                       '%s.%d' % (basename(fpath), int(time.time())))
         print(yellow("* Creating backup: %s" % backup))
         os.rename(fpath, backup)
+
+    # Read the template configuration file.
     print(yellow("* Creating configuration file: %s" % fpath))
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
@@ -119,12 +123,19 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
     if keep:
         for section in set(cf.sections()) - set(keep):
             cf.remove_section(section)
+
+    # Update with our guesses.
+    if 'BUILD' in cf.sections() and 'JAVA_HOME' in cf.options('BUILD'):
+        cf.set('BUILD', 'JAVA_HOME', guessJavaHome())
+
+    # Create the actual configuration file.
     cf.write(open(fpath, 'w'))
     print("Please edit it to reflect the configuration of your system.\n")
 
 
 def checkPaths(conf):
     "Check that some paths in the config file actually make sense"
+
     print("Checking paths in %s ..." % conf)
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
@@ -155,6 +166,7 @@ def checkPaths(conf):
 
 def checkConf(fpath, ftemplate, remove=[], keep=[]):
     "Check that all the variables in the template are in the config file too"
+
     # Remove from the checks the sections in "remove", and if "keep"
     # is used only check those sections.
     cf = ConfigParser()
@@ -197,6 +209,60 @@ def checkConf(fpath, ftemplate, remove=[], keep=[]):
             for o in dt[s] - df[s]:
                 print("In section %s, option %s exists in the template "
                       "but not in the configuration file." % (red(s), red(o)))
+
+
+def guessJavaHome():
+    "Guess the system's JAVA_HOME"
+
+    candidates = []
+
+    # First check if the system has a favorite one.
+    if 'JAVA_HOME' in os.environ:
+        candidates.append(os.environ['JAVA_HOME'])
+
+    # Add also all the ones related to a "java" program.
+    for d in os.environ.get('PATH', '').split(':'):
+        if not isdir(d) or 'java' not in os.listdir(d):
+            continue
+        javaBin = unref(join(d, 'java'))
+        if javaBin.endswith('/bin/java'):
+            javaHome = javaBin[:-len('/bin/java')]
+            candidates.append(javaHome)
+            if javaHome.endswith('/jre'):
+                candidates.append(javaHome[:-len('/jre')])
+
+    # Check in order if for any of our candidates, all related
+    # directories and files exist. If they do, that'd be our best guess.
+    for javaHome in candidates:
+        allExist = True
+        for path in ['include', join('bin', 'javac'), join('bin', 'jar')]:
+            if not exists(join(javaHome, path)):
+                allExist = False
+        if allExist:
+            return javaHome
+
+    print(red("Warning: could not detect a suitable JAVA_HOME."))
+    if candidates:
+        print(red("Our candidates were:\n  %s" % '\n  '.join(candidates)))
+    return '/usr/lib64/jvm/java-1.7.0-openjdk-1.7.0'  # not found, default value
+
+
+def unref(path):
+    "Return the final file or directory to which the symbolic link path points"
+    # If the path is not a symbolic link, it just returns it.
+
+    for i in range(100):
+        if islink(path):
+            path = os.readlink(path)
+        elif exists(path):
+            break
+        else:
+            continue
+    else:  # too many iterations (> 100)
+        raise RuntimeError("Link screwed: %s" % path)
+
+    return path
+
 
 
 if __name__ == '__main__':

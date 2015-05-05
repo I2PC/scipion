@@ -133,7 +133,8 @@ lapack = env.addLibrary(
     tar='lapack-3.5.0.tgz',
     flags=['-DBUILD_SHARED_LIBS:BOOL=ON',
            '-DLAPACKE:BOOL=ON'],
-    cmake=True, 
+    cmake=True,
+    neededProgs=['gfortran'],
     default=False)
 # TODO: add check for gfortran
 

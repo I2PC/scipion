@@ -129,13 +129,14 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         line=form.addLine('Tilt angle:', help='0 degrees represent top views, 90 degrees represent side views')
         line.addParam('angularMinTilt', FloatParam, label="Min.", default=0)
         line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90)
-        groupSignificant = form.addGroup('Significant')
+        groupSignificant = form.addGroup('Global')
         groupSignificant.addParam('significantMaxResolution', FloatParam, label="Global assignment if resolution is worse than (A)", default=12,
                       help='Significant assignment is always performed on the first iteration. Starting from the second, you may '\
                       'decide whether to perform it or not. Note that the significant angular assignment is a robust angular assignment '\
                       'meant to avoid local minima, although it may take time to calculate.')
         groupSignificant.addParam('significantSignificance', FloatParam, label="Significance (%)", default=99.75)
-        groupContinuous = form.addGroup('Continuous')
+        groupSignificant.addParam('significantGrayValues', BooleanParam, label="Optimize gray values?", default=True)
+        groupContinuous = form.addGroup('Local')
         groupContinuous.addParam('continuousMinResolution', FloatParam, label="Continuous assignment if resolution is better than (A)", default=15,
                       help='Continuous assignment can produce very accurate assignments if the initial assignment is correct.')
         groupContinuous.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True,
@@ -329,6 +330,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         # Estimate resolution
         fnFsc=join(fnDirCurrent,"fsc.xmd")
         self.runJob('xmipp_resolution_fsc','--ref %s -i %s -o %s --sampling_rate %f'%(fnVol1,fnVol2,fnFsc,TsCurrent),numberOfMpi=1)
+        fnBeforeVol1=join(fnDirCurrent,"volumeBeforePostProcessing%02d.vol"%1)
+        fnBeforeVol2=join(fnDirCurrent,"volumeBeforePostProcessing%02d.vol"%1)
+        if exists(fnBeforeVol1) and exists(fnBeforeVol2):
+            fnBeforeFsc=join(fnDirCurrent,"fsc.xmd")
+            self.runJob('xmipp_resolution_fsc','--ref %s -i %s -o %s --sampling_rate %f'%(fnBeforeVol1,fnBeforeVol2,fnBeforeFsc,TsCurrent),
+                        numberOfMpi=1)
         md = MetaData(fnFsc)
         resolution=2*TsCurrent
         for objId in md:
@@ -549,6 +556,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
                 if self.saveSpace:
                     self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
+                
+                if self.significantGrayValues and previousResolution>self.continuousMinResolution.get():
+                    fnRefinedStack=join(fnDirSignificant,"imagesRefined%02d.stk"%i)
+                    self.runJob("xmipp_angular_continuous_assign2","-i %s -o %s --ref %s --optimizeGray"%\
+                                (fnAngles,fnRefinedStack,fnReferenceVol))
+                    fnRefinedXmd=join(fnDirSignificant,"imagesRefined%02d.xmd"%i)
+                    moveFile(fnRefinedXmd,fnAngles)
 
     def adaptShifts(self, fnSource, TsSource, fnDest, TsDest):
         K=TsSource/TsDest
@@ -684,12 +698,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 moveFile(join(fnDirLocal,"covariance%02d.xmd"%i),fnAngles)
             
             md=MetaData(fnAngles)
+            doWeightSignificance=self.weightSignificance and md.containsLabel(MDL_WEIGHT_SIGNIFICANT)
             for objId in md:
                 weight=1
                 if self.weightSSNR:
                     aux=md.getValue(MDL_WEIGHT_SSNR,objId)
                     weight*=aux
-                if self.weightSignificance and exists(fnAnglesDisc):
+                if doWeightSignificance:
                     aux=md.getValue(MDL_WEIGHT_SIGNIFICANT,objId)
                     weight*=aux
                 if self.weightContinuous and exists(fnAnglesCont):
@@ -750,9 +765,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
                 previousResolution=self.readInfoField(fnDirPrevious, "resolution", MDL_RESOLUTION_FREQREAL)
                 if previousResolution<self.postBmin.get():
-                    args="-i %s --sampling %f --auto --fit_minres %f --fit_maxres %f --maxres %f"%\
-                       (fnVol,TsCurrent,self.postBmin.get(),self.postBmax.get(),2*TsCurrent)
+                    fnAuxVol=join(fnDirCurrent,"volumeAux%02d.vol"%i)
+                    args="-i %s --sampling %f --auto --fit_minres %f --fit_maxres %f --maxres %f -o %s"%\
+                       (fnVol,TsCurrent,self.postBmin.get(),self.postBmax.get(),2*TsCurrent,fnAuxVol)
                     self.runJob("xmipp_volume_correct_bfactor",args,numberOfMpi=1)
+                    moveFile(fnAuxVol,fnVol)
+                    moveFile(fnAuxVol+".guinier",fnVol+".guinier")
             
             if self.postNonnegativity:
                 self.runJob("xmipp_transform_threshold","-i %s --select below 0 --substitute value 0"%fnVol,numberOfMpi=1)
