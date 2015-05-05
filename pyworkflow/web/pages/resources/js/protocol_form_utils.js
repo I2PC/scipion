@@ -252,50 +252,31 @@ function evalElements() {
 		}
 		// Get the type (data-type)
 		var type = $(this).attr('data-type');
-
+		
 		// DEBUG -----------------------------
-		var debug_param = "PARAM:"+param;
-		var debug_value = "VALUE:"+value;
-		var debug_type = "TYPE:"+type;
-		//console.log(debug_param + ", " +debug_value + ", " +debug_type);
-
-
+//		var debug_param = "PARAM:"+param;
+//		var debug_value = "VALUE:"+value;
+//		var debug_type = "TYPE:"+type;
+//		console.log(debug_param + ", " +debug_value + ", " +debug_type);
+		
 		switch (type){
 		// Depending of the parameter type is processed
-
+			
 			case "EnumParam":
 				// Get the kind of EnumParam
 				var typeEnum = parseInt($(this).attr('data-enum'));
-
+				
 				if(typeEnum){
 					onChangeEnumParamCombo(param + "_select", param);
 				} else {
 					onChangeEnumParamList(value, param);
 				}
 				break;
-
+				
 			case "MultiPointerParam":
 				recalculateSelectDim('#' + param + '_input');
 				break;
 				
-			// If param is a  line go over all elements inside
-			case "Line":
-                var row = $(this)
-                row.find('div').each(function(index) {
-                // Get the identifier (id) for the parameter
-                	var par = $(this).find('input').attr('id');
-                    // Get the value for the parameter
-                    var val = $(this).find('input').val();
-                    if(val.length == 0){
-                    	val = $(this).find('input').attr('value');
-                    }
-                    onChangeParam(val, par);
-                });
-             // Get the expertise level for the row affected
-            	var expLevel = row.attr('data-expert');
-            	var newLevel = $("input[name=expertLevel]:checked").val();
-            	evalExpertLevel(expLevel, newLevel, row)
-            	
 			default:
 				onChangeParam(value, param);
 				break;
@@ -333,11 +314,6 @@ function setParamValue(paramId, value) {
 	
 	// Get the row affected
 	var row = $("tr#" + paramId);
-	
-	if (row == undefined){
-		row = $("input#" + paramId);
-	}
-	
 	// Update the value for the row
 	row.val(value);
 	
@@ -351,19 +327,18 @@ function setParamValue(paramId, value) {
 	// Evaluate the dependencies for the new expert level and the row affected
 	evalDependencies(row, newLevel);
 
-    // Get the expertise level for the row affected
-	var expLevel = row.attr('data-expert');
-
-	// To process the hidden elements into protocol form
-	// is necessary to be evaluated himself.
-    evalRow(row)
-
 	// Get the params affected with the changes
 	var params = row.attr('data-params');
+
 	// Evaluate the expert level
 	if (params != undefined && params.length <= 0) {
+		var expLevel = row.attr('data-expert');
 		evalExpertLevel(expLevel, newLevel, row)
 	}
+	
+	// To process the hidden elements into protocol form
+	// is necessary to be evaluated himself.
+	evalRow(row)
 }
 
 function evalExpertLevel(expLevel, newLevel, row){
@@ -380,7 +355,6 @@ function evalExpertLevel(expLevel, newLevel, row){
 }
 
 function evalRow(row){
-    /*
 	var evalThis = row.attr("data-cond")
 	switch (evalThis){
 		case "False":
@@ -390,15 +364,6 @@ function evalRow(row){
 			row.css('display', 'table-row')
 			break;
 	}
-	*/
-    var res = evalCondition(row)
-	if (res != undefined){
-        if (res == false) {
-            row.hide();
-        } else if (res == true) {
-            row.show();
-        }
-    }
 }
 
 
@@ -419,19 +384,12 @@ function evalDependencies(row, newLevel) {
 
 		for (var cont = 0; cont < arrayDepends.length; cont++) {
 			// Get params affected with the dependencies
-		
-			// Look for a 'tr' element, otherwise look for an 'div' element
-    	    var row2 = $("tr#" + arrayDepends[cont]);
-            //console.log("TO EVALUATE: tr#" + arrayDepends[cont]);
+			var row2 = $("tr#" + arrayDepends[cont]);
+			
+//			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
 
 			// Evaluate the new parameter affected
 			var res = evalCondition(row2);
-
-			if (res == undefined){
-			    row2 = $("div#" + arrayDepends[cont]);
-                //console.log("TO EVALUATE: div#" + arrayDepends[cont]);
-                var res = evalCondition(row2);
-			}
 			
 			if (res != undefined){
 
