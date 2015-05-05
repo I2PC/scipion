@@ -29,18 +29,13 @@ import os
 import sys
 import time
 from glob import glob
-
 from subprocess import STDOUT, call
-#Python 3 compatibility: How to overcome Python NameError: name 'basestring' is not defined
+
 try:
     unicode = unicode
-except NameError:
-    # 'unicode' is undefined, must be Python 3
+except NameError:  # 'unicode' is undefined, must be Python 3
     unicode = str
-    basestring = (str,bytes)
-else:
-    # 'unicode' exists, must be Python 2
-    basestring = basestring
+    basestring = (str, bytes)
 
 # Then we get some OS vars
 MACOSX = (platform.system() == 'Darwin')
