@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors: J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -29,18 +29,13 @@ import os
 import sys
 import time
 from glob import glob
-
 from subprocess import STDOUT, call
-#Python 3 compatibility: How to overcome Python NameError: name 'basestring' is not defined
+
 try:
     unicode = unicode
-except NameError:
-    # 'unicode' is undefined, must be Python 3
+except NameError:  # 'unicode' is undefined, must be Python 3
     unicode = str
-    basestring = (str,bytes)
-else:
-    # 'unicode' exists, must be Python 2
-    basestring = basestring
+    basestring = (str, bytes)
 
 # Then we get some OS vars
 MACOSX = (platform.system() == 'Darwin')
@@ -323,11 +318,10 @@ class Environment:
     def addLibrary(self, name, **kwargs):
         """Add library <name> to the construction process.
 
-        This pseudobuilder checks that the needed programs are in PATH,
-        downloads the given url, untars the resulting tar file, configures
-        the library with the given flags, compiles it (in the given
-        buildDir) and installs it. It also tells SCons about the proper
-        dependencies (deps).
+        Checks that the needed programs are in PATH, needed libraries
+        can be found, downloads the given url, untars the resulting
+        tar file, configures the library with the given flags,
+        compiles it (in the given buildDir) and installs it.
 
         If default=False, the library will not be built.
 
@@ -340,6 +334,17 @@ class Environment:
         targets = kwargs.get('targets', [self.getLib(name)])
         clean = kwargs.get('clean', False) # Execute make clean at the end??
         cmake = kwargs.get('cmake', False) # Use cmake instead of configure??
+        default = kwargs.get('default', True)
+        neededProgs = kwargs.get('neededProgs', [])
+        libChecks = kwargs.get('libChecks', [])
+
+        if default or name in sys.argv[2:]:
+            # Check that we have the necessary programs and libraries in place.
+            for prog in neededProgs:
+                assert progInPath(prog), ("Cannot find necessary program: %s\n"
+                                          "Please install and try again" % prog)
+            for lib in libChecks:
+                checkLib(lib)
 
         # If passing a command list (of tuples (command, target)) those actions
         # will be performed instead of the normal ./configure / cmake + make
@@ -410,6 +415,17 @@ class Environment:
         # Use reasonable defaults.
         targets = kwargs.get('targets', [name])
         flags = kwargs.get('flags', [])
+        default = kwargs.get('default', True)
+        neededProgs = kwargs.get('neededProgs', [])
+        libChecks = kwargs.get('libChecks', [])
+
+        if default or name in sys.argv[2:]:
+            # Check that we have the necessary programs and libraries in place.
+            for prog in neededProgs:
+                assert progInPath(prog), ("Cannot find necessary program: %s\n"
+                                          "Please install and try again" % prog)
+            for lib in libChecks:
+                checkLib(lib)
         
         deps = kwargs.get('deps', [])
         deps.append('python')
@@ -458,13 +474,12 @@ class Environment:
                    final=True)
 
         return t
-    
+
     def addPackage(self, name, **kwargs):
-        """ This function download a package tar.gz, untar it and 
-        create a link in software/em.
+        """ Download a package tgz, untar it and create a link in software/em.
         Params in kwargs:
             tar: the package tar file, by default the name + .tgz
-            commands: a list with action to be executed to install the package
+            commands: a list with actions to be executed to install the package
         """
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
@@ -493,7 +508,7 @@ class Environment:
                          final=True)            
 
         return target
-    
+
     def _showTargetGraph(self, targetList):
         """ Traverse the targets taking into account
         their dependences and print them in DOT format.
@@ -549,6 +564,10 @@ class Environment:
         cmdTargets = [a for a in self._args[2:] if a[0].isalpha() and not a.startswith('xmipp')]
 
         if cmdTargets:
+            # Check that they are all command targets
+            for t in cmdTargets:
+                if t not in self._targetDict:
+                    raise RuntimeError("Unknown target: %s" % t)
             # Grab the targets passed in the command line
             targetList = [self._targetDict[t] for t in cmdTargets]
         else:

@@ -253,14 +253,14 @@ public class PlotJDialog extends XmippDialog {
                         }
                         else
                         {
-//                        	String scipionHome = System.getenv().get("SCIPION_HOME");
-//                          if(scipionHome == null)
-//                          {
-//                                XmippDialog.showError(null, "Scipion is not available");
-//                                return;
-//                          }
-//                          String plotcmd = Filename.join(scipionHome, "software", "em", "xmipp", "bin", "xmipp_metadata_plot");
-                        	String plotcmd = "xmipp_metadata_plot"; 
+                        	String scipionHome = System.getenv().get("SCIPION_HOME");
+                          if(scipionHome == null)
+                          {
+                                XmippDialog.showError(null, "Scipion is not available");
+                                return;
+                          }
+                          String plotcmd = Filename.join(scipionHome, "software", "em", "xmipp", "bin", "xmipp_metadata_plot");
+			  //String plotcmd = "xmipp_metadata_plot"; 
                             argsBasic = new String[]{ plotcmd,
                                             gallery.data.getMdFilename(), "-y", labels, "--colors", colors,
                                             "--style", styles, "--markers", markers, "--title",
