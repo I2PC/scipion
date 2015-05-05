@@ -328,6 +328,16 @@ class TestXmippExtractParticles(TestXmippBase):
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
         self.assertTrue(protExtract.outputParticles.hasCTF(), "Output does not have CTF.")
+        partDef1 = protExtract.outputParticles[1].getCTF().getDefocusU()
+        defU1 = protExtract.ctfRelations.get()[1].getDefocusU()
+        partDef2 = protExtract.outputParticles[150].getCTF().getDefocusU()
+        defU2 = protExtract.ctfRelations.get()[2].getDefocusU()
+        partDef3 = protExtract.outputParticles[300].getCTF().getDefocusU()
+        defU3 = protExtract.ctfRelations.get()[3].getDefocusU()
+        self.assertAlmostEquals(partDef1, defU1, delta=1)
+        self.assertAlmostEquals(partDef2, defU2, delta=1)
+        self.assertAlmostEquals(partDef3, defU3, delta=1)
+
 
     def testExtractSort(self):
         print "Run extract particles with sort by statistics"#
