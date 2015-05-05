@@ -229,7 +229,7 @@ colorName = {'30': 'gray',
              '37': 'white'}
 
 def renderTextFile(fname, add, offset=0, lineNo=0, numberLines=True,
-                   maxSize=100, headSize=20, tailSize=None):
+                   maxSize=400, headSize=40, tailSize=None):
     """
     Call callback function add() on each fragment of text from file fname,
     delimited by lines and/or color codes.
@@ -304,7 +304,7 @@ def renderLine(line, add, lineNo=1, numberLines=True):
 
 
 def iterBigFile(textfile, offset=0, size=None,
-                maxSize=100, headSize=20, tailSize=None):
+                maxSize=400, headSize=40, tailSize=None):
     """
     Yield lines from file textfile. If the size to read is bigger
     than maxSize then yield the first lines until headSize bytes, then
