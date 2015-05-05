@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from protlib_filesystem import renameFile
 """
 Protocol to perform high-resolution reconstructions
 """
