@@ -341,14 +341,14 @@ class Environment:
         cmake = kwargs.get('cmake', False) # Use cmake instead of configure??
         default = kwargs.get('default', True)
         neededProgs = kwargs.get('neededProgs', [])
-        neededLibs = kwargs.get('neededLibs', [])
+        libChecks = kwargs.get('libChecks', [])
 
         if default or name in sys.argv[2:]:
             # Check that we have the necessary programs and libraries in place.
             for prog in neededProgs:
                 assert progInPath(prog), ("Cannot find necessary program: %s\n"
                                           "Please install and try again" % prog)
-            for lib in neededLibs:
+            for lib in libChecks:
                 checkLib(lib)
 
         # If passing a command list (of tuples (command, target)) those actions
@@ -420,6 +420,17 @@ class Environment:
         # Use reasonable defaults.
         targets = kwargs.get('targets', [name])
         flags = kwargs.get('flags', [])
+        default = kwargs.get('default', True)
+        neededProgs = kwargs.get('neededProgs', [])
+        libChecks = kwargs.get('libChecks', [])
+
+        if default or name in sys.argv[2:]:
+            # Check that we have the necessary programs and libraries in place.
+            for prog in neededProgs:
+                assert progInPath(prog), ("Cannot find necessary program: %s\n"
+                                          "Please install and try again" % prog)
+            for lib in libChecks:
+                checkLib(lib)
         
         deps = kwargs.get('deps', [])
         deps.append('python')
