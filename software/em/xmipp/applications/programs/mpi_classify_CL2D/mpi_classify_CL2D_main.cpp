@@ -700,7 +700,7 @@ void CL2D::readImage(Image<double> &I, size_t objId, bool applyGeo) const
 void CL2D::initialize(MetaData &_SF,
                       std::vector<MultidimArray<double> > &_codes0)
 {
-    if (prm->node->rank == 0)
+    if (prm->node->rank == 1)
         std::cout << "Initializing ...\n";
 
     SF = &_SF;
@@ -724,7 +724,7 @@ void CL2D::initialize(MetaData &_SF,
     // Estimate sigma and if no previous classes have been given,
     // assign randomly
     prm->sigma = 0;
-    if (prm->node->rank == 0)
+    if (prm->node->rank == 1)
         init_progress_bar(Nimgs);
     Image<double> I;
     MultidimArray<double> Iaux, Ibest;
@@ -774,13 +774,13 @@ void CL2D::initialize(MetaData &_SF,
                     P[q]->updateProjection(Ibest, bestAssignment);
             }
             SF->setValue(MDL_REF, q + 1, objId);
-            if (idx % 100 == 0 && prm->node->rank == 0)
+            if (idx % 100 == 0 && prm->node->rank == 1)
                 progress_bar(idx);
         }
         idx++;
     }
     prm->node->barrierWait();
-    if (prm->node->rank == 0)
+    if (prm->node->rank == 1)
         progress_bar(Nimgs);
     prm->useCorrelation = oldUseCorrelation;
 
@@ -795,7 +795,7 @@ void CL2D::initialize(MetaData &_SF,
     // Now compute the histogram of corr values
     if (!prm->classicalMultiref)
     {
-        if (prm->node->rank == 0)
+        if (prm->node->rank == 1)
         {
             std::cout << "Computing histogram of correlation values\n";
             init_progress_bar(Nimgs);
@@ -832,13 +832,13 @@ void CL2D::initialize(MetaData &_SF,
                             P[qp]->updateNonProjection(outClass.corr);
                         }
                 }
-                if (prm->node->rank == 0 && idx % 100 == 0)
+                if (prm->node->rank == 1 && idx % 100 == 0)
                     progress_bar(idx);
             }
             idx++;
         }
         prm->node->barrierWait();
-        if (prm->node->rank == 0)
+        if (prm->node->rank == 1)
             progress_bar(Nimgs);
 
         shareAssignments(false, true, true);
@@ -992,7 +992,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
 {
 	size_t Q = P.size();
 
-    if (prm->node->rank == 0)
+    if (prm->node->rank == 1)
         std::cout << "Quantizing with " << Q << " codes...\n";
 #ifdef DEBUG
     Image<double> save;
@@ -1017,10 +1017,9 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
     fnResultsDir.makePath(0755);
     while (goOn)
     {
-        if (prm->node->rank == 0)
+        if (prm->node->rank == 1)
         {
             std::cout << "Iteration " << iter << " ...\n";
-            std::cerr << "Iteration " << iter << " ...\n";
             init_progress_bar(Nimgs);
         }
 
@@ -1050,7 +1049,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
                 lookNode(I(), oldAssignment[idx], node, assignment);
                 SF->setValue(MDL_REF, node + 1, objId);
                 corrSum += assignment.corr;
-                if (prm->node->rank == 0 && idx % progressStep == 0)
+                if (prm->node->rank == 1 && idx % progressStep == 0)
                     progress_bar(idx);
             }
             idx++;
@@ -1064,7 +1063,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
 
         // Some report
         size_t idMdChanges=0;
-        if (prm->node->rank == 0)
+        if (prm->node->rank == 1)
         {
             progress_bar(Nimgs);
             double avgSimilarity = corrSum / Nimgs;
@@ -1089,7 +1088,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
                 if (*ptrNew != *ptrOld)
                     ++Nchanges;
         }
-        if (prm->node->rank == 0)
+        if (prm->node->rank == 1)
         {
             FileName fnClasses=formatString("%s/%s_classes.xmd",fnResultsDir.c_str(),fnOut.c_str());
         	if (iter==1)
@@ -1132,7 +1131,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
                     break;
                 if (sizeSmallestNode < prm->PminSize * Nimgs / Q * 0.01 && sizeSmallestNode<0.25*sizeLargestNode)
                 {
-                    if (prm->node->rank == 0 && prm->verbose)
+                    if (prm->node->rank == 1 && prm->verbose)
                         std::cout << "Splitting node " << largestNode << " (size=" << sizeLargestNode << ") "
                         << " by overwriting " << smallNode << " (size=" << sizeSmallestNode << ")" << std::endl;
                     smallNodes = true;
@@ -1178,7 +1177,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
             while (smallNodes);
         }
 
-        if (prm->node->rank == 0)
+        if (prm->node->rank == 1)
             write(fnODir,fnOut,level);
 
         if ((iter > 1 && Nchanges < 0.005 * Nimgs && Q > 1) || iter >= prm->Niter)
@@ -1254,7 +1253,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         }
 
         // Compute the corr histogram
-        if (prm->node->rank == 0 && prm->verbose >= 2)
+        if (prm->node->rank == 1 && prm->verbose >= 2)
             std::cerr << "Calculating corr distribution at split ..."
             << std::endl;
         corrList.initZeros(imax);
@@ -1266,10 +1265,10 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                 node->fit(I(), assignment);
                 A1D_ELEM(corrList,i) = assignment.corr;
             }
-            if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
+            if (prm->node->rank == 1 && i % 25 == 0 && prm->verbose >= 2)
                 progress_bar(i);
         }
-        if (prm->node->rank == 0 && prm->verbose >= 2)
+        if (prm->node->rank == 1 && prm->verbose >= 2)
             progress_bar(imax);
         MPI_Allreduce(MPI_IN_PLACE, MULTIDIM_ARRAY(corrList), imax, MPI_DOUBLE,
                       MPI_MAX, MPI_COMM_WORLD);
@@ -1334,7 +1333,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         else
         {
             // Split according to corr
-            if (prm->node->rank == 0 && prm->verbose >= 2)
+            if (prm->node->rank == 1 && prm->verbose >= 2)
                 std::cerr << "Splitting by corr threshold ..." << std::endl;
             for (size_t i = 0; i < imax; i++)
             {
@@ -1356,10 +1355,10 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                         node1->updateNonProjection(assignment.corr);
                     }
                 }
-                if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
+                if (prm->node->rank == 1 && i % 25 == 0 && prm->verbose >= 2)
                     progress_bar(i);
             }
-            if (prm->node->rank == 0 && prm->verbose >= 2)
+            if (prm->node->rank == 1 && prm->verbose >= 2)
                 progress_bar(imax);
             shareSplitAssignments(newAssignment, node1, node2);
         }
@@ -1388,7 +1387,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         // Split iterations
         for (int it = 0; it < prm->Niter; it++)
         {
-            if (prm->node->rank == 0 && prm->verbose >= 2)
+            if (prm->node->rank == 1 && prm->verbose >= 2)
             {
                 init_progress_bar(imax);
             }
@@ -1443,10 +1442,10 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                         }
                     }
                 }
-                if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
+                if (prm->node->rank == 1 && i % 25 == 0 && prm->verbose >= 2)
                     progress_bar(i);
             }
-            if (prm->node->rank == 0 && prm->verbose >= 2)
+            if (prm->node->rank == 1 && prm->verbose >= 2)
                 progress_bar(imax);
             shareSplitAssignments(newAssignment, node1, node2);
 
@@ -1464,7 +1463,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
             FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
             if (newAssignment(i) != oldAssignment(i))
                 Nchanges++;
-            if (prm->node->rank == 0 && prm->verbose >= 2)
+            if (prm->node->rank == 1 && prm->verbose >= 2)
                 std::cout << "Number of assignment split changes=" << Nchanges
                 << std::endl;
 
@@ -1477,7 +1476,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
 
         if (node1->currentListImg.size() < minAllowedSize && node2->currentListImg.size() < minAllowedSize)
         {
-            if (prm->node->rank == 0 && prm->verbose >= 2)
+            if (prm->node->rank == 1 && prm->verbose >= 2)
                 std::cout << "Removing both nodes, they are too small. Current size: "
                 << node1->currentListImg.size() << " Minimum allowed: "
                 << minAllowedSize << "...\n";
@@ -1490,7 +1489,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         }
         else if (node1->currentListImg.size() < minAllowedSize)
         {
-            if (prm->node->rank == 0 && prm->verbose >= 2)
+            if (prm->node->rank == 1 && prm->verbose >= 2)
                 std::cout << "Removing node1, it's too small "
                 << node1->currentListImg.size() << " "
                 << minAllowedSize << "...\n";
@@ -1507,7 +1506,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         }
         else if (node2->currentListImg.size() < minAllowedSize)
         {
-            if (prm->node->rank == 0 && prm->verbose >= 2)
+            if (prm->node->rank == 1 && prm->verbose >= 2)
                 std::cout << "Removing node2, it's too small "
                 << node2->currentListImg.size() << " "
                 << minAllowedSize << "...\n";
@@ -1745,7 +1744,7 @@ void ProgClassifyCL2D::run()
 
     while (Q < Ncodes)
     {
-        if (node->rank == 0)
+        if (node->rank == 1)
             std::cout << "Spliting nodes ...\n";
 
         int Nclean = vq.cleanEmptyNodes();
@@ -1754,7 +1753,7 @@ void ProgClassifyCL2D::run()
         for (int i = 0; i < Nsplits; i++)
         {
             vq.splitFirstNode();
-            if (node->rank == 0)
+            if (node->rank == 1)
                 std::cout << "Currently there are " << vq.P.size() << " nodes"
                 << std::endl;
         }
@@ -1764,7 +1763,7 @@ void ProgClassifyCL2D::run()
         classicalMultiref=originalClassicalMultiref || Q==1;
         vq.run(fnODir, fnOut, level);
     }
-    if (node->rank == 0)
+    if (node->rank == 1)
     {
         std::sort(vq.P.begin(), vq.P.end(), SDescendingClusterSort());
         Q = vq.P.size();

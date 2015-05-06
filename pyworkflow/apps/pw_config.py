@@ -27,7 +27,7 @@ or if they do not exist.
 
 import sys
 import os
-from os.path import join, exists, dirname, basename, islink, isdir
+from os.path import join, exists, basename
 import time
 import optparse
 # We use optparse instead of argparse because we want this script to
@@ -102,7 +102,7 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
     # is used only keep those sections.
 
     # Create directory and backup if necessary.
-    dname = dirname(fpath)
+    dname = os.path.dirname(fpath)
     if not exists(dname):
         os.makedirs(dname)
     elif exists(fpath):
@@ -125,8 +125,11 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
             cf.remove_section(section)
 
     # Update with our guesses.
-    if 'BUILD' in cf.sections() and 'JAVA_HOME' in cf.options('BUILD'):
-        cf.set('BUILD', 'JAVA_HOME', guessJavaHome())
+    if 'BUILD' in cf.sections():
+        if 'JAVA_HOME' in cf.options('BUILD'):
+            cf.set('BUILD', 'JAVA_HOME', guessJavaHome())
+        if 'MPI_HOME' in cf.options('BUILD'):
+            cf.set('BUILD', 'MPI_HOME', guessMPI())
 
     # Create the actual configuration file.
     cf.write(open(fpath, 'w'))
@@ -222,9 +225,9 @@ def guessJavaHome():
 
     # Add also all the ones related to a "javac" program.
     for d in os.environ.get('PATH', '').split(':'):
-        if not isdir(d) or 'javac' not in os.listdir(d):
+        if not os.path.isdir(d) or 'javac' not in os.listdir(d):
             continue
-        javaBin = unref(join(d, 'javac'))
+        javaBin = os.path.realpath(join(d, 'javac'))
         if javaBin.endswith('/bin/javac'):
             javaHome = javaBin[:-len('/bin/javac')]
             candidates.append(javaHome)
@@ -247,21 +250,45 @@ def guessJavaHome():
     return '/usr/lib64/jvm/java-1.7.0-openjdk-1.7.0'  # not found, default value
 
 
-def unref(path):
-    "Return the final file or directory to which the symbolic link path points"
-    # If the path is not a symbolic link, it just returns it.
+def guessMPI():
+    "Guess the system's MPI installation"
 
-    for i in range(100):
-        if islink(path):
-            path = os.readlink(path)
-        elif exists(path):
-            break
-        else:
+    # TODO: instad of finding a single MPI_HOME, find separately
+    # MPI_LIBDIR, MPI_INCLUDE and MPI_BINDIR. Return it as a dictionary.
+    
+    candidates = []
+
+    # First check if the system has a favorite one.
+    for prefix in ['MPI_', 'MPI', 'OPENMPI_', 'OPENMPI']:
+        if '%sHOME' % prefix in os.environ:
+            candidates.append(os.environ['%sHOME' % prefix])
+
+    # Add also all the ones related to a "mpicc" program.
+    for d in os.environ.get('PATH', '').split(':'):
+        if not os.path.isdir(d) or 'mpicc' not in os.listdir(d):
             continue
-    else:  # too many iterations (> 100)
-        raise RuntimeError("Link screwed: %s" % path)
+        mpiBin = os.path.realpath(join(d, 'mpicc'))
+        if mpiBin.endswith('/bin/mpicc'):
+            mpiHome = mpiBin[:-len('/bin/mpicc')]
+            candidates.append(mpiHome)
 
-    return path
+    # Add some extra that are commonly found.
+    candidates += ['/usr/lib/openmpi', '/usr/lib64/mpi/gcc/openmpi']
+
+    # Check in order if for any of our candidates, all related
+    # directories and files exist. If they do, that'd be our best guess.
+    for mpiHome in candidates:
+        allExist = True
+        for path in ['include', 'lib']:
+            if not exists(join(mpiHome, path)):
+                allExist = False
+        if allExist:
+            return mpiHome
+
+    print(red("Warning: could not detect a suitable MPI_HOME."))
+    if candidates:
+        print(red("Our candidates were:\n  %s" % '\n  '.join(candidates)))
+    return '/usr/lib64/mpi/gcc/openmpi'  # not found, default value
 
 
 

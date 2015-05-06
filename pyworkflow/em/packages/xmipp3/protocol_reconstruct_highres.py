@@ -162,19 +162,24 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='The mask values must be between 0 (remove these pixels) and 1 (let them pass). Smooth masks are recommended.')
         groupMask = form.addGroup('Mask')
         groupMask.addParam('postMask', BooleanParam, label="Construct mask for the reconstructed volume?", default=True)
-        groupMask.addParam('postMaskThreshold', FloatParam, label="Mask sigma threshold", default=1, condition="postMask",
+        groupMask.addParam('postMaskThreshold', FloatParam, label="Mask sigma threshold", default=1, expertLevel=LEVEL_ADVANCED, condition="postMask",
                            help="In standard deviation units")
-        groupMask.addParam('postDoMaskRemoveSmall', BooleanParam, label="Remove small objects?", default=True, condition="postMask")
+        groupMask.addParam('postDoMaskRemoveSmall', BooleanParam, label="Remove small objects?", default=True, expertLevel=LEVEL_ADVANCED,
+                           condition="postMask")
         groupMask.addParam('postMaskRemoveSmallThreshold', IntParam, label="Small size", default=50, expertLevel=LEVEL_ADVANCED,
                            condition="postMask and postDoMaskRemoveSmall", help="An object is small if it has fewer than this number of voxels")
-        groupMask.addParam('postMaskKeepLargest', BooleanParam, label="Keep largest component", default=True, condition="postMask")
-        groupMask.addParam('postDoMaskDilate', BooleanParam, label="Dilate mask", default=True, condition="postMask")
-        groupMask.addParam('postMaskDilateSize', IntParam, label="Dilation size", default=2,
+        groupMask.addParam('postMaskKeepLargest', BooleanParam, label="Keep largest component", default=True, expertLevel=LEVEL_ADVANCED,
+                           condition="postMask")
+        groupMask.addParam('postDoMaskDilate', BooleanParam, label="Dilate mask", default=True, expertLevel=LEVEL_ADVANCED,
+                           condition="postMask")
+        groupMask.addParam('postMaskDilateSize', IntParam, label="Dilation size", default=2, expertLevel=LEVEL_ADVANCED,
                            condition="postMask and postDoMaskDilate", help="In voxels")
-        groupMask.addParam('postDoMaskSmooth', BooleanParam, label="Smooth borders", default=True, condition="postMask")
-        groupMask.addParam('postMaskSmoothSize', FloatParam, label="Smooth size", default=2, 
+        groupMask.addParam('postDoMaskSmooth', BooleanParam, label="Smooth borders", default=True, expertLevel=LEVEL_ADVANCED,
+                           condition="postMask")
+        groupMask.addParam('postMaskSmoothSize', FloatParam, label="Smooth size", default=2, expertLevel=LEVEL_ADVANCED, 
                            condition="postMask and postDoMaskSmooth", help="In voxels")
-        groupMask.addParam('postMaskSymmetry', StringParam, label="Mask symmetry", default="c1", condition="postMask",
+        groupMask.addParam('postMaskSymmetry', StringParam, label="Mask symmetry", default="c1", expertLevel=LEVEL_ADVANCED,
+                           condition="postMask",
                            help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
                            'If no symmetry is present, give c1')
         groupSymmetry = form.addGroup('Symmetry')

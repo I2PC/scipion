@@ -243,13 +243,16 @@ public:\
     }\
     void startProcessing()\
     {\
-        if (node->isMaster())\
+        if (node->rank==1)\
+        { \
+        	verbose=1; \
             baseClassName::startProcessing();\
+        } \
         node->barrierWait();\
     }\
     void showProgress()\
     {\
-        if (node->isMaster())\
+        if (node->rank==1)\
         {\
             time_bar_done=first+1;\
             baseClassName::showProgress();\

@@ -277,7 +277,57 @@ function evalElements() {
 				recalculateSelectDim('#' + param + '_input');
 				break;
 				
-			default:
+			// If param is a  line go over all elements inside
+
+			case "Line":
+                var row = $(this)
+                row.find('div').each(function(index) {
+                // Get the identifier (id) for the parameter
+                	var par_line = $(this).find('input');
+                	// Get the id for the line parameter
+                	var par_line_id = par_line.attr("id");
+                    // Get the value for the line parameter
+                    var par_line_val = par_line.val();
+                    
+                    if(par_line_val.length == 0){
+                    	par_line_val = $(this).find('input').attr('value');
+                    }
+                                    	
+                	// Get the new expertise level
+                	var newLevel = $("input[name=expertLevel]:checked").val();
+                	 
+                	// DEBUG
+                	//console.log("PARAM TO EVALUATE: " + par_line_id + " WITH LEVEL: " + newLevel)
+                	
+                	
+                	// Evaluate the condition for each line parameter
+                	var res = evalCondition($(this))
+                	if (res != undefined){
+                        if (res == false) {
+                        	$(this).hide();
+                        } else {
+                        	$(this).show();
+                        }
+                    }
+                	
+                	/* 
+                	 * The following should not be needed cause it will enter the default case 
+                	 * where level should be evaluated but it does not work
+                	 */
+                	// Evaluate the expert level for the whole line
+                	var expLevel = row.attr('data-expert');
+                	
+                	// Get the params affected with the changes
+                	var params = row.attr('data-params');
+
+                	// Evaluate the expert level
+                	if (params != undefined && params.length <= 0) {
+                		evalExpertLevel(expLevel, newLevel, row);
+                	}
+                	
+                });
+				
+			default:		
 				onChangeParam(value, param);
 				break;
 		}
@@ -324,7 +374,7 @@ function setParamValue(paramId, value) {
 	// DEBUG
 //	console.log("PARAM TO EVALUATE: " + paramId + " WITH LEVEL: " + newLevel)
 	
-	// Evaluate the dependencies for the new expert level and the row affected
+	// Evaluate the dependencies for the new expert level and the param line
 	evalDependencies(row, newLevel);
 
 	// Get the params affected with the changes
@@ -343,7 +393,7 @@ function setParamValue(paramId, value) {
 
 function evalExpertLevel(expLevel, newLevel, row){
 //	console.log('Evaluate the expert level')
-	var expLevel = row.attr('data-expert');
+	//var expLevel = row.attr('data-expert');
 
 	if (expLevel > newLevel) {
 //		console.log("hide")
@@ -364,6 +414,7 @@ function evalRow(row){
 			row.css('display', 'table-row')
 			break;
 	}
+	
 }
 
 
@@ -384,24 +435,35 @@ function evalDependencies(row, newLevel) {
 
 		for (var cont = 0; cont < arrayDepends.length; cont++) {
 			// Get params affected with the dependencies
-			var row2 = $("tr#" + arrayDepends[cont]);
+			
+			var row_tr = $("tr#" + arrayDepends[cont]);
 			
 //			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
 
 			// Evaluate the new parameter affected
-			var res = evalCondition(row2);
+			var res = evalCondition(row_tr);
+			
+			// If there is no element <tr> try to find a <div> that corresponds to a line parameter (data-line attribute to yes)
+			if (res == undefined){
+			    row_div = $("div#" + arrayDepends[cont]);
+                //console.log("TO EVALUATE: div#" + arrayDepends[cont]);
+			    if (row_div.attr('data-line') == "yes") {			    		
+			    	row_tr = row_div;
+			    	res = evalCondition(row_tr);
+			    } 
+			}
 			
 			if (res != undefined){
 
 				// Get the expertise level for the row affected
-				var expLevel = row2.attr('data-expert');
+				var expLevel = row_tr.attr('data-expert');
 				if (res == false || expLevel > newLevel) {
-					row2.hide();
+					row_tr.hide();
 				} else if (res == true) {
-					row2.show();
+					row_tr.show();
 					
 					// Evaluate the dependencies for the new row affected
-					evalDependencies(row2, newLevel);
+					evalDependencies(row_tr, newLevel);
 				}
 			}
 		}
