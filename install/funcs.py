@@ -362,6 +362,8 @@ class Environment:
         if commands:
             for cmd, tgt in commands:
                 t.addCommand(cmd, targets=tgt, final=True)
+                # Note that we don't use cwd=t.buildDir, so paths are
+                # relative to SCIPION_HOME.
             return t
 
         # If we didnt' specify the commands, we can either compile
@@ -485,17 +487,17 @@ class Environment:
         # and pass the createLink as a new command 
         tar = kwargs.get('tar', '%s.tgz' % name)
         packageDir = tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-        
+
         libArgs = {'downloadDir': os.path.join('software', 'em'),
                    'urlSuffix': 'em',
                    'default': False} # This will be updated with value in kwargs
         libArgs.update(kwargs)
-        
+
         target = self._addDownloadUntar(name, **libArgs)
         target.addCommand(Command(self, Link(name, packageDir),
-                             targets=[self.getEm(name), 
-                                      self.getEm(packageDir)],
-                             cwd=self.getEm('')),
+                                  targets=[self.getEm(name),
+                                           self.getEm(packageDir)],
+                                  cwd=self.getEm('')),
                           final=True)
         commands = kwargs.get('commands', [])
         for cmd, tgt in commands:
@@ -503,9 +505,9 @@ class Environment:
                 tgt = [tgt]
             # Take all package targets relative to package build dir
             target.addCommand(cmd, targets=[os.path.join(target.buildPath, t) 
-                                            for t in tgt], 
-                         cwd=target.buildPath, 
-                         final=True)            
+                                            for t in tgt],
+                              cwd=target.buildPath,
+                              final=True)
 
         return target
 

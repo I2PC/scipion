@@ -42,6 +42,17 @@ noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
 #  *                                                                      *
 #  ************************************************************************
 
+cmake = env.addLibrary(
+    'cmake',
+    tar='cmake-3.2.2.tgz',
+    targets=[env.getBin('cmake')],
+    commands=[('cd software/tmp/cmake-3.2.2; '
+               './bootstrap --prefix=../.. --parallel=%d' % env.getProcessors(),
+               'software/tmp/cmake-3.2.2/Makefile'),
+              ('cd software/tmp/cmake-3.2.2; make install -j %d'
+               % env.getProcessors(), 'software/bin/cmake')],
+    default=False)
+
 # In order to get both the float and double libraries of fftw
 # we need to execute ./configure; make; make install twice
 # see: http://www.fftw.org/fftw2_doc/fftw_6.html
@@ -77,7 +88,6 @@ tk = env.addLibrary(
     libChecks=['xft'],
     flags=osFlags,
     deps=[tcl])
-
 
 # Special case: tk does not make the link automatically, go figure.
 tk_wish = env.addTarget('tk_wish')
