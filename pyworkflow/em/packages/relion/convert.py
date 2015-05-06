@@ -38,7 +38,7 @@ from collections import OrderedDict
 from pyworkflow.object import ObjectWrap, String
 from pyworkflow.utils import Environ
 from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
-                                   findRootFrom, replaceBaseExt)
+                                   findRootFrom, replaceBaseExt, getExt)
 import pyworkflow.em as em
 
 # Since Relion share several conventions with Xmipp, we will reuse 
@@ -245,7 +245,6 @@ def rowToCtfModel(ctfRow):
 
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
-    from numpy import rad2deg
 
     if inverseTransform:
         from numpy.linalg import inv
@@ -380,7 +379,7 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     # and detected defaults if not passed at readSetOf.. level
     alignType = kwargs.get('alignType') 
     
-    if alignType != em.ALIGN_NONE:
+    if alignType != em.ALIGN_NONE and img.hasTransform():
         alignmentToRow(img.getTransform(), imgRow, alignType)
                 
     if kwargs.get('writeAcquisition', True) and img.hasAcquisition():
@@ -503,10 +502,6 @@ def setOfImagesToMd(imgSet, imgMd, imgToFunc, **kwargs):
         imgRow.writeToMd(imgMd, objId)
 
 
-def setOfParticlesToMd(imgSet, md, **kwargs):
-    setOfImagesToMd(imgSet, md, particleToRow, **kwargs)
-
-
 def writeSetOfParticles(imgSet, starFile,
                         outputDir, **kwargs):
     """ This function will write a SetOfImages as Relion meta
@@ -518,9 +513,49 @@ def writeSetOfParticles(imgSet, starFile,
     filesDict = convertBinaryFiles(imgSet, outputDir)
     kwargs['filesDict'] = filesDict
     partMd = md.MetaData()
-    setOfParticlesToMd(imgSet, partMd, **kwargs)
+    setOfImagesToMd(imgSet, partMd, particleToRow, **kwargs)
     blockName = kwargs.get('blockName', 'Particles')
     partMd.write('%s@%s' % (blockName, starFile))
+    
+    
+def writeReferences(inputSet, outputRoot):
+    """ Write an references star and stack files from
+    a given SetOfAverages or SetOfClasses2D.
+    """
+    refsMd = md.MetaData()
+    stackFile = outputRoot + '.stk'
+    baseStack = basename(stackFile)
+    starFile = outputRoot + '.star'
+    ih = em.ImageHandler()
+     
+    if isinstance(inputSet, em.SetOfAverages):
+        row = md.Row()
+        for i, img in enumerate(inputSet):
+            ih.convert(img, (i+1, stackFile))
+            img.setLocation((i+1, baseStack)) # make the star with relative
+            particleToRow(img, row)
+            row.writeToMd(refsMd, refsMd.addObject())
+        refsMd.write(starFile)
+            
+    elif isinstance(inputSet, em.SetOfClasses2D):
+        pass
+    else:
+        raise Exception('Invalid object type: %s' % type(inputSet)) 
+
+
+def micrographToRow(mic, micRow, **kwargs):
+    """ Set labels values from Micrograph mic to md row. """
+    imageToRow(mic, micRow, imgLabel=md.RLN_MICROGRAPH_NAME, **kwargs)
+
+    
+def writeSetOfMicrographs(micSet, starFile, **kwargs):
+    """ If 'outputDir' is in kwargs, the micrographs are\
+    converted or linked in the outputDir.
+    """
+    micMd = md.MetaData()
+    setOfImagesToMd(micSet, micMd, micrographToRow, **kwargs)
+    blockName = kwargs.get('blockName', 'Particles')
+    micMd.write('%s@%s' % (blockName, starFile))
 
 
 def writeSqliteIterData(imgStar, imgSqlite, **kwargs):
@@ -655,7 +690,7 @@ def setupCTF(imgRow, sampling):
             imgRow.setValue(md.MDL_CTF_DEFOCUS_ANGLE, 0.)
             
 
-def convertBinaryFiles(imgSet, outputDir):
+def convertBinaryFiles(imgSet, outputDir, extension='mrcs'):
     """ Convert binary images files to a format read by Relion.
     Params:
         imgSet: input image set to be converted.
@@ -669,11 +704,11 @@ def convertBinaryFiles(imgSet, outputDir):
     # This approach can be extended when
     # converting from a binary file format that
     # is not read from Relion
-    def linkMrcsToMrc(fn):
+    def createBinaryLink(fn):
         """ Just create a link named .mrcs to Relion understand 
         that it is a binary stack file and not a volume.
         """
-        newFn = join(outputDir, basename(fn) + 's')
+        newFn = join(outputDir, replaceBaseExt(fn, extension))
         createLink(fn, newFn)
         return newFn
         
@@ -685,9 +720,15 @@ def convertBinaryFiles(imgSet, outputDir):
         ih.convertStack(fn, newFn)
         return newFn
         
-    ext = imgSet.getFirstItem().getFileName()
-    if ext.endswith('.mrc'):
-        mapFunc = linkMrcsToMrc
+    ext = getExt(imgSet.getFirstItem().getFileName())[1:] # remove dot in extension
+    
+    print "extension = ", extension
+    print "ext = ", ext
+    
+    if ext == extension:
+        mapFunc = createBinaryLink
+    elif ext == 'mrc' and extension == 'mrcs':
+        mapFunc = createBinaryLink
     elif ext.endswith('.hdf'): # assume eman .hdf format
         mapFunc = convertStack
     else:
@@ -735,10 +776,10 @@ def createItemMatrix(item, row, align):
 
 
 def readCoordinates(mic, fileName, coordsSet):
-        for row in md.iterRows(fileName):
-            coord = rowToCoordinate(row)
-            coord.setX(coord.getX())
-            coord.setY(coord.getY())
-            coord.setMicrograph(mic)
-            coordsSet.append(coord)
+    for row in md.iterRows(fileName):
+        coord = rowToCoordinate(row)
+        coord.setX(coord.getX())
+        coord.setY(coord.getY())
+        coord.setMicrograph(mic)
+        coordsSet.append(coord)
 
