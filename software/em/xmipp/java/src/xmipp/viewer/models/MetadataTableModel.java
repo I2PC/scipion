@@ -87,13 +87,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                 return row;
 	}
 
-	@Override
-	public Point getCoords(int index) {
-		Point p = new Point();
-		p.x = 0;
-		p.y = index;
-		return p;
-	}
+	
 
 	/**
 	 * Returns metadata value with java type

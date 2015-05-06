@@ -1361,8 +1361,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		if (gallery.data.isGalleryMode() && row * table.getColumnCount() + col + 1 > gallery.getSize())
 		{
 			Point coords = gallery.getCoords(gallery.getSize() - 1);
-			row = coords.x;
-			col = coords.y;
+			row = coords.y;
+			col = coords.x;
 		}
 		gallery.clearSelection();
 		gallery.touchItem(row, col);
