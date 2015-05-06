@@ -1579,7 +1579,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			String cmd = evt.getActionCommand();
 			try
 			{
-                                if (cmd.equals(DISPLAY_INVERTY))
+                if (cmd.equals(DISPLAY_INVERTY))
 				{
 					gallery.setInvertY(getItemSelected(DISPLAY_INVERTY));
 				}

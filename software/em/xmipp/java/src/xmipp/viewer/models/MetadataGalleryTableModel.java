@@ -203,7 +203,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel//Table mod
 	{
 		try
 		{
-			System.out.printf("row %s col %s\n", row, col);
 			int index = getIndex(row, col);
 			long objId = data.ids[index];
             return data.getDisplayLabel(objId);
@@ -323,12 +322,12 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel//Table mod
 	{
 		try
 		{
-                    ImagePlus imp = XmippImageConverter.readMetadataToImagePlus(renderLabel.label, data.md, data.useGeo, data.wrap, data.inverty);
-                    return new ImagePlusLoader(imp, data.inverty);
+            ImagePlus imp = XmippImageConverter.readMetadataToImagePlus(renderLabel.label, data.md, data.useGeo, data.wrap, data.inverty);
+                return new ImagePlusLoader(imp, data.inverty);
 		}
 		catch (Exception e)
 		{
-                    e.printStackTrace();
+            e.printStackTrace();
 		}
 		return null;
 	}// function getImageLoader
@@ -352,7 +351,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel//Table mod
 		Point p = new Point();
 		p.x = 0;
 		p.y = index;
-		System.out.printf("row %s col %s\n", p.y, p.x);
 		return p;
 	}
         
