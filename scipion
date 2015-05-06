@@ -235,6 +235,7 @@ MODE_STATS = 'stats'
 MODE_ENV = 'printenv'
 MODE_RUN = 'run'
 MODE_TUTORIAL = 'tutorial'
+MODE_DEPENDENCIES = 'deps'
 
 
 def main():
@@ -446,6 +447,10 @@ def main():
 
     elif mode == MODE_TUTORIAL:
         runApp('pw_tutorial.py', sys.argv[2:])
+
+    elif mode == MODE_DEPENDENCIES:
+        runScript('scripts/find_deps.py software/bin software/lib %s'
+                  % ' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
 
     elif mode == MODE_HELP:
         sys.stdout.write("""\

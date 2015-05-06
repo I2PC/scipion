@@ -49,8 +49,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     
     def _defineParams(self, form):
         form.addSection(label='Preprocess')
-        form.addParam('inputMicrographs', PointerParam, label="Input micrographs", isImportant=True,
+        form.addParam('inputMicrographs', PointerParam, 
                       pointerClass='SetOfMicrographs',
+                      label="Input micrographs", important=True,
                       help='Select the SetOfMicrograph to be preprocessed.')
         
         form.addParam('doCrop', BooleanParam, default=False,
@@ -65,15 +66,12 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                            'of the pixel values in order to have a linear relationship between '
                            'the gray values in the image and those in the volume. a - b ln(x+c) '
                            'by default 4.431-0.4018*LN((P1+336.6)) is applied (right one for nikon coolscan 9000)')
-        form.addParam('logA', FloatParam, default=4.431, condition='doLog',
-                      label='a',
-                      help='Parameter a in a - b ln(x+c).')
-        form.addParam('logB', FloatParam, default=0.4018, condition='doLog',
-                      label='b',
-                      help='Parameter b in a - b ln(x+c).')
-        form.addParam('logC', FloatParam, default=336.6, condition='doLog',
-                      label='c',
-                      help='Parameter c in a - b ln(x+c).')
+        line = form.addLine('Log', condition='doLog', 
+                            help='Parameters in a - b ln(x+c).')
+        line.addParam('logA', FloatParam, default=4.431, label='a')
+        line.addParam('logB', FloatParam, default=0.402, label='b')
+        line.addParam('logC', FloatParam, default=336.6, label='c')
+        
         form.addParam('doRemoveBadPix', BooleanParam, default=False,
                       label='Remove bad pixels?',
                       help='Values will be thresholded to this multiple of standard deviations. '

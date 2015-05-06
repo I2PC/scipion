@@ -27,7 +27,7 @@ or if they do not exist.
 
 import sys
 import os
-from os.path import join, exists, dirname, basename
+from os.path import join, exists, basename
 import time
 import optparse
 # We use optparse instead of argparse because we want this script to
@@ -100,7 +100,9 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
     "Create config file in fpath following the template in ftemplate"
     # Remove from the template the sections in "remove", and if "keep"
     # is used only keep those sections.
-    dname = dirname(fpath)
+
+    # Create directory and backup if necessary.
+    dname = os.path.dirname(fpath)
     if not exists(dname):
         os.makedirs(dname)
     elif exists(fpath):
@@ -110,6 +112,8 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
                       '%s.%d' % (basename(fpath), int(time.time())))
         print(yellow("* Creating backup: %s" % backup))
         os.rename(fpath, backup)
+
+    # Read the template configuration file.
     print(yellow("* Creating configuration file: %s" % fpath))
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
@@ -119,12 +123,22 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
     if keep:
         for section in set(cf.sections()) - set(keep):
             cf.remove_section(section)
+
+    # Update with our guesses.
+    if 'BUILD' in cf.sections():
+        if 'JAVA_HOME' in cf.options('BUILD'):
+            cf.set('BUILD', 'JAVA_HOME', guessJavaHome())
+        if 'MPI_HOME' in cf.options('BUILD'):
+            cf.set('BUILD', 'MPI_HOME', guessMPI())
+
+    # Create the actual configuration file.
     cf.write(open(fpath, 'w'))
     print("Please edit it to reflect the configuration of your system.\n")
 
 
 def checkPaths(conf):
     "Check that some paths in the config file actually make sense"
+
     print("Checking paths in %s ..." % conf)
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
@@ -155,6 +169,7 @@ def checkPaths(conf):
 
 def checkConf(fpath, ftemplate, remove=[], keep=[]):
     "Check that all the variables in the template are in the config file too"
+
     # Remove from the checks the sections in "remove", and if "keep"
     # is used only check those sections.
     cf = ConfigParser()
@@ -197,6 +212,84 @@ def checkConf(fpath, ftemplate, remove=[], keep=[]):
             for o in dt[s] - df[s]:
                 print("In section %s, option %s exists in the template "
                       "but not in the configuration file." % (red(s), red(o)))
+
+
+def guessJavaHome():
+    "Guess the system's JAVA_HOME"
+
+    candidates = []
+
+    # First check if the system has a favorite one.
+    if 'JAVA_HOME' in os.environ:
+        candidates.append(os.environ['JAVA_HOME'])
+
+    # Add also all the ones related to a "javac" program.
+    for d in os.environ.get('PATH', '').split(':'):
+        if not os.path.isdir(d) or 'javac' not in os.listdir(d):
+            continue
+        javaBin = os.path.realpath(join(d, 'javac'))
+        if javaBin.endswith('/bin/javac'):
+            javaHome = javaBin[:-len('/bin/javac')]
+            candidates.append(javaHome)
+            if javaHome.endswith('/jre'):
+                candidates.append(javaHome[:-len('/jre')])
+
+    # Check in order if for any of our candidates, all related
+    # directories and files exist. If they do, that'd be our best guess.
+    for javaHome in candidates:
+        allExist = True
+        for path in ['include', join('bin', 'javac'), join('bin', 'jar')]:
+            if not exists(join(javaHome, path)):
+                allExist = False
+        if allExist:
+            return javaHome
+
+    print(red("Warning: could not detect a suitable JAVA_HOME."))
+    if candidates:
+        print(red("Our candidates were:\n  %s" % '\n  '.join(candidates)))
+    return '/usr/lib64/jvm/java-1.7.0-openjdk-1.7.0'  # not found, default value
+
+
+def guessMPI():
+    "Guess the system's MPI installation"
+
+    # TODO: instad of finding a single MPI_HOME, find separately
+    # MPI_LIBDIR, MPI_INCLUDE and MPI_BINDIR. Return it as a dictionary.
+    
+    candidates = []
+
+    # First check if the system has a favorite one.
+    for prefix in ['MPI_', 'MPI', 'OPENMPI_', 'OPENMPI']:
+        if '%sHOME' % prefix in os.environ:
+            candidates.append(os.environ['%sHOME' % prefix])
+
+    # Add also all the ones related to a "mpicc" program.
+    for d in os.environ.get('PATH', '').split(':'):
+        if not os.path.isdir(d) or 'mpicc' not in os.listdir(d):
+            continue
+        mpiBin = os.path.realpath(join(d, 'mpicc'))
+        if mpiBin.endswith('/bin/mpicc'):
+            mpiHome = mpiBin[:-len('/bin/mpicc')]
+            candidates.append(mpiHome)
+
+    # Add some extra that are commonly found.
+    candidates += ['/usr/lib/openmpi', '/usr/lib64/mpi/gcc/openmpi']
+
+    # Check in order if for any of our candidates, all related
+    # directories and files exist. If they do, that'd be our best guess.
+    for mpiHome in candidates:
+        allExist = True
+        for path in ['include', 'lib']:
+            if not exists(join(mpiHome, path)):
+                allExist = False
+        if allExist:
+            return mpiHome
+
+    print(red("Warning: could not detect a suitable MPI_HOME."))
+    if candidates:
+        print(red("Our candidates were:\n  %s" % '\n  '.join(candidates)))
+    return '/usr/lib64/mpi/gcc/openmpi'  # not found, default value
+
 
 
 if __name__ == '__main__':

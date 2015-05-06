@@ -55,9 +55,11 @@ MPI_CC = mpicc
 MPI_CXX = mpiCC
 MPI_LINKERFORPROGRAMS = mpiCC
 MPI_LIB = mpi
-MPI_LIBDIR = /usr/lib
-MPI_INCLUDE = /usr/include/mpi
-MPI_BINDIR = /usr/bin
+MPI_HOME = /usr/lib64/mpi/gcc/openmpi
+MPI_LIBDIR = %(MPI_HOME)s/lib
+MPI_INCLUDE = %(MPI_HOME)s/include
+MPI_BINDIR = %(MPI_HOME)s/bin
+
 MATLAB_DIR = /usr/local/MATLAB/R2011a
 
 # Java variables

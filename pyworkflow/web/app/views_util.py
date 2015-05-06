@@ -106,7 +106,7 @@ cssDict = {'project_content': 'project_content_style.css',
 jsDict = {'jquery': 'jquery/jquery.js',
           'jquery_cookie': 'jquery/jquery.cookie.js',
           'jquery_treeview': 'jquery/jquery.treeview.js',
-          'jquery_datatables': 'jquery/jquery.dataTables.js',
+          'jquery_datatables': 'DataTables-1.10.6/media/js/jquery.dataTables.js',
           'jquery_editable': 'jquery/jquery.jeditable.js',
           'jquery_sizes': 'jquery/jquery.sizes.js',
           'jquery_layout': 'jquery/jquery.jlayout.js',
@@ -129,8 +129,8 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'download_utils': 'download_utils.js',
 
 #          'tabs_config': 'tabs_config.js',
-          'jquery_colreorder': 'showj_libs/colReorder.js',
-          'jquery_colreorder_resize': 'showj_libs/colReorderWithResize.js',
+          'jquery_colreorder': 'DataTables-1.10.6/extensions/ColReorder/js/dataTables.colReorder.js',
+          #'jquery_colreorder_resize': 'showj_libs/colReorderWithResize.js',
           'jquery_waypoints': 'showj_libs/waypoints.min.js',
           'transpose': 'showj_libs/transpose.js',
           
@@ -457,11 +457,13 @@ def render_column(request):
         return get_image(request)
     elif renderFunction == "get_slice":
         return get_slice(request)
-    elif renderFunction == "get_image_psd":
-        from pyworkflow.web.app.em_wizard import get_image_psd
-        return get_image_psd(request)
-    elif renderFunction == "getTestPlot":
-        return getTestPlot(request)
+    
+#    Seems to be there is no cases where renderFunction is get_image_psd(used instead get_image_psd url) or getTestPlot
+#     elif renderFunction == "get_image_psd":
+#         from pyworkflow.web.app.em_wizard import get_image_psd
+#         return get_image_psd(request)
+#     elif renderFunction == "getTestPlot":
+#         return getTestPlot(request)
 #    return getattr(self, renderFunction)
 
       
@@ -490,6 +492,9 @@ def get_image(request):
     # TO DO: Change the way to obtain the separate string of the imagePath
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
+
+    # This prefix can be passed to avoid that image is not refresh when cached by browser (name does not change)
+    prefix = request.GET.get('prefix', "")
     
     mirrorY = 'mirrorY' in request.GET
     
@@ -502,7 +507,7 @@ def get_image(request):
     try:
         # PAJM: Como vamos a gestionar lsa imagen    
         if imagePath.endswith('png') or imagePath.endswith('gif'):
-            imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+            imagePathTmp = os.path.join(request.session['projectPath'], prefix + imagePath)
             img = getImage(imagePathTmp, tkImage=False)
         else:
             if '@' in imagePath:

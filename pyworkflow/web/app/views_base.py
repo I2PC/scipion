@@ -138,7 +138,6 @@ def base_showj(request, context):
                     #JS
                     'jquery_datatable': getResourceJs('jquery_datatables'),
                     'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
-                    'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
                     'jeditable': getResourceJs('jquery_editable'),
                     'jquery_waypoints':getResourceJs('jquery_waypoints'),
                     'jquery_hover_intent':getResourceJs('jquery_hover_intent'),

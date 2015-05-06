@@ -119,148 +119,151 @@ var COL_RENDER_SLICE = 5;
 
 /** METHODS ***************************************************************** */
 
-function renderElements(nRow, aData) {
+
+
+function getColumnsDefinition() {
+	var jsonColumnsLayout = jsonTableLayoutConfiguration.columnsLayout;
 	var columnId = 0;
-	var invisibleColumns = 0;
+	var dataForTable = [];
 	
-	for (var i in jsonTableLayoutConfiguration.columnsLayout) {
-		var columnLayoutConfiguration = jsonTableLayoutConfiguration.columnsLayout[i]
-
-		if (columnLayoutConfiguration.visible) {
-			if (typeof oTable != 'undefined') {
-				columnId = oTable.fnGetColumnIndex(i)
-				var columnIdReal = oTable.fnColumnIndexToVisible(columnId)
-			} else {
-				var columnIdReal = columnId - invisibleColumns
-			}
-
-			if (columnIdReal != null) {
-				
-				// columnType = 4 
-				if (columnLayoutConfiguration.columnType == COL_RENDER_CHECKBOX) {
-//					console.log("id:"+columnIdReal+" checkbox!")
-					colRenderCheckbox(i, nRow, aData, columnId, columnIdReal);
-				
-				} else if (columnLayoutConfiguration.renderable) {
-//					console.log("id:"+columnIdReal+" renderable!")
-					colRenderImg('colRenderable', i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
-				
-				// columnType = 3
-				} else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
-//					console.log("id:"+columnIdReal+" render!")
-					colRenderImg('colRenderImage', i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
-				
-				// columnType = 5
-				} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
-//					console.log("id:"+columnIdReal+" render slice!")
-					colRenderImg('colRenderSlice', i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
-				
-				// None
-				} else if (columnLayoutConfiguration.columnType == COL_RENDER_NONE) {
-//					console.log("id:"+columnIdReal+ " nothing to render!")
-				}
-			}
-		} else {
-			invisibleColumns++;
+	for ( var i in jsonColumnsLayout) {
+		var dataRowForTable = [];
+		var columnLayoutConfiguration = jsonColumnsLayout[i];
+		
+		dataRowForTable["bVisible"] = columnLayoutConfiguration.visible;             
+		dataRowForTable["sTitle"] = columnLayoutConfiguration.columnLabel;
+		dataRowForTable["sSubTitle"] = columnLayoutConfiguration.columnName;
+		dataRowForTable["aTargets"] = [columnId];
+		if (columnLayoutConfiguration.columnType == COL_RENDER_CHECKBOX) {
+//			console.log("id:"+columnIdReal+" checkbox!")
+			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderCheckbox(meta.col, data)}
+		
+		} 
+		else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
+//			console.log("id:"+columnIdReal+" render!")
+			dataRowForTable["mRender"] = function (data, type, row, meta){	return colRenderImage(meta.col, data)}
+		
+		// columnType = 5
+		} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
+//			console.log("id:"+columnIdReal+" render slice!")
+			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderSlice(meta.col, data)}
+		
+		// None
 		}
+		
+		dataForTable.push(dataRowForTable);
 		columnId++;
 	}
+	return dataForTable;
 }
 
-
-function colRenderCheckbox(id, nRow, aData, columnId, columnIdReal){
-	var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"'
-			+ id + '___' + aData[0] + '\" '
-	
-	var data = aData[columnId]
+function colRenderCheckbox(id, aData){
+	var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" '
+	var data = aData
 			
 	if (data == "True" || data == 1 || data == true) {
 		checkbox_element += 'checked>'
 	} else {
 		checkbox_element += '>'
 	}
-	$('td:eq(' + columnIdReal + ')', nRow).html(checkbox_element);
+	return checkbox_element
+	
 }
 
-function colRenderImg(mode, id, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration){
-	var renderFunc = columnLayoutConfiguration.renderFunc
-	var extraRenderFunc = columnLayoutConfiguration.extraRenderFunc
-	var content_html = "";
-	
-	switch(mode){
-		case "colRenderable":
-			content_html += colRenderable(id, aData, columnId, renderFunc, extraRenderFunc)
-			break;
-			
-		case "colRenderImage":
-			content_html += colRenderImage(id, aData, columnId, renderFunc, extraRenderFunc)
-			break;
+
+function colRenderable(id, aData, renderFunc){
+		src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc;
+		src += '&image=' + aData + '\"';
 		
-		case "colRenderSlice":
-			content_html += colRenderSlice(id, aData, columnId, renderFunc, extraRenderFunc)
-			break;
-	}
-	$('td:eq(' + columnIdReal + ')', nRow).html(content_html);
+		var content_html = '<span style="display:none">' 
+				+ aData + '</span>'
+				+ '<img class=\"tableImages\"'
+				+ ' src=' + src
+				+ ' data-real_src=' +src
+				+ '/>'
+				
+		return content_html;
 }
 
 
-function colRenderable(id, aData, columnId, renderFunc, extraRenderFunc){
-	src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc;
-	if(extraRenderFunc.length > 0){
-		src += '&'	+ extraRenderFunc
-	}
-	src += '&image=' + aData[columnId] + '\"';
+function colRenderImage(id, aData){
 	
-	var content_html = '<span style="display:none">' 
-			+ aData[columnId] + '</span>'
-			+ '<img class=\"tableImages\" id=\"'
-			+ id + '___' + aData[0]
-			+ '\" src=' + src
-			+ '\" data-real_src=' +src
-			+ '/>'
-			
-	
-	
-	return content_html;
+	html = colRenderable(id, aData, "get_image")
+	return html
 }
 
-
-function colRenderImage(id, aData, columnId, renderFunc, extraRenderFunc){
-	var content_html = '<span>' 
-			+ aData[columnId] + '</span>'
-			+ '<img style="display:none" class=\"tableImages\" id=\"'
-			+ id + '___' + aData[0]
-			+ '\" data-real_src=\"'+ getSubDomainURL() +'/render_column/?renderFunc='
-			+ renderFunc;
-			
-	if(extraRenderFunc.length > 0){
-		content_html += '&'	+ extraRenderFunc
-	}
-	content_html += '&image=' + aData[columnId] + '\"/>';
-
-	return content_html;
-}
-
-function colRenderSlice(id, aData, columnId, renderFunc, extraRenderFunc){
-	var content_html = '<span>' 
-			+ aData[columnId] + '</span>'
-			+ '<img style="display:none" class=\"tableImages\" id=\"'
-			+ id + '___' + aData[0]
-			+ '\" data-real_src=\"'+ getSubDomainURL() +'/render_column/?renderFunc='
-			+ renderFunc;
-			
-	if(extraRenderFunc.length > 0){
-		content_html += '&'	+ extraRenderFunc
-	}
-	
-	var volName = aData[columnId].split(".")
+function colRenderSlice(id, aData){
+	var volName = aData.split(".")
 	volName = volName[0] + "_tmp.mrc"
 	
-	content_html += '&image=' + volName + '\"/>';
-
+	src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=get_slice' ;
+	src += '&image=' + volName + '\"';
+	
+	var content_html = '<span style="display:none">' 
+			+ aData + '</span>'
+			+ '<img class=\"tableImages\" '
+			+ ' src=' + src
+			+ ' data-real_src=' +src
+			+ '/>'
+			
 	return content_html;
 }
 
+function getVisibleColumn(n)
+{
+	count = 0;
+	visibles  = 0 
+	for (column in jsonTableLayoutConfiguration.columnsLayout)
+	{
+		if(jsonTableLayoutConfiguration.columnsLayout[column].visible)
+		{
+			if(visibles == n)
+				return count
+			visibles ++
+		}
+		count ++
+	}	
+}
+
+function getJsonFromIndex(json, index)
+{
+	var i = 0, key;
+    for (key in json) {
+        if (i == index) {
+            return json[key];
+        }
+        i++;
+    }
+    return null;
+}
+
+function orderColumns(order)
+{
+	orderColumns = jsonTableLayoutConfiguration.colsOrder.trim().split(" ")
+	var i = 0;
+	for(orderColumn in orderColumns)
+	{
+		j = 0
+		for (column in jsonTableLayoutConfiguration.columnsLayout)
+		{
+			if(jsonTableLayoutConfiguration.columnsLayout[column].columnLabel == orderColumns[orderColumn])
+			{
+				pos = getVisibleColumn(i)
+				if(pos != order[j] && pos != -1)
+				{
+					pos2 = order.indexOf(j)
+					aux = order[pos]
+ 					order[pos] = order[pos2]
+ 					order[pos2] = aux
+				}
+				i ++
+				break
+			}
+			j ++
+		}
+	}
+	return order
+}
 
 function initializeColumnHeader() {
 	var headerRow = $("#data_table thead tr")
@@ -327,25 +330,6 @@ function getHeaderWithIcon(text, columnLayoutProperties) {
 	return iconElements;
 }
 
-function getColumnsDefinition() {
-	var jsonColumnsLayout = jsonTableLayoutConfiguration.columnsLayout;
-	var columnId = 0;
-	var dataForTable = [];
-	
-	for ( var i in jsonColumnsLayout) {
-		var dataRowForTable = [];
-		var columnLayoutConfiguration = jsonColumnsLayout[i];
-		
-		dataRowForTable["bVisible"] = columnLayoutConfiguration.visible;             
-		dataRowForTable["sTitle"] = columnLayoutConfiguration.columnLabel;
-		dataRowForTable["sSubTitle"] = columnLayoutConfiguration.columnName;
-		dataRowForTable["aTargets"] = [columnId];
-		dataForTable.push(dataRowForTable);
-		
-		columnId++;
-	}
-	return dataForTable;
-}
 
 function enableDisableColumn(event, element) {
 	// From the image element we get the column header index
@@ -685,8 +669,9 @@ function saveTableConfiguration() {
 				'checked')
 
 		// From the image element we get the column header index
-		columnId = oTable.fnGetColumnIndex(label)
-		oTable.fnSetColumnVis(columnId, columnLayoutProperties.visible);
+		columnId = oTable.fnGetColumnIndex(columnLayoutProperties.columnLabel)
+		if(columnId != -1)
+			oTable.fnSetColumnVis(columnId, columnLayoutProperties.visible);
 
 		var newValue = ""
 

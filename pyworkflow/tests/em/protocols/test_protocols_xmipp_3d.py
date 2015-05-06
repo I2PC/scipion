@@ -236,6 +236,15 @@ class TestXmippPreprocessVolumes(TestXmippBase):
         TestXmippBase.setData()
         cls.protImport1 = cls.runImportVolumes(cls.volumes, 9.896)
         cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
+        cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
+        #test symmetryze with mask
+#        dataProject='SymVirus'
+#        dataset = DataSet.getDataSet(dataProject)
+#        virusVol  = dataset.getFile('virusVol.vol')
+#        virusMask = dataset.getFile('virusMask1.vol')
+#        cls.protImportVirus = cls.runImportVolumes(virusVol, 1)
+#        cls.protImportVirusMask = cls.runImportVolumes(virusMask, 1)
+
 
     def testPreprocessVolumes(self):
         print "Run preprocess a volume"
@@ -254,6 +263,16 @@ class TestXmippPreprocessVolumes(TestXmippBase):
         self.proj.launchProtocol(protPreprocessVol2, wait=True)
         self.assertIsNotNone(protPreprocessVol2.outputVol, "There was a problem with preprocess a SetOfVolumes")
 
+#        print "Run preprocess a volume using mask in the symmetrization"
+#        protPreprocessVol3 = XmippProtPreprocessVolumes(doChangeHand=False, doRandomize=False,
+#                                                        doSymmetrize=True, symmetryGroup='i3',
+#                                                        doSegment=False, doNormalize=False,
+#                                                        doInvert=False, doThreshold=False,
+#                                                        )
+#        protPreprocessVol3.inputVolumes.set(self.protImportVirus.outputVolume)
+#        protPreprocessVol3.volumeMask.set(self.protImportVirusMask.outputVolume)
+#        self.proj.launchProtocol(protPreprocessVol3, wait=True)
+#        self.assertIsNotNone(protPreprocessVol3.outputVol, "There was a problem with a volume")
 
 class TestXmippResolution3D(TestXmippBase):
     @classmethod
@@ -599,15 +618,15 @@ class TestXmippProtHelicalParameters(TestXmippBase):
 
     def testHelicalParameters(self):
         print "Run symmetrize helical"
-        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=True,rot0=50,rotF=70,rotStep=5,z0=5,zF=10,zStep=0.5)
+        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=True,rot0=-70,rotF=-50,rotStep=5,z0=5,zF=10,zStep=0.5)
         protHelical.inputVolume.set(self.protImport.outputVolume)
         self.proj.launchProtocol(protHelical, wait=True)
 
         self.assertIsNotNone(protHelical.outputVolume, "There was a problem with Helical output volume")
         self.assertIsNotNone(protHelical.deltaRot.get(), "Output delta rot is None")
         self.assertIsNotNone(protHelical.deltaZ.get(), "Output delta Z is None")
-        self.assertAlmostEqual(protHelical.deltaRot.get(), 59.4, places=1, msg="Output delta rot is wrong")
-        self.assertAlmostEqual(protHelical.deltaZ.get(), 6.7, places=1, msg="Output delta Z is wrong")
+        self.assertAlmostEqual(protHelical.deltaRot.get(), -67.4, places=1, msg="Output delta rot is wrong")
+        self.assertAlmostEqual(protHelical.deltaZ.get(), 7.6, places=1, msg="Output delta Z is wrong")
 
 
 class TestXmippRansacMda(TestXmippBase):

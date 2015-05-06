@@ -73,7 +73,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		else if (ci.isEnable())
 			return Boolean.class;//This way a JCheckBox is rendered
 		try {
-                        Class c = MetaData.getClassForType(ci.type);
+            Class c = MetaData.getClassForType(ci.type);
 			return c;
                         
 		} catch (Exception e) {

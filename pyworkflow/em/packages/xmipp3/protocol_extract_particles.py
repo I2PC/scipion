@@ -442,7 +442,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             self.ctfDict = {}
             for ctf in self.ctfRelations.get():
                 ctfName = ctf.getMicrograph().getMicName()
-                self.ctfDict[ctfName] = ctf
+                self.ctfDict[ctfName] = ctf.clone()
 
     
     def getInputMicrographs(self):

@@ -29,6 +29,7 @@
 
 #include <data/xmipp_program.h>
 #include "reconstruct_significant.h"
+#include "validation_nontilt.h"
 #include <math.h>
 #include <data/metadata.h>
 #include <string.h>
@@ -40,7 +41,7 @@ class MultireferenceAligneability: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnDir, fnSym, fnInit;
+    FileName fnDir, fnSym, fnInit, fin, fsig;
 
 
     /** Sampling rate of the volume and projections */
@@ -56,14 +57,16 @@ public:
     void run();
 
 private:
-    void obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
 
-    void obtainSumW(const MetaData & tempMd,std::vector<double> & sum_W,std::vector<double> & sum_u,std::vector<double> & H);
+    void write_projection_file();
 
-    void writeparams();
+    //void P_calculus(FileName &fnMd_signif,FileName &fnMdProj_signif,
+    //		FileName &fnMd,FileName &fnMdProj, MetaData &mdOut);
+    void P_calculus(FileName &fnMd_signif,FileName &fnMd, MetaData &mdOut);
 
-    void H0andHk_calculus(FileName &fnMd_signif,FileName &fnMdProj_signif,
-    		FileName &fnMd,FileName &fnMdProj, MetaData &mdOut);
+    void calc_sumu(MetaData tempMd,std::vector<double> & sum_u);
 
 };
+
+
 #endif /* MULTIREFERENCE_ALIGNEABILITY_H_ */

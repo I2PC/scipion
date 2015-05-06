@@ -209,6 +209,7 @@ class TestBrandeisFrealign(TestBrandeisBase):
     def testFrealign(self):
         frealign = self.newProtocol(ProtFrealign,
                                     inputParticles = self.protImportPart.outputParticles,
+                                    doInvert=False,
                                     input3DReference = self.protImportVol.outputVolume,
                                     useInitialAngles=True,
                                     mode=MOD_RECONSTRUCTION,

@@ -404,8 +404,10 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
     if inputParams[sj.MODE]==sj.MODE_VOL_CHIMERA or inputParams[sj.MODE]==sj.MODE_VOL_JSMOL:
         context.update(create_context_volume(request, inputParams, volPath, paramStats))
                
-    elif inputParams[sj.MODE]==sj.MODE_GALLERY or inputParams[sj.MODE]==sj.MODE_TABLE or inputParams[sj.MODE]=='column':
+    elif inputParams[sj.MODE]==sj.MODE_GALLERY or inputParams[sj.MODE]==sj.MODE_TABLE :
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParams[sj.MODE] + '_utils')})
+    elif inputParams[sj.MODE]=='column':
+        context.update({"showj_alt_js": getResourceJs('showj_' + sj.MODE_TABLE + '_utils')})
     
     # IMPROVE TO KEEP THE ITEMS (SELECTED, ENABLED, CHANGES)
     context.update({sj.SELECTEDITEMS : inputParams[sj.SELECTEDITEMS],
