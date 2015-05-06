@@ -119,6 +119,7 @@ public abstract class ParticlePicker {
     }
 
     public ParticlePicker(String block, String selfile, String outputdir, Mode mode, ParticlePickerParams params) {
+    	
         this.params = params;
         this.block = block;
         this.outputdir = outputdir;
@@ -127,7 +128,7 @@ public abstract class ParticlePicker {
         this.selfile = selfile;
         this.mode = mode;
         this.configfile = getOutputPath("config.xmd");
-
+        picker = this;
         filters = new ArrayList<IJCommand>();
         loadEmptyMicrographs();
         loadConfig();
@@ -138,7 +139,7 @@ public abstract class ParticlePicker {
         emextensions.put(Format.Xmipp301, ".pos");
         emextensions.put(Format.Relion, ".star");
         emextensions.put(Format.Eman, ".box");
-        picker = this;
+        
     }
 
     public void loadConfig() {
