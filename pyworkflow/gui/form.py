@@ -1317,9 +1317,11 @@ class FormWindow(Window):
                                                   font=self.font)
         self._addVarBinding(Message.VAR_QUEUE, var)
         frame.grid(row=2, column=c+1, pady=5, sticky='nw')
-        btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, 
-                                  command=self._editQueueParams)
-        btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
+        # Commented out the button to edit queue since the queue dialog
+        #  will be shown after pressing the 'Execute' button
+        #btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, 
+        #                          command=self._editQueueParams)
+        #btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
                              command=self._createHelpCommand(Message.HELP_RUNMODE))
         btnHelp.grid(row=2, column=c+3, padx=(5, 0), pady=2, sticky='ne')
@@ -1352,18 +1354,21 @@ class FormWindow(Window):
                 
     def _editQueueParams(self, e=None):
         """ Open the dialog to edit the queue parameters. """
-        dlg = QueueDialog(self, {'default': [('hours', '72', 'Hours', 'Number of time in the queue before the job is stopped.'),
-                                                  ('cores', '8', 'Cores'),
-                                                  ('memory', '16', 'Memory')], 
-                                      'long': [('hours', '72', 'Hours'),
-                                               ('cores', '8', 'Cores')], 
-                                      'short': []})
-        if dlg.resultYes():
-            self.protocol.setQueueParams(dlg.value)
-            return True
+        queues = self.protocol.getHostConfig().queueSystem.queues
+        # If there is only one Queue and it has not parameters
+        # dont bother to showing the QueueDialog
+        noQueueChoices = len(queues) == 1 and len(queues.values[0]) == 0
+        if noQueueChoices:
+            result = queues.keys[0], {}
         else:
-            return False
+            dlg = QueueDialog(self, queues)
+
+            if not dlg.resultYes():
+                return False
+            result = dlg.value
         
+        self.protocol.setQueueParams(result)
+        return True
         
     def _createParams(self, parent):
         paramsFrame = tk.Frame(parent)
@@ -1818,7 +1823,7 @@ class QueueDialog(Dialog):
             elif len(p) == 4:
                 name, value, label, helpMsg = p
             else:
-                raise Exception('Incorrect number of params for %s, expected 3 or 4' % name)
+                raise Exception('Incorrect number of params for %s, expected 3 or 4' % p[0])
             
             label = tk.Label(self.content, text=label, bg='white')
             label.grid(row=r, column=0, sticky='ne', padx=5, pady=(0,5))

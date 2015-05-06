@@ -101,12 +101,8 @@ def loadHostsConf(hostsConf):
             host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
 
             host.queueSystem.queues = OrderedDict()
-            for qName, values in json.loads(get('QUEUES')).iteritems():
-                queue = pwhosts.QueueConfig()
-                queue.maxCores.set(values['MAX_CORES'])
-                queue.allowMPI.set(values['ALLOW_MPI'])
-                queue.allowThreads.set(values['ALLOW_THREADS'])
-                host.queueSystem.queues[qName] = queue
+            for qName, qValues in json.loads(get('QUEUES')).iteritems():
+                host.queueSystem.queues[qName] = qValues
                 
             hosts[hostName] = host
 
