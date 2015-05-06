@@ -138,6 +138,13 @@ python = env.addLibrary(
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
+sh_alignment = env.addLibrary(
+    'sh_alignment',
+    tar='sh_alignment.tgz',
+    commands=[('cd software/tmp/sh_alignment; make install',
+               'software/lib/python2.7/site-packages/sh_alignment/frm.py')],
+    deps=[python])
+
 lapack = env.addLibrary(
     'lapack',
     tar='lapack-3.5.0.tgz',
