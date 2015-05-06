@@ -211,6 +211,7 @@ class QueueSystemConfig(OrderedObject):
         return None
         
         
+#TODO: maybe deprecated
 class QueueConfig(OrderedObject):
     def __init__(self, **args):
         OrderedObject.__init__(self, **args) 
