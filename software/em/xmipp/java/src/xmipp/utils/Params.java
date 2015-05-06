@@ -57,7 +57,7 @@ public class Params {
     
     public String directory;
     public String files[];
-    public int port;
+    public Integer port;
     public boolean singleSelection;
     public String mode = OPENING_MODE_DEFAULT;
     public boolean poll;

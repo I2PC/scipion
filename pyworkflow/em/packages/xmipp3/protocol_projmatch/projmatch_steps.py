@@ -668,7 +668,7 @@ def runFilterVolumeStep(self, iterN, refN, constantToAddToFiltration):
         self.runJob("xmipp_transform_filter", args % params)
 
 
-def runCreateOutpuStep(self):
+def runCreateOutputStep(self):
     import pyworkflow.em as em
     ''' Create standard output results_images, result_classes'''
     #creating results files
@@ -718,4 +718,4 @@ def runCreateOutpuStep(self):
         imgSetOut.setSamplingRate(imgSet.getSamplingRate())
         #read xmipp and convert
         readSetOfParticles(imgFn, imgSetOut, alignType=em.ALIGN_PROJ)
-        self._defineOutputs(outputParticles=imgSet)
+        self._defineOutputs(outputParticles=imgSetOut)

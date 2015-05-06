@@ -26,8 +26,11 @@
 package xmipp.viewer.models;
 
 import ij.ImagePlus;
+
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
+
 import xmipp.ij.commons.ImagePlusFromFile;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
@@ -39,7 +42,7 @@ import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
-public class MetadataGalleryTableModel extends ImageGalleryTableModel
+public class MetadataGalleryTableModel extends ImageGalleryTableModel//Table mode with images
 {
 
 	private static final long serialVersionUID = 1L;
@@ -163,30 +166,30 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			renderLabel = data.ciFirstRender;
 			// if (renderLabels) {
 			String imageFn = data.getSampleImage(renderLabel);
-                        if(imageFn != null)
-                            try
-                            {
-                                    ImagePlusFromFile loader = new ImagePlusFromFile(imageFn);
-                                    ImagePlus image = loader.getImagePlus();
-                                    
-                                    width = image.getWidth(); 
-                                    height = image.getHeight();
-                                    dim = new ImageDimension(width, height);
-                            }
-                            catch (Exception e)
-                            {
-                                    dim = null;
-                                    e.printStackTrace();
-                            }
+            if(imageFn != null)
+                try
+                {
+                        ImagePlusFromFile loader = new ImagePlusFromFile(imageFn);
+                        ImagePlus image = loader.getImagePlus();
+                        
+                        width = image.getWidth(); 
+                        height = image.getHeight();
+                        dim = new ImageDimension(width, height);
+                }
+                catch (Exception e)
+                {
+                        dim = null;
+                        e.printStackTrace();
+                }
 		}
 
 		if (dim == null)
 			dim = new ImageDimension(width);
 		dim.setZDim(data.ids.length);
-                int defZoom = GalleryData.getDefaultZoom(width);
-                int similarity = Math.min(defZoom, data.zoom)/Math.max(defZoom, data.zoom);
-                if(data.zoom == 0 || similarity < 0.5)
-                    data.zoom = defZoom;
+        int defZoom = GalleryData.getDefaultZoom(width);
+        int similarity = Math.min(defZoom, data.zoom)/Math.max(defZoom, data.zoom);
+        if(data.zoom == 0 || similarity < 0.5)
+            data.zoom = defZoom;
 		return dim;
 	}
 
@@ -202,9 +205,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		{
 			int index = getIndex(row, col);
 			long objId = data.ids[index];
-
-
-                        return data.getDisplayLabel(objId);
+            return data.getDisplayLabel(objId);
                         
 		}
 		catch (Exception e)
@@ -321,12 +322,12 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		try
 		{
-                    ImagePlus imp = XmippImageConverter.readMetadataToImagePlus(renderLabel.label, data.md, data.useGeo, data.wrap, data.inverty);
-                    return new ImagePlusLoader(imp, data.inverty);
+            ImagePlus imp = XmippImageConverter.readMetadataToImagePlus(renderLabel.label, data.md, data.useGeo, data.wrap, data.inverty);
+                return new ImagePlusLoader(imp, data.inverty);
 		}
 		catch (Exception e)
 		{
-                    e.printStackTrace();
+            e.printStackTrace();
 		}
 		return null;
 	}// function getImageLoader
@@ -344,6 +345,14 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
         return true;
     }
 	
+    @Override
+	public Point getCoords(int index) {
+	
+		Point p = new Point();
+		p.x = 0;
+		p.y = index;
+		return p;
+	}
         
 
 }

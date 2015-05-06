@@ -54,15 +54,18 @@ import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.ColorEditor;
 import xmipp.utils.ColorRenderer;
+import xmipp.utils.Params;
 import xmipp.utils.ScipionParams;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
+import xmipp.viewer.models.GalleryData;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.scipion.ScipionGalleryData;
 import xmipp.viewer.scipion.ScipionGalleryJFrame;
 
-public class PlotJDialog extends XmippDialog {
+public class PlotJDialog extends XmippDialog 
+{
 	private static final long serialVersionUID = 1L;
 	private JTable tableColumns;
 	private HashMap<ColumnInfo, ColumnInfo.ColumnExtraInfo> rowsExtra;
@@ -76,8 +79,7 @@ public class PlotJDialog extends XmippDialog {
 	GridBagConstraints gbc = new GridBagConstraints();
 	ImageGalleryTableModel gallery;
 	JPanel panelEntries;
-	String[] COLORS = { "0000CC", "009900", "CC0000", "000000", "FF6600",
-			"FFFF00", "00CCFF" };
+	String[] COLORS = { "0000CC", "009900", "CC0000", "000000", "FF6600", "FFFF00", "00CCFF" };
         String[] plotTypes = new String[]{"Plot", "Histogram", "Scatter"};
     private JLabel binslb;
 
@@ -100,9 +102,10 @@ public class PlotJDialog extends XmippDialog {
 		initComponents();
 	}// constructor ColumnsJDialog
         
-        private void addPair(String text, Component c, int row) {
-            addPair(text, c, row, 0);
-        }
+    private void addPair(String text, Component c, int row) {
+        addPair(text, c, row, 0);
+    }
+    
 	private void addPair(String text, Component c, int row, int column) {
 		JLabel label = new JLabel(text);
 		gbc.anchor = GridBagConstraints.EAST;
@@ -118,23 +121,23 @@ public class PlotJDialog extends XmippDialog {
 		
                 JPanel plotPanel = new JPanel();
 		plotTypecb = new JComboBox(plotTypes);
-                plotTypecb.addActionListener(new ActionListener() {
+        plotTypecb.addActionListener(new ActionListener() {
 
-                    @Override
-                    public void actionPerformed(ActionEvent ae) {
-                        binslb.setVisible(isHistogram());
-                        tfBins.setVisible(isHistogram());
-                        validate();
-                        pack();
-                    }
-                });
-                plotPanel.add(plotTypecb);
-                binslb = new JLabel("Bins");
-                binslb.setVisible(false);
-                tfBins = new JTextField(10);
-                tfBins.setVisible(false);
-                plotPanel.add(binslb);
-                plotPanel.add(tfBins);
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                binslb.setVisible(isHistogram());
+                tfBins.setVisible(isHistogram());
+                validate();
+                pack();
+            }
+        });
+        plotPanel.add(plotTypecb);
+        binslb = new JLabel("Bins");
+        binslb.setVisible(false);
+        tfBins = new JTextField(10);
+        tfBins.setVisible(false);
+        plotPanel.add(binslb);
+        plotPanel.add(tfBins);
 		panelEntries = new JPanel(new GridBagLayout());
 		addPair("Title:", tfTitle, 0);
 		addPair("X label:", tfXLabel, 1);
@@ -230,63 +233,46 @@ public class PlotJDialog extends XmippDialog {
 			return;
 
 		try {
-                        String[] argsBasic;
-                        if(((GalleryJFrame)parent).data.isScipionInstance())
-                        {
-                            ScipionParams params = (ScipionParams)gallery.data.parameters;
-                            //argsBasic = new String[]{params.python, params.getPlotSqliteScript(), gallery.data.getFileName(), ((ScipionGalleryData)gallery.data).getPreffix(), 
-                              //  labels, colors, styles, markers, getXColumn(), getYLabel(), getXLabel(), getPlotTitle(), getBins()};
-                            ScipionGalleryData data = (ScipionGalleryData)gallery.data;
-                            String orderColumn = "id";
-                            String orderDirection = "ASC";
-                            String[] sortby = data.getSortBy();
-                            if(sortby != null)
-                            {
-                                orderColumn = sortby[0];
-                                orderDirection = sortby[1];
-                            }   
-                            String command = String.format("run function scheduleSqlitePlot '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' %s %s", 
-                                    data.getFileName(), data.getPreffix(), plotTypecb.getSelectedItem(),
-                                labels, colors, styles, markers, getXColumn(), ylabel, getXLabel(), getPlotTitle(), getBins(), orderColumn, orderDirection);
-                            
-                            XmippWindowUtil.runCommand(command, params.port);
-                        }
-                        else
-                        {
-                        	String scipionHome = System.getenv().get("SCIPION_HOME");
-                          if(scipionHome == null)
-                          {
-                                XmippDialog.showError(null, "Scipion is not available");
-                                return;
-                          }
-                          String plotcmd = Filename.join(scipionHome, "software", "em", "xmipp", "bin", "xmipp_metadata_plot");
-			  //String plotcmd = "xmipp_metadata_plot"; 
-                            argsBasic = new String[]{ plotcmd,
-                                            gallery.data.getMdFilename(), "-y", labels, "--colors", colors,
-                                            "--style", styles, "--markers", markers, "--title",
-                                            tfTitle.getText().trim(), "--ytitle", ylabel, "--xtitle",
-                                            tfXLabel.getText().trim() };
-                            ArrayList<String> argsArray = new ArrayList<String>(Arrays.asList(argsBasic));
-                            
-                            if (isHistogram()) {
-                                    argsArray.add("--nbins");
-                                    argsArray.add(tfBins.getText().trim());
-                            }
-
-                            if (jcbXAxis.getSelectedIndex() != 0) {
-                                    argsArray.add("-x");
-                                    argsArray.add(jcbXAxis.getSelectedItem().toString());
-                            }
-
-                            for (String a: argsArray)
-                                    System.out.print(a + " ");
-                            System.out.println("");
-                            argsBasic = argsArray.toArray(argsBasic);
-                            String result = XmippWindowUtil.executeCommand(argsBasic, false);
-                        }
-			
-			
-			
+				
+                String[] argsBasic;
+                Params params = gallery.data.parameters;
+                GalleryData data = gallery.data;
+                String orderColumn = "id";
+                String orderDirection = "ASC";
+                String[] sortby = data.getSortBy();
+                if(sortby != null)
+                {
+                    orderColumn = sortby[0];
+                    orderDirection = sortby[1];
+                }   
+                if(params.port != null)
+                {
+	                String command = String.format("run function schedulePlot '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' %s %s", 
+	                        data.getFileName(), data.getPreffix(), plotTypecb.getSelectedItem(),
+	                    labels, colors, styles, markers, getXColumn(), ylabel, getXLabel(), getPlotTitle(), getBins(), orderColumn, orderDirection);
+	                
+	                XmippWindowUtil.runCommand(command, params.port);
+                }
+                else
+                {
+                	String scipion = System.getenv("SCIPION_HOME");
+                	String pwplot = Filename.join(scipion, "pyworkflow", "apps", "pw_plot.py");
+                	String cmd = String.format("%s --file %s --type %s --columns %s --orderColumn %s --orderDir %s --colors %s --styles %s --markers %s"
+                			, pwplot, data.getFileName(), plotTypecb.getSelectedItem(), labels, orderColumn, orderDirection, colors, styles, markers);
+                	if(!data.getPreffix().isEmpty())
+                		cmd += " --block " + data.getPreffix();
+                	
+                	if(!getXColumn().isEmpty())
+                		cmd += " --xcolumn " + getXColumn();
+                	if(!getPlotTitle().isEmpty())
+                		cmd += " --title " + getPlotTitle();
+                	if(!getXLabel().isEmpty())
+                		cmd += " --xtitle " + getXLabel();
+                	if(!ylabel.isEmpty())
+                		cmd += " --ytitle " + ylabel;
+                	
+                	XmippWindowUtil.executeCommand(cmd, false);
+                }
 
 		} catch (Exception e) {
 			e.printStackTrace();

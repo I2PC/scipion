@@ -5,7 +5,7 @@
 # * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
 # *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -83,8 +83,8 @@ def addLib(name, **kwargs):
     # Install all libraries in scipion/software/lib
     kwargs['installDir'] = '#software/lib'
     # Add always the xmipp path as -I for include and also xmipp/libraries
-    incs = kwargs.get('incs', []) + [os.path.join(XMIPP_PATH, 'external'),
-                                     os.path.join(XMIPP_PATH, 'libraries')]
+    incs = kwargs.get('incs', []) + [join(XMIPP_PATH, 'external'),
+                                     join(XMIPP_PATH, 'libraries')]
     kwargs['incs'] = incs
 
     deps = kwargs.get('deps', [])
