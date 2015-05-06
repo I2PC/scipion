@@ -45,6 +45,12 @@ public:
 
     double angleThreshold;
 
+    // Regularization
+    double lambda;
+
+    // Number of iterations
+    int iterations;
+
 public:
     /** Low resolution and high resolution dictionary */
     std::vector< MultidimArray<double> > dictionaryLow, dictionaryHigh;
@@ -60,6 +66,10 @@ public:
 
     /** Signature */
     Matrix1D<double> auxSignature;
+
+    /* Some variables to approximate patches */
+    Matrix2D<double> Ui, UitUi;
+	Matrix1D<double> wi, v1, v2, y, yp;
 
 public:
     virtual void defineParams();
@@ -77,6 +87,19 @@ public:
     /** True if the patch is not already in the low resolution dictionary */
     bool notInDictionary(const MultidimArray<double> &candidatePatch, MultidimArray<double> &canonicalPatch,
     		Matrix1D<double> &canonicalSignature, size_t &canonicalIdx);
+
+    /** Select dictionary patches for a low resolution patch */
+    void selectDictionaryPatches(const MultidimArray<double> &lowResolutionPatch, Matrix1D<double> &lowResolutionPatchSignature,
+    		std::vector<size_t> &selectedPatchesIdx, std::vector<double> &weight);
+
+    /** Approximate patch.
+     * It returns the R2 of the approximation. */
+    double approximatePatch(const MultidimArray<double> &lowResolutionPatch,
+    		std::vector< size_t > &selectedPatchesIdx, std::vector<double> &weight, Matrix1D<double> &alpha);
+
+    /** Reconstruct patch */
+    void reconstructPatch(size_t idxTransf, std::vector< size_t > &selectedPatchesIdx, Matrix1D<double> &alpha,
+    		MultidimArray<double> &highResolutionPatch);
 
     /** Load dictionaries */
     void loadDictionaries();

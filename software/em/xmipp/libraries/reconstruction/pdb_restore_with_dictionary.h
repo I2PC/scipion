@@ -37,27 +37,11 @@ public:
 	/** Input and output volume names */
 	FileName fnIn, fnOut;
 
-    double lambda;
-
-    int iterations;
-public:
-    Matrix2D<double> Ui, UitUi;
-	Matrix1D<double> wi, v1, v2, y, yp;
-
 public:
     void defineParams();
     void readParams();
     void show();
     void run();
-
-    void selectDictionaryPatches(const MultidimArray<double> &lowResolutionPatch, Matrix1D<double> &lowResolutionPatchSignature,
-    		std::vector<size_t> &selectedPatchesIdx, std::vector<double> &weight);
-
-    double approximatePatch(const MultidimArray<double> &lowResolutionPatch,
-    		std::vector< size_t > &selectedPatchesIdx, std::vector<double> &weight, Matrix1D<double> &alpha);
-
-    void reconstructPatch(size_t idxTransf, std::vector< size_t > &selectedPatchesIdx, Matrix1D<double> &alpha,
-    		MultidimArray<double> &highResolutionPatch);
 };
 //@}
 #endif
