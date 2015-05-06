@@ -336,7 +336,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         fnFsc=join(fnDirCurrent,"fsc.xmd")
         self.runJob('xmipp_resolution_fsc','--ref %s -i %s -o %s --sampling_rate %f'%(fnVol1,fnVol2,fnFsc,TsCurrent),numberOfMpi=1)
         fnBeforeVol1=join(fnDirCurrent,"volumeBeforePostProcessing%02d.vol"%1)
-        fnBeforeVol2=join(fnDirCurrent,"volumeBeforePostProcessing%02d.vol"%1)
+        fnBeforeVol2=join(fnDirCurrent,"volumeBeforePostProcessing%02d.vol"%2)
         if exists(fnBeforeVol1) and exists(fnBeforeVol2):
             fnBeforeFsc=join(fnDirCurrent,"fscBeforePostProcessing.xmd")
             self.runJob('xmipp_resolution_fsc','--ref %s -i %s -o %s --sampling_rate %f'%(fnBeforeVol1,fnBeforeVol2,fnBeforeFsc,TsCurrent),
