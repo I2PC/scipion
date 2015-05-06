@@ -28,16 +28,18 @@
 								class="normal" 
 							{% endif %}>
 							{{param.label.get}}
-							</td>
-							
+						</td>
+
 <!-- 						<td style="1em;"> -->
-							<td>
-							
+						<td>
+
 						{% for paramLineName, paramLine in param.iterParams %}
-							{{paramLine.label.get}}
-							<input type="text" style="width: 4em;" id="{{paramLineName}}_input" data-objId="{{paramLine.htmlIdValue}}" name="{{paramLineName}}" value="{{paramLine.htmlValue}}" >
-						{% endfor %}
-							</td>
+                            <div id="{{paramLineName}}" style="float: left;" data-cond="{{paramLine.condition.get}}" data-params="{{paramLine.htmlCondParams}}" data-depen="{{paramLine.htmlDepend}}" data-line="yes" data-expert="{{paramLine.expertLevel.get}}">
+                            {{paramLine.label.get}}
+                            <input type="text" style="width: 4em;" id="{{paramLineName}}_input" data-objId="{{paramLine.htmlIdValue}}" name="{{paramLineName}}" value="{{paramLine.htmlValue}}">
+                            </div>
+                        {% endfor %}
+						</td>
 <!-- 							<td> -->
 <!-- 							</td> -->
 						{% if param.hasWizard %}
