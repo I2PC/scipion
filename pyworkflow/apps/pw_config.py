@@ -169,9 +169,10 @@ def checkPaths(conf):
 
 def checkConf(fpath, ftemplate, remove=[], keep=[]):
     "Check that all the variables in the template are in the config file too"
-
     # Remove from the checks the sections in "remove", and if "keep"
     # is used only check those sections.
+
+    # Read the config file fpath and the template ftemplate
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     assert cf.read(fpath) != [], 'Missing file %s' % fpath
