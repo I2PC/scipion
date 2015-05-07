@@ -2803,21 +2803,32 @@ void SymList::breakSymmetry(double rot1, double tilt1, double psi1,
 }
 
 // Forward declaration
-double interpolatedElement3DHelical(const MultidimArray<double> &Vin, double x, double y, double z, double zHelical);
+double interpolatedElement3DHelical(const MultidimArray<double> &Vin, double x, double y, double z, double zHelical,
+		double sinRotHelical, double cosRotHelical);
 
-double interpolatedElement3DHelicalInt(const MultidimArray<double> &Vin, int x, int y, int z, double zHelical)
+double interpolatedElement3DHelicalInt(const MultidimArray<double> &Vin, int x, int y, int z, double zHelical,
+		double sinRotHelical, double cosRotHelical)
 {
 	if (x<STARTINGX(Vin) || x>FINISHINGX(Vin) || y<STARTINGY(Vin) || y>FINISHINGY(Vin))
 		return 0.0;
 	if (z>=STARTINGZ(Vin) && z<=FINISHINGZ(Vin))
 		return A3D_ELEM(Vin,z,y,x);
 	else if (z<STARTINGZ(Vin))
-		return interpolatedElement3DHelical(Vin,x,y,z+zHelical,zHelical);
+	{
+		double newx=cosRotHelical*x-sinRotHelical*y;
+		double newy=sinRotHelical*x+cosRotHelical*y;
+		return interpolatedElement3DHelical(Vin,newx,newy,z+zHelical,zHelical, sinRotHelical, cosRotHelical);
+	}
 	else
-		return interpolatedElement3DHelical(Vin,x,y,z-zHelical,zHelical);
+	{
+		double newx=cosRotHelical*x+sinRotHelical*y;
+		double newy=-sinRotHelical*x+cosRotHelical*y;
+		return interpolatedElement3DHelical(Vin,newx,newy,z-zHelical,zHelical, sinRotHelical, cosRotHelical);
+	}
 }
 
-double interpolatedElement3DHelical(const MultidimArray<double> &Vin, double x, double y, double z, double zHelical)
+double interpolatedElement3DHelical(const MultidimArray<double> &Vin, double x, double y, double z, double zHelical,
+		double sinRotHelical, double cosRotHelical)
 {
 	int x0 = floor(x);
     double fx = x - x0;
@@ -2831,14 +2842,14 @@ double interpolatedElement3DHelical(const MultidimArray<double> &Vin, double x, 
     double fz = z - z0;
     int z1 = z0 + 1;
 
-    double d000 = interpolatedElement3DHelicalInt(Vin, x0, y0, z0, zHelical);
-    double d001 = interpolatedElement3DHelicalInt(Vin, x1, y0, z0, zHelical);
-    double d010 = interpolatedElement3DHelicalInt(Vin, x0, y1, z0, zHelical);
-    double d011 = interpolatedElement3DHelicalInt(Vin, x1, y1, z0, zHelical);
-    double d100 = interpolatedElement3DHelicalInt(Vin, x0, y0, z1, zHelical);
-    double d101 = interpolatedElement3DHelicalInt(Vin, x1, y0, z1, zHelical);
-    double d110 = interpolatedElement3DHelicalInt(Vin, x0, y1, z1, zHelical);
-    double d111 = interpolatedElement3DHelicalInt(Vin, x1, y1, z1, zHelical);
+    double d000 = interpolatedElement3DHelicalInt(Vin, x0, y0, z0, zHelical, sinRotHelical, cosRotHelical);
+    double d001 = interpolatedElement3DHelicalInt(Vin, x1, y0, z0, zHelical, sinRotHelical, cosRotHelical);
+    double d010 = interpolatedElement3DHelicalInt(Vin, x0, y1, z0, zHelical, sinRotHelical, cosRotHelical);
+    double d011 = interpolatedElement3DHelicalInt(Vin, x1, y1, z0, zHelical, sinRotHelical, cosRotHelical);
+    double d100 = interpolatedElement3DHelicalInt(Vin, x0, y0, z1, zHelical, sinRotHelical, cosRotHelical);
+    double d101 = interpolatedElement3DHelicalInt(Vin, x1, y0, z1, zHelical, sinRotHelical, cosRotHelical);
+    double d110 = interpolatedElement3DHelicalInt(Vin, x0, y1, z1, zHelical, sinRotHelical, cosRotHelical);
+    double d111 = interpolatedElement3DHelicalInt(Vin, x1, y1, z1, zHelical, sinRotHelical, cosRotHelical);
 
     double dx00 = LIN_INTERP(fx, d000, d001);
     double dx01 = LIN_INTERP(fx, d100, d101);
@@ -2855,6 +2866,9 @@ void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &
 {
     Vout.initZeros(Vin);
     double izHelical=1.0/zHelical;
+    double sinRotHelical, cosRotHelical;
+    sincos(rotHelical,&sinRotHelical,&cosRotHelical);
+    int Llength=ceil(ZSIZE(Vin)*izHelical);
     FOR_ALL_ELEMENTS_IN_ARRAY3D(Vin)
     {
         if (mask!=NULL && !A3D_ELEM(*mask,k,i,j))
@@ -2862,7 +2876,7 @@ void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &
         double rot=atan2((double)i,(double)j)+rot0;
         double rho=sqrt((double)i*i+(double)j*j);
         double l0=ceil((STARTINGZ(Vin)-k)*izHelical);
-        double lF=floor((FINISHINGZ(Vin)-k)*izHelical);
+        double lF=l0+Llength;
         double finalValue=0;
         double L=0;
         for (double l=l0; l<=lF; ++l)
@@ -2873,11 +2887,11 @@ void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &
             sincos(rotp,&ip,&jp);
             ip*=rho;
             jp*=rho;
-            finalValue+=interpolatedElement3DHelical(Vin,jp,ip,kp,zHelical);
+            finalValue+=interpolatedElement3DHelical(Vin,jp,ip,kp,zHelical,sinRotHelical,cosRotHelical);
             L+=1.0;
             if (dihedral)
             {
-                finalValue+=interpolatedElement3DHelical(Vin,jp,-ip,-kp,zHelical);
+                finalValue+=interpolatedElement3DHelical(Vin,jp,-ip,-kp,zHelical,sinRotHelical,cosRotHelical);
                 L+=1.0;
             }
         }
