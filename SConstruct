@@ -296,7 +296,7 @@ def symLink(env, target, source):
         sources = source[0].path
     if isinstance(sources, basestring) and sources.startswith(current):
         sources = sources.split(current)[1]
-    
+
     sources = os.path.relpath(sources, os.path.split(link)[0])
     #if os.path.lexists(link):
     #    os.remove(link)
@@ -307,8 +307,9 @@ def symLink(env, target, source):
                          Action('rm -rf %s && ln -v -s %s %s' % (Entry(link).abspath, sources, 
                                                                  Entry(link).abspath),
                                 'Creating a link from %s to %s' % (link, sources)))
+    env.Default(result)
     return result
-    
+
 
 def Cmd(cmd):
     print cmd
