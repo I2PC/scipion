@@ -34,7 +34,7 @@ import xmipp.viewer.windows.GalleryJFrame;
 public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private String type;
-    private int port;
+    private Integer port;
     private JButton cmdbutton;
     private String sqlitefile;
     private JButton classcmdbutton;

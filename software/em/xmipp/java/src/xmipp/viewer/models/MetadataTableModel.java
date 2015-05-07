@@ -29,11 +29,13 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
@@ -87,13 +89,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                 return row;
 	}
 
-	@Override
-	public Point getCoords(int index) {
-		Point p = new Point();
-		p.x = 0;
-		p.y = index;
-		return p;
-	}
+	
 
 	/**
 	 * Returns metadata value with java type
@@ -468,6 +464,16 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		}
 	}
         
+	@Override
+	public Point getCoords(int index) {
+	
+		Point p = new Point();
+		p.x = 0;
+		p.y = index;
+		return p;
+	}
+	
+
         
         
 }// class MetadataTable

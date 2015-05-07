@@ -138,6 +138,27 @@ python = env.addLibrary(
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
+pcre = env.addLibrary(
+    'pcre',
+    tar='pcre-8.36.tgz',
+    targets=[env.getBin('pcretest')],
+    default=False)
+
+swig = env.addLibrary(
+    'swig',
+    tar='swig-3.0.2.tgz',
+    targets=[env.getBin('swig')],
+    makeTargets=['Source/Swig/tree.o'],
+    deps=[pcre],
+    default=False)
+
+sh_alignment = env.addLibrary(
+    'sh_alignment',
+    tar='sh_alignment.tgz',
+    commands=[('cd software/tmp/sh_alignment; make install',
+               'software/lib/python2.7/site-packages/sh_alignment/frm.py')],
+    deps=[python, swig])
+
 lapack = env.addLibrary(
     'lapack',
     tar='lapack-3.5.0.tgz',
@@ -161,19 +182,6 @@ opencv = env.addLibrary(
     default=not noOpencv)
 
 # ---------- Libraries required by PyTom 
-pcre = env.addLibrary(
-    'pcre',
-    tar='pcre-8.36.tgz',
-    targets=[env.getBin('pcretest')],
-    default=False)
-
-swig = env.addLibrary(
-    'swig',
-    tar='swig-3.0.2.tgz',
-    targets=[env.getBin('swig')],
-    makeTargets=['Source/Swig/tree.o'],
-    deps=[pcre],
-    default=False)
 
 boost = env.addLibrary(
     'boost',

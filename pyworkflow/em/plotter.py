@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 
 import pyworkflow.em.metadata as md
 from pyworkflow.gui.plotter import Plotter
-
+import pyworkflow.em.metadata as md
 
 
 class EmPlotter(Plotter):
@@ -108,3 +108,88 @@ class EmPlotter(Plotter):
         """
 
         self.plot(xValues, yValues, color, **kwargs)
+        
+        
+def plotFile(dbName, dbPreffix, plotType,
+                   columnsStr, colorsStr, linesStr, markersStr,
+                   xcolumn, ylabel, xlabel, title, bins, orderColumn, orderDirection):
+        columns = columnsStr.split()
+        colors = colorsStr.split()
+        lines = linesStr.split()
+        markers = markersStr.split()
+        data = PlotData(dbName, dbPreffix, orderColumn, orderDirection)
+        #setObj = getSetObject(dbName, dbPreffix)
+
+        plotter = Plotter(windowTitle=title)
+        ax = plotter.createSubPlot(title, xlabel, ylabel)
+        xvalues = data.getColumnValues(xcolumn) if xcolumn else range(0, data.getSize())
+        #xvalues = range(0, setObj.getSize()) if not isxvalues else []
+
+        for i, col in enumerate(columns):
+            yvalues = data.getColumnValues(col)
+            color = colors[i]
+            line = lines[i]
+            if bins:
+                ax.hist(yvalues, bins=int(bins), color=color, linestyle=line, label=col)
+            else:
+                if plotType == 'Plot':
+                    marker = (markers[i] if not markers[i] == 'none' else None)
+                    ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line, label=col)
+                else:
+                    ax.scatter(xvalues, yvalues, c=color, label=col, alpha=0.5)
+        ax.legend(columns)
+        
+        return plotter
+        
+        
+class PlotData():
+    """ Small wrapper around table data such as: sqlite or metadata
+    files. """
+    def __init__(self, fileName, tableName, orderColumn, orderDirection):
+        self._orderColumn = orderColumn
+        self._orderDirection = orderDirection
+        
+        if fileName.endswith(".db") or fileName.endswith(".sqlite"):
+            self._table = self._loadSet(fileName, tableName)
+            self.getColumnValues = self._getValuesFromSet
+            self.getSize = self._table.getSize
+        else: # asume a metadata file
+            self._table = self._loadMd(fileName, tableName)
+            self.getColumnValues = self._getValuesFromMd
+            self.getSize = self._table.size
+    
+   
+        
+    def _loadSet(self, dbName, dbPreffix):
+        from pyworkflow.mapper.sqlite import SqliteFlatDb
+        db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPreffix)
+        if dbPreffix:
+            setClassName = "SetOf%ss" % db.getSelfClassName()
+        else:
+            setClassName = db.getProperty('self') # get the set class name
+
+        from pyworkflow.em import getObjects
+        setObj = getObjects()[setClassName](filename=dbName, prefix=dbPreffix)
+        return setObj
+    
+    def _getValuesFromSet(self, columnName):
+        return [self._getValue(obj, columnName) 
+                  for obj in self._table.iterItems(orderBy=self._orderColumn, 
+                                                   direction=self._orderDirection)]
+        
+    def _loadMd(self, fileName, tableName):
+        label = md.str2Label(self._orderColumn)
+        tableMd = md.MetaData('%s@%s' % (tableName, fileName))
+        tableMd.sort(label)
+        #TODO: sort metadata by self._orderColumn
+        return tableMd
+    
+    def _getValuesFromMd(self, columnName):
+        label = md.str2Label(columnName)
+        return [self._table.getValue(label, objId) for objId in self._table]
+    
+    def _getValue(self, obj, column):
+        if column == 'id':
+            return obj.getObjId()
+        
+        return obj.getAttributeValue(column)

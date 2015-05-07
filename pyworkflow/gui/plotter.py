@@ -28,7 +28,6 @@ This module implement the classes to create plots on xmipp.
 """
 
 import matplotlib.pyplot as plt
-
 from pyworkflow.viewer import View
 
 figureCounter = 0
@@ -196,4 +195,12 @@ class Plotter(View):
     def close(self):
         """ Close current Plotter figure. """
         plt.close(self.figure)
+        
+
+
+
+
+
+
+
         

@@ -205,8 +205,8 @@ void MultireferenceAligneability::P_calculus(FileName &fnMd_gallery,FileName &fn
 
 		calc_sumu(tempMd_gallery,sum_u1);
 		calc_sumu(tempMd,sum_u2);
-		PVN.obtainSumW(tempMd_gallery,sum_w1,sum_u1,H0);
-		PVN.obtainSumW(tempMd,sum_w2,sum_u2,H);
+		PVN.obtainSumW(tempMd_gallery,sum_w1,sum_u1,H0,correction);
+		PVN.obtainSumW(tempMd,sum_w2,sum_u2,H,correction);
 
 		std::sort(H0.begin(),H0.end());
 		std::sort(H.begin(),H.end());
@@ -215,7 +215,7 @@ void MultireferenceAligneability::P_calculus(FileName &fnMd_gallery,FileName &fn
 		for(size_t j=0; j<sum_u1.size();j++)  //NOTA, u1 and u2 have 100 elements, then the condition sum_u1.size, does not matter
 			P += H0.at(j)/H.at(j);
 
-		P /= (nSamplesRandom/correction);
+		P /= (nSamplesRandom);
 		row.setValue(MDL_IMAGE_IDX,i);
 		row.setValue(MDL_WEIGHT,P);
 		mdOut.addRow(row);
