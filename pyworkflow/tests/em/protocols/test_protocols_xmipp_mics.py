@@ -195,13 +195,13 @@ class TestXmippCTFEstimation(TestXmippBase):
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
         self.proj.launchProtocol(protCTF, wait=True)
-        print protCTF.outputCTF.printAll()
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.") 
         ctfModel = protCTF.outputCTF.getFirstItem()
         self.assertAlmostEquals(ctfModel.getDefocusU(),23825.9, delta=50)
         self.assertAlmostEquals(ctfModel.getDefocusV(),23520.3, delta=50)
-        self.assertAlmostEquals(ctfModel.getDefocusAngle(), 47.489, delta=1)
-        self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
+        self.assertAlmostEquals(ctfModel.getDefocusAngle(), 49.2882, delta=1)
+        sampling = ctfModel.getMicrograph().getSamplingRate() * protCTF.ctfDownFactor.get()
+        self.assertAlmostEquals(sampling, 2.474, delta=0.001)
 
 
 # class TestXmippCTFRestimation(TestXmippBase):
