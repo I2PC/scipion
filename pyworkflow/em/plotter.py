@@ -157,9 +157,7 @@ class PlotData():
             self._table = self._loadMd(fileName, tableName)
             self.getColumnValues = self._getValuesFromMd
             self.getSize = self._table.size
-    
-   
-        
+            
     def _loadSet(self, dbName, dbPreffix):
         from pyworkflow.mapper.sqlite import SqliteFlatDb
         db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPreffix)
@@ -180,7 +178,7 @@ class PlotData():
     def _loadMd(self, fileName, tableName):
         label = md.str2Label(self._orderColumn)
         tableMd = md.MetaData('%s@%s' % (tableName, fileName))
-        tableMd.sort(label)
+        tableMd.sort(label)#FIXME: use order direction 
         #TODO: sort metadata by self._orderColumn
         return tableMd
     

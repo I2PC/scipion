@@ -140,7 +140,6 @@ function getColumnsDefinition() {
 		
 		} 
 		else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
-//			console.log("id:"+columnIdReal+" render!")
 			dataRowForTable["mRender"] = function (data, type, row, meta){	return colRenderImage(meta.col, data)}
 		
 		// columnType = 5
@@ -154,6 +153,7 @@ function getColumnsDefinition() {
 		dataForTable.push(dataRowForTable);
 		columnId++;
 	}
+	console.log(dataForTable)
 	return dataForTable;
 }
 
@@ -172,21 +172,31 @@ function colRenderCheckbox(id, aData){
 
 
 function colRenderable(id, aData, renderFunc){
-		src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc;
-		src += '&image=' + aData + '\"';
-		
-		var content_html = '<span style="display:none">' 
-				+ aData + '</span>'
-				+ '<img class=\"tableImages\"'
-				+ ' src=' + src
-				+ ' data-real_src=' +src
-				+ '/>'
-				
+		column = columns[id]
+		if (column != null && column.renderable)
+		{
+			
+			src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc;
+			src += '&image=' + aData + '\"';
+			
+			var content_html = '<span style="display:none">' 
+					+ aData + '</span>'
+					+ '<img class=\"tableImages\"'
+					+ ' src=' + src
+					+ ' data-real_src=' +src
+					+ '/>'
+		}	
+		else
+		{
+			//console.log("not rendered image " + column.columnLabel + " renderable " +column.renderable)
+			content_html = aData
+		}
 		return content_html;
 }
 
 
 function colRenderImage(id, aData){
+	
 	
 	html = colRenderable(id, aData, "get_image")
 	return html
@@ -225,17 +235,7 @@ function getVisibleColumn(n)
 	}	
 }
 
-function getJsonFromIndex(json, index)
-{
-	var i = 0, key;
-    for (key in json) {
-        if (i == index) {
-            return json[key];
-        }
-        i++;
-    }
-    return null;
-}
+
 
 function orderColumns(order)
 {
