@@ -198,6 +198,12 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel//Table mod
 	{
 		return createImageItem(index, renderLabel.label);
 	}
+	
+	public int getIndex(int row, int col) {
+        
+        return row;
+
+}
 
 	public String getLabel(int row, int col)
 	{
