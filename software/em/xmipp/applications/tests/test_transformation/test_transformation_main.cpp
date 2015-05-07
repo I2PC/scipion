@@ -235,6 +235,18 @@ TEST_F(TransformationTest, str2TransformationMatrix)
     string2TransformationMatrix(matrixStr2, matrix2);
     EXPECT_EQ(M, matrix2);
 
+    Matrix2D<double> M3(3, 3);
+    M.initIdentity();
+    dMij(M, 0, 0) = -1.1601138;
+    dMij(M, 0, 1) = -1.6291519;
+    dMij(M, 0, 2) = 2;
+    dMij(M, 1, 0) = -1.6291519;
+    dMij(M, 1, 1) = 1.1601138;
+    dMij(M, 1, 2) = 4;
+    Matrix2D<double> matrix3;
+    string2TransformationMatrix(matrixStr2, matrix3, 3);
+    EXPECT_EQ(M, matrix2);
+
 
 }
 

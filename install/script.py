@@ -157,7 +157,8 @@ sh_alignment = env.addLibrary(
     tar='sh_alignment.tgz',
     commands=[('cd software/tmp/sh_alignment; make install',
                'software/lib/python2.7/site-packages/sh_alignment/frm.py')],
-    deps=[python, swig])
+    deps=[python, swig],
+    default=False)
 
 lapack = env.addLibrary(
     'lapack',

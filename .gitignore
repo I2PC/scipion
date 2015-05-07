@@ -34,50 +34,40 @@
 .classpath
 .idea
 
-#### Xmipp
-# Config files
-.xmipp*
-
-# Qt files
-moc_*.cc
-
 # Scons auxiliary files
 .sconsign.dblite
 
 # Other
-software/tmp
-software/bin
-software/cfg
-software/include
-software/install
-software/lib
-software/log
-software/man
-software/share
-software/em/*
-!software/em/xmipp
+/software/tmp
+/software/bin
+/software/cfg
+/software/include
+/software/install
+/software/lib
+/software/log
+/software/man
+/software/share
+/software/em/*
+!/software/em/xmipp
 
-data/
 gmon.out
 *~
 \#*
 .\#*
-pyworkflow/tests/classes/tmp
-pyworkflow/web/scipion_web.db
+/pyworkflow/tests/classes/tmp
+/pyworkflow/web/scipion_web.db
 .directory
-pw.bashrc
-pw.cshrc
 
 # Static Path
-pyworkflow/web/static/
-pyworkflow/resources/uploads/
-static/
-data
+/pyworkflow/web/static
+/pyworkflow/resources/uploads
+/pyworkflow/tests/em/data
+/data
 
 # Scipion
-config/*.conf
-config/backups/
+/config/*.conf
+/config/backups
 
 # Configuration for servers
-pyworkflow/web/pages/resources/js/templates_libs/config.js
+/pyworkflow/web/pages/resources/js/templates_libs/config.js
 /config.log

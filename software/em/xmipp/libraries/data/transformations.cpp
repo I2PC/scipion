@@ -88,9 +88,9 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
     }
 }
 
-void string2TransformationMatrix(const String &matrixStr, Matrix2D<double> &matrix)
+void string2TransformationMatrix(const String &matrixStr, Matrix2D<double> &matrix, size_t dim)
 {
-  matrix.resizeNoCopy(4, 4);
+  matrix.resizeNoCopy(dim, dim);
 
   String matrixStrCopy(matrixStr);
   char c;
@@ -104,10 +104,18 @@ void string2TransformationMatrix(const String &matrixStr, Matrix2D<double> &matr
 
   size_t n = 4; // EMX matrix are always 4x4
   std::stringstream ss(matrixStrCopy);
+  size_t d_1 = dim - 1;
 
   for (size_t i = 0; i < n; ++i)
     for (size_t j = 0; j < n; ++j)
-      ss >> dMij(matrix, i, j);
+    {
+    	//TODO validate that M(dim, dim) is 1
+    	//if (i == dim-1 && j == dim-1)
+
+      ss >> dMij(matrix, i < d_1 ? i : i-1, j < d_1 ? j : j-1);
+    }
+  dMij(matrix, d_1, d_1) = 1.;
+
 }
 
 void transformationMatrix2Parameters2D(const Matrix2D<double> &A, bool &flip,
