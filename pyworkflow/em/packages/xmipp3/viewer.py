@@ -310,19 +310,21 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtScreenClasses):
             if isinstance(obj.inputSet.get(), SetOfClasses2D):
                 fn = obj.outputClasses
-                labels = 'id enabled _size _representative._index _representative._filename _xmipp_maxCC'
-                labelRender = "_representative._filename"
+                labels = 'id enabled _size _representative._filename _xmipp_imageRef _xmipp_image1 _xmipp_maxCC'
+                labelRender = "_representative._filename _xmipp_imageRef _xmipp_image1"
                 self._visualize(fn, viewParams={ORDER: labels, 
                                                           VISIBLE: labels, 
-                                                          SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender})
+                                                          SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender,
+                                                          MODE: MODE_MD})
             else:
                 fn = obj.outputAverages.getFileName()
-                labels = 'id enabled _index _filename _xmipp_maxCC _transform._matrix'
-                labelRender = "_filename"
+                labels = 'id enabled _filename _xmipp_imageRef _xmipp_image1 _xmipp_maxCC'
+                labelRender = "_filename _xmipp_imageRef _xmipp_image1"
                 self._views.append(ObjectView(self._project, obj.outputAverages.strId(), fn,
                                               viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
-                                                      SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender}))
+                                                      SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender,
+                                                      MODE: MODE_MD}))
         
         elif issubclass(cls, XmippProtProjectionOutliers):
             if isinstance(obj.inputSet.get(), SetOfClasses2D):
