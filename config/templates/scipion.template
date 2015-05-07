@@ -55,10 +55,9 @@ MPI_CC = mpicc
 MPI_CXX = mpiCC
 MPI_LINKERFORPROGRAMS = mpiCC
 MPI_LIB = mpi
-MPI_HOME = /usr/lib64/mpi/gcc/openmpi
-MPI_LIBDIR = %(MPI_HOME)s/lib
-MPI_INCLUDE = %(MPI_HOME)s/include
-MPI_BINDIR = %(MPI_HOME)s/bin
+MPI_LIBDIR = /usr/lib64/mpi/gcc/openmpi/lib
+MPI_INCLUDE = /usr/lib64/mpi/gcc/openmpi/include
+MPI_BINDIR = /usr/lib64/mpi/gcc/openmpi/bin
 
 MATLAB_DIR = /usr/local/MATLAB/R2011a
 
