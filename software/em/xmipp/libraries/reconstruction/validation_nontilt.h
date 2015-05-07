@@ -57,7 +57,7 @@ public:
 public:
     void obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
 
-    void obtainSumW(const MetaData & tempMd,std::vector<double> & sum_W,std::vector<double> & sum_u,std::vector<double> & H);
+    void obtainSumW(const MetaData & tempMd,std::vector<double> & sum_W,std::vector<double> & sum_u,std::vector<double> & H, const double factor);
 
 
 };

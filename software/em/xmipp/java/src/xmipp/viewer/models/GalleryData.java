@@ -1937,5 +1937,9 @@ public class GalleryData {
 			return count;
 		}
         
+		public String getPreffix() {
+	        return selectedBlock;
+	    }
+	    
         
 }// class GalleryDaa

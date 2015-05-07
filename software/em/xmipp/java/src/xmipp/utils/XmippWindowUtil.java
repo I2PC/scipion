@@ -215,31 +215,31 @@ public class XmippWindowUtil
 		progressPanel.setVisible(false);
 	}
 
-        public static void executeGUICommand(final String[] command, final JFrame frame, String msg)
-        {
+    public static void executeGUICommand(final String[] command, final JFrame frame, String msg)
+    {
 
 
-            XmippWindowUtil.blockGUI(frame, msg);
-            new Thread(new Runnable() {
+        XmippWindowUtil.blockGUI(frame, msg);
+        new Thread(new Runnable() {
 
-                @Override
-                public void run() {
+            @Override
+            public void run() {
 
-                    try {
+                try {
 
-                        String output = executeCommand(command, true);
-                        XmippWindowUtil.releaseGUI(frame.getRootPane());
+                    String output = executeCommand(command, true);
+                    XmippWindowUtil.releaseGUI(frame.getRootPane());
 
-                        if(output != null && !output.isEmpty())
-                            System.out.println(output);
+                    if(output != null && !output.isEmpty())
+                        System.out.println(output);
 
-                    } catch (Exception ex) {
-                        throw new IllegalArgumentException(ex.getMessage());
-                    }
-
+                } catch (Exception ex) {
+                    throw new IllegalArgumentException(ex.getMessage());
                 }
-            }).start();
-        }
+
+            }
+        }).start();
+    }
         
     public static String executeCommand(String[] command, boolean wait) throws Exception {
             //System.out.println(Arrays.toString(command));
@@ -253,7 +253,7 @@ public class XmippWindowUtil
     }
     
     public static String executeCommand(String command, boolean wait) throws Exception {
-            //System.out.println(Arrays.toString(command));
+            //System.out.println(command);
             Process p = Runtime.getRuntime().exec(command);
             if(wait)
             {
@@ -261,10 +261,15 @@ public class XmippWindowUtil
                 return readProcessOutput(p);
             }
             return null;
-        }
+    }
         
-    public static void runCommand(String command, int port) {
+    public static void runCommand(String command, Integer port) {
         //System.out.println(command);
+    	if(port == null)
+    	{
+    		XmippDialog.showError(null, XmippMessage.getEmptyFieldMsg("Scipion port"));
+    		return;
+    	}
         String hostName = "";
  
         try {
@@ -285,24 +290,24 @@ public class XmippWindowUtil
 
 
 
-        public static String readProcessOutput(Process p) throws IOException
-        {
-            StringBuffer output = new StringBuffer();
-            BufferedReader reader
-                    = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    public static String readProcessOutput(Process p) throws IOException
+    {
+        StringBuffer output = new StringBuffer();
+        BufferedReader reader
+                = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
 
-            String line = "";
-            while ((line = reader.readLine()) != null) {
-                output.append(line + "\n");
-            }
-            reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-
-            while ((line = reader.readLine()) != null) {
-                output.append(line + "\n");
-            }
-            return output.toString();
-
+        String line = "";
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
         }
+        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
+        }
+        return output.toString();
+
+    }
 
 }

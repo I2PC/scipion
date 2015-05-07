@@ -106,8 +106,7 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		ImageGeneric preview = new ImageGeneric();
 		volume.getPreview(preview, thumb_width, thumb_height, index + 1,
 				ImageGeneric.FIRST_IMAGE);
-		ImagePlus imp = XmippImageConverter.convertToImagePlus(preview);
-                
+		ImagePlus imp = new ImagePlusLoader(preview, data.inverty).getImagePlus();
 		ImageItem item = new ImageItem(index);
 		item.setImagePlus(imp);
 		return item;
