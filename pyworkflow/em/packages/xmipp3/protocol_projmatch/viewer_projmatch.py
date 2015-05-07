@@ -43,6 +43,7 @@ from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, IntParam, FloatParam,
                                         StringParam, EnumParam, NumericRangeParam)
 import xmipp
+from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 import numpy as np
 
@@ -78,7 +79,7 @@ class XmippProjMatchViewer(ProtocolViewer):
         form.addSection(label='Visualization')
         group = form.addGroup('Overall results')
         form.addParam('viewIter', EnumParam, choices=['last', 'selection'], default=ITER_LAST,
-                      display=EnumParam.DISPLAY_LIST,
+                      display=EnumParam.DISPLAY_HLIST,
                       label="Iteration to visualize", 
                       help="""
 *last*: only the last iteration will be visualized.
@@ -114,7 +115,7 @@ Examples:
 
         group = form.addGroup('Volumes')
         group.addParam('showRef3DNo', EnumParam, choices=['all', 'selection'], default=REF_ALL,
-                      display=EnumParam.DISPLAY_LIST,
+                      display=EnumParam.DISPLAY_HLIST,
                       label='Reference to visualize',
                       help='')
         group.addParam('ref3DSelection', NumericRangeParam, default='1',
@@ -126,42 +127,33 @@ Examples:
                       label='Width of projection galleries',
                       help='Usually a multiple of 2 is the right value. -1 => authomatic')
 
-        group.addParam('displayVolWith', EnumParam, choices=['slices', 'chimera'],
-                      display=EnumParam.DISPLAY_COMBO, default=VOLUME_SLICES,
-                      label='Display volume with',
-                      help='*slices*: display volumes as 2D slices along z axis.\n'
-                           '*chimera*: display volumes as surface with Chimera.')
-        group.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed', 'Filtered'],
-                          default=1, display=EnumParam.DISPLAY_COMBO,
-                          label='Display volume',
-                          help='Displays selected volume')
         group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'],
-                      display=EnumParam.DISPLAY_COMBO, default=ANGDIST_2DPLOT,
+                      display=EnumParam.DISPLAY_HLIST, default=ANGDIST_2DPLOT,
                       label='Display angular distribution',
                       help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                            '*chimera*: display angular distribution using Chimera with red spheres.')
+        group.addParam('displayVolWith', EnumParam, choices=['slices', 'chimera'],
+                      display=EnumParam.DISPLAY_HLIST, default=VOLUME_SLICES,
+                      label='Display volume with',
+                      help='*slices*: display volumes as 2D slices along z axis.\n'
+                           '*chimera*: display volumes as surface with Chimera.')
+        group.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed', 'Filtered', 'bfactor corrected'],
+                          default=1, display=EnumParam.DISPLAY_COMBO,
+                          label='Display volume',
+                          help='Displays selected volume')
         group.addParam('spheresScale', IntParam, default=100, 
               expertLevel=LEVEL_ADVANCED,
               label='Spheres size',
               help='')
-#         group.addParam('showBFactorCorrectedVolume', LabelParam, default=False,
-#                        label='Show a b_factor corrected volume',
-#                        help=""" This utility boost up the high frequencies. Do not use the automated 
-#                             mode [default] for maps with resolutions lower than 12-15 Angstroms.
-#                             It does not make sense to apply the Bfactor to the firsts iterations
-#                             see http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor.
-#                             NOTE: bfactor will be applied ONLY to the reconstructed volumes NOT to
-#                             the reference ones
-#                             """)
-#         group.addParam('maxRes', FloatParam, default=12, 
-#                       condition='showBFactorCorrectedVolume',
-#                       label='Maximum resolution to apply B-factor (in Angstroms)')
-#         group.addParam('correctBfactorExtraCommand', StringParam, default='--auto',
-#                        condition='showBFactorCorrectedVolume', 
-#                        label='User defined flags for the correct_bfactor program',
-#                        help=""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
-#                             for details. DEFAULT behaviour is --auto
-#                             """)
+        group.addParam('maxRes', FloatParam, default=5, 
+                      condition='displayVolume==3',
+                      label='Maximum resolution to apply B-factor (in Angstroms)')
+        group.addParam('correctBfactorExtraCommand', StringParam, default='--auto',
+                       condition='displayVolume==3', 
+                       label='User defined flags for the correct_bfactor program',
+                       help=""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
+                            for details. DEFAULT behaviour is --auto
+                            """)
 
         group = form.addGroup('Resolution')
 
@@ -193,18 +185,10 @@ Examples:
         group.addParam('shiftSort', BooleanParam, default=False,
                       label='Sort shift',
                       help='Sort by shift the experimental images.')
-
-
+    
     def _getVisualizeDict(self):
         self._load()
         return {
-                # 'showReference': self._showRefs,
-                # 'showReconstruction': self._showRecons,
-                # 'showFilteredReconstruction' : self._showFilVols,
-                # 'showBFactorCorrectedVolume' : self._showBfactorVols,
-                #'showProjectionMatchingLibrary' : self._showProjMatchLibrary,
-                # 'showProjectionMatchingClasses' : self._showProjMatchClasses,
-                # 'showProjectionMatchingLibraryAndClasses' : self._showProjMatchLibAndClasses,
                 'displayVolume' : self._showVolume,
                 'displayLibraryOrClasses' : self._showLibraryOrClasses,
                 'showProjectionMatchingLibraryAndImages' : self._showProjMatchLibAndImages,
@@ -273,16 +257,6 @@ Examples:
             
         return gridsize
     
-#     def _getPrefixes(self):
-#         prefixes = self.protocol.PREFIXES
-#         halves = getattr(self, 'showHalves', None)
-#         if halves:
-#             if halves == 0:
-#                 prefixes = ['half1_']
-#             elif halves == 1:
-#                 prefixes = ['half2_']
-#         return prefixes
-    
 #===============================================================================
 # Show Volumes
 #===============================================================================
@@ -294,8 +268,11 @@ Examples:
             return self._showRefs(paramName)
         elif choice == 1:
             return self._showRecons(paramName)
-        else:
+        elif choice == 2:
             return self._showFilVols(paramName)
+        else:
+            return self._showBfactorVols(paramName)
+            
     
     def _createVolumesMd(self, volumes):
         """ Write a metadata with all volumes selected for visualization. """
@@ -370,6 +347,7 @@ Examples:
     
     def _showBfactorVols(self, paramName=None):
         volsBfactor = []
+        guinierPlots = []
         volumes = self._volFileNames('reconstructedFileNamesIters')
         for vol in volumes:
             volBfactor = vol + '.bfactor'
@@ -386,8 +364,9 @@ Examples:
             # Finally run the protocol
             
             self.protocol.runJob("xmipp_volume_correct_bfactor", args, numberOfMpi=1)
-        return self._showVolumes(volsBfactor, paramName)
-#         pass
+            guinierPlots.append(self._showGuinier(volBfactor))
+            
+        return self._showVolumes(volsBfactor, paramName) + guinierPlots
     
 #===============================================================================
 # Show Library, Classes and Images
@@ -718,17 +697,6 @@ Examples:
 #===============================================================================
 # plotFSC
 #===============================================================================
-    def _plotFSC(self, a, mdFn):
-        md = xmipp.MetaData(mdFn)
-        resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
-        frc = [md.getValue(xmipp.MDL_RESOLUTION_FRC, id) for id in md]
-        self.maxFrc = max(frc)
-        self.minInv = min(resolution_inv)
-        self.maxInv = max(resolution_inv)
-        a.plot(resolution_inv, frc)
-        a.xaxis.set_major_formatter(self._plotFormatter)
-        a.set_ylim([-0.1, 1.1])
-    
     def _showFSC(self, paramName=None):
         threshold = self.resolutionThreshold.get()
         nrefs = len(self._refsList)
@@ -757,3 +725,56 @@ Examples:
                 raise Exception("Set a valid iteration to show its FSC")
             
             return [xplotter]
+    
+    def _plotFSC(self, a, mdFn):
+        md = xmipp.MetaData(mdFn)
+        resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
+        frc = [md.getValue(xmipp.MDL_RESOLUTION_FRC, id) for id in md]
+        self.maxFrc = max(frc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
+    
+#===============================================================================
+# plotBfactor
+#===============================================================================
+    def _showGuinier(self, volume):
+        nrefs = len(self._refsList)
+        gridsize = self._getGridSize(nrefs)
+        guinierFn = volume + ".guinier"
+        
+        d2 = self._getGuinierValue(guinierFn, 0)
+        
+        legends = ["lnFweighted ln(F)", "corrected ln(F)", "model"]
+        xplotter = EmPlotter(*gridsize, windowTitle='Guinier Plots')
+        subPlot = xplotter.createSubPlot(basename(volume), 'd^-2(A^-2)', 'ln(F)', yformat=False)
+        for i, legend in enumerate(legends):
+            y = self._getGuinierValue(guinierFn, i+2)
+            subPlot.plot(d2, y)
+            xplotter.showLegend(legends)
+        subPlot.grid(True)
+        return xplotter
+    
+    def _getGuinierValue(self, guinierFn, col):
+        f1 = open(guinierFn)
+        value = []
+        for l in f1:
+            if not "#" in l:
+                valList = l.split()
+                val = float(valList[col])
+                value.append(val)
+        f1.close()
+        return value
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
