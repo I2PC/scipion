@@ -109,6 +109,9 @@ class ProtRelionAutopickFom(ProtParticlePicking, ProtRelionBase):
                       help='Set this to Yes, only if this option was also used to generate the references.')
         
         form.addSection('Autopicking')
+        form.addParam('particleDiameter', IntParam, default=200,
+                      label='Particle diameter (A)',
+                      help='')    
         form.addParam('pickingThreshold', FloatParam, default=0.05,
                       label='Picking threshold',
                       help='Use lower thresholds to pick more particles (and more junk probably)')
@@ -161,7 +164,7 @@ class ProtRelionAutopickFom(ProtParticlePicking, ProtRelionBase):
         
         params = ' --i input_micrographs.star'
         params += ' --o autopick'
-        params += ' --particle_diameter %d' % 200 # FIXME
+        params += ' --particle_diameter %d' % self.particleDiameter
         params += ' --angpix %0.3f' % micSet.getSamplingRate()
         params += ' --ref input_references.star'
         
