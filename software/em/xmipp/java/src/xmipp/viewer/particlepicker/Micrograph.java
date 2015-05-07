@@ -52,16 +52,16 @@ public abstract class Micrograph {
 		this.file = file;
 		this.psd = psd;
 		this.ctf = ctf;
-                String path = file;
-                if(Filename.hasPrefix(file))
-                    path = Filename.removePrefix(file);
-		 if (!new File(path).exists()) 
-                {
-                     
-                     file = Filename.findImagePath(name, ParticlePicker.getPicker().selfile, true);
-                     if(file == null)
-                        throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
-                }
+		String path = file;
+		if(Filename.hasPrefix(file))
+		    path = Filename.removePrefix(file);
+		if (!new File(path).exists()) 
+        {
+             System.out.printf("path %s selfile %s\n", path, ParticlePicker.getPicker().selfile);
+             file = Filename.findImagePath(path, ParticlePicker.getPicker().selfile, true);
+             if(file == null)
+                throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
+        }
 		
 		this.name = name;
 		this.posfile = name + ext;

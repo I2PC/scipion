@@ -43,6 +43,10 @@ public class ImagePlusLoader {
     public ImagePlusLoader(ImagePlus imp, boolean inverty) {
         this(getFile(imp), imp, null, false, false, inverty, -2);
     }
+    
+    public ImagePlusLoader(ImageGeneric ig, boolean inverty) {
+        this(getFile(ig), null, ig, false, false, inverty, -2);
+    }
 
     public ImagePlusLoader(int index, ImageGeneric ig) {
         this(getFile(ig), null, ig, false, false, false, index);

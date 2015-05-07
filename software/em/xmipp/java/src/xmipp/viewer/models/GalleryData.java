@@ -164,6 +164,8 @@ public class GalleryData {
     	String file = vol;
     	if (vol.contains(":"))
     		file = vol.substring(0, vol.lastIndexOf(":"));
+    	if (vol.contains("@"))
+    		file = file.substring(file.lastIndexOf("@") + 1);
     	if(new File(file).exists())
     		selectedVolFn = vol;
     	else
@@ -1937,5 +1939,9 @@ public class GalleryData {
 			return count;
 		}
         
+		public String getPreffix() {
+	        return selectedBlock;
+	    }
+	    
         
 }// class GalleryDaa

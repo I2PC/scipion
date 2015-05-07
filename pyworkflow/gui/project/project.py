@@ -41,6 +41,7 @@ from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project
 from pyworkflow.gui import Message
 from pyworkflow.gui.browser import FileBrowserWindow
+from pyworkflow.em.plotter import plotFile
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.gui.text import _open_cmd
 import SocketServer
@@ -171,76 +172,9 @@ class ProjectWindow(ProjectBaseWindow):
         server_thread.daemon = True
         server_thread.start()
 
-    def scheduleSqlitePlot(self, *args):
-        self.queue.put(lambda: self.plotSqlite(*args))
-
-    def plotSqlite(self, dbName, dbPreffix, type,
-                   columnsStr, colorsStr, linesStr, markersStr,
-                   xcolumn, ylabel, xlabel, title, bins, orderColumn, orderDirection):
-        columns = columnsStr.split()
-        colors = colorsStr.split()
-        lines = linesStr.split()
-        markers = markersStr.split()
-
-        from pyworkflow.mapper.sqlite import SqliteFlatDb
-        db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPreffix)
-        if dbPreffix:
-            setClassName = "SetOf%ss"%db.getSelfClassName()
-        else:
-            setClassName = db.getProperty('self') # get the set class name
-
-        from pyworkflow.em import getObjects
-        setObj = getObjects()[setClassName](filename=dbName, prefix=dbPreffix)
-
-
-        i = 0
-        plotter = Plotter(windowTitle=title)
-        ax = plotter.createSubPlot(title, xlabel, ylabel)
-
-        isxvalues = bool(xcolumn)
-
-        xvalues = range(0, setObj.getSize()) if not isxvalues else []
-
-
-        for column in columns:
-            yvalues = []
-
-            for obj in setObj.iterItems(orderBy=orderColumn, direction=orderDirection):
-                value = self.getValue(obj, column)
-                yvalues.append(value)
-                if isxvalues:
-                    value = self.getValue(obj, xcolumn)
-                    xvalues.append(value)
-
-            isxvalues = False
-
-            color = colors[i]
-            line = lines[i]
-            if bins:
-                ax.hist(yvalues, bins=int(bins), color=color, linestyle=line, label=column)
-            else:
-
-                if type == 'Plot':
-                    marker = (markers[i] if not markers[i] == 'none' else None)
-                    ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line, label=column)
-                else:
-                    ax.scatter(xvalues, yvalues, c=color, label=column, alpha=0.5)
-            i += 1
-
-        ax.legend(columns)
-        plotter.show()
-
-    def getValue(self, obj, column):
-        if column == 'id':
-            id = int(obj.getObjId())
-            return id
-        if not '.' in column:
-            return getattr(obj, column).get()
-
-        else:
-            for attrName in column.split('.'):
-                obj = getattr(obj, attrName)
-        return obj.get()
+    def schedulePlot(self, path, *args):
+        self.queue.put(lambda: plotFile(path, *args).show())
+    
 
     def runObjectCommand(self, cmd, protocolStrId, objStrId):
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot

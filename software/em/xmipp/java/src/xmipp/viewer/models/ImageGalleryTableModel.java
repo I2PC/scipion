@@ -376,8 +376,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 */
 	public Point getCoords(int index) {
                 Point p = new Point();
-		p.x = index / cols;
-		p.y = index % cols;
+		p.y = index / cols;
+		p.x = index % cols;
 		return p;
 	}
 
@@ -389,14 +389,14 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
                     int from = getSelFrom(), to = getSelTo();
 			for (int i = from; i <= to; i++)
 				if (selection[i])
-                                    data.setEnabled(i, value);
+					data.setEnabled(i, value);
                                 
-                        if(from != -1)
-                        {
-                            from = getCoords(from).x;
-                            to = getCoords(to).x;
-                            fireTableRowsUpdated(from, to);
-                        }
+		    if(from != -1)
+		    {
+		        from = getCoords(from).y;
+		        to = getCoords(to).y;
+		        fireTableRowsUpdated(from, to);
+		    }
 	            
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -414,8 +414,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	public void selectRange(int first_index, int last_index, boolean value) {
 		for (int i = first_index; i <= last_index; ++i)
 			setSelected(i, value);
-                int from = getCoords(first_index).x;
-                int to = getCoords(last_index).x;
+                int from = getCoords(first_index).y;
+                int to = getCoords(last_index).y;
 		fireTableRowsUpdated(from, to);
 	}
 
@@ -472,7 +472,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		clearSelection();
 		setSelected(i, !isSelected(i));
 		Point coords = getCoords(i);
-		fireTableCellUpdated(coords.x, coords.y);
+		fireTableCellUpdated(coords.y, coords.x);
 	}
 
 	
@@ -640,7 +640,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 		public String getLabel() {
 			Point coords = getCoords(index);
-			return ImageGalleryTableModel.this.getLabel(coords.x, coords.y);
+			return ImageGalleryTableModel.this.getLabel(coords.y, coords.x);
 		}
 
 		public String getKey() {
@@ -662,7 +662,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		}
 
 		public boolean isBusy() {
-			// int[] coords = getCoords(index);
 			return ImageGalleryTableModel.this.isBusy(index, 0);
 		}
 
