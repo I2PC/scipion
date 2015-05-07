@@ -634,7 +634,7 @@ for p in ['angular_break_symmetry',
           'mpi_transform_normalize',
           'mpi_transform_threshold',
           'mpi_xray_project',
-	  'mpi_validation_nontilt',
+	  #'mpi_validation_nontilt',
           'mpi_write_test',
 
           # Unittest for Xmipp libraries
