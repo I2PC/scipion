@@ -444,9 +444,7 @@ public class MetaData {
 	public native void getStatsImages(ImageGeneric imageAvg,
 			ImageGeneric imageStd, boolean applyGeo, int label);
         
-        
-
-	public native void getPCAbasis(ImageGeneric basis, int label);
+   	public native void getPCAbasis(ImageGeneric basis, int label);
 
 	public native void computeFourierStatistics(MetaData mdIn, int label);
 
