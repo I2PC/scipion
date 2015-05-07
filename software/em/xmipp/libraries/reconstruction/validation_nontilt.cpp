@@ -88,6 +88,12 @@ void ProgValidationNonTilt::run()
     double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
     double validation = 0;
 
+	MetaData tempMd;
+	std::vector<double> sum_u(nSamplesRandom);
+	std::vector<double> sum_w(nSamplesRandom);
+	std::vector<double> H0(nSamplesRandom);
+	std::vector<double> H(nSamplesRandom);
+
 	if (rank==0)
 		init_progress_bar(maxNImg);
 
@@ -95,12 +101,6 @@ void ProgValidationNonTilt::run()
 	{
 		if ((idx+1)%Nprocessors==rank)
 		{
-			MetaData tempMd;
-			std::vector<double> sum_u(nSamplesRandom);
-			std::vector<double> sum_w(nSamplesRandom);
-			std::vector<double> H0(nSamplesRandom);
-			std::vector<double> H(nSamplesRandom);
-
 			expression = formatString("imageIndex == %lu",idx);
 			tempMd.importObjects(md, MDExpression(expression));
 
@@ -124,10 +124,10 @@ void ProgValidationNonTilt::run()
 			rowP.setValue(MDL_WEIGHT,P);
 			mdPartial.addRow(rowP);
 
-			sum_u.clear();
-			sum_w.clear();
-			H0.clear();
-			H.clear();
+			//sum_u.clear();
+			//sum_w.clear();
+			//H0.clear();
+			//H.clear();
 			tempMd.clear();
 
 			if (rank==0)
