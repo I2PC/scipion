@@ -1174,7 +1174,7 @@ template<typename T>
         {
           String matrixStr;
           row.getValue(MDL_TRANSFORM_MATRIX, matrixStr);
-          string2TransformationMatrix(matrixStr, A);
+          string2TransformationMatrix(matrixStr, A, 3);
         }
 
         if (!A.isIdentity())

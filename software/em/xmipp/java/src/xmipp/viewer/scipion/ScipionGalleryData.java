@@ -436,7 +436,6 @@ public class ScipionGalleryData extends GalleryData {
                 }
                 index++;
             }
-            imagesmd.print();
             return imagesmd;
     }
     

@@ -64,7 +64,7 @@ void geo2TransformationMatrix(const MDRow &imageHeader, Matrix2D<double> &A,
  * or
  * 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
  */
-void string2TransformationMatrix(const String &matrixStr, Matrix2D<double> &matrix);
+void string2TransformationMatrix(const String &matrixStr, Matrix2D<double> &matrix, size_t dim=4);
 
 /** Retrieve the geometry transformations from matrix for 2D. */
 void transformationMatrix2Parameters2D(const Matrix2D<double> &A, bool &flip,
