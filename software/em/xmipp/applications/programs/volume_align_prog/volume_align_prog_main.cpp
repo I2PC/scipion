@@ -385,8 +385,8 @@ public:
         }
         else if (useFRM)
         {
-    		String xmippPython;
-    		initializeXmippPython(xmippPython);
+    		String scipionPython;
+    		initializeScipionPython(scipionPython);
     		PyObject * pFunc = getPointerToPythonFRMFunction();
     		double rot,tilt,psi,x,y,z,score;
     		Matrix2D<double> A;

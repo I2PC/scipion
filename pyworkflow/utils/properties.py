@@ -313,7 +313,9 @@ Do you really want to continue?'
     TOOLTIP_SEARCH = 'Search a given world in the text. '
     TOOLTIP_REFRESH = 'Reload the content of the files in the viewer. '
     TOOLTIP_EXTERNAL = 'Open the viewer in an external window. '
-    
+
+    TITLE_PICK_GAUSS = 'Automatic gaussian picking'
+    LABEL_PICK_GAUSS = 'Do you wish to perform an automatic gaussian picking for the remaining micrographs?'
     
 class Icon():
     # Project Content Template

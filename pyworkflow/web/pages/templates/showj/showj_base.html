@@ -67,6 +67,14 @@ var forceRecallServer=false
 var previousZoom='{{defaultZoom}}'
 /* Initialize Table Layout Configuration from json variable */
 var jsonTableLayoutConfiguration = convertJSON({{tableLayoutConfiguration|safe}})
+var columns = []
+	
+var i = 0;
+for (key in jsonTableLayoutConfiguration.columnsLayout) {
+    columns[i] = jsonTableLayoutConfiguration.columnsLayout[key]
+    i ++
+}
+console.log(columns)
 
 // DEBUG
 console.log("jsonTableLayoutConfiguration", jsonTableLayoutConfiguration)

@@ -31,17 +31,16 @@ public class Worker implements Runnable
 		/** Constructor selecting operation */
 		private int op; // store operation
 		private MetaData imagesmd;
-                private GalleryJFrame frame = null;
+        private GalleryJFrame frame = null;
 
 		public Worker(int operation, boolean selected, GalleryJFrame frame)
 		{
-                        this.frame = frame;
+            this.frame = frame;
                         
 			op = operation;
-                        imagesmd = frame.data.getImagesMd(frame.gallery.getSelection(), selected);
+            imagesmd = frame.data.getImagesMd(frame.gallery.getSelection(), selected);
 			if (imagesmd.size() == 0)
 				throw new IllegalArgumentException("No images available");
-                        
 		}
 
 		public void run()
@@ -50,15 +49,15 @@ public class Worker implements Runnable
 			{
 				switch (op)
 				{
-				case STATS:
-					computeStatsImages();
-					break;
-				case PCA:
-					pca();
-					break;
-				case FSC:
-					fsc();
-					break;
+					case STATS:
+						computeStatsImages();
+						break;
+					case PCA:
+						pca();
+						break;
+					case FSC:
+						fsc();
+						break;
 				}
 			}
 			catch (Exception e)
@@ -85,68 +84,68 @@ public class Worker implements Runnable
 			return "";
 		}
                 
-                private void computeStatsImages() throws Exception
-                {
-                        ImageGeneric imgAvg = new ImageGeneric();
-                        ImageGeneric imgStd = new ImageGeneric();
+        private void computeStatsImages() throws Exception
+        {
+            ImageGeneric imgAvg = new ImageGeneric();
+            ImageGeneric imgStd = new ImageGeneric();
 
-                        imagesmd.getStatsImages(imgAvg, imgStd, frame.data.useGeo(), MDLabel.MDL_IMAGE);
-                        ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
-                        ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
-                        imgAvg.destroy();
-                        imgStd.destroy();
+            imagesmd.getStatsImages(imgAvg, imgStd, frame.data.useGeo(), MDLabel.MDL_IMAGE);
+            ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
+            ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
+            imgAvg.destroy();
+            imgStd.destroy();
 
-                        XmippImageWindow winAvg = new XmippImageWindow(new ImagePlusLoader(impAvg), "AVG: " + frame.data.getFileName(), frame.data.parameters);
-                        XmippWindowUtil.setLocation(0.2f, 0.5f, winAvg, frame);
-                        winAvg.setVisible(true);
-                        XmippImageWindow winStd = new XmippImageWindow(new ImagePlusLoader(impStd), "STD: " + frame.data.getFileName(), frame.data.parameters);
+            XmippImageWindow winAvg = new XmippImageWindow(new ImagePlusLoader(impAvg), "AVG: " + frame.data.getFileName(), frame.data.parameters);
+            XmippWindowUtil.setLocation(0.2f, 0.5f, winAvg, frame);
+            winAvg.setVisible(true);
+            XmippImageWindow winStd = new XmippImageWindow(new ImagePlusLoader(impStd), "STD: " + frame.data.getFileName(), frame.data.parameters);
 
-                        XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, frame);
-                        winStd.setVisible(true);
-                }
+            XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, frame);
+            winStd.setVisible(true);
+        }
 
-                public void pca() throws Exception
-                {
-                        ImageGeneric image = new ImageGeneric();
-                        imagesmd.getPCAbasis(image, MDLabel.MDL_IMAGE);
-                        ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
-                        imp.setTitle("PCA: " + frame.data.getFileName());
-                        ImagesWindowFactory.openXmippImageWindow(frame, imp, frame.data.parameters);
+        public void pca() throws Exception
+        {
+            ImageGeneric image = new ImageGeneric();
+            imagesmd.getPCAbasis(image, MDLabel.MDL_IMAGE);
+            ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
+            imp.setTitle("PCA: " + frame.data.getFileName());
+            ImagesWindowFactory.openXmippImageWindow(frame, imp, frame.data.parameters);
 
-                }
+        }
 
-                public void fsc() throws Exception
-                {
-                        FSCJFrame fscframe = new FSCJFrame(frame.data, imagesmd, MDLabel.MDL_IMAGE);
-                        XmippWindowUtil.centerWindows(fscframe, frame);
-                        fscframe.setVisible(true);
-                }
-                
-               
-                
-                
-                public MDRow[] getImagesMd(MetaData md, int idlabel) {
-                    
-                    MDRow mdRow;
-                    ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
-                    int index = 0;
-                    String imagepath;
-                    for (long id : md.findObjects()) {
-                        if (frame.data.isEnabled(index)) {
-                            imagepath = md.getValueString(idlabel, id, true);
-                            System.out.println(imagepath);
-                            if (imagepath != null && ImageGeneric.exists(imagepath)) {
-                                mdRow = new MDRow();
-                                if (frame.data.useGeo()) 
-                                    md.getRow(mdRow, id);//copy geo info in mdRow
-                                mdRow.setValueString(idlabel, imagepath);
-                                imagesmd.add(mdRow);
-                            }
-                        }
-                        index++;
+        public void fsc() throws Exception
+        {
+            FSCJFrame fscframe = new FSCJFrame(frame.data, imagesmd, MDLabel.MDL_IMAGE);
+            XmippWindowUtil.centerWindows(fscframe, frame);
+            fscframe.setVisible(true);
+        }
+        
+       
+        
+        
+        public MDRow[] getImagesMd(MetaData md, int idlabel) {
+            
+            MDRow mdRow;
+            ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
+            int index = 0;
+            String imagepath;
+            for (long id : md.findObjects()) {
+                if (frame.data.isEnabled(index)) {
+                    imagepath = md.getValueString(idlabel, id, true);
+                    System.out.println(imagepath);
+                    if (imagepath != null && ImageGeneric.exists(imagepath)) {
+                        mdRow = new MDRow();
+                        if (frame.data.useGeo()) 
+                            md.getRow(mdRow, id);//copy geo info in mdRow
+                        mdRow.setValueString(idlabel, imagepath);
+                        imagesmd.add(mdRow);
                     }
-                    return imagesmd.toArray(new MDRow[]{});
                 }
+                index++;
+            }
+            return imagesmd.toArray(new MDRow[]{});
+        }
 
 	}
 

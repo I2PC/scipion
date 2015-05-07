@@ -17,7 +17,7 @@ fi
 
 # Xmipp Aliases
 ## Setup ##
-alias xcompile='${SCIPION_HOME}/scipion install xmipp '
+alias xcompile='${SCIPION_HOME}/scipion install '
 ## Interface ##
 alias xa='xmipp_apropos'
 alias xb='xmipp_browser'
