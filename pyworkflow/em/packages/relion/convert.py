@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from itertools import izip
 """
 This module contains converter functions that will serve to:
 1. Write from base classes to Relion specific files
@@ -774,6 +775,19 @@ def convertBinaryVol(vol, outputDir):
 def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
 
+
+def readSetOfCoordinates(coordSet, coordFiles):
+    """ Read a set of coordinates from given coordinate files
+    associated to some SetOfMicrographs.
+    Params:
+        micSet and coordFiles should have same length and same order.
+        coordSet: empty SetOfCoordinates to be populated.
+    """
+    micSet = coordSet.getMicrographs()
+    
+    for mic, coordFn in izip(micSet, coordFiles):
+        readCoordinates(mic, coordFn, coordSet)
+        
 
 def readCoordinates(mic, fileName, coordsSet):
     for row in md.iterRows(fileName):
