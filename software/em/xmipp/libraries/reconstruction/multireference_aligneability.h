@@ -28,11 +28,11 @@
 #define PI 3.14159265
 
 #include <data/xmipp_program.h>
-#include "reconstruct_significant.h"
 #include "validation_nontilt.h"
 #include <math.h>
 #include <data/metadata.h>
 #include <string.h>
+#include <data/mask.h>
 
 
 class MultireferenceAligneability: public XmippProgram
@@ -43,6 +43,8 @@ public:
     /** Filenames */
     FileName fnDir, fnSym, fnInit, fin, fsig;
 
+private:
+    size_t Xdim,Ydim,Zdim,Ndim;
 
     /** Sampling rate of the volume and projections */
     //double sampling_rate   //COMMENTED
