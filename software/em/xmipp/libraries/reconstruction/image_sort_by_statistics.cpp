@@ -375,6 +375,8 @@ void ProgSortByStatistics::processInputPrepare(MetaData &SF)
                 continue;
         }
         img.readApplyGeo(SF,__iter.objId);
+        if (targetXdim!=-1 && targetXdim!=XSIZE(img()))
+        	selfScaleToSize(LINEAR,img(),targetXdim,targetXdim,1);
         MultidimArray<double> &mI=img();
         mI.setXmippOrigin();
         mI.statisticsAdjust(0,1);

@@ -97,7 +97,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       help='In pixels. The box size is the size of the boxed particles, '
                       'actual particles may be smaller than this.')
 
-        form.addParam('doSort', BooleanParam, default=False,
+        form.addParam('doSort', BooleanParam, default=True,
                       label='Perform sort by statistics',
                       help='Perform sort by statistics to add zscore info to particles.')
 
