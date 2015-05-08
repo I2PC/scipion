@@ -28,7 +28,6 @@
 #define PI 3.14159265
 
 #include <data/xmipp_program.h>
-#include "reconstruct_significant.h"
 #include <math.h>
 
 /**@defgroup Validation without tilt
