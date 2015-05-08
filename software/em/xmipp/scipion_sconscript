@@ -580,7 +580,6 @@ for p in ['angular_break_symmetry',
           'tomo_extract_subvolume',
           'validation_nontilt',
 
-          #'volume_align_prog',  ['XmippInterface']),  --> it is done elsewhere
           'volume_center',
           'volume_correct_bfactor',
           'volume_enhance_contrast',
@@ -606,7 +605,6 @@ for p in ['angular_break_symmetry',
           'mpi_angular_projection_matching',
           'mpi_angular_project_library',
           'mpi_classify_CL2D',
-          #'mpi_classify_CLTomo_prog', # DEPRECATED
           'mpi_classify_CL2D_core_analysis',
           'mpi_ctf_correct_idr',
           'mpi_ctf_sort_psds',
@@ -636,6 +634,7 @@ for p in ['angular_break_symmetry',
           'mpi_transform_normalize',
           'mpi_transform_threshold',
           'mpi_xray_project',
+	  'mpi_validation_nontilt',
           'mpi_write_test',
 
           # Unittest for Xmipp libraries
@@ -671,6 +670,9 @@ for p in ['angular_break_symmetry',
 # Programs with specials needs
 # This programs need python lib to compile
 addProg('volume_align_prog',
+         incs=python_incs,
+         libs=['python2.7', 'XmippInterface'])
+addProg('mpi_classify_CLTomo_prog',
          incs=python_incs,
          libs=['python2.7', 'XmippInterface'])
 
@@ -730,6 +732,7 @@ addBatch('showj', 'showj/batch_showj.py')
 addBatch('tomoj', 'tomoj/batch_tomoj.py')
 addBatch('visualize_preprocessing_micrographj', 'visualize_preprocessing_micrograph/batch_visualize_preprocessing_micrographj.py')
 addBatch('volume_align', 'volume_align/batch_volume_align.sh')
+addBatch('mpi_classify_CLTomo', 'mpi_classify_CLTomo/batch_mpi_classify_CLTomo.sh')
 addBatch('imagej', 'runImageJ', 'external')
 
 # # Python tests

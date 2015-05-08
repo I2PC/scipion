@@ -51,9 +51,10 @@ def getEmanProgram(program):
     if not 'EMAN_PYTHON' in os.environ:
         os.environ['EMAN_PYTHON'] = os.path.join(os.environ['EMAN2DIR'], 'Python/bin/python')
     # For EMAN2 python scripts, join the path to bin
-    if program.startswith('e2'):
-        program = os.path.join(os.environ['EMAN2DIR'], 'bin', program)
-        #raise Exception('EMAN_PYTHON is not load in environment')
+    # Comment this out cause there are eman programs that do not start with e2
+    #if program.startswith('e2'):
+    program = os.path.join(os.environ['EMAN2DIR'], 'bin', program)
+    #raise Exception('EMAN_PYTHON is not load in environment')
     python = os.environ['EMAN_PYTHON']
     return '%(python)s %(program)s ' % locals()
     

@@ -711,7 +711,7 @@ def runCreateOutputStep(self):
         vol.setSamplingRate(imgSet.getSamplingRate())
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(imgSet, vol)
-
+        
         imgFn = "all_exp_images@" + self._getFileName('docfileInputAnglesIters', iter=lastIter, ref=1)
         #create set of images
         imgSetOut = self._createSetOfParticles()

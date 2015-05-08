@@ -108,6 +108,7 @@ public:
         else
         {
             helical=false;
+            helicalDihedral=false;
             rot_sym = getIntParam("--sym",1);
         }
         useSplines = checkParam("--useSplines");
@@ -341,7 +342,7 @@ public:
         MultidimArray<double> volume_sym, volume_aux;
         const MultidimArray<double> &mVolume=volume();
         Matrix2D<double> sym_matrix;
-        if (!helical)
+        if (!helical && !helicalDihedral)
         {
             Matrix2D<double> Euler;
             Matrix1D<double> sym_axis;

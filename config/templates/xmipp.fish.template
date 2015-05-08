@@ -11,7 +11,7 @@ set -x PYTHONPATH $XMIPP_HOME/protocols $SCIPION_HOME $SCIPION_HOME/software/lib
 
 # Xmipp Aliases
 ## Setup ##
-alias xcompile 'env $SCIPION_HOME/scipion install xmipp '
+alias xcompile 'env $SCIPION_HOME/scipion install '
 ## Interface ##
 alias xa 'xmipp_apropos'
 alias xb 'xmipp_browser'

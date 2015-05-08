@@ -37,7 +37,7 @@
    @ingroup InterfaceLibrary */
 //@{
 /// Initialize Python to be used from C++
-void initializeXmippPython(String &xmippPython);
+void initializeScipionPython(String &scipionPython);
 
 /// Convert from MultidimArray to numpy array
 PyObject* convertToNumpy(const MultidimArray<double> &I);

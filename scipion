@@ -337,6 +337,20 @@ def main():
         os.environ.update(VARS)
         args = sys.argv[2:]
 
+        if '--help' in args:
+            print("""usage: %s [<target>] [--no-scipy] [--no-opencv] [--show]
+
+Installs Scipion. Also used to install only part of it, as specified
+in the <target>, or to add extra em packages to Scipion.
+
+arguments:
+  <target>      a library, a python module, an em package or a xmipp file
+  --show        do not install, just show what would be done
+  --no-opencv   do not install opencv (big) or anything that depends on it
+  --no-scipy    do not install scipy or anything that depends on it
+""" % ' '.join(sys.argv[:2]))
+            sys.exit()
+
         # Create folders if needed.
         for path in DIRS_GLOBAL.values():
             if not exists(path):

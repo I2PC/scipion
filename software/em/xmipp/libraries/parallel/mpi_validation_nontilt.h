@@ -23,53 +23,36 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef VALIDATION_NONTILT_H_
-#define VALIDATION_NONTILT_H_
-#define PI 3.14159265
+#ifndef MPI_VALIDATE_NONTILT_H_
+#define MPI_VALIDATE_NONTILT_H_
 
-#include <data/xmipp_program.h>
-#include "reconstruct_significant.h"
-#include <math.h>
+#include <reconstruction/validation_nontilt.h>
+#include "parallel/xmipp_mpi.h"
 
-/**@defgroup Validation without tilt
-   @ingroup ReconsLibrary */
+/**@defgroup MpiProgValidationNonTilt validate a volume analyzing the clusterability of each projection image (MPI)
+   @ingroup ParallelLibrary */
 //@{
-class ProgValidationNonTilt: public XmippProgram
+
+/** Validation parameters. */
+class MpiProgValidationNonTilt: public ProgValidationNonTilt
 {
-
-
 public:
-    /** Filenames */
-    FileName fnDir, fnSym, fnInit;
-
-    /** Sampling rate of the volume and projections */
-    double sampling_rate;
-
-    MetaData mdPartial;
-
-    size_t rank, Nprocessors;
-
+	MpiNode *node;
 public:
+	// Empty constructor
+	MpiProgValidationNonTilt();
 
-    void readParams();
+	// Destructor
+	~MpiProgValidationNonTilt();
 
-    void defineParams();
+	// Redefine how to read the command line
+	void read(int argc, char** argv);
 
-    void run();
+	// Redefine how to synchronize
+	void synchronize();
 
-public:
-
-    ProgValidationNonTilt();
-
-    void obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
-
-    void obtainSumW(const MetaData & tempMd,std::vector<double> & sum_W,std::vector<double> & sum_u,std::vector<double> & H, const double factor);
-
-    /// Gather alignment
-    virtual void gatherClusterability() {}
-
-    /// Synchronize with other processors
-    virtual void synchronize() {}
-
+	// Redefine how to gather the alignment
+    void gatherClusterability();
 };
-#endif /* VALIDATION_NONTILT_H_ */
+//@}
+#endif /* MPI_VALIDATE_NONTILT_H_ */

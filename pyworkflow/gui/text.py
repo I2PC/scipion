@@ -343,13 +343,15 @@ class OutputText(Text):
     Implement a Text that will show file content
     and handle console metacharacter for colored output
     """
-    def __init__(self, master, filename, colors=True, t_refresh=0, goEnd=True, **opts):
+    def __init__(self, master, filename, colors=True, t_refresh=0, maxSize=400, **opts):
         """ colors flag indicate if try to parse color meta-characters
             t_refresh is the refresh time in seconds, 0 means no refresh
         """
         self.filename = filename
         self.colors = colors
         self.t_refresh = t_refresh
+        self.maxSize = maxSize
+
         self.refreshAlarm = None  # Identifier returned by after()
         self.lineNo = 0
         self.offset = 0
@@ -397,12 +399,13 @@ class OutputText(Text):
             self.offset, self.lineNo = renderTextFile(self.filename, 
                                                       self._addChunk,
                                                       offset=self.offset, 
-                                                      lineNo=self.lineNo)
+                                                      lineNo=self.lineNo,
+                                                      maxSize=self.maxSize)
         else:
             self.insert(tk.END, "File '%s' doesn't exist" % self.filename)
-        
+
         self.setReadOnly(True)
-        self.goEnd()
+        # self.goEnd()
       
     def doRefresh(self):
         # First stop pending refreshes
@@ -423,7 +426,7 @@ class TextFileViewer(tk.Frame):
     
     def __init__(self, master, fileList=[],
                  allowSearch=True, allowRefresh=True, allowOpen=False,
-                 font=None):
+                 font=None, maxSize=400):
         tk.Frame.__init__(self, master)
         self.searchList = None
         self.lastSearch = None
@@ -436,6 +439,7 @@ class TextFileViewer(tk.Frame):
         self._allowRefresh = allowRefresh
         self._allowOpen = allowOpen
         self._font = font # allow a font to be passed as argument to be used
+        self.maxSize = maxSize
 
         self.createWidgets(fileList)
         self.master = master
@@ -461,8 +465,8 @@ class TextFileViewer(tk.Frame):
         
         if self._font is not None:
             kwargs['font'] = self._font
-            
-        t = OutputText(tab, filename, width=100, height=30, **kwargs)
+
+        t = OutputText(tab, filename, width=100, height=30, maxSize=self.maxSize, **kwargs)
         t.frame.grid(column=0, row=0, padx=5, pady=5, sticky='nsew')
         self.taList.append(t)
         tabText = "   %s   " % os.path.basename(filename)
@@ -631,7 +635,7 @@ def openTextFileEditor(filename):
     
 def showTextFileViewer(title, filelist, parent=None, main=False):
     w = gui.Window(title, parent, minsize=(900, 800))
-    viewer = TextFileViewer(w.root, filelist)
+    viewer = TextFileViewer(w.root, filelist, maxSize=-1)
     viewer.grid(row=0, column=0, sticky='news')
     gui.configureWeigths(w.root)
     w.show()

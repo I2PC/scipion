@@ -28,15 +28,15 @@ from pyworkflow.em.constants import ALIGN_PROJ
 This sub-package contains wrapper around Screen Classes Xmipp program
 """
 
-from pyworkflow.object import Float
+from pyworkflow.object import Float, String
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam
 from pyworkflow.em.protocol import ProtAnalysis2D
 from pyworkflow.em.data import Class2D, SetOfClasses2D
 from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
-
-import xmipp
+import pyworkflow.em.metadata as md
+# import xmipp
 from xmipp3 import ProjMatcher
 
         
@@ -120,11 +120,11 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
             outputSet = self._createSetOfAverages()
             outputName = 'outputAverages'
             
-        md = xmipp.MetaData(outImgsFn)
+        mdOut = md.MetaData(outImgsFn)
         outputSet.copyInfo(inputSet)
         outputSet.copyItems(inputSet, 
                             updateItemCallback=self.updateItemMaxCC,
-                            itemDataIterator=iterMdRows(md))
+                            itemDataIterator=iterMdRows(mdOut))
 
         self._defineOutputs(**{outputName: outputSet})
         self._defineTransformRelation(inputSet, outputSet)
@@ -176,11 +176,13 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
             index, fn = item.getLocation()
             
         objLoc = locationToXmipp(index, fn)
-        mdLoc = row.getValue(xmipp.MDL_IMAGE)
+        mdLoc = row.getValue(md.MDL_IMAGE)
         if objLoc != mdLoc:
             raise Exception("The the image isn't the same. Please, sort the metadata.")
         
-        item._xmipp_maxCC = Float(row.getValue(xmipp.MDL_MAXCC))
+        item._xmipp_imageRef = String(row.getValue(md.MDL_IMAGE_REF))
+        item._xmipp_image1 = String(row.getValue(md.MDL_IMAGE1))
+        item._xmipp_maxCC = Float(row.getValue(md.MDL_MAXCC))
         if isinstance(item, Class2D):
             particle = item.getRepresentative()
         else:

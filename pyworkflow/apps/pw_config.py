@@ -126,10 +126,10 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
 
     # Update with our guesses.
     if 'BUILD' in cf.sections():
-        if 'JAVA_HOME' in cf.options('BUILD'):
-            cf.set('BUILD', 'JAVA_HOME', guessJavaHome())
-        if 'MPI_HOME' in cf.options('BUILD'):
-            cf.set('BUILD', 'MPI_HOME', guessMPI())
+        for options in [guessJava(), guessMPI()]:
+            for key in options:
+                if key in cf.options('BUILD'):
+                    cf.set('BUILD', key, options[key])
 
     # Create the actual configuration file.
     cf.write(open(fpath, 'w'))
@@ -169,9 +169,10 @@ def checkPaths(conf):
 
 def checkConf(fpath, ftemplate, remove=[], keep=[]):
     "Check that all the variables in the template are in the config file too"
-
     # Remove from the checks the sections in "remove", and if "keep"
     # is used only check those sections.
+
+    # Read the config file fpath and the template ftemplate
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     assert cf.read(fpath) != [], 'Missing file %s' % fpath
@@ -214,9 +215,10 @@ def checkConf(fpath, ftemplate, remove=[], keep=[]):
                       "but not in the configuration file." % (red(s), red(o)))
 
 
-def guessJavaHome():
-    "Guess the system's JAVA_HOME"
+def guessJava():
+    "Guess the system's Java installation, return a dict with the Java keys"
 
+    options = {}
     candidates = []
 
     # First check if the system has a favorite one.
@@ -242,20 +244,26 @@ def guessJavaHome():
             if not exists(join(javaHome, path)):
                 allExist = False
         if allExist:
-            return javaHome
+            options['JAVA_HOME'] = javaHome
+            break
+        # We could instead check individually for JAVA_BINDIR, JAVAC
+        # and so on, as we do with MPI options, but we go for an
+        # easier and consistent case instead: everything must be under
+        # JAVA_HOME, which is the most common case for Java.
 
-    print(red("Warning: could not detect a suitable JAVA_HOME."))
-    if candidates:
-        print(red("Our candidates were:\n  %s" % '\n  '.join(candidates)))
-    return '/usr/lib64/jvm/java-1.7.0-openjdk-1.7.0'  # not found, default value
+    if not options:
+        print(red("Warning: could not detect a suitable JAVA_HOME."))
+        if candidates:
+            print(red("Our candidates were:\n  %s" % '\n  '.join(candidates)))
+
+    return options
 
 
 def guessMPI():
-    "Guess the system's MPI installation"
+    "Guess the system's MPI installation, return a dict with MPI keys"
+    # Returns MPI_LIBDIR, MPI_INCLUDE and MPI_BINDIR as a dictionary.
 
-    # TODO: instad of finding a single MPI_HOME, find separately
-    # MPI_LIBDIR, MPI_INCLUDE and MPI_BINDIR. Return it as a dictionary.
-    
+    options = {}
     candidates = []
 
     # First check if the system has a favorite one.
@@ -268,27 +276,29 @@ def guessMPI():
         if not os.path.isdir(d) or 'mpicc' not in os.listdir(d):
             continue
         mpiBin = os.path.realpath(join(d, 'mpicc'))
+        if 'MPI_BINDIR' not in options:
+            options['MPI_BINDIR'] = os.path.dirname(mpiBin)
         if mpiBin.endswith('/bin/mpicc'):
             mpiHome = mpiBin[:-len('/bin/mpicc')]
             candidates.append(mpiHome)
 
-    # Add some extra that are commonly found.
+    # Add some extra directories that are commonly around.
     candidates += ['/usr/lib/openmpi', '/usr/lib64/mpi/gcc/openmpi']
 
     # Check in order if for any of our candidates, all related
     # directories and files exist. If they do, that'd be our best guess.
     for mpiHome in candidates:
-        allExist = True
-        for path in ['include', 'lib']:
-            if not exists(join(mpiHome, path)):
-                allExist = False
-        if allExist:
-            return mpiHome
+        if (exists(join(mpiHome, 'include', 'mpi.h')) and
+            'MPI_INCLUDE' not in options):
+            options['MPI_INCLUDE'] = join(mpiHome, 'include')
+        if (exists(join(mpiHome, 'lib', 'libmpi.so')) and
+            'MPI_LIBDIR' not in options):
+            options['MPI_LIBDIR'] = join(mpiHome, 'lib')
+        if (exists(join(mpiHome, 'bin', 'mpicc')) and
+            'MPI_BINDIR' not in options):
+            options['MPI_BINDIR'] = join(mpiHome, 'bin')
 
-    print(red("Warning: could not detect a suitable MPI_HOME."))
-    if candidates:
-        print(red("Our candidates were:\n  %s" % '\n  '.join(candidates)))
-    return '/usr/lib64/mpi/gcc/openmpi'  # not found, default value
+    return options
 
 
 
