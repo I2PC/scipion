@@ -321,7 +321,9 @@ def iterBigFile(textfile, offset=0, size=None,
     tailSizeB = (tailSize or headSize) * 1024
 
     textfile.seek(offset)
-    if sizeKb > maxSize:  # max size that we want to read (in kB)
+    # If the size is bigger than the max that we want to read (in kB).
+    if maxSize > 0 and sizeKb > maxSize:
+        # maxSize <= 0 means we just want to read it all and not enter here.
         for line in textfile.read(headSizeB).split('\n'):
             yield line + '\n'
         yield None  # Special result to mark omitting lines

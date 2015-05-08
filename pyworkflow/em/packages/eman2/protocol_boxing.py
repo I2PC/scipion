@@ -28,10 +28,12 @@ import os
 
 from pyworkflow.object import String
 from pyworkflow.utils.properties import Message
+from pyworkflow.utils.path import join
 from pyworkflow.gui.dialog import askYesNo
 from pyworkflow.em.protocol import ProtParticlePicking
 
 import eman2
+from pyworkflow.em.packages.eman2.data import loadJson
 from convert import readSetOfCoordinates
 
 
@@ -66,9 +68,44 @@ class EmanProtBoxing(ProtParticlePicking):
 
         # Open dialog to request confirmation to create output
         if askYesNo(Message.TITLE_SAVE_OUTPUT, Message.LABEL_SAVE_OUTPUT, None):
+            self.check_gauss()
             self._leaveDir()# going back to project dir
             self._createOutput(self.getWorkingDir())
-        
+
+    def check_gauss(self):
+        # Function to check if gaussian algorithm was used to pick and is so
+        # ask user if she wants to perform an automatic picking for the remaining micrographs
+        gaussJsonFile = join("e2boxercache", "gauss_box_DB.json")
+        # Check if gauss json file exists and load it
+        if os.path.exists(gaussJsonFile):
+            jsonGaussDict = loadJson(gaussJsonFile)
+            gaussParsDict = None
+            micList = [os.path.relpath(mic.getFileName(), self.workingDir.get()) for mic in self.inputMics]
+            # Go over the list of input micrographs and see if gaussian was used to pick any of them
+            for mic in micList:
+                if mic in jsonGaussDict:
+                    gaussParsDict = jsonGaussDict[mic]
+                    break
+            if gaussParsDict is not None:
+                # If found ask user if she wats to perform an automatic gaussian picking for the rest of mics
+                # if askYesNo(Message.TITLE_PICK_GAUSS, Message.LABEL_PICK_GAUSS, None):
+                self._params['boxSize'] = gaussParsDict['boxsize']
+                # Run sxprocess.py to store parameters
+                program = eman2.getEmanProgram("sxprocess.py")
+                argsList = ["'%s'=%s:" %(key, val) for (key, val) in gaussParsDict.iteritems()]
+                args = 'demoparms --makedb ' + "".join(argsList)
+                # Remove last ":" to avoid error
+                args = args[:-1]
+                # Run the command with formatted parameters
+                self._log.info('Launching: ' + program + ' ' + args)
+                self.runJob(program, args)
+                # Now run e2boxer.py with stored parameters
+                #arguments = "--gauss_autoboxer=demoparms --write_ptcl --boxsize=%(boxSize)s --norm=normalize.ramp.normvar" + arguments
+                arguments = "--gauss_autoboxer=demoparms --write_dbbox --boxsize=%(boxSize)s " + "%(inputMics)s"
+                program = eman2.getEmanProgram("e2boxer.py")
+                self._log.info('Launching: ' + program + ' ' + arguments % self._params)
+                self.runJob(program, arguments % self._params)
+
     #--------------------------- UTILS functions ---------------------------------------------------
     def _runSteps(self, startIndex):
         # Redefine run to change to workingDir path

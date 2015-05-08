@@ -296,7 +296,7 @@ def symLink(env, target, source):
         sources = source[0].path
     if isinstance(sources, basestring) and sources.startswith(current):
         sources = sources.split(current)[1]
-    
+
     sources = os.path.relpath(sources, os.path.split(link)[0])
     #if os.path.lexists(link):
     #    os.remove(link)
@@ -307,8 +307,9 @@ def symLink(env, target, source):
                          Action('rm -rf %s && ln -v -s %s %s' % (Entry(link).abspath, sources, 
                                                                  Entry(link).abspath),
                                 'Creating a link from %s to %s' % (link, sources)))
+    env.Default(result)
     return result
-    
+
 
 def Cmd(cmd):
     print cmd
@@ -340,13 +341,13 @@ def CompileJavaJar(target, source, env):
     """Add self-made and compiled java library to the compilation process """  
     srcDir = str(source[0])
     print "Compiling jar: ", target[0]
-    buildDir = os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_BUILDPATH'])
-    classPath = "'%s/*'" % os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_LIBPATH'])
-    globalSrcDir = os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_SOURCEPATH'])
+    buildDir = join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_BUILDPATH'])
+    classPath = "'%s/*'" % join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_LIBPATH'])
+    globalSrcDir = join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_SOURCEPATH'])
     jarfile = str(target[0])
     name = os.path.basename(jarfile)
-    listfile = os.path.join(buildDir, name+'_source.txt')
-    classfile = os.path.join(buildDir, name+'_classes.txt')
+    listfile = join(buildDir, name+'_source.txt')
+    classfile = join(buildDir, name+'_classes.txt')
     CreateFileList(srcDir, '*.java', listfile)
     Cmd(env['JAVAC'] + ' -cp %(classPath)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals())
     
@@ -373,15 +374,15 @@ def addJavaLibrary(env, name, path, deps=[], default=True):
 
     Returns the final targets, the ones that Make will create.
     """
-    libPath = os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_LIBPATH'])
-    srcPath = os.path.join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_SOURCEPATH'])
+    libPath = join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_LIBPATH'])
+    srcPath = join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_SOURCEPATH'])
 
     # Get all java files inside the source 
-    libSrcPath = os.path.join(srcPath, path)
+    libSrcPath = join(srcPath, path)
     sources = Glob(libSrcPath, "*.java")
 
     jar = '%s.jar' % name
-    jarfile = os.path.join(libPath, jar)
+    jarfile = join(libPath, jar)
     jarCreation = env.Command(jarfile, [libSrcPath], CompileJavaJar)
     
     for sd in sources + deps:
@@ -606,7 +607,7 @@ env['PACKAGE'] = {'NAME': 'xmipp',
                   'SCONSCRIPT': xmippPath
                   }
 
-env.SConscript(os.path.join(xmippPath, 'scipion_sconscript'), exports='env')
+env.SConscript(join(xmippPath, 'scipion_sconscript'), exports='env')
 
 # Add original help (the one that we would have if we didn't use
 # Help() before). But remove the "usage:" part (first line).

@@ -62,7 +62,11 @@ def getData():
             'idValues': idValues,
             'cpu': get('cpu'),
             'mem': get('mem'),
-            'swap': get('swap')
+            'swap': get('swap'),
+            'disks_read_per_sec': get('disks_read_per_sec'),
+            'disks_write_per_sec': get('disks_write_per_sec'),
+            'disks_read_time_sec': get('disks_read_time_sec'),
+            'disks_write_time_sec': get('disks_write_time_sec'),
             }
     
     conn.close()
@@ -81,6 +85,18 @@ def main():
     parser.add_argument('--swap', '-s',
                         action='store_true',
                         help='Plot swap memory stored by monitor.')
+    parser.add_argument('--disks_read_per_sec', '--drb',
+                        action='store_true',
+                        help='Report disk usage read bytes seg')
+    parser.add_argument('--disks_write_per_sec', '--dwb',
+                        action='store_true',
+                        help='Report disk usage write byte seg')
+    parser.add_argument('--disks_read_time_sec', '--drt',
+                        action='store_true',
+                        help='Report disk usage read seg (do not think is working)')
+    parser.add_argument('--disks_write_time_sec', '--dwt',
+                        action='store_true',
+                        help='Report disk usage write seg (do not think is working)')
     #TODO: I have remove the repaint ability in plotter since it make imposible to maximize the plot
     # and it is not very usefull. If you want to recover it uncomment all the lines starting with #! 
     #and comment the lines ending with #!  
@@ -89,7 +105,7 @@ def main():
     args = parser.parse_args()   
     
     # Plot memory by default if not option is selected
-    if not (args.cpu or args.mem or args.mem):
+    if not (args.cpu or args.mem or args.swap or args.disks_read_per_sec or args.disks_write_per_sec or args.disks_read_time_sec or args.disks_write_time_sec):
          args.mem = True
 
     # Force to start the x values at 0
@@ -99,12 +115,13 @@ def main():
     # Show plots
     
     pyplot.xlabel("time (hours)")
-    pyplot.ylabel("percentage")
+    pyplot.ylabel("percentage (or Mb for IO)")
     
     
-    #!pyplot.ion()
+    #pyplot.ion()
     
     lines = {}
+    
     
     while True:
         data = getData()
@@ -125,15 +142,18 @@ def main():
         plot('cpu')
         plot('mem')
         plot('swap')
-        
+        plot('disks_read_per_sec') 
+        plot('disks_write_per_sec') 
+        plot('disks_read_time_sec') 
+        plot('disks_write_time_sec') 
         pyplot.title("System Monitor (%s)" % data['initTimeTitle'])
         pyplot.legend()
         x1,x2,y1,y2 = pyplot.axis()
         pyplot.axis((0.,x2,y1,y2))
         #!pyplot.draw()
         pyplot.show()#!
-        time.sleep(args.sleepSec)
-        break#!        
+        #!time.sleep(args.sleepSec)
+        break        
 
 
 

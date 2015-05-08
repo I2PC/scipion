@@ -93,7 +93,7 @@ Examples:
         if not self.protocol.IS_REFINE:
             group.addParam('showClasses3D', BooleanParam, default=CLASSES_ALL,
                            choices=['all', 'selection'], 
-                           display=EnumParam.DISPLAY_LIST,
+                           display=EnumParam.DISPLAY_HLIST,
                            label='CLASS 3D to visualize',
                            help='')
             group.addParam('class3DSelection', NumericRangeParam, default='1',
@@ -102,13 +102,13 @@ Examples:
                           help='')
         
         group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-              default=VOLUME_SLICES, display=EnumParam.DISPLAY_COMBO, 
+              default=VOLUME_SLICES, display=EnumParam.DISPLAY_HLIST, 
               label='Display volume with',
               help='*slices*: display volumes as 2D slices along z axis.\n'
                    '*chimera*: display volumes as surface with Chimera.')
 
         group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
-              default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_COMBO, 
+              default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_HLIST, 
               label='Display angular distribution',
               help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                    '*chimera*: display angular distribution using Chimera with red spheres.')
