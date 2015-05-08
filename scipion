@@ -103,7 +103,7 @@ for confFile in [SCIPION_CONFIG, SCIPION_LOCAL_CONFIG,
                  'configuration' % (confFile, sys.argv[0]))
 
 # VARS will contain all the relevant environment variables, including
-# directories and packages.
+# directories and packages..
 VARS = {
     'SCIPION_HOME': SCIPION_HOME,
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
