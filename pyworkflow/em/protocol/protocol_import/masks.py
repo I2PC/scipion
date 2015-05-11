@@ -97,5 +97,4 @@ class ProtImportMask(ProtImport):
 
     def _summary(self):
         summary = ['Mask file imported from *%s*' % self.maskPath.get()]
-
         return summary
