@@ -411,10 +411,10 @@ def _defineProjectionMatchingParams(self, form):
     form.addSection(label='2D re-alignment of classes', expertLevel=LEVEL_ADVANCED)
     
     form.addParam('performAlign2D', BooleanParam, default=False,
-                 label='Perform 2D re-alignment', expertLevel=LEVEL_ADVANCED)
+                 label='Perform 2D re-alignment')
     
     form.addParam('doAlign2D', NumericListParam, default='0', condition='performAlign2D',
-                 label='Perform 2D re-alignment of classes?', expertLevel=LEVEL_ADVANCED,
+                 label='Perform 2D re-alignment of classes?',
                  help=""" After performing a 3D projection matching iteration, each of the
     subsets of images assigned to one of the library projections is
     re-aligned using a 2D-alignment protocol.
