@@ -42,6 +42,7 @@ class ProgSortByStatistics: public XmippProgram
 public:
     FileName fn, fn_out, fn_train;
     bool addToInput;
+    int targetXdim;
 
 public:
     double cutoff, per;

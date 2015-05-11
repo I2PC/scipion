@@ -1,6 +1,7 @@
+# coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,31 +21,33 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'coss@cnb.csic.es'
 # *
 # **************************************************************************
 """
-This sub-package will contains Relion protocols
+Bibtex string file for Cryoem package.
 """
 
-from bibtex import _bibtex # Load bibtex dict with references
+_bibtexStr = """
 
-_logo = "relion_logo.png"
-_references = ['Scheres2012a', 'Scheres2012b', 'Chen2012']
+@Article{Joubert2015,
+  Title                    = {Bayesian Inference of Initial Models in Cryo-Electron Microscopy Using Pseudo-atoms.},
+  Author                   = {Joubert, P. and Habeck, M.},
+  Journal                  = {Biophysical Journal},
+  Year                     = {2015},
+  Month                    = {March},
+  Number                   = {5},
+  Pages                    = {1165--1175},
+  Volume                   = {108},
+  Doi                      = {http://dx.doi.org/10.1016/j.bpj.2014.12.054},
+  Keywords                 = {Algorithms; Cryoelectron Microscopy, methods; Pseudo atoms, methods; Ribosomes;},
+  Pii                      = {S0006349515000648},
+  Pmid                     = {25762328},
+  Url                      = {http://dx.doi.org/10.1016/j.bpj.2014.12.054}
+}
 
-from convert import *
-from protocol_classify2d import ProtRelionClassify2D
-from protocol_classify3d import ProtRelionClassify3D
-from protocol_refine3d import ProtRelionRefine3D
-from protocol_reconstruct import ProtRelionReconstruct
-from protocol_postprocess import ProtRelionPostprocess
-from protocol_preprocess import ProtRelionPreprocessParticles
-from protocol_polish import ProtRelionPolish
-from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
+"""
 
-# Wizards
-from wizard import *
+from pyworkflow.utils import parseBibTex
 
-from viewer import *
-
-_environ = getEnviron()
+_bibtex = parseBibTex(_bibtexStr)  

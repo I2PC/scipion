@@ -30,18 +30,19 @@ In this module are protocol related to EM imports of Masks...
 
 from os.path import exists, basename
 
-from pyworkflow.utils.properties import Message
+from pyworkflow.protocol.params import PathParam, FloatParam
+import pyworkflow.utils as pwutils
 
-from pyworkflow.protocol.params import (PathParam, FloatParam,
-                                        EnumParam, StringParam, LEVEL_ADVANCED)
-from pyworkflow.utils.path import copyFile
-from pyworkflow.em.protocol.protocol_import.base import ProtImport
+from base import ProtImport
 from pyworkflow.em.data import Mask, VolumeMask
 from pyworkflow.em.convert import ImageHandler
 
 
+
 class ProtImportMask(ProtImport):
     """ Class for import masks from existing files. """
+    _label = 'import mask'
+    
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         
@@ -51,7 +52,7 @@ class ProtImportMask(ProtImport):
                       label="Mask path",
                       help="Select the file path of the mask\n")
         form.addParam('samplingRate', FloatParam, default=1.,
-                   label=Message.LABEL_SAMP_RATE)
+                   label=pwutils.properties.Message.LABEL_SAMP_RATE)
 
     def _insertAllSteps(self):
         self._insertFunctionStep('importMaskStep', self.maskPath.get(), self.samplingRate.get())
@@ -65,17 +66,18 @@ class ProtImportMask(ProtImport):
 
         # Copy the image file into the project
         dst = self._getExtraPath(basename(path))
-        copyFile(path, dst)
+        pwutils.copyFile(path, dst)
 
         # Retrive image dimensions
         imgh = ImageHandler()
-        x, y, z, n = imgh.getDimensions(dst)
+        _, _, z, n = imgh.getDimensions(dst)
 
-        # Create a 2D or 3D Mask
-        if z == 1:
-            mask = Mask()
-        else:
+        # Create a 2D or 3D Mask, consider the case of n>1
+        # as the case of some volume maps in mrc format
+        if z > 1 or n > 1:
             mask = VolumeMask()
+        else:
+            mask = Mask()
 
         mask.setFileName(dst)
         mask.setSamplingRate(samplingRate)
@@ -95,5 +97,4 @@ class ProtImportMask(ProtImport):
 
     def _summary(self):
         summary = ['Mask file imported from *%s*' % self.maskPath.get()]
-
         return summary

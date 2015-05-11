@@ -221,3 +221,10 @@ DataSet(name='initial_volume',  folder='initial_volume',
 DataSet(name='general',  folder='general',
         files={'vol_helix': 'volumes/helix_59_4__6_7.vol'
                 })
+
+DataSet(name='SymVirus', folder='SymVirus',
+        files={'whole_vol_half' : 'volumes/whole_vol_half.vol',
+               'large_vol_half_th' : 'volumes/large_vol_half_th.vol',
+               'small_vol_half_th' : 'volumes/small_vol_half_th.vol'
+              }
+       )

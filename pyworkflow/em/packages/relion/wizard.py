@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.relion.protocol_autopick import ProtRelionAutopick
 """
 This module implement some wizards
 """
@@ -36,6 +37,7 @@ from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_preprocess import ProtRelionPreprocessParticles
+from protocol_autopick import ProtRelionAutopickFom
 
 #===============================================================================
 # MASKS
@@ -50,12 +52,15 @@ class RelionBackRadiusWizard(ParticleMaskRadiusWizard):
                 (ProtRelionPreprocessParticles, ['backRadius'])]
     _unit = UNIT_PIXEL
     
+    def _getProtocolImages(self, protocol):
+        return protocol.inputParticles
+    
     def _getParameters(self, protocol):
         
         label, value = self._getInputProtocol(self._targets, protocol)
         
         protParams = {}
-        protParams['input']= protocol.inputParticles
+        protParams['input']= self._getProtocolImages(protocol)
         protParams['label']= label
         protParams['value']= value
         return protParams  
@@ -87,8 +92,9 @@ class RelionPartMaskDiameterWizard(RelionBackRadiusWizard):
     
     def setVar(self, form, label, value):
         # adjust again from radius to diameter
-        form.setVar(label, value * 2)        
+        form.setVar(label, value * 2)
 
+        
 #===============================================================================
 # FILTER
 #===============================================================================
@@ -144,4 +150,38 @@ class RelionVolFilterWizard(FilterVolumesWizard):
 
         else:
             dialog.showWarning("Input volumes", "Select volumes first", form.root)
-        
+            
+
+#===============================================================================
+# PICKING
+#===============================================================================
+
+class RelionPartDiameter(RelionPartMaskDiameterWizard):  
+    _targets = [(ProtRelionAutopickFom, ['particleDiameter'])]
+    
+    def _getProtocolImages(self, protocol):
+        return protocol.inputReferences 
+
+
+class RelionAutopickParams(EmWizard):  
+    _targets = [(ProtRelionAutopick, ['pickingThreshold',
+                                      'interParticleDistance'])]
+    
+    def show(self, form):
+        autopickProt = form.protocol
+        autopickFomProt = autopickProt.getInputAutopick()
+        params = autopickFomProt.getAutopickParams()
+        # Get current values of the properties
+        _, values = self._getInputProtocol(self._targets, autopickProt)
+        threshold, distance = values
+        autopickFomProt.setStepsExecutor() # allow to use runJob
+        autopickFomProt.autopickStep(params, 
+                                     threshold, distance, 
+                                     '--read_fom_maps')
+        print "Writing Xmipp coordinate files."
+        micFn, coordDir = autopickFomProt.writeXmippCoords()
+        print "Launching picking GUI..."
+        CoordinatesObjectView(autopickProt.getProject(), micFn, coordDir).show()
+                                     
+    
+    

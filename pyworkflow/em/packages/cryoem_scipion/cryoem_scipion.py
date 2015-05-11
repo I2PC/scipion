@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,27 +24,12 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Relion protocols
+This sub-package contains data and protocol classes
+wrapping Cryoem
 """
+import os
 
-from bibtex import _bibtex # Load bibtex dict with references
+from pyworkflow.utils import Environ
 
-_logo = "relion_logo.png"
-_references = ['Scheres2012a', 'Scheres2012b', 'Chen2012']
-
-from convert import *
-from protocol_classify2d import ProtRelionClassify2D
-from protocol_classify3d import ProtRelionClassify3D
-from protocol_refine3d import ProtRelionRefine3D
-from protocol_reconstruct import ProtRelionReconstruct
-from protocol_postprocess import ProtRelionPostprocess
-from protocol_preprocess import ProtRelionPreprocessParticles
-from protocol_polish import ProtRelionPolish
-from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
-
-# Wizards
-from wizard import *
-
-from viewer import *
-
-_environ = getEnviron()
+CRYOEM_HOME = os.path.join(os.environ.get('SCIPION_HOME'),'software/lib/python2.7/site-packages/cryoem')
+CRYOEM_BIN = os.path.join(CRYOEM_HOME, 'program')

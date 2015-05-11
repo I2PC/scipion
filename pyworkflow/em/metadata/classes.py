@@ -104,6 +104,11 @@ class Row():
         md = MetaData(fn)
         self.readFromMd(md, md.firstObject())
         
+    def writeToFile(self, fn):
+        md = MetaData()
+        self.writeToMd(md, md.addObject())
+        md.write(fn)
+        
     def copyFromRow(self, other):
         for label, value in other._labelDict.iteritems():
             self.setValue(label, value)

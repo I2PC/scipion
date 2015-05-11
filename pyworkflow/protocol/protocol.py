@@ -1056,7 +1056,10 @@ class Protocol(Step):
     def getDbPath(self):
         return self._getLogsPath('run.db')
             
-    def setStepsExecutor(self, executor):
+    def setStepsExecutor(self, executor=None):
+        if executor is None:
+            executor = StepExecutor(self.getHostConfig())
+            
         self._stepsExecutor = executor
                 
     def getFiles(self):

@@ -38,6 +38,7 @@ void ProgSortByStatistics::readParams()
     fn_train = getParam("--train");
     cutoff = getDoubleParam("--zcut");
     per = getDoubleParam("--percent");
+    targetXdim = getIntParam("--dim");
 }
 
 void ProgSortByStatistics::defineParams()
@@ -67,6 +68,8 @@ void ProgSortByStatistics::defineParams()
     addParamsLine(" [--percent <float=0>]   : Cut-off for particles (zero for no cut-off) ");
     addParamsLine("                         : Percentage of images with larger Z-scores are disabled");
     addParamsLine(" [--addToInput]          : Add columns also to input MetaData");
+    addParamsLine(" [--dim <d=50>]          : Scale images to this size if they are larger.");
+    addParamsLine("                         : Set to -1 for no rescaling");
 }
 
 
@@ -178,6 +181,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
         }
 
         img.readApplyGeo(SF,__iter.objId);
+        if (targetXdim!=-1 && targetXdim!=XSIZE(img()))
+        	selfScaleToSize(LINEAR,img(),targetXdim,targetXdim,1);
 
         MultidimArray<double> &mI=img();
         mI.setXmippOrigin();
@@ -370,6 +375,8 @@ void ProgSortByStatistics::processInputPrepare(MetaData &SF)
                 continue;
         }
         img.readApplyGeo(SF,__iter.objId);
+        if (targetXdim!=-1 && targetXdim!=XSIZE(img()))
+        	selfScaleToSize(LINEAR,img(),targetXdim,targetXdim,1);
         MultidimArray<double> &mI=img();
         mI.setXmippOrigin();
         mI.statisticsAdjust(0,1);

@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,31 +20,21 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'coss@cnb.csic.es'
 # *
 # **************************************************************************
 """
-This sub-package will contains Relion protocols
+This sub-package contains data and protocol classes
+wrapping Cryoem programs. The protocol was provided by
+the author, Paul Joubert. pjouber@gwdg.de
 """
-
 from bibtex import _bibtex # Load bibtex dict with references
 
-_logo = "relion_logo.png"
-_references = ['Scheres2012a', 'Scheres2012b', 'Chen2012']
+_logo = "cryoem_logo.png"
 
-from convert import *
-from protocol_classify2d import ProtRelionClassify2D
-from protocol_classify3d import ProtRelionClassify3D
-from protocol_refine3d import ProtRelionRefine3D
-from protocol_reconstruct import ProtRelionReconstruct
-from protocol_postprocess import ProtRelionPostprocess
-from protocol_preprocess import ProtRelionPreprocessParticles
-from protocol_polish import ProtRelionPolish
-from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
+from cryoem_scipion import *
 
-# Wizards
-from wizard import *
+from protocol_cryoem import ProtCryoem
 
-from viewer import *
+# from viewer import *
 
-_environ = getEnviron()
