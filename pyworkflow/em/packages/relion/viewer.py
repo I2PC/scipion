@@ -167,12 +167,12 @@ Examples:
                               help='Select which half do you want to visualize.')
             
             group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-                          default=VOLUME_SLICES, display=EnumParam.DISPLAY_COMBO, 
+                          default=VOLUME_SLICES, display=EnumParam.DISPLAY_HLIST, 
                           label='Display volume with',
                           help='*slices*: display volumes as 2D slices along z axis.\n'
                                '*chimera*: display volumes as surface with Chimera.')
             group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
-                          default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_COMBO, 
+                          default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_HLIST, 
                           label='Display angular distribution',
                           help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                                '*chimera*: display angular distribution using Chimera with red spheres.') 
@@ -187,7 +187,7 @@ Examples:
             group.addParam('resolutionPlotsFSC', LabelParam, default=True,
                           label='Display resolution plots (FSC)',
                           help='')
-            group.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
+            group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
                           expertLevel=LEVEL_ADVANCED,
                           label='Threshold in resolution plots',
                           help='')
@@ -459,17 +459,6 @@ Examples:
 #===============================================================================
 # plotSSNR              
 #===============================================================================
-    def _plotSSNR(self, a, fn):
-        mdOut = md.MetaData(fn)
-        mdSSNR = md.MetaData()
-        # only cross by 1 is important
-        mdSSNR.importObjects(mdOut, md.MDValueGT(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, 0.9))
-        mdSSNR.operate("rlnSsnrMap=log(rlnSsnrMap)")
-        resolution_inv = [mdSSNR.getValue(md.RLN_RESOLUTION, id) for id in mdSSNR]
-        frc = [mdSSNR.getValue(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, id) for id in mdSSNR]
-        a.plot(resolution_inv, frc)
-        a.xaxis.set_major_formatter(self._plotFormatter)               
- 
     def _showSSNR(self, paramName=None):
         prefixes = self._getPrefixes()        
         nrefs = len(self._refsList)
@@ -493,21 +482,21 @@ Examples:
                 a.grid(True)
         
         return [xplotter]
-        
+    
+    def _plotSSNR(self, a, fn):
+        mdOut = md.MetaData(fn)
+        mdSSNR = md.MetaData()
+        # only cross by 1 is important
+        mdSSNR.importObjects(mdOut, md.MDValueGT(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, 0.9))
+        mdSSNR.operate("rlnSsnrMap=log(rlnSsnrMap)")
+        resolution_inv = [mdSSNR.getValue(md.RLN_RESOLUTION, id) for id in mdSSNR]
+        frc = [mdSSNR.getValue(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, id) for id in mdSSNR]
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)               
+ 
 #===============================================================================
 # plotFSC            
 #===============================================================================
-    def _plotFSC(self, a, model_star):
-        mdStar = md.MetaData(model_star)
-        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
-        frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
-        self.maxFrc = max(frc)
-        self.minInv = min(resolution_inv)
-        self.maxInv = max(resolution_inv)
-        a.plot(resolution_inv, frc)
-        a.xaxis.set_major_formatter(self._plotFormatter)
-        a.set_ylim([-0.1, 1.1])
-            
     def _showFSC(self, paramName=None):
         threshold = self.resolutionThresholdFSC.get()
         prefixes = self._getPrefixes()        
@@ -536,6 +525,17 @@ Examples:
                 a.grid(True)
         
         return [xplotter]
+    
+    def _plotFSC(self, a, model_star):
+        mdStar = md.MetaData(model_star)
+        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
+        frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
+        self.maxFrc = max(frc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
     
 #===============================================================================
 # Utils Functions
@@ -614,12 +614,14 @@ Examples:
     
     def _getPrefixes(self):
         prefixes = self.protocol.PREFIXES
+        print "halves1: ", prefixes
         halves = getattr(self, 'showHalves', None)
         if halves:
             if halves == 0:
                 prefixes = ['half1_']
             elif halves == 1:
                 prefixes = ['half2_']
+        print "halves: ", halves, prefixes
         return prefixes
     
     def _iterAngles(self, it, prefix, ref3d):
@@ -655,25 +657,25 @@ class PostprocessViewer(ProtocolViewer):
         group = form.addGroup('3D analysis')
         
         group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-                      display=EnumParam.DISPLAY_LIST, default=VOLUME_SLICES,
+                      display=EnumParam.DISPLAY_HLIST, default=VOLUME_SLICES,
                       label='Display volume with',
                       help='*slices*: display volumes as 2D slices along z axis.\n'
                            '*chimera*: display volumes as surface with Chimera.')
         group.addParam('displayMaskedVol', EnumParam, choices=['slices', 'chimera'], 
-                      display=EnumParam.DISPLAY_LIST, default=VOLUME_SLICES,
+                      display=EnumParam.DISPLAY_HLIST, default=VOLUME_SLICES,
                       label='Display masked volume with',
                       help='*slices*: display masked volume as 2D slices along z axis.\n'
                            '*chimera*: display masked volume as surface with Chimera.')
-        group.addParam('resolutionPlotsFSC', BooleanParam, default=True,
+        group.addParam('resolutionPlotsFSC', LabelParam, default=True,
                       label='Display resolution plots (FSC) ?',
                       help='')
-        group.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
+        group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
                       expertLevel=LEVEL_ADVANCED,
                       label='Threshold in resolution plots',
                       help='')
     
     def _getVisualizeDict(self):
-#         self._load()
+        self._load()
         return {'displayVol': self._showVolume,
                 'displayMaskedVol': self._showMaskedVolume,
                 'resolutionPlotsFSC': self._showFSC
@@ -712,8 +714,8 @@ class PostprocessViewer(ProtocolViewer):
 #===============================================================================
 # plotFSC            
 #===============================================================================
-    def _plotFSC(self, a, model_star):
-        mdStar = md.MetaData(model_star)
+    def _plotFSC(self, a, model):
+        mdStar = md.MetaData(model)
         resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
         fsc = [mdStar.getValue(md.RLN_POSTPROCESS_FSC_TRUE, id) for id in mdStar]
         self.maxfsc = max(fsc)
@@ -725,10 +727,8 @@ class PostprocessViewer(ProtocolViewer):
             
     def _showFSC(self, paramName=None):
         threshold = self.resolutionThresholdFSC.get()
-        prefixes = self._getPrefixes()        
-        nrefs = len(self._refsList)
-        n = nrefs * len(prefixes)
-        gridsize = self._getGridSize(n)
+        n = 1
+        gridsize = [1, 1]
         
         md.activateMathExtensions()
         
@@ -737,10 +737,26 @@ class PostprocessViewer(ProtocolViewer):
         
         model_star = self.protocol._getExtraPath('postprocess.star')
         if exists(model_star):
-            self._plotFSC(a, 'fsc@' + model_star)
+            model = 'fsc@' + model_star
+            self._plotFSC(a, model)
         if threshold < self.maxfsc:
             a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
         a.grid(True)
         
         return [xplotter]
+    
+#===============================================================================
+# Utils Functions
+#===============================================================================
+    def _load(self):
+        """ Load selected iterations and classes 3D for visualization mode. """
+        from matplotlib.ticker import FuncFormatter
+        self._plotFormatter = FuncFormatter(self._formatFreq) 
+        
+    def _formatFreq(self, value, pos):
+        """ Format function for Matplotlib formatter. """
+        inv = 999.
+        if value:
+            inv = 1/value
+        return "1/%0.2f" % inv
     
