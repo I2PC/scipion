@@ -74,18 +74,22 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 
 	public void setZoom(double zoom)
 	{
-		if (Math.abs(getMagnification() - zoom) <= 0.025)
-		{
-			if (getMagnification() <= 1.0)
-				imp.repaintWindow();
-			return;
-		}
-		if (getMagnification() < zoom)
-			zoomIn(0, 0);
-		else
-			zoomOut(0, 0);
-
-		setZoom(zoom);
+                //double mag = getZoom();
+                //System.out.printf("Zoom is %f\n", zoom);
+                
+                if (getMagnification() > zoom)
+                {
+                    while (getMagnification() > zoom)
+                        zoomOut(0, 0);
+                }
+                else 
+                {
+                    while (getMagnification() < zoom)
+                        zoomIn(0, 0);
+                }
+                
+                if (getMagnification() <= 1.0)
+                    imp.repaintWindow();		
 	}
 
 	public void mouseReleased(MouseEvent e)
