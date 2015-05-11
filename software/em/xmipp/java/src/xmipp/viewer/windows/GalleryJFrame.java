@@ -440,7 +440,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				reloadTableData();
 			}
 		});
-
+		enableToolBarActions();
 		pack();
 		XmippWindowUtil.centerWindows(this);
 		setVisible(true);
@@ -1129,7 +1129,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             }
         });
         toolBar.add(plotbt);
-
 	}// function createToolbar
 
 	/** Create combos for selection of block and volume if its the case */
@@ -1218,10 +1217,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         protected void enableToolBarActions()
         {
         	boolean hasRender = data.allowGallery();
-			btnChangeView.setEnabled(hasRender);
+        	boolean isCol = data.isColumnFormat();
+        	
+			btnChangeView.setEnabled(hasRender && isCol);
 			jsZoom.setEnabled(hasRender);
 			jlZoom.setEnabled(hasRender);
-			boolean isCol = data.isColumnFormat();
+			
 			jsGoToImage.setEnabled(isCol && gallery.getSize() > 0);
 			jlGoToImage.setEnabled(isCol);
 			
