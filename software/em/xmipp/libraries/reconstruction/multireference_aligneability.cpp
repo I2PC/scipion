@@ -48,12 +48,11 @@
 
 void MultireferenceAligneability::readParams()
 {
-    fnDir = getParam("--odir");
-    fnSym = getParam("--sym");
     fnInit = getParam("--volume");
-    fin = getParam("--stackimages");
+    fin = getParam("--angles_file");
+    fnSym = getParam("--sym");
+    fnDir = getParam("--odir");
     fsig = getParam("--significance");
-
 }
 
 void MultireferenceAligneability::defineParams()
@@ -62,10 +61,10 @@ void MultireferenceAligneability::defineParams()
     addUsageLine("This function takes a volume and a set of projections with orientations. The volume is projected into the set of projection directions defining the "
     		"the reference projections. Thus, using the projections and references, the calculus of H0k, Hk and Pk is carried out");
     //params
-    addParamsLine("  [--volume <md_file=\"\">]    : Volume to be validated");
+    addParamsLine("  [--volume <md_file=\"\">]    : Input volume to be validated");
+    addParamsLine("  [--angles_file <file=\".\">] : Input metadata with projections and orientations");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections"); //TODO the input will be two doc files one from the exp and the other from refs
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
-    addParamsLine("  [--stackimages <inputDir=\".\">]   : Stack of projections");
     addParamsLine("  [--significance <fsig=0.05>] : Significance (default signif=0.05");
 }
 
@@ -74,13 +73,13 @@ void MultireferenceAligneability::run()
 
     randomize_random_generator();
     char buffer[400];
-    sprintf(buffer, "xmipp_reconstruct_significant  -i %s --initvolumes %s --odir %s --sym %s --iter 1 --alpha0 %s", fin.c_str(), fnInit.c_str(),fnDir.c_str(), fnSym.c_str(),fsig.c_str());
-    //system(buffer);
+    sprintf(buffer, "xmipp_reconstruct_significant  -i %s --initvolumes %s --odir %s --sym %s --iter 1 --alpha0 %s --dontReconstruct", fin.c_str(), fnInit.c_str(),fnDir.c_str(), fnSym.c_str(),fsig.c_str());
+    system(buffer);
 
     //We read the image dimensions from significant file
     MetaData mdExp, mdRef;
     FileName fnMdExp;//, fnMdProj;
-    fnMdExp = fnDir+"/angles_iter001_00.xmd";
+    fnMdExp = fnDir+"/images_significant_iter001_00.xmd";
     mdExp.read(fnMdExp);
     getImageSize(mdExp,Xdim,Ydim,Zdim,Ndim);
 
@@ -94,31 +93,33 @@ void MultireferenceAligneability::run()
     fnParams = fnDir +"/params";
     //Projection in the direction of a set of angles defined in params
     sprintf(buffer, "xmipp_phantom_project -i %s --params %s -o %s", fnVol.c_str() , fnParams.c_str() , fnOut.c_str());
+    std::cout << buffer << std::endl;
     system(buffer);
 
     //Add noise to the reference images according to the noise in the experimental images
     Mask mask;
     mask.allowed_data_types = INT_MASK;
     mask.generate_mask(Zdim, Ydim, Xdim);
-    Image<double> img;
+    Image<double> imgExp,imgRef;
     double min_val;
     double max_val;
     double avg;
     double stddev;
-    FOR_ALL_OBJECTS_IN_METADATA(mdExp)
+    FileName fnRef;
+    FOR_ALL_OBJECTS_IN_METADATA2(mdExp,mdRef)
     {
-    	img.readApplyGeo(mdExp,__iter.objId);
-    	computeStats_within_binary_mask(mask.get_binary_mask(), img(), min_val, max_val,avg, stddev);
+    	imgExp.readApplyGeo(mdExp,__iter.objId);
+    	imgRef.readApplyGeo(mdRef,__iter2.objId);
+    	computeStats_within_binary_mask(mask.get_binary_mask(), imgExp(), min_val, max_val,avg, stddev);
+    	imgRef().addNoise(stddev,avg,"gaussian",3.);
+    	mdRef.getValue(MDL_IMAGE,fnRef,__iter2.objId);
+    	imgRef().write(fnRef);
     }
-    std::cout << " " << std::endl;
-    std::cout << "STEP2 ENDED" << std::endl;
-    std::cout << " " << std::endl;
 
-    //STEP3 A new set of angles is gotten thought significant
-    FileName fnMd_gallery;
-    FileName fnOut_gallery;
+    //FileName fnMd_gallery;
+    //FileName fnOut_gallery;
     ///////////////////////////////////////
-    fnOut_gallery = fnDir+"/gallery_alignment";
+    FileName fnOut_gallery = fnDir+"/gallery_alignment";
     ///////////////////////////////////////
 
     sprintf(buffer,"mkdir %s",fnOut_gallery.c_str());//,fnSym.c_str());
@@ -260,7 +261,7 @@ void MultireferenceAligneability::write_projection_file()
 	myfile << "data_block1 \n";
 	myfile << "_dimensions2D "+xdim+" "+ydim+" \n";
 	myfile << "_projAngleFile "+fnDir+"/images_iter001_00.xmd \n";
-	myfile << "_noisePixelLevel   '0 4' \n";    //where the variance is the first number and the second one is the mean
+	myfile << "_noisePixelLevel   '0 0' \n";    //where the variance is the first number and the second one is the mean
 	myfile.close();
 }
 
