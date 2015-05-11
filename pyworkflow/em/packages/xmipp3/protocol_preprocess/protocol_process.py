@@ -32,7 +32,7 @@ from pyworkflow.em.protocol import ProtProcessParticles, ProtPreprocessVolumes
 from pyworkflow.em.data import Volume
 from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 from ..convert import writeSetOfParticles, xmippToLocation
-from ..convert import writeSetOfVolumes, readSetOfVolumes, getImageLocation
+from ..convert import writeSetOfVolumes, getImageLocation
 import pyworkflow.em.metadata as md
 
 
@@ -156,7 +156,11 @@ class XmippProcessVolumes(ProtPreprocessVolumes):
     def createOutputStep(self):
         volInput = self.inputVolumes.get()
         if self._isSingleInput():
-            vol = Volume()
+            # Create the output with the same class as
+            # the input, that should be Volume or a subclass
+            # of Volume like VolumeMask
+            volClass = volInput.getClass()
+            vol = volClass() # Create an instance with the same class of input 
             vol.copyInfo(volInput)
             vol.setLocation(1, self.outputStk)
             self._postprocessOutput(vol)
@@ -171,7 +175,6 @@ class XmippProcessVolumes(ProtPreprocessVolumes):
                 vol = Volume()
                 vol.setLocation(i, self.outputStk)
                 volumes.append(vol)
-#             readSetOfVolumes(self.outputMd, volumes)
             self._postprocessOutput(volumes)
             self._defineOutputs(outputVol=volumes)
             
