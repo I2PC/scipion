@@ -117,7 +117,9 @@ Examples:
                       display=EnumParam.DISPLAY_HLIST,
                       label='3D Class to visualize',
                       help='All: Display all 3D classes for each iteration'
-                           'that you selected.')
+                           'that you selected.\n'
+                           'Selection: You may specify wich 3D class (or classes)'
+                           ' to visualize')
         group.addParam('ref3DSelection', NumericRangeParam, default='1',
                       condition='showRef3DNo == %d' % REF_SEL,
                       label='Classes list',
