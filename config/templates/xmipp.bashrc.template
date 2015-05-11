@@ -1,7 +1,7 @@
 # -*- sh -*-
 
 export SCIPION_HOME=%(SCIPION_HOME)s
-export XMIPP_HOME=$SCIPION_HOME/software/em/xmipp
+export XMIPP_HOME=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 export PATH=$SCIPION_HOME/software/bin:$XMIPP_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$SCIPION_HOME/software/lib:$LD_LIBRARY_PATH
