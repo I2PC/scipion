@@ -160,7 +160,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	@Override
 	public Object getValueAt(int row, int col) {
 		int index = getIndex(row, col);
-
 		if (isValidIndex(index)) {
 			try {
 				String key = getItemKey(index);
