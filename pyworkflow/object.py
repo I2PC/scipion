@@ -394,7 +394,7 @@ class Object(object):
                 or methods without arguments to be evaluated.
             Examples:
                 hasCTF
-                hasCTF and not hasAligment
+                hasCTF and not hasAlignment
         Return:
             The value of the condition evaluated with values
         """
@@ -426,7 +426,7 @@ class Object(object):
             v.printAll(k, level + 1)
             
     def printObjDict(self, includeClasses=False):
-        """Print object dictionary. Main for debugging"""
+        """Print object dictionary. Mainly for debugging"""
         import pprint
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(dict(self.getObjDict(includeClasses)))        
