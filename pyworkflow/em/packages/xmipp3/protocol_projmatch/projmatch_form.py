@@ -60,9 +60,6 @@ def _defineProjectionMatchingParams(self, form):
                       'more than one 3D input reference. \n'
                       '_For example_: reference1.vol reference2.vol \n '
                       'specifies two references.')
-    form.addParam('numberOfIterations', IntParam, default=4,
-                 label='Number of iterations',
-                 help='Number of iterations to perform.')
     form.addParam('cleanUpFiles', BooleanParam, default=False,
                  label="Clean up intermediate files?",  expertLevel=LEVEL_ADVANCED,
                  help='Save disc space by cleaning up intermediate files. \n '
@@ -144,6 +141,9 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addSection(label='Projection Matching')
     
+    form.addParam('numberOfIterations', IntParam, default=4,
+             label='Number of iterations',
+             help='Number of iterations to perform.')
     form.addParam('innerRadius', NumericListParam, default='0', 
                  label='Inner radius for rotational correlation:', 
                  help=""" In pixels from the image center

@@ -119,7 +119,7 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
                       help='Width of the raised cosine on the low-pass filter edge'
                            '(in resolution shells)\n'
                            'Relion param: *--filter_edge_width*')
-        form.addParam('randomizeAtFsc', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
+        form.addParam('randomizeAtFsc', FloatParam, default=0.8, expertLevel=LEVEL_ADVANCED,
                       label='Randomize phases threshold',
                       help='Randomize phases from the resolution where FSC drops below this value\n'
                            'Relion param: *--randomize_at_fsc*')
