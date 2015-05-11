@@ -154,7 +154,7 @@ Examples:
             if self.protocol.IS_CLASSIFY:
                 group.addParam('showClasses3D', BooleanParam, default=CLASSES_ALL,
                                choices=['all', 'selection'], 
-                               display=EnumParam.DISPLAY_LIST,
+                               display=EnumParam.DISPLAY_HLIST,
                                label='3D Class to visualize',
                                help='')
                 group.addParam('class3DSelection', NumericRangeParam, default='1',

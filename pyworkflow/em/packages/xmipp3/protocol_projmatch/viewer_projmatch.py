@@ -111,17 +111,17 @@ Examples:
         group.addParam('showDiscardedImages', LabelParam, default=False,
                       label='Display discarded particles',
                       help='Display discarded particles.')
-
-
+        
         group = form.addGroup('Volumes')
         group.addParam('showRef3DNo', EnumParam, choices=['all', 'selection'], default=REF_ALL,
                       display=EnumParam.DISPLAY_HLIST,
-                      label='Reference to visualize',
-                      help='')
+                      label='3D Class to visualize',
+                      help='All: Display all 3D classes for each iteration'
+                           'that you selected.')
         group.addParam('ref3DSelection', NumericRangeParam, default='1',
                       condition='showRef3DNo == %d' % REF_SEL,
-                      label='Iteration list',
-                      help='')
+                      label='Classes list',
+                      help='Write the 3d classes list to visualize.')
         group.addParam('matrixWidth', FloatParam, default=-1, 
                       expertLevel=LEVEL_ADVANCED,
                       label='Width of projection galleries',
@@ -767,14 +767,3 @@ Examples:
                 value.append(val)
         f1.close()
         return value
-
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
