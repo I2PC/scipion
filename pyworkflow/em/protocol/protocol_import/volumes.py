@@ -79,8 +79,9 @@ class ProtImportVolumes(ProtImportImages):
             dst = self._getExtraPath(basename(fileName))
             copyOrLink(fileName, dst)
             x, y, z, n = imgh.getDimensions(dst)
-#            if (n == x and n == y and z == 1) or n == 1:
-            if (z == 1 and n != 1) or z !=1:
+            # First case considers when reading mrc without volume flag
+            # Second one considers single volumes (not in stack)
+            if (z == 1 and n != 1) or (z !=1 and n == 1):
                 vol.setObjId(fileId)
                 vol.setLocation(dst)
                 volSet.append(vol)
