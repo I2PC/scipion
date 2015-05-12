@@ -137,6 +137,16 @@ class ProtRelionBase(EMProtocol):
                       important=True,
                       label="Input particles",  
                       help='Select the input images from the project.')
+        form.addParam('maskDiameterA', IntParam, default=200,
+                      condition='not doContinue',
+                      label='Particle mask diameter (A)',
+                      help='The experimental images will be masked with a soft circular mask '
+                           'with this <diameter>. '
+                           'Make sure this diameter is not set too small because that may mask '
+                           'away part of the signal! If set to a value larger than the image '
+                           'size no masking will be performed.\n\n'
+                           'The same diameter will also be used for a spherical mask of the '
+                           'reference structures if no user-provided mask is specified.')
         form.addParam('continueRun', PointerParam, pointerClass=self.getClassName(),
                       condition='doContinue', allowsNull=True,
                       label='Select previous run',
@@ -244,7 +254,7 @@ class ProtRelionBase(EMProtocol):
                                'If continue option is True, you going to do this number of new iterations (e.g. if'
                                '*Continue from iteration* is set 3 and this param is set 25, the final iteration of the'
                                'protocol will be the 28th.')
-            form.addParam('regularisationParamT', IntParam, default=1,
+            form.addParam('regularisationParamT', IntParam, default=2,
                           label='Regularisation parameter T',
                           help='Bayes law strictly determines the relative weight between the contribution of the '
                                'experimental data and the prior. '
@@ -254,15 +264,7 @@ class ProtRelionBase(EMProtocol):
                                'have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements. '
                                'Too small values yield too-low resolution structures; too high values result in ' 
                                'over-estimated resolutions and overfitting.') 
-        form.addParam('maskDiameterA', IntParam, default=200,
-                      label='Particle mask diameter (A)',
-                      help='The experimental images will be masked with a soft circular mask '
-                           'with this <diameter>. '
-                           'Make sure this diameter is not set too small because that may mask '
-                           'away part of the signal! If set to a value larger than the image '
-                           'size no masking will be performed.\n\n'
-                           'The same diameter will also be used for a spherical mask of the '
-                           'reference structures if no user-provided mask is specified.') 
+ 
         if self.IS_CLASSIFY:
             form.addParam('maskZero', EnumParam, default=0,
                           choices=['Yes, fill with zeros', 'No, fill with random noise'],
@@ -274,23 +276,37 @@ class ProtRelionBase(EMProtocol):
                                'When set to <No>, then the solvent area is filled with random noise, which prevents introducing '
                                'correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling ' 
                                'the solvent area with random noise, some classifications go better when using zeros.') 
-        form.addParam('referenceMask', PointerParam, pointerClass='Mask,VolumeMask',
-                      label='Reference mask (optional)', allowsNull=True,
-                      help='A volume mask containing a (soft) mask with the same dimensions ' 
-                           'as the reference(s), and values between 0 and 1, with 1 being 100% protein '
-                           'and 0 being 100% solvent. The reconstructed reference map will be multiplied '
-                           'by this mask. If no mask is given, a soft spherical mask based on the <radius> '
-                           'of the mask for the experimental images will be applied.\n\n'  
-                           'In some cases, for example for non-empty icosahedral viruses, it is also useful ' 
-                           'to use a second mask. Use <More options> and check <Solvent mask> parameter. ') 
-        form.addParam('solventMask', PointerParam, pointerClass='Mask',
-                      expertLevel=LEVEL_ADVANCED, allowsNull=True,
-                      label='Solvent mask (optional)',
-                      help='For all white (value 1) pixels in this second mask the '
-                           'corresponding pixels in the reconstructed map are set to the average value of '
-                           'these pixels. Thereby, for example, the higher density inside the virion may be '
-                           'set to a constant. Note that this second mask should have one-values inside the '
-                           'virion and zero-values in the capsid and the solvent areas.')
+        if self.IS_3D:
+            form.addParam('referenceMask', PointerParam, pointerClass='VolumeMask',
+                          label='Reference mask (optional)', allowsNull=True,
+                          help='A volume mask containing a (soft) mask with the same dimensions ' 
+                               'as the reference(s), and values between 0 and 1, with 1 being 100% protein '
+                               'and 0 being 100% solvent. The reconstructed reference map will be multiplied '
+                               'by this mask. If no mask is given, a soft spherical mask based on the <radius> '
+                               'of the mask for the experimental images will be applied.\n\n'  
+                               'In some cases, for example for non-empty icosahedral viruses, it is also useful ' 
+                               'to use a second mask. Check _Advaced_ level and select another volume mask') 
+            form.addParam('solventMask', PointerParam, pointerClass='VolumeMask',
+                          expertLevel=LEVEL_ADVANCED, allowsNull=True,
+                          label='Second reference mask (optional)',
+                          help='For all white (value 1) pixels in this second mask the '
+                               'corresponding pixels in the reconstructed map are set to the average value of '
+                               'these pixels. Thereby, for example, the higher density inside the virion may be '
+                               'set to a constant. Note that this second mask should have one-values inside the '
+                               'virion and zero-values in the capsid and the solvent areas.')
+        
+        if self.IS_CLASSIFY:
+            form.addParam('limitResolEStep', FloatParam, default=-1,
+              label='Limit resolution E-step to (A)', 
+              help='If set to a positive number, then the expectation step '
+                   '(i.e. the alignment) will be done only including the Fourier '
+                   'components up to this resolution (in Angstroms). This is useful '
+                   'to prevent overfitting, as the classification runs in RELION are '
+                   'not to be guaranteed to be 100% overfitting-free (unlike the '
+                   '_3D auto-refine_ with its gold-standard FSC). In particular for very '
+                   'difficult data sets, e.g. of very small or featureless particles, '
+                   'this has been shown to give much better class averages. In such '
+                   'cases, values in the range of 7-12 Angstroms have proven useful.')
         
         # Change the Sampling section name depending if classify or refine 3D
         if self.IS_CLASSIFY:
@@ -385,7 +401,7 @@ class ProtRelionBase(EMProtocol):
         form.addSection('Additional')
         form.addParam('memoryPreThreads', IntParam, default=2,
                       label='Memory per Threads',
-                      help='Computer memory in Gigabytes that is avaliable for each thread. This will only'
+                      help='Computer memory in Gigabytes that is avaliable for each thread. This will only '
                            'affect some of the warnings about required computer memory.')
         form.addParam('dontCombine', BooleanParam, default=False,
                       label='Dont combine weights via disc?',
@@ -458,6 +474,9 @@ class ProtRelionBase(EMProtocol):
             if self.maskZero == MASK_FILL_ZERO:
                 args['--zero_mask'] = ''                
             args['--K'] = self.numberOfClasses.get()
+            if self.limitResolEStep > 0:
+                args['--strict_highres_exp'] = self.limitResolEStep.get()
+            
         
         if self.IS_3D:
             args['--ref'] = convertBinaryVol(self.referenceVolume.get(), self._getTmpPath())
