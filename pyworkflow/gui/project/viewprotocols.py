@@ -40,7 +40,7 @@ import pyworkflow.protocol as pwprot
 import pyworkflow.gui as pwgui
 import pyworkflow.em as em
 
-from pyworkflow.viewer import DESKTOP_TKINTER
+from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color
 
 
@@ -293,12 +293,13 @@ class SearchProtocolWindow(pwgui.Window):
         
     def _onSearchClick(self, e=None):
         self._resultsTree.clear()
-        keyword = self._searchVar.get()
+        keyword = self._searchVar.get().lower()
         emProtocolsDict = em.getProtocols()
         for key, prot in emProtocolsDict.iteritems():
-            label = prot.getClassLabel()
-            if keyword in label:
-                self._resultsTree.insert('', 'end', key, text=label, tags=('protocol'))
+            if not issubclass(prot, ProtocolViewer):
+                label = prot.getClassLabel().lower()
+                if keyword in label:
+                    self._resultsTree.insert('', 'end', key, text=label, tags=('protocol'))
         
 
 class RunIOTreeProvider(pwgui.tree.TreeProvider):
@@ -1167,7 +1168,6 @@ class ProtocolsView(tk.Frame):
         if len(viewers):
             #TODO: If there are more than one viewer we should display a selection menu
             firstViewer = viewers[0](project=self.project, protocol=prot) # Instanciate the first available viewer
-            from pyworkflow.viewer import ProtocolViewer
             if isinstance(firstViewer, ProtocolViewer):
                 firstViewer.visualize(prot, windows=self.windows)
             else:
