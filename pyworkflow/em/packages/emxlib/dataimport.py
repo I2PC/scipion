@@ -33,7 +33,6 @@ from collections import OrderedDict
 from pyworkflow.em.constants import ALIGN_NONE
 
 from pyworkflow.protocol.params import PointerParam, RelationParam, StringParam
-from pyworkflow.em.data import EMXObject
 from pyworkflow.em.protocol import EMProtocol, RELATION_CTF
 
 import emxlib
@@ -195,9 +194,6 @@ class ProtEmxExport(EMProtocol):
         binaryFile = self.outputPrefix.get() + '.mrc'
         exportData(emxDir, self.inputSet.get(), ctfSet=self.ctfEstimation.get(), 
                    xmlFile=xmlFile, binaryFile=binaryFile)
-        
-        self._defineOutputs(emxOutput=EMXObject(join(emxDir, xmlFile),
-                                                join(emxDir, binaryFile)))
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

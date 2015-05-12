@@ -612,28 +612,6 @@ class PdbFile(EMFile):
         return "%s (pseudoatoms=%s)" % (self.getClassName(), self.getPseudoAtoms())
     
     
-class EMXObject(EMObject):
-    """Represents EMX data object, mainly comprising two files:
-    1- XML file specifiying metadata information
-    2- A binary data file of either Micrographs or Particles.
-    """
-    def __init__(self, xmlFile=None, binaryFile=None, **args):
-        EMObject.__init__(self, **args)
-        self._xmlFile = String(xmlFile)
-        self._binaryFile = String(binaryFile)
-        
-    def getXmlFile(self):
-        return self._xmlFile.get()
-    
-    def getBinaryFile(self):
-        return self._binaryFile.get()        
-                
-#       
-# class EMSet(EMObject, Set):
-#     def __init__(self, *args, **kwargs):
-#         Set.__init__(self, *args, **kwargs)
-#         EMObject.__init__(self, *args, **kwargs)
-
 class EMSet(Set, EMObject):
     def _loadClassesDict(self):
         return globals()

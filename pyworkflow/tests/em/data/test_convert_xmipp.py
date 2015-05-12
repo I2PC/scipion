@@ -99,7 +99,7 @@ PRINT_FILES  = True
 def runXmippProgram(cmd):
     print ">>>", cmd
     p = subprocess.Popen(cmd, shell=True, env=xmipp3.getEnviron())
-    return p.wait()   
+    return p.wait()
 
 
 class TestConvertBase(BaseTest):
