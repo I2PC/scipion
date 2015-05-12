@@ -111,7 +111,7 @@ class ProtParticlePicking(ProtParticles):
         return "\n".join(summary)
 
     def getMethods(self, output):
-        msg = 'User picked %d particles with a particle size of %d.' % (output.getSize(), output.getBoxSize())
+        msg = 'User picked %d particles with a particle size of %s.' % (output.getSize(), output.getBoxSize())
         return msg
     
     def _methods(self):
