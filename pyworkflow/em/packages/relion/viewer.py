@@ -27,7 +27,7 @@
 import os
 
 
-from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
@@ -35,6 +35,7 @@ from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_postprocess import ProtRelionPostprocess
+from protocol_autopick import ProtRelionAutopick
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
                                         EnumParam, FloatParam, BooleanParam,
@@ -759,4 +760,18 @@ class PostprocessViewer(ProtocolViewer):
         if value:
             inv = 1/value
         return "1/%0.2f" % inv
+    
+    
+
+class RelionAutopickViewer(Viewer):
+    """ Class to visualize Relion postprocess protocol """
+    _targets = [ProtRelionAutopick]
+    _environments = [DESKTOP_TKINTER]
+    
+    def visualize(self, obj, **args):
+        micPath, coordPath = obj.writeXmippOutputCoords()
+        import pyworkflow.em.packages.xmipp3 as xmipp3
+        xmipp3.viewer.launchSupervisedPickerGUI(2, micPath, coordPath, 'manual', 
+                                                self.getProject().getDbPath(), 
+                                                obj.strId(), self.getProject().port)
     
