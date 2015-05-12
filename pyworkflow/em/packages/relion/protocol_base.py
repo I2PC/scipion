@@ -96,7 +96,9 @@ class ProtRelionBase(EMProtocol):
                   'all_changes_xmipp': self._getTmpPath('iterations_changes_xmipp.xmd'),
                   'selected_volumes': self._getTmpPath('selected_volumes_xmipp.xmd'),
                   'movie_particles': self._getPath('movie_particles.star'),
-                  'volume_shiny': self.extraIter + 'data_shiny_post.mrc:mrc'
+                  'volume_shiny': self.extraIter + 'data_shiny_post.mrc:mrc',
+                  'dataFinal' : self._getExtraPath("relion_data.star"),
+                  'modelFinal' : self._getExtraPath("relion_model.star"),
                   }
         # add to keys, data.star, optimiser.star and sampling.star
         for key in self.FILE_KEYS:
@@ -696,21 +698,6 @@ class ProtRelionBase(EMProtocol):
             writeSqliteIterData(data, data_sqlite, **kwargs)
         
         return data_sqlite
-    
-    def _getIterAngularDist(self, it):
-        """ Return the .star file with the classes angular distribution
-        for this iteration. If the file not exists, it will be written.
-        """
-        data_star = self._getFileName('data', iter=it)
-        data_angularDist = self._getFileName('angularDist_xmipp', iter=it)
-        
-        if exists(data_star):
-            if not exists(data_angularDist):
-                from convert import writeIterAngularDist
-                writeIterAngularDist(self, data_star, data_angularDist, 
-                                     self.numberOfClasses.get(), self.PREFIXES)
-
-        return data_angularDist
     
     def _splitInCTFGroups(self, imgStar):
         """ Add a new colunm in the image star to separate the particles into ctf groups """
