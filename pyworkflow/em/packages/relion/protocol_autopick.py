@@ -37,7 +37,7 @@ from protocol_base import ProtRelionBase
 from convert import writeSetOfMicrographs, writeReferences, readSetOfCoordinates
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.em.metadata as md
-from pyworkflow.utils.path import replaceBaseExt, makePath, removeBaseExt
+from pyworkflow.utils.path import replaceBaseExt, makePath, removeBaseExt, createLink
 
 
 
@@ -49,7 +49,12 @@ class ProtRelionAutopickBase(ProtRelionBase):
         # they are in 'mrc' format
         # Get basename and replace extension by 'mrc'
         newName = replaceBaseExt(img.getFileName(), 'mrc')
-        self._ih.convert(img, self._getExtraPath(newName))
+        newPath = self._getExtraPath(newName)
+        
+        if img.getFileName().endswith('mrc'):
+            createLink(img.getFileName(), newPath)
+        else:
+            self._ih.convert(img, newPath)
         # The command will be launched from the working dir
         # so, let's make the micrograph path relative to that
         img.setFileName(os.path.join('extra', newName))
