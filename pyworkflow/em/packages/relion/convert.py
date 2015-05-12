@@ -575,26 +575,6 @@ def writeSqliteIterClasses(imgStar):
     pass
     
     
-def writeIterAngularDist(self, inDataStar, outAngularDist, numberOfClasses, prefixes):
-    """ Write the angular distribution. Should be overriden in subclasses. """
-    mdAll = md.MetaData(inDataStar)
-    
-    refsList = range(1, numberOfClasses + 1) 
-
-    for ref3d in refsList:
-        for prefix in prefixes:
-            mdGroup = md.MetaData()
-            mdGroup.importObjects(mdAll, md.MDValueEQ(md.RLN_PARTICLE_CLASS, ref3d))
-            mdDist = md.MetaData()
-            mdDist.aggregateMdGroupBy(mdGroup, md.AGGR_COUNT,
-                                      [md.RLN_ORIENT_ROT, md.RLN_ORIENT_TILT],
-                                      md.RLN_ORIENT_ROT, md.MDL_WEIGHT)
-            mdDist.setValueCol(md.RLN_ORIENT_PSI, 0.0)
-            blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
-            print "Writing angular distribution to: ", blockName + outAngularDist
-            mdDist.write(blockName + outAngularDist, md.MD_APPEND) 
-            
-    
 def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
     """ Add a new colunm in the image star to separate the particles into ctf groups """
     mdAll = md.MetaData(imgStar)

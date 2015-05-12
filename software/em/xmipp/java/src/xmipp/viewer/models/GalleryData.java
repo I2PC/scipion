@@ -740,7 +740,6 @@ public class GalleryData {
     public boolean isColumnFormat() {
         return md.isColumnFormat();
     }
-
     
 
     public boolean isMicrographsMode() {
@@ -757,8 +756,6 @@ public class GalleryData {
             mode = Mode.GALLERY_VOL;
         else
             mode = Mode.GALLERY_MD;
-        
-
     }
 
     /**
