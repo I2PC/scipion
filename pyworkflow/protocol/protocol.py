@@ -926,13 +926,15 @@ class Protocol(Step):
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: ' + self.workingDir.get())
         self.info('      runMode: %d' % self.runMode.get())
-#        Commented lines by some fails when a protocol not used this options
-#        self.info('          MPI: %d' % self.numberOfMpi.get())
-#        self.info('      threads: %d' % self.numberOfThreads.get())
+        try:
+            self.info('          MPI: %d' % self.numberOfMpi.get())
+            self.info('      threads: %d' % self.numberOfThreads.get())
+        except Exception as e:
+            self.info('  * Cannot get information about MPI/threads (%s)' % e)
 
         Step.run(self)     
         self._endRun()
-        
+
     def _endRun(self):
         """ Print some ending message and close some files. """   
         #self._store()

@@ -717,7 +717,7 @@ public class GalleryData {
      * Return true if the gallery mode is allowed
      */
     public boolean allowGallery() {
-        return hasRenderLabel() || isRotSpectraMd();
+        return hasRenderLabel();
     }
 
     // some mode shortcuts
@@ -740,7 +740,6 @@ public class GalleryData {
     public boolean isColumnFormat() {
         return md.isColumnFormat();
     }
-
     
 
     public boolean isMicrographsMode() {
@@ -757,8 +756,6 @@ public class GalleryData {
             mode = Mode.GALLERY_VOL;
         else
             mode = Mode.GALLERY_MD;
-        
-
     }
 
     /**
@@ -843,7 +840,8 @@ public class GalleryData {
 
     public boolean isImageFile(ColumnInfo ci) {
         try {
-            return MetaData.isImage(ci.label);
+        		
+            return ci.render;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1123,43 +1121,7 @@ public class GalleryData {
         }
         return mdImages;
     }
-
-    /**
-     * Return true if current metadata is a rotspectra classes
-     */
-    public boolean isRotSpectraMd() {
-        if (filename != null) {
-            if (!filename.contains("classes")) {
-                return false;
-            }
-            String fnVectors = filename.replace("classes", "vectors");
-            String fnVectorsData = fnVectors.replace(".xmd", ".vec");
-            
-            if (isClassificationMd() && Filename.exists(fnVectors) && Filename.exists(fnVectorsData)) {
-                return true;
-            }
-        }
-        return false;
-    }
     
-    public class RotSpectra
-    {
-        public String fnVectors, fnVectorsData, fnClasses;
-        
-        public RotSpectra(String fnClasses, String fnVectors, String fnVectorsData)
-        {
-            this.fnClasses = fnClasses;
-            this.fnVectors = fnVectors;
-            this.fnVectorsData = fnVectorsData;
-        }
-    }
-    
-    public RotSpectra getRotSpectra()
-    {
-        String fnVectors = filename.replace("classes", "vectors");
-        String fnVectorsData = fnVectors.replace(".xmd", ".vec");
-        return new RotSpectra(filename, fnVectors, fnVectorsData);
-    }
 
     /**
      * Check if a block is present, ignore case

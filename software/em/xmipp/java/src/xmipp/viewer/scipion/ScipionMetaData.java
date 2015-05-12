@@ -99,6 +99,23 @@ public class ScipionMetaData extends MetaData {
         Connection c = null;
         Statement stmt = null;
         try {
+        	String query;
+        	 c = getConnection();
+             stmt = c.createStatement();
+             ResultSet rs;
+        	if (preffix == null || preffix.equals(""))
+            {
+                properties = new HashMap<String, String>();
+                String key, value;
+                query = "SELECT * FROM Properties;";
+                rs = stmt.executeQuery(query);
+
+                while (rs.next()) {
+                    key = rs.getString("key");
+                    value = rs.getString("value");
+                    properties.put(key, value);
+                }
+            }
             String name, alias, clsname;
             int type;
             boolean allowRender;
@@ -124,14 +141,12 @@ public class ScipionMetaData extends MetaData {
             commentci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false, false);
             columns.add(commentci);
 
-            c = getConnection();
-            stmt = c.createStatement();
-            ResultSet rs;
+           
 
             loadValues(c);
            
             
-            String query = String.format("SELECT * FROM %sClasses;", preffix);
+            query = String.format("SELECT * FROM %sClasses;", preffix);
             rs = stmt.executeQuery(query);
             while (rs.next()) {
                 name = rs.getString("label_property");
@@ -147,19 +162,7 @@ public class ScipionMetaData extends MetaData {
                 ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
                 columns.add(ci);
             }
-            if (preffix == null || preffix.equals(""))
-            {
-                properties = new HashMap<String, String>();
-                String key, value;
-                query = "SELECT * FROM Properties;";
-                rs = stmt.executeQuery(query);
-
-                while (rs.next()) {
-                    key = rs.getString("key");
-                    value = rs.getString("value");
-                    properties.put(key, value);
-                }
-            }
+            
 
             rs.close();
             stmt.close();
@@ -344,7 +347,7 @@ public class ScipionMetaData extends MetaData {
             if (label.equals("_filename")) {
                 return true;
             }
-        } else if (setType.equals("SetOfCTFModel")) {
+        } else if (setType.equals("SetOfCTF")) {
             if (label.equals("_micObj._filename") || label.equals("_psdFile") || label.equals("_xmipp_enhanced_psd") 
                     ||label.equals("_xmipp_ctfmodel_quadrant") ||label.equals("_xmipp_ctfmodel_halfplane")) {
                 return true;
