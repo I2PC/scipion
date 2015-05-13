@@ -34,9 +34,11 @@ import os
 from os.path import join
 from collections import OrderedDict
 import subprocess
-
+from pyworkflow.utils import getFreePort
 from pyworkflow.dataset import COL_RENDER_ID, COL_RENDER_TEXT, COL_RENDER_IMAGE, COL_RENDER_VOLUME
-
+import threading
+import shlex
+import SocketServer
 
 #------------------------ Showj constants ---------------------------
 PATH = 'path'
@@ -260,12 +262,43 @@ def runJavaIJapp(memory, appName, args, env={}):
     print 'java %s'%args
     return subprocess.Popen('java ' + args, shell=True, env=env)
 
-def launchSupervisedPickerGUI(memory, micsFn, outputDir, mode, dbpath, protid, port):
+def launchSupervisedPickerGUI(memory, micsFn, outputDir, mode, protocol):
+        port = initProtocolTCPServer(protocol)
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %s --output %s --mode %s  --scipion %s \"%s\" %s"%(micsFn, outputDir, mode, dbpath, protid, port)
+        args = "--input %s --output %s --mode %s  --scipion %s"%(micsFn, outputDir, mode, port)
+            
         return runJavaIJapp("%dg" % memory, app, args)
+    
+def initProtocolTCPServer(protocol):
+        address = ''
+        port = getFreePort()
+        server = SocketServer.TCPServer((address, port), ProtocolTCPRequestHandler)
+        server.protocol = protocol
+        server_thread = threading.Thread(target=server.serve_forever)
+        server_thread.start()
+        return port
 
-def launchTiltPairPickerGUI(memory, micsFn, outputDir, mode, dbpath, protid, port):
+class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
+
+    def handle(self):
+        protocol = self.server.protocol
+        msg = self.request.recv(1024)
+        tokens = shlex.split(msg)
+
+        if msg.startswith('run function'):
+            functionName = tokens[2]
+            try:
+                functionPointer = getattr(protocol, functionName)
+                functionPointer(tokens[3:])
+            except:
+                print 'protocol %s must implement %s'%(protocol.getName(), functionName)
+
+        else:
+            answer = 'no answer available'
+            self.request.sendall(answer + '\n')
+
+def launchTiltPairPickerGUI(memory, micsFn, outputDir, mode, protocol):
+        port = initProtocolTCPServer(protocol)
         app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
-        args = "--input %s --output %s --mode %s  --scipion %s \"%s\" %s"%(micsFn, outputDir, mode, dbpath, protid, port)
+        args = "--input %s --output %s --mode %s  --scipion %s"%(micsFn, outputDir, mode, port)
         return runJavaIJapp("%dg" % memory, app, args)

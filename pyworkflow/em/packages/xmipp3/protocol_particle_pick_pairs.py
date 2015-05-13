@@ -31,13 +31,11 @@ This sub-package contains the XmippParticlePicking protocol
 from pyworkflow.em import ProtParticlePicking, PointerParam, FloatParam, String, CoordinatesTiltPair, TiltPair
 from pyworkflow.utils.path import pw, getFiles, copyFile, join, exists
 from xmipp3 import XmippProtocol
-from pyworkflow.em.showj import runJavaIJapp
 from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
 from convert import writeSetOfMicrographsPairs
 from itertools import izip
 from pyworkflow.em.showj import launchTiltPairPickerGUI
 import xmipp
-from pyworkflow.protocol import getProtocolFromDb
 import os
 
 
@@ -89,8 +87,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         
     def launchParticlePickGUIStep(self):
         extraDir = self._getExtraPath()
-        self.initProtocolTCPServer()
-        process = launchTiltPairPickerGUI(self.memory.get(), self.micsFn, extraDir, 'manual', self.getDbPath(), self.strId(), self.port)
+        process = launchTiltPairPickerGUI(self.memory.get(), self.micsFn, extraDir, 'manual', self)
         process.wait()
         print 'launch ended'
 

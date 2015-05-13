@@ -31,13 +31,8 @@ from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import EMObject
 from pyworkflow.utils.properties import Message
-import threading
-import shlex
-import SocketServer
-
-from pyworkflow.em.data_tiltpairs import CoordinatesTiltPair, TiltPair
 from itertools import izip
-from pyworkflow.utils import getFreePort
+
 
 
 
@@ -172,36 +167,7 @@ class ProtParticlePicking(ProtParticles):
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
 
-    def initProtocolTCPServer(self):
-        self.address = ''
-        self.port = getFreePort()
-        print self.port
-        server = SocketServer.TCPServer((self.address, self.port), ProtocolTCPRequestHandler)
-        server.protocol = self
-        server_thread = threading.Thread(target=server.serve_forever)
-        server_thread.start()
 
-
-
-
-
-
-class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
-
-    def handle(self):
-        protocol = self.server.protocol
-        msg = self.request.recv(1024)
-        tokens = shlex.split(msg)
-        print msg
-
-        if msg.startswith('run function'):
-            functionName = tokens[2]
-            functionPointer = getattr(protocol, functionName)
-            functionPointer(tokens[3:])
-
-        else:
-            answer = 'no answer available'
-            self.request.sendall(answer + '\n')
 
 
 

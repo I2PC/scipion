@@ -194,7 +194,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                                 return;
                             }
                             HashMap<String, String> msgfields = new HashMap<String, String>();
-                            boolean createprot = getParticlePicker().getProtId() == null;
+                            boolean createprot = getParticlePicker().getPort() == null;
                             if(createprot)
                                 msgfields.put("Run name:", "ProtUserCoordinates");
                             
@@ -975,7 +975,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 public void run() {
 
                     try {
-                        String cmd = getParticlePicker().getScipionSaveCommand();
+                        String cmd = "run function registerCoords";
                         XmippWindowUtil.runCommand(cmd, getParticlePicker().getParams().port);
                         XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
                         getCanvas().setEnabled(true);

@@ -93,9 +93,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     def launchParticlePickGUIStep(self, micFn):
         # Launch the particle picking GUI
         extraDir = self._getExtraPath()
-
-        self.initProtocolTCPServer()
-        process = launchSupervisedPickerGUI(self.memory.get(), micFn, extraDir, 'manual', self.getDbPath(), self.strId(), self.port)
+        process = launchSupervisedPickerGUI(self.memory.get(), micFn, extraDir, 'manual', self)
         process.wait()
 
     def _importFromFolderStep(self):
@@ -179,8 +177,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         return "\n".join(summary)
 
     def registerCoords(self, args):
-
-        from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
 
         extradir = self._getExtraPath()
         count = self.getOutputsSize()
