@@ -32,7 +32,7 @@ from glob import glob
 from os.path import exists
 
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
-                                        IntParam, EnumParam, StringParam)
+                                        IntParam, EnumParam, StringParam, LabelParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPath
 
@@ -178,15 +178,15 @@ class ProtRelionBase(EMProtocol):
                       help='The probabilities are based on squared differences, '
                            'so that the absolute grey scale is important. \n'
                            'Probabilities are calculated based on a Gaussian noise model,'
-                           'which contains a squared difference term between the reference and the experimental image.' 
+                           'which contains a squared difference term between the reference and the experimental image. ' 
                            'This has a consequence that the reference needs to be on the same absolute intensity '
-                           'grey-scale as the experimental images. RELION and XMIPP reconstruct maps at their absolute'
-                           'intensity grey-scale. Other packages may perform internal normalisations of the reference' 
-                           'density, which will result in incorrect grey-scales. Therefore: if the map was reconstructed'
+                           'grey-scale as the experimental images. RELION and XMIPP reconstruct maps at their absolute '
+                           'intensity grey-scale. Other packages may perform internal normalisations of the reference ' 
+                           'density, which will result in incorrect grey-scales. Therefore: if the map was reconstructed '
                            'in RELION or in XMIPP, set this option to Yes, otherwise set it to No. If set to No, RELION '
                            'will use a (grey-scale invariant) cross-correlation criterion in the first iteration, and '
-                           'prior to the second iteration the map will be filtered again using the initial low-pass filter.'
-                           'This procedure is relatively quick and typically does not negatively affect the outcome of the'
+                           'prior to the second iteration the map will be filtered again using the initial low-pass filter. '
+                           'This procedure is relatively quick and typically does not negatively affect the outcome of the '
                            'subsequent MAP refinement. Therefore, if in doubt it is recommended to set this option to No.')        
         
         self.addSymmetry(group)
@@ -197,62 +197,59 @@ class ProtRelionBase(EMProtocol):
                       help='It is recommended to strongly low-pass filter your initial reference map. '
                            'If it has not yet been low-pass filtered, it may be done internally using this option. ' 
                            'If set to 0, no low-pass filter will be applied to the initial reference(s).')
-        if not self.IS_CLASSIFY:
-            group.addParam('resolJoinHalves', FloatParam, default=40,
-                          label='Resolution join halves (A)', condition="not doContinue",
-                          help='Resolution (in Angstrom) up to which the two random half-reconstructions'
-                               ' will not be independent to prevent diverging orientations.') 
-
         
         form.addSection(label='CTF')
+        form.addParam('contuinueMsg', LabelParam, default=True,
+                      label='CTF parameters are not available in continue mode', condition='doContinue',)
         form.addParam('doCTF', BooleanParam, default=True,
-                      label='Do CTF-amplitude correction?',
+                      label='Do CTF-amplitude correction?', condition='not doContinue',
                       help='If set to Yes, CTFs will be corrected inside the MAP refinement. '
                            'The resulting algorithm intrinsically implements the optimal linear, ' 
                            'or Wiener filter. Note that input particles should contains CTF parameters.')
         form.addParam('hasReferenceCTFCorrected', BooleanParam, default=False,
-                      condition='not is2D',
+                      condition='not is2D and not doContinue',
                       label='Has reference been CTF-corrected?',
                       help='Set this option to Yes if the reference map represents CTF-unaffected density, '
                            'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
                            'then in the first iteration, the Fourier transforms of the reference projections ' 
                            'are not multiplied by the CTFs.') 
         form.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
-                      label='Have data been phase-flipped?',
+                      label='Have data been phase-flipped?', condition='not doContinue',
                       help='Set this to Yes if the images have been ctf-phase corrected during the '
                            'pre-processing steps. Note that CTF-phase flipping is NOT a necessary '
                            'pre-processing step for MAP-refinement in RELION, as this can be done inside '
                            'the internal CTF-correction. However, if the phases have been flipped, '
                            'you should tell the program about it by setting this option to Yes.')       
-        form.addParam('doCtfManualGroups', BooleanParam, default=False,
-                      label='Do manual grouping ctfs?',
-                      help='Set this to Yes the CTFs will grouping manually.')
-        form.addParam('defocusRange', FloatParam, default=1000,
-                      label='defocus range for group creation (in Angstroms)', condition='doCtfManualGroups',
-                      help='Particles will be grouped by defocus.'
-                      'This parameter is the bin for an histogram.'
-                      'All particles asigned to a bin form a group')
-        form.addParam('numParticles', FloatParam, default=1,
-                      label='minimum size for defocus group', condition='doCtfManualGroups',
-                      help='If defocus group is smaller than this value'
-                      'It will be expanded untill numParticles per defocus group is reached')
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
-                      label='Ignore CTFs until first peak?',
+                      label='Ignore CTFs until first peak?', condition='not doContinue',
                       help='If set to Yes, then CTF-amplitude correction will only be performed from the first peak ' 
                            'of each CTF onward. This can be useful if the CTF model is inadequate at the lowest resolution. ' 
                            'Still, in general using higher amplitude contrast on the CTFs (e.g. 10-20%) often yields better results. '
                            'Therefore, this option is not generally recommended.')    
+        form.addParam('doCtfManualGroups', BooleanParam, default=False,
+                      label='Do manual grouping ctfs?', condition='not doContinue',
+                      help='Set this to Yes the CTFs will grouping manually.')
+        form.addParam('defocusRange', FloatParam, default=1000,
+                      label='defocus range for group creation (in Angstroms)', condition='doCtfManualGroups and not doContinue',
+                      help='Particles will be grouped by defocus.'
+                      'This parameter is the bin for an histogram.'
+                      'All particles asigned to a bin form a group')
+        form.addParam('numParticles', FloatParam, default=1,
+                      label='minimum size for defocus group', condition='doCtfManualGroups and not doContinue',
+                      help='If defocus group is smaller than this value, '
+                           'it will be expanded until number of particles '
+                           'per defocus group is reached')
         
         form.addSection(label='Optimisation')
         if self.IS_CLASSIFY:
             form.addParam('numberOfIterations', IntParam, default=25,
                           label='Number of iterations',
                           help='Number of iterations to be performed. Note that the current implementation does NOT '
-                               'comprise a convergence criterium. Therefore, the calculations will need to be stopped'
-                               'by the user if further iterations do not yield improvements in resolution or classes.'
-                               'If continue option is True, you going to do this number of new iterations (e.g. if'
-                               '*Continue from iteration* is set 3 and this param is set 25, the final iteration of the'
+                               'comprise a convergence criterium. Therefore, the calculations will need to be stopped '
+                               'by the user if further iterations do not yield improvements in resolution or classes. '
+                               'If continue option is True, you going to do this number of new iterations (e.g. if '
+                               '*Continue from iteration* is set 3 and this param is set 25, the final iteration of the '
                                'protocol will be the 28th.')
             form.addParam('regularisationParamT', IntParam, default=2,
                           label='Regularisation parameter T',
@@ -264,18 +261,16 @@ class ProtRelionBase(EMProtocol):
                                'have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements. '
                                'Too small values yield too-low resolution structures; too high values result in ' 
                                'over-estimated resolutions and overfitting.') 
- 
-        if self.IS_CLASSIFY:
-            form.addParam('maskZero', EnumParam, default=0,
-                          choices=['Yes, fill with zeros', 'No, fill with random noise'],
-                          label='Mask particles with zeros?',
-                          help='If set to <Yes>, then in the individual particles, the area outside a circle with the radius '
-                               'of the particle will be set to zeros prior to taking the Fourier transform. '
-                               'This will remove noise and therefore increase sensitivity in the alignment and classification. ' 
-                               'However, it will also introduce correlations between the Fourier components that are not modelled. ' 
-                               'When set to <No>, then the solvent area is filled with random noise, which prevents introducing '
-                               'correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling ' 
-                               'the solvent area with random noise, some classifications go better when using zeros.') 
+        form.addParam('maskZero', EnumParam, default=0,
+                      choices=['Yes, fill with zeros', 'No, fill with random noise'],
+                      label='Mask particles with zeros?', condition='not doContinue',
+                      help='If set to <Yes>, then in the individual particles, the area outside a circle with the radius '
+                           'of the particle will be set to zeros prior to taking the Fourier transform. '
+                           'This will remove noise and therefore increase sensitivity in the alignment and classification. ' 
+                           'However, it will also introduce correlations between the Fourier components that are not modelled. ' 
+                           'When set to <No>, then the solvent area is filled with random noise, which prevents introducing '
+                           'correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling ' 
+                           'the solvent area with random noise, some classifications go better when using zeros.') 
         if self.IS_3D:
             form.addParam('referenceMask', PointerParam, pointerClass='VolumeMask',
                           label='Reference mask (optional)', allowsNull=True,
@@ -297,7 +292,7 @@ class ProtRelionBase(EMProtocol):
         
         if self.IS_CLASSIFY:
             form.addParam('limitResolEStep', FloatParam, default=-1,
-              label='Limit resolution E-step to (A)', 
+              label='Limit resolution E-step to (A)', condition="not doContinue",
               help='If set to a positive number, then the expectation step '
                    '(i.e. the alignment) will be done only including the Fourier '
                    'components up to this resolution (in Angstroms). This is useful '
@@ -313,18 +308,26 @@ class ProtRelionBase(EMProtocol):
             form.addSection('Sampling')
         else:
             form.addSection('Auto-Sampling')
-        
+            form.addParam('noteAutoSampling', LabelParam,
+                          label='Note that initial sampling rates will be auto-incremented!')
+        form.addParam('doImageAlignment', BooleanParam, default=True,
+              label='Perform image alignment?', condition="isClassify",
+              help='If set to No, then rather than performing both alignment '
+                   'and classification, only classification will be performed. '
+                   'This allows the use of very focused masks.This requires '
+                   'that the optimal orientations of all particles are already '
+                   'calculated.')
         if self.IS_3D:
             form.addParam('angularSamplingDeg', EnumParam, default=2,
-                          choices=ANGULAR_SAMPLING_LIST,
-                          label='Angular sampling interval (deg)',
+                          choices=ANGULAR_SAMPLING_LIST, 
+                          label='Angular sampling interval (deg)', condition='not isClassify or doImageAlignment',
                           help='There are only a few discrete angular samplings possible because '
                            'we use the HealPix library to generate the sampling of the first '
                            'two Euler angles on the sphere. The samplings are approximate numbers ' 
                            'and vary slightly over the sphere.')
         else:
             form.addParam('inplaneAngularSamplingDeg', FloatParam, default=5,
-                          label='In-plane angular sampling (deg)',
+                          label='In-plane angular sampling (deg)', condition="doImageAlignment",
                           help='The sampling rate for the in-plane rotation angle (psi) in degrees.\n'
                                'Using fine values will slow down the program. Recommended value for\n'
                                'most 2D refinements: 5 degrees. \n\n'
@@ -332,14 +335,14 @@ class ProtRelionBase(EMProtocol):
                                'iteration(s) only, and the sampling rate will be increased \n'
                                'automatically after that.')
         form.addParam('offsetSearchRangePix', FloatParam, default=5,
-                      condition='isClassify or not doContinue',
+                      condition='not isClassify or doImageAlignment',
                       label='Offset search range (pix)',
                       help='Probabilities will be calculated only for translations in a circle '
                            'with this radius (in pixels). The center of this circle changes at '
                            'every iteration and is placed at the optimal translation for each '
                            'image in the previous iteration.')
         form.addParam('offsetSearchStepPix', FloatParam, default=1.0,
-                      condition='isClassify or not doContinue',
+                      condition='not isClassify or doImageAlignment',
                       label='Offset search step (pix)',
                       help='Translations will be sampled with this step-size (in pixels). '
                            'Translational sampling is also done using the adaptive approach. '
@@ -348,7 +351,7 @@ class ProtRelionBase(EMProtocol):
         if self.IS_3D: 
             if self.IS_CLASSIFY:
                 form.addParam('localAngularSearch', BooleanParam, default=False,
-                              condition='not is2D',
+                              condition='not is2D and doImageAlignment',
                               label='Perform local angular search?',
                               help='If set to Yes, then rather than performing exhaustive angular searches, '
                                    'local searches within the range given below will be performed. A prior '
@@ -357,13 +360,12 @@ class ProtRelionBase(EMProtocol):
                 form.addParam('localAngularSearchRange', FloatParam, default=5.0,
                               condition='localAngularSearch',
                               label='Local angular search range',
-                              help='Local angular searches will be performed within +/- \n'
-                                   'the given amount (in degrees) from the optimal orientation\n'
-                                   'in the previous iteration. A Gaussian prior (also see \n'
-                                   'previous option) will be applied, so that orientations \n'
-                                   'closer to the optimal orientation in the previous iteration \n'
+                              help='Local angular searches will be performed within +/- '
+                                   'the given amount (in degrees) from the optimal orientation '
+                                   'in the previous iteration. A Gaussian prior (also see '
+                                   'previous option) will be applied, so that orientations '
+                                   'closer to the optimal orientation in the previous iteration '
                                    'will get higher weights than those further away.')
-                
                 
             else:
                 form.addParam('localSearchAutoSamplingDeg', EnumParam, default=4,
@@ -376,7 +378,8 @@ class ProtRelionBase(EMProtocol):
                 form.addSection("Movies")
                 form.addParam('realignMovieFrames', BooleanParam, default=False,
                               label='Realign movie frames?',
-                              help='If set to Yes, then running averages of the individual frames of recorded movies will be aligned as independent particles.')
+                              help='If set to Yes, then running averages of the individual frames '
+                                   'of recorded movies will be aligned as independent particles.')
                 
                 group = form.addGroup('Movie frames alignment',
                                       condition='realignMovieFrames and doContinue')
@@ -397,33 +400,22 @@ class ProtRelionBase(EMProtocol):
                               condition='movieIncludeRotSearch',
                               label='Stddev on the rotations (deg)',
                               help='A Gaussian prior with the specified standard deviation will be centered at the rotations determined for the corresponding particle where all movie-frames were averaged. For ribosomes, we used a value of 1 degree')
-
+        
         form.addSection('Additional')
         form.addParam('memoryPreThreads', IntParam, default=2,
                       label='Memory per Threads',
                       help='Computer memory in Gigabytes that is avaliable for each thread. This will only '
                            'affect some of the warnings about required computer memory.')
-        form.addParam('dontCombine', BooleanParam, default=False,
-                      label='Dont combine weights via disc?',
-                      help='Option *--dont_combine_weights_via_disc* in Relion.'
-                           'Send the large arrays of summed weights through the MPI network,'
-                           ' instead of writing large files to disc.')
-        form.addParam('verboseLevel', EnumParam, default=1,
-                      choices=['0 low','1 high'],
-                      label='Verbose Level',
-                      help='the higher the more verbose output')
-        form.addParam('paddingFactor', FloatParam, default=2,
-                      condition='isClassify',
-                      label='Padding factor',
-                      help='Option *--pad * in Relion'
-                           'Oversampling factor for the Fourier transforms of the references.')
         
-        
-        extraDefault = '' if self.IS_CLASSIFY else ''
-        form.addParam('extraParams', StringParam, default=extraDefault,
+        joinHalves = "--low_resol_join_halves 40 (only not continue mode)" if not self.IS_CLASSIFY else ""
+        form.addParam('extraParams', StringParam, default='',
                       label='Additional parameters',
-                      help='')
-
+                      help="In this box command-line arguments may be provided that "
+                           "are not generated by the GUI. This may be useful for testing "
+                           "developmental options and/or expert use of the program, e.g: \n"
+                           "--dont_combine_weights_via_disc\n"
+                           "--verb 1\n"
+                           "--pad 2\n" + joinHalves)
         
         form.addParallelSection(threads=1, mpi=3)
     
@@ -467,12 +459,11 @@ class ProtRelionBase(EMProtocol):
                     })
         self._setMaskArgs(args)
         self._setCTFArgs(args)
-        args['--offset_range'] = self.offsetSearchRangePix.get()
-        args['--offset_step']  = self.offsetSearchStepPix.get() * 2
         
+        if self.maskZero == MASK_FILL_ZERO:
+            args['--zero_mask'] = ''
+            
         if self.IS_CLASSIFY:
-            if self.maskZero == MASK_FILL_ZERO:
-                args['--zero_mask'] = ''                
             args['--K'] = self.numberOfClasses.get()
             if self.limitResolEStep > 0:
                 args['--strict_highres_exp'] = self.limitResolEStep.get()
@@ -507,9 +498,6 @@ class ProtRelionBase(EMProtocol):
                      '--oversampling': '1'
                     })
 
-        args['--verb'] = self.verboseLevel.get()
-        if self.dontCombine:
-            args['--dont_combine_weights_via_disc'] = ''
         if self.IS_CLASSIFY:
             args['--tau2_fudge'] = self.regularisationParamT.get()
             args['--iter'] = self._getnumberOfIters()

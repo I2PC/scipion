@@ -40,7 +40,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     The alignment parameters will be converted to a Relion star file
     and used as direction projections to reconstruct.
     """
-    _label = 'polish particles'
+    _label = 'particle polishing'
     
     def _initialize(self):
         """ This function is mean to be called after the 

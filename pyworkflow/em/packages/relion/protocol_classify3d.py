@@ -44,7 +44,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     parameters of a statistical model are learned from the data,which
     leads to objective and high-quality results.
     """
-    _label = '3D classify'
+    _label = '3D classification'
     CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS, 
                      md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS]
     
@@ -60,9 +60,14 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _setSamplingArgs(self, args):
         """ Set sampling related params. """
-        args['--healpix_order'] = self.angularSamplingDeg.get()
-        if self.localAngularSearch:
-            args['--sigma_ang'] = self.localAngularSearchRange.get() / 3.
+        if self.doImageAlignment:
+            args['--healpix_order'] = self.angularSamplingDeg.get()
+            args['--offset_range'] = self.offsetSearchRangePix.get()
+            args['--offset_step']  = self.offsetSearchStepPix.get() * 2
+            if self.localAngularSearch:
+                args['--sigma_ang'] = self.localAngularSearchRange.get() / 3.
+        else:
+            args['--skip_align'] = ''
     
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
