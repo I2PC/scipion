@@ -812,6 +812,5 @@ class RelionAutopickViewer(Viewer):
         micPath, coordPath = obj.writeXmippOutputCoords()
         import pyworkflow.em.packages.xmipp3 as xmipp3
         xmipp3.viewer.launchSupervisedPickerGUI(2, micPath, coordPath, 'manual', 
-                                                self.getProject().getDbPath(), 
-                                                obj.strId(), self.getProject().port)
+                                                self.protocol)
     
