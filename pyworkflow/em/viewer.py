@@ -184,7 +184,7 @@ class CoordinatesObjectView(DataView):
         self.outputdir = outputdir
         
     def getShowJParams(self):
-        params = '--input %s --output %s --mode readonly --scipion'%(self._path, self.outputdir)
+        params = '--input %s --output %s --mode readonly'%(self._path, self.outputdir)
         return params
     
     def show(self):
