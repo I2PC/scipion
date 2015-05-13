@@ -38,8 +38,6 @@ public class ParticlePickerParams {
     
     public String inputfile;
     public String outputdir;
-    public String protid;
-    public String dbpath;
     public Integer port;
     public Mode mode;
     public int threads;
@@ -64,9 +62,7 @@ public class ParticlePickerParams {
         options.addOption(THREADSOPT, true, "");
         options.addOption(FASTOPT, true, "");
         options.addOption(INCOREOPT, true, "");
-
-        Option cmdoption = OptionBuilder.hasOptionalArgs(4).create(SCIPIONOPT);
-        options.addOption(cmdoption);
+        options.addOption(SCIPIONOPT, true, "");
     }
 
     public void processArgs(String args[]) throws ParseException {
@@ -92,10 +88,7 @@ public class ParticlePickerParams {
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
             if(cmdargs != null)
             {
-                System.out.println(Arrays.toString(cmdargs));
-                dbpath = cmdargs[0];
-                protid = cmdargs[1];
-                port = Integer.parseInt(cmdargs[2]);
+                port = Integer.parseInt(cmdargs[0]);
             }
         }
 
