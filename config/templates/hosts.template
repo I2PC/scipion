@@ -1,3 +1,5 @@
+# -*- conf -*-
+
 [localhost]
 PARALLEL_COMMAND = mpirun -np %_(JOB_NODES)d -bynode %_(COMMAND)s
 NAME = PBS/TORQUE
