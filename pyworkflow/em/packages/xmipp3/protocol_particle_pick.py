@@ -180,8 +180,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 
     def registerCoords(self, args):
 
-        from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
-
         extradir = self._getExtraPath()
         count = self.getOutputsSize()
 
