@@ -533,11 +533,12 @@ class ProtRelionBase(EMProtocol):
             args['--ctf_intact_first_peak'] = ''
             
     def _setMaskArgs(self, args):
-        if self.referenceMask.hasValue():
-            args['--solvent_mask'] = self.referenceMask.get().getFileName() #FIXE: CHANGE BY LOCATION
-            
-        if self.solventMask.hasValue():
-            args['--solvent_mask2'] = self.solventMask.get().getFileName() #FIXME: CHANGE BY LOCATION
+        if self.IS_3D:
+            if self.referenceMask.hasValue():
+                args['--solvent_mask'] = self.referenceMask.get().getFileName() #FIXE: CHANGE BY LOCATION, convert if necessary
+                
+            if self.solventMask.hasValue():
+                args['--solvent_mask2'] = self.solventMask.get().getFileName() #FIXME: CHANGE BY LOCATION, convert if necessary
     
     #--------------------------- STEPS functions --------------------------------------------       
     def convertInputStep(self, particlesId):
