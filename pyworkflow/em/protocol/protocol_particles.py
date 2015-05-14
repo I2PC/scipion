@@ -174,7 +174,6 @@ class ProtParticlePicking(ProtParticles):
         coordsDir = self.getCoordsDir()
         count = self.getOutputsSize()
         suffix = str(count + 1) if count > 0 else ''
-        inputset = self.getInputMicrographs()
         outputName = 'outputCoordinates' + suffix
         from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
         inputset = self.getInputMicrographs()

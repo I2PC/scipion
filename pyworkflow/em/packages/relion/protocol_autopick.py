@@ -67,14 +67,23 @@ class ProtRelionAutopickBase(ProtRelionBase):
             self.ctfDict[ctf.getMicrograph().getMicName()] = ctf.clone()
         
         micStar = self._getPath('input_micrographs.star')
-        writeSetOfMicrographs(self.inputMicrographs.get(), micStar, 
+        writeSetOfMicrographs(self.getInputMicrograhs(), micStar, 
                               preprocessImageRow=self._preprocessMicrographRow)
         
-        writeReferences(self.inputReferences.get(), self._getPath('input_references'))        
+        writeReferences(self.getInputReferences(), self._getPath('input_references'))        
 
     #--------------------------- UTILS functions --------------------------------------------
+    def getInputReferences(self):
+        return self.inputReferences.get()
+    
+    def getInputMicrographs(self):
+        return self.inputMicrographs.get()
+        
+    def getCoordsDir(self):
+        return self._getTmpPath('xmipp_coordinates')
+    
     def _writeXmippCoords(self, coordSet):
-        micSet = self.inputMicrographs.get()
+        micSet = self.getInputMicrograhs()
         coordPath = self._getTmpPath('xmipp_coordinates')
         pwutils.cleanPath(coordPath)
         pwutils.makePath(coordPath)
@@ -91,8 +100,9 @@ class ProtRelionAutopickBase(ProtRelionBase):
         """ Write the SetOfCoordinates as expected by Xmipp
         to be display with its GUI. 
         """
-        micSet = self.inputMicrographs.get()
+        micSet = self.getInputMicrograhs()
         coordSet = self._createSetOfCoordinates(micSet)
+        coordSet.setBoxSize(self.getInputReferences().getDim()[0])
         starFiles = [self._getExtraPath(pwutils.removeBaseExt(mic.getFileName()) + '_autopick.star')
                      for mic in micSet]
         readSetOfCoordinates(coordSet, starFiles)
@@ -179,15 +189,15 @@ class ProtRelionAutopickFom(ProtParticlePicking, ProtRelionAutopickBase):
 
     def _insertAllSteps(self): 
         self._insertFunctionStep('convertInputStep', 
-                                 self.inputMicrographs.get().strId(),
-                                 self.inputReferences.get().strId())
+                                 self.getInputMicrograhs().strId(),
+                                 self.getInputReferences().strId())
         self._insertAutopickStep()
         self._insertFunctionStep('createOutputStep', 1)
         
     def getAutopickParams(self):
         params = ' --o autopick'
         params += ' --particle_diameter %d' % self.particleDiameter
-        params += ' --angpix %0.3f' % self.inputMicrographs.get().getSamplingRate()
+        params += ' --angpix %0.3f' % self.getInputMicrograhs().getSamplingRate()
         params += ' --ref input_references.star'
         
         if self.refsHaveInvertedContrast:
@@ -247,7 +257,7 @@ class ProtRelionAutopickFom(ProtParticlePicking, ProtRelionAutopickBase):
     #--------------------------- UTILS functions --------------------------------------------
     def getInputDimA(self):
         """ Return the dimension of input references in A. """
-        inputRefs = self.inputReferences.get()
+        inputRefs = self.getInputReferences()
         if inputRefs is None:
             return None
         else:
@@ -298,7 +308,7 @@ class ProtRelionAutopick(ProtParticlePicking, ProtRelionAutopickBase):
 
     def _insertAllSteps(self): 
         self._insertFunctionStep('convertInputStep', 
-                                 self.inputMicrographs.get().strId(),
+                                 self.getInputMicrograhs().strId(),
                                  self.getInputReferences().strId())
         self._insertAutopickStep()
         self._insertFunctionStep('createOutputStep', 1)
@@ -327,8 +337,9 @@ class ProtRelionAutopick(ProtParticlePicking, ProtRelionAutopickBase):
             self.runJob(self._getProgram('relion_autopick'), cmd, cwd=self.getWorkingDir())
     
     def createOutputStep(self, t):
-        micSet = self.inputMicrographs.get()
+        micSet = self.getInputMicrograhs()
         coordSet = self._createSetOfCoordinates(micSet)
+        coordSet.setBoxSize(self.getInputReferences().getDim()[0])
         starFiles = [self._getExtraPath(pwutils.removeBaseExt(mic.getFileName()) + '_autopick.star')
                      for mic in micSet]
         readSetOfCoordinates(coordSet, starFiles)
@@ -355,8 +366,4 @@ class ProtRelionAutopick(ProtParticlePicking, ProtRelionAutopickBase):
     
     def getInputReferences(self):
         return self.getInputAutopick().inputReferences.get()
-    
-    def getInputMicrographs(self):
-        return self.inputMicrographs.get()
-    
 
