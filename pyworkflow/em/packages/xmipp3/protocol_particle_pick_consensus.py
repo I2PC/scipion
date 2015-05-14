@@ -109,7 +109,7 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         Ncurrent = N0
         for n in range(1, len(self.inputCoordinates)):
             for coord in coords[n]:
-                dist = np.sum((coord - allCoords[0:(Ncurrent-1)])**2, axis=1)
+                dist = np.sum((coord - allCoords[0:Ncurrent])**2, axis=1)
                 imin = np.argmin(dist)
                 if sqrt(dist[imin]) < self.consensusRadius:
                     newCoord = (votes[imin]*allCoords[imin,]+coord)/(votes[imin]+1)
