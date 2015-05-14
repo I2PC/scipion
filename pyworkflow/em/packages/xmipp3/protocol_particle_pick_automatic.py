@@ -196,3 +196,6 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     def _citations(self):
         return ['Abrishami2013']
     
+    def getCoordsDir(self):
+        return self._getExtraPath()
+    

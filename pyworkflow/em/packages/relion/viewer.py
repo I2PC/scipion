@@ -27,7 +27,7 @@
 import os
 
 
-from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
@@ -35,6 +35,7 @@ from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_postprocess import ProtRelionPostprocess
+from protocol_autopick import ProtRelionAutopick
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
                                         EnumParam, FloatParam, BooleanParam,
@@ -154,7 +155,7 @@ Examples:
             if self.protocol.IS_CLASSIFY:
                 group.addParam('showClasses3D', BooleanParam, default=CLASSES_ALL,
                                choices=['all', 'selection'], 
-                               display=EnumParam.DISPLAY_LIST,
+                               display=EnumParam.DISPLAY_HLIST,
                                label='3D Class to visualize',
                                help='')
                 group.addParam('class3DSelection', NumericRangeParam, default='1',
@@ -162,17 +163,17 @@ Examples:
                               label='Classes list',
                               help='')
             else:
-                group.addParam('showHalves', EnumParam, choices=['half1', 'half2', 'both'], default=0,
-                              label='Half to visualize',
+                group.addParam('showHalves', EnumParam, choices=['half1', 'half2', 'both', 'final'], default=0,
+                              label='Volume to visualize',
                               help='Select which half do you want to visualize.')
             
             group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-                          default=VOLUME_SLICES, display=EnumParam.DISPLAY_COMBO, 
+                          default=VOLUME_SLICES, display=EnumParam.DISPLAY_HLIST, 
                           label='Display volume with',
                           help='*slices*: display volumes as 2D slices along z axis.\n'
                                '*chimera*: display volumes as surface with Chimera.')
             group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
-                          default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_COMBO, 
+                          default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_HLIST, 
                           label='Display angular distribution',
                           help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                                '*chimera*: display angular distribution using Chimera with red spheres.') 
@@ -182,12 +183,12 @@ Examples:
                           help='')
             group = form.addGroup('Resolution')
             group.addParam('resolutionPlotsSSNR', LabelParam, default=True,
-                          label='Display SSNR plotss',
+                          label='Display SSNR plots',
                           help='Display signal to noise ratio plots (SSNR) ')
             group.addParam('resolutionPlotsFSC', LabelParam, default=True,
                           label='Display resolution plots (FSC)',
                           help='')
-            group.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
+            group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
                           expertLevel=LEVEL_ADVANCED,
                           label='Threshold in resolution plots',
                           help='')
@@ -330,44 +331,29 @@ Examples:
 #===============================================================================
 # ShowVolumes
 #===============================================================================
+    def _showVolumes(self, paramName=None):
+        if self.displayVol == VOLUME_CHIMERA:
+            return self._showVolumesChimera()
+        elif self.displayVol == VOLUME_SLICES:
+            return self._createVolumesSqlite()
+    
     def _createVolumesSqlite(self):
         """ Write an sqlite with all volumes selected for visualization. """
-
-        prefixes = self._getPrefixes()
-
         path = self.protocol._getExtraPath('relion_viewer_volumes.sqlite')
         samplingRate = self.protocol.inputParticles.get().getSamplingRate()
 
         files = []
-        for it in self._iterations:
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    if exists(volFn.replace(':mrc', '')):
-                        files.append(volFn)
+        volumes = self._getVolumeNames()
+        for volFn in volumes:
+            if exists(volFn.replace(':mrc', '')):
+                files.append(volFn)
         self.createVolumesSqlite(files, path, samplingRate)
         return [em.ObjectView(self._project, self.protocol.strId(), path)]
-
-
-    def getVolumeNames(self):
-
-        vols = []
-        prefixes = self._getPrefixes()
-        for it in self._iterations:
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    vols.append(volFn)
-        return vols
-
+    
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
-        prefixes = self._getPrefixes()
-        volumes = []
+        volumes = self._getVolumeNames()
         
-        for volFn in self.getVolumeNames():
-            volumes.append(volFn)
-                    
         if len(volumes) > 1:
             cmdFile = self.protocol._getExtraPath('chimera_volumes.cmd')
             f = open(cmdFile, 'w+')
@@ -386,13 +372,6 @@ Examples:
             view = em.ChimeraClientView(volumes[0])
             
         return [view]
-            
-    def _showVolumes(self, paramName=None):
-        if self.displayVol == VOLUME_CHIMERA:
-            return self._showVolumesChimera()
-        
-        elif self.displayVol == VOLUME_SLICES:
-            return self._createVolumesSqlite()
     
 #===============================================================================
 # showAngularDistribution
@@ -422,14 +401,15 @@ Examples:
         if len(self._refsList) == 1:
             # If just one reference we can show the angular distribution
             ref3d = self._refsList[0]
-            for prefix in prefixes:
-                volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                if exists(volFn.replace(":mrc","")):
+            volFn = self._getVolumeNames()[0]
+            if exists(volFn.replace(":mrc","")):
+                for prefix in prefixes:
                     sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
-                    self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, prefix, ref3d))
+                    if not exists(sqliteFn):
+                        self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(self._getMdOut(it, prefix, ref3d)))
                     return em.ChimeraClientView(volFn, angularDistFile=sqliteFn, spheresDistance=radius)
-                else:
-                    raise Exception("This class is Empty. Please try with other class")
+            else:
+                raise Exception("This class is Empty. Please try with other class")
         else:
             return self.infoMessage("Please select only one class to display angular distribution",
                                     "Input selection") 
@@ -441,35 +421,34 @@ Examples:
         nrefs = len(self._refsList)
         n = nrefs * len(prefixes)
         gridsize = self._getGridSize(n)
-        
-        data_angularDist = self.protocol._getIterAngularDist(it)
-        if exists(data_angularDist):
-            plotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
-                                     mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                    title = '%s class %d' % (prefix, ref3d)
-                    sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
-                    self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, prefix, ref3d))
-                    plotter.plotAngularDistributionFromMd(sqliteFn, title)
-            return plotter
+        if prefixes[0] == "final":
+            title = "Final"
         else:
-            return
+            title = 'Iteration %d' % it
+        
+        plotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
+                                 mainTitle=title, windowTitle="Angular Distribution")
+        for ref3d in self._refsList:
+            for prefix in prefixes:
+                randomSet = self._getRandomSet(prefix)
+                dataStar = self._getDataStar(prefix, it)
+                if exists(dataStar):
+                    if randomSet > 0:
+                        title = '%s class %d' % (prefix, ref3d)
+                    else:
+                        title = 'class %d' % ref3d
+                    
+                    sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
+                    if not exists(sqliteFn):
+                        self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(self._getMdOut(it, prefix, ref3d)))
+                    plotter.plotAngularDistributionFromMd(sqliteFn, title)
+                    return plotter
+                else:
+                    return
     
 #===============================================================================
 # plotSSNR              
 #===============================================================================
-    def _plotSSNR(self, a, fn):
-        mdOut = md.MetaData(fn)
-        mdSSNR = md.MetaData()
-        # only cross by 1 is important
-        mdSSNR.importObjects(mdOut, md.MDValueGT(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, 0.9))
-        mdSSNR.operate("rlnSsnrMap=log(rlnSsnrMap)")
-        resolution_inv = [mdSSNR.getValue(md.RLN_RESOLUTION, id) for id in mdSSNR]
-        frc = [mdSSNR.getValue(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, id) for id in mdSSNR]
-        a.plot(resolution_inv, frc)
-        a.xaxis.set_major_formatter(self._plotFormatter)               
- 
     def _showSSNR(self, paramName=None):
         prefixes = self._getPrefixes()        
         nrefs = len(self._refsList)
@@ -485,7 +464,7 @@ Examples:
                 blockName = 'model_class_%d@' % ref3d
                 legendName = []
                 for it in self._iterations:
-                    fn = self.protocol._getFileName(prefix + 'model', iter=it)
+                    fn = self._getModelStar(prefix, it)
                     if exists(fn):
                         self._plotSSNR(a, blockName+fn)
                     legendName.append('iter %d' % it)
@@ -493,21 +472,21 @@ Examples:
                 a.grid(True)
         
         return [xplotter]
-        
+    
+    def _plotSSNR(self, a, fn):
+        mdOut = md.MetaData(fn)
+        mdSSNR = md.MetaData()
+        # only cross by 1 is important
+        mdSSNR.importObjects(mdOut, md.MDValueGT(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, 0.9))
+        mdSSNR.operate("rlnSsnrMap=log(rlnSsnrMap)")
+        resolution_inv = [mdSSNR.getValue(md.RLN_RESOLUTION, id) for id in mdSSNR]
+        frc = [mdSSNR.getValue(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, id) for id in mdSSNR]
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)               
+ 
 #===============================================================================
 # plotFSC            
 #===============================================================================
-    def _plotFSC(self, a, model_star):
-        mdStar = md.MetaData(model_star)
-        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
-        frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
-        self.maxFrc = max(frc)
-        self.minInv = min(resolution_inv)
-        self.maxInv = max(resolution_inv)
-        a.plot(resolution_inv, frc)
-        a.xaxis.set_major_formatter(self._plotFormatter)
-        a.set_ylim([-0.1, 1.1])
-            
     def _showFSC(self, paramName=None):
         threshold = self.resolutionThresholdFSC.get()
         prefixes = self._getPrefixes()        
@@ -526,7 +505,7 @@ Examples:
                 legends = []
                 blockName = 'model_class_%d@' % ref3d
                 for it in self._iterations:
-                    model_star = self.protocol._getFileName(prefix + 'model', iter=it)
+                    model_star = self._getModelStar(prefix, it)
                     if exists(model_star):
                         self._plotFSC(a, blockName + model_star)
                         legends.append('iter %d' % it)
@@ -536,6 +515,17 @@ Examples:
                 a.grid(True)
         
         return [xplotter]
+    
+    def _plotFSC(self, a, model_star):
+        mdStar = md.MetaData(model_star)
+        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
+        frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
+        self.maxFrc = max(frc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
     
 #===============================================================================
 # Utils Functions
@@ -583,7 +573,8 @@ Examples:
         self.firstIter = self.protocol._firstIter()
         self.lastIter = self.protocol._lastIter()
         
-        if self.viewIter.get() == ITER_LAST:
+        halves = getattr(self, 'showHalves', None)
+        if self.viewIter.get() == ITER_LAST or halves == 3:
             self._iterations = [self.lastIter]
         else:
             self._iterations = self._getListFromRangeString(self.iterSelection.get())
@@ -620,16 +611,68 @@ Examples:
                 prefixes = ['half1_']
             elif halves == 1:
                 prefixes = ['half2_']
+            elif halves == 3:
+                prefixes = ['final']
         return prefixes
     
-    def _iterAngles(self, it, prefix, ref3d):
-        data_angularDist = self.protocol._getIterAngularDist(it)
-        angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
-        angMd = md.MetaData(angDistFile)
-        for objId in  angMd:
-            rot = angMd.getValue(md.RLN_ORIENT_ROT, objId)
-            tilt = angMd.getValue(md.RLN_ORIENT_TILT, objId)
+    def _iterAngles(self, mdOut):
+        
+        for objId in mdOut:
+            rot = mdOut.getValue(md.RLN_ORIENT_ROT, objId)
+            tilt = mdOut.getValue(md.RLN_ORIENT_TILT, objId)
             yield rot, tilt
+    
+    def _getVolumeNames(self):
+        vols = []
+        prefixes = self._getPrefixes()
+        if prefixes[0] == "final":
+            for ref3d in self._refsList:
+                volFn = self.protocol._getExtraPath("relion_class%03d.mrc:mrc" % ref3d)
+                vols.append(volFn)
+        else:
+            for it in self._iterations:
+                for ref3d in self._refsList:
+                    for prefix in prefixes:
+                        volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                        vols.append(volFn)
+        return vols
+    
+    def _getMdOut(self, it, prefix, ref3d):
+        randomSet = self._getRandomSet(prefix)
+        dataStar = self._getDataStar(prefix, it)
+        
+        if randomSet > 0 :
+            mdAll = md.MetaData(dataStar)
+            mdTmp = md.MetaData()
+            mdTmp.importObjects(mdAll, md.MDValueEQ(md.RLN_PARTICLE_RANDOM_SUBSET, randomSet))
+        else:
+            mdTmp = md.MetaData(dataStar)
+        
+        mdOut = md.MetaData()
+        mdOut.importObjects(mdTmp, md.MDValueEQ(md.RLN_PARTICLE_CLASS, ref3d))
+        return mdOut
+    
+    def _getDataStar(self, prefix, it):
+        randomSet = self._getRandomSet(prefix)
+        if randomSet > 0 :
+            return self.protocol._getFileName('data', iter=it)
+        else:
+            return self.protocol._getFileName('dataFinal')
+    
+    def _getModelStar(self, prefix, it):
+        randomSet = self._getRandomSet(prefix)
+        if randomSet > 0 :
+            return self.protocol._getFileName(prefix + 'model', iter=it)
+        else:
+            return self.protocol._getFileName('modelFinal')
+    
+    def _getRandomSet(self, prefix):
+        if prefix == "half1_":
+            return 1
+        elif prefix == "half2_":
+            return 2
+        else:
+            return 0
 
 
 class PostprocessViewer(ProtocolViewer):
@@ -655,25 +698,25 @@ class PostprocessViewer(ProtocolViewer):
         group = form.addGroup('3D analysis')
         
         group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-                      display=EnumParam.DISPLAY_LIST, default=VOLUME_SLICES,
+                      display=EnumParam.DISPLAY_HLIST, default=VOLUME_SLICES,
                       label='Display volume with',
                       help='*slices*: display volumes as 2D slices along z axis.\n'
                            '*chimera*: display volumes as surface with Chimera.')
         group.addParam('displayMaskedVol', EnumParam, choices=['slices', 'chimera'], 
-                      display=EnumParam.DISPLAY_LIST, default=VOLUME_SLICES,
+                      display=EnumParam.DISPLAY_HLIST, default=VOLUME_SLICES,
                       label='Display masked volume with',
                       help='*slices*: display masked volume as 2D slices along z axis.\n'
                            '*chimera*: display masked volume as surface with Chimera.')
-        group.addParam('resolutionPlotsFSC', BooleanParam, default=True,
+        group.addParam('resolutionPlotsFSC', LabelParam, default=True,
                       label='Display resolution plots (FSC) ?',
                       help='')
-        group.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
+        group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
                       expertLevel=LEVEL_ADVANCED,
                       label='Threshold in resolution plots',
                       help='')
     
     def _getVisualizeDict(self):
-#         self._load()
+        self._load()
         return {'displayVol': self._showVolume,
                 'displayMaskedVol': self._showMaskedVolume,
                 'resolutionPlotsFSC': self._showFSC
@@ -712,8 +755,8 @@ class PostprocessViewer(ProtocolViewer):
 #===============================================================================
 # plotFSC            
 #===============================================================================
-    def _plotFSC(self, a, model_star):
-        mdStar = md.MetaData(model_star)
+    def _plotFSC(self, a, model):
+        mdStar = md.MetaData(model)
         resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
         fsc = [mdStar.getValue(md.RLN_POSTPROCESS_FSC_TRUE, id) for id in mdStar]
         self.maxfsc = max(fsc)
@@ -725,10 +768,8 @@ class PostprocessViewer(ProtocolViewer):
             
     def _showFSC(self, paramName=None):
         threshold = self.resolutionThresholdFSC.get()
-        prefixes = self._getPrefixes()        
-        nrefs = len(self._refsList)
-        n = nrefs * len(prefixes)
-        gridsize = self._getGridSize(n)
+        n = 1
+        gridsize = [1, 1]
         
         md.activateMathExtensions()
         
@@ -737,10 +778,39 @@ class PostprocessViewer(ProtocolViewer):
         
         model_star = self.protocol._getExtraPath('postprocess.star')
         if exists(model_star):
-            self._plotFSC(a, 'fsc@' + model_star)
+            model = 'fsc@' + model_star
+            self._plotFSC(a, model)
         if threshold < self.maxfsc:
             a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
         a.grid(True)
         
         return [xplotter]
+    
+#===============================================================================
+# Utils Functions
+#===============================================================================
+    def _load(self):
+        """ Load selected iterations and classes 3D for visualization mode. """
+        from matplotlib.ticker import FuncFormatter
+        self._plotFormatter = FuncFormatter(self._formatFreq) 
+        
+    def _formatFreq(self, value, pos):
+        """ Format function for Matplotlib formatter. """
+        inv = 999.
+        if value:
+            inv = 1/value
+        return "1/%0.2f" % inv
+    
+    
+
+class RelionAutopickViewer(Viewer):
+    """ Class to visualize Relion postprocess protocol """
+    _targets = [ProtRelionAutopick]
+    _environments = [DESKTOP_TKINTER]
+    
+    def visualize(self, obj, **args):
+        micPath, coordPath = obj.writeXmippOutputCoords()
+        import pyworkflow.em.packages.xmipp3 as xmipp3
+        xmipp3.viewer.launchSupervisedPickerGUI(2, micPath, coordPath, 'manual', 
+                                                self.protocol)
     

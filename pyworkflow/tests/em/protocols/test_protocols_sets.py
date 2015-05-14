@@ -119,7 +119,7 @@ class TestSets(BaseTest):
     def outputs(self, p):
         """Iterator over all the elements in the outputs of protocol p."""
 
-        for key, output in p.iterOutputAttributes(EMObject):
+        for key, output in p.iterOutputEM():
             yield output
 
     #

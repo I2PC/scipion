@@ -60,6 +60,14 @@ class TestXmippBase(BaseTest):
         return cls.protImport
 
     @classmethod
+    def runImportMask(cls, pattern, samplingRate):
+        """ Run an Import particles protocol. """
+        cls.protImportMask = cls.newProtocol(ProtImportMask,
+                                         maskPath=pattern, samplingRate=samplingRate)
+        cls.launchProtocol(cls.protImportMask)
+        return cls.protImportMask
+
+    @classmethod
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportParticles,
@@ -238,12 +246,14 @@ class TestXmippPreprocessVolumes(TestXmippBase):
         cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
         cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
         #test symmetryze with mask
-#        dataProject='SymVirus'
-#        dataset = DataSet.getDataSet(dataProject)
-#        virusVol  = dataset.getFile('virusVol.vol')
-#        virusMask = dataset.getFile('virusMask1.vol')
-#        cls.protImportVirus = cls.runImportVolumes(virusVol, 1)
-#        cls.protImportVirusMask = cls.runImportVolumes(virusMask, 1)
+        dataProject='SymVirus'
+        dataset = DataSet.getDataSet(dataProject)
+        virusVol  = dataset.getFile('whole_vol_half')
+        virusMaskCapsid = dataset.getFile('large_vol_half_th')
+        virusMaskPenton = dataset.getFile('small_vol_half_th')
+        cls.protImportVirus = cls.runImportVolumes(virusVol, 1)
+        cls.protImportvirusMaskCapsid = cls.runImportMask(virusMaskCapsid, 1)
+        cls.protImportvirusMaskPenton = cls.runImportMask(virusMaskPenton, 1)
 
 
     def testPreprocessVolumes(self):
@@ -263,16 +273,29 @@ class TestXmippPreprocessVolumes(TestXmippBase):
         self.proj.launchProtocol(protPreprocessVol2, wait=True)
         self.assertIsNotNone(protPreprocessVol2.outputVol, "There was a problem with preprocess a SetOfVolumes")
 
-#        print "Run preprocess a volume using mask in the symmetrization"
-#        protPreprocessVol3 = XmippProtPreprocessVolumes(doChangeHand=False, doRandomize=False,
-#                                                        doSymmetrize=True, symmetryGroup='i3',
-#                                                        doSegment=False, doNormalize=False,
-#                                                        doInvert=False, doThreshold=False,
-#                                                        )
-#        protPreprocessVol3.inputVolumes.set(self.protImportVirus.outputVolume)
-#        protPreprocessVol3.volumeMask.set(self.protImportVirusMask.outputVolume)
-#        self.proj.launchProtocol(protPreprocessVol3, wait=True)
-#        self.assertIsNotNone(protPreprocessVol3.outputVol, "There was a problem with a volume")
+        print "Run preprocess a volume using mask_1 in the symmetrization"
+        protPreprocessVol3 = XmippProtPreprocessVolumes(doChangeHand=False, doRandomize=False,
+                                                        doSymmetrize=True, symmetryGroup='i3',
+                                                        doSegment=False, doNormalize=False,
+                                                        doInvert=False, doThreshold=False,
+                                                        doVolumeMask=True
+                                                        )
+        protPreprocessVol3.inputVolumes.set(self.protImportVirus.outputVolume)
+        protPreprocessVol3.volumeMask.set(self.protImportvirusMaskCapsid.outputMask)
+        self.proj.launchProtocol(protPreprocessVol3, wait=True)
+        self.assertIsNotNone(protPreprocessVol3.outputVol, "There was a problem with a volume")
+
+        print "Run preprocess a volume using mask_2 in the symmetrization"
+        protPreprocessVol4 = XmippProtPreprocessVolumes(doChangeHand=False, doRandomize=False,
+                                                        doSymmetrize=True, symmetryGroup='c7',
+                                                        doSegment=False, doNormalize=False,
+                                                        doInvert=False, doThreshold=False,
+                                                        doVolumeMask=True
+                                                        )
+        protPreprocessVol4.inputVolumes.set(self.protImportVirus.outputVolume)
+        protPreprocessVol4.volumeMask.set(self.protImportvirusMaskPenton.outputMask)
+        self.proj.launchProtocol(protPreprocessVol4, wait=True)
+        self.assertIsNotNone(protPreprocessVol4.outputVol, "There was a problem with a volume")
 
 class TestXmippResolution3D(TestXmippBase):
     @classmethod
@@ -618,15 +641,15 @@ class TestXmippProtHelicalParameters(TestXmippBase):
 
     def testHelicalParameters(self):
         print "Run symmetrize helical"
-        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=True,rot0=-70,rotF=-50,rotStep=5,z0=5,zF=10,zStep=0.5)
+        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=True,rot0=50,rotF=70,rotStep=5,z0=5,zF=10,zStep=0.5)
         protHelical.inputVolume.set(self.protImport.outputVolume)
         self.proj.launchProtocol(protHelical, wait=True)
 
         self.assertIsNotNone(protHelical.outputVolume, "There was a problem with Helical output volume")
         self.assertIsNotNone(protHelical.deltaRot.get(), "Output delta rot is None")
         self.assertIsNotNone(protHelical.deltaZ.get(), "Output delta Z is None")
-        self.assertAlmostEqual(protHelical.deltaRot.get(), -67.4, places=1, msg="Output delta rot is wrong")
-        self.assertAlmostEqual(protHelical.deltaZ.get(), 7.6, places=1, msg="Output delta Z is wrong")
+        self.assertAlmostEqual(protHelical.deltaRot.get(), 59.59, places=1, msg="Output delta rot is wrong")
+        self.assertAlmostEqual(protHelical.deltaZ.get(), 6.628, places=1, msg="Output delta Z is wrong")
 
 
 class TestXmippRansacMda(TestXmippBase):

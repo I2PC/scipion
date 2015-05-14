@@ -267,8 +267,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         if (confirmCreate("Representatives")) {
             String output = setType.equals("SetOfClasses2D")? "SetOfAverages,Representatives":"SetOfVolumes,Representatives";
-            String command = String.format(runProtCreateSubset, 
-            inputid, sqlitefile, "", output , other, getRunLabel());
+            String command = String.format(runProtCreateSubset, inputid, sqlitefile, "", output , other, getRunLabel());
             runCommand(command, "Creating set ...");
         }
     }

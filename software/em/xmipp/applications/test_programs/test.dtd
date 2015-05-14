@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<!--
+    TODO define vocabulary identification
+    PUBLIC ID: -//vendor//vocabulary//EN
+    SYSTEM ID: http://server/path/test.dtd
+
+-->
+
+<!--
+    An example how to use this DTD from your XML document:
+
+    <?xml version="1.0"?>
+
+    <!DOCTYPE XMIPP_TESTS SYSTEM "test.dtd">
+
+    <XMIPP_TESTS>
+    ...
+    </XMIPP_TESTS>
+-->
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT XMIPP_TESTS (PROGRAM)*>
+
+<!--- Put your DTDDoc comment here. -->
+<!--random true if output of two execution may be different-->
+<!ELEMENT PROGRAM (CASE)*>
+<!ATTLIST PROGRAM
+    random CDATA #IMPLIED
+    mpi CDATA #IMPLIED
+    name CDATA #IMPLIED
+    owner CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT CASE (PRERUN|POSTRUN|FILE)*>
+<!ATTLIST CASE
+    arguments CDATA #IMPLIED
+    changeDir CDATA #IMPLIED
+    random    CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT PRERUN EMPTY>
+<!ATTLIST PRERUN
+    command CDATA #IMPLIED
+  >
+  
+<!ELEMENT POSTRUN EMPTY>
+<!ATTLIST POSTRUN
+    command CDATA #IMPLIED
+  >
+  
+<!ELEMENT FILE EMPTY>
+<!ATTLIST FILE
+    filename CDATA #IMPLIED
+  >
