@@ -71,8 +71,13 @@ public class XmippWindowUtil
 
 	public static void setLocation(double positionx, double positiony, Window w)
 	{
-            GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-            setLocation(positionx, positiony, w, gd.getDefaultConfiguration().getBounds());
+        setLocation(positionx, positiony, w, getScreenRectangle());
+	}
+	
+	public static Rectangle getScreenRectangle()
+	{
+		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+		return gd.getDefaultConfiguration().getBounds();
 	}
 
 	public static void setLocation(float positionx, float positiony, Container w, Container parent)
