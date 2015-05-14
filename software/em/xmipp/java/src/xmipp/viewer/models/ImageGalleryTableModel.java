@@ -98,7 +98,10 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		n = dimension.getZDim();
 		image_width = dimension.getXDim();
 		image_height = dimension.getYDim();
-		setZoomValue(data.getZoom());
+		int zoom = 100;
+		if(data.getZoom() != null)
+			zoom = data.getZoom();
+		setZoomValue(zoom);
 		// This should be changed later after a call to
 		// setColumns or adjustColumns
 		if (cols < 1) {
@@ -258,6 +261,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * @param height
 	 */
 	protected void calculateCellSize() {
+		
 		thumb_width = (int) (image_width * scale);
 		thumb_height = (int) (image_height * scale);
 
@@ -328,6 +332,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	}
 
 	public void setZoom(int z) {
+		
 		if (data.getZoom() != null || data.getZoom() != z) {
 			setZoomValue(z);
 			fireTableDataChanged();
