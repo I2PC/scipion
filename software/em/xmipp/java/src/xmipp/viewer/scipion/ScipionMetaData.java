@@ -611,7 +611,7 @@ public class ScipionMetaData extends MetaData {
         if(!ascending)
             comparator = Collections.reverseOrder(comparator);
         Collections.sort(emobjects, comparator);
-        for (int i = 0; i < emobjects.size() - 1; i++) 
+        for (int i = 0; i < emobjects.size(); i++) 
             emobjects.get(i).setIndex(i);
 
     }
@@ -651,7 +651,7 @@ public class ScipionMetaData extends MetaData {
             {
                 if(selection != null)
                 {
-                    enabled = selection[emo.index];
+                	enabled = selection[emo.index];
                     stmt.setInt(1, enabled ? 1 : 0);
                     stmt.setString(2, emo.getLabel());
                     stmt.setString(3, emo.getComment());
@@ -660,7 +660,6 @@ public class ScipionMetaData extends MetaData {
                  
                 }
                 else if (emo.changed) {
-                    
                     stmt.setInt(1, emo.isEnabled() ? 1 : 0);
                     stmt.setString(2, emo.getLabel());
                     stmt.setString(3, emo.getComment());
