@@ -173,11 +173,13 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
                 summary.append("Automatic particles picked: %d"%autoParticlesSize)
             summary.append("Last micrograph: " + activeMic)
         return "\n".join(summary)
+
     
     def getCoordsDir(self):
         return self._getExtraPath()
     
     
+
 
 
 

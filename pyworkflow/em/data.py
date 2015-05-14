@@ -853,9 +853,10 @@ class SetOfImages(EMSet):
                         self.append(img)
 
 
-class SetOfMicrographs(SetOfImages):
-    """Represents a set of Micrographs"""
-    ITEM_TYPE = Micrograph
+class SetOfMicrographsBase(SetOfImages):
+    """ Create a base class for both Micrographs and Movies,
+    but avoid to select Movies when Micrographs are required. 
+    """
     
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
@@ -887,6 +888,11 @@ class SetOfMicrographs(SetOfImages):
             raise Exception("SetOfMicrographs: cannot set scanned pixel size if Magnification is not set.")
         self._scannedPixelSize.set(scannedPixelSize)
         self._samplingRate.set((1e+4 * scannedPixelSize) / mag)
+        
+        
+class SetOfMicrographs(SetOfMicrographsBase):
+    """Represents a set of Micrographs"""
+    ITEM_TYPE = Micrograph
 
 
 class SetOfParticles(SetOfImages):
@@ -1543,12 +1549,12 @@ class MovieAlignment(EMObject):
         return self._shifts
 
 
-class SetOfMovies(SetOfMicrographs):
+class SetOfMovies(SetOfMicrographsBase):
     """ Represents a set of Movies. """
     ITEM_TYPE = Movie
     
     def __init__(self, **kwargs):
-        SetOfMicrographs.__init__(self, **kwargs)
+        SetOfMicrographsBase.__init__(self, **kwargs)
         self._gainFile = String()
         
     def setGain(self, gain):

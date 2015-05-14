@@ -148,9 +148,8 @@ class TestRelionRefine(TestRelionBase):
   
         print "Run ProtRelionRefine"
         relion3DClass = self.newProtocol(ProtRelionRefine3D, 
-                                         doCTF=False, runMode=1,
-                                         maskDiameterA=340,
-                                         extraParams='--low_resol_join_halves 40 --memory_per_thread 1',
+                                         doCTF=False, runMode=1, memoryPreThreads=1,
+                                         maskDiameterA=340, symmetryGroup="d6",
                                          numberOfMpi=3, numberOfThreads=2)
         relion3DClass.inputParticles.set(relionNormalize.outputParticles)
         relion3DClass.referenceVolume.set(self.protImportVol.outputVolume)
