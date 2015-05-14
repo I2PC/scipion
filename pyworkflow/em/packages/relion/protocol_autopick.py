@@ -364,25 +364,3 @@ class ProtRelionAutopick(ProtParticlePicking, ProtRelionAutopickBase):
     def getInputReferences(self):
         return self.getInputAutopick().inputReferences.get()
 
-    def registerCoords(self, args):
-        """ This method is needed to register outputCoordinates after editing
-        the default output with Xmipp Picker GUI. """ 
-
-        coordPath = self._getTmpPath('xmipp_coordinates')
-        count = self.getOutputsSize()
-
-        suffix = str(count + 1) if count > 0 else ''
-
-        micSet = self.getInputMicrographs()
-        outputName = 'outputCoordinates' + suffix
-        outputset = self._createSetOfCoordinates(micSet, suffix=suffix)#micrographs are the input set if protocol is not finished
-        import pyworkflow.em.packages.xmipp3 as xmipp3
-        xmipp3.readSetOfCoordinates(coordPath, micSet, outputset)
-
-        summary = self.getSummary(outputset)
-        outputset.setObjComment(summary)
-
-        outputs = {outputName: outputset}
-        self._defineOutputs(**outputs)
-        self._defineSourceRelation(micSet, outputset)
-        self._store()

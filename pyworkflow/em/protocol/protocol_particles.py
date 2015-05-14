@@ -167,7 +167,25 @@ class ProtParticlePicking(ProtParticles):
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
 
+    def getCoordsDir(self):
+        pass
 
+    def registerCoords(self, args):
+        coordsDir = self.getCoordsDir()
+        count = self.getOutputsSize()
+        suffix = str(count + 1) if count > 0 else ''
+        inputset = self.getInputMicrographs()
+        outputName = 'outputCoordinates' + suffix
+        from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
+        inputset = self.getInputMicrographs()
+        outputset = self._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
+        readSetOfCoordinates(coordsDir, outputset.getMicrographs(), outputset)
+        summary = self.getSummary(outputset)
+        outputset.setObjComment(summary)
+        outputs = {outputName: outputset}
+        self._defineOutputs(**outputs)
+        self._defineSourceRelation(inputset, outputset)
+        self._store()
 
 
 
