@@ -98,7 +98,10 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		n = dimension.getZDim();
 		image_width = dimension.getXDim();
 		image_height = dimension.getYDim();
-		setZoomValue(data.zoom);
+		int zoom = 100;
+		if(data.getZoom() != null)
+			zoom = data.getZoom();
+		setZoomValue(zoom);
 		// This should be changed later after a call to
 		// setColumns or adjustColumns
 		if (cols < 1) {
@@ -321,14 +324,14 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	}
 
 	protected void setZoomValue(int z) {
-		data.zoom = z;
-		scale = (float) (data.zoom / 100.0);
+		data.setZoom(z);
+		scale = (float) (z / 100.0);
 		calculateCellSize();
 		resizeCache();
 	}
 
 	public void setZoom(int z) {
-		if (data.zoom != z) {
+		if (data.getZoom() != null || data.getZoom() != z) {
 			setZoomValue(z);
 			fireTableDataChanged();
 			if (data.isAutoAdjust())

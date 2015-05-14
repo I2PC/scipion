@@ -59,7 +59,7 @@ from plotter import XmippPlotter
 
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from protocol_apply_alignment import XmippProtApplyAlignment
-#from protocol_break_symmetry import XmippProtAngBreakSymmetry
+from protocol_break_symmetry import XmippProtAngBreakSymmetry
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
