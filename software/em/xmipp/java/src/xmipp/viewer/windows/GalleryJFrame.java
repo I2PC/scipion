@@ -193,7 +193,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
-		screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		screenSize = XmippWindowUtil.getScreenRectangle().getSize();
 		float aux = (float) screenSize.height * MAX_HEIGHT_RATE;
 		MAX_HEIGHT = Math.round(aux);
 		aux = (float) MIN_WIDTH / DIM_RATE;
@@ -212,7 +212,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
                     
 			this.data = data;
-                        data.setWindow(this);
+            data.setWindow(this);
 			createModel();
 			createGUI();
 			XmippApplication.addInstance(false);

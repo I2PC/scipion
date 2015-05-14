@@ -28,35 +28,26 @@
 This module implement the wrappers around xmipp_showj
 visualization program.
 """
-import os
-
-from pyworkflow.gui.text import showTextFileViewer
+from pyworkflow.viewer import TextView
+from pyworkflow.em.viewer import DataView
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.data import EMXObject
+from dataimport import ProtEmxExport
 
 
 class EMXViewer(Viewer):
     """ Class to visualize Relion protocols """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    #_targets = [EMXObject]
+    _targets = [ProtEmxExport]
     _label = 'viewer emx'
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
 
     def visualize(self, obj, **args):
-        #os.system('kwrite %s &' % obj.getXmlFile()) 
-        showTextFileViewer("EMX Xml file", [obj.getXmlFile()], self.getParent())    
-
-    @classmethod
-    def getView(cls):
-        """ This function will notify the web viewer for this protocol"""
-        return "viewerEMX"
-    
-    @classmethod
-    def getViewFunction(cls):
-        """ This will return the name of the function to view
-        in web one (or all) params of the protocol"""
-        return "viewerEMX"
-
+        data = self.protocol._getPath('emxData/data.mrc')
+        DataView(data).show()
         
+        # text view doesn't work now.
+        
+#         fn = self.protocol._getPath('emxData/data.emx')
+#         self.textView([fn])    

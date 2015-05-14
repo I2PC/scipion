@@ -31,13 +31,8 @@ from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import EMObject
 from pyworkflow.utils.properties import Message
-import threading
-import shlex
-import SocketServer
-
-from pyworkflow.em.data_tiltpairs import CoordinatesTiltPair, TiltPair
 from itertools import izip
-from pyworkflow.utils import getFreePort
+
 
 
 
@@ -111,7 +106,7 @@ class ProtParticlePicking(ProtParticles):
         return "\n".join(summary)
 
     def getMethods(self, output):
-        msg = 'User picked %d particles with a particle size of %d.' % (output.getSize(), output.getBoxSize())
+        msg = 'User picked %d particles with a particle size of %s.' % (output.getSize(), output.getBoxSize())
         return msg
     
     def _methods(self):
@@ -172,36 +167,24 @@ class ProtParticlePicking(ProtParticles):
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
 
-    def initProtocolTCPServer(self):
-        self.address = ''
-        self.port = getFreePort()
-        print self.port
-        server = SocketServer.TCPServer((self.address, self.port), ProtocolTCPRequestHandler)
-        server.protocol = self
-        server_thread = threading.Thread(target=server.serve_forever)
-        server_thread.start()
+    def getCoordsDir(self):
+        pass
 
-
-
-
-
-
-class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
-
-    def handle(self):
-        protocol = self.server.protocol
-        msg = self.request.recv(1024)
-        tokens = shlex.split(msg)
-        print msg
-
-        if msg.startswith('run function'):
-            functionName = tokens[2]
-            functionPointer = getattr(protocol, functionName)
-            functionPointer(tokens[3:])
-
-        else:
-            answer = 'no answer available'
-            self.request.sendall(answer + '\n')
+    def registerCoords(self, args):
+        coordsDir = self.getCoordsDir()
+        count = self.getOutputsSize()
+        suffix = str(count + 1) if count > 0 else ''
+        outputName = 'outputCoordinates' + suffix
+        from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
+        inputset = self.getInputMicrographs()
+        outputset = self._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
+        readSetOfCoordinates(coordsDir, outputset.getMicrographs(), outputset)
+        summary = self.getSummary(outputset)
+        outputset.setObjComment(summary)
+        outputs = {outputName: outputset}
+        self._defineOutputs(**outputs)
+        self._defineSourceRelation(inputset, outputset)
+        self._store()
 
 
 

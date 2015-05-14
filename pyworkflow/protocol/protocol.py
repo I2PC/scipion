@@ -468,13 +468,10 @@ class Protocol(Step):
         from pyworkflow.em.data import EMObject
         for paramName, attr in self.iterOutputAttributes(EMObject):
             yield paramName, attr
-    
+
     def getOutputsSize(self):
-        count = 0
-        for _ in self.iterOutputEM():
-            count += 1
-        return count;
-    
+        return sum(1 for _ in self.iterOutputEM())
+
     def getOutputFiles(self):
         """ Return the output files produced by this protocol.
         This can be used in web to download or in remote 

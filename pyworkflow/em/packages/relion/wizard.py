@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.relion.protocol_autopick import ProtRelionAutopick
 """
 This module implement some wizards
 """
@@ -37,7 +36,7 @@ from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_preprocess import ProtRelionPreprocessParticles
-from protocol_autopick import ProtRelionAutopickFom
+from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
 
 #===============================================================================
 # MASKS

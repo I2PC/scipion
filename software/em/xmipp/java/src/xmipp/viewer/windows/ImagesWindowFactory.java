@@ -118,7 +118,7 @@ public class ImagesWindowFactory {
 			md.destroy();
 		} else {
 			imp = XmippImageConverter.loadImage(path,
-					parameters.zoom > 0 ? parameters.zoom : 100);
+					parameters.zoom != null ? parameters.zoom : 100);
 		}
 		return imp;
 	}

@@ -61,7 +61,7 @@ public class Params {
     public boolean singleSelection;
     public String mode = OPENING_MODE_DEFAULT;
     public boolean poll;
-    public int zoom = 0;
+    public Integer zoom;
     public String[] renderLabels = new String[]{"first"}; //Label to render, by default first
     public String renderLabel;
     public String[] displayLabels;
