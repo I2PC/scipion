@@ -633,7 +633,7 @@ class ProtocolsView(tk.Frame):
              then only case when False is from _automaticRefreshRuns where the
              refresh time is doubled each time to avoid refreshing too often.
         """
-        if os.environ.get('SCIPION_DEBUG', None) == '1':
+        if pwutils.envVarOn('SCIPION_DEBUG'):
             import psutil
             proc = psutil.Process(os.getpid())
             mem = psutil.virtual_memory()
