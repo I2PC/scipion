@@ -197,15 +197,14 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             summary.append("Particle size: %d"%particleSize)
             summary.append("Last micrograph: " + activemic)
         return "\n".join(summary)
+    
 
     def registerCoords(self, args):
         from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
 
         extradir = self._getExtraPath()
-        print extradir
         count = self.getOutputsSize()
         suffix = str(count + 1) if count > 0 else ''
-        print count
         inputset = self.inputMicrographsTiltedPair.get()
         uSet = inputset.getUntilted()
         tSet = inputset.getTilted()

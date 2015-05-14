@@ -733,7 +733,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected void updateZoom()
 	{
 		double zoom = getZoom();
-		System.out.printf("Zoom is %f\n", zoom);
 		
 		if (zoom == -1. || (zoom != -1. && !usezoombt.isSelected()))
 		{
@@ -741,10 +740,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			usezoombt.setText(String.format(Locale.US, "%.2f", zoom));
 		}
 		else if (usezoombt.isSelected())
-		{
-                        System.out.printf("Setting canvas Zoom....\n");
 			getCanvas().setZoom(zoom);
-		}
 	}
 
 	public double getZoom()

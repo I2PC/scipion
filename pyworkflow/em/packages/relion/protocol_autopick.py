@@ -358,3 +358,5 @@ class ProtRelionAutopick(ProtParticlePicking, ProtRelionAutopickBase):
     
     def getInputMicrographs(self):
         return self.inputMicrographs.get()
+    
+    
