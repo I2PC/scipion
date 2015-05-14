@@ -68,9 +68,9 @@ class ProtFrmAlign(em.ProtAlignVolume):
                       label='Binning factor (int)')
         
         group = form.addGroup('Alignment')
-        group.addParam('maxFreq', params.IntParam, 
-                      label='Max. frequency (px)',
-                      help='the starting frequency (in pixel) at which the \n'
+        group.addParam('maxFreq', params.FloatParam, default=0.15,
+                      label='Max. frequency (<0.5)',
+                      help='the starting frequency (in digital frequency normalized to 0.5) at which the \n'
                            'alignment procedure would start')
         group.addParam('alignmentMask', params.PointerParam,
                        pointerClass='VolumeMask', allowsNull=True,
@@ -100,13 +100,15 @@ class ProtFrmAlign(em.ProtAlignVolume):
     def _insertFrmAlignStep(self):
         """ Prepare the dictionary to be used in job.xml template. """
         
-        
+        Ts=self.inputVolumes.get().getSamplingRate()
+        xdim=self.inputVolumes.get().getDim()[0]
         args = {'particleList': os.path.basename(self.volXml),
                 'reference': os.path.basename(self.refVol),
                 'mask': os.path.basename(self.maskVol),
-                'frequency': self.maxFreq.get(),
+                'frequency': int(self.maxFreq.get()*xdim),
                 'offset': self.offset.get(),
-                'pixelSize': self.inputVolumes.get().getSamplingRate()
+                'pixelSize': Ts,
+                'diameter': xdim*Ts
                 }
                 
         self._insertFunctionStep('runFrmAlignStep', args)
@@ -115,7 +117,7 @@ class ProtFrmAlign(em.ProtAlignVolume):
     #--------------------------- STEPS functions --------------------------------------------        
     def convertInputStep(self):
         printLicense()
-        self.info('Wrinting pytom xml file: ' + self.volXml)
+        self.info('Writing pytom xml file: ' + self.volXml)
         volsDir = self._getExtraPath('inputVolumes')
         pwutils.makePath(volsDir)
         writeSetOfVolumes(self.inputVolumes.get(), self.volXml, volsDir)
@@ -134,16 +136,17 @@ class ProtFrmAlign(em.ProtAlignVolume):
 
 <Reference PreWedge="" File="%(reference)s" Weighting="">
 </Reference>
-<Mask Filename="%(mask)s" Binning="1" isSphere="True"/>
-<SampleInformation PixelSize="%(pixelSize)s" ParticleDiameter="100"/>
+<Mask Filename="%(mask)s" Binning="1"/>
+<SampleInformation PixelSize="%(pixelSize)s" ParticleDiameter="%(diameter)s"/>
 
 <ParticleListLocation Path="%(particleList)s"/>
 
 </FRMJob> 
         """
+#<Mask Filename="%(mask)s" Binning="1" isSphere="True"/>
         jobName = 'job.xml'
         jobXml = self._getExtraPath(jobName)
-        self.info('Wrinting job.xml file to: ' + jobXml)
+        self.info('Writing job.xml file to: ' + jobXml)
         f = open(jobXml, 'w')
         f.write(jobTemplate % args)
         f.close()
