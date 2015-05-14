@@ -41,26 +41,6 @@ except ImportError:
 __version__ = 'v.0.1.5 Phosphorus'
 
 
-#  ************************************************************************
-#  *                                                                      *
-#  *                     Redirection to our new home                      *
-#  *                                                                      *
-#  ************************************************************************
-
-
-print("""You are running an old version of scipion.
-To get the latest one, please go to https://github.com/biocompwebs/scipion""")
-sys.exit()
-
-
-#  ************************************************************************
-#  *                                                                      *
-#  * From this point on, this is the script as it was before 2015-05-08   *
-#  *                                                                      *
-#  ************************************************************************
-
-
-
 # This script tries to run ok with any python version. So we cannot
 # use some of the cool syntax of modern Python (no "with" statement,
 # no inline "if ... else ...", etc.), and we better avoid things like
@@ -359,10 +339,8 @@ def main():
 
         if '--help' in args:
             print("""usage: %s [<target>] [--no-scipy] [--no-opencv] [--show]
-
 Installs Scipion. Also used to install only part of it, as specified
 in the <target>, or to add extra em packages to Scipion.
-
 arguments:
   <target>      a library, a python module, an em package or a xmipp file
   --show        do not install, just show what would be done
@@ -432,13 +410,11 @@ arguments:
             open(join(VARS['SCIPION_SOFTWARE'], 'log',
                       'success.log'), 'w').write('Yes :)')
             sys.stdout.write("""
-
   ************************************************************************
   *                                                                      *
   *         Congratulations, Scipion was installed successfully          *
   *                                                                      *
   ************************************************************************
-
 """)
         os.chdir(cwd) # Go back to original folder
         sys.exit(ret)
@@ -489,31 +465,21 @@ arguments:
     elif mode == MODE_HELP:
         sys.stdout.write("""\
 Usage: scipion [MODE] [ARGUMENTS]
-
 MODE can be:
     browser                Browse a dir or an sqlite database.
-
     config                 Write default configuration.
-
     help                   Print this help message.
-
     install [OPTION]       Download and install all the necessary software to run Scipion.
                            OPTION can be:
                              --with-all-packages: download also all external em packages
                              --with-xmipp=$XMIPP_HOME: use existing installation of xmipp
                              --help: show all the available options
-
     manager                Open the manager with a list of all projects.
-
     printenv               Print the environment variables used by the application.
-
     project [PROJECT_NAME] Open the specified project. The name 'last' opens the last project.
     last                   Same as 'project last'
-
     run COMMAND [ARG ...]  Run command in the Scipion environment.
-
     stats                  Write git statistics to data/stats folder.
-
     test [OPTION]          Run a test. They are located in pyworkflow/tests .
                            OPTION can be:
                              <test name>: name of the test to run
@@ -521,7 +487,6 @@ MODE can be:
                              --help: show all the available options
                            For example, to run the "test_object" test:
                              scipion test tests.model.test_object
-
     testdata [OPTION]      Get/put tests data from/to the server to/from the SCIPION_TESTS folder.
                            OPTION can be:
                              --download: copy dataset from remote location to local
@@ -536,9 +501,7 @@ MODE can be:
                              
     tutorial [NAME]        Create a new protocol with a tutorial workflow loaded.
                            If NAME is empty, the list of available tutorials are shown. 
-
     viewer [FILE]          Open a file with Scipion's showj program.
-
     webserver [OPTION]     Launch webserver. Scipion can be then controlled from a web browser.
                            OPTION can be:
                              django: open local django webserver (default)
@@ -562,3 +525,4 @@ if __name__ == '__main__':
     except Exception:
         # This way of catching exceptions works with Python 2 & 3
         sys.exit('Error: %s\n' % sys.exc_info()[1])
+
