@@ -511,18 +511,11 @@ public class GalleryData {
             ColumnInfo auxRender = null;
             for (int i = 0; i < labelids.length; ++i) {
                 ci = initColumnInfo(labelids[i]);
-                if (labels != null) {
-                    for (ColumnInfo ci2 : labels) {
-                        if (ci.label == ci2.label) {
-                            ci.updateInfo(ci2);
-                        }
-                    }
-                } else {
-                    ci.render = isRenderLabel(ci);
-                    if(ci.render)
-                        auxRender = ci;
-                    ci.visible = isVisibleLabel(ci);
-                }
+
+                ci.render = isRenderLabel(ci);
+                if(ci.render)
+                    auxRender = ci;
+                ci.visible = isVisibleLabel(ci);
                 newLabels.add(ci);
                 if (inputRenderLabel.equals(ci.labelName) && ci.render) {//render label specified and included on renders
                     ciFirstRender = ci;
