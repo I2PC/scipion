@@ -23,8 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pprint import PrettyPrinter
-from pyworkflow.utils.utils import prettyDict
 """
 This module extends the functionalities of a normal Tkinter Canvas.
 The new Canvas class allows to easily display Texboxes and Edges
@@ -257,7 +255,10 @@ class Canvas(tk.Canvas, Scrollable):
         to create the boxes for each graph node.
         """
         
-        self.drawNode = drawNode
+        if drawNode is None:
+            self.drawNode = self._drawNode
+        else:
+            self.drawNode = drawNode
         
         self._drawNodes(graph.getRoot(), {})
         
@@ -267,6 +268,11 @@ class Canvas(tk.Canvas, Scrollable):
         # Update node positions
         self._updatePositions(graph.getRoot(), {})
         self.updateScrollRegion()
+        
+    def _drawNode(self, canvas, node):
+        """ Default implementation to draw nodes as textboxes. """
+        return TextBox(self, node.getLabel(), 0, 0,
+                       bgColor="#99DAE8", textColor='black')
         
     def _drawNodes(self, node, visitedDict={}):
         nodeName = node.getName()

@@ -26,11 +26,12 @@
 """
 Consensus picking protocol
 """
+import os
 import collections
 from itertools import izip
 from math import sqrt
 
-from pyworkflow.utils.path import cleanPath, removeBaseExt
+from pyworkflow.utils.path import cleanPath, removeBaseExt, copyFile
 from pyworkflow.object import Set, Integer, Float, String, Object
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
@@ -125,7 +126,11 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         else:
             consensus = self.consensus.get()
         consensusCoords = allCoords[votes>=consensus,:]
-        np.savetxt(self._getTmpPath('consensus_%06d.txt' % micId), consensusCoords)
+        
+        # Write the consensus file only if there
+        # are some coodinates (size > 0)
+        if consensusCoords.size:
+            np.savetxt(self._getExtraPath('consensus_%06d.txt' % micId), consensusCoords)
     
     def createOutputStep(self):
         firstCoords = self.inputCoordinates[0].get()
@@ -135,15 +140,18 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         
         # Read all consensus particles
         for micrograph in inputMics:
-            fnTmp = self._getTmpPath('consensus_%06d.txt' % micrograph.getObjId())
-            coords = np.loadtxt(fnTmp)
-            for coord in coords:
-                aux = Coordinate()
-                aux.setMicrograph(micrograph)
-                aux.setX(coord[0])
-                aux.setY(coord[1])
-                setOfCoordinates.append(aux)
-            cleanPath(fnTmp)
+            fnTmp = self._getExtraPath('consensus_%06d.txt' % micrograph.getObjId())
+            if os.path.exists(fnTmp):
+                coords = np.loadtxt(fnTmp)
+                if coords.size == 2:  # special case with only one coordinate in consensus
+                    coords = [coords]
+                for coord in coords:
+                    aux = Coordinate()
+                    aux.setMicrograph(micrograph)
+                    aux.setX(coord[0])
+                    aux.setY(coord[1])
+                    setOfCoordinates.append(aux)
+                #cleanPath(fnTmp)
 
         # Set output
         self._defineOutputs(outputCoordinates=setOfCoordinates)
