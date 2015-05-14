@@ -79,6 +79,9 @@ class ProtRelionAutopickBase(ProtRelionBase):
     def getInputMicrographs(self):
         return self.inputMicrographs.get()
         
+    def getCoordsDir(self):
+        return self._getTmpPath('xmipp_coordinates')
+    
     def _writeXmippCoords(self, coordSet):
         micSet = self.getInputMicrograhs()
         coordPath = self._getTmpPath('xmipp_coordinates')
