@@ -28,6 +28,7 @@ import os
 
 
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+import pyworkflow.em.showj as showj
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
@@ -140,14 +141,22 @@ Examples:
         if self.protocol.IS_CLASSIFY:
 
             group.addParam('showImagesInClasses', LabelParam, 
-                          label='Particles assigned to each Class',
-                          help='Display the classes and the images associated.')
+                          label='Show classes with particles',
+                          help='Display each class with the number of particles assigned. \n'
+                               '*Note1*: The images of one class can be shown by \n'
+                               'right-click on the class and select "Open images".\n'
+                               '*Note2*: This option convert the Relion star file to\n'
+                               'Scipion format and can take several minutes if the \n'
+                               'number of particles is high.')
+            group.addParam('showClassesOnly', LabelParam, 
+                          label='Show classes only (*_model.star)',
+                          help='Display the classes directly form the *_model.star file.')            
             changesLabel = 'Changes in Offset, Angles and Classes'
         else:
             group.addParam('showImagesAngularAssignment', LabelParam, 
                            label='Particles angular assignment')
         group.addParam('showOptimiserFile', LabelParam, 
-                       label='Show optimizer file')
+                       label='Show *_optimizer.star file')
         
         if self.protocol.IS_3D:
             group = form.addGroup('Volumes')
@@ -208,6 +217,7 @@ Examples:
     def _getVisualizeDict(self):
         self._load()
         return {'showImagesInClasses': self._showImagesInClasses,
+                'showClassesOnly': self._showClassesOnly,
                 'showImagesAngularAssignment' : self._showImagesAngularAssignment,
                 'showOptimiserFile': self._showOptimiserFile,
                 'showLL': self._showLL,
@@ -225,6 +235,16 @@ Examples:
 #===============================================================================
 # showImagesInClasses     
 #===============================================================================
+    def _getZoom(self):
+        # Ensure that classes are shown at least at 128 px to 
+        # properly see the rlnClassDistribution label. 
+        dim = self.protocol.inputParticles.get().getDim()[0]
+        if dim < 128:
+            zoom = 128*100/dim
+        else:
+            zoom = 100
+        return zoom
+        
     def _showImagesInClasses(self, paramName=None):
         """ Read Relion _data.star images file and 
         generate a new metadata with the Xmipp classification standard:
@@ -239,6 +259,21 @@ Examples:
             views.append(v)
         
         return views
+    
+    def _showClassesOnly(self, paramName=None):
+        views = []
+        viewParams = {showj.MODE: showj.MODE_GALLERY,
+                      showj.RENDER: 'rlnReferenceImage',
+                      showj.SORT_BY: 'rlnClassDistribution desc',
+                      showj.LABELS: 'rlnClassDistribution',
+                      showj.ZOOM: str(self._getZoom())
+                      }
+        
+        for it in self._iterations:
+            modelFile = self.protocol._getFileName('model', iter=it)
+            v = self.createDataView('model_classes@' + modelFile, viewParams=viewParams)
+            views.append(v)
+        return views        
 
 #===============================================================================
 # showImagesAngularAssignment     
@@ -537,8 +572,15 @@ Examples:
     def createDataView(self, filename, viewParams={}):
         return em.DataView(filename, env=self._env, viewParams=viewParams)
 
-    def createScipionView(self, filename, viewParams={}):
-
+    def createScipionView(self, filename):
+        labels =  'enabled id _size _representative._filename '
+        labels += '_rlnclassDistribution _rlnAccuracyRotations _rlnAccuracyTranslations'
+        viewParams = {showj.ORDER: labels,
+                      showj.VISIBLE: labels, 
+                      showj.RENDER:'_representative._filename',
+                      showj.SORT_BY: '_size desc',
+                      showj.ZOOM: str(self._getZoom())
+                      }
         inputParticlesId = self.protocol.inputParticles.get().strId()
         ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
         view = ViewClass(self._project,
@@ -552,8 +594,8 @@ Examples:
         inputParticlesId = self.protocol._getInputParticles().strId()
         
         labels =  'enabled id _size _filename _transform._matrix'
-        viewParams = {em.ORDER:labels,
-                      em.VISIBLE: labels, em.RENDER:'_filename',
+        viewParams = {showj.ORDER:labels,
+                      showj.VISIBLE: labels, showj.RENDER:'_filename',
                       'labels': 'id',
                       }
         return em.ObjectView(self._project, 
