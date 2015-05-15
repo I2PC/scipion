@@ -61,6 +61,8 @@ ORDER = 'order'
 VISIBLE = 'visible'
 ZOOM = 'zoom'
 SORT_BY = 'sortby'
+LABELS = 'labels'
+
 SAMPLINGRATE = 'sampling_rate'
 CHIMERA_PORT = 'chimera_port'
 INVERTY = 'inverty'
