@@ -289,17 +289,26 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
             #try:
             functionPointer = getattr(protocol, functionName)
             functionPointer(tokens[3:])
+            self.server.end = True
             #except:
             #    print 'protocol %s must implement %s'%(protocol.getName(), functionName)
 
         else:
             answer = 'no answer available'
             self.request.sendall(answer + '\n')
-            
+    
+class MySocketServer (SocketServer.TCPServer):
+
+    def serve_forever(self):
+        self.end = False
+        while not self.end:
+            self.handle_request()
+    
+    
 def initProtocolTCPServer(protocol):
         address = ''
         port = getFreePort()
-        server = SocketServer.TCPServer((address, port), ProtocolTCPRequestHandler)
+        server = MySocketServer((address, port), ProtocolTCPRequestHandler)
         server.protocol = protocol
         server_thread = threading.Thread(target=server.serve_forever)
         server_thread.start()
