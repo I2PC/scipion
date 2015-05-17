@@ -166,8 +166,7 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
-                                                      MODE: MODE_MD,
-                                                      RENDER:'_filename'}))
+                                                      MODE: MODE_MD}))
 
         elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()
