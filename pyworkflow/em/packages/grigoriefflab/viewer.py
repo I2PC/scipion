@@ -641,14 +641,17 @@ class ProtCTFFindViewer(Viewer):
             psdLabels = '_psdFile'
             labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _micObj._filename' % psdLabels
             if self.protocol.useCftfind4:
-                from pyworkflow.em.showj import OBJCMDS, OBJCMD_CTFFIND4
                 self._views.append(em.ObjectView(self._project, obj.strId(), fn,
                                                  viewParams={showj.MODE: showj.MODE_MD,
                                                              showj.ORDER: labels,
                                                              showj.VISIBLE: labels,
                                                              showj.ZOOM: 50,
                                                              showj.RENDER: psdLabels,
+<<<<<<< HEAD
                                                              OBJCMDS: "'%s'" % OBJCMD_CTFFIND4}))
+=======
+                                                             showj.OBJCMDS: "'%s'" % showj.OBJCMD_CTFFIND4}))
+>>>>>>> 70d8cd277f88c3c116a1c71ef0520a765739a927
             else:
                 self._views.append(em.ObjectView(self._project, obj.strId(), fn,
                                                  viewParams={showj.MODE: showj.MODE_MD,
