@@ -184,19 +184,18 @@ def listDatasets(url):
     """ Print a list of local and remote datasets """
 
     tdir = os.environ['SCIPION_TESTS']
-    print "Local datasets in %s" % tdir
+    print "Local datasets in %s" % yellow(tdir)
     for folder in sorted(os.listdir(tdir)):
         if isdir(join(tdir, folder)):
             if exists(join(tdir, folder, 'MANIFEST')):
-                print "  * " + folder
+                print "  * %s" % folder
             else:
-                print "  * " + folder + ' (not in dataset format)'
+                print "  * %s (not in dataset format)" % folder
 
     try:
-        print "\nRemote datasets in %s" % url
-        data = urlopen(url + '/MANIFEST').read()
-        for line in sorted(data.splitlines()):
-            print "  * " + line.strip('./')
+        print "\nRemote datasets in %s" % yellow(url)
+        for line in sorted(urlopen('%s/MANIFEST' % url)):
+            print "  * %s" % line.strip('./\n')
     except Exception as e:
         print 'Error reading %s (%s)' % (url, e)
 
@@ -247,11 +246,9 @@ def download(dataset, destination=None, url=None, verbose=False):
     destination = destination or os.environ['SCIPION_TESTS']
 
     # First make sure that we ask for a known dataset.
-    datasetsAvailable = [x.strip('./') for x in
-                         urlopen('%s/MANIFEST' % url).read().splitlines()]
-    if dataset not in datasetsAvailable:
-        print 'Unknown dataset "%s".' % dataset
-        print 'Use --list to see the available datasets.'
+    if dataset not in [x.strip('./\n') for x in urlopen('%s/MANIFEST' % url)]:
+        print "Unknown dataset: %s" % red(dataset)
+        print "Use --list to see the available datasets."
         return
 
     # Retrieve the dataset's MANIFEST file.
@@ -335,14 +332,14 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
     taintedMANIFEST = False  # can MANIFEST be out of sync?
 
     for fname in md5sRemote:
-        vlog("\t%s" % fname)
+        vlog("  %s" % fname)
         fpath = join(datasetFolder, fname)
         try:
             if exists(fpath) and md5sLocal[fname] == md5sRemote[fname]:
-                vlog("\r\t%s  %s\n" % (green("OK"), fname))
+                vlog("\r  %s  %s\n" % (green("OK"), fname))
                 pass  # just to emphasize that we do nothing in this case
             else:
-                vlog("\r\t%s  %s  (downloading... " % (red("XX"), fname))
+                vlog("\r  %s  %s  (downloading... " % (red("XX"), fname))
                 if not isdir(dirname(fpath)):
                     os.makedirs(dirname(fpath))
                 open(fpath, 'w').writelines(
