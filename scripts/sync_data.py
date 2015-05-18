@@ -42,7 +42,7 @@ import hashlib
 from urllib2 import urlopen
 import getpass
 
-from pyworkflow.utils import redB, green, yellow
+from pyworkflow.utils import redB, red, green, yellow
 
 
 scipion_logo = """
