@@ -30,7 +30,7 @@ import sys
 
 import pyworkflow.protocol.params as params
 import pyworkflow.viewer as pwviewer
-import pyworkflow.em as em
+import pyworkflow.em.showj as showj
 from pyworkflow.em.viewer import DataView
 
 from protocol_autofocus_classify import ProtAutofocusClassify
@@ -113,7 +113,7 @@ class PyTomFrmAlignmentViewer(PyTomViewer):
     def _showAlignedMaps(self, param=None):
         #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volPath)
         volsSqlite = self.protocol.getVolumesSqlite(self.getIter())
-        viewParams = {em.MODE: em.MODE_MD}
+        viewParams = {showj.MODE: showj.MODE_MD}
         
         return [self.getObjectView(volsSqlite, 
                                    other=self.protocol.inputVolumes.get().getObjId(),
