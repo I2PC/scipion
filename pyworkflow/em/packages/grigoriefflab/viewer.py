@@ -647,11 +647,7 @@ class ProtCTFFindViewer(Viewer):
                                                              showj.VISIBLE: labels,
                                                              showj.ZOOM: 50,
                                                              showj.RENDER: psdLabels,
-<<<<<<< HEAD
-                                                             OBJCMDS: "'%s'" % OBJCMD_CTFFIND4}))
-=======
                                                              showj.OBJCMDS: "'%s'" % showj.OBJCMD_CTFFIND4}))
->>>>>>> 70d8cd277f88c3c116a1c71ef0520a765739a927
             else:
                 self._views.append(em.ObjectView(self._project, obj.strId(), fn,
                                                  viewParams={showj.MODE: showj.MODE_MD,
