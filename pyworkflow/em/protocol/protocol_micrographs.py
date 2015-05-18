@@ -214,7 +214,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         if self.recalculate:
             ctfSet = self._createSetOfCTF("_recalculated")
             defocusList = []
-            if self.continueRun:
+            if self.continueRun.get() is not None:
                 oldCtfSet = getattr(self.continueRun.get(), 'outputCTF')
             else:
                 oldCtfSet = getattr(self, 'outputCTF')

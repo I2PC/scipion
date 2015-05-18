@@ -446,9 +446,8 @@ Examples:
         
         labels =  'enabled id _size _filename _transform._matrix'
         viewParams = {showj.ORDER:labels,
-                      showj.VISIBLE: labels, 
-                      showj.RENDER:'_filename',
-                      showj.LABELS: 'id',
+                      showj.VISIBLE: labels, showj.RENDER:'_filename',
+                      'labels': 'id',
                       }
         return em.ObjectView(self._project,  self.protocol.strId(),
                              filename, other=inputParticlesId,
