@@ -335,32 +335,32 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
     taintedMANIFEST = False  # can MANIFEST be out of sync?
 
     for fname in md5sRemote:
-        vlog('\t%s' % fname)
+        vlog("\t%s" % fname)
         fpath = join(datasetFolder, fname)
         try:
             if exists(fpath) and md5sLocal[fname] == md5sRemote[fname]:
-                vlog('\r\t%s  %s\n' % (green('OK'), fname))
+                vlog("\r\t%s  %s\n" % (green("OK"), fname))
                 pass  # just to emphasize that we do nothing in this case
             else:
-                vlog('\r\t%s  %s  (downloading... ' % (red('XX'), fname))
+                vlog("\r\t%s  %s  (downloading... " % (red("XX"), fname))
                 if not isdir(dirname(fpath)):
                     os.makedirs(dirname(fpath))
                 open(fpath, 'w').writelines(
                     urlopen('%s/%s/%s' % (url, dataset, fname)))
-                vlog('done)\n')
+                vlog("done)\n")
                 filesUpdated += 1
         except Exception as e:
-            print '\nError while updating %s: %s' % (fname, e)
+            print "\nError while updating %s: %s" % (fname, e)
             taintedMANIFEST = True  # if we don't update, it can be wrong
 
-    print '...done. Updated files: %d' % filesUpdated
+    print "...done. Updated files: %d" % filesUpdated
 
     # Save the new MANIFEST file in the folder of the downloaded dataset
     if filesUpdated > 0:
         open(join(datasetFolder, 'MANIFEST'), 'w').writelines(manifest)
 
     if taintedMANIFEST:
-        print 'Some files could not be updated. Regenerating local MANIFEST ...'
+        print "Some files could not be updated. Regenerating local MANIFEST ..."
         createMANIFEST(datasetFolder)
 
 
@@ -372,25 +372,25 @@ def upload(dataset, delete=False):
     remoteFolder = '/services/scipionwiki/data/htdocs/files/scipion/data/tests'
 
     if not exists(localFolder):
-        sys.exit('ERROR: local folder %s does not exist.' % localFolder)
+        sys.exit("ERROR: local folder %s does not exist." % localFolder)
 
-    print 'Warning: Uploading, please BE CAREFUL! This can be dangerous.'
+    print "Warning: Uploading, please BE CAREFUL! This can be dangerous."
     print ('You are going to be connected to "%s" to write in folder '
            '"%s" the dataset "%s".' % (remoteLoc, remoteFolder, dataset))
     if ask() == 'n':
         return
 
     # First make sure we have our MANIFEST file up-to-date
-    print 'Updating local MANIFEST file with MD5 info...'
+    print "Updating local MANIFEST file with MD5 info..."
     createMANIFEST(localFolder)
 
     # Upload the dataset files (with rsync)
-    print 'Uploading files...'
+    print "Uploading files..."
     call(['rsync', '-rlv', '--chmod=a+r', localFolder,
           '%s:%s' % (remoteLoc, remoteFolder)] + (['--delete'] if delete else []))
 
     # Regenerate remote MANIFEST (which contains a list of datasets)
-    print 'Regenerating remote MANIFEST file...'
+    print "Regenerating remote MANIFEST file..."
     call(['ssh', remoteLoc,
           'cd %s && find -type d -mindepth 1 -maxdepth 1 > MANIFEST' % remoteFolder])
     # This is a file that just contains the name of the directories
@@ -398,7 +398,7 @@ def upload(dataset, delete=False):
     # the datasets, which contain file names and md5s.
 
     # Leave a register (log file)
-    print 'Logging modification attempt in modifications.log ...'
+    print "Logging modification attempt in modifications.log ..."
     log = """++++
 Modification to %s dataset made at
 %s
