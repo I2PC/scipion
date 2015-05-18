@@ -50,7 +50,8 @@ def ansi(n):
     return lambda txt: '\x1b[%dm%s\x1b[0m' % (n, txt)
 
 black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
-
+# We don't take them from pyworkflow.utils because this has to run
+# with all python versions (and so it is simplified).
 
 
 def progInPath(prog):
