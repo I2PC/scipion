@@ -197,7 +197,7 @@ def listDatasets(url):
         for line in sorted(urlopen('%s/MANIFEST' % url)):
             print "  * %s" % line.strip('./\n')
     except Exception as e:
-        print 'Error reading %s (%s)' % (url, e)
+        print "Error reading %s (%s)" % (url, e)
 
 
 def check(dataset, url, verbose=False, updateMANIFEST=False):
@@ -206,12 +206,12 @@ def check(dataset, url, verbose=False, updateMANIFEST=False):
     """
     def vlog(txt): sys.stdout.write(txt) if verbose else None  # verbose log
 
-    vlog('Checking dataset %s ... ' % dataset)
+    vlog("Checking dataset %s ... " % dataset)
 
     if updateMANIFEST:
         createMANIFEST(join(os.environ['SCIPION_TESTS'], dataset))
     else:
-        vlog('(not updating local MANIFEST) ')
+        vlog("(not updating local MANIFEST) ")
 
     try:
         md5sRemote = dict(x.split() for x in
@@ -222,21 +222,21 @@ def check(dataset, url, verbose=False, updateMANIFEST=False):
                          open('%s/MANIFEST' %
                               join(os.environ['SCIPION_TESTS'], dataset)))
         if md5sRemote == md5sLocal:
-            vlog('\tlooks up-to-date\n')
+            vlog("\tlooks up-to-date\n")
             return True
         else:
-            vlog('\thas differences\n')
+            vlog("\thas differences\n")
             flocal = set(md5sLocal.keys())
             fremote = set(md5sRemote.keys())
             def show(txt, lst):
-                if lst: vlog('  %s: %s\n' % (txt, ' '.join(lst)))
-            show('Local files missing in the server', flocal - fremote)
-            show('Remote files missing locally', fremote - flocal)
-            show('Files with differences', [f for f in fremote & flocal
+                if lst: vlog("  %s: %s\n" % (txt, ' '.join(lst)))
+            show("Local files missing in the server", flocal - fremote)
+            show("Remote files missing locally", fremote - flocal)
+            show("Files with differences", [f for f in fremote & flocal
                                             if md5sLocal[f] != md5sRemote[f]])
             return False
     except Exception as e:
-        vlog('\terror: %s\n' % e)
+        vlog("\terror: %s\n" % e)
         return False
 
 
@@ -321,7 +321,7 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
         t_manifest = os.stat(join(datasetFolder, 'MANIFEST')).st_mtime
         assert t_manifest > last and time.time() - t_manifest < 60*60*24*7
     except (OSError, IOError, AssertionError) as e:
-        print 'Regenerating local MANIFEST...'
+        print "Regenerating local MANIFEST..."
         createMANIFEST(datasetFolder)
     md5sLocal = dict(x.split() for x in open(join(datasetFolder, 'MANIFEST')))
 
@@ -426,7 +426,7 @@ def md5sum(fname):
     return mhash.hexdigest()
 
 
-def ask(question='Continue? (y/n): ', allowed=None):
+def ask(question="Continue? (y/n): ", allowed=None):
     """ Ask the question until it returns one of the allowed responses """
 
     while True:
