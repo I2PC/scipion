@@ -48,6 +48,7 @@ void ProgAngularContinuousAssign2::readParams()
     fnVol = getParam("--ref");
     maxShift = getDoubleParam("--max_shift");
     maxScale = getDoubleParam("--max_scale");
+    maxDefocusChange = getDoubleParam("--max_defocus_change");
     maxAngularChange = getDoubleParam("--max_angular_change");
     maxResol = getDoubleParam("--max_resolution");
     Ts = getDoubleParam("--sampling");
@@ -76,6 +77,7 @@ void ProgAngularContinuousAssign2::show()
     << "Max. Scale:          " << maxScale           << std::endl
     << "Max. Angular Change: " << maxAngularChange   << std::endl
     << "Max. Resolution:     " << maxResol           << std::endl
+    << "Max. Defocus Change: " << maxDefocusChange   << std::endl
     << "Sampling:            " << Ts                 << std::endl
     << "Max. Radius:         " << Rmax               << std::endl
     << "Padding factor:      " << pad                << std::endl
@@ -103,7 +105,8 @@ void ProgAngularContinuousAssign2::defineParams()
     addParamsLine("   --ref <volume>              : Reference volume");
     addParamsLine("  [--max_shift <s=-1>]         : Maximum shift allowed in pixels");
     addParamsLine("  [--max_scale <s=0.02>]       : Maximum scale change");
-    addParamsLine("  [--max_angular_change <a=5>] : Maximum angular change allowed");
+    addParamsLine("  [--max_angular_change <a=5>] : Maximum angular change allowed (in degrees)");
+    addParamsLine("  [--max_defocus_change <d=500>] : Maximum defocus change allowed (in Angstroms)");
     addParamsLine("  [--max_resolution <f=4>]     : Maximum resolution (A)");
     addParamsLine("  [--sampling <Ts=1>]          : Sampling rate (A/pixel)");
     addParamsLine("  [--Rmax <R=-1>]              : Maximum radius (px). -1=Half of volume size");
@@ -264,6 +267,8 @@ double continuous2cost(double *x, void *_prm)
 	if (fabs(deltaRot)>prm->maxAngularChange || fabs(deltaTilt)>prm->maxAngularChange || fabs(deltaPsi)>prm->maxAngularChange)
 		return 1e38;
 	if (fabs(a-1)>0.1)
+		return 1e38;
+	if (fabs(deltaDefocusU)>prm->maxDefocusChange || fabs(deltaDefocusV)>prm->maxDefocusChange)
 		return 1e38;
 	MAT_ELEM(prm->A,0,0)=1+scalex;
 	MAT_ELEM(prm->A,1,1)=1+scaley;
@@ -432,6 +437,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     	rowOut.setValue(MDL_CTF_DEFOCUSU,old_defocusU+p(9));
     	rowOut.setValue(MDL_CTF_DEFOCUSV,old_defocusV+p(10));
     	rowOut.setValue(MDL_CTF_DEFOCUS_ANGLE,old_defocusAngle+p(11));
+    	if (old_defocusU+p(9)<0 || old_defocusU+p(10)<0)
+    		rowOut.setValue(MDL_ENABLED,-1);
     }
 
 #ifdef DEBUG
