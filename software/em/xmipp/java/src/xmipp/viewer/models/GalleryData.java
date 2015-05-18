@@ -261,8 +261,6 @@ public class GalleryData {
         if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
             {
                 mode = Mode.TABLE_MD;
-//                if(renderLabel.equals("first") && isScipionInstance())
-//                    renderImages = false;
             }
         if(parameters.getBlock().equals(selectedBlock))
         {
@@ -274,7 +272,7 @@ public class GalleryData {
             useGeo = parameters.useGeo;
             wrap = parameters.wrap;
             displayLabels = parameters.getDisplayLabels();
-            
+            this.renderImages = parameters.renderImages;
             
         }
     }

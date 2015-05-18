@@ -235,7 +235,6 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	public boolean handleDoubleClick(int row, int col) {
 		try {
 			ColumnInfo ci = visibleLabels.get(col);
-            System.out.printf("column %s allow render %s is image %s\n", ci, ci.allowRender, data.isImageFile(ci));            
 			if (ci.allowRender && data.isImageFile(ci)) {
                 int index = getIndex(row, col);
                 String file = getImageFilename(index, renderLabel.label);
