@@ -74,12 +74,8 @@ class ProtUserSubSet(BatchProtocol):
         form.addHidden('sqliteFile', FileParam)
         form.addHidden('outputClassName', StringParam)
 
-
-
-
     def _insertAllSteps(self):
         self._insertFunctionStep('createSetStep')
-
 
     def createSetStep(self):
         setObj = self.createSetObject()
@@ -121,7 +117,6 @@ class ProtUserSubSet(BatchProtocol):
             otherid = self.other.get()
             otherObj = self.getProject().mapper.selectById(int(otherid))
 
-
             if isinstance(setObj, SetOfClasses):
                 setObj.setImages(otherObj)
                 output = self._createSubSetFromClasses(setObj)
@@ -144,10 +139,8 @@ class ProtUserSubSet(BatchProtocol):
             # Register outputs
             self._defineOutput(className, output)
 
-
         if isinstance(inputObj, EMProtocol):
-            for key, attr in inputObj.iterInputAttributes():
-                print attr
+            for _, attr in inputObj.iterInputAttributes():
                 self._defineSourceRelation(attr.get(), output)
         else:
             if not isinstance(inputObj, SetOfCTF):#otherwise setted before
@@ -164,6 +157,14 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        
+        # Define an informative summary of the subset operation
+        sizeIn = inputImages.getSize()
+        sizeOut = output.getSize()
+        sizeDiff = sizeIn - sizeOut
+        msg = 'A subset of _%s_ was created, ' % output.getClassName()
+        msg += 'discarding *%d* items (%0.1f %%) from the input set.' % (sizeDiff, sizeDiff*100./sizeIn)
+        self.summaryVar.set(msg)
 
         return output
 
@@ -248,7 +249,10 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         self._defineOutput('Representatives', output)
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
-        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.__class__.__name__, inputClasses.getSize(), selectmsg, output.__class__.__name__)
+        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.getClassName(), 
+                                                                 inputClasses.getSize(), 
+                                                                 selectmsg, 
+                                                                 output.getClassName())
         self.summaryVar.set(msg)
         return output
 
@@ -271,10 +275,13 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
-        count = 0
         count = len([cls for cls in modifiedSet if cls.isEnabled()])
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
-        msg = 'From input %s of size %s %s to create output %s of size %s'%(inputClasses.__class__.__name__, inputClasses.getSize(),  selectmsg, output.__class__.__name__, output.getSize())
+        msg = 'From input %s of size %s %s to create output %s of size %s'%(inputClasses.getClassName(), 
+                                                                            inputClasses.getSize(),  
+                                                                            selectmsg, 
+                                                                            output.getClassName(), 
+                                                                            output.getSize())
         self.summaryVar.set(msg)
         return output
  
@@ -294,7 +301,7 @@ class ProtUserSubSet(BatchProtocol):
         self._defineOutput(className, output)
         count = len([cls for cls in modifiedSet if cls.isEnabled()])
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
-        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.__class__.__name__, inputClasses.getSize(),  selectmsg, output.__class__.__name__)
+        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.getClassName(), inputClasses.getSize(),  selectmsg, output.getClassName())
         self.summaryVar.set(msg)
         return output
         
@@ -364,20 +371,18 @@ class ProtUserSubSet(BatchProtocol):
         return summary
 
     def getDefaultSummary(self):
-
         input = ''
-
-
         inputObj = self.inputObject.get()
-        input += inputObj.__class__.__name__
+        input += inputObj.getClassName()
         if isinstance(inputObj, EMSet):
-            input += ' of size %s'%inputObj.getSize()
+            input += ' of size %s' % inputObj.getSize()
         output = ''
         for key, attr in self.iterOutputAttributes(EMObject):
-            output += attr.__class__.__name__
+            output += attr.getClassName()
             if isinstance(attr, EMSet):
-                output += ' of size %s'%attr.getSize()
+                output += ' of size %s' % attr.getSize()
 
+        
         msg = 'From input %s created output %s '%(input, output)
         return msg
 

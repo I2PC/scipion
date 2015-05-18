@@ -29,6 +29,7 @@ from os.path import relpath
 from pyworkflow.protocol.params import (PointerParam, FloatParam, RelationParam,
                                         IntParam, BooleanParam, LEVEL_ADVANCED, 
                                         LabelParam)
+from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
 from pyworkflow.em.constants import RELATION_CTF
 
@@ -40,8 +41,25 @@ import pyworkflow.utils as pwutils
 
 
 
-class ProtRelionAutopickBase(ProtRelionBase):
+class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
 
+    #--------------------------- INSERT steps functions -------------------------------------------- 
+    def _insertAllSteps(self): 
+        # Convert the input micrographs and references to 
+        # the required Relion star files
+        convertId = self._insertFunctionStep('convertInputStep', 
+                                 self.getInputMicrographs().strId(),
+                                 self.getInputReferences().strId())
+        # Insert the picking steps for each micrograph separately 
+        # (Relion requires in that way if micrographs have different dimensions)
+        allMicSteps = []
+        for mic in self.getInputMicrographs():
+            autopickId = self._insertAutopickStep(mic, convertId)
+            allMicSteps.append(autopickId)
+        # Register final coordinates as output
+        self._insertFunctionStep('createOutputStep', 
+                                 prerequisites=allMicSteps)
+        
     #--------------------------- STEPS functions --------------------------------------------
     def _preprocessMicrographRow(self, img, imgRow):
         # Temporarly convert the few micrographs to tmp and make sure
@@ -50,6 +68,8 @@ class ProtRelionAutopickBase(ProtRelionBase):
         newName = pwutils.replaceBaseExt(img.getFileName(), 'mrc')
         newPath = self._getExtraPath(newName)
         
+        # If the micrographs are in 'mrc' format just create a link
+        # if not, convert to 'mrc'
         if img.getFileName().endswith('mrc'):
             pwutils.createLink(img.getFileName(), newPath)
         else:
@@ -58,6 +78,12 @@ class ProtRelionAutopickBase(ProtRelionBase):
         # so, let's make the micrograph path relative to that
         img.setFileName(os.path.join('extra', newName))
         img.setCTF(self.ctfDict[img.getMicName()])
+        
+    def _getMicStarFile(self, mic):
+        return self._getExtraPath(pwutils.replaceBaseExt(mic.getFileName(), 'star'))            
+        
+    def _postprocessMicrographRow(self, img, imgRow):
+        imgRow.writeToFile(self._getMicStarFile(img))
             
     def convertInputStep(self, micsId, refsId):
         self._ih = ImageHandler() # used to convert micrographs
@@ -67,10 +93,19 @@ class ProtRelionAutopickBase(ProtRelionBase):
             self.ctfDict[ctf.getMicrograph().getMicName()] = ctf.clone()
         
         micStar = self._getPath('input_micrographs.star')
-        writeSetOfMicrographs(self.getInputMicrograhs(), micStar, 
-                              preprocessImageRow=self._preprocessMicrographRow)
+        writeSetOfMicrographs(self.getInputMicrographs(), micStar, 
+                              preprocessImageRow=self._preprocessMicrographRow,
+                              postprocessImageRow=self._postprocessMicrographRow)
         
-        writeReferences(self.getInputReferences(), self._getPath('input_references'))        
+        writeReferences(self.getInputReferences(), self._getPath('input_references'))  
+        
+    def autopickMicrographStep(self, micStarFile, params, threshold, minDistance, fom):
+        """ Launch the 'relion_autopick' for a micrograph with the given parameters. """
+        # Call relion_autopick to allow picking of micrographs with different size
+        params += ' --i %s' % relpath(micStarFile, self.getWorkingDir())
+        params += ' --threshold %0.3f --min_distance %0.3f %s' % (threshold, minDistance, fom)
+        
+        self.runJob(self._getProgram('relion_autopick'), params, cwd=self.getWorkingDir())      
 
     #--------------------------- UTILS functions --------------------------------------------
     def getInputReferences(self):
@@ -83,7 +118,7 @@ class ProtRelionAutopickBase(ProtRelionBase):
         return self._getTmpPath('xmipp_coordinates')
     
     def _writeXmippCoords(self, coordSet):
-        micSet = self.getInputMicrograhs()
+        micSet = self.getInputMicrographs()
         coordPath = self._getTmpPath('xmipp_coordinates')
         pwutils.cleanPath(coordPath)
         pwutils.makePath(coordPath)
@@ -100,7 +135,7 @@ class ProtRelionAutopickBase(ProtRelionBase):
         """ Write the SetOfCoordinates as expected by Xmipp
         to be display with its GUI. 
         """
-        micSet = self.getInputMicrograhs()
+        micSet = self.getInputMicrographs()
         coordSet = self._createSetOfCoordinates(micSet)
         coordSet.setBoxSize(self.getInputReferences().getDim()[0])
         starFiles = [self._getExtraPath(pwutils.removeBaseExt(mic.getFileName()) + '_autopick.star')
@@ -110,7 +145,7 @@ class ProtRelionAutopickBase(ProtRelionBase):
         
     
     
-class ProtRelionAutopickFom(ProtParticlePicking, ProtRelionAutopickBase):
+class ProtRelionAutopickFom(ProtRelionAutopickBase):
     """    
     This Relion protocol uses 2D class averages as templates to run the auto-picking 
     job-type. In this first stage, the auto-picking will be run just in few micrographs 
@@ -186,18 +221,11 @@ class ProtRelionAutopickFom(ProtParticlePicking, ProtRelionAutopickBase):
                       label='Auto-picking parameters will be optimized later interactively.')
         
     #--------------------------- INSERT steps functions --------------------------------------------  
-
-    def _insertAllSteps(self): 
-        self._insertFunctionStep('convertInputStep', 
-                                 self.getInputMicrograhs().strId(),
-                                 self.getInputReferences().strId())
-        self._insertAutopickStep()
-        self._insertFunctionStep('createOutputStep', 1)
         
     def getAutopickParams(self):
         params = ' --o autopick'
         params += ' --particle_diameter %d' % self.particleDiameter
-        params += ' --angpix %0.3f' % self.getInputMicrograhs().getSamplingRate()
+        params += ' --angpix %0.3f' % self.getInputMicrographs().getSamplingRate()
         params += ' --ref input_references.star'
         
         if self.refsHaveInvertedContrast:
@@ -210,28 +238,26 @@ class ProtRelionAutopickFom(ProtParticlePicking, ProtRelionAutopickBase):
         params += ' --lowpass %d' % self.lowpassFilterRefs
         
         return params
-        
-    def _insertAutopickStep(self):
+
+    def autopickStep(self, threshold, minDistance, fom):
+        """ This method is used from the wizard to optimize the parameters. """
+        params = self.getAutopickParams()
+        for mic in self.getInputMicrographs():
+            self.autopickMicrographStep(self._getMicStarFile(mic), 
+                                        params, threshold, minDistance, fom)  
+                  
+    def _insertAutopickStep(self, mic, convertId):
         """ Prepare the command line for calling 'relion_autopick' program """
         params = self.getAutopickParams()
         # Use by default the references size as --min_distance
-        self._insertFunctionStep('autopickStep', params, 0.25, self.getInputDimA(),
-                                 ' --write_fom_maps')
+        return self._insertFunctionStep('autopickMicrographStep', self._getMicStarFile(mic), 
+                                        params, 0.25, 
+                                        self.getInputDimA(), ' --write_fom_maps',
+                                        prerequisites=[convertId])
         
     #--------------------------- STEPS functions --------------------------------------------
-    def autopickStep(self, params, threshold, minDistance, fom):
-        """ Launch the 'relion_autopick' with the given parameters. """
-        # Call relion_autopick to allow picking of micrographs with
-        # different size
-        micMd = md.MetaData(self._getPath('input_micrographs.star'))
-        params += ' --threshold %0.3f --min_distance %0.3f %s' % (threshold, minDistance, fom)
-        for micRow in md.iterRows(micMd):
-            micStarFile = self._getExtraPath(pwutils.replaceBaseExt(micRow.getValue('rlnMicrographName'), 'star'))
-            micRow.writeToFile(micStarFile)
-            cmd = '--i %s %s' % (relpath(micStarFile, self.getWorkingDir()), params)
-            self.runJob(self._getProgram('relion_autopick'), cmd, cwd=self.getWorkingDir())
-    
-    def createOutputStep(self, t):
+
+    def createOutputStep(self):
         self.summaryVar.set('This protocol does not generate any output.\n'
                             'The FOM maps were written to be used later to optimize \n'
                             'the _Threshold_ and _Inter-particle distance_ \n'
@@ -265,7 +291,7 @@ class ProtRelionAutopickFom(ProtParticlePicking, ProtRelionAutopickBase):
                 
         
         
-class ProtRelionAutopick(ProtParticlePicking, ProtRelionAutopickBase):
+class ProtRelionAutopick(ProtRelionAutopickBase):
     """    
     This Relion protocol uses 2D class averages as templates to run the auto-picking 
     job-type. In this second stage, the protocol reads the FOM maps to optimize
@@ -273,6 +299,11 @@ class ProtRelionAutopick(ProtParticlePicking, ProtRelionAutopickBase):
     """
     _label = 'auto-picking (2)'
     
+    
+    def __init__(self, **kwargs):        
+        ProtRelionAutopickBase.__init__(self, **kwargs)
+        self.stepsExecutionMode = STEPS_PARALLEL
+        
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         
@@ -304,40 +335,25 @@ class ProtRelionAutopick(ProtParticlePicking, ProtRelionAutopickBase):
                            'will be consider to be a single cluster. \n'
                            'From each cluster, only one particle will be picked.')
         
+        form.addParallelSection(threads=4, mpi=1)
+        
     #--------------------------- INSERT steps functions --------------------------------------------  
-
-    def _insertAllSteps(self): 
-        self._insertFunctionStep('convertInputStep', 
-                                 self.getInputMicrograhs().strId(),
-                                 self.getInputReferences().strId())
-        self._insertAutopickStep()
-        self._insertFunctionStep('createOutputStep', 1)
         
-    def _insertAutopickStep(self):
+    def _insertAutopickStep(self, mic, convertId):
         """ Prepare the command line for calling 'relion_autopick' program """
-        params = self.inputAutopickFom.get().getAutopickParams()
-        
+        params = self.getAutopickParams()
         # Use by default the references size as --min_distance
-        self._insertFunctionStep('autopickStep', params, 
-                                 self.pickingThreshold.get(), 
-                                 self.interParticleDistance.get(), 
-                                 '') # neither read or write fom
-        
+        return self._insertFunctionStep('autopickMicrographStep', self._getMicStarFile(mic), 
+                                        params,
+                                        self.pickingThreshold.get(),
+                                        self.interParticleDistance.get(),
+                                        '', # neither read or write fom
+                                        prerequisites=[convertId])
+                
     #--------------------------- STEPS functions --------------------------------------------
-    def autopickStep(self, params, threshold, minDistance, fom):
-        """ Launch the 'relion_autopick' with the given parameters. """
-        # Call relion_autopick to allow picking of micrographs with
-        # different size
-        micMd = md.MetaData(self._getPath('input_micrographs.star'))
-        params += ' --threshold %0.3f --min_distance %0.3f %s' % (threshold, minDistance, fom)
-        for micRow in md.iterRows(micMd):
-            micStarFile = self._getExtraPath(pwutils.replaceBaseExt(micRow.getValue('rlnMicrographName'), 'star'))
-            micRow.writeToFile(micStarFile)
-            cmd = '--i %s %s' % (relpath(micStarFile, self.getWorkingDir()), params)
-            self.runJob(self._getProgram('relion_autopick'), cmd, cwd=self.getWorkingDir())
     
-    def createOutputStep(self, t):
-        micSet = self.getInputMicrograhs()
+    def createOutputStep(self):
+        micSet = self.getInputMicrographs()
         coordSet = self._createSetOfCoordinates(micSet)
         coordSet.setBoxSize(self.getInputReferences().getDim()[0])
         starFiles = [self._getExtraPath(pwutils.removeBaseExt(mic.getFileName()) + '_autopick.star')
@@ -366,4 +382,6 @@ class ProtRelionAutopick(ProtParticlePicking, ProtRelionAutopickBase):
     
     def getInputReferences(self):
         return self.getInputAutopick().inputReferences.get()
-
+    
+    def getAutopickParams(self):
+        return self.getInputAutopick().getAutopickParams()
