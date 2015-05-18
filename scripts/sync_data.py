@@ -42,7 +42,7 @@ import hashlib
 from urllib2 import urlopen
 import getpass
 
-from pyworkflow.utils import red, green, yellow
+from pyworkflow.utils import redB, green, yellow
 
 
 scipion_logo = """
@@ -262,9 +262,8 @@ def download(dataset, destination=None, url=None, verbose=False):
     try:
         if verbose:
             print "Retrieving MANIFEST file"
-
-        data = urlopen('%s/%s/MANIFEST' % (url, dataset)).read()
-        open(manifest, 'w').write(data)
+        open(manifest, 'w').writelines(
+            urlopen('%s/%s/MANIFEST' % (url, dataset)))
     except Exception as e:
         print "ERROR reading %s/%s/MANIFEST (%s)" % (url, dataset, e)
         return
@@ -281,26 +280,24 @@ def download(dataset, destination=None, url=None, verbose=False):
             # Download content and create file with it.
             if not isdir(dirname(fpath)):
                 os.makedirs(dirname(fpath))
-            open(fpath, 'w').write(
-                urlopen('%s/%s/%s' % (url, dataset, fname)).read())
-
-            done += inc
-            if verbose:
-                sys.stdout.write("\t( %3d %% )\t%s" % (100 * done, fname))
-            else:
-                sys.stdout.write(red("#") * (int(50*done) - int(50*(done-inc))))
-                sys.stdout.flush()
+            open(fpath, 'w').writelines(
+                urlopen('%s/%s/%s' % (url, dataset, fname)))
 
             md5 = md5sum(fpath)
             assert md5 == md5Remote, \
                 "Bad md5. Expected: %s Computed: %s" % (md5Remote, md5)
+
+            done += inc
             if verbose:
-                sys.stdout.write(green("    \tMD5 OK\n"))
+                print redB("%3d%% " % (100 * done)), fname
+            else:
+                sys.stdout.write(redB("#") * (int(50*done)-int(50*(done-inc))))
+                sys.stdout.flush()
         except Exception as e:
             print "\nError in %s (%s)" % (fname, e)
             print "URL: %s/%s/%s" % (url, dataset, fname)
             print "Destination: %s" % fpath
-            if ask('Continue downloading? (y/[n]): ', ['y', 'n', '']) != 'y':
+            if ask("Continue downloading? (y/[n]): ", ['y', 'n', '']) != 'y':
                 return
     print
 
@@ -317,8 +314,8 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
     def vlog(txt): sys.stdout.write(txt) if verbose else None
 
     # Read contents of *remote* MANIFEST file, and create a dict {fname: md5}
-    manifestRaw = urlopen('%s/%s/MANIFEST' % (url, dataset)).read()
-    md5sRemote = dict(x.split() for x in manifestRaw.splitlines())
+    manifest = urlopen('%s/%s/MANIFEST' % (url, dataset)).readlines()
+    md5sRemote = dict(x.strip().split() for x in manifest)
 
     # Update and read contents of *local* MANIFEST file, and create a dict
     datasetFolder = join(workingCopy, dataset)
@@ -346,10 +343,10 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
                 pass  # just to emphasize that we do nothing in this case
             else:
                 vlog('\r\t%s  %s  (downloading... ' % (red('XX'), fname))
-                data = urlopen('%s/%s/%s' % (url, dataset, fname)).read()
                 if not isdir(dirname(fpath)):
                     os.makedirs(dirname(fpath))
-                open(fpath, 'w').write(data)
+                open(fpath, 'w').writelines(
+                    urlopen('%s/%s/%s' % (url, dataset, fname)))
                 vlog('done)\n')
                 filesUpdated += 1
         except Exception as e:
@@ -360,7 +357,7 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
 
     # Save the new MANIFEST file in the folder of the downloaded dataset
     if filesUpdated > 0:
-        open(join(datasetFolder, 'MANIFEST'), 'w').write(manifestRaw)
+        open(join(datasetFolder, 'MANIFEST'), 'w').writelines(manifest)
 
     if taintedMANIFEST:
         print 'Some files could not be updated. Regenerating local MANIFEST ...'
