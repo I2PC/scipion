@@ -31,6 +31,7 @@ from os.path import exists, relpath
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO, Viewer)
 import pyworkflow.em as em
+import pyworkflow.em.showj as showj
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,IntParam,
@@ -444,8 +445,8 @@ Examples:
         inputParticlesId = self.protocol.inputParticles.get().strId()
         
         labels =  'enabled id _size _filename _transform._matrix'
-        viewParams = {em.ORDER:labels,
-                      em.VISIBLE: labels, em.RENDER:'_filename',
+        viewParams = {showj.ORDER:labels,
+                      showj.VISIBLE: labels, showj.RENDER:'_filename',
                       'labels': 'id',
                       }
         return em.ObjectView(self._project,  self.protocol.strId(),
@@ -642,19 +643,19 @@ class ProtCTFFindViewer(Viewer):
             if self.protocol.useCftfind4:
                 from pyworkflow.em.showj import OBJCMDS, OBJCMD_CTFFIND4
                 self._views.append(em.ObjectView(self._project, obj.strId(), fn,
-                                                 viewParams={em.MODE: em.MODE_MD,
-                                                             em.ORDER: labels,
-                                                             em.VISIBLE: labels,
-                                                             em.ZOOM: 50,
-                                                             em.RENDER: psdLabels,
+                                                 viewParams={showj.MODE: showj.MODE_MD,
+                                                             showj.ORDER: labels,
+                                                             showj.VISIBLE: labels,
+                                                             showj.ZOOM: 50,
+                                                             showj.RENDER: psdLabels,
                                                              OBJCMDS: "'%s'" % OBJCMD_CTFFIND4}))
             else:
                 self._views.append(em.ObjectView(self._project, obj.strId(), fn,
-                                                 viewParams={em.MODE: em.MODE_MD,
-                                                             em.ORDER: labels,
-                                                             em.VISIBLE: labels,
-                                                             em.ZOOM: 50,
-                                                             em.RENDER: psdLabels}))
+                                                 viewParams={showj.MODE: showj.MODE_MD,
+                                                             showj.ORDER: labels,
+                                                             showj.VISIBLE: labels,
+                                                             showj.ZOOM: 50,
+                                                             showj.RENDER: psdLabels}))
         
         return self._views
     
