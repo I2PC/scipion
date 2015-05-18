@@ -42,6 +42,8 @@ import hashlib
 from urllib2 import urlopen
 import getpass
 
+from pyworkflow.utils import red, green, yellow
+
 
 scipion_logo = """
 QQQQQQQQQT!^'::""?$QQQQQQ  S   S   S
@@ -100,7 +102,7 @@ def main():
         sys.exit('At least --list, --check-all or datasets needed.\n'
                  'Run with --help for more info.')
 
-    print 'Selected datasets: %s' % ' '.join(args.datasets)
+    print 'Selected datasets: %s' % yellow(' '.join(args.datasets))
 
     if args.format:
         for dataset in args.datasets:
@@ -241,8 +243,8 @@ def check(dataset, url, verbose=False, updateMANIFEST=False):
 
 def download(dataset, destination=None, url=None, verbose=False):
     """ Download all the data files mentioned in url/dataset/MANIFEST """
-
-    destination = destination if destination else os.environ['SCIPION_TESTS']
+    # Get default values for variables if we got None.
+    destination = destination or os.environ['SCIPION_TESTS']
 
     # First make sure that we ask for a known dataset.
     datasetsAvailable = [x.strip('./') for x in
@@ -260,6 +262,7 @@ def download(dataset, destination=None, url=None, verbose=False):
     try:
         if verbose:
             print "Retrieving MANIFEST file"
+
         data = urlopen('%s/%s/MANIFEST' % (url, dataset)).read()
         open(manifest, 'w').write(data)
     except Exception as e:
@@ -268,33 +271,31 @@ def download(dataset, destination=None, url=None, verbose=False):
 
     # Now retrieve all of the files mentioned in MANIFEST, and check their md5.
     print 'Fetching files of dataset "%s"...' % dataset
-    manifestLines = open(manifest).readlines()
-    totalNumber = len(manifestLines)
-    prevPercent = 0
-    for number, line in enumerate(manifestLines):
-        fname, md5InLine = line.strip().split()
+    lines = open(manifest).readlines()
+    done = 0.0  # fraction already done
+    inc = 1.0 / len(lines)  # increment, how much each iteration represents
+    for line in lines:
+        fname, md5Remote = line.strip().split()
         fpath = join(datasetFolder, fname)
         try:
-            # Create file with downloaded content
-            data = urlopen('%s/%s/%s' % (url, dataset, fname)).read()
+            # Download content and create file with it.
             if not isdir(dirname(fpath)):
                 os.makedirs(dirname(fpath))
-            open(fpath, 'w').write(data)
+            open(fpath, 'w').write(
+                urlopen('%s/%s/%s' % (url, dataset, fname)).read())
 
-            percent = ((number+1)/(totalNumber*1.0))*100
+            done += inc
             if verbose:
-                sys.stdout.write('\t( %3d %% )\t%s' % (percent, fname))
+                sys.stdout.write("\t( %3d %% )\t%s" % (100 * done, fname))
             else:
-                progress = percent - prevPercent
-                sys.stdout.write("#" * int(1 + progress))
+                sys.stdout.write(red("#") * (int(50*done) - int(50*(done-inc))))
                 sys.stdout.flush()
-            prevPercent = percent
 
             md5 = md5sum(fpath)
-            assert md5 == md5InLine, \
-                'Bad md5. Expected: %s Computed: %s' % (md5InLine, md5)
+            assert md5 == md5Remote, \
+                "Bad md5. Expected: %s Computed: %s" % (md5Remote, md5)
             if verbose:
-                sys.stdout.write('    \tMD5 OK\n')
+                sys.stdout.write(green("    \tMD5 OK\n"))
         except Exception as e:
             print "\nError in %s (%s)" % (fname, e)
             print "URL: %s/%s/%s" % (url, dataset, fname)
@@ -309,7 +310,7 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
     It compares the md5 of remote files in url/dataset/MANIFEST with the
     ones in workingCopy/dataset/MANIFEST, and downloads only when necessary.
     """
-    # Get default values for variables if we got none
+    # Get default values for variables if we got None.
     workingCopy = workingCopy or os.environ['SCIPION_TESTS']
 
     # Verbose log
@@ -341,10 +342,10 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
         fpath = join(datasetFolder, fname)
         try:
             if exists(fpath) and md5sLocal[fname] == md5sRemote[fname]:
-                vlog('\r\tOK  %s\n' % fname)
+                vlog('\r\t%s  %s\n' % (green('OK'), fname))
                 pass  # just to emphasize that we do nothing in this case
             else:
-                vlog('\r\tXX  %s  (downloading... ' % fname)
+                vlog('\r\t%s  %s  (downloading... ' % (red('XX'), fname))
                 data = urlopen('%s/%s/%s' % (url, dataset, fname)).read()
                 if not isdir(dirname(fpath)):
                     os.makedirs(dirname(fpath))
