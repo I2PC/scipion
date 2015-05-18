@@ -86,7 +86,7 @@ def replace(fname,
                     changed += 1
                 fout.write(line)
         fout.seek(0)
-        open(fname, 'wb').write(fout.read())  # overwrite fname
+        open(fname, 'wb').writelines(fout)  # overwrite fname
 
     return changed
 
