@@ -247,12 +247,12 @@ def setRenderingOptions(request, dataset, table, inputParams):
             
             if isVol:
                 inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_slice")
-                dataset.setVolumeName(_imageVolNameNew)
+                dataset.setVolumeName(_imageVolName)
             else:
                 if inputParams[sj.MODE] != sj.MODE_TABLE:
                     inputParams[sj.MODE] = sj.MODE_GALLERY
                
-        volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolNameNew)
+        volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
     
     return volPath, _stats, _imageDimensions, _imageVolNameOld
 
