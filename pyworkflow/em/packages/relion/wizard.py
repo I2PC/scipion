@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.relion.protocol_autopick import ProtRelionAutopick
 """
 This module implement some wizards
 """
@@ -37,7 +36,7 @@ from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_preprocess import ProtRelionPreprocessParticles
-from protocol_autopick import ProtRelionAutopickFom
+from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
 
 #===============================================================================
 # MASKS
@@ -170,13 +169,11 @@ class RelionAutopickParams(EmWizard):
     def show(self, form):
         autopickProt = form.protocol
         autopickFomProt = autopickProt.getInputAutopick()
-        params = autopickFomProt.getAutopickParams()
         # Get current values of the properties
         _, values = self._getInputProtocol(self._targets, autopickProt)
         threshold, distance = values
         autopickFomProt.setStepsExecutor() # allow to use runJob
-        autopickFomProt.autopickStep(params, 
-                                     threshold, distance, 
+        autopickFomProt.autopickStep(threshold, distance, 
                                      '--read_fom_maps')
         print "Writing Xmipp coordinate files."
         micFn, coordDir = autopickFomProt.writeXmippCoords()

@@ -1357,9 +1357,9 @@ class FormWindow(Window):
         queues = self.protocol.getHostConfig().queueSystem.queues
         # If there is only one Queue and it has not parameters
         # dont bother to showing the QueueDialog
-        noQueueChoices = len(queues) == 1 and len(queues.values[0]) == 0
+        noQueueChoices = len(queues) == 1 and len(queues.values()[0]) == 0
         if noQueueChoices:
-            result = queues.keys[0], {}
+            result = queues.keys()[0], {}
         else:
             dlg = QueueDialog(self, queues)
 

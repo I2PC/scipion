@@ -151,7 +151,7 @@ class XmippViewer(Viewer):
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
-
+            
             self._views.append(ObjectView(self._project, obj.strId(), fn))
             
         elif issubclass(cls, SetOfNormalModes):
@@ -166,8 +166,7 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
-                                                      MODE: MODE_MD,
-                                                      RENDER:'_filename'}))
+                                                      MODE: MODE_MD, RENDER: "no"}))
 
         elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()
@@ -357,7 +356,7 @@ class XmippViewer(Viewer):
                 writeSetOfMicrographs(micSet, micsfn)
                 
             posDir = getattr(obj.getCoords(), '_xmippMd').get()  # extra dir istead of md file for SetOfCoordinates
-            launchSupervisedPickerGUI(2, micsfn, posDir, 'review', self.getProject().getDbPath(), obj.strId(), self.getProject().port)
+            launchSupervisedPickerGUI(2, micsfn, posDir, 'review', obj)
 
         elif issubclass(cls, XmippProtParticlePickingPairs):
             tmpDir = self._getTmpPath(obj.getName()) 
@@ -368,7 +367,7 @@ class XmippViewer(Viewer):
                                         obj.outputCoordinatesTiltPair.getTilted().getMicrographs(), 
                                         mdFn) 
             extraDir = obj._getExtraPath()
-            launchTiltPairPickerGUI(obj.memory.get(), mdFn, extraDir, 'readonly', self.getProject().getDbPath(), obj.strId(), self.getProject().port)
+            launchTiltPairPickerGUI(obj.memory.get(), mdFn, extraDir, 'readonly', obj)
 
         elif issubclass(cls, ProtMovieAlignment):
             outputMics = obj.outputMicrographs
@@ -376,7 +375,7 @@ class XmippViewer(Viewer):
             labels = plotLabels + ' _filename '
             objCommands = "'%s' '%s' '%s'" % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
             
-            self._views.append(ObjectView(self._project, obj.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
+            self._views.append(ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
                                                       ORDER: labels, VISIBLE: labels, RENDER: plotLabels, 'zoom': 50,
                                                       OBJCMDS: objCommands}))
 

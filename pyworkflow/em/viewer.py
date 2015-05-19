@@ -29,31 +29,24 @@ This module implement viewers for some type of common objects.
 """
 from __future__ import print_function
 import os
+import sys
 import shlex
 import ast
-from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
-from pyworkflow.em.data import PdbFile
-from pyworkflow.utils import Environ, runJob
-from pyworkflow.em.showj import CHIMERA_PORT
-from showj import (runJavaIJapp, ZOOM, ORDER, VISIBLE, 
-                   MODE, PATH, TABLE_NAME, MODE_MD, RENDER, INVERTY)
 from threading import Thread
 from multiprocessing.connection import Client
 from numpy import flipud
-import xmipp
-from pyworkflow.em import metadata as md
-import sys
-from pyworkflow.utils import getFreePort
-from os import system
-from pyworkflow.gui.matplotlib_image import ImageWindow
-import os.path
 import socket
-from time import sleep
-from numpy import linalg as LA
-import numpy
-from math import acos, pi
-# PATH is used by app/em_viewer.py
 
+from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
+from pyworkflow.utils import Environ, runJob
+from pyworkflow.utils import getFreePort
+from pyworkflow.gui.matplotlib_image import ImageWindow
+
+# From pyworkflow.em level
+import showj
+import metadata as md
+import xmipp
+from data import PdbFile
 
 
 #------------------------ Some common Views ------------------
@@ -78,7 +71,7 @@ class DataView(View):
             self._tableName, self._path = None, path
             
     def show(self):        
-        runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), env=self._env)
+        showj.runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), env=self._env)
     
     def getShowJParams(self):
         inputPath = self._path if not self._tableName else self._tableName + '@' + self._path
@@ -153,16 +146,18 @@ class ObjectView(DataView):
         return params
     
     def show(self):
-        runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), env=self._env)
+        showj.runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), env=self._env)
         
         
 class ClassesView(ObjectView):
     """ Customized ObjectView for SetOfClasses. """
     def __init__(self, project, inputid, path, other='', viewParams={}, **kwargs):
         labels =  'enabled id _size _representative._filename'
-        defaultViewParams = {ORDER:labels,
-                             VISIBLE: labels, RENDER:'_representative._filename',
-                             'sortby': '_size desc', 'labels': 'id _size',
+        defaultViewParams = {showj.ORDER:labels,
+                             showj.VISIBLE: labels, 
+                             showj.RENDER:'_representative._filename',
+                             showj.SORT_BY: '_size desc', 
+                             showj.LABELS: 'id _size',
                              }
         defaultViewParams.update(viewParams)
         ObjectView.__init__(self, project, inputid, path, other, defaultViewParams, **kwargs)
@@ -171,7 +166,8 @@ class ClassesView(ObjectView):
 class Classes3DView(ClassesView):
     """ Customized ObjectView for SetOfClasses. """
     def __init__(self, project, inputid, path, other='', viewParams={}, **kwargs):
-        defaultViewParams = {ZOOM: '99', MODE: 'metadata'}
+        defaultViewParams = {showj.ZOOM: '99', 
+                             showj.MODE: 'metadata'}
         defaultViewParams.update(viewParams)
         ClassesView.__init__(self, project, inputid, path, other, defaultViewParams, **kwargs)
             
@@ -184,11 +180,11 @@ class CoordinatesObjectView(DataView):
         self.outputdir = outputdir
         
     def getShowJParams(self):
-        params = '--input %s --output %s --mode readonly --scipion'%(self._path, self.outputdir)
+        params = '--input %s --output %s --mode readonly'%(self._path, self.outputdir)
         return params
     
     def show(self):
-        runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), env=self._env)
+        showj.runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), env=self._env)
         
         
 class ImageView(View):
@@ -199,8 +195,6 @@ class ImageView(View):
         
     def getImagePath(self):
         return self._imagePath
-
-
 
         
 #------------------------ Some views and  viewers ------------------------
@@ -241,9 +235,9 @@ class ChimeraDataView(ChimeraClientView):
         #print 'on pair'
         self.dataview = dataview
         self.showjPort = getFreePort()
-        self.dataview._viewParams[CHIMERA_PORT] = self.showjPort
-        self.dataview._viewParams[MODE] = MODE_MD
-        self.dataview._viewParams[INVERTY] = ''
+        self.dataview._viewParams[showj.CHIMERA_PORT] = self.showjPort
+        self.dataview._viewParams[showj.MODE] = showj.MODE_MD
+        self.dataview._viewParams[showj.INVERTY] = ''
         ChimeraClientView.__init__(self, vol.getFileName(), showProjection=True, showjPort=self.showjPort, voxelSize=vol.getSamplingRate())
 
     def show(self):

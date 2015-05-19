@@ -593,19 +593,15 @@ public abstract class ParticlePicker {
     }
 
     public static File[] getCoordsFiles(String folder)
-        {
-            return new File(folder).listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        String lowercasename = name.toLowerCase();
-                        return lowercasename.endsWith(".pos") || lowercasename.endsWith(".box");
-                    }
-                });
-        }
+    {
+        return new File(folder).listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    String lowercasename = name.toLowerCase();
+                    return lowercasename.endsWith(".pos") || lowercasename.endsWith(".box");
+                }
+            });
+    }
 
-    
-     
-     
-     
      public boolean isScipionSave()
      {
          if(params == null)
@@ -613,23 +609,20 @@ public abstract class ParticlePicker {
          return params.port != null && mode != Mode.ReadOnly;
      }
 
-    public String getScipionSaveCommand() {
-        String cmd = String.format("run function registerCoords %s %s", params.dbpath, params.protid);
-        return cmd;
-    }
-     
-    
+       
     public abstract int getParticlesCount();
 
-    public String getProtId() {
-        return params.protid;
-    }
-
+    
     
     public static ParticlePicker getPicker()
     {
         return picker;
     }
+
+	public Integer getPort()
+	{
+		return params.port;
+	}
      
 
    

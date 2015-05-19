@@ -30,7 +30,8 @@ from pyworkflow.viewer import WEB_DJANGO, MessageView, ProtocolViewer, TextView,
 from pyworkflow.web.app.views_util import getImageUrl
 from views_util import savePlot
 from pyworkflow.gui.plotter import Plotter
-from pyworkflow.em import TABLE_NAME, DataView, ImageView, PATH
+from pyworkflow.em.viewer import DataView, ImageView
+from pyworkflow.em.showj import TABLE_NAME, PATH
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 

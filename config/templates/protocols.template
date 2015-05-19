@@ -1,5 +1,6 @@
-# Scipion will read this file from ~/.config/scipion/ to construct the
-# protocols menu.
+# -*- conf -*-
+
+# Scipion will read this file to construct the protocols menu.
 
 [PROTOCOLS]
 
@@ -66,5 +67,4 @@ HEMNMA = [
     {"tag": "section", "text": "5. Conformational distribution", "children": [
         {"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "Image analysis with selected modes"}]},
     {"tag": "section", "text": "6. 3D reconstructions & animations", "children": [
-        {"tag": "protocol", "value": "XmippProtDimredNMA", "text": "Clustering and trajectories"}]}
-    ]
+        {"tag": "protocol", "value": "XmippProtDimredNMA", "text": "Clustering and trajectories"}]}]

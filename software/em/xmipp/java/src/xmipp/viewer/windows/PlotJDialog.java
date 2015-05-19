@@ -41,7 +41,9 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -57,6 +59,7 @@ import xmipp.utils.ColorRenderer;
 import xmipp.utils.Params;
 import xmipp.utils.ScipionParams;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
@@ -204,6 +207,12 @@ public class PlotJDialog extends XmippDialog
 
 	@Override
 	public void handleOk() {
+		
+		if(plotTypecb.getSelectedItem().equals("Histogram") && tfBins.getText().isEmpty())
+		{
+			XmippDialog.showError((JFrame)parent, XmippMessage.getEmptyFieldMsg("Bins"));
+			return;
+		}
 
 		String labels = "";
 		String colors = "";
@@ -211,18 +220,18 @@ public class PlotJDialog extends XmippDialog
 		String markers = "";
 		Boolean checked = false;
 		
-                int plots = 0;
-                ColumnInfo plotci = null;
+        int plots = 0;
+        ColumnInfo plotci = null;
 		for (ColumnInfo ci: rows) {
 			ColumnInfo.ColumnExtraInfo cei = rowsExtra.get(ci);
 			if (cei.plot) {
-                                plots ++;
+                plots ++;
 				labels += ci.labelName + " ";
 				colors += "#" + cei.color + " ";
 				styles += cei.linestyle + " ";
 				markers += cei.marker + " ";
 				checked = true;
-                                plotci = ci;
+                plotci = ci;
 			}
 		}
                 String ylabel = tfYLabel.getText().trim();
@@ -230,7 +239,10 @@ public class PlotJDialog extends XmippDialog
                     ylabel = plotci.labelName;
 
 		if (!checked)
+		{
+			XmippDialog.showError((JFrame)parent, XmippMessage.getEmptyFieldMsg("Label"));
 			return;
+		}
 
 		try {
 				
@@ -264,14 +276,18 @@ public class PlotJDialog extends XmippDialog
                 	
                 	if(!getXColumn().isEmpty())
                 		cmd += " --xcolumn " + getXColumn();
+                	if(!data.getPreffix().isEmpty())
+                		cmd += " --block " + data.getPreffix();
+                	if(plotTypecb.getSelectedItem().equals("Histogram"))
+                		cmd += " --bins " + getBins();
                 	if(!getPlotTitle().isEmpty())
                 		cmd += " --title " + getPlotTitle();
                 	if(!getXLabel().isEmpty())
                 		cmd += " --xtitle " + getXLabel();
                 	if(!ylabel.isEmpty())
                 		cmd += " --ytitle " + ylabel;
-                	
-                	XmippWindowUtil.executeCommand(cmd, false);
+                	System.out.println(cmd);
+                	String output = XmippWindowUtil.executeCommand(cmd, false);
                 }
 
 		} catch (Exception e) {

@@ -64,9 +64,7 @@ public class ScipionGalleryData extends GalleryData {
     }
 
     
-    public boolean isColumnFormat() {
-        return true;
-    }
+    
 
     /**
      * Create a metadata just with selected items
@@ -349,35 +347,7 @@ public class ScipionGalleryData extends GalleryData {
             
     }
     
-     /**
-     * Return true if current file is a rotspectra classes
-     */
-    public boolean isRotSpectraMd() 
-    {
-        GalleryData.RotSpectra rs = getRotSpectra();
-        if (rs != null) {
-            boolean filesExist =  Filename.exists(rs.fnVectors) && Filename.exists(rs.fnVectorsData);
-            
-            if (isClassificationMd() && filesExist) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    
-    
-    public GalleryData.RotSpectra getRotSpectra()
-    {
-        String dir = getExtraPath();
-        if(dir == null)
-            return null;
-        String fnClasses = Filename.join(dir, "kerdensom_classes.xmd");
-        String fnVectors = Filename.join(dir, "kerdensom_vectors.xmd");
-        String fnVectorsData = Filename.join(dir, "kerdensom_vectors.vec");
-        return new RotSpectra(fnClasses, fnVectors, fnVectorsData);
-    }
-    
+       
     public String getExtraPath()
     {
         if(filename == null)

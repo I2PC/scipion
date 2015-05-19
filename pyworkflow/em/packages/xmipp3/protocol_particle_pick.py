@@ -35,7 +35,6 @@ import xmipp
 from xmipp3 import XmippProtocol
 from pyworkflow.em.showj import launchSupervisedPickerGUI
 from convert import writeSetOfMicrographs, readSetOfCoordinates
-from pyworkflow.protocol import getProtocolFromDb
 
 
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
@@ -93,9 +92,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     def launchParticlePickGUIStep(self, micFn):
         # Launch the particle picking GUI
         extraDir = self._getExtraPath()
-
-        self.initProtocolTCPServer()
-        process = launchSupervisedPickerGUI(self.memory.get(), micFn, extraDir, 'manual', self.getDbPath(), self.strId(), self.port)
+        process = launchSupervisedPickerGUI(self.memory.get(), micFn, extraDir, 'manual', self)
         process.wait()
 
     def _importFromFolderStep(self):
@@ -134,8 +131,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         else:
             return [self.getMethods(None)]
 
-    def getInputMicrographs(self):
-        return self.inputMicrographs.get()
+    
     
     def getMethods(self, output):#output is not used but to overwrite getMethods it is used
         configfile = join(self._getExtraPath(), 'config.xmd')
@@ -178,28 +174,12 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             summary.append("Last micrograph: " + activeMic)
         return "\n".join(summary)
 
-    def registerCoords(self, args):
+    
+    def getCoordsDir(self):
+        return self._getExtraPath()
+    
+    
 
-        from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
-
-        extradir = self._getExtraPath()
-        count = self.getOutputsSize()
-
-        suffix = str(count + 1) if count > 0 else ''
-
-
-        inputset = self.getInputMicrographs()
-        outputName = 'outputCoordinates' + suffix
-        outputset = self._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
-        readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
-
-        summary = self.getSummary(outputset)
-        outputset.setObjComment(summary)
-
-        outputs = {outputName: outputset}
-        self._defineOutputs(**outputs)
-        self._defineSourceRelation(inputset, outputset)
-        self._store()
 
 
 

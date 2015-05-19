@@ -38,7 +38,7 @@ from pyworkflow.em.packages.relion.convert import rowToAlignment, relionToLocati
 class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
     """ Wrapper to Relion 2D - class averages program.
     """
-    _label = '2d classify'
+    _label = '2D classification'
     IS_2D = True
     OUTPUT_TYPE = SetOfClasses2D
     
@@ -56,8 +56,13 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _setSamplingArgs(self, args):
         """ Set sampling related params. """
-        # Sampling stuff            
-        args['--psi_step'] = self.inplaneAngularSamplingDeg.get() * 2
+        # Sampling stuff
+        if self.doImageAlignment:
+            args['--offset_range'] = self.offsetSearchRangePix.get()
+            args['--offset_step']  = self.offsetSearchStepPix.get() * 2
+            args['--psi_step'] = self.inplaneAngularSamplingDeg.get() * 2
+        else:
+            args['--skip_align'] = ''
 
     #--------------------------- STEPS functions --------------------------------------------       
     def _loadClassesInfo(self, iteration):

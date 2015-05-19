@@ -27,7 +27,8 @@
 import os
 
 
-from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+import pyworkflow.em.showj as showj
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
@@ -35,6 +36,7 @@ from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_postprocess import ProtRelionPostprocess
+from protocol_autopick import ProtRelionAutopick
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
                                         EnumParam, FloatParam, BooleanParam,
@@ -139,14 +141,22 @@ Examples:
         if self.protocol.IS_CLASSIFY:
 
             group.addParam('showImagesInClasses', LabelParam, 
-                          label='Particles assigned to each Class',
-                          help='Display the classes and the images associated.')
+                          label='Show classes with particles',
+                          help='Display each class with the number of particles assigned. \n'
+                               '*Note1*: The images of one class can be shown by \n'
+                               'right-click on the class and select "Open images".\n'
+                               '*Note2*: This option convert the Relion star file to\n'
+                               'Scipion format and can take several minutes if the \n'
+                               'number of particles is high.')
+            group.addParam('showClassesOnly', LabelParam, 
+                          label='Show classes only (*_model.star)',
+                          help='Display the classes directly form the *_model.star file.')            
             changesLabel = 'Changes in Offset, Angles and Classes'
         else:
             group.addParam('showImagesAngularAssignment', LabelParam, 
                            label='Particles angular assignment')
         group.addParam('showOptimiserFile', LabelParam, 
-                       label='Show optimizer file')
+                       label='Show *_optimizer.star file')
         
         if self.protocol.IS_3D:
             group = form.addGroup('Volumes')
@@ -162,8 +172,8 @@ Examples:
                               label='Classes list',
                               help='')
             else:
-                group.addParam('showHalves', EnumParam, choices=['half1', 'half2', 'both'], default=0,
-                              label='Half to visualize',
+                group.addParam('showHalves', EnumParam, choices=['half1', 'half2', 'both', 'final'], default=0,
+                              label='Volume to visualize',
                               help='Select which half do you want to visualize.')
             
             group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
@@ -182,7 +192,7 @@ Examples:
                           help='')
             group = form.addGroup('Resolution')
             group.addParam('resolutionPlotsSSNR', LabelParam, default=True,
-                          label='Display SSNR plotss',
+                          label='Display SSNR plots',
                           help='Display signal to noise ratio plots (SSNR) ')
             group.addParam('resolutionPlotsFSC', LabelParam, default=True,
                           label='Display resolution plots (FSC)',
@@ -207,6 +217,7 @@ Examples:
     def _getVisualizeDict(self):
         self._load()
         return {'showImagesInClasses': self._showImagesInClasses,
+                'showClassesOnly': self._showClassesOnly,
                 'showImagesAngularAssignment' : self._showImagesAngularAssignment,
                 'showOptimiserFile': self._showOptimiserFile,
                 'showLL': self._showLL,
@@ -224,6 +235,16 @@ Examples:
 #===============================================================================
 # showImagesInClasses     
 #===============================================================================
+    def _getZoom(self):
+        # Ensure that classes are shown at least at 128 px to 
+        # properly see the rlnClassDistribution label. 
+        dim = self.protocol.inputParticles.get().getDim()[0]
+        if dim < 128:
+            zoom = 128*100/dim
+        else:
+            zoom = 100
+        return zoom
+        
     def _showImagesInClasses(self, paramName=None):
         """ Read Relion _data.star images file and 
         generate a new metadata with the Xmipp classification standard:
@@ -238,6 +259,21 @@ Examples:
             views.append(v)
         
         return views
+    
+    def _showClassesOnly(self, paramName=None):
+        views = []
+        viewParams = {showj.MODE: showj.MODE_GALLERY,
+                      showj.RENDER: 'rlnReferenceImage',
+                      showj.SORT_BY: 'rlnClassDistribution desc',
+                      showj.LABELS: 'rlnClassDistribution',
+                      showj.ZOOM: str(self._getZoom())
+                      }
+        
+        for it in self._iterations:
+            modelFile = self.protocol._getFileName('model', iter=it)
+            v = self.createDataView('model_classes@' + modelFile, viewParams=viewParams)
+            views.append(v)
+        return views        
 
 #===============================================================================
 # showImagesAngularAssignment     
@@ -330,44 +366,29 @@ Examples:
 #===============================================================================
 # ShowVolumes
 #===============================================================================
+    def _showVolumes(self, paramName=None):
+        if self.displayVol == VOLUME_CHIMERA:
+            return self._showVolumesChimera()
+        elif self.displayVol == VOLUME_SLICES:
+            return self._createVolumesSqlite()
+    
     def _createVolumesSqlite(self):
         """ Write an sqlite with all volumes selected for visualization. """
-
-        prefixes = self._getPrefixes()
-
         path = self.protocol._getExtraPath('relion_viewer_volumes.sqlite')
         samplingRate = self.protocol.inputParticles.get().getSamplingRate()
 
         files = []
-        for it in self._iterations:
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    if exists(volFn.replace(':mrc', '')):
-                        files.append(volFn)
+        volumes = self._getVolumeNames()
+        for volFn in volumes:
+            if exists(volFn.replace(':mrc', '')):
+                files.append(volFn)
         self.createVolumesSqlite(files, path, samplingRate)
         return [em.ObjectView(self._project, self.protocol.strId(), path)]
-
-
-    def getVolumeNames(self):
-
-        vols = []
-        prefixes = self._getPrefixes()
-        for it in self._iterations:
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    vols.append(volFn)
-        return vols
-
+    
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
-        prefixes = self._getPrefixes()
-        volumes = []
+        volumes = self._getVolumeNames()
         
-        for volFn in self.getVolumeNames():
-            volumes.append(volFn)
-                    
         if len(volumes) > 1:
             cmdFile = self.protocol._getExtraPath('chimera_volumes.cmd')
             f = open(cmdFile, 'w+')
@@ -386,13 +407,6 @@ Examples:
             view = em.ChimeraClientView(volumes[0])
             
         return [view]
-            
-    def _showVolumes(self, paramName=None):
-        if self.displayVol == VOLUME_CHIMERA:
-            return self._showVolumesChimera()
-        
-        elif self.displayVol == VOLUME_SLICES:
-            return self._createVolumesSqlite()
     
 #===============================================================================
 # showAngularDistribution
@@ -422,14 +436,15 @@ Examples:
         if len(self._refsList) == 1:
             # If just one reference we can show the angular distribution
             ref3d = self._refsList[0]
-            for prefix in prefixes:
-                volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                if exists(volFn.replace(":mrc","")):
+            volFn = self._getVolumeNames()[0]
+            if exists(volFn.replace(":mrc","")):
+                for prefix in prefixes:
                     sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
-                    self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, prefix, ref3d))
+                    if not exists(sqliteFn):
+                        self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(self._getMdOut(it, prefix, ref3d)))
                     return em.ChimeraClientView(volFn, angularDistFile=sqliteFn, spheresDistance=radius)
-                else:
-                    raise Exception("This class is Empty. Please try with other class")
+            else:
+                raise Exception("This class is Empty. Please try with other class")
         else:
             return self.infoMessage("Please select only one class to display angular distribution",
                                     "Input selection") 
@@ -441,20 +456,30 @@ Examples:
         nrefs = len(self._refsList)
         n = nrefs * len(prefixes)
         gridsize = self._getGridSize(n)
-        
-        data_angularDist = self.protocol._getIterAngularDist(it)
-        if exists(data_angularDist):
-            plotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
-                                     mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                    title = '%s class %d' % (prefix, ref3d)
-                    sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
-                    self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(it, prefix, ref3d))
-                    plotter.plotAngularDistributionFromMd(sqliteFn, title)
-            return plotter
+        if prefixes[0] == "final":
+            title = "Final"
         else:
-            return
+            title = 'Iteration %d' % it
+        
+        plotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
+                                 mainTitle=title, windowTitle="Angular Distribution")
+        for ref3d in self._refsList:
+            for prefix in prefixes:
+                randomSet = self._getRandomSet(prefix)
+                dataStar = self._getDataStar(prefix, it)
+                if exists(dataStar):
+                    if randomSet > 0:
+                        title = '%s class %d' % (prefix, ref3d)
+                    else:
+                        title = 'class %d' % ref3d
+                    
+                    sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
+                    if not exists(sqliteFn):
+                        self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(self._getMdOut(it, prefix, ref3d)))
+                    plotter.plotAngularDistributionFromMd(sqliteFn, title)
+                    return plotter
+                else:
+                    return
     
 #===============================================================================
 # plotSSNR              
@@ -474,7 +499,7 @@ Examples:
                 blockName = 'model_class_%d@' % ref3d
                 legendName = []
                 for it in self._iterations:
-                    fn = self.protocol._getFileName(prefix + 'model', iter=it)
+                    fn = self._getModelStar(prefix, it)
                     if exists(fn):
                         self._plotSSNR(a, blockName+fn)
                     legendName.append('iter %d' % it)
@@ -515,7 +540,7 @@ Examples:
                 legends = []
                 blockName = 'model_class_%d@' % ref3d
                 for it in self._iterations:
-                    model_star = self.protocol._getFileName(prefix + 'model', iter=it)
+                    model_star = self._getModelStar(prefix, it)
                     if exists(model_star):
                         self._plotFSC(a, blockName + model_star)
                         legends.append('iter %d' % it)
@@ -547,8 +572,15 @@ Examples:
     def createDataView(self, filename, viewParams={}):
         return em.DataView(filename, env=self._env, viewParams=viewParams)
 
-    def createScipionView(self, filename, viewParams={}):
-
+    def createScipionView(self, filename):
+        labels =  'enabled id _size _representative._filename '
+        labels += '_rlnclassDistribution _rlnAccuracyRotations _rlnAccuracyTranslations'
+        viewParams = {showj.ORDER: labels,
+                      showj.VISIBLE: labels, 
+                      showj.RENDER:'_representative._filename',
+                      showj.SORT_BY: '_size desc',
+                      showj.ZOOM: str(self._getZoom())
+                      }
         inputParticlesId = self.protocol.inputParticles.get().strId()
         ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
         view = ViewClass(self._project,
@@ -562,8 +594,8 @@ Examples:
         inputParticlesId = self.protocol._getInputParticles().strId()
         
         labels =  'enabled id _size _filename _transform._matrix'
-        viewParams = {em.ORDER:labels,
-                      em.VISIBLE: labels, em.RENDER:'_filename',
+        viewParams = {showj.ORDER:labels,
+                      showj.VISIBLE: labels, showj.RENDER:'_filename',
                       'labels': 'id',
                       }
         return em.ObjectView(self._project, 
@@ -583,7 +615,8 @@ Examples:
         self.firstIter = self.protocol._firstIter()
         self.lastIter = self.protocol._lastIter()
         
-        if self.viewIter.get() == ITER_LAST:
+        halves = getattr(self, 'showHalves', None)
+        if self.viewIter.get() == ITER_LAST or halves == 3:
             self._iterations = [self.lastIter]
         else:
             self._iterations = self._getListFromRangeString(self.iterSelection.get())
@@ -614,24 +647,74 @@ Examples:
     
     def _getPrefixes(self):
         prefixes = self.protocol.PREFIXES
-        print "halves1: ", prefixes
         halves = getattr(self, 'showHalves', None)
         if halves:
             if halves == 0:
                 prefixes = ['half1_']
             elif halves == 1:
                 prefixes = ['half2_']
-        print "halves: ", halves, prefixes
+            elif halves == 3:
+                prefixes = ['final']
         return prefixes
     
-    def _iterAngles(self, it, prefix, ref3d):
-        data_angularDist = self.protocol._getIterAngularDist(it)
-        angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
-        angMd = md.MetaData(angDistFile)
-        for objId in  angMd:
-            rot = angMd.getValue(md.RLN_ORIENT_ROT, objId)
-            tilt = angMd.getValue(md.RLN_ORIENT_TILT, objId)
+    def _iterAngles(self, mdOut):
+        
+        for objId in mdOut:
+            rot = mdOut.getValue(md.RLN_ORIENT_ROT, objId)
+            tilt = mdOut.getValue(md.RLN_ORIENT_TILT, objId)
             yield rot, tilt
+    
+    def _getVolumeNames(self):
+        vols = []
+        prefixes = self._getPrefixes()
+        if prefixes[0] == "final":
+            for ref3d in self._refsList:
+                volFn = self.protocol._getExtraPath("relion_class%03d.mrc:mrc" % ref3d)
+                vols.append(volFn)
+        else:
+            for it in self._iterations:
+                for ref3d in self._refsList:
+                    for prefix in prefixes:
+                        volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                        vols.append(volFn)
+        return vols
+    
+    def _getMdOut(self, it, prefix, ref3d):
+        randomSet = self._getRandomSet(prefix)
+        dataStar = self._getDataStar(prefix, it)
+        
+        if randomSet > 0 :
+            mdAll = md.MetaData(dataStar)
+            mdTmp = md.MetaData()
+            mdTmp.importObjects(mdAll, md.MDValueEQ(md.RLN_PARTICLE_RANDOM_SUBSET, randomSet))
+        else:
+            mdTmp = md.MetaData(dataStar)
+        
+        mdOut = md.MetaData()
+        mdOut.importObjects(mdTmp, md.MDValueEQ(md.RLN_PARTICLE_CLASS, ref3d))
+        return mdOut
+    
+    def _getDataStar(self, prefix, it):
+        randomSet = self._getRandomSet(prefix)
+        if randomSet > 0 :
+            return self.protocol._getFileName('data', iter=it)
+        else:
+            return self.protocol._getFileName('dataFinal')
+    
+    def _getModelStar(self, prefix, it):
+        randomSet = self._getRandomSet(prefix)
+        if randomSet > 0 :
+            return self.protocol._getFileName(prefix + 'model', iter=it)
+        else:
+            return self.protocol._getFileName('modelFinal')
+    
+    def _getRandomSet(self, prefix):
+        if prefix == "half1_":
+            return 1
+        elif prefix == "half2_":
+            return 2
+        else:
+            return 0
 
 
 class PostprocessViewer(ProtocolViewer):
@@ -759,4 +842,17 @@ class PostprocessViewer(ProtocolViewer):
         if value:
             inv = 1/value
         return "1/%0.2f" % inv
+    
+    
+
+class RelionAutopickViewer(Viewer):
+    """ Class to visualize Relion postprocess protocol """
+    _targets = [ProtRelionAutopick]
+    _environments = [DESKTOP_TKINTER]
+    
+    def visualize(self, obj, **args):
+        micPath, coordPath = obj.writeXmippOutputCoords()
+        import pyworkflow.em.packages.xmipp3 as xmipp3
+        xmipp3.viewer.launchSupervisedPickerGUI(2, micPath, coordPath, 'manual', 
+                                                self.protocol)
     

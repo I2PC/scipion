@@ -1,3 +1,5 @@
+# -*- conf -*-
+
 [localhost]
 PARALLEL_COMMAND = mpirun -np %_(JOB_NODES)d -bynode %_(COMMAND)s
 NAME = PBS/TORQUE
@@ -40,8 +42,4 @@ SUBMIT_TEMPLATE = #!/bin/bash
     %_(JOB_COMMAND)s
 CANCEL_COMMAND = canceljob %_(JOB_ID)s
 CHECK_COMMAND = qstat %_(JOB_ID)s
-QUEUES = {
-    "standard": {"MAX_CORES": 4,
-                 "ALLOW_MPI": true,
-                 "ALLOW_THREADS": true}
-         }
+QUEUES = { "default": {} }
