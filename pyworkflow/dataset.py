@@ -324,7 +324,6 @@ class SqliteDataSet(DataSet):
         # This will store the images columsn to join
         # the _index and the _filename
         imgCols = {}
-        
         for row in db._iterResults():
             renderType = COL_RENDER_NONE
             colName = row['column_name']
@@ -375,10 +374,10 @@ class SqliteDataSet(DataSet):
                     index = rowDict[colName]
                     
                     filename = os.path.join(self.projectPath, rowDict[k])
-                    
+                    filepath = filename.replace(":mrc", "")
                     if not checkedImgCols.get(colName, False):
-                        if os.path.exists(filename):
-#                             print "Fn to get dims: %s@%s" % (index,filename)
+                        if os.path.exists(filepath):
+                            #print "Fn to get dims: %s@%s" % (index,filename)
                             x, y, z, n = ih.getDimensions((index, filename))
                             if z > 1:
                                 table.getColumn(k).setRenderType(COL_RENDER_VOLUME)

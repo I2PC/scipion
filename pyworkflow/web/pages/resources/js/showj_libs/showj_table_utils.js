@@ -203,8 +203,9 @@ function colRenderImage(id, aData){
 }
 
 function colRenderSlice(id, aData){
-	var volName = aData.split(".")
-	volName = volName[0] + "_tmp.mrc"
+	//var volName = aData.split(".")
+	//volName = volName[0] + "_tmp.mrc"
+	var volName = aData
 	
 	src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=get_slice' ;
 	src += '&image=' + volName + '\"';
