@@ -72,7 +72,7 @@
     },
     {
         "object.className": "EmanProtBoxing",
-        "object.id": "123",
+        "object.id": "369",
         "object.label": "eman2 - boxer",
         "object.comment": "",
         "runName": null,
@@ -112,7 +112,7 @@
         "downFactor": 2.0,
         "boxSize": 64,
         "doSort": false,
-        "rejectionMethod": 1,
+        "rejectionMethod": 0,
         "maxZscore": 3,
         "percentage": 5,
         "doRemoveDust": true,
