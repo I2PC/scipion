@@ -104,6 +104,8 @@ enum MDLabel
     MDL_CONTINUOUS_GRAY_B, ///< b value of continuous assignment
     MDL_CONTINUOUS_SCALE_X, ///< a value of continuous assignment
     MDL_CONTINUOUS_SCALE_Y, ///< b value of continuous assignment
+
+    MDL_CTF_DATA_PHASE_FLIPPED, // Is the Data Phase-Flippled?
     MDL_CTF_INPUTPARAMS, ///< Parameters file for the CTF Model (std::string)
     MDL_CTF_MODEL, ///< Name for the CTF Model (std::string)
     MDL_CTF_MODEL2, ///< Name for another CTF model (std::string)
@@ -1329,6 +1331,7 @@ private:
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "ctfBgGaussian2Angle");
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_ANGLE, "CTFBG_Gaussian2_Angle"); //3.0
 
+        MDL::addLabel(MDL_CTF_DATA_PHASE_FLIPPED, LABEL_BOOL, "ctfPhaseFlipped");
         MDL::addLabel(MDL_CTF_X0, LABEL_DOUBLE, "ctfX0");
         MDL::addLabel(MDL_CTF_XF, LABEL_DOUBLE, "ctfXF");
         MDL::addLabel(MDL_CTF_Y0, LABEL_DOUBLE, "ctfY0");
