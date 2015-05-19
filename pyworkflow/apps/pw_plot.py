@@ -49,7 +49,6 @@ def main():
 #     else: 
 #         plotMetaData(plotfile, *args)
     
-    print plotfile
     
     
 if __name__ == '__main__':

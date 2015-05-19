@@ -92,7 +92,6 @@ class ProtCTFFind(ProtCTFMicrographs):
         psdFile = self._getPsdPath(micDir)
         
         cleanPath(out)
-        cleanPath(psdFile)
         micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc"))
         ImageHandler().convert(micFn, micFnMrc, DT_FLOAT)
 
@@ -103,6 +102,7 @@ class ProtCTFFind(ProtCTFMicrographs):
         self._params['ctffindOut'] = out
         self._params['ctffindPSD'] = psdFile
         
+        cleanPath(psdFile)
         try:
             self.runJob(self._program, self._args % self._params)
         except Exception:

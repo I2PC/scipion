@@ -73,7 +73,7 @@ OBJCMD_NMA_VMD = "Display VMD animation"
 OBJCMD_MOVIE_ALIGNPOLAR = "Display Polar Presentation"
 OBJCMD_MOVIE_ALIGNCARTESIAN = "Display Cartesian Presentation"
 OBJCMD_MOVIE_ALIGNPOLARCARTESIAN = "Display Polar + Cartesian Presentations"
-OBJCMD_CTFFIND4 = "Display Ctf profiles"
+OBJCMD_CTFFIND4 = "Display Ctf Fitting"
 
 GOTO = 'goto'
 ROWS = 'rows'
