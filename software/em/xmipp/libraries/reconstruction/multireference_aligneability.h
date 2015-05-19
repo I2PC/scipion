@@ -41,7 +41,8 @@ class MultireferenceAligneability: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnDir, fnSym, fnInit, fin, fsig;
+    FileName fnDir, fnSym, fin, finRef, fnInit;
+    //fsig, fnInit;
 
 private:
     size_t Xdim,Ydim,Zdim,Ndim;
@@ -64,7 +65,7 @@ private:
 
     //void P_calculus(FileName &fnMd_signif,FileName &fnMdProj_signif,
     //		FileName &fnMd,FileName &fnMdProj, MetaData &mdOut);
-    void P_calculus(FileName &fnMd_signif,FileName &fnMd, MetaData &mdOut);
+    void P_calculus(FileName &fnMd_signif,FileName &fnMd);
 
     void calc_sumu(MetaData tempMd,std::vector<double> & sum_u);
 

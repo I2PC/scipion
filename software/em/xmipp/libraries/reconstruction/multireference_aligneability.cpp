@@ -24,20 +24,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-//ejecución del programa
-//xmipp_validation_nontilt --volume 4MOA.vol --odir Sig4MOA --sym c1
-
-
-//xmipp_multireference_aligneability --volume alignment_reference_images.vol  --odir Sig4MOA --sym c1
-//xmipp_multireference_aligneability --volume alignment_reference_images.vol  --odir Output_dir --sym c1
-
-//xmipp_multireference_aligneability --stackimages input_volume.stk --volume alignment_reference_images.vol  --odir Output_dir --sym c1  --significance 0.05
-
-
 #include "multireference_aligneability.h"
 #include "validation_nontilt.h"
-#include <cstdlib>      // std::rand, std::srand
-#include <ctime>        // std::time
+#include <cstdlib>
+#include <ctime>
 #include <algorithm>
 #include <fstream>
 #include "data/sampling.h"
@@ -50,9 +40,9 @@ void MultireferenceAligneability::readParams()
 {
     fnInit = getParam("--volume");
     fin = getParam("--angles_file");
+    finRef = getParam("--angles_file_ref");
     fnSym = getParam("--sym");
     fnDir = getParam("--odir");
-    fsig = getParam("--significance");
 }
 
 void MultireferenceAligneability::defineParams()
@@ -60,129 +50,37 @@ void MultireferenceAligneability::defineParams()
     //usage
     addUsageLine("This function takes a volume and a set of projections with orientations. The volume is projected into the set of projection directions defining the "
     		"the reference projections. Thus, using the projections and references, the calculus of H0k, Hk and Pk is carried out");
-    //params
     addParamsLine("  [--volume <md_file=\"\">]    : Input volume to be validated");
-    addParamsLine("  [--angles_file <file=\".\">] : Input metadata with projections and orientations");
+    addParamsLine("  [--angles_file <file=\".\">]     : Input metadata with projections and orientations");
+    addParamsLine("  [--angles_file_ref <file=\".\">] : Input reference metadata with projections and orientations obtained from the projection orientations and the volume ");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections"); //TODO the input will be two doc files one from the exp and the other from refs
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
-    addParamsLine("  [--significance <fsig=0.05>] : Significance (default signif=0.05");
 }
 
 void MultireferenceAligneability::run()
 {
+	//xmipp_multireference_aligneability --volume 1BRD.vol --sym c3 --odir testMultiReference/ --angles_file testMultiReference/angles_iter001_00.xmd --angles_file_ref testMultiReference/gallery_alignment/angles_iter001_00.xmd &
 
-    randomize_random_generator();
-    char buffer[400];
-    sprintf(buffer, "xmipp_reconstruct_significant  -i %s --initvolumes %s --odir %s --sym %s --iter 1 --alpha0 %s --dontReconstruct", fin.c_str(), fnInit.c_str(),fnDir.c_str(), fnSym.c_str(),fsig.c_str());
-    system(buffer);
-
-    //We read the image dimensions from significant file
-    MetaData mdExp, mdRef;
-    FileName fnMdExp;//, fnMdProj;
-    fnMdExp = fnDir+"/images_significant_iter001_00.xmd";
-    mdExp.read(fnMdExp);
-    getImageSize(mdExp,Xdim,Ydim,Zdim,Ndim);
-
-    //Creation of the projection file
-    write_projection_file();
-
-    //Creation of the reference images without noise projecting the volume using the projection file
-    FileName fnVol, fnParams, fnOut;//, fnFSC, fnOut2; //, fnMdProj2;
-    fnVol = fnInit;
-    fnOut = fnDir+"/projected_images.stk";
-    fnParams = fnDir +"/params";
-    //Projection in the direction of a set of angles defined in params
-    sprintf(buffer, "xmipp_phantom_project -i %s --params %s -o %s", fnVol.c_str() , fnParams.c_str() , fnOut.c_str());
-    std::cout << buffer << std::endl;
-    system(buffer);
-
-    //Add noise to the reference images according to the noise in the experimental images
-    Mask mask;
-    mask.allowed_data_types = INT_MASK;
-    mask.generate_mask(Zdim, Ydim, Xdim);
-    Image<double> imgExp,imgRef;
-    double min_val;
-    double max_val;
-    double avg;
-    double stddev;
-    FileName fnRef;
-    FOR_ALL_OBJECTS_IN_METADATA2(mdExp,mdRef)
-    {
-    	imgExp.readApplyGeo(mdExp,__iter.objId);
-    	imgRef.readApplyGeo(mdRef,__iter2.objId);
-    	computeStats_within_binary_mask(mask.get_binary_mask(), imgExp(), min_val, max_val,avg, stddev);
-    	imgRef().addNoise(stddev,avg,"gaussian",3.);
-    	mdRef.getValue(MDL_IMAGE,fnRef,__iter2.objId);
-    	imgRef().write(fnRef);
-    }
-
-    //FileName fnMd_gallery;
-    //FileName fnOut_gallery;
-    ///////////////////////////////////////
-    FileName fnOut_gallery = fnDir+"/gallery_alignment";
-    ///////////////////////////////////////
-
-    sprintf(buffer,"mkdir %s",fnOut_gallery.c_str());//,fnSym.c_str());
-    //system(buffer);// It is necessary to create a new folder for running significant again. Due to, the significant output
-    					   // will be the same name that Step1.
-
-    sprintf(buffer, "xmipp_reconstruct_significant -i %s --initvolumes %s --odir %s  --sym %s --iter 1 --alpha0 %s", fnOut.c_str(),fnInit.c_str(),fnOut_gallery.c_str(),fnSym.c_str(),fsig.c_str());
-    //system(buffer);
-
-    std::cout << " " << std::endl;
-    std::cout << "STEP3 ENDED" << std::endl;
-    std::cout << " " << std::endl;
-
-
-    //STEP4 Calculus of H0 and Hk(using projected data), then P is obtained
-    //Files inside gallery_alignment folder
-    //FileName fnDir_gallery="gallery_alignment";
-    FileName fnDir_gallery="gallery_alignment";
-    //FileName fnMd_gallery; //, fnMdProj_signif;
-    //fnMd_gallery = fnDir_gallery+"/angles_iter001_00.xmd";
-    fnOut_gallery = fnDir+"/"+fnDir_gallery+"/angles_iter001_00.xmd";
-
-    //Calculus of H0 and Hk (using experimental data)
-    //standard files
-
-
-    MetaData outtput;
-
-    P_calculus(fnOut_gallery,fnMdExp, outtput);
-
-    std::cout << " " << std::endl;
-    std::cout << "FINISHED" << std::endl;
-    std::cout << " " << std::endl;
-
-}
-
-
-void MultireferenceAligneability::P_calculus(FileName &fnMd_gallery,FileName &fnMd,MetaData &mdOut)
-{
 	randomize_random_generator();
 
-	MetaData md, md_gallery, mdProjMatch, mdProjMatch_gallery;
+    MetaData mdOutCL, mdOutQ;
+	randomize_random_generator();
+	MetaData mdExp, mdExpSort, mdProj;
 	size_t nSamplesRandom = 100;
 	size_t maxNImg;
-	FileName fnOut;
-	fnOut = fnDir+"/clusteringTendency.xmd";
+	FileName fnOutCL,fnOutQ;
+	fnOutCL = fnDir+"/clusteringTendency.xmd";
+	fnOutQ = fnDir+"/validation.xmd";
 
-	md_gallery.read(fnMd_gallery);
-	md.read(fnMd);
+	mdProj.read(finRef);
+	mdExp.read(fin);
 
-	size_t sz_gallery = md_gallery.size();
-	size_t sz = md.size();
+	mdExpSort.sort(mdExp,MDL_IMAGE_IDX,true,-1,0);
+	size_t sz = mdExp.size();
+	mdExpSort.getValue(MDL_IMAGE_IDX,maxNImg,sz);
 
-	md_gallery.getValue(MDL_IMAGE_IDX,maxNImg,sz_gallery);
-	md.getValue(MDL_IMAGE_IDX,maxNImg,sz);
-
-	String expression, expression2;
-	MDRow row, row_gallery, row2, row2_gallery;
-
-	init_progress_bar(maxNImg);
-
-	MDIterator __iter(mdProjMatch);
-	//MDIterator __iter(mdProjMatch_signif);
+	String expression;
+	MDRow row;
 
 	SymList SL;
 	int symmetry, sym_order;
@@ -195,56 +93,140 @@ void MultireferenceAligneability::P_calculus(FileName &fnMd_gallery,FileName &fn
 	double validation = 0;
 
 	ProgValidationNonTilt PVN;
+	init_progress_bar(maxNImg);
+
+	MetaData tempMdExp, tempMdProj;
+	std::vector<double> sum_u_exp(nSamplesRandom);
+	std::vector<double> sum_u_proj(nSamplesRandom);
+	std::vector<double> sum_w_exp(nSamplesRandom);
+	std::vector<double> sum_w_proj(nSamplesRandom);
+	std::vector<double> H0(nSamplesRandom);
+	std::vector<double> H_exp(nSamplesRandom);
+	std::vector<double> H_proj(nSamplesRandom);
 
 	for (size_t i=0; i<=maxNImg;i++)
 	{
-		std::cout << "Iteration" << i << std::endl;
-		MetaData tempMd, tempMd_gallery;
-		std::vector<double> sum_u1(nSamplesRandom);
-		std::vector<double> sum_u2(nSamplesRandom);
-		std::vector<double> sum_w1(nSamplesRandom);
-		std::vector<double> sum_w2(nSamplesRandom);
-		std::vector<double> H0(nSamplesRandom);
-		std::vector<double> H(nSamplesRandom);
-
 		expression = formatString("imageIndex == %lu",i);
-		tempMd.importObjects(md, MDExpression(expression));
-		tempMd_gallery.importObjects(md_gallery, MDExpression(expression));
+		tempMdExp.importObjects(mdExp, MDExpression(expression));
+		tempMdProj.importObjects(mdProj, MDExpression(expression));
 
-		if ( (tempMd.size()==0) || (tempMd_gallery.size()==0))
+		if ( (tempMdExp.size()==0) || (tempMdProj.size()==0))
 			continue;
 
-		calc_sumu(tempMd_gallery,sum_u1);
-		calc_sumu(tempMd,sum_u2);
-		PVN.obtainSumW(tempMd_gallery,sum_w1,sum_u1,H0,correction);
-		PVN.obtainSumW(tempMd,sum_w2,sum_u2,H,correction);
+		PVN.obtainSumU(tempMdProj,sum_u_proj,H0);
+		PVN.obtainSumU(tempMdExp,sum_u_exp,H0);
+		PVN.obtainSumW(tempMdProj,sum_w_proj,sum_u_proj,H_proj,correction);
+		PVN.obtainSumW(tempMdExp,sum_w_exp,sum_u_exp,H_exp,correction);
 
-		std::sort(H0.begin(),H0.end());
-		std::sort(H.begin(),H.end());
+		std::sort(H_proj.begin(),H_proj.end());
+		std::sort(H_exp.begin(),H_exp.end());
 
 		double P = 0.;
-		for(size_t j=0; j<sum_u1.size();j++)  //NOTA, u1 and u2 have 100 elements, then the condition sum_u1.size, does not matter
-			P += H0.at(j)/H.at(j);
+		for(size_t j=0; j<sum_u_exp.size();j++)  //NOTA, u1 and u2 have 100 elements, then the condition sum_u1.size, does not matter
+			P += H_proj.at(j)/H_exp.at(j);
 
 		P /= (nSamplesRandom);
+		validation += P;
 		row.setValue(MDL_IMAGE_IDX,i);
 		row.setValue(MDL_WEIGHT,P);
-		mdOut.addRow(row);
+		mdOutCL.addRow(row);
 
-		std::cout << mdOut << std::endl;
-
-		sum_u1.clear();
-		sum_u2.clear();
-		sum_w1.clear();
-		sum_w2.clear();
-		H0.clear();
-		H.clear();
-		tempMd.clear();
+		tempMdExp.clear();
+		tempMdProj.clear();
 		progress_bar(i+1);
-		__iter.moveNext();
 	}
 
-	mdOut.write(fnOut);
+	mdOutCL.write(fnOutCL);
+	validation /= (maxNImg+1);
+	row.clear();
+    row.setValue(MDL_IMAGE,fnInit);
+    row.setValue(MDL_WEIGHT,validation);
+    mdOutQ.addRow(row);
+    mdOutQ.write(fnOutQ);
+}
+
+
+void MultireferenceAligneability::P_calculus(FileName &fnMdProjAngles,FileName &fnMdExpAngles)
+{
+    MetaData mdOutCL, mdOutQ;
+	randomize_random_generator();
+	MetaData mdExp, mdExpSort, mdProj;
+	size_t nSamplesRandom = 100;
+	size_t maxNImg;
+	FileName fnOutCL,fnOutQ;
+	fnOutCL = fnDir+"/clusteringTendency.xmd";
+	fnOutQ = fnDir+"/validation.xmd";
+
+	mdProj.read(fnMdProjAngles);
+	mdExp.read(fnMdExpAngles);
+	mdExpSort.sort(mdExp,MDL_IMAGE_IDX,true,-1,0);
+	size_t sz = mdExp.size();
+	mdExpSort.getValue(MDL_IMAGE_IDX,maxNImg,sz);
+
+	String expression;
+	MDRow row;
+
+	SymList SL;
+	int symmetry, sym_order;
+	SL.readSymmetryFile(fnSym.c_str());
+	SL.isSymmetryGroup(fnSym.c_str(), symmetry, sym_order);
+
+	double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
+	double area_of_sphere_no_symmetry = 4.*PI;
+	double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
+	double validation = 0;
+
+	ProgValidationNonTilt PVN;
+	init_progress_bar(maxNImg);
+
+	MetaData tempMdExp, tempMdProj;
+	std::vector<double> sum_u_exp(nSamplesRandom);
+	std::vector<double> sum_u_proj(nSamplesRandom);
+	std::vector<double> sum_w_exp(nSamplesRandom);
+	std::vector<double> sum_w_proj(nSamplesRandom);
+	std::vector<double> H0(nSamplesRandom);
+	std::vector<double> H_exp(nSamplesRandom);
+	std::vector<double> H_proj(nSamplesRandom);
+
+	for (size_t i=0; i<=maxNImg;i++)
+	{
+		expression = formatString("imageIndex == %lu",i);
+		tempMdExp.importObjects(mdExp, MDExpression(expression));
+		tempMdProj.importObjects(mdProj, MDExpression(expression));
+
+		if ( (tempMdExp.size()==0) || (tempMdProj.size()==0))
+			continue;
+
+		PVN.obtainSumU(tempMdProj,sum_u_proj,H0);
+		PVN.obtainSumU(tempMdExp,sum_u_exp,H0);
+		PVN.obtainSumW(tempMdProj,sum_w_proj,sum_u_proj,H_proj,correction);
+		PVN.obtainSumW(tempMdExp,sum_w_exp,sum_u_exp,H_exp,correction);
+
+		std::sort(H_proj.begin(),H_proj.end());
+		std::sort(H_exp.begin(),H_exp.end());
+
+		double P = 0.;
+		for(size_t j=0; j<sum_u_exp.size();j++)  //NOTA, u1 and u2 have 100 elements, then the condition sum_u1.size, does not matter
+			P += H_proj.at(j)/H_exp.at(j);
+
+		P /= (nSamplesRandom);
+		validation += P;
+		row.setValue(MDL_IMAGE_IDX,i);
+		row.setValue(MDL_WEIGHT,P);
+		mdOutCL.addRow(row);
+
+		tempMdExp.clear();
+		tempMdProj.clear();
+		progress_bar(i+1);
+	}
+
+	mdOutCL.write(fnOutCL);
+	validation /= (maxNImg+1);
+	row.clear();
+    row.setValue(MDL_IMAGE,fnInit);
+    row.setValue(MDL_WEIGHT,validation);
+    mdOutQ.addRow(row);
+    mdOutQ.write(fnOutQ);
 }
 
 
@@ -259,8 +241,8 @@ void MultireferenceAligneability::write_projection_file()
 	myfile << "# XMIPP_STAR_1 *\n";
 	myfile << "# \n";
 	myfile << "data_block1 \n";
-	myfile << "_dimensions2D "+xdim+" "+ydim+" \n";
-	myfile << "_projAngleFile "+fnDir+"/images_iter001_00.xmd \n";
+	myfile << "_dimensions2D '"+xdim+" "+ydim+"' \n";
+	myfile << "_projAngleFile "+fin+" \n";
 	myfile << "_noisePixelLevel   '0 0' \n";    //where the variance is the first number and the second one is the mean
 	myfile.close();
 }
