@@ -197,7 +197,6 @@ function colRenderable(id, aData, renderFunc){
 
 function colRenderImage(id, aData){
 	
-	
 	html = colRenderable(id, aData, "get_image")
 	return html
 }
