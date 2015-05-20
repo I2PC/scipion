@@ -27,10 +27,8 @@
 This sub-package contains data and protocol classes
 wrapping Grigrorieff Lab programs at Brandeis
 """
-
+import os
 from os.path import join
-from pyworkflow.em import *
-from constants import *
 
 CTFFIND3 = 'ctffind3.exe'
 CTFFIND4 = 'ctffind'
