@@ -178,7 +178,7 @@ public class ImportParticlesJDialog extends XmippDialog {
             try {
                     return parent.importParticles(format, path, preffixtf.getText(), suffixtf.getText(), ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
             } catch (Exception e) {
-                    XmippDialog.showException(parent, e);
+                    XmippDialog.showInfo(parent, e.getMessage());
             }
             return null;
 
