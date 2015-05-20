@@ -119,11 +119,6 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         
         imgStar = self._getFileName('data', iter=refineRun._lastIter())
         
-        # `which relion_particle_polish_mpi` --i Refine3D/run2_ct21_it021_data.star 
-        # --o folder/shiny  --angpix 3.54 --movie_frames_running_avg 5 --dont_read_old_files  
-        # --sigma_nb 100 --perframe_highres 6 --autob_lowres 20 --sym C1 --bg_radius 28 
-        #--white_dust -1 --black_dust -1
-        
         params = ' --i %s' % imgStar
         params += ' --o shiny'
         params += ' --angpix %0.3f' % imgSet.getSamplingRate()

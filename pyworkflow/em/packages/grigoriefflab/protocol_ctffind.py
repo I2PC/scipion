@@ -83,10 +83,10 @@ class ProtCTFFind(em.ProtCTFMicrographs):
             raise
         pwutils.cleanPath(micFnMrc)
     
-    def _restimateCTF(self, id):
+    def _restimateCTF(self, ctfId):
         """ Run ctffind3 with required parameters """
 
-        ctfModel = self.recalculateSet[id]
+        ctfModel = self.recalculateSet[ctfId]
         mic = ctfModel.getMicrograph()
         micFn = mic.getFileName()
         micDir = self._getMicrographDir(mic)
@@ -132,7 +132,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         ctfSet.setMicrographs(self.inputMics)
         defocusList = []
         
-        for fn, micDir, mic in self._iterMicrographs():
+        for _, micDir, mic in self._iterMicrographs():
             samplingRate = mic.getSamplingRate() * self.ctfDownFactor.get()
             mic.setSamplingRate(samplingRate)
             psdFile = self._getPsdPath(micDir)
@@ -159,9 +159,12 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
-        ctffind = os.path.join(os.environ['CTFFIND_HOME'], 'ctffind3.exe')
+        if self.useCftfind4:
+            ctffind = CTFFIND4_PATH
+        else:
+            ctffind = CTFFIND_PATH
         if not os.path.exists(ctffind):
-            errors.append('Missing ctffind3.exe')
+            errors.append('Missing %s' % ctffind)
         return errors
     
     def _citations(self):
@@ -239,8 +242,7 @@ eof
 """
     
     def _argsCtffind4(self):
-            
-        self._program = CTFFIND4_PATH
+        self._program = 'export OMP_NUM_THREADS=1; ' + CTFFIND4_PATH
         self._args = """ << eof
 %(micFn)s
 %(ctffindPSD)s
