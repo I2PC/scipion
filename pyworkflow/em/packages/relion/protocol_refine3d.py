@@ -111,7 +111,6 @@ leads to objective and high-quality results.
             self._defineTransformRelation(imgSet, outImgSet)
         else:
             pass
-        
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):

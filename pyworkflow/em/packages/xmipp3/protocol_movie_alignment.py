@@ -323,11 +323,11 @@ class ProtMovieAlignment(ProtProcessMovies):
     def _citations(self):
         alMethod = self.alignMethod.get()
         if alMethod == AL_OPTICAL:
-            return ['Abrishami2014a']
+            return ['Abrishami2015']
         if alMethod == AL_DOSEFGPU:
             return ['Li2013']
         if alMethod == AL_DOSEFGPUOPTICAL:
-            return ['Abrishami2014a', 'Li2013']
+            return ['Abrishami2015', 'Li2013']
 
     def _methods(self):
         methods = []
