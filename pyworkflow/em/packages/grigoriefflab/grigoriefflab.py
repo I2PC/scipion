@@ -39,9 +39,17 @@ FREALIGNMP = 'frealign_v9_mp.exe'
 CALC_OCC = 'calc_occ.exe'
 RSAMPLE = 'rsample.exe'
 
+def _getCtffind4():
+    ctffind4 = join(os.environ['CTFFIND4_HOME'], 'bin', CTFFIND4)
+    if exists(ctffind4):
+        return ctffind4
+    else:
+        return join(os.environ['CTFFIND4_HOME'], CTFFIND4)
+
 CTFFIND_PATH = join(os.environ['CTFFIND_HOME'], CTFFIND3)
-CTFFIND4_PATH = join(os.environ['CTFFIND4_HOME'], 'bin', CTFFIND4)
+CTFFIND4_PATH = _getCtffind4()
 FREALIGN_PATH = join(os.environ['FREALIGN_HOME'], 'bin', FREALIGN)
 FREALIGNMP_PATH = join(os.environ['FREALIGN_HOME'], 'bin', FREALIGNMP)
 CALC_OCC_PATH = join(os.environ['FREALIGN_HOME'], 'bin', CALC_OCC)
 RSAMPLE_PATH = join(os.environ['FREALIGN_HOME'], 'bin', RSAMPLE)
+

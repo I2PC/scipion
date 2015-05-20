@@ -356,7 +356,7 @@ env.addPackage('ctffind',
                default=False)
 
 env.addPackage('ctffind4',
-               tar='ctffind_V4.0.13.tgz',
+               tar='ctffind_V4.0.15.tgz',
                default=False)
 
 env.addPackage('eman',
