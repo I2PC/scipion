@@ -34,7 +34,7 @@ import ttk
 from pyworkflow.em.constants import *
 from constants import *
 
-from pyworkflow.em.packages.grigoriefflab.protocol_ctffind import ProtCTFFind
+from protocol_ctffind import ProtCTFFind
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.em.wizard import *
 from protocol_refinement import ProtFrealign

@@ -56,6 +56,7 @@ def getModules(path):
 
     return modules
 
+
 def getSubclassesFromModules(BaseClass, modules, debug=False):
     """ Find subclasses of BaseClass from a give dict of modules.
     """
@@ -64,18 +65,19 @@ def getSubclassesFromModules(BaseClass, modules, debug=False):
     for m in modules.values():
         if debug:
             print "loading module: ", m.__name__
-#             if m.__name__ == 'emx':
-#                 from pprint import pprint
-#                 pprint(m.__dict__)
         subDict = getSubclasses(BaseClass, m.__dict__)
+        
         for subclass in subDict.values():
-            if subclass.__module__.startswith(m.__name__):
+            # some protocols have pyworkflow.em.packages. in the __module__ and other no
+            moduleName = subclass.__module__.replace('pyworkflow.em.packages.', '')
+            if moduleName.startswith(m.__name__):
                 subclass._package = m
                 if debug:
                     print "  found: ", subclass.__name__, "module: ", subclass.__module__
         subclasses.update(subDict)
 
     return subclasses
+
 
 def getSubclassesFromPath(BaseClass, path):
     """ Try to find possible sub-packages under path
@@ -84,6 +86,7 @@ def getSubclassesFromPath(BaseClass, path):
     """
     modules = getModules(path)
     return getSubclassesFromModules(BaseClass, modules)
+
 
 def getSubclasses(BaseClass, inputDict):
     """ Iterate over inputDict and find all subclasses
