@@ -83,10 +83,10 @@ class ProtCTFFind(em.ProtCTFMicrographs):
             raise
         pwutils.cleanPath(micFnMrc)
     
-    def _restimateCTF(self, id):
+    def _restimateCTF(self, ctfId):
         """ Run ctffind3 with required parameters """
 
-        ctfModel = self.recalculateSet[id]
+        ctfModel = self.recalculateSet[ctfId]
         mic = ctfModel.getMicrograph()
         micFn = mic.getFileName()
         micDir = self._getMicrographDir(mic)
@@ -132,7 +132,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         ctfSet.setMicrographs(self.inputMics)
         defocusList = []
         
-        for fn, micDir, mic in self._iterMicrographs():
+        for _, micDir, mic in self._iterMicrographs():
             samplingRate = mic.getSamplingRate() * self.ctfDownFactor.get()
             mic.setSamplingRate(samplingRate)
             psdFile = self._getPsdPath(micDir)
