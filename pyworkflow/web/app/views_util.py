@@ -758,11 +758,12 @@ def parseText(text, func=replacePattern):
 
 
 def getImageUrl(filename):
-    abs_url = django_settings.ABSOLUTE_URL 
-    url_plot = ""
-    if len(abs_url) != 0:
-        url_plot = url_plot + django_settings.ABSOLUTE_URL + "/"
-    url_plot = url_plot + "get_image_path/?image=" + filename
+#     abs_url = django_settings.ABSOLUTE_URL 
+#     url_plot = ""
+#     if len(abs_url) != 0:
+#         url_plot = url_plot + django_settings.ABSOLUTE_URL + "/"
+#     url_plot = url_plot + "get_image_path/?image=" + filename
+    url_plot = "get_image_path/?image=" + filename
     return url_plot
     
     

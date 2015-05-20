@@ -28,46 +28,49 @@
 This module contains the protocol for CTF estimation with ctffind3
 """
 
+import os
 
-from pyworkflow.utils.path import replaceBaseExt, cleanPattern
-from pyworkflow.em import *
-from pyworkflow.em.packages.grigoriefflab import CTFFIND_PATH, CTFFIND4_PATH
-from pyworkflow.em.packages.grigoriefflab.convert import (readCtfModel, parseCtffindOutput,
-                                                          parseCtffind4Output)
+import pyworkflow.utils as pwutils
+import pyworkflow.em as em
+import pyworkflow.protocol.params as params
+from grigoriefflab import CTFFIND_PATH, CTFFIND4_PATH
+from convert import (readCtfModel, parseCtffindOutput, parseCtffind4Output)
 
-class ProtCTFFind(ProtCTFMicrographs):
+
+
+class ProtCTFFind(em.ProtCTFMicrographs):
     """Estimates CTF on a set of micrographs
     using either ctffind3 or ctffind4 program"""
     _label = 'ctffind'
     
     
     def _defineProcessParams(self, form):
-        form.addParam('useCftfind4', BooleanParam, default=False,
+        form.addParam('useCftfind4', params.BooleanParam, default=False,
               label="use ctffind4 to estimate the CTF?",
               help='If is true, the protocol will use ctffind4 instead of ctffind3')
-        form.addParam('astigmatism', FloatParam, default=100.0,
-              label='Expected (tolerated) astigmatism', expertLevel=LEVEL_ADVANCED,
+        form.addParam('astigmatism', params.FloatParam, default=100.0,
+              label='Expected (tolerated) astigmatism', expertLevel=params.LEVEL_ADVANCED,
               condition='useCftfind4', )
-        form.addParam('findPhaseShift', BooleanParam, default=False,
+        form.addParam('findPhaseShift', params.BooleanParam, default=False,
               label="Find additional phase shift?", condition='useCftfind4',
-              expertLevel=LEVEL_ADVANCED,)
+              expertLevel=params.LEVEL_ADVANCED,)
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir):
         """ Run ctffind, 3 or 4, with required parameters """
         # Create micrograph dir 
-        makePath(micDir)
+        pwutils.makePath(micDir)
         downFactor = self.ctfDownFactor.get()
         
-        micFnMrc = self._getTmpPath(replaceBaseExt(micFn, 'mrc'))
+        micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'mrc'))
         if downFactor != 1:
             #Replace extension by 'mrc' cause there are some formats that cannot be written (such as dm3)
             import pyworkflow.em.packages.xmipp3 as xmipp3
             self.runJob("xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor), env=xmipp3.getEnviron())
             self._params['scannedPixelSize'] = self.inputMicrographs.get().getScannedPixelSize() * downFactor
         else:
-            micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc"))
-            ImageHandler().convert(micFn, micFnMrc, DT_FLOAT)
+            micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, "mrc"))
+            em.ImageHandler().convert(micFn, micFnMrc, em.DT_FLOAT)
         
         # Update _params dictionary
         self._params['micFn'] = micFnMrc
@@ -78,7 +81,7 @@ class ProtCTFFind(ProtCTFMicrographs):
             self.runJob(self._program, self._args % self._params)
         except Exception:
             raise
-        cleanPath(micFnMrc)
+        pwutils.cleanPath(micFnMrc)
     
     def _restimateCTF(self, id):
         """ Run ctffind3 with required parameters """
@@ -91,9 +94,9 @@ class ProtCTFFind(ProtCTFMicrographs):
         out = self._getCtfOutPath(micDir)
         psdFile = self._getPsdPath(micDir)
         
-        cleanPath(out)
-        micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc"))
-        ImageHandler().convert(micFn, micFnMrc, DT_FLOAT)
+        pwutils.cleanPath(out)
+        micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, "mrc"))
+        em.ImageHandler().convert(micFn, micFnMrc, em.DT_FLOAT)
 
         # Update _params dictionary
         self._prepareRecalCommand(ctfModel)
@@ -102,18 +105,18 @@ class ProtCTFFind(ProtCTFMicrographs):
         self._params['ctffindOut'] = out
         self._params['ctffindPSD'] = psdFile
         
-        cleanPath(psdFile)
+        pwutils.cleanPath(psdFile)
         try:
             self.runJob(self._program, self._args % self._params)
         except Exception:
             raise
-        cleanPattern(micFnMrc)
+        pwutils.cleanPattern(micFnMrc)
     
     def _createNewCtfModel(self, mic):
         micDir = self._getMicrographDir(mic)
         out = self._getCtfOutPath(micDir)
         psdFile = self._getPsdPath(micDir)
-        ctfModel2 = CTFModel()
+        ctfModel2 = em.CTFModel()
         
         if not self.useCftfind4:
             readCtfModel(ctfModel2, out)
@@ -135,7 +138,7 @@ class ProtCTFFind(ProtCTFMicrographs):
             psdFile = self._getPsdPath(micDir)
             out = self._getCtfOutPath(micDir)
             
-            ctfModel = CTFModel()
+            ctfModel = em.CTFModel()
         
             if not self.useCftfind4:
                 readCtfModel(ctfModel, out)
@@ -156,8 +159,8 @@ class ProtCTFFind(ProtCTFMicrographs):
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
-        ctffind = join(os.environ['CTFFIND_HOME'], 'ctffind3.exe')
-        if not exists(ctffind):
+        ctffind = os.path.join(os.environ['CTFFIND_HOME'], 'ctffind3.exe')
+        if not os.path.exists(ctffind):
             errors.append('Missing ctffind3.exe')
         return errors
     
@@ -199,7 +202,7 @@ class ProtCTFFind(ProtCTFMicrographs):
         # get the size and the image of psd
     
         imgPsd = ctfModel.getPsdFile()
-        imgh = ImageHandler()
+        imgh = em.ImageHandler()
         size, _, _, _ = imgh.getDimensions(imgPsd)
         
         mic = ctfModel.getMicrograph()
@@ -257,10 +260,10 @@ eof
 """            
     
     def _getPsdPath(self, micDir):
-        return join(micDir, 'ctfEstimation.mrc')
+        return os.path.join(micDir, 'ctfEstimation.mrc')
     
     def _getCtfOutPath(self, micDir):
-        return join(micDir, 'ctfEstimation.txt')
+        return os.path.join(micDir, 'ctfEstimation.txt')
     
     def _parseOutput(self, filename):
         """ Try to find the output estimation parameters
@@ -272,7 +275,7 @@ eof
             return parseCtffind4Output(filename)
     
     def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
-        ctf = CTFModel()
+        ctf = em.CTFModel()
         ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
         ctf.setPsdFile(psdFile)
          
