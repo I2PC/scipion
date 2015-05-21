@@ -87,7 +87,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                       condition="alignMethod==%d or alignMethod==%d" % (AL_OPTICAL, AL_DOSEFGPUOPTICAL),
                       help="Set to true if you want the GPU implementation of Optical Flow")
         group.addParam('GPUCore', IntParam, default=1,
-                      label="Choose GPU core",
+                      label="Choose GPU core", expertLevel=LEVEL_ADVANCED,
                       condition="doGPU  or alignMethod==%d or alignMethod==%d  " % (AL_DOSEFGPU, AL_DOSEFGPUOPTICAL),
                       help="GPU may have several cores. Set it to one if you do not know what we are talking about")
         
