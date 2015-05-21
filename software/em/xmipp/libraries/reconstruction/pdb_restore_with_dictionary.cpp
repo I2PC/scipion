@@ -65,7 +65,7 @@ void ProgRestoreWithPDBDictionary::run()
 {
     show();
     loadDictionaries();
-    constructRotationGroup();
+    constructRotationGroup3D();
 
     Image<double> V, Vhigh;
     MultidimArray<double> weightHigh;
@@ -75,25 +75,28 @@ void ProgRestoreWithPDBDictionary::run()
 	mV.computeStats(mean,std,min,max);
 
     MultidimArray<double> patchLow, patchLowNormalized, canonicalPatch, patchHigh;
-    int patchSize_2=patchSize/2;
+    patchSize_2=patchSize/2;
+    if (mode==0)
+    	patchLow.resizeNoCopy(patchSize,patchSize,patchSize);
+    else
+    	patchLow.resizeNoCopy(patchSize,patchSize);
+    patchLow.setXmippOrigin();
 	size_t Npatches=0, NcandidatePatches=0;
 
 	std::vector< size_t > selectedPatchesIdx;
 	std::vector<double> weight;
 	Matrix1D<double> alpha, canonicalSignature;
 	init_progress_bar(ZSIZE(mV));
-	patchHigh.resizeNoCopy(patchSize,patchSize,patchSize);
 	Vhigh().initZeros(mV);
 	weightHigh.initZeros(mV);
-	const MultidimArray<double> &mVhigh=Vhigh();
+	MultidimArray<double> &mVhigh=Vhigh();
 	for (int k=patchSize_2; k<(int)ZSIZE(mV)-patchSize_2; ++k)
 	{
 		for (int i=patchSize_2; i<(int)ZSIZE(mV)-patchSize_2; ++i)
 			for (int j=patchSize_2; j<(int)ZSIZE(mV)-patchSize_2; ++j)
 			{
 				 ++Npatches;
-				 mV.window(patchLow,k-patchSize_2,i-patchSize_2,j-patchSize_2,k+patchSize_2,i+patchSize_2,j+patchSize_2);
-				 STARTINGX(patchLow)=STARTINGY(patchLow)=STARTINGZ(patchLow)=0;
+            	 extractPatch(mV,patchLow,k,i,j);
 
 				double minPatchLow, maxPatchLow, meanPatchLow, stdPatchLow=0;
 				patchLow.computeStats(meanPatchLow,stdPatchLow,minPatchLow,maxPatchLow);
@@ -106,7 +109,11 @@ void ProgRestoreWithPDBDictionary::run()
 					patchLowNormalized=patchLow;
 					double norm=sqrt(patchLow.sum2());
 					patchLowNormalized*=1.0/norm;
-					size_t idxTransf=canonicalOrientation(patchLowNormalized,canonicalPatch,canonicalSignature);
+					size_t idxTransf=0;
+					if (mode==0)
+						idxTransf=canonicalOrientation3D(patchLowNormalized,canonicalPatch,canonicalSignature);
+					else
+						idxTransf=canonicalOrientation2D(patchLowNormalized,canonicalPatch,canonicalSignature);
 					selectDictionaryPatches(canonicalPatch, canonicalSignature, selectedPatchesIdx, weight);
 					if (selectedPatchesIdx.size()>0)
 					{
@@ -125,13 +132,7 @@ void ProgRestoreWithPDBDictionary::run()
 					}
 				}
 				// Insert patchHigh in Vhigh
-				for (int kk=0; kk<patchSize; ++kk)
-					for (int ii=0; ii<patchSize; ++ii)
-						for (int jj=0; jj<patchSize; ++jj)
-						{
-							A3D_ELEM(mVhigh,k+kk-patchSize_2,i+ii-patchSize_2,j+jj-patchSize_2)+=R2*DIRECT_A3D_ELEM(patchHigh,kk,ii,jj);
-							A3D_ELEM(weightHigh,k+kk-patchSize_2,i+ii-patchSize_2,j+jj-patchSize_2)+=R2;
-						}
+				insertPatch(mVhigh,weightHigh,patchHigh,k,i,j,R2);
 			}
 		progress_bar(k);
 	}
