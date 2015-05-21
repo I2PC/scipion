@@ -246,9 +246,8 @@ void ParametersProjection::read(const FileName &fn_proj_param)
                 REPORT_ERROR(ERR_IO_NOTEXIST, (String)"Prog_Project_Parameters::read: "
                              "file " + fn_angle + " doesn't exist");
             else
-            {
             	MD.getValue(MDL_CTF_DATA_PHASE_FLIPPED, doPhaseFlip, objId);
-            }
+
         if (MD.getValue(MDL_PRJ_ROT_RANGE,ParamVec, objId))
         {
             enable_angle_range = true;
@@ -1033,7 +1032,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
     		//JV he tenido que tocar esta función para poder acceder al sampling rate
     		hasCTF = true;
     		MDRow row;
-    		SF.getRow(row,__iter.objId);
+    		side.DF.getRow(row,__iter.objId);
     		ctf.readFromMdRow(row);
         	ctf.produceSideInfo();
     	}
@@ -1070,6 +1069,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
 
             if (hasCTF)
             	ctf.applyCTF(proj(),sampling_rate, prm.doPhaseFlip);
+            hasCTF = false;
 
             Matrix1D<double> shifts(2);
             XX(shifts) = shiftX;
