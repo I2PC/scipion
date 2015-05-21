@@ -94,9 +94,9 @@ class ProtParticlePicking(ProtParticles):
     def _defineParams(self, form):
 
         form.addSection(label='Input')
-        form.addParam('inputMicrographs', PointerParam, label="Micrographs",
-                      pointerClass='SetOfMicrographs',
-                      help='Select the SetOfMicrographs ')
+        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
+                      label=Message.LABEL_INPUT_MIC, important=True,                      
+                      help='Select the SetOfMicrographs to be used during picking.')
 
     #--------------------------- INFO functions ----------------------------------------------------
     def getSummary(self, coordSet):
