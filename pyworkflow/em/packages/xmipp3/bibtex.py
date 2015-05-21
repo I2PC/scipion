@@ -42,19 +42,22 @@ url = {http://bioinformatics.oxfordjournals.org/content/29/19/2460.abstract},
 journal = {Bioinformatics}
 }
 
-@article{Abrishami2014a,
-title = "Alignment of Direct Detector Device micrographs using a robust Optical Flow approach",
-journal = "Journal of Structural Biology",
-volume = "None",
-number = "None",
-pages = "None",
-year = "?",
-note = "Submitted",
-issn = "None",
-doi = "None",
-url = "None",
-author = "Abrishami, V. and Vargas, J. and Xueming, L. and Yifan, C. and Marabini, R. and Sorzano, C. O. S. and Carazo, J. M. ",
-keywords = "Direct Detector Devices"
+@article{Abrishami2015,
+title = "Alignment of direct detection device micrographs using a robust Optical Flow approach ",
+journal = "Journal of Structural Biology ",
+volume = "189",
+number = "3",
+pages = "163 - 176",
+year = "2015",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2015.02.001",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847715000313",
+author = "Vahid Abrishami and Javier Vargas and Xueming Li and Yifan Cheng and Roberto Marabini and Carlos Óscar Sánchez Sorzano and José María Carazo",
+keywords = "Direct detection devices",
+keywords = "Beam induced motion",
+keywords = "Single particle analysis",
+keywords = "Electron microscopy "
 }
 
 @article{Chen2013,
@@ -123,7 +126,7 @@ keywords = "2D/3D registration, Splines, 3DEM, Angular assignment "
   pages="584-590",
   year="2013",
   publisher="Nature Publishing Group",
-  doi = "http://dx.doi.org/10.1038/nmeth.2727"
+  doi = "http://dx.doi.org/10.1038/nmeth.2472"
 }
 
 @article{Nogales2013,

@@ -38,7 +38,8 @@ from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,IntParam,
                                         EnumParam, BooleanParam, FloatParam)
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
-from pyworkflow.em.packages.grigoriefflab.protocol_ctffind import ProtCTFFind
+from protocol_ctffind import ProtCTFFind
+from convert import readCtfModel
 
 
 LAST_ITER = 0
@@ -446,9 +447,8 @@ Examples:
         
         labels =  'enabled id _size _filename _transform._matrix'
         viewParams = {showj.ORDER:labels,
-                      showj.VISIBLE: labels, 
-                      showj.RENDER:'_filename',
-                      showj.LABELS: 'id',
+                      showj.VISIBLE: labels, showj.RENDER:'_filename',
+                      'labels': 'id',
                       }
         return em.ObjectView(self._project,  self.protocol.strId(),
                              filename, other=inputParticlesId,
@@ -597,8 +597,6 @@ class ProtCTFFindViewer(Viewer):
                 yield (micFn, micDir, mic)
          
         def visualizeObjs(obj, setOfMics):
-            from pyworkflow.em.packages.grigoriefflab.convert import readCtfModel
-            
             if exists(obj._getPath("ctfs_temporary.sqlite")):
                 os.remove(obj._getPath("ctfs_temporary.sqlite"))
              

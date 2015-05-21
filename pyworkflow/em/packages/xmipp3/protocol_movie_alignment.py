@@ -87,7 +87,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                       condition="alignMethod==%d or alignMethod==%d" % (AL_OPTICAL, AL_DOSEFGPUOPTICAL),
                       help="Set to true if you want the GPU implementation of Optical Flow")
         group.addParam('GPUCore', IntParam, default=1,
-                      label="Choose GPU core",
+                      label="Choose GPU core", expertLevel=LEVEL_ADVANCED,
                       condition="doGPU  or alignMethod==%d or alignMethod==%d  " % (AL_DOSEFGPU, AL_DOSEFGPUOPTICAL),
                       help="GPU may have several cores. Set it to one if you do not know what we are talking about")
         
@@ -323,11 +323,11 @@ class ProtMovieAlignment(ProtProcessMovies):
     def _citations(self):
         alMethod = self.alignMethod.get()
         if alMethod == AL_OPTICAL:
-            return ['Abrishami2014a']
+            return ['Abrishami2015']
         if alMethod == AL_DOSEFGPU:
             return ['Li2013']
         if alMethod == AL_DOSEFGPUOPTICAL:
-            return ['Abrishami2014a', 'Li2013']
+            return ['Abrishami2015', 'Li2013']
 
     def _methods(self):
         methods = []

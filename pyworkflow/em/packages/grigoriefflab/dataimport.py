@@ -24,9 +24,9 @@
 # *
 # **************************************************************************
 
-from pyworkflow.em.packages.grigoriefflab.convert import parseCtffindOutput
 from pyworkflow.utils.path import removeExt
 from pyworkflow.em.data import CTFModel
+from convert import parseCtffindOutput
 
 
 class BrandeisImport():
