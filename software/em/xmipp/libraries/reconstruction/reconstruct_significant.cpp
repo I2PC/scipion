@@ -59,6 +59,7 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--angDistance <a=10>]       : Angular distance");
     addParamsLine("  [--dontApplyFisher]          : Do not select directions using Fisher");
     addParamsLine("  [--dontReconstruct]          : Do not reconstruct");
+    addParamsLine("  [--useForValidation]         : Use the program for validation");
 }
 
 // Read arguments ==========================================================
@@ -83,6 +84,7 @@ void ProgReconstructSignificant::readParams()
     applyFisher=checkParam("--dontApplyFisher");
     fnFirstGallery=getParam("--initgallery");
     doReconstruct=!checkParam("--dontReconstruct");
+    useForValidation=checkParam("--useForValidation");
     if (!doReconstruct)
     {
     	if (rank==0)
@@ -110,6 +112,8 @@ void ProgReconstructSignificant::show()
         std::cout << "Angular distance            : "  << angDistance << std::endl;
         std::cout << "Apply Fisher                : "  << applyFisher << std::endl;
         std::cout << "Reconstruct                 : "  << doReconstruct << std::endl;
+        std::cout << "useForValidation            : "  << useForValidation << std::endl;
+
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnFirstGallery=="")
@@ -670,7 +674,7 @@ void ProgReconstructSignificant::produceSideinfo()
 	getImageSize(mdIn,Xdim,Ydim,Zdim,Ndim);
 
 	// Adjust alpha
-	if (fnSym!="c1")
+	if ( (fnSym!="c1") && !useForValidation )
 	{
 		SymList SL;
 		SL.readSymmetryFile(fnSym);

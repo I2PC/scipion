@@ -82,6 +82,9 @@ public:
 
     /** Do reconstruct */
     bool doReconstruct;
+
+    /** Use it for validation */
+    bool useForValidation = false;
 public: // Internal members
     size_t rank, Nprocessors;
 
