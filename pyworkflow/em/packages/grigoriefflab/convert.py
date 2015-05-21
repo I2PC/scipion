@@ -31,7 +31,8 @@ This module contains converter functions that will serve to:
 2. Read from Grigo packs files to base classes
 """
 
-import os.path as ospath
+import os
+
 from itertools import izip
 import numpy
 from collections import OrderedDict
@@ -173,15 +174,16 @@ def parseCtffindOutput(filename):
     """ Retrieve defocus U, V and angle from the
     output file of the ctffind3 execution.
     """
-    f = open(filename)
     result = None
-    for line in f:
-        if 'Final Values' in line:
-            # Take DefocusU, DefocusV and Angle as a tuple
-            # that are the first three values in the line
-            result = tuple(map(float, line.split()[:3]))
-            break
-    f.close()
+    if os.path.exists(filename):
+        f = open(filename)
+        for line in f:
+            if 'Final Values' in line:
+                # Take DefocusU, DefocusV and Angle as a tuple
+                # that are the first three values in the line
+                result = tuple(map(float, line.split()[:3]))
+                break
+        f.close()
     return result
 
 
@@ -189,29 +191,39 @@ def parseCtffind4Output(filename):
     """ Retrieve defocus U, V and angle from the
     output file of the ctffind3 execution.
     """
-    f = open(filename)
     result = None
-    for line in f:
-        if not line.startswith("#"):
-            result = tuple(map(float, line.split()[1:]))
-    f.close()
+    if os.path.exists(filename):
+        f = open(filename)
+        for line in f:
+            if not line.startswith("#"):
+                result = tuple(map(float, line.split()[1:]))
+        f.close()
     return result
 
 
-def readCtfModel(ctfModel, filename, ctf4=False):
-        
+def setWrongDefocus(ctfModel):
+    ctfModel.setDefocusU(-999)
+    ctfModel.setDefocusV(-1)
+    ctfModel.setDefocusAngle(-999)
+    
+    
+def readCtfModel(ctfModel, filename, ctf4=False):        
     if not ctf4:
-        if not ospath.exists(filename):
-            _createErrorCtf3Fn(filename)
-        defocusU, defocusV, defocusAngle = parseCtffindOutput(filename)
-        ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
+        result = parseCtffindOutput(filename)
+        if result is None:
+            setWrongDefocus(ctfModel)
+        else:
+            defocusU, defocusV, defocusAngle = result
+            ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
     else:
-        if not ospath.exists(filename):
-            _createErrorCtf4Fn(filename)
-        defocusU, defocusV, defocusAngle, _, ctfFit, ctfResolution = parseCtffind4Output(filename)
-        ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
-        ctfModel._ctffind4_crossCorrelation = Float(ctfFit)
-        ctfModel._ctffind4_ctfResolution = Float(ctfResolution)
+        result =  parseCtffind4Output(filename)
+        if result is None:
+            setWrongDefocus(ctfModel)
+        else:
+            defocusU, defocusV, defocusAngle, _, ctfFit, ctfResolution = result
+            ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
+            ctfModel._ctffind4_crossCorrelation = Float(ctfFit)
+            ctfModel._ctffind4_ctfResolution = Float(ctfResolution)
 
 
 def geometryFromMatrix(matrix):
