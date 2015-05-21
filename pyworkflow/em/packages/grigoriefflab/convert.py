@@ -31,6 +31,7 @@ This module contains converter functions that will serve to:
 2. Read from Grigo packs files to base classes
 """
 
+import os.path as ospath
 from itertools import izip
 import numpy
 from collections import OrderedDict
@@ -198,10 +199,15 @@ def parseCtffind4Output(filename):
 
 
 def readCtfModel(ctfModel, filename, ctf4=False):
+        
     if not ctf4:
+        if not ospath.exists(filename):
+            _createErrorCtf3Fn(filename)
         defocusU, defocusV, defocusAngle = parseCtffindOutput(filename)
         ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
     else:
+        if not ospath.exists(filename):
+            _createErrorCtf4Fn(filename)
         defocusU, defocusV, defocusAngle, _, ctfFit, ctfResolution = parseCtffind4Output(filename)
         ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
         ctfModel._ctffind4_crossCorrelation = Float(ctfFit)
@@ -225,3 +231,20 @@ def geometryFromAligment(alignment):
     shifts, angles = geometryFromMatrix(alignment.getMatrix(),True)#####
 
     return shifts, angles
+
+
+def _createErrorCtf4Fn(self, filename):
+            f = open(filename, 'w+')
+            lines = """# Error report file 
+  -999       -999       -999       -999       -999      -999       -999     
+"""
+            f.write(lines)
+            f.close()
+
+
+def _createErrorCtf3Fn(self, filename):
+            f = open(filename, 'w+')
+            lines = """-999    -999       -999     -999  Final Values"""
+            f.write(lines)
+            f.close()
+

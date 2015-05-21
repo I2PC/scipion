@@ -29,7 +29,7 @@ This module contains the protocol for CTF estimation with ctffind3
 """
 
 import os
-
+import sys
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
@@ -79,8 +79,8 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         self._params['ctffindPSD'] = self._getPsdPath(micDir)
         try:
             self.runJob(self._program, self._args % self._params)
-        except Exception:
-            raise
+        except Exception, ex:
+            print >> sys.stderr, "ctffind has failed with micrograph %s" % micFnMrc
         pwutils.cleanPath(micFnMrc)
     
     def _restimateCTF(self, ctfId):
@@ -108,8 +108,8 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         pwutils.cleanPath(psdFile)
         try:
             self.runJob(self._program, self._args % self._params)
-        except Exception:
-            raise
+        except Exception, ex:
+            print >> sys.stderr, "ctffind has failed with micrograph %s" % micFnMrc
         pwutils.cleanPattern(micFnMrc)
     
     def _createNewCtfModel(self, mic):

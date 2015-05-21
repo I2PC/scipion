@@ -137,7 +137,7 @@ class ProtRelionBase(EMProtocol):
                       important=True,
                       label="Input particles",  
                       help='Select the input images from the project.')
-        form.addParam('maskDiameterA', IntParam, default=200,
+        form.addParam('maskDiameterA', IntParam, default=-1,
                       condition='not doContinue',
                       label='Particle mask diameter (A)',
                       help='The experimental images will be masked with a soft circular mask '
@@ -453,8 +453,14 @@ class ProtRelionBase(EMProtocol):
         self._insertFunctionStep('runRelionStep', params)
         
     def _setNormalArgs(self, args):
+        
+        maskDiameter = self.maskDiameterA.get()
+        if maskDiameter <= 0:
+            x, _, _ = self._getInputParticles().getDim()
+            maskDiameter = self._getInputParticles().getSamplingRate() * x
+        
         args.update({'--i': self._getFileName('input_star'),
-                     '--particle_diameter': self.maskDiameterA.get(),
+                     '--particle_diameter': maskDiameter,
                      '--angpix': self._getInputParticles().getSamplingRate(),
                     })
         self._setMaskArgs(args)
