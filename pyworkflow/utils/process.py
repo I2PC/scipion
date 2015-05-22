@@ -41,7 +41,7 @@ def runJob(log, programname, params,
            numberOfMpi=1, numberOfThreads=1, 
            hostConfig=None, env=None, cwd=None):
 
-    command = buildRunCommand(programname, params, numberOfMpi, hostConfig)
+    command = buildRunCommand(programname, params, numberOfMpi, hostConfig, env)
     
     if log is None:
         print "** Running command: %s" % greenStr(command)
@@ -66,7 +66,7 @@ def runCommand(command, env=None, cwd=None):
     # It would be nice to avoid shell=True and calling buildRunCommand()...
 
     
-def buildRunCommand(programname, params, numberOfMpi, hostConfig=None):
+def buildRunCommand(programname, params, numberOfMpi, hostConfig=None, env=None):
     """ Return a string with the command line to run """
 
     # Convert our list of params to a string, with each element escaped
@@ -81,10 +81,12 @@ def buildRunCommand(programname, params, numberOfMpi, hostConfig=None):
 
         if programname.startswith('xmipp'):
             programname = programname.replace('xmipp', 'xmipp_mpi')
+            
+        mpiFlags = '' if env is None else env.get('SCIPION_MPI_FLAGS', '') 
 
         return hostConfig.mpiCommand.get() % {
             'JOB_NODES': numberOfMpi,
-            'COMMAND': "`which %s` %s" % (programname, params),
+            'COMMAND': "%s `which %s` %s" % (mpiFlags, programname, params),
         }
 
 
