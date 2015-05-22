@@ -278,6 +278,8 @@ class Protocol(Step):
         self.mapper = kwargs.get('mapper', None)
         self._inputs = []
         self._outputs = CsvList()
+        # Expert level
+        self.expertLevel = Integer(kwargs.get('expertLevel', LEVEL_NORMAL))#needs to be defined before parsing params 
         self._definition = Form()
         self._defineParams(self._definition)
         self._createVarsFromDefinition(**kwargs)
@@ -315,8 +317,7 @@ class Protocol(Step):
         # Maybe this property can be inferred from the 
         # prerequisites of steps, but is easier to keep it
         self.stepsExecutionMode = STEPS_SERIAL
-        # Expert level
-        self.expertLevel = Integer(kwargs.get('expertLevel', LEVEL_NORMAL))
+        
         # Run mode
         self.runMode = Integer(kwargs.get('runMode', MODE_RESUME))
         # Use queue system?

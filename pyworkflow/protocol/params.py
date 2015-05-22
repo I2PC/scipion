@@ -81,6 +81,8 @@ class FormElement(OrderedObject):
             if key in kwargs:
                 self.setAttributeValue(key, kwargs.get(key)) 
     
+
+    
         
 class Param(FormElement):
     """Definition of a protocol parameter"""
@@ -128,7 +130,7 @@ class ElementGroup(FormElement):
         """Add a new param to the group"""
         param = ParamClass(**args)
         self._paramList.append(paramName)
-        self._form.registerParam(paramName, param)
+        self._form.registerParam(paramName, param, **args)
         return param
     
     def addHidden(self, paramName, ParamClass, **args):
@@ -177,7 +179,6 @@ class Section(ElementGroup):
         return self._form.getParam(self.questionParam.get())
 
     def addGroup(self, groupName, **kwargs):
-        
         labelName = groupName
         for symbol in ' ()':
             labelName = labelName.replace(symbol, '_')
@@ -209,10 +210,10 @@ class Form(object):
     def addLine(self, *args, **kwargs):
         return self.lastSection.addLine(*args, **kwargs)      
 
-    def registerParam(self, paramName, param):
+    def registerParam(self, paramName, param, **args):
         """ Register a given param in the form. """
         self._paramsDict[paramName] = param        
-        self._analizeCondition(paramName, param)
+        self._analizeCondition(paramName, param, **args)
         
     def addParam(self, *args, **kwargs):
         """Add a new param to last section"""
@@ -221,14 +222,20 @@ class Form(object):
     def addHidden(self, *args, **kwargs):
         return self.lastSection.addHidden(*args, **kwargs)
     
-    def _analizeCondition(self, paramName, param):
+    def _analizeCondition(self, paramName, param, **args):
+        protocol = args.get("protocol", None)
+        if protocol:
+            print protocol.hasAttribute("expertLevel")
         if param.hasCondition():
             param._conditionParams = []
             tokens = re.split('\W+', param.condition.get())
             for t in tokens:
                 if self.hasParam(t):
-                    param._conditionParams.append(t)
                     self.getParam(t)._dependants.append(paramName)
+                    param._conditionParams.append(t)
+                if (protocol and protocol.hasAttribute(t)):
+                    param._conditionParams.append(t)
+                    
 
     def escapeLiteral(self, value):
         if isinstance(value, str):
@@ -238,6 +245,7 @@ class Form(object):
         return result
     
     def evalParamCondition(self, protocol, paramName):
+        
         """Evaluate if a condition is True for a give param
         with the values of a particular Protocol"""
         param = self.getParam(paramName)
