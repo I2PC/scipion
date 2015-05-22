@@ -89,15 +89,12 @@ leads to objective and high-quality results.
     #--------------------------- STEPS functions --------------------------------------------     
     def createOutputStep(self):
         
-        imgSet = self._getInputParticles()
-        
-        vol = Volume()
-        vol.setFileName(self._getExtraPath('relion_class001.mrc'))
-        vol.setSamplingRate(imgSet.getSamplingRate())
-        
-        self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(imgSet, vol)
         if not self.realignMovieFrames:
+            imgSet = self._getInputParticles()
+            vol = Volume()
+            vol.setFileName(self._getExtraPath('relion_class001.mrc'))
+            vol.setSamplingRate(imgSet.getSamplingRate())
+            
             outImgSet = self._createSetOfParticles()
             outImgsFn = self._getFileName('data', iter=self._lastIter())
             
@@ -107,6 +104,8 @@ leads to objective and high-quality results.
                                 updateItemCallback=self._createItemMatrix,
                                 itemDataIterator=md.iterRows(outImgsFn))
             
+            self._defineOutputs(outputVolume=vol)
+            self._defineSourceRelation(imgSet, vol)
             self._defineOutputs(outputParticles=outImgSet)
             self._defineTransformRelation(imgSet, outImgSet)
         else:
