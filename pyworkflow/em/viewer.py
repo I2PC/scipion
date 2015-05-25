@@ -216,7 +216,7 @@ class ChimeraView(CommandView):
                              env=getChimeraEnviron(), **kwargs)
 
              
-class ChimeraClientView(View):
+class ChimeraClientView(CommandView):
     """ View for calling an external command. """
     def __init__(self, inputFile, **kwargs):
         self._inputFile = inputFile
