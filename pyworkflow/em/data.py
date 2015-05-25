@@ -38,7 +38,7 @@ from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt, exists
 from constants import *
 from convert import ImageHandler
 import numpy as np
-import xmipp
+# import xmipp
 
 
 class EMObject(OrderedObject):
@@ -1579,8 +1579,8 @@ class MovieParticle(Particle):
     def getFrameId(self):
         return self._frameId.get()
     
-    def setFrameId(self, partId):
-        self._frameId.set(partId)
+    def setFrameId(self, frameId):
+        self._frameId.set(frameId)
 
 
 class SetOfMovieParticles(SetOfParticles):
