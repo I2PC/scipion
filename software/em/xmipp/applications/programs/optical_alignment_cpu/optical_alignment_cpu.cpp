@@ -268,7 +268,7 @@ public:
 
         // Object for optical flow
         FarnebackOpticalFlow d_calc;
-        gpu::setDevice(gpuDevice);
+        setDevice(gpuDevice);
 
         // Initialize the parameters for optical flow structure
         d_calc.numLevels=6;
@@ -411,7 +411,7 @@ public:
                     d_mapx.upload(mapx);
                     d_mapy.upload(mapy);
                     d_preimg.upload(preimg);
-                    gpu::remap(d_preimg,d_dest,d_mapx,d_mapy,INTER_CUBIC);
+                    remap(d_preimg,d_dest,d_mapx,d_mapy,cv::INTER_CUBIC);
                     d_dest.download(dest);
 
                     d_dest.release();
