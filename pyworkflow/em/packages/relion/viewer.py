@@ -35,6 +35,7 @@ import pyworkflow.em.metadata as md
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
+from protocol_polish import ProtRelionPolish
 from protocol_postprocess import ProtRelionPostprocess
 from protocol_autopick import ProtRelionAutopick
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
@@ -58,6 +59,11 @@ CHIMERADATAVIEW = 0
 CLASSES_ALL = 0
 CLASSES_SEL = 1
 
+FSC_CORRECTED = 0
+FSC_UNMASKEDMAPS = 1
+FSC_MASKEDMAPS = 2
+FSC_RANDOMIZED = 3
+FSC_ALL = 4
 
 
 class RelionPlotter(EmPlotter):
@@ -605,7 +611,7 @@ Examples:
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
-        self._refsList = [1] 
+        self._refsList = [1]
         if self.protocol.IS_3D and self.protocol.IS_CLASSIFY:
             if self.showClasses3D == CLASSES_ALL:
                 self._refsList = range(1, self.protocol.numberOfClasses.get()+1)
@@ -653,8 +659,6 @@ Examples:
                 prefixes = ['half1_']
             elif halves == 1:
                 prefixes = ['half2_']
-            elif halves == 3:
-                prefixes = ['final']
         return prefixes
     
     def _iterAngles(self, mdOut):
@@ -667,16 +671,11 @@ Examples:
     def _getVolumeNames(self):
         vols = []
         prefixes = self._getPrefixes()
-        if prefixes[0] == "final":
+        for it in self._iterations:
             for ref3d in self._refsList:
-                volFn = self.protocol._getExtraPath("relion_class%03d.mrc:mrc" % ref3d)
-                vols.append(volFn)
-        else:
-            for it in self._iterations:
-                for ref3d in self._refsList:
-                    for prefix in prefixes:
-                        volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                        vols.append(volFn)
+                for prefix in prefixes:
+                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                    vols.append(volFn)
         return vols
     
     def _getMdOut(self, it, prefix, ref3d):
@@ -842,8 +841,7 @@ class PostprocessViewer(ProtocolViewer):
         if value:
             inv = 1/value
         return "1/%0.2f" % inv
-    
-    
+
 
 class RelionAutopickViewer(Viewer):
     """ Class to visualize Relion postprocess protocol """
@@ -855,4 +853,358 @@ class RelionAutopickViewer(Viewer):
         import pyworkflow.em.packages.xmipp3 as xmipp3
         xmipp3.viewer.launchSupervisedPickerGUI(2, micPath, coordPath, 'manual', 
                                                 self.protocol)
+
+
+class RelionPolishViewer(ProtocolViewer):
+    _targets = [ProtRelionPolish]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
+    _label = 'viewer relion polish'
+    
+    def _defineParams(self, form):
+        self._env = os.environ.copy()
+        form.addSection(label='Visualization')
+        
+        group = form.addGroup('Particles')
+        group.addParam('displayShinyParticles', LabelParam, 
+                       label='Display Shiny Particles')
+        
+        group = form.addGroup('Volumes')
+        
+        group.addParam('showHalves', EnumParam, choices=['half1', 'half2', 'both', 'final shiny'], default=0,
+                      label='Volume to visualize',
+                      help='Select which half do you want to visualize.')
+        group.addParam('viewFrame', EnumParam, choices=['all', 'selection'], default=0, 
+                      display=EnumParam.DISPLAY_HLIST, condition="showHalves<3",
+                      label="Frame to visualize", 
+                      help="""
+*all*: all frames volumes will be visualized.
+*selection*: you may specify a range of frames.
+Examples:
+"1,5-8,10" -> [1,5,6,7,8,10]
+"2,6,9-11" -> [2,6,9,10,11]
+"2 5, 6-8" -> [2,5,6,7,8]                      
+                           """)
+        group.addParam('frameSelection', NumericRangeParam, 
+                      condition='showHalves<3 and viewFrame==1' , 
+                      label="Frames list", default = 1,
+                      help="Write the frame list to visualize.")
+        group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
+                      default=VOLUME_SLICES, display=EnumParam.DISPLAY_HLIST, 
+                      label='Display volume with',
+                      help='*slices*: display volumes as 2D slices along z axis.\n'
+                           '*chimera*: display volumes as surface with Chimera.')
+        group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
+                      default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_HLIST, 
+                      label='Display angular distribution',condition="showHalves==3",
+                      help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
+                           '*chimera*: display angular distribution using Chimera with red spheres.') 
+        group.addParam('spheresScale', IntParam, default=100, 
+                      expertLevel=LEVEL_ADVANCED,condition="showHalves==3 and displayAngDist==%d" % ANGDIST_CHIMERA,
+                      label='Spheres size',
+                      help='')
+        group = form.addGroup('Plots')
+        group.addParam('resolutionPlotsFSC', EnumParam,
+                      choices=['Corrected', 'Unmasked Maps', 'Masked Maps', 'Phase Randomized Masked Maps', 'all'],
+                      default=FSC_CORRECTED, display=EnumParam.DISPLAY_COMBO, 
+                      label='Display resolution plots (FSC)',
+                      help='') 
+        group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Threshold in resolution plots',
+                      help='')
+        group.addParam('guinierPlots', LabelParam,
+                      default=True, condition="showHalves<3",
+                      label='Display guinier plots',
+                      help='')
+    
+    def _getVisualizeDict(self):
+        self._load()
+        return {'displayShinyParticles': self._showShinyParticles,
+                'displayVol': self._showVolumes,
+                'displayAngDist': self._showAngularDistribution,
+                'resolutionPlotsFSC': self._showFSC,
+                'guinierPlots': self._showGuinier,
+                }
+        
+    def _viewAll(self, *args):
+        pass
+    
+#===============================================================================
+# displayShinyParticles     
+#===============================================================================
+    def _showShinyParticles(self, paramName=None):
+        partsId = self.protocol.outputParticles.strId()
+        fn = self.protocol.outputParticles.getFileName()
+        view = self.createScipionPartView(fn, partsId)
+        
+        return [view]
+    
+#===============================================================================
+# ShowVolumes
+#===============================================================================
+    def _showVolumes(self, paramName=None):
+        if self.displayVol == VOLUME_CHIMERA:
+            return self._showVolumesChimera()
+        elif self.displayVol == VOLUME_SLICES:
+            return self._createVolumesSqlite()
+    
+    def _createVolumesSqlite(self):
+        """ Write an sqlite with all volumes selected for visualization. """
+        path = self.protocol._getExtraPath('relion_viewer_volumes.sqlite')
+        samplingRate = self.protocol.outputParticles.getSamplingRate()
+
+        files = []
+        volumes = self._getVolumeNames()
+        for volFn in volumes:
+            if exists(volFn.replace(':mrc', '')):
+                files.append(volFn)
+        self.createVolumesSqlite(files, path, samplingRate)
+        return [em.ObjectView(self._project, self.protocol.strId(), path)]
+    
+    def _showVolumesChimera(self):
+        """ Create a chimera script to visualize selected volumes. """
+        volumes = self._getVolumeNames()
+        
+        if len(volumes) > 1:
+            cmdFile = self.protocol._getExtraPath('chimera_volumes.cmd')
+            f = open(cmdFile, 'w+')
+            for volFn in volumes:
+                # We assume that the chimera script will be generated
+                # at the same folder than relion volumes
+                vol = volFn.replace(':mrc', '')
+                localVol = os.path.basename(vol)
+                if exists(vol):
+                    f.write("open %s\n" % localVol)
+            f.write('tile\n')
+            f.close()
+            view = em.ChimeraView(cmdFile)
+        else:
+            view = em.ChimeraClientView(volumes[0])
+            
+        return [view]
+    
+#===============================================================================
+# showAngularDistribution
+#===============================================================================
+    def _showAngularDistribution(self, paramName=None):
+        if self.displayAngDist == ANGDIST_CHIMERA:
+            view = self._createAngDistChimera()
+        elif self.displayAngDist == ANGDIST_2DPLOT:
+            view = self._createAngDist2D()
+        return [view]
+    
+    def _createAngDistChimera(self):
+        # Common variables to use
+        nparts = self.protocol.outputParticles.getSize()
+        radius = self.spheresScale.get()
+        if radius < 0:
+            radius = self.protocol.maskDiameterA.get()/2
+            
+        volFn = self._getVolumeNames()[0]
+        if exists(volFn.replace(":mrc","")):
+            sqliteFn = self.protocol._getFileName('projections', iter=1, half="shiny_")
+            if not exists(sqliteFn):
+                self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(self.protocol._getFileName('shiny')))
+            return em.ChimeraClientView(volFn, angularDistFile=sqliteFn, spheresDistance=radius)
+        else:
+            raise Exception("They aren't shiny particles to show it's angular distribution.")
+    
+    def _createAngDist2D(self):
+        # Common variables to use
+        nparts = self.protocol.outputParticles.getSize()
+        n = 1
+        gridsize = self._getGridSize(n)
+        
+        plotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
+                                 mainTitle="Shiny Particles", windowTitle="Angular Distribution")
+        dataStar = self.protocol._getFileName('shiny')
+        if exists(dataStar):
+            sqliteFn = self.protocol._getFileName('projections', iter=1, half="shiny_")
+            if not exists(sqliteFn):
+                self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(dataStar))
+            plotter.plotAngularDistributionFromMd(sqliteFn, "")
+            return plotter
+        else:
+            return
+    
+#===============================================================================
+# plotFSC            
+#===============================================================================
+    def _showFSC(self, paramName=None):
+        threshold = self.resolutionThresholdFSC.get()
+        n = 1
+        gridsize = [1, 1]
+        
+        md.activateMathExtensions()
+        
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
+        a = xplotter.createSubPlot("FSC Shiny Particles", 'Angstroms^-1', 'FSC', yformat=False)
+        legends = []
+        modelStar = self.protocol._getFileName('fsc_shiny', iter=self.protocol._lastIter())
+        for label in self._getFSCLabels():
+            if exists(modelStar):
+                model = 'fsc@' + modelStar
+                self._plotFSC(a, model, label)
+                legends.append(self._getLegend(label))
+        xplotter.showLegend(legends)
+        if threshold < self.maxfsc:
+            a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+        a.grid(True)
+        
+        return [xplotter]
+    
+    def _plotFSC(self, a, model, label):
+        mdStar = md.MetaData(model)
+        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
+        fsc = [mdStar.getValue(label, id) for id in mdStar]
+        self.maxfsc = max(fsc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, fsc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
+            
+#===============================================================================
+# plotGuinier
+#===============================================================================
+    def _showGuinier(self, paramName=None):
+        n = 1
+        gridsize = [1, 1]
+        md.activateMathExtensions()
+        
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Relative Guinier Plot')
+        a = xplotter.createSubPlot("", 'Angstroms^-2', 'log(Amplitude)', yformat=False)
+        legends = []
+        for frame in self._frames:
+            modelStar = self.protocol._getFileName('guinier_frame', iter=self.protocol._lastIter(), frame=frame)
+            if exists(modelStar):
+                model = 'relative_guinier@' + modelStar
+                self._plotGuinier(a, model)
+                legends.append("guinier frame %d " % frame)
+        xplotter.showLegend(legends)
+        a.grid(True)
+        
+        return [xplotter]
+    
+    def _plotGuinier(self, a, model):
+        mdStar = md.MetaData(model)
+        resolSqInv = [mdStar.getValue(md.RLN_POSTPROCESS_GUINIER_RESOL_SQUARED, id) for id in mdStar]
+        logAmp = [mdStar.getValue(md.RLN_POSTPROCESS_GUINIER_VALUE_IN, id) for id in mdStar]
+        self.maxfsc = max(logAmp)
+        self.minInv = min(resolSqInv)
+        self.maxInv = max(resolSqInv)
+        a.plot(resolSqInv, logAmp)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+            
+
+
+
+#===============================================================================
+# Utils Functions
+#===============================================================================
+    def _load(self):
+        self.protocol._initialize() # Load filename templates
+        self.lastIter = self.protocol._lastIter()
+        halves = getattr(self, 'showHalves', None)
+        if self.viewFrame.get() == 0 and halves < 3:
+            # ToDo: Change this when exists a method to
+            # know how many frames has a SetOfMovieParticles.
+            self._frames = range(1, 50)
+        elif halves < 3:
+            self._frames = self._getListFromRangeString(self.frameSelection.get())
+        else:
+            self._frames = [1]
+            
+        from matplotlib.ticker import FuncFormatter
+        self._plotFormatter = FuncFormatter(self._formatFreq) 
+        
+    def createScipionPartView(self, filename, partsId, viewParams={}):
+        labels =  'enabled id _filename _transform._matrix'
+        viewParams = {showj.ORDER:labels,
+                      showj.VISIBLE: labels, showj.RENDER:'_filename',
+                      'labels': 'id',
+                      }
+        return em.ObjectView(self._project, 
+                          self.protocol.strId(), filename, other=partsId,
+                          env=self._env,
+                          viewParams=viewParams)
+    
+    def _getPrefixes(self):
+        prefixes = self.protocol.PREFIXES
+        halves = getattr(self, 'showHalves', None)
+        if halves:
+            if halves == 0:
+                prefixes = ['half1_']
+            elif halves == 1:
+                prefixes = ['half2_']
+            elif halves == 3:
+                prefixes = ['shiny']
+        return prefixes
+    
+    def _getVolumeNames(self):
+        vols = []
+        prefixes = self._getPrefixes()
+        if prefixes == ["shiny"]:
+            volFn = self.protocol._getFileName('volume_shiny', iter=self.lastIter)
+            if exists(volFn.replace(':mrc', '')):
+                vols.append(volFn)
+        else:
+            for frm in self._frames:
+                for prefix in prefixes:
+                    volFn = self.protocol._getFileName('volume_frame', halve=prefix, frame=frm, iter=self.lastIter, ref3d=1)
+                    if exists(volFn.replace(':mrc', '')):
+                        vols.append(volFn)
+        return vols
+    
+    def _formatFreq(self, value, pos):
+        """ Format function for Matplotlib formatter. """
+        import math
+        inv = 999.
+        if value:
+            inv = 1/math.sqrt(value)
+        return "1/%0.2f" % inv
+    
+    def _getGridSize(self, n=None):
+        """ Figure out the layout of the plots given the number of references. """
+        if n is None:
+            n = len(self._refsList)
+        
+        if n == 1:
+            gridsize = [1, 1]
+        elif n == 2:
+            gridsize = [2, 1]
+        else:
+            gridsize = [(n+1)/2, 2]
+            
+        return gridsize
+    
+    def _iterAngles(self, fn):
+        mdOut = md.MetaData(fn)
+        for objId in mdOut:
+            rot = mdOut.getValue(md.RLN_ORIENT_ROT, objId)
+            tilt = mdOut.getValue(md.RLN_ORIENT_TILT, objId)
+            yield rot, tilt
+    
+    def _getFSCLabels(self):
+        if self.resolutionPlotsFSC.get() == 0:
+            return [md.RLN_POSTPROCESS_FSC_TRUE]
+        elif self.resolutionPlotsFSC.get() == 1:
+            return [md.RLN_POSTPROCESS_FSC_UNMASKED]
+        elif self.resolutionPlotsFSC.get() == 2:
+            return [md.RLN_POSTPROCESS_FSC_MASKED]
+        elif self.resolutionPlotsFSC.get() == 3:
+            return [md.RLN_POSTPROCESS_FSC_RANDOM_MASKED]
+        else:
+            return [md.RLN_POSTPROCESS_FSC_TRUE, md.RLN_POSTPROCESS_FSC_UNMASKED,
+                    md.RLN_POSTPROCESS_FSC_MASKED, md.RLN_POSTPROCESS_FSC_RANDOM_MASKED]
+    
+    def _getLegend(self, label):
+        if label == md.RLN_POSTPROCESS_FSC_TRUE:
+            return 'Corrected'
+        elif label == md.RLN_POSTPROCESS_FSC_UNMASKED:
+            return 'Unmasked Maps'
+        elif label == md.RLN_POSTPROCESS_FSC_MASKED:
+            return 'Masked Maps'
+        else:
+            return 'Phase Randomized Masked Maps'

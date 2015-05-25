@@ -90,6 +90,7 @@ class ProtRelionBase(EMProtocol):
                   'projections': self.extraIter + '%(half)s_projections.sqlite',
                   'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
                   'model': self.extraIter + 'model.star',
+                  'shiny': self._getExtraPath('shiny.star'),
                   'optimiser': self.extraIter + 'optimiser.star',
                   'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
                   'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
@@ -97,8 +98,12 @@ class ProtRelionBase(EMProtocol):
                   'selected_volumes': self._getTmpPath('selected_volumes_xmipp.xmd'),
                   'movie_particles': self._getPath('movie_particles.star'),
                   'volume_shiny': self.extraIter + 'data_shiny_post.mrc:mrc',
+                  'volume_frame': self.extraIter + 'data_shiny_frame%(frame)03d_%(halve)sclass%(ref3d)03d_unfil.mrc:mrc',
+                  'guinier_frame': self.extraIter + 'data_shiny_frame%(frame)03d_guinier.star',
+                  'fsc_shiny': self.extraIter + 'data_shiny_post.star',
                   'dataFinal' : self._getExtraPath("relion_data.star"),
                   'modelFinal' : self._getExtraPath("relion_model.star"),
+                  
                   }
         # add to keys, data.star, optimiser.star and sampling.star
         for key in self.FILE_KEYS:

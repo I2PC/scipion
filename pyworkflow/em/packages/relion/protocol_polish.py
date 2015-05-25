@@ -42,6 +42,8 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     """
     _label = 'particle polishing'
     
+    PREFIXES = ['half1_', 'half2_']
+
     def _initialize(self):
         """ This function is mean to be called after the 
         working dir for the protocol have been set. (maybe after recovery from mapper)
@@ -187,7 +189,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         shinyPartSet = self._createSetOfParticles()
         
         shinyPartSet.copyInfo(imgSet)
-        readSetOfParticles(self._getExtraPath("shiny.star"), shinyPartSet, alignType=ALIGN_PROJ)
+        readSetOfParticles(self._getFileName('shiny'), shinyPartSet, alignType=ALIGN_PROJ)
         
         self._defineOutputs(outputParticles=shinyPartSet)
         self._defineSourceRelation(imgSet, shinyPartSet)
