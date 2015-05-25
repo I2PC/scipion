@@ -194,7 +194,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                                 return;
                             }
                             HashMap<String, String> msgfields = new HashMap<String, String>();
-                            boolean createprot = getParticlePicker().getProtId() == null;
+                            boolean createprot = getParticlePicker().getPort() == null;
                             if(createprot)
                                 msgfields.put("Run name:", "ProtUserCoordinates");
                             
@@ -733,7 +733,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected void updateZoom()
 	{
 		double zoom = getZoom();
-		System.out.printf("Zoom is %f\n", zoom);
 		
 		if (zoom == -1. || (zoom != -1. && !usezoombt.isSelected()))
 		{
@@ -741,10 +740,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			usezoombt.setText(String.format(Locale.US, "%.2f", zoom));
 		}
 		else if (usezoombt.isSelected())
-		{
-                        System.out.printf("Setting canvas Zoom....\n");
 			getCanvas().setZoom(zoom);
-		}
 	}
 
 	public double getZoom()
@@ -975,7 +971,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 public void run() {
 
                     try {
-                        String cmd = getParticlePicker().getScipionSaveCommand();
+                        String cmd = "run function registerCoords";
                         XmippWindowUtil.runCommand(cmd, getParticlePicker().getParams().port);
                         XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
                         getCanvas().setEnabled(true);

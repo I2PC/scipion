@@ -30,7 +30,8 @@ from pyworkflow.viewer import WEB_DJANGO, MessageView, ProtocolViewer, TextView,
 from pyworkflow.web.app.views_util import getImageUrl
 from views_util import savePlot
 from pyworkflow.gui.plotter import Plotter
-from pyworkflow.em import TABLE_NAME, DataView, ImageView, PATH
+from pyworkflow.em.viewer import DataView, ImageView
+from pyworkflow.em.showj import TABLE_NAME, PATH
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 
@@ -161,14 +162,17 @@ def viewer_element(request):
     updateProtocolParams(request, protocolViewer, project)
     
     views = protocolViewer._getVisualizeDict()[viewerParam](viewerParam)
-
     urls = []
-    for v in views:
-         # COMMAND VIEW
-        if isinstance(v, CommandView):
-            v.show()
-        else:
-            urls.append(viewToUrl(request, v))
+    if views is None:
+        print "no viewer found"
+    else:
+        for v in views:
+             # COMMAND VIEW
+             if isinstance(v, CommandView):
+        #             v.show()
+                print "THIS FUNCTION IS ONLY AVAILABLE ON DESKTOP!"
+             else:
+                urls.append(viewToUrl(request, v))
 
     jsonStr = json.dumps(urls, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')

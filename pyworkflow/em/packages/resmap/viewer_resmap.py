@@ -92,7 +92,7 @@ class ResMapViewer(ProtocolViewer):
         #os.system('chimera "%s" &' % self.protocol._getPath('volume1_resmap_chimera.cmd'))
         cmdFile = self.protocol._getPath('volume1_resmap_chimera.cmd')
         view = ChimeraView(cmdFile)
-        view.show()
+        return [view]
 
         
         

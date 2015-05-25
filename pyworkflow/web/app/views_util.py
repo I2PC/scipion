@@ -558,16 +558,15 @@ def get_image(request):
     return response
 
 def get_slice(request):
-    imageNo = None
     sliceNo = None
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
     mirrorY = 'mirrorY' in request.GET
-    
 #    applyTransformMatrix = 'applyTransformMatrix' in request.GET
 #    onlyApplyShifts = request.GET.get('onlyApplyShifts',False)
 #    wrap = request.GET.get('wrap',False)
 #    transformMatrix = request.GET.get('transformMatrix',None)
+
 
     # This validations not works for volumes into a stack
     if '__slice__' in imagePath:
@@ -579,27 +578,14 @@ def get_slice(request):
 #             parts = imagePath.split('@')
 #             imageNo = parts[0]
 #             imagePath = parts[1]
-            
-    if 'projectPath' in request.session:
-        imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
-        imagePath = imagePathTmp
-#         if not os.path.isfile(imagePathTmp):
-#             raise Exception('should not use getInputPath')
-            #imagePath = getInputPath('showj', imagePath)
-            
-#     if imageNo:
-#         imagePath = '%s@%s' % (imageNo, imagePath)
-
+    
+    imagePath = convertVolume(request, imagePath)
     imgXmipp = xmipp.Image()
     
     if sliceNo is None:
         imgXmipp.readPreview(imagePath, int(imageDim))
     else:
-#         print "CURRENT DIR: ", os.getcwd()
-#         print "Exist path? ", os.path.exists(imagePath)
-        
         imgXmipp.readPreview(imagePath, int(imageDim), sliceNo)
-        
         
 #        if applyTransformMatrix and transformMatrix != None: 
 #            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
@@ -610,13 +596,12 @@ def get_slice(request):
     # from PIL import Image
 #   img = getPILImage(imgXmipp, None, False)
     img = getPILImage(imgXmipp)
-
-    
     response = HttpResponse(mimetype="image/png")
     
     if img.mode != 'RGB':
         img = img.convert('RGB')
     img.save(response, "PNG")
+    
     return response
 
 
@@ -640,6 +625,7 @@ def get_image_dim(request):
     jsonStr = json.dumps(objs, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
+
 def getImageDim(request, imagePath):
     projectPath = request.session['projectPath']
 #     imgFn = os.path.join(projectPath, imagePath)
@@ -648,10 +634,12 @@ def getImageDim(request, imagePath):
     x, y, z, n = ImageHandler().getDimensions(location)
     return x, y, z, n
 
+
 def getImageXdim(request, imagePath):
     xdim = getImageDim(request, imagePath)[0]
 #     print "x dimension: ", xdim
     return xdim
+
 
 def readDimensions(request, path, typeOfColumn):
     if (typeOfColumn == COL_RENDER_IMAGE or
@@ -659,12 +647,37 @@ def readDimensions(request, path, typeOfColumn):
         return getImageDim(request, path)
     return (300,300,1,1) 
 
+
+def getTmpVolumePath(fileName):
+    """ Return the temporarly filename of converted volumes
+    to be rendered over the web.
+    """ 
+    baseName, _ = os.path.splitext(fileName)
+    return '%s_tmp%s' % (baseName, '.mrc')
+    
+    
+def convertVolume(request, path):
+    imgFn = os.path.join(request.session['projectPath'], path)
+    imgFn.replace(':mrc', '')
+    imgConvertedFn = getTmpVolumePath(imgFn)
+    # For rendering volume slices over the web, PIL need that
+    # the volume is stored with a specific datatype
+    # So, we write a temporarly volume the first time
+    if not os.path.exists(imgConvertedFn):
+        img = xmipp.Image()
+        img.read(str(imgFn))
+        img.convert2DataType(xmipp.DT_FLOAT , xmipp.CW_ADJUST)
+        img.write(imgConvertedFn)
+    return imgConvertedFn
+
+
 def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     _newPath = path
     _stats = None
     
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], path)
+    img.read(str(imgFn))
     
     if not convert and not reslice and not getStats:
 #         img.read(str(imgFn), xmipp.HEADER)
@@ -682,12 +695,12 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         if axis != xmipp.VIEW_Z_NEG:
             img.reslice(axis)    
     
-    if convert or reslice:
-        fileName, _ = os.path.splitext(path)
-        _newPath = '%s_tmp%s' % (fileName, '.mrc')
-        img.write(os.path.join(request.session['projectPath'], _newPath))
+    if (convert or reslice) and not os.path.exists(imgFn):
+        _newPath = getTmpVolumePath(imgFn)
+        img.write(_newPath)
     
     return _newPath, _stats
+
 
 def getTestPlot(request):
     """ Just a test of a custom render function. """
@@ -701,6 +714,7 @@ def getTestPlot(request):
     response = HttpResponse(content_type='image/png')
     canvas.print_png(response)
     return response   
+
 
 def replacePattern(m, mode):
     g1 = m.group(mode)
@@ -744,11 +758,12 @@ def parseText(text, func=replacePattern):
 
 
 def getImageUrl(filename):
-    abs_url = django_settings.ABSOLUTE_URL 
-    url_plot = ""
-    if len(abs_url) != 0:
-        url_plot = url_plot + django_settings.ABSOLUTE_URL + "/"
-    url_plot = url_plot + "get_image_path/?image=" + filename
+#     abs_url = django_settings.ABSOLUTE_URL 
+#     url_plot = ""
+#     if len(abs_url) != 0:
+#         url_plot = url_plot + django_settings.ABSOLUTE_URL + "/"
+#     url_plot = url_plot + "get_image_path/?image=" + filename
+    url_plot = "get_image_path/?image=" + filename
     return url_plot
     
     

@@ -40,7 +40,7 @@ or 2D class averages in electron cryo-microscopy (cryo-EM). Many
 parameters of a statistical model are learned from the data,which
 leads to objective and high-quality results.
     """    
-    _label = '3D refine'
+    _label = '3D auto-refine'
     IS_CLASSIFY = False
     CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS, 
                      md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS]
@@ -63,11 +63,17 @@ leads to objective and high-quality results.
         """ Set sampling related params"""
         # Sampling stuff
         args['--auto_local_healpix_order'] = self.localSearchAutoSamplingDeg.get()
+        
         if not self.doContinue:
             args['--healpix_order'] = self.angularSamplingDeg.get()
+            args['--offset_range'] = self.offsetSearchRangePix.get()
+            args['--offset_step']  = self.offsetSearchStepPix.get() * 2
             args['--auto_refine'] = ''
             args['--split_random_halves'] = ''
-            args['--low_resol_join_halves'] = self.resolJoinHalves.get()
+            
+            joinHalves = "--low_resol_join_halves"
+            if not joinHalves in self.extraParams.get():
+                args['--low_resol_join_halves'] = 40
         
         # Set movie refinement arguments
         if self.realignMovieFrames:
@@ -83,15 +89,12 @@ leads to objective and high-quality results.
     #--------------------------- STEPS functions --------------------------------------------     
     def createOutputStep(self):
         
-        imgSet = self._getInputParticles()
-        
-        vol = Volume()
-        vol.setFileName(self._getExtraPath('relion_class001.mrc'))
-        vol.setSamplingRate(imgSet.getSamplingRate())
-        
-        self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(imgSet, vol)
         if not self.realignMovieFrames:
+            imgSet = self._getInputParticles()
+            vol = Volume()
+            vol.setFileName(self._getExtraPath('relion_class001.mrc'))
+            vol.setSamplingRate(imgSet.getSamplingRate())
+            
             outImgSet = self._createSetOfParticles()
             outImgsFn = self._getFileName('data', iter=self._lastIter())
             
@@ -101,11 +104,12 @@ leads to objective and high-quality results.
                                 updateItemCallback=self._createItemMatrix,
                                 itemDataIterator=md.iterRows(outImgsFn))
             
+            self._defineOutputs(outputVolume=vol)
+            self._defineSourceRelation(imgSet, vol)
             self._defineOutputs(outputParticles=outImgSet)
             self._defineTransformRelation(imgSet, outImgSet)
         else:
             pass
-        
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):

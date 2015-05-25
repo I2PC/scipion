@@ -50,6 +50,8 @@ public:
     double maxAngularChange;
     /** Maximum frequency (A) */
     double maxResol;
+    /** Maximum defocus change (A) */
+    double maxDefocusChange;
     /** Sampling rate */
     double Ts;
     /** Maximum radius */

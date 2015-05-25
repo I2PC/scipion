@@ -205,6 +205,8 @@ def runScript(scriptCmd, chdir=True):
 
 
 def runApp(app, args='', chdir=True):
+    if isinstance(args, list):
+        args = ' '.join('"%s"' % x for x in args)
     runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args), chdir)
 
 
@@ -296,12 +298,10 @@ def main():
 
     # TODO(josemiguel): review and see if we really need it.
     elif mode == MODE_DBBROWSE:
-        browserArgs = " ".join('"%s"' % x for x in sys.argv[2:])
-        runApp('pw_browser.py', args=browserArgs)
+        runApp('pw_browser.py', args=sys.argv[2:])
 
     elif mode == MODE_VIEWER:
-        viewerArgs = ' '.join(sys.argv[2:])
-        runApp('pw_viewer.py', args=viewerArgs, chdir=False)
+        runApp('pw_viewer.py', args=sys.argv[2:], chdir=False)
 
     elif mode == MODE_UNINSTALL:
         # We do not os.environ.update(VARS) here. SCons needs to use
@@ -424,13 +424,13 @@ arguments:
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:
-        runApp('pw_config.py', args=' '.join('"%s"' % x for x in sys.argv[2:]))
+        runApp('pw_config.py', sys.argv[2:])
 
     elif mode == MODE_STATS:
         statsDir = join(SCIPION_HOME, 'data', 'stats')
         if not exists(statsDir):
             os.makedirs(statsDir)
-        runApp('gitstats/gitstats', args='%s %s' % (SCIPION_HOME, statsDir))
+        runApp('gitstats/gitstats', args=[SCIPION_HOME, statsDir])
 
     elif mode == MODE_VERSION:
         sys.stdout.write('%s\n' % __version__)
@@ -441,9 +441,7 @@ arguments:
         # this could be pw_protocol_run.py or pw_protocol_mpirun.py
         protocolApp = sys.argv[2]
         # This should be (projectPath, protocolDb and protocolId)
-        params = ['"%s"' % s for s in sys.argv[3:]]
-        args = ' '.join(params)
-        runApp(protocolApp, args)
+        runApp(protocolApp, args=sys.argv[3:])
         
     elif mode == MODE_PROTOCOLS:
         runApp('pw_protocol_list.py')

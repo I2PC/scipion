@@ -79,14 +79,14 @@ class ProtMovieAlignment(ProtProcessMovies):
                       help='If *0*, use maximum value')
         
         # GROUP GPU PARAMETERS
-        group = form.addGroup('GPU',condition="alignMethod==%d or alignMethod==%d "
-                                                         " or alignMethod==%d "
-                                                         % (AL_OPTICAL, AL_DOSEFGPUOPTICAL, AL_DOSEFGPU))
+        group = form.addGroup('GPU',condition="alignMethod==%d or (alignMethod==%d and expertLevel==%d)"
+                                                         " or (alignMethod==%d and expertLevel==%d)"
+                                                         % (AL_OPTICAL, AL_DOSEFGPUOPTICAL, LEVEL_ADVANCED, AL_DOSEFGPU, LEVEL_ADVANCED))
         group.addParam('doGPU', BooleanParam, default=False,
                       label="Use GPU (vs CPU)",
                       condition="alignMethod==%d or alignMethod==%d" % (AL_OPTICAL, AL_DOSEFGPUOPTICAL),
                       help="Set to true if you want the GPU implementation of Optical Flow")
-        group.addParam('GPUCore', IntParam, default=1,
+        group.addParam('GPUCore', IntParam, default=1, expertLevel=LEVEL_ADVANCED,
                       label="Choose GPU core",
                       condition="doGPU  or alignMethod==%d or alignMethod==%d  " % (AL_DOSEFGPU, AL_DOSEFGPUOPTICAL),
                       help="GPU may have several cores. Set it to one if you do not know what we are talking about")
@@ -323,11 +323,11 @@ class ProtMovieAlignment(ProtProcessMovies):
     def _citations(self):
         alMethod = self.alignMethod.get()
         if alMethod == AL_OPTICAL:
-            return ['Abrishami2014a']
+            return ['Abrishami2015']
         if alMethod == AL_DOSEFGPU:
             return ['Li2013']
         if alMethod == AL_DOSEFGPUOPTICAL:
-            return ['Abrishami2014a', 'Li2013']
+            return ['Abrishami2015', 'Li2013']
 
     def _methods(self):
         methods = []

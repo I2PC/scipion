@@ -265,7 +265,6 @@ Examples:
 
     def _showVolume(self, paramName=None):
         choice = self.displayVolume.get()
-        print choice
         if choice == 0:
             return self._showRefs(paramName)
         elif choice == 1:
@@ -286,7 +285,7 @@ Examples:
             md.clear()
             md.setValue(xmipp.MDL_IMAGE, volFn, md.addObject())
             blockName = volFn.split("/")[3]
-            print "Volume: ", volFn, blockName
+            #print "Volume: ", volFn, blockName
             md.write("%s@%s"% (blockName, mdPath), xmipp.MD_APPEND)
         return [self.createDataView(mdPath)]
 
@@ -298,7 +297,6 @@ Examples:
     
     def _showVolumesChimera(self, volumes):
         """ Create a chimera script to visualize selected volumes. """
-        
         if len(volumes) > 1:
             cmdFile = self.protocol._getTmpPath('chimera_volumes.cmd')
             cleanPath(cmdFile)
@@ -317,7 +315,7 @@ Examples:
         
         return [view]
     
-    def _showVolumes(self, volumes, paramName):
+    def _showVolumes(self, volumes):
         if self.displayVolWith == VOLUME_CHIMERA:
             return self._showVolumesChimera(volumes)
         elif self.displayVolWith == VOLUME_SLICES:
@@ -337,15 +335,15 @@ Examples:
     
     def _showRefs(self, paramName=None):
         volumes = self._volFileNames('maskedFileNamesIters')
-        return self._showVolumes(volumes, paramName)
+        return self._showVolumes(volumes)
     
     def _showRecons(self, paramName=None):
         volumes = self._volFileNames('reconstructedFileNamesIters')
-        return self._showVolumes(volumes, paramName)
+        return self._showVolumes(volumes)
     
     def _showFilVols(self, paramName=None):
         volumes = self._volFileNames('reconstructedFilteredFileNamesIters')
-        return self._showVolumes(volumes, paramName)
+        return self._showVolumes(volumes)
     
     def _showBfactorVols(self, paramName=None):
         volsBfactor = []
@@ -368,14 +366,13 @@ Examples:
             self.protocol.runJob("xmipp_volume_correct_bfactor", args, numberOfMpi=1)
             guinierPlots.append(self._showGuinier(volBfactor))
             
-        return self._showVolumes(volsBfactor, paramName) + guinierPlots
+        return self._showVolumes(volsBfactor) + guinierPlots
     
 #===============================================================================
 # Show Library, Classes and Images
 #===============================================================================
     def _showLibraryOrClasses(self, paramName=None):
         choice = self.displayLibraryOrClasses.get()
-        print choice
         if choice == DISPLAY_LIBRARY:
             return self._showProjMatchLibrary(paramName)
         elif choice == 1:
@@ -384,7 +381,6 @@ Examples:
             return self._showProjMatchLibAndClasses(paramName)
 
     def _showProjMatchLibrary(self, paramName=None):
-        print '_show library'
         #map stack position with ref number
         list = []
         mdIn  = xmipp.MetaData()
@@ -446,7 +442,6 @@ Examples:
         return classes
     
     def _showProjMatchLibAndClasses(self, paramName=None):
-        print 'show lib and classes'
         #map stack position with ref number
         list = []
         mdIn  = xmipp.MetaData()

@@ -426,6 +426,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                         suffix = '[Item %s]' % extendedValue
                     if obj.get() is None:
                         labelObj = obj.getObjValue()
+                        suffix = ''
                     else:
                         labelObj = obj.get()
                 else:

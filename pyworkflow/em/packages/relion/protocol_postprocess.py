@@ -39,7 +39,7 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
     The alignment parameters will be converted to a Relion star file
     and used as direction projections to reconstruct.
     """
-    _label = 'post-process'
+    _label = 'post-processing'
     
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):

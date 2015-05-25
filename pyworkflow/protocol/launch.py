@@ -43,9 +43,8 @@ import os
 import re
 from subprocess import Popen, PIPE
 import pyworkflow as pw
-from pyworkflow.utils import buildRunCommand, redStr, greenStr, makeFilePath, join
+from pyworkflow.utils import redStr, greenStr, makeFilePath, join
 from pyworkflow.utils import process
-from pyworkflow.protocol import STEPS_PARALLEL
 
 UNKNOWN_JOBID = -1
 LOCALHOST = 'localhost'
@@ -115,8 +114,6 @@ def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
                                                                      protStrId)
     hostConfig = protocol.getHostConfig()
     useQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
-    #bg = not wait and not useQueue
-    #command = process.buildRunCommand(script, params, mpi, hostConfig)
     # Check if need to submit to queue    
     if useQueue:        
         submitDict = protocol.getSubmitDict()

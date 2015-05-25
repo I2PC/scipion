@@ -333,7 +333,7 @@ class TestXmippScreenParticles(TestXmippBase):
         self.launchProtocol(protScreenZScore)
         self.assertIsNotNone(protScreenZScore.outputParticles, "Output has not been produced")
         print '\t --> Output is not None'
-        self.assertEqual(len(protScreenZScore.outputParticles), 72, "Output Set Of Particles must be 72, but %s found" % len(protScreenZScore.outputParticles))
+        self.assertEqual(len(protScreenZScore.outputParticles), 71, "Output Set Of Particles must be 71, but %s found" % len(protScreenZScore.outputParticles))
         print '\t --> Output set size is correct (%s)' % len(protScreenZScore.outputParticles)
         
         for x in protScreenZScore.outputParticles:
@@ -348,7 +348,7 @@ class TestXmippScreenParticles(TestXmippBase):
         self.launchProtocol(protScreenPercentage)
         self.assertIsNotNone(protScreenPercentage.outputParticles, "Output has not been produced")
         print '\t --> Output is not None'
-        self.assertEqual(len(protScreenPercentage.outputParticles), 72, "Output Set Of Particles must be 72, but %s found" % len(protScreenPercentage.outputParticles))
+        self.assertEqual(len(protScreenPercentage.outputParticles), 71, "Output Set Of Particles must be 71, but %s found" % len(protScreenPercentage.outputParticles))
         print '\t --> Output set size is correct (%s)' % len(protScreenPercentage.outputParticles)
         
         for x, y in izip(protScreenZScore.outputParticles, protScreenPercentage.outputParticles):

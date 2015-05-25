@@ -77,6 +77,12 @@
 						{% for choice in paramGroup.choices %}
 						<option value="{{forloop.counter0}}" {% if paramGroup.htmlValue == forloop.counter0 %} selected="selected" {% endif %}>{{choice}}</option>
 					{% endfor %}
+<!-- ENUM PARAM HORIZONTAL RADIO -->
+				{% elif paramGroup.display == 2 %}
+					{% for choice in paramGroup.choices %}
+					  <input type="radio" id="" name={{paramGroupName}} onChange="javascript:onChangeEnumParamList('{{forloop.counter0}}', '{{paramGroupName}}');" value="{{forloop.counter0}}" 
+					  {% if paramGroup.htmlValue == forloop.counter0 %} checked {% endif %} />{{choice}}
+					{% endfor %}
 				</select>
 			{% endif %}				
 		{% else %}

@@ -80,7 +80,11 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         """ 
         # Get micrographs to pick
         if self.micsToPick == MICS_SAMEASPICKING:
-            return self.xmippParticlePicking.get().inputMicrographs.get()
+            inputPicking = self.xmippParticlePicking.get()
+            if inputPicking is None:
+                return None
+            else:
+                return inputPicking.inputMicrographs.get()
         else:
             return self.inputMicrographs.get()
                 
@@ -195,4 +199,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     
     def _citations(self):
         return ['Abrishami2013']
+    
+    def getCoordsDir(self):
+        return self._getExtraPath()
     

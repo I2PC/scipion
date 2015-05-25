@@ -86,13 +86,15 @@ public class XmippMessage {
 		return "Unexpected error";
 	}
 
-        public static String getInvalidDirectoryMsg(String outputdir) {
-            return String.format("Directory '%s' doesn't exists.", outputdir);
-        }
+    public static String getInvalidDirectoryMsg(String outputdir) {
+        return String.format("Directory %s doesn't exists.", outputdir);
+    }
 
-        public static String getFileTypeNotSupportedMsg(String path) {
-            return String.format("Extension not supported: %s", path); //To change body of generated methods, choose Tools | Templates.
-        }
+    public static String getFileTypeNotSupportedMsg(String path) {
+        return String.format("Extension not supported: %s", path); //To change body of generated methods, choose Tools | Templates.
+    }
+
+	
 
         
 }
