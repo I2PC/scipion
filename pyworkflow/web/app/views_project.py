@@ -83,7 +83,7 @@ def getNodeStateColor(node):
     color = '#ADD8E6'  # Lightblue
     status = ''
     if node.run:
-        status = node.run.status.get(STATUS_FAILED)
+        status = node.run._status.get(STATUS_FAILED)
         color = STATUS_COLORS[status]
         
     return status, color
@@ -337,7 +337,7 @@ def protocol_info(request):
             methods = parseText(protocol.methods())
     
             # STATUS
-            status = protocol.status.get()
+            status = protocol._status.get()
             
             # LOGS (ERROR & OUTPUT)
             fOutString, fErrString, fScpnString = protocol.getLogsAsStrings()
