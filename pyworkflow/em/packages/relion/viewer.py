@@ -1096,10 +1096,7 @@ Examples:
         self.maxInv = max(resolSqInv)
         a.plot(resolSqInv, logAmp)
         a.xaxis.set_major_formatter(self._plotFormatter)
-            
-
-
-
+    
 #===============================================================================
 # Utils Functions
 #===============================================================================
@@ -1110,7 +1107,7 @@ Examples:
         if self.viewFrame.get() == 0 and halves < 3:
             # ToDo: Change this when exists a method to
             # know how many frames has a SetOfMovieParticles.
-            self._frames = range(1, 50)
+            self._frames = range(1, self.protocol._lastFrame())
         elif halves < 3:
             self._frames = self._getListFromRangeString(self.frameSelection.get())
         else:
