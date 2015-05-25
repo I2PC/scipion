@@ -369,3 +369,8 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     def getLastIter(self):
         return self._lastIter.get()
     
+    def _createItemMatrix(self, item, row):
+        from pyworkflow.em.packages.xmipp3.convert import createItemMatrix
+        import pyworkflow.em as em
+        
+        createItemMatrix(item, row, align=em.ALIGN_PROJ)
