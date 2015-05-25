@@ -160,7 +160,7 @@ class Step(OrderedObject):
         try:
             self._run()
             self.endTime.set(dt.datetime.now())
-            if self.status == STATUS_RUNNING:
+            if self.status.get() == STATUS_RUNNING:
                 if self.isInteractive():
                     # If the Step is interactive, after run
                     # it will be waiting for use to mark it as DONE
@@ -1155,22 +1155,23 @@ class Protocol(Step):
     
     def setQueueParams(self, queueParams):
         self._queueParams.set(json.dumps(queueParams))
-        
-    def getNumberOfSteps(self):
+
+    @property
+    def numberOfSteps(self):
         return self._numberOfSteps.get(0)
-    
-    def getStepsDone(self):
+
+    @property
+    def stepsDone(self):
         """ Return the number of steps executed. """
         return self._stepsDone.get(0)
-            
+
     def getStatusMessage(self):
         """ Return the status string and if running the steps done. 
         """
         msg = self.getStatus()
         if self.isRunning() or self.isAborted() or self.isFailed():
-            done = self.getStepsDone()
-            msg += " (done %d/%d)" % (done, self.getNumberOfSteps())
-        
+            msg += " (done %d/%d)" % (self.stepsDone, self.numberOfSteps)
+
         return msg
     
     def getRunMode(self):

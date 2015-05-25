@@ -25,14 +25,16 @@
 
 #include "pdb_construct_dictionary.h"
 #include <data/xmipp_image_extension.h>
+#include <data/numerical_tools.h>
 
 void ProgPDBDictionary::defineParams()
 {
     // Parameters
     addParamsLine(" [--stdThreshold <s=0.25>] : Threshold on the standard deviation to include a patch");
-    addParamsLine(" [--angleThreshold <s=20>] : Threshold in degrees on the angle to include a patch");
+    addParamsLine(" [--angleThreshold <s=20>] : Threshold in degrees on the angle to consider a patch");
     addParamsLine(" [--regularization <lambda=0.01>] : Regularization factor for the approximation phase");
     addParamsLine(" [--iter <s=50>] : Number of iterations");
+    addParamsLine(" [--mode <m=\"3D\">] : 3D, 2Dx, 2Dy, 2Dz mode");
 }
 
 void ProgPDBDictionary::readParams()
@@ -41,6 +43,15 @@ void ProgPDBDictionary::readParams()
 	angleThreshold=cos(DEG2RAD(getDoubleParam("--angleThreshold")));
 	lambda=getDoubleParam("--regularization");
 	iterations=getIntParam("--iter");
+	String modeStr=getParam("--mode");
+	if (modeStr=="3D")
+		mode=0;
+	else if (modeStr=="2Dx")
+		mode=1;
+	else if (modeStr=="2Dy")
+		mode=2;
+	else if (modeStr=="2Dz")
+		mode=3;
 }
 
 void ProgPDBDictionary::show()
@@ -51,21 +62,25 @@ void ProgPDBDictionary::show()
 		<< "Angle threshold:     " << angleThreshold << std::endl
 		<< "Iterations:          " << iterations     << std::endl
 		<< "Regularization:      " << lambda         << std::endl
+		<< "Mode:                " << mode           << std::endl
 		;
 }
 
 bool ProgPDBDictionary::notInDictionary(const MultidimArray<double> &candidatePatch, MultidimArray<double> &canonicalPatch,
 		Matrix1D<double> &canonicalSignature, size_t &canonicalIdx)
 {
-	canonicalIdx=canonicalOrientation(candidatePatch,canonicalPatch,canonicalSignature);
+	if (mode==0)
+		canonicalIdx=canonicalOrientation3D(candidatePatch,canonicalPatch,canonicalSignature);
+	else
+		canonicalIdx=canonicalOrientation2D(candidatePatch,canonicalPatch,canonicalSignature);
 	size_t imax=dictionaryLow.size();
 
 	for (size_t i=0; i<imax; ++i)
 	{
 		const Matrix1D<double> &dictSignature=dictionarySignature[i];
-		double dotProduct=XX(canonicalSignature)*XX(dictSignature)+
-                          YY(canonicalSignature)*YY(dictSignature)+
-                          ZZ(canonicalSignature)*ZZ(dictSignature);
+		double dotProduct=0;
+		for (size_t j=0; j<VEC_XSIZE(dictSignature); ++j)
+		   dotProduct+=VEC_ELEM(canonicalSignature,j)*VEC_ELEM(dictSignature,j);
 		if (dotProduct>angleThreshold)
 		{
 			const MultidimArray<double> &dictionaryPatch=dictionaryLow[i];
@@ -89,9 +104,9 @@ void ProgPDBDictionary::selectDictionaryPatches(const MultidimArray<double> &low
 	for (size_t i=0; i<imax; ++i)
 	{
 		const Matrix1D<double> &dictSignature=dictionarySignature[i];
-		double dotProduct=XX(lowResolutionPatchSignature)*XX(dictSignature)+
-                          YY(lowResolutionPatchSignature)*YY(dictSignature)+
-                          ZZ(lowResolutionPatchSignature)*ZZ(dictSignature);
+		double dotProduct=0;
+		for (size_t j=0; j<VEC_XSIZE(dictSignature); ++j)
+		   dotProduct+=VEC_ELEM(lowResolutionPatchSignature,j)*VEC_ELEM(dictSignature,j);
 		if (dotProduct>angleThreshold)
 		{
 			const double *ptrDictionaryPatch=MULTIDIM_ARRAY(dictionaryLow[i]);
@@ -130,6 +145,7 @@ void ProgPDBDictionary::selectDictionaryPatches(const MultidimArray<double> &low
 /* See Algorithm 1 in Trinh, Luong, Dibos, Rocchisani, Pham, Nguyen. Novel Exanple-based method for super-resolution
  *    and denoising of medical images. IEEE Trans. Image Processing, 23: 1882-1895 (2014)
  */
+#ifdef NEVERDEFINED
 double ProgPDBDictionary::approximatePatch(const MultidimArray<double> &lowResolutionPatch,
 		std::vector< size_t > &selectedPatchesIdx, std::vector<double> &weight, Matrix1D<double> &alpha)
 {
@@ -178,7 +194,54 @@ double ProgPDBDictionary::approximatePatch(const MultidimArray<double> &lowResol
 		diff=VEC_ELEM(y,i)-ymean;
 		norm2+=diff*diff;
 	}
-	return 1-diff2/norm2;
+	double R2=1-diff2/norm2;
+	if (selectedPatchesIdx.size()>30 && R2<0.975)
+	{
+		Ui.write("PPPUi.txt");
+		y.write("PPPy.txt");
+		yp.write("PPPyp.txt");
+		std::cout << "A strange case detected" << std::endl;
+		char c; std::cin >> c;
+	}
+	return R2;
+}
+#endif
+
+double ProgPDBDictionary::approximatePatch(const MultidimArray<double> &lowResolutionPatch,
+		std::vector< size_t > &selectedPatchesIdx, std::vector<double> &weight, Matrix1D<double> &alpha)
+{
+	Ui.initZeros(MULTIDIM_SIZE(lowResolutionPatch),selectedPatchesIdx.size());
+
+	// Prepare Ui
+	for (size_t j=0; j<MAT_XSIZE(Ui); ++j)
+	{
+		const double *ptr=MULTIDIM_ARRAY(dictionaryLow[selectedPatchesIdx[j]]);
+		for (size_t i=0; i<MAT_YSIZE(Ui); ++i, ++ptr)
+			MAT_ELEM(Ui,i,j)=*ptr;
+	}
+	matrixOperation_AtA(Ui,UitUi);
+
+	// Prepare y
+	y.resizeNoCopy(MULTIDIM_SIZE(lowResolutionPatch));
+	memcpy(&VEC_ELEM(y,0),&DIRECT_MULTIDIM_ELEM(lowResolutionPatch,0),MULTIDIM_SIZE(lowResolutionPatch)*sizeof(double));
+	matrixOperation_Atx(Ui,y,Uity);
+
+	// Solve Least Squares problem
+	solveBySVD(UitUi,Uity,alpha,1e-6);
+
+	// Calculate R2
+	matrixOperation_Ax(Ui,alpha,yp);
+	double diff2=0.0, norm2=0.0;
+	double ymean=y.computeMean();
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(y)
+	{
+		double diff=VEC_ELEM(y,i)-VEC_ELEM(yp,i);
+		diff2+=diff*diff;
+		diff=VEC_ELEM(y,i)-ymean;
+		norm2+=diff*diff;
+	}
+	double R2=1-diff2/norm2;
+	return R2;
 }
 
 void ProgPDBDictionary::reconstructPatch(size_t idxTransf, std::vector<size_t> &selectedPatchesIdx,
@@ -193,7 +256,6 @@ void ProgPDBDictionary::reconstructPatch(size_t idxTransf, std::vector<size_t> &
 			DIRECT_MULTIDIM_ELEM(highResolutionPatch,n)+=VEC_ELEM(alpha,j)*(*ptr);
 	}
 }
-
 
 void ProgPDBDictionary::loadDictionaries()
 {
@@ -231,8 +293,13 @@ void ProgPDBDictionary::saveDictionaries() const
 	FileName fnLow=fnRoot+"_low.mrcs";
 	FileName fnHigh=fnRoot+"_high.mrcs";
 	FileName fnSignature=fnRoot+"_signature.raw";
-	createEmptyFile(fnLow,patchSize,patchSize,patchSize,imax,true);
-	createEmptyFile(fnHigh,patchSize,patchSize,patchSize,imax,true);
+	int Zdim;
+	if (mode==0)
+		Zdim=patchSize;
+	else
+		Zdim=1;
+	createEmptyFile(fnLow,patchSize,patchSize,Zdim,imax,true);
+	createEmptyFile(fnHigh,patchSize,patchSize,Zdim,imax,true);
 	Image<double> aux;
 	FILE *fhSignature=fopen(fnSignature.c_str(),"wb");
 	for (size_t i=0; i<imax; ++i)
@@ -246,9 +313,96 @@ void ProgPDBDictionary::saveDictionaries() const
 	fclose(fhSignature);
 }
 
-void ProgPDBDictionary::constructRotationGroup()
+void ProgPDBDictionary::extractPatch(const MultidimArray<double> &V, MultidimArray<double> &patch, int k, int i, int j)
 {
-	Matrix2D<double> A(4,4), B;
+	if (mode==0)
+		V.window(patch,k-patchSize_2,i-patchSize_2,j-patchSize_2,k+patchSize_2,i+patchSize_2,j+patchSize_2);
+	else if (mode==1)
+	{
+		for (int kk=-patchSize_2; kk<=patchSize_2; ++kk)
+			for (int ii=-patchSize_2; ii<=patchSize_2; ++ii)
+				A2D_ELEM(patch,kk,ii)=A3D_ELEM(V,k+kk,i+ii,j);
+	}
+	else if (mode==2)
+	{
+		for (int kk=-patchSize_2; kk<=patchSize_2; ++kk)
+			for (int jj=-patchSize_2; jj<=patchSize_2; ++jj)
+				A2D_ELEM(patch,kk,jj)=A3D_ELEM(V,k+kk,i,j+jj);
+	}
+	else if (mode==3)
+	{
+		for (int ii=-patchSize_2; ii<=patchSize_2; ++ii)
+			for (int jj=-patchSize_2; jj<=patchSize_2; ++jj)
+				A2D_ELEM(patch,ii,jj)=A3D_ELEM(V,k,i+ii,j+jj);
+	}
+}
+
+void ProgPDBDictionary::insertPatch(MultidimArray<double> &Vhigh, MultidimArray<double> &weightHigh, const MultidimArray<double> &patchHigh,
+		int k, int i, int j, double R2)
+{
+	if (mode==0)
+	{
+		for (int kk=-patchSize_2; kk<=patchSize_2; ++kk)
+			for (int ii=-patchSize_2; ii<=patchSize_2; ++ii)
+				for (int jj=-patchSize_2; jj<=patchSize_2; ++jj)
+				{
+					A3D_ELEM(Vhigh,k+kk,i+ii,j+jj)+=R2*A3D_ELEM(patchHigh,kk,ii,jj);
+					A3D_ELEM(weightHigh,k+kk,i+ii,j+jj)+=R2;
+				}
+	}
+	else if (mode==1)
+	{
+		for (int kk=-patchSize_2; kk<=patchSize_2; ++kk)
+			for (int ii=-patchSize_2; ii<=patchSize_2; ++ii)
+			{
+				A3D_ELEM(Vhigh,k+kk,i+ii,j)+=R2*A2D_ELEM(patchHigh,kk,ii);
+				A3D_ELEM(weightHigh,k+kk,i+ii,j)+=R2;
+			}
+	}
+	else if (mode==2)
+	{
+		for (int kk=-patchSize_2; kk<=patchSize_2; ++kk)
+			for (int jj=-patchSize_2; jj<=patchSize_2; ++jj)
+			{
+				A3D_ELEM(Vhigh,k+kk,i,j+jj)+=R2*A2D_ELEM(patchHigh,kk,jj);
+				A3D_ELEM(weightHigh,k+kk,i,j+jj)+=R2;
+			}
+	}
+	else if (mode==3)
+	{
+		for (int ii=-patchSize_2; ii<=patchSize_2; ++ii)
+			for (int jj=-patchSize_2; jj<=patchSize_2; ++jj)
+			{
+				A3D_ELEM(Vhigh,k,i+ii,j+jj)+=R2*A2D_ELEM(patchHigh,ii,jj);
+				A3D_ELEM(weightHigh,k,i+ii,j+jj)+=R2;
+			}
+	}
+}
+
+void ProgPDBDictionary::constructRotationGroup2D()
+{
+	Matrix2D<double> A(3,3);
+	A.initIdentity();
+	rotationGroup.push_back(A);
+
+	A.initZeros();
+	A(0,0)=-1; A(1,1)=1; A(2,2)=1;
+	rotationGroup.push_back(A);
+
+	A.initZeros();
+	A(0,0)=1; A(1,1)=-1; A(2,2)=1;
+	rotationGroup.push_back(A);
+
+	A.initZeros();
+	A(0,1)=1; A(1,0)=-1; A(2,2)=1;
+	rotationGroup.push_back(A);
+
+	constructRotationGroup();
+}
+
+void ProgPDBDictionary::constructRotationGroup3D()
+{
+	Matrix2D<double> A(4,4);
 	A.initIdentity();
 	rotationGroup.push_back(A);
 
@@ -272,6 +426,12 @@ void ProgPDBDictionary::constructRotationGroup()
 	A(0,0)=1; A(1,1)=-1; A(2,2)=1; A(3,3)=1;
 	rotationGroup.push_back(A);
 
+	constructRotationGroup();
+}
+
+void ProgPDBDictionary::constructRotationGroup()
+{
+	Matrix2D<double> B;
 	bool finished;
 	do
 	{
@@ -294,9 +454,49 @@ void ProgPDBDictionary::constructRotationGroup()
 				}
 			}
 	} while (!finished);
+	std::cout << "Size of rotation group=" << rotationGroup.size() << std::endl;
 }
 
-size_t ProgPDBDictionary::canonicalOrientation(const MultidimArray<double> &patch, MultidimArray<double> &canonicalPatch,
+size_t ProgPDBDictionary::canonicalOrientation2D(const MultidimArray<double> &patch, MultidimArray<double> &canonicalPatch,
+		Matrix1D<double> &patchSignature)
+{
+	patchSignature.resizeNoCopy(4);
+	size_t imax=rotationGroup.size();
+	double bestMoment=-1e38;
+	size_t bestIdx=0;
+	for (size_t i=0; i<imax; ++i)
+	{
+		applyGeometry(LINEAR,auxPatch,patch,rotationGroup[i],IS_INV,DONT_WRAP);
+		// Calculate gradients
+		double momentX=0, momentY=0, momentXmY=0, momentXY=0;
+		auxPatch.setXmippOrigin();
+		FOR_ALL_ELEMENTS_IN_ARRAY3D(auxPatch)
+		{
+			double val=A2D_ELEM(auxPatch,k,i);
+			double jval=j*val;
+			double ival=i*val;
+			momentX+=jval;
+			momentY+=ival;
+			momentXmY+=jval-ival;
+			momentXY+=jval+ival;
+		}
+		double moment=momentX+momentY;
+		if (moment>bestMoment)
+		{
+			bestMoment=moment;
+			bestIdx=i;
+			canonicalPatch=auxPatch;
+			VEC_ELEM(patchSignature,0)=momentX;
+			VEC_ELEM(patchSignature,1)=momentY;
+			VEC_ELEM(patchSignature,2)=momentXmY;
+			VEC_ELEM(patchSignature,3)=momentXY;
+		}
+	}
+	patchSignature.selfNormalize();
+	return bestIdx;
+}
+
+size_t ProgPDBDictionary::canonicalOrientation3D(const MultidimArray<double> &patch, MultidimArray<double> &canonicalPatch,
 		Matrix1D<double> &patchSignature)
 {
 	patchSignature.resizeNoCopy(3);
@@ -339,6 +539,7 @@ void ProgConstructPDBDictionary::defineParams()
     // Parameters
     addParamsLine(" --low <metadata>      : Metadata with the low resolution volumes");
     addParamsLine(" --high <metadata>     : Metadata with the high resolution volumes");
+    addParamsLine(" [--R2Threshold <s=0.99>] : Threshold in R2 to include a patch");
     addParamsLine(" [--oroot <root=dictionary>] : Rootname for the output files");
     addParamsLine(" [--patchSize <n=5>] : Patch size for the dictionary");
     ProgPDBDictionary::defineParams();
@@ -350,6 +551,7 @@ void ProgConstructPDBDictionary::readParams()
 	fnHigh=getParam("--high");
 	fnRoot=getParam("--oroot");
 	patchSize=getIntParam("--patchSize");
+	R2threshold=getDoubleParam("--R2Threshold");
 	ProgPDBDictionary::readParams();
 }
 
@@ -362,6 +564,7 @@ void ProgConstructPDBDictionary::show()
 		<< "Input high volumes:  " << fnHigh    << std::endl
 		<< "Output rootname:     " << fnRoot    << std::endl
 		<< "Patch size:          " << patchSize << std::endl
+		<< "R2 threshold:        " << R2threshold << std::endl
 		;
 		ProgPDBDictionary::show();
     }
@@ -377,7 +580,10 @@ void ProgConstructPDBDictionary::run()
     MetaData mdlow, mdhigh;
     mdlow.read(fnLow);
     mdhigh.read(fnHigh);
-    constructRotationGroup();
+    if (mode==0)
+    	constructRotationGroup3D();
+    else
+    	constructRotationGroup2D();
 
     FileName fnVol;
     Image<double> Vlow, Vhigh;
@@ -386,11 +592,15 @@ void ProgConstructPDBDictionary::run()
 #endif
     MultidimArray<double> patchLow, patchHigh, canonicalPatch;
     Matrix1D<double> alpha, canonicalSignature;
-    int patchSize_2=patchSize/2;
+    patchSize_2=patchSize/2;
     size_t canonicalIdx;
 
-    patchLow.resize(patchSize_2,patchSize_2,patchSize_2);
+    if (mode==0)
+    	patchLow.resize(patchSize,patchSize,patchSize);
+    else
+    	patchLow.resize(patchSize,patchSize);
     patchLow.setXmippOrigin();
+    patchHigh=patchLow;
 
     FOR_ALL_OBJECTS_IN_METADATA2(mdlow,mdhigh)
     {
@@ -424,8 +634,8 @@ void ProgConstructPDBDictionary::run()
                 for (int j=patchSize_2; j<(int)ZSIZE(mVlow)-patchSize_2; ++j)
                 {
                 	 ++Npatches;
-                     mVlow.window(patchLow,k,i,j,k+patchSize-1,i+patchSize-1,j+patchSize-1);
-                     mVhigh.window(patchHigh,k,i,j,k+patchSize-1,i+patchSize-1,j+patchSize-1);
+                	 extractPatch(mVlow,patchLow,k,i,j);
+                	 extractPatch(mVhigh,patchHigh,k,i,j);
 
                  	double minPatchLow, maxPatchLow, meanPatchLow, stdPatchLow=0;
                  	double minPatchHigh, maxPatchHigh, meanPatchHigh, stdPatchHigh=0;
@@ -439,13 +649,24 @@ void ProgConstructPDBDictionary::run()
                  		// Candidate patch
                  		double inormPatchLow=1.0/sqrt(patchLow.sum2());
                  		patchLow*=inormPatchLow;
-    					size_t canonicalIdx=canonicalOrientation(patchLow,canonicalPatch,canonicalSignature);
+    					size_t canonicalIdx=0;
+    					if (mode==0)
+    						canonicalIdx=canonicalOrientation3D(patchLow,canonicalPatch,canonicalSignature);
+    					else
+    						canonicalIdx=canonicalOrientation2D(patchLow,canonicalPatch,canonicalSignature);
     					selectDictionaryPatches(canonicalPatch, canonicalSignature, selectedPatchesIdx, weight);
     					bool introduceInDictionary=(selectedPatchesIdx.size()==0);
+#ifdef DEBUG
+    					std::cout << "Evaluating " << k << "," << i << "," << j << " -> selectedPatches=" << selectedPatchesIdx.size() << std::endl;
+#endif
+    					double R2=-1;
     					if (!introduceInDictionary)
     					{
-    						double R2=approximatePatch(canonicalPatch,selectedPatchesIdx,weight,alpha);
-    						introduceInDictionary=(R2<angleThreshold);
+    						R2=approximatePatch(canonicalPatch,selectedPatchesIdx,weight,alpha);
+#ifdef DEBUG
+    					std::cout << "   R2=" << R2 << std::endl;
+#endif
+    						introduceInDictionary=(R2<R2threshold);
     					}
                  		if (introduceInDictionary)
                  		{
@@ -456,6 +677,9 @@ void ProgConstructPDBDictionary::run()
                      		patchHigh*=inormPatchLow;
                  			dictionaryHigh.push_back(patchHigh);
                  			dictionarySignature.push_back(canonicalSignature);
+#ifdef DEBUG
+    					std::cout << "   Introducing it into dictionary" << std::endl;
+#endif
                  		}
 
 #ifdef DEBUG

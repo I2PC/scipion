@@ -261,6 +261,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * @param height
 	 */
 	protected void calculateCellSize() {
+		
 		thumb_width = (int) (image_width * scale);
 		thumb_height = (int) (image_height * scale);
 
@@ -331,6 +332,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	}
 
 	public void setZoom(int z) {
+		
 		if (data.getZoom() != null || data.getZoom() != z) {
 			setZoomValue(z);
 			fireTableDataChanged();
