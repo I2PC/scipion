@@ -280,7 +280,7 @@ class Protocol(Step):
         self._outputs = CsvList()
         # Expert level
         self.expertLevel = Integer(kwargs.get('expertLevel', LEVEL_NORMAL))#needs to be defined before parsing params 
-        self._definition = Form()
+        self._definition = Form(self)
         self._defineParams(self._definition)
         self._createVarsFromDefinition(**kwargs)
         self.__stdOut = None
@@ -400,7 +400,7 @@ class Protocol(Step):
         """ Eval if the condition of paramName in _definition
         is satified with the current values of the protocol attributes. 
         """
-        return self._definition.evalParamCondition(self, paramName)
+        return self._definition.evalParamCondition(paramName)
     
     def evalExpertLevel(self, paramName):
         """ Return the expert level evaluation for a param with the given name. """
