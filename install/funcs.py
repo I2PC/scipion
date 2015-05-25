@@ -207,12 +207,15 @@ class Target:
 class Environment:
 
     def __init__(self, **kwargs):
-        self._targetList = []
         self._targetDict = {}
+        self._targetList = []
+        # We need a targetList which has the targetDict.keys() in order
+        # (OrderedDict is not available in python < 2.7)
+
         self._args = kwargs.get('args', [])
         self.showOnly = '--show' in self._args
-        
-        # Find if the -j arguments was passed to grap the number of processors
+
+        # Find if the -j arguments was passed to get the number of processors
         if '-j' in self._args:
             j = self._args.index('-j')
             self._processors = int(self._args[j+1])
