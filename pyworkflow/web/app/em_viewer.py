@@ -162,14 +162,17 @@ def viewer_element(request):
     updateProtocolParams(request, protocolViewer, project)
     
     views = protocolViewer._getVisualizeDict()[viewerParam](viewerParam)
-
     urls = []
-    for v in views:
-         # COMMAND VIEW
-        if isinstance(v, CommandView):
-            v.show()
-        else:
-            urls.append(viewToUrl(request, v))
+    if views is None:
+        print "no viewer found"
+    else:
+        for v in views:
+             # COMMAND VIEW
+             if isinstance(v, CommandView):
+        #             v.show()
+                print "THIS FUNCTION IS ONLY AVAILABLE ON DESKTOP!"
+             else:
+                urls.append(viewToUrl(request, v))
 
     jsonStr = json.dumps(urls, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
