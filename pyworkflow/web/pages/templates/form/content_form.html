@@ -90,6 +90,12 @@
 									{% endfor %}
 									</select>
 								{% endif %}	
+<!-- ENUM PARAM HORIZONTAL RADIO -->
+								{% elif param.display == 2 %}
+									{% for choice in param.choices %}
+									  <input type="radio" id="" name={{paramName}} onChange="javascript:onChangeEnumParamList('{{forloop.counter0}}', '{{paramName}}');" value="{{forloop.counter0}}" 
+									  {% if param.htmlValue == forloop.counter0 %} checked {% endif %} />{{choice}}
+									{% endfor %}								
 								
 <!-- 							{% elif param.getClassName == "Line" %} -->
 								

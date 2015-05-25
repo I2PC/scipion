@@ -81,7 +81,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         # GROUP GPU PARAMETERS
         group = form.addGroup('GPU',condition="alignMethod==%d or (alignMethod==%d and expertLevel==%d)"
                                                          " or (alignMethod==%d and expertLevel==%d)"
-                                                         % (AL_OPTICAL, AL_DOSEFGPUOPTICAL, LEVEL_ADVANCED, AL_DOSEFGPU, LEVEL_ADVANCED), protocol=self)
+                                                         % (AL_OPTICAL, AL_DOSEFGPUOPTICAL, LEVEL_ADVANCED, AL_DOSEFGPU, LEVEL_ADVANCED))
         group.addParam('doGPU', BooleanParam, default=False,
                       label="Use GPU (vs CPU)",
                       condition="alignMethod==%d or alignMethod==%d" % (AL_OPTICAL, AL_DOSEFGPUOPTICAL),
