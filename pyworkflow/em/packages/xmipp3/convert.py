@@ -1352,4 +1352,7 @@ def createClassesFromImages(inputImages, inputMd,
                              classesFn, ClassType, classLabel, 
                              alignType, getClassFn=getClassFn, 
                              preprocessImageRow=preprocessImageRow)
-    
+
+
+def createItemMatrix(item, row, align):
+    item.setTransform(rowToAlignment(row, alignType=align))

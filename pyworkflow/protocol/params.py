@@ -124,17 +124,17 @@ class ElementGroup(FormElement):
         for name in self._paramList:
             yield (name, self._form.getParam(name))
 
-    def addParam(self, paramName, ParamClass, **args):
+    def addParam(self, paramName, ParamClass, **kwargs):
         """Add a new param to the group"""
-        param = ParamClass(**args)
+        param = ParamClass(**kwargs)
         self._paramList.append(paramName)
         self._form.registerParam(paramName, param)
         return param
     
-    def addHidden(self, paramName, ParamClass, **args):
+    def addHidden(self, paramName, ParamClass, **kwargs):
         """Add a hidden parameter to be used in conditions. """
-        args.update({'label': '', 'condition': 'False'})
-        self.addParam(paramName, ParamClass, **args)
+        kwargs.update({'label': '', 'condition': 'False'})
+        self.addParam(paramName, ParamClass, **kwargs)
 
     def addLine(self, lineName, **kwargs):
         
@@ -177,7 +177,6 @@ class Section(ElementGroup):
         return self._form.getParam(self.questionParam.get())
 
     def addGroup(self, groupName, **kwargs):
-        
         labelName = groupName
         for symbol in ' ()':
             labelName = labelName.replace(symbol, '_')
@@ -187,19 +186,21 @@ class Section(ElementGroup):
         
 class Form(object):
     """Store all sections and parameters"""
-    def __init__(self):
+    def __init__(self, protocol):
+        """ Build a Form from a given protocol. """
         object.__init__(self)
         self._sectionList = [] # Store list of sections
         self._paramsDict = collections.OrderedDict() #{} # Dictionary to store all params, grouped by sections
         self._lastSection = None
+        self._protocol = protocol
         self.addGeneralSection()
         
     def getClass(self):
         return type(self)
         
-    def addSection(self, label='', **args):
+    def addSection(self, label='', **kwargs):
         """Add a new section"""
-        self.lastSection = Section(self, label=label, **args)
+        self.lastSection = Section(self, label=label, **kwargs)
         self._sectionList.append(self.lastSection)
         return self.lastSection
     
@@ -227,9 +228,11 @@ class Form(object):
             tokens = re.split('\W+', param.condition.get())
             for t in tokens:
                 if self.hasParam(t):
-                    param._conditionParams.append(t)
                     self.getParam(t)._dependants.append(paramName)
-
+                    param._conditionParams.append(t)
+                if self._protocol.hasAttribute(t):
+                    param._conditionParams.append(t)
+                    
     def escapeLiteral(self, value):
         if isinstance(value, str):
             result = "'%s'" % value
@@ -237,7 +240,7 @@ class Form(object):
             result = str(value)
         return result
     
-    def evalParamCondition(self, protocol, paramName):
+    def evalParamCondition(self, paramName):
         """Evaluate if a condition is True for a give param
         with the values of a particular Protocol"""
         param = self.getParam(paramName)
@@ -245,8 +248,8 @@ class Form(object):
             return True
         condStr = param.condition.get()
         for t in param._conditionParams:
-            if self.hasParam(t) or protocol.hasAttribute(t):
-                condStr = condStr.replace(t, self.escapeLiteral(protocol.getAttributeValue(t)))
+            if self.hasParam(t) or self._protocol.hasAttribute(t):
+                condStr = condStr.replace(t, self.escapeLiteral(self._protocol.getAttributeValue(t)))
         return eval(condStr)
     
     def validateParams(self, protocol):
