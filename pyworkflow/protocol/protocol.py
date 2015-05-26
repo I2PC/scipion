@@ -160,7 +160,7 @@ class Step(OrderedObject):
         try:
             self._run()
             self.endTime.set(dt.datetime.now())
-            if self.status == STATUS_RUNNING:
+            if self.status.get() == STATUS_RUNNING:
                 if self.isInteractive():
                     # If the Step is interactive, after run
                     # it will be waiting for use to mark it as DONE
