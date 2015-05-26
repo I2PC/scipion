@@ -638,8 +638,9 @@ class ProtCTFFindViewer(Viewer):
         else:
             fn = obj.getFileName()
             psdLabels = '_psdFile'
-            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _micObj._filename' % psdLabels
+            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio' % psdLabels
             if self.protocol.useCftfind4:
+                labels = labels + ' _ctffind4_ctfResolution'
                 self._views.append(em.ObjectView(self._project, obj.strId(), fn,
                                                  viewParams={showj.MODE: showj.MODE_MD,
                                                              showj.ORDER: labels,
