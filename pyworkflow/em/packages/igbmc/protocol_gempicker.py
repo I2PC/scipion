@@ -171,7 +171,7 @@ class ProtGemPicker(em.ProtParticlePicking):
             outMask = join(maskSchDir, 'ref01.tif')
             ih.createCircularMask(radius, inputRefs.getFirstItem(), outMask)
         else:
-            for i, mask in enumerate(self.inputMasks.get()):
+            for i, mask in enumerate(self.inputMasks):
                 outMask = join(maskSchDir, 'ref%02d.tif' % (i+1))
                 ih.convert(mask.get(), outMask)
                 
@@ -192,6 +192,17 @@ class ProtGemPicker(em.ProtParticlePicking):
         self._defineSourceRelation(micSet, coordSet)
 
     #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        errors = []
+        # Check that the number of input masks (in case of non-circular mask)
+        # should be the same of the number of references, if greater than one
+        if self.maskType == MASK_OBJECT:
+            n = len(self.inputMasks)
+            if n > 1 and n != self.inputReferences.get().getSize():
+                errors.append('If the number of input masks is greater than one, \n'
+                              'it should be equal to the number of references.')
+        return errors
+        
     def _summary(self):
         summary = []
         summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())

@@ -24,13 +24,40 @@
 # *
 # **************************************************************************
 """
-This EM module contains protocol developed at IGBMC, Strasbourg.
+This module implement some wizards
 """
 
-from bibtex import _bibtex # Load bibtex dict with references
-
-_logo = "igbmc_logo.png"
+from pyworkflow.em.wizard import ParticleMaskRadiusWizard, UNIT_PIXEL
 
 from protocol_gempicker import ProtGemPicker
-from wizard import GemPickerMaskWizard
 
+
+
+#===============================================================================
+# MASKS
+#===============================================================================
+
+class GemPickerMaskWizard(ParticleMaskRadiusWizard):
+    _targets = [(ProtGemPicker, ['maskRadius'])]
+    
+    def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
+        protParams = {}
+        protParams['input']= protocol.inputReferences
+        protParams['label']= label
+        protParams['value']= value
+        return protParams
+    
+    def _getProvider(self, protocol):
+        _objs = self._getParameters(protocol)['input'] 
+        return ParticleMaskRadiusWizard._getListProvider(self, _objs)
+    
+    def show(self, form):
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        ParticleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        
+    
