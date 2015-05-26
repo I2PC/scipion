@@ -388,7 +388,10 @@ class XmippProtRansac(ProtInitialVolume):
                     if cc<minCC:
                         minCC=cc
                     N+=1
-                avg=sum/N
+                if N>0:
+                    avg=sum/N
+                else:
+                    avg=0.0
                 id=mdOut.addObject()
                 mdOut.setValue(xmipp.MDL_IMAGE,fnRoot+".vol",id)
                 mdOut.setValue(xmipp.MDL_VOLUME_SCORE_SUM,float(sum),id)
