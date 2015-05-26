@@ -130,7 +130,6 @@ $(document).ready(function() {
 	*/
 	$("#protocolForm").submit(function() {
 		var mode = $("#protocolForm").attr('data-mode');
-
 // ---------- MODE EXECUTE PROTOCOL  -----------------------------------------------
 		if (mode == 'execute') {
 			/* Execute the protocol */
