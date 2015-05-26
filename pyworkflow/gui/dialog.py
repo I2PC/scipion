@@ -330,7 +330,39 @@ class EntryDialog(Dialog):
             return False
         return True
     
-    
+
+class EntryCheckDialog(EntryDialog):
+    """Dialog to ask some entry and a checkbox"""
+    def __init__(self, parent, title, entryLabel, checkLabel, entryWidth=20, defaultValue='', headerLabel=None):
+        self.checkLabel = checkLabel
+        EntryDialog.__init__(self, parent, title, entryLabel, entryWidth=entryWidth, defaultValue=defaultValue, headerLabel=headerLabel)
+
+    def body(self, bodyFrame):
+        bodyFrame.config(bg='white')
+        frame = tk.Frame(bodyFrame, bg='white')
+        frame.grid(row=0, column=0, padx=20, pady=20)
+        row = 0
+        if self.headerLabel:
+            label = tk.Label(bodyFrame, text=self.headerLabel, bg='white', bd=0)
+            label.grid(row=row, column=0, columnspan=2, sticky='nw', padx=(15, 10), pady=15)
+            row += 1
+        label = tk.Label(bodyFrame, text=self.entryLabel, bg='white', bd=0)
+        label.grid(row=row, column=0, sticky='nw', padx=(15, 10), pady=15)
+        self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor, width=self.entryWidth, textvariable=self.tkvalue)
+        self.entry.grid(row=row, column=1, sticky='new', padx=(0,15), pady=15)
+        self.initial_focus = self.entry
+        row += 1
+
+        labelCheck = tk.Label(bodyFrame, text=self.checkLabel, bg='white', bd=0)
+        labelCheck.grid(row=row, column=0, sticky='nw', padx=(15, 10), pady=15)
+        self.tkCheckVar = tk.IntVar()
+        self.check = tk.Checkbutton(bodyFrame, variable=self.tkCheckVar, bg='white', bd=0)
+        self.check.grid(row=row, column=1, sticky='nw', padx=(15, 10), pady=15)
+
+    def apply(self):
+        self.value = (self.entry.get(), self.tkCheckVar.get())
+
+
 class EditObjectDialog(Dialog):
     """Dialog to edit some text"""
     def __init__(self, parent, title, obj, mapper, **kwargs):
@@ -416,6 +448,10 @@ def showError(title, msg, parent):
     
 def askString(title, label, parent, entryWidth=20, defaultValue='', headerLabel=None):
     d = EntryDialog(parent, title, label, entryWidth, defaultValue, headerLabel)
+    return d.value
+
+def askCheckString(title, label, parent, question, entryWidth=20, defaultValue='', headerLabel=None):
+    d = EntryCheckDialog(parent, title, label, question, entryWidth, defaultValue, headerLabel)
     return d.value
 
                 
