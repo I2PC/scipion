@@ -57,7 +57,7 @@ class Step(OrderedObject):
     def __init__(self, **kwargs):
         OrderedObject.__init__(self, **kwargs)
         self._prerequisites = CsvList() # which steps needs to be done first
-        self._status = String()
+        self.status = String()
         self.initTime = String()
         self.endTime = String()
         self._error = String()
@@ -86,7 +86,7 @@ class Step(OrderedObject):
         """
         self.initTime.set(dt.datetime.now())
         self.endTime.set(None)
-        self._status.set(STATUS_RUNNING)
+        self.status.set(STATUS_RUNNING)
         self._error.set(None) # Clean previous error message
         
     def getError(self):
@@ -99,16 +99,16 @@ class Step(OrderedObject):
         """ Set the run failed and store an error message. """
         self.endTime.set(dt.datetime.now())
         self._error.set(msg)
-        self._status.set(STATUS_FAILED)
+        self.status.set(STATUS_FAILED)
         
     def setAborted(self):
         """ Set the status to aborted and updated the endTime. """
         self.endTime.set(dt.datetime.now())
         self._error.set("Aborted by user.")
-        self._status.set(STATUS_ABORTED)
+        self.status.set(STATUS_ABORTED)
 
     def getStatus(self):
-        return self._status.get(STATUS_NEW)
+        return self.status.get(STATUS_NEW)
     
     def getElapsedTime(self):
         """ Return the time that took to run 
@@ -128,7 +128,7 @@ class Step(OrderedObject):
         return elapsed
     
     def setStatus(self, value):
-        return self._status.set(value)
+        return self.status.set(value)
     
     def setInteractive(self, value):
         return self.interactive.set(value)
@@ -160,14 +160,14 @@ class Step(OrderedObject):
         try:
             self._run()
             self.endTime.set(dt.datetime.now())
-            if self._status.get() == STATUS_RUNNING:
+            if self.status.get() == STATUS_RUNNING:
                 if self.isInteractive():
                     # If the Step is interactive, after run
                     # it will be waiting for use to mark it as DONE
                     status = STATUS_INTERACTIVE
                 else:
                     status = STATUS_FINISHED
-                self._status.set(status)
+                self.status.set(status)
         except Exception, e:
             self.setFailed(str(e))
             import traceback
@@ -803,10 +803,10 @@ class Protocol(Step):
         self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
         self._store()
         
-        self.lastStatus = self._status.get()
+        self.lastStatus = self.status.get()
         self._stepsExecutor.runSteps(self._steps, self._stepStarted, self._stepFinished)
         self.setStatus(self.lastStatus)
-        self._store(self._status)
+        self._store(self.status)
         
     def __deleteOutputs(self):
         """ This function should only be used from RESTART.
