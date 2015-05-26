@@ -31,7 +31,7 @@ inside the utils module
 import os
 import shutil
 import sys
-from os.path import (exists, join, splitext, isdir, isfile, expanduser,
+from os.path import (exists, join, splitext, isdir, isfile, islink, expanduser,
                      expandvars, basename, dirname, split, relpath)
 from glob import glob
 
@@ -108,7 +108,10 @@ def cleanPath(*paths):
     for p in paths:
         if exists(p):
             if isdir(p):
-                shutil.rmtree(p)
+                if islink(p):
+                    os.remove(p)
+                else:
+                    shutil.rmtree(p)
             else:
                 os.remove(p)
                 

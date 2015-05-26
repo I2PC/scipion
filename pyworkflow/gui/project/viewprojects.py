@@ -30,13 +30,14 @@ import tkFont
 
 import pyworkflow as pw
 from pyworkflow.utils.utils import prettyDate, prettyTime
+from pyworkflow.utils.path import getHomePath
 from pyworkflow.manager import Manager
 from pyworkflow.utils.properties import Message
 import pyworkflow.gui as pwgui 
 from pyworkflow.gui.widgets import HotButton
 from pyworkflow.gui.text import TaggedText
-from pyworkflow.gui.dialog import askString, askYesNo, showError
-
+from pyworkflow.gui.dialog import askString, askCheckString, askYesNo, showError
+from pyworkflow.gui.browser import FileBrowserWindow
 
             
 class ProjectsView(tk.Frame):    
@@ -107,12 +108,23 @@ class ProjectsView(tk.Frame):
         return frame
     
     def createNewProject(self, e=None):
-        projName =  askString(Message.LABEL_CREATE_PROJECT, Message.TITLE_CREATE_PROJECT_NAME, self.root, 30)
-        if not projName is None:
-            self.manager.createProject(projName)
-            self.createProjectList(self.text)
-            self.openProject(projName)
-    
+        value =  askCheckString(Message.LABEL_CREATE_PROJECT, Message.TITLE_CREATE_PROJECT_NAME, self.root, "Change project location?", 30)
+        if value is not None:
+            (projName, askLocation) = value
+            if not projName is None:
+                def onCreate(projName, location = None):
+                    self.manager.createProject(projName, location = location)
+                    self.createProjectList(self.text)
+                    self.openProject(projName)
+
+                def onSelect(obj):
+                    onCreate(projName, location=obj.getPath())
+
+                if askLocation:
+                    FileBrowserWindow("Browsing", self.windows, path=getHomePath(), onSelect=onSelect).show()
+                else:
+                    onCreate(projName)
+
     def openProject(self, projName):
         from subprocess import Popen
         script = pw.join('apps', 'pw_project.py')

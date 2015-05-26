@@ -851,7 +851,7 @@ class ProtocolsView(tk.Frame):
         node.expanded = nodeInfo.isExpanded()
             
         if node.run:
-            status = node.run._status.get(pwprot.STATUS_FAILED)
+            status = node.run.status.get(pwprot.STATUS_FAILED)
             if node.expanded:
                 expandedStr = ''
             else:
