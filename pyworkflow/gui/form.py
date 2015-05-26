@@ -372,11 +372,11 @@ class SubclassesTreeProvider(TreeProvider):
             
     def getObjects(self):
         # Retrieve all objects of type className
-        objects = list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
+        objects = list(self.project.iterSubclasses(self.className, self.objFilter))
         objects_child = list()
                
         # Retrieve all objects of type SetOf'className'
-        for setObject in self.protocol.getProject().iterSubclasses("Set", self.classFilter):
+        for setObject in self.project.iterSubclasses("Set", self.classFilter):
             # If object is not yet on the list add it but dont allow to select it
             obj = self._getObjectFromList(objects, setObject)
             if  obj is None:
@@ -448,7 +448,7 @@ class SubclassesTreeProvider(TreeProvider):
         from pyworkflow.em import findViewers
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
-            actions.append(('Open with %s' % v.__name__, lambda : v(project=self.protocol.getProject()).visualize(obj)))
+            actions.append(('Open with %s' % v.__name__, lambda : v(project=self.project).visualize(obj)))
             
         return actions
     
@@ -1120,6 +1120,7 @@ class FormWindow(Window):
         self.bindings = []
         self.hostList = hostList
         self.protocol = protocol
+        self.project = protocol.getProject()
         self.visualizeMode = kwargs.get('visualizeMode', False)  # This control when to close or not after execute
         self.headerBgColor = Color.RED_COLOR
         if self.visualizeMode:
@@ -1353,7 +1354,10 @@ class FormWindow(Window):
                 
     def _editQueueParams(self, e=None):
         """ Open the dialog to edit the queue parameters. """
-        queues = self.protocol.getHostConfig().queueSystem.queues
+        # Grab the host config from the project, since it 
+        # have not been set in the protocol
+        hostConfig = self.project.getHostConfig(self.protocol.getHostName())
+        queues = hostConfig.queueSystem.queues
         # If there is only one Queue and it has not parameters
         # dont bother to showing the QueueDialog
         noQueueChoices = len(queues) == 1 and len(queues.values()[0]) == 0
@@ -1562,7 +1566,7 @@ class FormWindow(Window):
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
                 v = viewers[0] # Use the first viewer registered
-                v(project=self.protocol.getProject()).visualize(obj) # Instanciate the viewer and visualize object
+                v(project=self.project).visualize(obj) # Instanciate the viewer and visualize object
             else:
                 self.showInfo("There is not viewer registered for this object")
         else:
