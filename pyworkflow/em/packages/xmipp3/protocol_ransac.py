@@ -256,6 +256,8 @@ class XmippProtRansac(ProtInitialVolume):
             if Nimages>0:
                 self.runJob("xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))
                 self.runJob("xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,self.Xdim2/2))
+        else:
+            print fnRoot+".xmd is empty. The corresponding volume is not generated." 
     
     def resizeStep(self,fnRoot,Xdim):
         if os.path.exists(fnRoot+".vol"):
