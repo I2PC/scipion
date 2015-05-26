@@ -165,7 +165,9 @@ function customPopup(URL, widthValue, heightValue) {
 		URL = setFormURL(URL)
 	}
 	
-	var URL = getSubDomainURL() + URL
+	var domain = getSubDomainURL()
+	if (!URL.match("^" + domain)) 
+		 URL = domain + URL
 	var day = new Date();
 	var id = day.getTime();
 	
