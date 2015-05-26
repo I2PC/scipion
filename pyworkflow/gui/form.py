@@ -805,7 +805,7 @@ class ParamWidget():
         
         elif t is params.MultiPointerParam:
             tp = MultiPointerTreeProvider(self._protocol.mapper)
-            tree = BoundTree(content, tp)
+            tree = BoundTree(content, tp, height=5)
             var = MultiPointerVar(tp, tree)
             tree.grid(row=0, column=0, sticky='w')
             self._addButton("Select", Icon.ACTION_SEARCH, self._browseObject)
