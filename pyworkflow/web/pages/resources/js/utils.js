@@ -128,6 +128,8 @@ function detectWebBrowser(){
 	return res;
 }
 
+
+
 function popup(URL) {
 	/*
 	 * Launch a basic popup (600x500) opening the URL passed by argument.
@@ -137,10 +139,7 @@ function popup(URL) {
 		URL = setFormURL(URL)
 	}
 	
-	var domain = getSubDomainURL()
-	if (URL.indexOf(domain) != 0) {
-		var URL = domain + URL
-    }
+	var URL = getSubDomainURL(URL)
 
 	var popup_width = 600;
 	var popup_height = 500;
@@ -169,7 +168,7 @@ function customPopup(URL, widthValue, heightValue) {
 		URL = setFormURL(URL)
 	}
 	
-	var URL = getSubDomainURL() + URL
+	var URL = getSubDomainURL(URL) 
 	var day = new Date();
 	var id = day.getTime();
 	
