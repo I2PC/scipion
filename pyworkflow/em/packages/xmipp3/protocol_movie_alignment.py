@@ -86,10 +86,10 @@ class ProtMovieAlignment(ProtProcessMovies):
                       label="Use GPU (vs CPU)",
                       condition="alignMethod==%d or alignMethod==%d" % (AL_OPTICAL, AL_DOSEFGPUOPTICAL),
                       help="Set to true if you want the GPU implementation of Optical Flow")
-        group.addParam('GPUCore', IntParam, default=1, expertLevel=LEVEL_ADVANCED,
+        group.addParam('GPUCore', IntParam, default=0, expertLevel=LEVEL_ADVANCED,
                       label="Choose GPU core",
                       condition="doGPU  or alignMethod==%d or alignMethod==%d  " % (AL_DOSEFGPU, AL_DOSEFGPUOPTICAL),
-                      help="GPU may have several cores. Set it to one if you do not know what we are talking about")
+                      help="GPU may have several cores. Set it to zero if you do not know what we are talking about. First core index is 0, second 1 and so on.")
         
         # GROUP OPTICAL FLOW PARAMETERS
         group = form.addGroup('Optical Flow parameters', expertLevel=LEVEL_ADVANCED, condition="alignMethod==%d or alignMethod==%d " % (AL_OPTICAL, AL_DOSEFGPUOPTICAL))
