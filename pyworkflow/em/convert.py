@@ -33,7 +33,7 @@ import PIL
 from constants import NO_INDEX
 import xmipp
 from constants import *
-from pyworkflow.utils.path import getExt
+from pyworkflow.utils import runJob, getExt
 
 # TODO: remove dependency from Xmipp
 DT_FLOAT = xmipp.DT_FLOAT
@@ -217,7 +217,7 @@ class ImageHandler(object):
         import pyworkflow.em.packages.xmipp3 as xmipp3
         xmippEnv = xmipp3.getEnviron()
         inputRef = xmipp3.getImageLocation(refImage)
-        self.runJob('xmipp_transform_mask', 
+        runJob(None, 'xmipp_transform_mask', 
                     '-i %s --create_mask  %s --mask circular -%d' % (inputRef, outputFile, radius),
                     env=xmippEnv)
         
