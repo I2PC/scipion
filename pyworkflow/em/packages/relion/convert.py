@@ -36,7 +36,7 @@ from os.path import join, basename
 import numpy
 from collections import OrderedDict
 
-from pyworkflow.object import ObjectWrap, String
+from pyworkflow.object import ObjectWrap, String, Integer
 from pyworkflow.utils import Environ
 from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
                                    findRootFrom, replaceBaseExt, getExt)
@@ -84,7 +84,6 @@ CTF_EXTRA_LABELS = [
 # Some extra labels to take into account the zscore
 IMAGE_EXTRA_LABELS = [
     md.RLN_SELECT_PARTICLES_ZSCORE,
-    md.RLN_PARTICLE_ID,
     md.RLN_IMAGE_FRAME_NR,
     ]
  
@@ -409,6 +408,8 @@ def particleToRow(part, partRow, **kwargs):
         # could at least group for CTF using that
         if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
             partRow.setValue(md.RLN_MICROGRAPH_NAME, 'fake_micrograph_%06d.mrc' % part.getMicId())
+    if part.hasAttribute('_rlnParticleId'):
+        partRow.setValue(md.RLN_PARTICLE_ID, long(part._rlnParticleId.get()))
     imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
 
 
@@ -461,6 +462,9 @@ def rowToParticle(partRow, **kwargs):
     # copy micId if available from row to particle
     if partRow.hasLabel(md.RLN_MICROGRAPH_ID):
         img.setMicId(partRow.getValue(md.RLN_MICROGRAPH_ID))
+    # copy particleId if available from row to particle
+    if partRow.hasLabel(md.RLN_PARTICLE_ID):
+        img._rlnParticleId = Integer(partRow.getValue(md.RLN_MICROGRAPH_ID))
 
     return img
 
