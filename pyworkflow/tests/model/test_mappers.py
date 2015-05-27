@@ -245,7 +245,7 @@ class TestSqliteFlatMapper(BaseTest):
         
     def test_downloads(self):
         dbName = self.getOutputPath('downloads.sqlite')
-        dbName = '/tmp/downloads.sqlite'
+        #dbName = '/tmp/downloads.sqlite'
         
         print ">>> test_downloads: dbName = '%s'" % dbName
         mapper = SqliteFlatMapper(dbName, globals())
