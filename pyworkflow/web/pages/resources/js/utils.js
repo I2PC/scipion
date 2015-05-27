@@ -139,7 +139,7 @@ function popup(URL) {
 		URL = setFormURL(URL)
 	}
 	
-	var URL = getSubDomainURL(URL)
+	var URL = getAbsoluteURL(URL)
 
 	var popup_width = 600;
 	var popup_height = 500;
@@ -168,7 +168,7 @@ function customPopup(URL, widthValue, heightValue) {
 		URL = setFormURL(URL)
 	}
 	
-	var URL = getSubDomainURL(URL) 
+	var URL = getAbsoluteURL(URL)
 	var day = new Date();
 	var id = day.getTime();
 	
