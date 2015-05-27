@@ -634,7 +634,7 @@ def openTextFileEditor(filename):
     
     
 def showTextFileViewer(title, filelist, parent=None, main=False):
-    w = gui.Window(title, parent, minsize=(900, 800))
+    w = gui.Window(title, parent, minsize=(600, 400))
     viewer = TextFileViewer(w.root, filelist, maxSize=-1)
     viewer.grid(row=0, column=0, sticky='news')
     gui.configureWeigths(w.root)

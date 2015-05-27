@@ -882,6 +882,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             errors.append("The set of input volumes should have exactly 2 volumes")
         if self.postSymmetryWithinMask and not self.postSymmetryWithinMaskMask.hasValue():
             errors.append("Symmetrize within mask requires a mask")
+        if self.significantMaxResolution.get()>=self.continuousMinResolution.get():
+            errors.append("There is a gap in resolution for which no angular assignment is performed")
         return errors    
     
     def _summary(self):
