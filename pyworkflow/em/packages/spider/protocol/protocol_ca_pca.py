@@ -99,7 +99,9 @@ class SpiderProtCAPCA(SpiderProtocol):
                       help='A 64x64 image can be expressed as a vector of 4096 dimensions. '
                            'In this step, we will reduce this number of dimensions to the number of factors specified here. '
                            'These factors will represent the largest systematic variations in the data.')
-        form.addParam('maskType', EnumParam, choices=['circular', 'file'], default=0,
+        form.addParam('maskType', EnumParam, 
+                      choices=['circular', 'object'], default=0, 
+                      display=EnumParam.DISPLAY_HLIST,
                       label='Mask type', 
                       help='Select which type of mask do you want to apply. '
                            'Only the pixels beneath this mask will be analyzed. '

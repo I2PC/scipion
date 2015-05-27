@@ -1,6 +1,7 @@
 package xmipp.viewer.particlepicker;
 
 import ij.plugin.frame.Recorder;
+
 import java.awt.Color;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -12,7 +13,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.JFrame;
+
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -494,6 +497,8 @@ public abstract class ParticlePicker {
 
     public void fillParticlesMdFromRelionFile(String file, Micrograph m, MetaData md) {
          MetaData relionmd = new MetaData(file);
+         if(!md.containsLabel(MDLabel.RLN_IMAGE_COORD_X))
+         	throw new IllegalArgumentException(String.format("File %s format is not supported", file));
          long[] ids = relionmd.findObjects();
          int xcoor, ycoor;
          long id;

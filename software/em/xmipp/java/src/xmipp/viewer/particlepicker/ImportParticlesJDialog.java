@@ -99,14 +99,12 @@ public class ImportParticlesJDialog extends XmippDialog {
                 panel.add(preffixlb, XmippWindowUtil.getConstraints(gbc, 0, 2));
                 preffixtf = new JTextField(20);
                 preffixtf.setToolTipText(tooltip);
-		panel.add(preffixtf, XmippWindowUtil.getConstraints(gbc, 1, 2));
+                panel.add(preffixtf, XmippWindowUtil.getConstraints(gbc, 1, 2));
                 tooltip = "Suffix added to micrograph name in coordinates file (eg:_filt.pos)";
                 JLabel suffixlb = new JLabel("Suffix:");
                 panel.add(suffixlb, XmippWindowUtil.getConstraints(gbc, 0, 3));
                 suffixlb.setToolTipText(tooltip);
                 suffixtf = new JTextField(20);
-                
-                suffixtf.setText(".pos");
                 suffixtf.setToolTipText(tooltip);
 		panel.add(suffixtf, XmippWindowUtil.getConstraints(gbc, 1, 3));
                 
@@ -178,7 +176,7 @@ public class ImportParticlesJDialog extends XmippDialog {
             try {
                     return parent.importParticles(format, path, preffixtf.getText(), suffixtf.getText(), ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
             } catch (Exception e) {
-                    XmippDialog.showException(parent, e);
+                    XmippDialog.showInfo(parent, e.getMessage());
             }
             return null;
 

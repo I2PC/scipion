@@ -33,7 +33,7 @@ import PIL
 from constants import NO_INDEX
 import xmipp
 from constants import *
-from pyworkflow.utils.path import getExt
+from pyworkflow.utils import runJob, getExt
 
 # TODO: remove dependency from Xmipp
 DT_FLOAT = xmipp.DT_FLOAT
@@ -205,4 +205,20 @@ class ImageHandler(object):
         self._img.inplaceMultiply(-1)
         # Write to output
         self._img.write(self._convertToLocation(outputObj))
+        
+    def createCircularMask(self, radius, refImage, outputFile):
+        """ Create a circular mask with the given radius (pixels)
+        and with the same dimensions of the refImage.
+        The radius should be less or equal dim(refImage)/2
+        The mask will be stored in 'outputFile'
+        """
+        #TODO: right now we need to call an xmipp program to create 
+        # the spherical mask, it would be nicer to have such utility in the binding
+        import pyworkflow.em.packages.xmipp3 as xmipp3
+        xmippEnv = xmipp3.getEnviron()
+        inputRef = xmipp3.getImageLocation(refImage)
+        runJob(None, 'xmipp_transform_mask', 
+                    '-i %s --create_mask  %s --mask circular -%d' % (inputRef, outputFile, radius),
+                    env=xmippEnv)
+        
 

@@ -94,5 +94,7 @@ public class XmippMessage {
         return String.format("Extension not supported: %s", path); //To change body of generated methods, choose Tools | Templates.
     }
 
+	
+
         
 }

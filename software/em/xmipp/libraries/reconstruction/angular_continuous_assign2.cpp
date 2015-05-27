@@ -209,9 +209,10 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 		{
 			DIRECT_MULTIDIM_ELEM(mIp,n)=a*DIRECT_MULTIDIM_ELEM(mIp,n)+b;
 			DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=a*DIRECT_MULTIDIM_ELEM(mIfilteredp,n)+b;
-			DIRECT_MULTIDIM_ELEM(mE,n)=DIRECT_MULTIDIM_ELEM(mP,n)-DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
-			cost+=fabs(DIRECT_MULTIDIM_ELEM(mE,n));
-			avg+=DIRECT_MULTIDIM_ELEM(mE,n);
+			double val=DIRECT_MULTIDIM_ELEM(mP,n)-DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
+			DIRECT_MULTIDIM_ELEM(mE,n)=val;
+			cost+=fabs(val);
+			avg+=val;
 		}
 		else
 		{

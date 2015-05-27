@@ -38,7 +38,8 @@ from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,IntParam,
                                         EnumParam, BooleanParam, FloatParam)
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
-from pyworkflow.em.packages.grigoriefflab.protocol_ctffind import ProtCTFFind
+from protocol_ctffind import ProtCTFFind
+from convert import readCtfModel
 
 
 LAST_ITER = 0
@@ -596,8 +597,6 @@ class ProtCTFFindViewer(Viewer):
                 yield (micFn, micDir, mic)
          
         def visualizeObjs(obj, setOfMics):
-            from pyworkflow.em.packages.grigoriefflab.convert import readCtfModel
-            
             if exists(obj._getPath("ctfs_temporary.sqlite")):
                 os.remove(obj._getPath("ctfs_temporary.sqlite"))
              
@@ -639,8 +638,9 @@ class ProtCTFFindViewer(Viewer):
         else:
             fn = obj.getFileName()
             psdLabels = '_psdFile'
-            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _micObj._filename' % psdLabels
+            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio' % psdLabels
             if self.protocol.useCftfind4:
+                labels = labels + ' _ctffind4_ctfResolution'
                 self._views.append(em.ObjectView(self._project, obj.strId(), fn,
                                                  viewParams={showj.MODE: showj.MODE_MD,
                                                              showj.ORDER: labels,

@@ -31,12 +31,12 @@ from bibtex import _bibtex # Load bibtex dict with references
 
 _logo = "brandeis_logo.png"
 
-from pyworkflow.em.packages.grigoriefflab.grigoriefflab import *
+from grigoriefflab import *
 
-from viewer import *
-from pyworkflow.em.packages.grigoriefflab.protocol_ctffind import ProtCTFFind
+from protocol_ctffind import ProtCTFFind
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
 
+from viewer import ProtCTFFindViewer, FrealignViewer
 # Wizards
 from wizard import *

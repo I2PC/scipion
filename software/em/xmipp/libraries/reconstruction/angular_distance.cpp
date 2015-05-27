@@ -327,94 +327,107 @@ void ProgAngularDistance::computeWeights()
     	} while (anotherIteration);
 
     	// Advance Iter 1 to catch Iter 2
-		DF1sorted.getValue(label,id1,iter1.objId);
-    	while (id1<currentId && iter1.hasNext())
+    	double N=0, cumulatedDistance=0;
+    	size_t newObjId=0;
+    	if (iter1.objId>0)
     	{
-    		iter1.moveNext();
-    		DF1sorted.getValue(label,id1,iter1.objId);
-    	}
-
-    	// If we are at the end of DF1, then we did not find id1 such that id1==currentId
-    	if (!iter1.hasNext())
-    		break;
-
-    	// Grab all the angles in DF1 associated to this id
-    	anotherIteration=false;
-    	do
-    	{
-    		DF1sorted.getValue(label,id1,iter1.objId);
-			anotherIteration=false;
-    		if (id1==currentId)
-    		{
-				DF1sorted.getValue(MDL_ANGLE_ROT,XX(rotTiltPsi),iter1.objId);
-				DF1sorted.getValue(MDL_ANGLE_TILT,YY(rotTiltPsi),iter1.objId);
-				DF1sorted.getValue(MDL_ANGLE_PSI,ZZ(rotTiltPsi),iter1.objId);
-				DF1sorted.getValue(MDL_FLIP,mirror,iter1.objId);
-				if (mirror)
-				{
-					double rotp, tiltp, psip;
-					Euler_mirrorX(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
-					XX(rotTiltPsi)=rotp;
-					YY(rotTiltPsi)=tiltp;
-					ZZ(rotTiltPsi)=psip;
-				}
-				ang1.push_back(rotTiltPsi);
+			DF1sorted.getValue(label,id1,iter1.objId);
+			while (id1<currentId && iter1.hasNext())
+			{
 				iter1.moveNext();
-				if (iter1.hasNext())
-					anotherIteration=true;
-    		}
-    	} while (anotherIteration);
+				DF1sorted.getValue(label,id1,iter1.objId);
+			}
 
-    	// Process both sets of angles
-    	double cumulatedDistance=0;
-    	double N=0;
-    	for (size_t i=0; i<ang2.size(); ++i)
-    	{
-    		const Matrix1D<double> &anglesi=ang2[i];
-    		double rot2=XX(anglesi);
-    		double tilt2=YY(anglesi);
-    		double psi2=ZZ(anglesi);
-    		double bestDistance=1e38;
-    		for (size_t j=0; j<ang1.size(); ++j)
-    		{
-        		const Matrix1D<double> &anglesj=ang1[j];
-        		double rot1=XX(anglesj);
-        		double tilt1=YY(anglesj);
-        		double psi1=ZZ(anglesj);
-                double dist = SL.computeDistance(rot1, tilt1, psi1, rot2, tilt2, psi2, false,
-                                                 check_mirrors, object_rotation);
-                if (dist<bestDistance)
-                	bestDistance=dist;
-    		}
-    		if (bestDistance<360)
-    		{
-    			cumulatedDistance+=bestDistance;
-    			N++;
-    		}
+			// If we are at the end of DF1, then we did not find id1 such that id1==currentId
+			if (!iter1.hasNext())
+				break;
+
+			// Grab all the angles in DF1 associated to this id
+			anotherIteration=false;
+			do
+			{
+				DF1sorted.getValue(label,id1,iter1.objId);
+				anotherIteration=false;
+				if (id1==currentId)
+				{
+					DF1sorted.getValue(MDL_ANGLE_ROT,XX(rotTiltPsi),iter1.objId);
+					DF1sorted.getValue(MDL_ANGLE_TILT,YY(rotTiltPsi),iter1.objId);
+					DF1sorted.getValue(MDL_ANGLE_PSI,ZZ(rotTiltPsi),iter1.objId);
+					DF1sorted.getValue(MDL_FLIP,mirror,iter1.objId);
+					if (mirror)
+					{
+						double rotp, tiltp, psip;
+						Euler_mirrorX(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
+						XX(rotTiltPsi)=rotp;
+						YY(rotTiltPsi)=tiltp;
+						ZZ(rotTiltPsi)=psip;
+					}
+					ang1.push_back(rotTiltPsi);
+					iter1.moveNext();
+					if (iter1.hasNext())
+						anotherIteration=true;
+				}
+			} while (anotherIteration);
+
+			// Process both sets of angles
+			cumulatedDistance=0;
+			N=0;
+			for (size_t i=0; i<ang2.size(); ++i)
+			{
+				const Matrix1D<double> &anglesi=ang2[i];
+				double rot2=XX(anglesi);
+				double tilt2=YY(anglesi);
+				double psi2=ZZ(anglesi);
+				double bestDistance=1e38;
+				for (size_t j=0; j<ang1.size(); ++j)
+				{
+					const Matrix1D<double> &anglesj=ang1[j];
+					double rot1=XX(anglesj);
+					double tilt1=YY(anglesj);
+					double psi1=ZZ(anglesj);
+					double dist = SL.computeDistance(rot1, tilt1, psi1, rot2, tilt2, psi2, false,
+													 check_mirrors, object_rotation);
+					if (dist<bestDistance)
+						bestDistance=dist;
+				}
+				if (bestDistance<360)
+				{
+					cumulatedDistance+=bestDistance;
+					N++;
+				}
+			}
+			newObjId=DFweights.addObject();
+			DFweights.setValue(label,currentId,newObjId);
+			DFweights.setValue(label,currentId,newObjId);
     	}
-		size_t newObjId=DFweights.addObject();
-		DFweights.setValue(label,currentId,newObjId);
-		DFweights.setValue(label,currentId,newObjId);
+    	else
+    		N=0;
+
     	if (N>0)
     	{
 			double meanDistance=cumulatedDistance/ang2.size();
 			DFweights.setValue(MDL_ANGLE_DIFF,meanDistance,newObjId);
     	}
     	else
-			DFweights.setValue(MDL_ANGLE_DIFF,-1.0,newObjId);
+    		if (newObjId>0)
+    			DFweights.setValue(MDL_ANGLE_DIFF,-1.0,newObjId);
         anotherImageIn2=iter2.hasNext();
     }
 
     // Calculate the deviation with respect to angleDiff=0 of the angular distances
     std::vector<double> angleDistances;
     DFweights.getColumnValues(MDL_ANGLE_DIFF,angleDistances);
-    double sigma2=0, d;
+    double sigma2=0, d, N=0;
     for (size_t i=0; i<angleDistances.size(); ++i)
     {
     	d=angleDistances[i];
-    	sigma2+=d*d;
+    	if (d>0)
+		{
+    		sigma2+=d*d;
+    		++N;
+		}
     }
-    sigma2/=angleDistances.size();
+    sigma2/=N;
     sigma2=std::max(minSigma*minSigma,sigma2);
 
     // Adjust the jumper weights according to a Gaussian
@@ -422,7 +435,10 @@ void ProgAngularDistance::computeWeights()
     FOR_ALL_OBJECTS_IN_METADATA(DFweights)
     {
     	DFweights.getValue(MDL_ANGLE_DIFF,d,__iter.objId);
-    	DFweights.setValue(MDL_WEIGHT_JUMPER,exp(d*d*isigma2),__iter.objId);
+    	if (d>0)
+    		DFweights.setValue(MDL_WEIGHT_JUMPER,exp(d*d*isigma2),__iter.objId);
+    	else
+    		DFweights.setValue(MDL_WEIGHT_JUMPER,0.5,__iter.objId);
     }
 
     // Transfer these weights to the DF2 metadata
@@ -437,7 +453,8 @@ void ProgAngularDistance::computeWeights()
     	double angleDiff;
     	DF2weighted.getValue(MDL_ANGLE_DIFF,angleDiff,__iter.objId);
     	if (angleDiff<0)
-    		DF2weighted.setValue(MDL_ENABLED,-1,__iter.objId);
+    		// DF2weighted.setValue(MDL_ENABLED,-1,__iter.objId);
+    		DF2weighted.setValue(MDL_ANGLE_DIFF,0.0,__iter.objId);
     }
     DF2weighted.removeDisabled();
     DF2weighted.write(fn_out+"_weights.xmd");

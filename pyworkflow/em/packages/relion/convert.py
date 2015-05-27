@@ -110,7 +110,8 @@ def getEnviron():
     environ.update({
             'PATH': join(os.environ['RELION_HOME'], 'bin'),
             'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
-#             'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib64'),
+            'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
+#            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib64'),
             }, position=Environ.BEGIN)
     return environ
 
@@ -398,7 +399,6 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
 
 def particleToRow(part, partRow, **kwargs):
     """ Set labels values from Particle to md row. """
-    imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
     coord = part.getCoordinate()
     if coord is not None:
         coordinateToRow(coord, partRow, copyId=False)
@@ -409,7 +409,8 @@ def particleToRow(part, partRow, **kwargs):
         # could at least group for CTF using that
         if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
             partRow.setValue(md.RLN_MICROGRAPH_NAME, 'fake_micrograph_%06d.mrc' % part.getMicId())
-        
+    imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
+
 
 def rowToParticle(partRow, **kwargs):
     """ Create a Particle from a row of a meta """
@@ -634,8 +635,8 @@ def prependToFileName(imgRow, prefixPath):
 def relativeFromFileName(imgRow, prefixPath):
     """ Remove some prefix from filename in row. """
     index, imgPath = relionToLocation(imgRow.getValue(md.RLN_IMAGE_NAME))
-    imgPath = os.path.relpath(imgPath, prefixPath)
-    newLoc = locationToRelion(index, imgPath)
+    newImgPath = os.path.relpath(imgPath, prefixPath)
+    newLoc = locationToRelion(index, newImgPath)
     imgRow.setValue(md.RLN_IMAGE_NAME, newLoc)
     
     

@@ -31,12 +31,17 @@ This module contains converter functions that will serve to:
 2. Read from Grigo packs files to base classes
 """
 
+import os
+
+from itertools import izip
 import numpy
 from collections import OrderedDict
 from numpy import rad2deg
 from numpy.linalg import inv
 
-from pyworkflow.em.packages.grigoriefflab import *
+from pyworkflow.object import Float
+import pyworkflow.em as em
+
 
 HEADER_COLUMNS = ['INDEX', 'PSI', 'THETA', 'PHI', 'SHX', 'SHY', 'MAG',
                   'FILM', 'DF1', 'DF2', 'ANGAST', 'OCC',
@@ -82,7 +87,8 @@ def readSetOfParticles(inputSet, outputSet, parFileName):
         # in order to be processed in Frealign
         rowToCtfModel(row, particle.getCTF())
         outputSet.append(particle)
-    outputSet.setAlignment(ALIGN_PROJ)
+    outputSet.setAlignment(em.ALIGN_PROJ)
+
 
 def rowToAlignment(alignmentRow, samplingRate):
     """
@@ -91,7 +97,7 @@ def rowToAlignment(alignmentRow, samplingRate):
     """
     angles = numpy.zeros(3)
     shifts = numpy.zeros(3)
-    alignment = Transform()
+    alignment = em.Transform()
     # PSI   THETA     PHI       SHX       SHY
     angles[0] = float(alignmentRow.get('PSI'))
     angles[1] = float(alignmentRow.get('THETA'))
@@ -104,6 +110,7 @@ def rowToAlignment(alignmentRow, samplingRate):
 
     return alignment
 
+
 def matrixFromGeometry(shifts, angles):
     """ Create the transformation matrix from a given
     2D shifts in X and Y...and the 3 euler angles.
@@ -115,13 +122,13 @@ def matrixFromGeometry(shifts, angles):
 
     M = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
     if inverseTransform:
-        from numpy.linalg import inv
         M[:3, 3] = -shifts[:3]
         M = inv(M)
     else:
         M[:3, 3] = shifts[:3]
 
     return M
+
 
 def rowToCtfModel(ctfRow, ctfModel):
     defocusU = float(ctfRow.get('DF1'))
@@ -138,9 +145,9 @@ def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
     imgSet = classes3DSet.getImages()
 
     for ref, volFn in enumerate(volumeList):
-        class3D = Class3D()
+        class3D = em.Class3D()
         class3D.setObjId(ref+1)
-        vol = Volume()
+        vol = em.Volume()
         vol.copyObjId(class3D)
         vol.setLocation(volFn)
 
@@ -167,38 +174,58 @@ def parseCtffindOutput(filename):
     """ Retrieve defocus U, V and angle from the
     output file of the ctffind3 execution.
     """
-    f = open(filename)
     result = None
-    for line in f:
-        if 'Final Values' in line:
-            # Take DefocusU, DefocusV and Angle as a tuple
-            # that are the first three values in the line
-            result = tuple(map(float, line.split()[:3]))
-            break
-    f.close()
+    if os.path.exists(filename):
+        f = open(filename)
+        for line in f:
+            if 'Final Values' in line:
+                # Take DefocusU, DefocusV and Angle as a tuple
+                # that are the first three values in the line
+                result = tuple(map(float, line.split()[:3]))
+                break
+        f.close()
     return result
+
 
 def parseCtffind4Output(filename):
     """ Retrieve defocus U, V and angle from the
     output file of the ctffind3 execution.
     """
-    f = open(filename)
     result = None
-    for line in f:
-        if not line.startswith("#"):
-            result = tuple(map(float, line.split()[1:]))
-    f.close()
+    if os.path.exists(filename):
+        f = open(filename)
+        for line in f:
+            if not line.startswith("#"):
+                result = tuple(map(float, line.split()[1:]))
+        f.close()
     return result
 
-def readCtfModel(ctfModel, filename, ctf4=False):
+
+def setWrongDefocus(ctfModel):
+    ctfModel.setDefocusU(-999)
+    ctfModel.setDefocusV(-1)
+    ctfModel.setDefocusAngle(-999)
+    
+    
+def readCtfModel(ctfModel, filename, ctf4=False):        
     if not ctf4:
-        defocusU, defocusV, defocusAngle = parseCtffindOutput(filename)
-        ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
+        result = parseCtffindOutput(filename)
+        if result is None:
+            setWrongDefocus(ctfModel)
+        else:
+            defocusU, defocusV, defocusAngle = result
+            ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
     else:
-        defocusU, defocusV, defocusAngle, _, ctfFit, ctfResolution = parseCtffind4Output(filename)
-        ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
+        result =  parseCtffind4Output(filename)
+        if result is None:
+            setWrongDefocus(ctfModel)
+            ctfFit, ctfResolution = -999, -999 
+        else:
+            defocusU, defocusV, defocusAngle, _, ctfFit, ctfResolution = result
+            ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
         ctfModel._ctffind4_crossCorrelation = Float(ctfFit)
         ctfModel._ctffind4_ctfResolution = Float(ctfResolution)
+
 
 def geometryFromMatrix(matrix):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
@@ -212,8 +239,25 @@ def geometryFromMatrix(matrix):
     angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
     return shifts, angles
 
+
 def geometryFromAligment(alignment):
-    matrix = alignment.getMatrix()
     shifts, angles = geometryFromMatrix(alignment.getMatrix(),True)#####
 
     return shifts, angles
+
+
+def _createErrorCtf4Fn(self, filename):
+            f = open(filename, 'w+')
+            lines = """# Error report file 
+  -999       -999       -999       -999       -999      -999       -999     
+"""
+            f.write(lines)
+            f.close()
+
+
+def _createErrorCtf3Fn(self, filename):
+            f = open(filename, 'w+')
+            lines = """-999    -999       -999     -999  Final Values"""
+            f.write(lines)
+            f.close()
+
