@@ -485,10 +485,7 @@ class ChimeraVirusClient(ChimeraClient):
             rot, tilt, psi = xmipp.Euler_matrix2angles(self.motion)
             printCmd('calling rotate')
             self.rotate(rot, tilt, psi)
-
-    def answer(self, msg):
-        ChimeraClient.answer(self, msg)
-        if msg == 'id':
+        elif msg == 'id':
             id = self.client.recv()
             self.listToBild([self.va[id-1]],2.5,'id.bild')
         else:
