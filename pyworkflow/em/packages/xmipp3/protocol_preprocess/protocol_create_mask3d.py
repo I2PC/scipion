@@ -70,14 +70,18 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         form.addParam('inputVolume', PointerParam, pointerClass="Volume", condition=isVolume, 
                       label="Input volume",
                       help="Select the volume that will be used to create the mask")
+        # For another mask
+        form.addParam('inputMask', PointerParam, pointerClass="VolumeMask",
+                      condition='source==%d' % SOURCE_MASK, 
+                      label="Input mask")
         form.addParam('volumeOperation', EnumParam, default=OPERATION_THRESHOLD,
-                      choices=['Threshold','Segment'], condition=isVolume,
+                      choices=['Threshold','Segment'],
                       label='Operation')
         #TODO: add wizard
         form.addParam('threshold', FloatParam,
-                      condition='%s and volumeOperation==%d' % (isVolume, OPERATION_THRESHOLD),
+                      condition='volumeOperation==%d' % (OPERATION_THRESHOLD),
                       label='Threshold')
-        isSegmentation = '%s and volumeOperation==%d' % (isVolume, OPERATION_SEGMENT)
+        isSegmentation = 'volumeOperation==%d' % (OPERATION_SEGMENT)
         form.addParam('segmentationType', EnumParam, default=SEGMENTATION_DALTON, 
                       condition=isSegmentation,
                       label='Segmentation type',
@@ -99,11 +103,6 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         XmippGeometricalMask3D.defineParams(self, form, 
                                             isGeometry='source==%d' % SOURCE_GEOMETRY, 
                                             addSize=True)
-
-        # For another mask
-        form.addParam('inputMask', PointerParam, pointerClass="VolumeMask",
-                      condition='source==%d' % SOURCE_MASK, 
-                      label="Input mask")
 
         # Postprocessing
         form.addSection(label='Postprocessing')
@@ -159,13 +158,16 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
             self._insertFunctionStep('createMaskFromGeometryStep')
         else:
             self.inputVolume.set(None)
-            self._insertFunctionStep('createMaskFromAnotherMaskStep')
+            self._insertFunctionStep('createMaskFromVolumeStep')
         self._insertFunctionStep('postProcessMaskStep')
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions --------------------------------------------
     def createMaskFromVolumeStep(self):
-        volume = self.inputVolume.get()
+        if self.source == SOURCE_VOLUME:
+            volume = self.inputVolume.get()
+        else:
+            volume = self.inputMask.get()
         fnVol = getImageLocation(volume)
         Ts = volume.getSamplingRate()
         
@@ -200,11 +202,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         
         return [self.maskFile]
     
-    def createMaskFromAnotherMaskStep(self):
-        ImageHandler().convert(self.inputMask.get(), self.maskFile)
-
-    def postProcessMaskStep(self):
-        
+    def postProcessMaskStep(self):        
         if self.doSmall:
             self.runJob("xmipp_transform_morphology","-i %s --binaryOperation removeSmall %d"%(self.maskFile,self.smallSize.get()))
         
@@ -248,9 +246,9 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
     def _summary(self):
         messages = []      
         messages.append("*Mask creation*")
-        if self.source==SOURCE_MASK:
-            messages.append("   From another mask")
-        if self.source==SOURCE_VOLUME:
+        if self.source==SOURCE_VOLUME or self.source==SOURCE_MASK:
+            if self.source==SOURCE_MASK:
+                messages.append("   From another mask")
             if self.volumeOperation==OPERATION_THRESHOLD:
                 messages.append("   Thresholding %f"%self.threshold.get())
             elif self.volumeOperation==OPERATION_SEGMENT:
@@ -295,11 +293,12 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         messages = []      
         messages.append("*Mask creation*")
         
-        if self.source == SOURCE_MASK:
-            messages.append('We processed the mask %s.'%self.inputMask.get().getNameId())
-        
-        if self.source == SOURCE_VOLUME:
-            messages.append('We processed the volume %s.'%self.inputVolume.get().getNameId())
+        if self.source == SOURCE_MASK or self.source == SOURCE_VOLUME:
+            if self.source == SOURCE_VOLUME:
+                messages.append('We processed the volume %s.'%self.inputVolume.get().getNameId())
+            elif self.source == SOURCE_MASK:
+                messages.append('We processed the mask %s.'%self.inputMask.get().getNameId())
+
             if self.volumeOperation == OPERATION_THRESHOLD:
                 messages.append("We thresholded it to a gray value of %f. "%self.threshold.get())
             elif self.volumeOperation == OPERATION_SEGMENT:
