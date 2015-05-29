@@ -119,8 +119,8 @@ class TestXmippCreateMask3D(TestXmippBase):
     
         print "Run create mask from another mask"
         protMask3 = self.newProtocol(XmippProtCreateMask3D,
-                                     source=2, doMorphological=True, elementSize=3)
-        protMask3.inputMask.set(protMask1.outputMask)
+                                     source=0, volumeOperation=2, doMorphological=True, elementSize=3)
+        protMask3.inputVolume.set(protMask1.outputMask)
         protMask3.setObjLabel('dilation mask')
         self.launchProtocol(protMask3)
         self.assertIsNotNone(protMask3.outputMask, "There was a problem with mask from another mask")

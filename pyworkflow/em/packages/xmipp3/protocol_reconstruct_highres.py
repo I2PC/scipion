@@ -420,13 +420,16 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         # Prepare particles
         fnDir0=self._getExtraPath("Iter000")
         fnNewParticles=join(fnDir,"images.stk")
-        self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"%(self.imgsFn,fnNewParticles,newXdim))
+        if newXdim!=Xdim:
+            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"%(self.imgsFn,fnNewParticles,newXdim))
+        else:
+            self.runJob("xmipp_image_convert","-i %s -o %s"%(self.imgsFn,fnNewParticles))
         R=self.particleRadius.get()
         if R<=0:
             R=self.inputParticles.get().getDimensions()[0]/2
         R=min(round(R*self.TsOrig/TsCurrent*(1+self.angularMaxShift.get()*0.01)),newXdim/2)
         self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnNewParticles,R))
-        self.runJob('xmipp_transform_filter','-i %s --fourier fsc %s --sampling %f'%(fnNewParticles,join(fnDirPrevious,"fsc.xmd"),TsCurrent))
+        # COSS: self.runJob('xmipp_transform_filter','-i %s --fourier fsc %s --sampling %f'%(fnNewParticles,join(fnDirPrevious,"fsc.xmd"),TsCurrent))
         fnSource=join(fnDir,"images.xmd")
         for i in range(1,3):
             fnImagesi=join(fnDir,"images%02d.xmd"%i)
@@ -746,6 +749,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         for i in range(1,3):
             fnAngles=join(fnDirCurrent,"angles%02d.xmd"%i)
             fnVol=join(fnDirCurrent,"volume%02d.vol"%i)
+            # Reconstruct Fourier
             args="-i %s -o %s --sym %s --weight"%(fnAngles,fnVol,self.symmetryGroup)
             row=getFirstRow(fnAngles)
             if row.containsLabel(MDL_CTF_DEFOCUSU) or row.containsLabel(MDL_CTF_MODEL):
@@ -753,6 +757,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 if self.phaseFlipped:
                     args+=" --phaseFlipped"
             self.runJob("xmipp_reconstruct_fourier",args)
+            # Reconstruct ADMM
+#            args="-i %s -o %s --sym %s"%(fnAngles,fnVol,self.symmetryGroup)
+#            row=getFirstRow(fnAngles)
+#            if row.containsLabel(MDL_CTF_DEFOCUSU) or row.containsLabel(MDL_CTF_MODEL):
+#                if not self.phaseFlipped:
+#                    args+=" --dontUseCTF"
+#            self.runJob("xmipp_reconstruct_admm",args)
     
     def postProcessing(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)

@@ -101,6 +101,7 @@ class ProtRelionBase(EMProtocol):
                   'volume_frame': self.extraIter + 'data_shiny_frame%(frame)03d_%(halve)sclass%(ref3d)03d_unfil.mrc:mrc',
                   'guinier_frame': self.extraIter + 'data_shiny_frame%(frame)03d_guinier.star',
                   'fsc_shiny': self.extraIter + 'data_shiny_post.star',
+                  'bfactors': self.extraIter + 'data_shiny_bfactors.star',
                   'dataFinal' : self._getExtraPath("relion_data.star"),
                   'modelFinal' : self._getExtraPath("relion_model.star"),
                   
