@@ -228,14 +228,21 @@ class ProjectCreateWindow(Window):
         projName = self.projName.get().strip()
         projLocation = self.projLocation.get().strip()
 
+        # Validate that project name is not empty
         if not projName:
             showError("Validation error", "Project name is empty", self.root)
+        # Validate that project location is not empty
         elif not projLocation:
             showError("Validation error", "Project location is empty", self.root)
+        # Validate that project location exists
         elif not os.path.exists(projLocation):
             showError("Validation error", "Project location does not exist", self.root)
+        # Validate that project location is a directory
         elif not os.path.isdir(projLocation):
             showError("Validation error", "Project location is not a directory", self.root)
+        # Validate that project path (location + name) ddoes not exists
+        elif os.path.exists(os.path.join(projLocation, projName)):
+            showError("Validation error", "Project path already exists", self.root)
         else:
             self.parent.createNewProject(projName, projLocation)
             self.close()
