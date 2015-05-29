@@ -83,7 +83,7 @@ class Manager(object):
         confs dict can contains customs .conf files 
         for: menus, protocols, or hosts
         """
-        # If location is not None create project on it
+        # If location is not None create project on it (if exists)
         if location is None:
             projectPath = self.getProjectPath(projectName)
         else:
@@ -93,8 +93,8 @@ class Manager(object):
         project.create(runsView=runsView, 
                        hostsConf=hostsConf, 
                        protocolsConf=protocolsConf)
-        # If location is not None create a symlink on self.PROJECTS directory
-        if location is not None:
+        # If location is not the default one create a symlink on self.PROJECTS directory
+        if projectPath != self.getProjectPath(projectName) :
             pwutils.path.createLink(projectPath, self.getProjectPath(projectName))
 
         return project

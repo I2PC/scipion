@@ -32,12 +32,14 @@ import pyworkflow as pw
 from pyworkflow.utils.utils import prettyDate, prettyTime
 from pyworkflow.utils.path import getHomePath
 from pyworkflow.manager import Manager
-from pyworkflow.utils.properties import Message
-import pyworkflow.gui as pwgui 
-from pyworkflow.gui.widgets import HotButton
+import pyworkflow.gui as pwgui
 from pyworkflow.gui.text import TaggedText
-from pyworkflow.gui.dialog import askString, askCheckString, askYesNo, showError
+from pyworkflow.gui.dialog import askString, askYesNo, showError
+
+from pyworkflow.gui import Message, Window, cfgEntryBgColor
 from pyworkflow.gui.browser import FileBrowserWindow
+from pyworkflow.gui.widgets import IconButton, HotButton, Button
+from pyworkflow.utils.properties import Icon
 
             
 class ProjectsView(tk.Frame):    
@@ -57,7 +59,7 @@ class ProjectsView(tk.Frame):
         self.projDelFont = tkFont.Font(size=smallSize, family=fontName, weight='bold')
         self.manager = Manager()
         btn = HotButton(self, text=Message.LABEL_CREATE_PROJECT, font=self.projNameFont, 
-                     command=self.createNewProject)
+                     command=self._onCreateProject)
         btn.grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         
         self.columnconfigure(0, weight=1)
@@ -107,23 +109,14 @@ class ProjectsView(tk.Frame):
         
         return frame
     
-    def createNewProject(self, e=None):
-        value =  askCheckString(Message.LABEL_CREATE_PROJECT, Message.TITLE_CREATE_PROJECT_NAME, self.root, "Change project location?", 30)
-        if value is not None:
-            (projName, askLocation) = value
-            if not projName is None:
-                def onCreate(projName, location = None):
-                    self.manager.createProject(projName, location = location)
-                    self.createProjectList(self.text)
-                    self.openProject(projName)
+    def createNewProject(self, projName, projLocation):
+        self.manager.createProject(projName, location=projLocation)
+        self.createProjectList(self.text)
+        self.openProject(projName)
 
-                def onSelect(obj):
-                    onCreate(projName, location=obj.getPath())
-
-                if askLocation:
-                    FileBrowserWindow("Browsing", self.windows, path=getHomePath(), onSelect=onSelect).show()
-                else:
-                    onCreate(projName)
+    def _onCreateProject(self, e=None):
+        projWindow = ProjectCreateWindow("Create project", self)
+        projWindow.show()
 
     def openProject(self, projName):
         from subprocess import Popen
@@ -146,3 +139,103 @@ class ProjectsView(tk.Frame):
             return
         self.manager.renameProject(projName, newName)
         self.createProjectList(self.text)
+
+
+class ProjectCreateWindow(Window):
+    """ Windows to create a project. """
+    def __init__(self, title, parent=None, weight=True, minsize=(400, 150),
+                 icon="scipion_bn.xbm", **args):
+        """
+         We assume the parent should be of ProjectsView
+        """
+        Window.__init__(self, title, parent.windows, weight=weight,
+                        icon=icon, minsize=minsize, enableQueue=True)
+
+        self.parent = parent
+        self.projectsPath = self.parent.manager.PROJECTS
+        self.projName = tk.StringVar()
+        self.projName.set('')
+        self.projLocation = tk.StringVar()
+        self.projLocation.set(self.projectsPath)
+
+        content = tk.Frame(self.root)
+        content.columnconfigure(0, weight=1)
+        content.columnconfigure(1, weight=1)
+        content.config(bg='white')
+        content.grid(row=0, column=0, sticky='news',
+                       padx=5, pady=5)
+        labelName = tk.Label(content, text=Message.LABEL_PROJECT, bg='white', bd=0)
+        labelName.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
+        entryName = tk.Entry(content, bg=cfgEntryBgColor, width=20, textvariable=self.projName)
+        entryName.grid(row=0, column=1, sticky='nw', padx=5, pady=5)
+
+        labelCheck = tk.Label(content, text="Use default location", bg='white', bd=0)
+        labelCheck.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
+        self.tkCheckVar = tk.IntVar()
+        btnCheck = tk.Checkbutton(content, variable=self.tkCheckVar, bg='white', bd=0)
+        btnCheck.grid(row=1, column=1, sticky='nw', padx=5, pady=5)
+
+        self.browseFrame = tk.Frame(content, bg='white')
+        #self.browseFrame.columnconfigure(1, weight=1)
+        self.browseFrame.grid(row=2, column=0, padx=0, pady=0, columnspan=2, sticky='nw')
+        self.entryBrowse = tk.Entry(self.browseFrame, bg=cfgEntryBgColor, width=40, textvariable=self.projLocation)
+        self.entryBrowse.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
+        self.btnBrowse = IconButton(self.browseFrame, 'Browse', Icon.ACTION_BROWSE, command=self._browsePath)
+        self.btnBrowse.grid(row=0, column=1, sticky='e', padx=5, pady=5)
+
+        self.initial_focus = entryName
+        self.tkCheckVar.trace('w', self._onVarChanged)
+        btnCheck.select()
+
+        btnFrame = tk.Frame(content)
+        btnFrame.columnconfigure(0, weight=1)
+        btnFrame.grid(row=3, column=0, sticky='sew', padx=5, pady=(0, 5), columnspan=2)
+        btnFrame.config(bg='white')
+
+        # Create buttons
+        btnSelect = HotButton(btnFrame, 'Create', Icon.BUTTON_SELECT, command=self._select)
+        btnSelect.grid(row=0, column=0, sticky='e', padx=5, pady=5)
+        btnCancel = Button(btnFrame, 'Cancel', Icon.BUTTON_CANCEL, command=self.close)
+        btnCancel.grid(row=0, column=1, sticky='e', padx=5, pady=5)
+
+
+    def _onVarChanged(self, *args):
+        if self.tkCheckVar.get() == 0:
+            self.entryBrowse.config(state='normal')
+            self.btnBrowse.config(state='normal')
+        else:
+            self.projLocation.set(self.projectsPath)
+            self.entryBrowse.config(state='readonly')
+            self.btnBrowse.config(state='disabled')
+
+    def _browsePath(self, e=None):
+        def onSelect(obj):
+            self.projLocation.set(obj.getPath())
+
+        v = self.projLocation.get().strip()
+        path = None
+        if v:
+            v = os.path.dirname(v)
+            if os.path.exists(v):
+                path = v
+        if not path:
+            path = self.projectsPath
+
+        browser = FileBrowserWindow("Browsing", self, path=path, onSelect=onSelect)
+        browser.show()
+
+    def _select(self):
+        projName = self.projName.get().strip()
+        projLocation = self.projLocation.get().strip()
+
+        if not projName:
+            showError("Validation error", "Project name is empty", self.root)
+        elif not projLocation:
+            showError("Validation error", "Project location is empty", self.root)
+        elif not os.path.exists(projLocation):
+            showError("Validation error", "Project location does not exist", self.root)
+        elif not os.path.isdir(projLocation):
+            showError("Validation error", "Project location is not a directory", self.root)
+        else:
+            self.parent.createNewProject(projName, projLocation)
+            self.close()
