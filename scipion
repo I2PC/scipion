@@ -465,7 +465,8 @@ arguments:
     elif (mode.startswith('xmipp') or
           mode.startswith('relion') or
           mode.startswith('e2') or 
-          mode.startswith('sx')):
+          mode.startswith('sx') or
+          mode.startswith('b')):
         runApp('pw_program.py',  sys.argv[1:], chdir=False)
     
     elif mode == MODE_HELP:

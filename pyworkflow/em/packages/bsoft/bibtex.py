@@ -1,3 +1,4 @@
+# coding: latin-1
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -24,16 +25,27 @@
 # *
 # **************************************************************************
 """
-This package contains the protocols and data for BSOFT
+Bibtex string file for Xmipp package.
 """
 
-from bibtex import _bibtex # Load bibtex dict with references
- 
-_logo = "bsoft_logo.png"
-_references = ['Heymann2007']
+_bibtexStr = """
+@article{Heymann2007,
+title = "Bsoft: Image processing and molecular modeling for electron microscopy ",
+journal = "Journal of Structural Biology ",
+volume = "157",
+number = "1",
+pages = "3 - 18",
+year = "2007",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2006.06.006",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847706001997",
+author = "J. Bernard Heymann and David M. Belnap",
+keywords = "Single particle analysis Tomography",
+}
+"""
 
 
-from protocol_particle_pick import BsoftProtParticlePicking
 
-from convert import getEnviron
-_environ = getEnviron()
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  

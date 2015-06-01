@@ -6,10 +6,22 @@ Created on Feb 21, 2014
 import os
 from xmipp import *
 from pyworkflow.utils.path import join, dirname, replaceBaseExt
-from xmipp import addLabelAlias
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.convert import rowToCoordinate, rowFromMd
-from xmipp3 import XmippMdRow
+
+
+def getEnviron():
+    """ Setup the environment variables needed to launch Bsoft. """
+    environ = Environ(os.environ)
+    BSOFT_HOME = os.environ['BSOFT_HOME']
+    
+    environ.update({
+            'BSOFT': BSOFT_HOME,
+            'BPARAM': join(BSOFT_HOME, 'params'),
+            'PATH': join(BSOFT_HOME, 'bin'),
+            'LD_LIBRARY_PATH': join(BSOFT_HOME, 'lib')
+            }, position=Environ.BEGIN)
+    return environ
 
 # Map from Xmipp labels to Relion labels names
 XMIPP_BSOFT_LABELS = {
@@ -80,6 +92,7 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
             
              #reading origin.x value and converting to particle size, can change, we take last value
             coordSet.setBoxSize(boxSize)
+            
             
 class ParticleAdaptor():
     """ Class used to convert a set of particles for Bsoft.

@@ -50,6 +50,9 @@ if __name__ == '__main__':
           program.startswith('sx')):
         import pyworkflow.em.packages.eman2 as eman2
         env = eman2.getEnviron()
+    elif program.startswith('b'):
+        import pyworkflow.em.packages.bsoft as bsoft
+        env = bsoft.getEnviron()
     
     pwutils.runJob(None, program, params, env=env)
          
