@@ -246,7 +246,10 @@ void ParametersProjection::read(const FileName &fn_proj_param)
                 REPORT_ERROR(ERR_IO_NOTEXIST, (String)"Prog_Project_Parameters::read: "
                              "file " + fn_angle + " doesn't exist");
             else
+            {
             	MD.getValue(MDL_CTF_DATA_PHASE_FLIPPED, doPhaseFlip, objId);
+            	MD.getValue(MDL_APPLY_SHIFT, applyShift, objId);
+            }
 
         if (MD.getValue(MDL_PRJ_ROT_RANGE,ParamVec, objId))
         {
@@ -995,12 +998,14 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         side.DF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         side.DF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
         side.DF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
-        if (side.DF.containsLabel(MDL_SHIFT_X))
-        	side.DF.getValue(MDL_SHIFT_X,x,__iter.objId);
-        if (side.DF.containsLabel(MDL_SHIFT_Y))
-        	side.DF.getValue(MDL_SHIFT_Y,y,__iter.objId);
 
-
+        if (prm.applyShift)
+        {
+        	if (side.DF.containsLabel(MDL_SHIFT_X))
+        		side.DF.getValue(MDL_SHIFT_X,x,__iter.objId);
+        	if (side.DF.containsLabel(MDL_SHIFT_Y))
+        		side.DF.getValue(MDL_SHIFT_Y,y,__iter.objId);
+        }
         realWRAP(rot, 0, 360);
         realWRAP(tilt, 0, 360);
         realWRAP(psi, 0, 360);

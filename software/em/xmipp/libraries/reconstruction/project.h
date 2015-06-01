@@ -174,6 +174,8 @@ public:
 
     //Do phase flip
     bool doPhaseFlip = false;
+    //Apply shift
+    bool applyShift = true;
 
     /// Document filename
     FileName fn_angle;
