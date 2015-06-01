@@ -658,7 +658,7 @@ def getTmpVolumePath(fileName):
     
 def convertVolume(request, path):
     imgFn = os.path.join(request.session['projectPath'], path)
-    imgFn.replace(':mrc', '')
+    imgFn = imgFn.replace(':mrc', '')
     imgConvertedFn = getTmpVolumePath(imgFn)
     # For rendering volume slices over the web, PIL need that
     # the volume is stored with a specific datatype
@@ -677,7 +677,7 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], path)
-    img.read(str(imgFn))
+    imgFn = imgFn.replace(':mrc', '')
     
     if not convert and not reslice and not getStats:
 #         img.read(str(imgFn), xmipp.HEADER)
