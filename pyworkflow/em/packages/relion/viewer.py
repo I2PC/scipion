@@ -659,6 +659,8 @@ Examples:
                 prefixes = ['half1_']
             elif halves == 1:
                 prefixes = ['half2_']
+            elif halves == 3:
+                prefixes = ['final']
         return prefixes
     
     def _iterAngles(self, mdOut):
@@ -917,6 +919,10 @@ Examples:
                       default=True, condition="showHalves<3",
                       label='Display guinier plots',
                       help='')
+        group.addParam('bfactorsPlot', LabelParam,
+                      default=True,
+                      label='Display bfactors plot',
+                      help='')
     
     def _getVisualizeDict(self):
         self._load()
@@ -925,6 +931,7 @@ Examples:
                 'displayAngDist': self._showAngularDistribution,
                 'resolutionPlotsFSC': self._showFSC,
                 'guinierPlots': self._showGuinier,
+                'bfactorsPlot': self._showBfactors
                 }
         
     def _viewAll(self, *args):
@@ -1069,7 +1076,6 @@ Examples:
 # plotGuinier
 #===============================================================================
     def _showGuinier(self, paramName=None):
-        n = 1
         gridsize = [1, 1]
         md.activateMathExtensions()
         
@@ -1096,6 +1102,32 @@ Examples:
         self.maxInv = max(resolSqInv)
         a.plot(resolSqInv, logAmp)
         a.xaxis.set_major_formatter(self._plotFormatter)
+    
+#===============================================================================
+# plotBfactors
+#===============================================================================
+    def _showBfactors(self, paramName=None):
+        gridsize = self._getGridSize(2)
+        md.activateMathExtensions()
+        
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Per Frames Bfactors')
+        modelStar = self.protocol._getFileName('bfactors', iter=self.protocol._lastIter())
+        model = 'perframe_bfactors@' + modelStar
+        for title in ['Bfactor', 'Intercept']:
+            a = xplotter.createSubPlot(title, 'Frame', title, yformat=False)
+            if title == "Bfactor":
+                label = md.RLN_POSTPROCESS_BFACTOR
+            else:
+                label = md.RLN_POSTPROCESS_GUINIER_FIT_INTERCEPT
+            self._plotBfactor(a, model, label)
+        
+        return [xplotter]
+    
+    def _plotBfactor(self, a, model, label):
+        mdStar = md.MetaData(model)
+        frames = [mdStar.getValue(md.RLN_IMAGE_FRAME_NR, id) for id in mdStar]
+        bfactors = [mdStar.getValue(label, id) for id in mdStar]
+        a.plot(frames, bfactors)
     
 #===============================================================================
 # Utils Functions
