@@ -77,33 +77,10 @@ If you are satisfied please
 press OK to use that values.    
 """    
 
-class PreWhiteningDialog(dialog.Dialog):
-    def __init__(self, form, workingDir, **kwargs):
-        """ 
-        Params:
-            parent: parent windows of the dialog.
-            provider: the TreeProvider to populate items tree.
-        """
-        self.form = form
-        self.workingDir = workingDir
-        buttons = [('Select', dialog.RESULT_YES), ('Cancel', dialog.RESULT_CANCEL)]
-        dialog.Dialog.__init__(self, form.root, "Pre-whitening", buttons=buttons, default='Select', **kwargs)
-
-    def _runBeforePreWhitening(self):
-        prot = self.form.protocol
-        # Convert input volumes
-        ih = ImageHandler()
-        ih.convert(prot.inputVolume.get(), join(self.workingDir, 'volume1.map'))
-        if prot.useSplitVolume:
-            ih.convert(prot.splitVolume.get(), join(self.workingDir, 'volume2.map'))
-    
-        self.results = prot.runResmap(self.workingDir, wizardMode=True)
-         
-    def _runPreWhitening(self, newElbowAngstrom, newRampWeight):
-        # Add resmap libraries to the path
+def myCreatePrewhiteningFigure(results, figure, newElbowAngstrom, newRampWeight):
+                # Add resmap libraries to the path
         sys.path.append(os.environ['RESMAP_HOME'])
         from ResMap_spectrumTools import preWhitenCube, createPrewhiteningFigure, preWhitenVolumeSoftBG
-        results = self.results
         
         n = results['n']
         subVolLPF = results['subVolLPF']
@@ -147,8 +124,7 @@ class PreWhiteningDialog(dialog.Dialog):
 
         dataPW = preWhiteningResult['dataPW']          
         
-        self.figure.clear()
-        createPrewhiteningFigure(figure = self.figure,
+        createPrewhiteningFigure(figure = figure,
                                  showButtons = False,
                                  showSliders = False,
                                  instructions = INSTRUCTIONS,
@@ -161,8 +137,39 @@ class PreWhiteningDialog(dialog.Dialog):
                                  dataPWBGSpect = preWhiteningResult['dataPWBGSpect'],
                                  vxSize        = vxSize,
                                  dataSlice     = data[int(dataSize/2),:,:],
-                                 dataPWSlice   = dataPW[int(dataSize/2),:,:]
-                                )
+                                 dataPWSlice   = dataPW[int(dataSize/2),:,:])
+        
+        
+
+class PreWhiteningDialog(dialog.Dialog):
+    def __init__(self, form, workingDir, **kwargs):
+        """ 
+        Params:
+            parent: parent windows of the dialog.
+            provider: the TreeProvider to populate items tree.
+        """
+        self.form = form
+        self.workingDir = workingDir
+        buttons = [('Select', dialog.RESULT_YES), ('Cancel', dialog.RESULT_CANCEL)]
+        dialog.Dialog.__init__(self, form.root, "Pre-whitening", buttons=buttons, default='Select', **kwargs)
+
+    def _runBeforePreWhitening(self):
+        prot = self.form.protocol
+        # Convert input volumes
+        ih = ImageHandler()
+        ih.convert(prot.inputVolume.get(), join(self.workingDir, 'volume1.map'))
+        if prot.useSplitVolume:
+            ih.convert(prot.splitVolume.get(), join(self.workingDir, 'volume2.map'))
+    
+        self.results = prot.runResmap(self.workingDir, wizardMode=True)
+         
+    def _runPreWhitening(self, newElbowAngstrom, newRampWeight):
+        # Add resmap libraries to the path
+        results = self.results
+        
+        self.figure.clear()
+        myCreatePrewhiteningFigure(results, self.figure, newElbowAngstrom, newRampWeight)
+        
         
     def body(self, bodyFrame):
         figFrame = FigureFrame(bodyFrame, figsize=(18, 9))

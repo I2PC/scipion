@@ -39,6 +39,7 @@ from pyworkflow.web.app.views_base import base_wiz
 from pyworkflow.web.app.views_util import savePlot, loadProject, getResourceCss, getResourceJs
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.packages.resmap import ProtResMap
+from pyworkflow.em.packages.resmap.wizard import myCreatePrewhiteningFigure
 
 
 class ResmapPrewhitenWizardWeb(ResmapPrewhitenWizard):
@@ -178,70 +179,16 @@ def _beforePreWhitening(protocol, dir):
 
      
 def _runPreWhiteningWeb(protocol, results):
-    # Add resmap libraries to the path
-    sys.path.append(os.environ['RESMAP_HOME'])
-    from ResMap_spectrumTools import preWhitenCube, createPrewhiteningFigure, preWhitenVolumeSoftBG
-    
-    n = results['n']
-    subVolLPF = results['subVolLPF']
-    splitVolume = results['splitVolume']
-    vxSize = results['vxSize']
-    
-    # Here we need to duplicate some code because
-    # have diffent path (if/else) in the original ResMap code
     
     newAng = protocol.prewhitenAng.get()
     newRamp = protocol.prewhitenRamp.get()
-    
-    if n > subVolLPF:
-        dataSize = results['cubeSize']
-        preWhiteningResult = preWhitenCube( n = dataSize,
-                                    vxSize        = vxSize,
-                                    elbowAngstrom = newAng,
-                                    rampWeight    = newRamp,
-                                    dataF         = results['dataF'],
-                                    dataBGF       = results['dataBGF'],
-                                    dataBGSpect   = results['dataBGSpect'])
-    else:
-        dataSize = n
-        if splitVolume == False:
-            preWhiteningResult = preWhitenVolumeSoftBG( n = n,
-                                    vxSize        = vxSize,
-                                    elbowAngstrom = newAng,
-                                    rampWeight    = newRamp,
-                                    dataF         = results['dataF'],
-                                    dataBGSpect   = results['dataBGSpect'],
-                                    softBGmask    = results['softBGmask'],
-                                    )
-        else:
-            preWhiteningResult = preWhitenCube( n = n,
-                                    vxSize        = vxSize,
-                                    elbowAngstrom = newAng,
-                                    rampWeight    = newRamp,
-                                    dataF         = results['dataF'],
-                                    dataBGF       = results['dataBGF'],
-                                    dataBGSpect   = results['dataBGSpect'])
-
-    dataPW = preWhiteningResult['dataPW']          
     
     figsize = (18, 9)
     gridsize = [0, 0]
     plotter = Plotter(*gridsize, figsize=figsize, windowTitle="ResMap")
     
-    createPrewhiteningFigure(figure = plotter.getFigure(),
-                             showButtons = False,
-                             showSliders = False,
-                             instructions = INSTRUCTIONS,
-                             elbowAngstrom = newAng,
-                             rampWeight    = newRamp,
-                             dataSpect     = results['dataPowerSpectrum'],
-                             dataBGSpect   = results['dataBGSpect'],
-                             peval         = preWhiteningResult['peval'],
-                             dataPWSpect   = preWhiteningResult['dataPWSpect'],
-                             dataPWBGSpect = preWhiteningResult['dataPWBGSpect'],
-                             vxSize        = vxSize,
-                             dataSlice     = results['data'][int(dataSize/2),:,:],
-                             dataPWSlice   = dataPW[int(dataSize/2),:,:]
+    myCreatePrewhiteningFigure(results, plotter.getFigure(),
+                             newAng, newRamp
                             )
     
     return plotter
