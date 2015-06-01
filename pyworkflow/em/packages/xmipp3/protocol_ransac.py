@@ -81,7 +81,7 @@ class XmippProtRansac(ProtInitialVolume):
                       label="Number of RANSAC iterations", 
                       help='Number of initial volumes to test by RANSAC')
         
-        form.addParam('dimRed', BooleanParam, default=True, expertLevel=LEVEL_ADVANCED,
+        form.addParam('dimRed', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label='Perform dimensionality reduction', 
                       help='The dimensionality reduction is performed using the Local Tangent Space'
                       'Alignment. See http://www.stat.missouri.edu/~ys873/research/LTSA11.pdf')

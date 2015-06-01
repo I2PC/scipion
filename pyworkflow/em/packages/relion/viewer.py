@@ -659,6 +659,8 @@ Examples:
                 prefixes = ['half1_']
             elif halves == 1:
                 prefixes = ['half2_']
+            elif halves == 3:
+                prefixes = ['final']
         return prefixes
     
     def _iterAngles(self, mdOut):
