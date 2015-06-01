@@ -85,6 +85,9 @@ public:
 
     /** Use it for validation */
     bool useForValidation = false;
+
+    size_t numOrientationsPerParticle = 0;
+
 public: // Internal members
     size_t rank, Nprocessors;
 
@@ -146,6 +149,9 @@ public:
 
     /// Generate projections from the current volume
     void generateProjections();
+
+    ///
+    void numberOfProjections();
 
     /// Align images to gallery projections
     void alignImagesToGallery();
