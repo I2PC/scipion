@@ -25,8 +25,8 @@
 # *
 # **************************************************************************
 
-from os.path import join
-
+from os.path import join, isfile
+from shutil import copyfile
 from pyworkflow.object import Float, String
 from pyworkflow.protocol.params import (PointerParam, FloatParam, STEPS_PARALLEL,
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
@@ -72,20 +72,32 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                       label="Angular Sampling (degrees)",  
                       help='Angular distance (in degrees) between neighboring projection points ')
 
-        form.addParam('alpha', FloatParam, default=0.05,
-                      label="Significance value",  
-                      help='Parameter to define the corresponding most similar volume \n' 
+        form.addParam('numOrientations', FloatParam, default=10,
+                      label="Number of Orientations for particle",  
+                      help='Parameter to define the number of most similar volume \n' 
                       '    projected images for each projection image')
+        
+        form.addParam('phaseFlipped', BooleanParam, default=False,
+                      label="Is the data already phase flipped?",
+                      help='In case the data has been already phase flipped select True')
+        
+
+        form.addParam('doNotUseWeights', BooleanParam, default=False,
+                      label="Do not use the weights",
+                      help='Do not use the weights in the clustering calculation')
         
         form.addParallelSection(threads=1, mpi=1)
 
     #--------------------------- INSERT steps functions --------------------------------------------
 
-    def _insertAllSteps(self):        
+    def _insertAllSteps(self):   
+             
         convertId = self._insertFunctionStep('convertInputStep', 
                                              self.inputParticles.get().getObjId())
         deps = [] # store volumes steps id to use as dependencies for last step
-        commonParams = self._getCommonParams()
+        commonParams    = self._getCommonParams()
+        commonParamsRef = self._getCommonParamsRef()
+        
         sym = self.symmetryGroup.get()
         for i, vol in enumerate(self._iterInputVols()):
             volName = getImageLocation(vol)
@@ -93,6 +105,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
             
             sigStepId = self._insertFunctionStep('significantStep', 
                                                  volName, volDir,
+                                                 'exp_particles.xmd',
                                                  commonParams, 
                                                  prerequisites=[convertId])
             
@@ -103,13 +116,14 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
 
             sigStepId = self._insertFunctionStep('significantStep', 
                                                  volName, volDir,
+                                                 'ref_particles.xmd',
                                                  commonParamsRef, 
                                                  prerequisites=[phanProjStepId])
 
 
             volStepId = self._insertFunctionStep('validationStep', 
                                                  volName, volDir,
-                                                 sym, 
+                                                 sym,
                                                  prerequisites=[sigStepId])
             
             deps.append(volStepId)
@@ -122,43 +136,74 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         particlesId: is only need to detect changes in
         input particles and cause restart from here.
         """
+        a = self.inputParticles.get() 
+        print a.printAll() 
         writeSetOfParticles(self.inputParticles.get(), 
-                            self._getTmpPath('input_particles.xmd'))
+                            self._getPath('input_particles.xmd'))
                     
     def _getCommonParams(self):
-        params =  '  -i %s' % self._getTmpPath('input_particles.xmd')        
+        params =  '  -i %s' % self._getPath('input_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
-        params += ' --alpha0 %0.3f --alphaF %0.3f' % (self.alpha.get(),self.alpha.get())
+        params += ' --alpha0 0.05 --alphaF 0.05'
         params += ' --angularSampling %0.3f' % self.angularSampling.get()
+        params += ' --dontReconstruct'
+        params += ' --useForValidation %d' % self.numOrientations.get()
         return params
     
     def _getCommonParamsRef(self):
-        params =  '  -i %s' % self._getTmpPath('reference_particles.xmd')        
+        params =  '  -i %s' % self._getPath('reference_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
-        params += ' --alpha0 %0.3f --alphaF %0.3f' % (self.alpha.get(),self.alpha.get())
+        params += ' --alpha0 0.05 --alphaF 0.05'
         params += ' --angularSampling %0.3f' % self.angularSampling.get()
+        params += ' --dontReconstruct'
+        params += ' --useForValidation %d' % self.numOrientations.get()
         return params
     
-    def phantomProject(self,volName):        
-        pathParticles = self._getTmpPath('input_particles.xmd')
+    def phantomProject(self,volName):
+        
+        nproc = self.numberOfMpi.get()
+        nT=self.numberOfThreads.get()         
+        pathParticles = self._getPath('input_particles.xmd')
         Nx,Ny,Nz = self.inputParticles.get().getDim()
-        f = open(self._getExtraPath('params'),'w')
+        R = -int(Nx/2)
+
+        f = open(self._getExtraPath('params'),'w') 
+        if (self.phaseFlipped.get()):
+            doPhaseFlip = 1
+        else:
+            doPhaseFlip = 0  
+        print doPhaseFlip             
         f.write("""# XMIPP_STAR_1 *
 #
 data_block1
 _dimensions2D '%d %d'
 _projAngleFile %s
-_noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles))
-        
+_ctfPhaseFlipped %d
+_applyShift 0
+_noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
+        f.close()
         param =     ' -i %s' % volName
-        param +=    ' --params' % self._getExtraPath('params')
-        param +=    ' -o' % self._getTmpPath('reference_particles.xmd')
-               
-        self.runJob('xmipp_phantom_project', 
-                    params, numberOfMpi=1,numberOfThreads=1)
+        param +=    ' --params %s' % self._getExtraPath('params')
+        param +=    ' -o %s' % self._getPath('reference_particles.xmd')
+        param +=    ' --sampling_rate % 0.3f' % self.inputParticles.get().getSamplingRate()
+                
+        #while (~isfile(self._getExtraPath('params'))):
+        #    print 'No created'
         
+        self.runJob('xmipp_phantom_project', 
+                    param, numberOfMpi=1,numberOfThreads=1)
+
+        param =     ' -i %s' % self._getPath('reference_particles.stk')
+        param +=    ' --mask circular %d' % R
+        self.runJob('xmipp_transform_mask', 
+                    param, numberOfMpi=1,numberOfThreads=1)
+                
     
-    def significantStep(self, volName, volDir, params):
+    def numberOfProjections(self,sym,angularSampling):
+        #http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/HowManyReferenceProjections
+        dict = {0.5: 165016, 1.0: 41258, 1.5: 18338, 2.0: 10318, 2.5: 6600, 3.0: 4586, 3.5: 3367,4.0: 2586, 4.5: 2042, 5.0: 1652, 5.5: 1367, 6.0: 1148, 6.5: 977, 7.0: 843, 7.5: 732, 8.0: 643, 8.5: 569, 9.0: 510, 9.5: 460, 10.0: 412, 11.0: 340, 12.0: 288, 13.0: 245, 14.0: 211, 15.0: 184};
+    
+    def significantStep(self, volName, volDir, anglesPath, params):
 
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get() 
@@ -168,13 +213,22 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles))
         params += ' --iter %d' % 1
         self.runJob('xmipp_reconstruct_significant', 
                     params, numberOfMpi=nproc,numberOfThreads=nT)
+        copyfile(volDir+'/angles_iter001_00.xmd', self._getExtraPath(anglesPath))
         
-    def validationStep(self, volName, volDir,sym):
+    def validationStep(self, volName,volDir,sym):
         makePath(volDir)  
+        aFile = self._getExtraPath('exp_particles.xmd')
+        aFileRef =self._getExtraPath('ref_particles.xmd')
         params = '  --volume %s' % volName  
+        params += '  --angles_file %s' % aFile
+        params += '  --angles_file_ref %s' % aFileRef
         params += ' --odir %s' % volDir
         params += ' --sym %s' % sym
-        self.runJob('xmipp_validation_nontilt', params,numberOfMpi=1,numberOfThreads=1)
+        
+        if (self.doNotUseWeights.get()) :
+            params += ' --dontUseWeights'
+            
+        self.runJob('xmipp_multireference_aligneability', params,numberOfMpi=1,numberOfThreads=1)
         
     def createOutputStep(self):
         outputVols = self._createSetOfVolumes()
@@ -190,7 +244,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles))
             moveFile(join(volDir, 'clusteringTendency.xmd'), clusterMd)
             
             md = xmipp.MetaData(validationMd)
-            weight = md.getValue(xmipp.MDL_WEIGHT, md.firstObject())
+            weight = md.getValue(xmipp.MDL_MAXCC, md.firstObject())
             volume.weight = Float(weight)
             volume.clusterMd = String(clusterMd)
             volume.cleanObjId() # clean objects id to assign new ones inside the set
@@ -238,7 +292,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles))
     def _methods(self):
         messages = []
         if (hasattr(self,'outputVolumes')):
-            messages.append('The quality parameter(s) has been obtained using the approach [Vargas2014a] with angular sampling of %f and significant value of %f' % (self.angularSampling.get(), self.alpha.get()))
+            messages.append('The quality parameter(s) has been obtained using the approach [Vargas2014a] with angular sampling of %f and number of orientations of %f' % (self.angularSampling.get(), self.numOrientations.get()))
         return messages
     
     def _citations(self):
