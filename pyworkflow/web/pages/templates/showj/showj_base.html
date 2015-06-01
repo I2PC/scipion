@@ -103,7 +103,7 @@ $(document).ready(function(){
 }); 
 </script>
 
-{% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %}
+<!-- {% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %} -->
 <script type="text/javascript">	
 function setImageSize(refreshElement){
 	/* Gets zoom and image width and height */
@@ -207,7 +207,7 @@ function setImageSize(refreshElement){
 	if ($("#colRowModeImage").length > 0 && $("#colRowModeImage").attr("src").indexOf("On") != -1){initializeColsRows()}
 }
 </script>
-{% endif %}
+<!-- {% endif %} -->
 {% block head %}  {% endblock %}
 {% endblock %}
 
