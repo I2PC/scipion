@@ -805,7 +805,7 @@ class ParamWidget():
         
         elif t is params.MultiPointerParam:
             tp = MultiPointerTreeProvider(self._protocol.mapper)
-            tree = BoundTree(content, tp)
+            tree = BoundTree(content, tp, height=5)
             var = MultiPointerVar(tp, tree)
             tree.grid(row=0, column=0, sticky='w')
             self._addButton("Select", Icon.ACTION_SEARCH, self._browseObject)
@@ -980,7 +980,6 @@ class ParamWidget():
             
     def _openProtocolForm(self, e=None):
         className = self.get().strip()
-        
         if len(className):
             instanceName = self.paramName + "Instance"
             protocol = self._protocol
@@ -1522,13 +1521,12 @@ class FormWindow(Window):
             
         errors = self.protocol.validate()
         
-        if len(errors):
+        if errors:
             self.showError(errors)
         else:
             warns = self.protocol.warnings()
-#             if len(warns):
-#                 self.showWarning('\n'.join(warns))
-#             else:
+            if warns:
+                self.showWarning('\n'.join(warns))
             self._close()
         
     def _close(self, onlySave=False):

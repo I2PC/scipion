@@ -693,7 +693,7 @@ class TestXmippRansacGroel(TestXmippRansacMda):
         cls.samplingRate = 2.1
         cls.symmetryGroup = 'd7'
         cls.angularSampling = 7
-        cls.nRansac = 2350
+        cls.nRansac = 400
         cls.numSamples = 10
         cls.dimRed = True
         cls.numVolumes = 10

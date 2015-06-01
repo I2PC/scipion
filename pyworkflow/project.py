@@ -324,8 +324,7 @@ class Project(object):
         2. Create the working dir and also the protocol independent db
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
-        
-        #if protocol.getStatus() != STATUS_INTERACTIVE:
+
         if not protocol.isInteractive():
             self._checkModificationAllowed([protocol], 'Cannot RE-LAUNCH protocol')
         protocol.setStatus(pwprot.STATUS_LAUNCHED)

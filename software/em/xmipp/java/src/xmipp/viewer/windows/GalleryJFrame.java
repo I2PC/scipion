@@ -212,7 +212,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
                     
 			this.data = data;
-                        data.setWindow(this);
+            data.setWindow(this);
 			createModel();
 			createGUI();
 			XmippApplication.addInstance(false);

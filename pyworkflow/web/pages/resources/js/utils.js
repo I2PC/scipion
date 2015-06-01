@@ -128,6 +128,8 @@ function detectWebBrowser(){
 	return res;
 }
 
+
+
 function popup(URL) {
 	/*
 	 * Launch a basic popup (600x500) opening the URL passed by argument.
