@@ -334,21 +334,22 @@ def main():
 
         if '--help' in args:
             print("""usage: %s [<target>] [--no-scipy] [--no-opencv] [--show]
+
 Installs Scipion. Also used to install only part of it, as specified
 in the <target>, or to add extra em packages to Scipion.
-arguments:
+
+Arguments:
   <target>      a library, a python module, an em package or a xmipp file
-  --show        do not install, just show what would be done
+  --show        just show what would be done, without actually installing
   --no-opencv   do not install opencv (big) or anything that depends on it
   --no-scipy    do not install scipy or anything that depends on it
 """ % ' '.join(sys.argv[:2]))
-            sys.exit()
-
-        # Create folders if needed.
-        for path in DIRS_GLOBAL.values():
-            if not exists(path):
-                sys.stdout.write("  Creating folder %s ...\n" % path)
-                os.makedirs(path)
+        else:
+            # Create folders if needed.
+            for path in DIRS_GLOBAL.values():
+                if not exists(path):
+                    sys.stdout.write("  Creating folder %s ...\n" % path)
+                    os.makedirs(path)
 
         def build(args):
             # Just importing the script will launch the install actions
