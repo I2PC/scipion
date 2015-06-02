@@ -104,6 +104,7 @@ class ProtRelionBase(EMProtocol):
                   'bfactors': self.extraIter + 'data_shiny_bfactors.star',
                   'dataFinal' : self._getExtraPath("relion_data.star"),
                   'modelFinal' : self._getExtraPath("relion_model.star"),
+                  'finalvolume' : self._getExtraPath("relion_class%(ref3d)03d.mrc:mrc")
                   
                   }
         # add to keys, data.star, optimiser.star and sampling.star
