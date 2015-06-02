@@ -144,6 +144,7 @@ class ProjectWindow(ProjectBaseWindow):
     def _loadWorkflow(self, obj):
         try:
             self.project.loadProtocols(obj.getPath())
+            self.getViewWidget().updateRunsGraph(True, reorganize=True)
         except Exception, ex:
             self.showError(str(ex))
             
