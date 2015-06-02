@@ -595,7 +595,7 @@ def get_slice(request):
     
     # from PIL import Image
 #   img = getPILImage(imgXmipp, None, False)
-    img = getPILImage(imgXmipp)
+    img = getPILImage(imgXmipp, normalize=False)
     response = HttpResponse(mimetype="image/png")
     
     if img.mode != 'RGB':
