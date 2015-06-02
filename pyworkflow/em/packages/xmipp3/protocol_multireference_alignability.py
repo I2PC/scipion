@@ -32,12 +32,13 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, STEPS_PARALLEL
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume
 from pyworkflow.em import Viewer
+import pyworkflow.em.metadata as md
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.utils.path import moveFile, makePath
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
                                                    writeSetOfVolumes,
-                                                   getImageLocation)
-import xmipp
+                                                   getImageLocation,
+                                                   readSetOfParticles)
 
 
 class XmippProtMultiRefAlignability(ProtAnalysis3D):
@@ -232,9 +233,9 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
         
     def createOutputStep(self):
         outputVols = self._createSetOfVolumes()
-        
+        imgSet = self.inputParticles.get()
         for i, vol in enumerate(self._iterInputVols()):
-            volume = vol.clone()
+            volume = vol.clone()               
             volDir = self._getVolDir(i+1)
             volPrefix = 'vol%03d_' % (i+1)
             validationMd = self._getExtraPath(volPrefix + 'validation.xmd')
@@ -243,12 +244,22 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
             clusterMd = self._getExtraPath(volPrefix + 'clusteringTendency.xmd')
             moveFile(join(volDir, 'clusteringTendency.xmd'), clusterMd)
             
-            md = xmipp.MetaData(validationMd)
-            weight = md.getValue(xmipp.MDL_MAXCC, md.firstObject())
+            outImgSet = self._createSetOfParticles(volPrefix)
+            
+            outImgSet.copyInfo(imgSet)
+            #readSetOfParticles(String(clusterMd), outImgSet)
+
+            outImgSet.copyItems(imgSet,
+                                updateItemCallback=self._setWeight,
+                                itemDataIterator=md.iterRows(clusterMd))
+                        
+            mdValidatoin = md.MetaData(validationMd)
+            weight = mdValidatoin.getValue(md.MDL_WEIGHT, mdValidatoin.firstObject())
             volume.weight = Float(weight)
             volume.clusterMd = String(clusterMd)
-            volume.cleanObjId() # clean objects id to assign new ones inside the set
-            outputVols.append(volume)                
+            volume.cleanObjId() # clean objects id to assign new ones inside the set            
+            outputVols.append(volume)
+            self._defineOutputs(outputParticles=outImgSet)
         
         outputVols.setSamplingRate(volume.getSamplingRate())
         self._defineOutputs(outputVolumes=outputVols)
@@ -317,7 +328,6 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
             for vol in inputVols:
                 yield vol
         
-        
     def _defineMetadataRootName(self, mdrootname,volId):
         
         if mdrootname=='P':
@@ -335,4 +345,8 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
     def _defineVolumeName(self,volId):
         fscFn = self._defineMetadataRootName('Volume',volId)
         return fscFn
+    
+    def _setWeight(self, item, row):  
+        item._xmipp_weightClusterability = Float(row.getValue(md.MDL_VOLUME_SCORE1))
+        print row.getValue(md.MDL_VOLUME_SCORE1), item._xmipp_weightClusterability
 

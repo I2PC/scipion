@@ -120,6 +120,7 @@ void MultireferenceAligneability::run()
 		if ( (tempMdExp.size()==0) || (tempMdProj.size()==0))
 			continue;
 
+		tempMdExp.getRow(row,1);
 		calc_sumu(tempMdExp, sum_w_exp);
 		calc_sumu(tempMdProj, sum_w_proj);
 
@@ -132,15 +133,16 @@ void MultireferenceAligneability::run()
 
 		validation += (rank>0.5);
 		tempMdExp.getValue(MDL_IMAGE,imagePath,1);
-		row.setValue(MDL_IMAGE,imagePath);
-		row.setValue(MDL_IMAGE_IDX,i);
-		row.setValue(MDL_WEIGHT,rank);
-		row.setValue(MDL_VOLUME_SCORE1,sum_w_proj);
-		row.setValue(MDL_VOLUME_SCORE2,sum_w_exp);
-		row.setValue(MDL_VOLUME_SCORE3,sum_noise);
+		//row.setValue(MDL_IMAGE,imagePath);
+		//row.setValue(MDL_IMAGE_IDX,i);
+		row.setValue(MDL_VOLUME_SCORE1,rank);
+		row.setValue(MDL_VOLUME_SCORE2,sum_w_proj);
+		row.setValue(MDL_VOLUME_SCORE3,sum_w_exp);
+		row.setValue(MDL_VOLUME_SCORE4,sum_noise);
 
 		mdOutCL.addRow(row);
 
+		row.clear();
 		tempMdExp.clear();
 		tempMdProj.clear();
 		progress_bar(i+1);
@@ -186,7 +188,6 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
     double tempW;
     double W;
     double sumW;
-    double * weightsDistribution = new double[tempMd.size()];
 
     sumW = 0;
     size_t idx = 0;
@@ -196,7 +197,7 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
         //tempMd.getValue(MDL_WEIGHT,w,__iter.objId);
         tempMd.getValue(MDL_MAXCC,w,__iter.objId);
-        weightsDistribution[idx] = w;
+
         idx++;
         x = sin(tilt*PI/180.)*cos(rot*PI/180.);
         y = sin(tilt*PI/180.)*sin(rot*PI/180.);
