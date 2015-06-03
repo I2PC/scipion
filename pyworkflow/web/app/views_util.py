@@ -578,10 +578,8 @@ def get_slice(request):
 #             parts = imagePath.split('@')
 #             imageNo = parts[0]
 #             imagePath = parts[1]
-    
     imagePath = convertVolume(request, imagePath)
     imgXmipp = xmipp.Image()
-    
     if sliceNo is None:
         imgXmipp.readPreview(imagePath, int(imageDim))
     else:
@@ -655,7 +653,7 @@ def getTmpVolumePath(fileName):
     baseName, _ = os.path.splitext(fileName)
     return '%s_tmp%s' % (baseName, '.mrc')
     
-    
+    #This convert is only used in table mode
 def convertVolume(request, path):
     imgFn = os.path.join(request.session['projectPath'], path)
     imgFn = imgFn.replace(':mrc', '')
@@ -666,7 +664,9 @@ def convertVolume(request, path):
     if not os.path.exists(imgConvertedFn):
         img = xmipp.Image()
         img.read(str(imgFn))
-        img.convert2DataType(xmipp.DT_FLOAT , xmipp.CW_ADJUST)
+        img.convert2DataType(xmipp.DT_UCHAR , xmipp.CW_ADJUST)
+        print "volume after conversion"
+        print img.getData()
         img.write(imgConvertedFn)
     return imgConvertedFn
 
@@ -698,7 +698,6 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     if (convert or reslice) and not os.path.exists(imgFn):
         _newPath = getTmpVolumePath(imgFn)
         img.write(_newPath)
-    
     return _newPath, _stats
 
 

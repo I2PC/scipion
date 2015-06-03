@@ -60,10 +60,10 @@ public class SupervisedParticlePicker extends ParticlePicker
 	private String templatesfile;
 	private int templateindex;
 	private PickingClassifier classifier;
-        private UpdateTemplatesTask uttask;
-        private TemplatesJDialog dialog;
-        private boolean isautopick;
-        private boolean existspsd;
+    private UpdateTemplatesTask uttask;
+    private TemplatesJDialog dialog;
+    private boolean isautopick;
+    private boolean existspsd;
 
 	// private String reviewfile;
 
