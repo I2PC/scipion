@@ -224,8 +224,7 @@ MODE_TESTS = 'tests' # keep tests for compatibility
 MODE_TEST = 'test' # also allow 'test', in singular
 MODE_TEST_DATA = 'testdata'
 MODE_HELP = 'help'
-MODE_DBBROWSE = 'browser'
-MODE_VIEWER = 'viewer'
+MODE_VIEWER = ['viewer', 'view', 'show']
 MODE_INSTALL = 'install'
 MODE_UNINSTALL = 'uninstall'
 MODE_CONFIG = 'config'
@@ -296,11 +295,7 @@ def main():
     elif mode == MODE_TEST_DATA:
         runScript('scripts/sync_data.py %s' % ' '.join(sys.argv[2:]))
 
-    # TODO(josemiguel): review and see if we really need it.
-    elif mode == MODE_DBBROWSE:
-        runApp('pw_browser.py', args=sys.argv[2:])
-
-    elif mode == MODE_VIEWER:
+    elif mode in MODE_VIEWER:
         runApp('pw_viewer.py', args=sys.argv[2:], chdir=False)
 
     elif mode == MODE_UNINSTALL:
@@ -474,7 +469,6 @@ Arguments:
         sys.stdout.write("""\
 Usage: scipion [MODE] [ARGUMENTS]
 MODE can be:
-    browser                Browse a dir or an sqlite database.
     config                 Write default configuration.
     help                   Print this help message.
     install [OPTION]       Download and install all the necessary software to run Scipion.
@@ -509,7 +503,7 @@ MODE can be:
                              
     tutorial [NAME]        Create a new protocol with a tutorial workflow loaded.
                            If NAME is empty, the list of available tutorials are shown. 
-    viewer [FILE]          Open a file with Scipion's showj program.
+    viewer | view | show [ARGS] Open a file with Scipion's showj program or Browser if a directory.
     webserver [OPTION]     Launch webserver. Scipion can be then controlled from a web browser.
                            OPTION can be:
                              django: open local django webserver (default)
