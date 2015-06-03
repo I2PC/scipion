@@ -32,7 +32,7 @@ from pyworkflow.protocol.params import PointerParam, BooleanParam, FloatParam, I
 
 from pyworkflow.em.packages.relion.convert import writeSetOfParticles
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
-
+import pyworkflow.em as em
 
 class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     """ Wrapper to Relion preprocess program.
@@ -159,7 +159,12 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     
     def createOutputStep(self):
         inputSet = self.inputParticles.get()
-        imgSet = self._createSetOfParticles()
+        
+        if isinstance(inputSet, em.SetOfAverages):
+            imgSet = self._createSetOfAverages()
+        else:
+            imgSet = self._createSetOfParticles()
+            
         imgSet.copyInfo(inputSet)
         if self.doScale:
             oldSampling = inputSet.getSamplingRate()

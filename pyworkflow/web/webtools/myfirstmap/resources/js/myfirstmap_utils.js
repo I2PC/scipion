@@ -41,9 +41,7 @@ function serviceTestDataForm(){
 	var title = 'Test data'
 	var dialog = ""
 		
-	dialog += "<p>You have two options to use <strong>Test data</strong> :<br />" +
-        "1.- <strong>Create a project</strong> with <strong>Test data</strong> already imported inside.<br />" +	
-		"2.- <strong>Download</strong> test files to your computer, to be manually imported into an already created project.</p>";
+	dialog += "<strong>Create a project</strong> with <strong>Test data</strong> already imported inside.<br /></p>";
 	dialog += "<br />";
 	dialog += '<div id="testData">';
 	dialog += "<p>Select <strong>Test data</strong>:</p>";
@@ -58,20 +56,14 @@ function serviceTestDataForm(){
 	dialog += '<br />';
 	dialog += "</div>";
 	dialog += "<br />";
-    dialog += "<p>After selection, choose your option.</p>";
 
     
     var btn1 = 'Create project'
 	var ico1 = 'fa-check'
 	var funcName1 = 'createServProject';	
 		
-	var btn2 = 'Download'
-	var ico2 = 'fa-download';
-	var funcName2 = 'downloadTestdata';
-	
 	accessPopup2opt(title, dialog, 
 					 btn1, ico1, funcName1, 
-					 btn2, ico2, funcName2, 
 					 "Cancel")
 }
 

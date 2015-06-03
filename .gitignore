@@ -39,7 +39,8 @@
 
 # Other
 /software/tmp
-/software/bin
+/software/bin/*
+!/software/bin/python_scipion
 /software/cfg
 /software/include
 /software/install

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# coding: latin-1
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -25,34 +25,27 @@
 # *
 # **************************************************************************
 """
-Launch main project window 
+Bibtex string file for Xmipp package.
 """
 
-import sys
-import pyworkflow.utils as pwutils
+_bibtexStr = """
+@article{Heymann2007,
+title = "Bsoft: Image processing and molecular modeling for electron microscopy ",
+journal = "Journal of Structural Biology ",
+volume = "157",
+number = "1",
+pages = "3 - 18",
+year = "2007",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2006.06.006",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847706001997",
+author = "J. Bernard Heymann and David M. Belnap",
+keywords = "Single particle analysis Tomography",
+}
+"""
 
 
 
-if __name__ == '__main__':
+from pyworkflow.utils import parseBibTex
 
-    program = sys.argv[1]
-    params = ' '.join('"%s"' % x for x in sys.argv[2:])
-    
-    env = None
-    
-    if program.startswith('xmipp'):
-        import pyworkflow.em.packages.xmipp3 as xmipp3
-        env = xmipp3.getEnviron()
-    if program.startswith('relion'):
-        import pyworkflow.em.packages.relion as relion
-        env = relion.getEnviron()        
-    elif (program.startswith('e2') or 
-          program.startswith('sx')):
-        import pyworkflow.em.packages.eman2 as eman2
-        env = eman2.getEnviron()
-    elif program.startswith('b'):
-        import pyworkflow.em.packages.bsoft as bsoft
-        env = bsoft.getEnviron()
-    
-    pwutils.runJob(None, program, params, env=env)
-         
+_bibtex = parseBibTex(_bibtexStr)  

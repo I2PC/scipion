@@ -578,10 +578,8 @@ def get_slice(request):
 #             parts = imagePath.split('@')
 #             imageNo = parts[0]
 #             imagePath = parts[1]
-    
     imagePath = convertVolume(request, imagePath)
     imgXmipp = xmipp.Image()
-    
     if sliceNo is None:
         imgXmipp.readPreview(imagePath, int(imageDim))
     else:
@@ -595,7 +593,7 @@ def get_slice(request):
     
     # from PIL import Image
 #   img = getPILImage(imgXmipp, None, False)
-    img = getPILImage(imgXmipp)
+    img = getPILImage(imgXmipp, normalize=False)
     response = HttpResponse(mimetype="image/png")
     
     if img.mode != 'RGB':
@@ -655,10 +653,10 @@ def getTmpVolumePath(fileName):
     baseName, _ = os.path.splitext(fileName)
     return '%s_tmp%s' % (baseName, '.mrc')
     
-    
+    #This convert is only used in table mode
 def convertVolume(request, path):
     imgFn = os.path.join(request.session['projectPath'], path)
-    imgFn.replace(':mrc', '')
+    imgFn = imgFn.replace(':mrc', '')
     imgConvertedFn = getTmpVolumePath(imgFn)
     # For rendering volume slices over the web, PIL need that
     # the volume is stored with a specific datatype
@@ -666,7 +664,9 @@ def convertVolume(request, path):
     if not os.path.exists(imgConvertedFn):
         img = xmipp.Image()
         img.read(str(imgFn))
-        img.convert2DataType(xmipp.DT_FLOAT , xmipp.CW_ADJUST)
+        img.convert2DataType(xmipp.DT_UCHAR , xmipp.CW_ADJUST)
+        print "volume after conversion"
+        print img.getData()
         img.write(imgConvertedFn)
     return imgConvertedFn
 
@@ -677,7 +677,7 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], path)
-    img.read(str(imgFn))
+    imgFn = imgFn.replace(':mrc', '')
     
     if not convert and not reslice and not getStats:
 #         img.read(str(imgFn), xmipp.HEADER)
@@ -698,7 +698,6 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     if (convert or reslice) and not os.path.exists(imgFn):
         _newPath = getTmpVolumePath(imgFn)
         img.write(_newPath)
-    
     return _newPath, _stats
 
 
