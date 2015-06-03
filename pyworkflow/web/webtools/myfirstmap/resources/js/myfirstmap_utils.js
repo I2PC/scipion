@@ -62,9 +62,8 @@ function serviceTestDataForm(){
 	var ico1 = 'fa-check'
 	var funcName1 = 'createServProject';	
 		
-	accessPopup2opt(title, dialog, 
-					 btn1, ico1, funcName1, 
-					 "Cancel")
+		
+	accessPopup(title, dialog, funcName1, btn1, "Cancel")
 }
 
 function goExampleForm(){
