@@ -112,10 +112,10 @@ class ThreadStepExecutor(StepExecutor):
         while True:
             # See which of the runningSteps are not really running anymore.
             # Update them and freeNodes, and call final callback for step.
-            notRunning = [node for node, step in runningSteps.iteritems()
-                              if not step.isRunning()]
+            nodesFinished = [node for node, step in runningSteps.iteritems()
+                             if not step.isRunning()]
             doContinue = True
-            for node in notRunning:
+            for node in nodesFinished:
                 step = runningSteps.pop(node)  # remove entry from runningSteps
                 freeNodes.append(node)  # the node is available now
                 doContinue = stepFinishedCallback(step)  # and do final work on the finished step
