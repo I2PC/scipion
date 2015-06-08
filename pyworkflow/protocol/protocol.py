@@ -151,6 +151,9 @@ class Step(OrderedObject):
     def isAborted(self):
         return self.getStatus() == STATUS_ABORTED
 
+    def isLaunched(self):
+        return self.getStatus() == STATUS_LAUNCHED
+
     def isInteractive(self):
         return self.interactive.get()
     
