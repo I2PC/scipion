@@ -69,27 +69,32 @@ class StepExecutor():
 
 class StepThread(threading.Thread):
     """ Thread to run Steps in parallel. """
-    def __init__(self, thId, step):
+    def __init__(self, thId, step, lock):
         threading.Thread.__init__(self)
         self.thId = thId
         self.step = step
+        self.lock = lock
 
     def run(self):
         try:
             self.step._run()  # not self.step.run() , to avoid race conditions
-            self.step.setStatus(cts.STATUS_FINISHED)
+            with self.lock:
+                self.step.setStatus(cts.STATUS_FINISHED)
         except Exception as e:
-            self.step.setFailed(str(e))
+            with self.lock:
+                self.step.setFailed(str(e))
             traceback.print_exc()
         finally:
-            self.step.endTime.set(datetime.datetime.now())
-
+            with self.lock:
+                self.step.endTime.set(datetime.datetime.now())
 
 class ThreadStepExecutor(StepExecutor):
     """ Run steps in parallel using threads. """
     def __init__(self, hostConfig, nThreads):
         StepExecutor.__init__(self, hostConfig)
         self.numberOfProcs = nThreads
+        self._lock = threading.Lock()
+        self.sharedLock = threading.Lock()
         
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         """ Create threads and synchronize the steps execution.
@@ -112,8 +117,9 @@ class ThreadStepExecutor(StepExecutor):
         while True:
             # See which of the runningSteps are not really running anymore.
             # Update them and freeNodes, and call final callback for step.
-            nodesFinished = [node for node, step in runningSteps.iteritems()
-                             if not step.isRunning()]
+            with self._lock:
+                nodesFinished = [node for node, step in runningSteps.iteritems()
+                                 if not step.isRunning()]
             doContinue = True
             for node in nodesFinished:
                 step = runningSteps.pop(node)  # remove entry from runningSteps
@@ -125,6 +131,7 @@ class ThreadStepExecutor(StepExecutor):
                 break
 
             # If there are available nodes, send next runnable step.
+            self._lock.acquire()
             if freeNodes:
                 step = getRunnable()
                 if step is not None:
@@ -134,9 +141,12 @@ class ThreadStepExecutor(StepExecutor):
                     stepStartedCallback(step)
                     node = freeNodes.pop()  # take an available node
                     runningSteps[node] = step
-                    StepThread(node, step).start()
+                    t = StepThread(node, step, self.sharedLock)
+                    t.daemon = True  # won't keep process up if main thread ends
+                    t.start()
                 elif not any(s.isRunning() for s in steps):  # nothing running
                     break  # yeah, we are done, either failed or finished :)
+            self._lock.release()
 
             time.sleep(0.1)  # be gentle on the main thread
 
