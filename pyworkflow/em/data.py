@@ -478,7 +478,7 @@ class Image(EMObject):
             dimStr = str(ImageDim(*dim))
         else:
             dimStr = 'No-Dim'
-        return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr, self.getSamplingRate())
+        return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr, self.getSamplingRate() or 99999.)
     
     def getFiles(self):
         filePaths = set()
