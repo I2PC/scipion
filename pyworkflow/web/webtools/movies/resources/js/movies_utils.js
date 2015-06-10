@@ -98,7 +98,7 @@ function getProjExample(elm){
 
 
 function createMovProject(elm) {
-	var projName = "mov"+randomString(32, '#aA')
+	var projName = "mov"+randomString(16, '#aA')
 	
 	var selected = $("#testData input[type='radio']:checked").val();
 
