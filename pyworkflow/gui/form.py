@@ -58,18 +58,23 @@ MPI = 'MPI'
 
 class BoolVar():
     """Wrapper around tk.IntVar"""
-    def __init__(self, value=False):
+    def __init__(self, value=None):
         self.tkVar = tk.IntVar()
         self.set(value)
         self.trace = self.tkVar.trace
         
     def set(self, value):
-        if value:
+        if value is None:
+            self.tkVar.set(-1)
+        elif value:
             self.tkVar.set(1)
         else:
             self.tkVar.set(0)    
             
     def get(self):
+        if self.tkVar.get() == -1:
+            return None
+
         return self.tkVar.get() == 1    
     
     

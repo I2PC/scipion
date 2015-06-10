@@ -136,11 +136,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       help='Invert the contrast if your particles are black over a white background.')
         
         form.addParam('doFlip', BooleanParam, default=None,
-                      label='Phase flipping:', 
+                      label='Phase flipping:',
                       help='This option correct the phases contrast if your data are not'
                            'phase-corrected. Use this option wisely, in dependence of the'
                            'protocols that you will run.')
-        
         form.addParam('doNormalize', BooleanParam, default=True,
                       label='Normalize (Recommended)', 
                       help='It subtract a ramp in the gray values and normalizes so that in the '
