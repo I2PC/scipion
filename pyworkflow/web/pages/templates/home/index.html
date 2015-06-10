@@ -282,6 +282,7 @@ text-decoration: none;
 </style>
 
 <!-- JS -->
+<script type="text/javascript" src="{{config}}"></script>
 </head>
 <body>
 	<div id="bodyStyle">
@@ -315,13 +316,13 @@ text-decoration: none;
 					</h3>
 					<br /><br />
 					<div id="buttonSection">
-						<a href="javascript:getAbsoluteURL('/download_form/)" class="downloadButton"> 
+						<a href="javascript:goWithSubDomainURL('/download_form/')" class="downloadButton"> 
 							Download 
 						</a>
 						<a href="http://scipion.cnb.csic.es/docs/" class="documentationButton">
 							Documentation 
 						</a>
-						<a href="javascript:getAbsoluteURL('/services/)'" class="documentationButton"> 
+						<a href="javascript:goWithSubDomainURL('services/')" class="documentationButton"> 
 							Web Tools 
 						</a>
 					</div>

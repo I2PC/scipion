@@ -177,35 +177,35 @@ class ProjectWindow(ProjectBaseWindow):
         self.queue.put(lambda: plotFile(path, *args).show())
     
 
-    def runObjectCommand(self, cmd, protocolStrId, objStrId):
+    def runObjectCommand(self, cmd, inputStrId, objStrId):
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
         from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots, PLOT_POLAR, PLOT_CART, PLOT_POLARCART
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createVmdView
-        protocolId = int(protocolStrId)
+        inputId = int(inputStrId)
         objId = int(objStrId)
         project = self.project
-        protocol = project.mapper.selectById(protocolId)
+        inputObj = project.mapper.selectById(inputId)
 
         #Plotter.setBackend('TkAgg')
         if cmd == OBJCMD_NMA_PLOTDIST:
-            self.queue.put(lambda: createDistanceProfilePlot(protocol, modeNumber=objId).show())
+            self.queue.put(lambda: createDistanceProfilePlot(inputObj, modeNumber=objId).show())
 
         elif cmd == OBJCMD_NMA_VMD:
-            vmd = createVmdView(protocol, modeNumber=objId)
+            vmd = createVmdView(inputObj, modeNumber=objId)
             vmd.show()
 
         elif cmd == OBJCMD_MOVIE_ALIGNPOLAR:
-            self.queue.put(lambda: createPlots(PLOT_POLAR, protocol, objId))
+            self.queue.put(lambda: createPlots(PLOT_POLAR, inputObj, objId))
 
         elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
-            self.queue.put(lambda: createPlots(PLOT_CART, protocol, objId))
+            self.queue.put(lambda: createPlots(PLOT_CART, inputObj, objId))
 
         elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
-            self.queue.put(lambda: createPlots(PLOT_POLARCART, protocol, objId))
+            self.queue.put(lambda: createPlots(PLOT_POLARCART, inputObj, objId))
         
         elif cmd == OBJCMD_CTFFIND4:
             from pyworkflow.em.packages.grigoriefflab.viewer import createCtfPlot
-            self.queue.put(lambda: createCtfPlot(protocol, objId))
+            self.queue.put(lambda: createCtfPlot(inputObj, objId))
     
     def recalculateCTF(self, inputObjId, sqliteFile):
         """ Load the project and launch the protocol to
