@@ -153,4 +153,11 @@ def findWizards(protocol, environment):
 #globals().update(emProtocolsDict)
 #globals().update(emObjectsDict)
 #globals().update(emViewersDict)
+
+def loadSetFromDb(dbName, dbPrefix):
+    from pyworkflow.mapper.sqlite import SqliteFlatDb
+    db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPrefix)
+    setClassName = db.getProperty('self') # get the set class name
+    setObj = getObjects()[setClassName](filename=dbName, prefix=dbPrefix)
+    return setObj
     

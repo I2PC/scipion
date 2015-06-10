@@ -181,10 +181,14 @@ class ProjectWindow(ProjectBaseWindow):
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
         from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots, PLOT_POLAR, PLOT_CART, PLOT_POLARCART
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createVmdView
-        inputId = int(inputStrId)
         objId = int(objStrId)
         project = self.project
-        inputObj = project.mapper.selectById(inputId)
+        if os.path.isfile(inputStrId) and os.path.exists(inputStrId):
+            from pyworkflow.em import loadSetFromDb
+            inputObj = loadSetFromDb(self._dbName, self._dbPrefix)
+        else:
+            inputId = int(inputStrId)
+            inputObj = project.mapper.selectById(inputId)
 
         #Plotter.setBackend('TkAgg')
         if cmd == OBJCMD_NMA_PLOTDIST:
