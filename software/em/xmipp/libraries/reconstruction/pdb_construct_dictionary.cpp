@@ -572,7 +572,7 @@ void ProgConstructPDBDictionary::show()
     }
 }
 
-#define DEBUG
+//#define DEBUG
 void ProgConstructPDBDictionary::run()
 {
     show();
