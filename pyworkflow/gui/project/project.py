@@ -185,7 +185,7 @@ class ProjectWindow(ProjectBaseWindow):
         project = self.project
         if os.path.isfile(inputStrId) and os.path.exists(inputStrId):
             from pyworkflow.em import loadSetFromDb
-            inputObj = loadSetFromDb(self._dbName, self._dbPrefix)
+            inputObj = loadSetFromDb(inputStrId)
         else:
             inputId = int(inputStrId)
             inputObj = project.mapper.selectById(inputId)
