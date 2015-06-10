@@ -32,7 +32,7 @@ from os.path import basename
 
 from pyworkflow.utils.path import commonPath
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import FloatParam, IntParam, LabelParam
+from pyworkflow.protocol.params import FloatParam, IntParam, LabelParam, BooleanParam
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import Acquisition
 
@@ -63,6 +63,9 @@ class ProtImportImages(ProtImportFiles):
         by subclasses to change what parameters to include.
         """
         group = form.addGroup('Acquisition info')
+        group.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
+                      label='Have data been phase-flipped?',
+                      help='Set this to Yes if the images have been ctf-phase corrected.')       
         group.addParam('acquisitionWizard', LabelParam, important=True,
                        condition='importFrom != %d' % self.IMPORT_FROM_FILES,
                        label='Use the wizard button to import acquisition.',
@@ -82,8 +85,7 @@ class ProtImportImages(ProtImportFiles):
                    label=Message.LABEL_MAGNI_RATE, 
                    help=Message.TEXT_MAGNI_RATE)
         return group
-        
-        
+    
     #--------------------------- INSERT functions ---------------------------------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('importImagesStep', self.getPattern(), 
@@ -99,6 +101,7 @@ class ProtImportImages(ProtImportFiles):
         
         createSetFunc = getattr(self, '_create' + self._outputClassName)
         imgSet = createSetFunc()
+        imgSet.setIsPhaseFlipped(self.haveDataBeenPhaseFlipped.get())
         acquisition = imgSet.getAcquisition()
         
         self.fillAcquisition(acquisition)
@@ -158,6 +161,7 @@ class ProtImportImages(ProtImportFiles):
                                "more time to import. ")
         else:
             summary.append("*%d* %s imported from %s" % (outputSet.getSize(), self._getOutputItemName(), self.getPattern()))
+            summary.append("Is the data phase flipped : %s" % outputSet.isPhaseFlipped())
             summary.append("Sampling rate : *%0.2f* A/px" % outputSet.getSamplingRate())
         
         return summary

@@ -59,6 +59,7 @@ class RelionImport():
             # create a set to link from particles
             self.micSet = self.protocol._createSetOfMicrographs()
             self.protocol.setSamplingRate(self.micSet)
+            self.micSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
             self.protocol.fillAcquisition(self.micSet.getAcquisition())
 
         partSet = self.protocol._createSetOfParticles()
@@ -67,6 +68,7 @@ class RelionImport():
         # Update both samplingRate and acquisition with parameters
         # selected in the protocol form
         self.protocol.setSamplingRate(partSet)
+        partSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
         self.protocol.fillAcquisition(partSet.getAcquisition())
         # Read the micrographs from the 'self._starFile' metadata
         # but fixing the filenames with new ones (linked or copy to extraDir)
