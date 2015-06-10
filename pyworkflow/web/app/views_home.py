@@ -35,11 +35,12 @@ from django.core.context_processors import csrf
 from pyworkflow.web.pages import settings as django_settings
 
 import pyworkflow as pw
-DB_PATH_DOWNLOAD = os.path.join(pw.HOME, 'web', 'webtools', 'desktop', "download_statistics.db")
+DB_PATH_DOWNLOAD = os.path.join(pw.HOME, 'web', 'home', "download_statistics.db")
 
-def desktop(request):
+def home(request):
     context = {}
-    return render(request, 'index/index.html')
+    context = base_grid(request, context)
+    return render_to_response('home/index.html', context)
 
 def download_form(request):
     
@@ -47,7 +48,7 @@ def download_form(request):
     context = {"download_utils": desktop_utils }
     context = base_grid(request, context)
     context.update(csrf(request))
-    return render_to_response('download_form.html', context)
+    return render_to_response('home/download_form.html', context)
 
 def doDownload(request):
     
