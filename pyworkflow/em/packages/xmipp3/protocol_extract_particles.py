@@ -135,7 +135,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       label='Invert contrast', 
                       help='Invert the contrast if your particles are black over a white background.')
         
-        form.addParam('doFlip', BooleanParam, default=True,
+        form.addParam('doFlip', BooleanParam, default=None,
                       label='Phase flipping (Recommended)', 
                       help='Use the information from the CTF to compensate for phase reversals.')
         
