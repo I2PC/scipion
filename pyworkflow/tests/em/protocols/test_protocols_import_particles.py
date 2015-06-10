@@ -59,7 +59,8 @@ class TestImportParticles(TestImportBase):
                 'amplitudConstrast': 0.1,
                 'sphericalAberration': 2.,
                 'voltage': 100,
-                'samplingRate': 2.1
+                'samplingRate': 2.1,
+                'haveDataBeenPhaseFlipped': True
                 }
 
 
@@ -83,7 +84,8 @@ class TestImportParticles(TestImportBase):
                 'sphericalAberration': 2.,
                 'voltage': 100,
                 'samplingRate': 2.46,
-                'magnification': 10000
+                'magnification': 10000,
+                'haveDataBeenPhaseFlipped': True
                 }
         args['emxFile'] = self.dsEmx.getFile('particles/particles.emx')
         protEmxImport = self.newProtocol(ProtImportParticles, **args)
@@ -103,7 +105,8 @@ class TestImportParticles(TestImportBase):
                                  importFrom=ProtImportParticles.IMPORT_FROM_XMIPP3,
                                  mdFile=self.dsXmipp.getFile('gold/xmipp_ml2d_images.xmd'),
                                  magnification=10000,
-                                 samplingRate=1.
+                                 samplingRate=1,
+                                 haveDataBeenPhaseFlipped=True
                                  )
         prot1.setObjLabel('from xmipp (ml2d)')
         self.launchProtocol(prot1)
@@ -115,7 +118,8 @@ class TestImportParticles(TestImportBase):
                                  importFrom=ProtImportParticles.IMPORT_FROM_XMIPP3,
                                  mdFile=self.dsXmipp.getFile('gold/images10.xmd'),
                                  magnification=10000,
-                                 samplingRate=1.
+                                 samplingRate=1,
+                                 haveDataBeenPhaseFlipped=True
                                  )
         prot1.setObjLabel('from xmipp (with mic id)')
         self.launchProtocol(prot1)
@@ -128,10 +132,12 @@ class TestImportParticles(TestImportBase):
                                  importFrom=ProtImportParticles.IMPORT_FROM_RELION,
                                  starFile=self.dsRelion.getFile('import/refine3d/extra/relion_it001_data.star'),
                                  magnification=10000,
-                                 samplingRate=7.08
+                                 samplingRate=7.08,
+                                 haveDataBeenPhaseFlipped=True
                                  )
         self.launchProtocol(prot1)
-        self.checkOutput(prot1, 'outputParticles', ['outputParticles.hasAlignmentProj()'])
+        self.checkOutput(prot1, 'outputParticles', ['outputParticles.hasAlignmentProj()',
+                                                    'outputParticles.isPhaseFlipped()'])
         
     def test_fromRelionClassify2D(self):
         """ Import an EMX file with Particles and defocus
@@ -141,10 +147,12 @@ class TestImportParticles(TestImportBase):
                                  importFrom=ProtImportParticles.IMPORT_FROM_RELION,
                                  starFile=self.dsRelion.getFile('import/classify2d/extra/relion_it015_data.star'),
                                  magnification=10000,
-                                 samplingRate=7.08
+                                 samplingRate=7.08,
+                                 haveDataBeenPhaseFlipped=True
                                  )
         self.launchProtocol(prot1)
-        self.checkOutput(prot1, 'outputParticles', ['outputParticles.hasAlignment2D()'])
+        self.checkOutput(prot1, 'outputParticles', ['outputParticles.hasAlignment2D()',
+                                                    'outputParticles.isPhaseFlipped()'])
         self.checkOutput(prot1, 'outputClasses')    
  
     def test_fromRelionClassify3D(self):
@@ -155,7 +163,8 @@ class TestImportParticles(TestImportBase):
                                  importFrom=ProtImportParticles.IMPORT_FROM_RELION,
                                  starFile=self.dsRelion.getFile('import/classify3d/extra/relion_it015_data.star'),
                                  magnification=10000,
-                                 samplingRate=7.08
+                                 samplingRate=7.08,
+                                 haveDataBeenPhaseFlipped=True
                                  )
         self.launchProtocol(prot1)         
         
@@ -170,10 +179,12 @@ class TestImportParticles(TestImportBase):
                                  importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
                                  sqliteFile=self.dsRelion.getFile('import/case2/particles.sqlite'),
                                  magnification=10000,
-                                 samplingRate=7.08
+                                 samplingRate=7.08,
+                                 haveDataBeenPhaseFlipped=True
                                  )
         self.launchProtocol(prot1)
         
         self.checkOutput(prot1, 'outputParticles', ['outputParticles.hasCTF()', 
-                                                    'outputParticles.hasAlignmentProj()'])
+                                                    'outputParticles.hasAlignmentProj()',
+                                                    'outputParticles.isPhaseFlipped()'])
 

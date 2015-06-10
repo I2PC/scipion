@@ -251,7 +251,9 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
             node.path = '%d@%s' % (node.avgCount, self.dendroAverages)
             if writeAverages:
                 #TODO: node['image'] /= float(node['length'])
-                ih.write(node.image, (node.avgCount, self.dendroAverages))
+                #node.image.inplaceDivide(float(node.length)) #FIXME: not working, noisy images
+                avgImage = node.image / float(node.length)
+                ih.write(avgImage, (node.avgCount, self.dendroAverages))
                 fn = self._getTmpPath('doc_class%03d.stk' % index)
                 doc = SpiderDocFile(fn, 'w+')
                 for i in node.imageList:

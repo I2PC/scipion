@@ -366,6 +366,7 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir,
         _micrographFromEmx(emxMic, mic)
         acq = mic.getAcquisition().clone()
         micSet.setAcquisition(acq)
+        micSet.setIsPhaseFlipped(protocol.haveDataBeenPhaseFlipped.get())
         if not samplingRate:
             samplingRate = mic.getSamplingRate()
         micSet.setSamplingRate(samplingRate)
@@ -447,6 +448,7 @@ def _particlesFromEmx(protocol
             if not samplingRate:
                 samplingRate = part.getSamplingRate()
             partSet.setSamplingRate(samplingRate) 
+            partSet.setIsPhaseFlipped(protocol.haveDataBeenPhaseFlipped.get())
             particles = True
         else: # if not binary data, the coordinate case
             if micSet is None:

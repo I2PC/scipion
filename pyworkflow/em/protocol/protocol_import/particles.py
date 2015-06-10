@@ -151,9 +151,10 @@ class ProtImportParticles(ProtImportImages):
         
         if self.hasAttribute('outputParticles'):
             particles = self.outputParticles
-            summary += '   Particles: *%d* (ctf=%s, alignment=%s)\n' % (particles.getSize(),
-                                                                        particles.hasCTF(),
-                                                                        particles.getAlignment())
+            summary += ' Particles: *%d* (ctf=%s, alignment=%s, phaseFlip=%s)\n' % (particles.getSize(),
+                                                                                    particles.hasCTF(),
+                                                                                    particles.getAlignment(),
+                                                                                    particles.isPhaseFlipped())
                                                                       
         if self.hasAttribute('outputCoordinates'): # EMX files can contain only Coordinates information
             summary += '   Coordinates: *%d* \n' % (self.outputCoordinates.getSize())

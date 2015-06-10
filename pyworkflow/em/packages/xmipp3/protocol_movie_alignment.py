@@ -224,7 +224,7 @@ class ProtMovieAlignment(ProtProcessMovies):
 
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
-        gpuId = self.GPUCore.get() - 1
+        gpuId = self.GPUCore.get()
         alMethod = self.alignMethod.get()
 
         # For simple average execution
