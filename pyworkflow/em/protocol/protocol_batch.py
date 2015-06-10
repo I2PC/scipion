@@ -31,20 +31,11 @@ are called "batch" protocols.
 
 import os
 
-from pyworkflow.protocol.params import PointerParam, FileParam, StringParam, IntParam
+from pyworkflow.protocol.params import PointerParam, FileParam, StringParam
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair, ParticlesTiltPair
 from pyworkflow.em.data import Mask
-
-from pyworkflow.em.data_tiltpairs import  TiltPair
-
-
-
-
-from pyworkflow.gui.plotter import Plotter
-
-
 
 
 
@@ -371,19 +362,20 @@ class ProtUserSubSet(BatchProtocol):
         return summary
 
     def getDefaultSummary(self):
-        input = ''
+        inputStr = ''
         inputObj = self.inputObject.get()
-        input += inputObj.getClassName()
-        if isinstance(inputObj, EMSet):
-            input += ' of size %s' % inputObj.getSize()
+        if inputObj is not None:
+            inputStr += inputObj.getClassName()
+            if isinstance(inputObj, EMSet):
+                inputStr += ' of size %s' % inputObj.getSize()
         output = ''
-        for key, attr in self.iterOutputAttributes(EMObject):
+        for _, attr in self.iterOutputAttributes(EMObject):
             output += attr.getClassName()
             if isinstance(attr, EMSet):
                 output += ' of size %s' % attr.getSize()
 
-        
-        msg = 'From input %s created output %s '%(input, output)
+        msg = 'From input %s created output %s ' % (inputStr, output)
+
         return msg
 
     def _methods(self):
@@ -395,16 +387,17 @@ class ProtUserSubSet(BatchProtocol):
         
 
 class ProtCreateMask(BatchProtocol):
-     _label='create mask'
+    
+    _label='create mask'
 
-     def _defineParams(self, form):
+    def _defineParams(self, form):
         form.addHidden('inputObj', PointerParam, pointerClass='EMObject')
         form.addHidden('maskFile', StringParam)
 
-     def _insertAllSteps(self):
+    def _insertAllSteps(self):
         self._insertFunctionStep('createMaskStep')
 
-     def createMaskStep(self):
+    def createMaskStep(self):
         inputObj = self.inputObj.get()
         maskFile=self.maskFile.get()
         samplingRate = None
@@ -417,20 +410,20 @@ class ProtCreateMask(BatchProtocol):
                     samplingRate = attr.get().getSamplingRate()
         if  not samplingRate:
             raise Exception("sampling rate required")
-
+        
         mask = Mask()
         mask.setFileName(maskFile)
         mask.setSamplingRate(samplingRate)
         self._defineOutputs(outputMask=mask)
         self._defineSourceRelation(inputObj, self.outputMask)
 
-     def _summary(self):
+    def _summary(self):
         summary = []
         summary.append('From input %s created mask %s'%(self.getObjectTag("inputObj"), self.getObjectTag("outputMask")))
         return summary
-
-     def _methods(self):
-         return self._summary()
+        
+    def _methods(self):
+        return self._summary()
 
 
 
