@@ -271,14 +271,16 @@ void ProgPDBDictionary::loadDictionaries()
 	FILE *fhSignature=fopen(fnSignature.c_str(),"r");
 	Image<double> aux;
 	Matrix1D<double> auxSignature(3);
+	if (Zdim==1)
+		auxSignature.resizeNoCopy(4);
 	for (size_t n=0; n<Ndim; ++n)
 	{
 		aux.read(fnLow,DATA,n+1);
 		dictionaryLow.push_back(aux());
 		aux.read(fnHigh,DATA,n+1);
 		dictionaryHigh.push_back(aux());
-		size_t sizeRead=fread(MATRIX1D_ARRAY(auxSignature),sizeof(double),3,fhSignature);
-		if (sizeRead==3)
+		size_t sizeRead=fread(MATRIX1D_ARRAY(auxSignature),sizeof(double),VEC_XSIZE(auxSignature),fhSignature);
+		if (sizeRead==VEC_XSIZE(auxSignature))
 			dictionarySignature.push_back(auxSignature);
 	}
 	fclose(fhSignature);
@@ -308,7 +310,7 @@ void ProgPDBDictionary::saveDictionaries() const
 		aux.write(fnLow,i+1,true,WRITE_REPLACE);
 		aux()=dictionaryHigh[i];
 		aux.write(fnHigh,i+1,true,WRITE_REPLACE);
-		fwrite(MATRIX1D_ARRAY(dictionarySignature[i]),sizeof(double),3,fhSignature);
+		fwrite(MATRIX1D_ARRAY(dictionarySignature[i]),sizeof(double),VEC_XSIZE(dictionarySignature[i]),fhSignature);
 	}
 	fclose(fhSignature);
 }
@@ -461,18 +463,18 @@ size_t ProgPDBDictionary::canonicalOrientation2D(const MultidimArray<double> &pa
 		Matrix1D<double> &patchSignature)
 {
 	patchSignature.resizeNoCopy(4);
-	size_t imax=rotationGroup.size();
+	size_t nmax=rotationGroup.size();
 	double bestMoment=-1e38;
 	size_t bestIdx=0;
-	for (size_t i=0; i<imax; ++i)
+	for (size_t n=0; n<nmax; ++n)
 	{
-		applyGeometry(LINEAR,auxPatch,patch,rotationGroup[i],IS_INV,DONT_WRAP);
+		applyGeometry(LINEAR,auxPatch,patch,rotationGroup[n],IS_INV,DONT_WRAP);
 		// Calculate gradients
 		double momentX=0, momentY=0, momentXmY=0, momentXY=0;
 		auxPatch.setXmippOrigin();
-		FOR_ALL_ELEMENTS_IN_ARRAY3D(auxPatch)
+		FOR_ALL_ELEMENTS_IN_ARRAY2D(auxPatch)
 		{
-			double val=A2D_ELEM(auxPatch,k,i);
+			double val=A2D_ELEM(auxPatch,i,j);
 			double jval=j*val;
 			double ival=i*val;
 			momentX+=jval;
@@ -484,7 +486,7 @@ size_t ProgPDBDictionary::canonicalOrientation2D(const MultidimArray<double> &pa
 		if (moment>bestMoment)
 		{
 			bestMoment=moment;
-			bestIdx=i;
+			bestIdx=n;
 			canonicalPatch=auxPatch;
 			VEC_ELEM(patchSignature,0)=momentX;
 			VEC_ELEM(patchSignature,1)=momentY;
@@ -500,12 +502,12 @@ size_t ProgPDBDictionary::canonicalOrientation3D(const MultidimArray<double> &pa
 		Matrix1D<double> &patchSignature)
 {
 	patchSignature.resizeNoCopy(3);
-	size_t imax=rotationGroup.size();
+	size_t nmax=rotationGroup.size();
 	double bestMoment=-1e38;
 	size_t bestIdx=0;
-	for (size_t i=0; i<imax; ++i)
+	for (size_t n=0; n<nmax; ++n)
 	{
-		applyGeometry(LINEAR,auxPatch,patch,rotationGroup[i],IS_INV,DONT_WRAP);
+		applyGeometry(LINEAR,auxPatch,patch,rotationGroup[n],IS_INV,DONT_WRAP);
 		// Calculate gradients
 		double momentX=0, momentY=0, momentZ=0;
 		auxPatch.setXmippOrigin();
@@ -520,7 +522,7 @@ size_t ProgPDBDictionary::canonicalOrientation3D(const MultidimArray<double> &pa
 		if (moment>bestMoment)
 		{
 			bestMoment=moment;
-			bestIdx=i;
+			bestIdx=n;
 			canonicalPatch=auxPatch;
 			XX(patchSignature)=momentX;
 			YY(patchSignature)=momentY;
@@ -570,7 +572,7 @@ void ProgConstructPDBDictionary::show()
     }
 }
 
-//#define DEBUG
+#define DEBUG
 void ProgConstructPDBDictionary::run()
 {
     show();
