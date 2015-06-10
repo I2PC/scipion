@@ -148,10 +148,10 @@ class EmanProtReconstruct(ProtReconstruct3D):
                                'experimental'],
                       label="Mode to Fourier method:", default=FOURIER_GAUSS2,
                       display=EnumParam.DISPLAY_COMBO)
-        form.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
-              label='Have data been phase-flipped?',
-              help='Set this to Yes if the images have been ctf-phase corrected during the '
-                   'pre-processing steps.')       
+#         form.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
+#               label='Have data been phase-flipped?',
+#               help='Set this to Yes if the images have been ctf-phase corrected during the '
+#                    'pre-processing steps.')       
         form.addParam('keepSense', EnumParam, expertLevel=LEVEL_ADVANCED,
                       choices=['percentage', 'standard deviation', 'absolute quality'],
                       label="Sense of keep:", default=KEEP_PERCENTAGE,
@@ -204,7 +204,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
             args = " --voltage %3d" % acq.getVoltage()
             args += " --cs %f" % acq.getSphericalAberration()
             args += " --ac %f" % (100 * acq.getAmplitudeContrast())
-            if not self.haveDataBeenPhaseFlipped:
+            if not partSet.isPhaseFlipped():
                 args += " --phaseflip"
             args += " --apix %f --allparticles --autofit --curdefocusfix --storeparm -v 8" % (partSet.getSamplingRate())
             self.runJob(program, args, cwd=self._getExtraPath())
@@ -297,12 +297,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
         return os.path.basename(self._getFileName(key))
 
     def _getParticlesStack(self):
-        if not self.haveDataBeenPhaseFlipped and self.inputParticles.get().hasCTF():
+        if not self.inputParticles.get().isPhaseFlipped() and self.inputParticles.get().hasCTF():
             return self._getFileName("partFlipSet")
         else:
             return self._getFileName("partSet")
-
-#     def _getRelativeName(self, key):
-#         """ Remove the folders and return the file from the filename. """
-#         return os.path.relpath(self._getFileName(key), self._getExtraPath())
-    

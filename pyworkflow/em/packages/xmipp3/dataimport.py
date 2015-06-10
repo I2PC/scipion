@@ -59,6 +59,7 @@ class XmippImport():
         # Update both samplingRate and acquisition with parameters
         # selected in the protocol form
         self.protocol.setSamplingRate(micSet)
+        micSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
         self.protocol.fillAcquisition(micSet.getAcquisition())
         # Read the micrographs from the 'self._mdFile' metadata
         # but fixing the filenames with new ones (linked or copy to extraDir)
@@ -97,6 +98,7 @@ class XmippImport():
         # Update both samplingRate and acquisition with parameters
         # selected in the protocol form
         self.protocol.setSamplingRate(partSet)
+        partSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
         self.protocol.fillAcquisition(partSet.getAcquisition())
         # Read the micrographs from the 'self._mdFile' metadata
         # but fixing the filenames with new ones (linked or copy to extraDir)
@@ -280,8 +282,8 @@ class XmippImport():
 
         posMd = readPosCoordinates(fileName)
         for objId in posMd:
-             coord = rowToCoordinate(rowFromMd(posMd, objId))
-             addCoordinate(coord)
+            coord = rowToCoordinate(rowFromMd(posMd, objId))
+            addCoordinate(coord)
 
     def importCTF(self, mic, fileName):
         ctf = readCTFModel(fileName, mic)

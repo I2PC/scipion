@@ -346,11 +346,8 @@ class ProtUserSubSet(BatchProtocol):
         if self._dbPrefix.endswith('_'):
             self._dbPrefix = self._dbPrefix[:-1]
 
-        from pyworkflow.mapper.sqlite import SqliteFlatDb
-        db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
-        setClassName = db.getProperty('self') # get the set class name
-        from pyworkflow.em import getObjects
-        setObj = getObjects()[setClassName](filename=self._dbName, prefix=self._dbPrefix)
+        from pyworkflow.em import loadSetFromDb
+        setObj = loadSetFromDb(self._dbName, self._dbPrefix)
         return setObj
 
     def _summary(self):

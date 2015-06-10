@@ -123,7 +123,7 @@ function downloadTestdata(elm){
 }
 
 function createServProject(elm) {
-	var projName = "map"+randomString(32, '#aA')
+	var projName = "map"+randomString(16, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
 
 	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
