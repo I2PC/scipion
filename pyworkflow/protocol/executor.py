@@ -76,16 +76,18 @@ class StepThread(threading.Thread):
         self.lock = lock
 
     def run(self):
+        error = None
         try:
             self.step._run()  # not self.step.run() , to avoid race conditions
-            with self.lock:
-                self.step.setStatus(cts.STATUS_FINISHED)
         except Exception as e:
-            with self.lock:
-                self.step.setFailed(str(e))
+            error = str(e)
             traceback.print_exc()
         finally:
             with self.lock:
+                if error is None:
+                    self.step.setStatus(cts.STATUS_FINISHED)
+                else:
+                    self.step.setFailed(error)
                 self.step.endTime.set(datetime.datetime.now())
 
 class ThreadStepExecutor(StepExecutor):
@@ -93,13 +95,13 @@ class ThreadStepExecutor(StepExecutor):
     def __init__(self, hostConfig, nThreads):
         StepExecutor.__init__(self, hostConfig)
         self.numberOfProcs = nThreads
-        self._lock = threading.Lock()
-        self.sharedLock = threading.Lock()
         
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         """ Create threads and synchronize the steps execution.
         n: the number of threads.
         """
+
+        sharedLock = threading.Lock()
 
         runningSteps = {}  # currently running step in each node ({node: step})
         freeNodes = range(self.numberOfProcs)  # available nodes to send mpi jobs
@@ -117,7 +119,7 @@ class ThreadStepExecutor(StepExecutor):
         while True:
             # See which of the runningSteps are not really running anymore.
             # Update them and freeNodes, and call final callback for step.
-            with self._lock:
+            with sharedLock:
                 nodesFinished = [node for node, step in runningSteps.iteritems()
                                  if not step.isRunning()]
             doContinue = True
@@ -131,22 +133,21 @@ class ThreadStepExecutor(StepExecutor):
                 break
 
             # If there are available nodes, send next runnable step.
-            self._lock.acquire()
-            if freeNodes:
-                step = getRunnable()
-                if step is not None:
-                    # We found a step to work in, so let's start a new
-                    # thread to do the job and book it.
-                    step.setRunning()
-                    stepStartedCallback(step)
-                    node = freeNodes.pop()  # take an available node
-                    runningSteps[node] = step
-                    t = StepThread(node, step, self.sharedLock)
-                    t.daemon = True  # won't keep process up if main thread ends
-                    t.start()
-                elif not any(s.isRunning() for s in steps):  # nothing running
-                    break  # yeah, we are done, either failed or finished :)
-            self._lock.release()
+            with sharedLock:
+                if freeNodes:
+                    step = getRunnable()
+                    if step is not None:
+                        # We found a step to work in, so let's start a new
+                        # thread to do the job and book it.
+                        step.setRunning()
+                        stepStartedCallback(step)
+                        node = freeNodes.pop()  # take an available node
+                        runningSteps[node] = step
+                        t = StepThread(node, step, sharedLock)
+                        t.daemon = True  # won't keep process up if main thread ends
+                        t.start()
+                    elif not any(s.isRunning() for s in steps):  # nothing running
+                        break  # yeah, we are done, either failed or finished :)
 
             time.sleep(0.1)  # be gentle on the main thread
 
