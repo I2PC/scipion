@@ -63,7 +63,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
     def _defineParams(self, form):
         form.addSection(label='Mask generation')
         form.addParam('source', EnumParam, default=SOURCE_VOLUME,
-                      choices=['Volume','Geometry','Another mask'],
+                      choices=['Volume','Geometry'],
                       label='Mask source')
         # For volume sources
         isVolume = 'source==%d' % SOURCE_VOLUME
