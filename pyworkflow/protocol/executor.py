@@ -69,10 +69,11 @@ class StepExecutor():
 
 class StepThread(threading.Thread):
     """ Thread to run Steps in parallel. """
-    def __init__(self, thId, step):
+    def __init__(self, thId, step, lock):
         threading.Thread.__init__(self)
         self.thId = thId
         self.step = step
+        self.lock = lock
 
     def run(self):
         error = None
@@ -88,6 +89,7 @@ class StepThread(threading.Thread):
                 else:
                     self.step.setFailed(error)
                 self.step.endTime.set(datetime.datetime.now())
+
 
 class ThreadStepExecutor(StepExecutor):
     """ Run steps in parallel using threads. """
@@ -122,7 +124,7 @@ class ThreadStepExecutor(StepExecutor):
                 nodesFinished = [node for node, step in runningSteps.iteritems()
                                  if not step.isRunning()]
             doContinue = True
-            for node in notRunning:
+            for node in nodesFinished:
                 step = runningSteps.pop(node)  # remove entry from runningSteps
                 freeNodes.append(node)  # the node is available now
                 doContinue = stepFinishedCallback(step)  # and do final work on the finished step
