@@ -230,7 +230,7 @@ class Environment:
             self._libSuffix = 'dylib'
 
         self._downloadCmd = 'wget -nv -c -O %s %s'
-        self._tarCmd = 'tar --recursive-unlink -xzf %s'
+        self._tarCmd = 'tar -xzf %s'
 
     def getLibSuffix(self):
         return self._libSuffix
