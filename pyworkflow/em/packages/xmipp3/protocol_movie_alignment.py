@@ -271,7 +271,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
             winSize = self.winSize.get()
             if alMethod == AL_DOSEFGPUOPTICAL:
-                program = 'xmipp_optical_alignment_gpu'
+                program = 'xmipp_movie_optical_alignment_gpu'
                 corrMovieName = self._getCorrMovieName(movieId)
                 command = '-i %(corrMovieName)s ' % locals()
                 # Set to Zero for Optical Flow (output movie of dosefgpu)
@@ -302,12 +302,12 @@ class ProtMovieAlignment(ProtProcessMovies):
     def _getProgram(self):
         alMethod = self.alignMethod.get()
         if alMethod == AL_AVERAGE:
-            return 'xmipp_optical_alignment_cpu'
+            return 'xmipp_movie_optical_alignment_cpu'
         if alMethod == AL_OPTICAL:
             if self.doGPU:
-                return 'xmipp_optical_alignment_gpu'
+                return 'xmipp_movie_optical_alignment_gpu'
             else:
-                return 'xmipp_optical_alignment_cpu'
+                return 'xmipp_movie_optical_alignment_cpu'
         elif alMethod == AL_DOSEFGPU:
             return 'dosefgpu_driftcorr'
 
