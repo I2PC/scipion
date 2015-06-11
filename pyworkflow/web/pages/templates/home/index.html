@@ -174,7 +174,7 @@ section{
 	-moz-box-shadow: #ff5959 0px 0px 0px 0px;
 	box-shadow: #ff5959 0px 0px 0px 0px;
 	text-shadow: #591717 1px 1px 1px;
-	font: normal normal bold 24px trebuchet ms;
+	font: normal normal bold 22px trebuchet ms;
 	color: #ffffff;
 	text-decoration: none;
 	
@@ -220,7 +220,7 @@ section{
 #innerContent li{
 	margin: 5px 0px;
 }
-.documentationButton {
+.documentationButton, .webtoolsButton {
 background: #992828;
 background: -webkit-gradient(linear, left top, left bottom, from(#d9d7d9), to(#848384));
 background: -moz-linear-gradient(top, #d9d7d9, #848384);
@@ -235,7 +235,7 @@ background: linear-gradient(to bottom, #ff4a4a, #992727);
 margin-right: 10px;
 }
 .documentationButton:hover,
-.documentationButton:focus {
+.documentationButton:focus, .webtoolsButton:hover, .webtoolsButton:focus {
 background: #a3a3a3;
 background: -webkit-gradient(linear, left top, left bottom, from(#868686), to(#bcbcbc));
 background: -moz-linear-gradient(top, #868686, #bcbcbc);
@@ -271,6 +271,11 @@ text-decoration: none;
 
 .documentationButton:before{
     background: url("{{abs_url}}/resources/doc_icon.png") no-repeat left center transparent;
+}
+
+
+.webtoolsButton:before{
+    background: url("{{abs_url}}/resources/fa-cogs.png") no-repeat left center transparent;
 }
 
 
@@ -319,12 +324,13 @@ text-decoration: none;
 						<a href="javascript:goWithSubDomainURL('/download_form/')" class="downloadButton"> 
 							Download 
 						</a>
+						<a href="javascript:goWithSubDomainURL('/services/')" class="webtoolsButton"> 
+							Web Tools 
+						</a>
 						<a href="http://scipion.cnb.csic.es/docs/" class="documentationButton">
 							Documentation 
 						</a>
-						<a href="javascript:goWithSubDomainURL('/services/')" class="documentationButton"> 
-							Web Tools 
-						</a>
+						
 					</div>
 				</div>
 			</div>
