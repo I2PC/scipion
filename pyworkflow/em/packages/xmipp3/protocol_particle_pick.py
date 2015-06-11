@@ -130,8 +130,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             return ProtParticlePicking._methods(self)
         else:
             return [self.getMethods(None)]
-
-    
     
     def getMethods(self, output):#output is not used but to overwrite getMethods it is used
         configfile = join(self._getExtraPath(), 'config.xmd')
@@ -146,6 +144,10 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             isAutopick = pickingState != "Manual"
             manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
             autoParticlesSize = md.getValue(xmipp.MDL_PICKING_AUTOPARTICLES_SIZE, configobj)
+            if manualParticlesSize is None:
+                manualParticlesSize = 0
+            if autoParticlesSize is None:
+                autoParticlesSize = 0
             msg = 'User picked %d particles with a particle size of %d.' % (autoParticlesSize + manualParticlesSize, particleSize)
             if isAutopick:
                 msg += "Automatic picking was used ([Abrishami2013]). %d particles were picked automatically and %d  manually."%(autoParticlesSize, manualParticlesSize)
