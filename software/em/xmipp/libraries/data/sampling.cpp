@@ -1662,6 +1662,7 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
 
 void Sampling::computeNeighbors(bool only_winner)
 {
+
     double my_dotProduct;
     double winner_dotProduct;
     Matrix1D<double>  row(3);
@@ -1808,7 +1809,7 @@ void Sampling::computeNeighbors(bool only_winner)
 #endif
 #undef DEBUG
 
-#define CHIMERA
+//#define CHIMERA
 #ifdef CHIMERA
 
     std::ofstream filestr;
@@ -1816,7 +1817,7 @@ void Sampling::computeNeighbors(bool only_winner)
     filestr    << ".color white"
     << std::endl << ".sphere 0 0 0 .95" << std::endl
     ;
-    int exp_image=1;
+    int exp_image=0;
     filestr    <<  ".color yellow" << std::endl
     <<  ".sphere "
     << exp_data_projection_direction_by_L_R[exp_image*R_repository.size()](0) << " "
