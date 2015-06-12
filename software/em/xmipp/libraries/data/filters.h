@@ -474,6 +474,15 @@ double bestShift(const MultidimArray<double> &I1, const MultidimArray< std::comp
                double &shiftX, double &shiftY, CorrelationAux &aux,
                const MultidimArray<int> *mask=NULL, int maxShift=-1);
 
+/** Translational search.
+ * Assumes that FFTI1 and FFTI2 are already computed. Mcorr must already have the right size.
+ */
+double bestShift(const MultidimArray< std::complex<double> > &FFTI1,
+				const MultidimArray< std::complex<double> > &FFTI2,
+				MultidimArray<double> &Mcorr,
+               double &shiftX, double &shiftY, CorrelationAux &aux,
+               const MultidimArray<int> *mask=NULL, int maxShift=-1);
+
 /** Translational search (3D)
  * @ingroup Filters
  *
