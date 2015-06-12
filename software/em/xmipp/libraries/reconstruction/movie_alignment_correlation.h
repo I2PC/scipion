@@ -49,6 +49,10 @@ public:
     FileName fnAligned;
     /** Aligned micrograph */
     FileName fnAvg;
+    /** Metadata with shifts */
+    FileName fnOut;
+    /** First and last frame*/
+    int nfirst, nlast;
 public:
     // Fourier transforms of the input images
 	std::vector< MultidimArray<std::complex<double> > * > frameFourier;

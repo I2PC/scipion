@@ -32,12 +32,15 @@
 void ProgMovieAlignmentCorrelation::readParams()
 {
 	fnMovie = getParam("-i");
+	fnOut = getParam("-o");
     maxShift = getDoubleParam("--max_shift");
     Ts = getDoubleParam("--sampling");
     maxFreq = getDoubleParam("--max_freq");
     solverIterations = getIntParam("--solverIterations");
 	fnAligned = getParam("--oaligned");
 	fnAvg = getParam("--oavg");
+	nfirst = getIntParam("--frameRange",0);
+	nlast = getIntParam("--frameRange",1);
 }
 
 // Show ====================================================================
@@ -46,13 +49,15 @@ void ProgMovieAlignmentCorrelation::show()
     if (!verbose)
         return;
     std::cout
-    << "Reference volume:    " << fnMovie            << std::endl
+    << "Input movie:         " << fnMovie            << std::endl
+    << "Output metadata:     " << fnOut              << std::endl
     << "Max. Shift:          " << maxShift           << std::endl
     << "Max. Scale:          " << maxFreq            << std::endl
     << "Sampling:            " << Ts                 << std::endl
     << "Solver iterations:   " << solverIterations   << std::endl
     << "Aligned movie:       " << fnAligned          << std::endl
     << "Aligned micrograph:  " << fnAvg              << std::endl
+    << "Frame range:         " << nfirst << " " << nlast << std::endl
     ;
 }
 
@@ -61,12 +66,15 @@ void ProgMovieAlignmentCorrelation::defineParams()
 {
     addUsageLine("Align a set of frames by cross-correlation of the frames");
     addParamsLine("   -i <metadata>               : Metadata with the list of frames to align");
+    addParamsLine("  [-o <fn=\"\">]               : Metadata with the shifts of each frame.");
+    addParamsLine("                               : If no filename is given, the input is rewritten");
     addParamsLine("  [--max_shift <s=-1>]         : Maximum shift allowed in pixels");
     addParamsLine("  [--max_freq <s=4>]           : Maximum resolution to align (in Angstroms)");
     addParamsLine("  [--sampling <Ts=1>]          : Sampling rate (A/pixel)");
     addParamsLine("  [--solverIterations <N=2>]   : Number of robust least squares iterations");
     addParamsLine("  [--oaligned <fn=\"\">]       : Give the name of a stack if you want to generate an aligned movie");
     addParamsLine("  [--oavg <fn=\"\">]           : Give the name of a micrograph to generate an aligned micrograph");
+    addParamsLine("  [--frameRange <n0=-1> <nF=-1>]  : First and last frame to process, frame numbers start at 0");
     addExampleLine("A typical example",false);
     addExampleLine("xmipp_movie_alignment_correlation -i movie.xmd --oaligned alignedMovie.stk --oavg alignedMicrograph.mrc");
     addSeeAlsoLine("xmipp_movie_optical_alignment_cpu");
@@ -97,6 +105,10 @@ void computeTotalShift(int iref, int j, const Matrix1D<double> &shiftX, const Ma
 void ProgMovieAlignmentCorrelation::run()
 {
 	MetaData movie(fnMovie);
+	if (nfirst<0)
+		nfirst=0;
+	if (nlast<0)
+		nlast=movie.size();
 
 	// Determine target size of the images
 	const double targetOccupancy=0.9; // Set to 1 if you want fmax maps onto 1/(2*newTs)
@@ -131,35 +143,39 @@ void ProgMovieAlignmentCorrelation::run()
 	}
 	FileName fnFrame;
 	Image<double> frame, reducedFrame;
-	size_t n=0;
+	int n=0;
 	FourierTransformer transformer;
 	Matrix1D<double> w(2);
 	std::complex<double> zero=0;
 	FOR_ALL_OBJECTS_IN_METADATA(movie)
 	{
-		movie.getValue(MDL_IMAGE,fnFrame,__iter.objId);
-		frame.read(fnFrame);
-
-		// Reduce the size of the input frame
-		scaleToSizeFourier(1,newYdim,newXdim,frame(),reducedFrame());
-
-		// Now do the Fourier transform and filter
-		MultidimArray< std::complex<double> > *reducedFrameFourier=new MultidimArray< std::complex<double> >;
-		transformer.FourierTransform(reducedFrame(),*reducedFrameFourier,true);
-		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*reducedFrameFourier)
+		if (n>=nfirst && n<=nlast)
 		{
-			FFT_IDX2DIGFREQ(i,newYdim,YY(w));
-			FFT_IDX2DIGFREQ(j,newXdim,XX(w));
-			double wabs=w.module();
-			if (wabs>targetOccupancy)
-				A2D_ELEM(*reducedFrameFourier,i,j)=zero;
-			else
-				A2D_ELEM(*reducedFrameFourier,i,j)*=lpf.interpolatedElement1D(wabs*newXdim);
-		}
+			movie.getValue(MDL_IMAGE,fnFrame,__iter.objId);
+			frame.read(fnFrame);
 
-		frameFourier.push_back(reducedFrameFourier);
+			// Reduce the size of the input frame
+			scaleToSizeFourier(1,newYdim,newXdim,frame(),reducedFrame());
+
+			// Now do the Fourier transform and filter
+			MultidimArray< std::complex<double> > *reducedFrameFourier=new MultidimArray< std::complex<double> >;
+			transformer.FourierTransform(reducedFrame(),*reducedFrameFourier,true);
+			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*reducedFrameFourier)
+			{
+				FFT_IDX2DIGFREQ(i,newYdim,YY(w));
+				FFT_IDX2DIGFREQ(j,newXdim,XX(w));
+				double wabs=w.module();
+				if (wabs>targetOccupancy)
+					A2D_ELEM(*reducedFrameFourier,i,j)=zero;
+				else
+					A2D_ELEM(*reducedFrameFourier,i,j)*=lpf.interpolatedElement1D(wabs*newXdim);
+			}
+
+			frameFourier.push_back(reducedFrameFourier);
+		}
+		++n;
 		if (verbose)
-			progress_bar(++n);
+			progress_bar(n);
 	}
 	if (verbose)
 		progress_bar(movie.size());
@@ -185,7 +201,7 @@ void ProgMovieAlignmentCorrelation::run()
 		{
 			bestShift(*frameFourier[i],*frameFourier[j],Mcorr,bX(idx),bY(idx),aux,NULL,maxShift);
 			if (verbose)
-				std::cout << "Frame " << i << " to Frame " << j << " -> (" << bX(idx) << "," << bY(idx) << ")\n";
+				std::cout << "Frame " << i+nfirst << " to Frame " << j+nfirst << " -> (" << bX(idx) << "," << bY(idx) << ")\n";
 			for (int ij=i; ij<j; ij++)
 				A(idx,ij)=1;
 
@@ -272,43 +288,59 @@ void ProgMovieAlignmentCorrelation::run()
 		}
 	}
 	if (verbose)
-		std::cout << "Reference frame: " << bestIref+1 << std::endl;
+		std::cout << "Reference frame: " << bestIref+1+nfirst << std::endl;
 
 	// Compute shifts
 	int j=0;
 	Image<double> shiftedFrame, averageMicrograph;
 	Matrix1D<double> shift(2);
+	n=0;
 	FOR_ALL_OBJECTS_IN_METADATA(movie)
 	{
-		movie.getValue(MDL_IMAGE,fnFrame,__iter.objId);
-		frame.read(fnFrame);
-
-		double totalShiftX, totalShiftY;
-		computeTotalShift(bestIref, j, shiftX, shiftY,XX(shift), YY(shift));
-		shift/=sizeFactor;
-		movie.setValue(MDL_SHIFT_X,XX(shift),__iter.objId);
-		movie.setValue(MDL_SHIFT_Y,YY(shift),__iter.objId);
-
-		std::cout << fnFrame << " shiftX=" << XX(shift) << " shiftY=" << YY(shift) << std::endl;
-		if (fnAligned!="" || fnAvg!="")
+		if (n>=nfirst && n<=nlast)
 		{
-			translate(BSPLINE3,shiftedFrame(),frame(),shift,WRAP);
-			if (fnAligned!="")
-				shiftedFrame.write(fnAligned,j+1,true,WRITE_REPLACE);
-			if (fnAvg!="")
-			{
-				if (j==0)
-					averageMicrograph()=shiftedFrame();
-				else
-					averageMicrograph()+=shiftedFrame();
-			}
-		}
+			movie.getValue(MDL_IMAGE,fnFrame,__iter.objId);
+			frame.read(fnFrame);
 
-		j++;
+			double totalShiftX, totalShiftY;
+			computeTotalShift(bestIref, j, shiftX, shiftY,XX(shift), YY(shift));
+			shift/=sizeFactor;
+			shift*=-1;
+			movie.setValue(MDL_SHIFT_X,XX(shift),__iter.objId);
+			movie.setValue(MDL_SHIFT_Y,YY(shift),__iter.objId);
+
+			std::cout << fnFrame << " shiftX=" << XX(shift) << " shiftY=" << YY(shift) << std::endl;
+			if (fnAligned!="" || fnAvg!="")
+			{
+				translate(BSPLINE3,shiftedFrame(),frame(),shift,WRAP);
+				if (fnAligned!="")
+					shiftedFrame.write(fnAligned,j+1,true,WRITE_REPLACE);
+				if (fnAvg!="")
+				{
+					if (j==0)
+						averageMicrograph()=shiftedFrame();
+					else
+						averageMicrograph()+=shiftedFrame();
+				}
+			}
+
+			j++;
+		}
+		else
+		{
+			movie.setValue(MDL_ENABLED,-1,__iter.objId);
+			movie.setValue(MDL_SHIFT_X,0.0,__iter.objId);
+			movie.setValue(MDL_SHIFT_Y,0.0,__iter.objId);
+		}
+		movie.setValue(MDL_WEIGHT,1.0,__iter.objId);
+		n++;
 	}
 	if (fnAvg!="")
 	{
 		averageMicrograph()/=N;
 		averageMicrograph.write(fnAvg);
 	}
+	if (fnOut=="")
+		fnOut=fnMovie;
+	movie.write(fnOut);
 }
