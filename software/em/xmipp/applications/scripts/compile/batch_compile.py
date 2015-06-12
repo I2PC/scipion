@@ -57,13 +57,15 @@ class ScriptCompile(XmippScript):
         xmippDir=getXmippPath();
         if xmippDir=="":
            reportError("$XMIPP_HOME is not set in the environment")
+	scipionDir=os.environ['SCIPION_HOME']
         command+=" -o "+fnBase+" "+fn+" -O -D_LINUX "+\
                  "-L"+xmippDir+"/lib "+\
                  "-I"+xmippDir+"/libraries "+\
                  "-I"+xmippDir+" "+\
-                 "-lXmippClassif -lXmippData -lXmippExternal -lXmippInterface -lXmippRecons -lXmippDimred -lfftw3 -lfftw3_threads -lsqlite3 -ltiff -ljpeg"
+                 "-lXmippClassif -lXmippData -lXmippInterface -lXmippRecons -lXmippDimred -lXmippBilib -lfftw3 -lfftw3_threads -lsqlite3 -ltiff -ljpeg"
         command +=" -I"+xmippDir+"/external/python/Python-2.7.2/Include -I"+xmippDir+"/external/python/Python-2.7.2 -L"+\
-                  xmippDir+"/external/python/Python-2.7.2 -lpython2.7 -I"+xmippDir+"/lib/python2.7/site-packages/numpy/core/include"
+                  xmippDir+"/external/python/Python-2.7.2 -lpython2.7 -I"+xmippDir+"/lib/python2.7/site-packages/numpy/core/include"+\
+		  " -I"+xmippDir+"/external"+" -I"+scipionDir+"/software/include -L"+scipionDir+"/software/lib"
         os.system(command)
 
 if __name__ == '__main__':
