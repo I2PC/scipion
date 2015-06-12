@@ -514,10 +514,10 @@ double MultidimArray<double>::interpolatedElement2D(double x, double y, double o
     int jF=FINISHINGX(*this);
 
     double d00, d10, d11, d01;
-    ASSIGNVAL(d00,y0,x0);
-    ASSIGNVAL(d01,y0,x1);
-    ASSIGNVAL(d10,y1,x0);
-    ASSIGNVAL(d11,y1,x1);
+    ASSIGNVAL2D(d00,y0,x0);
+    ASSIGNVAL2D(d01,y0,x1);
+    ASSIGNVAL2D(d10,y1,x0);
+    ASSIGNVAL2D(d11,y1,x1);
 
     double d0 = LIN_INTERP(fx, d00, d01);
     double d1 = LIN_INTERP(fx, d10, d11);
