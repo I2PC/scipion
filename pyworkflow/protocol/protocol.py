@@ -1346,15 +1346,18 @@ class Protocol(Step):
         
     def getParsedMethods(self):
         """ Get the _methods results and parse possible cites. """
-        baseMethods = self._methods() or []
-        bibtex = self.__getPackageBibTex()
-        parsedMethods = []
-        for m in baseMethods:
-            for bibId, cite in bibtex.iteritems():
-                k = '[%s]' % bibId
-                link = self._getCiteText(cite, useKeyLabel=True)
-                m = m.replace(k, link)
-            parsedMethods.append(m)
+        try:
+            baseMethods = self._methods() or []
+            bibtex = self.__getPackageBibTex()
+            parsedMethods = []
+            for m in baseMethods:
+                for bibId, cite in bibtex.iteritems():
+                    k = '[%s]' % bibId
+                    link = self._getCiteText(cite, useKeyLabel=True)
+                    m = m.replace(k, link)
+                parsedMethods.append(m)
+        except Exception, ex:
+            parsedMethods = ['ERROR generating methods info: %s' % ex]
         
         return parsedMethods
         
