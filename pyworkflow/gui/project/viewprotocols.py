@@ -707,7 +707,7 @@ class ProtocolsView(tk.Frame):
         """ Create the select-view combobox. """
         label = tk.Label(parent, text='View:', bg='white')
         label.grid(row=0, column=0)
-        viewChoices = ['String', 'Tree', 'Tree - small']
+        viewChoices = ['List', 'Tree', 'Tree - small']
         self.switchCombo = pwgui.widgets.ComboBox(parent, width=10, 
                                     choices=viewChoices, 
                                     values=[VIEW_LIST, VIEW_TREE, VIEW_TREE_SMALL],
