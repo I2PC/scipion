@@ -90,6 +90,7 @@ class StepThread(threading.Thread):
                     self.step.setFailed(error)
                 self.step.endTime.set(datetime.datetime.now())
 
+
 class ThreadStepExecutor(StepExecutor):
     """ Run steps in parallel using threads. """
     def __init__(self, hostConfig, nThreads):

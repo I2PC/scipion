@@ -63,7 +63,7 @@ from protocol_break_symmetry import XmippProtAngBreakSymmetry
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
-from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
+# from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_denoise_particles import XmippProtDenoiseParticles

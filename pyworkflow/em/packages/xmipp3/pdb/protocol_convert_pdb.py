@@ -86,19 +86,23 @@ class XmippProtConvertPdb(ProtInitialVolume):
         form.addSection(label='Input')
         form.addParam('pdb_file', PathParam, 
                       label="Pattern",
-                      help='Specify a path or an url to desired PDB structure. Also wwpdb.org IDs are accepted')
+                      help='Specify a path or an url to desired PDB structure. Also www.pdb.org IDs are accepted')
 #        form.addParam('pdb_file', StringParam, label="FileName or PDB ID",
 #                       help='type local PDB File Name or PDB ID')
-        form.addParam('inputPdbData', EnumParam, choices=['local_file', 'pdb_id'],
-                      label="Retrieve data from", default=self._pdb_id,
-                      display=EnumParam.DISPLAY_COMBO,
+        form.addParam('inputPdbData', EnumParam, choices=['file', 'id'],
+                      label="Retrieve PDB from", default=self._pdb_id,
+                      display=EnumParam.DISPLAY_HLIST,
                       help='Retrieve PDB data from server or use local file')
-        form.addParam('sampling', FloatParam, default=1.0, label="Sampling rate (A/px)",
+        form.addParam('sampling', FloatParam, default=1.0, 
+                      label="Sampling rate (A/px)",
                       help='Sampling rate (Angstroms/pixel)')
         form.addParam('setSize', BooleanParam, label='Set final size?', default=False)
-        form.addParam('size', IntParam, label="Final size (px)", condition='setSize', allowsNull=True,
+        form.addParam('size', IntParam, condition='setSize', allowsNull=True, 
+                      label="Final size (px)",
                       help='Final size in pixels. If no value is provided, protocol will estimate it.')
-        form.addParam('centerPdb', BooleanParam, label="Center PDB", default=True, expertLevel=LEVEL_ADVANCED,
+        form.addParam('centerPdb', BooleanParam, default=True, 
+                      expertLevel=LEVEL_ADVANCED, 
+                      label="Center PDB",
                       help='Center PDB with the center of mass')
 
     def _insertAllSteps(self):
@@ -128,9 +132,6 @@ class XmippProtConvertPdb(ProtInitialVolume):
         """ Although is not mandatory, usually is used by the protocol to
         register the resulting outputs in the database.
         """
-        import xmipp
-        from tempfile import NamedTemporaryFile
-        
         centerArg = _outFile = ''
         if self._centerPdb:
             centerArg = '--centerPDB'
@@ -158,6 +159,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         register the resulting outputs in the database.
         """
         volume = Volume()
+        volume.setSamplingRate(self.sampling.get())
         _outFile = self._output_file
         #    _outFile = self._getPath(self._pdb_file.rsplit(".", 1)[ 0 ])
         #_outFile = removeExt(self._output_file)

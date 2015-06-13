@@ -707,7 +707,7 @@ class ProtocolsView(tk.Frame):
         """ Create the select-view combobox. """
         label = tk.Label(parent, text='View:', bg='white')
         label.grid(row=0, column=0)
-        viewChoices = ['String', 'Tree', 'Tree - small']
+        viewChoices = ['List', 'Tree', 'Tree - small']
         self.switchCombo = pwgui.widgets.ComboBox(parent, width=10, 
                                     choices=viewChoices, 
                                     values=[VIEW_LIST, VIEW_TREE, VIEW_TREE_SMALL],
@@ -1088,7 +1088,16 @@ class ProtocolsView(tk.Frame):
             self.outputViewer.setIndex(i) # Preserve the last selected tab
 
     def _scheduleRunsUpdate(self, secs=1):
-        self.runsTree.after(secs*1000, self.refreshRuns)
+        #self.runsTree.after(secs*1000, self.refreshRuns)
+        self.windows.enqueue(self.refreshRuns)
+        
+    def executeProtocol(self, prot):
+        """ Function to execute a protocol called not
+        directly from the Form "Execute" button.
+        """
+        # We need to equeue the execute action
+        # to be executed in the same thread
+        self.windows.enqueue(lambda: self._executeSaveProtocol(prot))
         
     def _executeSaveProtocol(self, prot, onlySave=False):
         if onlySave:
