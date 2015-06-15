@@ -497,7 +497,7 @@ MODE can be:
                            For example, to run the "test_object" test:
                              scipion test tests.model.test_object
 
-    testdata OPTION        Get/put tests data from/to the server to/from the $SCIPION_TESTS folder.
+    testdata OPTION        Get(put) tests data, from(to) the server to(from) the $SCIPION_TESTS folder.
                            OPTION can be:
                              --download: copy dataset from remote location to local
                              --upload: copy dataset from local to remote
