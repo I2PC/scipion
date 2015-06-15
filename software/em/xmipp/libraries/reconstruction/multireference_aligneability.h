@@ -28,11 +28,11 @@
 #define PI 3.14159265
 
 #include <data/xmipp_program.h>
-#include "reconstruct_significant.h"
 #include "validation_nontilt.h"
 #include <math.h>
 #include <data/metadata.h>
 #include <string.h>
+#include <data/mask.h>
 
 
 class MultireferenceAligneability: public XmippProgram
@@ -41,8 +41,12 @@ class MultireferenceAligneability: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnDir, fnSym, fnInit, fin, fsig;
+    FileName fnDir, fnSym, fin, finRef, fnInit;
+    bool donNotUseWeights;
+    //fsig, fnInit;
 
+private:
+    size_t Xdim,Ydim,Zdim,Ndim;
 
     /** Sampling rate of the volume and projections */
     //double sampling_rate   //COMMENTED
@@ -60,11 +64,9 @@ private:
 
     void write_projection_file();
 
-    //void P_calculus(FileName &fnMd_signif,FileName &fnMdProj_signif,
-    //		FileName &fnMd,FileName &fnMdProj, MetaData &mdOut);
-    void P_calculus(FileName &fnMd_signif,FileName &fnMd, MetaData &mdOut);
+    void calc_sumu(const MetaData & tempMd, double & sum_W);
 
-    void calc_sumu(MetaData tempMd,std::vector<double> & sum_u);
+    void calc_sumw(const size_t num, double & sumw);
 
 };
 
