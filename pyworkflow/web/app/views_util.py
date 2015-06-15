@@ -672,7 +672,7 @@ def convertVolume(request, path):
 
 
 def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
-    _newPath = path
+    #_newPath = path
     _stats = None
     
     img = xmipp.Image()
@@ -695,8 +695,8 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         if axis != xmipp.VIEW_Z_NEG:
             img.reslice(axis)    
     
-    if (convert or reslice) and not os.path.exists(imgFn):
-        _newPath = getTmpVolumePath(imgFn)
+    _newPath = getTmpVolumePath(imgFn)
+    if (convert  and not os.path.exists(_newPath))or reslice:
         img.write(_newPath)
     return _newPath, _stats
 
