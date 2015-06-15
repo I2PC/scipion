@@ -53,6 +53,18 @@ public:
     FileName fnOut;
     /** First and last frame*/
     int nfirst, nlast;
+    /*****************************/
+    /** crop corner **/
+    /*****************************/
+    /** x left top corner **/
+    int xLTcorner;
+    /** y left top corner **/
+    int yLTcorner;
+    /** x right down corner **/
+    int xDRcorner;
+    /** y right down corner **/
+    int yDRcorner;
+
 public:
     // Fourier transforms of the input images
 	std::vector< MultidimArray<std::complex<double> > * > frameFourier;
