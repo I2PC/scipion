@@ -216,8 +216,7 @@ def check(dataset, url, verbose=False, updateMANIFEST=False):
 
     try:
         md5sRemote = dict(x.split() for x in
-                          urlopen('%s/%s/MANIFEST' %
-                                  (url, dataset)).read().splitlines())
+                          urlopen('%s/%s/MANIFEST' % (url, dataset)))
 
         md5sLocal = dict(x.split() for x in
                          open('%s/MANIFEST' %
