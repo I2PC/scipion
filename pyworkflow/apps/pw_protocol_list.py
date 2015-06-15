@@ -53,7 +53,7 @@ if __name__ == '__main__':
         print "-" * 100
         print "Package: ", group, "(%d protocols)" % len(prots)
         for k, v in prots:
-            print "   %s -> %s" % (k, v.__name__)
+            print "   %s ( %s )" % (k, v.getClassLabel())
             if withDoc:
                 print "      doc: ", v.__doc__
             #count += 1
