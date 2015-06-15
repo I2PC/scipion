@@ -161,10 +161,10 @@ at each refinement step. The resolution you specify is a target, not the filter 
                       help='Approximate molecular mass of the particle, in kDa.'
                            'This is used to runnormalize.bymass. Due to'
                            'resolution effects, not always the true mass.')
-        form.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
-                      label='Have data been phase-flipped?', condition='not doContinue',
-                      help='Set this to Yes if the images have been ctf-phase corrected during the '
-                           'pre-processing steps.')       
+#         form.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
+#                       label='Have data been phase-flipped?', condition='not doContinue',
+#                       help='Set this to Yes if the images have been ctf-phase corrected during the '
+#                            'pre-processing steps.')       
         form.addParam('doBreaksym', BooleanParam, default=False,
                        label='Do not impose symmetry?',
                        help='If set True, reconstruction will be asymmetric with'
@@ -258,7 +258,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
             args = " --voltage %3d" % acq.getVoltage()
             args += " --cs %f" % acq.getSphericalAberration()
             args += " --ac %f" % (100 * acq.getAmplitudeContrast())
-            if not self._isPhaseFlipped():
+            if not partSet.isPhaseFlipped():
                 args += " --phaseflip"
             args += " --apix %f --allparticles --autofit --curdefocusfix --storeparm -v 8" % (partSet.getSamplingRate())
             self.runJob(program, args, cwd=self._getExtraPath())
@@ -389,7 +389,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
         return os.path.basename(self._getFileName(key, **args))
     
     def _getParticlesStack(self):
-        if not self._isPhaseFlipped() and self._getInputParticles().hasCTF():
+        if not self._getInputParticles().isPhaseFlipped() and self._getInputParticles().hasCTF():
             return self._getFileName("partFlipSet")
         else:
             return self._getFileName("partSet")
@@ -443,10 +443,10 @@ at each refinement step. The resolution you specify is a target, not the filter 
             self.inputParticles.set(self.continueRun.get().inputParticles.get())
         return self.inputParticles.get()
 
-    def _isPhaseFlipped(self):
-        if self.doContinue:
-            self.haveDataBeenPhaseFlipped.set(self.continueRun.get().haveDataBeenPhaseFlipped.get())
-        return self.haveDataBeenPhaseFlipped.get()
+#     def _isPhaseFlipped(self):
+#         if self.doContinue:
+#             self.haveDataBeenPhaseFlipped.set(self.continueRun.get().haveDataBeenPhaseFlipped.get())
+#         return self.haveDataBeenPhaseFlipped.get()
     
     def _execEmanProcess(self, numRun, iterN):
         from pyworkflow.utils.path import cleanPath

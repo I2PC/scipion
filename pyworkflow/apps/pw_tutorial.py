@@ -28,97 +28,98 @@
 Launch main project window 
 """
 
+import os
 import sys
+from collections import OrderedDict
 
 import pyworkflow.tests as tests
-import pyworkflow.em as em
 from pyworkflow.manager import Manager
+import pyworkflow.utils as pwutils
 from pyworkflow.gui.project import ProjectWindow
 
 
-class TutorialIntro(tests.BaseTest):
+def getWorkflow(workflow):
+    """ Return the full workflow path from
+    the Scipion folder + config/workflows/
+    """
+    return os.path.join(os.environ['SCIPION_HOME'], 
+                        'config', 'workflows', workflow)
     
+
+class Tutorial():
+    """ Base class to implement some common functionalities. """
     def __init__(self):
         projName = self.__class__.__name__
         manager = Manager()
         if manager.hasProject(projName):
-            project = manager.loadProject(projName)
+            self.project = manager.loadProject(projName)
         else:
-            project = manager.createProject(projName)
-            
-            # Create a new project
-            self.outputPath = project.path
-            self.ds = tests.DataSet.getDataSet('xmipp_tutorial')
-            
-            project.loadProtocols(self.ds.getFile('workflow.json'))
-            
+            self.project = manager.createProject(projName)
             # Use graph view as default
-            settings = project.getSettings()
+            settings = self.project.getSettings()
             settings.setRunsView(1) # graph view
             settings.write()
-            
-            # Update the path of imports
-            protImportMics = project.getProtocolsByClass('ProtImportMicrographs')[0]
-            protImportMics.filesPath.set(self.ds.getFile('allMics'))
-            project.saveProtocol(protImportMics)
-            
-            protImportVol = project.getProtocolsByClass('ProtImportVolumes')[0]
-            protImportVol.filesPath.set(self.ds.getFile('vol110'))
-            project.saveProtocol(protImportVol)
+            self.loadWorkflow()
+    
 
-        self.project = project
-        
-        
-class Tutorial2D(tests.BaseTest):
+class TutorialIntro(Tutorial):
     
-    def __init__(self):
-        projName = self.__class__.__name__
-        manager = Manager()
-        if manager.hasProject(projName):
-            project = manager.loadProject(projName)
-        else:
-            project = manager.createProject(projName)
-            
-            # Create a new project
-            self.outputPath = project.path
-            self.ds = tests.DataSet.getDataSet('2d_analysis')
-            
-            project.loadProtocols(self.ds.getFile('workflow.json'))
-            
-            # Use graph view as default
-            #settings = project.getSettings()
-            #settings.setRunsView(1) # graph view
-            #settings.write()
-            
-            # Update the path of imports
-            protImportParticles = project.getProtocolsByClass('ProtImportParticles')[0]
-            protImportParticles.filesPath.set(self.ds.getFile('allMics'))
-            project.saveProtocol(protImportParticles)
-            
-            protImportVol = project.getProtocolsByClass('ProtImportVolumes')[0]
-            protImportVol.filesPath.set(self.ds.getFile('vol1'))
-            project.saveProtocol(protImportVol)
+    def loadWorkflow(self):            
+        # Create a new project
+        self.ds = tests.DataSet.getDataSet('xmipp_tutorial')
+        self.project.loadProtocols(self.ds.getFile('workflow.json'))
+        
+        # Update the path of imports
+        protImportMics = self.project.getProtocolsByClass('ProtImportMicrographs')[0]
+        protImportMics.filesPath.set(self.ds.getFile('allMics'))
+        self.project.saveProtocol(protImportMics)
+        
+        protImportVol = self.project.getProtocolsByClass('ProtImportVolumes')[0]
+        protImportVol.filesPath.set(self.ds.getFile('vol110'))
+        self.project.saveProtocol(protImportVol)
 
-        self.project = project
+
+class TutorialBetagal(Tutorial):
     
-    
+    def loadWorkflow(self):            
+        # Update the path of imports
+        self.project.loadProtocols(getWorkflow('workflow_betagal1.json'))
+
+
+ALL_TUTORIALS = OrderedDict([('intro', TutorialIntro),
+                             ('betagal', TutorialBetagal)])
+
 if __name__ == '__main__':
 
-    # Add callback for remote debugging if available.
-    try:
-        from rpdb2 import start_embedded_debugger
-        from signal import signal, SIGUSR2
-        signal(SIGUSR2, lambda sig, frame: start_embedded_debugger('a'))
-    except ImportError:
-        pass
+    def printUsage(msg):
+        if msg:
+            print "ERROR: ", msg
+            
+        print "\nUSAGE: scipion tutorial [TUTORIAL_NAME]"
+        print "\nwhere TUTORIAL_NAME can be:"
+        print "\n".join([' %s' % k for k in ALL_TUTORIALS.keys()])
+        
+    if pwutils.envVarOn('SCIPION_DEBUG'):
+        # Add callback for remote debugging if available.
+        try:
+            from rpdb2 import start_embedded_debugger
+            from signal import signal, SIGUSR2
+            signal(SIGUSR2, lambda sig, frame: start_embedded_debugger('a'))
+        except ImportError:
+            pass
 
-    if len(sys.argv) > 1:
+    if len(sys.argv) == 2:
         manager = Manager()
         tutorialName = sys.argv[1]
         
-        tutorial = TutorialIntro()
+        if not tutorialName in ALL_TUTORIALS:
+            printUsage("Invalid tutorial '%s'." % tutorialName)
+        else:
+            # Instanciate the proper tutorial class
+            tutorial = ALL_TUTORIALS[tutorialName]()
         
-        projWindow = ProjectWindow(tutorial.project.getName())
-        projWindow.show()
+            projWindow = ProjectWindow(tutorial.project.getName())
+            projWindow.show()
     else:
-        pass #TODO: print list of all tutorials
+        msg = 'Too many arguments.' if len(sys.argv) > 2 else ''
+        printUsage(msg)

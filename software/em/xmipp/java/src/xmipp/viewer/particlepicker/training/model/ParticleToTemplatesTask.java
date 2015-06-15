@@ -27,7 +27,8 @@ public class ParticleToTemplatesTask extends SwingWorker<String, Object>
 		{
 			
 			SupervisedParticlePicker picker = (SupervisedParticlePicker)particle.getParticlePicker();
-			picker.addParticleToTemplates(particle);
+			if (particle.getMicrograph().fits(particle.getX(), particle.getY(), picker.getSize()))
+				picker.addParticleToTemplates(particle);
 			
 		}
 		catch (Exception e)

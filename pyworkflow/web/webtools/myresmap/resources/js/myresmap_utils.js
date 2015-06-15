@@ -106,7 +106,7 @@ function getProjExample(elm){
 
 
 function createResMapProject(elm) {
-	var projName = "res"+randomString(32, '#aA')
+	var projName = "res"+randomString(16, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
 
 	var URL = getSubDomainURL() + "/create_resmap_project/?projectName=" + projName

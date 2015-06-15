@@ -6,6 +6,7 @@ from django.contrib import admin
 admin.autodiscover()
 from django.conf import settings
 from pyworkflow.web.pages.settings import WS_ROOT, serviceFolders
+from django.views.generic import TemplateView
 
 #===============================================================================
 # URL ASSOCIATION
@@ -106,6 +107,11 @@ mainUrls = ['',
     #TESTING
 #    url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
 
+    
+    url(r'^home/', 'app.views_home.home'),
+    url(r'^download_form/', 'app.views_home.download_form'),
+    url(r'^doDownload/', 'app.views_home.doDownload'),
+
 ]
 
 # Load URLS for webtools
@@ -114,6 +120,7 @@ toolModules = getModules(WS_ROOT)
 
 for tm in toolModules.values():
     mainUrls += tm.urls
+    
  
 
 # handler404 = "app.views_util.error"

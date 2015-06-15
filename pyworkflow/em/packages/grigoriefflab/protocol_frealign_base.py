@@ -40,8 +40,9 @@ from constants import (MOD2_SIMPLE_SEARCH_REFINEMENT, MOD_REFINEMENT, EWA_DISABL
                        INTERPOLATION_1, REF_ALL, MOD_RECONSTRUCTION, MOD_RANDOM_SEARCH_REFINEMENT,
                        MOD_SIMPLE_SEARCH_REFINEMENT, EWA_REFERENCE, EWA_SIMPLE_HAND, EWA_SIMPLE,
                        FSC_3DR_ODD, FSC_3DR_EVEN, FSC_3DR_ALL, MEM_1, MEM_2, INTERPOLATION_0, REF_ANGLES, REF_SHIFTS)
-from pyworkflow.em.packages.grigoriefflab.grigoriefflab import FREALIGN, FREALIGN_PATH, FREALIGNMP_PATH
-from pyworkflow.em import SetOfParticles
+from grigoriefflab import FREALIGN, FREALIGN_PATH, FREALIGNMP_PATH
+
+
 
 class ProtFrealignBase(EMProtocol):
     """ This class cointains the common functionalities for all Frealign protocols.
@@ -734,8 +735,12 @@ class ProtFrealignBase(EMProtocol):
             errors.append('Particle dimensions must be even!!!')
         if not imgSet.hasAlignmentProj() and self.useInitialAngles.get():
             errors.append("Particles has not initial angles !!!")
+        if imgSet.isPhaseFlipped():
+            errors.append("Your particles are phase flipped. Please, choose "
+                          "a set of particles without phase-contrast correction "
+                          "to run frealign.")
         return errors
-
+    
     def _summary(self):
         summary = []
         if self.inputParticles.get() is not None:

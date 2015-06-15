@@ -30,7 +30,9 @@ from pyworkflow.viewer import WEB_DJANGO, MessageView, ProtocolViewer, TextView,
 from pyworkflow.web.app.views_util import getImageUrl
 from views_util import savePlot
 from pyworkflow.gui.plotter import Plotter
-from pyworkflow.em import TABLE_NAME, DataView, ImageView, PATH
+from pyworkflow.em.viewer import DataView, ImageView
+from pyworkflow.em.showj import TABLE_NAME, PATH
+
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 
@@ -93,7 +95,7 @@ def launch_viewer(request):
     else:
         views = [MessageView("Object not found to visualize")]
         urls = [viewToUrl(request, view) for view in views]
-        
+    
     jsonStr = json.dumps(urls, ensure_ascii=False)
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
@@ -112,15 +114,13 @@ def viewToUrl(request, view):
 
     url = ""
     
-    print "type: ", type(view)
-    
     # PLOT
     if isinstance(view, Plotter):
-        url = 'url::/' + savePlot(request, view)
+        url = 'url::' + savePlot(request, view)
                 
     # IMAGE
     elif isinstance(view, ImageView):
-        url = 'url::/' + getImageUrl(view.getImagePath())
+        url = 'url::' + getImageUrl(view.getImagePath())
     
     # SHOWJ
     elif isinstance(view, DataView):
@@ -135,7 +135,7 @@ def viewToUrl(request, view):
     # MESSAGE
     elif isinstance(view, MessageView):
         url = 'error::' + view.getMessage()
-
+    
     return url
 
 def getShowjWebURL(view):
@@ -161,15 +161,19 @@ def viewer_element(request):
     updateProtocolParams(request, protocolViewer, project)
     
     views = protocolViewer._getVisualizeDict()[viewerParam](viewerParam)
+    
+    if views is None:
+        print "no viewer found"
+    else:
+        urls = []
+        for v in views:
+             # COMMAND VIEW
+             if isinstance(v, CommandView):
+        #             v.show()
+                print "THIS FUNCTION IS ONLY AVAILABLE ON DESKTOP!"
+             else:
+                urls.append(viewToUrl(request, v))
 
-    urls = []
-    for v in views:
-         # COMMAND VIEW
-        if isinstance(v, CommandView):
-            v.show()
-        else:
-            urls.append(viewToUrl(request, v))
-
-    jsonStr = json.dumps(urls, ensure_ascii=False)
+        jsonStr = json.dumps(urls, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
     

@@ -51,6 +51,9 @@ public:
     // Number of iterations
     int iterations;
 
+    // 3D or 2D mode
+    int mode;
+
 public:
     /** Low resolution and high resolution dictionary */
     std::vector< MultidimArray<double> > dictionaryLow, dictionaryHigh;
@@ -69,7 +72,8 @@ public:
 
     /* Some variables to approximate patches */
     Matrix2D<double> Ui, UitUi;
-	Matrix1D<double> wi, v1, v2, y, yp;
+	Matrix1D<double> wi, v1, v2, y, yp, Uity;
+	int patchSize_2;
 
 public:
     virtual void defineParams();
@@ -77,11 +81,28 @@ public:
     virtual void show();
     virtual void run()=0;
 
+    /** Extract Patch from volume */
+    void extractPatch(const MultidimArray<double> &V, MultidimArray<double> &patch, int k, int i, int j);
+
+    /** Insert Patch into volume */
+    void insertPatch(MultidimArray<double> &Vhigh, MultidimArray<double> &weightHigh, const MultidimArray<double> &patchHigh,
+    		int k, int i, int j, double R2);
+
+    /** Construct rotation group 2D */
+    void constructRotationGroup2D();
+
+    /** Construct rotation group 3D */
+    void constructRotationGroup3D();
+
     /** Construct rotation group */
     void constructRotationGroup();
 
     /** Orient canonically a patch */
-    size_t canonicalOrientation(const MultidimArray<double> &patch, MultidimArray<double> &canonicalPatch,
+    size_t canonicalOrientation2D(const MultidimArray<double> &patch, MultidimArray<double> &canonicalPatch,
+    		Matrix1D<double> &patchSignature);
+
+    /** Orient canonically a patch */
+    size_t canonicalOrientation3D(const MultidimArray<double> &patch, MultidimArray<double> &canonicalPatch,
     		Matrix1D<double> &patchSignature);
 
     /** True if the patch is not already in the low resolution dictionary */
@@ -117,6 +138,7 @@ class ProgConstructPDBDictionary: public ProgPDBDictionary
     /** Metadata with the high resolution volumes */
     FileName fnHigh;
 
+    double R2threshold;
 public:
     void defineParams();
     void readParams();

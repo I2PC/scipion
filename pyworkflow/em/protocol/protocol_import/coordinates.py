@@ -65,9 +65,9 @@ class ProtImportCoordinates(ProtImportFiles):
         form.addParam('scale', FloatParam,
                       label='Scale', default=1,
                       help='factor to scale coordinates')
-        form.addParam('invertX', BooleanParam,
+        form.addParam('invertX', BooleanParam, default=False,
                       label='Invert X')
-        form.addParam('invertY', BooleanParam,
+        form.addParam('invertY', BooleanParam, default=False,
                       label='Invert Y')
 
 

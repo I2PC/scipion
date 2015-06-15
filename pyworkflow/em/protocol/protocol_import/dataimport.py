@@ -65,7 +65,7 @@ class ScipionImport():
         # selected in the protocol form
         self.protocol.setSamplingRate(partSet)
         self.protocol.fillAcquisition(partSet.getAcquisition())
-
+        partSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
         self.protocol._defineOutputs(outputParticles=partSet)
         
     def _findPathAndCtf(self, warnings=True):

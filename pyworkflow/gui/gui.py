@@ -289,7 +289,11 @@ class Window():
             func = self.queue.get(block=False)
             # executes graphic interface function
             func()
-        self._queueTimer = self.root.after(1000, self.__processQueue)
+        self._queueTimer = self.root.after(500, self.__processQueue)
+        
+    def enqueue(self, func):
+        """ Put some function to be executed in the GUI main thread. """
+        self.queue.put(func)
         
     def getRoot(self):
         return self.root

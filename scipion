@@ -205,6 +205,8 @@ def runScript(scriptCmd, chdir=True):
 
 
 def runApp(app, args='', chdir=True):
+    if isinstance(args, list):
+        args = ' '.join('"%s"' % x for x in args)
     runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args), chdir)
 
 
@@ -222,8 +224,7 @@ MODE_TESTS = 'tests' # keep tests for compatibility
 MODE_TEST = 'test' # also allow 'test', in singular
 MODE_TEST_DATA = 'testdata'
 MODE_HELP = 'help'
-MODE_DBBROWSE = 'browser'
-MODE_VIEWER = 'viewer'
+MODE_VIEWER = ['viewer', 'view', 'show']
 MODE_INSTALL = 'install'
 MODE_UNINSTALL = 'uninstall'
 MODE_CONFIG = 'config'
@@ -256,8 +257,8 @@ def main():
 #         if not exists(join(VARS['SCIPION_SOFTWARE'], 'log', 'success.log')):
 #             ok = False
         if not ok:
-            sys.exit('There is a problem with the installation. Please run:\n'
-                     '  %s install' % sys.argv[0])
+            sys.exit("There is a problem with the installation. Please run:\n"
+                     "  %s install" % sys.argv[0])
 
     if mode == MODE_MANAGER:
         runApp('pw_manager.py')
@@ -266,9 +267,7 @@ def main():
         runApp('pw_project.py', args='last')
         
     elif mode == MODE_PROJECT:
-        if n > 2:
-            projectName = sys.argv[2]
-            runApp('pw_project.py', args=projectName)
+        runApp('pw_project.py', args=sys.argv[2:])
 
     elif mode == MODE_WEBSERVER:
         if n > 2:
@@ -294,14 +293,8 @@ def main():
     elif mode == MODE_TEST_DATA:
         runScript('scripts/sync_data.py %s' % ' '.join(sys.argv[2:]))
 
-    # TODO(josemiguel): review and see if we really need it.
-    elif mode == MODE_DBBROWSE:
-        browserArgs = " ".join('"%s"' % x for x in sys.argv[2:])
-        runApp('pw_browser.py', args=browserArgs)
-
-    elif mode == MODE_VIEWER:
-        viewerArgs = ' '.join(sys.argv[2:])
-        runApp('pw_viewer.py', args=viewerArgs, chdir=False)
+    elif mode in MODE_VIEWER:
+        runApp('pw_viewer.py', args=sys.argv[2:], chdir=False)
 
     elif mode == MODE_UNINSTALL:
         # We do not os.environ.update(VARS) here. SCons needs to use
@@ -343,19 +336,18 @@ def main():
 Installs Scipion. Also used to install only part of it, as specified
 in the <target>, or to add extra em packages to Scipion.
 
-arguments:
+Arguments:
   <target>      a library, a python module, an em package or a xmipp file
-  --show        do not install, just show what would be done
+  --show        just show what would be done, without actually installing
   --no-opencv   do not install opencv (big) or anything that depends on it
   --no-scipy    do not install scipy or anything that depends on it
 """ % ' '.join(sys.argv[:2]))
-            sys.exit()
-
-        # Create folders if needed.
-        for path in DIRS_GLOBAL.values():
-            if not exists(path):
-                sys.stdout.write("  Creating folder %s ...\n" % path)
-                os.makedirs(path)
+        else:
+            # Create folders if needed.
+            for path in DIRS_GLOBAL.values():
+                if not exists(path):
+                    sys.stdout.write("  Creating folder %s ...\n" % path)
+                    os.makedirs(path)
 
         def build(args):
             # Just importing the script will launch the install actions
@@ -412,25 +404,23 @@ arguments:
             open(join(VARS['SCIPION_SOFTWARE'], 'log',
                       'success.log'), 'w').write('Yes :)')
             sys.stdout.write("""
-
   ************************************************************************
   *                                                                      *
   *         Congratulations, Scipion was installed successfully          *
   *                                                                      *
   ************************************************************************
-
 """)
         os.chdir(cwd) # Go back to original folder
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:
-        runApp('pw_config.py', args=' '.join('"%s"' % x for x in sys.argv[2:]))
+        runApp('pw_config.py', sys.argv[2:])
 
     elif mode == MODE_STATS:
         statsDir = join(SCIPION_HOME, 'data', 'stats')
         if not exists(statsDir):
             os.makedirs(statsDir)
-        runApp('gitstats/gitstats', args='%s %s' % (SCIPION_HOME, statsDir))
+        runApp('gitstats/gitstats', args=[SCIPION_HOME, statsDir])
 
     elif mode == MODE_VERSION:
         sys.stdout.write('%s\n' % __version__)
@@ -441,9 +431,7 @@ arguments:
         # this could be pw_protocol_run.py or pw_protocol_mpirun.py
         protocolApp = sys.argv[2]
         # This should be (projectPath, protocolDb and protocolId)
-        params = ['"%s"' % s for s in sys.argv[3:]]
-        args = ' '.join(params)
-        runApp(protocolApp, args)
+        runApp(protocolApp, args=sys.argv[3:])
         
     elif mode == MODE_PROTOCOLS:
         runApp('pw_protocol_list.py')
@@ -466,43 +454,50 @@ arguments:
         runScript('scripts/find_deps.py software/bin software/lib %s'
                   % ' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
 
+    # Allow to run programs from different packages
+    # scipion will load the specified environment
+    elif (mode.startswith('xmipp') or
+          mode.startswith('relion') or
+          mode.startswith('e2') or 
+          mode.startswith('sx') or
+          mode.startswith('b')):
+        runApp('pw_program.py',  sys.argv[1:], chdir=False)
+    
     elif mode == MODE_HELP:
         sys.stdout.write("""\
 Usage: scipion [MODE] [ARGUMENTS]
 
 MODE can be:
-    browser                Browse a dir or an sqlite database.
-
-    config                 Write default configuration.
-
     help                   Print this help message.
+
+    config                 Check and/or write Scipion's global and local configuration.
 
     install [OPTION]       Download and install all the necessary software to run Scipion.
                            OPTION can be:
                              --with-all-packages: download also all external em packages
-                             --with-xmipp=$XMIPP_HOME: use existing installation of xmipp
                              --help: show all the available options
 
     manager                Open the manager with a list of all projects.
 
     printenv               Print the environment variables used by the application.
 
-    project [PROJECT_NAME] Open the specified project. The name 'last' opens the last project.
+    project NAME           Open the specified project. The name 'last' opens the last project.
+
     last                   Same as 'project last'
 
     run COMMAND [ARG ...]  Run command in the Scipion environment.
 
-    stats                  Write git statistics to data/stats folder.
+    stats                  Write git statistics to the data/stats folder.
 
-    test [OPTION]          Run a test. They are located in pyworkflow/tests .
+    test OPTION            Run test(s). All tests are located in pyworkflow/tests .
                            OPTION can be:
-                             <test name>: name of the test to run
+                             <name>: name of the test to run
                              --show: list the available tests
                              --help: show all the available options
                            For example, to run the "test_object" test:
                              scipion test tests.model.test_object
 
-    testdata [OPTION]      Get/put tests data from/to the server to/from the SCIPION_TESTS folder.
+    testdata OPTION        Get(put) tests data, from(to) the server to(from) the $SCIPION_TESTS folder.
                            OPTION can be:
                              --download: copy dataset from remote location to local
                              --upload: copy dataset from local to remote
@@ -515,9 +510,9 @@ MODE can be:
                              scipion testdata --upload xmipp_tutorial
                              
     tutorial [NAME]        Create a new protocol with a tutorial workflow loaded.
-                           If NAME is empty, the list of available tutorials are shown. 
+                           If NAME is empty, the list of available tutorials are shown.
 
-    viewer [FILE]          Open a file with Scipion's showj program.
+    view | show NAME       Open a file with Scipion's showj, or a directory with Browser.
 
     webserver [OPTION]     Launch webserver. Scipion can be then controlled from a web browser.
                            OPTION can be:
@@ -542,3 +537,4 @@ if __name__ == '__main__':
     except Exception:
         # This way of catching exceptions works with Python 2 & 3
         sys.exit('Error: %s\n' % sys.exc_info()[1])
+

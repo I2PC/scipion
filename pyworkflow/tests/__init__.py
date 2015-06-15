@@ -223,8 +223,8 @@ DataSet(name='general',  folder='general',
                 })
 
 DataSet(name='SymVirus', folder='SymVirus',
-        files={'whole_vol_half' : 'volumes/whole_vol_half.vol',
-               'large_vol_half_th' : 'volumes/large_vol_half_th.vol',
-               'small_vol_half_th' : 'volumes/small_vol_half_th.vol'
+        files={'whole_vol_half' : 'whole_vol_half.vol',
+               'large_vol_half_th' : 'large_vol_half_th.vol',
+               'small_vol_half_th' : 'small_vol_half_th.vol'
               }
        )

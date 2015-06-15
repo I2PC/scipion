@@ -119,8 +119,8 @@ class TestXmippCreateMask3D(TestXmippBase):
     
         print "Run create mask from another mask"
         protMask3 = self.newProtocol(XmippProtCreateMask3D,
-                                     source=2, doMorphological=True, elementSize=3)
-        protMask3.inputMask.set(protMask1.outputMask)
+                                     source=0, volumeOperation=2, doMorphological=True, elementSize=3)
+        protMask3.inputVolume.set(protMask1.outputMask)
         protMask3.setObjLabel('dilation mask')
         self.launchProtocol(protMask3)
         self.assertIsNotNone(protMask3.outputMask, "There was a problem with mask from another mask")
@@ -641,15 +641,15 @@ class TestXmippProtHelicalParameters(TestXmippBase):
 
     def testHelicalParameters(self):
         print "Run symmetrize helical"
-        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=True,rot0=-70,rotF=-50,rotStep=5,z0=5,zF=10,zStep=0.5)
+        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=True,rot0=50,rotF=70,rotStep=5,z0=5,zF=10,zStep=0.5)
         protHelical.inputVolume.set(self.protImport.outputVolume)
         self.proj.launchProtocol(protHelical, wait=True)
 
         self.assertIsNotNone(protHelical.outputVolume, "There was a problem with Helical output volume")
         self.assertIsNotNone(protHelical.deltaRot.get(), "Output delta rot is None")
         self.assertIsNotNone(protHelical.deltaZ.get(), "Output delta Z is None")
-        self.assertAlmostEqual(protHelical.deltaRot.get(), -67.4, places=1, msg="Output delta rot is wrong")
-        self.assertAlmostEqual(protHelical.deltaZ.get(), 7.6, places=1, msg="Output delta Z is wrong")
+        self.assertAlmostEqual(protHelical.deltaRot.get(), 59.59, places=1, msg="Output delta rot is wrong")
+        self.assertAlmostEqual(protHelical.deltaZ.get(), 6.628, places=1, msg="Output delta Z is wrong")
 
 
 class TestXmippRansacMda(TestXmippBase):
@@ -693,7 +693,7 @@ class TestXmippRansacGroel(TestXmippRansacMda):
         cls.samplingRate = 2.1
         cls.symmetryGroup = 'd7'
         cls.angularSampling = 7
-        cls.nRansac = 2350
+        cls.nRansac = 400
         cls.numSamples = 10
         cls.dimRed = True
         cls.numVolumes = 10

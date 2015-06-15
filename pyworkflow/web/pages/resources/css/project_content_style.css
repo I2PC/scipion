@@ -34,25 +34,29 @@
 	max-height: 80%;
 	overflow-y: scroll;
 	overflow: auto;
+	
 }
 
 .layout-inner>.north {
-	height: 80%;
+	height: 65%;
 	margin-top: 1.5em;
-	margin-bottom: 30px;
-	max-height: 70%;
+	margin-bottom: 0px;
+	max-height: 65%;
 	position: relative;
 	overflow: auto;
+	
 }
 
 .layout-inner>.north>.text {
 	position: relative;
 	height: 100%;
 	overflow: auto;
+	
 }
 
 .layout-inner>.center {
 	height: 100%;
+	
 }
 
 /* FLEX TEMPLATE (These styles are to create custom resize handles.) */

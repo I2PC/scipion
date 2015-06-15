@@ -1188,6 +1188,9 @@ def alignmentToRow(alignment, alignmentRow, alignType):
     invTransform == True  -> for xmipp implies projection
                           -> for xmipp implies alignment
     """
+    if alignment is None:
+        return 
+    
     is2D = alignType == ALIGN_2D
     inverseTransform = alignType == ALIGN_PROJ
     #only flip is meaninfull if 2D case
@@ -1349,4 +1352,7 @@ def createClassesFromImages(inputImages, inputMd,
                              classesFn, ClassType, classLabel, 
                              alignType, getClassFn=getClassFn, 
                              preprocessImageRow=preprocessImageRow)
-    
+
+
+def createItemMatrix(item, row, align):
+    item.setTransform(rowToAlignment(row, alignType=align))

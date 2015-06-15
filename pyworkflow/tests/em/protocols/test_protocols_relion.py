@@ -148,9 +148,8 @@ class TestRelionRefine(TestRelionBase):
   
         print "Run ProtRelionRefine"
         relion3DClass = self.newProtocol(ProtRelionRefine3D, 
-                                         doCTF=False, runMode=1,
-                                         maskDiameterA=340,
-                                         extraParams='--low_resol_join_halves 40 --memory_per_thread 1',
+                                         doCTF=False, runMode=1, memoryPreThreads=1,
+                                         maskDiameterA=340, symmetryGroup="d6",
                                          numberOfMpi=3, numberOfThreads=2)
         relion3DClass.inputParticles.set(relionNormalize.outputParticles)
         relion3DClass.referenceVolume.set(self.protImportVol.outputVolume)
@@ -193,78 +192,78 @@ class TestRelionPreprocess(TestRelionBase):
         self.launchProtocol(protocol)       
 
 
-class TestPolishParticles(TestRelionBase):
-    @classmethod
-    def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('ribo_movies')
-        cls.movies = cls.dataset.getFile('movies')
-        cls.crdsDir = cls.dataset.getFile('posAllDir')
-        cls.vol = cls.dataset.getFile('volume')
-        cls.protImportVol = cls.runImportVolumes(cls.vol, 4.74)
-    
-    def test_polish(self):
-        #First, import a set of movies
-        print "Importing a set of movies..."
-        protImport = self.newProtocol(ProtImportMovies,
-                                      filesPath=self.movies,
-                                      samplingRate=2.37, magnification=59000,
-                                      voltage=300, sphericalAberration=2.0)
-        protImport.setObjLabel('import movies')
-        self.proj.launchProtocol(protImport, wait=True)
-        self.assertIsNotNone(protImport.outputMovies, "There was a problem importing movies")
-        
-        print "Aligning the movies..."
-        protAlignMov = self.newProtocol(ProtMovieAlignment, numberOfThreads=4)
-        protAlignMov.inputMovies.set(protImport.outputMovies)
-        protAlignMov.setObjLabel('align movies')
-        self.proj.launchProtocol(protAlignMov, wait=True)
-        self.assertIsNotNone(protAlignMov.outputMicrographs, "There was a problem aligning movies")
-         
-        print "Preprocessing the micrographs..."
-        protPreprocess = self.newProtocol(XmippProtPreprocessMicrographs, doCrop=True,
-                                          cropPixels=50, doDownsample=True, downFactor=2,
-                                          numberOfThreads=4)
-        protPreprocess.inputMicrographs.set(protAlignMov.outputMicrographs)
-        protPreprocess.setObjLabel('crop and Down')
-        self.proj.launchProtocol(protPreprocess, wait=True)
-        self.assertIsNotNone(protPreprocess.outputMicrographs, "There was a problem with the crop")
-         
-        # Now estimate CTF on the micrographs
-        print "Performing CTF Micrographs..."
-        protCTF = self.newProtocol(ProtCTFFind, lowRes=0.03, highRes=0.31, numberOfThreads=4)
-        protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
-        protCTF.setObjLabel('ctf')
-        self.proj.launchProtocol(protCTF, wait=True)
-        self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF")
- 
-        print "Running Xmipp Import Coordinates"
-        protPP = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
-                                 filesPath=self.crdsDir,
-                                 filesPattern='*.pos', boxSize=120, scale=0.5)
-        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
-        protPP.setObjLabel('Picking')
-        self.launchProtocol(protPP)
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Xmipp import coordinates")
- 
-        print "Run extract particles with <Other> option"
-        protExtract = self.newProtocol(XmippProtExtractParticles,
-                                       boxSize=110, doInvert=True,
-                                                 doFlip=False, numberOfThreads=4)
-        protExtract.inputCoordinates.set(protPP.outputCoordinates)
-        protExtract.ctfRelations.set(protCTF.outputCTF)
-        protExtract.setObjLabel('extract particles')
-        self.proj.launchProtocol(protExtract, wait=True)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-        
-        print "Run Relion Refine"
-        proRef = self.newProtocol(ProtRelionRefine3D,
-                                  initialLowPassFilterA=40, maskDiameterA=500,
-                                  numberOfMpi=8, numberOfThreads=2)
-        proRef.inputParticles.set(protExtract.outputParticles)
-        proRef.referenceVolume.set(self.protImportVol.outputVolume)
-        proRef.setObjLabel('relion Refine')
-        self.launchProtocol(proRef)
-        self.assertIsNotNone(proRef.outputVolume, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
-        self.assertIsNotNone(proRef.outputParticles, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
+# class TestPolishParticles(TestRelionBase):
+#     @classmethod
+#     def setUpClass(cls):
+#         setupTestProject(cls)
+#         cls.dataset = DataSet.getDataSet('ribo_movies')
+#         cls.movies = cls.dataset.getFile('movies')
+#         cls.crdsDir = cls.dataset.getFile('posAllDir')
+#         cls.vol = cls.dataset.getFile('volume')
+#         cls.protImportVol = cls.runImportVolumes(cls.vol, 4.74)
+#     
+#     def test_polish(self):
+#         #First, import a set of movies
+#         print "Importing a set of movies..."
+#         protImport = self.newProtocol(ProtImportMovies,
+#                                       filesPath=self.movies,
+#                                       samplingRate=2.37, magnification=59000,
+#                                       voltage=300, sphericalAberration=2.0)
+#         protImport.setObjLabel('import movies')
+#         self.proj.launchProtocol(protImport, wait=True)
+#         self.assertIsNotNone(protImport.outputMovies, "There was a problem importing movies")
+#         
+#         print "Aligning the movies..."
+#         protAlignMov = self.newProtocol(ProtMovieAlignment, numberOfThreads=4)
+#         protAlignMov.inputMovies.set(protImport.outputMovies)
+#         protAlignMov.setObjLabel('align movies')
+#         self.proj.launchProtocol(protAlignMov, wait=True)
+#         self.assertIsNotNone(protAlignMov.outputMicrographs, "There was a problem aligning movies")
+#          
+#         print "Preprocessing the micrographs..."
+#         protPreprocess = self.newProtocol(XmippProtPreprocessMicrographs, doCrop=True,
+#                                           cropPixels=50, doDownsample=True, downFactor=2,
+#                                           numberOfThreads=4)
+#         protPreprocess.inputMicrographs.set(protAlignMov.outputMicrographs)
+#         protPreprocess.setObjLabel('crop and Down')
+#         self.proj.launchProtocol(protPreprocess, wait=True)
+#         self.assertIsNotNone(protPreprocess.outputMicrographs, "There was a problem with the crop")
+#          
+#         # Now estimate CTF on the micrographs
+#         print "Performing CTF Micrographs..."
+#         protCTF = self.newProtocol(ProtCTFFind, lowRes=0.03, highRes=0.31, numberOfThreads=4)
+#         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
+#         protCTF.setObjLabel('ctf')
+#         self.proj.launchProtocol(protCTF, wait=True)
+#         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF")
+#  
+#         print "Running Xmipp Import Coordinates"
+#         protPP = self.newProtocol(ProtImportCoordinates,
+#                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+#                                  filesPath=self.crdsDir,
+#                                  filesPattern='*.pos', boxSize=120, scale=0.5)
+#         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
+#         protPP.setObjLabel('Picking')
+#         self.launchProtocol(protPP)
+#         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Xmipp import coordinates")
+#  
+#         print "Run extract particles with <Other> option"
+#         protExtract = self.newProtocol(XmippProtExtractParticles,
+#                                        boxSize=110, doInvert=True,
+#                                                  doFlip=False, numberOfThreads=4)
+#         protExtract.inputCoordinates.set(protPP.outputCoordinates)
+#         protExtract.ctfRelations.set(protCTF.outputCTF)
+#         protExtract.setObjLabel('extract particles')
+#         self.proj.launchProtocol(protExtract, wait=True)
+#         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+#         
+#         print "Run Relion Refine"
+#         proRef = self.newProtocol(ProtRelionRefine3D,
+#                                   initialLowPassFilterA=40, maskDiameterA=500,
+#                                   numberOfMpi=8, numberOfThreads=2)
+#         proRef.inputParticles.set(protExtract.outputParticles)
+#         proRef.referenceVolume.set(self.protImportVol.outputVolume)
+#         proRef.setObjLabel('relion Refine')
+#         self.launchProtocol(proRef)
+#         self.assertIsNotNone(proRef.outputVolume, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
+#         self.assertIsNotNone(proRef.outputParticles, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))

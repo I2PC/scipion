@@ -151,16 +151,19 @@ class Step(OrderedObject):
     def isAborted(self):
         return self.getStatus() == STATUS_ABORTED
 
+    def isLaunched(self):
+        return self.getStatus() == STATUS_LAUNCHED
+
     def isInteractive(self):
         return self.interactive.get()
-    
+
     def run(self):
         """ Do the job of this step"""
         self.setRunning() 
         try:
             self._run()
             self.endTime.set(dt.datetime.now())
-            if self.status == STATUS_RUNNING:
+            if self.status.get() == STATUS_RUNNING:
                 if self.isInteractive():
                     # If the Step is interactive, after run
                     # it will be waiting for use to mark it as DONE
@@ -278,7 +281,9 @@ class Protocol(Step):
         self.mapper = kwargs.get('mapper', None)
         self._inputs = []
         self._outputs = CsvList()
-        self._definition = Form()
+        # Expert level
+        self.expertLevel = Integer(kwargs.get('expertLevel', LEVEL_NORMAL))#needs to be defined before parsing params 
+        self._definition = Form(self)
         self._defineParams(self._definition)
         self._createVarsFromDefinition(**kwargs)
         self.__stdOut = None
@@ -315,8 +320,7 @@ class Protocol(Step):
         # Maybe this property can be inferred from the 
         # prerequisites of steps, but is easier to keep it
         self.stepsExecutionMode = STEPS_SERIAL
-        # Expert level
-        self.expertLevel = Integer(kwargs.get('expertLevel', LEVEL_NORMAL))
+        
         # Run mode
         self.runMode = Integer(kwargs.get('runMode', MODE_RESUME))
         # Use queue system?
@@ -399,7 +403,7 @@ class Protocol(Step):
         """ Eval if the condition of paramName in _definition
         is satified with the current values of the protocol attributes. 
         """
-        return self._definition.evalParamCondition(self, paramName)
+        return self._definition.evalParamCondition(paramName)
     
     def evalExpertLevel(self, paramName):
         """ Return the expert level evaluation for a param with the given name. """
@@ -468,13 +472,10 @@ class Protocol(Step):
         from pyworkflow.em.data import EMObject
         for paramName, attr in self.iterOutputAttributes(EMObject):
             yield paramName, attr
-    
+
     def getOutputsSize(self):
-        count = 0
-        for _ in self.iterOutputEM():
-            count += 1
-        return count;
-    
+        return sum(1 for _ in self.iterOutputEM())
+
     def getOutputFiles(self):
         """ Return the output files produced by this protocol.
         This can be used in web to download or in remote 
@@ -767,6 +768,8 @@ class Protocol(Step):
         """
         self.info(magentaStr("STARTED") + ": %s, step %d" %
                   (step.funcName.get(), step._index))
+        self.info("  %s" % dt.datetime.strptime(step.initTime.get(),
+                                                "%Y-%m-%d %H:%M:%S.%f"))
         self.__updateStep(step)
         
     def _stepFinished(self, step):
@@ -789,13 +792,14 @@ class Protocol(Step):
         
         self.info(magentaStr(step.getStatus().upper()) + ": %s, step %d" %
                   (step.funcName.get(), step._index))
-
+        self.info("  %s" % dt.datetime.strptime(step.endTime.get(),
+                                                "%Y-%m-%d %H:%M:%S.%f"))
         if step.isFailed() and self.stepsExecutionMode == STEPS_PARALLEL:
             # In parallel mode the executor will exit to close
             # all working threads, so we need to close
             self._endRun()
         return doContinue
-    
+
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps. """
         self._stepsDone.set(startIndex)
@@ -909,12 +913,12 @@ class Protocol(Step):
         if 'env' not in kwargs:
             #self._log.info("calling self._getEnviron...")
             kwargs['env'] = self._getEnviron()
-                       
+
         #self._log.info("runJob: cwd = %s" % kwargs.get('cwd', ''))
         #self._log.info("runJob: env = %s " % str(kwargs['env']))
 
         self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
-        
+
     def run(self):
         """ Before calling this method, the working dir for the protocol
         to run should exists. 
@@ -926,13 +930,15 @@ class Protocol(Step):
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: ' + self.workingDir.get())
         self.info('      runMode: %d' % self.runMode.get())
-#        Commented lines by some fails when a protocol not used this options
-#        self.info('          MPI: %d' % self.numberOfMpi.get())
-#        self.info('      threads: %d' % self.numberOfThreads.get())
+        try:
+            self.info('          MPI: %d' % self.numberOfMpi.get())
+            self.info('      threads: %d' % self.numberOfThreads.get())
+        except Exception as e:
+            self.info('  * Cannot get information about MPI/threads (%s)' % e)
 
-        Step.run(self)     
+        Step.run(self)
         self._endRun()
-        
+
     def _endRun(self):
         """ Print some ending message and close some files. """   
         #self._store()
@@ -1155,22 +1161,23 @@ class Protocol(Step):
     
     def setQueueParams(self, queueParams):
         self._queueParams.set(json.dumps(queueParams))
-        
-    def getNumberOfSteps(self):
+
+    @property
+    def numberOfSteps(self):
         return self._numberOfSteps.get(0)
-    
-    def getStepsDone(self):
+
+    @property
+    def stepsDone(self):
         """ Return the number of steps executed. """
         return self._stepsDone.get(0)
-            
+
     def getStatusMessage(self):
         """ Return the status string and if running the steps done. 
         """
         msg = self.getStatus()
         if self.isRunning() or self.isAborted() or self.isFailed():
-            done = self.getStepsDone()
-            msg += " (done %d/%d)" % (done, self.getNumberOfSteps())
-        
+            msg += " (done %d/%d)" % (self.stepsDone, self.numberOfSteps)
+
         return msg
     
     def getRunMode(self):
@@ -1342,15 +1349,18 @@ class Protocol(Step):
         
     def getParsedMethods(self):
         """ Get the _methods results and parse possible cites. """
-        baseMethods = self._methods() or []
-        bibtex = self.__getPackageBibTex()
-        parsedMethods = []
-        for m in baseMethods:
-            for bibId, cite in bibtex.iteritems():
-                k = '[%s]' % bibId
-                link = self._getCiteText(cite, useKeyLabel=True)
-                m = m.replace(k, link)
-            parsedMethods.append(m)
+        try:
+            baseMethods = self._methods() or []
+            bibtex = self.__getPackageBibTex()
+            parsedMethods = []
+            for m in baseMethods:
+                for bibId, cite in bibtex.iteritems():
+                    k = '[%s]' % bibId
+                    link = self._getCiteText(cite, useKeyLabel=True)
+                    m = m.replace(k, link)
+                parsedMethods.append(m)
+        except Exception, ex:
+            parsedMethods = ['ERROR generating methods info: %s' % ex]
         
         return parsedMethods
         

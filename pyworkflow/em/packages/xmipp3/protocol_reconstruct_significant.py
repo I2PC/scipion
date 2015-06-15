@@ -88,7 +88,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                       label='Starting significance',
                       help='80 means 80% of significance. Use larger numbers to relax the starting significance and have a smoother '
                            'landscape of solutions')
-        form.addParam('iter', IntParam, default=100,
+        form.addParam('iter', IntParam, default=50,
                       label='Number of iterations',
                       help='Number of iterations to go from the initial significance to the final one')
         form.addParam('alphaF', FloatParam, default=99.5,

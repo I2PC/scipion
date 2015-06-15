@@ -51,11 +51,11 @@ class TestXmippBase(BaseTest):
         cls.averagesDir = cls.dataset.getFile('averagesDir')
     
     @classmethod
-    def runImportParticles(cls, pattern, samplingRate, checkStack=False):
+    def runImportParticles(cls, pattern, samplingRate, checkStack=False, phaseFlip=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportParticles, 
                                          filesPath=pattern, samplingRate=samplingRate, 
-                                         checkStack=checkStack)
+                                         checkStack=checkStack, haveDataBeenPhaseFlipped=phaseFlip)
         print '_label: ', cls.protImport._label
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
@@ -333,7 +333,7 @@ class TestXmippScreenParticles(TestXmippBase):
         self.launchProtocol(protScreenZScore)
         self.assertIsNotNone(protScreenZScore.outputParticles, "Output has not been produced")
         print '\t --> Output is not None'
-        self.assertEqual(len(protScreenZScore.outputParticles), 72, "Output Set Of Particles must be 72, but %s found" % len(protScreenZScore.outputParticles))
+        self.assertEqual(len(protScreenZScore.outputParticles), 71, "Output Set Of Particles must be 71, but %s found" % len(protScreenZScore.outputParticles))
         print '\t --> Output set size is correct (%s)' % len(protScreenZScore.outputParticles)
         
         for x in protScreenZScore.outputParticles:
@@ -348,7 +348,7 @@ class TestXmippScreenParticles(TestXmippBase):
         self.launchProtocol(protScreenPercentage)
         self.assertIsNotNone(protScreenPercentage.outputParticles, "Output has not been produced")
         print '\t --> Output is not None'
-        self.assertEqual(len(protScreenPercentage.outputParticles), 72, "Output Set Of Particles must be 72, but %s found" % len(protScreenPercentage.outputParticles))
+        self.assertEqual(len(protScreenPercentage.outputParticles), 71, "Output Set Of Particles must be 71, but %s found" % len(protScreenPercentage.outputParticles))
         print '\t --> Output set size is correct (%s)' % len(protScreenPercentage.outputParticles)
         
         for x, y in izip(protScreenZScore.outputParticles, protScreenPercentage.outputParticles):
@@ -476,7 +476,7 @@ class TestXmippFilterParticles(TestXmippBase):
         print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
         setupTestProject(cls)
         TestXmippBase.setData('xmipp_tutorial')
-        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True, True)
 
     def test_filterParticles(self):
         print "\n", greenStr(" Filter Particles ".center(75, '-'))

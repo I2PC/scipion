@@ -81,7 +81,7 @@ class XmippProtRansac(ProtInitialVolume):
                       label="Number of RANSAC iterations", 
                       help='Number of initial volumes to test by RANSAC')
         
-        form.addParam('dimRed', BooleanParam, default=True, expertLevel=LEVEL_ADVANCED,
+        form.addParam('dimRed', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label='Perform dimensionality reduction', 
                       help='The dimensionality reduction is performed using the Local Tangent Space'
                       'Alignment. See http://www.stat.missouri.edu/~ys873/research/LTSA11.pdf')
@@ -251,10 +251,13 @@ class XmippProtRansac(ProtInitialVolume):
     
     def reconstructStep(self, fnRoot):
         from pyworkflow.em.metadata.utils import getSize
-        Nimages=getSize(fnRoot+".xmd")
-        if Nimages>0:
-            self.runJob("xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))
-            self.runJob("xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,self.Xdim2/2))
+        if os.path.exists(fnRoot+".xmd"):
+            Nimages=getSize(fnRoot+".xmd")
+            if Nimages>0:
+                self.runJob("xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))
+                self.runJob("xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,self.Xdim2/2))
+        else:
+            print fnRoot+".xmd is empty. The corresponding volume is not generated." 
     
     def resizeStep(self,fnRoot,Xdim):
         if os.path.exists(fnRoot+".vol"):
@@ -385,7 +388,10 @@ class XmippProtRansac(ProtInitialVolume):
                     if cc<minCC:
                         minCC=cc
                     N+=1
-                avg=sum/N
+                if N>0:
+                    avg=sum/N
+                else:
+                    avg=0.0
                 id=mdOut.addObject()
                 mdOut.setValue(xmipp.MDL_IMAGE,fnRoot+".vol",id)
                 mdOut.setValue(xmipp.MDL_VOLUME_SCORE_SUM,float(sum),id)

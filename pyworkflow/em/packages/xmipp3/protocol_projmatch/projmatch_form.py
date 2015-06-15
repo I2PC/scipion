@@ -60,9 +60,6 @@ def _defineProjectionMatchingParams(self, form):
                       'more than one 3D input reference. \n'
                       '_For example_: reference1.vol reference2.vol \n '
                       'specifies two references.')
-    form.addParam('numberOfIterations', IntParam, default=4,
-                 label='Number of iterations',
-                 help='Number of iterations to perform.')
     form.addParam('cleanUpFiles', BooleanParam, default=False,
                  label="Clean up intermediate files?",  expertLevel=LEVEL_ADVANCED,
                  help='Save disc space by cleaning up intermediate files. \n '
@@ -144,6 +141,9 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addSection(label='Projection Matching')
     
+    form.addParam('numberOfIterations', IntParam, default=4,
+             label='Number of iterations',
+             help='Number of iterations to perform.')
     form.addParam('innerRadius', NumericListParam, default='0', 
                  label='Inner radius for rotational correlation:', 
                  help=""" In pixels from the image center
@@ -411,10 +411,10 @@ def _defineProjectionMatchingParams(self, form):
     form.addSection(label='2D re-alignment of classes', expertLevel=LEVEL_ADVANCED)
     
     form.addParam('performAlign2D', BooleanParam, default=False,
-                 label='Perform 2D re-alignment', expertLevel=LEVEL_ADVANCED)
+                 label='Perform 2D re-alignment')
     
     form.addParam('doAlign2D', NumericListParam, default='0', condition='performAlign2D',
-                 label='Perform 2D re-alignment of classes?', expertLevel=LEVEL_ADVANCED,
+                 label='Perform 2D re-alignment of classes?',
                  help=""" After performing a 3D projection matching iteration, each of the
     subsets of images assigned to one of the library projections is
     re-aligned using a 2D-alignment protocol.

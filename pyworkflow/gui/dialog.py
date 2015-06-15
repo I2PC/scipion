@@ -329,8 +329,8 @@ class EntryDialog(Dialog):
             showError("Validation error", "Value is empty", self)
             return False
         return True
-    
-    
+
+
 class EditObjectDialog(Dialog):
     """Dialog to edit some text"""
     def __init__(self, parent, title, obj, mapper, **kwargs):

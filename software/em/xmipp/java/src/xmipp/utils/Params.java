@@ -51,6 +51,7 @@ public class Params {
     public final static String SAMPLINGRATE = "sampling_rate";
     public final static String CHIMERAPORT = "chimera_port";
     public final static String INVERTY = "inverty";
+
     
     
     
@@ -61,7 +62,7 @@ public class Params {
     public boolean singleSelection;
     public String mode = OPENING_MODE_DEFAULT;
     public boolean poll;
-    public int zoom = 0;
+    public Integer zoom;
     public String[] renderLabels = new String[]{"first"}; //Label to render, by default first
     public String renderLabel;
     public String[] displayLabels;
@@ -90,6 +91,7 @@ public class Params {
     private Float samplingRate;
     public Integer chimeraPort;
     public boolean inverty;
+	public boolean renderImages = true;
     
 
     public Params() {
@@ -114,7 +116,7 @@ public class Params {
         options.addOption(OPENING_MODE, true, "");
         options.addOption(POLL, false, "");
         options.addOption(ZOOM, true, "");
-        Option opt = new Option(RENDER_IMAGES, "");
+        Option opt = new Option(RENDER_IMAGES, true, "");
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
         opt = new Option(VISIBLE_LABELS, "");
@@ -196,6 +198,7 @@ public class Params {
             if(cmdLine.hasOption(RENDER_IMAGES))
             {
             	renderLabels = cmdLine.getOptionValues(RENDER_IMAGES);
+            	renderImages = !(renderLabels.length == 1 && renderLabels[0].equalsIgnoreCase("no"));
                 
             }
             if(cmdLine.hasOption(VISIBLE_LABELS))

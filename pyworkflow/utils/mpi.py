@@ -79,7 +79,7 @@ def runJobMPI(programname, params, mpiComm, mpiDest,
               env=None, cwd=None):
     """ Send the command to the MPI node in which it will be executed. """
 
-    command = buildRunCommand(programname, params, numberOfMpi, hostConfig)
+    command = buildRunCommand(programname, params, numberOfMpi, hostConfig, env)
     if cwd is not None:
         send("cwd=%s" % cwd, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
     if env is not None:

@@ -69,20 +69,26 @@ class StepExecutor():
 
 class StepThread(threading.Thread):
     """ Thread to run Steps in parallel. """
-    def __init__(self, thId, step):
+    def __init__(self, thId, step, lock):
         threading.Thread.__init__(self)
         self.thId = thId
         self.step = step
+        self.lock = lock
 
     def run(self):
+        error = None
         try:
             self.step._run()  # not self.step.run() , to avoid race conditions
-            self.step.setStatus(cts.STATUS_FINISHED)
         except Exception as e:
-            self.step.setFailed(str(e))
+            error = str(e)
             traceback.print_exc()
         finally:
-            self.step.endTime.set(datetime.datetime.now())
+            with self.lock:
+                if error is None:
+                    self.step.setStatus(cts.STATUS_FINISHED)
+                else:
+                    self.step.setFailed(error)
+                self.step.endTime.set(datetime.datetime.now())
 
 
 class ThreadStepExecutor(StepExecutor):
@@ -95,6 +101,8 @@ class ThreadStepExecutor(StepExecutor):
         """ Create threads and synchronize the steps execution.
         n: the number of threads.
         """
+
+        sharedLock = threading.Lock()
 
         runningSteps = {}  # currently running step in each node ({node: step})
         freeNodes = range(self.numberOfProcs)  # available nodes to send mpi jobs
@@ -112,26 +120,35 @@ class ThreadStepExecutor(StepExecutor):
         while True:
             # See which of the runningSteps are not really running anymore.
             # Update them and freeNodes, and call final callback for step.
-            notRunning = [node for node, step in runningSteps.iteritems()
-                              if not step.isRunning()]
-            for node in notRunning:
+            with sharedLock:
+                nodesFinished = [node for node, step in runningSteps.iteritems()
+                                 if not step.isRunning()]
+            doContinue = True
+            for node in nodesFinished:
                 step = runningSteps.pop(node)  # remove entry from runningSteps
                 freeNodes.append(node)  # the node is available now
-                stepFinishedCallback(step)  # and do final work on the finished step
+                doContinue = stepFinishedCallback(step)  # and do final work on the finished step
+                if not doContinue:
+                    break
+            if not doContinue:
+                break
 
             # If there are available nodes, send next runnable step.
-            if freeNodes:
-                step = getRunnable()
-                if step is not None:
-                    # We found a step to work in, so let's start a new
-                    # thread to do the job and book it.
-                    step.setRunning()
-                    stepStartedCallback(step)
-                    node = freeNodes.pop()  # take an available node
-                    runningSteps[node] = step
-                    StepThread(node, step).start()
-                elif not any(s.isRunning() for s in steps):  # nothing running
-                    break  # yeah, we are done, either failed or finished :)
+            with sharedLock:
+                if freeNodes:
+                    step = getRunnable()
+                    if step is not None:
+                        # We found a step to work in, so let's start a new
+                        # thread to do the job and book it.
+                        step.setRunning()
+                        stepStartedCallback(step)
+                        node = freeNodes.pop()  # take an available node
+                        runningSteps[node] = step
+                        t = StepThread(node, step, sharedLock)
+                        t.daemon = True  # won't keep process up if main thread ends
+                        t.start()
+                    elif not any(s.isRunning() for s in steps):  # nothing running
+                        break  # yeah, we are done, either failed or finished :)
 
             time.sleep(0.1)  # be gentle on the main thread
 

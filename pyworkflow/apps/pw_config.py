@@ -34,15 +34,17 @@ import optparse
 # be compatible with python >= 2.3
 
 try:
-    from ConfigParser import ConfigParser
+    from ConfigParser import ConfigParser, Error
 except ImportError:
-    from configparser import ConfigParser  # Python 3
+    from configparser import ConfigParser, Error  # Python 3
 
 def ansi(n):
     "Return function that escapes text with ANSI color n."
     return lambda txt: '\x1b[%dm%s\x1b[0m' % (n, txt)
 
 black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
+# We don't take them from pyworkflow.utils because this has to run
+# with all python versions (and so it is simplified).
 
 
 def main():
@@ -90,6 +92,12 @@ def main():
 
         # After all, check some extra things are fine in scipion.conf
         checkPaths(os.environ['SCIPION_CONFIG'])
+        if (not globalIsLocal and '[BUILD]' in
+            [x.strip() for x in open(os.environ['SCIPION_LOCAL_CONFIG'])]):
+            print(red("Found a BUILD section in the local configuration file %s"
+                      "\nthat would override %s -- Not checking it." %
+                      (os.environ['SCIPION_LOCAL_CONFIG'],
+                       os.environ['SCIPION_CONFIG'])))
     except Exception:
         # This way of catching exceptions works with Python 2 & 3
         sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
@@ -143,7 +151,12 @@ def checkPaths(conf):
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     assert cf.read(conf) != [], 'Missing file: %s' % conf
-    get = lambda x: cf.get('BUILD', x)  # short notation
+    def get(var):
+        try:
+            return cf.get('BUILD', var)
+        except Error as e:
+            print(red("While getting '%s' in section BUILD: %s" % (var, e)))
+            return '/'
     allOk = True
     for var in ['MPI_LIBDIR', 'MPI_INCLUDE', 'MPI_BINDIR',
                 'JAVA_HOME', 'JAVA_BINDIR']:

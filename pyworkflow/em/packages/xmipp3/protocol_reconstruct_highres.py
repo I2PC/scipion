@@ -92,7 +92,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addParam('weightAstigmatism', BooleanParam, label="Weight by astigmatism?", default=True,
                       help='Give lower weight to those images whose astigmatic CTF would not allow to reach high resolution.' \
                            'This weight is calculated by the continuous assignment.')
-        form.addParam('weightAstigmatismSigma', FloatParam, label="Astigmatism sigma", default=10, expertLevel=LEVEL_ADVANCED, 
+        form.addParam('weightAstigmatismSigma', FloatParam, label="Astigmatism sigma", default=120, expertLevel=LEVEL_ADVANCED, 
                         condition="weightAstigmatism", help="Sigma in degrees for the CTF phase");
         form.addParam('weightResiduals', BooleanParam, label="Weight by residuals?", default=True,
                       help="Analyze how different are the image residuals, it only works after running the continuous assignment");
@@ -420,13 +420,16 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         # Prepare particles
         fnDir0=self._getExtraPath("Iter000")
         fnNewParticles=join(fnDir,"images.stk")
-        self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"%(self.imgsFn,fnNewParticles,newXdim))
+        if newXdim!=Xdim:
+            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"%(self.imgsFn,fnNewParticles,newXdim))
+        else:
+            self.runJob("xmipp_image_convert","-i %s -o %s --save_metadata_stack %s"%(self.imgsFn,fnNewParticles,join(fnDir,"images.xmd")),
+                        numberOfMpi=1)
         R=self.particleRadius.get()
         if R<=0:
             R=self.inputParticles.get().getDimensions()[0]/2
         R=min(round(R*self.TsOrig/TsCurrent*(1+self.angularMaxShift.get()*0.01)),newXdim/2)
         self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnNewParticles,R))
-        self.runJob('xmipp_transform_filter','-i %s --fourier fsc %s --sampling %f'%(fnNewParticles,join(fnDirPrevious,"fsc.xmd"),TsCurrent))
         fnSource=join(fnDir,"images.xmd")
         for i in range(1,3):
             fnImagesi=join(fnDir,"images%02d.xmd"%i)
@@ -452,6 +455,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     copyFile(fnPreviousVol, fnReferenceVol)
                 else:
                     createLink(fnPreviousVol, fnReferenceVol)
+            self.runJob('xmipp_transform_filter','-i %s --fourier fsc %s --sampling %f'%(fnReferenceVol,join(fnDirPrevious,"fsc.xmd"),TsCurrent))
             if self.nextLowPass:
                 self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%\
                             (fnReferenceVol,targetResolution+self.nextResolutionOffset.get(),TsCurrent),numberOfMpi=1)
@@ -487,7 +491,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def calculateAngStep(self,newXdim,TsCurrent,ResolutionAlignment):
         k=newXdim*TsCurrent/ResolutionAlignment # Freq. index
         from math import atan2,pi
-        return max(3,2*atan2(1,k)*180.0/pi) # Corresponding angular step
+        return 2*atan2(1,k)*180.0/pi # Corresponding angular step
 
     def globalAssignment(self,iteration):
         fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
@@ -746,6 +750,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         for i in range(1,3):
             fnAngles=join(fnDirCurrent,"angles%02d.xmd"%i)
             fnVol=join(fnDirCurrent,"volume%02d.vol"%i)
+            # Reconstruct Fourier
             args="-i %s -o %s --sym %s --weight"%(fnAngles,fnVol,self.symmetryGroup)
             row=getFirstRow(fnAngles)
             if row.containsLabel(MDL_CTF_DEFOCUSU) or row.containsLabel(MDL_CTF_MODEL):
@@ -753,6 +758,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 if self.phaseFlipped:
                     args+=" --phaseFlipped"
             self.runJob("xmipp_reconstruct_fourier",args)
+            # Reconstruct ADMM
+#            args="-i %s -o %s --sym %s"%(fnAngles,fnVol,self.symmetryGroup)
+#            row=getFirstRow(fnAngles)
+#            if row.containsLabel(MDL_CTF_DEFOCUSU) or row.containsLabel(MDL_CTF_MODEL):
+#                if not self.phaseFlipped:
+#                    args+=" --dontUseCTF"
+#            self.runJob("xmipp_reconstruct_admm",args)
     
     def postProcessing(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
@@ -882,6 +894,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             errors.append("The set of input volumes should have exactly 2 volumes")
         if self.postSymmetryWithinMask and not self.postSymmetryWithinMaskMask.hasValue():
             errors.append("Symmetrize within mask requires a mask")
+        if self.significantMaxResolution.get()>=self.continuousMinResolution.get():
+            errors.append("There is a gap in resolution for which no angular assignment is performed")
         return errors    
     
     def _summary(self):

@@ -36,12 +36,25 @@ if __name__ == '__main__':
     count = 0
     withDoc = '--with-doc' in sys.argv
     emProtocolsDict = getProtocols()
+    
+    protDict = {}
+    
+    # Group protocols by package name
     for k, v in emProtocolsDict.iteritems():
         packageName = v.getClassPackageName()
-        if packageName == 'xmipp3':
-            print "%s: %s -> %s" % (packageName, k, v.__name__)
+        
+        if packageName not in protDict:
+            protDict[packageName] = []
+        
+        protDict[packageName].append((k, v))
+           
+         
+    for group, prots in protDict.iteritems():
+        print "-" * 100
+        print "Package: ", group, "(%d protocols)" % len(prots)
+        for k, v in prots:
+            print "   %s -> %s" % (k, v.__name__)
             if withDoc:
-                print "   doc: ", v.__doc__
-            count += 1
+                print "      doc: ", v.__doc__
+            #count += 1
             
-    print "total: ", count

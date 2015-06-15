@@ -29,7 +29,8 @@ from pyworkflow.em import *
 from tests import *
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils import dateStr
-
+from pyworkflow.protocol.constants import MODE_RESUME, STATUS_FINISHED
+from pyworkflow.protocol.executor import StepExecutor
 
     
 #Protocol for tests, runs in resume mode, and sleeps for??
@@ -66,6 +67,8 @@ class MyParallelProtocol(MyProtocol):
     
             
 class TestProtocolExecution(BaseTest):
+
+    # TODO: this test seems not to be finished.
     
     @classmethod
     def setUpClass(cls):
@@ -80,15 +83,16 @@ class TestProtocolExecution(BaseTest):
         prot._stepsExecutor = StepExecutor(hostConfig=None)
         prot.run()
         
-        self.assertEqual(prot._steps[0].status, STATUS_FINISHED)
+        self.assertEqual(prot._steps[0]._status.get(), STATUS_FINISHED)
         
         mapper2 = SqliteMapper(fn, globals())
         prot2 = mapper2.selectById(prot.getObjId())
         
-        self.assertEqual(prot.endTime, prot2.endTime)
-        self.assertEqual(prot._steps[1].status, prot2._steps[1].status)
-        
+        self.assertEqual(prot.endTime.get(), prot2.endTime.get())
+        self.assertEqual(prot._steps[1]._status.get(),
+                         prot2._steps[1]._status.get())
+        # TODO: prot2._steps is an empty list (so the last line fails). Why?
+
     def test_MpiStepExecutor(self):
         """ Test the execution of a protocol steps with MPI. """
-        
-    
+        pass  # TODO: this function

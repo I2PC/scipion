@@ -57,10 +57,11 @@ class ProtCTFMicrographs(ProtMicrographs):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_CTF_ESTI)
-        form.addHidden('recalculate', BooleanParam, default=False)
+        form.addParam('recalculate', BooleanParam, default=False, condition='recalculate',
+                      label="Do recalculate ctf?")
         
         form.addParam('continueRun', PointerParam, allowsNull=True,
-                      condition='recalculate', label="input previous run",
+                      condition='recalculate', label="Input previous run",
                       pointerClass=self.getClassName())
         form.addHidden('sqliteFile', FileParam, condition='recalculate',
                        allowsNull=True)
@@ -214,7 +215,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         if self.recalculate:
             ctfSet = self._createSetOfCTF("_recalculated")
             defocusList = []
-            if self.continueRun:
+            if self.continueRun.get() is not None:
                 oldCtfSet = getattr(self.continueRun.get(), 'outputCTF')
             else:
                 oldCtfSet = getattr(self, 'outputCTF')

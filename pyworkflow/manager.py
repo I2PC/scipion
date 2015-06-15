@@ -78,15 +78,25 @@ class Manager(object):
             projList.sort(key=lambda k: k.mTime, reverse=True)
         return projList
     
-    def createProject(self, projectName, runsView=1, hostsConf=None, protocolsConf=None):
+    def createProject(self, projectName, runsView=1, hostsConf=None, protocolsConf=None, location=None):
         """Create a new project.
         confs dict can contains customs .conf files 
         for: menus, protocols, or hosts
         """
-        project = Project(self.getProjectPath(projectName))
+        # If location is not None create project on it (if exists)
+        if location is None:
+            projectPath = self.getProjectPath(projectName)
+        else:
+            projectPath = os.path.join(location, projectName)
+
+        project = Project(projectPath)
         project.create(runsView=runsView, 
                        hostsConf=hostsConf, 
                        protocolsConf=protocolsConf)
+        # If location is not the default one create a symlink on self.PROJECTS directory
+        if projectPath != self.getProjectPath(projectName) :
+            pwutils.path.createLink(projectPath, self.getProjectPath(projectName))
+
         return project
     
     def loadProject(self, projId, **kwargs):

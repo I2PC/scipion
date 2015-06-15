@@ -50,7 +50,8 @@ def ansi(n):
     return lambda txt: '\x1b[%dm%s\x1b[0m' % (n, txt)
 
 black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
-
+# We don't take them from pyworkflow.utils because this has to run
+# with all python versions (and so it is simplified).
 
 
 def progInPath(prog):
@@ -122,19 +123,32 @@ class Command:
                     os.chdir(self._cwd)
                 print(cyan("cd %s" % self._cwd))
 
-            cmd = self._cmd
-            if self._out is not None:
-                cmd += ' > %s 2>&1' % self._out
-                # TODO: more general, this only works for bash.
-            print(cyan(cmd))
-            if not self._env.showOnly:
-                # self._cmd could be a function, in which case just call it
-                if callable(self._cmd):
-                    self._cmd()
-                else: # if not, we assume is a command and we make a system call
+            # Actually allow self._cmd to be a list or a
+            # '\n'-separated list of commands, and run them all.
+            if isinstance(self._cmd, basestring):
+                cmds = self._cmd.split('\n')  # create list of commands
+            elif callable(self._cmd):
+                cmds = [self._cmd]  # a function call
+            else:
+                cmds = self._cmd  # already a list of whatever
+
+            for cmd in cmds:
+                if self._out is not None:
+                    cmd += ' > %s 2>&1' % self._out
+                    # TODO: more general, this only works for bash.
+
+                print(cyan(cmd))
+
+                if self._env.showOnly:
+                    continue  # we don't really execute the command here
+
+                if callable(cmd):  # cmd could be a function: call it
+                    cmd()
+                else:  # if not, it's a command: make a system call
                     call(cmd, shell=True, env=self._environ)
-            # Return to working directory, useful
-            # when changing dir before executing command
+
+            # Return to working directory, useful when we change dir
+            # before executing the command.
             os.chdir(cwd)
             if not self._env.showOnly:
                 for t in self._targets:
@@ -206,12 +220,17 @@ class Target:
 class Environment:
 
     def __init__(self, **kwargs):
-        self._targetList = []
         self._targetDict = {}
+        self._targetList = []
+        # We need a targetList which has the targetDict.keys() in order
+        # (OrderedDict is not available in python < 2.7)
+
+        self._packages = []  # list of available packages (to show in --help)
+
         self._args = kwargs.get('args', [])
         self.showOnly = '--show' in self._args
-        
-        # Find if the -j arguments was passed to grap the number of processors
+
+        # Find if the -j arguments was passed to get the number of processors
         if '-j' in self._args:
             j = self._args.index('-j')
             self._processors = int(self._args[j+1])
@@ -223,8 +242,9 @@ class Environment:
         else:
             self._libSuffix = 'dylib'
 
-        self._downloadCmd = 'wget -nv -c -O %s %s'
-        self._tarCmd = 'tar --recursive-unlink -xzf %s'
+        self._downloadCmd = ('wget -nv -c -O %(tar)s.part %(url)s\n'
+                             'mv -v %(tar)s.part %(tar)s')
+        self._tarCmd = 'tar -xzf %s'
 
     def getLibSuffix(self):
         return self._libSuffix
@@ -307,7 +327,7 @@ class Environment:
                          targets=tarFile,
                          cwd=downloadDir)
         else:
-            t.addCommand(self._downloadCmd % (tarFile, url),
+            t.addCommand(self._downloadCmd % {'tar': tarFile, 'url': url},
                          targets=tarFile)
         t.addCommand(self._tarCmd % tar,
                      targets=buildPath,
@@ -380,8 +400,9 @@ class Environment:
                          out='%s/log/%s_configure.log' % (prefix, name),
                          always=configAlways, environ=environ)
         else:
-            assert progInPath('cmake'), ("Cannot run 'cmake'. Please install "
-                                         "it in your system first.")
+            assert progInPath('cmake') or 'cmake' in sys.argv[2:], \
+                "Cannot run 'cmake'. Please install it in your system first."
+
             flags.append('-DCMAKE_INSTALL_PREFIX:PATH=%s .' % prefix)
             t.addCommand('cmake %s' % ' '.join(flags),
                          targets=makeFile, cwd=configPath,
@@ -483,6 +504,9 @@ class Environment:
             tar: the package tar file, by default the name + .tgz
             commands: a list with actions to be executed to install the package
         """
+        # Add to the list of available packages, for reference (used in --help).
+        self._packages.append(name)
+
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
         tar = kwargs.get('tar', '%s.tgz' % name)
@@ -561,6 +585,13 @@ class Environment:
                 exploring.discard(tgt.getName())
 
     def execute(self):
+        if '--help' in self._args[2:]:
+            if self._packages:
+                print("Available packages:")
+                for p in self._packages:
+                    print("  %s" % p)
+            sys.exit()
+
         # Check if there are explicit targets and only install
         # the selected ones, ignore starting with 'xmipp'
         cmdTargets = [a for a in self._args[2:] if a[0].isalpha() and not a.startswith('xmipp')]

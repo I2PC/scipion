@@ -152,7 +152,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                             return;
                         }
                         String command = String.format("run function recalculateCTF %s %s", inputid, sqlitefile);
-                        runCommand(command, "Recalculating CTF");
+                        runCommand(command, "Recalculating CTF", false);
                     }
                 });
                 recalculatectfbt.setIcon(icon);
@@ -267,8 +267,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         if (confirmCreate("Representatives")) {
             String output = setType.equals("SetOfClasses2D")? "SetOfAverages,Representatives":"SetOfVolumes,Representatives";
-            String command = String.format(runProtCreateSubset, 
-            inputid, sqlitefile, "", output , other, getRunLabel());
+            String command = String.format(runProtCreateSubset, inputid, sqlitefile, "", output , other, getRunLabel());
             runCommand(command, "Creating set ...");
         }
     }
@@ -341,10 +340,15 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     protected void runCommand(final String command, String msg) 
     {
+        runCommand(command, msg, gallery.hasSelection() && !data.hasDisabled());
+    }
+    
+    protected void runCommand(final String command, String msg, boolean useSelection) 
+    {
         try {
             boolean[] selection = null;
             
-            if(gallery.hasSelection() && !data.hasDisabled())
+            if(useSelection)
                 selection = gallery.getSelection();
             ((ScipionGalleryData)data).overwrite(sqlitefile, selection);
             XmippWindowUtil.runCommand(command, port);

@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
+
 import javax.swing.JFrame;
 import javax.swing.SwingWorker;
+
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -58,10 +60,10 @@ public class SupervisedParticlePicker extends ParticlePicker
 	private String templatesfile;
 	private int templateindex;
 	private PickingClassifier classifier;
-        private UpdateTemplatesTask uttask;
-        private TemplatesJDialog dialog;
-        private boolean isautopick;
-        private boolean existspsd;
+    private UpdateTemplatesTask uttask;
+    private TemplatesJDialog dialog;
+    private boolean isautopick;
+    private boolean existspsd;
 
 	// private String reviewfile;
 
@@ -760,16 +762,25 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 	}
 
-	
-        
-        
-
 	/** Return the number of particles imported */
 	public String importParticlesFromFolder(String path, Format f, String preffix, String suffix, float scale, boolean invertx, boolean inverty)
 	{
 
 		if (f == Format.Auto)
-			f = detectFormat(path, preffix, suffix);
+			if(!suffix.isEmpty())
+				f = detectFormat(path, preffix, suffix);
+			else
+			{
+				for(String ext: emextensions.values())
+				{
+					f = detectFormat(path, preffix, ext);
+					if(f != Format.None)
+					{
+						suffix = ext;
+						break;
+					}
+				}
+			}
 		if (f == Format.None)
 			throw new IllegalArgumentException("Unable to detect format. You may try specifying format or renaming files");
 
@@ -817,15 +828,13 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 		catch (Exception ex)
 		{
-                        ex.printStackTrace();
-			System.err.format("Error importing from file '%s' message: '%s'\n", path, ex.toString());
+            XmippDialog.showInfo(null, ex.getMessage());
 		}
 		return result;
 	}// function importParticlesFromFile
 
 	public String importParticlesFromMd(SupervisedPickerMicrograph m, MetaData md)
 	{
-
 		long[] ids = md.findObjects();
 		int x, y;
 		String result = "";
@@ -835,7 +844,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		{
 			x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
-			if (!m.fits(x, y, size))// ignore out of bounds particles
+			if ( !m.fits(x, y, size))// ignore out of bounds particles
 			{
 				result += XmippMessage.getOutOfBoundsMsg(String.format("Particle on x:%s y:%s\n", x, y)) + " dismissed\n";
 				continue;

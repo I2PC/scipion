@@ -59,4 +59,16 @@ class TestImportVolumes(TestImportBase):
         prot2 = self.newProtocol(ProtImportVolumes, **args)
         prot2.setObjLabel('from mrc stack')
         self.launchProtocol(prot2)
+        # Check the number of output volumes and dimensions
+        self.assertEqual(3, prot2.outputVolumes.getSize())
+        self.assertEqual(60, prot2.outputVolumes.getDim()[0])
 
+        # Id's should be taken from filename   
+        args['filesPath'] = self.dsRelion.getFile('import/case2/relion_volumes.stk') 
+        args['filesPattern'] = ''
+        prot3 = self.newProtocol(ProtImportVolumes, **args)
+        prot3.setObjLabel('from spider stack')
+        self.launchProtocol(prot3)
+        # Check the number of output volumes and dimensions
+        self.assertEqual(3, prot3.outputVolumes.getSize())
+        self.assertEqual(60, prot3.outputVolumes.getDim()[0])

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<!-- 
+# **************************************************************************
+# *
+# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jose.gutierrez@cnb.csic.es'
+# *
+# **************************************************************************
+-->
+<html lang='es'>
+<head>
+<title>Scipion</title>
+<meta charset='utf-8'>
+<link rel="icon" type="image/png" href="{{abs_url}}/resources/favicon.png" />
+
+<!-- CSS -->
+<link href="{{general_css}}" rel="stylesheet" type="text/css">
+<!-- <link href="css/general_style.css" rel="stylesheet" type="text/css"> -->
+<!-- <link href="css/web.css" rel="stylesheet" type="text/css"> -->
+
+<style type="text/css">
+div#bodyStyle {
+	margin-left: auto;
+	margin-right: auto;
+	width: 90%;
+	padding: 2em;
+	border-radius: 7px;
+}
+
+header {
+	height: 7em;
+}
+
+div#box {
+	padding: 2.2em;
+	margin-left: auto;
+	margin-right: auto;
+	height: auto;
+	width: 80%;
+	background-color: #E8E8E8;
+	border-radius: 5px;
+	text-align: center;
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+div#minibox {
+	width: 90%;
+	padding: 1em;
+	background-color: white;
+	border: 1px solid black;
+	border-radius: 5px;
+	display: inline-table;
+	margin: 1em;
+}
+
+h1 {
+	font-size: 57px;
+}
+
+h1, h2, h3 {
+	padding: 5px;
+	font-weight: 500;
+	line-height: 1.1;
+}
+
+img.ico {
+	background-color: white;
+}
+
+div#steps {
+	text-align: left;
+	/* 	float:left;  */
+	width: 100%;
+}
+
+#buttons {
+	float: right;
+	/* 	width:auto; */
+}
+
+#textbtn {
+	/* 	float:left; */
+	width: 60%;
+}
+
+#lineOpt {
+	width: 100%;
+	display: flex;
+	/* 	text-align: left; */
+}
+
+.btn {
+	width: 10em;
+}
+
+.scipionlogo {
+	max-height: 65px;
+	margin: 2px 10px 0px 20px;
+}
+
+section{
+	padding:0px;
+	background: #d7d7d7; /* Old browsers */
+	background: -moz-linear-gradient(top, #d7d7d7 2%, #ffffff 70%, #ffffff 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(2%,#d7d7d7), color-stop(70%,#ffffff), color-stop(100%,#ffffff)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #d7d7d7 2%,#ffffff 70%,#ffffff 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #d7d7d7 2%,#ffffff 70%,#ffffff 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, #d7d7d7 2%,#ffffff 70%,#ffffff 100%); /* IE10+ */
+	background: linear-gradient(to bottom, #d7d7d7 2%,#ffffff 70%,#ffffff 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d7d7d7', endColorstr='#ffffff',GradientType=0 ); /* IE6-9 */
+	}
+	
+#titleSection{
+	color:#830b0b;
+	font-size:30px;
+	font-family:Trebuchet;
+	margin-bottom: 10px;
+	font-weight:bold;
+}
+
+#textSection{
+	padding:100px 0px 70px 20px;
+	width:50%;
+	float:left;
+	text-align:left;
+}
+
+#innerSection{
+	width:100%;
+	height:80%;
+	background:url('{{abs_url}}/resources/background_section.png') no-repeat 0 0px;
+	background-position:right;
+	display: inline-block;
+	background-size: contain;
+}
+
+#topTextSection, #bottomTextSection{
+	
+}
+
+#buttonSection{
+/* 	margin-left: 30px;	 */
+	
+}
+
+#buttonSection  a{
+	display: inline-block;
+	text-align: center;
+	vertical-align: middle;
+	padding: 13px 42px;
+	border: 0px solid #a12727;
+	border-radius: 4px;
+	-webkit-box-shadow: #ff5959 0px 0px 0px 0px;
+	-moz-box-shadow: #ff5959 0px 0px 0px 0px;
+	box-shadow: #ff5959 0px 0px 0px 0px;
+	text-shadow: #591717 1px 1px 1px;
+	font: normal normal bold 22px trebuchet ms;
+	color: #ffffff;
+	text-decoration: none;
+	
+}
+
+.redBold{
+	color: #830b0b;
+	font-weight: bold;
+}
+
+/*  Inner Section */
+#innerContent{
+	padding: 2%;
+	margin-left: 2%;
+}
+
+#innerContent h1{
+	font-size: 2em;
+	color: #6F3232;
+	font-weight:normal;
+	margin: 10px 0px;
+}
+
+#innerContent h3{
+	width: 40%;
+	font-weight: 500;
+	line-height: 1.3;
+	margin: 10px 0px;
+	text-align:justify;
+}
+
+#innerContent h2{
+	font-size: 1.5em;
+	color: #6F3232;
+	font-weight:bold;
+	margin: 20px 0px 7px 0px;
+	border-bottom: 1px solid grey;
+}
+
+#innerContent ul{
+	padding-left: 30px;	
+}
+#innerContent li{
+	margin: 5px 0px;
+}
+.documentationButton, .webtoolsButton {
+background: #992828;
+background: -webkit-gradient(linear, left top, left bottom, from(#d9d7d9), to(#848384));
+background: -moz-linear-gradient(top, #d9d7d9, #848384);
+background: linear-gradient(to bottom, #d9d7d9, #848384);
+}
+
+.downloadButton {
+background: #992828;
+background: -webkit-gradient(linear, left top, left bottom, from(#ff4a4a), to(#992727));
+background: -moz-linear-gradient(top, #ff4a4a, #992727);
+background: linear-gradient(to bottom, #ff4a4a, #992727);
+margin-right: 10px;
+}
+.documentationButton:hover,
+.documentationButton:focus, .webtoolsButton:hover, .webtoolsButton:focus {
+background: #a3a3a3;
+background: -webkit-gradient(linear, left top, left bottom, from(#868686), to(#bcbcbc));
+background: -moz-linear-gradient(top, #868686, #bcbcbc);
+background: linear-gradient(to bottom, #868686, #bcbcbc);
+color: #ffffff;
+text-decoration: none;
+}
+.downloadButton:hover,
+.downloadButton:focus {
+background: #ff4a4a;
+background: -webkit-gradient(linear, left top, left bottom, from(#992727), to(#ff4a4a));
+background: -moz-linear-gradient(top, #992727, #ff4a4a);
+background: linear-gradient(to bottom, #992727, #ff4a4a); 
+color: #ffffff;
+text-decoration: none;
+}
+#buttonSection a:before{
+    content:  "\0000a0";
+    display: inline-block;
+    line-height: 24px;
+    margin: 0 4px -6px -4px;
+    position: relative;
+    top: 0px;
+/*     left: -11px; */
+    height: 27px;
+    width: 27px;    
+    background-size: 100% 100%;
+}
+
+.downloadButton:before{
+    background: url("{{abs_url}}/resources/download_icon.png") no-repeat left center transparent;
+}
+
+.documentationButton:before{
+    background: url("{{abs_url}}/resources/doc_icon.png") no-repeat left center transparent;
+}
+
+
+.webtoolsButton:before{
+    background: url("{{abs_url}}/resources/fa-cogs.png") no-repeat left center transparent;
+}
+
+
+/*  Disable Read More message*/
+.parentclass .node-readmore
+{
+  display: none;
+}
+</style>
+
+<!-- JS -->
+<script type="text/javascript" src="{{config}}"></script>
+</head>
+<body>
+	<div id="bodyStyle">
+		<header data-layout='{"type": "border", "hgap": 1, "vgap": 1}'
+			class="north">
+			<div id="headerMainContainer">
+				<img class="scipionlogo" src="{{abs_url}}/resources/scipion_logo_normal.png"
+					alt="Scipion logo">
+				<div style="float: right;">
+					<a href="http://i2pc.cnb.csic.es/LoadHome.htm"> <img
+						src="{{abs_url}}/resources/logo_i2pc_with_title.png" style="height: 3.2em;" />
+					</a> <a href="http://www.structuralbiology.eu/"> <img
+						src="{{abs_url}}/resources/logoInstruct.png" style="height: 3.2em;" />
+					</a> <a href="http://www.cnb.csic.es/"> <img
+						src="{{abs_url}}/resources/logo_cnb_without_title.gif" style="height: 3.2em;" />
+					</a>
+				</div>
+			</div>
+			<div id="headerLine"></div>
+		</header>
+		<section>
+			<div id="innerSection" style="min-height: 26em;">
+				<div id="innerContent">
+					<h3>Scipion is an image processing framework to obtain 3D
+						models of macromolecular complexes using Electron Microscopy
+						(3DEM). It integrates several software packages and presents a
+						unified interface for both biologists and developers. Scipion
+						allows to execute workflows combining different software tools,
+						while taking care of formats and conversions. Additionally, all
+						steps are tracked and can be reproduced later on.
+					</h3>
+					<br /><br />
+					<div id="buttonSection">
+						<a href="javascript:goWithSubDomainURL('/download_form/')" class="downloadButton"> 
+							Download 
+						</a>
+						<a href="javascript:goWithSubDomainURL('/services/')" class="webtoolsButton"> 
+							Web Tools 
+						</a>
+						<a href="http://scipion.cnb.csic.es/docs/" class="documentationButton">
+							Documentation 
+						</a>
+						
+					</div>
+				</div>
+			</div>
+		</section>
+		<div style="text-align: right; font-size: 0.9em;padding-top:1.2em;">
+			<a href="http://www.gnu.org/copyleft/gpl.html"> © 2015 · Scipion
+				is licenced under the GNU General Public License </a>
+		</div>
+	</div>
+</body>
+</html>
+

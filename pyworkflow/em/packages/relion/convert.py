@@ -36,7 +36,7 @@ from os.path import join, basename
 import numpy
 from collections import OrderedDict
 
-from pyworkflow.object import ObjectWrap, String
+from pyworkflow.object import ObjectWrap, String, Integer
 from pyworkflow.utils import Environ
 from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
                                    findRootFrom, replaceBaseExt, getExt)
@@ -84,7 +84,6 @@ CTF_EXTRA_LABELS = [
 # Some extra labels to take into account the zscore
 IMAGE_EXTRA_LABELS = [
     md.RLN_SELECT_PARTICLES_ZSCORE,
-    md.RLN_PARTICLE_ID,
     md.RLN_IMAGE_FRAME_NR,
     ]
  
@@ -110,7 +109,8 @@ def getEnviron():
     environ.update({
             'PATH': join(os.environ['RELION_HOME'], 'bin'),
             'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
-#             'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib64'),
+            'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
+#            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib64'),
             }, position=Environ.BEGIN)
     return environ
 
@@ -398,7 +398,6 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
 
 def particleToRow(part, partRow, **kwargs):
     """ Set labels values from Particle to md row. """
-    imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
     coord = part.getCoordinate()
     if coord is not None:
         coordinateToRow(coord, partRow, copyId=False)
@@ -409,7 +408,10 @@ def particleToRow(part, partRow, **kwargs):
         # could at least group for CTF using that
         if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
             partRow.setValue(md.RLN_MICROGRAPH_NAME, 'fake_micrograph_%06d.mrc' % part.getMicId())
-        
+    if part.hasAttribute('_rlnParticleId'):
+        partRow.setValue(md.RLN_PARTICLE_ID, long(part._rlnParticleId.get()))
+    imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
+
 
 def rowToParticle(partRow, **kwargs):
     """ Create a Particle from a row of a meta """
@@ -460,6 +462,9 @@ def rowToParticle(partRow, **kwargs):
     # copy micId if available from row to particle
     if partRow.hasLabel(md.RLN_MICROGRAPH_ID):
         img.setMicId(partRow.getValue(md.RLN_MICROGRAPH_ID))
+    # copy particleId if available from row to particle
+    if partRow.hasLabel(md.RLN_PARTICLE_ID):
+        img._rlnParticleId = Integer(partRow.getValue(md.RLN_MICROGRAPH_ID))
 
     return img
 
@@ -575,26 +580,6 @@ def writeSqliteIterClasses(imgStar):
     pass
     
     
-def writeIterAngularDist(self, inDataStar, outAngularDist, numberOfClasses, prefixes):
-    """ Write the angular distribution. Should be overriden in subclasses. """
-    mdAll = md.MetaData(inDataStar)
-    
-    refsList = range(1, numberOfClasses + 1) 
-
-    for ref3d in refsList:
-        for prefix in prefixes:
-            mdGroup = md.MetaData()
-            mdGroup.importObjects(mdAll, md.MDValueEQ(md.RLN_PARTICLE_CLASS, ref3d))
-            mdDist = md.MetaData()
-            mdDist.aggregateMdGroupBy(mdGroup, md.AGGR_COUNT,
-                                      [md.RLN_ORIENT_ROT, md.RLN_ORIENT_TILT],
-                                      md.RLN_ORIENT_ROT, md.MDL_WEIGHT)
-            mdDist.setValueCol(md.RLN_ORIENT_PSI, 0.0)
-            blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
-            print "Writing angular distribution to: ", blockName + outAngularDist
-            mdDist.write(blockName + outAngularDist, md.MD_APPEND) 
-            
-    
 def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
     """ Add a new colunm in the image star to separate the particles into ctf groups """
     mdAll = md.MetaData(imgStar)
@@ -654,8 +639,8 @@ def prependToFileName(imgRow, prefixPath):
 def relativeFromFileName(imgRow, prefixPath):
     """ Remove some prefix from filename in row. """
     index, imgPath = relionToLocation(imgRow.getValue(md.RLN_IMAGE_NAME))
-    imgPath = os.path.relpath(imgPath, prefixPath)
-    newLoc = locationToRelion(index, imgPath)
+    newImgPath = os.path.relpath(imgPath, prefixPath)
+    newLoc = locationToRelion(index, newImgPath)
     imgRow.setValue(md.RLN_IMAGE_NAME, newLoc)
     
     

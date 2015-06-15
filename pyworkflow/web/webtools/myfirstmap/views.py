@@ -36,6 +36,10 @@ from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
 from pyworkflow.utils.utils import prettyDelta
+from pyworkflow.em.packages.xmipp3 import XmippProtRansac
+from pyworkflow.em.packages.eman2.protocol_refineasy import EmanProtRefine
+from pyworkflow.em.packages.eman2.protocol_initialmodel import EmanProtInitModel
+from pyworkflow.em.packages.xmipp3.protocol_reconstruct_significant import XmippProtReconstructSignificant
 
 def service_projects(request):
    
@@ -128,6 +132,7 @@ def create_service_project(request):
         protRansac.setObjLabel('xmipp - ransac')
         protRansac.inputSet.set(protImport)
         protRansac.inputSet.setExtendedAttribute('outputAverages')
+        setProtocolParams(protRansac, testDataKey)
         project.saveProtocol(protRansac)
         
         # 2b. Eman 
@@ -135,6 +140,7 @@ def create_service_project(request):
         protEmanInitVol.setObjLabel('eman - initial vol')
         protEmanInitVol.inputSet.set(protImport)
         protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
+        setProtocolParams(protEmanInitVol, testDataKey)
         project.saveProtocol(protEmanInitVol)
         
         # 2c. Significant 
@@ -142,6 +148,7 @@ def create_service_project(request):
         protSignificant.setObjLabel('xmipp - significant')
         protSignificant.inputSet.set(protImport)
         protSignificant.inputSet.setExtendedAttribute('outputAverages')
+        setProtocolParams(protSignificant, testDataKey)
         project.saveProtocol(protSignificant)
         
         # 3. Join result volumes
@@ -213,3 +220,42 @@ def service_content(request):
     
     return render_to_response('service_content.html', context)
 
+def setProtocolParams(protocol, key):
+    #Here we set protocol parameters for each test data
+    cls = type(protocol)
+    if issubclass(cls, XmippProtRansac):
+        if(key == "bpv"):
+            attrs = {"symmetryGroup" : "i1",
+                    "dimRed": True,
+                    "numGrids": 2}
+        if(key == "groel"):
+            attrs = {"symmetryGroup" : "d7",
+                    "dimRed": True, 
+                    "numGrids": 3}
+        if(key == "ribosome"):
+            attrs = {"symmetryGroup" : "c1",
+                    "dimRed": True,
+                    "numGrids": 3}
+    if issubclass(cls, EmanProtInitModel):
+        if(key == "bpv"):
+            attrs = {"symmetry" : "icos"}
+        if(key == "groel"):
+            attrs = {"symmetry" : "d7"}
+        if(key == "ribosome"):
+            attrs = {"symmetry" : "c1"}
+    if issubclass(cls, XmippProtReconstructSignificant):
+        if(key == "bpv"):
+            attrs = {"symmetryGroup" : "i1",
+                     "alpha0": 99.5, 
+                     "alphaF": 99.5}
+        if(key == "groel"):
+            attrs = {"symmetryGroup" : "d7",
+                     "alpha0": 98, 
+                     "alphaF": 99.9}
+        if(key == "ribosome"):
+            attrs = {"symmetryGroup" : "c1", 
+                     "alpha0": 80, 
+                     "alphaF": 99.5}
+    for key,value in attrs.iteritems():
+        getattr(protocol, key).set(value)
+    

@@ -29,49 +29,34 @@
 """
 This sub-package contains the XmippProtExtractParticles protocol
 """
-from fileinput import filename
-
 import os
 
 import pyworkflow.em.metadata as md
-from pyworkflow.em.packages.appion.convert import readSetOfCoordinates
 from pyworkflow.em.packages.xmipp3.convert import readSetOfMovieParticles, xmippToLocation
 
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import ProtExtractMovieParticles
-# from pyworkflow.em.packages import xmipp3
-# from pyworkflow.object import String, Float
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.protocol.params import (PointerParam, IntParam, RelationParam,
-                                        BooleanParam, Positive, FloatParam,
-                                        EnumParam)
-# from pyworkflow.em.protocol import  ProtExtractParticles
-# from pyworkflow.em.data import SetOfParticles
-from pyworkflow.em.constants import RELATION_CTF
-from pyworkflow.utils.path import cleanPath, makePath, moveFile#removeBaseExt, replaceBaseExt
+from pyworkflow.protocol.constants import LEVEL_ADVANCED, STEPS_PARALLEL
+from pyworkflow.protocol.params import (PointerParam, IntParam, BooleanParam,
+                                        Positive, FloatParam, EnumParam)
+from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.packages.xmipp3 import coordinateToRow, XmippMdRow
-# 
-# from convert import writeSetOfCoordinates, readSetOfParticles, micrographToCTFParam
-# from xmipp3 import XmippProtocol
- 
- 
+
+
 class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
     """ Extract a set of Particles from each frame of a set of Movies.
     """
     _label = 'movie extract particles' 
-     
+    def __init__(self, **args):
+        ProtExtractMovieParticles.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
+    
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         ProtExtractMovieParticles._defineParams(self, form)
         form.addParam('inputCoordinates', PointerParam, pointerClass='SetOfCoordinates',
                       important=True,
                       label='Input coordinates')
-#         form.addParam('ctfRelations', RelationParam, allowsNull=True,
-#                       relationName=RELATION_CTF, attributeName='getInputMovies',
-#                       label='CTF estimation',
-#                       help='Choose some CTF estimation related to input micrographs. \n'
-#                            'CTF estimation is need if you want to do phase flipping or \n'
-#                            'you want to associate CTF information to the particles.')
         form.addParam('boxSize', IntParam, default=0,
                       label='Particle box size', validators=[Positive],
                       help='In pixels. The box size is the size of the boxed particles, '
@@ -81,7 +66,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
 
         line = form.addLine('Frames range',
                       help='')
-        line.addParam('firstFrame', IntParam, default=0,
+        line.addParam('firstFrame', IntParam, default=1,
                       label='First')
         line.addParam('lastFrame',  IntParam, default=0,
                       label='Last')
@@ -168,10 +153,12 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         x, y, z, n = imgh.getDimensions(movieName)
         
         first = self.firstFrame.get()
+        if first <= 1:
+            first = 1
         last = self.lastFrame.get()
-        
-        if last == 0:
-            last = n-1
+        if last <= 0 or last >= n:
+            last = n
+        numberOfFrames = last - first + 1
         
         stkIndex = 0
         movieStk = self._getMovieName(movieId, '.stk')
@@ -182,7 +169,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         frameRow = md.Row()
          
         for frame in range(first, last+1):
-            i = frame + 1
             # Get the frame shifts
             index = frame - first
             shiftX = shifts[2*index]
@@ -200,8 +186,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                 self.info("Writing frame: %s" % frameName)
                 #TODO: there is no need to write the frame and then operate
                 #the input of the first operation should be the movie
-                imgh.convert(tuple([i, movieName]), frameName)
-
+                imgh.convert(tuple([frame, movieName]), frameName)
+                
                 if self.doRemoveDust:
                     self.info("Removing Dust")
                     self._runNoDust(frameName)
@@ -219,7 +205,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                 cleanPath(frameName)
                 
                 frameStk = frameRoot + '.stk'
-                 
+                
                 self.info("Combining particles into one stack.")
                  
                 frameMdImages.read(frameMdFile)
@@ -248,14 +234,15 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                 cleanPath(frameStk)
         
         if self.doNormalize:
-            self._runNormalize(movieStk)
+            self._runNormalize(movieStk, numberOfFrames)
 
     
     def _runNoDust(self, frameName):
         args=" -i %s -o %s --bad_pixels outliers %f" % (frameName,frameName,self.thresholdDust.get())
         self.runJob("xmipp_transform_filter", args)
 
-    def _runNormalize(self, stack):
+    def _runNormalize(self, stack, frames):
+        import math
         program = "xmipp_transform_normalize"
         args = "-i %(stack)s "
         normType = self.normType.get()
@@ -272,6 +259,14 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         else:
             args += "--method Ramp --background circle %(bgRadius)d"
         self.runJob(program, args % locals())
+        
+        # The background's stddev of the movie
+        # particles must be equal to sqrt(NoOfFrames)
+        # for the background's stddev of the
+        # average particle be equal to 1.
+        val = math.sqrt(frames)
+        opArgs = "-i %s --mult %f" % (stack, val)
+        self.runJob("xmipp_image_operate", opArgs)
     
     def createOutputStep(self):
         inputMovies = self.inputMovies.get()

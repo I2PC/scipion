@@ -25,6 +25,8 @@
 # **************************************************************************
 
 import os
+import re
+from glob import glob
 from os.path import exists
 from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
                                         IntParam, BooleanParam, LEVEL_ADVANCED)
@@ -40,15 +42,25 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     The alignment parameters will be converted to a Relion star file
     and used as direction projections to reconstruct.
     """
-    _label = 'polish particles'
+    _label = 'particle polishing'
     
+    PREFIXES = ['half1_', 'half2_']
+
     def _initialize(self):
         """ This function is mean to be called after the 
         working dir for the protocol have been set. (maybe after recovery from mapper)
         """
         self._createFilenameTemplates()
         self._createIterTemplates()
-        
+        self._createFrameTemplates()
+    
+    def _createFrameTemplates(self):
+        """ Setup the regex on how to find iterations. """
+        self._frameTemplate = self._getFileName('guinier_frame', frame=0, iter=self._lastIter()).replace('000','???')
+        # Frames will be identify by _frameXXX_ where XXX is the frame number
+        # and is restricted to only 3 digits.
+        self._frameRegex = re.compile('_frame(\d{3,3})_')
+    
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -119,11 +131,6 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         
         imgStar = self._getFileName('data', iter=refineRun._lastIter())
         
-        # `which relion_particle_polish_mpi` --i Refine3D/run2_ct21_it021_data.star 
-        # --o folder/shiny  --angpix 3.54 --movie_frames_running_avg 5 --dont_read_old_files  
-        # --sigma_nb 100 --perframe_highres 6 --autob_lowres 20 --sym C1 --bg_radius 28 
-        #--white_dust -1 --black_dust -1
-        
         params = ' --i %s' % imgStar
         params += ' --o shiny'
         params += ' --angpix %0.3f' % imgSet.getSamplingRate()
@@ -186,13 +193,13 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         from pyworkflow.em.packages.relion.convert import readSetOfParticles
         imgSet = self.refineRun.get()._getInputParticles()
         vol = Volume()
-        vol.setFileName(self._getFileName('volume_shiny', iter=self._lastIter()))
+        vol.setFileName(self._getFileName('volume_shiny', iter=self.refineRun._lastIter()))
         vol.setSamplingRate(imgSet.getSamplingRate())
         
         shinyPartSet = self._createSetOfParticles()
         
         shinyPartSet.copyInfo(imgSet)
-        readSetOfParticles(self._getExtraPath("shiny.star"), shinyPartSet, alignType=ALIGN_PROJ)
+        readSetOfParticles(self._getFileName('shiny'), shinyPartSet, alignType=ALIGN_PROJ)
         
         self._defineOutputs(outputParticles=shinyPartSet)
         self._defineSourceRelation(imgSet, shinyPartSet)
@@ -218,3 +225,16 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         return []
     
     #--------------------------- UTILS functions --------------------------------------------
+    def _getFrameNumber(self, index):
+        """ Return the list of iteration files, give the iterTemplate. """
+        result = None
+        files = sorted(glob(self._frameTemplate))
+        if files:
+            f = files[index]
+            s = self._frameRegex.search(f)
+            if s:
+                result = int(s.group(1)) # group 1 is 3 digits frame number
+        return result
+        
+    def _lastFrame(self):
+        return self._getIterNumber(-1)

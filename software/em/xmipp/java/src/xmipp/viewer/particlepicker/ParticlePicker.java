@@ -1,6 +1,7 @@
 package xmipp.viewer.particlepicker;
 
 import ij.plugin.frame.Recorder;
+
 import java.awt.Color;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -12,7 +13,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.JFrame;
+
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -494,6 +497,8 @@ public abstract class ParticlePicker {
 
     public void fillParticlesMdFromRelionFile(String file, Micrograph m, MetaData md) {
          MetaData relionmd = new MetaData(file);
+         if(!md.containsLabel(MDLabel.RLN_IMAGE_COORD_X))
+         	throw new IllegalArgumentException(String.format("File %s format is not supported", file));
          long[] ids = relionmd.findObjects();
          int xcoor, ycoor;
          long id;
@@ -593,19 +598,15 @@ public abstract class ParticlePicker {
     }
 
     public static File[] getCoordsFiles(String folder)
-        {
-            return new File(folder).listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        String lowercasename = name.toLowerCase();
-                        return lowercasename.endsWith(".pos") || lowercasename.endsWith(".box");
-                    }
-                });
-        }
+    {
+        return new File(folder).listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    String lowercasename = name.toLowerCase();
+                    return lowercasename.endsWith(".pos") || lowercasename.endsWith(".box");
+                }
+            });
+    }
 
-    
-     
-     
-     
      public boolean isScipionSave()
      {
          if(params == null)
@@ -613,23 +614,20 @@ public abstract class ParticlePicker {
          return params.port != null && mode != Mode.ReadOnly;
      }
 
-    public String getScipionSaveCommand() {
-        String cmd = String.format("run function registerCoords %s %s", params.dbpath, params.protid);
-        return cmd;
-    }
-     
-    
+       
     public abstract int getParticlesCount();
 
-    public String getProtId() {
-        return params.protid;
-    }
-
+    
     
     public static ParticlePicker getPicker()
     {
         return picker;
     }
+
+	public Integer getPort()
+	{
+		return params.port;
+	}
      
 
    
