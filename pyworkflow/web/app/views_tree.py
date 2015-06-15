@@ -55,7 +55,6 @@ class TreeItem():
         
         
 def populateProtTree(tree, obj):    
-    print "poputate prot tree"
     emProtocolsDict = em.getProtocols()
     
     for sub in obj:
