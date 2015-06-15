@@ -174,8 +174,7 @@ class ProjectWindow(ProjectBaseWindow):
         server_thread.start()
 
     def schedulePlot(self, path, *args):
-        self.enqueue(lambda: plotFile(path, *args).show())
-    
+        self.enqueue(lambda: plotFile(path, *args).show())    
 
     def runObjectCommand(self, cmd, inputStrId, objStrId):
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
