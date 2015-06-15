@@ -111,13 +111,16 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         input particles and cause restart from here.
         """
         writeSetOfParticles(self.inputParticles.get(), 
-                            self._getTmpPath('input_particles.xmd'))
+                            self._getPath('input_particles.xmd'))
                     
     def _getCommonParams(self):
-        params =  '  -i %s' % self._getTmpPath('input_particles.xmd')        
+        params =  '  -i %s' % self._getPath('input_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
         params += ' --alpha0 %0.3f --alphaF %0.3f' % (self.alpha.get(),self.alpha.get())
         params += ' --angularSampling %0.3f' % self.angularSampling.get()
+        params += ' --dontReconstruct'
+        params += ' --useForValidation'
+        
         return params
     
     def significantStep(self, volName, volDir, params):
@@ -132,11 +135,13 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
                     params, numberOfMpi=nproc,numberOfThreads=nT)
         
     def validationStep(self, volName, volDir,sym):
-        makePath(volDir)  
+        makePath(volDir)                  
+        nproc = self.numberOfMpi.get()
+        nT=self.numberOfThreads.get() 
         params = '  --volume %s' % volName  
         params += ' --odir %s' % volDir
         params += ' --sym %s' % sym
-        self.runJob('xmipp_validation_nontilt', params,numberOfMpi=1,numberOfThreads=1)
+        self.runJob('xmipp_validation_nontilt', params,numberOfMpi=nproc,numberOfThreads=nT)
         
     def createOutputStep(self):
         outputVols = self._createSetOfVolumes()
