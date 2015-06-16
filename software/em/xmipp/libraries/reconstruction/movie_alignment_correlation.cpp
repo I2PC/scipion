@@ -378,6 +378,7 @@ void ProgMovieAlignmentCorrelation::run()
             }
 
             j++;
+            movie.setValue(MDL_ENABLED,1,__iter.objId);
         }
         else
         {
