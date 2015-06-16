@@ -348,5 +348,3 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
     
     def _setWeight(self, item, row):  
         item._xmipp_weightClusterability = Float(row.getValue(md.MDL_VOLUME_SCORE1))
-        print row.getValue(md.MDL_VOLUME_SCORE1), item._xmipp_weightClusterability
-
