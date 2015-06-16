@@ -80,8 +80,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def _insertAllSteps(self):
         # Build the list of all processMovieStep ids by 
         # inserting each of the steps for each movie
-        allMovies = [self._insertMovieStep(movie) for movie in self.inputMovies.get()]
         self.samplingRate = self.inputMovies.get().getSamplingRate()
+        allMovies = [self._insertMovieStep(movie) for movie in self.inputMovies.get()]
         self._insertFunctionStep('createOutputStep', prerequisites=allMovies)
 
     def _insertMovieStep(self, movie):
