@@ -168,7 +168,6 @@ class ProtMovieAlignment(ProtProcessMovies):
         movieSet.sumFrameN = Integer(self.sumFrameN)
 
         alMethod = self.alignMethod.get()
-        ####>>>ESTO NO TIENE PIES NO CABEZA
         for movie in self.inputMovies.get():
             micName = self._getNameExt(movie.getFileName(),'_aligned', 'mrc')
             metadataName = self._getNameExt(movie.getFileName(), '_aligned', 'xmd')
@@ -177,6 +176,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             psdCorrName = self._getNameExt(movie.getFileName(),'_aligned_corrected', 'psd')
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
+            ####>>>This is wrong. Save an xmipp metadata
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
             alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
@@ -229,7 +229,10 @@ class ProtMovieAlignment(ProtProcessMovies):
 
 
     #--------------------------- UTILS functions ---------------------------------------------------
-
+    #TODO: In methods calling 2 protocols we should:
+    #      1) work with the original movie and not the resampled one
+    #      2) output metadata with shifts should be given over
+    #         orignal movie not intermediate one
     def _processMovie(self, movieId, movieName, movieFolder):
         """ Process the movie actions, remember to:
         1) Generate all output files inside movieFolder (usually with cwd in runJob)
@@ -310,7 +313,9 @@ class ProtMovieAlignment(ProtProcessMovies):
                 print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
 
         # For Optical Flow execution (and combination with DosefGPU)
-        if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
+        if alMethod == AL_OPTICAL or\
+           alMethod == AL_DOSEFGPUOPTICAL or\
+           alMethod == AL_CROSSCORRELATIONOPTICAL:
             winSize = self.winSize.get()
             if alMethod == AL_DOSEFGPUOPTICAL:
                 program = 'xmipp_movie_optical_alignment_gpu'
@@ -319,7 +324,14 @@ class ProtMovieAlignment(ProtProcessMovies):
                 # Set to Zero for Optical Flow (output movie of dosefgpu)
                 firstFrame = 0
                 lastFrame = 0
+            elif alMethod == AL_CROSSCORRELATIONOPTICAL:
+                program = 'xmipp_movie_optical_alignment_cpu'
+                command = '-i %(corrMovieName)s ' % locals()
+                # Set to Zero for Optical Flow (output movie of dosefgpu)
+                firstFrame = 0
+                lastFrame = 0
             else:
+                program = 'xmipp_movie_optical_alignment_cpu'
                 command = '-i %(movieName)s ' % locals()
             command += '-o %(micName)s --winSize %(winSize)d' % locals()
             command += ' --nst %d --ned %d --psd' % (firstFrame, lastFrame)
@@ -329,7 +341,9 @@ class ProtMovieAlignment(ProtProcessMovies):
                 self.runJob(program, command, cwd=movieFolder)
             except:
                 print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
-            if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
+            if alMethod == AL_OPTICAL \
+                    or alMethod == AL_DOSEFGPUOPTICAL or\
+                    alMethod == AL_CROSSCORRELATIONOPTICAL:
                 moveFile(join(movieFolder, metadataName), self._getExtraPath())
 
         # Move output micrograph and related information to 'extra' folder
