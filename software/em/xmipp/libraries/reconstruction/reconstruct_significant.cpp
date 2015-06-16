@@ -59,6 +59,7 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--angDistance <a=10>]       : Angular distance");
     addParamsLine("  [--dontApplyFisher]          : Do not select directions using Fisher");
     addParamsLine("  [--dontReconstruct]          : Do not reconstruct");
+    addParamsLine("  [--useForValidation <numOrientationsPerParticle=10>] : Use the program for validation. This number defines the number of possible orientations per particle");
 }
 
 // Read arguments ==========================================================
@@ -83,6 +84,11 @@ void ProgReconstructSignificant::readParams()
     applyFisher=checkParam("--dontApplyFisher");
     fnFirstGallery=getParam("--initgallery");
     doReconstruct=!checkParam("--dontReconstruct");
+    useForValidation=checkParam("--useForValidation");
+    numOrientationsPerParticle = getIntParam("--useForValidation");
+
+    if (numOrientationsPerParticle != 0)
+    	useForValidation = true;
     if (!doReconstruct)
     {
     	if (rank==0)
@@ -110,6 +116,8 @@ void ProgReconstructSignificant::show()
         std::cout << "Angular distance            : "  << angDistance << std::endl;
         std::cout << "Apply Fisher                : "  << applyFisher << std::endl;
         std::cout << "Reconstruct                 : "  << doReconstruct << std::endl;
+        std::cout << "useForValidation            : "  << useForValidation << std::endl;
+
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnFirstGallery=="")
@@ -121,6 +129,9 @@ void ProgReconstructSignificant::show()
         }
         else
             std::cout <<     "Gallery                     : "  << fnFirstGallery << std::endl;
+
+        if (useForValidation)
+        	std::cout <<  " numOrientationsPerParticle : " << numOrientationsPerParticle << std::endl;
     }
 }
 
@@ -653,6 +664,36 @@ void ProgReconstructSignificant::generateProjections()
 	}
 }
 
+void ProgReconstructSignificant::numberOfProjections()
+{
+
+	double angDist[] =        {0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
+	double numWithOutSymm[] = {165016, 41258, 18338, 10318, 6600, 4586, 3367, 2586, 2042, 1652, 1367, 1148, 977, 843, 732, 643, 569, 510, 460, 412, 340, 288, 245, 211, 184, 161, 146};
+	SymList SL;
+	SL.readSymmetryFile(fnSym);
+	size_t minIndex = 0;
+	double tmp = 1e3;
+	double numProjects = 0;
+	for (int idx = 0; idx < 27; idx++)
+	{
+		if ( std::abs(angularSampling-angDist[idx]) < tmp)
+		{
+			minIndex = idx;
+			numProjects = (numWithOutSymm[idx]/((2*(SL.true_symNo-1))));
+			tmp = std::abs(angularSampling-angDist[idx]);
+		}
+	}
+
+	angularSampling = angDist[minIndex];
+	std::cout << " Changing angular sampling to " << angularSampling << std::endl;
+	std::cout << " Number of projections taking into account angular sampling and symmetry " << numProjects << std::endl;
+
+	alpha0 = numOrientationsPerParticle/numProjects;
+	alphaF = alpha0;
+
+	std::cout << " changing alpha0 to " << alpha0 << std::endl;
+}
+
 void ProgReconstructSignificant::produceSideinfo()
 {
 	mdIn.read(fnIn);
@@ -670,7 +711,7 @@ void ProgReconstructSignificant::produceSideinfo()
 	getImageSize(mdIn,Xdim,Ydim,Zdim,Ndim);
 
 	// Adjust alpha
-	if (fnSym!="c1")
+	if ( (fnSym!="c1") && !useForValidation )
 	{
 		SymList SL;
 		SL.readSymmetryFile(fnSym);
@@ -678,7 +719,12 @@ void ProgReconstructSignificant::produceSideinfo()
 		alphaF*=SL.true_symNo;
 		if (alpha0>1)
 			REPORT_ERROR(ERR_ARG_INCORRECT,"Alpha values are too large: reduce the error such that the error times the symmetry number is smaller than 1");
-	}
+	} else
+		if (useForValidation)
+		{
+			//Adjust alpha parameters
+			numberOfProjections();
+		}
 
 	// If there is not any input volume, create a random one
 	if (fnFirstGallery=="")
