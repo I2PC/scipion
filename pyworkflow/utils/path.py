@@ -202,6 +202,15 @@ def createLink(source, dest):
     destDir = split(dest)[0]
     os.symlink(relpath(source,destDir),dest)
     
+def createLinkToPath(source, dest):
+    """ Creates a link to a given file path """
+    if exists(dest):
+        if isdir(dest):
+            shutil.rmtree(dest)
+        else:
+            os.remove(dest)
+    os.symlink(source,dest)    
+    
 def getLastFile(pattern):
     """ Return the last file matching the pattern. """
     files = glob(pattern)
