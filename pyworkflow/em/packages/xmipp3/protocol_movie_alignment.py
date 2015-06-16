@@ -32,7 +32,7 @@ In this module are protocol base classes related to EM Micrographs
 import sys
 from os.path import join
 
-from pyworkflow.object import String
+from pyworkflow.object import String, Integer
 from pyworkflow.protocol.params import IntParam, StringParam, BooleanParam, LEVEL_ADVANCED, LEVEL_ADVANCED, EnumParam
 from pyworkflow.utils.path import moveFile
 import pyworkflow.em as em
@@ -160,7 +160,15 @@ class ProtMovieAlignment(ProtProcessMovies):
         # Also create a Set of Movies with the alignment parameters
         movieSet = self._createSetOfMovies()
         movieSet.copyInfo(inputMovies)
+        movieSet.cropOffsetX = Integer(self.cropOffsetX)
+        movieSet.cropOffsetY = Integer(self.cropOffsetY)
+        movieSet.cropDimX = Integer(self.cropDimX)
+        movieSet.cropDimY = Integer(self.cropDimY)
+        movieSet.sumFrame0 = Integer(self.sumFrame0)
+        movieSet.sumFrameN = Integer(self.sumFrameN)
+
         alMethod = self.alignMethod.get()
+        ####>>>ESTO NO TIENE PIES NO CABEZA
         for movie in self.inputMovies.get():
             micName = self._getNameExt(movie.getFileName(),'_aligned', 'mrc')
             metadataName = self._getNameExt(movie.getFileName(), '_aligned', 'xmd')
@@ -191,7 +199,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                 mic.plotCart = em.Image()
                 mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
                 mic.plotCart.setFileName(self._getExtraPath(plotCartName))
-            if alMethod != AL_DOSEFGPU or alMethod != AL_CROSSCORRELATION:
+            if alMethod != AL_DOSEFGPU and alMethod != AL_CROSSCORRELATION:
                 mic.psdCorr = em.Image()
                 mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
                 print psdCorrName
@@ -241,7 +249,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
         alMethod = self.alignMethod.get()
-        print("alMethod",alMethod)
+
         # For simple average execution
         if alMethod == AL_AVERAGE:
             command = '-i %(movieName)s -o %(micName)s' % locals()
@@ -283,14 +291,13 @@ class ProtMovieAlignment(ProtProcessMovies):
         elif alMethod == AL_CROSSCORRELATION or alMethod == AL_CROSSCORRELATIONOPTICAL: #not dosefgpu
             program = 'xmipp_movie_alignment_correlation'
             corrMovieName = self._getCorrMovieName(movieId)
-            command  = '-i %(movieName)s ' % locals()
+            command  = '-i %s ' % movieName
             command += '-o %s '% metadataNameInterMediate
             command += '--sampling %f ' % self.samplingRate
             command += '--cropULCorner %d %d '%(self.cropOffsetX.get(),self.cropOffsetY.get())
             command += '--cropDRCorner %d %d '%(self.cropOffsetX.get() + self.cropDimX.get() -1
                                                ,self.cropOffsetY.get() + self.cropDimY.get() -1)
             _lastFrame = -1
-            print("lastFrame-->",lastFrame)
             if lastFrame != 0:
                 _lastFrame = lastFrame
             command += '--frameRange %d %d '%(firstFrame,_lastFrame)
@@ -334,6 +341,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             # Copy metadatafile otherwise it will be deleted
             #TODO: create a proper scipion object
             moveFile(join(movieFolder, metadataNameInterMediate), self._getExtraPath())
+            moveFile(join(movieFolder, corrMovieName), self._getExtraPath())
         else:
             moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
 
