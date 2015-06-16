@@ -40,6 +40,7 @@ from pyworkflow.em.packages.xmipp3 import XmippProtRansac
 from pyworkflow.em.packages.eman2.protocol_refineasy import EmanProtRefine
 from pyworkflow.em.packages.eman2.protocol_initialmodel import EmanProtInitModel
 from pyworkflow.em.packages.xmipp3.protocol_reconstruct_significant import XmippProtReconstructSignificant
+from pyworkflow.em.packages.xmipp3.protocol_validate_nontilt import XmippProtValidateNonTilt
 
 def service_projects(request):
    
@@ -60,6 +61,7 @@ def service_projects(request):
 
 
 def writeCustomMenu(customMenu):
+    print
     if not exists(customMenu):
         f = open(customMenu, 'w+')
         f.write('''
@@ -73,7 +75,8 @@ Initial_Volume = [
         {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"},
         {"tag": "protocol", "value": "XmippProtReconstructSignificant", "text": "xmipp3 - significant"}]},
     {"tag": "section", "text": "3. Align volumes.", "children": [
-        {"tag": "protocol", "value": "XmippProtAlignVolumeForWeb", "text": "xmipp3 - align volumes"}]}]
+        {"tag": "protocol", "value": "XmippProtAlignVolumeForWeb", "text": "xmipp3 - align volumes"},
+        {"tag": "protocol", "value": "XmippProtValidateNonTilt", "text": "xmipp3 - validate nontilt"}]}]
         ''')
         f.close()
         
@@ -132,7 +135,8 @@ def create_service_project(request):
         protRansac.setObjLabel('xmipp - ransac')
         protRansac.inputSet.set(protImport)
         protRansac.inputSet.setExtendedAttribute('outputAverages')
-        setProtocolParams(protRansac, testDataKey)
+        if testDataKey :
+            setProtocolParams(protRansac, testDataKey)
         project.saveProtocol(protRansac)
         
         # 2b. Eman 
@@ -140,7 +144,8 @@ def create_service_project(request):
         protEmanInitVol.setObjLabel('eman - initial vol')
         protEmanInitVol.inputSet.set(protImport)
         protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
-        setProtocolParams(protEmanInitVol, testDataKey)
+        if testDataKey :
+            setProtocolParams(protEmanInitVol, testDataKey)
         project.saveProtocol(protEmanInitVol)
         
         # 2c. Significant 
@@ -148,7 +153,8 @@ def create_service_project(request):
         protSignificant.setObjLabel('xmipp - significant')
         protSignificant.inputSet.set(protImport)
         protSignificant.inputSet.setExtendedAttribute('outputAverages')
-        setProtocolParams(protSignificant, testDataKey)
+        if testDataKey :
+            setProtocolParams(protSignificant, testDataKey)
         project.saveProtocol(protSignificant)
         
         # 3. Join result volumes
@@ -171,6 +177,18 @@ def create_service_project(request):
         protJoin.inputVolumes.append(p3)
 #         protJoin.inputVolumes.append(p4)
         project.saveProtocol(protJoin)
+        
+        protValidate = project.newProtocol(XmippProtValidateNonTilt)
+        protValidate.setObjLabel('validate nontilt')
+        protValidate.inputVolumes.set(protJoin)
+        protValidate.inputVolumes.setExtendedAttribute('outputVolumes')
+        protValidate.inputParticles.set(protImport)
+        protValidate.inputParticles.setExtendedAttribute('outputAverages')
+        protValidate.numberOfMpi.set(8)
+        if testDataKey :
+            setProtocolParams(protValidate, testDataKey)
+#         protJoin.inputVolumes.append(p4)
+        project.saveProtocol(protValidate)
         
         
     return HttpResponse(mimetype='application/javascript')
@@ -223,6 +241,7 @@ def service_content(request):
 def setProtocolParams(protocol, key):
     #Here we set protocol parameters for each test data
     cls = type(protocol)
+    print "protocol class %s key %s"%(cls, key)
     if issubclass(cls, XmippProtRansac):
         if(key == "bpv"):
             attrs = {"symmetryGroup" : "i1",
@@ -256,6 +275,13 @@ def setProtocolParams(protocol, key):
             attrs = {"symmetryGroup" : "c1", 
                      "alpha0": 80, 
                      "alphaF": 99.5}
+    if issubclass(cls, XmippProtValidateNonTilt):
+        if(key == "bpv"):
+            attrs = {"symmetryGroup" : "i1"}
+        if(key == "groel"):
+            attrs = {"symmetryGroup" : "d7"}
+        if(key == "ribosome"):
+            attrs = {"symmetryGroup" : "c1"}
     for key,value in attrs.iteritems():
         getattr(protocol, key).set(value)
     

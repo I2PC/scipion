@@ -24,20 +24,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-//ejecución del programa
-//xmipp_validation_nontilt --volume 4MOA.vol --odir Sig4MOA --sym c1
-
-
-//xmipp_multireference_aligneability --volume alignment_reference_images.vol  --odir Sig4MOA --sym c1
-//xmipp_multireference_aligneability --volume alignment_reference_images.vol  --odir Output_dir --sym c1
-
-//xmipp_multireference_aligneability --stackimages input_volume.stk --volume alignment_reference_images.vol  --odir Output_dir --sym c1  --significance 0.05
-
-
 #include "multireference_aligneability.h"
 #include "validation_nontilt.h"
-#include <cstdlib>      // std::rand, std::srand
-#include <ctime>        // std::time
+#include <cstdlib>
+#include <ctime>
 #include <algorithm>
 #include <fstream>
 #include "data/sampling.h"
@@ -48,262 +38,281 @@
 
 void MultireferenceAligneability::readParams()
 {
-    fnDir = getParam("--odir");
-    fnSym = getParam("--sym");
     fnInit = getParam("--volume");
-    fin = getParam("--stackimages");
-    fsig = getParam("--significance");
+    fin = getParam("--angles_file");
+    finRef = getParam("--angles_file_ref");
+    fnSym = getParam("--sym");
+    fnDir = getParam("--odir");
+    donNotUseWeights= checkParam("--dontUseWeights");
 
 }
 
 void MultireferenceAligneability::defineParams()
 {
     //usage
-    addUsageLine("This function takes a volume and projects it in a set of directions defined in a metadata. Thus, using the projections,"
-    		"the calculus of H0 and Hk is carried out");
-    //params
-    addParamsLine("  [--volume <md_file=\"\">]    : Volume to be projected and from its projections then the calculus of"
-    		" H0 and Hk will be performed");
-    addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
+    addUsageLine("This function takes a volume and a set of projections with orientations. The volume is projected into the set of projection directions defining the "
+    		"the reference projections. Thus, using the projections and references, the calculus of H0k, Hk and Pk is carried out");
+    addParamsLine("  [--volume <md_file=\"\">]    : Input volume to be validated");
+    addParamsLine("  [--angles_file <file=\".\">]     : Input metadata with projections and orientations");
+    addParamsLine("  [--angles_file_ref <file=\".\">] : Input reference metadata with projections and orientations obtained from the projection orientations and the volume ");
+    addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections"); //TODO the input will be two doc files one from the exp and the other from refs
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
-    addParamsLine("  [--stackimages <inputDir=\".\">]   : Stack of projections");
-    addParamsLine("  [--significance <fsig=0.05>]  : Significance (default signif=0.05");
+    addParamsLine("  [--dontUseWeights]           : Do not use the particle weigths in the clusterability calculation ");
+
 }
 
 void MultireferenceAligneability::run()
 {
+	//xmipp_multireference_aligneability --volume 1BRD.vol --sym c3 --odir testMultiReference/ --angles_file testMultiReference/angles_iter001_00.xmd --angles_file_ref testMultiReference/gallery_alignment/angles_iter001_00.xmd &
     randomize_random_generator();
-    char buffer[400];
 
-    //STEP1 From a stack of images adn comparing with a volume, a set of angles (set1) is obtained via significant (alignment)
-    	//input_volume.stk
-    	//alignment_reference_images.vol Initial volume
-    sprintf(buffer, "xmipp_reconstruct_significant  -i %s --initvolumes %s --odir %s --sym %s --iter 1 --alpha0 %s", fin.c_str(), fnInit.c_str(),fnDir.c_str(), fnSym.c_str(),fsig.c_str());
-    //system(buffer);
-
-    write_projection_file();
-    std::cout << " " << std::endl;
-    std::cout << "STEP1 ENDED" << std::endl;
-    std::cout << " " << std::endl;
-
-    //STEP2 Using the set of angles, the volume is projected
-    MetaData md,mdOut;//,mdOut2,tempMd2; //,mdProjMatch;
-    FileName fnVol, fnParams, fnOut;//, fnFSC, fnOut2; //, fnMdProj2;
-
-    fnVol = fnInit;
-    fnOut = fnDir+"/projected_images.stk";
-    fnParams = fnDir +"/params";
-
-    //Projection in the direction of a set of angles defined in params
-    sprintf(buffer, "xmipp_phantom_project -i %s --params %s -o %s", fnVol.c_str() , fnParams.c_str() , fnOut.c_str());
-    system(buffer);
-
-    std::cout << " " << std::endl;
-    std::cout << "STEP2 ENDED" << std::endl;
-    std::cout << " " << std::endl;
-
-
-    //STEP3 A new set of angles is gotten thought significant
-    FileName fnMd_gallery;
-    FileName fnOut_gallery;
-    ///////////////////////////////////////
-    fnOut_gallery = fnDir+"/gallery_alignment";
-    ///////////////////////////////////////
-
-    sprintf(buffer,"mkdir %s",fnOut_gallery.c_str());//,fnSym.c_str());
-    //system(buffer);// It is necessary to create a new folder for running significant again. Due to, the significant output
-    					   // will be the same name that Step1.
-
-    sprintf(buffer, "xmipp_reconstruct_significant -i %s --initvolumes %s --odir %s  --sym %s --iter 1 --alpha0 %s", fnOut.c_str(),fnInit.c_str(),fnOut_gallery.c_str(),fnSym.c_str(),fsig.c_str());
-    //system(buffer);
-
-    std::cout << " " << std::endl;
-    std::cout << "STEP3 ENDED" << std::endl;
-    std::cout << " " << std::endl;
-
-
-    //STEP4 Calculus of H0 and Hk(using projected data), then P is obtained
-    //Files inside gallery_alignment folder
-    //FileName fnDir_gallery="gallery_alignment";
-    FileName fnDir_gallery="gallery_alignment";
-    //FileName fnMd_gallery; //, fnMdProj_signif;
-    //fnMd_gallery = fnDir_gallery+"/angles_iter001_00.xmd";
-    fnOut_gallery = fnDir+"/"+fnDir_gallery+"/angles_iter001_00.xmd";
-
-    //Calculus of H0 and Hk (using experimental data)
-    //standard files
-    FileName fnMd;//, fnMdProj;
-    fnMd = fnDir+"/angles_iter001_00.xmd";
-
-    MetaData outtput;
-
-    P_calculus(fnOut_gallery,fnMd, outtput);
-
-    std::cout << " " << std::endl;
-    std::cout << "FINISHED" << std::endl;
-    std::cout << " " << std::endl;
-
-}
-
-
-void MultireferenceAligneability::P_calculus(FileName &fnMd_gallery,FileName &fnMd,MetaData &mdOut)
-{
-	randomize_random_generator();
-
-	MetaData md, md_gallery, mdProjMatch, mdProjMatch_gallery;
-	size_t nSamplesRandom = 100;
+    MetaData mdOutCL, mdOutQ;
+	MetaData mdExp, mdExpSort, mdProj;
 	size_t maxNImg;
-	FileName fnOut;
-	fnOut = fnDir+"/clusteringTendency.xmd";
+	FileName fnOutCL,fnOutQ;
+	fnOutCL = fnDir+"/clusteringTendency.xmd";
+	fnOutQ = fnDir+"/validation.xmd";
 
-	md_gallery.read(fnMd_gallery);
-	md.read(fnMd);
+    SymList SL;
+    int symmetry, sym_order;
+    SL.readSymmetryFile(fnSym.c_str());
+    SL.isSymmetryGroup(fnSym.c_str(), symmetry, sym_order);
+    double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
+    double area_of_sphere_no_symmetry = 4.*PI;
+    double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
 
-	size_t sz_gallery = md_gallery.size();
-	size_t sz = md.size();
+	mdProj.read(finRef);
+	mdExp.read(fin);
 
-	md_gallery.getValue(MDL_IMAGE_IDX,maxNImg,sz_gallery);
-	md.getValue(MDL_IMAGE_IDX,maxNImg,sz);
+	mdExpSort.sort(mdExp,MDL_IMAGE_IDX,true,-1,0);
+	size_t sz = mdExp.size();
+	mdExpSort.getValue(MDL_IMAGE_IDX,maxNImg,sz);
 
-	String expression, expression2;
-	MDRow row, row_gallery, row2, row2_gallery;
+	String expression;
+	MDRow row;
 
+	double validation = 0;
 	init_progress_bar(maxNImg);
 
-	MDIterator __iter(mdProjMatch);
-	//MDIterator __iter(mdProjMatch_signif);
+	MetaData tempMdExp, tempMdProj;
+	double sum_w_exp;
+	double sum_w_proj;
+	double sum_noise = 0;
 
-	SymList SL;
-	int symmetry, sym_order;
-	SL.readSymmetryFile(fnSym.c_str());
-	SL.isSymmetryGroup(fnSym.c_str(), symmetry, sym_order);
+	expression = formatString("imageIndex == %lu",maxNImg);
+	tempMdExp.importObjects(mdExp, MDExpression(expression));
+	size_t numProjs = tempMdExp.size();
+	tempMdExp.clear();
 
-	double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
-	double area_of_sphere_no_symmetry = 4.*PI;
-	double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
-	double validation = 0;
+	//Noise
+	calc_sumw(numProjs, sum_noise);
+	sum_noise *= correction;
 
-	ProgValidationNonTilt PVN;
-
+	double rank = 0.;
+	char hold;
+	FileName imagePath;
 	for (size_t i=0; i<=maxNImg;i++)
 	{
-		std::cout << "Iteration" << i << std::endl;
-		MetaData tempMd, tempMd_gallery;
-		std::vector<double> sum_u1(nSamplesRandom);
-		std::vector<double> sum_u2(nSamplesRandom);
-		std::vector<double> sum_w1(nSamplesRandom);
-		std::vector<double> sum_w2(nSamplesRandom);
-		std::vector<double> H0(nSamplesRandom);
-		std::vector<double> H(nSamplesRandom);
-
 		expression = formatString("imageIndex == %lu",i);
-		tempMd.importObjects(md, MDExpression(expression));
-		tempMd_gallery.importObjects(md_gallery, MDExpression(expression));
+		tempMdExp.importObjects(mdExp, MDExpression(expression));
+		tempMdProj.importObjects(mdProj, MDExpression(expression));
 
-		if ( (tempMd.size()==0) || (tempMd_gallery.size()==0))
+		if ( (tempMdExp.size()==0) || (tempMdProj.size()==0))
 			continue;
 
-		calc_sumu(tempMd_gallery,sum_u1);
-		calc_sumu(tempMd,sum_u2);
-		PVN.obtainSumW(tempMd_gallery,sum_w1,sum_u1,H0,correction);
-		PVN.obtainSumW(tempMd,sum_w2,sum_u2,H,correction);
+		tempMdExp.getRow(row,1);
+		calc_sumu(tempMdExp, sum_w_exp);
+		calc_sumu(tempMdProj, sum_w_proj);
 
-		std::sort(H0.begin(),H0.end());
-		std::sort(H.begin(),H.end());
+		rank = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
 
-		double P = 0.;
-		for(size_t j=0; j<sum_u1.size();j++)  //NOTA, u1 and u2 have 100 elements, then the condition sum_u1.size, does not matter
-			P += H0.at(j)/H.at(j);
+		if (rank>1)
+			rank=1;
+		else if (rank < 0)
+			rank = 0;
 
-		P /= (nSamplesRandom);
-		row.setValue(MDL_IMAGE_IDX,i);
-		row.setValue(MDL_WEIGHT,P);
-		mdOut.addRow(row);
+		validation += (rank>0.5);
+		tempMdExp.getValue(MDL_IMAGE,imagePath,1);
+		//row.setValue(MDL_IMAGE,imagePath);
+		//row.setValue(MDL_IMAGE_IDX,i);
+		row.setValue(MDL_VOLUME_SCORE1,rank);
+		row.setValue(MDL_VOLUME_SCORE2,sum_w_proj);
+		row.setValue(MDL_VOLUME_SCORE3,sum_w_exp);
+		row.setValue(MDL_VOLUME_SCORE4,sum_noise);
 
-		std::cout << mdOut << std::endl;
+		mdOutCL.addRow(row);
 
-		sum_u1.clear();
-		sum_u2.clear();
-		sum_w1.clear();
-		sum_w2.clear();
-		H0.clear();
-		H.clear();
-		tempMd.clear();
+		row.clear();
+		tempMdExp.clear();
+		tempMdProj.clear();
 		progress_bar(i+1);
-		__iter.moveNext();
 	}
 
-	mdOut.write(fnOut);
+	mdOutCL.write(fnOutCL);
+	validation /= (maxNImg+1);
+	row.clear();
+    row.setValue(MDL_IMAGE,fnInit);
+    row.setValue(MDL_WEIGHT,validation);
+    mdOutQ.addRow(row);
+    mdOutQ.write(fnOutQ);
 }
 
 
 void MultireferenceAligneability::write_projection_file()
 {
+
+	String xdim= integerToString(Xdim);
+	String ydim= integerToString(Ydim);
 	FileName filnam=fnDir+"/params";
 	std::ofstream myfile;
 	myfile.open(filnam.c_str());
 	myfile << "# XMIPP_STAR_1 *\n";
 	myfile << "# \n";
 	myfile << "data_block1 \n";
-	myfile << "_dimensions2D   '101 101' \n";
-	myfile << "_projAngleFile "+fnDir+"/images_iter001_00.xmd \n";
-	myfile << "_noisePixelLevel   '0 4' \n";    //where the variance is the first number and the second one is the mean
+	myfile << "_dimensions2D '"+xdim+" "+ydim+"' \n";
+	myfile << "_projAngleFile "+fin+" \n";
+	myfile << "_noisePixelLevel   '0 0' \n";    //where the variance is the first number and the second one is the mean
 	myfile.close();
 }
 
-void MultireferenceAligneability::calc_sumu(MetaData tempMd,std::vector<double> & sum_u)
+#define _FOR_ALL_OBJECTS_IN_METADATA2(__md) \
+        for(MDIterator __iter2(__md); __iter2.hasNext(); __iter2.moveNext())
+
+void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & sum_W)
 {
-	const size_t tempMdSz= tempMd.size();
-    double xRan,yRan,zRan;
-    double tilt,rot;
-    double sumWRan;
-    double * xRanArray = new double[tempMdSz];
-    double * yRanArray = new double[tempMdSz];
-    double * zRanArray  = new double[tempMdSz];
-    std::vector<double> weightV;
     double a;
+    double rot,tilt,w;
+    double x,y,z;
+    double xx,yy,zz;
+    double w2;
+    double tempW;
+    double W;
+    double sumW;
 
-	for (size_t n=0; n<sum_u.size(); n++)
-	    {
-	        sumWRan = 0;
-	        for (size_t nS=0; nS<tempMd.size(); nS++)
-	        {
-	        	rot = 2*PI*rnd_unif(0,1);
-	        	tilt = std::acos(2*rnd_unif(0,1)-1);
+    sumW = 0;
+    size_t idx = 0;
+    FOR_ALL_OBJECTS_IN_METADATA(tempMd)
+    {
+        tempMd.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+        tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+        //tempMd.getValue(MDL_WEIGHT,w,__iter.objId);
+        tempMd.getValue(MDL_MAXCC,w,__iter.objId);
 
-	        	//tilt =(double(std::rand())/RAND_MAX)*(PI);		[ 0 ,PI]
-	        	//rot  =(std::rand()-RAND_MAX/2)*(2*PI/RAND_MAX);   [-PI,PI]
-	        	xRan = sin(tilt)*cos(rot);
-	        	yRan = sin(tilt)*sin(rot);
-	        	zRan = std::abs(cos(tilt));
+        idx++;
+        x = sin(tilt*PI/180.)*cos(rot*PI/180.);
+        y = sin(tilt*PI/180.)*sin(rot*PI/180.);
+        z = std::abs(cos(tilt*PI/180.));
 
-	            xRanArray[nS] = xRan;
-	            yRanArray[nS] = yRan;
-	            zRanArray[nS] = zRan;
-	            tempMd.getColumnValues(MDL_WEIGHT, weightV);
+        tempW = 1e3;
+        _FOR_ALL_OBJECTS_IN_METADATA2(tempMd)
+        {
+            tempMd.getValue(MDL_ANGLE_ROT,rot,__iter2.objId);
+            tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter2.objId);
+            //tempMd.getValue(MDL_WEIGHT,w2,__iter2.objId);
+            tempMd.getValue(MDL_MAXCC,w2,__iter2.objId);
+            xx = sin(tilt*PI/180.)*cos(rot*PI/180.);
+            yy = sin(tilt*PI/180.)*sin(rot*PI/180.);
+            zz = std::abs(cos(tilt*PI/180.));
+            a = std::abs(std::acos(x*xx+y*yy+z*zz));
 
-	            std::random_shuffle(weightV.begin(), weightV.end());
-	        }
+            if ( (a<tempW) && (a != 0))
+            {
+            	if (donNotUseWeights)
+            		W = a;
+            	else
+            		//W = a*std::exp(-2*(w+w2));
+            		W = a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
 
-	        sumWRan = 0;
-	        double WRan, tempWRan, tempW1, tempW2;
-	        for (size_t nS1=0; nS1<tempMd.size(); nS1++)
-	        {
-	            tempWRan = 1e3;
-	            for (size_t nS2=0; nS2<tempMd.size(); nS2++)
-	            {
-	                a = std::abs(std::acos(xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2]));
-	                if ( (a<tempWRan) && (a != 0))
-	                {
-	                    tempWRan = a;
-	                    tempW2 = weightV[nS2];
-	                    tempW1 = weightV[nS1];
-	                    WRan = a*std::exp(std::abs(tempW1-tempW2))*std::exp(-(tempW1+tempW2));
-	                }
-	            }
-	            sumWRan += WRan;
-	        }
-	        sum_u.at(n)=sumWRan;
-	    }
+                tempW = a;
+                //std::cout << x << " " << y << " " << z << " " << xx << " " << yy << " " << zz << " " <<  w << " " << w2 << " " << a << " " << W << " " << std::exp(std::abs(w-w2)) << " " << std::exp(-(w+w2)) << std::endl;
+            }
+        }
+        sumW +=  W;
+    }
+
+    //calculate the std of weightsDistribution and use it as a weight
+/*    double sum=0;
+    double mean=0;
+    double stdDev=0;
+    double tmp=0;
+    for (idx = 0; idx < tempMd.size(); idx++)
+    	sum += weightsDistribution[idx];
+
+    mean =sum/ tempMd.size();
+
+    for (idx = 0; idx < tempMd.size(); idx++)
+    	tmp += (weightsDistribution[idx]-mean)*(weightsDistribution[idx]-mean);
+
+    stdDev = std::sqrt(tmp/(tempMd.size()+1));
+    //sum_W = std::exp(-stdDev)*sumW;
+ */
+    sum_W = sumW;
+    //std::cout << " sumW : " << sumW << std::endl;
 }
+
+void MultireferenceAligneability::calc_sumw(const size_t num, double & sumw)
+{
+	size_t trials=200;
+    double xRan,yRan,zRan;
+    double x,y;
+    double sumWRan;
+    double * xRanArray = new double[num];
+    double * yRanArray = new double[num];
+    double * zRanArray  = new double[num];
+    double a;
+    sumw=0;
+
+    for (size_t n=0; n < trials; n++)
+    {
+        sumWRan = 0;
+        for (size_t nS=0; nS<num; nS++)
+        {
+             /*
+                x = sin(tilt*PI/180)*cos(rot*PI/180);
+        		y = sin(tilt*PI/180)*sin(rot*PI/180);
+        		z = std::abs(cos(tilt*PI/180));
+             */
+
+        	//http://mathworld.wolfram.com/SpherePointPicking.html
+        	x = 2*(double(std::rand())-RAND_MAX/2)/RAND_MAX;
+        	y = 2*(double(std::rand())-RAND_MAX/2)/RAND_MAX;
+
+        	while (x*x+y*y >= 1 )
+        	{
+            	x = 2*(std::rand()-RAND_MAX/2)/RAND_MAX;
+            	y = 2*(std::rand()-RAND_MAX/2)/RAND_MAX;
+        	}
+
+        	xRan = 2*x*std::sqrt(1-x*x-y*y);
+        	yRan = 2*y*std::sqrt(1-x*x-y*y);
+        	zRan = std::abs(1-2*(x*x+y*y));
+
+            xRanArray[nS] = xRan;
+            yRanArray[nS] = yRan;
+            zRanArray[nS] = zRan;
+        }
+
+        sumWRan = 0;
+        double WRan, tempWRan, tempW1, tempW2;
+        for (size_t nS1=0; nS1<num; nS1++)
+        {
+            tempWRan = 1e3;
+            for (size_t nS2=0; nS2<num; nS2++)
+            {
+                a = std::abs(std::acos(xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2]));
+                if ( (a<tempWRan) && (a != 0))
+                {
+                    tempWRan = a;
+                    WRan = a;
+                }
+            }
+            sumWRan += WRan;
+        }
+
+        sumw += sumWRan;
+    }
+
+    sumw /= trials;
+}
+
 

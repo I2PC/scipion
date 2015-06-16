@@ -28,7 +28,6 @@
 #define PI 3.14159265
 
 #include <data/xmipp_program.h>
-#include "reconstruct_significant.h"
 #include <math.h>
 
 /**@defgroup Validation without tilt
@@ -63,7 +62,7 @@ public:
 
     void obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
 
-    void obtainSumW(const MetaData & tempMd,std::vector<double> & sum_W,std::vector<double> & sum_u,std::vector<double> & H, const double factor);
+    void obtainSumW(const MetaData & tempMd, double & sum_W, std::vector<double> & sum_u, std::vector<double> & H, const double factor);
 
     /// Gather alignment
     virtual void gatherClusterability() {}

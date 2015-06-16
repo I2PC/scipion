@@ -36,6 +36,7 @@ from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.utils import prettyDelta
+from pyworkflow.utils.path import copyFile
 
 def resmap_projects(request):
    
@@ -99,7 +100,8 @@ def create_resmap_project(request):
             attr = getAttrTestFile(testDataKey)
             source = attr['path'] + attr['file']
             dest = os.path.join(projectPath,'Uploads', attr['file'])
-            pwutils.createLink(source, dest)        
+            #pwutils.createLink(source, dest)        
+            copyFile(source, dest)
         
             label_import = "import volumes ("+ testDataKey +")" 
             protImport = project.newProtocol(ProtImportVolumes, objLabel=label_import)
@@ -130,19 +132,19 @@ def getAttrTestFile(key):
 #                 }
 #         
     if(key == "fcv"):
-        attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/", 
+        attr = {"path" : "/mnt/big1/scipion-service/data/scipionweb/maps_testdata/", 
                 "file":"fcv.map",
                 "samplingRate": 2.33, 
                 }
     
     if(key == "mito_ribosome"):
-        attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/",
+        attr = {"path" : "/mnt/big1/scipion-service/data/scipionweb/maps_testdata/",
                 "file": "mito_ribosome.map",
                 "samplingRate": 1.34, 
                 }
         
     if(key == "t20s_proteasome"):
-        attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/",
+        attr = {"path" : "/mnt/big1/scipion-service/data/scipionweb/maps_testdata/",
                 "file": "t20s_proteasome.map",
                 "samplingRate": 0.98, 
                 }
