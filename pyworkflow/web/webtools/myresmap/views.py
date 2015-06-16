@@ -36,7 +36,6 @@ from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.utils import prettyDelta
-from pyworkflow.utils.path import copyFile
 
 def resmap_projects(request):
    
@@ -100,8 +99,7 @@ def create_resmap_project(request):
             attr = getAttrTestFile(testDataKey)
             source = attr['path'] + attr['file']
             dest = os.path.join(projectPath,'Uploads', attr['file'])
-            #pwutils.createLink(source, dest)        
-            copyFile(source, dest)
+            pwutils.createLinkToPath(source, dest)        
         
             label_import = "import volumes ("+ testDataKey +")" 
             protImport = project.newProtocol(ProtImportVolumes, objLabel=label_import)
