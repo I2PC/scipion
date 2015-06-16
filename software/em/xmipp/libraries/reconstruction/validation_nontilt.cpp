@@ -90,7 +90,8 @@ void ProgValidationNonTilt::run()
 
 	MetaData tempMd;
 	std::vector<double> sum_u(nSamplesRandom);
-	std::vector<double> sum_w(nSamplesRandom);
+	//std::vector<double> sum_w(nSamplesRandom);
+	double sum_w=0;
 	std::vector<double> H0(nSamplesRandom);
 	std::vector<double> H(nSamplesRandom);
 
@@ -214,7 +215,8 @@ void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<doubl
             xRanArray[nS] = xRan;
             yRanArray[nS] = yRan;
             zRanArray[nS] = zRan;
-            tempMd.getColumnValues(MDL_WEIGHT, weightV);
+            //tempMd.getColumnValues(MDL_WEIGHT, weightV);
+            tempMd.getColumnValues(MDL_MAXCC, weightV);
 
             std::random_shuffle(weightV.begin(), weightV.end());
         }
@@ -260,7 +262,7 @@ void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<doubl
 
 #define _FOR_ALL_OBJECTS_IN_METADATA2(__md) \
         for(MDIterator __iter2(__md); __iter2.hasNext(); __iter2.moveNext())
-void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd,std::vector<double> & sum_W,std::vector<double> & sum_u,std::vector<double> & H, const double factor)
+void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd, double & sum_W, std::vector<double> & sum_u, std::vector<double> & H, const double factor)
 {
     double a;
     double rot,tilt,w;
@@ -276,7 +278,8 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd,std::vector<doubl
     {
         tempMd.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
-        tempMd.getValue(MDL_WEIGHT,w,__iter.objId);
+        //tempMd.getValue(MDL_WEIGHT,w,__iter.objId);
+        tempMd.getValue(MDL_MAXCC,w,__iter.objId);
         x = sin(tilt*PI/180.)*cos(rot*PI/180.);
         y = sin(tilt*PI/180.)*sin(rot*PI/180.);
         z = std::abs(cos(tilt*PI/180.));
@@ -286,7 +289,8 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd,std::vector<doubl
         {
             tempMd.getValue(MDL_ANGLE_ROT,rot,__iter2.objId);
             tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter2.objId);
-            tempMd.getValue(MDL_WEIGHT,w2,__iter2.objId);
+            //tempMd.getValue(MDL_WEIGHT,w2,__iter2.objId);
+            tempMd.getValue(MDL_MAXCC,w2,__iter2.objId);
             xx = sin(tilt*PI/180.)*cos(rot*PI/180.);
             yy = sin(tilt*PI/180.)*sin(rot*PI/180.);
             zz = std::abs(cos(tilt*PI/180.));
@@ -300,6 +304,8 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd,std::vector<doubl
         }
         sumW +=  W;
     }
+
+    sum_W = sumW;
 
     for (size_t n=0; n<sum_u.size(); n++)
     {

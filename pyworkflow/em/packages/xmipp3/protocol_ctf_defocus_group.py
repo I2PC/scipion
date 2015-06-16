@@ -79,7 +79,7 @@ class XmippProtCTFDefocusGroup(ProtProcessParticles):
         ctfGroupMaxDiff = self.ctfGroupMaxDiff.get()
         
         #verifyFiles = []
-        self._insertFunctionStep('createOutputStep', imgsFn, ctfGroupMaxDiff)
+        self._insertFunctionStep('createOutputStep', ctfGroupMaxDiff)
     
     #--------------------------- STEPS functions -------------------------------------------- 
     def convertInputStep(self):

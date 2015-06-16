@@ -174,8 +174,7 @@ class ProjectWindow(ProjectBaseWindow):
         server_thread.start()
 
     def schedulePlot(self, path, *args):
-        self.queue.put(lambda: plotFile(path, *args).show())
-    
+        self.enqueue(lambda: plotFile(path, *args).show())    
 
     def runObjectCommand(self, cmd, inputStrId, objStrId):
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
@@ -192,24 +191,24 @@ class ProjectWindow(ProjectBaseWindow):
 
         #Plotter.setBackend('TkAgg')
         if cmd == OBJCMD_NMA_PLOTDIST:
-            self.queue.put(lambda: createDistanceProfilePlot(inputObj, modeNumber=objId).show())
+            self.enqueue(lambda: createDistanceProfilePlot(inputObj, modeNumber=objId).show())
 
         elif cmd == OBJCMD_NMA_VMD:
             vmd = createVmdView(inputObj, modeNumber=objId)
             vmd.show()
 
         elif cmd == OBJCMD_MOVIE_ALIGNPOLAR:
-            self.queue.put(lambda: createPlots(PLOT_POLAR, inputObj, objId))
+            self.enqueue(lambda: createPlots(PLOT_POLAR, inputObj, objId))
 
         elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
-            self.queue.put(lambda: createPlots(PLOT_CART, inputObj, objId))
+            self.enqueue(lambda: createPlots(PLOT_CART, inputObj, objId))
 
         elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
-            self.queue.put(lambda: createPlots(PLOT_POLARCART, inputObj, objId))
+            self.enqueue(lambda: createPlots(PLOT_POLARCART, inputObj, objId))
         
         elif cmd == OBJCMD_CTFFIND4:
             from pyworkflow.em.packages.grigoriefflab.viewer import createCtfPlot
-            self.queue.put(lambda: createCtfPlot(inputObj, objId))
+            self.enqueue(lambda: createCtfPlot(inputObj, objId))
     
     def recalculateCTF(self, inputObjId, sqliteFile):
         """ Load the project and launch the protocol to
@@ -232,7 +231,7 @@ class ProjectWindow(ProjectBaseWindow):
         prot.recalculate.set(True)
         prot.sqliteFile.set(sqliteFile)
         # Launch the protocol
-        project.launchProtocol(prot, wait=True)
+        self.getViewWidget().executeProtocol(prot)
 
 
 class ProjectManagerWindow(ProjectBaseWindow):
@@ -325,7 +324,11 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
                         attr.set(obj)
                     elif value:
                         attr.set(value)
-                project.launchProtocol(protocol, wait=True)
+                #project.launchProtocol(protocol)
+                # We need to enqueue the action of execute a new protocol
+                # to be run in the same GUI thread and avoid concurrent
+                # access to the project sqlite database
+                window.getViewWidget().executeProtocol(protocol)
             if msg.startswith('run function'):
                 functionName = tokens[2]
                 functionPointer = getattr(window, functionName)
@@ -334,5 +337,6 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
                 answer = 'no answer available'
                 self.request.sendall(answer + '\n')
         except:
-            print "Unexpected error:", sys.exc_info()[0]
+            import traceback
+            traceback.print_stack()
 
