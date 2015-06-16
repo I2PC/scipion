@@ -87,8 +87,6 @@ void ProgReconstructSignificant::readParams()
     useForValidation=checkParam("--useForValidation");
     numOrientationsPerParticle = getIntParam("--useForValidation");
 
-    if (numOrientationsPerParticle != 0)
-    	useForValidation = true;
     if (!doReconstruct)
     {
     	if (rank==0)
@@ -570,6 +568,7 @@ void ProgReconstructSignificant::reconstructCurrent()
 		FileName fnVolume=formatString("%s/volume_iter%03d_%02d.vol",fnDir.c_str(),iter,nVolume);
 		String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
 		String cmd=(String)"xmipp_reconstruct_fourier "+args;
+		std::cout << cmd << std::endl;
 		if (system(cmd.c_str())==-1)
 			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
@@ -577,12 +576,14 @@ void ProgReconstructSignificant::reconstructCurrent()
 		{
 			args=formatString("-i %s --sym %s -v 0",fnVolume.c_str(),fnSym.c_str());
 			cmd=(String)"xmipp_transform_symmetrize "+args;
+			std::cout << cmd << std::endl;
 			if (system(cmd.c_str())==-1)
 				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 		}
 
 		args=formatString("-i %s --mask circular %d -v 0",fnVolume.c_str(),-Xdim/2);
 		cmd=(String)"xmipp_transform_mask "+args;
+		std::cout << cmd << std::endl;
 		if (system(cmd.c_str())==-1)
 			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 	}
@@ -685,13 +686,15 @@ void ProgReconstructSignificant::numberOfProjections()
 	}
 
 	angularSampling = angDist[minIndex];
-	std::cout << " Changing angular sampling to " << angularSampling << std::endl;
-	std::cout << " Number of projections taking into account angular sampling and symmetry " << numProjects << std::endl;
-
 	alpha0 = numOrientationsPerParticle/numProjects;
 	alphaF = alpha0;
 
-	std::cout << " changing alpha0 to " << alpha0 << std::endl;
+    if (rank==0)
+    {
+      std::cout << " Changing angular sampling to " << angularSampling << std::endl;
+      std::cout << " Number of projections taking into account angular sampling and symmetry " << numProjects << std::endl;
+      std::cout << " changing alpha0 to " << alpha0 << std::endl;
+    }
 }
 
 void ProgReconstructSignificant::produceSideinfo()
