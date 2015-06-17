@@ -1714,7 +1714,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					try
 					{
-                                                XmippUtil.showImageJ(Tool.VIEWER);
+                        XmippUtil.showImageJ(Tool.VIEWER);
 						ImagePlusLoader loader = gallery.getImageLoader();
 						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, data.parameters);
 					}
