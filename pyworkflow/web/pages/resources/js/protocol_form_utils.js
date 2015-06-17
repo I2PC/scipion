@@ -207,8 +207,11 @@ $(document).ready(function() {
 			var URL = getSubDomainURL() + "/viewer_element/"
 			$.post(URL, serialize_form, function(json) {
 				$('.messi').remove();
-				$('.messi-modal').remove();				
-				popUpJSON(json);
+				$('.messi-modal').remove();		
+				if(json.length == 0)
+					infoPopup("Info", "No viewer found");
+				else
+					popUpJSON(json);
 			},"json");			
 		} 
 		// Important. Stop the normal POST
