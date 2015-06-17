@@ -237,7 +237,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			ColumnInfo ci = visibleLabels.get(col);
 			if (ci.allowRender && data.isImageFile(ci)) {
                 int index = getIndex(row, col);
-                String file = getImageFilename(index, renderLabel.label);
+                String file = getImageFilename(index, ci.label);
                 if(Filename.isVolume(file))
                     ImagesWindowFactory.openMetadata(file, new Params(), Params.OPENING_MODE_GALLERY);
                 else
