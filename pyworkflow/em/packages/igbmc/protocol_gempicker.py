@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+import os
 from os.path import join
 
 import pyworkflow.utils as pwutils
@@ -37,7 +38,7 @@ MASK_OBJECT = 1
 
 
 class ProtGemPicker(em.ProtParticlePicking):
-    """Protocol to pick particles in a set of micrographs using appion dogpicker"""
+    """Protocol to pick particles in a set of micrographs"""
     _label = 'gempicker'
         
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -182,12 +183,30 @@ class ProtGemPicker(em.ProtParticlePicking):
         args += ' --nCPU=%d' % self.numberOfThreads
         
         self.runJob('gEMpicker', args)
+        
 
     def createOutputStep(self):
-        return #FIXME
         micSet = self.getInputMicrographs()
+        ih = em.ImageHandler()
         coordSet = self._createSetOfCoordinates(micSet)
-        #TODO: parse the .box files and add coordinates per micrograph
+        coordSet.setBoxSize(self.inputReferences.get().getDim()[0]) #FIXME, the usre can change the box size
+        
+        for mic in micSet:
+            fnCoords = pwutils.replaceBaseExt(mic.getFileName(), 'txt')
+            fn2parse = self._getExtraPath('pik_coord', fnCoords)
+            print fn2parse
+            xdim, _, _, _ = ih.getDimensions(mic)
+            #xdim, ydim, _ = em.getDimensions(micSet)
+            #print xdim, ydim
+            with open(fn2parse,"r") as source:
+                source.readline() # Skip first line
+                for line in source:
+                    tokens = line.split()
+                    coord = em.Coordinate()
+                    coord.setPosition(xdim-int(tokens[3]), int(tokens[2]))
+                    coord.setMicrograph(mic)
+                    coordSet.append(coord)
+
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
 
