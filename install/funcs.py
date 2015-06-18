@@ -589,9 +589,12 @@ class Environment:
     def execute(self):
         if '--help' in self._args[2:]:
             if self._packages:
-                print("Available packages:")
+                print("Available packages (*: seems already installed)")
                 for p in self._packages:
-                    print("  %s" % p)
+                    if os.path.exists(os.path.join('software', 'em', p)):
+                        print("  %s (*)" % p)
+                    else:
+                        print("  %s" % p)
             sys.exit()
 
         # Check if there are explicit targets and only install
