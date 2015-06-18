@@ -556,7 +556,6 @@ class ProtFrealignBase(EMProtocol):
         prevIterVol = self._getFileName('iter_vol', iter=prevIter) # volume of the previous iteration
         
         if iterN == 1:
-            ### imgSet = self.inputParticles.get()
             vol = self.input3DReference.get()
 
             imgFn = self._getFileName('particles')
