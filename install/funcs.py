@@ -373,7 +373,7 @@ class Environment:
         t = self._addDownloadUntar(name, **kwargs)
         configDir = kwargs.get('configDir', t.buildDir)
 
-        configPath = os.path.join('software/tmp', configDir)
+        configPath = os.path.join('software', 'tmp', configDir)
         makeFile = '%s/%s' % (configPath, configTarget)
         prefix = os.path.abspath('software')
 
