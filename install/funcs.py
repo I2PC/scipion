@@ -376,8 +376,10 @@ class Environment:
         # with autotools (so we have to run "configure") or cmake.
 
         environ = os.environ.copy()
-        environ.update({'CPPFLAGS': '-I%s/include' % prefix,
-                        'LDFLAGS': '-L%s/lib' % prefix})
+        for envVar, value in [('CPPFLAGS', '-I%s/include' % prefix),
+                              ('LDFLAGS', '-L%s/lib' % prefix)]:
+            environ[envVar] = '%s %s' % (value, os.environ.get(envVar, ''))
+
         if not cmake:
             flags.append('--prefix=%s' % prefix)
             flags.append('--libdir=%s/lib' % prefix)
@@ -427,6 +429,7 @@ class Environment:
         default = kwargs.get('default', True)
         neededProgs = kwargs.get('neededProgs', [])
         libChecks = kwargs.get('libChecks', [])
+        numpyIncludes = kwargs.get('numpyIncludes', False)
 
         if default or name in sys.argv[2:]:
             # Check that we have the necessary programs and libraries in place.
@@ -439,8 +442,8 @@ class Environment:
         deps = kwargs.get('deps', [])
         deps.append('python')
 
-        prefixPath = os.path.abspath('software')
-        flags.append('--prefix=%s' % prefixPath)
+        prefix = os.path.abspath('software')
+        flags.append('--prefix=%s' % prefix)
 
         modArgs = {'urlSuffix': 'python'}
         modArgs.update(kwargs)
@@ -452,32 +455,31 @@ class Environment:
                 return x
             else:
                 return 'software/lib/python2.7/site-packages/%s' % x
-         
-        t.addCommand('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
-                     'PATH="%(root)s/bin:%(PATH)s" '
-    #               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
-    # The CFLAGS line is commented out because even if it is needed for modules
-    # like libxml2, it causes problems for others like numpy and scipy (see for
-    # example https://github.com/numpy/numpy/issues/2411
 
-    # Yes, that behavior of numpy is *crazy*. We now modify the
-    # original source, and it should be safe to use our CFLAGS and
-    # LDFLAGS. TODO: actually use them again, and check that all the
-    # compilation works fine.
+        environ = {
+            'PYTHONHOME': prefix,
+            'LD_LIBRARY_PATH': '%s/lib' % prefix,
+            'PATH': '%s/bin:%s' % (prefix, os.environ['PATH']),
+            'CPPFLAGS': '-I%s/include' % prefix,
+            'LDFLAGS': '-L%s/lib %s' % (prefix, os.environ.get('LDFLAGS', ''))}
+        if numpyIncludes:
+            numpyPath = '%s/lib/python2.7/site-packages/numpy/core' % prefix
+            environ['CPPFLAGS'] = ('%s %s/include %s/include/numpy' %
+                                   (environ['CPPFLAGS'], numpyPath, numpyPath))
+        # CPPFLAGS cause problems for modules like numpy and scipy (see for
+        # example https://github.com/numpy/numpy/issues/2411
 
-    # TODO: to compile against numpy (as cryoem does), one
-    # needs to have:
-    #   software/lib/python2.7/site-packages/numpy/core/include
-    #   software/lib/python2.7/site-packages/numpy/core/include/numpy
-    # as part of their CFLAGS="-I...."
-    # So we should add it somehow.
+        # Yes, that behavior of numpy is *crazy*. We now modify the
+        # original source, and it should be safe to use our CFLAGS,
+        # CPPFLAGS and LDFLAGS.
 
-    # TODO: maybe add an argument to the function to chose if we want them?
+        envStr = ' '.join('%s="%s"' % (k, v) for k, v in environ.iteritems())
+
+        t.addCommand('%(env)s '
                      '%(root)s/bin/python setup.py install %(flags)s > '
-                     '%(root)s/log/%(name)s.log 2>&1' % {'root': prefixPath,
-                                                       'PATH': os.environ['PATH'],
-                                                       'flags': ' '.join(flags),
-                                                       'name': name},
+                     '%(root)s/log/%(name)s.log 2>&1' % {
+                         'env': envStr, 'root': prefix, 'name': name,
+                         'flags': ' '.join(flags)},
                    targets=[path(tg) for tg in targets],
                    cwd=t.buildPath,
                    final=True)
