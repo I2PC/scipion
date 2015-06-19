@@ -44,7 +44,7 @@ void ProgMovieAlignmentCorrelation::readParams()
     xLTcorner= getIntParam("--cropULCorner",0);
     yLTcorner= getIntParam("--cropULCorner",0);
     xDRcorner = getIntParam("--cropDRCorner",0);
-    yDRcorner = getIntParam("--cropDRCorner",1);
+    yDRcorner = getIntParam("--cropDRCorner",0);
     show();
 }
 
@@ -147,7 +147,7 @@ void ProgMovieAlignmentCorrelation::run()
     if (newTs<Ts)
         newTs=Ts;
     getImageSize(movie,Xdim, Ydim, Zdim, Ndim);
-    if (yDRcorner!=0)
+    if (yDRcorner!=-1)
     {
         Xdim = xDRcorner - xLTcorner +1 ;
         Ydim = yDRcorner - yLTcorner +1 ;
