@@ -33,7 +33,7 @@ import sys
 from os.path import join
 
 from pyworkflow.object import String, Integer
-from pyworkflow.protocol.params import IntParam, StringParam, BooleanParam, LEVEL_ADVANCED, LEVEL_ADVANCED, EnumParam
+from pyworkflow.protocol.params import IntParam, FloatParam, StringParam, BooleanParam, LEVEL_ADVANCED, LEVEL_ADVANCED, EnumParam
 from pyworkflow.utils.path import moveFile
 import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtProcessMovies
@@ -110,7 +110,12 @@ class ProtMovieAlignment(ProtProcessMovies):
         group = form.addGroup('DosefGPU parameters',condition="alignMethod==%d "
                                                               "or alignMethod==%d"
                                                               "or alignMethod==%d"
-                                                              "or alignMethod==%d" % (AL_DOSEFGPU, AL_DOSEFGPUOPTICAL, AL_CROSSCORRELATION, AL_CROSSCORRELATIONOPTICAL))
+                                                              "or alignMethod==%d" %
+                                                              (AL_DOSEFGPU,\
+                                                               AL_DOSEFGPUOPTICAL,\
+                                                               AL_CROSSCORRELATION,\
+                                                               AL_CROSSCORRELATIONOPTICAL)
+                              )
         
         line = group.addLine('Used in final sum',
                              help='First and last frames used in alignment.\n'
@@ -128,10 +133,24 @@ class ProtMovieAlignment(ProtProcessMovies):
                            'If equal to 0, use maximum size.')
         line.addParam('cropDimX', IntParam, default=0, label='X')
         line.addParam('cropDimY', IntParam, default=0, label='Y')
-        group.addParam('binFactor', IntParam, default=1,
+
+        group.addParam('binFactor', IntParam, default=1,condition="alignMethod==%d "
+                                                              "or alignMethod==%d" %
+                                                                  (AL_DOSEFGPU,\
+                                                                   AL_DOSEFGPUOPTICAL\
+                       ),
                        label='Binning factor',
                        help='1x or 2x. Bin stack before processing.')
-        
+
+        group.addParam('filterFactor', FloatParam, default=4,condition="alignMethod==%d "
+                                                              "or alignMethod==%d" %
+                                                                  (AL_CROSSCORRELATION,\
+                                                                   AL_CROSSCORRELATIONOPTICAL\
+                       ),
+                       label='Filter at (unit=A)',
+                       help='1x or 2x. Bin stack before processing.')
+
+
         group.addParam('extraParams', StringParam, default='',
                       expertLevel=LEVEL_ADVANCED,
                       label='Additional parameters',
@@ -297,6 +316,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             command  = '-i %s ' % movieName
             command += '-o %s '% metadataNameInterMediate
             command += '--sampling %f ' % self.samplingRate
+            command += '--max_freq %f ' % self.filterFactor
             command += '--cropULCorner %d %d '%(self.cropOffsetX.get(),self.cropOffsetY.get())
             command += '--cropDRCorner %d %d '%(self.cropOffsetX.get() + self.cropDimX.get() -1
                                                ,self.cropOffsetY.get() + self.cropDimY.get() -1)
