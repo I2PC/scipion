@@ -147,7 +147,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                                                                   (AL_CROSSCORRELATION,\
                                                                    AL_CROSSCORRELATIONOPTICAL\
                        ),
-                       label='Filter at (unit=A)',
+                       label='Filter at (A)',
                        help='1x or 2x. Bin stack before processing.')
 
 
