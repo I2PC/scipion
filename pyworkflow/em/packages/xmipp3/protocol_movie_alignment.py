@@ -73,7 +73,12 @@ class ProtMovieAlignment(ProtProcessMovies):
                                                         ],
                       label="Alignment method", default=AL_OPTICAL,
                       display=EnumParam.DISPLAY_COMBO,
-                      help='Method to use for movie alignment. dosefgpu requires a GPU. croscorrelation and dosefgpu with default parameters are equivalent  ')
+                      help='Method to use for movie alignment. '
+                           'dosefgpu requires a GPU. Croscorrelation '
+                           'and dosefgpu with default parameters are equivalent. '
+                           'Croscorrelation is a CPU implementation of dosefgpu  '
+                           'with limited functionality (only aligns whole frames)'
+                      )
 
         # GROUP COMMON PARAMETERS
         group = form.addGroup('Common parameters')
@@ -107,7 +112,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         
         #---------------------------------- DosefGPU Params--------------------------------
         # GROUP DOSEFGPU PARAMETERS
-        group = form.addGroup('DosefGPU parameters',condition="alignMethod==%d "
+        group = form.addGroup('DosefGPU/Croscorrelation parameters',condition="alignMethod==%d "
                                                               "or alignMethod==%d"
                                                               "or alignMethod==%d"
                                                               "or alignMethod==%d" %
