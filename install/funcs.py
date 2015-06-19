@@ -487,7 +487,7 @@ class Environment:
         # original source, and it should be safe to use our CFLAGS,
         # CPPFLAGS and LDFLAGS.
 
-        envStr = ' '.join('%s="%s"' % (k, v) for k, v in environ.iteritems())
+        envStr = ' '.join('%s="%s"' % (k, v) for k, v in environ.items())
 
         t.addCommand('%(env)s '
                      '%(root)s/bin/python setup.py install %(flags)s > '
