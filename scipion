@@ -299,7 +299,7 @@ def main():
         # We do not os.environ.update(VARS) here. SCons needs to use
         # the python installed in the system by default.
         # But we set all vars named SCIPION_*
-        for k, v in VARS.iteritems():
+        for k, v in VARS.items():
             if k.startswith('SCIPION_') or k in BUILD:
                 os.environ[k] = v
 
