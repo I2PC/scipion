@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Laura del Cano (ldelcano@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,16 +24,13 @@
 # *
 # **************************************************************************
 """
-This package contains the protocols and data for APPION
+This EM module contains protocol developed at IGBMC, Strasbourg.
 """
 
-_logo = "ncbi_logo.png"
+from bibtex import _bibtex # Load bibtex dict with references
 
-from bibtex import _bibtex
-from convert import getEnviron
-from protocol_picking import DogPickerProtPicking
+_logo = "igbmc_logo.png"
 
+from protocol_gempicker import ProtGemPicker
+from wizard import GemPickerMaskWizard
 
-#_references = ['Voss2009']
-
-_environ = getEnviron()
