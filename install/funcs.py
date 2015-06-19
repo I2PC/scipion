@@ -478,7 +478,7 @@ class Environment:
             'LDFLAGS': '-L%s/lib %s' % (prefix, os.environ.get('LDFLAGS', ''))}
         if numpyIncludes:
             numpyPath = '%s/lib/python2.7/site-packages/numpy/core' % prefix
-            environ['CPPFLAGS'] = ('%s %s/include %s/include/numpy' %
+            environ['CPPFLAGS'] = ('%s -I%s/include -I%s/include/numpy' %
                                    (environ['CPPFLAGS'], numpyPath, numpyPath))
         # CPPFLAGS cause problems for modules like numpy and scipy (see for
         # example https://github.com/numpy/numpy/issues/2411
