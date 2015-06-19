@@ -7,7 +7,7 @@ export SCIPION_HOME=$(cd $XMIPP_HOME/../../.. && pwd)
 # We could use instead:
 #   export SCIPION_HOME=%(SCIPION_HOME)s
 
-export PATH=$SCIPION_HOME/software/bin:$XMIPP_HOME/bin:$PATH
+export PATH=$SCIPION_HOME:$SCIPION_HOME/software/bin:$XMIPP_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$SCIPION_HOME/software/lib:$LD_LIBRARY_PATH
 export PYTHONPATH=$XMIPP_HOME/protocols:$SCIPION_HOME:$SCIPION_HOME/software/lib:$PYTHONPATH
 
