@@ -451,7 +451,7 @@ class Project(object):
         if self.isReadOnly():
             raise Exception(msg + " Running in READ-ONLY mode.")
         
-        self._checkProtocolsDependencies(protocols, msg)        
+        self._checkProtocolsDependencies(protocols, msg)
         
     def deleteProtocol(self, *protocols):
         self._checkModificationAllowed(protocols, 'Cannot DELETE protocols')
@@ -661,6 +661,10 @@ class Project(object):
     
     def saveProtocol(self, protocol):
         self._checkModificationAllowed([protocol], 'Cannot SAVE protocol')
+
+        if protocol.isRunning() or protocol.isFinished() or protocol.isLaunched():
+            raise Exception('Cannot SAVE a protocol that is %s. Copy it instead.' % protocol.getStatus())
+
         
         protocol.setStatus(pwprot.STATUS_SAVED)
         if protocol.hasObjId():

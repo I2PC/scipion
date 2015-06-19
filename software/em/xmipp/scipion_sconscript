@@ -528,6 +528,7 @@ for p in ['angular_break_symmetry',
           'ml_refine3d',
           'mlf_refine3d',
           'ml_tomo',
+          'movie_alignment_correlation',
           'mrc_create_metadata',
           'multireference_aligneability',
           'nma_alignment',
@@ -683,13 +684,13 @@ if opencv:
                   'opencv_imgproc',
                   'opencv_video']
 
-    addProg('optical_alignment_cpu',
+    addProg('movie_optical_alignment_cpu',
             libs=opencvLibs,
             deps=['opencv'])
 
     if cuda: # also the gpu version
         opencvLibs.append('opencv_gpu')
-        addProg('optical_alignment_gpu',
+        addProg('movie_optical_alignment_gpu',
                 libs=opencvLibs,
                 deps=['opencv'], cuda=True)
 

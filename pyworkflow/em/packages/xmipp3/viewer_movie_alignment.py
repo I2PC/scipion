@@ -50,7 +50,7 @@ class XmippMovieAlignViewer(ProtocolViewer):
 
     def _defineParams(self, form):
         form.addSection('Visualization')
-        form.addParam('showMovies', BooleanParam,
+        form.addParam('showMovies', BooleanParam, default=False,
                       important=True,
                       label="Display movies",
                       help='Check to see the list of available movies.')

@@ -26,9 +26,8 @@
 
 function serviceProjForm(){
 	var title = 'Project creation'
-	var dialog = "<p>Your <strong>Project</strong> will be created.<br /><br />" +
-        "This process generates a unique <strong>url access</strong>.<br /><br />" +
-        "This url access should be used to have access to your data in future sessions.</p>" +
+	var dialog = "<p>Your <strong>project</strong> will be created with a unique <strong>url access</strong>.<br />" +
+        "Use this URL to access your data in future sessions.</p>" +
         "<p><br /></p>";
 	
     dialog += "<p>Confirm to generate it.</p>";
@@ -42,9 +41,7 @@ function serviceTestDataForm(){
 	var title = 'Test data'
 	var dialog = ""
 		
-	dialog += "<p>You have two options to use <strong>Test data</strong> :<br />" +
-        "1.- <strong>Create a project</strong> with <strong>Test data</strong> already imported inside.<br />" +	
-		"2.- <strong>Download</strong> test files to your computer, to be manually imported into an already created project.</p>";
+	dialog += "<strong>Create a project</strong> with <strong>Test data</strong> already imported inside.<br /></p>";
 	dialog += "<br />";
 	dialog += '<div id="testData">';
 	dialog += "<p>Select <strong>Test data</strong>:</p>";
@@ -59,21 +56,14 @@ function serviceTestDataForm(){
 	dialog += '<br />';
 	dialog += "</div>";
 	dialog += "<br />";
-    dialog += "<p>After selection, choose your option.</p>";
 
     
     var btn1 = 'Create project'
 	var ico1 = 'fa-check'
 	var funcName1 = 'createServProject';	
 		
-	var btn2 = 'Download'
-	var ico2 = 'fa-download';
-	var funcName2 = 'downloadTestdata';
-	
-	accessPopup2opt(title, dialog, 
-					 btn1, ico1, funcName1, 
-					 btn2, ico2, funcName2, 
-					 "Cancel")
+		
+	accessPopup(title, dialog, funcName1, btn1, "Cancel")
 }
 
 function goExampleForm(){
@@ -133,7 +123,7 @@ function downloadTestdata(elm){
 }
 
 function createServProject(elm) {
-	var projName = "map"+randomString(32, '#aA')
+	var projName = "map"+randomString(16, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
 
 	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
@@ -148,14 +138,14 @@ function createServProject(elm) {
 		success : function() {
 			var title = "ACCESS CODE"
 			
-			var msg = "<p>Your <strong>url to access </strong> this <strong>Project</strong> is:</p>" +
+			var msg = "<p>Your <strong>url to access </strong> this <strong>project</strong> is:</p>" +
 			"<br /><p><h3>" + 
 			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/content/?p="+ projName+ "'>" +
 			"http://scipion.cnb.csic.es/m/content/?p="+ projName+ "</a>"+
 			"</h3></p><br />" +
-			"<p>The access to this new project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
+			"<p>The project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
-			"in order to access this project in future sessions.</p>"+
+			"in order to access project in future sessions.</p>"+
 			"<p>If you experience any problem contact us on this email: <span style='color:firebrick;'>scipion at cnb.csic.es</span></p>";
 			
 			msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";

@@ -170,7 +170,8 @@ class SqliteMapper(Mapper):
                 obj = None
             else:
                 obj = self._buildObject(objRow['classname'])
-                self.fillObject(obj, objRow)
+                if obj is not None:
+                    self.fillObject(obj, objRow)
         return obj
     
     def getParent(self, obj):

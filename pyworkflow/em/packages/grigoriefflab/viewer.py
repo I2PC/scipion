@@ -626,22 +626,25 @@ class ProtCTFFindViewer(Viewer):
                 ctfSet.write()
                 ctfSet.close()
                 self._visualize(ctfSet)
-         
+        
+        
         if issubclass(cls, ProtCTFFind) and not obj.hasAttribute("outputCTF"):
             mics = obj.inputMicrographs.get()
             visualizeObjs(obj, mics)
- 
-         
         elif obj.hasAttribute("outputCTF"):
             self._visualize(obj.outputCTF)
-             
         else:
             fn = obj.getFileName()
+            if obj.strId() == "None":
+                objName = fn
+            else:
+                objName = obj.strId()
             psdLabels = '_psdFile'
             labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio' % psdLabels
             if self.protocol.useCftfind4:
-                labels = labels + ' _ctffind4_ctfResolution'
-                self._views.append(em.ObjectView(self._project, obj.strId(), fn,
+                labels = labels + ' _ctffind4_ctfResolution _micObj._filename'
+                print "objName, ", objName
+                self._views.append(em.ObjectView(self._project, objName, fn,
                                                  viewParams={showj.MODE: showj.MODE_MD,
                                                              showj.ORDER: labels,
                                                              showj.VISIBLE: labels,
@@ -649,6 +652,7 @@ class ProtCTFFindViewer(Viewer):
                                                              showj.RENDER: psdLabels,
                                                              showj.OBJCMDS: "'%s'" % showj.OBJCMD_CTFFIND4}))
             else:
+                labels += ' _micObj._filename'
                 self._views.append(em.ObjectView(self._project, obj.strId(), fn,
                                                  viewParams={showj.MODE: showj.MODE_MD,
                                                              showj.ORDER: labels,
@@ -663,7 +667,6 @@ def createCtfPlot(ctfSet, ctfId):
     ctfModel = ctfSet[ctfId]
     psdFn = ctfModel.getPsdFile()
     fn = removeExt(psdFn) + "_avrot.txt"
-
     gridsize = [1, 1]
     xplotter = EmPlotter(x=gridsize[0], y=gridsize[1], windowTitle='CTF Fitting')
     plot_title = "CTF Fitting"

@@ -409,6 +409,8 @@ class FloatParam(Param):
 class BooleanParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Boolean, **args)
+        self.addValidator(NonEmptyBool)
+
 
 class HiddenBooleanParam(BooleanParam):
     def __init__(self, **args):
@@ -613,6 +615,11 @@ class NumericListValidator(Conditional):
             return False    
 
 
+class NonEmptyBoolCondition(Conditional):
+    def __init__(self, error='Boolean param needs to be set.'):
+        Conditional.__init__(self, error)
+        self._condition = lambda value: value is not None
+
 #--------- Some constants validators ---------------------
 
 Positive = GT(0.0, error='Value should be greater than zero')
@@ -621,4 +628,4 @@ FreqValidator = Range(0., 0.5,
                       error="Digital frequencies should be between 0. and 0.5")
 
 NonEmpty = NonEmptyCondition()
-        
+NonEmptyBool = NonEmptyBoolCondition()

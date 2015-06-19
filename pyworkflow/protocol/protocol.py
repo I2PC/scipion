@@ -151,9 +151,12 @@ class Step(OrderedObject):
     def isAborted(self):
         return self.getStatus() == STATUS_ABORTED
 
+    def isLaunched(self):
+        return self.getStatus() == STATUS_LAUNCHED
+
     def isInteractive(self):
         return self.interactive.get()
-    
+
     def run(self):
         """ Do the job of this step"""
         self.setRunning() 
@@ -765,6 +768,8 @@ class Protocol(Step):
         """
         self.info(magentaStr("STARTED") + ": %s, step %d" %
                   (step.funcName.get(), step._index))
+        self.info("  %s" % dt.datetime.strptime(step.initTime.get(),
+                                                "%Y-%m-%d %H:%M:%S.%f"))
         self.__updateStep(step)
         
     def _stepFinished(self, step):
@@ -787,13 +792,14 @@ class Protocol(Step):
         
         self.info(magentaStr(step.getStatus().upper()) + ": %s, step %d" %
                   (step.funcName.get(), step._index))
-
+        self.info("  %s" % dt.datetime.strptime(step.endTime.get(),
+                                                "%Y-%m-%d %H:%M:%S.%f"))
         if step.isFailed() and self.stepsExecutionMode == STEPS_PARALLEL:
             # In parallel mode the executor will exit to close
             # all working threads, so we need to close
             self._endRun()
         return doContinue
-    
+
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps. """
         self._stepsDone.set(startIndex)
@@ -907,12 +913,12 @@ class Protocol(Step):
         if 'env' not in kwargs:
             #self._log.info("calling self._getEnviron...")
             kwargs['env'] = self._getEnviron()
-                       
+
         #self._log.info("runJob: cwd = %s" % kwargs.get('cwd', ''))
         #self._log.info("runJob: env = %s " % str(kwargs['env']))
 
         self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
-        
+
     def run(self):
         """ Before calling this method, the working dir for the protocol
         to run should exists. 
@@ -930,7 +936,7 @@ class Protocol(Step):
         except Exception as e:
             self.info('  * Cannot get information about MPI/threads (%s)' % e)
 
-        Step.run(self)     
+        Step.run(self)
         self._endRun()
 
     def _endRun(self):
@@ -1343,15 +1349,18 @@ class Protocol(Step):
         
     def getParsedMethods(self):
         """ Get the _methods results and parse possible cites. """
-        baseMethods = self._methods() or []
-        bibtex = self.__getPackageBibTex()
-        parsedMethods = []
-        for m in baseMethods:
-            for bibId, cite in bibtex.iteritems():
-                k = '[%s]' % bibId
-                link = self._getCiteText(cite, useKeyLabel=True)
-                m = m.replace(k, link)
-            parsedMethods.append(m)
+        try:
+            baseMethods = self._methods() or []
+            bibtex = self.__getPackageBibTex()
+            parsedMethods = []
+            for m in baseMethods:
+                for bibId, cite in bibtex.iteritems():
+                    k = '[%s]' % bibId
+                    link = self._getCiteText(cite, useKeyLabel=True)
+                    m = m.replace(k, link)
+                parsedMethods.append(m)
+        except Exception, ex:
+            parsedMethods = ['ERROR generating methods info: %s' % ex]
         
         return parsedMethods
         

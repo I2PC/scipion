@@ -79,7 +79,7 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("            binary_file <file>               : Binary file with the filter");
     program->addParamsLine("                                             :+The filter must be defined in the whole Fourier space (not only the nonredundant part).");
     program->addParamsLine("                                             :+This filter is produced, for instance, by xmipp_ctf_group");
-    program->addParamsLine("            astigmatism <sigma=10>           : Filter images according to the astigmatism of their CTF");
+    program->addParamsLine("            astigmatism <sigma=120>          : Filter images according to the astigmatism of their CTF");
     program->addParamsLine("                                             :+sigma is the standard deviation of a Gaussian in degrees for the CTF phase");
     program->addParamsLine("               requires --sampling;                                                         ");
     program->addParamsLine("         alias -f;");
@@ -492,7 +492,7 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
 	        double phaseU=ctf.getPhaseAt();
 	        ctf.precomputeValues(0.0,R);
 	        double phaseV=ctf.getPhaseAt();
-	        double diff=phaseV-phaseU;
+	        double diff=(phaseV-phaseU)*0.5;
 	        return exp(-0.5*diff*diff/(w1*w1));
     	}
         break;

@@ -112,7 +112,7 @@ void string2TransformationMatrix(const String &matrixStr, Matrix2D<double> &matr
     	//TODO validate that M(dim, dim) is 1
     	//if (i == dim-1 && j == dim-1)
 
-      ss >> dMij(matrix, i < d_1 ? i : i-1, j < d_1 ? j : j-1);
+      ss >> dMij(matrix, i < dim ? i : i-1, j < dim ? j : j-1);
     }
   dMij(matrix, d_1, d_1) = 1.;
 

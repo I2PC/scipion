@@ -46,7 +46,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     
     def _defineProcessParams(self, form):
         form.addParam('useCftfind4', params.BooleanParam, default=False,
-              label="use ctffind4 to estimate the CTF?",
+              label="Use ctffind4 to estimate the CTF?",
               help='If is true, the protocol will use ctffind4 instead of ctffind3')
         form.addParam('astigmatism', params.FloatParam, default=100.0,
               label='Expected (tolerated) astigmatism', expertLevel=params.LEVEL_ADVANCED,

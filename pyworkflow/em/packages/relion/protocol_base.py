@@ -101,8 +101,10 @@ class ProtRelionBase(EMProtocol):
                   'volume_frame': self.extraIter + 'data_shiny_frame%(frame)03d_%(halve)sclass%(ref3d)03d_unfil.mrc:mrc',
                   'guinier_frame': self.extraIter + 'data_shiny_frame%(frame)03d_guinier.star',
                   'fsc_shiny': self.extraIter + 'data_shiny_post.star',
+                  'bfactors': self.extraIter + 'data_shiny_bfactors.star',
                   'dataFinal' : self._getExtraPath("relion_data.star"),
                   'modelFinal' : self._getExtraPath("relion_model.star"),
+                  'finalvolume' : self._getExtraPath("relion_class%(ref3d)03d.mrc:mrc")
                   
                   }
         # add to keys, data.star, optimiser.star and sampling.star
@@ -206,6 +208,8 @@ class ProtRelionBase(EMProtocol):
         form.addSection(label='CTF')
         form.addParam('contuinueMsg', LabelParam, default=True,
                       label='CTF parameters are not available in continue mode', condition='doContinue',)
+        form.addParam('haveDataBeenPhaseFlipped', LabelParam, condition='not doContinue',
+                      label='The phase flip comes as a property of the input particles!')
         form.addParam('doCTF', BooleanParam, default=True,
                       label='Do CTF-amplitude correction?', condition='not doContinue',
                       help='If set to Yes, CTFs will be corrected inside the MAP refinement. '
@@ -217,14 +221,7 @@ class ProtRelionBase(EMProtocol):
                       help='Set this option to Yes if the reference map represents CTF-unaffected density, '
                            'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
                            'then in the first iteration, the Fourier transforms of the reference projections ' 
-                           'are not multiplied by the CTFs.') 
-        form.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
-                      label='Have data been phase-flipped?', condition='not doContinue',
-                      help='Set this to Yes if the images have been ctf-phase corrected during the '
-                           'pre-processing steps. Note that CTF-phase flipping is NOT a necessary '
-                           'pre-processing step for MAP-refinement in RELION, as this can be done inside '
-                           'the internal CTF-correction. However, if the phases have been flipped, '
-                           'you should tell the program about it by setting this option to Yes.')       
+                           'are not multiplied by the CTFs.')
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Ignore CTFs until first peak?', condition='not doContinue',
@@ -525,12 +522,12 @@ class ProtRelionBase(EMProtocol):
         if self.hasReferenceCTFCorrected:
             args['--ctf_corrected_ref'] = ''
             
-        if self.haveDataBeenPhaseFlipped:
+        if self._getInputParticles().isPhaseFlipped():
             args['--ctf_phase_flipped'] = ''
             
         if self.ignoreCTFUntilFirstPeak:
             args['--ctf_intact_first_peak'] = ''
-            
+    
     def _setMaskArgs(self, args):
         if self.IS_3D:
             if self.referenceMask.hasValue():
@@ -638,12 +635,18 @@ class ProtRelionBase(EMProtocol):
             iterMsg += '/%d' % self._getnumberOfIters()
         summary = [iterMsg]
         
+        if self._getInputParticles().isPhaseFlipped():
+            msg = "Your images have been ctf-phase corrected"
+        else:
+            msg = "Your images not have been ctf-phase corrected"
+        summary += [msg]
+        
         if self.doContinue:
             summary += self._summaryContinue()
         summary += self._summaryNormal()
         
         return summary
-
+    
     def _summaryNormal(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 

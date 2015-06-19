@@ -100,7 +100,7 @@ cssDict = {'project_content': 'project_content_style.css',
            'jquery_ui': 'jquery-ui.css',
            'showj_demo_table_jui': 'demo_table_jui.css',
            'wizard': 'wizard_style.css',
-           'font_awesome': 'font-awesome/css/font-awesome.min.css'
+           'font_awesome': 'font-awesome/css/font-awesome.min.css',
            }
 
 jsDict = {'jquery': 'jquery/jquery.js',
@@ -578,10 +578,8 @@ def get_slice(request):
 #             parts = imagePath.split('@')
 #             imageNo = parts[0]
 #             imagePath = parts[1]
-    
     imagePath = convertVolume(request, imagePath)
     imgXmipp = xmipp.Image()
-    
     if sliceNo is None:
         imgXmipp.readPreview(imagePath, int(imageDim))
     else:
@@ -595,7 +593,7 @@ def get_slice(request):
     
     # from PIL import Image
 #   img = getPILImage(imgXmipp, None, False)
-    img = getPILImage(imgXmipp)
+    img = getPILImage(imgXmipp, normalize=False)
     response = HttpResponse(mimetype="image/png")
     
     if img.mode != 'RGB':
@@ -655,10 +653,10 @@ def getTmpVolumePath(fileName):
     baseName, _ = os.path.splitext(fileName)
     return '%s_tmp%s' % (baseName, '.mrc')
     
-    
+    #This convert is only used in table mode
 def convertVolume(request, path):
     imgFn = os.path.join(request.session['projectPath'], path)
-    imgFn.replace(':mrc', '')
+    imgFn = imgFn.replace(':mrc', '')
     imgConvertedFn = getTmpVolumePath(imgFn)
     # For rendering volume slices over the web, PIL need that
     # the volume is stored with a specific datatype
@@ -666,18 +664,20 @@ def convertVolume(request, path):
     if not os.path.exists(imgConvertedFn):
         img = xmipp.Image()
         img.read(str(imgFn))
-        img.convert2DataType(xmipp.DT_FLOAT , xmipp.CW_ADJUST)
+        img.convert2DataType(xmipp.DT_UCHAR , xmipp.CW_ADJUST)
+        print "volume after conversion"
+        print img.getData()
         img.write(imgConvertedFn)
     return imgConvertedFn
 
 
 def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
-    _newPath = path
+    #_newPath = path
     _stats = None
     
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], path)
-    img.read(str(imgFn))
+    imgFn = imgFn.replace(':mrc', '')
     
     if not convert and not reslice and not getStats:
 #         img.read(str(imgFn), xmipp.HEADER)
@@ -695,10 +695,9 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         if axis != xmipp.VIEW_Z_NEG:
             img.reslice(axis)    
     
-    if (convert or reslice) and not os.path.exists(imgFn):
-        _newPath = getTmpVolumePath(imgFn)
+    _newPath = getTmpVolumePath(imgFn)
+    if (convert  and not os.path.exists(_newPath))or reslice:
         img.write(_newPath)
-    
     return _newPath, _stats
 
 

@@ -735,8 +735,12 @@ class ProtFrealignBase(EMProtocol):
             errors.append('Particle dimensions must be even!!!')
         if not imgSet.hasAlignmentProj() and self.useInitialAngles.get():
             errors.append("Particles has not initial angles !!!")
+        if imgSet.isPhaseFlipped():
+            errors.append("Your particles are phase flipped. Please, choose "
+                          "a set of particles without phase-contrast correction "
+                          "to run frealign.")
         return errors
-
+    
     def _summary(self):
         summary = []
         if self.inputParticles.get() is not None:

@@ -31,8 +31,6 @@ $(document).ready(function() {
 	*/
 	$("#downloadForm").submit(function() {
 		
-		console.log($("#downloadForm").serialize())
-		 
 		var action = "/doDownload/";
 		var URL = getSubDomainURL() + action
 		

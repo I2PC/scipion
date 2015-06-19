@@ -51,11 +51,11 @@ class TestXmippBase(BaseTest):
         cls.averagesDir = cls.dataset.getFile('averagesDir')
     
     @classmethod
-    def runImportParticles(cls, pattern, samplingRate, checkStack=False):
+    def runImportParticles(cls, pattern, samplingRate, checkStack=False, phaseFlip=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportParticles, 
                                          filesPath=pattern, samplingRate=samplingRate, 
-                                         checkStack=checkStack)
+                                         checkStack=checkStack, haveDataBeenPhaseFlipped=phaseFlip)
         print '_label: ', cls.protImport._label
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
@@ -476,7 +476,7 @@ class TestXmippFilterParticles(TestXmippBase):
         print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
         setupTestProject(cls)
         TestXmippBase.setData('xmipp_tutorial')
-        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True, True)
 
     def test_filterParticles(self):
         print "\n", greenStr(" Filter Particles ".center(75, '-'))

@@ -135,7 +135,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       label='Invert contrast', 
                       help='Invert the contrast if your particles are black over a white background.')
         
-        form.addParam('doFlip', BooleanParam, default=True,
+        form.addParam('doFlip', BooleanParam, default=None,
                       label='Phase flipping (Recommended)', 
                       help='Use the information from the CTF to compensate for phase reversals.')
         
@@ -327,7 +327,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputMics)
         if self.doFlip:
-            imgSet.setIsPhaseFlipped(True)
+            # Check if self.inputMics are phase flipped.
+            if self.inputMics.isPhaseFlipped():
+                imgSet.setIsPhaseFlipped(False)
+            else:
+                imgSet.setIsPhaseFlipped(True)
         
         #imgSet.setHasCTF(self.fnCTF is not None)
         if self.downsampleType == OTHER:

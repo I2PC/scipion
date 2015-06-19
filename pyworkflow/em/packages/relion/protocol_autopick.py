@@ -201,7 +201,7 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
                       label='Angular sampling (deg)',
                       help='Angular sampling in degrees for exhaustive searches \n'
                            'of the in-plane rotations for all references.')
-        form.addParam('refsHaveInvertedContrast', BooleanParam,
+        form.addParam('refsHaveInvertedContrast', BooleanParam, default=False,
                       label='References have inverted contrast',
                       help='Set to Yes to indicate that the reference have inverted \n'
                            'contrast with respect to the particles in the micrographs.')

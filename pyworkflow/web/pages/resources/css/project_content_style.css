@@ -34,25 +34,29 @@
 	max-height: 80%;
 	overflow-y: scroll;
 	overflow: auto;
+	
 }
 
 .layout-inner>.north {
-	height: 80%;
+	height: 65%;
 	margin-top: 1.5em;
-	margin-bottom: 30px;
-	max-height: 70%;
+	margin-bottom: 0px;
+	max-height: 65%;
 	position: relative;
 	overflow: auto;
+	
 }
 
 .layout-inner>.north>.text {
 	position: relative;
 	height: 100%;
 	overflow: auto;
+	
 }
 
 .layout-inner>.center {
 	height: 100%;
+	
 }
 
 /* FLEX TEMPLATE (These styles are to create custom resize handles.) */
@@ -63,13 +67,13 @@
 .north .ui-resizable-s {
 	position: absolute;
 	bottom: 0px !important;
-	background: url("/resources/handle_hor.gif") no-repeat center center
+	background: url("../images/handle_hor.gif") no-repeat center center
 		transparent;
 	/* 	background: linear-gradient(to right, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); */
 }
 
 .ui-resizable-e {
-	background: url("/resources/handle_ver.gif") no-repeat center center
+	background: url("../images/handle_ver.gif") no-repeat center center
 		transparent;
 	margin-right: 5px;
 	padding-right: 5px;
@@ -96,7 +100,7 @@
 }
 
 .treeview .hitarea {
-	background: url(../../../resources/treeview-default.gif) -64px -25px
+	background: url(../images/treeview-default.gif) -64px -25px
 		no-repeat;
 	height: 16px;
 	width: 16px;
@@ -143,7 +147,7 @@
 }
 
 .treeview li.lastCollapsable,.treeview li.lastExpandable {
-	background-image: url(../../../../resources/treeview-default.gif);
+	background-image: url(../images/treeview-default.gif);
 }
 
 .treeview li.lastCollapsable {
@@ -250,7 +254,7 @@
 	padding: 0.6em 0 0.25em 0.2em;
 	border: 1px solid #aaaaaa;
 	border-radius: 0.2em;
-	background: #cccccc url(/resources/showj/ui-bg_highlight-soft_75_cccccc_1x100.png) 50% 50% repeat-x;
+	background: #cccccc url(../images/ui-bg_highlight-soft_75_cccccc_1x100.png) 50% 50% repeat-x;
 	color: #222222;
 }
 
@@ -261,7 +265,7 @@
 	background-color: #e6e6e6;
 	border-radius: 0.3em 0.3em 0 0;
 	border: 1px solid #d3d3d3;
-	background: #e6e6e6 url(../../../resources/showj/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x;
+	background: #e6e6e6 url(../images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x;
 	font-size:medium;
 	color: #555555;
 	
@@ -269,7 +273,7 @@
 
 .elm-header-log:hover{
 	border: 1px solid #999999;
-	background: #dadada url(../../../resources/showj/ui-bg_glass_75_dadada_1x400.png) 50% 50% repeat-x;
+	background: #dadada url(../images/ui-bg_glass_75_dadada_1x400.png) 50% 50% repeat-x;
 }
 
 .elm-header-log_selected {

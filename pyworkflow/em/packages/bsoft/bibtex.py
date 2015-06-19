@@ -1,6 +1,7 @@
+# coding: latin-1
 # **************************************************************************
 # *
-# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,12 +24,28 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+Bibtex string file for Xmipp package.
+"""
 
-import os
-from django.conf.urls import url
+_bibtexStr = """
+@article{Heymann2007,
+title = "Bsoft: Image processing and molecular modeling for electron microscopy ",
+journal = "Journal of Structural Biology ",
+volume = "157",
+number = "1",
+pages = "3 - 18",
+year = "2007",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2006.06.006",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847706001997",
+author = "J. Bernard Heymann and David M. Belnap",
+keywords = "Single particle analysis Tomography",
+}
+"""
 
-urls = [
-#     url(r'^desktop/', 'app.views_desktop.desktop'),
-    url(r'^download_form/', 'app.views_webtools.download_form'),
-    url(r'^doDownload/', 'app.views_webtools.doDownload'),
-]
+
+
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  

@@ -1059,26 +1059,11 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeoMatrix
   XMIPP_JAVA_TRY
      {
 
-         jboolean aux=false;
          // Get the matrix representation as string (from python numpy)
-         // and strip the brackets and semi-colons
+         jboolean aux = false;
          const char *matrixStr = env->GetStringUTFChars(matrixString, &aux);
-         size_t n = strlen(matrixStr);
-         char * matrixStrCopy = new char[n];
-         strncpy(matrixStrCopy, matrixStr, n);
-         char c;
-
-         for (int i = 0; i < n; i++)
-         {
-           c = matrixStrCopy[i];
-           if (c == ']' || c == '[' || c == ',')
-             matrixStrCopy[i] = ' ';
-         }
-         // Parse the string values as floats
-         std::stringstream ss(matrixStrCopy);
-         double values[16];
-         for (int i = 0; i < 16; i++)
-           ss >> values[i];
+         Matrix2D<double> transformM(3, 3);
+         string2TransformationMatrix(matrixStr, transformM, 3);
 
          // Get the pointer to the image
          // and build the matrix from the parsed values
@@ -1087,24 +1072,9 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeoMatrix
          MultidimArray<double> *I, Iaux;
          MULTIDIM_ARRAY_GENERIC(*img).getMultidimArrayPointer(I);
 
-         Matrix2D<double> transformM(3, 3);
-         dMij(transformM, 0, 2) = 0;
-         dMij(transformM, 1, 2) = 0;
-         dMij(transformM, 2, 0) = 0;
-         dMij(transformM, 2, 1) = 0;
-         dMij(transformM, 2, 2) = 1;
-         dMij(transformM, 0, 0) = values[0]; // cosine
-         dMij(transformM, 0, 1) = values[1]; // sine
-         dMij(transformM, 1, 0) = values[4]; // -sine
-         dMij(transformM, 1, 1) = values[5]; // cosine
-         dMij(transformM, 0, 2) = values[3]; // shiftx;
-         dMij(transformM, 1, 2) = values[7]; // shifty;
-
          applyGeometry(LINEAR, Iaux, *I, transformM, IS_NOT_INV, wrap);
          *I=Iaux;
 
-
-         delete matrixStrCopy;
      }
      XMIPP_JAVA_CATCH;
 }
