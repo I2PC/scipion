@@ -382,7 +382,8 @@ class ProtMovieAlignment(ProtProcessMovies):
                 errors.append("GPU and Parallelization can not be used together")
         if self.doGPU and (alMethod == AL_CROSSCORRELATION or \
                            alMethod == AL_CROSSCORRELATIONOPTICAL):
-                errors.append("Crosscorrelation is not implemente in GPU")
+                self.doGPU.set(False)
+                #errors.append("Crosscorrelation is not implemente in GPU")
         return errors
 
     def _citations(self):
