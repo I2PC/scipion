@@ -408,5 +408,8 @@ env.addPackage('simple',
                tar='simple2.tgz',
                default=False)
 
+env.addPackage('dogpicker',
+               tar='dogpicker-0.2.1.tgz',
+               default=False)
 
 env.execute()
