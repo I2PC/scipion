@@ -408,5 +408,14 @@ env.addPackage('simple',
                tar='simple2.tgz',
                default=False)
 
+env.addPackage('chimera',
+               tar='chimera-1.10.1-linux_x86_64.tgz',
+               targetDir='chimera-1.10.1',
+               commands=[('./scipion_installer','bin/chimera')],
+               default=False)
+
+env.addPackage('dogpicker',
+               tar='dogpicker-0.2.1.tgz',
+               default=False)
 
 env.execute()
