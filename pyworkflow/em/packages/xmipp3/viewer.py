@@ -61,7 +61,7 @@ from protocol_screen_particles import XmippProtScreenParticles
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from pyworkflow.em.showj import *
 from protocol_movie_alignment import ProtMovieAlignment
-
+from protocol_validate_nontilt import XmippProtValidateNonTilt
 
 class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
@@ -91,7 +91,8 @@ class XmippViewer(Viewer):
                 XmippProtScreenClasses, 
                 XmippProtScreenParticles, 
                 XmippProtCTFMicrographs, 
-                ProtMovieAlignment
+                ProtMovieAlignment,
+                XmippProtValidateNonTilt
                 ]
     
     def __init__(self, **args):
@@ -378,7 +379,12 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
                                                       ORDER: labels, VISIBLE: labels, RENDER: plotLabels, 'zoom': 50,
                                                       OBJCMDS: objCommands}))
-
+        
+        elif issubclass(cls, XmippProtValidateNonTilt):
+            outputVols = obj.outputVolumes
+            labels = 'id enabled comment _filename weight'
+            self._views.append(ObjectView(self._project, outputVols.strId(), outputVols.getFileName(), viewParams={MODE: MODE_MD,
+                                                      VISIBLE:labels, ORDER: labels, SORT_BY: 'weight', RENDER: 'image'}))
 
         elif issubclass(cls, XmippProtExtractParticlesPairs):
             self._visualize(obj.outputParticlesTiltPair)
