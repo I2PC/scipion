@@ -658,12 +658,9 @@ class Pointer(Object):
         # or the id of an item inside a set
         self._extended = String()
         
-        if 'extendedAttribute' in kwargs:
-            self.setExtendedAttribute(kwargs.get('extendedAttribute')) 
-        if 'extendedItemId' in kwargs:
-            self.setExtendedItemId(kwargs.get('extendedItemId'))
-        
-       
+        if 'extended' in kwargs:
+            self.setExtended(str(kwargs.get('extended'))) 
+               
     def __str__(self):
         """String representation of a pointer"""
         if self.hasValue():
@@ -677,29 +674,28 @@ class Pointer(Object):
     
     def get(self, default=None):
         """ Get the pointed object. 
-        If the _extended property is set, then the extended attribute or item id
-        will be retrieved by the call to get().
+        By default all pointers store a "pointed object" value.
+        The _extended attribute allows to also point to internal
+        attributes or items (in case of sets) of the pointed object.
         """
         extended = self._extended.get()
         if extended:
-            if extended.startswith(self.EXTENDED_ATTR):
-                attribute = extended.split('__')[-1]
-                value = getattr(self._objValue, attribute, default)
-            elif extended.startswith(self.EXTENDED_ITEMID):
-                itemId = int(extended.split('__')[-1])
-                value = self._objValue[itemId]
-                value._parentObject = self._objValue
-            else:
-                # This is now only for compatibility reasons
-                try:
-                    itemId = int(extended)
-                    value = self._objValue[itemId]
-                    value._parentObject = self._objValue
-                except Exception:
-                    attribute = str(extended)
-                    value = getattr(self._objValue, attribute, default)
-                    
-                #raise Exception("Invalid value '%s' for pointer._extended property." % extended)
+            #TODO: This replacements are needed now by backward compatibility
+            # reasons, when we used __attribute__ and __item__ to mark both cases
+            # in a future the following two lines can be removed.
+            ext = extended.replace(self.EXTENDED_ATTR, '')
+            ext = ext.replace(self.EXTENDED_ITEMID, '')
+            
+            parts = ext.split('.')
+            value = self._objValue
+            for p in parts:
+                if p.isdigit():
+                    value = value[int(p)] # item case
+                else:
+                    value = getattr(value, p)
+            
+            #FIXME: Maybe we don't need to set the _parentObject property
+            value._parentObject = self._objValue
         else:
             value = self._objValue
             
@@ -713,34 +709,26 @@ class Pointer(Object):
         if hasattr(self, '_extended'):
             self._extended.set(None)
         
-    def setExtendedAttribute(self, attributeName):
-        """ Point to an attribute of the pointed object. """
-        self._extended.set(self.EXTENDED_ATTR + attributeName)
-        
-    def hasExtendedAttribute(self):
-        return (self._extended.hasValue() and
-                self._extended.get().startswith(self.EXTENDED_ATTR))
-        
-    def setExtendedItemId(self, itemId):
-        """ Point to an specific item of a pointed Set. """
-        self._extended.set(self.EXTENDED_ITEMID + str(itemId))
-         
-    def hasExtendedItemId(self):
-        return (self._extended.hasValue() and
-                self._extended.get().startswith(self.EXTENDED_ITEMID))       
-        
-        
     def hasExtended(self):
         return self._extended.hasValue()
     
     def getExtended(self):
         return self._extended.get()
-    
-    def getExtendedValue(self):
+        
+    def setExtended(self, attribute):
+        """ Set the attribute name of the "pointed object"
+        that will be the result of the get() action. 
+        """
+        self._extended.set(attribute)
+        
+    def addExtended(self, attribute):
+        """ Similar to setExtended, but concatenating more extensions
+        instead of replacing the previous value.
+        """
         if self.hasExtended():
-            return self._extended.get().split('__')[-1]
+            self._extended.set('%s.%s' % (self._extended.get(), attribute))
         else:
-            return None
+            self.setExtended(attribute)            
         
     def getAttributes(self):
         yield ('_extended', getattr(self, '_extended'))

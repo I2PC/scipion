@@ -117,7 +117,7 @@ def create_resmap_project(request):
         protResMap = project.newProtocol(ProtResMap)
         protResMap.setObjLabel('resmap - local resolution')
         protResMap.inputVolume.set(protImport)
-        protResMap.inputVolume.setExtendedAttribute('outputVolume')
+        protResMap.inputVolume.setExtended('outputVolume')
         project.saveProtocol(protResMap)
         
     return HttpResponse(mimetype='application/javascript')

@@ -514,7 +514,7 @@ class Project(object):
             value = iAttr.get()
             if value is None:
                 if iAttr.getObjValue() is node.run:
-                    oKey = iAttr.getExtendedValue()
+                    oKey = iAttr.getExtended()
                     matches.append((oKey, iKey))
             else:
                 for oKey, oAttr in node.run.iterOutputAttributes(em.EMObject):
@@ -561,7 +561,7 @@ class Project(object):
                         for oKey, iKey in matches:
                             childPointer = getattr(newChildProt, iKey)
                             childPointer.set(newProt)
-                            childPointer.setExtendedAttribute(oKey)
+                            childPointer.setExtended(oKey)
                         self.mapper.store(newChildProt)  
 
             self.mapper.commit()

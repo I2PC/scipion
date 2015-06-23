@@ -79,7 +79,7 @@ class BoolVar():
     
     
 class PointerVar():
-    """Wrapper around tk.StringVar to hold object pointers"""
+    """ Wrapper around tk.StringVar to hold object pointers. """
     def __init__(self, protocol):
         self.tkVar = tk.StringVar()
         self._pointer = pwobj.Pointer()
@@ -335,10 +335,10 @@ def getPointerLabelAndInfo(ptr, mapper):
         obj = ptr.getObjValue()
         label = _getObjectLabel(obj, mapper)
         
-        if ptr.hasExtendedItemId():
-            label += ' [Item %d]' % ptr.getExtendedValue()
-        elif ptr.hasExtendedAttribute():
-            label += ' [Attr %s]' % ptr.getExtendedValue()
+        if ptr.hasExtended():
+            label += ' [Item %d]' % ptr.getExtended()
+        elif ptr.hasExtended():
+            label += ' [Attr %s]' % ptr.getExtended()
         
         info = str(ptr.get()) # get string info of pointed object
 
@@ -935,8 +935,10 @@ class ParamWidget():
                 if not getattr(item, '_allowSelection', True):
                     return "Please select object of types: %s" % self.param.pointerClass.get()
 
-        dlg = ListDialog(self.parent, "Select object", tp, 
-                         "Double click an item to preview the object",validateSelectionCallback= validateSelected,
+        dlg = ListDialog(self.parent, 
+                         "Select object of types: %s" % self.param.pointerClass.get(), 
+                         tp, "Double click an item to preview the object",
+                         validateSelectionCallback= validateSelected,
                          selectmode=self._selectmode)
         
         if dlg.values:
@@ -1741,7 +1743,7 @@ class FormWindow(Window):
                     # is inside a Set, so the pointer should store the Set value
                     # and then have a pointer extension to the item id
                     param.set(value._parentObject)
-                    param.setExtendedItemId(value.getObjId())
+                    param.setExtended(value.getObjId())
                 else:
                     if isinstance(param, pwobj.Object):
                         param.set(value)

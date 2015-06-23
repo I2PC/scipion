@@ -419,10 +419,10 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                 parent = self.inputParentDict[obj._parentKey]
                 
                 if obj.hasExtended():
-                    extendedValue = obj.getExtendedValue()
-                    if obj.hasExtendedAttribute():
+                    extendedValue = obj.getExtended()
+                    if obj.hasExtended():
                         suffix = '[%s]' % extendedValue
-                    elif obj.hasExtendedItemId():
+                    elif obj.hasExtended():
                         suffix = '[Item %s]' % extendedValue
                     if obj.get() is None:
                         labelObj = obj.getObjValue()

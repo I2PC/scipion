@@ -172,7 +172,7 @@ class TestSqliteMapper(BaseTest):
         # Insert an Integer
         p1 = Pointer()
         p1.set(c)
-        p1.setExtendedAttribute('real')
+        p1.setExtended('real')
         
         mapper.store(c)
         mapper.store(p1)

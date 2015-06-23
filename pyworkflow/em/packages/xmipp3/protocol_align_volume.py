@@ -202,7 +202,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         for pointer in self.inputVolumes:
             if pointer.pointsNone():
                 errors.append('Invalid input, pointer: %s' % pointer.getObjValue())
-                errors.append('              extended: %s' % pointer.getExtendedValue())
+                errors.append('              extended: %s' % pointer.getExtended())
         return errors    
     
     def _summary(self):

@@ -92,7 +92,7 @@ class TestSpiderWorkflow(TestWorkflow):
         
         protFilter = self.newProtocol(spider.SpiderProtFilter)
         protFilter.inputParticles.set(protImport)
-        protFilter.inputParticles.setExtendedAttribute('outputParticles')
+        protFilter.inputParticles.setExtended('outputParticles')
         self.launchProtocol(protFilter)
         
         protAPSR = self.newProtocol(spider.SpiderProtAlignAPSR)
