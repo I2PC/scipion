@@ -384,7 +384,7 @@ class XmippViewer(Viewer):
             outputVols = obj.outputVolumes
             labels = 'id enabled comment _filename weight'
             self._views.append(ObjectView(self._project, outputVols.strId(), outputVols.getFileName(), viewParams={MODE: MODE_MD,
-                                                      VISIBLE:labels, ORDER: labels, SORT_BY: 'weight', RENDER: 'image'}))
+                                                      VISIBLE:labels, ORDER: labels, SORT_BY: 'weight', RENDER: '_filename'}))
 
         elif issubclass(cls, XmippProtExtractParticlesPairs):
             self._visualize(obj.outputParticlesTiltPair)

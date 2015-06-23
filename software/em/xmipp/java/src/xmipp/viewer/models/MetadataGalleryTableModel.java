@@ -222,8 +222,8 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel//Gallery m
 	{
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
-		ImageItem item = new ImageItem(index);
 		ImagePlus imp = getImage(objId, imageFn);
+		ImageItem item = new ImageItem(index, imp);
                 
 		item.setImagePlus(imp);
 		return item;
