@@ -270,7 +270,7 @@ DEFAULT_PARAMS = {
     sj.ROWS: None,                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
     
     sj.ORDER: None,
-    
+    sj.SORT_BY: None,
     sj.IMG_ZOOM: '128px',                     # Zoom set by default
     sj.IMG_MIRRORY: False,                    # When 'True' image are mirrored in Y Axis 
     sj.IMG_APPLY_TRANSFORM: False,       # When 'True' if there is transform matrix, it will be applied
@@ -432,7 +432,8 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
     if columnsConfig is not None:
         
         context.update({sj.COLS_CONFIG: json.dumps({'columnsLayout': columnsConfig._columnsDict,
-                                                    'colsOrder': inputParams[sj.ORDER]
+                                                    'colsOrder': inputParams[sj.ORDER],
+                                                    'colsSortby': inputParams[sj.SORT_BY]
                                                    },
                                                    ensure_ascii=False,
                                                    cls=ColumnPropertiesEncoder)})
