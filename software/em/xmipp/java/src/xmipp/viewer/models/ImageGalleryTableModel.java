@@ -352,7 +352,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 */
 	public int getIndex(int row, int col) {
                 
-                return row * cols + col; 
+		return row * cols + col; 
 		
 	}
         
@@ -454,17 +454,17 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	/** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col) {
             
-                setSelected(row, col, !isSelected(row, col));
-                adjustWidth = false;
-                fireTableCellUpdated(row, col);
+        setSelected(row, col, !isSelected(row, col));
+        adjustWidth = false;
+        fireTableCellUpdated(row, col);
 	}
         
         /** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col, boolean isselected) {
 		
-                setSelected(row, col, isselected);
-                adjustWidth = false;
-                fireTableCellUpdated(row, col);	
+        setSelected(row, col, isselected);
+        adjustWidth = false;
+        fireTableCellUpdated(row, col);	
 	}
 	
 	
@@ -511,7 +511,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * not show at all if the return is false
 	 */
 	public abstract boolean handleRightClick(int row, int col,
-			XmippPopupMenuCreator xpopup);
+		XmippPopupMenuCreator xpopup);
 
 	/**
 	 * This function will be called when a double click is performed under the
@@ -524,8 +524,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	/** Whether to display the labels */
 	public void setShowLabels() {
 		
-			calculateCellSize();
-			fireTableStructureChanged();
+		calculateCellSize();
+		fireTableStructureChanged();
 		
 	}
 
@@ -612,8 +612,9 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 			index = ImageGalleryTableModel.this.getIndex(row, col);
 		}
 
-		public ImageItem(int index) {
+		public ImageItem(int index, ImagePlus imp) {
 			this.index = index;
+			this.image = imp;
 		}
 
 		public int getIndex() {
@@ -828,5 +829,10 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
     public void setSelected(int row, int col, boolean b) {
           setSelected(getIndex(row, col), b);
     }
+
+	public ColumnInfo getColumn(int row, int col)
+	{
+		return data.ciFirstRender;
+	}
 
 }

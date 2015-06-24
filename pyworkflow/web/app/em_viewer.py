@@ -170,7 +170,7 @@ def viewer_element(request):
              # COMMAND VIEW
              if isinstance(v, CommandView):
         #             v.show()
-                print "THIS FUNCTION IS ONLY AVAILABLE ON DESKTOP!"
+                print "CommandView IS ONLY AVAILABLE ON DESKTOP!"
              else:
                 urls.append(viewToUrl(request, v))
 

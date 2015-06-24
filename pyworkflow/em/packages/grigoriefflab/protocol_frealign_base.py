@@ -147,7 +147,7 @@ class ProtFrealignBase(EMProtocol):
                       condition='not doContinue',
                       help='Select the input particles.\n')
         form.addParam('doInvert', BooleanParam, default=True,
-                      label='Invert contrast',
+                      label='Invert contrast', condition='not doContinue',
                       help='Invert the contrast if your particles are white over a black background.')
         form.addParam('input3DReference', PointerParam,
                       pointerClass='Volume',
@@ -487,6 +487,7 @@ class ProtFrealignBase(EMProtocol):
         if self.doContinue:
             continueRun = self.continueRun.get()
             self.inputParticles.set(continueRun.inputParticles.get())
+            self.doInvert.set(continueRun.doInvert.get())
             self.symmetry.set(continueRun.symmetry.get())
             self.input3DReference.set(None)
             
@@ -555,7 +556,6 @@ class ProtFrealignBase(EMProtocol):
         prevIterVol = self._getFileName('iter_vol', iter=prevIter) # volume of the previous iteration
         
         if iterN == 1:
-            ### imgSet = self.inputParticles.get()
             vol = self.input3DReference.get()
 
             imgFn = self._getFileName('particles')

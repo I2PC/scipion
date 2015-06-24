@@ -1839,14 +1839,7 @@ public class GalleryData {
         return imagesmd;
    }
    
-    public ColumnInfo getColumn(int row, int col)
-    {
-        if(isGalleryMode())
-            return ciFirstRender;
-        if(isColumnFormat())
-            return getColumnInfo(col);
-        return getColumnInfo(row); 
-    }
+    
     
     public String[] getSortBy()
     {

@@ -133,13 +133,13 @@ marginal likelihood.
         prevIter = iterN - 1
         
         if iterN==1:
-            imgSet = self.inputParticles.get()
             vol = self.input3DReference.get()
             
             imgFn = self._getFileName('particles')
             volFn = self._getFileName('init_vol')
             refVol = self._getFileName('ref_vol', iter=iterN) # reference volume of the step.
-            imgSet.writeStack(imgFn) # convert the SetOfParticles into a mrc stack.
+            #TODO check if the input is already a single mrc stack
+            self.writeParticlesByMic(imgFn)
             ImageHandler().convert(vol.getLocation(), volFn) # convert the reference volume into a mrc volume
             copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
             

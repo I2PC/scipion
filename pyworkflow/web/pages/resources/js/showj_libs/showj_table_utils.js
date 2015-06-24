@@ -134,6 +134,11 @@ function getColumnsDefinition() {
 		dataRowForTable["sTitle"] = columnLayoutConfiguration.columnLabel;
 		dataRowForTable["sSubTitle"] = columnLayoutConfiguration.columnName;
 		dataRowForTable["aTargets"] = [columnId];
+//		if (columnLayoutConfiguration.columnLabel == 'weight')
+//		{
+//			console.log("order by weight")
+//			dataRowForTable["aaSorting"] = [columnId, 'asc'];
+//		}
 		if (columnLayoutConfiguration.columnType == COL_RENDER_CHECKBOX) {
 //			console.log("id:"+columnIdReal+" checkbox!")
 			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderCheckbox(meta.col, data)}
@@ -153,7 +158,8 @@ function getColumnsDefinition() {
 		dataForTable.push(dataRowForTable);
 		columnId++;
 	}
-	console.log(dataForTable)
+//	console.log("columns Definition:")
+//	console.log(dataForTable)
 	return dataForTable;
 }
 
@@ -237,33 +243,51 @@ function getVisibleColumn(n)
 
 
 
-function orderColumns(order)
+function arrangeColumns(order, sort)
 {
-	orderColumns = jsonTableLayoutConfiguration.colsOrder.trim().split(" ")
-	var i = 0;
-	for(orderColumn in orderColumns)
+	if(jsonTableLayoutConfiguration.colsOrder)
+		orderColumns = jsonTableLayoutConfiguration.colsOrder.trim().split(" ")
+	if(jsonTableLayoutConfiguration.colsSortby)
 	{
-		j = 0
-		for (column in jsonTableLayoutConfiguration.columnsLayout)
-		{
-			if(jsonTableLayoutConfiguration.columnsLayout[column].columnLabel == orderColumns[orderColumn])
-			{
-				pos = getVisibleColumn(i)
-				if(pos != order[j] && pos != -1)
-				{
-					pos2 = order.indexOf(j)
-					aux = order[pos]
- 					order[pos] = order[pos2]
- 					order[pos2] = aux
-				}
-				i ++
-				break
-			}
-			j ++
-		}
+		sortby = jsonTableLayoutConfiguration.colsSortby.trim().split(" ")
+		sortbyColumn = sortby[0]
+		if (sortby.length == 2)
+			direction = sortby[1]
+		else
+			direction = 'asc'
 	}
-	return order
+	
+	j = 0
+	var i = 0;
+	for (column in jsonTableLayoutConfiguration.columnsLayout)
+	{
+		columnLabel = jsonTableLayoutConfiguration.columnsLayout[column].columnLabel
+		if(jsonTableLayoutConfiguration.colsOrder)
+			for(orderColumn in orderColumns)
+			{
+				if( columnLabel == orderColumns[orderColumn])
+				{
+					pos = getVisibleColumn(i)
+					if(pos != order[j] && pos != -1)
+					{
+						pos2 = order.indexOf(j)
+						aux = order[pos]
+	 					order[pos] = order[pos2]
+	 					order[pos2] = aux
+					}
+					i ++
+					
+				}
+			}
+		if(jsonTableLayoutConfiguration.colsSortby && sortbyColumn == columnLabel)
+			sort[0] = [order[j], direction]
+		j ++
+	}
+	
+	
+	
 }
+
 
 function initializeColumnHeader() {
 	var headerRow = $("#data_table thead tr")

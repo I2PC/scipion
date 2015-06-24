@@ -131,6 +131,8 @@ public class XmippImageConverter {
 			select_image = ImageGeneric.FIRST_IMAGE;
 			lastImage = image.getNDim();
 		}
+		else if (select_image == -1)
+			select_image = lastImage = image.getNDim()/2;
 		for (; select_image <= lastImage; select_image++) {
 			image.read(width, height, select_image);
 			addSlicesToStack(image, ImageGeneric.FIRST_IMAGE, slice, is, pc);
@@ -191,7 +193,6 @@ public class XmippImageConverter {
                 
 		for (; slice <= lastSlice; slice++)
 			is.addSlice("", pc.getProcessor(image, select_image, slice));
-
 	}
 
 	public static ImagePlus readMdRowToImagePlus(String fn, MetaData md,

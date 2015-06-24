@@ -207,8 +207,11 @@ $(document).ready(function() {
 			var URL = getSubDomainURL() + "/viewer_element/"
 			$.post(URL, serialize_form, function(json) {
 				$('.messi').remove();
-				$('.messi-modal').remove();				
-				popUpJSON(json);
+				$('.messi-modal').remove();		
+				if(json.length == 0)
+					infoPopup("Info", "No viewer found");
+				else
+					popUpJSON(json);
 			},"json");			
 		} 
 		// Important. Stop the normal POST
@@ -270,8 +273,7 @@ function evalElements() {
 				} else {
 					onChangeEnumParamList(value, param);
 				}
-				break;
-				
+				break;				
 			case "MultiPointerParam":
 				recalculateSelectDim('#' + param + '_input');
 				break;
@@ -357,12 +359,13 @@ function onChangeEnumParamList(index, paramId) {
 }
 
 function setParamValue(paramId, value) {
+	
 	/*
 	 * Put the new value in an attribute of the parent node.
 	 */
-	
 	// Get the row affected
 	var row = $("tr#" + paramId);
+
 	// Update the value for the row
 	row.val(value);
 	
@@ -371,7 +374,7 @@ function setParamValue(paramId, value) {
 	var newLevel = $("input[name=expertLevel]:checked").val();
 	 
 	// DEBUG
-//	console.log("PARAM TO EVALUATE: " + paramId + " WITH LEVEL: " + newLevel)
+//	console.log("PARAM TO EVALUATE: " + paramId + " WITH LEVEL: " + newLevel + " value " + value)
 	
 	// Evaluate the dependencies for the new expert level and the param line
 	evalDependencies(row, newLevel);
@@ -441,7 +444,6 @@ function evalDependencies(row, newLevel) {
 
 			// Evaluate the new parameter affected
 			var res = evalCondition(row_tr);
-			
 			// If there is no element <tr> try to find a <div> that corresponds to a line parameter (data-line attribute to yes)
 			if (res == undefined){
 			    row_div = $("div#" + arrayDepends[cont]);
@@ -456,6 +458,7 @@ function evalDependencies(row, newLevel) {
 
 				// Get the expertise level for the row affected
 				var expLevel = row_tr.attr('data-expert');
+				
 				if (res == false || expLevel > newLevel) {
 					row_tr.hide();
 				} else if (res == true) {
@@ -496,13 +499,18 @@ function evalCondition(row) {
 	
 			for (var cont = 0; cont < arrayParams.length; cont++) {
 				param = arrayParams[cont];
-				
-				value = $("tr#" + param).val();
-				if (!value){
-					value = $("tr#" + param).attr("value");
+				if (param == "expertLevel")
+					value = $("input[name=expertLevel]:checked").val();
+				else
+				{
+					value = $("tr#" + param).val();
+					
 					if (!value){
-						value="''";
-					}
+						value = $("tr#" + param).attr("value");
+						if (!value){
+							value="''";
+						}
+				}
 				}
 				params += "param: " + param + " value: " + value + "\n";
 				cond_eval = cond_eval.replace(param, value);
