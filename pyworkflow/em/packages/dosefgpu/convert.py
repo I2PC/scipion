@@ -37,8 +37,8 @@ def getEnviron():
     """ Setup the environment variables needed to launch Relion. """
     environ = Environ(os.environ)
     environ.update({
-            'PATH': join(os.environ['DOSEFGPU_HOME'], 'bin'),
-            'LD_LIBRARY_PATH': join(os.environ['DOSEFGPU_CUDA_LIB'])
+            'PATH': join(os.environ['MOTIONCORR_HOME'], 'bin'),
+            'LD_LIBRARY_PATH': join(os.environ['MOTIONCORR_CUDA_LIB'])
             }, position=Environ.BEGIN)
     return environ  
 
@@ -64,5 +64,3 @@ def parseMovieAlignment(logFile):
     f.close()
     
     return MovieAlignment(first=first, last=first+len(shifts)/2-1, shifts=shifts)
-    
-    

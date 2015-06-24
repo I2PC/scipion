@@ -181,25 +181,16 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
     def _summary(self):
         summary = []
 
-        summary.append("Input particles:  %s" % self.inputParticles.get().getNameId())
-
-        summary.append("-----------------")
-        if self.inputVolumes.get():
-            for i, vol in enumerate(self._iterInputVols()):
-                summary.append("Input volume(s)_%d: [%s]" % (i+1,vol))
-
-        summary.append("-----------------")
         if  (not hasattr(self,'outputVolumes')):
             summary.append("Output volumes not ready yet.")
         else:
+            size = 0
             for i, vol in enumerate(self._iterInputVols()):
-                            
-                VolPrefix = 'vol%03d_' % (i+1)
-                md = xmipp.MetaData(self._getExtraPath(VolPrefix+'validation.xmd'))                
-                weight = md.getValue(xmipp.MDL_WEIGHT, md.firstObject())
-                summary.append("Output volume(s)_%d : %s" % (i+1,self.outputVolumes.getNameId()))
-                summary.append("Quality parameter_%d : %f" % (i+1,weight))
-                summary.append("-----------------")        
+                size +=1
+            summary.append("Volumes to validate: *%d* " % size)
+            summary.append("Angular sampling: %s" % self.angularSampling.get())
+            summary.append("Significance value: %s" % self.alpha.get())
+
         return summary
     
     def _methods(self):

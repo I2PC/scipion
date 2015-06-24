@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -85,6 +86,7 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
+
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
@@ -1714,7 +1716,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					try
 					{
-                                                XmippUtil.showImageJ(Tool.VIEWER);
+                        XmippUtil.showImageJ(Tool.VIEWER);
 						ImagePlusLoader loader = gallery.getImageLoader();
 						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, data.parameters);
 					}
@@ -1922,7 +1924,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		public void show(Component cmpnt, Point location)
 		{
-                        row = table.rowAtPoint(location);
+            row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
                         boolean isscipion = data.isScipionInstance();
 			setItemVisible(SET_CLASS, data.isClassificationMd() && !isscipion);
@@ -1994,15 +1996,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			else if (cmd.equals(OPEN))
 			{
-                                ColumnInfo ci = data.getColumn(row, col);
-                                if (ci.allowRender)
-                                    gallery.handleDoubleClick(row, col);
-                                else
-                                {
-                                    int index = gallery.getIndex(row, col);
-                                    String file = data.getValueFromCol(index, ci);
-                                    ImagesWindowFactory.openFileAsDefault(file);
-                                }
+                ColumnInfo ci = gallery.getColumn(row, col);
+                if (ci.allowRender)
+                    gallery.handleDoubleClick(row, col);
+                else
+                {
+                    int index = gallery.getIndex(row, col);
+                    String file = data.getValueFromCol(index, ci);
+                    ImagesWindowFactory.openFileAsDefault(file);
+                }
 			}
 			else if (cmd.equals(OPEN_ASTEXT))
 			{

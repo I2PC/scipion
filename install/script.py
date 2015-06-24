@@ -414,6 +414,7 @@ env.addPackage('chimera',
                commands=[('./scipion_installer','bin/chimera')],
                default=False)
 
+
 env.addPackage('dogpicker',
                tar='dogpicker-0.2.1.tgz',
                default=False)

@@ -9,7 +9,7 @@ $(document).ready(function(){
 	
 	var listSelectedItems = [{{listSelectedItems}}];
  	$("input#listSelectedItems").val(listSelectedItems)
- 	console.log("selectedItems: " + listSelectedItems)
+ 	//console.log("selectedItems: " + listSelectedItems)
 
 	if (mode == "table"){
 	 	markSelectedItems(mode, listSelectedItems)
@@ -33,7 +33,7 @@ $(document).ready(function(){
 		});
  	});
  	
- 	console.log("setImageSize used with zoom value")
+ 	//console.log("setImageSize used with zoom value")
 	setImageSize(true);
  	
 });

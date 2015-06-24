@@ -42,7 +42,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
 	public ImagePlus loadImagePlus()
 	{
                 
-                imp = null;
+        imp = null;
 		try
 		{
 			if (ig == null || hasChanged())
@@ -72,7 +72,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
             }
             else if(ig != null)
             {
-                 if(index == -1 || !ig.isStackOrVolume())//if index is not -1 ig read it already
+                 if(index == -2 || !ig.isStackOrVolume())//if index is not -2 ig read it already
                     imp = XmippImageConverter.convertToImagePlus(ig);
                 else 
                  {
@@ -89,7 +89,6 @@ public class ImagePlusFromFile extends ImagePlusReader{
 				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
 				imp.updateImage();
 			}
-                        
 			return imp;
                         
 		}
@@ -102,7 +101,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
         
         
     
-        public boolean hasChanged()
+    public boolean hasChanged()
 	{
 		return new File(fileName).lastModified() > modified;
 	}
