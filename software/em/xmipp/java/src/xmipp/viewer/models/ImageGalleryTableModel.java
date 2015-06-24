@@ -353,7 +353,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	public int getIndex(int row, int col) {
                 
 		return row * cols + col; 
-		
 	}
         
        
@@ -453,7 +452,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	/** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col) {
-            
         setSelected(row, col, !isSelected(row, col));
         adjustWidth = false;
         fireTableCellUpdated(row, col);
@@ -771,7 +769,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
         
         if(isselected && (selfrom > index || selfrom == -1))
             selfrom = index;
-        if(isselected && selto < index)
+        if(isselected && (selto < index|| selto == -1))
             selto = index;
         boolean hasSelection = (isselected || selto != selfrom || selfrom != index);
         selection[index] = isselected;
@@ -798,7 +796,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
                         break;
                     }
         }      
-        
         if (data.isVolumeMd && data.isTableMode())
             data.selectedVolFn = isselected? data.getVolumeAt(index): data.getVolumeAt(0);
 
