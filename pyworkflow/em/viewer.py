@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+
 """
 This module implement viewers for some type of common objects.
 """
@@ -105,11 +106,12 @@ class DataView(View):
     #===========================================================================
     
         parameters = {
-            'mode', # FOR MODE TABLE OR GALLERY
-            'visible',
-            'zoom',
-            'order',
-            'render',
+            showj.MODE, # FOR MODE TABLE OR GALLERY
+            showj.VISIBLE,
+            showj.ZOOM,
+            showj.ORDER,
+            showj.RENDER,
+            showj.SORT_BY
 #             'columns',
         }
         

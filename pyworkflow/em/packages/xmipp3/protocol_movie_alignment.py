@@ -318,6 +318,9 @@ class ProtMovieAlignment(ProtProcessMovies):
         if numThreads>1:
             if self.doGPU:
                 errors.append("GPU and Parallelization can not be used together")
+        alignMethod = self.alignMethod.get()
+        if alignMethod == 1 or alignMethod == 2:
+            errors.append("GPU methods are not available at the moment.")
         return errors
 
     def _citations(self):

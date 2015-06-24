@@ -42,7 +42,8 @@ import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
-public class MetadataGalleryTableModel extends ImageGalleryTableModel//Gallery mode
+//Gallery mode!!!!!!!!!!
+public class MetadataGalleryTableModel extends ImageGalleryTableModel
 {
 
 	private static final long serialVersionUID = 1L;
@@ -345,6 +346,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel//Gallery m
     }
 	
     
+	
         
 
 }

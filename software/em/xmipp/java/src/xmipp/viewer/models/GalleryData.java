@@ -1190,12 +1190,12 @@ public class GalleryData {
      */
     public void removeSelection(boolean[] selection) throws Exception {
 
-            for (int i = 0; i < selection.length; i++) {
-                if (selection[i]) {
-                    md.removeObject(ids[i]);
-                    hasMdChanges = true;
-                }
+        for (int i = 0; i < selection.length; i++) {
+            if (selection[i]) {
+                md.removeObject(ids[i]);
+                hasMdChanges = true;
             }
+        }
     }
 
     /**
@@ -1839,14 +1839,7 @@ public class GalleryData {
         return imagesmd;
    }
    
-    public ColumnInfo getColumn(int row, int col)
-    {
-        if(isGalleryMode())
-            return ciFirstRender;
-        if(isColumnFormat())
-            return getColumnInfo(col);
-        return getColumnInfo(row); 
-    }
+    
     
     public String[] getSortBy()
     {
