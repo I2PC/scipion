@@ -1,7 +1,7 @@
 setenv SCIPION_HOME %(SCIPION_HOME)s
 setenv XMIPP_HOME ${SCIPION_HOME}/software/em/xmipp
 
-setenv PATH ${SCIPION_HOME}/software/bin:${XMIPP_HOME}/bin:${PATH}
+setenv PATH ${SCIPION_HOME}:${SCIPION_HOME}/software/bin:${XMIPP_HOME}/bin:${PATH}
 
 if($?LD_LIBRARY_PATH) then
   setenv LD_LIBRARY_PATH ${SCIPION_HOME}/software/lib:${LD_LIBRARY_PATH}

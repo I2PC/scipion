@@ -168,7 +168,6 @@ lapack = env.addLibrary(
     cmake=True,
     neededProgs=['gfortran'],
     default=False)
-# TODO: add check for gfortran
 
 if get('CUDA'):
     opencvFlags = ['-DWITH_CUDA:BOOL=ON']
@@ -243,6 +242,7 @@ matplotlib = env.addModule(
     'matplotlib',
     tar='matplotlib-1.3.1.tgz',
     targets=['matplotlib-1.3.1*'],
+    numpyIncludes=True,
     deps=[numpy, png, dateutil, pyparsing])
 
 psutil = env.addModule(
@@ -408,5 +408,15 @@ env.addPackage('simple',
                tar='simple2.tgz',
                default=False)
 
+env.addPackage('chimera',
+               tar='chimera-1.10.1-linux_x86_64.tgz',
+               targetDir='chimera-1.10.1',
+               commands=[('./scipion_installer','bin/chimera')],
+               default=False)
+
+
+env.addPackage('dogpicker',
+               tar='dogpicker-0.2.1.tgz',
+               default=False)
 
 env.execute()

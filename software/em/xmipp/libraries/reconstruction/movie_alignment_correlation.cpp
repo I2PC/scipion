@@ -42,7 +42,7 @@ void ProgMovieAlignmentCorrelation::readParams()
     nfirst = getIntParam("--frameRange",0);
     nlast = getIntParam("--frameRange",1);
     xLTcorner= getIntParam("--cropULCorner",0);
-    yLTcorner= getIntParam("--cropULCorner",0);
+    yLTcorner= getIntParam("--cropULCorner",1);
     xDRcorner = getIntParam("--cropDRCorner",0);
     yDRcorner = getIntParam("--cropDRCorner",1);
     show();
@@ -83,7 +83,7 @@ void ProgMovieAlignmentCorrelation::defineParams()
     addParamsLine("  [--oavg <fn=\"\">]           : Give the name of a micrograph to generate an aligned micrograph");
     addParamsLine("  [--frameRange <n0=-1> <nF=-1>]  : First and last frame to process, frame numbers start at 0");
     addParamsLine("  [--cropULCorner <x=0> <y=0>]    : crop up left corner (unit=px, index starts at 0)");
-    addParamsLine("  [--cropDRCorner <x=0> <y=0>]    : crop down right corner (unit=px, index starts at 0)");
+    addParamsLine("  [--cropDRCorner <x=-1> <y=-1>]    : crop down right corner (unit=px, index starts at 0), -1 -> no crop");
     addExampleLine("A typical example",false);
     addExampleLine("xmipp_movie_alignment_correlation -i movie.xmd --oaligned alignedMovie.stk --oavg alignedMicrograph.mrc");
     addSeeAlsoLine("xmipp_movie_optical_alignment_cpu");
@@ -147,11 +147,12 @@ void ProgMovieAlignmentCorrelation::run()
     if (newTs<Ts)
         newTs=Ts;
     getImageSize(movie,Xdim, Ydim, Zdim, Ndim);
-    if (yDRcorner!=0)
+    if (yDRcorner!=-1)
     {
         Xdim = xDRcorner - xLTcorner +1 ;
         Ydim = yDRcorner - yLTcorner +1 ;
     }
+
     if (Zdim!=1)
         REPORT_ERROR(ERR_ARG_INCORRECT,"This program is meant to align 2D frames, not 3D");
     double sizeFactor=Ts/newTs;
@@ -183,10 +184,11 @@ void ProgMovieAlignmentCorrelation::run()
     std::complex<double> zero=0;
     FOR_ALL_OBJECTS_IN_METADATA(movie)
     {
+
         if (n>=nfirst && n<=nlast)
         {
             movie.getValue(MDL_IMAGE,fnFrame,__iter.objId);
-            if (yDRcorner==0)
+            if (yDRcorner==-1)
                 cropedFrame.read(fnFrame);
             else
             {
@@ -243,7 +245,7 @@ void ProgMovieAlignmentCorrelation::run()
         {
             bestShift(*frameFourier[i],*frameFourier[j],Mcorr,bX(idx),bY(idx),aux,NULL,maxShift);
             if (verbose)
-                std::cout << "Frame " << i+nfirst << " to Frame " << j+nfirst << " -> (" << bX(idx) << "," << bY(idx) << ")\n";
+                std::cerr << "Frame " << i+nfirst << " to Frame " << j+nfirst << " -> (" << bX(idx) << "," << bY(idx) << ")\n";
             for (int ij=i; ij<j; ij++)
                 A(idx,ij)=1;
 
@@ -347,7 +349,7 @@ void ProgMovieAlignmentCorrelation::run()
         	//std::cerr << "DEBUG_ROB: nlast: " << nlast << std::endl;
             movie.getValue(MDL_IMAGE,fnFrame,__iter.objId);
             //frame.read(fnFrame);
-            if (yDRcorner==0)
+            if (yDRcorner==-1)
                 cropedFrame.read(fnFrame);
             else
             {

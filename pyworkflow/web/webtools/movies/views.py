@@ -198,7 +198,7 @@ def movies_form(request):
                     'formUrl': 'mov_form',
                     'showHost': False,
                     'showParallel': False,
-                    'hostSelected': 'clark'})
+                    'hostSelected': 'localhost'})
     return render_to_response('form/form.html', context)
 
 

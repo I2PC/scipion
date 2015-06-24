@@ -581,7 +581,7 @@ for (key in jsonTableLayoutConfiguration.columnsLayout) {
     columns[i] = jsonTableLayoutConfiguration.columnsLayout[key]
     i ++
 }
-console.log(columns)
+//console.log(columns)
 
 // DEBUG
 console.log("jsonTableLayoutConfiguration", jsonTableLayoutConfiguration)
@@ -622,7 +622,6 @@ function setImageSize(refreshElement){
 	
 	/* Check if zoom in pixel */
 	if (zoom_element.val().indexOf('px')!=-1){
-		console.log("zoom in px")
 		
 		/*  Get zoom value*/			
 		zoom_val=parseInt(zoom_element.val().split('px')[0])

@@ -107,8 +107,8 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		volume.getPreview(preview, thumb_width, thumb_height, index + 1,
 				ImageGeneric.FIRST_IMAGE);
 		ImagePlus imp = new ImagePlusLoader(preview, data.inverty).getImagePlus();
-		ImageItem item = new ImageItem(index);
-		item.setImagePlus(imp);
+		ImageItem item = new ImageItem(index, imp);
+		//item.setImagePlus(imp);
 		return item;
 	}
 

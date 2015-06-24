@@ -121,6 +121,10 @@ public class Filename {
 	public static boolean isSingleImageExt(String filename) {
 		return filename != null && isFileType(filename, SINGLE_IMAGES);
 	}
+	
+	public static boolean isStackOrVolume(String filename) {
+		return isStack(filename) || isVolume(filename);
+	}
 
 	public static boolean isVolume(String filename) {
                 
@@ -138,12 +142,12 @@ public class Filename {
 		return filename != null && isFileType(filename, VOLUMES);
 	}
 
-	public static boolean isStack(String filename) throws Exception {
+	public static boolean isStack(String filename){
 		try {
-                        if(isXmippSupported(filename))
-                            return (new ImageGeneric(filename)).isStack();
-                        else
-                            return isFileType(filename, STACKS);
+                if(isXmippSupported(filename))
+                    return (new ImageGeneric(filename)).isStack();
+                else
+                    return isFileType(filename, STACKS);
 		} catch (Exception ex) {
 			return filename != null && isFileType(filename, STACKS);
 		}
