@@ -830,4 +830,9 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
           setSelected(getIndex(row, col), b);
     }
 
+	public ColumnInfo getColumn(int row, int col)
+	{
+		return data.ciFirstRender;
+	}
+
 }

@@ -84,10 +84,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		}
 	}
 
-	@Override
-	public int getIndex(int row, int col) {
-                return row;
-	}
+	
 
 	
 
@@ -463,14 +460,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		}
 	}
         
-	@Override
-	public Point getCoords(int index) {
 	
-		Point p = new Point();
-		p.x = 0;
-		p.y = index;
-		return p;
-	}
 	
 
         
