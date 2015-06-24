@@ -42,7 +42,8 @@ import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
-public class MetadataGalleryTableModel extends ImageGalleryTableModel//Gallery mode
+//Gallery mode!!!!!!!!!!
+public class MetadataGalleryTableModel extends ImageGalleryTableModel
 {
 
 	private static final long serialVersionUID = 1L;
@@ -344,24 +345,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel//Gallery m
         return true;
     }
 	
-    @Override
-	public int getIndex(int row, int col) {
-        return row;
-	}
     
-    public ColumnInfo getColumn(int row, int col)
-	{
-		return visibleLabels.get(col);
-	}
-    
-    @Override
-	public Point getCoords(int index) {
-	
-		Point p = new Point();
-		p.x = 0;
-		p.y = index;
-		return p;
-	}
 	
         
 

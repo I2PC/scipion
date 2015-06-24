@@ -1190,12 +1190,12 @@ public class GalleryData {
      */
     public void removeSelection(boolean[] selection) throws Exception {
 
-            for (int i = 0; i < selection.length; i++) {
-                if (selection[i]) {
-                    md.removeObject(ids[i]);
-                    hasMdChanges = true;
-                }
+        for (int i = 0; i < selection.length; i++) {
+            if (selection[i]) {
+                md.removeObject(ids[i]);
+                hasMdChanges = true;
             }
+        }
     }
 
     /**
