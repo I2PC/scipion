@@ -102,7 +102,7 @@ def create_movies_project(request):
         # Create symbolic link for uploads
         projectPath = manager.getProjectPath(projectName)
         dest = os.path.join(projectPath,'Uploads')
-        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
+        source = "/services/scipion/data/uploads/"+ projectName
         pwutils.path.makePath(source)
         pwutils.createLink(source, dest)
         
