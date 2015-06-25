@@ -227,7 +227,10 @@ public class ScipionMetaData extends MetaData {
     
 
     public String getBlock() {
-    	String block = getSetType().replace("SetOf", "");
+    	String setType = getSetType();
+    	if(setType.isEmpty())
+    		setType = "noname";
+    	String block = setType.replace("SetOf", "");
     	
         if (preffix == null) {
             return block;
@@ -334,6 +337,8 @@ public class ScipionMetaData extends MetaData {
 
     public boolean isImage(String label) {
     	String setType = getSetType();
+    	if (setType == null)
+    		return false;
         if(label.contains("_filename"))
         {
             String indexLabel = label.replace("_filename", "_index");
@@ -880,6 +885,8 @@ public class ScipionMetaData extends MetaData {
 
     boolean isClassificationMd() {
     	String setType = getSetType();
+    	if(setType == null)
+    		return false;
         return setType.equals("SetOfClasses2D") || setType.equals("SetOfClasses3D");
     }
     
@@ -1127,6 +1134,8 @@ public class ScipionMetaData extends MetaData {
     public String getSetType() {
         if(properties == null)
             return "SetOfParticles";//child md from classes set
+        if(properties.isEmpty())
+        	return "";
         return properties.get("self");
     }
     
