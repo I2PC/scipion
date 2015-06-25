@@ -33,8 +33,10 @@ from pyworkflow.web.app.views_base import base_grid
 from django.http import HttpResponse
 from django.core.context_processors import csrf
 from pyworkflow.web.pages import settings as django_settings
+from pyworkflow.mapper.sqlite import SqliteFlatMapper
 
 import pyworkflow as pw
+from pyworkflow.config import DownloadRecord
 DB_PATH_DOWNLOAD = os.path.join(pw.HOME, 'web', 'home', "download_statistics.db")
 
 def home(request):
@@ -76,18 +78,36 @@ def doDownload(request):
         errors += "Please choose one into the Platform field.\n"
 
     if len(errors) == 0:
+        dbName = os.path.join(os.environ['SCIPION_HOME'], 'downloads.sqlite')
+        #dbName = '/tmp/downloads.sqlite'
+        
+        print ">>> test_downloads: dbName = '%s'" % dbName
+        mapper = SqliteFlatMapper(dbName, globals())
+        mapper.enableAppend()
+        download = DownloadRecord(fullName = fullName,
+                organization = organization,
+                email = email,
+                subscription = mailoption,
+                country = country,
+                version = version,
+                platform = platform)
+        
+
+        mapper.store(download)
+        mapper.commit()
+        mapper.close()
         # Save statistics into DB
-        data = {"name": fullName,
-                "org" : organization,
-                "mail": email,
-                "subscription" : mailoption,
-                "country": country,
-                "version": version,
-                "platform": platform }
+#         data = {"name": fullName,
+#                 "org" : organization,
+#                 "mail": email,
+#                 "subscription" : mailoption,
+#                 "country": country,
+#                 "version": version,
+#                 "platform": platform }
         
         # Update database with the new data
 #         createDB()
-        updateDB(data)
+        #updateDB(data)
         
     jsonStr = json.dumps({'errors' : parseText(errors)}, ensure_ascii=False)
     

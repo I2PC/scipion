@@ -168,7 +168,6 @@ lapack = env.addLibrary(
     cmake=True,
     neededProgs=['gfortran'],
     default=False)
-# TODO: add check for gfortran
 
 if get('CUDA'):
     opencvFlags = ['-DWITH_CUDA:BOOL=ON']
@@ -243,6 +242,7 @@ matplotlib = env.addModule(
     'matplotlib',
     tar='matplotlib-1.3.1.tgz',
     targets=['matplotlib-1.3.1*'],
+    numpyIncludes=True,
     deps=[numpy, png, dateutil, pyparsing])
 
 psutil = env.addModule(

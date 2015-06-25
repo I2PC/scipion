@@ -123,19 +123,32 @@ class Command:
                     os.chdir(self._cwd)
                 print(cyan("cd %s" % self._cwd))
 
-            cmd = self._cmd
-            if self._out is not None:
-                cmd += ' > %s 2>&1' % self._out
-                # TODO: more general, this only works for bash.
-            print(cyan(cmd))
-            if not self._env.showOnly:
-                # self._cmd could be a function, in which case just call it
-                if callable(self._cmd):
-                    self._cmd()
-                else: # if not, we assume is a command and we make a system call
+            # Actually allow self._cmd to be a list or a
+            # '\n'-separated list of commands, and run them all.
+            if isinstance(self._cmd, basestring):
+                cmds = self._cmd.split('\n')  # create list of commands
+            elif callable(self._cmd):
+                cmds = [self._cmd]  # a function call
+            else:
+                cmds = self._cmd  # already a list of whatever
+
+            for cmd in cmds:
+                if self._out is not None:
+                    cmd += ' > %s 2>&1' % self._out
+                    # TODO: more general, this only works for bash.
+
+                print(cyan(cmd))
+
+                if self._env.showOnly:
+                    continue  # we don't really execute the command here
+
+                if callable(cmd):  # cmd could be a function: call it
+                    cmd()
+                else:  # if not, it's a command: make a system call
                     call(cmd, shell=True, env=self._environ)
-            # Return to working directory, useful
-            # when changing dir before executing command
+
+            # Return to working directory, useful when we change dir
+            # before executing the command.
             os.chdir(cwd)
             if not self._env.showOnly:
                 for t in self._targets:
@@ -229,8 +242,9 @@ class Environment:
         else:
             self._libSuffix = 'dylib'
 
-        self._downloadCmd = 'wget -nv -c -O %s %s'
-        self._tarCmd = 'tar --recursive-unlink -xzf %s'
+        self._downloadCmd = ('wget -nv -c -O %(tar)s.part %(url)s\n'
+                             'mv -v %(tar)s.part %(tar)s')
+        self._tarCmd = 'tar -xzf %s'
 
     def getLibSuffix(self):
         return self._libSuffix
@@ -313,7 +327,7 @@ class Environment:
                          targets=tarFile,
                          cwd=downloadDir)
         else:
-            t.addCommand(self._downloadCmd % (tarFile, url),
+            t.addCommand(self._downloadCmd % {'tar': tarFile, 'url': url},
                          targets=tarFile)
         t.addCommand(self._tarCmd % tar,
                      targets=buildPath,
@@ -376,8 +390,10 @@ class Environment:
         # with autotools (so we have to run "configure") or cmake.
 
         environ = os.environ.copy()
-        environ.update({'CPPFLAGS': '-I%s/include' % prefix,
-                        'LDFLAGS': '-L%s/lib' % prefix})
+        for envVar, value in [('CPPFLAGS', '-I%s/include' % prefix),
+                              ('LDFLAGS', '-L%s/lib' % prefix)]:
+            environ[envVar] = '%s %s' % (value, os.environ.get(envVar, ''))
+
         if not cmake:
             flags.append('--prefix=%s' % prefix)
             flags.append('--libdir=%s/lib' % prefix)
@@ -427,6 +443,7 @@ class Environment:
         default = kwargs.get('default', True)
         neededProgs = kwargs.get('neededProgs', [])
         libChecks = kwargs.get('libChecks', [])
+        numpyIncludes = kwargs.get('numpyIncludes', False)
 
         if default or name in sys.argv[2:]:
             # Check that we have the necessary programs and libraries in place.
@@ -439,8 +456,8 @@ class Environment:
         deps = kwargs.get('deps', [])
         deps.append('python')
 
-        prefixPath = os.path.abspath('software')
-        flags.append('--prefix=%s' % prefixPath)
+        prefix = os.path.abspath('software')
+        flags.append('--prefix=%s' % prefix)
 
         modArgs = {'urlSuffix': 'python'}
         modArgs.update(kwargs)
@@ -452,32 +469,31 @@ class Environment:
                 return x
             else:
                 return 'software/lib/python2.7/site-packages/%s' % x
-         
-        t.addCommand('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
-                     'PATH="%(root)s/bin:%(PATH)s" '
-    #               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
-    # The CFLAGS line is commented out because even if it is needed for modules
-    # like libxml2, it causes problems for others like numpy and scipy (see for
-    # example https://github.com/numpy/numpy/issues/2411
 
-    # Yes, that behavior of numpy is *crazy*. We now modify the
-    # original source, and it should be safe to use our CFLAGS and
-    # LDFLAGS. TODO: actually use them again, and check that all the
-    # compilation works fine.
+        environ = {
+            'PYTHONHOME': prefix,
+            'LD_LIBRARY_PATH': '%s/lib' % prefix,
+            'PATH': '%s/bin:%s' % (prefix, os.environ['PATH']),
+            'CPPFLAGS': '-I%s/include' % prefix,
+            'LDFLAGS': '-L%s/lib %s' % (prefix, os.environ.get('LDFLAGS', ''))}
+        if numpyIncludes:
+            numpyPath = '%s/lib/python2.7/site-packages/numpy/core' % prefix
+            environ['CPPFLAGS'] = ('%s -I%s/include -I%s/include/numpy' %
+                                   (environ['CPPFLAGS'], numpyPath, numpyPath))
+        # CPPFLAGS cause problems for modules like numpy and scipy (see for
+        # example https://github.com/numpy/numpy/issues/2411
 
-    # TODO: to compile against numpy (as cryoem does), one
-    # needs to have:
-    #   software/lib/python2.7/site-packages/numpy/core/include
-    #   software/lib/python2.7/site-packages/numpy/core/include/numpy
-    # as part of their CFLAGS="-I...."
-    # So we should add it somehow.
+        # Yes, that behavior of numpy is *crazy*. We now modify the
+        # original source, and it should be safe to use our CFLAGS,
+        # CPPFLAGS and LDFLAGS.
 
-    # TODO: maybe add an argument to the function to chose if we want them?
+        envStr = ' '.join('%s="%s"' % (k, v) for k, v in environ.items())
+
+        t.addCommand('%(env)s '
                      '%(root)s/bin/python setup.py install %(flags)s > '
-                     '%(root)s/log/%(name)s.log 2>&1' % {'root': prefixPath,
-                                                       'PATH': os.environ['PATH'],
-                                                       'flags': ' '.join(flags),
-                                                       'name': name},
+                     '%(root)s/log/%(name)s.log 2>&1' % {
+                         'env': envStr, 'root': prefix, 'name': name,
+                         'flags': ' '.join(flags)},
                    targets=[path(tg) for tg in targets],
                    cwd=t.buildPath,
                    final=True)
