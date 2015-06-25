@@ -33,7 +33,7 @@ from pyworkflow.em import *
 from protocol_cl2d import XmippProtCL2D
 from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
-from pyworkflow.protocol.params import LabelParam
+from pyworkflow.protocol.params import LabelParam, LEVEL_ADVANCED
 import glob
 
 CLASSES = 0
@@ -58,27 +58,39 @@ class XmippCL2DViewer(ProtocolViewer):
 
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        CLASS_CHOICES = ['Classes']
-        if self.protocol.doCore:
-            CLASS_CHOICES.append('Class Cores')
-            if self.protocol.doStableCore:
-                CLASS_CHOICES.append('Class Stable Cores')
-        form.addParam('classesToShow', EnumParam, choices=CLASS_CHOICES,
-                      label="What to show", default=CLASSES,
-                      display=EnumParam.DISPLAY_LIST)
+        # Select the level to show
         form.addParam('doShowLastLevel', EnumParam, default=LEVEL_LAST, 
                       choices=LEVEL_CHOICES,
-                      display=EnumParam.DISPLAY_LIST,
+                      display=EnumParam.DISPLAY_HLIST,
                       label="Level to visualize")     
         form.addParam('showSeveralLevels', StringParam, default='',
               label='Levels selection', condition='doShowLastLevel==%d' % LEVEL_SEL,
-              help='Specify a  list of levels like: 0,1,3 or 0-3 ')    
-        form.addParam('doShowClassHierarchy', LabelParam,
+              help='Specify a  list of levels like: 0,1,3 or 0-3 ') 
+        
+        # Classes
+        CLASS_CHOICES = ['classes']
+        if self.protocol.doCore:
+            CLASS_CHOICES.append('cores')
+            if self.protocol.doStableCore:
+                CLASS_CHOICES.append('stable cores')
+        form.addParam('classesToShow', EnumParam, choices=CLASS_CHOICES,
+                      label="What to show", default=CLASSES,
+                      display=EnumParam.DISPLAY_LIST)
+        # Convergence
+        form.addParam('showConvergence', LabelParam,
+                      label="Visualize convergence", 
+                      help="It shows per iteration the similarity (cl2dSimilarity) between "
+                           "experimental images and the references as well as the number "
+                           "experimental images changing class.")
+        form.addParam('showClassHierarchy', LabelParam,  
+                      expertLevel=LEVEL_ADVANCED,
                       label="Visualize class hierarchy.")      
     
     def _getVisualizeDict(self):
-        return {'doShowClassHierarchy': self._viewClassHierarchy,
-                'doShowLastLevel': self._viewLevelFiles}        
+        return {'classesToShow': self._viewLevelFiles,
+                'showConvergence': self._viewConvergence,
+                'showClassHierarchy': self._viewClassHierarchy,
+                }        
 
     def _getSubset(self):
         fnSubset = ""
@@ -90,7 +102,47 @@ class XmippCL2DViewer(ProtocolViewer):
         elif classesToShow == CLASS_STABLE_CORES:
             fnSubset = "_stable_core" 
         return fnSubset
+
+        
+    def _viewInfo(self, fn):
+        """ Display the info block in the metadata for a level convergence. """
+        return DataView('info@' + fn)
+    
+    def _viewConvergence(self, e=None):
+        levelFiles = self.protocol._getLevelMdFiles()
+        views = []
+        errors = []
+        
+        if levelFiles:
+            if self.doShowLastLevel == LEVEL_LAST:
+                views.append(self._viewInfo(levelFiles[-1]))
+            else:
+                if self.showSeveralLevels.empty():
+                    errors.append('Please select the levels that you want to visualize.')
+                else:
+                    listOfLevels = []
+                    try:
+                        listOfLevels = self._getListFromRangeString(self.showSeveralLevels.get())
+                    except Exception, ex:
+                        errors.append('Invalid levels range.')
                         
+                    files = []
+                    for level in listOfLevels:
+                        fn = self.protocol._getExtraPath("level_%02d/level_classes.xmd" % level)
+                        if os.path.exists(fn):
+                            files.append(fn)
+                        else:
+                            errors.append('Level %s does not exist.' % level)
+                    
+                    for fn in files:                        
+                        views.append(self._viewInfo(fn))
+        else:
+            errors.append('Classes have not been produced.')
+                        
+        self.errorList(errors, views)
+        
+        return views                     
+                    
     def _viewClassHierarchy(self, e=None):
         fnSubset = self._getSubset()
         fnHierarchy = self.protocol._getExtraPath("classes%s_hierarchy.txt" % fnSubset)
@@ -123,11 +175,7 @@ class XmippCL2DViewer(ProtocolViewer):
         #obj = getattr(self.protocol, "outputClasses" + fnSubset)
         levelFiles = self.protocol._getLevelMdFiles(fnSubset)
 
-        print "LEVEL FILES=%s" % levelFiles
-        
         if levelFiles:
-            levelFiles.sort()
-            
             if self.doShowLastLevel == LEVEL_LAST:
                 views.append(self._viewClasses("classes", levelFiles[-1]))
             else:
