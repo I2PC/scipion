@@ -27,6 +27,7 @@ package xmipp.viewer.models;
 
 
 import javax.swing.JTable;
+
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -98,6 +99,11 @@ public class MetadataRowTableModel extends MetadataTableModel {
                     return 0;
 
 	}
+       
+    public ColumnInfo getColumn(int row, int col)
+   	{
+   		return visibleLabels.get(row);
+   	}
         
         /** Set the selection state of an element give row and col */
         @Override

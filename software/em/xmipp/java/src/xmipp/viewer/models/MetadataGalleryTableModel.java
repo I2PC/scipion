@@ -42,7 +42,8 @@ import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
-public class MetadataGalleryTableModel extends ImageGalleryTableModel//Gallery mode
+//Gallery mode!!!!!!!!!!
+public class MetadataGalleryTableModel extends ImageGalleryTableModel
 {
 
 	private static final long serialVersionUID = 1L;
@@ -222,8 +223,8 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel//Gallery m
 	{
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
-		ImageItem item = new ImageItem(index);
 		ImagePlus imp = getImage(objId, imageFn);
+		ImageItem item = new ImageItem(index, imp);
                 
 		item.setImagePlus(imp);
 		return item;
@@ -345,6 +346,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel//Gallery m
     }
 	
     
+	
         
 
 }

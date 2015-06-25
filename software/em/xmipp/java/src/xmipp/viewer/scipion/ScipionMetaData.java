@@ -49,9 +49,6 @@ public class ScipionMetaData extends MetaData {
     HashMap<String, String> properties;
     HashMap <Long, EMObject> idsmap;
     
-    
-
-   
 
     public ScipionMetaData(String dbfile) {
        
@@ -998,7 +995,7 @@ public class ScipionMetaData extends MetaData {
         String getValueString(ColumnInfo ci) {
             Object value = getValue(ci);
             if (value != null) {
-                return ((String) value).toString();//in sqlite double is float
+                return  value.toString();//in sqlite double is float
             }
             return "";
         }

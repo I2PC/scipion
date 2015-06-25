@@ -44,7 +44,7 @@ class XmippValidateNonTiltViewer(ProtocolViewer):
     """
     _label = 'viewer validate_nontilt'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [XmippProtValidateNonTilt]
+    _targets = []#[XmippProtValidateNonTilt]
     
     def _defineParams(self, form):
         form.addSection(label='Show Results Validate NonTilt')
