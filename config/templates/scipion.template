@@ -32,6 +32,7 @@ MOTIONCORR_CUDA_LIB = None
 SIMPLE_HOME = %(EM_ROOT)s/simple
 PYTOM_HOME = %(EM_ROOT)s/pytom
 DOGPICKER_HOME = %(EM_ROOT)s/dogpicker
+NMA_HOME = %(EM_ROOT)s/nma
 # Some visualization packages
 CHIMERA_HOME = %(EM_ROOT)s/chimera
 CHIMERA_HEADLESS_HOME = %(EM_ROOT)s/chimera_headless

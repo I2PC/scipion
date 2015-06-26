@@ -342,13 +342,6 @@ cythongsl = env.addModule(
     deps=[cython])
 # TODO: add checks for dependencies: GSL
 
-cryoem = env.addModule(
-    'cryoem',
-    tar='cryoem-1.0.tgz',
-    default=False,
-    deps=[numpy, scipy, matplotlib, cythongsl])
-
-
 
 #  ************************************************************************
 #  *                                                                      *
@@ -431,12 +424,18 @@ env.addPackage('dogpicker',
 
 env.addPackage('nma',
                tar='nma.tgz',
-               commands=[('cd ElNemo; make', 'ElNemo/nma_elnemo_pdbmat'),
-                         ('cd NMA_cart; LDFLAGS=-L%s/lib make' %
-                          os.environ['SCIPION_SOFTWARE'],
-                          'NMA_cart/nma_diag_arpack')],
+               commands=[('cd ElNemo; make; mv nma_* ..', 'nma_elnemo_pdbmat'),
+                         ('cd NMA_cart; LDFLAGS=-L%s/lib make; mv nma_* ..' %
+                          os.environ['SCIPION_SOFTWARE'], 'nma_diag_arpack')],
                deps=['arpack'],
                default=False)
+
+cryoem = env.addPackage(
+    'cryoem',
+    tar='cryoem-1.0.tgz',
+    default=False,
+    pythonMod=True,
+    deps=[numpy, scipy, matplotlib, cythongsl])
 
 
 env.execute()
