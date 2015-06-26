@@ -211,7 +211,7 @@ class ProtRelionBase(EMProtocol):
         form.addParam('haveDataBeenPhaseFlipped', LabelParam, condition='not doContinue',
                       label='The phase flip comes as a property of the input particles!')
         form.addParam('doCTF', BooleanParam, default=True,
-                      label='Do CTF-amplitude correction?', condition='not doContinue',
+                      label='Do CTF-correction?', condition='not doContinue',
                       help='If set to Yes, CTFs will be corrected inside the MAP refinement. '
                            'The resulting algorithm intrinsically implements the optimal linear, ' 
                            'or Wiener filter. Note that input particles should contains CTF parameters.')
