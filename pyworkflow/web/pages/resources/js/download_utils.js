@@ -34,9 +34,9 @@ $(document).ready(function() {
 		fullName = $("input[name=fullName]").val()
 		organization = $("input[name=organization]").val()
 		email = $("input[name=email]").val()
-		country = $("input[name=fullName]").val()
-		version = $("input[name=fullName]").val()
-		platform = $("input[name=fullName]").val()
+		country = $("select[name=country]").val()
+		version = $("select[name=version]").val()
+		platform = $("select[name=platform]").val()
 		
 		errors = ""
 		if (fullName.length == 0)
