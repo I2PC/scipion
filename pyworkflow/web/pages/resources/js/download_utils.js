@@ -40,13 +40,10 @@ $(document).ready(function() {
 			if (json.errors.length > 0) {
 				// Show errors in the validation
 				errorPopup('Errors found', json.errors);
-			} else {
-				// Start download!
-
-			}
+			} 
 		}, "json");
 			
 		// Important. Stop the normal POST
-		return false;
-		});
-	});	
+		return false
+	});
+});	
