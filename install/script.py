@@ -342,13 +342,6 @@ cythongsl = env.addModule(
     deps=[cython])
 # TODO: add checks for dependencies: GSL
 
-cryoem = env.addModule(
-    'cryoem',
-    tar='cryoem-1.0.tgz',
-    default=False,
-    deps=[numpy, scipy, matplotlib, cythongsl])
-
-
 
 #  ************************************************************************
 #  *                                                                      *
@@ -436,6 +429,13 @@ env.addPackage('nma',
                           os.environ['SCIPION_SOFTWARE'], 'nma_diag_arpack')],
                deps=['arpack'],
                default=False)
+
+cryoem = env.addPackage(
+    'cryoem',
+    tar='cryoem-1.0.tgz',
+    default=False,
+    pythonMod=True,
+    deps=[numpy, scipy, matplotlib, cythongsl])
 
 
 env.execute()

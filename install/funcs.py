@@ -26,6 +26,7 @@
 
 import platform
 import os
+from os.path import join, exists, islink, abspath
 import sys
 import time
 from glob import glob
@@ -57,7 +58,7 @@ black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
 def progInPath(prog):
     """ Is program prog in PATH? """
     for base in os.environ.get('PATH', '').split(os.pathsep):
-        if os.path.exists('%s/%s' % (base, prog)):
+        if exists('%s/%s' % (base, prog)):
             return True
     return False
 
@@ -307,8 +308,7 @@ class Environment:
         tar = kwargs.get('tar', '%s.tgz' % name)
         urlSuffix = kwargs.get('urlSuffix', 'external')
         url = kwargs.get('url', '%s/%s/%s' % (SCIPION_URL_SOFTWARE, urlSuffix, tar))
-        downloadDir = kwargs.get('downloadDir', 
-                                 os.path.join('software', 'tmp'))
+        downloadDir = kwargs.get('downloadDir', join('software', 'tmp'))
         buildDir = kwargs.get('buildDir',
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
         targetDir = kwargs.get('targetDir', buildDir)
@@ -316,9 +316,9 @@ class Environment:
         deps = kwargs.get('deps', [])
         
         # Download library tgz
-        tarFile = os.path.join(downloadDir, tar)
-        buildPath = os.path.join(downloadDir, buildDir)
-        targetPath = os.path.join(downloadDir, targetDir)
+        tarFile = join(downloadDir, tar)
+        buildPath = join(downloadDir, buildDir)
+        targetPath = join(downloadDir, targetDir)
         
         t = self.addTarget(name, default=kwargs.get('default', True))
         self._addTargetDeps(t, deps)
@@ -377,9 +377,9 @@ class Environment:
         t = self._addDownloadUntar(name, **kwargs)
         configDir = kwargs.get('configDir', t.buildDir)
 
-        configPath = os.path.join('software', 'tmp', configDir)
+        configPath = join('software', 'tmp', configDir)
         makeFile = '%s/%s' % (configPath, configTarget)
-        prefix = os.path.abspath('software')
+        prefix = abspath('software')
 
         # If we specified the commands to run to obtain the target,
         # that's the only thing we will do.
@@ -460,7 +460,7 @@ class Environment:
         deps = kwargs.get('deps', [])
         deps.append('python')
 
-        prefix = os.path.abspath('software')
+        prefix = abspath('software')
         flags.append('--prefix=%s' % prefix)
 
         modArgs = {'urlSuffix': 'python'}
@@ -513,6 +513,11 @@ class Environment:
         # Add to the list of available packages, for reference (used in --help).
         self._packages.append(name)
 
+        # Special case: our "package" is a python module that we want to use
+        # from elsewhere.
+        if kwargs.get('pythonMod', False):
+            return self.addModule(name, **kwargs)
+
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
         tar = kwargs.get('tar', '%s.tgz' % name)
@@ -520,7 +525,7 @@ class Environment:
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
         targetDir = kwargs.get('targetDir', buildDir)
   
-        libArgs = {'downloadDir': os.path.join('software', 'em'),
+        libArgs = {'downloadDir': join('software', 'em'),
                    'urlSuffix': 'em',
                    'default': False} # This will be updated with value in kwargs
         libArgs.update(kwargs)
@@ -531,10 +536,9 @@ class Environment:
             if isinstance(tgt, basestring):
                 tgt = [tgt]
             # Take all package targets relative to package build dir
-            target.addCommand(cmd, targets=[os.path.join(target.targetPath, t) 
-                                            for t in tgt],
-                              cwd=target.buildPath,
-                              final=True)
+            target.addCommand(
+                cmd, targets=[join(target.targetPath, t) for t in tgt],
+                cwd=target.buildPath, final=True)
         target.addCommand(Command(self, Link(name, targetDir),
                                 targets=[self.getEm(name),
                                          self.getEm(targetDir)],
@@ -597,8 +601,10 @@ class Environment:
         if '--help' in self._args[2:]:
             if self._packages:
                 print("Available packages (*: seems already installed)")
-                for p in self._packages:
-                    if os.path.exists(os.path.join('software', 'em', p)):
+                pydir = join('software', 'lib', 'python2.7', 'site-packages')
+                for p in sorted(self._packages):
+                    if (exists(join('software', 'em', p)) or
+                        p in [x[:len(p)] for x in os.listdir(pydir)]):
                         print("  %s (*)" % p)
                     else:
                         print("  %s" % p)
@@ -647,13 +653,13 @@ class Link:
         """
         linkText = "'%s -> %s'" % (packageLink, packageFolder)
         
-        if not os.path.exists(packageFolder):
+        if not exists(packageFolder):
             print(red("Creating link %s, but '%s' does not exist!!!\n"
                  "INSTALLATION FAILED!!!" % (linkText, packageFolder)))
             sys.exit(1)
     
-        if os.path.exists(packageLink):
-            if os.path.islink(packageLink):
+        if exists(packageLink):
+            if islink(packageLink):
                 os.remove(packageLink)
             else:
                 print(red("Creating link %s, but '%s' exists and is not a link!!!\n"
