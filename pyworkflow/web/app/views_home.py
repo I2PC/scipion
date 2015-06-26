@@ -30,10 +30,12 @@ import json
 from django.shortcuts import render_to_response
 from pyworkflow.web.app.views_util import getResourceCss, getResourceIcon, getResourceJs, parseText
 from pyworkflow.web.app.views_base import base_grid
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound , HttpResponseBadRequest
 from django.core.context_processors import csrf
 from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.mapper.sqlite import SqliteFlatMapper
+from django.core.servers.basehttp import FileWrapper
+import mimetypes
 
 import pyworkflow as pw
 from pyworkflow.config import DownloadRecord
@@ -73,15 +75,14 @@ def doDownload(request):
 #     if not len(mailoption) > 0:
 #         errors += "Please choose one into the Country field.\n"
     if not len(version) > 0:
-        errors += "Please choose one into the Scipion Version field.\n"
+        errors += "Please fill in the Scipion Version field.\n"
     if not len(platform) > 0:
-        errors += "Please choose one into the Platform field.\n"
+        errors += "Please fill in the Platform field.\n"
 
     if len(errors) == 0:
         dbName = os.path.join(os.environ['SCIPION_HOME'], 'downloads.sqlite')
         #dbName = '/tmp/downloads.sqlite'
         
-        print ">>> test_downloads: dbName = '%s'" % dbName
         mapper = SqliteFlatMapper(dbName, globals())
         mapper.enableAppend()
         download = DownloadRecord(fullName = fullName,
@@ -96,63 +97,21 @@ def doDownload(request):
         mapper.store(download)
         mapper.commit()
         mapper.close()
-        # Save statistics into DB
-#         data = {"name": fullName,
-#                 "org" : organization,
-#                 "mail": email,
-#                 "subscription" : mailoption,
-#                 "country": country,
-#                 "version": version,
-#                 "platform": platform }
+        "Return a response with the scipion download file"
+        path = os.path.join(os.environ['SCIPION_HOME'], 'downloads.sqlite')
         
-        # Update database with the new data
-#         createDB()
-        #updateDB(data)
-        
-    jsonStr = json.dumps({'errors' : parseText(errors)}, ensure_ascii=False)
+        if not os.path.exists(path):
+            return HttpResponseNotFound('Path not found: %s' % path)
     
-    return HttpResponse(jsonStr, mimetype='application/javascript')   
+        response = HttpResponse(FileWrapper(open(path)),
+                                content_type=mimetypes.guess_type(path)[0])
+        response['Content-Length'] = os.path.getsize(path)
+        response['Content-Disposition'] = 'attachment; filename=scipion' 
 
-def createDB():
-    import sqlite3
+        return response
+    else:
+        jsonStr = json.dumps({'errors' : parseText(errors)}, ensure_ascii=False)
+    
+        return HttpResponse(jsonStr, mimetype='application/javascript')   
 
-    conn = sqlite3.connect(DB_PATH_DOWNLOAD)
-    
-    conn.execute('''CREATE TABLE DOWNLOAD (
-        NAME           TEXT    NOT NULL,
-        ORG            TEXT     NOT NULL,
-        MAIL           TEXT    NOT NULL,
-        SUBSCRIPTION   INTEGER    NOT NULL,
-        COUNTRY    TEXT    NOT NULL,
-        VERSION     TEXT    NOT NULL,
-        PLATFORM    TEXT    NOT NULL
-        );''')
-    print "Table created successfully";
-    conn.close()
 
-def updateDB(data):
-    import sqlite3
-
-    conn = sqlite3.connect(DB_PATH_DOWNLOAD)
-    print "Opened database successfully";
-    
-    print "data: ", data
-    
-    name = data['name']
-    org = data['org']
-    mail = data['mail']
-    subscription = data['subscription']
-    country = data['country']
-    version = data['version']
-    platform = data['platform']
-    
-#     table = "downloads (NAME, ORG, MAIL, SUBSCRIBE, COUNTRY, VERSION, PLATFORM)"
-    table = "DOWNLOAD"
-    values = "VALUES ('"+ name +"', '"+ org +"', '"+ mail +"', '"+ subscription +"', '"+ country +"', '"+ version +"', '"+ platform +"')"
-    
-    conn.execute("INSERT INTO " + table + " " + values);
-    conn.commit()
-    
-    print "Records created successfully";
-    conn.close()
-    
