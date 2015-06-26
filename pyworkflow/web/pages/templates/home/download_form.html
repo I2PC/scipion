@@ -183,7 +183,7 @@ function launchSubmit(){
 				</div>
 				<br />
 				
-				<form id="downloadForm" action="/doDownload/" method="POST">{% csrf_token %}
+				<form id="downloadForm" action="{{abs_url}}/doDownload/" method="POST">{% csrf_token %}
 				<table id="download">
 					<tr>
 						<td id="label">
