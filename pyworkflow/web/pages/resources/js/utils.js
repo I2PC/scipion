@@ -630,4 +630,8 @@ function zoomImagePopUp(imagePath){
 			customPopup(getImage, width, height)
 		}
 	});
+	
+
+	
+
 }

@@ -399,4 +399,9 @@ class DownloadRecord(pwobj.OrderedObject):
         
         self.fullName = pwobj.String(kwargs.get('fullName', None))
         self.organization = pwobj.String(kwargs.get('organization', None))
+        self.email = pwobj.String(kwargs.get('email', None))
+        self.subscription = pwobj.String(kwargs.get('subscription', None))
+        self.country = pwobj.String(kwargs.get('country', None))
+        self.version = pwobj.String(kwargs.get('version', None))
+        self.platform = pwobj.String(kwargs.get('platform', None))
     
