@@ -172,8 +172,10 @@ lapack = env.addLibrary(
 arpack = env.addLibrary(
     'arpack',
     tar='arpack-96.tgz',
-    neededProgs=['gfortran', 'f77'],
-    commands=[('cd software/tmp/arpack-96; make all',
+    neededProgs=['gfortran'],
+    commands=[('cd software/bin; ln -s $(which gfortran) f77',
+               'software/bin/f77'),
+              ('cd software/tmp/arpack-96; make all',
                'software/lib/libarpack.a')],
     default=False)
 # See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
