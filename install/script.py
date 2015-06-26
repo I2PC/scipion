@@ -431,10 +431,9 @@ env.addPackage('dogpicker',
 
 env.addPackage('nma',
                tar='nma.tgz',
-               commands=[('cd ElNemo; make', 'ElNemo/nma_elnemo_pdbmat'),
-                         ('cd NMA_cart; LDFLAGS=-L%s/lib make' %
-                          os.environ['SCIPION_SOFTWARE'],
-                          'NMA_cart/nma_diag_arpack')],
+               commands=[('cd ElNemo; make; mv nma_* ..', 'nma_elnemo_pdbmat'),
+                         ('cd NMA_cart; LDFLAGS=-L%s/lib make; mv nma_* ..' %
+                          os.environ['SCIPION_SOFTWARE'], 'nma_diag_arpack')],
                deps=['arpack'],
                default=False)
 
