@@ -169,6 +169,17 @@ lapack = env.addLibrary(
     neededProgs=['gfortran'],
     default=False)
 
+arpack = env.addLibrary(
+    'arpack',
+    tar='arpack-96.tgz',
+    neededProgs=['gfortran'],
+    commands=[('cd software/bin; ln -s $(which gfortran) f77',
+               'software/bin/f77'),
+              ('cd software/tmp/arpack-96; make all',
+               'software/lib/libarpack.a')],
+    default=False)
+# See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
+
 if get('CUDA'):
     opencvFlags = ['-DWITH_CUDA:BOOL=ON']
 else:
@@ -408,8 +419,24 @@ env.addPackage('simple',
                tar='simple2.tgz',
                default=False)
 
+env.addPackage('chimera',
+               tar='chimera-1.10.1-linux_x86_64.tgz',
+               targetDir='chimera-1.10.1',
+               commands=[('./scipion_installer','bin/chimera')],
+               default=False)
+
 env.addPackage('dogpicker',
                tar='dogpicker-0.2.1.tgz',
                default=False)
+
+env.addPackage('nma',
+               tar='nma.tgz',
+               commands=[('cd ElNemo; make', 'ElNemo/nma_elnemo_pdbmat'),
+                         ('cd NMA_cart; LDFLAGS=-L%s/lib make' %
+                          os.environ['SCIPION_SOFTWARE'],
+                          'NMA_cart/nma_diag_arpack')],
+               deps=['arpack'],
+               default=False)
+
 
 env.execute()
