@@ -139,6 +139,8 @@ td#value input, select{
 <script type="text/javascript" src="{{config}}"></script>
 <script src="{{download_utils}}" type="text/javascript"></script>
 <script>
+
+
 function launchSubmit(){
 	$('#downloadForm').submit();
 }
@@ -181,11 +183,11 @@ function launchSubmit(){
 				</div>
 				<br />
 				
-				<form id="downloadForm" action="/doDownload/" method="POST">{% csrf_token %}
+				<form id="downloadForm" action="{{abs_url}}/doDownload/" method="POST">{% csrf_token %}
 				<table id="download">
 					<tr>
 						<td id="label">
-							Your Full Name
+							Full Name
 						</td>
 						<td id="value">
 							<input type="text" name="fullName" />
@@ -193,7 +195,7 @@ function launchSubmit(){
 					</tr>
 					<tr>
 						<td id="label">
-							Your Organization
+							Organization
 						</td>
 						<td id="value">
 							<input type="text" name="organization" />
@@ -201,7 +203,7 @@ function launchSubmit(){
 					</tr>
 					<tr>
 						<td id="label">
-							Your Email
+							Email
 						</td>
 						<td id="value">
 							<input type="text" name="email" />
@@ -498,13 +500,13 @@ function launchSubmit(){
 					</tr>
 					<tr>
 						<td id="label">
-							Scipion Version
+							Version
 						</td>
 						<td id="value">
 							<select name="version">
 								<option value="" selected="selected"> - Select a Scipion
 									Version - </option>
-								<option value="desktop">Scipion Desktop 0.9a</option>
+								<option value="desktop">Scipion 1.0</option>
 							</select>
 						</td>
 					</tr>
@@ -515,7 +517,6 @@ function launchSubmit(){
 						<td id="value">
 							<select name="platform">
 								<option value="" selected="selected"> - Choose Platform - </option>
-								<option value="src">Source Code</option>
 								<option value="linuxbin">Linux binaries</option>
 							</select>
 						</td>

@@ -102,7 +102,8 @@ def create_movies_project(request):
         # Create symbolic link for uploads
         projectPath = manager.getProjectPath(projectName)
         dest = os.path.join(projectPath,'Uploads')
-        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
+        # @todo: this path to uploads dir should be configurable outside the code...
+        source = "/services/scipion/data/uploads/"+ projectName
         pwutils.path.makePath(source)
         pwutils.createLink(source, dest)
         
@@ -144,14 +145,14 @@ def create_movies_project(request):
 
 def getAttrTestFile(key):
     if(key == "ribosome"):
-        attr = {"path" : "/mnt/big1/scipionweb/movies_testdata/80S_ribosome/",
+        attr = {"path" : "/services/scipion/data/scipionweb/movies_testdata/80S_ribosome/",
                 "voltage" : 300.0,
                 "sphericalAberration" : 2.7,
                 "amplitudeContrast" : 0.1,
                 "magnification" : 59000,
                 "samplingRate": 1.77}
     if(key == "falcon"):
-        attr = {"path" : "/mnt/big1/scipionweb/movies_testdata/JMB_2015/",
+        attr = {"path" : "/services/scipion/data/scipionweb/movies_testdata/JMB_2015/",
                 "voltage" : 300.0,
                 "sphericalAberration" : 2.7,
                 "amplitudeContrast" : 0.1,

@@ -26,6 +26,7 @@
 
 import platform
 import os
+from os.path import join, exists, islink, abspath
 import sys
 import time
 from glob import glob
@@ -57,7 +58,7 @@ black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
 def progInPath(prog):
     """ Is program prog in PATH? """
     for base in os.environ.get('PATH', '').split(os.pathsep):
-        if os.path.exists('%s/%s' % (base, prog)):
+        if exists('%s/%s' % (base, prog)):
             return True
     return False
 
@@ -123,19 +124,32 @@ class Command:
                     os.chdir(self._cwd)
                 print(cyan("cd %s" % self._cwd))
 
-            cmd = self._cmd
-            if self._out is not None:
-                cmd += ' > %s 2>&1' % self._out
-                # TODO: more general, this only works for bash.
-            print(cyan(cmd))
-            if not self._env.showOnly:
-                # self._cmd could be a function, in which case just call it
-                if callable(self._cmd):
-                    self._cmd()
-                else: # if not, we assume is a command and we make a system call
+            # Actually allow self._cmd to be a list or a
+            # '\n'-separated list of commands, and run them all.
+            if isinstance(self._cmd, basestring):
+                cmds = self._cmd.split('\n')  # create list of commands
+            elif callable(self._cmd):
+                cmds = [self._cmd]  # a function call
+            else:
+                cmds = self._cmd  # already a list of whatever
+
+            for cmd in cmds:
+                if self._out is not None:
+                    cmd += ' > %s 2>&1' % self._out
+                    # TODO: more general, this only works for bash.
+
+                print(cyan(cmd))
+
+                if self._env.showOnly:
+                    continue  # we don't really execute the command here
+
+                if callable(cmd):  # cmd could be a function: call it
+                    cmd()
+                else:  # if not, it's a command: make a system call
                     call(cmd, shell=True, env=self._environ)
-            # Return to working directory, useful
-            # when changing dir before executing command
+
+            # Return to working directory, useful when we change dir
+            # before executing the command.
             os.chdir(cwd)
             if not self._env.showOnly:
                 for t in self._targets:
@@ -229,8 +243,9 @@ class Environment:
         else:
             self._libSuffix = 'dylib'
 
-        self._downloadCmd = 'wget -nv -c -O %s %s'
-        self._tarCmd = 'tar --recursive-unlink -xzf %s'
+        self._downloadCmd = ('wget -nv -c -O %(tar)s.part %(url)s\n'
+                             'mv -v %(tar)s.part %(tar)s')
+        self._tarCmd = 'tar -xzf %s'
 
     def getLibSuffix(self):
         return self._libSuffix
@@ -293,27 +308,30 @@ class Environment:
         tar = kwargs.get('tar', '%s.tgz' % name)
         urlSuffix = kwargs.get('urlSuffix', 'external')
         url = kwargs.get('url', '%s/%s/%s' % (SCIPION_URL_SOFTWARE, urlSuffix, tar))
-        downloadDir = kwargs.get('downloadDir', 
-                                 os.path.join('software', 'tmp'))
+        downloadDir = kwargs.get('downloadDir', join('software', 'tmp'))
         buildDir = kwargs.get('buildDir',
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
+        targetDir = kwargs.get('targetDir', buildDir)
+
         deps = kwargs.get('deps', [])
         
         # Download library tgz
-        tarFile = os.path.join(downloadDir, tar)
-        buildPath = os.path.join(downloadDir, buildDir)
+        tarFile = join(downloadDir, tar)
+        buildPath = join(downloadDir, buildDir)
+        targetPath = join(downloadDir, targetDir)
         
         t = self.addTarget(name, default=kwargs.get('default', True))
         self._addTargetDeps(t, deps)
         t.buildDir = buildDir
         t.buildPath = buildPath
+        t.targetPath = targetPath
 
         if url.startswith('file:'):
             t.addCommand('ln -s %s %s' % (url.replace('file:', ''), tar),
                          targets=tarFile,
                          cwd=downloadDir)
         else:
-            t.addCommand(self._downloadCmd % (tarFile, url),
+            t.addCommand(self._downloadCmd % {'tar': tarFile, 'url': url},
                          targets=tarFile)
         t.addCommand(self._tarCmd % tar,
                      targets=buildPath,
@@ -359,9 +377,9 @@ class Environment:
         t = self._addDownloadUntar(name, **kwargs)
         configDir = kwargs.get('configDir', t.buildDir)
 
-        configPath = os.path.join('software/tmp', configDir)
+        configPath = join('software', 'tmp', configDir)
         makeFile = '%s/%s' % (configPath, configTarget)
-        prefix = os.path.abspath('software')
+        prefix = abspath('software')
 
         # If we specified the commands to run to obtain the target,
         # that's the only thing we will do.
@@ -376,8 +394,10 @@ class Environment:
         # with autotools (so we have to run "configure") or cmake.
 
         environ = os.environ.copy()
-        environ.update({'CPPFLAGS': '-I%s/include' % prefix,
-                        'LDFLAGS': '-L%s/lib' % prefix})
+        for envVar, value in [('CPPFLAGS', '-I%s/include' % prefix),
+                              ('LDFLAGS', '-L%s/lib' % prefix)]:
+            environ[envVar] = '%s %s' % (value, os.environ.get(envVar, ''))
+
         if not cmake:
             flags.append('--prefix=%s' % prefix)
             flags.append('--libdir=%s/lib' % prefix)
@@ -427,6 +447,7 @@ class Environment:
         default = kwargs.get('default', True)
         neededProgs = kwargs.get('neededProgs', [])
         libChecks = kwargs.get('libChecks', [])
+        numpyIncludes = kwargs.get('numpyIncludes', False)
 
         if default or name in sys.argv[2:]:
             # Check that we have the necessary programs and libraries in place.
@@ -439,8 +460,8 @@ class Environment:
         deps = kwargs.get('deps', [])
         deps.append('python')
 
-        prefixPath = os.path.abspath('software')
-        flags.append('--prefix=%s' % prefixPath)
+        prefix = abspath('software')
+        flags.append('--prefix=%s' % prefix)
 
         modArgs = {'urlSuffix': 'python'}
         modArgs.update(kwargs)
@@ -452,32 +473,31 @@ class Environment:
                 return x
             else:
                 return 'software/lib/python2.7/site-packages/%s' % x
-         
-        t.addCommand('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
-                     'PATH="%(root)s/bin:%(PATH)s" '
-    #               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
-    # The CFLAGS line is commented out because even if it is needed for modules
-    # like libxml2, it causes problems for others like numpy and scipy (see for
-    # example https://github.com/numpy/numpy/issues/2411
 
-    # Yes, that behavior of numpy is *crazy*. We now modify the
-    # original source, and it should be safe to use our CFLAGS and
-    # LDFLAGS. TODO: actually use them again, and check that all the
-    # compilation works fine.
+        environ = {
+            'PYTHONHOME': prefix,
+            'LD_LIBRARY_PATH': '%s/lib' % prefix,
+            'PATH': '%s/bin:%s' % (prefix, os.environ['PATH']),
+            'CPPFLAGS': '-I%s/include' % prefix,
+            'LDFLAGS': '-L%s/lib %s' % (prefix, os.environ.get('LDFLAGS', ''))}
+        if numpyIncludes:
+            numpyPath = '%s/lib/python2.7/site-packages/numpy/core' % prefix
+            environ['CPPFLAGS'] = ('%s -I%s/include -I%s/include/numpy' %
+                                   (environ['CPPFLAGS'], numpyPath, numpyPath))
+        # CPPFLAGS cause problems for modules like numpy and scipy (see for
+        # example https://github.com/numpy/numpy/issues/2411
 
-    # TODO: to compile against numpy (as cryoem does), one
-    # needs to have:
-    #   software/lib/python2.7/site-packages/numpy/core/include
-    #   software/lib/python2.7/site-packages/numpy/core/include/numpy
-    # as part of their CFLAGS="-I...."
-    # So we should add it somehow.
+        # Yes, that behavior of numpy is *crazy*. We now modify the
+        # original source, and it should be safe to use our CFLAGS,
+        # CPPFLAGS and LDFLAGS.
 
-    # TODO: maybe add an argument to the function to chose if we want them?
+        envStr = ' '.join('%s="%s"' % (k, v) for k, v in environ.items())
+
+        t.addCommand('%(env)s '
                      '%(root)s/bin/python setup.py install %(flags)s > '
-                     '%(root)s/log/%(name)s.log 2>&1' % {'root': prefixPath,
-                                                       'PATH': os.environ['PATH'],
-                                                       'flags': ' '.join(flags),
-                                                       'name': name},
+                     '%(root)s/log/%(name)s.log 2>&1' % {
+                         'env': envStr, 'root': prefix, 'name': name,
+                         'flags': ' '.join(flags)},
                    targets=[path(tg) for tg in targets],
                    cwd=t.buildPath,
                    final=True)
@@ -493,32 +513,39 @@ class Environment:
         # Add to the list of available packages, for reference (used in --help).
         self._packages.append(name)
 
+        # Special case: our "package" is a python module that we want to use
+        # from elsewhere.
+        if kwargs.get('pythonMod', False):
+            return self.addModule(name, **kwargs)
+
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
         tar = kwargs.get('tar', '%s.tgz' % name)
-        packageDir = tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-
-        libArgs = {'downloadDir': os.path.join('software', 'em'),
+        buildDir = kwargs.get('buildDir',
+                              tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
+        targetDir = kwargs.get('targetDir', buildDir)
+  
+        libArgs = {'downloadDir': join('software', 'em'),
                    'urlSuffix': 'em',
                    'default': False} # This will be updated with value in kwargs
         libArgs.update(kwargs)
 
         target = self._addDownloadUntar(name, **libArgs)
-        target.addCommand(Command(self, Link(name, packageDir),
-                                  targets=[self.getEm(name),
-                                           self.getEm(packageDir)],
-                                  cwd=self.getEm('')),
-                          final=True)
         commands = kwargs.get('commands', [])
         for cmd, tgt in commands:
             if isinstance(tgt, basestring):
                 tgt = [tgt]
             # Take all package targets relative to package build dir
-            target.addCommand(cmd, targets=[os.path.join(target.buildPath, t) 
-                                            for t in tgt],
-                              cwd=target.buildPath,
-                              final=True)
-
+            target.addCommand(
+                cmd, targets=[join(target.targetPath, t) for t in tgt],
+                cwd=target.buildPath, final=True)
+        target.addCommand(Command(self, Link(name, targetDir),
+                                targets=[self.getEm(name),
+                                         self.getEm(targetDir)],
+                                  cwd=self.getEm('')),
+                          final=True)
+ 
+            
         return target
 
     def _showTargetGraph(self, targetList):
@@ -573,9 +600,14 @@ class Environment:
     def execute(self):
         if '--help' in self._args[2:]:
             if self._packages:
-                print("Available packages:")
-                for p in self._packages:
-                    print("  %s" % p)
+                print("Available packages (*: seems already installed)")
+                pydir = join('software', 'lib', 'python2.7', 'site-packages')
+                for p in sorted(self._packages):
+                    if (exists(join('software', 'em', p)) or
+                        p in [x[:len(p)] for x in os.listdir(pydir)]):
+                        print("  %s (*)" % p)
+                    else:
+                        print("  %s" % p)
             sys.exit()
 
         # Check if there are explicit targets and only install
@@ -621,13 +653,13 @@ class Link:
         """
         linkText = "'%s -> %s'" % (packageLink, packageFolder)
         
-        if not os.path.exists(packageFolder):
+        if not exists(packageFolder):
             print(red("Creating link %s, but '%s' does not exist!!!\n"
                  "INSTALLATION FAILED!!!" % (linkText, packageFolder)))
             sys.exit(1)
     
-        if os.path.exists(packageLink):
-            if os.path.islink(packageLink):
+        if exists(packageLink):
+            if islink(packageLink):
                 os.remove(packageLink)
             else:
                 print(red("Creating link %s, but '%s' exists and is not a link!!!\n"

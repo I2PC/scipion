@@ -78,7 +78,7 @@ public class ImagesWindowFactory {
 			XmippDialog.showError(null, String.format(
 					"Couldn't open file: '%s'\nError: %s", filename,
 					e.getMessage()));
-			DEBUG.printException(e);
+			e.printStackTrace();
 		}
 	}
 
@@ -104,7 +104,7 @@ public class ImagesWindowFactory {
 			XmippDialog.showError(null, String.format(
 					"Couldn't open file: '%s'\nError: %s", filename,
 					e.getMessage()));
-			DEBUG.printException(e);
+			e.printStackTrace();
 		}
 	}
 

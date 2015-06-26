@@ -151,9 +151,11 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         validateMsgs = []
+        
+        if not hasattr(self.xmippParticlePicking.get(),"outputCoordinates"):
+            validateMsgs.append("You need to generate coordinates for the supervised picking")
    
         srcPaths = [self.xmippParticlePicking.get()._getExtraPath(k) for k in self.filesToCopy]
-        print srcPaths
         # Check that all needed files exist
         if missingPaths(*srcPaths):
             validateMsgs.append('Input supervised picking run is not valid.')
