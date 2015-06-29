@@ -67,7 +67,7 @@ class XmippProtRansac(ProtInitialVolume):
         form.addParam('inputSet', PointerParam, label="Input averages", important=True, 
                       pointerClass='SetOfClasses2D, SetOfAverages',# pointerCondition='hasRepresentatives',
                       help='Select the input images from the project.'
-                           'It should be a SetOfClasses2D class')  
+                           'It should be a SetOfClasses2D object')  
         form.addParam('symmetryGroup', StringParam, default="c1",
                       label='Symmetry group',  
                       help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry"
