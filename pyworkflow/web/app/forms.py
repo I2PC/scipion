@@ -96,7 +96,7 @@ class ShowjForm(forms.Form):
     typeVolume = forms.CharField(widget=forms.HiddenInput())
 
     
-    def __init__(self, dataset=None, tableLayoutConfiguration=None, *args, **kwargs):
+    def __init__(self, dataset=None, tableLayoutConfiguration=None, labelsToRender = None, *args, **kwargs):
         #Init message properties file
         messagesForm = Message()
         
@@ -108,7 +108,7 @@ class ShowjForm(forms.Form):
                                                              choices=tuple(zip(dataset.listTables(), dataset.listTables())))
             
             # This rendarable columns cannot have to access to the extra params
-            namesToRender, labelsToRender = tableLayoutConfiguration.getRenderableColumns()
+            namesToRender, labelsToRender = tableLayoutConfiguration.getRenderableColumns(extra=labelsToRender)
             
             if namesToRender:
                 labelChoices = tuple(zip(namesToRender, labelsToRender))
