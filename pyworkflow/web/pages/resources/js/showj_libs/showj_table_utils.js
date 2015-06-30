@@ -144,15 +144,19 @@ function getColumnsDefinition() {
 			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderCheckbox(meta.col, data)}
 		
 		} 
-		else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
-			dataRowForTable["mRender"] = function (data, type, row, meta){	return colRenderImage(meta.col, data)}
-		
-		// columnType = 5
-		} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
-//			console.log("id:"+columnIdReal+" render slice!")
-			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderSlice(meta.col, data)}
-		
-		// None
+		if(columnLayoutConfiguration.renderable)
+		{
+			console.log(columnLayoutConfiguration.columnLabel)
+			if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
+				dataRowForTable["mRender"] = function (data, type, row, meta){	return colRenderImage(meta.col, data)}
+			
+			// columnType = 5
+			} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
+	//			console.log("id:"+columnIdReal+" render slice!")
+				dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderSlice(meta.col, data)}
+			
+			// None
+			}
 		}
 		
 		dataForTable.push(dataRowForTable);
@@ -239,6 +243,7 @@ function getVisibleColumn(n)
 		}
 		count ++
 	}	
+	return -1
 }
 
 
@@ -257,11 +262,11 @@ function arrangeColumns(order, sort)
 			direction = 'asc'
 	}
 	
-	j = 0
-	var i = 0;
+	var j = 0
 	for (column in jsonTableLayoutConfiguration.columnsLayout)
 	{
 		columnLabel = jsonTableLayoutConfiguration.columnsLayout[column].columnLabel
+		i = 0
 		if(jsonTableLayoutConfiguration.colsOrder)
 			for(orderColumn in orderColumns)
 			{
@@ -275,15 +280,13 @@ function arrangeColumns(order, sort)
 	 					order[pos] = order[pos2]
 	 					order[pos2] = aux
 					}
-					i ++
-					
 				}
+				i ++
 			}
 		if(jsonTableLayoutConfiguration.colsSortby && sortbyColumn == columnLabel)
 			sort[0] = [order[j], direction]
 		j ++
 	}
-	
 	
 	
 }
