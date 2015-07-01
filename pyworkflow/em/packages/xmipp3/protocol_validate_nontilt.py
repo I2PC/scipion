@@ -41,9 +41,7 @@ import xmipp
 
 class XmippProtValidateNonTilt(ProtAnalysis3D):
     """    
-    Reconstruct a volume using Xmipp_reconstruct_fourier from a given set of particles.
-    The alignment parameters will be converted to a Xmipp xmd file
-    and used as direction projections to reconstruct.
+    Ranks a set of volumes according to their alignment reliability obtained from a clusterability test.
     """
     _label = 'validate_nontilt'
     
