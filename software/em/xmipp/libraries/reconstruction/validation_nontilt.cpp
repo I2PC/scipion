@@ -69,7 +69,7 @@ void ProgValidationNonTilt::run()
     fnMd = fnDir+"/angles_iter001_00.xmd";
     fnOut = fnDir+"/clusteringTendency.xmd";
     fnOut2 = fnDir+"/validation.xmd";
-    size_t nSamplesRandom = 100;
+    size_t nSamplesRandom = 250;
 
     md.read(fnMd);
     size_t maxNImg;
