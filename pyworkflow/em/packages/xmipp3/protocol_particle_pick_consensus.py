@@ -102,6 +102,8 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         
         # Add all coordinates in the first method
         N0 = coords[0].shape[0]
+        if N0==0:
+            return
         allCoords[0:N0,:] = coords[0]
         votes[0:N0] = 1
         
