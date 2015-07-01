@@ -55,7 +55,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputVolumes', PointerParam, pointerClass='SetOfVolumes,Volume',
+        form.addParam('inputVolumes', PointerParam, pointerClass='SetOfVolumes, Volume',
                       label="Input volumes",  
                       help='Select the input volumes.')     
 
