@@ -334,8 +334,11 @@ class TaggedText(Text):
     def addLine(self, line):
         self.line = line
         self.lastIndex = 0
-        parseHyperText(line, self.matchHyperText)
-        Text.addLine(self, line[self.lastIndex:])
+        #if protocol has been executed BUT crashee before create something
+        #line=None (ROB)
+        if line!=None:
+            parseHyperText(line, self.matchHyperText)
+            Text.addLine(self, line[self.lastIndex:])
 
 
 class OutputText(Text):

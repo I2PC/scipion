@@ -41,20 +41,19 @@ import xmipp
 
 class XmippProtValidateNonTilt(ProtAnalysis3D):
     """    
-    Reconstruct a volume using Xmipp_reconstruct_fourier from a given set of particles.
-    The alignment parameters will be converted to a Xmipp xmd file
-    and used as direction projections to reconstruct.
+    Ranks a set of volumes according to their alignment reliability obtained from a clusterability test.
     """
     _label = 'validate_nontilt'
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
+	self.stepsExecutionMode = STEPS_PARALLEL
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputVolumes', PointerParam, pointerClass='SetOfVolumes,Volume',
+        form.addParam('inputVolumes', PointerParam, pointerClass='SetOfVolumes, Volume',
                       label="Input volumes",  
                       help='Select the input volumes.')     
 
@@ -67,7 +66,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
                       help='See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Xmipp') 
         
-        form.addParam('angularSampling', FloatParam, default=10,
+        form.addParam('angularSampling', FloatParam, default=5,
                       label="Angular Sampling (degrees)",  
                       help='Angular distance (in degrees) between neighboring projection points ')
 

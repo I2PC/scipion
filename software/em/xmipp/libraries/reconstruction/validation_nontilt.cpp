@@ -69,7 +69,7 @@ void ProgValidationNonTilt::run()
     fnMd = fnDir+"/angles_iter001_00.xmd";
     fnOut = fnDir+"/clusteringTendency.xmd";
     fnOut2 = fnDir+"/validation.xmd";
-    size_t nSamplesRandom = 100;
+    size_t nSamplesRandom = 250;
 
     md.read(fnMd);
     size_t maxNImg;
@@ -148,9 +148,14 @@ void ProgValidationNonTilt::run()
 		std::vector<double> P;
 		mdPartial.getColumnValues(MDL_WEIGHT,P);
 		for (size_t idx=0; idx< P.size();idx++)
-			if (P[idx] > 1)
-				validation++;
-	    validation /= (maxNImg+1);
+		{
+		if (P[idx] > 1)
+				
+			validation += 1;
+
+	        }
+
+		validation /= (maxNImg+1);
 
 	}
 

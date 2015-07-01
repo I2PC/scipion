@@ -126,7 +126,7 @@ class ProtUserSubSet(BatchProtocol):
                     output.append(item)
 
             if hasattr(modifiedSet, 'copyInfo'):
-                modifiedSet.copyInfo(output)
+                output.copyInfo(inputObj)
             # Register outputs
             self._defineOutput(className, output)
 

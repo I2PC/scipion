@@ -81,9 +81,18 @@ by Rosenthal2003''')
     #--------------------------- STEPS steps functions --------------------------------------------
     def calculateFscStep(self):
         """ Calculate the FSC between two volumes"""
+        #if volume is mrc force to be mrc volume (versus stack)
+        if self.refVol.endswith('.mrc'):
+            refVol = self.refVol + ':mrc' # Specify that are volumes to read them properly in xmipp
+        if self.inputVol.endswith('.mrc'):
+            inputVol = self.inputVol + ':mrc' # Specify that are volumes to read them properly in xmipp
+
         samplingRate = self.inputVolume.get().getSamplingRate()
         fscFn = self._defineFscName()
-        args="--ref %s -i %s -o %s --sampling_rate %f --do_dpr" % (self.refVol, self.inputVol, fscFn, samplingRate)
+        args="--ref %s -i %s -o %s --sampling_rate %f --do_dpr" % \
+             (refVol,
+              inputVol,
+              fscFn, samplingRate)
         self.runJob("xmipp_resolution_fsc", args)
     
     def structureFactorcStep(self):
