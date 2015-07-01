@@ -68,7 +68,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
                       help='See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Xmipp') 
         
-        form.addParam('angularSampling', FloatParam, default=10,
+        form.addParam('angularSampling', FloatParam, default=5,
                       label="Angular Sampling (degrees)",  
                       help='Angular distance (in degrees) between neighboring projection points ')
 

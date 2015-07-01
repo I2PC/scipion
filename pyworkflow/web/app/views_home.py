@@ -98,15 +98,17 @@ def doDownload(request):
         mapper.commit()
         mapper.close()
         "Return a response with the scipion download file"
-        path = os.path.join(os.environ['SCIPION_HOME'], 'downloads.sqlite')
-        
+        if platform == 'linuxbin':
+            path = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'web', 'pages', 'resources', 'binaries', 'scipion_all_packages_2015-06-29.tgz')
+        else:
+            path = dbName
         if not os.path.exists(path):
             return HttpResponseNotFound('Path not found: %s' % path)
     
         response = HttpResponse(FileWrapper(open(path)),
                                 content_type=mimetypes.guess_type(path)[0])
         response['Content-Length'] = os.path.getsize(path)
-        response['Content-Disposition'] = 'attachment; filename=scipion' 
+        response['Content-Disposition'] = 'attachment; filename=%s'%os.path.basename(path) 
 
         return response
     else:
