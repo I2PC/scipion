@@ -217,7 +217,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
     
     def _validate(self):
         errors = []
-        xdim = self.inputParticles.get().getDimensions()[0]
+        xdim = self.inputParticles.get().getDim()[0]
         if not isPower2(xdim):
             errors.append("Image dimension (%s) is not a power of two, consider resize them" % xdim)
         return errors
