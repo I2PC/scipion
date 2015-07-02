@@ -84,7 +84,7 @@ GUI_ARGS="gui"
 # Hack: download the tgz files that we don't want to have in the
 # repository itself. This way, we don't have to change anything
 # special.
-XMIPP_URL=http://metamagical.org/xmipp_soft
+XMIPP_URL=http://scipion.cnb.csic.es/downloads/xmipp_soft
 PACKAGES="gtest-1.6.0 imagej hdf5-1.8.14 tiff-3.9.4 sh_alignment "`
          `"condor NMA alglib-3.8.0.cpp fftw-3.3.3 sqlite-3.6.23 "`
          `"jpegsrc.v8c bilib scons"
