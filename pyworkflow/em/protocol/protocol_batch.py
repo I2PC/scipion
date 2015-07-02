@@ -33,7 +33,7 @@ import os
 
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet
+from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet, SetOfNormalModes
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair, ParticlesTiltPair
 from pyworkflow.em.data import Mask
 
@@ -115,27 +115,34 @@ class ProtUserSubSet(BatchProtocol):
             elif isinstance(setObj, SetOfImages):
                 setObj.copyInfo(otherObj) # copy info from original images
                 output = self._createSubSetFromImages(setObj)
+            elif isinstance(setObj, SetOfNormalModes):
+                output = self._createSimpleSubset(setObj)
+            
         else:
-            className = inputObj.getClassName()
-            createFunc = getattr(self, '_create' + className)
-            modifiedSet = inputObj.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-
-            output = createFunc()
-            for item in modifiedSet:
-                if item.isEnabled():
-                    output.append(item)
-
-            if hasattr(modifiedSet, 'copyInfo'):
-                output.copyInfo(inputObj)
-            # Register outputs
-            self._defineOutput(className, output)
-
+            output = self._createSimpleSubset(inputObj)
+        
         if isinstance(inputObj, EMProtocol):
             for _, attr in inputObj.iterInputAttributes():
                 self._defineSourceRelation(attr.get(), output)
         else:
             if not isinstance(inputObj, SetOfCTF):#otherwise setted before
                 self._defineSourceRelation(inputObj, output)
+                
+    def _createSimpleSubset(self, inputObj):
+        className = inputObj.getClassName()
+        createFunc = getattr(self, '_create' + className)
+        modifiedSet = inputObj.getClass()(filename=self._dbName, prefix=self._dbPrefix)
+
+        output = createFunc()
+        for item in modifiedSet:
+            if item.isEnabled():
+                output.append(item)
+
+        if hasattr(modifiedSet, 'copyInfo'):
+            output.copyInfo(inputObj)
+        # Register outputs
+        self._defineOutput(className, output)
+        return output
 
     
     def _createSubSetFromImages(self, inputImages):

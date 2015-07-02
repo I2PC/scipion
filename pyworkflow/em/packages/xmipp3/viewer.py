@@ -158,7 +158,7 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfNormalModes):
             fn = obj.getFileName()
             objCommands = "'%s' '%s'" % (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD)
-            self._views.append(ObjectView(self._project, obj.strId(), fn, viewParams={OBJCMDS: objCommands}, **args))
+            self._views.append(ObjectView(self._project,  self.protocol.strId(), fn, obj.strId(), viewParams={OBJCMDS: objCommands}, **args))
 
         elif issubclass(cls, SetOfMovies):
             fn = obj.getFileName()
