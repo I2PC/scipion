@@ -117,7 +117,7 @@ def create_movies_project(request):
                 # Create a symbolic link for each file
                 file_path = os.path.join(path_test, f)
                 source_file = os.path.join(source, f)
-                pwutils.createLink(file_path, source_file)
+                pwutils.createAbsLink(file_path, source_file)
             
             label_import = "import movies ("+ testDataKey +")" 
             protImport = project.newProtocol(ProtImportMovies, objLabel=label_import)
