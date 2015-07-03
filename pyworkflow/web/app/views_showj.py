@@ -137,7 +137,6 @@ def getRenderableColumnsFromParams(extraParams, table):
     for x in columnsProperties:
         if 'renderable' in columnsProperties[x]:
             if columnsProperties[x]['renderable'] == "True":
-                print "renderable from params " + mapCol[x]
                 labelsToRender.append(mapCol[x])
      
     if len(labelsToRender) == 0:
