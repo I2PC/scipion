@@ -279,7 +279,6 @@ function arrangeColumns(order, sort)
 		j ++
 	}
 	
-	
 }
 
 
