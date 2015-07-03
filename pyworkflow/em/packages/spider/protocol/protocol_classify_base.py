@@ -197,9 +197,26 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
         self.dendroAverages = self._getFileName('averages')
         self.dendroAverageCount = 0 # Write only the number of needed averages
         self.dendroMaxLevel = 10 # FIXME: remove hard coding if working the levels
+        self.ih = ImageHandler()
         
         return self._buildDendrogram(0, len(values)-1, 1, writeAverages)
     
+    def getImage(self, particleNumber):
+        return self.ih.read((particleNumber, self.dendroImages))
+        
+    def addChildNode(self, node, leftIndex, rightIndex, index, writeAverages, level):
+        child = self._buildDendrogram(leftIndex, rightIndex, index, writeAverages, level+1)
+        node.addChild(child)
+        node.length += child.length
+        node.imageList += child.imageList
+        
+        if writeAverages:
+            if node.image is None:
+                node.image = child.image
+            else:
+                node.image += child.image
+            del child.image # Allow to free child image memory
+                
     def _buildDendrogram(self, leftIndex, rightIndex, index, writeAverages=False, level=0):
         """ This function is recursively called to create the dendogram graph(binary tree)
         and also to write the average image files.
@@ -214,51 +231,54 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
         It will search for the max in values list (between minIndex and maxIndex).
         Nodes to the left of the max are left childs and the other right childs.
         """
-        maxValue = self.dendroValues[leftIndex]
-        maxIndex = 0
-        for i, v in enumerate(self.dendroValues[leftIndex+1:rightIndex]):
-            if v > maxValue:
-                maxValue = v
-                maxIndex = i+1
-        
-        m = maxIndex + leftIndex
-        node = DendroNode(index, maxValue)
-        
-        ih = ImageHandler()
-
-        particleNumber = self.dendroIndexes[m+1]
-        node.imageList = [particleNumber]
-        
-        if writeAverages:
-            node.image = ih.read((particleNumber, self.dendroImages))
-            
-        def addChildNode(left, right, index):
-            if right > left:
-                child = self._buildDendrogram(left, right, index, writeAverages, level+1)
-                node.addChild(child)
-                node.length += child.length
-                node.imageList += child.imageList
-                
-                if writeAverages:
-                    node.image += child.image
-                    del child.image # Allow to free child image memory
-                
-        if rightIndex > leftIndex + 1 and level < self.dendroMaxLevel:
-            addChildNode(leftIndex, m, 2*index)
-            addChildNode(m+1, rightIndex, 2*index+1)
-            node.avgCount = self.dendroAverageCount + 1
+        if level < self.dendroMaxLevel:
+            avgCount = self.dendroAverageCount + 1
             self.dendroAverageCount += 1
+                    
+        if rightIndex == leftIndex: # Just only one element
+            height = self.dendroValues[leftIndex]
+            node = DendroNode(index, height)
+            node.imageList = [self.dendroIndexes[leftIndex]]
+            node.image = self.getImage(node.imageList[0])
+            node.length = 1
+        
+        elif rightIndex == leftIndex + 1: # Two elements
+            height = max(self.dendroValues[leftIndex], 
+                         self.dendroValues[rightIndex])
+            node = DendroNode(index, height)
+            node.imageList = [self.dendroIndexes[leftIndex],
+                              self.dendroIndexes[rightIndex]]
+            node.image = self.getImage(node.imageList[0]) + self.getImage(node.imageList[1])
+            node.length = 2
+        else: # 3 or more elements
+            # Find the max value (or height) of the elements
+            maxValue = self.dendroValues[leftIndex]
+            maxIndex = 0
+            for i, v in enumerate(self.dendroValues[leftIndex+1:rightIndex]):
+                if v > maxValue:
+                    maxValue = v
+                    maxIndex = i+1
+            m = maxIndex + leftIndex
+            node = DendroNode(index, maxValue)
+            
+            self.addChildNode(node, leftIndex, m, 2*index, writeAverages, level)
+            self.addChildNode(node, m+1, rightIndex, 2*index+1, writeAverages, level)
+            
+        if level < self.dendroMaxLevel:
+            node.avgCount = avgCount
             node.path = '%d@%s' % (node.avgCount, self.dendroAverages)
+            
             if writeAverages:
-                #TODO: node['image'] /= float(node['length'])
-                #node.image.inplaceDivide(float(node.length)) #FIXME: not working, noisy images
-                avgImage = node.image / float(node.length)
-                ih.write(avgImage, (node.avgCount, self.dendroAverages))
+                # normalize the sum of images depending on the number of particles
+                # assigned to this classes
+                avgImage = node.image / float(node.getSize()) 
+                self.ih.write(avgImage, (node.avgCount, self.dendroAverages))
                 fn = self._getTmpPath('doc_class%03d.stk' % index)
                 doc = SpiderDocFile(fn, 'w+')
                 for i in node.imageList:
                     doc.writeValues(i)
                 doc.close()
+                
         return node
     
 
@@ -268,10 +288,16 @@ class DendroNode(graph.Node):
         graph.Node.__init__(self, 'class_%03d' % index)
         self.index = index
         self.height = height
-        self.length = 1
+        self.length = 0
         self.path = None
         self.selected = False
+        self.imageList = []
+        self.image = None
         
     def getChilds(self):
         return [c for c in self._childs if c.path]
+    
+    def getSize(self):
+        """ Return the number of images assigned to this class. """
+        return len(self.imageList)
           
