@@ -55,7 +55,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
         form.addParam('numberOfIterations', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label='Number of iterations:',
                       help='Maximum number of iterations')
-        form.addParallelSection(threads=1, mpi=4)
+        form.addParallelSection(threads=0, mpi=0)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     

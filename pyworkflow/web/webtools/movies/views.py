@@ -111,18 +111,18 @@ def create_movies_project(request):
         if testDataKey :
             attr = getAttrTestFile(testDataKey)
             path_test = attr['path']
-            filesToImport = source + "/*.mrcs"
+
             
             for f in os.listdir(path_test):           
                 # Create a symbolic link for each file
                 file_path = os.path.join(path_test, f)
                 source_file = os.path.join(source, f)
-                pwutils.createLink(file_path, source_file)
+                pwutils.createAbsLink(file_path, source_file)
             
             label_import = "import movies ("+ testDataKey +")" 
             protImport = project.newProtocol(ProtImportMovies, objLabel=label_import)
 
-            protImport.filesPath.set(filesToImport)
+            protImport.filesPath.set(attr["filesPath"])
             protImport.voltage.set(attr['voltage'])
             protImport.sphericalAberration.set(attr['sphericalAberration'])
             protImport.amplitudeContrast.set(attr['amplitudeContrast'])
@@ -145,7 +145,11 @@ def create_movies_project(request):
 
 def getAttrTestFile(key):
     if(key == "ribosome"):
-        attr = {"path" : "/services/scipion/data/scipionweb/movies_testdata/80S_ribosome/",
+        riboDataset = DataSet.getDataSet('riboMovies')
+        riboFiles = riboDataset.getFile("allMovies")
+        attr = {#"filesPath" : "/services/scipion/data/scipionweb/movies_testdata/80S_ribosome/",
+                "path": riboDataset.getPath(),
+                "filesPath" : riboFiles,
                 "voltage" : 300.0,
                 "sphericalAberration" : 2.7,
                 "amplitudeContrast" : 0.1,
