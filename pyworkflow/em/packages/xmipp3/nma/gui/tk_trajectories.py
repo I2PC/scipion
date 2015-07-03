@@ -202,9 +202,11 @@ class TrajectoriesWindow(gui.Window):
             
             if self.plotter is None or self.plotter.isClosed():
                 self.plotter = XmippNmaPlotter(data=self.data)
+                doShow = True
                 #self.plotter.useLastPlot = True
             else:
                 self.plotter.clear()
+                doShow = False
             
             # Actually plot
             baseList = [basename(n) for n in modeNameList]
@@ -229,7 +231,10 @@ class TrajectoriesWindow(gui.Window):
                     self.setDataIndex('ZIND', modeList[2])
                     self.plotter.plotArray3D("%s %s %s" % tuple(baseList), *baseList)
 
-            self.plotter.draw()
+            if doShow:
+                self.plotter.show()
+            else:
+                self.plotter.draw()
 
     def _updateSelectionLabel(self):
         self.selectionVar.set('%d / %d points' % (self.data.getDiscardedSize(),
