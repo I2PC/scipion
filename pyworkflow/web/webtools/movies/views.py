@@ -145,7 +145,10 @@ def create_movies_project(request):
 
 def getAttrTestFile(key):
     if(key == "ribosome"):
-        attr = {"path" : "/services/scipion/data/scipionweb/movies_testdata/80S_ribosome/",
+        riboDataset = DataSet.getDataSet('riboMovies')
+        riboFiles = riboDataset.getFile("allMovies")
+        attr = {#"filesPath" : "/services/scipion/data/scipionweb/movies_testdata/80S_ribosome/",
+                "filesPath" : riboFiles,
                 "voltage" : 300.0,
                 "sphericalAberration" : 2.7,
                 "amplitudeContrast" : 0.1,

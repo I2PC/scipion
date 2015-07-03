@@ -134,7 +134,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 			public void actionPerformed(ActionEvent e)
 			{
 				String path = sourcetf.getText();
-				boolean isDir = new File(path).isDirectory()
+				boolean isDir = new File(path).isDirectory();
 				preffixtf.setEnabled(isDir);
                 suffixtf.setEnabled(isDir);
 				
