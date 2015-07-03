@@ -156,7 +156,11 @@ def getAttrTestFile(key):
                 "magnification" : 59000,
                 "samplingRate": 1.77}
     if(key == "falcon"):
-        attr = {"path" : "/services/scipion/data/scipionweb/movies_testdata/JMB_2015/",
+        jmbFalconDataset = DataSet.getDataSet('jmbFalconMovies')
+        jmbFalconFiles = riboDataset.getFile("allMovies")
+        attr = {#"path" : "/services/scipion/data/scipionweb/movies_testdata/JMB_2015/",
+                "path": jmbFalconDataset.getPath(),
+                "filesPath" : jmbFalconFiles,
                 "voltage" : 300.0,
                 "sphericalAberration" : 2.7,
                 "amplitudeContrast" : 0.1,
