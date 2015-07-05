@@ -39,11 +39,8 @@ from collections import OrderedDict
 from pyworkflow.object import ObjectWrap, String, Integer
 from pyworkflow.utils import Environ
 from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
-                                   findRootFrom, replaceBaseExt, getExt)
+                                   replaceBaseExt, getExt, removeExt)
 import pyworkflow.em as em
-
-# Since Relion share several conventions with Xmipp, we will reuse 
-# the xmipp3 tools implemented for Scipion here
 import pyworkflow.em.metadata as md
 
 
@@ -687,14 +684,29 @@ def convertBinaryFiles(imgSet, outputDir, extension='mrcs'):
     """
     filesDict = {}
     ih = em.ImageHandler()
-    # This approach can be extended when
-    # converting from a binary file format that
-    # is not read from Relion
+    
+    def getUniqueFileName(fn, extension):
+        """ Get an unique file for either link or convert files.
+        It is possible that the base name overlap if they come
+        from different runs. (like partices.mrcs after relion preprocess)
+        """
+        newFn = join(outputDir, replaceBaseExt(fn, extension))
+        newRoot = removeExt(newFn)
+        
+        values = filesDict.values()
+        counter = 1
+        
+        while newFn in values:
+            counter += 1
+            newFn = '%s_%05d.%s' % (newRoot, counter, extension)
+            
+        return newFn
+
     def createBinaryLink(fn):
         """ Just create a link named .mrcs to Relion understand 
         that it is a binary stack file and not a volume.
         """
-        newFn = join(outputDir, replaceBaseExt(fn, extension))
+        newFn = getUniqueFileName(fn, extension)
         createLink(fn, newFn)
         return newFn
         
@@ -702,27 +714,29 @@ def convertBinaryFiles(imgSet, outputDir, extension='mrcs'):
         """ Convert from a format that is not read by Relion
         to an spider stack.
         """
-        newFn = join(outputDir, replaceBaseExt(fn, 'stk'))
+        newFn = getUniqueFileName(fn, 'stk')
         ih.convertStack(fn, newFn)
         return newFn
         
     ext = getExt(imgSet.getFirstItem().getFileName())[1:] # remove dot in extension
     
-    print "extension = ", extension
-    print "ext = ", ext
-    
     if ext == extension:
         mapFunc = createBinaryLink
+        print "convertBinaryFiles: creating soft links."
     elif ext == 'mrc' and extension == 'mrcs':
         mapFunc = createBinaryLink
+        print "convertBinaryFiles: creating soft links (mrcs -> mrc)."
     elif ext.endswith('.hdf'): # assume eman .hdf format
         mapFunc = convertStack
+        print "convertBinaryFiles: converting stacks. (%s -> %s)" % (extension, ext)
     else:
         mapFunc = None
         
     if mapFunc is not None:
         for fn in imgSet.getFiles():
-            filesDict[fn] = mapFunc(fn) # convert and map new filename
+            newFn = mapFunc(fn) # convert or link 
+            filesDict[fn] = newFn # map new filename
+            print "   %s -> %s" % (newFn, fn)
 
     return filesDict
 
