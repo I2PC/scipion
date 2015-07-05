@@ -1,15 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.1" encoding="UTF-8"?>
 <xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 
+
 <xsd:simpleType name="astigmatismAngle">
-    <xsd:restriction base="xsd:decimal">
+    <xsd:restriction base="xsd:double">
         <xsd:minInclusive value="0"/>
 	<xsd:maxExclusive value="180"/>
     </xsd:restriction>
 </xsd:simpleType>
 
 <xsd:simpleType name="decimalBTzeroANDone">
-    <xsd:restriction base="xsd:decimal">
+    <xsd:restriction base="xsd:double">
         <xsd:minInclusive value="0"/>
 	<xsd:maxInclusive value="1"/>
     </xsd:restriction>
@@ -18,7 +19,7 @@
 <xsd:complexType name="angleType">
     <xsd:simpleContent>
 	<xsd:extension base="astigmatismAngle">
-	    <xsd:attribute name="unit" type="unitDegrees"/>
+	    <xsd:attribute name="unit" type="unitDegrees" use="required"/>
 	</xsd:extension>
     </xsd:simpleContent>
 </xsd:complexType>
@@ -30,15 +31,15 @@
 </xsd:simpleType>
 
 <xsd:simpleType name="decimalGTzero">
-    <xsd:restriction base="xsd:decimal">
+    <xsd:restriction base="xsd:double">
         <xsd:minInclusive value="0"/>
     </xsd:restriction>
 </xsd:simpleType>
 
 <xsd:complexType name="defocusType">
     <xsd:simpleContent>
-	<xsd:extension base="xsd:decimal">
-	    <xsd:attribute name="unit" type="unitNanometers"/>
+	<xsd:extension base="xsd:double">
+	    <xsd:attribute name="unit" type="unitNanometers" use="required"/>
 	</xsd:extension>
     </xsd:simpleContent>
 </xsd:complexType>
@@ -52,7 +53,7 @@
 <xsd:complexType name="csType">
     <xsd:simpleContent>
 	<xsd:extension base="decimalGTzero">
-	    <xsd:attribute name="unit" type="unitMilimeters"/>
+	    <xsd:attribute name="unit" type="unitMilimeters" use="required"/>
 	</xsd:extension>
     </xsd:simpleContent>
 </xsd:complexType>
@@ -66,7 +67,7 @@
 <xsd:complexType name="accType">
     <xsd:simpleContent>
 	<xsd:extension base="decimalGTzero">
-	    <xsd:attribute name="unit" type="unitVoltage"/>
+	    <xsd:attribute name="unit" type="unitVoltage" use="required"/>
 	</xsd:extension>
     </xsd:simpleContent>
 </xsd:complexType>
@@ -79,8 +80,8 @@
 
 <xsd:complexType name="versionType">
     <xsd:simpleContent>
-	<xsd:extension base="xsd:decimal">
-	    <xsd:attribute name="unit" type="numVersion"/>
+	<xsd:extension base="xsd:double">
+	    <xsd:attribute name="unit" type="numVersion" use="required"/>
 	</xsd:extension>
     </xsd:simpleContent>
 </xsd:complexType>
@@ -94,7 +95,7 @@
 <xsd:complexType name="boxSizeType">
     <xsd:simpleContent>
 	<xsd:extension base="xsd:integer">
-	    <xsd:attribute name="unit" type="unitBoxSize"/>
+	    <xsd:attribute name="unit" type="unitBoxSize" use="required"/>
 	</xsd:extension>
     </xsd:simpleContent>
 </xsd:complexType>
@@ -107,8 +108,8 @@
 
 <xsd:complexType name="coordType">
     <xsd:simpleContent>
-	<xsd:extension base="xsd:decimal">
-	    <xsd:attribute name="unit" type="unitCoordinate"/>
+	<xsd:extension base="xsd:double">
+	    <xsd:attribute name="unit" type="unitCoordinate" use="required"/>
 	</xsd:extension>
     </xsd:simpleContent>
 </xsd:complexType>
@@ -121,8 +122,8 @@
 
 <xsd:complexType name="samplingType">
     <xsd:simpleContent>
-	<xsd:extension base="xsd:decimal">
-	    <xsd:attribute name="unit" type="unitSampling"/>
+	<xsd:extension base="xsd:double">
+	    <xsd:attribute name="unit" type="unitSampling" use="required"/>
 	</xsd:extension>
     </xsd:simpleContent>
 </xsd:complexType>
@@ -135,11 +136,12 @@
 
 <xsd:complexType name="transformationType">
     <xsd:simpleContent>
-	<xsd:extension base="xsd:decimal">
-	    <xsd:attribute name="unit" type="unitTransformation"/>
+	<xsd:extension base="xsd:double">
+	    <xsd:attribute name="unit" type="unitTransformation"  use="required"/>
 	</xsd:extension>
     </xsd:simpleContent>
 </xsd:complexType>
+
 
 <xsd:simpleType name="unitTransformation">
     <xsd:restriction base="xsd:string">
@@ -164,14 +166,18 @@
 	  <xsd:element name="X" type="samplingType" maxOccurs="1" minOccurs="1"/>
 	  <xsd:element name="Y" type="samplingType" maxOccurs="1" minOccurs="1"/>
 	</xsd:all>
+    <!-- <xsd:assert test="(@defocuU gt @defocusV)"/> This is xml 1.1, eventualy we will u-->
+
 	</xsd:complexType>
     </xsd:element>
   </xsd:all>
   <xsd:attribute name="fileName" type="xsd:string" use="required"/>
-  <xsd:attribute name="index" type="xsd:integer"/>
+  <xsd:attribute name="index" type="xsd:integer"  default="1"/>
+  <xsd:assert test="if (defocusU and defocusV) then (defocusU ge defocusV) else true()" />
 </xsd:complexType>
 
 <xsd:element name="EMX">
+
     <xsd:complexType>
       <xsd:sequence>
 	
@@ -188,7 +194,7 @@
 		<xsd:simpleContent>
 		  <xsd:extension base="xsd:string">
 		    <xsd:attribute name="fileName" type="xsd:string" use="required"/>
-		    <xsd:attribute name="index" type="xsd:integer"/>
+		    <xsd:attribute name="index" type="xsd:integer"  default="1"/>
 		  </xsd:extension>
 		</xsd:simpleContent>
 	      </xsd:complexType>
@@ -223,17 +229,17 @@
 	    <xsd:element name="transformationMatrix" maxOccurs="1" minOccurs="0">
 	      <xsd:complexType>
 		<xsd:all>
-		  <xsd:element name="t11" type="xsd:decimal" maxOccurs="1" minOccurs="0"/>
-		  <xsd:element name="t12" type="xsd:decimal" maxOccurs="1" minOccurs="0"/>
-		  <xsd:element name="t13" type="xsd:decimal" maxOccurs="1" minOccurs="0"/>
+		  <xsd:element name="t11" type="xsd:double" maxOccurs="1" minOccurs="0"/>
+		  <xsd:element name="t12" type="xsd:double" maxOccurs="1" minOccurs="0"/>
+		  <xsd:element name="t13" type="xsd:double" maxOccurs="1" minOccurs="0"/>
 		  <xsd:element name="t14" type="transformationType" maxOccurs="1" minOccurs="0"/>
-		  <xsd:element name="t21" type="xsd:decimal" maxOccurs="1" minOccurs="0"/>
-		  <xsd:element name="t22" type="xsd:decimal" maxOccurs="1" minOccurs="0"/>
-		  <xsd:element name="t23" type="xsd:decimal" maxOccurs="1" minOccurs="0"/>
+		  <xsd:element name="t21" type="xsd:double" maxOccurs="1" minOccurs="0"/>
+		  <xsd:element name="t22" type="xsd:double" maxOccurs="1" minOccurs="0"/>
+		  <xsd:element name="t23" type="xsd:double" maxOccurs="1" minOccurs="0"/>
 		  <xsd:element name="t24" type="transformationType" maxOccurs="1" minOccurs="0"/>
-		  <xsd:element name="t31" type="xsd:decimal" maxOccurs="1" minOccurs="0"/>
-		  <xsd:element name="t32" type="xsd:decimal" maxOccurs="1" minOccurs="0"/>
-		  <xsd:element name="t33" type="xsd:decimal" maxOccurs="1" minOccurs="0"/>
+		  <xsd:element name="t31" type="xsd:double" maxOccurs="1" minOccurs="0"/>
+		  <xsd:element name="t32" type="xsd:double" maxOccurs="1" minOccurs="0"/>
+		  <xsd:element name="t33" type="xsd:double" maxOccurs="1" minOccurs="0"/>
 		  <xsd:element name="t34" type="transformationType" maxOccurs="1" minOccurs="0"/>
 		</xsd:all>
 	      </xsd:complexType>
@@ -241,13 +247,27 @@
 	    
 	  </xsd:all>
 	  <xsd:attribute name="fileName" type="xsd:string" use="required"/>
-	  <xsd:attribute name="index" type="xsd:integer"/>
+	  <xsd:attribute name="index" type="xsd:integer"  default="1"/>
+	  <xsd:assert test="if (defocusU and defocusV) then (defocusU ge defocusV) else true()" />
 	</xsd:complexType>
+
       </xsd:element>
 	
     </xsd:sequence>
     <xsd:attribute name="version" type="numVersion" use="required"/>
+
   </xsd:complexType>
+  <xsd:key name="PKMicrograph">
+     <xsd:selector xpath="micrograph"/>
+     <xsd:field xpath="@fileName"/>
+     <xsd:field xpath="@index"/>
+  </xsd:key>
+  <xsd:keyref name="FKParticleMicrograph" refer="PKMicrograph">
+     <xsd:selector xpath="particle/micrograph"/>
+     <xsd:field xpath="@fileName"/>
+     <xsd:field xpath="@index"/>
+  </xsd:keyref>
+
 </xsd:element>
   
 </xsd:schema>

@@ -524,13 +524,19 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 makePath(fnDirSignificant)
 
                 # Create defocus groups
-                self.runJob("xmipp_ctf_group","--ctfdat %s -o %s/ctf:stk --pad 2.0 --sampling_rate %f --phase_flipped  --error 0.1 --resol %f"%\
-                            (fnImgs,fnDirSignificant,TsCurrent,targetResolution),numberOfMpi=1)
-                moveFile("%s/ctf_images.sel"%fnDirSignificant,"%s/ctf_groups.xmd"%fnDirSignificant)
-                cleanPath("%s/ctf_split.doc"%fnDirSignificant)
-                md = MetaData("numberGroups@%s"%join(fnDirSignificant,"ctfInfo.xmd"))
-                fnCTFs="%s/ctf_ctf.stk"%fnDirSignificant
-                numberGroups=md.getValue(MDL_COUNT,md.firstObject())
+                row=getFirstRow(fnImgs)
+                if row.containsLabel(MDL_CTF_MODEL) or row.containsLabel(MDL_CTF_DEFOCUSU):
+                    self.runJob("xmipp_ctf_group","--ctfdat %s -o %s/ctf:stk --pad 2.0 --sampling_rate %f --phase_flipped  --error 0.1 --resol %f"%\
+                                (fnImgs,fnDirSignificant,TsCurrent,targetResolution),numberOfMpi=1)
+                    moveFile("%s/ctf_images.sel"%fnDirSignificant,"%s/ctf_groups.xmd"%fnDirSignificant)
+                    cleanPath("%s/ctf_split.doc"%fnDirSignificant)
+                    md = MetaData("numberGroups@%s"%join(fnDirSignificant,"ctfInfo.xmd"))
+                    fnCTFs="%s/ctf_ctf.stk"%fnDirSignificant
+                    numberGroups=md.getValue(MDL_COUNT,md.firstObject())
+                    ctfPresent=True
+                else:
+                    numberGroups=1
+                    ctfPresent=False
 
                 # Generate projections
                 fnReferenceVol=join(fnGlobal,"volumeRef%02d.vol"%i)
@@ -546,12 +552,16 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 for j in range(1,numberGroups+1):
                     fnAnglesGroup=join(fnDirSignificant,"angles_group%02d.xmd"%j)
                     if not exists(fnAnglesGroup):
-                        fnGroup="ctfGroup%06d@%s/ctf_groups.xmd"%(j,fnDirSignificant)
-                        fnGalleryGroup=join(fnDirSignificant,"gallery_group%06d.stk"%j)
-                        fnGalleryGroupMd=join(fnDirSignificant,"gallery_group%06d.xmd"%j)
-                        self.runJob("xmipp_transform_filter",
-                                    "-i %s -o %s --fourier binary_file %d@%s --save_metadata_stack %s --keep_input_columns"%\
-                                    (fnGalleryMd,fnGalleryGroup,j,fnCTFs,fnGalleryGroupMd))
+                        if ctfPresent:
+                            fnGroup="ctfGroup%06d@%s/ctf_groups.xmd"%(j,fnDirSignificant)
+                            fnGalleryGroup=join(fnDirSignificant,"gallery_group%06d.stk"%j)
+                            fnGalleryGroupMd=join(fnDirSignificant,"gallery_group%06d.xmd"%j)
+                            self.runJob("xmipp_transform_filter",
+                                        "-i %s -o %s --fourier binary_file %d@%s --save_metadata_stack %s --keep_input_columns"%\
+                                        (fnGalleryMd,fnGalleryGroup,j,fnCTFs,fnGalleryGroupMd))
+                        else:
+                            fnGroup=fnImgs
+                            fnGalleryGroupMd=fnGalleryMd
                         args='-i %s --initgallery %s --odir %s --sym %s --iter 1 --alpha0 %f --alphaF %f --angularSampling %f --maxShift %d '\
                              '--minTilt %f --maxTilt %f --useImed --angDistance %f --dontReconstruct'%\
                              (fnGroup,fnGalleryGroupMd,fnDirSignificant,self.symmetryGroup,alpha,alpha,angleStep,\
@@ -563,7 +573,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             copyFile(fnAnglesGroup, fnAngles)
                         else:
                             self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
-                if self.saveSpace:
+                if self.saveSpace and ctfPresent:
                     self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
                 
                 if self.significantGrayValues and previousResolution>self.continuousMinResolution.get():
