@@ -924,6 +924,9 @@ class ProtocolsView(tk.Frame):
             g = self.project.getRunsGraph(refresh=False)
             for node in g.getNodes():
                 if node.run and node.run.getObjId() in self._selection:
+                    # This option is only for compatibility with all projects
+                    if hasattr(node, 'item'):
+                        node.item.setSelected(False)
                     node.item.setSelected(False)
             item.setSelected(True)
         
