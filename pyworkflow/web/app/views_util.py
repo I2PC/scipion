@@ -181,6 +181,7 @@ def loadProtocolProject(request, requestType='POST'):
     """
     requestDict = getattr(request, requestType)
     projectName = request.session['projectName']
+    #print "projectName %s"%projectName
     protId = requestDict.get("protocolId")
     protClass = requestDict.get("protocolClass")
     

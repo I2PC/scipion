@@ -99,9 +99,9 @@ def doDownload(request):
         mapper.close()
         "Return a response with the scipion download file"
         if platform == 'linuxbin':
-            path = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'web', 'pages', 'resources', 'binaries', 'scipion_all_packages_2015-06-29.tgz')
+            path = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'web', 'pages', 'resources', 'install', 'scipion_all_packages_2015-06-29.tgz')
         else:
-            path = dbName
+            path = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'web', 'pages', 'resources', 'install', 'scipion_source_2015-06-29.tgz')
         if not os.path.exists(path):
             return HttpResponseNotFound('Path not found: %s' % path)
     
