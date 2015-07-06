@@ -120,7 +120,7 @@ class ProtUserSubSet(BatchProtocol):
             
         else:
             output = self._createSimpleSubset(inputObj)
-        
+
         if isinstance(inputObj, EMProtocol):
             for _, attr in inputObj.iterInputAttributes():
                 self._defineSourceRelation(attr.get(), output)
@@ -140,6 +140,7 @@ class ProtUserSubSet(BatchProtocol):
 
         if hasattr(modifiedSet, 'copyInfo'):
             output.copyInfo(inputObj)
+
         # Register outputs
         self._defineOutput(className, output)
         return output

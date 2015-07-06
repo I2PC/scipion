@@ -157,7 +157,7 @@ def getAttrTestFile(key):
                 "samplingRate": 1.77}
     if(key == "falcon"):
         jmbFalconDataset = DataSet.getDataSet('jmbFalconMovies')
-        jmbFalconFiles = riboDataset.getFile("allMovies")
+        jmbFalconFiles = jmbFalconDataset.getFile("allMovies")
         attr = {#"path" : "/services/scipion/data/scipionweb/movies_testdata/JMB_2015/",
                 "path": jmbFalconDataset.getPath(),
                 "filesPath" : jmbFalconFiles,
