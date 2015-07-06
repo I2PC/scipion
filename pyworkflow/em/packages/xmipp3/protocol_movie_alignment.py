@@ -356,9 +356,9 @@ class ProtMovieAlignment(ProtProcessMovies):
         summary = []
         summary.append('Number of input movies: *%d*' % self.inputMovies.get().getSize())
         if lastFrame == 0:
-            summary.append('Frames used in alignment: *%d* to *%s*' % (firstFrame+1,'Last Frame'))
+            summary.append('Frames used in alignment: *%d* to *%s* (first frame is 0)' % (firstFrame, 'Last Frame'))
         else:
-            summary.append('Frames used in alignment: *%d* to *%d*' % (firstFrame+1,lastFrame+1))
+            summary.append('Frames used in alignment: *%d* to *%d* (first frame is 0)' % (firstFrame, lastFrame))
 
         return summary
 
