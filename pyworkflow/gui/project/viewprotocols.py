@@ -928,6 +928,7 @@ class ProtocolsView(tk.Frame):
                     # This option is only for compatibility with all projects
                     if hasattr(node, 'item'):
                         node.item.setSelected(False)
+
             item.setSelected(True)
         
         self._selection.clear()
