@@ -184,7 +184,7 @@ def create_service_project(request):
         protValidate.inputVolumes.setExtendedAttribute('outputVolumes')
         protValidate.inputParticles.set(protImport)
         protValidate.inputParticles.setExtendedAttribute('outputAverages')
-        protValidate.numberOfMpi.set(8)
+        protValidate.numberOfThreads.set(8)
         if testDataKey :
             setProtocolParams(protValidate, testDataKey)
 #         protJoin.inputVolumes.append(p4)
