@@ -47,7 +47,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
-	self.stepsExecutionMode = STEPS_PARALLEL
+        self.stepsExecutionMode = STEPS_PARALLEL
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):

@@ -76,13 +76,13 @@ public class ParticlesDialog extends Dialog
 		else//size changed by user
 		{
 			Dimension d = sp.getSize();
-                        width = (int) d.getWidth();
-                        height = (int)d.getHeight();
+            width = (int) d.getWidth();
+            height = (int)d.getHeight();
 			columns = width / side;
 			rows = (int) Math.ceil((particles.size() / (float) columns));
                         
 		}
-                sp.setPreferredSize(new Dimension(width, height));
+        sp.setPreferredSize(new Dimension(width, height));
 		particlespn.removeAll();
                 
 		particles = frame.getAvailableParticles();

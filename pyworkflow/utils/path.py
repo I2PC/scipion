@@ -208,7 +208,15 @@ def createLink(source, dest):
     relsource = join(relpath(sourcedir, destdir), basename(source))
     os.symlink(relsource,dest)
     
+def createAbsLink(source, dest):
+    """ Creates a link to a given file path"""
+    if exists(dest):
+        if isdir(dest):
+            shutil.rmtree(dest)
+        else:
+            os.remove(dest)
 
+    os.symlink(source,dest)
     
 def getLastFile(pattern):
     """ Return the last file matching the pattern. """
