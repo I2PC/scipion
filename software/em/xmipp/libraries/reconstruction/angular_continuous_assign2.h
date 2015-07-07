@@ -97,6 +97,8 @@ public:
     double old_rot, old_tilt, old_psi;
     // Original shift
 	double old_shiftX, old_shiftY;
+	// Original flip
+	bool old_flip;
 	// Has CTF
 	bool hasCTF;
 	// Original defocus

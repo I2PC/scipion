@@ -195,6 +195,12 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
     }
 
     double cost=0, avg=0;
+	if (prm->old_flip)
+	{
+		MAT_ELEM(A,0,0)*=-1;
+		MAT_ELEM(A,1,0)*=-1;
+	}
+
 	applyGeometry(degree,prm->Ip(),prm->I(),A,IS_NOT_INV,DONT_WRAP,0.);
 	applyGeometry(degree,prm->Ifilteredp(),prm->Ifiltered(),A,IS_NOT_INV,DONT_WRAP,0.);
 	const MultidimArray<double> &mP=prm->P();
@@ -227,10 +233,13 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 	covarianceMatrix(mE, prm->C);
 	double div=computeCovarianceMatrixDivergence(prm->C0,prm->C)/MAT_XSIZE(prm->C);
 #ifdef DEBUG
+	std::cout << "A=" << A << std::endl;
 	Image<double> save;
 	save()=prm->P();
 	save.write("PPPtheo.xmp");
 	save()=prm->Ifilteredp();
+	save.write("PPPfilteredp.xmp");
+	save()=prm->Ifiltered();
 	save.write("PPPfiltered.xmp");
 	save()=prm->E();
 	save.write("PPPe.xmp");
@@ -242,14 +251,17 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 	std::cout << "Press any key" << std::endl;
 	char c; std::cin >> c;
 #endif
-	return div+prm->penalization*fabs(avg);
+	return cost;
+	//return div+prm->penalization*fabs(avg);
+	//return cost+prm->penalization*fabs(avg);
+	//return div;
 }
 
 
 double continuous2cost(double *x, void *_prm)
 {
-	double a=x[2];
-	double b=x[1];
+	double a=x[1];
+	double b=x[2];
 	double deltax=x[3];
 	double deltay=x[4];
 	double scalex=x[5];
@@ -267,8 +279,8 @@ double continuous2cost(double *x, void *_prm)
 		return 1e38;
 	if (fabs(deltaRot)>prm->maxAngularChange || fabs(deltaTilt)>prm->maxAngularChange || fabs(deltaPsi)>prm->maxAngularChange)
 		return 1e38;
-	if (fabs(a-1)>0.1)
-		return 1e38;
+//	COSS: if (fabs(a-1)>0.1)
+//		return 1e38;
 	if (fabs(deltaDefocusU)>prm->maxDefocusChange || fabs(deltaDefocusV)>prm->maxDefocusChange)
 		return 1e38;
 	MAT_ELEM(prm->A,0,0)=1+scalex;
@@ -290,6 +302,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 //	geoParams.only_apply_shifts=false;
 //	geoParams.wrap=DONT_WRAP;
 
+    std::cout << "rowIn:" << rowIn << std::endl;
+
 	rowIn.getValue(MDL_ANGLE_ROT,old_rot);
 	rowIn.getValue(MDL_ANGLE_TILT,old_tilt);
 	rowIn.getValue(MDL_ANGLE_PSI,old_psi);
@@ -305,6 +319,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		rowIn.getValue(MDL_CONTINUOUS_X,old_contShiftX);
 		rowIn.getValue(MDL_CONTINUOUS_Y,old_contShiftY);
 	}
+	rowIn.getValue(MDL_FLIP,old_flip);
 
 	if (rowIn.containsLabel(MDL_CTF_DEFOCUSU) || rowIn.containsLabel(MDL_CTF_MODEL))
 	{
@@ -315,6 +330,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		old_defocusV=ctf.DeltafV;
 		old_defocusAngle=ctf.azimuthal_angle;
 	}
+	else
+		hasCTF=false;
 
 	if (verbose>=2)
 		std::cout << "Processing " << fnImg << std::endl;
@@ -325,10 +342,10 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     filter.applyMaskSpace(Ifiltered());
 
     Matrix1D<double> p(12), steps(12);
-    p(1)=old_grayA; // a in I'=a*I+b
-    p(0)=old_grayB; // b in I'=a*I+b
-    p(2)=old_contShiftX;
-    p(3)=old_contShiftY;
+    p(0)=old_grayA; // a in I'=a*I+b
+    p(1)=old_grayB; // b in I'=a*I+b
+    p(2)=old_contShiftX-old_shiftX;
+    p(3)=old_contShiftY-old_shiftY;
     p(4)=old_scaleX;
     p(5)=old_scaleY;
 
@@ -359,10 +376,10 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			{
 				rowOut.setValue(MDL_ENABLED,-1);
 				p.initZeros();
-			    p(1)=old_grayA; // a in I'=a*I+b
-			    p(0)=old_grayB; // b in I'=a*I+b
-			    p(2)=old_contShiftX;
-			    p(3)=old_contShiftY;
+			    p(0)=old_grayA; // a in I'=a*I+b
+			    p(1)=old_grayB; // b in I'=a*I+b
+			    p(2)=old_contShiftX-old_shiftX;
+			    p(3)=old_contShiftY-old_shiftY;
 			    p(4)=old_scaleX;
 			    p(5)=old_scaleY;
 			}
@@ -378,7 +395,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 				}
 			}
 			if (verbose>=2)
-				std::cout << "I'=" << p(1) << "*I" << "+" << p(0) << " Dshift=(" << p(2) << "," << p(3) << ") "
+				std::cout << "I'=" << p(0) << "*I" << "+" << p(1) << " Dshift=(" << p(2) << "," << p(3) << ") "
 				          << "scale=(" << 1+p(4) << "," << 1+p(5) << ") Drot=" << p(6) << " Dtilt=" << p(7)
 				          << " Dpsi=" << p(8) << " DU=" << p(9) << " DV=" << p(10) << " Dalpha=" << p(11) << std::endl;
 			// Apply
@@ -390,24 +407,20 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 				scaleToSize(BSPLINE3,Ip(),I(),XSIZE(Ip()),YSIZE(Ip()));
 				I()=Ip();
 			}
-			A(0,2)=p(2)+old_shiftX;
-			A(1,2)=p(3)+old_shiftY;
+			A(0,2)=p(2);
+			A(1,2)=p(3);
 			A(0,0)=1+p(4);
 			A(1,1)=1+p(5);
 
-			bool flip;
-			rowIn.getValue(MDL_FLIP,flip);
-			if (flip)
+			if (old_flip)
 			{
-				// M*A*M
-				A(0,1)*=-1;
-				A(1,0)*=-1;
-				A(0,2)*=-1;
+				MAT_ELEM(A,0,0)*=-1;
+				MAT_ELEM(A,1,0)*=-1;
 			}
 			applyGeometry(BSPLINE3,Ip(),I(),A,IS_NOT_INV,DONT_WRAP);
 			MultidimArray<double> &mIp=Ip();
-			double a=p(1);
-			double b=p(0);
+			double a=p(0);
+			double b=p(1);
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mIp)
 				DIRECT_MULTIDIM_ELEM(mIp,n)=a*DIRECT_MULTIDIM_ELEM(mIp,n)+b;
 			Ip.write(fnImgOut);
@@ -426,6 +439,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     rowOut.setValue(MDL_ANGLE_PSI,  old_psi+p(8));
     rowOut.setValue(MDL_SHIFT_X,    0.);
     rowOut.setValue(MDL_SHIFT_Y,    0.);
+    rowOut.setValue(MDL_FLIP,       false);
     rowOut.setValue(MDL_COST,       cost);
     rowOut.setValue(MDL_CONTINUOUS_GRAY_A,p(1));
     rowOut.setValue(MDL_CONTINUOUS_GRAY_B,p(0));
@@ -451,6 +465,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     save.write("PPPprojection.xmp");
     save()=I();
     save.write("PPPexperimental.xmp");
+    save()=C;
+    save.write("PPPC.xmp");
     Ip.write("PPPexperimentalp.xmp");
     Ifiltered.write("PPPexperimentalFiltered.xmp");
     Ifilteredp.write("PPPexperimentalFilteredp.xmp");

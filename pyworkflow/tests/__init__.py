@@ -204,7 +204,25 @@ DataSet(name='movies',  folder='movies',
         files={'movie1':'Falcon_2012_06_12-14_33_35_0_movie.mrcs',
                'movie2':'Falcon_2012_06_12-16_55_40_0_movie.mrcs',
                'movie3':'Falcon_2012_06_12-17_26_54_0_movie.mrcs',
-                })             
+                })   
+
+DataSet(name='riboMovies',  folder='riboMovies',
+        files={'movie1':'30_movie_gc_window.mrcs',
+               'movie2':'35_movie_gc_window.mrcs',
+               'movie3':'130_movie_gc_window.mrcs',
+               'movie4':'165_movie_gc_window.mrcs',
+               'movie5':'270_movie_gc_window.mrcs',
+               'allMovies':'*.mrcs'
+                })         
+
+DataSet(name='jmbFalconMovies',  folder='jmbFalconMovies',
+        files={'movie1':'Falcon_2014_07_16-16_32_43_0.mrcs',
+               'movie2':'Falcon_2014_07_16-21_37_37_0.mrcs',
+               'movie3':'Falcon_2014_07_16-23_30_50_0.mrcs',
+               'movie4':'Falcon_2014_07_17-03_21_57_0.mrcs',
+               'movie5':'Falcon_2014_07_17-06_55_56_0.mrcs',
+               'allMovies':'*.mrcs'
+                })  
                
 DataSet(name='grigorieff',  folder='grigorieff',
         files={'particles_rot_shift':'particles.sqlite',

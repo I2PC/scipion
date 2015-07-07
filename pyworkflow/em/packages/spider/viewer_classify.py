@@ -135,6 +135,7 @@ class SpiderViewerWard(SpiderViewerClassify):
             return classTemplate % classNo, averages % classNo
         
         node = self.protocol.buildDendrogram()
+        
         g = Graph(root=node)
         self.graph = g
                

@@ -5,9 +5,11 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Locale;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -15,6 +17,7 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+
 import xmipp.jni.Filename;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -79,9 +82,9 @@ public class ImportParticlesJDialog extends XmippDialog {
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-                                int index = jcbFormat.getSelectedIndex();
+                int index = jcbFormat.getSelectedIndex();
 				format = formatsList[index];
-                                suffixtf.setText(parent.getParticlePicker().emextensions.get(formatsList[index]));
+                suffixtf.setText(parent.getParticlePicker().emextensions.get(formatsList[index]));
 				
 			}
 		});
@@ -93,19 +96,19 @@ public class ImportParticlesJDialog extends XmippDialog {
 		browsebt = XmippWindowUtil.getIconButton("folderopen.gif", this);
 		panel.add(browsebt, XmippWindowUtil.getConstraints(gbc, 2, 1));
 		
-                String tooltip = "Preffix added to micrograph name in coordinates file";
-                JLabel preffixlb = new JLabel("Preffix:");
-                preffixlb.setToolTipText(tooltip);
-                panel.add(preffixlb, XmippWindowUtil.getConstraints(gbc, 0, 2));
-                preffixtf = new JTextField(20);
-                preffixtf.setToolTipText(tooltip);
-                panel.add(preffixtf, XmippWindowUtil.getConstraints(gbc, 1, 2));
-                tooltip = "Suffix added to micrograph name in coordinates file (eg:_filt.pos)";
-                JLabel suffixlb = new JLabel("Suffix:");
-                panel.add(suffixlb, XmippWindowUtil.getConstraints(gbc, 0, 3));
-                suffixlb.setToolTipText(tooltip);
-                suffixtf = new JTextField(20);
-                suffixtf.setToolTipText(tooltip);
+        String tooltip = "Preffix added to micrograph name in coordinates file";
+        JLabel preffixlb = new JLabel("Preffix:");
+        preffixlb.setToolTipText(tooltip);
+        panel.add(preffixlb, XmippWindowUtil.getConstraints(gbc, 0, 2));
+        preffixtf = new JTextField(20);
+        preffixtf.setToolTipText(tooltip);
+        panel.add(preffixtf, XmippWindowUtil.getConstraints(gbc, 1, 2));
+        tooltip = "Suffix added to micrograph name in coordinates file (eg:_filt.pos)";
+        JLabel suffixlb = new JLabel("Suffix:");
+        panel.add(suffixlb, XmippWindowUtil.getConstraints(gbc, 0, 3));
+        suffixlb.setToolTipText(tooltip);
+        suffixtf = new JTextField(20);
+        suffixtf.setToolTipText(tooltip);
 		panel.add(suffixtf, XmippWindowUtil.getConstraints(gbc, 1, 3));
                 
 		panel.add(new JLabel("Scale To:"),	XmippWindowUtil.getConstraints(gbc, 0, 4));
@@ -115,16 +118,28 @@ public class ImportParticlesJDialog extends XmippDialog {
 		panel.add(scaletf, XmippWindowUtil.getConstraints(gbc, 1, 4));
 		
 		panel.add(new JLabel("Invert X:"),
-				XmippWindowUtil.getConstraints(gbc, 0, 5));
+		XmippWindowUtil.getConstraints(gbc, 0, 5));
 		invertxcb = new JCheckBox();
 		panel.add(invertxcb, XmippWindowUtil.getConstraints(gbc, 1, 5));
 		
 		panel.add(new JLabel("Invert Y:"),
-				XmippWindowUtil.getConstraints(gbc, 0, 6));
+		XmippWindowUtil.getConstraints(gbc, 0, 6));
 		invertycb = new JCheckBox();
 		panel.add(invertycb, XmippWindowUtil.getConstraints(gbc, 1, 6));
                 
-               
+        sourcetf.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				String path = sourcetf.getText();
+				boolean isDir = new File(path).isDirectory();
+				preffixtf.setEnabled(isDir);
+                suffixtf.setEnabled(isDir);
+				
+			}
+		});       
 		
 	}// function createContent
 
@@ -140,10 +155,8 @@ public class ImportParticlesJDialog extends XmippDialog {
 			if (returnVal == XmippFileChooser.APPROVE_OPTION) {
 				path = xfc.getSelectedPath();
 				sourcetf.setText(path);
-                                
-                                preffixtf.setEnabled(xfc.getSelectedFile().isDirectory());
-                                suffixtf.setEnabled(xfc.getSelectedFile().isDirectory());
-                                
+                preffixtf.setEnabled(xfc.getSelectedFile().isDirectory());
+                suffixtf.setEnabled(xfc.getSelectedFile().isDirectory());
                                 
 			}
 		} catch (Exception ex) {
