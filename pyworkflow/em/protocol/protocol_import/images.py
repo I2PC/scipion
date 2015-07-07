@@ -90,7 +90,7 @@ class ProtImportImages(ProtImportFiles):
     def _insertAllSteps(self):
         self._insertFunctionStep('importImagesStep', self.getPattern(), 
                                  self.voltage.get(), self.sphericalAberration.get(), 
-                                 self.amplitudeContrast.get(), self.magnification.get()) #, self.samplingRate.get(),
+                                 self.amplitudeContrast.get(), self.magnification.get())
         
     #--------------------------- STEPS functions ---------------------------------------------------
     def importImagesStep(self, pattern, voltage, sphericalAberration, amplitudeContrast, magnification):
