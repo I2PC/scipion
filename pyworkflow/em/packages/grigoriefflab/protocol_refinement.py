@@ -35,6 +35,8 @@ from constants import *
 from protocol_frealign_base import ProtFrealignBase
 from convert import readSetOfParticles
 
+
+
 class ProtFrealign(ProtFrealignBase, ProtRefine3D):
     """ Protocol to refine a 3D map using Frealign. The algorithms implemented
 are optimized to perform  efficiently the correction for the contrast

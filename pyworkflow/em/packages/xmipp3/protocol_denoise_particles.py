@@ -28,16 +28,12 @@ This sub-package contains wrapper around Screen Particles Xmipp program
 """
 
 from pyworkflow.object import String
-from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
-                                        LEVEL_ADVANCED, FloatParam, PointerParam)
+from pyworkflow.protocol.params import IntParam, PointerParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import ProtProcessParticles
-from pyworkflow.utils.path import copyFile, replaceBaseExt
 
 from convert import writeSetOfParticles, readSetOfParticles, writeSetOfClasses2D
 
 
-
-        
         
 class XmippProtDenoiseParticles(ProtProcessParticles):
     """ Remove particles noise by filtering them. This filtering process is based on a projection over a basis created from some averages (extracted from classes). This filtering is not intended for processing particles. The huge filtering they will be passed through is known to remove part of the signal 
@@ -113,7 +109,6 @@ class XmippProtDenoiseParticles(ProtProcessParticles):
 
     #--------------------------- INFO functions --------------------------------------------                
     def _summary(self):
-        import os
         summary = []
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
