@@ -77,7 +77,8 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
         # The command will be launched from the working dir
         # so, let's make the micrograph path relative to that
         img.setFileName(os.path.join('extra', newName))
-        img.setCTF(self.ctfDict[img.getMicName()])
+        if self.ctfRelations.get() is not None:
+            img.setCTF(self.ctfDict[img.getMicName()])
         
     def _getMicStarFile(self, mic):
         return self._getExtraPath(pwutils.replaceBaseExt(mic.getFileName(), 'star'))            
@@ -89,8 +90,9 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
         self._ih = ImageHandler() # used to convert micrographs
         # Match ctf information against the micrographs
         self.ctfDict = {}
-        for ctf in self.ctfRelations.get():
-            self.ctfDict[ctf.getMicrograph().getMicName()] = ctf.clone()
+        if self.ctfRelations.get() is not None:
+            for ctf in self.ctfRelations.get():
+                self.ctfDict[ctf.getMicrograph().getMicName()] = ctf.clone()
         
         micStar = self._getPath('input_micrographs.star')
         writeSetOfMicrographs(self.getInputMicrographs(), micStar, 
@@ -272,6 +274,9 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
         if self.particleDiameter > self.getInputDimA():
             errors.append('Particle diameter (%d) can not be greater than size (%d)' % 
                           (self.particleDiameter, self.getInputDimA()))
+        if self.ctfRelations.get() is None and self.refsCtfCorrected:
+            errors.append("References CTF corrected parameter must be set to False or set ctf relations.")
+            
         return errors
     
     def _summary(self):
