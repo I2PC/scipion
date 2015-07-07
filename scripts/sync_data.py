@@ -365,8 +365,8 @@ def upload(dataset, delete=False):
     """ Upload a dataset to our repository """
 
     localFolder = join(os.environ['SCIPION_TESTS'], dataset)
-    remoteLoc = 'scipion@asimov.cnb.csic.es'
-    remoteFolder = '/services/scipionwiki/data/htdocs/files/scipion/data/tests'
+    remoteLoc = 'scipion@scipion.cnb.csic.es'
+    remoteFolder = '/services/scipion/data/downloads/scipion/data/tests'
 
     if not exists(localFolder):
         sys.exit("ERROR: local folder %s does not exist." % localFolder)

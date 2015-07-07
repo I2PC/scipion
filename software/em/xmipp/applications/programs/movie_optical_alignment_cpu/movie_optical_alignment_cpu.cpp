@@ -52,7 +52,7 @@ public:
 
     int winSize, gpuDevice, fstFrame, lstFrame;
     int psdPieceSize;
-    bool doAverage, psd;
+    bool doAverage, psd, saveCorrMovie;
 
     void defineParams()
     {
@@ -64,6 +64,7 @@ public:
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
         addParamsLine("     [--simpleAverage]: if we want to just compute the simple average");
         addParamsLine("     [--psd]             : save raw PSD and corrected PSD");
+        addParamsLine("     [--ssc]             : save corrected stack");
 #ifdef GPU
 
         addParamsLine("     [--gpu <int=0>]         : GPU device to be used");
@@ -79,6 +80,8 @@ public:
         winSize   = getIntParam("--winSize");
         doAverage = checkParam("--simpleAverage");
         psd = checkParam("--psd");
+        saveCorrMovie = checkParam("--ssc");
+
 #ifdef GPU
 
         gpuDevice = getIntParam("--gpu");
@@ -229,7 +232,9 @@ public:
     int main2()
     {
         // XMIPP structures are defined here
-        MultidimArray<double> preImg, avgCurr, avgStep, mappedImg;
+        MultidimArray<double> preImg, avgCurr, avgStep;
+        MultidimArray<double> mappedImg, outputMovie;
+
         ImageGeneric movieStack, movieStackNormalize;
         Image<double> II;
         MetaData MD; // To save plot information
@@ -249,14 +254,17 @@ public:
         cv::Mat flowx, flowy, mapx, mapy, flow,dest;
         cv::Mat flowxPre, flowyPre, flowxInBet, flowyInBet;// Using for computing the plot information
         cv::Mat avgcurr, avgstep, preimg, preimg8, avgcurr8;
-        cv::Mat planes[] = {flowx, flowy};
+        cv::Mat planes[]={flowx, flowy};
         cv::Scalar meanx, meany;
         cv::Scalar stddevx, stddevy;
 
         int imagenum, cnt = 2, div = 0;
         int h, w, idx, levelNum, levelCounter = 1;
 
-        motionInfFile = foname.replaceExtension("xmd");
+        motionInfFile=foname.replaceExtension("xmd");
+        std::string extension=fname.getExtension();
+        if (extension=="mrc")
+        	fname+=":mrcs";
         movieStack.read(fname,HEADER);
         movieStack.getDimensions(aDim);
         imagenum = aDim.ndim;
@@ -283,9 +291,10 @@ public:
         // Initialize variables with zero
         mapx=cv::Mat::zeros(h, w,CV_32FC1);
         mapy=cv::Mat::zeros(h, w,CV_32FC1);
-
+        // Initialize the stack for the output movie
+        if (saveCorrMovie)
+        	outputMovie.initZeros(imagenum, 1, h, w);
         tStart2=clock();
-
         // Compute the average of the whole stack
         fstFrame++; // Just to adapt to Li algorithm
         lstFrame++; // Just to adapt to Li algorithm
@@ -422,7 +431,8 @@ public:
 #else
                 cv::remap(preimg, dest, mapx, mapy, cv::INTER_CUBIC);
 #endif
-
+                if (div==1 && saveCorrMovie)
+                	mappedImg.aliasImageInStack(outputMovie, i);
                 opencv2Xmipp(dest, mappedImg);
                 avgStep += mappedImg;
             }
@@ -436,6 +446,11 @@ public:
         II() = avgCurr;
         II.write(foname);
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
+        if (saveCorrMovie)
+        {
+        	II()=outputMovie;
+        	II.write(foname.replaceExtension("mrcs"));
+        }
         if (psd)
         {
             Image<double> psdCorr, psdRaw;
