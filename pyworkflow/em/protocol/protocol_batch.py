@@ -71,7 +71,6 @@ class ProtUserSubSet(BatchProtocol):
     def createSetStep(self):
         setObj = self.createSetObject()
         inputObj = self.inputObject.get()
-        print inputObj.getClass()
         other = self.other.get()
 
         if other and ',Volume' in other:
@@ -107,7 +106,6 @@ class ProtUserSubSet(BatchProtocol):
         elif isinstance(inputObj, EMProtocol):
             otherid = self.other.get()
             otherObj = self.getProject().mapper.selectById(int(otherid))
-
             if isinstance(setObj, SetOfClasses):
                 setObj.setImages(otherObj)
                 output = self._createSubSetFromClasses(setObj)
@@ -115,12 +113,13 @@ class ProtUserSubSet(BatchProtocol):
             elif isinstance(setObj, SetOfImages):
                 setObj.copyInfo(otherObj) # copy info from original images
                 output = self._createSubSetFromImages(setObj)
+                
             elif isinstance(setObj, SetOfNormalModes):
-                output = self._createSimpleSubset(setObj)
+                output = self._createSimpleSubset(otherObj)
             
         else:
             output = self._createSimpleSubset(inputObj)
-        
+
         if isinstance(inputObj, EMProtocol):
             for _, attr in inputObj.iterInputAttributes():
                 self._defineSourceRelation(attr.get(), output)
@@ -140,6 +139,7 @@ class ProtUserSubSet(BatchProtocol):
 
         if hasattr(modifiedSet, 'copyInfo'):
             output.copyInfo(inputObj)
+
         # Register outputs
         self._defineOutput(className, output)
         return output
