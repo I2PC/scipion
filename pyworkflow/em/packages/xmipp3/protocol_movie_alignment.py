@@ -278,7 +278,12 @@ class ProtMovieAlignment(ProtProcessMovies):
                 firstFrame = 0
                 lastFrame = 0
             else:
-                command = '-i %(movieName)s ' % locals()
+                # Some movie have .mrc or .mrcs format but it is recognized as a volume
+                if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
+                    movieSuffix = ':mrcs'
+                else:
+                    movieSuffix = ''
+                command = '-i %(movieName)s%(movieSuffix)s ' % locals()
             command += '-o %(micName)s --winSize %(winSize)d' % locals()
             command += ' --nst %d --ned %d --psd' % (firstFrame, lastFrame)
             if self.doGPU:
