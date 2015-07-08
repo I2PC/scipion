@@ -221,4 +221,7 @@ class ImageHandler(object):
                     '-i %s --create_mask  %s --mask circular -%d' % (inputRef, outputFile, radius),
                     env=xmippEnv)
         
-
+    def isImageFile(self, imgFn):
+        """ Check if imgFn has an image extension. The function
+        is implemented in the xmipp binding."""
+        return xmipp.FileName(imgFn).isImage()
