@@ -54,7 +54,6 @@ class ProtFrealignBase(EMProtocol):
         EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
         self._lastIter = Integer(0)
-        self._micList = []
 
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -1217,12 +1216,10 @@ eot
             moveFile(tmpFile, stackFn)
     
     def _getMicIdList(self):
-        micList = []
+        print "self._micList: ", self._micList
         if self._micList == []:
-            micList = self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
-        else:
-            micList = self._micList
-        return micList
+            self._micList = self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
+        return self._micList
     
     def _getMicCounter(self):
         #frealign need to have a numeric micId not longer than 5 digits
@@ -1234,6 +1231,7 @@ eot
         return micIdMap
     
     def _defNumberOfCPUs(self):
+        self._micList = []
         cpus = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
         numberOfMics = len(self._getMicIdList())
         return min(cpus, numberOfMics)
