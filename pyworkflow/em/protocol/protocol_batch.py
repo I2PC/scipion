@@ -93,9 +93,9 @@ class ProtUserSubSet(BatchProtocol):
         elif isinstance(inputObj, SetOfCTF):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
-                self._createMicsSubSetFromCTF(inputObj)
+                output = self._createMicsSubSetFromCTF(inputObj)
             else:
-                self._createSubSetOfCTF(inputObj)
+                output = self._createSubSetOfCTF(inputObj)
 
         elif isinstance(inputObj, MicrographsTiltPair):
             output = self._createSubSetFromMicrographsTiltPair(inputObj)
@@ -124,8 +124,9 @@ class ProtUserSubSet(BatchProtocol):
             for _, attr in inputObj.iterInputAttributes():
                 self._defineSourceRelation(attr.get(), output)
         else:
-            if not isinstance(inputObj, SetOfCTF):#otherwise setted before
-                self._defineSourceRelation(inputObj, output)
+            #if not isinstance(inputObj, SetOfCTF):#otherwise setted before
+                #self._defineSourceRelation(inputObj, output)#There is always source relation and transform relation??
+            self._defineTransformRelation(inputObj, output)
                 
     def _createSimpleSubset(self, inputObj):
         className = inputObj.getClassName()
@@ -207,7 +208,7 @@ class ProtUserSubSet(BatchProtocol):
                 outputMics.append(mic)
                 
         self._defineOutputs(outputMicrographs=outputMics)
-        self._defineTransformRelation(setOfMics, outputMics)
+        #self._defineTransformRelation(setOfMics, outputMics)
         return outputMics
         
     def _createSubSetOfCTF(self, inputCtf):
@@ -223,7 +224,7 @@ class ProtUserSubSet(BatchProtocol):
                 
         # Register outputs
         self._defineOutput(self.outputClassName.get(), setOfCtf)
-        self._defineSourceRelation(inputCtf, setOfCtf)
+        #self._defineSourceRelation(inputCtf, setOfCtf)
         return setOfCtf
         
     def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
