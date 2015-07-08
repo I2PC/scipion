@@ -54,6 +54,7 @@ class ProtFrealignBase(EMProtocol):
         EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
         self._lastIter = Integer(0)
+        self._micList = []
 
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -182,7 +183,7 @@ class ProtFrealignBase(EMProtocol):
                                'reference by division of the data into random subsets during the'
                                'first iteration.')
         form.addParam('useInitialAngles', BooleanParam, default=False,
-                      label="Use initial angles/shifts ? ",
+                      label="Use initial angles/shifts ? ",condition='not doContinue',
                       help='Set to *Yes* if you want to use the projection assignment (angles/shifts) \n '
                            'associated with the input particles (hasProjectionAssigment=True)')
 
@@ -489,6 +490,7 @@ class ProtFrealignBase(EMProtocol):
             self.inputParticles.set(continueRun.inputParticles.get())
             self.doInvert.set(continueRun.doInvert.get())
             self.symmetry.set(continueRun.symmetry.get())
+            self.useInitialAngles.set(False)
             self.input3DReference.set(None)
             
             if self.continueIter.get() == 'last':
@@ -1215,7 +1217,13 @@ eot
             moveFile(tmpFile, stackFn)
     
     def _getMicIdList(self):
-        return self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
+        micList = []
+        if self._micList == []:
+            micList = self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
+        else:
+            micList = self._micList
+        print "micList", micList
+        return micList
     
     def _getMicCounter(self):
         #frealign need to have a numeric micId not longer than 5 digits
