@@ -22,7 +22,7 @@
  ***************************************************************************/
 '''
 from unittest import TestResult, _TextTestResult
-from protlib_xmipp import greenLowStr, failStr
+from pyworkflow.em.packages.xmipp3 import greenLowStr, failStr
 
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+

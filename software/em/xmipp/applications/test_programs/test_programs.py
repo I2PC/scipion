@@ -1,7 +1,7 @@
 #!/usr/bin/env xmipp_python
 from datetime import datetime, timedelta
 from os.path import exists, join, abspath
-from protlib_xmipp import greenStr, warnStr, redStr, XmippScript
+from pyworkflow.em.packages.xmipp3 import greenStr, warnStr, redStr, XmippScript
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 from xmipp import *
