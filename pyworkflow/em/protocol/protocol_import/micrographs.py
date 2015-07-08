@@ -148,10 +148,11 @@ class ProtImportMicrographs(ProtImportMicBase):
             errors = ProtImportMicBase._validate(self)
             for micFn, _ in self.iterFiles():
                 imgh = ImageHandler()
-                _, _, z, n = imgh.getDimensions(micFn)
-                if n > 1 or z > 1:
-                    errors.append("The protocol not support micrographs stored in stacks.")
-                    break
+                if imgh.isImageFile(micFn):
+                    _, _, z, n = imgh.getDimensions(micFn)
+                    if n > 1 or z > 1:
+                        errors.append("The protocol not support micrographs stored in stacks.")
+                        break
             return errors
             
         else:
