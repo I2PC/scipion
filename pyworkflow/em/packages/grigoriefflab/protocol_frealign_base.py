@@ -1222,7 +1222,6 @@ eot
             micList = self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
         else:
             micList = self._micList
-        print "micList", micList
         return micList
     
     def _getMicCounter(self):
