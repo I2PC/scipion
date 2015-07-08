@@ -105,7 +105,7 @@ class ProtImportFiles(ProtImport):
         return  self.IMPORT_FROM_FILES
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
-        import xmipp
+        from pyworkflow.em.convert import ImageHandler
         errors = []
         if self.importFrom == self.IMPORT_FROM_FILES:
             if not self.getPattern():
@@ -117,7 +117,8 @@ class ProtImportFiles(ProtImport):
                     errors.append("There are no files matching the pattern " + "%s" % self.getPattern())
             
             for imgFn, _ in self.iterFiles():
-                if not xmipp.FileName(imgFn).isImage():
+                ih = ImageHandler()
+                if not ih.isImageFile(imgFn):
                     errors.append("The imported files must be images.")
                     break
 
