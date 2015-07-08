@@ -13,9 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.swing.JFrame;
-
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -41,8 +39,17 @@ public abstract class ParticlePicker {
     protected String selfile;
     
     protected String configfile;
-    protected final String[] availableFilters = new String[]{"Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
-                   "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
+    public static final String duplicateFilter = "Duplicate";
+    public static final String bandPassFilter = "Bandpass Filter...";
+    public static final String anisotropicDiffFilter = "Anisotropic Diffusion...";
+    public static final String meanShiftFilter = "Mean Shift";
+    public static final String substractBackgroundFilter = "Subtract Background...";
+    public static final String gaussianBlurFilter = "Gaussian Blur...";
+    public static final String brightnessContrastFilter = "Brightness/Contrast...";
+    public static final String invertLUTFilter = "Invert LUT";
+    public static final String enhanceContrastFilter = "Enhance Contrast...";
+    protected final List<String> availableFilters = Arrays.asList(new String[]{duplicateFilter, bandPassFilter, anisotropicDiffFilter, meanShiftFilter,
+                   substractBackgroundFilter, gaussianBlurFilter, brightnessContrastFilter, invertLUTFilter, enhanceContrastFilter});
 
     
     static String xmippsmoothfilter = "Xmipp Smooth Filter";
@@ -153,7 +160,7 @@ public abstract class ParticlePicker {
             color = getNextColor();
             size = getDefaultSize();
             setMicrograph(getMicrographs().get(0));
-            filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
+            filters.add(new IJCommand(gaussianBlurFilter, "sigma=2"));
             saveConfig();
             return;
         }
@@ -288,14 +295,6 @@ public abstract class ParticlePicker {
 
 
 
-    protected boolean isRegisteredFilter(String command2) {
-        for (IJCommand f : filters) {
-            if (f.getCommand().equals(command2)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     public void updateFilters(String command) {
         if (command != null) {
@@ -303,23 +302,48 @@ public abstract class ParticlePicker {
             if (Recorder.getCommandOptions() != null) {
                 options = Recorder.getCommandOptions();
             }
-
-            if (!isFilterSelected(command) && Arrays.asList(availableFilters).contains(command)) {
+            //boolean isavailable = availableFilters.contains(command);
+            boolean isadded = isFilterAdded(command);
+            if (!isadded) {
                 addFilter(command, options);
             } else if (!(options == null || options.equals(""))) {
-                for (IJCommand f : filters) {
-                    if (f.getCommand().equals(command)) {
-                        f.setOptions(options);
-                    }
-                }
+                setFilterOptions(command, options);
             }
-
             saveConfig();
         }
     }
+    
+    void removeFilter(String filter) {
+        for (IJCommand f : filters) {
+            if (f.getCommand().equals(filter)) {
+                filters.remove(f);
+                saveConfig();
+                break;
+            }
+        }
+    }// function removeFilter
+
+    public boolean isFilterAdded(String filter) {
+        for (IJCommand f : filters) {
+            if (f.getCommand().equals(filter)) {
+                return true;
+            }
+        }
+        return false;
+    }// function isFilterSelected
+
 
     public String getMicrographsSelFile() {
         return selfile;
+    }
+    
+    public void setFilterOptions(String command, String options)
+    {
+    	for (IJCommand f : filters) {
+            if (f.getCommand().equals(command)) {
+                f.setOptions(options);
+            }
+        }
     }
 
     public void addFilter(String command, String options) {
@@ -410,24 +434,6 @@ public abstract class ParticlePicker {
         return null;
     }
 
-    void removeFilter(String filter) {
-        for (IJCommand f : filters) {
-            if (f.getCommand().equals(filter)) {
-                filters.remove(f);
-                saveConfig();
-                break;
-            }
-        }
-    }// function removeFilter
-
-    public boolean isFilterSelected(String filter) {
-        for (IJCommand f : filters) {
-            if (f.getCommand().equals(filter)) {
-                return true;
-            }
-        }
-        return false;
-    }// function isFilterSelected
 
     
 

@@ -453,8 +453,8 @@ HEADER = """<%(ROOTNAME)s version="%(VERSION)s">
   -->
 """ % globals()
   
-EMXSCHEMA10 = 'http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw'
-EMXSCHEMA11 = 'http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx_11.xsd?format=raw'
+EMXSCHEMA10 = 'https://raw.githubusercontent.com/biocompwebs/scipion/v1.0/pyworkflow/em/packages/emxlib/emx.xsd'
+EMXSCHEMA11 = 'https://raw.githubusercontent.com/biocompwebs/scipion/v1.0/pyworkflow/em/packages/emxlib/emx_11.xsd'
 
 
 class ValidateError(Exception):
