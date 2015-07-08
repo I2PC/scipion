@@ -51,6 +51,7 @@ from viewer_ml2d import XmippML2DViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
 from viewer_resolution3d import XmippResolution3DViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
+from viewer_split_volume import XmippViewerSplitVolume
 
 #from viewer_reconstruct_significant import XmippReconstructSignificantViewer
 # TODO(coss): add viewer_reconstruct_significant.py pretty please
@@ -90,6 +91,7 @@ from protocol_resolution3d import XmippProtResolution3D
 from protocol_rotational_spectra import XmippProtRotSpectra 
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
+from protocol_split_volume import XmippProtSplitvolume
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 
 # Wizards
