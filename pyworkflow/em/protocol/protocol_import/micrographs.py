@@ -143,15 +143,17 @@ class ProtImportMicrographs(ProtImportMicBase):
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         from pyworkflow.em.convert import ImageHandler
+        import xmipp
         ci = self.getImportClass()
         if ci is None:
             errors = ProtImportMicBase._validate(self)
             for micFn, _ in self.iterFiles():
-                imgh = ImageHandler()
-                _, _, z, n = imgh.getDimensions(micFn)
-                if n > 1 or z > 1:
-                    errors.append("The protocol not support micrographs stored in stacks.")
-                    break
+                if xmipp.FileName(micFn).isImage():
+                    imgh = ImageHandler()
+                    _, _, z, n = imgh.getDimensions(micFn)
+                    if n > 1 or z > 1:
+                        errors.append("The protocol not support micrographs stored in stacks.")
+                        break
             return errors
             
         else:

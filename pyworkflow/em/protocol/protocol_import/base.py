@@ -105,6 +105,7 @@ class ProtImportFiles(ProtImport):
         return  self.IMPORT_FROM_FILES
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
+        import xmipp
         errors = []
         if self.importFrom == self.IMPORT_FROM_FILES:
             if not self.getPattern():
@@ -114,6 +115,11 @@ class ProtImportFiles(ProtImport):
                 self.getMatchFiles()
                 if self.numberOfFiles == 0:
                     errors.append("There are no files matching the pattern " + "%s" % self.getPattern())
+            
+            for imgFn, _ in self.iterFiles():
+                if not xmipp.FileName(imgFn).isImage():
+                    errors.append("The imported files must be images.")
+                    break
 
         return errors
     
