@@ -1004,6 +1004,7 @@ class Coordinate(EMObject):
         self._x = Integer(kwargs.get('x', None))
         self._y = Integer(kwargs.get('y', None))
         self._micId = Integer()
+        self._micName = String()
         
     def getX(self):
         return self._x.get()
@@ -1044,6 +1045,7 @@ class Coordinate(EMObject):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
         self._micId.set(micrograph.getObjId())
+        self._micName.set(micrograph.getMicName())
     
     def copyInfo(self, coord):
         """ Copy information from other coordinate. """
@@ -1056,6 +1058,12 @@ class Coordinate(EMObject):
     
     def setMicId(self, micId):
         self._micId.set(micId)
+        
+    def getMicName(self):
+        return self._micName.get()
+    
+    def setMicName(self, micId):
+        self._micName.set(micId)    
     
     def invertY(self):
         if not self.getMicrograph() is None:
