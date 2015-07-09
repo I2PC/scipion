@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from protlib_xmipp import ScriptPluginIJ
+from pyworkflow.em.packages.xmipp3 import ScriptPluginIJ
 
 class ScriptTomo(ScriptPluginIJ):
 	def __init__(self):
