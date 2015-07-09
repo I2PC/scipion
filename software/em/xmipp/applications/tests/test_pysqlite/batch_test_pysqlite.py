@@ -6,7 +6,7 @@ from os.path import join
 """
 from protlib_filesystem import getXmippPath
 from xmipp import *
-from protlib_xmipp import greenStr
+from pyworkflow.em.packages.xmipp3 import greenStr
 from sqlite3 import dbapi2 as sqlite
 from distutils.dir_util import mkpath
 

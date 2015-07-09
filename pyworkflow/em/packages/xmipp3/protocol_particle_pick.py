@@ -41,7 +41,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 
     """Xmipp protocol to pick particles in a set of micrographs 
     either manually or using automatic picking support. Particles will be used in order to reconstruct a 3D molecule from it's 2D projections. """
-    _label = 'supervised picking'
+    _label = 'manual-picking (step 1)'
 
     
     def __init__(self, **args):        
