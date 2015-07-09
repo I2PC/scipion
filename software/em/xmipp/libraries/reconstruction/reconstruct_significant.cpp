@@ -680,7 +680,7 @@ void ProgReconstructSignificant::numberOfProjections()
 		if ( std::abs(angularSampling-angDist[idx]) < tmp)
 		{
 			minIndex = idx;
-			numProjects = (numWithOutSymm[idx]/((2*(SL.true_symNo-1))));
+			numProjects = (numWithOutSymm[idx]/((2*(SL.symsNo()+1))));
 			tmp = std::abs(angularSampling-angDist[idx]);
 		}
 	}
