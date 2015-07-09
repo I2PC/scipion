@@ -31,7 +31,7 @@ import sys
 from collections import OrderedDict
 
 from pyworkflow.object import ObjectWrap
-from xmipp import MetaData, label2Str, str2Label, MD_APPEND
+from xmipp import MetaData, MetaDataInfo, label2Str, str2Label, MD_APPEND
 
 
 

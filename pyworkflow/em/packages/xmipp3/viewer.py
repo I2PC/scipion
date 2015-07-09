@@ -252,7 +252,7 @@ class XmippViewer(Viewer):
             psdLabels = '_psdFile _xmipp_enhanced_psd _xmipp_ctfmodel_quadrant _xmipp_ctfmodel_halfplane'
             labels = 'id enabled label %s _defocusU _defocusV _defocusAngle _defocusRatio ' \
                      '_xmipp_ctfCritFirstZero _xmipp_ctfCritCorr13 _xmipp_ctfCritFitting _xmipp_ctfCritNonAstigmaticValidity ' \
-                     '_xmipp_ctfCritCtfMargin _micObj._filename' % psdLabels #TODO:CHECK IF _xmipp_ctfCritNonAstigmaticValidity AND _xmipp_ctfCritCtfMargin exist sometimes. 
+                     '_xmipp_ctfCritCtfMargin _xmipp_ctfCritMaxFreq _micObj._filename' % psdLabels #TODO:CHECK IF _xmipp_ctfCritNonAstigmaticValidity AND _xmipp_ctfCritCtfMargin exist sometimes. 
             self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))    
 
