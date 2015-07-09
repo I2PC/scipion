@@ -38,7 +38,7 @@ ALLOWED_HOSTS = []
 # ALLOWED_HOSTS = ['localhost']
 
 # Subdomain where Scipion is hosted or working
-ABSOLUTE_URL = ''
+ABSOLUTE_URL = '/m'
 # ABSOLUTE_URL = '/examples'
 
 # URL_REDIRECTS = (
