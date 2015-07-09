@@ -25,7 +25,7 @@
 # **************************************************************************
 
 
-from pyworkflow.protocol.params import PointerParam, FloatParam
+from pyworkflow.protocol.params import PointerParam, FloatParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import Coordinate
 
@@ -54,7 +54,7 @@ class ProtExtractCoords(EMProtocol):
                       help='Select the micrographs to which you want to\n'
                            'associate the coordinates from the particles.')
         
-        form.addParam('correction', FloatParam, 
+        form.addParam('correction', FloatParam, level=LEVEL_ADVANCED,
                       label='Scale correction',
                       help='This parameter should not be used. '
                            'It is only now to correct for a wrong '
@@ -78,13 +78,32 @@ class ProtExtractCoords(EMProtocol):
         print "Scaling pixel size by: ", scale        
         newCoord = Coordinate()
         
+        firstCoord = inputParticles.getFirstItem().getCoordinate()
+        hasMicName = firstCoord.getMicName() is not None
+        
+        def getMicKey(coord):
+            # If the coordinate has micName, we will use it, since it is 
+            # preserved after union operations
+            # if not, se use the micId
+            if hasMicName:
+                return coord.getMicName()
+            else:
+                return coord.getMicId()
+            
+        # Create the micrographs dict using either micName or micId
+        micDict = {}
+        
+        for mic in inputMics:
+            micKey = mic.getMicName if hasMicName else mic.getObjId()
+            micDict[micKey] = mic.clone()
+            
         for particle in inputParticles:
             coord = particle.getCoordinate()
-            micId = particle.getMicId()
-            mic = inputMics[micId]  
+            micKey = coord.getMicName() if hasMicName else coord.getMicId()
+            mic = micDict[micKey]  
             
             if mic is None:
-                print "Skipping particle, micId %s not found" % micId
+                print "Skipping particle, key %s not found" % micKey
             else:
                 newCoord.copyObjId(particle)
                 #FIXME: the 'correction' as a temporarly hack for fixing the 
@@ -93,7 +112,6 @@ class ProtExtractCoords(EMProtocol):
                 newCoord.setY(coord.getY() * scale * c)
                 newCoord.setMicrograph(mic)
                 outputCoords.append(newCoord)
-                
         
         boxSize = inputParticles.getXDim() * scale
         outputCoords.setBoxSize(boxSize)
@@ -104,30 +122,20 @@ class ProtExtractCoords(EMProtocol):
                 
     def _summary(self):
         summary = []
+        ps1 = self.inputParticles.get().getSamplingRate()
+        ps2 = self.inputMicrographs.get().getSamplingRate()
+        summary.append('Input particles pixel size: *%0.3f* (A/px)' % ps1)
+        summary.append('Input micrographs pixel size: *%0.3f* (A/px)' % ps2)
+        summary.append('Scaling coordinates by a factor of *%0.3f*' % (ps1/ps2))
+        
+        if hasattr(self, 'outputCoordinates'):
+            summary.append('Output coordinates: *%d*' % self.outputCoordinates.getSize())
+            
         return summary 
-    
-        if not hasattr(self, 'outputParticles'):
-            summary.append("Output particles not ready yet.")
-        else:
-            scale = self.inputAlignment.get().getSamplingRate()/self.inputParticles.get().getSamplingRate()
-            summary.append("Assigned alignment to %s particles from a total of %s." % (self.outputParticles.getSize(), self.inputParticles.get().getSize()))
-            if scale != 1:
-                summary.append("Applied scale of %s." % scale)
-        return summary
 
     def _methods(self):
-        methods = []
-        return methods
-    
-        if not hasattr(self, 'outputParticles'):
-            methods.append("Output particles not ready yet.")
-        else:
-            scale = self.inputAlignment.get().getSamplingRate()/self.inputParticles.get().getSamplingRate()
-            methods.append("We assigned alignment to %s particles from %s and produced %s."
-                           % (self.outputParticles.getSize(), self.getObjectTag('inputParticles'), self.getObjectTag('outputParticles')))
-            if scale != 1:
-                methods.append("Applied scale factor of %s." % scale)
-        return methods
+        # No much to add to summary information
+        return self._summary()
 
     def _validate(self):
         """ The function of this hook is to add some validation before the protocol
@@ -136,18 +144,10 @@ class ProtExtractCoords(EMProtocol):
         """
         #check that input set of aligned particles do have 2D alignment
         errors = [ ]
+        inputParticles = self.inputParticles.get()
+        first = inputParticles.getFirstItem()
+        if first.getCoordinate() is None:
+            errors.append('The input particles does not have coordinates!!!')
+        
         return errors
     
-        inputAlignmentSet = self.inputAlignment.get()
-        if not inputAlignmentSet.hasAlignment():
-            errors.append("Input alignment set should contains some kind of alignment (2D, 3D or Projection).")
-        else:
-            # Just for consistency, check that the particles really contains Transform object
-            first = inputAlignmentSet.getFirstItem()
-            alignment = first.getTransform()
-            if alignment is None:
-                errors.append('Inconsistency detected in *Input alignment* !!!')
-                errors.append('It has alignment: _%s_, but the alignment is missing!!!' % inputAlignmentSet.getAlignment())
-            
-        # Add some errors if input is not valid
-        return errors
