@@ -1058,12 +1058,6 @@ class Coordinate(EMObject):
     
     def setMicId(self, micId):
         self._micId.set(micId)
-        
-    def getMicName(self):
-        return self._micName.get()
-    
-    def setMicName(self, micId):
-        self._micName.set(micId)    
     
     def invertY(self):
         if not self.getMicrograph() is None:
@@ -1071,6 +1065,15 @@ class Coordinate(EMObject):
             height = dims[1]
             self.setY(height - self.getY())
         #else: error TODO
+    
+    def setMicName(self, micName):
+        self._micName.set(micName)
+    
+    def getMicName(self):
+        if self._micName is not None:
+            return self._micName.get()
+        else:
+            self.getFileName()
 
 
 class SetOfCoordinates(EMSet):
