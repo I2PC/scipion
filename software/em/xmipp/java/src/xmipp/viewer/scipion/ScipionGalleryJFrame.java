@@ -350,7 +350,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 selection = gallery.getSelection();
             ((ScipionGalleryData)data).overwrite(sqlitefile, selection);
             XmippWindowUtil.runCommand(command, port);
-            close(false);
+            //close(false);
         } catch (SQLException ex) {
             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
