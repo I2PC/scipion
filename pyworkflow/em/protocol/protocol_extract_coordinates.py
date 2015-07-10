@@ -94,7 +94,7 @@ class ProtExtractCoords(EMProtocol):
         micDict = {}
         
         for mic in inputMics:
-            micKey = mic.getMicName if hasMicName else mic.getObjId()
+            micKey = mic.getMicName() if hasMicName else mic.getObjId()
             micDict[micKey] = mic.clone()
             
         for particle in inputParticles:
@@ -102,7 +102,7 @@ class ProtExtractCoords(EMProtocol):
             micKey = coord.getMicName() if hasMicName else coord.getMicId()
             mic = micDict.get(micKey, None)  
             
-            if mic is None:
+            if mic is None: 
                 print "Skipping particle, key %s not found" % micKey
             else:
                 newCoord.copyObjId(particle)
