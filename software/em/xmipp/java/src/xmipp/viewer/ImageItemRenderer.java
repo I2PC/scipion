@@ -63,6 +63,7 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 			setPreferredSize(item.getCellDim());
 
 			// Loads image...
+			
 			Image image = item.getImage();
 			Icon icon;
 			
