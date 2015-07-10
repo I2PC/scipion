@@ -447,11 +447,16 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     for (int i=STARTINGY(mFourierWeights); i<=FINISHINGY(mFourierWeights); i++)
                         for (int j=STARTINGX(mFourierWeights); j<=FINISHINGX(mFourierWeights); j++)
                         {
-                            double weight_kij=A3D_ELEM(mFourierWeights,k,i,j);
-                            if (1.0/weight_kij>ACCURACY)
-                                A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*A3D_ELEM(mFourierWeights,k,i,j);
-                            else
-                                A3D_ELEM(parent->VoutFourier,k,i,j)=0;
+                        	if (parent->NiterWeight==0)
+                        		A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D;
+                        	else
+                        	{
+                        		double weight_kij=A3D_ELEM(mFourierWeights,k,i,j);
+                        		if (1.0/weight_kij>ACCURACY)
+                        			A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*A3D_ELEM(mFourierWeights,k,i,j);
+                        		else
+                        			A3D_ELEM(parent->VoutFourier,k,i,j)=0;
+                        	}
                         }
                 break;
             }
@@ -1033,7 +1038,7 @@ void ProgRecFourier::correctWeight()
                 ptrOut[0] = 1.0/DIRECT_A3D_ELEM(FourierWeights, k,i,j);
         }
 
-        for (int i=0;i<NiterWeight;i++)
+        for (int i=1;i<NiterWeight;i++)
         {
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FourierWeights)
             A3D_ELEM(FourierWeights,k,i,j)=0;
