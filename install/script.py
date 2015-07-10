@@ -364,6 +364,10 @@ env.addPackage('ctffind4',
                tar='ctffind_V4.0.15.tgz',
                default=False)
 
+env.addPackage('unblur',
+               tar='unblur_1.0_150529.tgz',
+               default=False)
+
 env.addPackage('eman',
                tar='eman2.1.linux64.tgz',
                commands=[('./eman2-installer', 
