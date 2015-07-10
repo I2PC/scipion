@@ -84,8 +84,12 @@ by Rosenthal2003''')
         #if volume is mrc force to be mrc volume (versus stack)
         if self.refVol.endswith('.mrc'):
             refVol = self.refVol + ':mrc' # Specify that are volumes to read them properly in xmipp
+        else:
+            refVol = self.refVol
         if self.inputVol.endswith('.mrc'):
             inputVol = self.inputVol + ':mrc' # Specify that are volumes to read them properly in xmipp
+        else:
+            inputVol = self.inputVol
 
         samplingRate = self.inputVolume.get().getSamplingRate()
         fscFn = self._defineFscName()

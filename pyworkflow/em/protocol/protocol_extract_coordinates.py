@@ -28,6 +28,7 @@
 from pyworkflow.protocol.params import PointerParam, FloatParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import Coordinate
+from collections import OrderedDict
 
 
 class ProtExtractCoords(EMProtocol):
@@ -80,18 +81,10 @@ class ProtExtractCoords(EMProtocol):
         
         firstCoord = inputParticles.getFirstItem().getCoordinate()
         hasMicName = firstCoord.getMicName() is not None
-        
-        def getMicKey(coord):
-            # If the coordinate has micName, we will use it, since it is 
-            # preserved after union operations
-            # if not, se use the micId
-            if hasMicName:
-                return coord.getMicName()
-            else:
-                return coord.getMicId()
             
         # Create the micrographs dict using either micName or micId
         micDict = {}
+        missedDict = OrderedDict()
         
         for mic in inputMics:
             micKey = mic.getMicName() if hasMicName else mic.getObjId()
