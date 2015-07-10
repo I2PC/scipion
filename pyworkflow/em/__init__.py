@@ -27,6 +27,7 @@
 This modules contains classes related with EM
 """
 import os
+import sys
 
 import pyworkflow as pw
 from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
@@ -35,10 +36,10 @@ from data_tiltpairs import *
 from protocol import *
 from constants import *
 from convert import *
-from pyworkflow.viewer import Viewer
+#from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 from viewer import *
-from pprint import pprint
+#from pprint import pprint
 import transformations
 #from packages import *
 
@@ -49,7 +50,9 @@ _emPackagesDict = None
 def getPackages():
     global _emPackagesDict
     if _emPackagesDict is None:
+        sys.path.insert(0, PACKAGES_PATH)
         _emPackagesDict = getModules(PACKAGES_PATH)
+        sys.path.pop(0)
     return _emPackagesDict
 
 # Load all Protocol subclasses found in EM-packages

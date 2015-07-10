@@ -28,11 +28,11 @@ This module implement the classes to create plots on xmipp.
 """
 from itertools import izip
 import matplotlib.pyplot as plt 
-
+#from math import pi
 import pyworkflow.em.metadata as md
 from pyworkflow.gui.plotter import Plotter
 import pyworkflow.em.metadata as md
-
+import numpy as np
 
 class EmPlotter(Plotter):
     ''' Class to create several plots'''
@@ -50,11 +50,11 @@ class EmPlotter(Plotter):
             a = self.createSubPlot(title, 'Min weight=%(min_w).2f, Max weight=%(max_w).2f' % locals(), '', projection='polar')
             for r, t, w in izip(rot, tilt, weight):
                 pointsize = int((w - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
-                a.plot(r, t, markerfacecolor=color, marker='.', markersize=pointsize)
+                a.plot(np.radians(r), t, markerfacecolor=color, marker='.', markersize=pointsize)
         else:
             a = self.createSubPlot(title, 'Empty plot', '', projection='polar')
             for r, t in izip(rot, tilt):
-                a.plot(r, t, markerfacecolor=color, marker='.', markersize=10)
+                a.plot(np.radians(r), t, markerfacecolor=color, marker='.', markersize=10)
                 
     def plotAngularDistributionFromMd(self, mdFile, title, **kwargs):
         """ Read the values of rot, tilt and weights from
@@ -73,7 +73,6 @@ class EmPlotter(Plotter):
             rot.append(row.getValue(md.MDL_ANGLE_ROT))
             tilt.append(row.getValue(md.MDL_ANGLE_TILT))
             weight.append(row.getValue(md.MDL_WEIGHT))
-            
         return self.plotAngularDistribution(title, rot, tilt, weight, **kwargs)
         
     def plotHist(self, yValues, nbins, color='blue', **kwargs):
