@@ -30,7 +30,7 @@ to the functions related to metadata.
 
 from constants import *
 from functions import *
-from classes import MetaData, Row, RowMetaData
+from classes import MetaData, Row, RowMetaData, MetaDataInfo
 from utils import *
 
 

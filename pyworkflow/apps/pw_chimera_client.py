@@ -61,12 +61,6 @@ def main():
                                 voxelSize=voxelSize, showjPort=showjPort)
 
     
-def which(file):
-    for path in os.environ["PATH"].split(":"):
-        if os.path.exists(path + "/" + file):
-                return path + "/" + file
-
-    return None
     
 if __name__ == '__main__':
     main()
