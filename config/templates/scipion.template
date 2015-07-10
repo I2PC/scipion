@@ -24,6 +24,7 @@ EMAN2DIR = %(EM_ROOT)s/eman
 FREALIGN_HOME = %(EM_ROOT)s/frealign
 CTFFIND_HOME = %(EM_ROOT)s/ctffind
 CTFFIND4_HOME = %(EM_ROOT)s/ctffind4
+UNBLUR_HOME = %(EM_ROOT)s/unblur
 RELION_HOME = %(EM_ROOT)s/relion
 RESMAP_HOME = %(EM_ROOT)s/resmap
 BSOFT_HOME = %(EM_ROOT)s/bsoft
