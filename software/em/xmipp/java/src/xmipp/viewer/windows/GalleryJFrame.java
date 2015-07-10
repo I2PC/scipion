@@ -49,6 +49,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1232,6 +1233,23 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         
         public class VolumesComboBoxModel implements ComboBoxModel
         {
+        	private HashMap<Integer, String> indexToVolume;
+        	private HashMap<String, Integer> volumeToIndex;
+        	
+        	public VolumesComboBoxModel()
+        	{
+        		String volume;
+        		int size = getSize();
+        		indexToVolume = new HashMap(size);
+        		volumeToIndex = new HashMap(size);
+        		for(int i = 0; i < size; i ++)
+        		{
+        			volume = data.getVolumeAt(i);
+        			volume = getVolumeName(volume);
+        			indexToVolume.put(i, volume);
+        			volumeToIndex.put(volume, i);
+        		}
+        	}
                        
 
 			@Override
@@ -1245,8 +1263,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public Object getElementAt(int index)
 			{
-                String volume = data.getVolumeAt(index);
-				return getVolumeName(volume);
+				return indexToVolume.get(index);
 			}
 
 			@Override
@@ -1254,14 +1271,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
 				try
 				{
-					String file;
-	                for(int i = 0; i < getSize(); i ++)
-	                    if(getElementAt(i).equals(anItem))
-	                    {
-	                		data.selectVolumeAt(i);
-	                		reloadTableData();
-	                    	break;
-	                    }
+					int index = volumeToIndex.get(anItem);
+            		data.selectVolumeAt(index);
+            		reloadTableData();
 				}
                 catch(Exception e)
                 {
@@ -1278,7 +1290,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                     String base = Filename.getBaseName(volume);
                     int count = 0;
                     for(int i = 0; i < getSize(); i ++)
-                        if(base.equals(Filename.getBaseName(data.getVolumeAt(i))))
+                        if(base.equals(Filename.getBaseName(volume)))
                             count ++;
                     if(count == 1)
                         return base;
