@@ -1092,14 +1092,20 @@ class ProtocolsView(tk.Frame):
         if len(self._selection) != 1 or not prot:
             self.outputViewer.clear()
             self._lastStatus = None
-        elif (prot.getObjId() != self._lastSelectedProtId or
-              prot.isActive() or prot.getStatus() != self._lastStatus):
+        elif prot.getObjId() != self._lastSelectedProtId:
             self._lastStatus = prot.getStatus()
             i = self.outputViewer.getIndex()
             self.outputViewer.clear()
-            for f in prot.getLogPaths():
-                self.outputViewer.addFile(f)
+            # Right now skip the err tab since we are redirecting
+            # stderr to stdout
+            out, _, log = prot.getLogPaths()
+            self.outputViewer.addFile(out)
+            self.outputViewer.addFile(log)
             self.outputViewer.setIndex(i) # Preserve the last selected tab
+        elif  prot.isActive() or prot.getStatus() != self._lastStatus:
+            self._lastStatus = prot.getStatus()
+            self.outputViewer.refreshAll()
+            
 
     def _scheduleRunsUpdate(self, secs=1):
         #self.runsTree.after(secs*1000, self.refreshRuns)
