@@ -168,7 +168,6 @@ def _beforePreWhitening(protocol, dir):
     # Convert input volumes
     ih = ImageHandler()
     inputVolume = protocol.inputVolume.get()
-    print inputVolume
     path = join(dir, 'volume1.map')
     print path
     ih.convert(inputVolume, path)

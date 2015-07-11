@@ -42,8 +42,6 @@ import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 public class SupervisedParticlePicker extends ParticlePicker
 {
 
-
-
 	protected List<SupervisedPickerMicrograph> micrographs;
 	private SupervisedPickerMicrograph micrograph;
 	protected int autopickpercent;
@@ -1208,6 +1206,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		micrograph.getAutomaticParticles().clear();
 		micrograph.setState(MicrographState.Available);
 		micrograph.setThreshold(0);
+		micrograph.resetParticlesRectangle();
 		new File(getOutputPath(micrograph.getPosFile())).delete();
 
 	}

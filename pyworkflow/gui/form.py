@@ -1532,8 +1532,9 @@ class FormWindow(Window):
             self.showError(errors)
         else:
             warns = self.protocol.warnings()
-            if warns:
-                self.showWarning('\n'.join(warns))
+            if warns and not self.askYesNo("There are some warnings",
+                                           '\n'.join(warns + ['\nDo you want to continue?'])):
+                return
             self._close()
         
     def _close(self, onlySave=False):

@@ -4,8 +4,8 @@
  *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
  *
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * You may use this program under the terms of either the  Apache License 
+ * or the GNU General Public License (GPL) as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
@@ -453,8 +453,8 @@ HEADER = """<%(ROOTNAME)s version="%(VERSION)s">
   -->
 """ % globals()
   
-EMXSCHEMA10 = 'http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw'
-EMXSCHEMA11 = 'http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx_11.xsd?format=raw'
+EMXSCHEMA10 = 'https://raw.githubusercontent.com/biocompwebs/scipion/v1.0/pyworkflow/em/packages/emxlib/emx.xsd'
+EMXSCHEMA11 = 'https://raw.githubusercontent.com/biocompwebs/scipion/v1.0/pyworkflow/em/packages/emxlib/emx_11.xsd'
 
 
 class ValidateError(Exception):

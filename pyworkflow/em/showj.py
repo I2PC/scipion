@@ -142,10 +142,10 @@ class ColumnsConfig():
                     if col.getName() in extra:
                         columnsName.append(col.getName())
                         columnsLabel.append(col.getLabel())
+                        
                 else:
                     columnsName.append(col.getName())
                     columnsLabel.append(col.getLabel())
-        
 #       columns = [col.getName() for col in self._columnsDict.values() if col.isRenderable()]
         return columnsName, columnsLabel
     
@@ -190,7 +190,7 @@ class ColumnProperties():
         self.editable = (self.columnType == COL_RENDER_TEXT)
         self.allowSetEditable = self.editable
         
-        self.renderable = 'renderable' in defaultColumnLayoutProperties
+        self.renderable = 'renderable' in defaultColumnLayoutProperties and defaultColumnLayoutProperties['renderable'].lower() == 'true'
             
         self.allowSetRenderable = ((self.columnType == COL_RENDER_IMAGE or
                                    self.columnType == COL_RENDER_VOLUME) and allowRender)
@@ -207,6 +207,9 @@ class ColumnProperties():
     def getColumnType(self):
         return self.columnType
     
+    def allowsRenderable(self):
+        self.renderable or self.allowSetRenderable
+        
     def isRenderable(self):
         return self.renderable or self.allowSetRenderable
         

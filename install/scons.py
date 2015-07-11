@@ -54,6 +54,10 @@ def build(args):
         while True:
             ret = proc.poll()
             if ret is not None:
+                for line in proc.stdout:  # output the remaining lines
+                    sys.stdout.write(line)
+                    logFile.write(line)
+                    logFile.flush()
                 return ret
             line = proc.stdout.readline()
             sys.stdout.write(line)

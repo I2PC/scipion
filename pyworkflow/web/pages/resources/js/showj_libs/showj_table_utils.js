@@ -134,30 +134,40 @@ function getColumnsDefinition() {
 		dataRowForTable["sTitle"] = columnLayoutConfiguration.columnLabel;
 		dataRowForTable["sSubTitle"] = columnLayoutConfiguration.columnName;
 		dataRowForTable["aTargets"] = [columnId];
+//		if (columnLayoutConfiguration.columnLabel == 'weight')
+//		{
+//			console.log("order by weight")
+//			dataRowForTable["aaSorting"] = [columnId, 'asc'];
+//		}
 		if (columnLayoutConfiguration.columnType == COL_RENDER_CHECKBOX) {
 //			console.log("id:"+columnIdReal+" checkbox!")
-			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderCheckbox(meta.col, data)}
+			dataRowForTable["mRender"] = function (data, type, row){ return colRenderCheckbox(data)}
 		
 		} 
-		else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
-			dataRowForTable["mRender"] = function (data, type, row, meta){	return colRenderImage(meta.col, data)}
-		
-		// columnType = 5
-		} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
-//			console.log("id:"+columnIdReal+" render slice!")
-			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderSlice(meta.col, data)}
-		
-		// None
+		if(columnLayoutConfiguration.renderable)
+		{
+			console.log(columnLayoutConfiguration.columnLabel)
+			if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
+				dataRowForTable["mRender"] = function (data, type, row){	return colRenderImage(data)}
+			
+			// columnType = 5
+			} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
+	//			console.log("id:"+columnIdReal+" render slice!")
+				dataRowForTable["mRender"] = function (data, type, row){ return colRenderSlice(data)}
+			
+			// None
+			}
 		}
 		
 		dataForTable.push(dataRowForTable);
 		columnId++;
 	}
-	console.log(dataForTable)
+//	console.log("columns Definition:")
+//	console.log(dataForTable)
 	return dataForTable;
 }
 
-function colRenderCheckbox(id, aData){
+function colRenderCheckbox(aData){
 	var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" '
 	var data = aData
 			
@@ -171,10 +181,7 @@ function colRenderCheckbox(id, aData){
 }
 
 
-function colRenderable(id, aData, renderFunc){
-		column = columns[id]
-		if (column != null && column.renderable)
-		{
+function colRenderable(aData, renderFunc){
 			
 			src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc;
 			src += '&image=' + aData + '\"';
@@ -185,23 +192,17 @@ function colRenderable(id, aData, renderFunc){
 					+ ' src=' + src
 					+ ' data-real_src=' +src
 					+ '/>'
-		}	
-		else
-		{
-			//console.log("not rendered image " + column.columnLabel + " renderable " +column.renderable)
-			content_html = aData
-		}
 		return content_html;
 }
 
 
-function colRenderImage(id, aData){
+function colRenderImage(aData){
 	
-	html = colRenderable(id, aData, "get_image")
+	html = colRenderable(aData, "get_image")
 	return html
 }
 
-function colRenderSlice(id, aData){
+function colRenderSlice(aData){
 	//var volName = aData.split(".")
 	//volName = volName[0] + "_tmp.mrc"
 	var volName = aData
@@ -233,37 +234,53 @@ function getVisibleColumn(n)
 		}
 		count ++
 	}	
+	return -1
 }
 
 
 
-function orderColumns(order)
+function arrangeColumns(order, sort)
 {
-	orderColumns = jsonTableLayoutConfiguration.colsOrder.trim().split(" ")
-	var i = 0;
-	for(orderColumn in orderColumns)
+	if(jsonTableLayoutConfiguration.colsOrder)
+		orderColumns = jsonTableLayoutConfiguration.colsOrder.trim().split(" ")
+	if(jsonTableLayoutConfiguration.colsSortby)
 	{
-		j = 0
-		for (column in jsonTableLayoutConfiguration.columnsLayout)
-		{
-			if(jsonTableLayoutConfiguration.columnsLayout[column].columnLabel == orderColumns[orderColumn])
+		sortby = jsonTableLayoutConfiguration.colsSortby.trim().split(" ")
+		sortbyColumn = sortby[0]
+		if (sortby.length == 2)
+			direction = sortby[1]
+		else
+			direction = 'asc'
+	}
+	
+	var j = 0
+	for (column in jsonTableLayoutConfiguration.columnsLayout)
+	{
+		columnLabel = jsonTableLayoutConfiguration.columnsLayout[column].columnLabel
+		i = 0
+		if(jsonTableLayoutConfiguration.colsOrder)
+			for(orderColumn in orderColumns)
 			{
-				pos = getVisibleColumn(i)
-				if(pos != order[j] && pos != -1)
+				if( columnLabel == orderColumns[orderColumn])
 				{
-					pos2 = order.indexOf(j)
-					aux = order[pos]
- 					order[pos] = order[pos2]
- 					order[pos2] = aux
+					pos = getVisibleColumn(i)
+					if(pos != order[j] && pos != -1)
+					{
+						pos2 = order.indexOf(j)
+						aux = order[pos]
+	 					order[pos] = order[pos2]
+	 					order[pos2] = aux
+					}
 				}
 				i ++
-				break
 			}
-			j ++
-		}
+		if(jsonTableLayoutConfiguration.colsSortby && sortbyColumn == columnLabel)
+			sort[0] = [order[j], direction]
+		j ++
 	}
-	return order
+	
 }
+
 
 function initializeColumnHeader() {
 	var headerRow = $("#data_table thead tr")

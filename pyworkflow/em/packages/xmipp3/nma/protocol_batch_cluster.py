@@ -65,6 +65,7 @@ class BatchProtNMACluster(BatchProtocol):
         tmpSet = SetOfParticles(filename=self.sqliteFile.get())        
         partSet.appendFromImages(tmpSet)
         # Register outputs
+        partSet.setAlignmentProj()
         self._defineOutputs(outputParticles=partSet)
         self._defineTransformRelation(inputSet, partSet)
         

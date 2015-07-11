@@ -130,23 +130,27 @@ def addProjectPrefix(request, fn):
         return join(projectPath, fn)
 
 
+def getRenderableColumnsFromParams(extraParams, table):
+    columnsProperties, mapCol = getExtraParameters(extraParams, table)
+    labelsToRender = []
+ 
+    for x in columnsProperties:
+        if 'renderable' in columnsProperties[x]:
+            if columnsProperties[x]['renderable'] == "True":
+                labelsToRender.append(mapCol[x])
+     
+    if len(labelsToRender) == 0:
+        labelsToRender = None
+    return labelsToRender
+    
+
 def setLabelToRender(request, table, inputParams, extraParams, firstTime):
     """ If no label is set to render, set the first one if exists """
     labelAux = inputParams.get(sj.LABEL_SELECTED, False)
     hasChanged = hasTableChanged(request, inputParams)
     
     if (not labelAux or hasChanged):
-        columnsProperties, mapCol = getExtraParameters(extraParams, table)
-        labelsToRender = []
-
-        for x in columnsProperties:
-            if 'renderable' in columnsProperties[x]:
-                if columnsProperties[x]['renderable'] == "True":
-                    labelsToRender.append(mapCol[x])
-        
-        if len(labelsToRender) == 0:
-            labelsToRender = None
-        
+        labelsToRender = getRenderableColumnsFromParams(extraParams, table)
         labelsToRender, _ = inputParams[sj.COLS_CONFIG].getRenderableColumns(extra=labelsToRender)
         
         if labelsToRender:
@@ -270,7 +274,7 @@ DEFAULT_PARAMS = {
     sj.ROWS: None,                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
     
     sj.ORDER: None,
-    
+    sj.SORT_BY: None,
     sj.IMG_ZOOM: '128px',                     # Zoom set by default
     sj.IMG_MIRRORY: False,                    # When 'True' image are mirrored in Y Axis 
     sj.IMG_APPLY_TRANSFORM: False,       # When 'True' if there is transform matrix, it will be applied
@@ -362,8 +366,8 @@ def showj(request):
     else:
         inputParams[sj.COLS_CONFIG] = None
         volPath = inputParams[sj.PATH]
-
-    context, return_page = createContextShowj(request, inputParams, dataset, table, _stats, volPath)
+    labelsToRender = getRenderableColumnsFromParams(extraParams, table)
+    context, return_page = createContextShowj(request, inputParams, dataset, table, _stats, volPath, labelsToRender)
 
     render_var = render_to_response(return_page, RequestContext(request, context))
 
@@ -391,9 +395,9 @@ def storeToSession(request, inputParams, dataset, _imageDimensions):
     request.session[inputParams[sj.PATH]] = datasetDict
     
 
-def createContextShowj(request, inputParams, dataset, table, paramStats, volPath=None):
+def createContextShowj(request, inputParams, dataset, table, paramStats, volPath=None, labelsToRender=None):
     showjForm = ShowjForm(dataset,
-                          inputParams[sj.COLS_CONFIG],
+                          inputParams[sj.COLS_CONFIG], labelsToRender,
                           inputParams) # A form bound for the POST data and unbound for the GET
         
     if showjForm.is_valid() is False:
@@ -432,7 +436,8 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
     if columnsConfig is not None:
         
         context.update({sj.COLS_CONFIG: json.dumps({'columnsLayout': columnsConfig._columnsDict,
-                                                    'colsOrder': inputParams[sj.ORDER]
+                                                    'colsOrder': inputParams[sj.ORDER],
+                                                    'colsSortby': inputParams[sj.SORT_BY]
                                                    },
                                                    ensure_ascii=False,
                                                    cls=ColumnPropertiesEncoder)})
@@ -471,6 +476,7 @@ def getExtraParameters(extraParams, table):
                     val = {'renderable':'True'}
                     if enc_render == False:
                         enc_render = True
+                        
                     
                 params = value.split()
                 for label in params:
@@ -486,7 +492,6 @@ def getExtraParameters(extraParams, table):
                     # COL_RENDER_IMAGE = 3
                     if _mapRender[x] == 3 and not 'renderable' in defaultColumnsLayoutProperties[x]:
                         defaultColumnsLayoutProperties[x].update({'renderable':'False'})
-    
     return defaultColumnsLayoutProperties, _mapCol
 
 

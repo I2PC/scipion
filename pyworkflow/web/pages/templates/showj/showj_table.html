@@ -78,18 +78,16 @@ $(document).ready(function() {
 	initializeGoToEvent()
 	initializeTableWidth()
 	
-
-	
-	
 	var order = []
+	var sort = [[]]
 	var count = 0
 	$.each(jsonTableLayoutConfiguration.columnsLayout, function(k, i) {
 		order.push(count)
 		count ++
 	});
 	
-	if (jsonTableLayoutConfiguration.colsOrder)
-		order = orderColumns(order)
+	
+	arrangeColumns(order, sort)
 	
 	
 	/* Init the table */
@@ -155,7 +153,8 @@ $(document).ready(function() {
 		    	        $(nRow).attr('id', 'row_container___'+aData[0]);
 		    	    }
 			    });
-
+	if(sort[0].length > 0)
+		oTable.fnSort(sort)
 	var configButton ="<a href='#' onclick='showTableConfig()'><input type='button' class='btn buttonGrey' value='{{msg.LABEL_DISPLAY_TABLE_CONFIG}}'/></a>"
 	$("#displayTableContainer").html(configButton)
 	

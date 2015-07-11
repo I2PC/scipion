@@ -44,7 +44,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String other;
     private JButton representativesbt;
     private InputFieldsMessageDialog dlg;
-    private String tmpdir;
     private JButton createvolbt;
     private String setType;
     private static final String runProtCreateSubset = "run protocol ProtUserSubSet inputObject=%s sqliteFile='%s','%s' outputClassName=%s other='%s' label='%s'";
@@ -70,7 +69,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             port = parameters.port;
             inputid = parameters.inputid;
             String filename = data.getFileName();
-            tmpdir = new File(filename).getParent() + File.separator + "tmp";
             sqlitefile = data.getTmpFile("_selection");
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "create subset");
@@ -352,7 +350,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 selection = gallery.getSelection();
             ((ScipionGalleryData)data).overwrite(sqlitefile, selection);
             XmippWindowUtil.runCommand(command, port);
-            close(false);
+            //close(false);
         } catch (SQLException ex) {
             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }

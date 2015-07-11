@@ -84,10 +84,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		}
 	}
 
-	@Override
-	public int getIndex(int row, int col) {
-                return row;
-	}
+	
 
 	
 
@@ -112,7 +109,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 					item = createImageItem(row, ci.label);
 					cache.put(key, item);
 				}
-				setupItem(item, row);
+				setupItem(item);
 				return item;
 			}
 			int label = ci.label;
@@ -464,6 +461,16 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	}
         
 	@Override
+	public int getIndex(int row, int col) {
+        return row;
+	}
+    
+    public ColumnInfo getColumn(int row, int col)
+	{
+		return visibleLabels.get(col);
+	}
+    
+    @Override
 	public Point getCoords(int index) {
 	
 		Point p = new Point();

@@ -181,8 +181,10 @@ class ClusteringWindow(gui.Window):
             
             if self.plotter is None or self.plotter.isClosed():
                 self.plotter = XmippNmaPlotter(data=self.data)
+                doShow = True
             else:
                 self.plotter.clear()
+                doShow = False
             
             # Actually plot
             baseList = [basename(n) for n in modeNameList]
@@ -205,7 +207,10 @@ class ClusteringWindow(gui.Window):
                     self.data.ZIND = modeList[2]
                     self.plotter.plotArray3D("%s %s %s" % tuple(baseList), *baseList)
 
-            self.plotter.draw()
+            if doShow:
+                self.plotter.show()
+            else:
+                self.plotter.draw()
 
     def _updateSelectionLabel(self):
         selected = self.data.getSelectedSize()

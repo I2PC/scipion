@@ -61,7 +61,7 @@ from protocol_screen_particles import XmippProtScreenParticles
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from pyworkflow.em.showj import *
 from protocol_movie_alignment import ProtMovieAlignment
-
+from protocol_validate_nontilt import XmippProtValidateNonTilt
 
 class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
@@ -91,7 +91,8 @@ class XmippViewer(Viewer):
                 XmippProtScreenClasses, 
                 XmippProtScreenParticles, 
                 XmippProtCTFMicrographs, 
-                ProtMovieAlignment
+                ProtMovieAlignment,
+                XmippProtValidateNonTilt
                 ]
     
     def __init__(self, **args):
@@ -157,7 +158,7 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfNormalModes):
             fn = obj.getFileName()
             objCommands = "'%s' '%s'" % (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD)
-            self._views.append(ObjectView(self._project, self.protocol.strId(), fn, viewParams={OBJCMDS: objCommands}, **args))
+            self._views.append(ObjectView(self._project,  self.protocol.strId(), fn, obj.strId(), viewParams={OBJCMDS: objCommands}, **args))
 
         elif issubclass(cls, SetOfMovies):
             fn = obj.getFileName()
@@ -251,7 +252,7 @@ class XmippViewer(Viewer):
             psdLabels = '_psdFile _xmipp_enhanced_psd _xmipp_ctfmodel_quadrant _xmipp_ctfmodel_halfplane'
             labels = 'id enabled label %s _defocusU _defocusV _defocusAngle _defocusRatio ' \
                      '_xmipp_ctfCritFirstZero _xmipp_ctfCritCorr13 _xmipp_ctfCritFitting _xmipp_ctfCritNonAstigmaticValidity ' \
-                     '_xmipp_ctfCritCtfMargin _micObj._filename' % psdLabels #TODO:CHECK IF _xmipp_ctfCritNonAstigmaticValidity AND _xmipp_ctfCritCtfMargin exist sometimes. 
+                     '_xmipp_ctfCritCtfMargin _xmipp_ctfCritMaxFreq _micObj._filename' % psdLabels #TODO:CHECK IF _xmipp_ctfCritNonAstigmaticValidity AND _xmipp_ctfCritCtfMargin exist sometimes. 
             self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))    
 
@@ -378,7 +379,12 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
                                                       ORDER: labels, VISIBLE: labels, RENDER: plotLabels, 'zoom': 50,
                                                       OBJCMDS: objCommands}))
-
+        
+        elif issubclass(cls, XmippProtValidateNonTilt):
+            outputVols = obj.outputVolumes
+            labels = 'id enabled comment _filename weight'
+            self._views.append(ObjectView(self._project, outputVols.strId(), outputVols.getFileName(), viewParams={MODE: MODE_MD,
+                                                      VISIBLE:labels, ORDER: labels, SORT_BY: 'weight desc', RENDER: '_filename'}))
 
         elif issubclass(cls, XmippProtExtractParticlesPairs):
             self._visualize(obj.outputParticlesTiltPair)

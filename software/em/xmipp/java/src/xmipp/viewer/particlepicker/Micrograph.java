@@ -217,11 +217,11 @@ public abstract class Micrograph {
 
 	public void runImageJFilters(List<IJCommand> filters) {
 		for (IJCommand f : filters)
-			if (!f.getCommand().equals(ParticlePicker.xmippsmoothfilter)) // this
-																			// filter
-																			// was
-																			// applied
+			// this filter was applied
+			if (!f.getCommand().equals(ParticlePicker.xmippsmoothfilter)) 
+			{
 				IJ.run(imp, f.getCommand(), f.getOptions());
+			}
 	}
 
 	public void releaseImage() {

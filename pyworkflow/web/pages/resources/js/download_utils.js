@@ -31,22 +31,42 @@ $(document).ready(function() {
 	*/
 	$("#downloadForm").submit(function() {
 		
-		var action = "/doDownload/";
-		var URL = getSubDomainURL() + action
+		fullName = $("input[name=fullName]").val()
+		organization = $("input[name=organization]").val()
+		email = $("input[name=email]").val()
+		country = $("select[name=country]").val()
+		version = $("select[name=version]").val()
+		platform = $("select[name=platform]").val()
 		
-		var serialize_form = $("#downloadForm").serialize();
-		
-		$.post(URL, serialize_form, function(json) {
-			if (json.errors.length > 0) {
-				// Show errors in the validation
-				errorPopup('Errors found', json.errors);
-			} else {
-				// Start download!
-
-			}
-		}, "json");
+		errors = ""
+		if (fullName.length == 0)
+			errors += "Please fill in the Full Name field.<br />"
+		if (organization.length == 0)
+			errors += "Please fill in the Organization field.<br />"
+		if (email.length == 0)
+			errors += "Please fill in the Email field.<br />"
+		if (country.length == 0)
+			errors += "Please fill in the Country field.<br />"
+		if (version.length == 0)
+			errors += "Please fill in the Version field.<br />"
+		if (platform.length == 0)
+			errors += "Please fill in the Platform field.<br />"
+        if (errors.length > 0) {
+        		// Show errors in the validation
+        		errorPopup('Errors found', errors);
+        		// Important. Stop the normal POST
+        		return false
+        } 
+        else
+        {
+			var action = "/doDownload/";
+			var URL = getSubDomainURL() + action
 			
-		// Important. Stop the normal POST
-		return false;
-		});
-	});	
+			var serialize_form = $(this).serialize();
+			
+			$.post(URL, serialize_form, function(json) {
+			}, "json");
+        }	
+		
+	});
+});	

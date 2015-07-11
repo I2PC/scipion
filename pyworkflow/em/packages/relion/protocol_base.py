@@ -87,7 +87,7 @@ class ProtRelionBase(EMProtocol):
                   'input_star': self._getPath('input_particles.star'),
                   'input_mrcs': self._getPath('input_particles.mrcs'),
                   'data_scipion': self.extraIter + 'data_scipion.sqlite',
-                  'projections': self.extraIter + '%(half)s_projections.sqlite',
+                  'projections': self.extraIter + '%(half)sclass%(ref3d)03d_projections.sqlite',
                   'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
                   'model': self.extraIter + 'model.star',
                   'shiny': self._getExtraPath('shiny.star'),
@@ -211,7 +211,7 @@ class ProtRelionBase(EMProtocol):
         form.addParam('haveDataBeenPhaseFlipped', LabelParam, condition='not doContinue',
                       label='The phase flip comes as a property of the input particles!')
         form.addParam('doCTF', BooleanParam, default=True,
-                      label='Do CTF-amplitude correction?', condition='not doContinue',
+                      label='Do CTF-correction?', condition='not doContinue',
                       help='If set to Yes, CTFs will be corrected inside the MAP refinement. '
                            'The resulting algorithm intrinsically implements the optimal linear, ' 
                            'or Wiener filter. Note that input particles should contains CTF parameters.')
