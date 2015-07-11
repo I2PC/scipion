@@ -245,7 +245,6 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 			canvas.updateMicrograph();
 		
 		canvas.display();
-		updateZoom();
 		
 	}
 
