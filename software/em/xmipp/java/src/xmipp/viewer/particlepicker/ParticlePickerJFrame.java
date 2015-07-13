@@ -1,12 +1,11 @@
 package xmipp.viewer.particlepicker;
 
-import ij.CommandListener;
-import ij.Executer;
 import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.WindowManager;
 import ij.plugin.frame.Recorder;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -39,6 +38,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -63,6 +63,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+
+import xmipp.ij.commons.InputFieldsMessageDialog;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippUtil;
@@ -76,7 +78,6 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.ij.commons.InputFieldsMessageDialog;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -464,7 +465,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 ImagePlus.addImageListener(new ImageListener() {
 
                     @Override
-                    public void imageUpdated(ImagePlus arg0) {
+                    public void imageUpdated(ImagePlus imp) {
                         if(command != null)
                         {
                             getParticlePicker().updateFilters(command);
@@ -710,10 +711,20 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
 		usezoombt.setToolTipText("Keep zoom");
 		usezoombt.setFocusable(false);
-                usezoombt.setSelected(true);
+        usezoombt.setSelected(true);
+        usezoombt.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				if(!usezoombt.isSelected())
+					getParticlePicker().setZoom(-1);
+			}
+		});
 		tb.add(usezoombt);
-                initShapePane();
-                tb.add(shapepn);
+        initShapePane();
+        tb.add(shapepn);
 		initSizePane();
 		tb.add(sizepn);
 		if (!(this instanceof ExtractPickerJFrame))
@@ -727,23 +738,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		
 	}
 
-	protected void updateZoom()
-	{
-		double zoom = getZoom();
-		
-		if (zoom == -1. || (zoom != -1. && !usezoombt.isSelected()))
-		{
-			zoom = getCanvas().getMagnification();
-			usezoombt.setText(String.format(Locale.US, "%.2f", zoom));
-		}
-		else if (usezoombt.isSelected())
-			getCanvas().setZoom(zoom);
-	}
+	
 
-	public double getZoom()
-	{
-		return Double.parseDouble(usezoombt.getText());
-	}
+	
 
 	public boolean isEraserMode()
 	{
@@ -751,11 +748,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			return false;
 		return eraserbt.isSelected();
 	}
+	
 
-	protected void displayZoom()
+	protected void displayZoom(double zoom)
 	{
-
-		usezoombt.setText(String.format(Locale.US, "%.2f", getCanvas().getMagnification()));
+		
+		usezoombt.setText(String.format(Locale.US, "%.2f", zoom));
+		if(usezoombt.isSelected())
+			getParticlePicker().setZoom(zoom);
 		pack();
 	}
 

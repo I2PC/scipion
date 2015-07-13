@@ -28,8 +28,8 @@ import os
 from math import floor
 
 import xmipp
-from pyworkflow.object import String
-from pyworkflow.utils.path import cleanPath, moveFile, copyFile, cleanPattern
+from pyworkflow.object import Float
+from pyworkflow.utils.path import cleanPath, copyFile, cleanPattern
 from pyworkflow.protocol.params import (PointerParam, FloatParam, BooleanParam,
                                         IntParam, StringParam, 
                                         STEPS_PARALLEL, LEVEL_ADVANCED)
@@ -414,13 +414,17 @@ class XmippProtRansac(ProtInitialVolume):
     def _postprocessVolume(self, vol, row):
         self._counter += 1
         vol.setObjComment('ransac volume %02d' % self._counter)
+        vol._xmipp_volScoreSum   = Float(row.getValue(xmipp.MDL_VOLUME_SCORE_SUM))
+        vol._xmipp_volScoreSumTh = Float(row.getValue(xmipp.MDL_VOLUME_SCORE_SUM_TH))
+        vol._xmipp_volScoreMean = Float(row.getValue(xmipp.MDL_VOLUME_SCORE_MEAN))
+        vol._xmipp_volScoreMin = Float(row.getValue(xmipp.MDL_VOLUME_SCORE_MIN))
         
     def createOutputStep(self):
         inputSet = self.inputSet.get()
         fn = self._getPath('proposedVolumes.xmd')
-        md = xmipp.MetaData(fn)
-        md.addItemId()
-        md.write(fn)
+#        md = xmipp.MetaData(fn)
+#        md.addItemId()
+#        md.write(fn)
         
         volumesSet = self._createSetOfVolumes()
         volumesSet.setSamplingRate(inputSet.getSamplingRate())

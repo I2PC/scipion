@@ -34,6 +34,8 @@ from pyworkflow.em.packages.relion.convert import writeSetOfParticles
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 import pyworkflow.em as em
 
+
+
 class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     """ Wrapper to Relion preprocess program.
     This protocol provides an easy way to execute *relion_preprocess* program

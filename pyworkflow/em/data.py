@@ -797,10 +797,12 @@ class SetOfImages(EMSet):
         x, y, z = self._firstDim
         return x, y, z
     
+    def getXDim(self):
+        return self.getDim()[0]
+    
     def isOddX(self):
         """ Return True if the first item x dimension is odd. """
-        x, _, _ = self.getDim()
-        return x % 2 == 1
+        return self.getXDim() % 2 == 1
     
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
@@ -1002,6 +1004,7 @@ class Coordinate(EMObject):
         self._x = Integer(kwargs.get('x', None))
         self._y = Integer(kwargs.get('y', None))
         self._micId = Integer()
+        self._micName = String()
         
     def getX(self):
         return self._x.get()
@@ -1042,6 +1045,7 @@ class Coordinate(EMObject):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
         self._micId.set(micrograph.getObjId())
+        self._micName.set(micrograph.getMicName())
     
     def copyInfo(self, coord):
         """ Copy information from other coordinate. """
@@ -1061,6 +1065,15 @@ class Coordinate(EMObject):
             height = dims[1]
             self.setY(height - self.getY())
         #else: error TODO
+    
+    def setMicName(self, micName):
+        self._micName.set(micName)
+    
+    def getMicName(self):
+        if self._micName is not None:
+            return self._micName.get()
+        else:
+            self.getFileName()
 
 
 class SetOfCoordinates(EMSet):

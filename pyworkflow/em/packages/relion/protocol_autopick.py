@@ -166,7 +166,7 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
     problems, the autopicking program can only be run sequentially (hence there is no option to use 
     more than one single MPI processor).
     """
-    _label = 'auto-picking (1)'
+    _label = 'auto-picking (step 1)'
     
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -302,7 +302,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
     job-type. In this second stage, the protocol reads the FOM maps to optimize
     the 'Threshold' and 'Inter-particle distance'.
     """
-    _label = 'auto-picking (2)'
+    _label = 'auto-picking (step 2)'
     
     
     def __init__(self, **kwargs):        

@@ -109,7 +109,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 					item = createImageItem(row, ci.label);
 					cache.put(key, item);
 				}
-				setupItem(item, row);
+				setupItem(item);
 				return item;
 			}
 			int label = ci.label;

@@ -27,7 +27,7 @@
 """
 
 import os
-from protlib_xmipp import XmippScript
+from pyworkflow.em.packages.xmipp3 import XmippScript
 from protlib_utils import reportError 
 from protlib_filesystem import getXmippPath
 

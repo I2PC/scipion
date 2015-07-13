@@ -208,8 +208,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         }
 
         canvas.display();
-        updateZoom();
-        
     }
 
     protected void formatMicrographsTable() {

@@ -116,3 +116,18 @@ class TestEmxBase(tests.BaseTest):
                                          voltage=200)
         self.launchProtocol(protEmxImport)
             
+    def test_particlesReconstruction(self):
+        """ Import an EMX file with particles and alignment information.
+        """
+        emxFn = self.dataset.getFile('alignment/Test2/stack2D.emx')
+        protEmxImport = self.newProtocol(ProtImportParticles,
+                                         objLabel='emx: import projection',
+                                         importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                         alignType=2,#PROJ
+                                         emxFile=emxFn,
+                                         samplingRate=1.,
+                                         amplitudeContrast=2.,
+                                         sphericalAberration=0.1,
+                                         voltage=200)
+        self.launchProtocol(protEmxImport)
+

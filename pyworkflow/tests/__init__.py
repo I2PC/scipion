@@ -201,10 +201,12 @@ DataSet(name='CTFDiscrepancy',  folder='CTFDiscrepancy',
               })
 
 DataSet(name='movies',  folder='movies',
-        files={'movie1':'Falcon_2012_06_12-14_33_35_0_movie.mrcs',
-               'movie2':'Falcon_2012_06_12-16_55_40_0_movie.mrcs',
-               'movie3':'Falcon_2012_06_12-17_26_54_0_movie.mrcs',
-                })   
+        files={'movie1':'ribo/Falcon_2012_06_12-14_33_35_0_movie.mrcs',
+               'movie2':'ribo/Falcon_2012_06_12-16_55_40_0_movie.mrcs',
+               'movie3':'ribo/Falcon_2012_06_12-17_26_54_0_movie.mrcs',
+               'movie4':'qbeta/qbeta.mrc',
+               'movie5':'cct/cct_1.em',
+                })
 
 DataSet(name='riboMovies',  folder='riboMovies',
         files={'movie1':'30_movie_gc_window.mrcs',
