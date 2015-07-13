@@ -26,10 +26,10 @@
 """
 This module implement the classes to create plots on xmipp.
 """
+from math import radians
 from itertools import izip
-import matplotlib.pyplot as plt 
-#from math import pi
-import pyworkflow.em.metadata as md
+import matplotlib.pyplot as plt
+
 from pyworkflow.gui.plotter import Plotter
 import pyworkflow.em.metadata as md
 
@@ -58,18 +58,20 @@ class EmPlotter(Plotter):
     def plotAngularDistributionFromMd(self, mdFile, title, **kwargs):
         """ Read the values of rot, tilt and weights from
         the medata and plot the angular distribution.
+        ANGLES are in DEGREES
         In the metadata:
             rot: MDL_ANGLE_ROT
             tilt: MDL_ANGLE_TILT
             weight: MDL_WEIGHT
         """
+
         angMd = md.MetaData(mdFile)
         rot = []
         tilt = []
         weight = []
         
         for row in md.iterRows(angMd):
-            rot.append(row.getValue(md.MDL_ANGLE_ROT))
+            rot.append(radians(row.getValue(md.MDL_ANGLE_ROT)))
             tilt.append(row.getValue(md.MDL_ANGLE_TILT))
             weight.append(row.getValue(md.MDL_WEIGHT))
         return self.plotAngularDistribution(title, rot, tilt, weight, **kwargs)

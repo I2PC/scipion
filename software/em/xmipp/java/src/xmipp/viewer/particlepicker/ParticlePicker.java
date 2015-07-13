@@ -67,6 +67,19 @@ public abstract class ParticlePicker {
     public final HashMap<Format, String> emextensions;
     protected ParticlePickerParams params;
     protected static ParticlePicker picker;
+    protected double zoom = -1.f;
+    
+    
+    public double getZoom()
+    {
+    	return zoom;
+    }
+    
+    public void setZoom(double zoom)
+    {
+    	this.zoom = zoom;
+    }
+    
 
     public static Color getNextColor() {
         Color next = colors[nextcolor];

@@ -546,23 +546,23 @@ public class SupervisedParticlePicker extends ParticlePicker
 			MetaData md = new MetaData(file);
 			Mode configmode;
 			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
-                        long id = md.firstObject();
+            long id = md.firstObject();
 
-                        if(hasautopercent) 
-                            autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-                        
-                        dtemplatesnum = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
-                        if (dtemplatesnum == 0)
-                                dtemplatesnum = 1;// for compatibility with previous
-                                                                        // projects
-                        configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
-                        isautopick = configmode == Mode.Supervised || configmode == Mode.Review;
-                        if (mode == Mode.Supervised && configmode == Mode.Manual)
-                                throw new IllegalArgumentException("Cannot switch to Supervised mode from the command line");
-                        if (mode == Mode.Manual && configmode == Mode.Supervised)
-                                mode = Mode.Supervised;
-                        if (mode == Mode.Review && configmode == mode.Manual)//Review mode makes no sense if manual mode
-                            throw new IllegalArgumentException("Cannot review picking in manual mode, use manual mode instead");
+            if(hasautopercent) 
+                autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+            
+            dtemplatesnum = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
+            if (dtemplatesnum == 0)
+                    dtemplatesnum = 1;// for compatibility with previous
+                                                            // projects
+            configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
+            isautopick = configmode == Mode.Supervised || configmode == Mode.Review;
+            if (mode == Mode.Supervised && configmode == Mode.Manual)
+                    throw new IllegalArgumentException("Cannot switch to Supervised mode from the command line");
+            if (mode == Mode.Manual && configmode == Mode.Supervised)
+                    mode = Mode.Supervised;
+            if (mode == Mode.Review && configmode == Mode.Manual)//Review mode makes no sense if manual mode
+                throw new IllegalArgumentException("Cannot review picking in manual mode, use manual mode instead");
 			md.destroy();
 		}
 		catch (Exception e)
