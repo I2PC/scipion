@@ -77,7 +77,7 @@ class TestXmippAlingMovies(TestXmippBase):
         setupTestProject(cls)
         TestXmippBase.setData()
         cls.protImport1 = cls.runImportMovie1(cls.movie1)
-        cls.protImport2 = cls.runImportMovie1(cls.movie2)
+        cls.protImport2 = cls.runImportMovie2(cls.movie2)
     
     def testAlignOFMovie1(self):
         # test downsampling a set of micrographs
