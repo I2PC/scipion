@@ -26,6 +26,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	protected Label pixelslb;
     private DesignMaskJFrame maskfr;
     protected Params params;
+    protected boolean closing = false;
     
 
 	public XmippImageWindow(ImagePlusLoader ipl, Params params)
@@ -187,27 +188,29 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	public void windowClosing(WindowEvent e) {
             
             super.windowClosing(e);
-            XmippApplication.removeInstance(true);
-            if(maskfr != null)
-            {
-                maskfr.setVisible(false);
-                maskfr.dispose();
-                
-            }
+            myClose();
 		
 	}
+        
+    public synchronized void myClose()
+    {
+    	closing = true;
+    	
+    	XmippApplication.removeInstance(true);
+    	if(maskfr != null)
+    	{
+    		maskfr.setVisible(false);
+    		maskfr.dispose();
+    		
+    	}
+    }
+    
         
     @Override
     public  boolean close()
     {
         boolean result = super.close();
-        XmippApplication.removeInstance(true);
-        if(maskfr != null)
-        {
-            maskfr.setVisible(false);
-            maskfr.dispose();
-            
-        }
+        myClose();
         return result;
     }
     
@@ -270,5 +273,13 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	});
         }
     }
+
+
+
+	public synchronized boolean isClosing()
+	{
+		// TODO Auto-generated method stub
+		return closing;
+	}
 
 }// class XmippImageWindow
