@@ -23,6 +23,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.JMetaDataIO;
+import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
@@ -32,6 +33,7 @@ import xmipp.viewer.particlepicker.training.CorrectAndAutopickRunnable;
 import xmipp.viewer.particlepicker.training.TrainRunnable;
 import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
+import xmipp.viewer.scipion.ScipionMetaData;
 
 /**
  * Business object for Single Particle Picker GUI. Inherits from ParticlePicker
@@ -350,7 +352,7 @@ public class SupervisedParticlePicker extends ParticlePicker
             return existspsd;
         }
 
-	@Override
+    @Override
 	public void loadEmptyMicrographs()
 	{
 		if (micrographs == null)
@@ -361,7 +363,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 		String psd = null, ctf = null, filename;
 		try
 		{
-			MetaData md = new MetaData(getMicrographsSelFile());
+			String selfile = getMicrographsSelFile();
+			MetaData md = new MetaData(selfile);
                         
 			md.removeDisabled();
                         
@@ -389,6 +392,42 @@ public class SupervisedParticlePicker extends ParticlePicker
 			if (micrographs.isEmpty())
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
 			md.destroy();
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+
+	}
+	
+	
+	public void loadEmptyMicrographsFromSqlite()
+	{
+		String selfile = getMicrographsSelFile();
+		
+		if (micrographs == null)
+			micrographs = new ArrayList<SupervisedPickerMicrograph>();
+		else
+			micrographs.clear();
+		SupervisedPickerMicrograph micrograph;
+		String psd = null, ctf = null, filename;
+		try
+		{
+			ScipionMetaData md = new ScipionMetaData(selfile);
+            if(!md.getSetType().equals("SetOfMicrographs"))    
+            	throw new IllegalArgumentException("SetOfMicrographs file expected");
+			ColumnInfo ci = md.getColumnInfo("_filename");
+			long[] ids = md.findObjects();
+			for (long id : ids)
+			{
+
+				filename = md.getValueString(ci.label, id);
+				micrograph = new SupervisedPickerMicrograph(filename, psd, ctf);
+				micrographs.add(micrograph);
+			}
+			if (micrographs.isEmpty())
+				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
 		}
 		catch (Exception e)
 		{
