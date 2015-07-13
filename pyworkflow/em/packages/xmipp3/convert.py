@@ -592,7 +592,27 @@ def readCTFModel(filename, mic):
     md = xmipp.MetaData(filename)
     return mdToCTFModel(md, mic)
         
-        
+
+def openMd(fn):
+    # We are going to write metadata directy to file to do it faster
+    f = open(fn, 'w')
+    s = """# XMIPP_STAR_1 * 
+#
+data_header
+loop_
+ _pickingMicrographState
+Manual 
+data_particles
+loop_
+ _itemId
+ _enabled
+ _xcoor
+ _ycoor
+ _micrographId
+"""
+    f.write(s)
+    return f
+
 def writeSetOfCoordinates(posDir, coordSet):
     """ Write a pos file on metadata format for each micrograph 
     on the coordSet. 
@@ -600,31 +620,40 @@ def writeSetOfCoordinates(posDir, coordSet):
         posDir: the directory where the .pos files will be written.
         coordSet: the SetOfCoordinates that will be read.
     """
-    posFiles = []
     boxSize = coordSet.getBoxSize() or 100  
     
-    # Write pos metadatas (one per micrograph)    
+    # Create a dictionary with the pos filenames for each micrograph
+    posDict = {}
     for mic in coordSet.iterMicrographs():
         micName = mic.getFileName()
         posFn = join(posDir, replaceBaseExt(micName, "pos"))
+        posDict[mic.getObjId()] = posFn
         
-        md = xmipp.MetaData()
-        for coord in coordSet.iterCoordinates(micrograph=mic):
-            objId = md.addObject()
-            coordRow = XmippMdRow()
-            coordinateToRow(coord, coordRow)
-            coordRow.writeToMd(md, objId)
-            
-        if not md.isEmpty():
-            md2 = xmipp.MetaData()    
-            objId = md2.addObject()
-            md2.setValue(xmipp.MDL_PICKING_MICROGRAPH_STATE, 'Manual', objId)
-            # Write header block
-            md2.write('header@%s' % posFn)
-            # Write particles block
-            md.write('particles@%s' % posFn, xmipp.MD_APPEND)
-            posFiles.append(posFn)
-            
+    
+    f = None
+    lastMicId = None
+    c = 0
+    
+    for coord in coordSet.iterItems(orderBy='_micId'):
+        micId = coord.getMicId()
+    
+        if micId != lastMicId:
+            # we need to close previous opened file
+            if f:
+                f.close()
+                print "Micrograph %s (%d)" % (lastMicId, c)
+                c = 0
+            f = openMd(posDict[micId])
+            lastMicId = micId
+        c += 1
+        f.write(" %06d   1   %d  %d   %06d\n" % (coord.getObjId(), 
+                                                 coord.getX(), coord.getY(), 
+                                                 micId))
+    
+    if f:
+        f.close()
+        print "Micrograph %s (%d)" % (lastMicId, c)
+    
     # Write config.xmd metadata
     configFn = join(posDir, 'config.xmd')
     md = xmipp.MetaData()
@@ -645,7 +674,7 @@ def writeSetOfCoordinates(posDir, coordSet):
     md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
     md.write('filters@%s' % configFn, xmipp.MD_APPEND)
     
-    return posFiles
+    return posDict.values()
 
 
 def readSetOfCoordinates(outputDir, micSet, coordSet):
