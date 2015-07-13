@@ -1216,7 +1216,6 @@ eot
             moveFile(tmpFile, stackFn)
     
     def _getMicIdList(self):
-        print "self._micList: ", self._micList
         if self._micList == []:
             self._micList = self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
         return self._micList
