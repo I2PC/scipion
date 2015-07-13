@@ -41,12 +41,12 @@ class TestImportMovies(TestImportBase):
         """ Import several micrographs from a given pattern.
         """
         args = {'importFrom': ProtImportMovies.IMPORT_FROM_FILES,
-                'filesPath': self.dsMovies.getFile('.'),
+                'filesPath': self.dsMovies.getFile('ribo/'),
                 'filesPattern': '*.mrcs',
                 'amplitudConstrast': 0.1,
                 'sphericalAberration': 2.,
-                'voltage': 200,
-                'samplingRate': 1.
+                'voltage': 300,
+                'samplingRate': 3.54
                 }
         
         def _checkOutput(prot, moviesId=[], size=None):

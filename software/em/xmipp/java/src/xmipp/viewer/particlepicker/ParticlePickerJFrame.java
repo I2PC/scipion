@@ -1,13 +1,9 @@
 package xmipp.viewer.particlepicker;
 
-import ij.CommandListener;
-import ij.Executer;
 import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.WindowManager;
-import ij.gui.ImageCanvas;
-import ij.gui.ImageWindow;
 import ij.plugin.frame.Recorder;
 
 import java.awt.Color;
@@ -68,9 +64,9 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
+import xmipp.ij.commons.InputFieldsMessageDialog;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
-import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.utils.ColorIcon;
@@ -82,7 +78,6 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.ij.commons.InputFieldsMessageDialog;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
