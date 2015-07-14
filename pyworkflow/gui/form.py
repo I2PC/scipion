@@ -87,41 +87,18 @@ class PointerVar():
         self._protocol = protocol
         
     def set(self, value):
-        if isinstance(value, pwobj.Pointer):
-            self._pointer.copy(value)
-        else:
-            self._pointer.set(value)
+        startDebugger()
+        
+        if not isinstance(value, pwobj.Pointer):
+            raise Exception('Pointer var should be used with pointers!!!')
+        self._pointer.copy(value)
             
-        if value is None:
-            label = ''
-        else:
-            label, _ = getPointerLabelAndInfo(self._pointer,
-                                              self._protocol.getMapper())
+        label, _ = getPointerLabelAndInfo(self._pointer,
+                                          self._protocol.getMapper())
         self.tkVar.set(label)   
      
-    def getObjectLabel(self):
-        """ We will try to show in the list the string representation
-        that is more readable for the user to pick the desired object.
-        """
-        label = ''
-
-        if hasattr(self.value, '_parentObject'):
-            obj = self.value._parentObject
-            suffix = ' [Item %d]' % self.value.getObjId()
-        else:
-            obj = self.value
-            suffix = ''
-            
-        if obj is not None:
-            if hasattr(obj, '_parentObject'):
-                label = obj.strId()
-            else:
-                label = _getObjectLabel(obj, self._protocol.mapper)
-        
-        return label + suffix
-           
     def get(self):
-        return self._pointer.get()
+        return self._pointer
     
     def getPointer(self):
         return self._pointer
@@ -288,41 +265,9 @@ class ProtocolClassTreeProvider(TreeProvider):
     def getObjectInfo(self, obj):
         return {'key': obj.get(),
                 'values': (obj.get(),)}
-    
-    
-def _getObjectLabel(obj, mapper):
-    """ Retrieve a readable label for an object
-    taking into account the parents of the object. 
-    """
-    from pyworkflow.protocol import Protocol
-    
-    # Check the case of selected Items
-    if hasattr(obj, '_parentObject'):
-        suffix = '[Item %d]' % obj.getObjId()
-        obj = obj._parentObject 
-    else:
-        suffix = ''
-        
-    label = obj.getObjLabel()
-    
-    if not len(label.strip()):
-        labelList = [obj.getLastName()]
-        parent = mapper.getParent(obj)
-        
-
-        while not isinstance(parent, Protocol):
-            if parent is None:
-                return "Wrong object: %s, possible db corrupted!!!" % obj.getObjId()
-            labelList.insert(0, parent.getLastName())
-            parent = mapper.getParent(parent)
-
-        labelList.insert(0, parent.getObjLabel())
-        label = '->'.join(labelList)
-        
-    return label + suffix   
 
 
-def getPointerLabelAndInfo(ptr, mapper):
+def getPointerLabelAndInfo(pobj, mapper):
     """ 
     Return a string to represent selected objects
     that are stored by pointesr.
@@ -330,29 +275,29 @@ def getPointerLabelAndInfo(ptr, mapper):
     """
     label = None
     info = None
+    obj = pobj.get()
     
-    if ptr.hasValue():
-        obj = ptr.getObjValue()
-        label = _getObjectLabel(obj, mapper)
-        
-        if ptr.hasExtended():
-            label += ' [Item %d]' % ptr.getExtended()
-        elif ptr.hasExtended():
-            label += ' [Attr %s]' % ptr.getExtended()
-        
-        info = str(ptr.get()) # get string info of pointed object
-
+    if obj is not None:
+        label = getObjectLabel(pobj, mapper)
+        info = str(pobj.get())
+    
     return label, info
     
     
-def getObjectLabel(obj, mapper):
+def getObjectLabel(pobj, mapper):
     """ We will try to show in the list the string representation
     that is more readable for the user to pick the desired object.
     """
-    if hasattr(obj, '_parentObject'):
-        label = "Item %s" % obj.strId()
+    #FIXME, maybe we can remove this function
+    obj = pobj.get()
+    prot = pobj.getObjValue()
+    
+    if obj is None:
+        label = '%s.%s' % (prot.getRunName(), pobj.getExtended())
     else:
-        label = _getObjectLabel(obj, mapper)
+        label = obj.getObjLabel().strip()
+        if not len(label):
+            label = '%s.%s' % (prot.getRunName(), pobj.getExtended())
 
     return label
 
@@ -363,66 +308,61 @@ class SubclassesTreeProvider(TreeProvider):
     def __init__(self, protocol, pointerParam, selected=None):
         self.className = pointerParam.pointerClass.get()
         self.condition = pointerParam.pointerCondition.get()
-        self.selected = selected
+        self.selected = selected # FIXME
+        self.selectedDict = {}
         self.protocol = protocol
         self.mapper = protocol.mapper
         self.maxNum = 200
-        
-    def _getObjectFromList(self, objects, obj):
-        # Returns an object if contained on a list, otherwise None
-        for o in objects:
-            if o.getObjId() == obj.getObjId():
-                return o
-        return None
             
     def getObjects(self):
+        import pyworkflow.em as em 
         # Retrieve all objects of type className
-        objects = list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
-        objects_child = list()
-               
-        # Retrieve all objects of type SetOf'className'
-        for setObject in self.protocol.getProject().iterSubclasses("Set", self.classFilter):
-            # If object is not yet on the list add it but dont allow to select it
-            obj = self._getObjectFromList(objects, setObject)
-            if  obj is None:
-                objects.append(setObject)
-                setObject._allowSelection = False # Do not allows set to be selected here
-            # If object is already on the list allow to select it
-            else:
-                obj._allowSelection = True   
-                setObject = obj
+        project = self.protocol.getProject()
+        # Get the classes that are valid as input object
+        classes = [em.findClass(c) for c in self.className.split(",")]
+        objects = []        
+        runs = project.getRuns()
+        
+        for prot in runs:
+            # Make sure we dont include previous output of the same 
+            # protocol, it will cause a recursive loop
+            if prot.getObjId() != self.protocol.getObjId():
+                p = None
+                for paramName, attr in prot.iterOutputEM():
+                    # If attr is a sub-classes of any desired one, add it to the list
+                    # we should also check if there is a condition, the object 
+                    # must comply with the condition
+                    if (any(isinstance(attr, c) for c in classes) and
+                        (not self.condition or 
+                         attr.evalCondition(self.condition))):
+                        p = pwobj.Pointer(prot, extended=paramName)
+                        p._allowsSelection = True
+                        objects.append(p)
+                    # If attr is a set, then we should consider its elements
+                    if isinstance(attr, em.EMSet):
+                        # If the ITEM type match any of the desired classes
+                        # we will add some elements from the set
+                        if any(issubclass(attr.ITEM_TYPE, c) for c in classes):
+                            if p is None: # This means the set have not be added
+                                p = pwobj.Pointer(prot, extended=paramName)
+                                p._allowsSelection = False
+                                objects.append(p)
+                            # Add each item on the set to the list of objects
+                            try:
+                                for i, item in enumerate(attr):
+                                    if i == self.maxNum: # Only load up to NUM particles
+                                        break
+                                    pi = pwobj.Pointer(prot, extended=paramName)
+                                    pi.addExtended(item.getObjId())
+                                    pi._parentObject = p
+                                    objects.append(pi)
+                            except Exception, ex:
+                                print "Error loading items from:"
+                                print "  protocol: %s, attribute: %s" % (prot.getRunName(), paramName)
+                                print "  dbfile: ", os.path.join(project.getPath(), attr.getFileName())
+                                print ex
 
-            # Add each item on the set to the list of objects
-            for i, item in enumerate(setObject):
-                if i == self.maxNum: # Only load up to NUM particles
-                    break
-                newItem = item.clone()
-                newItem.setObjId(item.getObjId())
-                newItem._parentObject = setObject
-                objects_child.append(newItem)
-        
-        objects.extend(objects_child)
         return objects
-            
-    def classFilter(self, obj):
-        """ Filter Set with the specified class name. """
-        itemType = getattr(obj, 'ITEM_TYPE', None)   
-        filter = False
-        for objClass in self.className.split(","):
-            if (itemType and itemType.__name__ == objClass):
-                return True
-        return False
-        
-    def objFilter(self, obj):
-        result = True
-        # Do not allow to select objects that are childs of the protocol
-        if (self.protocol.getObjId() and 
-            self.protocol.getObjId() == obj.getObjParentId()):
-            result = False
-        # Check that the condition is met
-        elif self.condition:
-            result = obj.evalCondition(self.condition)
-        return result
         
     def getColumns(self):
         return [('Object', 300), ('Info', 250), ('Creation', 150)]
@@ -435,25 +375,32 @@ class SubclassesTreeProvider(TreeProvider):
                     return True
         return False
     
-    def getObjectInfo(self, obj):
-        parent = getattr(obj, '_parentObject', None)
-        if parent:
-            objId = "%s.%s" % (parent.getObjId(), obj.getObjId())
-        else:
-            objId = obj.strId()
+    def getObjectInfo(self, pobj):
+        parent = getattr(pobj, '_parentObject', None)
+        if parent is None:
+            label = getObjectLabel(pobj, self.mapper)
+        else: # This is an item comming from a set
+            label = 'item %s' % pobj.get().strId()
             
-        return {'key': objId, 'text': getObjectLabel(obj, self.mapper),
-                'values': (str(obj).replace(obj.getClassName(), ''), obj.getObjCreation()), 
-                'selected': self.isSelected(obj), 'parent': parent}
+        obj = pobj.get()
+        objId = pobj.getUniqueId()
+        
+        isSelected = objId in self.selectedDict
+        self.selectedDict[objId] = True
+        info = str(obj).replace(obj.getClassName(), '')
+            
+        return {'key': objId, 'text': label,
+                'values': (info, obj.getObjCreation()), 
+                'selected': isSelected, 'parent': parent}
 
-    def getObjectActions(self, obj):
-        if isinstance(obj, pwobj.Pointer):
-            obj = obj.getName()
+    def getObjectActions(self, pobj):
+        obj = pobj.get()
         actions = []    
         from pyworkflow.em import findViewers
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
-            actions.append(('Open with %s' % v.__name__, lambda : v(project=self.protocol.getProject()).visualize(obj)))
+            actions.append(('Open with %s' % v.__name__, 
+                            lambda : v(project=self.protocol.getProject()).visualize(obj)))
             
         return actions
     
@@ -895,6 +842,7 @@ class ParamWidget():
         
     def _visualizePointer(self, pointer):
         obj = pointer.get()
+        
         if obj is None:
             label, _ = getPointerLabelAndInfo(pointer, self._protocol.getMapper())
             self._showInfo('*%s* points to *None*' % label)
@@ -908,7 +856,7 @@ class ParamWidget():
                 self._showInfo("There is not viewer registered for *%s* object class." % obj.getClassName())
     
     def _visualizePointerParam(self, paramName):
-        pointer = self.var.getPointer()
+        pointer = self.var.get()
         if pointer.hasValue():
             self._visualizePointer(pointer)
         else:
@@ -938,7 +886,7 @@ class ParamWidget():
         dlg = ListDialog(self.parent, 
                          "Select object of types: %s" % self.param.pointerClass.get(), 
                          tp, "Double click an item to preview the object",
-                         validateSelectionCallback= validateSelected,
+                         validateSelectionCallback=validateSelected,
                          selectmode=self._selectmode)
         
         if dlg.values:
@@ -1559,7 +1507,8 @@ class FormWindow(Window):
     
     def getWidgetValue(self, protVar, param):
         widgetValue = ""                
-        if isinstance(param, params.MultiPointerParam):
+        if (isinstance(param, params.PointerParam) or 
+            isinstance(param, params.MultiPointerParam)):
             widgetValue = protVar
         else:
             widgetValue = protVar.get(param.default.get())  
@@ -1730,24 +1679,22 @@ class FormWindow(Window):
         var = self.widgetDict[paramName]
         param = getattr(self.protocol, paramName, None)
         if param is not None:
-            var.set(param.get(''))
+            # Special treatment to pointer params
+            if isinstance(param, pwobj.Pointer):
+                var.set(param)
+            else:
+                var.set(param.get(''))
            
     def setParamFromVar(self, paramName):
         param = getattr(self.protocol, paramName, None)
         if param is not None:
             var = self.widgetDict[paramName]
             try:
-                value = var.get()
-                if hasattr(value, '_parentObject'): 
-                    # Handle the special case of pointer and extensions
-                    # If parent is not None, it means that the select object
-                    # is inside a Set, so the pointer should store the Set value
-                    # and then have a pointer extension to the item id
-                    param.set(value._parentObject)
-                    param.setExtended(value.getObjId())
-                else:
-                    if isinstance(param, pwobj.Object):
-                        param.set(value)
+                # Special treatment to pointer params
+                if isinstance(param, pwobj.Pointer):
+                    param.copy(var.get())
+                elif isinstance(param, pwobj.Object):
+                    param.set(var.get())
             except ValueError:
                 if len(var.get()):
                     print ">>> ERROR: setting param for: ", paramName, "value: '%s'" % var.get()
