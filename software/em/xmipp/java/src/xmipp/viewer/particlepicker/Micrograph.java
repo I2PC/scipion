@@ -224,9 +224,7 @@ public abstract class Micrograph {
 			}
 	}
 
-	public void releaseImage() {
-		imp = null;
-	}
+	
 
 	public String getFile() {
 		return file;
@@ -242,19 +240,25 @@ public abstract class Micrograph {
 
 	public abstract boolean hasData();
         
-        public int getWidth()
-        {
-            if(width == 0)
-                loadDimensions();
-            return width;
-        }
-        
-        public int getHeigth()
-        {
-            if(height == 0)
-                loadDimensions();
-            return height;
-        }
+    public int getWidth()
+    {
+        if(width == 0)
+            loadDimensions();
+        return width;
+    }
+    
+    public int getHeigth()
+    {
+        if(height == 0)
+            loadDimensions();
+        return height;
+    }
+
+	public void releaseImage()
+	{
+		imp = null;
+		
+	}
         
 
 }

@@ -1,5 +1,6 @@
 package xmipp.viewer.particlepicker;
 
+import ij.ImagePlus;
 import ij.gui.ImageWindow;
 
 import java.awt.BasicStroke;
@@ -40,36 +41,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	protected ParticlePicker picker;
 	protected XmippImageWindow iw;
 	
-	public void display()
-	{
-		if (iw != null)
-		{
-			if(!iw.isClosing())
-			{
-				iw.setImage(getImage());
-			}
-			else
-				this.iw = new XmippImageWindow(getImage(), this, null);
-			fitToWindow();
-			double zoom = getFrame().getParticlePicker().getZoom();
-			if(zoom != -1.f)
-			{
-				setMagnification(zoom);
-			}
-			else//no zoom to keep
-				iw.maximize();
-			
-		}
-		else
-        {
-			
-			this.iw = new XmippImageWindow(getImage(), this, null);
-            iw.maximize();
-        }
-		getFrame().displayZoom(getMagnification());
-		iw.setTitle(getMicrograph().getName());
-		
-	}
+
 	
         
 	public void setMicrograph(Micrograph m)
@@ -152,7 +124,11 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		});
 
 		addMouseMotionListener(this);
-		double zoom = picker.getZoom(); 
+
+		this.iw = new XmippImageWindow(getImage(), this, null);
+		getFrame().displayZoom(getMagnification());
+		iw.setTitle(getMicrograph().getName());
+
 	}
 	
 
@@ -178,10 +154,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	public void display(double xlocation, double ylocation)
 	{
-		boolean relocate = (iw == null);
-
-		display();
-		if (relocate)
+		
 			XmippWindowUtil.setLocation(xlocation, ylocation, iw);
 	}
 
@@ -375,17 +348,46 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		int width = imp.getWidth();
 		return y / m + width / 2.f;
 	}
-
+	
 	public void updateMicrograph()
 	{
 		Micrograph m = getFrame().getMicrograph();
+		updateMicrograph(m);
+	}
+
+	public void updateMicrograph(Micrograph m)
+	{
+		getMicrograph().releaseImage();
 		setMicrograph(m);
 		imp = m.getImagePlus(picker.getFilters());
 		m.runImageJFilters(picker.getFilters());
-		
 		refreshActive(null);
+		Rectangle previousRect = (Rectangle)srcRect.clone();
+		int previousDstWidth = dstWidth;
+		int previousDstHeight = dstHeight;
+		if(iw.isClosing())
+			iw = new XmippImageWindow(getImage(), this, null);
+		iw.setImage(imp);
+		double zoom = getParticlePicker().getZoom();
+		int imageWidth = imp.getWidth();
+		int imageHeight = imp.getHeight();
+		if(zoom != -1)
+		{
+			
+			setDrawingSize(previousDstWidth, previousDstHeight);
+			if (previousRect.width < imageWidth && previousRect.height < imageHeight)
+				setSourceRect(previousRect);
+			else
+				setMagnification(zoom);
+			iw.pack();
+		}
+		else
+			iw.maximize();
+		getFrame().displayZoom(getMagnification());
+		iw.setTitle(getMicrograph().getName());
 		
 	}
+
 
 
 	public abstract Micrograph getMicrograph();

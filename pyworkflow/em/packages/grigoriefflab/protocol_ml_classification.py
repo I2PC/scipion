@@ -256,9 +256,10 @@ marginal likelihood.
         #TODO: save alignment
 
         self._defineSourceRelation(imgSet, classes)
-        self._defineSourceRelation(self.input3DReference.get(), classes)
         self._defineSourceRelation(imgSet, volumes)
-        self._defineSourceRelation(self.input3DReference.get(), volumes)
+        if not self.doContinue:
+            self._defineSourceRelation(self.input3DReference.get(), classes)
+            self._defineSourceRelation(self.input3DReference.get(), volumes)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
