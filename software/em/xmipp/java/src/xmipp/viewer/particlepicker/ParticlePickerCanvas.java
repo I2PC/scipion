@@ -42,22 +42,27 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	
 	public void display()
 	{
-		if (iw != null && iw.isVisible())
+		if (iw != null)
 		{
-			iw.setImage(getImage());
+			if(!iw.isClosing())
+			{
+				iw.setImage(getImage());
+			}
+			else
+				this.iw = new XmippImageWindow(getImage(), this, null);
+			fitToWindow();
 			double zoom = getFrame().getParticlePicker().getZoom();
 			if(zoom != -1.f)
+			{
 				setMagnification(zoom);
+			}
 			else//no zoom to keep
 				iw.maximize();
+			
 		}
 		else
         {
-			if(iw != null)
-			{
-				iw.setVisible(false);
-				iw.dispose();
-			}
+			
 			this.iw = new XmippImageWindow(getImage(), this, null);
             iw.maximize();
         }

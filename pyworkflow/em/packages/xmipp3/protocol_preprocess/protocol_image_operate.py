@@ -134,7 +134,7 @@ class XmippProtImageOperate():
 
 class XmippProtImageOperateParticles(ProtOperateParticles, XmippProcessParticles, XmippProtImageOperate):
     """ Apply an operation to two sets of particles  """
-    _label = 'calculator'
+    _label = 'calculator2D'
     _isParticle = True
 
     def __init__(self, **args):
@@ -189,7 +189,7 @@ class XmippProtImageOperateVolumes(ProtOperateVolumes,
                                    XmippProcessVolumes,
                                    XmippProtImageOperate):
     """ Apply an operation to two sets of volumes """
-    _label = 'calculator'
+    _label = 'calculator3D'
     _isParticle = False
 
     def __init__(self, **args):
