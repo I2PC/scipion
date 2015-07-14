@@ -42,6 +42,7 @@ from pyworkflow.utils.path import getHomePath
 from pyworkflow.utils.properties import Message, Icon, Color
 from pyworkflow.viewer import DESKTOP_TKINTER
 import pyworkflow.protocol.params as params
+from pyworkflow.protocol import Protocol
 import gui
 from gui import configureWeigths, Window
 from browser import FileBrowserWindow
@@ -291,13 +292,20 @@ def getObjectLabel(pobj, mapper):
     #FIXME, maybe we can remove this function
     obj = pobj.get()
     prot = pobj.getObjValue()
-    
+        
     if obj is None:
         label = '%s.%s' % (prot.getRunName(), pobj.getExtended())
     else:
+        # This is for backward compatibility
+        # Now always the pobj.getObjValue() should
+        # be the protocol
+        extended = pobj.getExtended() if isinstance(prot, Protocol) else ''
+        while not isinstance(prot, Protocol):
+            extended = '%s.%s' % (prot.getLastName(), extended)
+            prot = mapper.getParent(prot)
         label = obj.getObjLabel().strip()
         if not len(label):
-            label = '%s.%s' % (prot.getRunName(), pobj.getExtended())
+            label = '%s.%s' % (prot.getRunName(), extended)
 
     return label
 
@@ -306,8 +314,7 @@ class SubclassesTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
     def __init__(self, protocol, pointerParam, selected=None):
-        self.className = pointerParam.pointerClass.get()
-        self.condition = pointerParam.pointerCondition.get()
+        self.param = pointerParam
         self.selected = selected # FIXME
         self.selectedDict = {}
         self.protocol = protocol
@@ -318,8 +325,10 @@ class SubclassesTreeProvider(TreeProvider):
         import pyworkflow.em as em 
         # Retrieve all objects of type className
         project = self.protocol.getProject()
+        className = self.param.pointerClass.get()
+        condition = self.param.pointerCondition.get()
         # Get the classes that are valid as input object
-        classes = [em.findClass(c) for c in self.className.split(",")]
+        classes = [em.findClass(c.strip()) for c in className.split(",")]
         objects = []        
         runs = project.getRuns()
         
@@ -333,8 +342,8 @@ class SubclassesTreeProvider(TreeProvider):
                     # we should also check if there is a condition, the object 
                     # must comply with the condition
                     if (any(isinstance(attr, c) for c in classes) and
-                        (not self.condition or 
-                         attr.evalCondition(self.condition))):
+                        (not condition or 
+                         attr.evalCondition(condition))):
                         p = pwobj.Pointer(prot, extended=paramName)
                         p._allowsSelection = True
                         objects.append(p)
@@ -410,16 +419,23 @@ class RelationsTreeProvider(SubclassesTreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
     def __init__(self, protocol, relationParam, selected=None):
-        self.mapper = protocol.mapper
-        self.selected = selected
-        item = protocol.getAttributeValue(relationParam.getAttributeName())
-        direction = relationParam.getDirection()
-        if item is not None:
-            self.getObjects = lambda: protocol.getProject().getRelatedObjects(relationParam.getName(), item, direction)
-        else:
-            self.getObjects = lambda: [] 
-            
-
+        SubclassesTreeProvider.__init__(self, protocol, relationParam, selected)
+        self.item = protocol.getAttributeValue(relationParam.getAttributeName())
+        self.direction = relationParam.getDirection()
+        self.relationParam = relationParam
+        
+    def getObjects(self):
+        objects = []
+        if self.item is not None:
+            project = self.protocol.getProject()
+            for obj in project.getRelatedObjects(self.relationParam.getName(), 
+                                                 self.item, self.direction):
+                prot = self.mapper.getParent(obj)
+            p = pwobj.Pointer(prot, extended=obj.getLastName())
+            objects.append(p)
+        
+        return objects
+    
 #---------------------- Other widgets ----------------------------------------
 # http://tkinter.unpythonic.net/wiki/VerticalScrolledFrame
 
@@ -905,7 +921,7 @@ class ParamWidget():
         tp = RelationsTreeProvider(self._protocol, self.param, selected=self.get())
         dlg = ListDialog(self.parent, "Select object", tp,
                          selectmoded=self._selectmode)
-        if dlg.values is not None:
+        if dlg.values:
             self.set(dlg.values[0])
             
     def _removeRelation(self, e=None):
@@ -1508,7 +1524,8 @@ class FormWindow(Window):
     def getWidgetValue(self, protVar, param):
         widgetValue = ""                
         if (isinstance(param, params.PointerParam) or 
-            isinstance(param, params.MultiPointerParam)):
+            isinstance(param, params.MultiPointerParam) or
+            isinstance(param, params.RelationParam)):
             widgetValue = protVar
         else:
             widgetValue = protVar.get(param.default.get())  
