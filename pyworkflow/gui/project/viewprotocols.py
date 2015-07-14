@@ -648,8 +648,11 @@ class ProtocolsView(tk.Frame):
             proc = psutil.Process(os.getpid())
             mem = psutil.virtual_memory()
             print "------------- refreshing ---------- "
-            print "  open files: ", len(proc.get_open_files())
-            print "  used memory: ", pwutils.prettySize(mem.used)
+            files = proc.get_open_files()
+            print "  open files: ", len(files)
+            for f in files:
+                print "    - %s, %s" % (f.path, f.fd)
+            print "  memory percent: ", proc.get_memory_percent()
         self.updateRunsTree(True)
         self.updateRunsGraph(True)
 
