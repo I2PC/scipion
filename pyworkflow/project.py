@@ -511,16 +511,15 @@ class Project(object):
         """
         matches = []
         for iKey, iAttr in childNode.run.iterInputAttributes():
-            value = iAttr.get()
-            if value is None:
-                if iAttr.getObjValue() is node.run:
-                    oKey = iAttr.getExtended()
-                    matches.append((oKey, iKey))
+            # As this point iAttr should be always a Pointer that 
+            # points to the output of other protocol
+            if iAttr.getObjValue() is node.run:
+                oKey = iAttr.getExtended()
+                matches.append((oKey, iKey))
             else:
                 for oKey, oAttr in node.run.iterOutputAttributes(em.EMObject):
                     if oAttr is iAttr.get():
                         matches.append((oKey, iKey))
-                
         
         return matches                    
         
@@ -530,6 +529,7 @@ class Project(object):
         
         if isinstance(protocol, pwprot.Protocol):
             newProt = self.newProtocol(protocol.getClass())
+            newProt.setObjLabel(protocol.getRunName() + ' (copy)')
             newProt.copyDefinitionAttributes(protocol)
             result = newProt
     
@@ -540,6 +540,7 @@ class Project(object):
                         
             for prot in protocol:
                 newProt = self.newProtocol(prot.getClass())
+                newProt.setObjLabel(prot.getRunName() + ' (copy)')
                 newProt.copyDefinitionAttributes(prot)
                 newDict[prot.getObjId()] = newProt
                 self.saveProtocol(newProt)
@@ -893,12 +894,14 @@ class Project(object):
         n = graph.getNode(obj.strId())
         # Get the oldest ancestor of a node, before 
         # reaching the root node
-        while not n.getParent().isRoot():
+        while not n is None and not n.getParent().isRoot():
             n = n.getParent()
             
         connection = {}
-        for node in n.iterChilds():
-            connection[node.object.strId()] = node.object
+        
+        if n is not None:
+            for node in n.iterChilds():
+                connection[node.object.strId()] = node.object
         
         return connection
     
