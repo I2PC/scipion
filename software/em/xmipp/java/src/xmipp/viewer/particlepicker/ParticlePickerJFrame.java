@@ -535,8 +535,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				else
 				{
 					command = activefilter;
-					for (int i = 0; i < WindowManager.getImageCount(); i++)
-						IJ.run(WindowManager.getImage(i), activefilter, "");
+					applyFilter(activefilter);
                                        
 				}
 			else
@@ -559,12 +558,15 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 
 	}
+	
+	public void applyFilter(String filter)
+	{
+		IJ.run(getMicrograph().getImagePlus(), filter, "");
+	}
 
 	protected void reloadImage()
 	{
-		getCanvas().getMicrograph().releaseImage();
 		getCanvas().updateMicrograph();
-		getCanvas().display();
                 
 	}
 
