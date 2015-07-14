@@ -651,6 +651,7 @@ class Pointer(Object):
     """Reference object to other one"""
     EXTENDED_ATTR = '__attribute__'
     EXTENDED_ITEMID = '__itemid__'
+    _ERRORS = {}
     
     def __init__(self, value=None, **kwargs):
         Object.__init__(self, value, objIsPointer=True, **kwargs)
@@ -692,10 +693,9 @@ class Pointer(Object):
                 if p.isdigit():
                     value = value[int(p)] # item case
                 else:
-                    value = getattr(value, p)
-            
-            #FIXME: Maybe we don't need to set the _parentObject property
-            value._parentObject = self._objValue
+                    value = getattr(value, p, None)
+                if value is None:
+                    break
         else:
             value = self._objValue
             
@@ -720,6 +720,16 @@ class Pointer(Object):
         that will be the result of the get() action. 
         """
         self._extended.set(attribute)
+    
+    def getExtendedParts(self):
+        """ Return the extended components as a list. """
+        return self.getExtended().split('.')
+    
+    def setExtendedParts(self, parts):
+        """ Set the extedend attribute but using 
+        a list as input. 
+        """
+        self.setExtended('.'.join(parts))
         
     def addExtended(self, attribute):
         """ Similar to setExtended, but concatenating more extensions
@@ -735,6 +745,17 @@ class Pointer(Object):
         
     def pointsNone(self):
         return self.get() is None
+    
+    def getUniqueId(self):
+        """ Return an unique id concatenating the id
+        of the direct pointed object plus the extended 
+        attribute.
+        """
+        uniqueId = self.getObjValue().strId()
+        if self.hasExtended():
+            uniqueId += '.%s' % self.getExtended()
+        
+        return uniqueId
     
 
 class List(Object, list):
@@ -1003,6 +1024,7 @@ class Set(OrderedObject):
     def __del__(self):
         # Close connections to db when destroy this object
         if self._mapper is not None:
+            #print "Closing DB: %s" % self.getFileName()
             self.close()
         
     def close(self):
