@@ -42,6 +42,9 @@ class SqliteMapper(Mapper):
         except Exception, ex:
             raise Exception('Error creating SqliteMapper, dbName: %s\n error: %s' % (dbName, ex))
     
+    def close(self):
+        self.db.close()
+        
     def commit(self):
         self.db.commit()
         
