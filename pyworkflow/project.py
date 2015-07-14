@@ -84,6 +84,8 @@ class Project(object):
         self._sourceGraph = None
         self.address = ''
         self.port = getFreePort()
+        self.mapper = None
+        self.settings = None
         # Host configuration
         self._hosts = None
         self._protocolViews = None
@@ -167,7 +169,8 @@ class Project(object):
         classesDict.update(em.getObjects())
         return SqliteMapper(sqliteFn, classesDict)
     
-    def load(self, dbPath=None, hostsConf=None, protocolsConf=None, chdir=True):
+    def load(self, dbPath=None, hostsConf=None, protocolsConf=None, chdir=True, 
+             loadAllConfig=True):
         """ Load project data, configuration and settings.
         Params:
             dbPath: the path to the project database.
@@ -177,6 +180,7 @@ class Project(object):
                 or read from ~/.config/scipion/hosts.conf
             settings: where to read the settings.
                 If None, use the settings.sqlite in project folder.
+            If forProtocol is True, the settings and protocols.conf will not be loaded.
         """
         if not os.path.exists(self.path):
             raise Exception("Cannot load project, path doesn't exist: %s" % self.path)
@@ -188,18 +192,19 @@ class Project(object):
         
         self._loadHosts(hostsConf)
         
-        self._loadProtocols(protocolsConf)
-        
-        #FIXME: Handle settings argument here
-        
-        # It is possible that settings does not exists if 
-        # we are loading a project after a Project.setDbName,
-        # used when running protocols
-        settingsPath = os.path.join(self.path, self.settingsPath) 
-        if os.path.exists(settingsPath):
-            self.settings = pwconfig.loadSettings(settingsPath)
-        else:
-            self.settings = None
+        if loadAllConfig:
+            self._loadProtocols(protocolsConf)
+            
+            #FIXME: Handle settings argument here
+            
+            # It is possible that settings does not exists if 
+            # we are loading a project after a Project.setDbName,
+            # used when running protocols
+            settingsPath = os.path.join(self.path, self.settingsPath) 
+            if os.path.exists(settingsPath):
+                self.settings = pwconfig.loadSettings(settingsPath)
+            else:
+                self.settings = None
             
     #---- Helper functions to load different pieces of a project
     def _loadDb(self, dbPath):
@@ -211,6 +216,11 @@ class Project(object):
         if not os.path.exists(absDbPath):
             raise Exception("Project database not found in '%s'" % absDbPath)
         self.mapper = self.createMapper(absDbPath)
+        
+    def closeMapper(self):
+        if self.mapper is not None:
+            self.mapper.close()
+            self.mapper = None
         
     def _loadHosts(self, hosts):
         """ Loads hosts configuration from hosts file. """
@@ -373,6 +383,10 @@ class Project(object):
                 protocol.setObjComment(comment)
                 
                 self.mapper.store(protocol)
+                
+                # Close DB connections
+                prot2.getProject().closeMapper()
+                prot2.closeMappers()
             
             except Exception, ex:
                 print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
@@ -416,7 +430,6 @@ class Project(object):
         """
         return (not self.__protocolInList(child, protocols) and
                 not child.isSaved()) 
-        
     
     def _getProtocolsDependencies(self, protocols):
         error = ''
@@ -429,7 +442,6 @@ class Project(object):
                     error += '\n *%s* is referenced from:\n   - ' % prot.getRunName()
                     error += '\n   - '.join(deps) 
         return error
-        
     
     def _checkProtocolsDependencies(self, protocols, msg):
         """ Check if the protocols have depencies.
@@ -731,12 +743,19 @@ class Project(object):
         """
         if self.runs is None or refresh:
             # Close db open connections to db files
+            if self.runs is not None:
+                for r in self.runs:
+                    r.closeMappers()
+            
             self.runs = self.mapper.selectByClass("Protocol", iterate=False)
             for r in self.runs:
                 self._setProtocolMapper(r)
                 # Update nodes that are running and are not invoked by other protocols
                 if r.isActive():
                     if not r.isChild():
+                        #pwutils.prettyLog("Updating protocol %s, because isActive (%s)" % (pwutils.green(r.getRunName()), 
+                        #                                                                   r.getStatus()))
+                        
                         self._updateProtocol(r)
             self.mapper.commit()
         

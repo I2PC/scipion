@@ -1490,7 +1490,8 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
         
     from pyworkflow.project import Project
     project = Project(projectPath)
-    project.load(dbPath=os.path.join(projectPath, protDbPath), chdir=chdir)     
+    project.load(dbPath=os.path.join(projectPath, protDbPath), chdir=chdir,
+                 loadAllConfig=False)     
     protocol = project.getProtocol(protId)
     return protocol
 
