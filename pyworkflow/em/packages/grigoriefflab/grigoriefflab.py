@@ -36,6 +36,7 @@ FREALIGN = 'frealign_v9.exe'
 FREALIGNMP = 'frealign_v9_mp.exe'
 CALC_OCC = 'calc_occ.exe'
 RSAMPLE = 'rsample.exe'
+UNBLUR = 'unblur'
 
 def _getCtffind4():
     ctffind4 = join(os.environ['CTFFIND4_HOME'], 'bin', CTFFIND4)
@@ -50,3 +51,4 @@ FREALIGN_PATH = join(os.environ['FREALIGN_HOME'], 'bin', FREALIGN)
 FREALIGNMP_PATH = join(os.environ['FREALIGN_HOME'], 'bin', FREALIGNMP)
 CALC_OCC_PATH = join(os.environ['FREALIGN_HOME'], 'bin', CALC_OCC)
 RSAMPLE_PATH = join(os.environ['FREALIGN_HOME'], 'bin', RSAMPLE)
+UNBLUR_PATH  = join(os.environ['UNBLUR_HOME'], 'bin', UNBLUR)
