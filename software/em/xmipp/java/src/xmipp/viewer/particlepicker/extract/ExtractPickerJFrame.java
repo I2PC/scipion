@@ -228,7 +228,6 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		if (picker.isChanged())
 			picker.saveData(getMicrograph());// Saving changes when switching
 		index = micrographstb.getSelectedRow();
-		picker.getMicrograph().releaseImage();
 		picker.setMicrograph(picker.getMicrographs().get(index));
 		setChanged(false);
 		initializeCanvas();
@@ -243,8 +242,6 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 			canvas = new ExtractCanvas(this);
 		else
 			canvas.updateMicrograph();
-		
-		canvas.display();
 		
 	}
 
@@ -263,12 +260,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	@Override
-	protected void reloadImage()
-	{
-		// TODO Auto-generated method stub
-
-	}
+	
 
 	
 
