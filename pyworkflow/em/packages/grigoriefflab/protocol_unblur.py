@@ -138,16 +138,16 @@ class ProtUnblur(ProtProcessMovies):
     #--------------------------- STEPS functions ----------------------------------------------
 
     def _getMicFnName(self, movieId,movieFolder):
-        return relpath(self._getExtraPath('aligned_sum_%0d5.mrc'%movieId), movieFolder)
+        return relpath(self._getExtraPath('aligned_sum_%06d.mrc'%movieId), movieFolder)
 
     def _getMicFnNameFromRun(self, movieId):
-        return self._getExtraPath('aligned_sum_%0d5.mrc'%movieId)
+        return self._getExtraPath('aligned_sum_%06d.mrc'%movieId)
 
     def _getShiftFnName(self, movieId):
-        return 'shifts_%0d5.txt'%movieId
+        return 'shifts_%06d.txt'%movieId
 
     def _getFSCFnName(self, movieId):
-        return 'fsc_%0d5.txt'%movieId
+        return 'fsc_%06d.txt'%movieId
 
     def _filterMovie(self, movieId, movieFn):
         """I really do not understand how I end writing this function ROB"""
