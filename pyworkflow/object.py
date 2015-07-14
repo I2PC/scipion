@@ -1028,8 +1028,9 @@ class Set(OrderedObject):
             self.close()
         
     def close(self):
-        self._mapper.close()
-        self._mapper = None
+        if self._mapper is not None:
+            self._mapper.close()
+            self._mapper = None
         
     def clear(self):
         self._mapper.clear()
