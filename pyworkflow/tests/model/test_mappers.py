@@ -148,7 +148,7 @@ class TestSqliteMapper(BaseTest):
         print "Checking that Relations table is updated and version to 1"
         self.assertEqual(1, mapper2.db.getVersion())
         # Check that the new column is properly added after updated to version 1
-        colNamesGold.append(u'object_parent_extended')
+        colNamesGold += [u'object_parent_extended', u'object_child_extended']
         colNames = [col[1] for col in mapper2.db.getTableColumns('Relations')]
         self.assertEqual(colNamesGold, colNames)
         

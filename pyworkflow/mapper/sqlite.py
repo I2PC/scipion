@@ -410,7 +410,8 @@ class SqliteObjectsDb(SqliteDb):
                       object_parent_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE,
                       object_child_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE,
                       creation  DATE,                 -- creation date and time of the object
-                      object_parent_extended TEXT DEFAULT NULL
+                      object_parent_extended TEXT DEFAULT NULL, -- extended property to consider internal objects
+                      object_child_extended TEXT DEFAULT NULL
                       )""")
         self.commit()
         
@@ -424,6 +425,8 @@ class SqliteObjectsDb(SqliteDb):
             # already contains this column
             self.executeCommand("ALTER TABLE Relations "
                                 "ADD COLUMN object_parent_extended  TEXT DEFAULT NULL")
+            self.executeCommand("ALTER TABLE Relations "
+                                "ADD COLUMN object_child_extended  TEXT DEFAULT NULL")
             self.setVersion(self.VERSION)
         
         
