@@ -208,13 +208,14 @@ class XmippViewer(Viewer):
             else:  # happens if protocol is not an xmipp one
                 fn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(micSet, fn)
-            posDir = getattr(obj, '_xmippMd', None)  # extra dir istead of md file for SetOfCoordinates
-            if posDir:
-                copyTree(posDir.get(), tmpDir)
-            else:
-                writeSetOfCoordinates(tmpDir, obj)
+                
+#             posDir = getattr(obj, '_xmippMd', None)  # extra dir istead of md file for SetOfCoordinates
+#             if posDir:
+#                 copyTree(posDir.get(), tmpDir)
+#             else:
+            writeSetOfCoordinates(tmpDir, obj)# always write set of coordinates instead of reading pos dir, that could have changed
 
-            self._views.append(CoordinatesObjectView(self._project, fn, tmpDir))
+            self._views.append(CoordinatesObjectView(self._project, fn, tmpDir, self.protocol))
 
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
@@ -273,11 +274,8 @@ class XmippViewer(Viewer):
 #             writeSetOfCoordinates(tmpDir, obj.getUntilted()) 
 #             writeSetOfCoordinates(tmpDir, obj.getTilted()) 
             
-            scipion =  "%s \"%s\" %s" % (self.getProject().port, self.getProject().getDbPath(), obj.strId())
-            app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
-            args = " --input %(mdFn)s --output %(extraDir)s --mode readonly --scipion %(scipion)s"%locals()
         
-            runJavaIJapp("2g", app, args)
+            launchTiltPairPickerGUI(mdFn, extraDir, self.protocol)
          
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             particles = obj.outputParticles
@@ -345,7 +343,18 @@ class XmippViewer(Viewer):
             
         elif issubclass(cls, XmippProtParticlePicking):
             if obj.getOutputsSize() >= 1:
-                self._visualize(obj.getCoords())
+                #self._visualize(obj.getCoords())
+                micSet = obj.getInputMicrographs()
+                mdFn = getattr(micSet, '_xmippMd', None)
+                if mdFn:
+                    micsfn = mdFn.get()
+                else:  # happens if protocol is not an xmipp one
+                    micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
+                    writeSetOfMicrographs(micSet, micsfn)
+                    
+                posDir = obj._getExtraPath()    # extra dir istead of md file for SetOfCoordinates
+                memory = '%dg'%obj.memory.get(), 
+                launchSupervisedPickerGUI(micsfn, posDir, obj, memory=memory)
             
         elif issubclass(cls, XmippParticlePickingAutomatic):
             micSet = obj.getInputMicrographs()
@@ -356,8 +365,9 @@ class XmippViewer(Viewer):
                 micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(micSet, micsfn)
                 
-            posDir = getattr(obj.getCoords(), '_xmippMd').get()  # extra dir istead of md file for SetOfCoordinates
-            launchSupervisedPickerGUI(2, micsfn, posDir, 'review', obj)
+            posDir = obj._getExtraPath()  
+            memory = '%dg'%obj.memory.get(), 
+            launchSupervisedPickerGUI(micsfn, posDir, obj, mode='review', memory=memory)
 
         elif issubclass(cls, XmippProtParticlePickingPairs):
             tmpDir = self._getTmpPath(obj.getName()) 
@@ -368,7 +378,8 @@ class XmippViewer(Viewer):
                                         obj.outputCoordinatesTiltPair.getTilted().getMicrographs(), 
                                         mdFn) 
             extraDir = obj._getExtraPath()
-            launchTiltPairPickerGUI(obj.memory.get(), mdFn, extraDir, 'readonly', obj)
+            memory = '%dg'%obj.memory.get(), 
+            launchTiltPairPickerGUI(mdFn, extraDir, obj, memory=memory)
 
         elif issubclass(cls, ProtMovieAlignment):
             outputMics = obj.outputMicrographs

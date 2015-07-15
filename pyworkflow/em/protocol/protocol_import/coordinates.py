@@ -33,6 +33,7 @@ from pyworkflow.em.data import Coordinate
 from pyworkflow.utils.path import removeBaseExt
 from pyworkflow.utils.path import join
 from os.path import exists
+from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
 
 
 
@@ -41,7 +42,7 @@ from base import ProtImportFiles
 
 
 
-class ProtImportCoordinates(ProtImportFiles):
+class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
     """ Protocol to import a set of coordinates """
     _label = 'import coordinates'
 
@@ -226,6 +227,9 @@ class ProtImportCoordinates(ProtImportFiles):
 
     def _methods(self):
         return self._summary()
+
+    def getInputMicrographs(self):
+        return self.inputMicrographs.get()
 
 
     # def importCoordinatesStep(self, micsId, pattern):
