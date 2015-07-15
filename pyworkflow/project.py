@@ -829,24 +829,35 @@ class Project(object):
         relations = self.mapper.getRelationsByName(relation)
         g = pwutils.graph.Graph(rootName='PROJECT')
         root = g.getRoot()
-        root.object = None
+        root.pointer = None
         runs = self.getRuns(refresh=refresh)
         
         for r in runs:
-            for _, attr in r.iterOutputAttributes(em.EMObject):
-                node = g.createNode(attr.strId(), attr.getNameId())
-                node.object = attr                
+            for paramName, attr in r.iterOutputAttributes(em.EMObject):
+                p = pwobj.Pointer(r, extended=paramName)
+                node = g.createNode(p.getUniqueId(), attr.getNameId())
+                node.pointer = p   
+                # The following alias if for backward compatibility
+                p2 = pwobj.Pointer(attr)
+                g.aliasNode(node, p2.getUniqueId())        
         
         for rel in relations:
-            pid = str(rel['object_parent_id'])
+            pObj = self.getObject(rel['object_parent_id'])
+            pExt = rel['object_parent_extended']
+            pp = pwobj.Pointer(pObj, extended=pExt) 
+            pid = pp.getUniqueId()
             parent = g.getNode(pid)
+            
             if not parent:
-                print "error, parent none: ", pid
+                print "project._getRelationGraph: ERROR, parent Node is None: ", pid
             else:
-                cid = str(rel['object_child_id'])
-                child = g.getNode(cid)
+                cObj = self.getObject(rel['object_child_id'])
+                cExt = rel['object_child_extended']
+                cp = pwobj.Pointer(cObj, extended=cExt)            
+                child = g.getNode(cp.getUniqueId())
+                
                 if not child:
-                    print "error, child none: ", cid, " label: ", 
+                    print "project._getRelationGraph: ERROR, child Node is None: ", cp.getUniqueId()
                     print "   parent: ", pid 
                 else:
                     parent.addChild(child)
@@ -897,11 +908,16 @@ class Project(object):
         objects = []
         
         for rel in relations:
-            pid = str(rel['object_parent_id'])
+            pObj = self.getObject(rel['object_parent_id'])
+            pExt = rel['object_parent_extended']
+            pp = pwobj.Pointer(pObj, extended=pExt) 
+            pid = pp.getUniqueId()
             parent = connection.get(pid, None)
             if parent:
-                cid = str(rel['object_child_id'])
-                child = graph.getNode(cid).object
+                cObj = self.getObject(rel['object_child_id'])
+                cExt = rel['object_child_extended']
+                cp = pwobj.Pointer(cObj, extended=cExt)            
+                child = graph.getNode(cp.getUniqueId()).pointer
                 objects.append(child)
                 
         return objects
@@ -911,16 +927,16 @@ class Project(object):
         are connected to an object, either childs, ancestors or siblings. 
         """
         n = graph.getNode(obj.strId())
-        # Get the oldest ancestor of a node, before 
-        # reaching the root node
+        # Get the oldest ancestor of a node, before reaching the root node
         while not n is None and not n.getParent().isRoot():
             n = n.getParent()
             
         connection = {}
         
         if n is not None:
+            # Iterate recursively all descendants
             for node in n.iterChilds():
-                connection[node.object.strId()] = node.object
+                connection[node.pointer.getUniqueId()] = node.pointer
         
         return connection
     

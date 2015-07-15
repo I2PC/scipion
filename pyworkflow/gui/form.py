@@ -428,11 +428,9 @@ class RelationsTreeProvider(SubclassesTreeProvider):
         objects = []
         if self.item is not None:
             project = self.protocol.getProject()
-            for obj in project.getRelatedObjects(self.relationParam.getName(), 
+            for pobj in project.getRelatedObjects(self.relationParam.getName(), 
                                                  self.item, self.direction):
-                prot = self.mapper.getParent(obj)
-            p = pwobj.Pointer(prot, extended=obj.getLastName())
-            objects.append(p)
+                objects.append(pobj.clone())
         
         return objects
     
