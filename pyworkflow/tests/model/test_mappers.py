@@ -34,7 +34,10 @@ from pyworkflow.config import *
 from pyworkflow.em.data import Acquisition, SetOfImages, Image
 from pyworkflow.tests import *
 import pyworkflow.dataset as ds
+import pyworkflow.utils as pwutils
 from pyworkflow.mapper.sqlite import SqliteFlatMapper
+from pyworkflow.mapper.sqlite_db import SqliteDb
+
 
 
 
@@ -48,21 +51,27 @@ class TestSqliteMapper(BaseTest):
 
     def test_SqliteDb(self):
         """ Test the SqliteDb class that is used by the sqlite mappers. """
-        from pyworkflow.mapper.sqlite_db import SqliteDb
         db = SqliteDb()
         db._createConnection(self.modelGoldSqlite, timeout=1000)
         
         tables = ['Objects', 'Relations']
         self.assertEqual(tables, db.getTables())
         
+        # Test getting the version, for the gold file it should be 0
+        self.assertEqual(0, db.getVersion())
+        
         db.close()
         
     def test_SqliteMapper(self):
         fn = self.getOutputPath("basic.sqlite")
+        fnGoldCopy = self.getOutputPath('gold.sqlite')
         fnGold = self.modelGoldSqlite
         
         print ">>> Using db: ", fn
         print "        gold: ", fnGold
+        print "   gold copy: ", fnGoldCopy
+        
+        pwutils.copyFile(fnGold, fnGoldCopy)
 
         mapper = SqliteMapper(fn)
         # Insert a Complex
@@ -120,10 +129,29 @@ class TestSqliteMapper(BaseTest):
         
         # Save changes to file
         mapper.commit()
+        self.assertEqual(1, mapper.db.getVersion())
 
+        # Intentionally keep gold.sqlite as version 0 to check
+        # backward compatibility
+        db = SqliteDb()
+        db._createConnection(fnGold, timeout=1000)
+        print "Checking old version is properly read"
+        self.assertEqual(0, db.getVersion())
+        colNamesGold = [u'id', u'parent_id', u'name', u'classname', 
+                        u'value', u'label', u'comment', u'object_parent_id', 
+                        u'object_child_id', u'creation']
+        colNames = [col[1] for col in db.getTableColumns('Relations')]
+        self.assertEqual(colNamesGold, colNames)
+        
         # Reading test
-        mapper2 = SqliteMapper(fnGold, globals())
-
+        mapper2 = SqliteMapper(fnGoldCopy, globals())
+        print "Checking that Relations table is updated and version to 1"
+        self.assertEqual(1, mapper2.db.getVersion())
+        # Check that the new column is properly added after updated to version 1
+        colNamesGold.append(u'object_parent_extended')
+        colNames = [col[1] for col in mapper2.db.getTableColumns('Relations')]
+        self.assertEqual(colNamesGold, colNames)
+        
         l = mapper2.selectByClass('Integer')[0]
         self.assertEqual(l.get(), 1)
 
@@ -208,6 +236,8 @@ class TestSqliteFlatMapper(BaseTest):
         from pyworkflow.mapper.sqlite import SqliteFlatDb
         print ">>> test_SqliteFlatDb: dbName = '%s'" % self.modelGoldSqlite
         db = SqliteFlatDb(self.modelGoldSqlite)
+        # Old db version 0
+        self.assertEqual(0, mapper.db.getVersion())
         # Test the 'self' class name is correctly retrieved
         self.assertEqual('Micrograph', db.getSelfClassName())  
         # Check the count is equal to 3
@@ -231,6 +261,7 @@ class TestSqliteFlatMapper(BaseTest):
         mapper.setProperty('defocusU', 2000) # Test update a property value
         mapper.deleteProperty('defocusV') # Test delete a property
         mapper.commit()
+        self.assertEqual(1, mapper.db.getVersion())
         mapper.close()
         
         # Test that values where stored properly

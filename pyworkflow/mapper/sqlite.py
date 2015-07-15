@@ -352,6 +352,10 @@ class SqliteMapper(Mapper):
 class SqliteObjectsDb(SqliteDb):
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
+    # Maintain the current version of the DB schema
+    # useful for future updates and backward compatibility
+    # version should be an interger number
+    VERSION = 1
     
     SELECT = "SELECT id, parent_id, name, classname, value, label, comment, datetime(creation, 'localtime') as creation FROM Objects WHERE "
     DELETE = "DELETE FROM Objects WHERE "
@@ -367,11 +371,21 @@ class SqliteObjectsDb(SqliteDb):
     def __init__(self, dbName, timeout=1000):
         SqliteDb.__init__(self)
         self._createConnection(dbName, timeout)
-        self.__createTables()
+        self._initialize()
 
+    def _initialize(self):
+        """ Create the required tables if needed. """
+        tables = self.getTables()
+        # Check if the tables have been created or not
+        if not tables:
+            self.__createTables()
+        else:
+            self.__updateTables()
+        
     def __createTables(self):
         """Create required tables if don't exists"""
         # Enable foreings keys
+        self.setVersion(self.VERSION)
         self.executeCommand("PRAGMA foreign_keys=ON")
         # Create the Objects table
         self.executeCommand("""CREATE TABLE IF NOT EXISTS Objects
@@ -395,9 +409,23 @@ class SqliteObjectsDb(SqliteDb):
                       comment   TEXT DEFAULT NULL,  -- relation comment, text used for annotations
                       object_parent_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE,
                       object_child_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE,
-                      creation  DATE                 -- creation date and time of the object
+                      creation  DATE,                 -- creation date and time of the object
+                      object_parent_extended TEXT DEFAULT NULL
                       )""")
         self.commit()
+        
+    def __updateTables(self):
+        """ This method is intended to update the table schema
+        in the case of dealing with old database version.
+        """
+        if self.getVersion() < self.VERSION: # This applies for version 1
+            # Add the extra column for pointer extended attribute in Relations table
+            # from version 1 on, there is not needed since the table will 
+            # already contains this column
+            self.executeCommand("ALTER TABLE Relations "
+                                "ADD COLUMN object_parent_extended  TEXT DEFAULT NULL")
+            self.setVersion(self.VERSION)
+        
         
     def insertObject(self, name, classname, value, parent_id, label, comment):
         """Execute command to insert a new object. Return the inserted object id"""
@@ -714,7 +742,11 @@ SELF = 'self'
 class SqliteFlatDb(SqliteDb):
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
-
+    # Maintain the current version of the DB schema
+    # useful for future updates and backward compatibility
+    # version should be an interger number
+    VERSION = 1
+    
     CLASS_MAP = {'Integer': 'INTEGER',
                  'Float': 'REAL',
                  'Boolean': 'INTEGER'
@@ -803,6 +835,7 @@ class SqliteFlatDb(SqliteDb):
         Each object will be stored in a single row.
         Each nested property of the object will be stored as a column value.
         """
+        self.setVersion(self.VERSION)
         # Create a general Properties table to store some needed values
         self.executeCommand("""CREATE TABLE IF NOT EXISTS Properties
                      (key       TEXT UNIQUE, -- property key                 
