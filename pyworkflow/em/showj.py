@@ -267,19 +267,22 @@ def runJavaIJapp(memory, appName, args, env={}):
     print 'java %s'%args
     return subprocess.Popen('java ' + args, shell=True, env=env)
 
-def launchSupervisedPickerGUI(memory, micsFn, outputDir, mode, protocol):
+def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
         port = initProtocolTCPServer(protocol)
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %s --output %s --mode %s  --scipion %s"%(micsFn, outputDir, mode, port)
-            
-        return runJavaIJapp("%dg" % memory, app, args)
+        args = "--input %s --output %s --scipion %s"%(micsFn, outputDir, port)
+        if mode:
+            args += " --mode %s"%mode    
+        return runJavaIJapp("%s" % memory, app, args)
     
 
-def launchTiltPairPickerGUI(memory, micsFn, outputDir, mode, protocol):
+def launchTiltPairPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
         port = initProtocolTCPServer(protocol)
         app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
-        args = "--input %s --output %s --mode %s  --scipion %s"%(micsFn, outputDir, mode, port)
-        return runJavaIJapp("%dg" % memory, app, args)
+        args = "--input %s --output %s  --scipion %s"%(micsFn, outputDir, port)
+        if mode:
+            args += " --mode %s"%mode    
+        return runJavaIJapp("%s" % memory, app, args)
     
 
 class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
@@ -293,7 +296,7 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
             functionName = tokens[2]
             #try:
             functionPointer = getattr(protocol, functionName)
-            functionPointer(tokens[3:])
+            functionPointer(*tokens[3:])
             self.server.end = True
             #except:
             #    print 'protocol %s must implement %s'%(protocol.getName(), functionName)

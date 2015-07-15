@@ -29,10 +29,7 @@ public class SupervisedPickerRunner implements Runnable {
         
             SupervisedParticlePicker ppicker = null;
             
-            if (params.mode == Mode.Manual) 
-                ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads, params.fast, params.incore, params);
-            else 
-                ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.mode, params);
+            ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads, params.fast, params.incore, params);
             if(params.isScipion())
                 XmippApplication.setIsScipion(true);
             new SupervisedPickerJFrame(ppicker);
