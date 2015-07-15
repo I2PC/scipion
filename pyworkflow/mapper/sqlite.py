@@ -423,10 +423,13 @@ class SqliteObjectsDb(SqliteDb):
             # Add the extra column for pointer extended attribute in Relations table
             # from version 1 on, there is not needed since the table will 
             # already contains this column
-            self.executeCommand("ALTER TABLE Relations "
-                                "ADD COLUMN object_parent_extended  TEXT DEFAULT NULL")
-            self.executeCommand("ALTER TABLE Relations "
-                                "ADD COLUMN object_child_extended  TEXT DEFAULT NULL")
+            columns = [c[1] for c in self.getTableColumns('Relations')]
+            if not 'object_parent_extended' in columns:
+                self.executeCommand("ALTER TABLE Relations "
+                                    "ADD COLUMN object_parent_extended  TEXT DEFAULT NULL")
+            if not 'object_child_extended' in columns:    
+                self.executeCommand("ALTER TABLE Relations "
+                                    "ADD COLUMN object_child_extended  TEXT DEFAULT NULL")
             self.setVersion(self.VERSION)
         
         
