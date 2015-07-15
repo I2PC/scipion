@@ -660,7 +660,7 @@ class Pointer(Object):
         self._extended = String()
         
         if 'extended' in kwargs:
-            self.setExtended(str(kwargs.get('extended'))) 
+            self.setExtended(kwargs.get('extended')) 
                
     def __str__(self):
         """String representation of a pointer"""
