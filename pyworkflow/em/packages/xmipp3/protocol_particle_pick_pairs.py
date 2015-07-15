@@ -87,7 +87,8 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         
     def launchParticlePickGUIStep(self):
         extraDir = self._getExtraPath()
-        process = launchTiltPairPickerGUI(self.memory.get(), self.micsFn, extraDir, 'manual', self)
+        memory = '%dg'%self.memory.get(), 
+        process = launchTiltPairPickerGUI(self.micsFn, extraDir, self, memory=memory)
         process.wait()
         print 'launch ended'
 

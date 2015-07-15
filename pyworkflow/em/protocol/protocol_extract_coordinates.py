@@ -29,9 +29,9 @@ from pyworkflow.protocol.params import PointerParam, FloatParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import Coordinate
 from collections import OrderedDict
+from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
 
-
-class ProtExtractCoords(EMProtocol):
+class ProtExtractCoords(ProtParticlePicking):
     """ 
     Extract the coordinates information from a set of particles.
     
