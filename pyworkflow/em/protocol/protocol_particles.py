@@ -133,9 +133,10 @@ class ProtParticlePicking(ProtParticles):
     
     def getCoords(self):
         count = self.getOutputsSize()
+        if count == 0:
+            return None
         suffix = str(count) if count > 1 else ''
         outputName = 'outputCoordinates' + suffix
-        print outputName
         return getattr(self, outputName)
 
     def _createOutput(self, outputDir):
