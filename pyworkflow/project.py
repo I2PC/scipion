@@ -732,8 +732,7 @@ class Project(object):
             # Set important properties of the protocol
             workingDir = "%06d_%s" % (protocol.getObjId(), protocol.getClassName())
             self._setProtocolMapper(protocol)
-            #print protocol.strId(), protocol.getProject().getName()
-            #protocol.setName(name)
+
             protocol.setWorkingDir(self.getPath(PROJECT_RUNS, workingDir))
             # Update with changes
             self._storeProtocol(protocol)
@@ -905,20 +904,22 @@ class Project(object):
         graph = self.getTransformGraph()
         relations = self.mapper.getRelationsByName(relation)
         connection = self._getConnectedObjects(obj, graph)
+        
         objects = []
+        objectsDict = {}
         
         for rel in relations:
             pObj = self.getObject(rel['object_parent_id'])
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt) 
-            pid = pp.getUniqueId()
-            parent = connection.get(pid, None)
-            if parent:
+            
+            if pp.getUniqueId() in connection:                
                 cObj = self.getObject(rel['object_child_id'])
                 cExt = rel['object_child_extended']
-                cp = pwobj.Pointer(cObj, extended=cExt)            
-                child = graph.getNode(cp.getUniqueId()).pointer
-                objects.append(child)
+                cp = pwobj.Pointer(cObj, extended=cExt)
+                if cp.hasValue() and cp.getUniqueId() not in objectsDict:            
+                    objects.append(cp)
+                    objectsDict[cp.getUniqueId()] = True
                 
         return objects
     
@@ -936,7 +937,9 @@ class Project(object):
         if n is not None:
             # Iterate recursively all descendants
             for node in n.iterChilds():
-                connection[node.pointer.getUniqueId()] = node.pointer
+                connection[node.pointer.getUniqueId()] = True
+                # Add also 
+                connection[node.pointer.get().strId()] = True  
         
         return connection
     
