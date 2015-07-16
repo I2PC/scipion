@@ -291,7 +291,6 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
         protocol = self.server.protocol
         msg = self.request.recv(1024)
         tokens = shlex.split(msg)
-        print msg
         if msg.startswith('run function'):
             functionName = tokens[2]
             #try:
