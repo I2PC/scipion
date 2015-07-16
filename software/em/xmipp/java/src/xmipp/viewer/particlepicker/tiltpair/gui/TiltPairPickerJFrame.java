@@ -1,5 +1,7 @@
 package xmipp.viewer.particlepicker.tiltpair.gui;
 
+import ij.IJ;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -9,6 +11,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
@@ -19,8 +22,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import xmipp.ij.commons.XmippApplication;
 
+import xmipp.ij.commons.XmippApplication;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.Format;
@@ -231,9 +234,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 			tiltedcanvas.updateMicrograph();
 
 		}
-		canvas.display();
-
-		tiltedcanvas.display();
 		tiltedcanvas.getIw().setLocation(canvas.getIw().getWidth(), canvas.getIw().getLocation().y);
 	}
 
@@ -294,12 +294,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 
 	@Override
 	protected void reloadImage() {
-		getCanvas().getMicrograph().releaseImage();
 		getCanvas().updateMicrograph();
-		getTiltedCanvas().getMicrograph().releaseImage();
 		getTiltedCanvas().updateMicrograph();
-		canvas.display();
-		getTiltedCanvas().display();
 
 	}
 
@@ -362,20 +358,25 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		return new TiltPairParticlesDialog(this);
 	}
         
-        public void close()
+    public void close()
 	{
 		setVisible(false);
 		dispose();
 		if (getCanvas() != null)
-                {
+        {
 			getCanvas().getIw().close();
-                        if(getTiltedCanvas() != null)
-                            getTiltedCanvas().getIw().close();
-                }
-
+            if(getTiltedCanvas() != null)
+                getTiltedCanvas().getIw().close();
+        }
 		
 		XmippApplication.removeInstance(false);
 
+	}
+    
+    public void applyFilter(String filter)
+	{
+		IJ.run(getMicrograph().getImagePlus(), filter, "");
+		IJ.run(getMicrograph().getTiltedMicrograph().getImagePlus(), filter, "");
 	}
 
 }// class TiltPairPickerJFrame

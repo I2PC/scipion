@@ -49,7 +49,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	protected int autopickpercent;
 
         //used in previous versions
-	private int threads = 1;
+	private Integer threads = 1;
 	private boolean fastmode = true;
 	private boolean incore = false;
         ///////////////////////////
@@ -89,9 +89,9 @@ public class SupervisedParticlePicker extends ParticlePicker
 				templates.read(templatesfile, false);
 				radialtemplates = new ImageGeneric(ImageGeneric.Float);
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
-                                templateindex = (templates.getStatistics()[2] == 0)? 0: getTemplatesNumber();
+                templateindex = (templates.getStatistics()[2] == 0)? 0: getTemplatesNumber();
 			}
-                        templates.getRadialAvg(radialtemplates);
+            templates.getRadialAvg(radialtemplates);
 
 
 			for (SupervisedPickerMicrograph m : micrographs)
@@ -347,10 +347,10 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 	}
         
-        public boolean containsPSD()
-        {
-            return existspsd;
-        }
+    public boolean containsPSD()
+    {
+        return existspsd;
+    }
 
     @Override
 	public void loadEmptyMicrographs()
@@ -402,41 +402,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	}
 	
 	
-	public void loadEmptyMicrographsFromSqlite()
-	{
-		String selfile = getMicrographsSelFile();
-		
-		if (micrographs == null)
-			micrographs = new ArrayList<SupervisedPickerMicrograph>();
-		else
-			micrographs.clear();
-		SupervisedPickerMicrograph micrograph;
-		String psd = null, ctf = null, filename;
-		try
-		{
-			ScipionMetaData md = new ScipionMetaData(selfile);
-            if(!md.getSetType().equals("SetOfMicrographs"))    
-            	throw new IllegalArgumentException("SetOfMicrographs file expected");
-			ColumnInfo ci = md.getColumnInfo("_filename");
-			long[] ids = md.findObjects();
-			for (long id : ids)
-			{
-
-				filename = md.getValueString(ci.label, id);
-				micrograph = new SupervisedPickerMicrograph(filename, psd, ctf);
-				micrographs.add(micrograph);
-			}
-			if (micrographs.isEmpty())
-				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
-
+	
 	@Override
 	public List<SupervisedPickerMicrograph> getMicrographs()
 	{
@@ -596,12 +562,11 @@ public class SupervisedParticlePicker extends ParticlePicker
                                                             // projects
             configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
             isautopick = configmode == Mode.Supervised || configmode == Mode.Review;
-            if (mode == Mode.Supervised && configmode == Mode.Manual)
-                    throw new IllegalArgumentException("Cannot switch to Supervised mode from the command line");
-            if (mode == Mode.Manual && configmode == Mode.Supervised)
-                    mode = Mode.Supervised;
+            
             if (mode == Mode.Review && configmode == Mode.Manual)//Review mode makes no sense if manual mode
                 throw new IllegalArgumentException("Cannot review picking in manual mode, use manual mode instead");
+            if (mode != Mode.ReadOnly && mode != Mode.Review)
+            	mode = configmode;
 			md.destroy();
 		}
 		catch (Exception e)
@@ -611,16 +576,16 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 	}
         
-        public boolean isAutopick()
-        {
-            return isautopick;
-        }
-        
-        @Override
-        public synchronized void saveConfig()
-        {
-            JMetaDataIO.saveConfig(this, configfile);
-        }
+    public boolean isAutopick()
+    {
+        return isautopick;
+    }
+    
+    @Override
+    public synchronized void saveConfig()
+    {
+        JMetaDataIO.saveConfig(this, configfile);
+    }
         
         @Override
 	protected synchronized void saveConfig(MetaData md, long id)
@@ -1021,7 +986,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 		return templateindex;
 	}
-
 
 
 	public void loadMicrographData(SupervisedPickerMicrograph m)

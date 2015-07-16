@@ -34,14 +34,13 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 		this.uc = (UntiltedMicrographCanvas) frame.getCanvas();
 		//XmippWindowUtil.setLocation(0.7f, 0, iw);
 	}
+	
+	
 
 	public void updateMicrograph()
 	{
 		TiltedMicrograph m = getFrame().getMicrograph().getTiltedMicrograph();
-		setMicrograph(m);
-		imp = m.getImagePlus(getFrame().getParticlePicker().getFilters());
-		m.runImageJFilters(getFrame().getParticlePicker().getFilters());
-		refreshActive(null);
+		updateMicrograph(m);
 
 	}
 

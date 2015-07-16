@@ -133,6 +133,8 @@ class ProtParticlePicking(ProtParticles):
     
     def getCoords(self):
         count = self.getOutputsSize()
+        if count == 0:
+            return None
         suffix = str(count) if count > 1 else ''
         outputName = 'outputCoordinates' + suffix
         return getattr(self, outputName)
@@ -170,8 +172,7 @@ class ProtParticlePicking(ProtParticles):
     def getCoordsDir(self):
         pass
 
-    def registerCoords(self, args):
-        coordsDir = self.getCoordsDir()
+    def registerCoords(self, coordsDir):
         count = self.getOutputsSize()
         suffix = str(count + 1) if count > 0 else ''
         outputName = 'outputCoordinates' + suffix
