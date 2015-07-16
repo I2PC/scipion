@@ -839,6 +839,8 @@ class Protocol(Step):
             rCreator = r['parent_id']
             rParent = r['object_parent_id']
             rChild = r['object_child_id']
+            rParentExt = r['object_parent_extended']
+            rChildExt = r['object_child_extended']
             
             if rParent in copyDict:
                 rParent = copyDict.get(rParent).getObjId()
@@ -846,7 +848,8 @@ class Protocol(Step):
             if rChild in copyDict:
                 rChild = copyDict.get(rChild).getObjId()
             
-            self.mapper.insertRelationData(rName, rCreator, rParent, rChild)
+            self.mapper.insertRelationData(rName, rCreator, rParent, rChild,
+                                           rParentExt, rChildExt)
         
         
     def getRelations(self):
@@ -855,7 +858,19 @@ class Protocol(Step):
     
     def _defineRelation(self, relName, parentObj, childObj):
         """ Insert a new relation in the mapper using self as creator. """
-        self.mapper.insertRelation(relName, self, parentObj, childObj)
+        parentExt = None
+        childExt = None
+        
+        if parentObj.isPointer():
+            parentExt = parentObj.getExtended()
+            parentObj = parentObj.getObjValue()
+            
+        if childObj.isPointer():
+            childExt = childObj.getExtended()
+            childObj = childObj.getObjValue()
+            
+        self.mapper.insertRelation(relName, self, parentObj, childObj,
+                                   parentExt, childExt)
         
     def makePathsAndClean(self):
         """ Create the necessary path or clean

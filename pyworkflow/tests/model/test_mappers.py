@@ -237,7 +237,7 @@ class TestSqliteFlatMapper(BaseTest):
         print ">>> test_SqliteFlatDb: dbName = '%s'" % self.modelGoldSqlite
         db = SqliteFlatDb(self.modelGoldSqlite)
         # Old db version 0
-        self.assertEqual(0, mapper.db.getVersion())
+        self.assertEqual(0, db.getVersion())
         # Test the 'self' class name is correctly retrieved
         self.assertEqual('Micrograph', db.getSelfClassName())  
         # Check the count is equal to 3

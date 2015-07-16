@@ -291,7 +291,8 @@ class SqliteMapper(Mapper):
         objRows = self.db.selectObjectsByParent(parent_id=None)
         return self.__objectsFromRows(objRows, iterate, objectFilter)    
     
-    def insertRelation(self, relName, creatorObj, parentObj, childObj):
+    def insertRelation(self, relName, creatorObj, parentObj, childObj, 
+                       parentExt=None, childExt=None):
         """ This function will add a new relation between two objects.
         Params:
             relName: the name of the relation to be added.
@@ -302,7 +303,8 @@ class SqliteMapper(Mapper):
         for o in [creatorObj, parentObj, childObj]:
             if not o.hasObjId():
                 raise Exception("Before adding a relation, the object should be stored in mapper")
-        self.db.insertRelation(relName, creatorObj.getObjId(), parentObj.getObjId(), childObj.getObjId())
+        self.db.insertRelation(relName, creatorObj.getObjId(), parentObj.getObjId(), childObj.getObjId(), 
+                               parentExt, childExt)
     
     def __objectsFromIds(self, objIds):
         """Return a list of objects, given a list of id's
@@ -345,8 +347,10 @@ class SqliteMapper(Mapper):
         """ Delete all relations created by object creatorObj """
         self.db.deleteRelationsByCreator(creatorObj.getObjId())
     
-    def insertRelationData(self, relName, creatorId, parentId, childId):
-        self.db.insertRelation(relName, creatorId, parentId, childId)
+    def insertRelationData(self, relName, creatorId, parentId, childId,
+                           parentExtended=None, childExtended=None):
+        self.db.insertRelation(relName, creatorId, parentId, childId,
+                               parentExtended, childExtended)
     
     
 class SqliteObjectsDb(SqliteDb):
@@ -444,16 +448,16 @@ class SqliteObjectsDb(SqliteDb):
             print "INSERT INTO Objects (parent_id, name, classname, value, label, comment, creation) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))", (parent_id, name, classname, value, label, comment)
             raise ex
         
-    def insertRelation(self, relName, parent_id, object_parent_id, object_child_id, **args):
+    def insertRelation(self, relName, parent_id, object_parent_id, object_child_id, 
+                       object_parent_extended=None, object_child_extended=None, **kwargs):
         """Execute command to insert a new object. Return the inserted object id"""
-        self.executeCommand("INSERT INTO Relations (parent_id, name, object_parent_id, object_child_id, creation) VALUES (?, ?, ?, ?, datetime('now'))",
-                            (parent_id, relName, object_parent_id, object_child_id))
+        self.executeCommand("INSERT INTO Relations "
+                            "(parent_id, name, object_parent_id, object_child_id, creation, "
+                            "object_parent_extended, object_child_extended) "
+                            " VALUES (?, ?, ?, ?, datetime('now'), ?, ?)",
+                            (parent_id, relName, object_parent_id, object_child_id,
+                             object_parent_extended, object_child_extended))
         return self.cursor.lastrowid
-    
-    def insertRelationRow(self, row):
-        """Execute command to insert a new object. Return the inserted object id"""
-        return self.insertRelation(row['name'], row['parent_id'], 
-                                   row['object_parent_id'], row['object_child_id'])
     
     def updateObject(self, objId, name, classname, value, parent_id, label, comment):
         """Update object data """
