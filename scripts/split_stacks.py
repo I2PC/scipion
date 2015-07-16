@@ -5,6 +5,7 @@ import os
 import argparse
 from pyworkflow.em import ImageHandler
 
+
 def main():
     parser = argparse.ArgumentParser(description="make individual micrographs from a stack")
     add = parser.add_argument  # shortcut
@@ -28,10 +29,9 @@ def main():
     for fileN in filePaths:
         n = getNumOfElements(fileN)
         for i in range(1, n+1):
-            inputFn = "%d@%s" % (i, fileN)
             outputFn = "%s_%03d.%s" % (os.path.splitext(fileN)[0], i, args.ext)
-            inputImg = imgh.read(inputFn)
-            imgh.write(inputImg, outputFn)
+            imgh.convert((i, fileN), outputFn)
+
 
 if __name__ == "__main__":
     main()
