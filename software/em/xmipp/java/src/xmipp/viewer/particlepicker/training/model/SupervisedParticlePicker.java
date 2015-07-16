@@ -769,20 +769,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 
 		if (f == Format.Auto)
-			if(!suffix.isEmpty())
-				f = detectFormat(path, preffix, suffix);
-			else
-			{
-				for(String ext: emextensions.values())
-				{
-					f = detectFormat(path, preffix, ext);
-					if(f != Format.None)
-					{
-						suffix = ext;
-						break;
-					}
-				}
-			}
+		{
+			StringBuffer suffixPtr = new StringBuffer(suffix);
+			f = detectFormat(path, preffix, suffixPtr);
+			suffix = suffixPtr.toString();
+		}
 		if (f == Format.None)
 			throw new IllegalArgumentException("Unable to detect format. You may try specifying format or renaming files");
 
@@ -800,10 +791,10 @@ public class SupervisedParticlePicker extends ParticlePicker
                 
 		for (SupervisedPickerMicrograph m : micrographs)
 		{
-                    resetMicrograph(m);
-                    file = Filename.join(path, preffix + m.getName() + suffix);
-                    if(new File(file).exists())
-                        result += importParticlesFromFile(file, f, m, scale, invertx, inverty);
+            resetMicrograph(m);
+            file = Filename.join(path, preffix + m.getName() + suffix);
+            if(new File(file).exists())
+                result += importParticlesFromFile(file, f, m, scale, invertx, inverty);
 		}
                 
                 
