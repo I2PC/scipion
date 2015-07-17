@@ -669,6 +669,16 @@ class Pointer(Object):
             strId = self.getObjValue().strId()
             return '-> %s (%s)' % (className, strId)
         return '-> None'
+    
+    def __clean(self, extended):
+        """ Remove old attributes conventions. """
+        #TODO: This replacements are needed now by backward compatibility
+        # reasons, when we used __attribute__ and __item__ to mark both cases
+        # in a future the following two lines can be removed.
+        ext = extended.replace(self.EXTENDED_ATTR, '')
+        ext = ext.replace(self.EXTENDED_ITEMID, '')
+        return ext
+        
 
     def hasValue(self):
         return self._objValue is not None
@@ -681,12 +691,7 @@ class Pointer(Object):
         """
         extended = self._extended.get()
         if extended:
-            #TODO: This replacements are needed now by backward compatibility
-            # reasons, when we used __attribute__ and __item__ to mark both cases
-            # in a future the following two lines can be removed.
-            ext = extended.replace(self.EXTENDED_ATTR, '')
-            ext = ext.replace(self.EXTENDED_ITEMID, '')
-            
+            ext = self.__clean(extended)
             parts = ext.split('.')
             value = self._objValue
             for p in parts:
@@ -710,10 +715,10 @@ class Pointer(Object):
             self._extended.set(None)
         
     def hasExtended(self):
-        return self._extended.hasValue()
+        return bool(self._extended.get()) # consider empty string as false
     
     def getExtended(self):
-        return self._extended.get()
+        return self.__clean(self._extended.get(''))
         
     def setExtended(self, attribute):
         """ Set the attribute name of the "pointed object"
@@ -723,7 +728,10 @@ class Pointer(Object):
     
     def getExtendedParts(self):
         """ Return the extended components as a list. """
-        return self.getExtended().split('.')
+        if self.hasExtended():
+            return self.getExtended().split('.')
+        else:
+            return []
     
     def setExtendedParts(self, parts):
         """ Set the extedend attribute but using 
@@ -738,7 +746,13 @@ class Pointer(Object):
         if self.hasExtended():
             self._extended.set('%s.%s' % (self._extended.get(), attribute))
         else:
-            self.setExtended(attribute)            
+            self.setExtended(attribute)
+            
+    def removeExtended(self):
+        """ Remove the last part of the extended attribute. """
+        if self.hasExtended():
+            parts = self.getExtendedParts()
+            self.setExtendedParts(parts[:-1])
         
     def getAttributes(self):
         yield ('_extended', getattr(self, '_extended'))
