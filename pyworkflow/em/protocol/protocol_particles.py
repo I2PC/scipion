@@ -149,7 +149,7 @@ class ProtParticlePicking(ProtParticles):
         coordSet.setObjComment(self.getSummary(coordSet))
         outputs = {outputName: coordSet}
         self._defineOutputs(**outputs)
-        self._defineSourceRelation(micSet, coordSet)
+        self._defineSourceRelation(self.inputMicrographs, coordSet)
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         pass
