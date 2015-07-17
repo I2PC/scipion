@@ -193,7 +193,9 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
             volSet.append(outVol) 
         
         self._defineOutputs(outputVolumes=volSet)
-        #TODO: define the source relation from each input
+        # Define all the inputs as SOURCE to the output volumes set
+        for pointer in self.inputVolumes:
+            self._defineSourceRelation(pointer, volSet)
     
     #--------------------------- INFO functions --------------------------------------------
     
