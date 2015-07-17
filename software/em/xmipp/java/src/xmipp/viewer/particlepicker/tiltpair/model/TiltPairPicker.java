@@ -308,37 +308,41 @@ public class TiltPairPicker extends ParticlePicker
 	public String importParticlesFromFolder(String path, Format f, String preffix, String suffix, float scale, boolean invertx, boolean inverty)
 	{
 		if (f == Format.Auto)
-			f = detectFormat(path, preffix, suffix);
+		{
+			StringBuffer suffixPtr = new StringBuffer(suffix);
+			f = detectFormat(path, preffix, suffixPtr);
+			suffix = suffixPtr.toString();
+		}
 		if (f == Format.None)
 			throw new IllegalArgumentException("Unable to detect format");
-
+		System.out.println(suffix);
 		String uFn, tFn, file;
 		String result = "";
-                importSize(path, f, scale);
+        importSize(path, f, scale);
 
 		MetaData uMd = new MetaData();
-                MetaData tMd = new MetaData();
-                for(UntiltedMicrograph m: micrographs)
-                {
-                    uFn = null; tFn = null;
-                    file = Filename.join(path, preffix + m.getName() + suffix);
-                    if(new File(file).exists())
-                        uFn = file;
-                    file = Filename.join(path, preffix + m.getTiltedMicrograph().getName() + suffix);
-                    if(new File(file).exists())
-                        tFn = file;
-                    
-                    if(uFn != null && tFn != null)
-                    {
-                        uMd.clear();
-                        tMd.clear();
-                        result += importParticlesFromFiles(uFn, tFn, f, m, scale, invertx, inverty, uMd, tMd);
-                        saveData(m);
-                    }           
+        MetaData tMd = new MetaData();
+        for(UntiltedMicrograph m: micrographs)
+        {
+            uFn = null; tFn = null;
+            file = Filename.join(path, preffix + m.getName() + suffix);
+            if(new File(file).exists())
+                uFn = file;
+            file = Filename.join(path, preffix + m.getTiltedMicrograph().getName() + suffix);
+            if(new File(file).exists())
+                tFn = file;
+            
+            if(uFn != null && tFn != null)
+            {
+                uMd.clear();
+                tMd.clear();
+                result += importParticlesFromFiles(uFn, tFn, f, m, scale, invertx, inverty, uMd, tMd);
+                saveData(m);
+            }           
 		}
-                uMd.destroy();
-               tMd.destroy();
-                super.saveData();
+        uMd.destroy();
+        tMd.destroy();
+        super.saveData();
                 
                 
 		return result;
