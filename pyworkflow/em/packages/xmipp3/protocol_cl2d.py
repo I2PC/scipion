@@ -245,7 +245,7 @@ class XmippProtCL2D(ProtClassify2D):
         readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
-        self._defineSourceRelation(inputParticles, classes2DSet)
+        self._defineSourceRelation(self.inputParticles, classes2DSet)
     
     def analyzeOutOfCores(self,subset):
         """ Analyze which images are out of cores """

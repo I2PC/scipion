@@ -293,9 +293,9 @@ at each refinement step. The resolution you specify is a target, not the filter 
                              itemDataIterator=self._iterTextFile(iterN))
         
         self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(partSet, vol)
+        self._defineSourceRelation(self.inputParticles, vol)
         self._defineOutputs(outputParticles=newPartSet)
-        self._defineSourceRelation(partSet, newPartSet)
+        self._defineSourceRelation(self.inputParticles, newPartSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

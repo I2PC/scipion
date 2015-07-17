@@ -208,7 +208,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         
         self._defineOutputs(outputParticles=partSet)
         self._defineSourceRelation(self.getInputPdb(), partSet)
-        self._defineTransformRelation(inputSet, partSet)
+        self._defineTransformRelation(self.inputParticles, partSet)
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):

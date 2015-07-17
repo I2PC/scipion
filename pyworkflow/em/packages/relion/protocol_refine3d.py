@@ -105,9 +105,9 @@ leads to objective and high-quality results.
                                 itemDataIterator=md.iterRows(outImgsFn))
             
             self._defineOutputs(outputVolume=vol)
-            self._defineSourceRelation(imgSet, vol)
+            self._defineSourceRelation(self.inputParticles, vol)
             self._defineOutputs(outputParticles=outImgSet)
-            self._defineTransformRelation(imgSet, outImgSet)
+            self._defineTransformRelation(self.inputParticles, outImgSet)
         else:
             pass
     

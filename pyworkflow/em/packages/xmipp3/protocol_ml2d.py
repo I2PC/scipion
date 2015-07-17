@@ -196,9 +196,9 @@ class XmippProtML2D(ProtClassify2D):
         classes2DSet = self._createSetOfClasses2D(imgSet)
         readSetOfClasses2D(classes2DSet, self._getFileName('output_classes'))
         self._defineOutputs(outputClasses=classes2DSet)
-        self._defineSourceRelation(imgSet, classes2DSet)
+        self._defineSourceRelation(self.inputParticles, classes2DSet)
         if not self.doGenerateReferences:
-            self._defineSourceRelation(self.inputReferences.get(), classes2DSet)
+            self._defineSourceRelation(self.inputReferences, classes2DSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
     

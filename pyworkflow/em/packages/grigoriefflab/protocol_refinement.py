@@ -44,7 +44,6 @@ transfer function of the microscope and refinement of three-dimensional
 reconstructions.
     """
     _label = 'frealign'
-
     
     def __init__(self, **args):
         ProtFrealignBase.__init__(self, **args)
@@ -60,7 +59,7 @@ reconstructions.
         vol.setFileName(volFn)
         vol.setSamplingRate(inputSet.getSamplingRate())
         self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(inputSet, vol)
+        self._defineSourceRelation(self.inputParticles, vol)
 
         # Register output Particles with their 3D alignment
         file2 = self._getFileName('output_par', iter=lastIter)
@@ -71,9 +70,8 @@ reconstructions.
         self._defineTransformRelation(inputSet, partSet)
         
         if not self.doContinue:
-            inputRef = self.input3DReference.get()
-            self._defineSourceRelation(inputRef, vol)
-            self._defineSourceRelation(inputRef, partSet)
+            self._defineSourceRelation(self.input3DReference, vol)
+            self._defineSourceRelation(self.input3DReference, partSet)
             
         #convert to scipion
 

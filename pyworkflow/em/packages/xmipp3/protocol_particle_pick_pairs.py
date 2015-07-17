@@ -131,7 +131,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             outputset.append(TiltPair(coordU, coordT))
         
         self._defineOutputs(outputCoordinatesTiltPair=outputset)
-        self._defineSourceRelation(inputset, outputset)
+        self._defineSourceRelation(self.inputMicrographsTiltedPair, outputset)
         
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):

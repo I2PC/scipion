@@ -202,9 +202,9 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         readSetOfParticles(self._getFileName('shiny'), shinyPartSet, alignType=ALIGN_PROJ)
         
         self._defineOutputs(outputParticles=shinyPartSet)
-        self._defineSourceRelation(imgSet, shinyPartSet)
+        self._defineSourceRelation(self.inputParticles, shinyPartSet)
         self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(imgSet, vol)
+        self._defineSourceRelation(self.inputParticles, vol)
 
     
     #--------------------------- INFO functions -------------------------------------------- 

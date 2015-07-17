@@ -175,7 +175,7 @@ class XmippProtConvertPdb(em.ProtInitialVolume):
         volume.setFileName(self._getVolName())
         self._defineOutputs(outputVolume=volume)
         if self.inputPdbData.get() == self.IMPORT_OBJ:
-            self._defineSourceRelation(self.pdbObj.get(), volume)
+            self._defineSourceRelation(self.pdbObj, volume)
     
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
