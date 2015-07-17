@@ -81,14 +81,19 @@ class XmippProtVolumeStrain(ProtAnalysis3D):
         fnRoot=self._getExtraPath('result')
         self.runJob("xmipp_image_convert", "-i %s_initial.raw#%d,%d,%d,0,float -o %s_initial.vol"%
                     (fnRoot,volDim,volDim,volDim,fnRoot))
+        self.runJob("xmipp_transform_mirror","-i %s_initial.vol --flipX"%fnRoot)
         self.runJob("xmipp_image_convert", "-i %s_final.raw#%d,%d,%d,0,float -o %s_final.vol"%
                     (fnRoot,volDim,volDim,volDim,fnRoot))
+        self.runJob("xmipp_transform_mirror","-i %s_final.vol --flipX"%fnRoot)
         self.runJob("xmipp_image_convert", "-i %s_initialDeformedToFinal.raw#%d,%d,%d,0,float -o %s_initialDeformedToFinal.vol"%
                     (fnRoot,volDim,volDim,volDim,fnRoot))
+        self.runJob("xmipp_transform_mirror","-i %s_initialDeformedToFinal.vol --flipX"%fnRoot)
         self.runJob("xmipp_image_convert", "-i %s_strain.raw#%d,%d,%d,0,float -o %s_strain.vol"%
                     (fnRoot,volDim,volDim,volDim,fnRoot))
+        self.runJob("xmipp_transform_mirror","-i %s_strain.vol --flipX"%fnRoot)
         self.runJob("xmipp_image_convert", "-i %s_localrot.raw#%d,%d,%d,0,float -o %s_localrot.vol"%
                     (fnRoot,volDim,volDim,volDim,fnRoot))
+        self.runJob("xmipp_transform_mirror","-i %s_localrot.vol --flipX"%fnRoot)
         self.runJob("rm","-f "+self._getExtraPath('result_*.raw'))
     
     def createChimeraScript(self):
@@ -109,29 +114,20 @@ class XmippProtVolumeStrain(ProtAnalysis3D):
         fhCmd.write("scolor #0 volume #1 cmap rainbow reverseColors True\n")
         fhCmd.close()
 
+        scriptFile = self._getPath('result') + '_morph_chimera.cmd'
+        fhCmd = open(scriptFile, 'w')
+        fhCmd.write("open %s\n" % (fnRoot+"_initial.vol"))
+        fhCmd.write("open %s\n" % (fnRoot+"_final.vol"))
+        fhCmd.write("vol #0 hide\n")
+        fhCmd.write("vol #1 hide\n")
+        fhCmd.write("vop morph #0,1 frames 50\n")
+        fhCmd.close()
+
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
-#        vol = self.inputVolume.get()
-#        xDim = self._getDimensions()
-#        volDim = vol.getDim()[0]
-#        
-#        if volDim != xDim:
-#            errors.append("Make sure that the volume and the images have the same size")
+        xdim0 = self.inputVolume0.get().getDim()[0]
+        xdimF = self.inputVolumeF.get().getDim()[0]
+        if xdim0 != xdimF:
+            errors.append("Make sure that the two volumes have the same size")
         return errors    
-    
-    def _summary(self):
-        summary = []
-#        summary.append("Images evaluated: %i" % self.inputSet.get().getSize())
-#        summary.append("Volume: %s" % self.inputVolume.getNameId())
-#        summary.append("symmetry: %s" % self.symmetryGroup.get())
-        return summary
-    
-    def _methods(self):
-        methods = []
-#        if hasattr(self, 'outputClasses') or hasattr(self, 'outputAverages'):
-#            methods.append("We evaluated %i images regarding to volume %s"
-#                           " using %s symmetry" %(self.inputSet.get().getSize(),\
-#                                                  self.inputVolume.getNameId(), self.symmetryGroup.get()) )
-        return methods
-    
