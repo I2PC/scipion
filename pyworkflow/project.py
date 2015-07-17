@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.utils import startDebugger
 """
 This modules handles the Project management
 """
@@ -469,7 +470,10 @@ class Project(object):
         self._checkModificationAllowed(protocols, 'Cannot DELETE protocols')
         
         for prot in protocols:
-            self.mapper.delete(prot) # Delete from database
+            # Delete the relations created by this protocol
+            self.mapper.deleteRelations(prot)
+            # Delete from protocol from database
+            self.mapper.delete(prot) 
             wd = prot.workingDir.get()
             
             if wd.startswith(PROJECT_RUNS):
@@ -847,19 +851,27 @@ class Project(object):
             pid = pp.getUniqueId()
             parent = g.getNode(pid)
             
+            while not parent and pp.hasExtended():
+                pp.removeExtended()
+                parent = g.getNode(pp.getUniqueId())
+            
             if not parent:
                 print "project._getRelationGraph: ERROR, parent Node is None: ", pid
             else:
                 cObj = self.getObject(rel['object_child_id'])
-                cExt = rel['object_child_extended']
-                cp = pwobj.Pointer(cObj, extended=cExt)            
-                child = g.getNode(cp.getUniqueId())
-                
-                if not child:
-                    print "project._getRelationGraph: ERROR, child Node is None: ", cp.getUniqueId()
-                    print "   parent: ", pid 
+                if cObj:
+                    cExt = rel['object_child_extended']
+                    cp = pwobj.Pointer(cObj, extended=cExt)            
+                    child = g.getNode(cp.getUniqueId())
+                    
+                    if not child:
+                        print "project._getRelationGraph: ERROR, child Node is None: ", cp.getUniqueId()
+                        print "   parent: ", pid 
+                    else:
+                        parent.addChild(child)
                 else:
-                    parent.addChild(child)
+                    print "project._getRelationGraph: ERROR, child Obj is None, id: ", rel['object_child_id']
+                    print "   parent: ", pid 
             
         for n in g.getNodes():
             if n.isRoot() and not n is root:
