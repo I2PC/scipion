@@ -126,6 +126,7 @@ class ProtRelionBase(EMProtocol):
         # and is restricted to only 3 digits.
         self._iterRegex = re.compile('_it(\d{3,3})_')
         
+        
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         self.IS_3D = not self.IS_2D
@@ -634,7 +635,6 @@ class ProtRelionBase(EMProtocol):
         if self.hasAttribute('numberOfIterations'):
             iterMsg += '/%d' % self._getnumberOfIters()
         summary = [iterMsg]
-        
         if self._getInputParticles().isPhaseFlipped():
             msg = "Your images have been ctf-phase corrected"
         else:
@@ -644,7 +644,6 @@ class ProtRelionBase(EMProtocol):
         if self.doContinue:
             summary += self._summaryContinue()
         summary += self._summaryNormal()
-        
         return summary
     
     def _summaryNormal(self):
@@ -730,6 +729,7 @@ class ProtRelionBase(EMProtocol):
     
     def _getContinueIter(self):
         continueRun = self.continueRun.get()
+        continueRun._initialize()
         if self.doContinue:
             if self.continueIter.get() == 'last':
                 continueIter = continueRun._lastIter()
