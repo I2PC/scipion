@@ -101,7 +101,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			e.printStackTrace();
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
@@ -279,7 +279,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 		catch (Exception e)
 		{
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 
 	}
@@ -343,7 +343,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 		catch (Exception e)
 		{
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
         
@@ -396,7 +396,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 
 	}
@@ -697,7 +697,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
@@ -914,7 +914,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 
 	}// function importAllParticles
@@ -955,7 +955,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 		return null;
 
