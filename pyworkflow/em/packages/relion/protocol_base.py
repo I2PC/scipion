@@ -122,7 +122,6 @@ class ProtRelionBase(EMProtocol):
     def _createIterTemplates(self):
         """ Setup the regex on how to find iterations. """
         self._iterTemplate = self._getFileName('data', iter=0).replace('000','???')
-        print "_iterTemplate: ", self._iterTemplate
         # Iterations will be identify by _itXXX_ where XXX is the iteration number
         # and is restricted to only 3 digits.
         self._iterRegex = re.compile('_it(\d{3,3})_')
@@ -634,7 +633,6 @@ class ProtRelionBase(EMProtocol):
         self._initialize()
         iterMsg = 'Iteration %d' % self._lastIter()
         if self.hasAttribute('numberOfIterations'):
-            print "True: ", self.hasAttribute('numberOfIterations')
             iterMsg += '/%d' % self._getnumberOfIters()
         summary = [iterMsg]
         if self._getInputParticles().isPhaseFlipped():
