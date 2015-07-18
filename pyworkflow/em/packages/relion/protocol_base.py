@@ -729,7 +729,10 @@ class ProtRelionBase(EMProtocol):
     
     def _getContinueIter(self):
         continueRun = self.continueRun.get()
-        continueRun._initialize()
+        
+        if continueRun is not None:
+            continueRun._initialize()
+        
         if self.doContinue:
             if self.continueIter.get() == 'last':
                 continueIter = continueRun._lastIter()
@@ -737,6 +740,7 @@ class ProtRelionBase(EMProtocol):
                 continueIter = int(self.continueIter.get())
         else:
             continueIter = 0
+            
         return continueIter
     
     def _getnumberOfIters(self):
