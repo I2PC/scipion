@@ -1161,7 +1161,10 @@ class ProtocolsView(tk.Frame):
         protocols = self._getSelectedProtocols()
         if len(protocols) == 1:
             newProt = self.project.copyProtocol(protocols[0])
-            self._openProtocolForm(newProt)
+            if newProt is None:
+                self.windows.showError("Error copying protocol.!!!")
+            else:
+                self._openProtocolForm(newProt)
         else:
             self.project.copyProtocol(protocols)
             self.refreshRuns()
