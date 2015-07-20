@@ -427,6 +427,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                 image = getattr(obj, '_icon', '')
                 parent = self.inputParentDict[obj._parentKey]
                 
+                suffix = ''
                 if obj.hasExtended():
                     extendedValue = obj.getExtendedValue()
                     if obj.hasExtendedAttribute():
@@ -440,7 +441,6 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                         labelObj = obj.get()
                 else:
                     labelObj = obj.get()
-                    suffix = ''
                     
                 objKey = obj._parentKey + str(labelObj.getObjId())
                 label = self.getObjectLabel(labelObj, self.mapper.getParent(labelObj))
