@@ -295,7 +295,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self.inputParticles, vol)
         self._defineOutputs(outputParticles=newPartSet)
-        self._defineSourceRelation(self.inputParticles, newPartSet)
+        self._defineTransformRelation(self.inputParticles, newPartSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
