@@ -17,7 +17,7 @@ import xmipp.viewer.particlepicker.PickerParticle;
 public class ManualParticle extends PickerParticle{
 	
 	protected ParticlePicker picker;
-        protected ImageGeneric ig;
+    protected ImageGeneric ig;
 
 	protected double[] lastalign;
 

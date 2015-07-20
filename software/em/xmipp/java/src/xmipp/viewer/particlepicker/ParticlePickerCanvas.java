@@ -432,17 +432,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	protected abstract void doCustomPaint(Graphics2D g2);
         
-         public void mouseWheelMoved(int x, int y, int rotation, Dimension size)
-	{
-                getIw().setSize(size);
-		if (rotation < 0)
-			zoomIn(x, y);
-		else
-			zoomOut(x, y);
-		if (getMagnification() <= 1.0)
-			imp.repaintWindow();
-
-	}
+   
          
     public abstract ParticlePicker getParticlePicker();
 

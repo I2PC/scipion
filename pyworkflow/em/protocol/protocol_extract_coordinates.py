@@ -29,9 +29,9 @@ from pyworkflow.protocol.params import PointerParam, FloatParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import Coordinate
 from collections import OrderedDict
+from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
 
-
-class ProtExtractCoords(EMProtocol):
+class ProtExtractCoords(ProtParticlePicking):
     """ 
     Extract the coordinates information from a set of particles.
     
@@ -88,6 +88,12 @@ class ProtExtractCoords(EMProtocol):
         
         for mic in inputMics:
             micKey = mic.getMicName() if hasMicName else mic.getObjId()
+            if micKey in micDict:
+                print ">>> ERROR: micrograph key %s is duplicated!!!" % micKey
+                print "           Used in micrographs:"
+                print "           - %s" % micDict[micKey].getLocation()
+                print "           - %s" % mic.getLocation()
+                raise Exception("Micrograph key %s is duplicated!!!" % micKey)
             micDict[micKey] = mic.clone()
             
         for particle in inputParticles:

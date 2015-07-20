@@ -151,7 +151,10 @@ class ProtImportMicrographs(ProtImportMicBase):
                 if imgh.isImageFile(micFn):
                     _, _, z, n = imgh.getDimensions(micFn)
                     if n > 1 or z > 1:
-                        errors.append("The protocol not support micrographs stored in stacks.")
+                        errors.append("The protocol not support micrographs stored in stacks. "
+                                      "If you want to obtain your micrographs individually, "
+                                      "you can run the following command:\n"
+                                      "scipion run scipion_directory/scripts/split_stacks.py --files *your files* --ext *extension*")
                         break
             return errors
             

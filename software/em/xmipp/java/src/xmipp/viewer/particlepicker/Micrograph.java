@@ -60,7 +60,7 @@ public abstract class Micrograph {
              System.out.printf("path %s selfile %s\n", path, ParticlePicker.getPicker().selfile);
              file = Filename.findImagePath(path, ParticlePicker.getPicker().selfile, true);
              if(file == null)
-                throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
+                throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("micrograph", path));
         }
 		
 		this.name = name;

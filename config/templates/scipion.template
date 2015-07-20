@@ -34,6 +34,8 @@ SIMPLE_HOME = %(EM_ROOT)s/simple
 PYTOM_HOME = %(EM_ROOT)s/pytom
 DOGPICKER_HOME = %(EM_ROOT)s/dogpicker
 NMA_HOME = %(EM_ROOT)s/nma
+MATLAB_BINDIR = None
+MATLAB_LIBDIR = None
 # Some visualization packages
 CHIMERA_HOME = %(EM_ROOT)s/chimera
 CHIMERA_HEADLESS_HOME = %(EM_ROOT)s/chimera_headless

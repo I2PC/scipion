@@ -1239,7 +1239,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         	public VolumesComboBoxModel()
         	{
         		String volume;
-        		int size = getSize();
+        		int size = data.size();//if this combo is created metadata is a set of volumes
         		indexToVolume = new HashMap(size);
         		volumeToIndex = new HashMap(size);
         		for(int i = 0; i < size; i ++)
@@ -1255,8 +1255,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public int getSize()
 			{
-                    if(!data.isVolumeMode())
-                        return 0;
+                    
                     return data.size();
 			}
 
@@ -1290,8 +1289,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                     String base = Filename.getBaseName(volume);
                     int count = 0;
                     for(int i = 0; i < getSize(); i ++)
-                        if(base.equals(Filename.getBaseName(volume)))
+                        if(base.equals(Filename.getBaseName(data.getVolumeAt(i))))
+                        {
                             count ++;
+                            if (count > 1)// if volumes use same name you need to keep preffix
+                            	break;
+                        }
                     if(count == 1)
                         return base;
                     

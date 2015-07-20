@@ -49,7 +49,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	protected int autopickpercent;
 
         //used in previous versions
-	private int threads = 1;
+	private Integer threads = 1;
 	private boolean fastmode = true;
 	private boolean incore = false;
         ///////////////////////////
@@ -89,9 +89,9 @@ public class SupervisedParticlePicker extends ParticlePicker
 				templates.read(templatesfile, false);
 				radialtemplates = new ImageGeneric(ImageGeneric.Float);
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
-                                templateindex = (templates.getStatistics()[2] == 0)? 0: getTemplatesNumber();
+                templateindex = (templates.getStatistics()[2] == 0)? 0: getTemplatesNumber();
 			}
-                        templates.getRadialAvg(radialtemplates);
+            templates.getRadialAvg(radialtemplates);
 
 
 			for (SupervisedPickerMicrograph m : micrographs)
@@ -101,7 +101,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			e.printStackTrace();
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
@@ -279,7 +279,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 		catch (Exception e)
 		{
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 
 	}
@@ -343,14 +343,14 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 		catch (Exception e)
 		{
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
         
-        public boolean containsPSD()
-        {
-            return existspsd;
-        }
+    public boolean containsPSD()
+    {
+        return existspsd;
+    }
 
     @Override
 	public void loadEmptyMicrographs()
@@ -396,47 +396,13 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 
 	}
 	
 	
-	public void loadEmptyMicrographsFromSqlite()
-	{
-		String selfile = getMicrographsSelFile();
-		
-		if (micrographs == null)
-			micrographs = new ArrayList<SupervisedPickerMicrograph>();
-		else
-			micrographs.clear();
-		SupervisedPickerMicrograph micrograph;
-		String psd = null, ctf = null, filename;
-		try
-		{
-			ScipionMetaData md = new ScipionMetaData(selfile);
-            if(!md.getSetType().equals("SetOfMicrographs"))    
-            	throw new IllegalArgumentException("SetOfMicrographs file expected");
-			ColumnInfo ci = md.getColumnInfo("_filename");
-			long[] ids = md.findObjects();
-			for (long id : ids)
-			{
-
-				filename = md.getValueString(ci.label, id);
-				micrograph = new SupervisedPickerMicrograph(filename, psd, ctf);
-				micrographs.add(micrograph);
-			}
-			if (micrographs.isEmpty())
-				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
-
+	
 	@Override
 	public List<SupervisedPickerMicrograph> getMicrographs()
 	{
@@ -537,39 +503,39 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 
 
-             if (size > ParticlePicker.sizemax) {
-                 XmippDialog.showInfo(parent, String.format("Max size is %s, %s not allowed", ParticlePicker.sizemax, size));
-                 return false;
+        if (size > ParticlePicker.sizemax) {
+             XmippDialog.showInfo(parent, String.format("Max size is %s, %s not allowed", ParticlePicker.sizemax, size));
+             return false;
         }
-            String outmsg = "";
-            int count;
-            boolean valid = true;
-            List<ManualParticle> outlist = new ArrayList<ManualParticle>();
-            for (SupervisedPickerMicrograph m : micrographs)
-            {
-                count = 0;
-                for (ManualParticle p : m.getParticles())
-                        if (!m.fits(p.getX(), p.getY(), size))
-                        {
-                                outlist.add(p);
-                                count ++;
-                                valid = false;
-                        }
-                if(count > 0)
-                    outmsg += String.format("%s %s from micrograph %s will be dismissed.\n", count, (count == 1)? "particle": "particles", m.getName());
-            }
+        String outmsg = "";
+        int count;
+        boolean valid = true;
+        List<ManualParticle> outlist = new ArrayList<ManualParticle>();
+        for (SupervisedPickerMicrograph m : micrographs)
+        {
+            count = 0;
+            for (ManualParticle p : m.getParticles())
+                    if (!m.fits(p.getX(), p.getY(), size))
+                    {
+                            outlist.add(p);
+                            count ++;
+                            valid = false;
+                    }
+            if(count > 0)
+                outmsg += String.format("%s %s from micrograph %s will be dismissed if size %s is set.", count, (count == 1)? "particle": "particles", m.getName(), size);
+        }
+        if(valid)
+            return true;
+        else
+        {
+            String msg = outmsg + " Are you sure you want to continue?";
+            valid = XmippDialog.showQuestion(parent, msg);
             if(valid)
-                return true;
-            else
-            {
-                String msg = outmsg + "Are you sure you want to continue?";
-                valid = XmippDialog.showQuestion(parent, msg);
-                if(valid)
-                    for(ManualParticle p: outlist)
-                        ((SupervisedPickerMicrograph)p.getMicrograph()).removeParticle(p, this);
-                return valid;
-                        
-            }
+                for(ManualParticle p: outlist)
+                    ((SupervisedPickerMicrograph)p.getMicrograph()).removeParticle(p, this);
+            return valid;
+                    
+        }
 	}
 
         @Override
@@ -596,12 +562,11 @@ public class SupervisedParticlePicker extends ParticlePicker
                                                             // projects
             configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
             isautopick = configmode == Mode.Supervised || configmode == Mode.Review;
-            if (mode == Mode.Supervised && configmode == Mode.Manual)
-                    throw new IllegalArgumentException("Cannot switch to Supervised mode from the command line");
-            if (mode == Mode.Manual && configmode == Mode.Supervised)
-                    mode = Mode.Supervised;
+            
             if (mode == Mode.Review && configmode == Mode.Manual)//Review mode makes no sense if manual mode
                 throw new IllegalArgumentException("Cannot review picking in manual mode, use manual mode instead");
+            if (mode != Mode.ReadOnly && mode != Mode.Review)
+            	mode = configmode;
 			md.destroy();
 		}
 		catch (Exception e)
@@ -611,16 +576,16 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 	}
         
-        public boolean isAutopick()
-        {
-            return isautopick;
-        }
-        
-        @Override
-        public synchronized void saveConfig()
-        {
-            JMetaDataIO.saveConfig(this, configfile);
-        }
+    public boolean isAutopick()
+    {
+        return isautopick;
+    }
+    
+    @Override
+    public synchronized void saveConfig()
+    {
+        JMetaDataIO.saveConfig(this, configfile);
+    }
         
         @Override
 	protected synchronized void saveConfig(MetaData md, long id)
@@ -732,7 +697,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
@@ -804,20 +769,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 
 		if (f == Format.Auto)
-			if(!suffix.isEmpty())
-				f = detectFormat(path, preffix, suffix);
-			else
-			{
-				for(String ext: emextensions.values())
-				{
-					f = detectFormat(path, preffix, ext);
-					if(f != Format.None)
-					{
-						suffix = ext;
-						break;
-					}
-				}
-			}
+		{
+			StringBuffer suffixPtr = new StringBuffer(suffix);
+			f = detectFormat(path, preffix, suffixPtr);
+			suffix = suffixPtr.toString();
+		}
 		if (f == Format.None)
 			throw new IllegalArgumentException("Unable to detect format. You may try specifying format or renaming files");
 
@@ -835,10 +791,10 @@ public class SupervisedParticlePicker extends ParticlePicker
                 
 		for (SupervisedPickerMicrograph m : micrographs)
 		{
-                    resetMicrograph(m);
-                    file = Filename.join(path, preffix + m.getName() + suffix);
-                    if(new File(file).exists())
-                        result += importParticlesFromFile(file, f, m, scale, invertx, inverty);
+            resetMicrograph(m);
+            file = Filename.join(path, preffix + m.getName() + suffix);
+            if(new File(file).exists())
+                result += importParticlesFromFile(file, f, m, scale, invertx, inverty);
 		}
                 
                 
@@ -958,7 +914,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 
 	}// function importAllParticles
@@ -999,7 +955,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 		return null;
 
@@ -1021,7 +977,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 		return templateindex;
 	}
-
 
 
 	public void loadMicrographData(SupervisedPickerMicrograph m)

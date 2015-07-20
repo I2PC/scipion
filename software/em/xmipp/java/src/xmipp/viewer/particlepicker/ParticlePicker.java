@@ -13,7 +13,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.JFrame;
+
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -267,18 +269,33 @@ public abstract class ParticlePicker {
          
         return Format.None;
     }
+    
+    
+    
 
-    public Format detectFormat(String path, String preffix, String suffix) {
-        String file;
-        Format f;
-        for (Micrograph m : getMicrographs())
-        {
-            file = Filename.join(path, preffix + m.getName() + suffix);
-            f = detectFileFormat(file);
-            if(f != Format.None)
-                return f;
-        }
-        return Format.None;
+    public Format detectFormat(String path, String preffix, StringBuffer suffix) {
+    	Format f;
+    	if(suffix.length() == 0)
+	    	for(String ext: emextensions.values())
+			{
+	    		suffix.setLength(0); 
+	    		suffix.append(ext);
+				f = detectFormat(path, preffix, suffix);
+				if(f != Format.None)
+					return f;
+			}
+    	else
+    	{
+	        String file;
+	        for (Micrograph m : getMicrographs())
+	        {
+	            file = Filename.join(path, preffix + m.getName() + suffix);
+	            f = detectFileFormat(file);
+	            if(f != Format.None)
+	                return f;
+	        }
+    	}
+    	return Format.None;
     }
 
     public String getExportFile(String path) {
