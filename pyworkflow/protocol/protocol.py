@@ -64,7 +64,10 @@ class Step(OrderedObject):
         self.interactive = Boolean(False)
         self._resultFiles = String()
         self._index = None
-        
+
+    def getIndex(self):
+        return self._index
+
     def _preconditions(self):
         """ Check if the necessary conditions to
         step execution are met""" 
@@ -983,10 +986,14 @@ class Protocol(Step):
     def getLogPaths(self):
         return map(self._getLogsPath, ['run.stdout', 'run.stderr', 'run.log'])
 
+    def getSteps(self):
+        """ Return the steps.sqlite file under logs directory. """
+        return self._steps
+    
     def getStepsFile(self):
         """ Return the steps.sqlite file under logs directory. """
         return self._getLogsPath('steps.sqlite')
-    
+
     def __openLogsFiles(self, mode):
         self.__fOut = open(self.getLogPaths()[0], mode)
         self.__fErr = open(self.getLogPaths()[1], mode)
