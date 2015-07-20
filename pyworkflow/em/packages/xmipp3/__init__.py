@@ -91,6 +91,7 @@ from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_validate_nontilt import XmippProtValidateNonTilt
+from protocol_validate_tilt import XmippProtValidateTilt
 
 # Wizards
 from wizard import *
