@@ -271,12 +271,12 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
             int k;
             if(info[1] == 2 || info[1] == 4)
                 k = 2;
-            else if(info[1] == 3 || info[1] == 5)
+            else if(info[1] == 3 || info[1] == 5 || info[1] == 6)
                 k = 4;
             else if(info[1] == 10 )
                 k = 1;
             else
-                REPORT_ERROR(ERR_ARG_INCORRECT,"");
+                REPORT_ERROR(ERR_ARG_INCORRECT,formatString("unsupported value info[1]=%d, read at %d",info[1],ftell(fimg)));
 
             fseek( fimg, ftell(fimg)+(info[nnum-1])*k , SEEK_SET );
             delete []info;

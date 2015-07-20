@@ -85,6 +85,8 @@ public class XmippDialog extends JDialog implements ActionListener {
 		pack();
 		if (parent != null)
 			XmippWindowUtil.centerWindows(this, parent);
+		else
+			XmippWindowUtil.centerWindows(this);
 	}
 
 	protected JButton addButton(String text) {
@@ -211,6 +213,7 @@ public class XmippDialog extends JDialog implements ActionListener {
 	public static boolean showWarning(JFrame parent, String message) {
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "WARNING",
 				message, "warning.gif");
+		dlg.btnCancel.setVisible(false);
 		return dlg.showDialog();
 	}
 
@@ -219,12 +222,14 @@ public class XmippDialog extends JDialog implements ActionListener {
                     message = XmippMessage.getUnexpectedErrorMsg();
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR",
 				message, "error.gif");
+		dlg.btnCancel.setVisible(false);
 		return dlg.showDialog();
 	}
 
 	public static boolean showException(JFrame parent, Exception e) {
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR",
 				e.getMessage(), "error.gif");
+		dlg.btnCancel.setVisible(false);
 		// TODO: Integrate the stack trace into the dialog
 		e.printStackTrace();
 		return dlg.showDialog();

@@ -1067,8 +1067,12 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
         {
             progress_bar(Nimgs);
             double avgSimilarity = corrSum / Nimgs;
-            std::cout << "\nAverage correlation with input vectors="
-            << avgSimilarity << std::endl;
+            if (avgSimilarity==0)
+            {
+            	std::cerr << colorString("The average correlation is 0.0, make sure that the maximum allowed shift is enough\n",RED);
+            	MPI_Abort(MPI_COMM_WORLD,ERR_UNCLASSIFIED);
+            }
+            std::cout << "\nAverage correlation with input vectors=" << avgSimilarity << std::endl;
             idMdChanges = MDChanges.addObject();
             MDChanges.setValue(MDL_ITER, iter, idMdChanges);
             MDChanges.setValue(MDL_CL2D_SIMILARITY, avgSimilarity, idMdChanges);

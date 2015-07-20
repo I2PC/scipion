@@ -21,13 +21,22 @@ public class Cache<K, T> extends LinkedHashMap<K, T> {
     private int limit;  // Max number of elements in cache.
 
     public Cache() {
-        this(1);
+        this(100);
     }
 
     public Cache(int limit) {
-        super(limit);
+        super(limit + 1);
 
         this.limit = limit;
+    }
+    
+    public static int getLimit(int thumb_width, int thumb_height)
+    {
+    	int imageSize = thumb_height * thumb_width * Cache.MAXPXSIZE;
+		int elements = imageSize > 0 ? Cache.MEMORY_SIZE / imageSize : 1;
+		if(elements > 512)//Too many elements cause memory issues
+			elements = 512;
+		return elements;
     }
 
     @SuppressWarnings("element-type-mismatch")

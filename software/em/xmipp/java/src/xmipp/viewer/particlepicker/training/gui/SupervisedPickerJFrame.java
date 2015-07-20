@@ -207,9 +207,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             canvas.updateMicrograph();
         }
 
-        canvas.display();
-        updateZoom();
-        
     }
 
     protected void formatMicrographsTable() {
@@ -665,7 +662,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             ppicker.saveData(current);
             setChanged(false);
         }
-        current.releaseImage();
         ppicker.setMicrograph(next);
         ppicker.saveConfig();
         

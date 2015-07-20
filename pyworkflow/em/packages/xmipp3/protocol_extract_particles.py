@@ -33,7 +33,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 from glob import glob
 from os.path import exists, basename
 
-import xmipp
+import pyworkflow.em.metadata as md
 from pyworkflow.object import String, Float
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER, ORIGINAL
 from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, STATUS_FINISHED
@@ -215,7 +215,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             deps.append(self._insertFunctionStep('extractParticlesStep', mic.getObjId(), baseMicName,
                                                  fnCTF, micrographToExtract, prerequisites=localDeps))
         # Insert step to create output objects
-        self._insertFunctionStep('createOutputStep', prerequisites=deps)
+        metaDeps = self._insertFunctionStep('createMetadataImageStep', prerequisites=deps)
+        if self.doSort:
+            screenDep = self._insertFunctionStep('screenParticlesStep', prerequisites=[metaDeps])
+            finalDeps = [screenDep]
+        else:
+            finalDeps = [metaDeps]
+        
+        self._insertFunctionStep('createOutputStep', prerequisites=finalDeps)
 
     #--------------------------- STEPS functions --------------------------------------------
     def writePosFilesStep(self):
@@ -268,11 +275,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                                
             if self.downsampleType.get() == OTHER:
                 selfile = outputRoot + ".xmd"
-                md = xmipp.MetaData(selfile)
+                mdSelFile = md.MetaData(selfile)
                 downsamplingFactor = self.samplingFinal/self.samplingInput
-                md.operate("Xcoor=Xcoor*%f" % downsamplingFactor)
-                md.operate("Ycoor=Ycoor*%f" % downsamplingFactor)
-                md.write(selfile)
+                mdSelFile.operate("Xcoor=Xcoor*%f" % downsamplingFactor)
+                mdSelFile.operate("Ycoor=Ycoor*%f" % downsamplingFactor)
+                mdSelFile.write(selfile)
         else:
             self.warning(" The micrograph %s hasn't coordinate file! Maybe you picked over a subset of micrographs" % baseMicName)
                 
@@ -281,7 +288,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         args = "-i %(stack)s "
         
         if bgRadius <= 0:
-            particleSize = xmipp.MetaDataInfo(stack)[0]
+            particleSize = md.MetaDataInfo(stack)[0]
             bgRadius = int(particleSize/2)
         
         if normType=="OldXmipp":
@@ -291,38 +298,42 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         else:
             args += "--method Ramp --background circle %(bgRadius)d"
         self.runJob(program, args % locals())
-        
-    def createOutputStep(self):
-        # Create the SetOfImages object on the database
-        #imgSet = XmippSetOfParticles(self._getPath('images.xmd'))
-                  
+    
+    def createMetadataImageStep(self):
         #Create images.xmd metadata
-        fnImages = self._getPath('images.xmd')
-        imgsXmd = xmipp.MetaData() 
+        fnImages = self._getOutputImgMd()
+        imgsXmd = md.MetaData() 
         posFiles = glob(self._getExtraPath('*.pos')) 
         for posFn in posFiles:
             xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))
             if exists(xmdFn):
-                md = xmipp.MetaData(xmdFn)
-                mdPos = xmipp.MetaData('particles@%s' % posFn)
-                mdPos.merge(md) 
+                mdFn = md.MetaData(xmdFn)
+                mdPos = md.MetaData('particles@%s' % posFn)
+                mdPos.merge(mdFn) 
                 #imgSet.appendFromMd(mdPos)
                 imgsXmd.unionAll(mdPos)
             else:
                 self.warning("The coord file %s wasn't used to extract! Maybe you are extracting over a subset of micrographs" % basename(posFn))
         imgsXmd.write(fnImages)
-
-        # IF selected run xmipp_image_sort_by_statistics to add zscore info to images.xmd
-        if self.doSort:
-            args="-i %(fnImages)s --addToInput"
-            if self.rejectionMethod == REJECT_MAXZSCORE:
-                maxZscore = self.maxZscore.get()
-                args += " --zcut " + str(maxZscore)
-            elif self.rejectionMethod == REJECT_PERCENTAGE:
-                percentage = self.percentage.get()
-                args += " --percent " + str(percentage)
-
-            self.runJob("xmipp_image_sort_by_statistics", args % locals())
+    
+    def screenParticlesStep(self):
+        # If selected run xmipp_image_sort_by_statistics to add zscore info to images.xmd
+        fnImages = self._getOutputImgMd()
+        args="-i %(fnImages)s --addToInput"
+        if self.rejectionMethod == REJECT_MAXZSCORE:
+            maxZscore = self.maxZscore.get()
+            args += " --zcut " + str(maxZscore)
+        elif self.rejectionMethod == REJECT_PERCENTAGE:
+            percentage = self.percentage.get()
+            args += " --percent " + str(percentage)
+        
+        self.runJob("xmipp_image_sort_by_statistics", args % locals())
+    
+    def createOutputStep(self):
+        # Create the SetOfImages object on the database
+        #imgSet = XmippSetOfParticles(self._getPath('images.xmd'))
+        
+        fnImages = self._getOutputImgMd()
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputMics)
@@ -346,10 +357,15 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         auxSet = SetOfParticles(filename=':memory:')
         auxSet.copyInfo(imgSet)
         readSetOfParticles(fnImages, auxSet)
+        
         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
         for img in auxSet:
             #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
             coord = self.inputCoords[img.getObjId()]
+            if self.downsampleType != SAME_AS_PICKING:
+                factor = self.samplingFinal/self.samplingInput
+                coord.setX(coord.getX() / factor)
+                coord.setY(coord.getY() / factor)
             ctfModel = img.getCTF()
             if ctfModel is not None:
                 ctfModel.setObjId(coord.getMicId())
@@ -467,11 +483,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     
     def _storeMethodsInfo(self, fnImages):
         """ Store some information when the protocol finishes. """
-        md = xmipp.MetaData(fnImages)
-        total = md.size() 
-        md.removeDisabled()
-        zScoreMax = md.getValue(xmipp.MDL_ZSCORE, md.lastObject())
-        numEnabled = md.size()
+        mdImgs = md.MetaData(fnImages)
+        total = mdImgs.size() 
+        mdImgs.removeDisabled()
+        zScoreMax = mdImgs.getValue(md.MDL_ZSCORE, mdImgs.lastObject())
+        numEnabled = mdImgs.size()
         numRejected = total - numEnabled
 
         msg = ""
@@ -528,4 +544,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         downFactor = samplingFinal/samplingInput
 
         return int(boxSize/downFactor)
-
+    
+    def _getOutputImgMd(self):
+        return self._getPath('images.xmd')
+    

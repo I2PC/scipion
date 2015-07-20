@@ -35,6 +35,8 @@ from constants import *
 from protocol_frealign_base import ProtFrealignBase
 from convert import readSetOfParticles
 
+
+
 class ProtFrealign(ProtFrealignBase, ProtRefine3D):
     """ Protocol to refine a 3D map using Frealign. The algorithms implemented
 are optimized to perform  efficiently the correction for the contrast
@@ -50,29 +52,29 @@ reconstructions.
     def createOutputStep(self):
         lastIter = self._getLastIter()
         inputSet = self.inputParticles.get()
-        inputRef = self.input3DReference.get()
         lastIterDir = self._iterWorkingDir(lastIter)
 
         # Register output volume
         volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
         vol = Volume()
-        vol.setSamplingRate(inputSet.getSamplingRate())
         vol.setFileName(volFn)
+        vol.setSamplingRate(inputSet.getSamplingRate())
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(inputSet, vol)
-        self._defineSourceRelation(inputRef, vol)
 
         # Register output Particles with their 3D alignment
-        #TODO: save alignment
-        #read last alignment file
         file2 = self._getFileName('output_par', iter=lastIter)
         partSet = self._createSetOfParticles()
         partSet.copyInfo(inputSet)
         readSetOfParticles(inputSet, partSet, file2)
         self._defineOutputs(outputParticles=partSet)
         self._defineTransformRelation(inputSet, partSet)
-        self._defineSourceRelation(inputRef, partSet)
-
+        
+        if not self.doContinue:
+            inputRef = self.input3DReference.get()
+            self._defineSourceRelation(inputRef, vol)
+            self._defineSourceRelation(inputRef, partSet)
+            
         #convert to scipion
 
     #--------------------------- INFO functions ----------------------------------------------------

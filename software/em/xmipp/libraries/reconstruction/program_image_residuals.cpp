@@ -107,7 +107,7 @@ double computeCovarianceMatrixDivergence(const Matrix2D<double> &C1, const Matri
 	double retval=0;
 	for (size_t i=0; i<VEC_XSIZE(D)/2; ++i) // Only half of the eigenvalues are reliable
 	{
-		double l=VEC_ELEM(D,i);
+		double l=fabs(VEC_ELEM(D,i));
 		if (l>1e-14)
 			retval+=log(l);
 	}
@@ -116,7 +116,7 @@ double computeCovarianceMatrixDivergence(const Matrix2D<double> &C1, const Matri
 	firstEigs(C, MAT_XSIZE(C), D, P, false);
 	for (size_t i=0; i<VEC_XSIZE(D)/2; ++i)
 	{
-		double l=VEC_ELEM(D,i);
+		double l=fabs(VEC_ELEM(D,i));
 		if (l>1e-14)
 			retval-=0.5*log(l);
 	}

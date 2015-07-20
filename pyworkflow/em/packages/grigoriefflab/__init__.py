@@ -36,7 +36,7 @@ from grigoriefflab import *
 from protocol_ctffind import ProtCTFFind
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
-
+from protocol_unblur import ProtUnblur
 from viewer import ProtCTFFindViewer, FrealignViewer
 # Wizards
 from wizard import *

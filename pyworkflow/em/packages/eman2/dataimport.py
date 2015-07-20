@@ -29,8 +29,10 @@
 from pyworkflow.em.packages.eman2.convert import readCoordinates
 
 from os.path import  exists
+from pyworkflow.utils.path import getExt
 from pyworkflow.em.data import Coordinate
 from pyworkflow.em.packages.eman2 import loadJson
+from pyworkflow.em.metadata import MetaData, MDL_XCOOR, MDL_YCOOR
 
 class EmanImport():
 
@@ -40,13 +42,27 @@ class EmanImport():
     def importCoordinates(self, fileName, addCoordinate):
 
         if exists(fileName):
-            jsonPosDict = loadJson(fileName)
+            ext = getExt(fileName)
+            if ext == ".json":
+                print "importando un json"
+                jsonPosDict = loadJson(fileName)
 
-            if jsonPosDict.has_key("boxes"):
-                boxes = jsonPosDict["boxes"]
+                if jsonPosDict.has_key("boxes"):
+                    boxes = jsonPosDict["boxes"]
 
-                for box in boxes:
-                    x, y = box[:2]
+                    for box in boxes:
+                        x, y = box[:2]
+                        coord = Coordinate()
+                        coord.setPosition(x, y)
+                        addCoordinate(coord)
+            elif ext == ".box":
+                md = MetaData()
+                md.readPlain(fileName, 'xcoor ycoor xSize ySize')
+                for objId in md:
+                    x = md.getValue(MDL_XCOOR, objId)
+                    y = md.getValue(MDL_YCOOR, objId)
                     coord = Coordinate()
                     coord.setPosition(x, y)
                     addCoordinate(coord)
+            else:
+                print "importando un queseyo"

@@ -97,9 +97,9 @@ public abstract class ImagePlusReader {
                 Logger.getLogger(ImagePlusReader.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        if(width != 0  && height != 0 && imp != null)
+        ImageProcessor processor = imp.getProcessor();
+        if(width != 0  && height != 0 && imp != null && processor != null)
         {
-            ImageProcessor processor = imp.getProcessor();
             processor.setInterpolate(true);
             processor = processor.resize(width, height);
             imp = new ImagePlus("", processor);

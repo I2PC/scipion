@@ -142,10 +142,10 @@ class ColumnsConfig():
                     if col.getName() in extra:
                         columnsName.append(col.getName())
                         columnsLabel.append(col.getLabel())
+                        
                 else:
                     columnsName.append(col.getName())
                     columnsLabel.append(col.getLabel())
-        
 #       columns = [col.getName() for col in self._columnsDict.values() if col.isRenderable()]
         return columnsName, columnsLabel
     
@@ -190,7 +190,7 @@ class ColumnProperties():
         self.editable = (self.columnType == COL_RENDER_TEXT)
         self.allowSetEditable = self.editable
         
-        self.renderable = 'renderable' in defaultColumnLayoutProperties
+        self.renderable = 'renderable' in defaultColumnLayoutProperties and defaultColumnLayoutProperties['renderable'].lower() == 'true'
             
         self.allowSetRenderable = ((self.columnType == COL_RENDER_IMAGE or
                                    self.columnType == COL_RENDER_VOLUME) and allowRender)
@@ -207,6 +207,9 @@ class ColumnProperties():
     def getColumnType(self):
         return self.columnType
     
+    def allowsRenderable(self):
+        self.renderable or self.allowSetRenderable
+        
     def isRenderable(self):
         return self.renderable or self.allowSetRenderable
         
@@ -264,19 +267,22 @@ def runJavaIJapp(memory, appName, args, env={}):
     print 'java %s'%args
     return subprocess.Popen('java ' + args, shell=True, env=env)
 
-def launchSupervisedPickerGUI(memory, micsFn, outputDir, mode, protocol):
+def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
         port = initProtocolTCPServer(protocol)
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %s --output %s --mode %s  --scipion %s"%(micsFn, outputDir, mode, port)
-            
-        return runJavaIJapp("%dg" % memory, app, args)
+        args = "--input %s --output %s --scipion %s"%(micsFn, outputDir, port)
+        if mode:
+            args += " --mode %s"%mode    
+        return runJavaIJapp("%s" % memory, app, args)
     
 
-def launchTiltPairPickerGUI(memory, micsFn, outputDir, mode, protocol):
+def launchTiltPairPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
         port = initProtocolTCPServer(protocol)
         app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
-        args = "--input %s --output %s --mode %s  --scipion %s"%(micsFn, outputDir, mode, port)
-        return runJavaIJapp("%dg" % memory, app, args)
+        args = "--input %s --output %s  --scipion %s"%(micsFn, outputDir, port)
+        if mode:
+            args += " --mode %s"%mode    
+        return runJavaIJapp("%s" % memory, app, args)
     
 
 class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
@@ -285,12 +291,11 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
         protocol = self.server.protocol
         msg = self.request.recv(1024)
         tokens = shlex.split(msg)
-        print msg
         if msg.startswith('run function'):
             functionName = tokens[2]
             #try:
             functionPointer = getattr(protocol, functionName)
-            functionPointer(tokens[3:])
+            functionPointer(*tokens[3:])
             self.server.end = True
             #except:
             #    print 'protocol %s must implement %s'%(protocol.getName(), functionName)

@@ -277,9 +277,15 @@ class ProtMovieAlignment(ProtProcessMovies):
         gpuId = self.GPUCore.get()
         alMethod = self.alignMethod.get()
 
+        # Some movie have .mrc or .mrcs format but it is recognized as a volume
+        if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
+            movieSuffix = ':mrcs'
+        else:
+            movieSuffix = ''
+            
         # For simple average execution
         if alMethod == AL_AVERAGE:
-            command = '-i %(movieName)s -o %(micName)s' % locals()
+            command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s' % locals()
             command += ' --nst %d --ned %d --simpleAverage --psd' % (firstFrame, lastFrame)
             try:
                 self.runJob(program, command, cwd=movieFolder)
@@ -315,10 +321,11 @@ class ProtMovieAlignment(ProtProcessMovies):
                             env=dosefgpu.getEnviron())
             except:
                 print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
+        
         elif alMethod == AL_CROSSCORRELATION or alMethod == AL_CROSSCORRELATIONOPTICAL: #not dosefgpu
             program = 'xmipp_movie_alignment_correlation'
             corrMovieName = self._getCorrMovieName(movieId)
-            command  = '-i %s ' % movieName
+            command  = '-i %s%s ' % (movieName, movieSuffix)
             command += '-o %s '% metadataNameInterMediate
             command += '--sampling %f ' % self.samplingRate
             command += '--max_freq %f ' % self.filterFactor
@@ -357,11 +364,12 @@ class ProtMovieAlignment(ProtProcessMovies):
                 lastFrame = 0
             else:
                 program = 'xmipp_movie_optical_alignment_cpu'
-                command = '-i %(movieName)s ' % locals()
-            command += '-o %(micName)s --winSize %(winSize)d' % locals()
-            command += ' --nst %d --ned %d --psd' % (firstFrame, lastFrame)
+                command = '-i %(movieName)s%(movieSuffix)s ' % locals()
+
+            command += '-o %(micName)s --winSize %(winSize)d ' % locals()
+            command += '--nst %d --ned %d --psd ' % (firstFrame, lastFrame)
             if self.doGPU:
-                command += ' --gpu %d' % gpuId
+                command += '--gpu %d ' % gpuId
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
@@ -445,11 +453,12 @@ class ProtMovieAlignment(ProtProcessMovies):
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
         summary = []
-        summary.append('Number of input movies: *%d*' % self.inputMovies.get().getSize())
+        if self.inputMovies.get():
+            summary.append('Number of input movies: *%d*' % self.inputMovies.get().getSize())
         if lastFrame == 0:
-            summary.append('Frames used in alignment: *%d* to *%s*' % (firstFrame+1,'Last Frame'))
+            summary.append('Frames used in alignment: *%d* to *%s* (first frame is 0)' % (firstFrame, 'Last Frame'))
         else:
-            summary.append('Frames used in alignment: *%d* to *%d*' % (firstFrame+1,lastFrame+1))
+            summary.append('Frames used in alignment: *%d* to *%d* (first frame is 0)' % (firstFrame, lastFrame))
 
         return summary
 

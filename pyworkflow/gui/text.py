@@ -334,8 +334,11 @@ class TaggedText(Text):
     def addLine(self, line):
         self.line = line
         self.lastIndex = 0
-        parseHyperText(line, self.matchHyperText)
-        Text.addLine(self, line[self.lastIndex:])
+        #if protocol has been executed BUT crashee before create something
+        #line=None (ROB)
+        if line!=None:
+            parseHyperText(line, self.matchHyperText)
+            Text.addLine(self, line[self.lastIndex:])
 
 
 class OutputText(Text):
@@ -494,7 +497,7 @@ class TextFileViewer(tk.Frame):
             btn.grid(row=0, column=5, padx=(0, 5))
         if self._allowRefresh:
             btn = IconButton(right, "Refresh", Icon.ACTION_REFRESH, tooltip=Message.TOOLTIP_REFRESH, 
-                             command=self.refreshAll, bg=None)
+                             command=self._onRefresh, bg=None)
             btn.grid(row=0, column=6, padx=(0, 5), pady=2)
         if self._allowOpen:
             btn = IconButton(right, "Open external", Icon.ACTION_REFERENCES, tooltip=Message.TOOLTIP_EXTERNAL,
@@ -549,13 +552,18 @@ class TextFileViewer(tk.Frame):
         for font in self.fontDict.values():
             gui.changeFontSize(font, event)
               
-    def refreshAll(self, e=None):
+    def refreshAll(self, clear=False, goEnd=False):
         """ Refresh all output textareas. """
         for ta in self.taList:
-            ta.readFile(clear=True)
-            ta.goEnd()
+            ta.readFile(clear)
+            if goEnd:
+                ta.goEnd()
         if self._lastTabIndex is not None:
             self.notebook.select(self._lastTabIndex)
+            
+    def _onRefresh(self, e=None):
+        """ Action triggered when the 'Refresh' icon is clicked. """
+        self.refreshAll(clear=False, goEnd=True)
         
     def refreshOutput(self, e=None):
         if self.refreshAlarm:

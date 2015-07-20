@@ -29,14 +29,14 @@ visualization program.
 """
 
 from os.path import join
+
 import Tkinter as tk
-from Tkinter import *
 
 from pyworkflow.em import ProtUserSubSet, Class2D, Particle, SetOfClasses2D
 from pyworkflow.protocol.params import IntParam, FloatParam, LabelParam
 from pyworkflow.protocol.constants import STATUS_FINISHED
 from pyworkflow.utils.properties import Icon
-from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.utils.graph import Graph
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.gui import Window
@@ -44,7 +44,6 @@ from pyworkflow.gui.widgets import HotButton
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.viewer import ClassesView
-from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 from protocol import SpiderProtClassifyWard, SpiderProtClassifyDiday
 from pyworkflow.gui.dialog import askString
 
@@ -136,6 +135,7 @@ class SpiderViewerWard(SpiderViewerClassify):
             return classTemplate % classNo, averages % classNo
         
         node = self.protocol.buildDendrogram()
+        
         g = Graph(root=node)
         self.graph = g
                
@@ -146,7 +146,7 @@ class SpiderViewerWard(SpiderViewerClassify):
         root.grid_columnconfigure(0, weight=1)
         root.grid_rowconfigure(0, weight=1) 
         
-        self.buttonframe = Frame(root)
+        self.buttonframe = tk.Frame(root)
         self.buttonframe.grid(row=2, column=0, columnspan=2)  
         self.win.createCloseButton(self.buttonframe).grid(row=0, column=0, sticky='n', padx=5, pady=5) 
         saveparticlesbtn = HotButton(self.buttonframe, "Particles", Icon.PLUS_CIRCLE, command=lambda: self.askCreateSubset('Particles', self.getSelectedNodesCount(2)))
@@ -194,15 +194,12 @@ class SpiderViewerWard(SpiderViewerClassify):
         if depth == 1:
             return len([node for node in self.graph.getNodes() if node.selected])
         else:
-            count = 0;
+            count = 0
             for node in self.graph.getNodes():
                 if node.selected:
-                    for i in node.imageList:
-                        count += 1
+                    count += len(node.imageList)
             return count
     
-    
-        
     def saveClasses(self, runname=None):
         """ Store selected classes. """
         def createClasses(prot):    
@@ -251,14 +248,12 @@ class SpiderViewerDiday(SpiderViewerClassify):
                       label='Number of classes',
                       help='Desired number of classes.')
 
-
     def visualizeClasses(self, e=None):
         prot = self.protocol
         classDir = prot.getClassDir()
         classAvg = 'classavg'
         classVar = 'classvar'
         classDoc = 'docclass'
-        ext = prot.getExt()
         
         params = {'[class_dir]': classDir,
                   '[desired-classes]': self.numberOfClasses.get(),

@@ -71,7 +71,9 @@ class EmanViewer(XmippViewer):
     def _visualize(self, obj, **args):
          
         if isinstance(obj, EmanProtBoxing):
-            XmippViewer._visualize(self, obj.outputCoordinates)
+            coords = obj.getCoords()
+            if coords:
+                XmippViewer._visualize(self, obj.outputCoordinates)
              
         elif isinstance(obj, EmanProtInitModel):
             XmippViewer._visualize(self, obj.outputVolumes)

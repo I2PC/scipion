@@ -1,12 +1,11 @@
 package xmipp.viewer.particlepicker;
 
-import ij.CommandListener;
-import ij.Executer;
 import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.WindowManager;
 import ij.plugin.frame.Recorder;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -39,6 +38,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -63,6 +63,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+
+import xmipp.ij.commons.InputFieldsMessageDialog;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippUtil;
@@ -76,7 +78,6 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.ij.commons.InputFieldsMessageDialog;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -116,8 +117,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JButton savebt;
 	protected JButton saveandexitbt;
 	protected JToolBar tb;
-        protected ResourceBundle bundle;
-        protected String command;
+    protected ResourceBundle bundle;
+    protected String command;
         
         
 
@@ -421,15 +422,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			public void menuSelected(MenuEvent arg0)
 			{
 				for (JCheckBoxMenuItem mi : mifilters)
-					mi.setSelected(getParticlePicker().isFilterSelected(mi.getText()));
+				{
+					mi.setSelected(getParticlePicker().isFilterAdded(mi.getText()));
+				}
 
 			}
 		});
                 
 		addFilterMenuItem(ParticlePicker.xmippsmoothfilter, true, picker);
-		addFilterMenuItem("Bandpass Filter...", true, picker);
+		addFilterMenuItem(ParticlePicker.bandPassFilter, true, picker);
 
-		JCheckBoxMenuItem admi = addFilterMenuItem("Anisotropic Diffusion...", false, picker);
+		JCheckBoxMenuItem admi = addFilterMenuItem(ParticlePicker.anisotropicDiffFilter, false, picker);
 		admi.addActionListener(new ActionListener()
 		{
 
@@ -442,12 +445,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				IJ.run(activefilter);
 			}
 		});
-		addFilterMenuItem("Mean Shift", true, picker);
-		addFilterMenuItem("Subtract Background...", true, picker);
-		addFilterMenuItem("Gaussian Blur...", true, picker);
-		addFilterMenuItem("Brightness/Contrast...", true, picker);
-		addFilterMenuItem("Invert LUT", true, picker);
-                addFilterAppliedListener();
+		addFilterMenuItem(ParticlePicker.meanShiftFilter, true, picker);
+		addFilterMenuItem(ParticlePicker.substractBackgroundFilter, true, picker);
+		addFilterMenuItem(ParticlePicker.gaussianBlurFilter, true, picker);
+		addFilterMenuItem(ParticlePicker.brightnessContrastFilter, true, picker);
+		addFilterMenuItem(ParticlePicker.enhanceContrastFilter, true, picker);
+		addFilterMenuItem(ParticlePicker.invertLUTFilter, true, picker);
+        addFilterAppliedListener();
 	}
         
         private void addFilterAppliedListener() {
@@ -457,26 +461,19 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 Recorder.record = true;
 
                 // detecting if a command is thrown by ImageJ
-                Executer.addCommandListener(new CommandListener() {
-                    public String commandExecuting(String command) {
-
-
-                        ParticlePickerJFrame.this.command = command;
-                        return command;
-
-                    }
-                });
+                
                 ImagePlus.addImageListener(new ImageListener() {
 
                     @Override
-                    public void imageUpdated(ImagePlus arg0) {
+                    public void imageUpdated(ImagePlus imp) {
                         if(command != null)
                         {
                             getParticlePicker().updateFilters(command);
                             if(particlesdialog != null)
                                 loadParticles(true);
-                            command = null;
+                            
                         }
+                        command = null;
                     }
 
                     @Override
@@ -513,7 +510,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	{
 		JCheckBoxMenuItem mi = new JCheckBoxMenuItem(command);
 		mifilters.add(mi);
-		mi.setSelected(picker.isFilterSelected(command));
+		mi.setSelected(picker.isFilterAdded(command));
 		if (defaultlistener)
 			mi.addActionListener(this);
 		filtersmn.add(mi);
@@ -537,8 +534,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				}
 				else
 				{
-					for (int i = 0; i < WindowManager.getImageCount(); i++)
-						IJ.run(WindowManager.getImage(i), activefilter, "");
+					command = activefilter;
+					applyFilter(activefilter);
                                        
 				}
 			else
@@ -546,12 +543,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				// filter removed
 				getParticlePicker().removeFilter(activefilter);
 				reloadImage();
-                                if(particlesdialog != null)
-                                    loadParticles(true);    
+                if(particlesdialog != null)
+                    loadParticles(true);    
                                 
 			}
-                        if(getParticlePicker().getMode() != Mode.ReadOnly)
-                            getParticlePicker().saveConfig();
+            if(getParticlePicker().getMode() != Mode.ReadOnly)
+                getParticlePicker().saveConfig();
 		}
 		catch (Exception ex)
 		{
@@ -561,12 +558,15 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 
 	}
+	
+	public void applyFilter(String filter)
+	{
+		IJ.run(getMicrograph().getImagePlus(), filter, "");
+	}
 
 	protected void reloadImage()
 	{
-		getCanvas().getMicrograph().releaseImage();
 		getCanvas().updateMicrograph();
-		getCanvas().display();
                 
 	}
 
@@ -583,9 +583,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	{
 		try
 		{
-                        if(reset)
-                            for (PickerParticle p : getAvailableParticles())
-                                p.resetParticleCanvas();
+            if(reset)
+                for (PickerParticle p : getAvailableParticles())
+                    p.resetParticleCanvas();
 			if (particlesdialog == null)
 				particlesdialog = initParticlesJDialog();
 			else
@@ -713,10 +713,20 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
 		usezoombt.setToolTipText("Keep zoom");
 		usezoombt.setFocusable(false);
-                usezoombt.setSelected(true);
+        usezoombt.setSelected(true);
+        usezoombt.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				if(!usezoombt.isSelected())
+					getParticlePicker().setZoom(-1);
+			}
+		});
 		tb.add(usezoombt);
-                initShapePane();
-                tb.add(shapepn);
+        initShapePane();
+        tb.add(shapepn);
 		initSizePane();
 		tb.add(sizepn);
 		if (!(this instanceof ExtractPickerJFrame))
@@ -730,23 +740,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		
 	}
 
-	protected void updateZoom()
-	{
-		double zoom = getZoom();
-		
-		if (zoom == -1. || (zoom != -1. && !usezoombt.isSelected()))
-		{
-			zoom = getCanvas().getMagnification();
-			usezoombt.setText(String.format(Locale.US, "%.2f", zoom));
-		}
-		else if (usezoombt.isSelected())
-			getCanvas().setZoom(zoom);
-	}
+	
 
-	public double getZoom()
-	{
-		return Double.parseDouble(usezoombt.getText());
-	}
+	
 
 	public boolean isEraserMode()
 	{
@@ -754,11 +750,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			return false;
 		return eraserbt.isSelected();
 	}
+	
 
-	protected void displayZoom()
+	protected void displayZoom(double zoom)
 	{
-
-		usezoombt.setText(String.format(Locale.US, "%.2f", getCanvas().getMagnification()));
+		
+		usezoombt.setText(String.format(Locale.US, "%.2f", zoom));
+		if(usezoombt.isSelected())
+			getParticlePicker().setZoom(zoom);
 		pack();
 	}
 
@@ -971,7 +970,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 public void run() {
 
                     try {
-                        String cmd = "run function registerCoords";
+                        String cmd = String.format("run function registerCoords '%s'", getParticlePicker().getOutputDir());
                         XmippWindowUtil.runCommand(cmd, getParticlePicker().getParams().port);
                         XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
                         getCanvas().setEnabled(true);

@@ -147,7 +147,7 @@ Examples:
         if self.protocol.IS_CLASSIFY:
 
             group.addParam('showImagesInClasses', LabelParam, 
-                          label='Show classes with particles',
+                          label='Show classification in Scipion', important=True,
                           help='Display each class with the number of particles assigned. \n'
                                '*Note1*: The images of one class can be shown by \n'
                                'right-click on the class and select "Open images".\n'
@@ -162,7 +162,7 @@ Examples:
             group.addParam('showImagesAngularAssignment', LabelParam, 
                            label='Particles angular assignment')
         group.addParam('showOptimiserFile', LabelParam, 
-                       label='Show *_optimizer.star file')
+                       label='Show *_optimiser.star file')
         
         if self.protocol.IS_3D:
             group = form.addGroup('Volumes')
@@ -209,9 +209,6 @@ Examples:
                               label='Threshold in resolution plots',
                               help='')
             
-        #form.addSection('Star files')
-        
-        
         form.addSection('Overall')      
         form.addParam('showPMax', LabelParam, default=True,
                       label="Show average PMax",
@@ -859,8 +856,7 @@ class RelionAutopickViewer(Viewer):
     def visualize(self, obj, **args):
         micPath, coordPath = obj.writeXmippOutputCoords()
         import pyworkflow.em.packages.xmipp3 as xmipp3
-        xmipp3.viewer.launchSupervisedPickerGUI(2, micPath, coordPath, 'manual', 
-                                                self.protocol)
+        xmipp3.viewer.launchSupervisedPickerGUI(micPath, coordPath, self.protocol)
 
 
 class RelionPolishViewer(ProtocolViewer):

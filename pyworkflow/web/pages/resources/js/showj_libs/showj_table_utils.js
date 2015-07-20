@@ -141,18 +141,22 @@ function getColumnsDefinition() {
 //		}
 		if (columnLayoutConfiguration.columnType == COL_RENDER_CHECKBOX) {
 //			console.log("id:"+columnIdReal+" checkbox!")
-			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderCheckbox(meta.col, data)}
+			dataRowForTable["mRender"] = function (data, type, row){ return colRenderCheckbox(data)}
 		
 		} 
-		else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
-			dataRowForTable["mRender"] = function (data, type, row, meta){	return colRenderImage(meta.col, data)}
-		
-		// columnType = 5
-		} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
-//			console.log("id:"+columnIdReal+" render slice!")
-			dataRowForTable["mRender"] = function (data, type, row, meta){ return colRenderSlice(meta.col, data)}
-		
-		// None
+		if(columnLayoutConfiguration.renderable)
+		{
+			console.log(columnLayoutConfiguration.columnLabel)
+			if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
+				dataRowForTable["mRender"] = function (data, type, row){	return colRenderImage(data)}
+			
+			// columnType = 5
+			} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
+	//			console.log("id:"+columnIdReal+" render slice!")
+				dataRowForTable["mRender"] = function (data, type, row){ return colRenderSlice(data)}
+			
+			// None
+			}
 		}
 		
 		dataForTable.push(dataRowForTable);
@@ -163,7 +167,7 @@ function getColumnsDefinition() {
 	return dataForTable;
 }
 
-function colRenderCheckbox(id, aData){
+function colRenderCheckbox(aData){
 	var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" '
 	var data = aData
 			
@@ -177,10 +181,7 @@ function colRenderCheckbox(id, aData){
 }
 
 
-function colRenderable(id, aData, renderFunc){
-		column = columns[id]
-		if (column != null && column.renderable)
-		{
+function colRenderable(aData, renderFunc){
 			
 			src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc;
 			src += '&image=' + aData + '\"';
@@ -191,23 +192,17 @@ function colRenderable(id, aData, renderFunc){
 					+ ' src=' + src
 					+ ' data-real_src=' +src
 					+ '/>'
-		}	
-		else
-		{
-			//console.log("not rendered image " + column.columnLabel + " renderable " +column.renderable)
-			content_html = aData
-		}
 		return content_html;
 }
 
 
-function colRenderImage(id, aData){
+function colRenderImage(aData){
 	
-	html = colRenderable(id, aData, "get_image")
+	html = colRenderable(aData, "get_image")
 	return html
 }
 
-function colRenderSlice(id, aData){
+function colRenderSlice(aData){
 	//var volName = aData.split(".")
 	//volName = volName[0] + "_tmp.mrc"
 	var volName = aData
@@ -239,6 +234,7 @@ function getVisibleColumn(n)
 		}
 		count ++
 	}	
+	return -1
 }
 
 
@@ -257,11 +253,11 @@ function arrangeColumns(order, sort)
 			direction = 'asc'
 	}
 	
-	j = 0
-	var i = 0;
+	var j = 0
 	for (column in jsonTableLayoutConfiguration.columnsLayout)
 	{
 		columnLabel = jsonTableLayoutConfiguration.columnsLayout[column].columnLabel
+		i = 0
 		if(jsonTableLayoutConfiguration.colsOrder)
 			for(orderColumn in orderColumns)
 			{
@@ -275,16 +271,13 @@ function arrangeColumns(order, sort)
 	 					order[pos] = order[pos2]
 	 					order[pos2] = aux
 					}
-					i ++
-					
 				}
+				i ++
 			}
 		if(jsonTableLayoutConfiguration.colsSortby && sortbyColumn == columnLabel)
 			sort[0] = [order[j], direction]
 		j ++
 	}
-	
-	
 	
 }
 

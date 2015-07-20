@@ -184,7 +184,7 @@ def create_service_project(request):
         protValidate.inputVolumes.setExtendedAttribute('outputVolumes')
         protValidate.inputParticles.set(protImport)
         protValidate.inputParticles.setExtendedAttribute('outputAverages')
-        protValidate.numberOfMpi.set(8)
+        protValidate.numberOfThreads.set(8)
         if testDataKey :
             setProtocolParams(protValidate, testDataKey)
 #         protJoin.inputVolumes.append(p4)
@@ -230,6 +230,7 @@ def service_content(request):
                     'summary': path_files + 'summary.png',
                     'showj': path_files + 'showj.png',
                     'alignVol': path_files + 'alignVol.png',
+                    'validateVols': path_files + 'validateVols.png',
                     'download': path_files + 'download.png',
                     'formUrl': 'my_form',
                     'mode':'service',

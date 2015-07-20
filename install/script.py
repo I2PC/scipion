@@ -169,6 +169,17 @@ lapack = env.addLibrary(
     neededProgs=['gfortran'],
     default=False)
 
+arpack = env.addLibrary(
+    'arpack',
+    tar='arpack-96.tgz',
+    neededProgs=['gfortran'],
+    commands=[('cd software/bin; ln -s $(which gfortran) f77',
+               'software/bin/f77'),
+              ('cd software/tmp/arpack-96; make all',
+               'software/lib/libarpack.a')],
+    default=False)
+# See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
+
 if get('CUDA'):
     opencvFlags = ['-DWITH_CUDA:BOOL=ON']
 else:
@@ -331,13 +342,6 @@ cythongsl = env.addModule(
     deps=[cython])
 # TODO: add checks for dependencies: GSL
 
-cryoem = env.addModule(
-    'cryoem',
-    tar='cryoem-1.0.tgz',
-    default=False,
-    deps=[numpy, scipy, matplotlib, cythongsl])
-
-
 
 #  ************************************************************************
 #  *                                                                      *
@@ -358,6 +362,10 @@ env.addPackage('ctffind',
 
 env.addPackage('ctffind4',
                tar='ctffind_V4.0.15.tgz',
+               default=False)
+
+env.addPackage('unblur',
+               tar='unblur_1.0_150529.tgz',
                default=False)
 
 env.addPackage('eman',
@@ -414,9 +422,24 @@ env.addPackage('chimera',
                commands=[('./scipion_installer','bin/chimera')],
                default=False)
 
-
 env.addPackage('dogpicker',
                tar='dogpicker-0.2.1.tgz',
                default=False)
+
+env.addPackage('nma',
+               tar='nma.tgz',
+               commands=[('cd ElNemo; make; mv nma_* ..', 'nma_elnemo_pdbmat'),
+                         ('cd NMA_cart; LDFLAGS=-L%s/lib make; mv nma_* ..' %
+                          os.environ['SCIPION_SOFTWARE'], 'nma_diag_arpack')],
+               deps=['arpack'],
+               default=False)
+
+cryoem = env.addPackage(
+    'cryoem',
+    tar='cryoem-1.0.tgz',
+    default=False,
+    pythonMod=True,
+    deps=[numpy, scipy, matplotlib, cythongsl])
+
 
 env.execute()
