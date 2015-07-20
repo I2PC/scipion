@@ -143,7 +143,7 @@ function createServProject(elm) {
 			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/content/?p="+ projName+ "'>" +
 			"http://scipion.cnb.csic.es/m/content/?p="+ projName+ "</a>"+
 			"</h3></p><br />" +
-			"<p>The access to this project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
+			"<p>The project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
 			"in order to access project in future sessions.</p>"+
 			"<p>If you experience any problem contact us on this email: <span style='color:firebrick;'>scipion at cnb.csic.es</span></p>";

@@ -441,12 +441,12 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     rowOut.setValue(MDL_SHIFT_Y,    0.);
     rowOut.setValue(MDL_FLIP,       false);
     rowOut.setValue(MDL_COST,       cost);
-    rowOut.setValue(MDL_CONTINUOUS_GRAY_A,p(1));
-    rowOut.setValue(MDL_CONTINUOUS_GRAY_B,p(0));
+    rowOut.setValue(MDL_CONTINUOUS_GRAY_A,p(0));
+    rowOut.setValue(MDL_CONTINUOUS_GRAY_B,p(1));
     rowOut.setValue(MDL_CONTINUOUS_SCALE_X,p(4));
     rowOut.setValue(MDL_CONTINUOUS_SCALE_Y,p(5));
-    rowOut.setValue(MDL_CONTINUOUS_X,old_shiftX+p(2));
-    rowOut.setValue(MDL_CONTINUOUS_Y,old_shiftY+p(3));
+    rowOut.setValue(MDL_CONTINUOUS_X,p(2));
+    rowOut.setValue(MDL_CONTINUOUS_Y,p(3));
     if (hasCTF)
     {
     	rowOut.setValue(MDL_CTF_DEFOCUSU,old_defocusU+p(9));

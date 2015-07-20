@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Carlos Oscar            coss@cnb.csic.es (1999)
+ * Authors:    Carlos Oscar            coss@cnb.csic.es (2015)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -23,6 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/volume_segment.h>
+#include <reconstruction/volume_pca.h>
 
-RUN_XMIPP_PROGRAM(ProgVolumeSegment)
+RUN_XMIPP_PROGRAM(ProgVolumePCA)

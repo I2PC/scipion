@@ -76,6 +76,20 @@ def getXmippPath(*paths):
     else:
         raise Exception('XMIPP_HOME environment variable not set')
     
+def getMatlabEnviron(*toolPaths):
+    """ Return an Environment prepared for launching Matlab
+    scripts using the Xmipp binding.
+    """
+    env = getEnviron()
+    env.set('PATH', os.environ['MATLAB_BINDIR'], Environ.BEGIN)
+    env.set('LD_LIBRARY_PATH', os.environ['MATLAB_LIBDIR'], Environ.BEGIN)
+    for toolpath in toolPaths:
+        env.set('MATLABPATH', toolpath, Environ.BEGIN)
+    env.set('MATLABPATH', os.path.join(os.environ['XMIPP_HOME'], 'libraries', 'bindings', 'matlab'),
+            Environ.BEGIN)
+    
+    return env
+    
     
 class XmippProtocol():
     """ This class groups some common functionalities that

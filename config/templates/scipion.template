@@ -12,7 +12,7 @@ SCIPION_TESTS = data/tests
 SCIPION_SOFTWARE = software
 
 [REMOTE]
-SCIPION_URL = http://scipionwiki.cnb.csic.es/files/scipion
+SCIPION_URL = http://scipion.cnb.csic.es/downloads/scipion
 SCIPION_URL_SOFTWARE = %(SCIPION_URL)s/software
 SCIPION_URL_TESTDATA = %(SCIPION_URL)s/data/tests
 
@@ -24,6 +24,7 @@ EMAN2DIR = %(EM_ROOT)s/eman
 FREALIGN_HOME = %(EM_ROOT)s/frealign
 CTFFIND_HOME = %(EM_ROOT)s/ctffind
 CTFFIND4_HOME = %(EM_ROOT)s/ctffind4
+UNBLUR_HOME = %(EM_ROOT)s/unblur
 RELION_HOME = %(EM_ROOT)s/relion
 RESMAP_HOME = %(EM_ROOT)s/resmap
 BSOFT_HOME = %(EM_ROOT)s/bsoft
@@ -33,6 +34,8 @@ SIMPLE_HOME = %(EM_ROOT)s/simple
 PYTOM_HOME = %(EM_ROOT)s/pytom
 DOGPICKER_HOME = %(EM_ROOT)s/dogpicker
 NMA_HOME = %(EM_ROOT)s/nma
+MATLAB_BINDIR = None
+MATLAB_LIBDIR = None
 # Some visualization packages
 CHIMERA_HOME = %(EM_ROOT)s/chimera
 CHIMERA_HEADLESS_HOME = %(EM_ROOT)s/chimera_headless
