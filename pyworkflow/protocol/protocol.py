@@ -851,7 +851,6 @@ class Protocol(Step):
             
             self.mapper.insertRelationData(rName, rCreator, rParent, rChild)
         
-        
     def getRelations(self):
         """ Return the relations created by this protocol. """
         return self.mapper.getRelationsByCreator(self)  

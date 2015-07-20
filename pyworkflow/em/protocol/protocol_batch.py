@@ -33,7 +33,7 @@ import os
 
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet
+from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet, SetOfNormalModes
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair, ParticlesTiltPair
 from pyworkflow.em.data import Mask
 
@@ -71,7 +71,6 @@ class ProtUserSubSet(BatchProtocol):
     def createSetStep(self):
         setObj = self.createSetObject()
         inputObj = self.inputObject.get()
-        print inputObj.getClass()
         other = self.other.get()
 
         if other and ',Volume' in other:
@@ -94,9 +93,9 @@ class ProtUserSubSet(BatchProtocol):
         elif isinstance(inputObj, SetOfCTF):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
-                self._createMicsSubSetFromCTF(inputObj)
+                output = self._createMicsSubSetFromCTF(inputObj)
             else:
-                self._createSubSetOfCTF(inputObj)
+                output = self._createSubSetOfCTF(inputObj)
 
         elif isinstance(inputObj, MicrographsTiltPair):
             output = self._createSubSetFromMicrographsTiltPair(inputObj)
@@ -107,7 +106,6 @@ class ProtUserSubSet(BatchProtocol):
         elif isinstance(inputObj, EMProtocol):
             otherid = self.other.get()
             otherObj = self.getProject().mapper.selectById(int(otherid))
-
             if isinstance(setObj, SetOfClasses):
                 setObj.setImages(otherObj)
                 output = self._createSubSetFromClasses(setObj)
@@ -115,27 +113,37 @@ class ProtUserSubSet(BatchProtocol):
             elif isinstance(setObj, SetOfImages):
                 setObj.copyInfo(otherObj) # copy info from original images
                 output = self._createSubSetFromImages(setObj)
+                
+            elif isinstance(setObj, SetOfNormalModes):
+                output = self._createSimpleSubset(otherObj)
+            
         else:
-            className = inputObj.getClassName()
-            createFunc = getattr(self, '_create' + className)
-            modifiedSet = inputObj.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-
-            output = createFunc()
-            for item in modifiedSet:
-                if item.isEnabled():
-                    output.append(item)
-
-            if hasattr(modifiedSet, 'copyInfo'):
-                modifiedSet.copyInfo(output)
-            # Register outputs
-            self._defineOutput(className, output)
+            output = self._createSimpleSubset(inputObj)
 
         if isinstance(inputObj, EMProtocol):
             for _, attr in inputObj.iterInputAttributes():
                 self._defineSourceRelation(attr.get(), output)
         else:
-            if not isinstance(inputObj, SetOfCTF):#otherwise setted before
-                self._defineSourceRelation(inputObj, output)
+            #if not isinstance(inputObj, SetOfCTF):#otherwise setted before
+                #self._defineSourceRelation(inputObj, output)#There is always source relation and transform relation??
+            self._defineTransformRelation(inputObj, output)
+                
+    def _createSimpleSubset(self, inputObj):
+        className = inputObj.getClassName()
+        createFunc = getattr(self, '_create' + className)
+        modifiedSet = inputObj.getClass()(filename=self._dbName, prefix=self._dbPrefix)
+
+        output = createFunc()
+        for item in modifiedSet:
+            if item.isEnabled():
+                output.append(item)
+
+        if hasattr(modifiedSet, 'copyInfo'):
+            output.copyInfo(inputObj)
+
+        # Register outputs
+        self._defineOutput(className, output)
+        return output
 
     
     def _createSubSetFromImages(self, inputImages):
@@ -200,7 +208,7 @@ class ProtUserSubSet(BatchProtocol):
                 outputMics.append(mic)
                 
         self._defineOutputs(outputMicrographs=outputMics)
-        self._defineTransformRelation(setOfMics, outputMics)
+        #self._defineTransformRelation(setOfMics, outputMics)
         return outputMics
         
     def _createSubSetOfCTF(self, inputCtf):
@@ -216,7 +224,7 @@ class ProtUserSubSet(BatchProtocol):
                 
         # Register outputs
         self._defineOutput(self.outputClassName.get(), setOfCtf)
-        self._defineSourceRelation(inputCtf, setOfCtf)
+        #self._defineSourceRelation(inputCtf, setOfCtf)
         return setOfCtf
         
     def _createRepresentativesFromClasses(self, inputClasses, outputClassName):

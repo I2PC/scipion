@@ -26,15 +26,18 @@
 package xmipp.viewer.models;
 
 import ij.ImagePlus;
+
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
 import java.util.ArrayList;
+
 import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
+
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MDRow;
@@ -66,7 +69,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	protected float scale = (float) 1.;
 	// protected int zoom = 100;
 	// Cache class to reuse of already loaded items
-	protected Cache<String, ImageItem> cache = new Cache<String, ImageItem>();
+	protected Cache<String, ImageItem> cache;
 	// Filename
 	// Hold gallery dimensions
 	protected ImageDimension dimension;
@@ -132,12 +135,11 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * depending on images size and available memory
 	 */
 	protected void resizeCache() {
-		//int imageSize = dimension.getXDim() * dimension.getYDim()
-		//		* Cache.MAXPXSIZE;
-		int imageSize = thumb_height * thumb_width * Cache.MAXPXSIZE;
-		int elements = imageSize > 0 ? Cache.MEMORY_SIZE / imageSize : 1;
-		//System.err.format("Cache elements: %d\n", elements);
-		cache.resize(elements > 0 ? elements : 1);
+		int limit = Cache.getLimit(thumb_width, thumb_height);
+		if(cache == null)
+			cache = new Cache(limit);
+		else
+			cache.resize(limit > 0 ? limit : 1);
 	}
 
 	@Override
@@ -171,16 +173,17 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 				if (cache.containsKey(key))
 					item = cache.get(key);
 				else {
-					// If not, create the item and store it for future
+//					// If not, create the item and store it for future
 					item = createItem(index, key);
 					cache.put(key, item);
 				}
-				setupItem(item, index);
+				setupItem(item);
 				return item;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		
 		return null;
 	}
 
@@ -203,9 +206,9 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 
 
-	protected void setupItem(ImageItem item, int index) {
+	protected void setupItem(ImageItem item) {
 		ImagePlus imp = item.getImagePlus();
-		if (imp != null) { // When image is missing this will be null
+		if (imp != null && imp.getProcessor() != null) { // When image is missing this will be null
 			if (data.normalize)
 				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
 			else
@@ -352,8 +355,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 */
 	public int getIndex(int row, int col) {
                 
-                return row * cols + col; 
-		
+		return row * cols + col; 
 	}
         
        
@@ -453,18 +455,17 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	/** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col) {
-            
-                setSelected(row, col, !isSelected(row, col));
-                adjustWidth = false;
-                fireTableCellUpdated(row, col);
+        setSelected(row, col, !isSelected(row, col));
+        adjustWidth = false;
+        fireTableCellUpdated(row, col);
 	}
         
         /** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col, boolean isselected) {
 		
-                setSelected(row, col, isselected);
-                adjustWidth = false;
-                fireTableCellUpdated(row, col);	
+        setSelected(row, col, isselected);
+        adjustWidth = false;
+        fireTableCellUpdated(row, col);	
 	}
 	
 	
@@ -511,7 +512,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * not show at all if the return is false
 	 */
 	public abstract boolean handleRightClick(int row, int col,
-			XmippPopupMenuCreator xpopup);
+		XmippPopupMenuCreator xpopup);
 
 	/**
 	 * This function will be called when a double click is performed under the
@@ -524,8 +525,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	/** Whether to display the labels */
 	public void setShowLabels() {
 		
-			calculateCellSize();
-			fireTableStructureChanged();
+		calculateCellSize();
+		fireTableStructureChanged();
 		
 	}
 
@@ -612,8 +613,9 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 			index = ImageGalleryTableModel.this.getIndex(row, col);
 		}
 
-		public ImageItem(int index) {
+		public ImageItem(int index, ImagePlus imp) {
 			this.index = index;
+			this.image = imp;
 		}
 
 		public int getIndex() {
@@ -770,7 +772,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
         
         if(isselected && (selfrom > index || selfrom == -1))
             selfrom = index;
-        if(isselected && selto < index)
+        if(isselected && (selto < index|| selto == -1))
             selto = index;
         boolean hasSelection = (isselected || selto != selfrom || selfrom != index);
         selection[index] = isselected;
@@ -797,7 +799,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
                         break;
                     }
         }      
-        
         if (data.isVolumeMd && data.isTableMode())
             data.selectedVolFn = isselected? data.getVolumeAt(index): data.getVolumeAt(0);
 
@@ -828,5 +829,10 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
     public void setSelected(int row, int col, boolean b) {
           setSelected(getIndex(row, col), b);
     }
+
+	public ColumnInfo getColumn(int row, int col)
+	{
+		return data.ciFirstRender;
+	}
 
 }

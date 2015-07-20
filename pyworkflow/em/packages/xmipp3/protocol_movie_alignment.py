@@ -331,8 +331,13 @@ class ProtMovieAlignment(ProtProcessMovies):
                 firstFrame = 0
                 lastFrame = 0
             else:
-                program = 'xmipp_movie_optical_alignment_cpu'
-                command = '-i %(movieName)s ' % locals()
+                # Some movie have .mrc or .mrcs format but it is recognized as a volume
+                if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
+                    movieSuffix = ':mrcs'
+                else:
+                    movieSuffix = ''
+                command = '-i %(movieName)s%(movieSuffix)s ' % locals()
+
             command += '-o %(micName)s --winSize %(winSize)d' % locals()
             command += ' --nst %d --ned %d --psd' % (firstFrame, lastFrame)
             if self.doGPU:
@@ -380,9 +385,15 @@ class ProtMovieAlignment(ProtProcessMovies):
         if numThreads>1:
             if self.doGPU:
                 errors.append("GPU and Parallelization can not be used together")
+<<<<<<< HEAD
         if self.doGPU and (alMethod == AL_CROSSCORRELATION or \
                            alMethod == AL_CROSSCORRELATIONOPTICAL):
                 errors.append("Crosscorrelation is not implemente in GPU")
+=======
+        alignMethod = self.alignMethod.get()
+        if alignMethod == 1 or alignMethod == 2:
+            errors.append("GPU methods are not available at the moment.")
+>>>>>>> v1.0
         return errors
 
     def _citations(self):
@@ -416,11 +427,12 @@ class ProtMovieAlignment(ProtProcessMovies):
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
         summary = []
-        summary.append('Number of input movies: *%d*' % self.inputMovies.get().getSize())
+        if self.inputMovies.get():
+            summary.append('Number of input movies: *%d*' % self.inputMovies.get().getSize())
         if lastFrame == 0:
-            summary.append('Frames used in alignment: *%d* to *%s*' % (firstFrame+1,'Last Frame'))
+            summary.append('Frames used in alignment: *%d* to *%s* (first frame is 0)' % (firstFrame, 'Last Frame'))
         else:
-            summary.append('Frames used in alignment: *%d* to *%d*' % (firstFrame+1,lastFrame+1))
+            summary.append('Frames used in alignment: *%d* to *%d* (first frame is 0)' % (firstFrame, lastFrame))
 
         return summary
 

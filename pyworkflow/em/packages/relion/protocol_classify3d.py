@@ -71,14 +71,12 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
-        partSet = self.inputParticles.get()       
-        inputVol = self.referenceVolume.get()
+        partSet = self.inputParticles.get()
         classes3D = self._createSetOfClasses3D(partSet)
         self._fillClassesFromIter(classes3D, self._lastIter())
         
         self._defineOutputs(outputClasses=classes3D)
         self._defineSourceRelation(partSet, classes3D)
-        self._defineSourceRelation(inputVol, classes3D)
 
 
         # create a SetOfVolumes and define its relations
@@ -92,7 +90,11 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         
         self._defineOutputs(outputVolumes=volumes)
         self._defineSourceRelation(partSet, volumes)
-        self._defineSourceRelation(inputVol, volumes)
+        
+        if not self.doContinue:
+            inputVol = self.referenceVolume.get()
+            self._defineSourceRelation(inputVol, classes3D)
+            self._defineSourceRelation(inputVol, volumes)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):

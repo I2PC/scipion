@@ -147,7 +147,7 @@ Examples:
         if self.protocol.IS_CLASSIFY:
 
             group.addParam('showImagesInClasses', LabelParam, 
-                          label='Show classes with particles',
+                          label='Show classification in Scipion', important=True,
                           help='Display each class with the number of particles assigned. \n'
                                '*Note1*: The images of one class can be shown by \n'
                                'right-click on the class and select "Open images".\n'
@@ -162,13 +162,13 @@ Examples:
             group.addParam('showImagesAngularAssignment', LabelParam, 
                            label='Particles angular assignment')
         group.addParam('showOptimiserFile', LabelParam, 
-                       label='Show *_optimizer.star file')
+                       label='Show *_optimiser.star file')
         
         if self.protocol.IS_3D:
             group = form.addGroup('Volumes')
             
             if self.protocol.IS_CLASSIFY:
-                group.addParam('showClasses3D', BooleanParam, default=CLASSES_ALL,
+                group.addParam('showClasses3D', EnumParam, default=CLASSES_ALL,
                                choices=['all', 'selection'], 
                                display=EnumParam.DISPLAY_HLIST,
                                label='3D Class to visualize',
@@ -200,17 +200,15 @@ Examples:
             group.addParam('resolutionPlotsSSNR', LabelParam, default=True,
                           label='Display SSNR plots',
                           help='Display signal to noise ratio plots (SSNR) ')
-            group.addParam('resolutionPlotsFSC', LabelParam, default=True,
-                          label='Display resolution plots (FSC)',
-                          help='')
-            group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
-                          expertLevel=LEVEL_ADVANCED,
-                          label='Threshold in resolution plots',
-                          help='')
+            if not self.protocol.IS_CLASSIFY:
+                group.addParam('resolutionPlotsFSC', LabelParam, default=True,
+                              label='Display resolution plots (FSC)',
+                              help='')
+                group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
+                              expertLevel=LEVEL_ADVANCED,
+                              label='Threshold in resolution plots',
+                              help='')
             
-        #form.addSection('Star files')
-        
-        
         form.addSection('Overall')      
         form.addParam('showPMax', LabelParam, default=True,
                       label="Show average PMax",
@@ -445,7 +443,7 @@ Examples:
             volFn = self._getVolumeNames()[0]
             if exists(volFn.replace(":mrc","")):
                 for prefix in prefixes:
-                    sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
+                    sqliteFn = self.protocol._getFileName('projections', iter=it, ref3d=ref3d, half=prefix)
                     if not exists(sqliteFn):
                         self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(self._getMdOut(it, prefix, ref3d)))
                     return em.ChimeraClientView(volFn, angularDistFile=sqliteFn, spheresDistance=radius)
@@ -469,23 +467,25 @@ Examples:
         
         plotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
                                  mainTitle=title, windowTitle="Angular Distribution")
-        for ref3d in self._refsList:
-            for prefix in prefixes:
-                randomSet = self._getRandomSet(prefix)
+        for prefix in prefixes:
+            for ref3d in self._refsList:
                 dataStar = self._getDataStar(prefix, it)
-                if exists(dataStar):
-                    if randomSet > 0:
-                        title = '%s class %d' % (prefix, ref3d)
-                    else:
-                        title = 'class %d' % ref3d
-                    
-                    sqliteFn = self.protocol._getFileName('projections', iter=it, half=prefix)
-                    if not exists(sqliteFn):
-                        self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(self._getMdOut(it, prefix, ref3d)))
-                    plotter.plotAngularDistributionFromMd(sqliteFn, title)
-                    return plotter
+                randomSet = self._getRandomSet(prefix)
+                if randomSet > 0:
+                    title = '%s class %d' % (prefix, ref3d)
                 else:
-                    return
+                    title = 'class %d' % ref3d
+                sqliteFn = self.protocol._getFileName('projections', iter=it, ref3d=ref3d, half=prefix)
+                if not exists(sqliteFn):
+                    self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(self._getMdOut(it, prefix, ref3d)))
+                plotter.plotAngularDistributionFromMd(sqliteFn, title)
+        
+        for prefix in prefixes:
+            dataStar = self._getDataStar(prefix, it)
+            if exists(dataStar):
+                return plotter
+            else:
+                return
     
 #===============================================================================
 # plotSSNR              
@@ -547,6 +547,7 @@ Examples:
                 blockName = 'model_class_%d@' % ref3d
                 for it in self._iterations:
                     model_star = self._getModelStar(prefix, it)
+                    print "modelStar: ", model_star
                     if exists(model_star):
                         self._plotFSC(a, blockName + model_star)
                         legends.append('iter %d' % it)
@@ -626,7 +627,7 @@ Examples:
             self._iterations = [self.lastIter]
         else:
             self._iterations = self._getListFromRangeString(self.iterSelection.get())
-            
+        
         from matplotlib.ticker import FuncFormatter
         self._plotFormatter = FuncFormatter(self._formatFreq) 
         
@@ -684,7 +685,7 @@ Examples:
         randomSet = self._getRandomSet(prefix)
         dataStar = self._getDataStar(prefix, it)
         
-        if randomSet > 0 :
+        if randomSet > 0 and  randomSet < 3:
             mdAll = md.MetaData(dataStar)
             mdTmp = md.MetaData()
             mdTmp.importObjects(mdAll, md.MDValueEQ(md.RLN_PARTICLE_RANDOM_SUBSET, randomSet))
@@ -710,12 +711,14 @@ Examples:
             return self.protocol._getFileName('modelFinal')
     
     def _getRandomSet(self, prefix):
-        if prefix == "half1_":
+        if prefix == "final":
+            return 0
+        elif prefix == "half1_":
             return 1
         elif prefix == "half2_":
             return 2
         else:
-            return 0
+            return 3
 
 
 class PostprocessViewer(ProtocolViewer):
@@ -853,8 +856,7 @@ class RelionAutopickViewer(Viewer):
     def visualize(self, obj, **args):
         micPath, coordPath = obj.writeXmippOutputCoords()
         import pyworkflow.em.packages.xmipp3 as xmipp3
-        xmipp3.viewer.launchSupervisedPickerGUI(2, micPath, coordPath, 'manual', 
-                                                self.protocol)
+        xmipp3.viewer.launchSupervisedPickerGUI(micPath, coordPath, self.protocol)
 
 
 class RelionPolishViewer(ProtocolViewer):

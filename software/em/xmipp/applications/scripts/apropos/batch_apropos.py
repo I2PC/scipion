@@ -1,15 +1,40 @@
 #!/usr/bin/env python
+# **************************************************************************
+# *
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
 
 import os
 
-from protlib_xmipp import XmippScript, createProgramsDb, createProgramsAutocomplete, ProgramKeywordsRank, getProgramsDbName,\
-    getXmippLabels, blueStr, redStr
-from protlib_filesystem import getXmippPath
+import pyworkflow.utils as pwutils
+import pyworkflow.em.packages.xmipp3 as xmipp3
+import pyworkflow.em.packages.xmipp3.programs as prog
 
 
-class ScriptApropos(XmippScript):
+class ScriptApropos(xmipp3.XmippScript):
     def __init__(self):
-        XmippScript.__init__(self)
+        xmipp3.XmippScript.__init__(self)
         self.results = []
         
     def defineParams(self):
@@ -39,7 +64,7 @@ class ScriptApropos(XmippScript):
         self.keywords = []
         if self.checkParam('-i'):
             self.keywords = [k.lower() for k in self.getListParam('-i')]
-        self.progRank = ProgramKeywordsRank(self.keywords)
+        self.progRank = prog.ProgramKeywordsRank(self.keywords)
         self.type = self.getParam('--type')
         
     def hasKeywords(self, label):
@@ -51,10 +76,10 @@ class ScriptApropos(XmippScript):
             
     def run(self):
         if self.checkParam('-u'):
-            db = createProgramsDb()
-            createProgramsAutocomplete()
+            prog.createProgramsDb()
+            prog.createProgramsAutocomplete()
         elif self.type == 'labels':
-            labels = getXmippLabels()
+            labels = prog.getXmippLabels()
             if self.checkParam("-i"):
                 labels = [l for l in labels if self.hasKeywords(l)]
             # Check which labels are ported to python
@@ -67,12 +92,11 @@ class ScriptApropos(XmippScript):
                     l['comment'] = l['enum'] + ' (MISSING IN PYTHON BINDING)'
                 print '{name:<30} {type:<30} {enum:<30} {comment}'.format(**l)
         else:
-            dbName = getProgramsDbName()
+            dbName = prog.getProgramsDbName()
             if not os.path.exists(dbName):
-                db = createDb()
+                db = prog.createProgramsDb(dbName)
             else:
-                from protlib_sql import ProgramDb
-                db = ProgramDb(dbName)
+                db = prog.ProgramDb(dbName)
 
             onlyList = self.checkParam('--list')
             
@@ -80,7 +104,7 @@ class ScriptApropos(XmippScript):
                 categories = db.selectCategories()
                 doBoth = self.type == 'both'
                 for c in categories:
-                    print blueStr(c['name'])
+                    print pwutils.blue(c['name'])
                     if doBoth:
                         programs = db.selectPrograms(c)
                         #self.maxlen = 50
@@ -114,10 +138,10 @@ class ScriptApropos(XmippScript):
                 desc = self.highlightStr(desc.splitlines()[0])
             print name.ljust(maxlen), desc    
                          
-    def highlightStr(self, str):
+    def highlightStr(self, hstr):
         for k in self.keywords:
-            str = str.replace(k, redStr(k))
-        return str
+            hstr = hstr.replace(k, pwutils.red(k))
+        return hstr
 
 if __name__ == '__main__':
     ScriptApropos().tryRun()

@@ -323,6 +323,8 @@ public class Params {
     }
 
     public boolean isMask() {
+    	if(cmdLine == null)
+    		return false;
         return cmdLine.hasOption("mask");
     }
    

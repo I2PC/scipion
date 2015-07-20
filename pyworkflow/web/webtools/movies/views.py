@@ -102,7 +102,8 @@ def create_movies_project(request):
         # Create symbolic link for uploads
         projectPath = manager.getProjectPath(projectName)
         dest = os.path.join(projectPath,'Uploads')
-        source = "/mnt/big1/scipion-mws/data/uploads/"+ projectName
+        # @todo: this path to uploads dir should be configurable outside the code...
+        source = "/services/scipion/data/uploads/"+ projectName
         pwutils.path.makePath(source)
         pwutils.createLink(source, dest)
         
@@ -110,18 +111,18 @@ def create_movies_project(request):
         if testDataKey :
             attr = getAttrTestFile(testDataKey)
             path_test = attr['path']
-            filesToImport = source + "/*.mrcs"
+
             
             for f in os.listdir(path_test):           
                 # Create a symbolic link for each file
                 file_path = os.path.join(path_test, f)
                 source_file = os.path.join(source, f)
-                pwutils.createLink(file_path, source_file)
+                pwutils.createAbsLink(file_path, source_file)
             
             label_import = "import movies ("+ testDataKey +")" 
             protImport = project.newProtocol(ProtImportMovies, objLabel=label_import)
 
-            protImport.filesPath.set(filesToImport)
+            protImport.filesPath.set(attr["filesPath"])
             protImport.voltage.set(attr['voltage'])
             protImport.sphericalAberration.set(attr['sphericalAberration'])
             protImport.amplitudeContrast.set(attr['amplitudeContrast'])
@@ -144,14 +145,22 @@ def create_movies_project(request):
 
 def getAttrTestFile(key):
     if(key == "ribosome"):
-        attr = {"path" : "/mnt/big1/scipionweb/movies_testdata/80S_ribosome/",
+        riboDataset = DataSet.getDataSet('riboMovies')
+        riboFiles = riboDataset.getFile("allMovies")
+        attr = {#"filesPath" : "/services/scipion/data/scipionweb/movies_testdata/80S_ribosome/",
+                "path": riboDataset.getPath(),
+                "filesPath" : riboFiles,
                 "voltage" : 300.0,
                 "sphericalAberration" : 2.7,
                 "amplitudeContrast" : 0.1,
                 "magnification" : 59000,
                 "samplingRate": 1.77}
     if(key == "falcon"):
-        attr = {"path" : "/mnt/big1/scipionweb/movies_testdata/JMB_2015/",
+        jmbFalconDataset = DataSet.getDataSet('jmbFalconMovies')
+        jmbFalconFiles = jmbFalconDataset.getFile("allMovies")
+        attr = {#"path" : "/services/scipion/data/scipionweb/movies_testdata/JMB_2015/",
+                "path": jmbFalconDataset.getPath(),
+                "filesPath" : jmbFalconFiles,
                 "voltage" : 300.0,
                 "sphericalAberration" : 2.7,
                 "amplitudeContrast" : 0.1,
@@ -198,7 +207,7 @@ def movies_form(request):
                     'formUrl': 'mov_form',
                     'showHost': False,
                     'showParallel': False,
-                    'hostSelected': 'clark'})
+                    'hostSelected': 'localhost'})
     return render_to_response('form/form.html', context)
 
 

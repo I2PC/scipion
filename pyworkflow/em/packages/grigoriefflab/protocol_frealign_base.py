@@ -147,7 +147,7 @@ class ProtFrealignBase(EMProtocol):
                       condition='not doContinue',
                       help='Select the input particles.\n')
         form.addParam('doInvert', BooleanParam, default=True,
-                      label='Invert contrast',
+                      label='Invert contrast', condition='not doContinue',
                       help='Invert the contrast if your particles are white over a black background.')
         form.addParam('input3DReference', PointerParam,
                       pointerClass='Volume',
@@ -182,7 +182,7 @@ class ProtFrealignBase(EMProtocol):
                                'reference by division of the data into random subsets during the'
                                'first iteration.')
         form.addParam('useInitialAngles', BooleanParam, default=False,
-                      label="Use initial angles/shifts ? ",
+                      label="Use initial angles/shifts ? ",condition='not doContinue',
                       help='Set to *Yes* if you want to use the projection assignment (angles/shifts) \n '
                            'associated with the input particles (hasProjectionAssigment=True)')
 
@@ -487,7 +487,9 @@ class ProtFrealignBase(EMProtocol):
         if self.doContinue:
             continueRun = self.continueRun.get()
             self.inputParticles.set(continueRun.inputParticles.get())
+            self.doInvert.set(continueRun.doInvert.get())
             self.symmetry.set(continueRun.symmetry.get())
+            self.useInitialAngles.set(False)
             self.input3DReference.set(None)
             
             if self.continueIter.get() == 'last':
@@ -555,7 +557,6 @@ class ProtFrealignBase(EMProtocol):
         prevIterVol = self._getFileName('iter_vol', iter=prevIter) # volume of the previous iteration
         
         if iterN == 1:
-            ### imgSet = self.inputParticles.get()
             vol = self.input3DReference.get()
 
             imgFn = self._getFileName('particles')
@@ -1215,7 +1216,9 @@ eot
             moveFile(tmpFile, stackFn)
     
     def _getMicIdList(self):
-        return self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
+        if self._micList == []:
+            self._micList = self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
+        return self._micList
     
     def _getMicCounter(self):
         #frealign need to have a numeric micId not longer than 5 digits
@@ -1227,6 +1230,7 @@ eot
         return micIdMap
     
     def _defNumberOfCPUs(self):
+        self._micList = []
         cpus = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
         numberOfMics = len(self._getMicIdList())
         return min(cpus, numberOfMics)

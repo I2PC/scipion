@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+
 """
 This module implement viewers for some type of common objects.
 """
@@ -105,11 +106,12 @@ class DataView(View):
     #===========================================================================
     
         parameters = {
-            'mode', # FOR MODE TABLE OR GALLERY
-            'visible',
-            'zoom',
-            'order',
-            'render',
+            showj.MODE, # FOR MODE TABLE OR GALLERY
+            showj.VISIBLE,
+            showj.ZOOM,
+            showj.ORDER,
+            showj.RENDER,
+            showj.SORT_BY
 #             'columns',
         }
         
@@ -174,17 +176,19 @@ class Classes3DView(ClassesView):
             
 class CoordinatesObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """
-    def __init__(self, project, path, outputdir, viewParams={}, **kwargs):
+    def __init__(self, project, path, outputdir, protocol, viewParams={}, **kwargs):
         DataView.__init__(self, path, **kwargs)
         self.project = project
         self.outputdir = outputdir
+        self.protocol = protocol
         
-    def getShowJParams(self):
-        params = '--input %s --output %s --mode readonly'%(self._path, self.outputdir)
-        return params
+#     def getShowJParams(self):
+#         params = '--input %s --output %s --mode %s'%(self._path, self.outputdir, self.mode)
+#         return params
     
     def show(self):
-        showj.runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), env=self._env)
+        #showj.runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), env=self._env)
+        showj.launchSupervisedPickerGUI(self._path, self.outputdir, self.protocol)
         
         
 class ImageView(View):

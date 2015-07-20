@@ -35,17 +35,17 @@ from xmipp3 import XmippProtocol
 
 from convert import createXmippInputMicrographs, readSetOfCoordinates
 
+
 MICS_SAMEASPICKING = 0
 MICS_OTHER = 1
 
+
 class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     """Protocol to pick particles automatically in a set of micrographs using previous training """
-    _label = 'automatic picking'
-  
+    _label = 'auto-picking (step 2)'  
     
     filesToCopy = ['model_training.txt', 'model_svm.txt', 'model_pca_model.stk', 'model_rotpca_model.stk', 
                'model_particle_avg.xmp', 'config.xmd', 'templates.stk']
-    
     
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
@@ -151,9 +151,11 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         validateMsgs = []
+        
+        if not hasattr(self.xmippParticlePicking.get(),"outputCoordinates"):
+            validateMsgs.append("You need to generate coordinates for the supervised picking")
    
         srcPaths = [self.xmippParticlePicking.get()._getExtraPath(k) for k in self.filesToCopy]
-        print srcPaths
         # Check that all needed files exist
         if missingPaths(*srcPaths):
             validateMsgs.append('Input supervised picking run is not valid.')

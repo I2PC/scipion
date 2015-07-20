@@ -130,19 +130,19 @@ def getAttrTestFile(key):
 #                 }
 #         
     if(key == "fcv"):
-        attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/", 
+        attr = {"path" : "/services/scipion/data/scipionweb/maps_testdata/", 
                 "file":"fcv.map",
                 "samplingRate": 2.33, 
                 }
     
     if(key == "mito_ribosome"):
-        attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/",
+        attr = {"path" : "/services/scipion/data/scipionweb/maps_testdata/",
                 "file": "mito_ribosome.map",
                 "samplingRate": 1.34, 
                 }
         
     if(key == "t20s_proteasome"):
-        attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/",
+        attr = {"path" : "/services/scipion/data/scipionweb/maps_testdata/",
                 "file": "t20s_proteasome.map",
                 "samplingRate": 0.98, 
                 }

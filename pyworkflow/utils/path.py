@@ -193,14 +193,30 @@ def moveFile(source, dest):
     cleanPath(source)
     
 def createLink(source, dest):
-    """ Creates a link to a given file path. """
+    """ Creates a relative link to a given file path. 
+    Try to use common path for source and dest to avoid errors. 
+    Different relative paths may exist since there are different valid paths for a file,
+    it depends on the current working dir path"""
     if exists(dest):
         if isdir(dest):
             shutil.rmtree(dest)
         else:
             os.remove(dest)
-    destDir = split(dest)[0]
-    os.symlink(relpath(source,destDir),dest)
+    #destDir = split(dest)[0]
+    sourcedir = dirname(source)
+    destdir = dirname(dest)
+    relsource = join(relpath(sourcedir, destdir), basename(source))
+    os.symlink(relsource,dest)
+    
+def createAbsLink(source, dest):
+    """ Creates a link to a given file path"""
+    if exists(dest):
+        if isdir(dest):
+            shutil.rmtree(dest)
+        else:
+            os.remove(dest)
+
+    os.symlink(source,dest)
     
 def getLastFile(pattern):
     """ Return the last file matching the pattern. """

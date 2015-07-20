@@ -286,8 +286,21 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.setObjLabel("extract-same as picking")
         self.proj.launchProtocol(protExtract, wait=True)
+        partCrdX1 = protExtract.outputParticles[228].getCoordinate().getX()
+        crdX1 = protExtract.inputCoordinates.get()[228].getX()
+        partCrdY1 = protExtract.outputParticles[228].getCoordinate().getY()
+        crdY1 = protExtract.inputCoordinates.get()[228].getY()
+        partCrdX2 = protExtract.outputParticles[83].getCoordinate().getX()
+        crdX2 = protExtract.inputCoordinates.get()[83].getX()
+        partCrdY2 = protExtract.outputParticles[83].getCoordinate().getY()
+        crdY2 = protExtract.inputCoordinates.get()[83].getY()
+        self.assertAlmostEquals(partCrdX1, crdX1, delta=0.001)
+        self.assertAlmostEquals(partCrdY1, crdY1, delta=0.001)
+        self.assertAlmostEquals(partCrdX2, crdX2, delta=0.001)
+        self.assertAlmostEquals(partCrdY2, crdY2, delta=0.001)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
         self.assertAlmostEqual(protExtract.outputParticles.getSamplingRate()/protExtract.inputMicrographs.get().getSamplingRate(), self.DOWNSAMPLING, 1, "There was a problem generating the output.")
+        
     
     def testExtractOriginal(self):
         print "Run extract particles with downsampling factor equal to the original micrographs"
@@ -296,6 +309,24 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-original")
         self.proj.launchProtocol(protExtract, wait=True)
+        
+        samplingCoords = self.protPP.outputCoordinates.getMicrographs().getSamplingRate()
+        samplingFinal = self.protImport.outputMicrographs.getSamplingRate()
+        factor = samplingFinal / samplingCoords
+        
+        partCrdX1 = protExtract.outputParticles[111].getCoordinate().getX()
+        crdX1 = int(protExtract.inputCoordinates.get()[111].getX() / factor)
+        partCrdY1 = protExtract.outputParticles[111].getCoordinate().getY()
+        crdY1 = int(protExtract.inputCoordinates.get()[111].getY() / factor)
+        partCrdX2 = protExtract.outputParticles[7].getCoordinate().getX()
+        crdX2 = int(protExtract.inputCoordinates.get()[7].getX() / factor)
+        partCrdY2 = protExtract.outputParticles[7].getCoordinate().getY()
+        crdY2 = int(protExtract.inputCoordinates.get()[7].getY() / factor)
+        self.assertAlmostEquals(partCrdX1, crdX1, delta=0.001)
+        self.assertAlmostEquals(partCrdY1, crdY1, delta=0.001)
+        self.assertAlmostEquals(partCrdX2, crdX2, delta=0.001)
+        self.assertAlmostEquals(partCrdY2, crdY2, delta=0.001)
+
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
         self.assertEqual(protExtract.outputParticles.getSamplingRate(), protExtract.inputMicrographs.get().getSamplingRate(), "Output sampling rate should be equal to input sampling rate.")
 
@@ -312,8 +343,23 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.setObjLabel("extract-other")
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
-        print downFactor
-        print protExtract.outputParticles.getSamplingRate()/ protExtract.inputMicrographs.get().getSamplingRate()
+        
+        samplingCoords = self.protPP.outputCoordinates.getMicrographs().getSamplingRate()
+        samplingFinal = self.protImport.outputMicrographs.getSamplingRate() * downFactor
+        factor = samplingFinal / samplingCoords
+        partCrdX1 = protExtract.outputParticles[45].getCoordinate().getX()
+        crdX1 = int(protExtract.inputCoordinates.get()[45].getX() / factor)
+        partCrdY1 = protExtract.outputParticles[45].getCoordinate().getY()
+        crdY1 = int(protExtract.inputCoordinates.get()[45].getY() / factor)
+        partCrdX2 = protExtract.outputParticles[229].getCoordinate().getX()
+        crdX2 = int(protExtract.inputCoordinates.get()[229].getX() / factor)
+        partCrdY2 = protExtract.outputParticles[229].getCoordinate().getY()
+        crdY2 = int(protExtract.inputCoordinates.get()[229].getY() / factor)
+        self.assertAlmostEquals(partCrdX1, crdX1, delta=0.001)
+        self.assertAlmostEquals(partCrdY1, crdY1, delta=0.001)
+        self.assertAlmostEquals(partCrdX2, crdX2, delta=0.001)
+        self.assertAlmostEquals(partCrdY2, crdY2, delta=0.001)
+
         self.assertAlmostEqual(protExtract.outputParticles.getSamplingRate()/ protExtract.inputMicrographs.get().getSamplingRate(), downFactor, 1, "There was a problem generating the output.")
         for particle in protExtract.outputParticles:
             self.assertTrue(particle.getCoordinate().getMicId() in micsId)
@@ -326,19 +372,30 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.ctfRelations.set(self.protCTF.outputCTF)
         protExtract.setObjLabel("extract-ctf")
         self.proj.launchProtocol(protExtract, wait=True)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
-        self.assertTrue(protExtract.outputParticles.hasCTF(), "Output does not have CTF.")
         partDef1 = protExtract.outputParticles[1].getCTF().getDefocusU()
         defU1 = protExtract.ctfRelations.get()[1].getDefocusU()
         partDef2 = protExtract.outputParticles[150].getCTF().getDefocusU()
         defU2 = protExtract.ctfRelations.get()[2].getDefocusU()
         partDef3 = protExtract.outputParticles[300].getCTF().getDefocusU()
         defU3 = protExtract.ctfRelations.get()[3].getDefocusU()
+        partCrdX1 = protExtract.outputParticles[228].getCoordinate().getX()
+        crdX1 = protExtract.inputCoordinates.get()[228].getX()
+        partCrdY1 = protExtract.outputParticles[228].getCoordinate().getY()
+        crdY1 = protExtract.inputCoordinates.get()[228].getY()
+        partCrdX2 = protExtract.outputParticles[83].getCoordinate().getX()
+        crdX2 = protExtract.inputCoordinates.get()[83].getX()
+        partCrdY2 = protExtract.outputParticles[83].getCoordinate().getY()
+        crdY2 = protExtract.inputCoordinates.get()[83].getY()
         self.assertAlmostEquals(partDef1, defU1, delta=1)
         self.assertAlmostEquals(partDef2, defU2, delta=1)
         self.assertAlmostEquals(partDef3, defU3, delta=1)
-
-
+        self.assertAlmostEquals(partCrdX1, crdX1, delta=0.001)
+        self.assertAlmostEquals(partCrdY1, crdY1, delta=0.001)
+        self.assertAlmostEquals(partCrdX2, crdX2, delta=0.001)
+        self.assertAlmostEquals(partCrdY2, crdY2, delta=0.001)
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
+        self.assertTrue(protExtract.outputParticles.hasCTF(), "Output does not have CTF.")
+    
     def testExtractSort(self):
         print "Run extract particles with sort by statistics"#
         protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=SAME_AS_PICKING,doFlip=True,
@@ -348,5 +405,17 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.ctfRelations.set(self.protCTF.outputCTF)
         protExtract.setObjLabel("extract-sort")
         self.proj.launchProtocol(protExtract, wait=True)
+        partCrdX1 = protExtract.outputParticles[228].getCoordinate().getX()
+        crdX1 = protExtract.inputCoordinates.get()[228].getX()
+        partCrdY1 = protExtract.outputParticles[228].getCoordinate().getY()
+        crdY1 = protExtract.inputCoordinates.get()[228].getY()
+        partCrdX2 = protExtract.outputParticles[83].getCoordinate().getX()
+        crdX2 = protExtract.inputCoordinates.get()[83].getX()
+        partCrdY2 = protExtract.outputParticles[83].getCoordinate().getY()
+        crdY2 = protExtract.inputCoordinates.get()[83].getY()
+        self.assertAlmostEquals(partCrdX1, crdX1, delta=0.001)
+        self.assertAlmostEquals(partCrdY1, crdY1, delta=0.001)
+        self.assertAlmostEquals(partCrdX2, crdX2, delta=0.001)
+        self.assertAlmostEquals(partCrdY2, crdY2, delta=0.001)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
-        self.assertTrue(protExtract.outputParticles.getSize() == 284, "Output particles were not correctly sorted.")
+        self.assertTrue(protExtract.outputParticles.getSize() == 249, "Output particles were not correctly sorted.")

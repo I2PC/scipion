@@ -82,6 +82,12 @@ public:
 
     /** Do reconstruct */
     bool doReconstruct;
+
+    /** Use it for validation */
+    bool useForValidation;
+
+    size_t numOrientationsPerParticle;
+
 public: // Internal members
     size_t rank, Nprocessors;
 
@@ -143,6 +149,9 @@ public:
 
     /// Generate projections from the current volume
     void generateProjections();
+
+    ///
+    void numberOfProjections();
 
     /// Align images to gallery projections
     void alignImagesToGallery();

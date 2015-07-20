@@ -102,6 +102,18 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
             
         if len(img):
             img = self.getImage(img)
+        
+        protClassName = value.split('.')[-1] # Take last part
+        emProtocolsDict = em.getProtocols()
+        prot = emProtocolsDict.get(protClassName, None)
+        
+        if tag == 'protocol' and text == 'default':
+            if prot is None:
+                raise Exception("Protocol className '%s' not found!!!. \n"
+                                "Fix your config/scipion.conf configuration." % protClassName)
+                 
+            text = prot.getClassLabel()
+             
         item = tree.insert(prefix, 'end', key, text=text, image=img, tags=(tag))
         treeItems[item] = obj
         # Check if the attribute should be open or close
@@ -110,9 +122,6 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
             tree.item(item, open=True)
             
         if obj.value.hasValue() and tag == 'protocol_base':
-            protClassName = value.split('.')[-1] # Take last part
-            emProtocolsDict = em.getProtocols()
-            prot = emProtocolsDict.get(protClassName, None)
             if prot is not None:
                 tree.item(item, image=self.getImage('class_obj.gif'))
                 
@@ -418,6 +427,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                 image = getattr(obj, '_icon', '')
                 parent = self.inputParentDict[obj._parentKey]
                 
+                suffix = ''
                 if obj.hasExtended():
                     extendedValue = obj.getExtendedValue()
                     if obj.hasExtendedAttribute():
@@ -431,7 +441,6 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                         labelObj = obj.get()
                 else:
                     labelObj = obj.get()
-                    suffix = ''
                     
                 objKey = obj._parentKey + str(labelObj.getObjId())
                 label = self.getObjectLabel(labelObj, self.mapper.getParent(labelObj))
@@ -737,6 +746,7 @@ class ProtocolsView(tk.Frame):
         t.tag_bind('protocol', '<Double-1>', self._protocolItemClick)
         t.tag_bind('protocol', '<Return>', self._protocolItemClick)
         t.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
+        t.tag_configure('protocol_group', image=self.getImage('class_obj.gif'))
         t.tag_configure('section', font=self.windows.fontBold)
         return t
         
@@ -924,6 +934,9 @@ class ProtocolsView(tk.Frame):
             g = self.project.getRunsGraph(refresh=False)
             for node in g.getNodes():
                 if node.run and node.run.getObjId() in self._selection:
+                    # This option is only for compatibility with all projects
+                    if hasattr(node, 'item'):
+                        node.item.setSelected(False)
                     node.item.setSelected(False)
             item.setSelected(True)
         
@@ -1078,14 +1091,20 @@ class ProtocolsView(tk.Frame):
         if len(self._selection) != 1 or not prot:
             self.outputViewer.clear()
             self._lastStatus = None
-        elif (prot.getObjId() != self._lastSelectedProtId or
-              prot.isActive() or prot.getStatus() != self._lastStatus):
+        elif prot.getObjId() != self._lastSelectedProtId:
             self._lastStatus = prot.getStatus()
             i = self.outputViewer.getIndex()
             self.outputViewer.clear()
-            for f in prot.getLogPaths():
-                self.outputViewer.addFile(f)
+            # Right now skip the err tab since we are redirecting
+            # stderr to stdout
+            out, _, log = prot.getLogPaths()
+            self.outputViewer.addFile(out)
+            self.outputViewer.addFile(log)
             self.outputViewer.setIndex(i) # Preserve the last selected tab
+        elif  prot.isActive() or prot.getStatus() != self._lastStatus:
+            self._lastStatus = prot.getStatus()
+            self.outputViewer.refreshAll()
+            
 
     def _scheduleRunsUpdate(self, secs=1):
         #self.runsTree.after(secs*1000, self.refreshRuns)
@@ -1142,7 +1161,10 @@ class ProtocolsView(tk.Frame):
         protocols = self._getSelectedProtocols()
         if len(protocols) == 1:
             newProt = self.project.copyProtocol(protocols[0])
-            self._openProtocolForm(newProt)
+            if newProt is None:
+                self.windows.showError("Error copying protocol.!!!")
+            else:
+                self._openProtocolForm(newProt)
         else:
             self.project.copyProtocol(protocols)
             self.refreshRuns()

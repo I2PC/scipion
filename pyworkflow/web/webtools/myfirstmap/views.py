@@ -184,6 +184,9 @@ def create_service_project(request):
         protValidate.inputVolumes.setExtendedAttribute('outputVolumes')
         protValidate.inputParticles.set(protImport)
         protValidate.inputParticles.setExtendedAttribute('outputAverages')
+        protValidate.numberOfThreads.set(8)
+        if testDataKey :
+            setProtocolParams(protValidate, testDataKey)
 #         protJoin.inputVolumes.append(p4)
         project.saveProtocol(protValidate)
         
@@ -227,6 +230,7 @@ def service_content(request):
                     'summary': path_files + 'summary.png',
                     'showj': path_files + 'showj.png',
                     'alignVol': path_files + 'alignVol.png',
+                    'validateVols': path_files + 'validateVols.png',
                     'download': path_files + 'download.png',
                     'formUrl': 'my_form',
                     'mode':'service',
@@ -272,6 +276,13 @@ def setProtocolParams(protocol, key):
             attrs = {"symmetryGroup" : "c1", 
                      "alpha0": 80, 
                      "alphaF": 99.5}
+    if issubclass(cls, XmippProtValidateNonTilt):
+        if(key == "bpv"):
+            attrs = {"symmetryGroup" : "i1"}
+        if(key == "groel"):
+            attrs = {"symmetryGroup" : "d7"}
+        if(key == "ribosome"):
+            attrs = {"symmetryGroup" : "c1"}
     for key,value in attrs.iteritems():
         getattr(protocol, key).set(value)
     

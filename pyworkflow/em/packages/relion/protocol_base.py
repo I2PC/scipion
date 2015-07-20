@@ -87,7 +87,7 @@ class ProtRelionBase(EMProtocol):
                   'input_star': self._getPath('input_particles.star'),
                   'input_mrcs': self._getPath('input_particles.mrcs'),
                   'data_scipion': self.extraIter + 'data_scipion.sqlite',
-                  'projections': self.extraIter + '%(half)s_projections.sqlite',
+                  'projections': self.extraIter + '%(half)sclass%(ref3d)03d_projections.sqlite',
                   'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
                   'model': self.extraIter + 'model.star',
                   'shiny': self._getExtraPath('shiny.star'),
@@ -125,6 +125,7 @@ class ProtRelionBase(EMProtocol):
         # Iterations will be identify by _itXXX_ where XXX is the iteration number
         # and is restricted to only 3 digits.
         self._iterRegex = re.compile('_it(\d{3,3})_')
+        
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -211,7 +212,7 @@ class ProtRelionBase(EMProtocol):
         form.addParam('haveDataBeenPhaseFlipped', LabelParam, condition='not doContinue',
                       label='The phase flip comes as a property of the input particles!')
         form.addParam('doCTF', BooleanParam, default=True,
-                      label='Do CTF-amplitude correction?', condition='not doContinue',
+                      label='Do CTF-correction?', condition='not doContinue',
                       help='If set to Yes, CTFs will be corrected inside the MAP refinement. '
                            'The resulting algorithm intrinsically implements the optimal linear, ' 
                            'or Wiener filter. Note that input particles should contains CTF parameters.')
@@ -634,7 +635,6 @@ class ProtRelionBase(EMProtocol):
         if self.hasAttribute('numberOfIterations'):
             iterMsg += '/%d' % self._getnumberOfIters()
         summary = [iterMsg]
-        
         if self._getInputParticles().isPhaseFlipped():
             msg = "Your images have been ctf-phase corrected"
         else:
@@ -644,7 +644,6 @@ class ProtRelionBase(EMProtocol):
         if self.doContinue:
             summary += self._summaryContinue()
         summary += self._summaryNormal()
-        
         return summary
     
     def _summaryNormal(self):
@@ -730,6 +729,10 @@ class ProtRelionBase(EMProtocol):
     
     def _getContinueIter(self):
         continueRun = self.continueRun.get()
+        
+        if continueRun is not None:
+            continueRun._initialize()
+        
         if self.doContinue:
             if self.continueIter.get() == 'last':
                 continueIter = continueRun._lastIter()
@@ -737,6 +740,7 @@ class ProtRelionBase(EMProtocol):
                 continueIter = int(self.continueIter.get())
         else:
             continueIter = 0
+            
         return continueIter
     
     def _getnumberOfIters(self):

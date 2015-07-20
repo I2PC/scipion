@@ -181,6 +181,7 @@ def loadProtocolProject(request, requestType='POST'):
     """
     requestDict = getattr(request, requestType)
     projectName = request.session['projectName']
+    #print "projectName %s"%projectName
     protId = requestDict.get("protocolId")
     protClass = requestDict.get("protocolClass")
     
@@ -656,8 +657,7 @@ def getTmpVolumePath(fileName):
     #This convert is only used in table mode
 def convertVolume(request, path):
     imgFn = os.path.join(request.session['projectPath'], path)
-    imgFn = imgFn.replace(':mrc', '')
-    imgConvertedFn = getTmpVolumePath(imgFn)
+    imgConvertedFn = getTmpVolumePath(imgFn.replace(':mrc', ''))
     # For rendering volume slices over the web, PIL need that
     # the volume is stored with a specific datatype
     # So, we write a temporarly volume the first time
@@ -665,8 +665,6 @@ def convertVolume(request, path):
         img = xmipp.Image()
         img.read(str(imgFn))
         img.convert2DataType(xmipp.DT_UCHAR , xmipp.CW_ADJUST)
-        print "volume after conversion"
-        print img.getData()
         img.write(imgConvertedFn)
     return imgConvertedFn
 
@@ -677,7 +675,6 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], path)
-    imgFn = imgFn.replace(':mrc', '')
     
     if not convert and not reslice and not getStats:
 #         img.read(str(imgFn), xmipp.HEADER)
@@ -694,8 +691,7 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     if reslice:
         if axis != xmipp.VIEW_Z_NEG:
             img.reslice(axis)    
-    
-    _newPath = getTmpVolumePath(imgFn)
+    _newPath = getTmpVolumePath(imgFn.replace(':mrc', ''))
     if (convert  and not os.path.exists(_newPath))or reslice:
         img.write(_newPath)
     return _newPath, _stats

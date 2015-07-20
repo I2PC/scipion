@@ -3,9 +3,13 @@ package xmipp.viewer.particlepicker.extract;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.IJCommand;
@@ -215,8 +219,17 @@ public class ExtractParticlePicker extends ParticlePicker
 
 	public static ExtractPickerJFrame open(String block, String filename, int size, GalleryJFrame galleryfr)
 	{
-		ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, size, Mode.Extract, null);
-		return new ExtractPickerJFrame(picker, galleryfr);
+		try
+		
+		{
+			ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, size, Mode.Extract, null);
+			return new ExtractPickerJFrame(picker, galleryfr);
+		}
+		catch(Exception e)
+		{
+			XmippDialog.showError(null,e.getMessage());
+			return null;
+		}
 	}
 
         @Override
