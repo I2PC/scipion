@@ -45,7 +45,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
     The alignment parameters will be converted to a Xmipp xmd file
     and used as direction projections to reconstruct.
     """
-    _label = 'validate_nontilt'
+    _label = 'validate nontilt'
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
