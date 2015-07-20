@@ -427,6 +427,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                 image = getattr(obj, '_icon', '')
                 parent = self.inputParentDict[obj._parentKey]
                 
+                suffix = ''
                 if obj.hasExtended():
                     extendedValue = obj.getExtended()
                     if obj.hasExtended():
@@ -440,7 +441,6 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                         labelObj = obj.get()
                 else:
                     labelObj = obj.get()
-                    suffix = ''
                     
                 objKey = obj._parentKey + str(labelObj.getObjId())
                 label = self.getObjectLabel(labelObj, self.mapper.getParent(labelObj))
@@ -1164,7 +1164,10 @@ class ProtocolsView(tk.Frame):
         protocols = self._getSelectedProtocols()
         if len(protocols) == 1:
             newProt = self.project.copyProtocol(protocols[0])
-            self._openProtocolForm(newProt)
+            if newProt is None:
+                self.windows.showError("Error copying protocol.!!!")
+            else:
+                self._openProtocolForm(newProt)
         else:
             self.project.copyProtocol(protocols)
             self.refreshRuns()
