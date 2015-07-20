@@ -132,7 +132,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
         
         self._defineOutputs(outputMicrographs=outputMics)
         self._defineSourceRelation(self.inputSet, outputMics)
-        self._defineCtfRelation(outputMics, inputCTF)
+        self._defineCtfRelation(outputMics, self.inputCTF)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):

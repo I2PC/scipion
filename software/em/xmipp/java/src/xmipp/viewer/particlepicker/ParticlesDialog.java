@@ -22,6 +22,7 @@ public class ParticlesDialog extends Dialog
 	protected ScrollPane sp;
 	protected GridBagConstraints constraints;
 	protected int width, height, rows, columns, side;
+	public static final int maxHeight = (int)(0.9 * XmippWindowUtil.getScreenRectangle().height);
 
 	public ParticlesDialog(ParticlePickerJFrame frame)
 	{
@@ -58,8 +59,8 @@ public class ParticlesDialog extends Dialog
 		if (particles.isEmpty())
 		{
 			particlespn.removeAll();
-                        width = 200;
-                        height = 800;
+            width = 200;
+            height = maxHeight;
 			sp.setPreferredSize(new Dimension(width, height));
 			pack();
 			return;
@@ -70,7 +71,7 @@ public class ParticlesDialog extends Dialog
 			columns = Math.min(200, particles.size() * side) / side;
 			rows = (int) Math.ceil(particles.size() / (float) columns);
 			width = side * columns + 20;
-			height = (side * Math.min(10, rows));
+			height = Math.min(side * rows, maxHeight);
 			
 		}
 		else//size changed by user

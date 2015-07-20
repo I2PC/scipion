@@ -88,8 +88,8 @@ class PointerVar():
         self._protocol = protocol
         
     def set(self, value):
-        startDebugger()
-        
+        if value is None:
+            value = pwobj.Pointer(None)
         if not isinstance(value, pwobj.Pointer):
             raise Exception('Pointer var should be used with pointers!!!')
         self._pointer.copy(value)
@@ -274,13 +274,9 @@ def getPointerLabelAndInfo(pobj, mapper):
     that are stored by pointesr.
     This function will be used from PointerVar and MultiPointerVar.
     """
-    label = None
-    info = None
+    label = getObjectLabel(pobj, mapper)
     obj = pobj.get()
-    
-    if obj is not None:
-        label = getObjectLabel(pobj, mapper)
-        info = str(pobj.get())
+    info = str(obj) if obj is not None else ''
     
     return label, info
     
@@ -293,7 +289,9 @@ def getObjectLabel(pobj, mapper):
     obj = pobj.get()
     prot = pobj.getObjValue()
         
-    if obj is None:
+    if prot is None:
+        label = ''
+    elif obj is None:
         label = '%s.%s' % (prot.getRunName(), pobj.getExtended())
     else:
         # This is for backward compatibility

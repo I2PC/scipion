@@ -101,7 +101,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			e.printStackTrace();
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
@@ -279,7 +279,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 		catch (Exception e)
 		{
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 
 	}
@@ -343,7 +343,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 		catch (Exception e)
 		{
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
         
@@ -396,7 +396,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 
 	}
@@ -503,39 +503,39 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 
 
-             if (size > ParticlePicker.sizemax) {
-                 XmippDialog.showInfo(parent, String.format("Max size is %s, %s not allowed", ParticlePicker.sizemax, size));
-                 return false;
+        if (size > ParticlePicker.sizemax) {
+             XmippDialog.showInfo(parent, String.format("Max size is %s, %s not allowed", ParticlePicker.sizemax, size));
+             return false;
         }
-            String outmsg = "";
-            int count;
-            boolean valid = true;
-            List<ManualParticle> outlist = new ArrayList<ManualParticle>();
-            for (SupervisedPickerMicrograph m : micrographs)
-            {
-                count = 0;
-                for (ManualParticle p : m.getParticles())
-                        if (!m.fits(p.getX(), p.getY(), size))
-                        {
-                                outlist.add(p);
-                                count ++;
-                                valid = false;
-                        }
-                if(count > 0)
-                    outmsg += String.format("%s %s from micrograph %s will be dismissed.\n", count, (count == 1)? "particle": "particles", m.getName());
-            }
+        String outmsg = "";
+        int count;
+        boolean valid = true;
+        List<ManualParticle> outlist = new ArrayList<ManualParticle>();
+        for (SupervisedPickerMicrograph m : micrographs)
+        {
+            count = 0;
+            for (ManualParticle p : m.getParticles())
+                    if (!m.fits(p.getX(), p.getY(), size))
+                    {
+                            outlist.add(p);
+                            count ++;
+                            valid = false;
+                    }
+            if(count > 0)
+                outmsg += String.format("%s %s from micrograph %s will be dismissed if size %s is set.", count, (count == 1)? "particle": "particles", m.getName(), size);
+        }
+        if(valid)
+            return true;
+        else
+        {
+            String msg = outmsg + " Are you sure you want to continue?";
+            valid = XmippDialog.showQuestion(parent, msg);
             if(valid)
-                return true;
-            else
-            {
-                String msg = outmsg + "Are you sure you want to continue?";
-                valid = XmippDialog.showQuestion(parent, msg);
-                if(valid)
-                    for(ManualParticle p: outlist)
-                        ((SupervisedPickerMicrograph)p.getMicrograph()).removeParticle(p, this);
-                return valid;
-                        
-            }
+                for(ManualParticle p: outlist)
+                    ((SupervisedPickerMicrograph)p.getMicrograph()).removeParticle(p, this);
+            return valid;
+                    
+        }
 	}
 
         @Override
@@ -697,7 +697,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
@@ -914,7 +914,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 
 	}// function importAllParticles
@@ -955,7 +955,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 		return null;
 
