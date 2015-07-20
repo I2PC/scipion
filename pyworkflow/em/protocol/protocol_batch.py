@@ -122,7 +122,7 @@ class ProtUserSubSet(BatchProtocol):
 
         if isinstance(inputObj, EMProtocol):
             for _, attr in inputObj.iterInputAttributes():
-                self._defineSourceRelation(attr.get(), output)
+                self._defineSourceRelation(attr, output)
         else:
             #if not isinstance(inputObj, SetOfCTF):#otherwise setted before
                 #self._defineSourceRelation(inputObj, output)#There is always source relation and transform relation??
@@ -420,7 +420,7 @@ class ProtCreateMask(BatchProtocol):
         mask.setFileName(maskFile)
         mask.setSamplingRate(samplingRate)
         self._defineOutputs(outputMask=mask)
-        self._defineSourceRelation(inputObj, self.outputMask)
+        self._defineSourceRelation(self.inputObj, self.outputMask)
 
     def _summary(self):
         summary = []

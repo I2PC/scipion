@@ -334,7 +334,7 @@ class ProtSubSet(ProtSets):
         self._defineOutputs(**{key: outputSet})
         self._defineTransformRelation(inputFullSet, outputSet)
         if not self.chooseAtRandom.get():
-            self._defineSourceRelation(inputSubSet, outputSet)
+            self._defineSourceRelation(self.inputSubSet, outputSet)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):

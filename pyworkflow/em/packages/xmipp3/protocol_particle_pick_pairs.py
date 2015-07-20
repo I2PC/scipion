@@ -238,7 +238,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         outputset.setObjComment(summary)
         outputs = {outputName: outputset}
         self._defineOutputs(**outputs)
-        self._defineSourceRelation(inputset, outputset)
+        self._defineSourceRelation(self.inputMicrographsTiltedPair, outputset)
         self._store()
 
 
