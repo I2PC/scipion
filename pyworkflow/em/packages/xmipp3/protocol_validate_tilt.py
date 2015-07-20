@@ -77,7 +77,7 @@ class XmippProtValidateTilt(ProtAnalysis3D):
         
         form.addParallelSection(threads=1, mpi=8)
         
-        #########################################################################################3
+       
 
     #--------------------------- INSERT steps functions --------------------------------------------
 
@@ -105,6 +105,9 @@ class XmippProtValidateTilt(ProtAnalysis3D):
             params =  '  -i %s' % self._getPath('input_untilted_particles.xmd')
             outputDir = self._getExtraPath("untilted")
                     
+        firstImage = self.inputTiltPair.get().getUntilted().getFirstItem()
+        maxShift = 0.1 * firstImage.getDim()[0]
+        
         params += ' --sym %s' % self.symmetryGroup.get()
         params += ' --alpha0 %f --alphaF %f' % (self.alpha.get(),self.alpha.get())
         params += ' --angularSampling %f' % self.angularSampling.get()
@@ -112,6 +115,7 @@ class XmippProtValidateTilt(ProtAnalysis3D):
         params += ' --iter 1'
         params += ' --initvolumes %s' % getImageLocation(self.inputVolume.get())  
         params += ' --useForValidation 3'  
+        params += ' --maxShift %f' % maxShift
         params += ' --odir %s' % outputDir
 
         makePath(outputDir)  
