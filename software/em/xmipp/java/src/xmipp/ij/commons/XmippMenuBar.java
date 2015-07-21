@@ -378,7 +378,7 @@ public class XmippMenuBar extends MenuBar
 		});
 		addFilterAppliedListener();
 		ImagePlus imp = xw.getImagePlusLoader().getImagePlus();
-		if( imp.getWidth() > 1024)
+		if( imp.getWidth() > 1024 && imp.getStackSize() == 1)
 		{
 			gbmi.setState(true);
 			IJCommand ijcmd = new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma =2");
