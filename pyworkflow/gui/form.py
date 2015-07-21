@@ -91,7 +91,8 @@ class PointerVar():
         if value is None:
             value = pwobj.Pointer(None)
         if not isinstance(value, pwobj.Pointer):
-            raise Exception('Pointer var should be used with pointers!!!')
+            raise Exception('Pointer var should be used with pointers!!!\n'
+                            ' Passing: %s, type: %s' % (value, type(value)))
         self._pointer.copy(value)
             
         label, _ = getPointerLabelAndInfo(self._pointer,

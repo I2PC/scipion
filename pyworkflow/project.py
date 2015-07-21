@@ -41,7 +41,6 @@ import pyworkflow.protocol as pwprot
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import getFreePort
 from pyworkflow.protocol.constants import MODE_RESTART
 
 PROJECT_DBNAME = 'project.sqlite'
@@ -83,7 +82,7 @@ class Project(object):
         self._transformGraph = None
         self._sourceGraph = None
         self.address = ''
-        self.port = getFreePort()
+        self.port = pwutils.getFreePort()
         self.mapper = None
         self.settings = None
         # Host configuration
@@ -536,7 +535,7 @@ class Project(object):
                 matches.append((oKey, iKey))
             else:
                 for oKey, oAttr in node.run.iterOutputAttributes(em.EMObject):
-                    if oAttr is iAttr.get():
+                    if oAttr.getObjId() == iAttr.get().getObjId():
                         matches.append((oKey, iKey))
         
         return matches                    
@@ -610,18 +609,24 @@ class Project(object):
                      
         g = self.getRunsGraph(refresh=False)
         
+        #pwutils.startDebugger('a')
         for prot in protocols:
             protId = prot.getObjId()
             node = g.getNode(prot.strId())
             
             for childNode in node.getChilds():
                 childId = childNode.run.getObjId()
+                childProt = childNode.run
                 if childId in newDict:
                     childDict = newDict[childId]
                     # Get the matches between outputs/inputs of node and childNode
                     matches = self.__getIOMatches(node, childNode)
                     for oKey, iKey in matches:
-                        childDict[iKey] = '%s.%s%s' % (protId, pwobj.Pointer.EXTENDED_ATTR, oKey)
+                        inputAttr = getattr(childProt, iKey)
+                        if isinstance(inputAttr, pwobj.PointerList):
+                            childDict[iKey] = [p.getUniqueId() for p in inputAttr]
+                        else:
+                            childDict[iKey] = '%s.%s' % (protId, oKey) # equivalent to pointer.getUniqueId
                       
         f = open(filename, 'w')  
         
@@ -655,26 +660,39 @@ class Project(object):
                                         objLabel=protDict.get('object.label', None),
                                         objComment=protDict.get('object.comment', None))
                 newDict[protId] = prot
-                for paramName, attr in prot.iterDefinitionAttributes():
-                    if not attr.isPointer():
-                        if paramName in protDict:
-                            attr.set(protDict[paramName])
                 self.saveProtocol(prot)
         # Second iteration: update pointers values
+        def _setPointer(pointer, value):
+            # Properly setup the pointer value checking if the 
+            # id is already present in the dictionary
+            parts = value.split('.')
+            target = newDict.get(parts[0], None)
+            pointer.set(target)
+            if not pointer.pointsNone():
+                pointer.setExtendedParts(parts[1:])
+            
         for protDict in protocolsList:
             protId = protDict['object.id']
             
             if protId in newDict:
                 prot = newDict[protId]
                 for paramName, attr in prot.iterDefinitionAttributes():
-                        if attr.isPointer() and paramName in protDict:
-                            parts = protDict[paramName].split('.')
-                            if parts[0] in newDict:
-                                attr.set(newDict[parts[0]]) # set pointer to correct created protocol
-                                if len(parts) > 1: # set extended attribute part
-                                    attr._extended.set(parts[1])
-                            else:
-                                attr.set(None)
+                    if paramName in protDict:
+                        # If the attribute is a pointer, we should look
+                        # if the id is already in the dictionary and 
+                        # set the extended property
+                        if attr.isPointer():
+                            _setPointer(attr, protDict[paramName])
+                        # This case is similar to Pointer, but the values
+                        # is a list and we will setup a pointer for each value
+                        elif isinstance(attr, pwobj.PointerList):
+                            for value in protDict[paramName]:
+                                p = pwobj.Pointer()
+                                _setPointer(p, value)
+                                attr.append(p)
+                        # For "normal" parameters we just set the string value 
+                        else:
+                            attr.set(protDict[paramName])
                 self.mapper.store(prot)
             
         f.close()
