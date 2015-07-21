@@ -96,7 +96,7 @@ class ProtUserSubSet(BatchProtocol):
                 output = self._createMicsSubSetFromCTF(inputObj)
             else:
                 output = self._createSubSetOfCTF(inputObj)
-
+        
         elif isinstance(inputObj, MicrographsTiltPair):
             output = self._createSubSetFromMicrographsTiltPair(inputObj)
 
@@ -119,15 +119,7 @@ class ProtUserSubSet(BatchProtocol):
             
         else:
             output = self._createSimpleSubset(inputObj)
-
-        if isinstance(inputObj, EMProtocol):
-            for _, attr in inputObj.iterInputAttributes():
-                self._defineSourceRelation(attr, output)
-        else:
-            #if not isinstance(inputObj, SetOfCTF):#otherwise setted before
-                #self._defineSourceRelation(inputObj, output)#There is always source relation and transform relation??
-            self._defineTransformRelation(inputObj, output)
-                
+    
     def _createSimpleSubset(self, inputObj):
         className = inputObj.getClassName()
         createFunc = getattr(self, '_create' + className)
@@ -143,6 +135,8 @@ class ProtUserSubSet(BatchProtocol):
 
         # Register outputs
         self._defineOutput(className, output)
+        if inputObj.hasObjId():
+            self._defineTransformRelation(inputObj, output)
         return output
 
     
@@ -156,6 +150,8 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        if inputImages.hasObjId():
+            self._defineTransformRelation(inputImages, output)
         
         # Define an informative summary of the subset operation
         sizeIn = inputImages.getSize()
@@ -190,7 +186,7 @@ class ProtUserSubSet(BatchProtocol):
             return self._createClassesFromClasses(inputClasses)
         else:
             raise Exception("Unrecognized output type: '%s'" % outputClassName)  
-              
+    
     def _createMicsSubSetFromCTF(self, inputCTFs):
         """ Create a subset of Micrographs analyzing the CTFs. """
         outputMics = self._createSetOfMicrographs()
@@ -208,7 +204,7 @@ class ProtUserSubSet(BatchProtocol):
                 outputMics.append(mic)
                 
         self._defineOutputs(outputMicrographs=outputMics)
-        #self._defineTransformRelation(setOfMics, outputMics)
+        self._defineTransformRelation(setOfMics, outputMics)
         return outputMics
         
     def _createSubSetOfCTF(self, inputCtf):
@@ -247,6 +243,11 @@ class ProtUserSubSet(BatchProtocol):
                 count += 1
         # Register outputs
         self._defineOutput('Representatives', output)
+        if inputClasses.hasObjId():
+            self.defineSourceRelation(inputClasses, output)
+        else:
+            self.defineSourceRelation(inputImages, output)
+        
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
         msg = 'From input %s of size %s %s to create output %s'%(inputClasses.getClassName(), 
                                                                  inputClasses.getSize(), 
@@ -274,6 +275,9 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        if inputClasses.hasObjId():
+            self._defineSourceRelation(inputClasses, output)
+        self._defineTransformRelation(inputImages, output)
         count = len([cls for cls in modifiedSet if cls.isEnabled()])
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
         msg = 'From input %s of size %s %s to create output %s of size %s'%(inputClasses.getClassName(), 
@@ -298,6 +302,10 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        if inputClasses.hasObjId():
+            self._defineTransformRelation(inputClasses, output)
+        else:
+            self._defineSourceRelation(inputClasses.getImages(), output)
         count = len([cls for cls in modifiedSet if cls.isEnabled()])
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
         msg = 'From input %s of size %s %s to create output %s'%(inputClasses.getClassName(), inputClasses.getSize(),  selectmsg, output.getClassName())
@@ -322,6 +330,7 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         outputDict = {'outputMicrographsTiltPair': output}
         self._defineOutputs(**outputDict)
+        self._defineTransformRelation(micrographsTiltPair, output)
         return output
 
     def _createSubSetFromParticlesTiltPair(self, particlesTiltPair):
@@ -343,6 +352,7 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         outputDict = {'outputParticlesTiltPair': output}
         self._defineOutputs(**outputDict)
+        self._defineTransformRelation(particlesTiltPair, output)
         return output
 
 
