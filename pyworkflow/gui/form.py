@@ -334,6 +334,11 @@ class SubclassesTreeProvider(TreeProvider):
             # Make sure we dont include previous output of the same 
             # protocol, it will cause a recursive loop
             if prot.getObjId() != self.protocol.getObjId():
+                # Check if the protocol itself is one of the desired classes
+                if any(issubclass(prot.getClass(), c) for c in classes):
+                    p = pwobj.Pointer(prot)
+                    objects.append(p)
+                
                 for paramName, attr in prot.iterOutputEM():
                     # If attr is a sub-classes of any desired one, add it to the list
                     # we should also check if there is a condition, the object 

@@ -121,7 +121,10 @@ public class ImagePlusFromFile extends ImagePlusReader{
     public String getName() {
 
         String name = fileName;
-
+        if(!name.contains("@"))
+        	name = Filename.getBaseName(name);
+        else
+        	name = Filename.getPrefix(name) + Filename.SEPARATOR + Filename.getBaseName(Filename.getFilename(name));
 
         if(index != -2)
             name = String.format("%d@%s", index, name);
