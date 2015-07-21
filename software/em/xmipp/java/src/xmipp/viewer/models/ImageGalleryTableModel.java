@@ -518,9 +518,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * This function will be called when a double click is performed under the
 	 * element at specified row and column
 	 */
-	public boolean handleDoubleClick(int row, int col) {
-		return false; // by default, do nothing
-	}
+	public abstract boolean handleDoubleClick(int row, int col) ;
 
 	/** Whether to display the labels */
 	public void setShowLabels() {

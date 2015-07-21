@@ -1878,4 +1878,10 @@ public class GalleryData {
 		this.zoom = zoom;
 	}
         
+	public boolean allowsVolumeMode()
+	{
+		boolean allowsVolumeMode = !selectedVolFn.isEmpty();
+		System.out.println(allowsVolumeMode);
+		return allowsVolumeMode;
+	}
 }// class GalleryData
