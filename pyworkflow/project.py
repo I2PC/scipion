@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.utils import startDebugger
 """
 This modules handles the Project management
 """
@@ -42,8 +41,8 @@ import pyworkflow.protocol as pwprot
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils.graph import Graph
 from pyworkflow.utils import getFreePort
+from pyworkflow.protocol.constants import MODE_RESTART
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
@@ -342,6 +341,9 @@ class Project(object):
         self._setupProtocol(protocol)
         #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean() # Create working dir if necessary
+        # Delete the relations created by this protocol
+        if protocol.getRunMode() == MODE_RESTART:
+            self.mapper.deleteRelations(self)
         self.mapper.commit()
         
         # Prepare a separate db for this run
