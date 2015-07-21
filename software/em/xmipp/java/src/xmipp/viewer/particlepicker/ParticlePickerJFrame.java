@@ -67,6 +67,7 @@ import javax.swing.event.MenuListener;
 import xmipp.ij.commons.InputFieldsMessageDialog;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
+import xmipp.ij.commons.XmippImageJ;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.utils.ColorIcon;
@@ -421,73 +422,72 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void menuSelected(MenuEvent arg0)
 			{
+				boolean added;
 				for (JCheckBoxMenuItem mi : mifilters)
 				{
-					mi.setSelected(getParticlePicker().isFilterAdded(mi.getText()));
+					added = getParticlePicker().isFilterAdded(mi.getText());
+					mi.setSelected(added);
 				}
 
 			}
 		});
                 
+		addFilterMenuItem(XmippImageJ.gaussianBlurFilter, true, picker);
 		addFilterMenuItem(ParticlePicker.xmippsmoothfilter, true, picker);
-		addFilterMenuItem(ParticlePicker.bandPassFilter, true, picker);
+		addFilterMenuItem(XmippImageJ.bandPassFilter, true, picker);
+		addFilterMenuItem(XmippImageJ.enhanceContrastFilter, true, picker);
+		addFilterMenuItem(XmippImageJ.brightnessContrastFilter, true, picker);
 
-		JCheckBoxMenuItem admi = addFilterMenuItem(ParticlePicker.anisotropicDiffFilter, false, picker);
-		admi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				activefilter = "8-bit";
-				IJ.run(activefilter);
-				activefilter = ((JCheckBoxMenuItem) e.getSource()).getText();
-				IJ.run(activefilter);
-			}
-		});
-		addFilterMenuItem(ParticlePicker.meanShiftFilter, true, picker);
-		addFilterMenuItem(ParticlePicker.substractBackgroundFilter, true, picker);
-		addFilterMenuItem(ParticlePicker.gaussianBlurFilter, true, picker);
-		addFilterMenuItem(ParticlePicker.brightnessContrastFilter, true, picker);
-		addFilterMenuItem(ParticlePicker.enhanceContrastFilter, true, picker);
-		addFilterMenuItem(ParticlePicker.invertLUTFilter, true, picker);
+//		JCheckBoxMenuItem admi = addFilterMenuItem(XmippImageJ.anisotropicDiffFilter, false, picker);
+//		admi.addActionListener(new ActionListener()
+//		{
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e)
+//			{
+//				activefilter = "8-bit";
+//				IJ.run(activefilter);
+//				activefilter = ((JCheckBoxMenuItem) e.getSource()).getText();
+//				IJ.run(activefilter);
+//			}
+//		});
+		addFilterMenuItem(XmippImageJ.invertLUTFilter, true, picker);
+		addFilterMenuItem(XmippImageJ.substractBackgroundFilter, true, picker);
         addFilterAppliedListener();
 	}
         
-        private void addFilterAppliedListener() {
+    protected void addFilterAppliedListener() {
 
-                
+        Recorder.record = true;
 
-                Recorder.record = true;
+        // detecting if a command is thrown by ImageJ
+        
+        ImagePlus.addImageListener(new ImageListener() {
 
-                // detecting if a command is thrown by ImageJ
-                
-                ImagePlus.addImageListener(new ImageListener() {
+            @Override
+            public void imageUpdated(ImagePlus imp) {
+                if(command != null)
+                {
+                    getParticlePicker().updateFilters(command);
+                    if(particlesdialog != null)
+                        loadParticles(true);
+                    
+                }
+                command = null;
+            }
 
-                    @Override
-                    public void imageUpdated(ImagePlus imp) {
-                        if(command != null)
-                        {
-                            getParticlePicker().updateFilters(command);
-                            if(particlesdialog != null)
-                                loadParticles(true);
-                            
-                        }
-                        command = null;
-                    }
+            @Override
+            public void imageOpened(ImagePlus arg0) {
 
-                    @Override
-                    public void imageOpened(ImagePlus arg0) {
+            }
 
-                    }
+            @Override
+            public void imageClosed(ImagePlus arg0) {
+                // TODO Auto-generated method stub
 
-                    @Override
-                    public void imageClosed(ImagePlus arg0) {
-                        // TODO Auto-generated method stub
-
-                    }
-                });
-        }
+            }
+        });
+    }
 
 	protected abstract void openHelpURl();
 
@@ -653,17 +653,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			// Set up the dialog that the button brings up.
 			colorChooser = new JColorChooser();
 			JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color", true, // modal
-					colorChooser, new ActionListener()
-					{
+			colorChooser, new ActionListener()
+			{
 
-						@Override
-						public void actionPerformed(ActionEvent e)
-						{
-							updateColor(colorChooser.getColor());
-							getParticlePicker().setColor(colorChooser.getColor());
-						}
-					}, // OK button handler
-					null); // no CANCEL button handler
+				@Override
+				public void actionPerformed(ActionEvent e)
+				{
+					updateColor(colorChooser.getColor());
+					getParticlePicker().setColor(colorChooser.getColor());
+				}
+			}, // OK button handler
+			null); // no CANCEL button handler
 			XmippWindowUtil.setLocation(0.5f, 0.5f, dialog);
 			dialog.setVisible(true);
 		}

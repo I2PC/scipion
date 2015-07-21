@@ -45,4 +45,6 @@ public class ImagePlusNotFromFile extends ImagePlusReader{
             name = String.format("%d@%s", index, name);
         return name;
     }
+
+
 }

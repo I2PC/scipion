@@ -1235,11 +1235,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         {
         	private HashMap<Integer, String> indexToVolume;
         	private HashMap<String, Integer> volumeToIndex;
+        	private int size;
         	
         	public VolumesComboBoxModel()
         	{
         		String volume;
-        		int size = data.size();//if this combo is created metadata is a set of volumes
+        		size = data.allowsVolumeMode()? data.size(): 0;
         		indexToVolume = new HashMap(size);
         		volumeToIndex = new HashMap(size);
         		for(int i = 0; i < size; i ++)
@@ -1250,13 +1251,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         			volumeToIndex.put(volume, i);
         		}
         	}
-                       
+            
+        	
 
 			@Override
 			public int getSize()
 			{
                     
-                    return data.size();
+                    return size;
 			}
 
 			@Override
