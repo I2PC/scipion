@@ -294,20 +294,15 @@ Examples:
         """ Iterate over the angular distribution for a given iteration. """
         # Get the alignment files of each group for this iteration
         files = glob(self._getFinalPath('align_%02d_???.stk' % it))
-	#print "_iterAngles....files: ", files
         for anglesFile in files:
             fscDoc = SpiderDocFile(anglesFile)
             for values in fscDoc:
-	    	#[theta] = 180.0-[theta]
-     		#[phi]   = [phi]+180.0
-		theta = values[1]
-		phi = values[2]
-		#print "theta: %s, phi: %s" % (theta, phi)
-		
-		if theta > 90:
-		    theta = 180. - theta
-		    phi += 180
-		    
+                theta = values[1]
+                phi = values[2]
+                
+                if theta > 90:
+                    theta = abs(180. - theta)
+                    phi += 180
                 yield phi, theta
             fscDoc.close()
         
@@ -323,7 +318,6 @@ Examples:
                 anglesSqlite = self._getFinalPath('angular_dist_%03d.sqlite' % it)
                 title = 'Angular distribution iter %03d' % it
                 plotter = EmPlotter(x=1, y=1, windowTitle=title)
-		print "createAngDistributionSqlite"
                 self.createAngDistributionSqlite(anglesSqlite, nparts, 
                                                  itemDataIterator=self._iterAngles(it))
                 plotter.plotAngularDistributionFromMd(anglesSqlite, title)
