@@ -220,7 +220,7 @@ class ProtUserSubSet(BatchProtocol):
                 
         # Register outputs
         self._defineOutput(self.outputClassName.get(), setOfCtf)
-        #self._defineSourceRelation(inputCtf, setOfCtf)
+        self._defineTransformRelation(inputCtf, setOfCtf)
         return setOfCtf
         
     def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
@@ -244,9 +244,9 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         self._defineOutput('Representatives', output)
         if inputClasses.hasObjId():
-            self.defineSourceRelation(inputClasses, output)
+            self._defineSourceRelation(inputClasses, output)
         else:
-            self.defineSourceRelation(inputImages, output)
+            self._defineSourceRelation(inputImages, output)
         
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
         msg = 'From input %s of size %s %s to create output %s'%(inputClasses.getClassName(), 
