@@ -39,10 +39,12 @@ public class ImagePlusNotFromFile extends ImagePlusReader{
 
         if(imp == null && ig == null)
             return null;
-        String name = (ig != null)? ig.getFilename(): imp.getTitle();
+        String name = (ig != null)? Filename.getBaseName(ig.getFilename()): imp.getTitle();
         
         if(index != -2)
             name = String.format("%d@%s", index, name);
         return name;
     }
+
+
 }

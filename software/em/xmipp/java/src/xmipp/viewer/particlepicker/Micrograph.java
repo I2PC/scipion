@@ -60,7 +60,7 @@ public abstract class Micrograph {
              System.out.printf("path %s selfile %s\n", path, ParticlePicker.getPicker().selfile);
              file = Filename.findImagePath(path, ParticlePicker.getPicker().selfile, true);
              if(file == null)
-                throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
+                throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("micrograph", path));
         }
 		
 		this.name = name;
@@ -224,9 +224,7 @@ public abstract class Micrograph {
 			}
 	}
 
-	public void releaseImage() {
-		imp = null;
-	}
+	
 
 	public String getFile() {
 		return file;
@@ -242,19 +240,25 @@ public abstract class Micrograph {
 
 	public abstract boolean hasData();
         
-        public int getWidth()
-        {
-            if(width == 0)
-                loadDimensions();
-            return width;
-        }
-        
-        public int getHeigth()
-        {
-            if(height == 0)
-                loadDimensions();
-            return height;
-        }
+    public int getWidth()
+    {
+        if(width == 0)
+            loadDimensions();
+        return width;
+    }
+    
+    public int getHeigth()
+    {
+        if(height == 0)
+            loadDimensions();
+        return height;
+    }
+
+	public void releaseImage()
+	{
+		imp = null;
+		
+	}
         
 
 }

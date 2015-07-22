@@ -25,14 +25,12 @@
 # **************************************************************************
 
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.em.showj import RENDER
 from pyworkflow.em.viewer import DataView
-from pyworkflow.em import *
-from pyworkflow.protocol.params import LabelParam
-from pyworkflow.gui.form import FormWindow
-from protocol_validate_nontilt import *
+import pyworkflow.em.metadata as md
+from pyworkflow.protocol.params import LabelParam, StringParam
+from protocol_validate_nontilt import XmippProtValidateNonTilt
 from plotter import XmippPlotter
-from xmipp import *
-import numpy as np
 
 
 IMAGE_INDEX = 'Image index'
@@ -44,7 +42,7 @@ class XmippValidateNonTiltViewer(ProtocolViewer):
     """
     _label = 'viewer validate_nontilt'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = []#[XmippProtValidateNonTilt]
+    _targets = [XmippProtValidateNonTilt]
     
     def _defineParams(self, form):
         form.addSection(label='Show Results Validate NonTilt')
@@ -82,18 +80,18 @@ class XmippValidateNonTiltViewer(ProtocolViewer):
             return [self.errorMessage("Invalid volume id *%d*" % volId)]
 
         pFn = vol.clusterMd.get()
-        md = MetaData(vol.clusterMd.get())
+        mdCls = md.MetaData(vol.clusterMd.get())
         return [self._viewPlot("Cluster tendency parameter for each image", IMAGE_INDEX, P_INDEX, 
-                       md, MDL_IMAGE_IDX, MDL_WEIGHT, color='b'),
+                       mdCls, md.MDL_IMAGE_IDX, md.MDL_WEIGHT, color='b'),
                                 DataView(pFn)]
         
-    def _viewPlot(self, title, xTitle, yTitle, md, mdLabelX, mdLabelY, color='g'):        
+    def _viewPlot(self, title, xTitle, yTitle, mdFn, mdLabelX, mdLabelY, color='g'):        
         #xplotter = XmippPlotter(1, 1, figsize=(4,4), windowTitle="Plot")
         #xplotter.createSubPlot(title, xTitle, yTitle)
         #xplotter.plotMdFile(md, mdLabelX, mdLabelY, color)
-        md.sort(MDL_WEIGHT)
+        mdFn.sort(md.MDL_WEIGHT)
         plotter = XmippPlotter()
         plotter.createSubPlot("", IMAGE_INDEX, P_INDEX)
-        plotter.plotMdFile(md, None, xmipp.MDL_WEIGHT)
+        plotter.plotMdFile(mdFn, None, md.MDL_WEIGHT)
         return plotter
  

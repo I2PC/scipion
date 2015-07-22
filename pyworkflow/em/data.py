@@ -1525,7 +1525,9 @@ class Movie(Micrograph):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
         Consider compressed Movie files"""
         if not self.isCompressed():
-            return Image.getDim(self)
+            fn = self.getFileName()
+            if fn is not None and exists(fn.replace(':mrc', '')):
+                return ImageHandler().getDimensions(self)
         return None
     
     def hasAlignment(self):
@@ -1535,6 +1537,11 @@ class Movie(Micrograph):
         return self._alignment
     
     def setAlignment(self, alignment):
+        """Alignment are stored as a vector
+        containing x and y coordinates. In this way 1 2 3 4
+        are the data related with 2 frames with shifts (1,2)
+        and (3,4)
+        """
         self._alignment = alignment
     
     

@@ -524,14 +524,19 @@ class Project(object):
         
         return matches                    
         
+    def __cloneProtocol(self, protocol):
+        """ Make a copy of the protocol parameters, not outputs. """
+        newProt = self.newProtocol(protocol.getClass())
+        newProt.copyDefinitionAttributes(protocol)
+        newProt.copyAttributes(protocol, 'hostName', '_useQueue', '_queueParams')
+        return newProt
+    
     def copyProtocol(self, protocol):
         """ Make a copy of the protocol, return a new one with copied values. """
         result = None
         
         if isinstance(protocol, pwprot.Protocol):
-            newProt = self.newProtocol(protocol.getClass())
-            newProt.copyDefinitionAttributes(protocol)
-            result = newProt
+            result = self.__cloneProtocol(protocol)
     
         elif isinstance(protocol, list):
             # Handle the copy of a list of protocols
@@ -539,8 +544,7 @@ class Project(object):
             newDict = {}
                         
             for prot in protocol:
-                newProt = self.newProtocol(prot.getClass())
-                newProt.copyDefinitionAttributes(prot)
+                newProt = self.__cloneProtocol(prot)
                 newDict[prot.getObjId()] = newProt
                 self.saveProtocol(newProt)
                          

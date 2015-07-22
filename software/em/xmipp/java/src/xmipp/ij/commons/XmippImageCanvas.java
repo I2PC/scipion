@@ -29,6 +29,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 		super(imp);
 		addMouseWheelListener(this);
+	
 
 	}
 
@@ -105,14 +106,12 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
         //System.out.println("mouse wheel moved");  // sorry Airen :)
 		int x = e.getX();
 		int y = e.getY();
-
 		int rotation = e.getWheelRotation();
 		if (rotation < 0)
 			zoomIn(x, y);
 		else
 			zoomOut(x, y);
-		if (getMagnification() <= 1.0)
-			imp.repaintWindow();
+		
 
 	}
 
@@ -156,7 +155,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		double currmagnif = getMagnification();
 		Rectangle rect = getSrcRect();
 		imp = xiw.getImagePlusLoader().loadImagePlus();
-                imp.setTitle(xiw.getImagePlusLoader().getName());
+        imp.setTitle(xiw.getImagePlusLoader().getName());
 		ImageWindow iw = (ImageWindow) xiw;
 		iw.setImage(getImage());
 		iw.updateImage(getImage());
