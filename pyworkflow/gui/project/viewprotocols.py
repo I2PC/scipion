@@ -483,6 +483,7 @@ class ProtocolsView(tk.Frame):
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
         self.root.bind("<Control-f>", self._findProtocol)
+        self.root.bind("<Control-a>", self._selectAllProtocols)
         self.__autoRefresh = None
         self.__autoRefreshCounter = 3 # start by 3 secs  
 
@@ -910,6 +911,12 @@ class ProtocolsView(tk.Frame):
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
 
+    def _selectAllProtocols(self, e=None):
+        self._selection.clear()
+        for prot in self.project.getRuns():
+            self._selection.append(prot.getObjId())
+        self._updateSelection()
+        
     def _updateSelection(self):
         self._fillSummary()
         self._fillMethod()

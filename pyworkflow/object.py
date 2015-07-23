@@ -850,7 +850,8 @@ class PointerList(List):
             pointer = Pointer()
             pointer.set(value)
         else:
-            raise Exception("Only subclasses of Object can be added to PointerList")
+            raise Exception("Only subclasses of Object can be added to PointerList\n"
+                            " Passing value: %s, type: %s" % (value, type(value)))
 
         List.append(self, pointer)
 
