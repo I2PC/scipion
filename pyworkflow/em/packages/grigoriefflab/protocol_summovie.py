@@ -135,19 +135,12 @@ class ProtSummovie(ProtProcessMovies):
         else:
             numberOfFramesPerMovie = self.alignFrameRange.get()
         #write dummy auxiliary shift file.
-        #TODO: this should be done properlly when we define how to transfer shift
+        #TODO: this should be done properly when we define how to transfer shift
         #between movies
         shiftFnName= os.path.join(movieFolder,self._getShiftFnName(movieId))
         f=open(shiftFnName,'w')
-        #x shifts
         shift= ("0 " * numberOfFramesPerMovie + "\n" ) *2
-        #for i in range(1,int(numberOfFramesPerMovie)+1):
-        #    f.write("0 ")
-        #f.write("\n")
-        ##y shifts
-        #for i in range(1,int(numberOfFramesPerMovie)+1):
-        #    f.write("0 ")
-        #f.write("\n")
+
         f.write(shift)
         f.close()
 
