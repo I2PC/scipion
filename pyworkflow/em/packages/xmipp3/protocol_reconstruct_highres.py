@@ -719,7 +719,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             md=MetaData(fnAngles)
             doWeightSignificance=self.weightSignificance and md.containsLabel(MDL_WEIGHT_SIGNIFICANT)
             for objId in md:
-                weight=1
+                weight=1.0
                 if self.weightSSNR:
                     aux=md.getValue(MDL_WEIGHT_SSNR,objId)
                     weight*=aux

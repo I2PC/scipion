@@ -369,7 +369,7 @@ env.addPackage('unblur',
                default=False)
 
 env.addPackage('eman',
-               tar='eman2.1.linux64.tgz',
+               tar='eman2.11.linux64.tgz',
                commands=[('./eman2-installer', 
                           'eman2.bashrc')],
                default=False)

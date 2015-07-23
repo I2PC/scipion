@@ -5,6 +5,7 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
+
 import java.awt.Label;
 import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
@@ -13,7 +14,9 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
+
 import javax.swing.SwingUtilities;
+
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
 import xmipp.utils.Params;
 import xmipp.utils.XmippWindowUtil;
@@ -57,7 +60,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		this.params = params;
 		XmippApplication.addInstance(true);
 		initComponents();
-                
+		
 	}
         
     protected void initComponents()
@@ -83,9 +86,9 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	                loadMaskFrame();
 	        }
         }
-        pixelslb = new Label("                                          ");
+        pixelslb = new Label("                                                ");
         add(pixelslb);
-        pack();
+        
     }
 
         @Override
