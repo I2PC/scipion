@@ -140,7 +140,6 @@ class ProtSummovie(ProtProcessMovies):
         shiftFnName= os.path.join(movieFolder,self._getShiftFnName(movieId))
         f=open(shiftFnName,'w')
         shift= ("0 " * numberOfFramesPerMovie + "\n" ) *2
-
         f.write(shift)
         f.close()
 
