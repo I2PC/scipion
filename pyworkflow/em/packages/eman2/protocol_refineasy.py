@@ -220,6 +220,8 @@ at each refinement step. The resolution you specify is a target, not the filter 
         self._createFilenameTemplates()
         self._createIterTemplates(self._getRun())
         if self.doContinue:
+            self.input3DReference.set(None)
+            self.inputParticles.set(None)
             self._insertFunctionStep('createLinkSteps')
             args = self._prepareContinueParams()
         else:
@@ -284,7 +286,6 @@ at each refinement step. The resolution you specify is a target, not the filter 
         vol.copyInfo(partSet)
         
         self._execEmanProcess(numRun, iterN)
-        
         newPartSet = self._createSetOfParticles()
         newPartSet.copyInfo(partSet)
         newPartSet.setAlignment(em.ALIGN_PROJ)
@@ -293,9 +294,9 @@ at each refinement step. The resolution you specify is a target, not the filter 
                              itemDataIterator=self._iterTextFile(iterN))
         
         self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(self.inputParticles, vol)
+        self._defineSourceRelation(self._getInputParticlesPointer(), vol)
         self._defineOutputs(outputParticles=newPartSet)
-        self._defineTransformRelation(self.inputParticles, newPartSet)
+        self._defineTransformRelation(self._getInputParticlesPointer(), newPartSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
@@ -438,15 +439,14 @@ at each refinement step. The resolution you specify is a target, not the filter 
             writeSqliteIterData(partSet, data_sqlite, self._createItemMatrix, self._iterTextFile(it))
         return data_sqlite
     
+    def _getInputParticlesPointer(self):
+        if self.doContinue:
+            return self.continueRun.get().inputParticles
+        else:
+            return self.inputParticles
+    
     def _getInputParticles(self):
-        if self.doContinue and not self.inputParticles:
-            self.inputParticles.set(self.continueRun.get().inputParticles.get())
-        return self.inputParticles.get()
-
-#     def _isPhaseFlipped(self):
-#         if self.doContinue:
-#             self.haveDataBeenPhaseFlipped.set(self.continueRun.get().haveDataBeenPhaseFlipped.get())
-#         return self.haveDataBeenPhaseFlipped.get()
+        return self._getInputParticlesPointer().get()
     
     def _execEmanProcess(self, numRun, iterN):
         from pyworkflow.utils.path import cleanPath
