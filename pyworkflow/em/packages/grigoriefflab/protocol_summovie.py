@@ -35,7 +35,7 @@ from pyworkflow.protocol.params import  (IntParam,
                                          BooleanParam, FloatParam,
                                          LEVEL_ADVANCED)
 from grigoriefflab import SUMMOVIE_PATH
-from pyworkflow.utils.path import createLink, relpath
+from pyworkflow.utils.path import createLink, relpath, removeBaseExt
 
 
 class ProtSummovie(ProtProcessMovies):
@@ -100,6 +100,15 @@ class ProtSummovie(ProtProcessMovies):
 
     def _getMicFnNameFromRun(self, movieId):
         return self._getExtraPath('aligned_sum_%06d.mrc'%movieId)
+
+    def _getNameExt(self, movieName, postFix, ext):
+        if movieName.endswith("bz2"):
+            # removeBaseExt function only eliminate the last extension,
+            # but if files are compressed, we need to eliminate two extensions:
+            # bz2 and its own image extension (e.g: mrcs, em, etc)
+            return removeBaseExt(removeBaseExt(movieName)) + postFix + '.' + ext
+        else:
+            return removeBaseExt(movieName) + postFix + '.' + ext
 
     def _getShiftFnName(self, movieId):
         return 'shifts_%06d.txt'%movieId
@@ -224,7 +233,7 @@ eof
         for movie in self.inputMovies.get():
             mic = Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
-            mic.setFileName(self._getMicFnNameFromRun(movie.getObjId()))
+            mic.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'_aligned', 'mrc')))
             micSet.append(mic)
         self._defineOutputs(outputMicrographs=micSet)
 
