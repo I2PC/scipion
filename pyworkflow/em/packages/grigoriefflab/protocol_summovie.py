@@ -190,7 +190,7 @@ class ProtSummovie(ProtProcessMovies):
         args['movieName'] = movieName
         args['numberOfFramesPerMovie'] = numberOfFramesPerMovie
         ##args['micFnName'] = self._getMicFnName(movieId,movieFolder)
-        args['micFnName'] = relpath(self._getExtraPath(self._getNameExt(movieName,'_aligned', 'mrc')),movieFolder)
+        args['micFnName'] = relpath(self._getExtraPath(self._getNameExt(movieName,'', 'mrc')),movieFolder)
         args['shiftFnName'] = self._getShiftFnName(movieId)
         args['samplingRate'] = self.samplingRate
         args['voltage'] = self.inputMovies.get().getAcquisition().getVoltage()
@@ -234,7 +234,7 @@ eof
         for movie in self.inputMovies.get():
             mic = Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
-            mic.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'_aligned', 'mrc')))
+            mic.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'', 'mrc')))
             micSet.append(mic)
         self._defineOutputs(outputMicrographs=micSet)
 
