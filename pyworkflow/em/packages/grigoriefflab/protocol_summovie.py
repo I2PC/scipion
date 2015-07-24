@@ -189,7 +189,8 @@ class ProtSummovie(ProtProcessMovies):
 
         args['movieName'] = movieName
         args['numberOfFramesPerMovie'] = numberOfFramesPerMovie
-        args['micFnName'] = self._getMicFnName(movieId,movieFolder)
+        ##args['micFnName'] = self._getMicFnName(movieId,movieFolder)
+        args['micFnName'] = relpath(self._getExtraPath(self._getNameExt(movieName,'_aligned', 'mrc')),movieFolder)
         args['shiftFnName'] = self._getShiftFnName(movieId)
         args['samplingRate'] = self.samplingRate
         args['voltage'] = self.inputMovies.get().getAcquisition().getVoltage()
