@@ -204,7 +204,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             psdCorrName = self._getNameExt(movie.getFileName(),'_aligned_corrected', 'psd')
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
-            if self.doSaveMovie:
+            if self.run:
                 alignedMovie.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'_aligned', 'mrcs')))
             ####>>>This is wrong. Save an xmipp metadata
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
@@ -369,6 +369,8 @@ class ProtMovieAlignment(ProtProcessMovies):
                 # Set to Zero for Optical Flow (output movie of dosefgpu)
                 firstFrame = 0
                 lastFrame = 0
+                if doSaveMovie:
+                    command += '--ssc '
             else:
                 program = 'xmipp_movie_optical_alignment_cpu'
                 command = '-i %(movieName)s%(movieSuffix)s ' % locals()
