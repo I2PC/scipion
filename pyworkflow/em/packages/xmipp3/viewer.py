@@ -377,7 +377,13 @@ class XmippViewer(Viewer):
                     micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
                     writeSetOfMicrographs(micSet, micsfn)
                     
-                posDir = obj._getExtraPath()    # extra dir istead of md file for SetOfCoordinates
+                if issubclass(cls, XmippProtParticlePicking):
+                    posDir = obj._getExtraPath()    # extra dir istead of md file for SetOfCoordinates
+                else:
+                    coordsSet = obj.getCoords()
+                    posDir = self._getTmpPath(coordsSet.getName())
+                    makePath(posDir)
+                    writeSetOfCoordinates(posDir, coordsSet)# always write set of coordinates instead of reading pos dir, that could have changed
                 
                 memory = '%dg'%obj.memory.get() if hasattr(obj, 'memory') else '2g'
                 launchSupervisedPickerGUI(micsfn, posDir, obj, memory=memory)
