@@ -54,9 +54,9 @@ marginal likelihood.
     def _insertContinueStep(self):
         if self.doContinue:
             continueRun = self.continueRun.get()
-            self.inputParticles.set(continueRun.inputParticles.get())
-            self.symmetry.set(continueRun.symmetry.get())
+            self.inputParticles.set(None)
             self.input3DReference.set(None)
+            self.symmetry.set(continueRun.symmetry.get())
             self.numberOfRef = continueRun.numberOfClasses.get()
             if self.continueIter.get() == 'last':
                 self.initIter = continueRun._getCurrIter()
@@ -179,7 +179,7 @@ marginal likelihood.
     def reconstructVolumeStep(self, iterN, ref, paramsDic):
         """Reconstruct a volume from a SetOfParticles with its current parameters refined
         """
-        imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
         initParticle = 1
         finalParticle = imgSet.getSize()
         iterDir = self._iterWorkingDir(iterN)
@@ -200,7 +200,7 @@ marginal likelihood.
         self.runJob('', args % params3DR, cwd=iterDir)
     
     def calculateOCCStep(self, iterN, isLastIterStep):
-        imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
         numberOfClasses = self.numberOfRef
         cpusRef = self._cpusPerClass(self.numberOfBlocks, numberOfClasses)
         iterDir = self._iterWorkingDir(iterN)
@@ -231,7 +231,7 @@ marginal likelihood.
     def createOutputStep(self):
         from convert import readSetOfClasses3D
         numberOfClasses = self.numberOfRef
-        imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
         volumes = self._createSetOfVolumes()
         volumes.setSamplingRate(imgSet.getSamplingRate())
         
@@ -255,8 +255,8 @@ marginal likelihood.
         self._defineOutputs(outputVolumes=volumes)
         #TODO: save alignment
 
-        self._defineSourceRelation(self.inputParticles, classes)
-        self._defineSourceRelation(self.inputParticles, volumes)
+        self._defineSourceRelation(self._getInputParticlesPointer(), classes)
+        self._defineSourceRelation(self._getInputParticlesPointer(), volumes)
         if not self.doContinue:
             self._defineSourceRelation(self.input3DReference, classes)
             self._defineSourceRelation(self.input3DReference, volumes)
