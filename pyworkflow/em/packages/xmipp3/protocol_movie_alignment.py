@@ -291,6 +291,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             
         # For simple average execution
         if alMethod == AL_AVERAGE:
+            doSaveMovie = self.doSaveMovie.get()#used later
             command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s' % locals()
             command += ' --nst %d --ned %d --simpleAverage --psd' % (firstFrame, lastFrame)
             try:
