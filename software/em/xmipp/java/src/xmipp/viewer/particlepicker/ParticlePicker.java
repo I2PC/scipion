@@ -7,15 +7,13 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.swing.JFrame;
-
+import xmipp.ij.commons.XmippImageJ;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -41,20 +39,9 @@ public abstract class ParticlePicker {
     protected String selfile;
     
     protected String configfile;
-    public static final String duplicateFilter = "Duplicate";
-    public static final String bandPassFilter = "Bandpass Filter...";
-    public static final String anisotropicDiffFilter = "Anisotropic Diffusion...";
-    public static final String meanShiftFilter = "Mean Shift";
-    public static final String substractBackgroundFilter = "Subtract Background...";
-    public static final String gaussianBlurFilter = "Gaussian Blur...";
-    public static final String brightnessContrastFilter = "Brightness/Contrast...";
-    public static final String invertLUTFilter = "Invert LUT";
-    public static final String enhanceContrastFilter = "Enhance Contrast...";
-    protected final List<String> availableFilters = Arrays.asList(new String[]{duplicateFilter, bandPassFilter, anisotropicDiffFilter, meanShiftFilter,
-                   substractBackgroundFilter, gaussianBlurFilter, brightnessContrastFilter, invertLUTFilter, enhanceContrastFilter});
 
     
-    static String xmippsmoothfilter = "Xmipp Smooth Filter";
+    public static final String xmippsmoothfilter = "Xmipp Smooth Filter";
     public static final String particlesAutoBlock = "particles_auto";
 
     protected Color color;
@@ -175,7 +162,8 @@ public abstract class ParticlePicker {
             color = getNextColor();
             size = getDefaultSize();
             setMicrograph(getMicrographs().get(0));
-            filters.add(new IJCommand(gaussianBlurFilter, "sigma=2"));
+            filters.add(new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma=2"));
+            filters.add(new IJCommand(XmippImageJ.enhanceContrastFilter, "saturated=0.4"));
             saveConfig();
             return;
         }
@@ -533,7 +521,7 @@ public abstract class ParticlePicker {
 
     public void fillParticlesMdFromRelionFile(String file, Micrograph m, MetaData md) {
          MetaData relionmd = new MetaData(file);
-         if(!md.containsLabel(MDLabel.RLN_IMAGE_COORD_X))
+         if(!relionmd.containsLabel(MDLabel.RLN_IMAGE_COORD_X))
          	throw new IllegalArgumentException(String.format("File %s format is not supported", file));
          long[] ids = relionmd.findObjects();
          int xcoor, ycoor;

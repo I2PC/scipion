@@ -88,6 +88,12 @@ class ProtExtractCoords(ProtParticlePicking):
         
         for mic in inputMics:
             micKey = mic.getMicName() if hasMicName else mic.getObjId()
+            if micKey in micDict:
+                print ">>> ERROR: micrograph key %s is duplicated!!!" % micKey
+                print "           Used in micrographs:"
+                print "           - %s" % micDict[micKey].getLocation()
+                print "           - %s" % mic.getLocation()
+                raise Exception("Micrograph key %s is duplicated!!!" % micKey)
             micDict[micKey] = mic.clone()
             
         for particle in inputParticles:
