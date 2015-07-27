@@ -138,7 +138,8 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtConvertToPseudoAtoms", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtDimredNMA", "text": "default"},
-                {"tag": "protocol", "value": "AtsasProtConvertPdbToSAXS", "text": "default"}
+                {"tag": "protocol", "value": "AtsasProtConvertPdbToSAXS", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtVolumeStrain", "text": "default"}
             ]}
          ]},     
         {"tag": "protocol_group", "text": "Reconstruct", "openItem": "False", "children": [
