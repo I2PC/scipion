@@ -139,7 +139,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
             loader.setGeometry(data.getGeometry(data.ids[index]));
         if (data.getNormalized())
             loader.setNormalize(normalize_min, normalize_max);
-        ImagesWindowFactory.openXmippImageWindow(data.window, loader, data.parameters);
+        ImagesWindowFactory.openXmippImageWindow(loader, data.parameters);
     }
 
 
