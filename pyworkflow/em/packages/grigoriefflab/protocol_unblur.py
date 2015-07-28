@@ -36,7 +36,7 @@ from pyworkflow.protocol.params import  (IntParam,
                                          LEVEL_ADVANCED)
 #from pyworkflow.utils.properties import Message
 from grigoriefflab import UNBLUR_PATH
-from pyworkflow.utils.path import createLink, relpath
+from pyworkflow.utils.path import createLink, relpath, removeBaseExt
 
 
 class ProtUnblur(ProtProcessMovies):
@@ -153,6 +153,14 @@ class ProtUnblur(ProtProcessMovies):
         """I really do not understand how I end writing this function ROB"""
         return True
 
+    def _getNameExt(self, movieName, postFix, ext):
+        if movieName.endswith("bz2"):
+            # removeBaseExt function only eliminate the last extension,
+            # but if files are compressed, we need to eliminate two extensions:
+            # bz2 and its own image extension (e.g: mrcs, em, etc)
+            return removeBaseExt(removeBaseExt(movieName)) + postFix + '.' + ext
+        else:
+            return removeBaseExt(movieName) + postFix + '.' + ext
     def _processMovie(self, movieId, movieName, movieFolder):
         """call program here"""
         # if not mrc convert format to mrc
@@ -204,7 +212,8 @@ class ProtUnblur(ProtProcessMovies):
 
         args['movieName'] = movieName
         args['numberOfFramesPerMovie'] = numberOfFramesPerMovie
-        args['micFnName'] = self._getMicFnName(movieId,movieFolder)
+        args['micFnName'] = relpath(self._getExtraPath(self._getNameExt(movieName,'', 'mrc')),movieFolder)
+        #args['micFnName'] = self._getMicFnName(movieId,movieFolder)
         args['shiftFnName'] = self._getShiftFnName(movieId)
         args['samplingRate'] = self.samplingRate
         args['voltage'] = self.inputMovies.get().getAcquisition().getVoltage()
@@ -269,7 +278,9 @@ eof
         for movie in self.inputMovies.get():
             mic = Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
-            mic.setFileName(self._getMicFnNameFromRun(movie.getObjId()))
+            #mic.setFileName(self._getMicFnNameFromRun(movie.getObjId()))
+            mic.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'', 'mrc')))
+
             micSet.append(mic)
         self._defineOutputs(outputMicrographs=micSet)
 
