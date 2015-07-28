@@ -39,8 +39,6 @@ public abstract class ParticlePicker {
     protected String selfile;
     
     protected String configfile;
-//    protected final List<String> availableFilters = Arrays.asList(new String[]{duplicateFilter, bandPassFilter, anisotropicDiffFilter, meanShiftFilter,
-//                   substractBackgroundFilter, gaussianBlurFilter, brightnessContrastFilter, invertLUTFilter, enhanceContrastFilter});
 
     
     public static final String xmippsmoothfilter = "Xmipp Smooth Filter";
@@ -165,6 +163,7 @@ public abstract class ParticlePicker {
             size = getDefaultSize();
             setMicrograph(getMicrographs().get(0));
             filters.add(new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma=2"));
+            filters.add(new IJCommand(XmippImageJ.enhanceContrastFilter, "saturated=0.4"));
             saveConfig();
             return;
         }
@@ -522,7 +521,7 @@ public abstract class ParticlePicker {
 
     public void fillParticlesMdFromRelionFile(String file, Micrograph m, MetaData md) {
          MetaData relionmd = new MetaData(file);
-         if(!md.containsLabel(MDLabel.RLN_IMAGE_COORD_X))
+         if(!relionmd.containsLabel(MDLabel.RLN_IMAGE_COORD_X))
          	throw new IllegalArgumentException(String.format("File %s format is not supported", file));
          long[] ids = relionmd.findObjects();
          int xcoor, ycoor;
