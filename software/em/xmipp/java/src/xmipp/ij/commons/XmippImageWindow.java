@@ -226,11 +226,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
         return params;
     }
 
-    public void setParams(Params params)
-    {
-        this.params = params;
-    }
-
 
     protected void loadMaskFrame()
     {

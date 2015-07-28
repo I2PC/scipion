@@ -12,7 +12,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.JFrame;
+
+import xmipp.ij.commons.IJCommand;
 import xmipp.ij.commons.XmippImageJ;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
@@ -156,45 +159,51 @@ public abstract class ParticlePicker {
 
     public void loadConfig() {
 
-        String file = configfile;
-        filters.clear();
-        if (!new File(file).exists()) {
-            color = getNextColor();
-            size = getDefaultSize();
-            setMicrograph(getMicrographs().get(0));
-            filters.add(new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma=2"));
-            filters.add(new IJCommand(XmippImageJ.enhanceContrastFilter, "saturated=0.4"));
-            saveConfig();
-            return;
-        }
-
-        String mname;
-        int rgb;
-        try {
-            MetaData md = new MetaData("properties@" + file);
-            for (long id : md.findObjects()) {
-
-                mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
-                setMicrograph(getMicrograph(mname));
-                rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
-                color = new Color(rgb);
-                size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
+    	try {
+	        String file = configfile;
+	        filters.clear();
+	        boolean existsConfig = new File(file).exists();
+	        if (!existsConfig) {
+	            color = getNextColor();
+	            size = getDefaultSize();
+	            setMicrograph(getMicrographs().get(0));
+	        }
+	        else
+	        {
+		        String mname;
+		        int rgb;
+	            MetaData md = new MetaData("properties@" + file);
+	            for (long id : md.findObjects()) {
+	
+	                mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+	                setMicrograph(getMicrograph(mname));
+	                rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
+	                color = new Color(rgb);
+	                size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
+	            }
+	            md.destroy();
+	            String command, options;
+	            if (MetaData.containsBlock(file, "filters")) {
+	                md = new MetaData("filters@" + file);
+	                long[] ids = md.findObjects();
+	                for (long id : ids) {
+	                    command = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD, id));
+	                    options = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, id));
+	                    if (options.equals("NULL")) {
+	                        options = "";
+	                    }
+	                    filters.add(new IJCommand(command, options));
+	                }
+	                md.destroy();
+	            }
+	        }
+            if (!existsConfig || (existsConfig && !MetaData.containsBlock(file, "filters")))
+            {
+            	filters.add(new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma=2"));
+            	filters.add(new IJCommand(XmippImageJ.enhanceContrastFilter, "saturated=0.4"));
+            	saveConfig();
             }
-            md.destroy();
-            String command, options;
-            if (MetaData.containsBlock(file, "filters")) {
-                md = new MetaData("filters@" + file);
-                long[] ids = md.findObjects();
-                for (long id : ids) {
-                    command = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD, id));
-                    options = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, id));
-                    if (options.equals("NULL")) {
-                        options = "";
-                    }
-                    filters.add(new IJCommand(command, options));
-                }
-                md.destroy();
-            }
+            
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, e.getMessage(), e);
             throw new IllegalArgumentException(e.getMessage());
