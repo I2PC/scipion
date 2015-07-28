@@ -27,7 +27,7 @@
  */
 /** Get the image statistics of a metadata.
  * Note that the mean and stddev are images, not values.*/
-void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, MDLabel image_label=MDL_IMAGE);
+void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, bool wrap, MDLabel image_label=MDL_IMAGE);
 
 
 /** Get the average of a Metadata applying the header.

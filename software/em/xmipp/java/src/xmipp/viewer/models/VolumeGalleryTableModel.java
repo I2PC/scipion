@@ -118,7 +118,7 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 			int index = getIndex(row, col);
 			//ImagePlus imp = XmippImageConverter.convertToImagePlus(volume, ImageGeneric.FIRST_IMAGE, index + 1);
 			ImagePlusLoader loader = new ImagePlusLoader(index + 1, volume, data.inverty);
-			ImagesWindowFactory.openXmippImageWindow(data.window, loader, data.parameters);
+			ImagesWindowFactory.openXmippImageWindow(loader, data.parameters);
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
