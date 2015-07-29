@@ -7,12 +7,13 @@ import java.util.logging.Level;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import xmipp.ij.commons.IJCommand;
+import xmipp.ij.commons.XmippImageJ;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.Format;
-import xmipp.viewer.particlepicker.IJCommand;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.ParticlePickerParams;
@@ -33,7 +34,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
-			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
+			filters.add(new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma=2"));
 	}
 	
 	public ExtractParticlePicker(String block, String selfile, int size, Mode mode, ParticlePickerParams params)
@@ -42,7 +43,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
-			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
+			filters.add(new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma=2"));
 	}
 	
 	

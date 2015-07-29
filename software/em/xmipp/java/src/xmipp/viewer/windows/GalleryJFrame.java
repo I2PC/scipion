@@ -1590,7 +1590,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			
 			setItemEnabled(DISPLAY_APPLYGEO, data.containsGeometryInfo());
 			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo());
-			setItemSelected(DISPLAY_WRAP, data.containsGeometryInfo() && data.getWrap());
+			setItemSelected(DISPLAY_WRAP, data.containsGeometryInfo() && data.isWrap());
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo());
                         setItemSelected(DISPLAY_INVERTY, data.isInvertY());
 			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
@@ -1735,7 +1735,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					{
                         XmippUtil.showImageJ(Tool.VIEWER);
 						ImagePlusLoader loader = gallery.getImageLoader();
-						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, data.parameters);
+						ImagesWindowFactory.openXmippImageWindow(loader, data.parameters);
 					}
 					catch (Exception e1)
 					{

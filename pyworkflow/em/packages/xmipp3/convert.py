@@ -667,12 +667,12 @@ def writeSetOfCoordinates(posDir, coordSet):
     
     md.write('properties@%s' % configFn)
 
-    # Write filters block
-    md = xmipp.MetaData()    
-    objId = md.addObject()
-    md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
-    md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
-    md.write('filters@%s' % configFn, xmipp.MD_APPEND)
+#     # Write filters block
+#     md = xmipp.MetaData()    
+#     objId = md.addObject()
+#     md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
+#     md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
+#     md.write('filters@%s' % configFn, xmipp.MD_APPEND)
     
     return posDict.values()
 

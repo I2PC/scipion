@@ -84,7 +84,7 @@ class XmippViewer(Viewer):
                 XmippParticlePickingAutomatic, 
                 XmippProtExtractParticlesPairs, 
                 XmippProtKerdensom, 
-                XmippProtParticlePicking, 
+                ProtParticlePicking, 
                 XmippProtParticlePickingPairs,
                 XmippProtProjectionOutliers, 
                 XmippProtRotSpectra, 
@@ -341,21 +341,6 @@ class XmippViewer(Viewer):
                                                       VISIBLE: labels, 
                                                       SORT_BY: '_xmipp_zScoreResCov desc', RENDER:labelRender}))
             
-        elif issubclass(cls, XmippProtParticlePicking):
-            if obj.getOutputsSize() >= 1:
-                #self._visualize(obj.getCoords())
-                micSet = obj.getInputMicrographs()
-                mdFn = getattr(micSet, '_xmippMd', None)
-                if mdFn:
-                    micsfn = mdFn.get()
-                else:  # happens if protocol is not an xmipp one
-                    micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
-                    writeSetOfMicrographs(micSet, micsfn)
-                    
-                posDir = obj._getExtraPath()    # extra dir istead of md file for SetOfCoordinates
-                memory = '%dg'%obj.memory.get(), 
-                launchSupervisedPickerGUI(micsfn, posDir, obj, memory=memory)
-            
         elif issubclass(cls, XmippParticlePickingAutomatic):
             micSet = obj.getInputMicrographs()
             mdFn = getattr(micSet, '_xmippMd', None)
@@ -368,7 +353,7 @@ class XmippViewer(Viewer):
             posDir = obj._getExtraPath()  
             memory = '%dg'%obj.memory.get(), 
             launchSupervisedPickerGUI(micsfn, posDir, obj, mode='review', memory=memory)
-
+            
         elif issubclass(cls, XmippProtParticlePickingPairs):
             tmpDir = self._getTmpPath(obj.getName()) 
             makePath(tmpDir)
@@ -380,7 +365,29 @@ class XmippViewer(Viewer):
             extraDir = obj._getExtraPath()
             memory = '%dg'%obj.memory.get(), 
             launchTiltPairPickerGUI(mdFn, extraDir, obj, memory=memory)
-
+            
+        elif issubclass(cls, ProtParticlePicking):
+            if obj.getOutputsSize() >= 1:
+                #self._visualize(obj.getCoords())
+                micSet = obj.getInputMicrographs()
+                mdFn = getattr(micSet, '_xmippMd', None)
+                if mdFn:
+                    micsfn = mdFn.get()
+                else:  # happens if protocol is not an xmipp one
+                    micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
+                    writeSetOfMicrographs(micSet, micsfn)
+                    
+                if issubclass(cls, XmippProtParticlePicking):
+                    posDir = obj._getExtraPath()    # extra dir istead of md file for SetOfCoordinates
+                else:
+                    coordsSet = obj.getCoords()
+                    posDir = self._getTmpPath(coordsSet.getName())
+                    makePath(posDir)
+                    writeSetOfCoordinates(posDir, coordsSet)# always write set of coordinates instead of reading pos dir, that could have changed
+                
+                memory = '%dg'%obj.memory.get() if hasattr(obj, 'memory') else '2g'
+                launchSupervisedPickerGUI(micsfn, posDir, obj, memory=memory)
+            
         elif issubclass(cls, ProtMovieAlignment):
             outputMics = obj.outputMicrographs
             plotLabels = 'psdCorr._filename plotPolar._filename plotCart._filename'

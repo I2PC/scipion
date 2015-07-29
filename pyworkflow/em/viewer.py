@@ -406,7 +406,8 @@ class ChimeraAngDistClient(ChimeraClient):
             tilt = mdAngDist.getValue(angleTiltLabel, id)
             psi = mdAngDist.getValue(anglePsiLabel, id) if anglePsiLabel else 0
             weight = mdAngDist.getValue(md.MDL_WEIGHT, id)
-            weight = (weight - minweight)/interval + 0.5#add 0.5 to avoid cero weight
+            weight = 0 if interval == 0 else (weight - minweight)/interval#avoid cero division
+            weight = weight + 0.5#add 0.5 to avoid cero weight
             x, y, z = xmipp.Euler_direction(rot, tilt, psi)
             radius = weight * self.spheresMaxRadius
 
