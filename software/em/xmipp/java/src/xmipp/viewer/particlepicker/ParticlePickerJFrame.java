@@ -4,6 +4,7 @@ import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.io.SaveDialog;
 import ij.plugin.frame.Recorder;
 
 import java.awt.Color;
@@ -959,31 +960,30 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return map;
 	}
         
-        protected void executeScipionSaveAndExit()
-        {
-            
-            getCanvas().setEnabled(false);
-            XmippWindowUtil.blockGUI(ParticlePickerJFrame.this, "Creating set ...");
-            new Thread(new Runnable() {
+    protected void executeScipionSaveAndExit()
+    {
+        getCanvas().setEnabled(false);
+        XmippWindowUtil.blockGUI(ParticlePickerJFrame.this, "Creating set ...");
+        new Thread(new Runnable() {
 
-                @Override
-                public void run() {
+            @Override
+            public void run() {
 
-                    try {
-                        String cmd = String.format("run function registerCoords '%s'", getParticlePicker().getOutputDir());
-                        XmippWindowUtil.runCommand(cmd, getParticlePicker().getParams().port);
-                        XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
-                        getCanvas().setEnabled(true);
-                        
-                        close();
+                try {
+                    String cmd = String.format("run function registerCoords '%s'", getParticlePicker().getOutputDir());
+                    XmippWindowUtil.runCommand(cmd, getParticlePicker().getParams().port);
+                    XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
+                    getCanvas().setEnabled(true);
+                    
+                    close();
 
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        throw new IllegalArgumentException(ex.getMessage());
-                    }
-
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    throw new IllegalArgumentException(ex.getMessage());
                 }
-            }).start();
-        }
+
+            }
+        }).start();
+    }
 
 }

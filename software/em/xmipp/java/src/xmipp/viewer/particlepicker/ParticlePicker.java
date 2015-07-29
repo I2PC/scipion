@@ -162,33 +162,40 @@ public abstract class ParticlePicker {
     	try {
 	        String file = configfile;
 	        filters.clear();
+	        Micrograph m = getMicrographs().get(0);
 	        boolean existsConfig = new File(file).exists();
+	        color = getNextColor();
 	        if (!existsConfig) {
-	            color = getNextColor();
 	            size = getDefaultSize();
-	            setMicrograph(getMicrographs().get(0));
+	            setMicrograph(m);
+	            
 	        }
 	        else
 	        {
 		        String mname;
 		        int rgb;
 	            MetaData md = new MetaData("properties@" + file);
-	            for (long id : md.findObjects()) {
-	
+	            long id = md.firstObject();
+	            if(md.containsLabel(MDLabel.MDL_MICROGRAPH))
+	            {
 	                mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
-	                setMicrograph(getMicrograph(mname));
-	                rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
-	                color = new Color(rgb);
-	                size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
+	                m = getMicrograph(mname);
 	            }
+                setMicrograph(m);
+                if(md.containsLabel(MDLabel.MDL_COLOR))
+                {
+                	rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
+                	color = new Color(rgb);
+                }
+                size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
 	            md.destroy();
 	            String command, options;
 	            if (MetaData.containsBlock(file, "filters")) {
 	                md = new MetaData("filters@" + file);
 	                long[] ids = md.findObjects();
-	                for (long id : ids) {
-	                    command = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD, id));
-	                    options = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, id));
+	                for (long filterid : ids) {
+	                    command = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD, filterid));
+	                    options = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, filterid));
 	                    if (options.equals("NULL")) {
 	                        options = "";
 	                    }
@@ -241,7 +248,8 @@ public abstract class ParticlePicker {
     }
 
     protected void saveConfig(MetaData md, long id) {
-        md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
+        Micrograph m = getMicrograph();
+        md.setValueString(MDLabel.MDL_MICROGRAPH, m.getName(), id);
         md.setValueInt(MDLabel.MDL_COLOR, getColor().getRGB(), id);
         md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, getSize(), id);
     }
