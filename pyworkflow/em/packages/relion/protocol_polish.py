@@ -192,9 +192,11 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     def createOutputStep(self):
         from pyworkflow.em import ALIGN_PROJ
         from pyworkflow.em.packages.relion.convert import readSetOfParticles
-        imgSet = self.refineRun.get()._getInputParticles()
+        refineRun = self.refineRun.get()
+        
+        imgSet = refineRun._getInputParticles()
         vol = Volume()
-        vol.setFileName(self._getFileName('volume_shiny', iter=self.refineRun.get()._lastIter()))
+        vol.setFileName(self._getFileName('volume_shiny', iter=refineRun._lastIter()))
         vol.setSamplingRate(imgSet.getSamplingRate())
         
         shinyPartSet = self._createSetOfParticles()
