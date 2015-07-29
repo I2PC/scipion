@@ -53,7 +53,7 @@ public abstract class ParticlePicker {
     public static final int sizemax = 2000;
     protected String block;
 
-    protected static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW};
+    protected static Color[] colors = new Color[]{Color.GREEN, Color.BLUE, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW};
 
     protected static int nextcolor;
     public final HashMap<Format, String> emextensions;

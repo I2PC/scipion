@@ -103,7 +103,21 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
             stepId = self._insertFunctionStep('autopickMicrographStep', mic.getFileName(), prerequisites=[copyId])
             deps.append(stepId)
                     
-        self._insertFunctionStep('_createOutput',self._getExtraPath(), prerequisites=deps)
+        self._insertFunctionStep('_createAutomaticOutput',self._getExtraPath(), prerequisites=deps)
+        
+    def _createAutomaticOutput(self, outputDir):
+        micSet = self.getInputMicrographs()
+        outputName = 'outputCoordinates'
+        coordSet = self._createSetOfCoordinates(micSet)
+        self.readSetOfCoordinates(outputDir, coordSet)
+        coordSet.setObjComment(self.getSummary(coordSet))
+        outputs = {outputName: coordSet}
+        for key, output in self.iterOutputAttributes(EMObject):
+            self._deleteChild(key, output)
+        self._insertChild(outputName, coordSet)
+            
+        self._storeAttributes(self._outputs, outputs)
+        self._defineSourceRelation(micSet, coordSet)
         
     
     #--------------------------- STEPS functions --------------------------------------------
