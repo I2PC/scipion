@@ -658,7 +658,6 @@ class ProtFrealignBase(EMProtocol):
         param = {}
 
         iterDir = self._iterWorkingDir(iterN)
-
         iniPart, lastPart = self._initFinalBlockParticles(block)
         prevIter = iterN - 1
         param['inputParFn'] = self._getBaseName('input_par_block', block= block, iter=iterN, prevIter=prevIter)
@@ -1209,8 +1208,12 @@ eot
             moveFile(tmpFile, stackFn)
     
     def _getMicIdList(self):
-        if self._micList == []:
+        imgSet = self._getInputParticles()
+        imgHasmicId = imgSet.getFirstItem().hasMicId()
+        if self._micList == [] and imgHasmicId:
             self._micList = self._getInputParticles().aggregate(['count'],'_micId',['_micId'])
+        elif not imgHasmicId:
+            self._micList = [{'count' : self._getInputParticles().getSize(),'_micId' : 0}]
         return self._micList
     
     def _getMicCounter(self):
@@ -1221,12 +1224,6 @@ eot
             micIdMap[mic['_micId']]=counter
             counter = counter +1
         return micIdMap
-    
-    def _defNumberOfCPUs(self):
-        self._micList = []
-        cpus = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
-        numberOfMics = len(self._getMicIdList())
-        return min(cpus, numberOfMics)
 
     def _getInputParticlesPointer(self):
         if self.doContinue and self.inputParticles is None:
@@ -1235,4 +1232,11 @@ eot
     
     def _getInputParticles(self):
         return self._getInputParticlesPointer().get()
-
+    
+    def _defNumberOfCPUs(self):
+        self._micList = []
+        cpus = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
+        numberOfMics = len(self._getMicIdList())
+        return min(cpus, numberOfMics)
+    
+    
