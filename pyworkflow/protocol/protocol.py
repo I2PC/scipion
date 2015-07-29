@@ -839,6 +839,8 @@ class Protocol(Step):
             rCreator = r['parent_id']
             rParent = r['object_parent_id']
             rChild = r['object_child_id']
+            rParentExt = r['object_parent_extended']
+            rChildExt = r['object_child_extended']
             
             if rParent in copyDict:
                 rParent = copyDict.get(rParent).getObjId()
@@ -846,7 +848,8 @@ class Protocol(Step):
             if rChild in copyDict:
                 rChild = copyDict.get(rChild).getObjId()
             
-            self.mapper.insertRelationData(rName, rCreator, rParent, rChild)
+            self.mapper.insertRelationData(rName, rCreator, rParent, rChild,
+                                           rParentExt, rChildExt)
         
     def getRelations(self):
         """ Return the relations created by this protocol. """
@@ -854,7 +857,19 @@ class Protocol(Step):
     
     def _defineRelation(self, relName, parentObj, childObj):
         """ Insert a new relation in the mapper using self as creator. """
-        self.mapper.insertRelation(relName, self, parentObj, childObj)
+        parentExt = None
+        childExt = None
+        
+        if parentObj.isPointer():
+            parentExt = parentObj.getExtended()
+            parentObj = parentObj.getObjValue()
+            
+        if childObj.isPointer():
+            childExt = childObj.getExtended()
+            childObj = childObj.getObjValue()
+            
+        self.mapper.insertRelation(relName, self, parentObj, childObj,
+                                   parentExt, childExt)
         
     def makePathsAndClean(self):
         """ Create the necessary path or clean
@@ -866,6 +881,9 @@ class Protocol(Step):
         if self.runMode == MODE_RESTART:
             cleanPath(*paths)
             self.__deleteOutputs()
+            # Delete the relations created by this protocol
+            # (delete this in both project and protocol db)
+            self.mapper.deleteRelations(self)
         # Create workingDir, extra and tmp paths
         makePath(*paths)
         
@@ -1489,7 +1507,8 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
         
     from pyworkflow.project import Project
     project = Project(projectPath)
-    project.load(dbPath=os.path.join(projectPath, protDbPath), chdir=chdir)     
+    project.load(dbPath=os.path.join(projectPath, protDbPath), chdir=chdir,
+                 loadAllConfig=False)     
     protocol = project.getProtocol(protId)
     return protocol
 

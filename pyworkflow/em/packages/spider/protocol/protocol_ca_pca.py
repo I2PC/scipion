@@ -168,8 +168,8 @@ class SpiderProtCAPCA(SpiderProtocol):
         seq.filename.set(self._getFileName('seqFile'))
         
         self._defineOutputs(imcFile=imc, seqFile=seq)        
-        self._defineSourceRelation(self.inputParticles.get(), imc)
-        self._defineSourceRelation(self.inputParticles.get(), seq)
+        self._defineSourceRelation(self.inputParticles, imc)
+        self._defineSourceRelation(self.inputParticles, seq)
         
             
     #--------------------------- INFO functions -------------------------------------------- 

@@ -437,7 +437,7 @@ class XmippProtRansac(ProtInitialVolume):
 #             volumesSet.update(vol)
         
         self._defineOutputs(outputVolumes=volumesSet)
-        self._defineSourceRelation(inputSet, volumesSet)
+        self._defineSourceRelation(self.inputSet, volumesSet)
         self._storeSummaryInfo(self.numVolumes.get())
     
     #--------------------------- INFO functions --------------------------------------------

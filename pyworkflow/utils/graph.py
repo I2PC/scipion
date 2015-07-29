@@ -122,6 +122,10 @@ class Graph(object):
         
         return node
     
+    def aliasNode(self, node, aliasName):
+        """ Register an alias name for the node. """
+        self._nodesDict[aliasName] = node
+    
     def getNode(self, nodeName):
         return self._nodesDict.get(nodeName, None)
     
