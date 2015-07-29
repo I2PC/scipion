@@ -38,7 +38,6 @@ import javax.vecmath.Color3f;
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
-import xmipp.viewer.particlepicker.IJCommand;
 
 /**
  * 
@@ -47,6 +46,7 @@ import xmipp.viewer.particlepicker.IJCommand;
 public class XmippMenuBar extends MenuBar
 {
 
+	protected final XmippIJWindow xw;
 	protected Menu filemn;
 	protected Menu imagemn;
 	protected Menu advancedmn;
@@ -65,7 +65,6 @@ public class XmippMenuBar extends MenuBar
 	protected Menu profilemn;
 	protected CheckboxMenuItem pollmi;
 	protected Object timer;
-	protected final XmippIJWindow xw;
 	protected PollTimer polltimer;
 	protected MenuItem refreshmi;
 	protected CheckboxMenuItem wrapmi;
@@ -79,7 +78,7 @@ public class XmippMenuBar extends MenuBar
 	protected CheckboxMenuItem activemi;
 	protected String command;
 	protected List<IJCommand> filters;
-        
+	protected ImagePlusLoader iploader;
 
 	enum IJRequirement
 	{
@@ -91,6 +90,7 @@ public class XmippMenuBar extends MenuBar
 	{
 		filters = new ArrayList<IJCommand>();
 		this.xw = xw;
+		this.iploader = xw.getImagePlusLoader();
 		// menubar menus
 		filemn = new Menu("File");
 		imagemn = new Menu("Image");
@@ -113,7 +113,7 @@ public class XmippMenuBar extends MenuBar
 			{
 				try
 				{
-					if(XmippMenuBar.this.xw.getImagePlusLoader().existsFile())
+					if(XmippMenuBar.this.iploader.existsFile())
 						XmippMenuBar.this.xw.saveData();
 					else
 						XmippMenuBar.this.saveAs();
@@ -147,7 +147,7 @@ public class XmippMenuBar extends MenuBar
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				ImagePlus imp = XmippMenuBar.this.xw.getImagePlusLoader().getImagePlus();
+				ImagePlus imp = XmippMenuBar.this.iploader.getImagePlus();
 				if (imp.getImageStackSize() == 1)
 					XmippDialog.showInfo(null, "Only for Stack");
 				else
@@ -159,7 +159,7 @@ public class XmippMenuBar extends MenuBar
 		addIJMenuItem(filemn, "Open with Volume Viewer/3D Slicer", "Volume Viewer", IJRequirement.VOLUME);
 		addIJMenuItem(filemn, "Open with VolumeJ", "VolumeJ ", IJRequirement.VOLUME);
 		refreshmi = new MenuItem("Refresh");
-		refreshmi.setEnabled(xw.getImagePlusLoader().allowsPoll());
+		refreshmi.setEnabled(iploader.allowsPoll());
 		refreshmi.setShortcut(new MenuShortcut(KeyEvent.VK_F5));
 		refreshmi.addActionListener(new ActionListener()
 		{
@@ -173,7 +173,7 @@ public class XmippMenuBar extends MenuBar
 		});
 
 		pollmi = new CheckboxMenuItem("Poll");
-		pollmi.setEnabled(xw.getImagePlusLoader().allowsPoll());
+		pollmi.setEnabled(iploader.allowsPoll());
 		pollmi.addItemListener(new ItemListener()
 		{
 
@@ -189,8 +189,8 @@ public class XmippMenuBar extends MenuBar
 		});
 		
 		ugmi = new CheckboxMenuItem("Use Geometry");
-		ugmi.setEnabled(xw.getImagePlusLoader().hasGeometry());
-		ugmi.setState(xw.getImagePlusLoader().getUseGeometry());
+		ugmi.setEnabled(iploader.hasGeometry());
+		ugmi.setState(iploader.getUseGeometry());
 		ugmi.addItemListener(new ItemListener()
 		{
 
@@ -205,8 +205,8 @@ public class XmippMenuBar extends MenuBar
 
 		
 		wrapmi = new CheckboxMenuItem("Wrap");
-		wrapmi.setEnabled(xw.getImagePlusLoader().hasGeometry());
-		wrapmi.setState(xw.getImagePlusLoader().isWrap());
+		wrapmi.setEnabled(iploader.hasGeometry());
+		wrapmi.setState(iploader.isWrap());
 		wrapmi.addItemListener(new ItemListener()
 		{
 
@@ -377,8 +377,8 @@ public class XmippMenuBar extends MenuBar
 			}
 		});
 		addFilterAppliedListener();
-		ImagePlus imp = xw.getImagePlusLoader().getImagePlus();
-		if( imp.getWidth() > 1024 && imp.getStackSize() == 1)
+		ImagePlus imp = iploader.getImagePlus();
+		if(xw.getParams() != null && imp.getWidth() > 1024 && imp.getStackSize() == 1)
 		{
 			gbmi.setState(true);
 			IJCommand ijcmd = new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma =2");

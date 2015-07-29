@@ -1123,6 +1123,12 @@ class Set(OrderedObject):
         """
         self.setAttributeValue(propertyName, self.getProperty(propertyName, defaultValue))
         
+    def loadAllProperties(self):
+        """ Retrieve all properties stored by the mapper. """
+        for key in self._getMapper().getPropertyKeys():
+            if key != 'self':
+                self.loadProperty(key)
+        
     def getIdSet(self):
         """ Return a Python set object containing all ids. """
         s = set()

@@ -89,16 +89,16 @@ public class Worker implements Runnable
             ImageGeneric imgAvg = new ImageGeneric();
             ImageGeneric imgStd = new ImageGeneric();
 
-            imagesmd.getStatsImages(imgAvg, imgStd, frame.data.useGeo(), MDLabel.MDL_IMAGE);
+            imagesmd.getStatsImages(imgAvg, imgStd, frame.data.useGeo(), frame.data.isWrap(), MDLabel.MDL_IMAGE);
             ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
             ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
             imgAvg.destroy();
             imgStd.destroy();
 
-            XmippImageWindow winAvg = new XmippImageWindow(new ImagePlusLoader(impAvg), "AVG: " + frame.data.getFileName(), frame.data.parameters);
+            XmippImageWindow winAvg = new XmippImageWindow(new ImagePlusLoader(impAvg), "AVG:", frame.data.parameters);
             XmippWindowUtil.setLocation(0.2f, 0.5f, winAvg, frame);
             winAvg.setVisible(true);
-            XmippImageWindow winStd = new XmippImageWindow(new ImagePlusLoader(impStd), "STD: " + frame.data.getFileName(), frame.data.parameters);
+            XmippImageWindow winStd = new XmippImageWindow(new ImagePlusLoader(impStd), "STD:", frame.data.parameters);
 
             XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, frame);
             winStd.setVisible(true);
@@ -110,7 +110,7 @@ public class Worker implements Runnable
             imagesmd.getPCAbasis(image, MDLabel.MDL_IMAGE);
             ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
             imp.setTitle("PCA: " + frame.data.getFileName());
-            ImagesWindowFactory.openXmippImageWindow(frame, imp, frame.data.parameters);
+            ImagesWindowFactory.openXmippImageWindow(imp, frame.data.parameters);
 
         }
 
