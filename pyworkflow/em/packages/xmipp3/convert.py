@@ -659,8 +659,8 @@ def writeSetOfCoordinates(posDir, coordSet):
     md = xmipp.MetaData()
     # Write properties block
     objId = md.addObject()
-    micName = removeBaseExt(micName)
-    md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
+#     micName = removeBaseExt(micName)
+#     md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
     #md.setValue(xmipp.MDL_COLOR, int(-16776961), objId)
     md.setValue(xmipp.MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
     md.setValue(xmipp.MDL_PICKING_STATE, 'Manual', objId)
