@@ -908,10 +908,12 @@ class ParamWidget():
                          selectmode=self._selectmode)
         
         if dlg.values:
-            if isinstance(self.param, params.PointerParam):
-                self.set(dlg.values[0]) # only a single value for Poin
-            else: # MulitiPointerParam
+            if isinstance(self.param, params.MultiPointerParam):
                 self.set(dlg.values)
+            elif isinstance(self.param, params.PointerParam):
+                self.set(dlg.values[0])
+            else:
+                raise Exception('Invalid param class: %s' % type(self.param))
         
     def _removeObject(self, e=None):
         """ Remove an object from a MultiPointer param. """
