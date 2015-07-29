@@ -198,17 +198,17 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         vol = Volume()
         vol.setFileName(self._getFileName('volume_shiny', iter=refineRun._lastIter()))
         vol.setSamplingRate(imgSet.getSamplingRate())
-        
         shinyPartSet = self._createSetOfParticles()
-        
         shinyPartSet.copyInfo(imgSet)
         readSetOfParticles(self._getFileName('shiny'), shinyPartSet, alignType=ALIGN_PROJ)
         
         self._defineOutputs(outputParticles=shinyPartSet)
-        self._defineSourceRelation(self.inputParticles, shinyPartSet)
         self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(self.inputParticles, vol)
-
+        
+        self._defineSourceRelation(refineRun.inputParticles, shinyPartSet)
+        self._defineSourceRelation(refineRun.inputMovieParticles, shinyPartSet)
+        self._defineSourceRelation(refineRun.inputParticles, vol)
+        self._defineSourceRelation(refineRun.inputMovieParticles, vol)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
