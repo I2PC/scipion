@@ -28,14 +28,14 @@ This module contains the protocol to obtain a refined 3D reconstruction from a s
 """
 import os
 from pyworkflow.utils import copyFile
-from pyworkflow.em import ProtClassify3D, ImageHandler
+import pyworkflow.em as em
 from data import Volume
 from pyworkflow.em.packages.grigoriefflab.grigoriefflab import FREALIGNMP_PATH, RSAMPLE_PATH, CALC_OCC_PATH
 # from constants import *
 from protocol_frealign_base import ProtFrealignBase
 
 
-class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
+class ProtFrealignClassify(ProtFrealignBase, em.ProtClassify3D):
     """ Protocol to classify 3D using Frealign. Frealign employs
 maximum likelihood classification for single particle electron
 cryo-microscopy.
@@ -140,7 +140,7 @@ marginal likelihood.
             refVol = self._getFileName('ref_vol', iter=iterN) # reference volume of the step.
             #TODO check if the input is already a single mrc stack
             self.writeParticlesByMic(imgFn)
-            ImageHandler().convert(vol.getLocation(), volFn) # convert the reference volume into a mrc volume
+            em.ImageHandler().convert(vol.getLocation(), volFn) # convert the reference volume into a mrc volume
             copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
             
         for ref in self._allRefs():
@@ -229,7 +229,6 @@ marginal likelihood.
             self._setLastIter(iterN)
     
     def createOutputStep(self):
-        from convert import readSetOfClasses3D
         numberOfClasses = self.numberOfRef
         imgSet = self._getInputParticles()
         volumes = self._createSetOfVolumes()
@@ -247,18 +246,24 @@ marginal likelihood.
             fileparList.append(filepar)
             volumeList.append(volFn)
         
-        classes = self._createSetOfClasses3D(imgSet)
-        readSetOfClasses3D(classes, fileparList, volumeList)
-        
+        clsSet = self._createSetOfClasses3D(imgSet)
+        params = {'orderBy' : ['_micId', 'id'],
+                  'direction' : 'ASC'
+                  }
+        clsSet.classifyItems(updateItemCallback=self._updateParticle,
+                     updateClassCallback=self._updateClass,
+                     itemDataIterator=self._iterRows(numberOfClasses),
+                     iterParams=params)
+
         # Define the outputs and relations
-        self._defineOutputs(outputClasses=classes)
+        self._defineOutputs(outputClasses=clsSet)
         self._defineOutputs(outputVolumes=volumes)
         #TODO: save alignment
 
-        self._defineSourceRelation(self._getInputParticlesPointer(), classes)
+        self._defineSourceRelation(self._getInputParticlesPointer(), clsSet)
         self._defineSourceRelation(self._getInputParticlesPointer(), volumes)
         if not self.doContinue:
-            self._defineSourceRelation(self.input3DReference, classes)
+            self._defineSourceRelation(self.input3DReference, clsSet)
             self._defineSourceRelation(self.input3DReference, volumes)
     
     #--------------------------- INFO functions ----------------------------------------------------
@@ -387,7 +392,6 @@ eot
 """
         return args
     
-    
     def _allRefs(self):
         """ Iterate over all references. """
         for i in range(1, self.numberOfRef+1):
@@ -409,4 +413,38 @@ eot
             lastPart = lastPart + blockParticles[i]
         
         return initPart, lastPart
-
+    
+    def _updateParticle(self, item, row):
+        from convert import rowToAlignment, OrderedDict, HEADER_COLUMNS
+        item.setClassId(row[0])
+        vals = OrderedDict(zip(HEADER_COLUMNS, row[1]))
+        item.setTransform(rowToAlignment(vals, item.getSamplingRate()))
+    
+    def _updateClass(self, item):
+        classId = item.getObjId()
+        volFn = self._getFileName('iter_vol_class', iter=self._getLastIter(), ref=classId)
+        item.getRepresentative().setLocation(volFn)
+    
+    def _iterRows(self, numberOfClasses):
+        filePar = self._getFileName('output_par_class', iter=self._getLastIter(), ref=1)
+        f1 = open(filePar)
+        for i, line in enumerate(f1):
+            if not line.startswith("C"):
+                values = map(float, line.split())
+                occValue = values[11]
+                classNum = 1
+                
+                for ref in range(2, numberOfClasses+1):
+                    filePar2 = self._getFileName('output_par_class', iter=self._getLastIter(), ref=ref)
+                    f2 = open(filePar2)
+                    line2 = f2.readlines()[i]
+                    val2 = map(float, line2.split())
+                    occNewValue = val2[11]
+                    
+                    if occNewValue > occValue:
+                        occValue = occNewValue
+                        classNum = ref
+                        values = val2
+                    
+                    f2.close()
+                yield classNum, values
