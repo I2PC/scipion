@@ -138,38 +138,6 @@ def rowToCtfModel(ctfRow, ctfModel):
 
 
 #-------------- Old fuctions (before using EMX matrix for alignment) ------
-
-def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
-    """read from frealign .par.
-    """
-    imgSet = classes3DSet.getImages()
-
-    for ref, volFn in enumerate(volumeList):
-        class3D = em.Class3D()
-        class3D.setObjId(ref+1)
-        vol = em.Volume()
-        vol.copyObjId(class3D)
-        vol.setLocation(volFn)
-
-        class3D.setRepresentative(vol)
-        classes3DSet.append(class3D)
-
-        file1 = fileparList[ref]
-        f1 = open(file1)
-        for l in f1:
-            if not l.startswith('C'):
-                values = l.split()
-                prob = float(values[11])
-                if prob > 0:
-                    objId = int(values[7])
-                    img = imgSet[objId]
-                    class3D.append(img)
-        f1.close()
-
-        # Check if write function is necessary
-        class3D.write()
-
-
 def parseCtffindOutput(filename):
     """ Retrieve defocus U, V and angle from the
     output file of the ctffind3 execution.

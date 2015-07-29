@@ -120,7 +120,7 @@ class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):
         mask.copyInfo(self.inputImg)
         mask.setLocation(4, maskFn)
         self._defineOutputs(outputMask=mask)
-        self._defineSourceRelation(self.inputImg, mask)
+        self._defineSourceRelation(self.inputParticles, mask)
             
     #--------------------------- INFO functions -------------------------------------------- 
     

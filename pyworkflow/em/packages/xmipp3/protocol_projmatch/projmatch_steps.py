@@ -669,7 +669,6 @@ def runFilterVolumeStep(self, iterN, refN, constantToAddToFiltration):
 
 
 def runCreateOutputStep(self):
-    import pyworkflow.em as em
     import pyworkflow.em.metadata as md
     ''' Create standard output results_images, result_classes'''
     #creating results files
@@ -703,15 +702,15 @@ def runCreateOutputStep(self):
     
         self._defineOutputs(outputVolumes=volumes)
         self._defineOutputs(outputClasses=classes)
-        self._defineSourceRelation(imgSet, volumes)
-        self._defineSourceRelation(imgSet, classes)
+        self._defineSourceRelation(self.inputParticles, volumes)
+        self._defineSourceRelation(self.inputParticles, classes)
     else:
         volFn = self._getFileName('reconstructedFileNamesIters', iter=lastIter, ref=1)
         vol = Volume()
         vol.setFileName(volFn)
         vol.setSamplingRate(imgSet.getSamplingRate())
         self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(imgSet, vol)
+        self._defineSourceRelation(self.inputParticles, vol)
         
         #create set of images
         imgSetOut = self._createSetOfParticles()
@@ -723,4 +722,5 @@ def runCreateOutputStep(self):
                             updateItemCallback=self._createItemMatrix,
                             itemDataIterator=md.iterRows(imgFn))
         self._defineOutputs(outputParticles=imgSetOut)
+        self._defineSourceRelation(self.inputParticles, imgSetOut)
     

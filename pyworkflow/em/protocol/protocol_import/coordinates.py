@@ -156,7 +156,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
 
 
          self._defineOutputs(outputCoordinates=coordsSet)
-         self._defineSourceRelation(inputMics, coordsSet)
+         self._defineSourceRelation(self.inputMicrographs, coordsSet)
 
     #--------------------------- STEPS functions ---------------------------------------------------
 

@@ -139,12 +139,11 @@ class DogPickerProtPicking(ProtParticlePicking):
 
 
     def createOutputStep(self):
-        micSet = self.getInputMicrographs()
-        coordSet = self._createSetOfCoordinates(micSet)
+        coordSet = self._createSetOfCoordinates(self.getInputMicrographs())
         self.readSetOfCoordinates(self._getExtraPath(), coordSet)
         coordSet.setBoxSize(self.diameter.get())
         self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(micSet, coordSet)
+        self._defineSourceRelation(self.inputMicrographs, coordSet)
 
     
     #--------------------------- UTILS functions --------------------------------------------------

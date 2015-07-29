@@ -245,7 +245,7 @@ class XmippProtCL2D(ProtClassify2D):
         readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
-        self._defineSourceRelation(inputParticles, classes2DSet)
+        self._defineSourceRelation(self.inputParticles, classes2DSet)
     
     def analyzeOutOfCores(self,subset):
         """ Analyze which images are out of cores """
@@ -299,11 +299,7 @@ class XmippProtCL2D(ProtClassify2D):
     
     def _warnings(self):
         validateMsgs = []
-        print "frist...."
-        print "self.inputParticles.get().getSamplingRate()", self.inputParticles.get().getSamplingRate()
-        print "self.inputParticles.get().getSamplingRate() < 3", self.inputParticles.get().getSamplingRate() < 3
         if self.inputParticles.get().getSamplingRate() < 3:
-            print "here......"
             validateMsgs.append("The sampling rate is smaller than 3 A/pix, consider downsampling the input images to speed-up the process. "\
                          "Probably you don't want such a precise 2D classification.")
         return validateMsgs       

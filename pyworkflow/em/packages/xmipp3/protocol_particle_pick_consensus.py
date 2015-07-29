@@ -161,4 +161,4 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         self._defineOutputs(outputCoordinates=setOfCoordinates)
         
         for coordinates in self.inputCoordinates:
-            self._defineSourceRelation(coordinates.get(), self.outputCoordinates)
+            self._defineSourceRelation(coordinates, self.outputCoordinates)
