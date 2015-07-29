@@ -50,13 +50,15 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         """ This function is mean to be called after the 
         working dir for the protocol have been set. (maybe after recovery from mapper)
         """
+        refineRun = self.refineRun.get()
+        refineRun._initialize() # load filenames stuff
         self._createFilenameTemplates()
         self._createIterTemplates()
-        self._createFrameTemplates()
+        self._createFrameTemplates(refineRun)
     
-    def _createFrameTemplates(self):
+    def _createFrameTemplates(self, refineRun):
         """ Setup the regex on how to find iterations. """
-        self._frameTemplate = self._getFileName('guinier_frame', frame=0, iter=self._lastIter()).replace('000','???')
+        self._frameTemplate = self._getFileName('guinier_frame', frame=0, iter=refineRun._lastIter()).replace('000','???')
         # Frames will be identify by _frameXXX_ where XXX is the frame number
         # and is restricted to only 3 digits.
         self._frameRegex = re.compile('_frame(\d{3,3})_')
@@ -127,7 +129,6 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     def _insertPolishStep(self):
         refineRun = self.refineRun.get()
         imgSet = refineRun._getInputParticles()
-        refineRun._initialize() # load filenames stuff
         
         imgStar = self._getFileName('data', iter=refineRun._lastIter())
         
