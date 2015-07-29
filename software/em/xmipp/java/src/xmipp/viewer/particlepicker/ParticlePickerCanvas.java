@@ -1,6 +1,5 @@
 package xmipp.viewer.particlepicker;
 
-import ij.ImagePlus;
 import ij.gui.ImageWindow;
 
 import java.awt.BasicStroke;
@@ -26,7 +25,6 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
-import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas

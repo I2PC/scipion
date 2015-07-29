@@ -703,7 +703,9 @@ class SqliteFlatMapper(Mapper):
     
     def deleteProperty(self, key):
         return self.db.deleteProperty(key)
-        
+    
+    def getPropertyKeys(self):
+        return self.db.getPropertyKeys()
         
 
 SELF = 'self'
@@ -750,6 +752,7 @@ class SqliteFlatDb(SqliteDb):
         self.DELETE_PROPERTY = "DELETE FROM Properties WHERE key=?"
         self.UPDATE_PROPERTY = "UPDATE Properties SET value=? WHERE key=?"
         self.SELECT_PROPERTY = "SELECT value FROM Properties WHERE key=?"
+        self.SELECT_PROPERTY_KEYS = "SELECT key FROM Properties"
 
 
     def hasProperty(self, key):
@@ -776,6 +779,12 @@ class SqliteFlatDb(SqliteDb):
             self.executeCommand(self.UPDATE_PROPERTY, (str(value), key))
         else:
             self.executeCommand(self.INSERT_PROPERTY, (key, str(value)))
+            
+    def getPropertyKeys(self):
+        """ Return all properties stored of this object. """
+        self.executeCommand(self.SELECT_PROPERTY_KEYS)
+        keys = [r[0] for r in self.cursor.fetchall()]
+        return keys        
 
     def deleteProperty(self, key):
         self.executeCommand(self.DELETE_PROPERTY, (key,))
