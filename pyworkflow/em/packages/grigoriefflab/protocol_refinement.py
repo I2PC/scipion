@@ -47,10 +47,9 @@ reconstructions.
     def createOutputStep(self):
         lastIter = self._getLastIter()
         inputSet = self._getInputParticles()
-        lastIterDir = self._iterWorkingDir(lastIter)
 
         # Register output volume
-        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
+        volFn = self._getFileName('iter_vol', iter=lastIter)
         vol = em.Volume()
         vol.setFileName(volFn)
         vol.setSamplingRate(inputSet.getSamplingRate())
