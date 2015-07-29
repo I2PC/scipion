@@ -54,9 +54,9 @@ marginal likelihood.
     def _insertContinueStep(self):
         if self.doContinue:
             continueRun = self.continueRun.get()
-            self.inputParticles.set(continueRun.inputParticles.get())
-            self.symmetry.set(continueRun.symmetry.get())
+            self.inputParticles.set(None)
             self.input3DReference.set(None)
+            self.symmetry.set(continueRun.symmetry.get())
             self.numberOfRef = continueRun.numberOfClasses.get()
             if self.continueIter.get() == 'last':
                 self.initIter = continueRun._getCurrIter()
@@ -179,14 +179,14 @@ marginal likelihood.
     def reconstructVolumeStep(self, iterN, ref, paramsDic):
         """Reconstruct a volume from a SetOfParticles with its current parameters refined
         """
-        imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
         initParticle = 1
         finalParticle = imgSet.getSize()
         iterDir = self._iterWorkingDir(iterN)
         
         os.environ['NCPUS'] = str(self.cpuList[ref-1])
         paramsDic['frealign'] = FREALIGNMP_PATH
-        paramsDic['outputParFn'] = self._getFileName('output_vol_par_class', iter=iterN, ref=ref)
+        paramsDic['outputParFn'] = self._getBaseName('output_vol_par_class', iter=iterN, ref=ref)
         paramsDic['initParticle'] = initParticle
         paramsDic['finalParticle'] = finalParticle
 #         paramsDic['paramRefine'] = '0, 0, 0, 0, 0'
@@ -200,7 +200,7 @@ marginal likelihood.
         self.runJob('', args % params3DR, cwd=iterDir)
     
     def calculateOCCStep(self, iterN, isLastIterStep):
-        imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
         numberOfClasses = self.numberOfRef
         cpusRef = self._cpusPerClass(self.numberOfBlocks, numberOfClasses)
         iterDir = self._iterWorkingDir(iterN)
@@ -231,7 +231,7 @@ marginal likelihood.
     def createOutputStep(self):
         from convert import readSetOfClasses3D
         numberOfClasses = self.numberOfRef
-        imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
         volumes = self._createSetOfVolumes()
         volumes.setSamplingRate(imgSet.getSamplingRate())
         
@@ -240,7 +240,7 @@ marginal likelihood.
         
         for ref in range(1, numberOfClasses + 1):
             vol = Volume()
-            filepar = self._getBaseName('output_par_class', iter=self._getLastIter(), ref=ref)
+            filepar = self._getFileName('output_par_class', iter=self._getLastIter(), ref=ref)
             volFn = self._getFileName('iter_vol_class', iter=self._getLastIter(), ref=ref)
             vol.setFileName(volFn)
             volumes.append(vol)
@@ -255,8 +255,8 @@ marginal likelihood.
         self._defineOutputs(outputVolumes=volumes)
         #TODO: save alignment
 
-        self._defineSourceRelation(self.inputParticles, classes)
-        self._defineSourceRelation(self.inputParticles, volumes)
+        self._defineSourceRelation(self._getInputParticlesPointer(), classes)
+        self._defineSourceRelation(self._getInputParticlesPointer(), volumes)
         if not self.doContinue:
             self._defineSourceRelation(self.input3DReference, classes)
             self._defineSourceRelation(self.input3DReference, volumes)
@@ -294,7 +294,7 @@ marginal likelihood.
         paramDics['stopParam'] = 0   #The stopParam must be 0 if you want obtain a 3D reconstruction.
         paramDics['volume'] = self._getBaseName('iter_vol_class', iter=iterN, ref=ref)
         paramDics['inputParFn'] = self._getBaseName('output_par_class', iter=iterN, ref=ref)
-        paramDics['imgFnMatch'] = self._getFileName('match_class', iter=iterN, ref=ref)
+        paramDics['imgFnMatch'] = self._getBaseName('match_class', iter=iterN, ref=ref)
         paramDics['outputShiftFn'] = self._getFileName('shift_class', iter=iterN, ref=ref)
         paramDics['3Dweigh'] = self._getFileName('weight_class', iter=iterN, ref=ref)
         paramDics['FSC3DR1'] = self._getFileName('vol1_class', iter=iterN, ref=ref)
@@ -367,7 +367,7 @@ marginal likelihood.
                 f2.close()
                 f1.close()
         else:
-            file2 = self._getFileName('input_par_block_class',prevIter=prevIter, iter=iterN, ref=ref, block=block)
+            file2 = self._getFileName('input_par_block_class',prevIter=prevIter, iter=iterN, ref=ref, block=1)
             copyFile(file1, file2)
     
     def _rsampleCommand(self):
@@ -400,10 +400,8 @@ eot
     
     def _particlesInBlock(self, block, numberOfBlocks):
         """calculate the initial and final particles that belongs to this block"""
-        
-        imgSet = self.inputParticles.get()
-        
-        blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
+        sortedMicIdList = sorted(self._getMicIdList(), key=lambda k: k['_micId'])
+        blockParticles = self._particlesPerBlock(numberOfBlocks, sortedMicIdList)
         initPart = 0
         lastPart = 0
         for i in range(block):
