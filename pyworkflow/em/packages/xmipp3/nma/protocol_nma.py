@@ -262,4 +262,4 @@ class XmippProtNMA(XmippProtNMABase):
         inputPdb = self.inputStructure.get()
         nmSet.setPdb(inputPdb)
         self._defineOutputs(outputModes=nmSet)
-        self._defineSourceRelation(inputPdb, nmSet)
+        self._defineSourceRelation(self.inputStructure, nmSet)

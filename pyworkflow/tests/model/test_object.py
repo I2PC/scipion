@@ -84,7 +84,7 @@ class TestObject(BaseTest):
         c = Complex.createComplex()
         p = Pointer()
         p.set(c)
-        p.setExtendedAttribute('Name')
+        p.setExtended('Name')
         c.Name = String('Paquito')
         
         self.assertEqual(p.get(), 'Paquito')
@@ -133,26 +133,38 @@ class TestObject(BaseTest):
         self.assertFalse(o.pointer.hasExtended(), 
                          'o.pointer should not have extended at this point')
         
-        o.pointer.setExtendedItemId(7)
+        o.pointer.setExtended(7)
         
         self.assertTrue(o.pointer.hasExtended())
-        self.assertTrue(o.pointer.hasExtendedItemId())
-        self.assertEqual(o.pointer.getExtendedValue(), "7")
+        self.assertTrue(o.pointer.hasExtended())
+        self.assertEqual(o.pointer.getExtended(), "7")
         
         # Check that the Item 7 of the set is properly
-        # retrieved by the pointer after setting the extendedItemId to 7
+        # retrieved by the pointer after setting the extended to 7
         self.assertEqual(imgSet[7], o.pointer.get())
         
         # Test the keyword arguments of Pointer contructor
         # repeat above tests with new pointer
-        ptr = Pointer(value=imgSet, extendedItemId=7)
+        ptr = Pointer(value=imgSet, extended=7)
         self.assertTrue(ptr.hasExtended())
-        self.assertTrue(ptr.hasExtendedItemId())
-        self.assertEqual(ptr.getExtendedValue(), "7")
+        self.assertTrue(ptr.hasExtended())
+        self.assertEqual(ptr.getExtended(), "7")
         
         # Check that the Item 7 of the set is properly
-        # retrieved by the pointer after setting the extendedItemId to 7
+        # retrieved by the pointer after setting the extended to 7
         self.assertEqual(imgSet[7], ptr.get())
+        
+        o2 = OrderedObject()
+        o2.outputImages = imgSet
+        ptr2 = Pointer()
+        ptr2.set(o2)
+        # Test nested extended attributes
+        ptr2.setExtended('outputImages.7')
+        self.assertEqual(imgSet[7], ptr2.get())
+        
+        # Same as ptr2, but setting extended in constructor
+        ptr3 = Pointer(value=o2, extended='outputImages.7')
+        self.assertEqual(imgSet[7], ptr3.get())
     
     
     def test_copyAttributes(self):

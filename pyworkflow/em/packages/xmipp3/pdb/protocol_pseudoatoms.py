@@ -60,7 +60,7 @@ class XmippProtConvertToPseudoAtoms(XmippProtConvertToPseudoAtomsBase):
         pdb = PdbFile(self._getPath('pseudoatoms.pdb'), pseudoatoms=True)
         self.createChimeraScript(inputVol, pdb)
         self._defineOutputs(outputPdb=pdb)
-        self._defineSourceRelation(inputVol, pdb)
+        self._defineSourceRelation(self.inputStructure, pdb)
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):

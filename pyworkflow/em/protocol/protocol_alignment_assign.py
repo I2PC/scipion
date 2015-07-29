@@ -85,8 +85,8 @@ class ProtAlignmentAssign(ProtAlign2D):
                             updateItemCallback=self._updateItem)
 
         self._defineOutputs(outputParticles=outputParticles)
-        self._defineSourceRelation(inputParticles, outputParticles)
-        self._defineSourceRelation(inputAlignment, outputParticles)
+        self._defineSourceRelation(self.inputParticles, outputParticles)
+        self._defineSourceRelation(self.inputAlignment, outputParticles)
 
     def _summary(self):
         summary = []

@@ -228,6 +228,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             vol.setLocation(self.getIterVolume(lastIter))
             vol.setSamplingRate(self.inputSet.get().getSamplingRate())
             self._defineOutputs(outputVolume=vol)
+            output = vol
         else:
             volSet = self._createSetOfVolumes()
             volSet.setSamplingRate(self.inputSet.get().getSamplingRate())
@@ -239,8 +240,9 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                 vol.setLocation(fnVolume)
                 volSet.append(vol)
             self._defineOutputs(outputVolumes=volSet)
+            output = volSet
 
-        self._defineSourceRelation(vol, self.inputSet)
+        self._defineSourceRelation(self.inputSet, output)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):

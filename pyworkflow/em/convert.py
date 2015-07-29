@@ -28,6 +28,7 @@ This module contains several conversion utilities
 """
 
 import os
+import sys
 import PIL
 
 from constants import NO_INDEX
@@ -225,3 +226,81 @@ class ImageHandler(object):
         """ Check if imgFn has an image extension. The function
         is implemented in the xmipp binding."""
         return xmipp.FileName(imgFn).isImage()
+
+
+def downloadPdb(pdbId, pdbFile, log=None):
+    pdbGz = pdbFile + ".gz"
+    result = (__downloadPdb(pdbId, pdbGz, log) and 
+              __unzipPdb(pdbGz, pdbFile, log))
+    return result
+    
+def __downloadPdb(pdbId, pdbGz, log):
+    import ftplib
+    """Download a pdb file given its id. """
+    if log:
+        log.info("File to download and unzip: %s" % pdbGz)
+    
+    pdborgHostname = "ftp.wwpdb.org"
+    pdborgDirectory = "/pub/pdb/data/structures/all/pdb/"
+    prefix = "pdb"
+    suffix = ".ent.gz"
+    success = True
+    # Log into serverhttp://www.rcsb.org/pdb/files/2MP1.pdb.gz
+    ftp = ftplib.FTP()
+    try:
+        ftp.connect(pdborgHostname)
+        ftp.login()
+    except ftplib.error_temp:
+        if log:
+            log.error("ERROR! Timeout reached!")
+        success = False
+    
+    if success:
+        # Download  file
+        _fileIn = "%s/%s%s%s" % (pdborgDirectory, prefix, pdbId, suffix) 
+        _fileOut = pdbGz
+        try:
+            ftp.retrbinary("RETR %s" % _fileIn, open(_fileOut, "wb").write)
+        except ftplib.error_perm:
+            os.remove(_fileOut)
+            if log:
+                log.error("ERROR!  %s could not be retrieved!" % _fileIn)
+            success = False
+        # Log out
+        ftp.quit()
+        
+    return success
+
+# TODO unzip may go to utilities
+def __unzipPdb(pdbGz, pdbFile, log, cleanFile=True):
+    """
+    Unzip a pdb file.
+    Params:
+        pdbGz: zipped pdb file.
+        pdbFile: output pdb file.
+        cleanFile: remove the zipped file.
+    """
+    import gzip
+    success = True
+    try:
+        f = gzip.open(pdbGz, 'r')
+        g = open(pdbFile, 'w')
+        g.writelines(f.readlines())
+        f.close()
+        g.close()
+    except:
+        e = sys.exc_info()[0]
+        if log:
+            log.error('ERROR opening gzipped file %s: %s' % (pdbGz, e))
+        success = False
+    
+    try:
+        if success:
+            os.remove(pdbGz)
+    except:
+        e = sys.exc_info()[0]
+        if log:
+            log.error('ERROR deleting gzipped file: %s' % e)
+        success = False
+        
+    return success

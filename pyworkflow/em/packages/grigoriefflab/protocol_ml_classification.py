@@ -28,14 +28,14 @@ This module contains the protocol to obtain a refined 3D reconstruction from a s
 """
 import os
 from pyworkflow.utils import copyFile
-from pyworkflow.em import ProtClassify3D, ImageHandler
+import pyworkflow.em as em
 from data import Volume
 from pyworkflow.em.packages.grigoriefflab.grigoriefflab import FREALIGNMP_PATH, RSAMPLE_PATH, CALC_OCC_PATH
 # from constants import *
 from protocol_frealign_base import ProtFrealignBase
 
 
-class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
+class ProtFrealignClassify(ProtFrealignBase, em.ProtClassify3D):
     """ Protocol to classify 3D using Frealign. Frealign employs
 maximum likelihood classification for single particle electron
 cryo-microscopy.
@@ -54,9 +54,9 @@ marginal likelihood.
     def _insertContinueStep(self):
         if self.doContinue:
             continueRun = self.continueRun.get()
-            self.inputParticles.set(continueRun.inputParticles.get())
-            self.symmetry.set(continueRun.symmetry.get())
+            self.inputParticles.set(None)
             self.input3DReference.set(None)
+            self.symmetry.set(continueRun.symmetry.get())
             self.numberOfRef = continueRun.numberOfClasses.get()
             if self.continueIter.get() == 'last':
                 self.initIter = continueRun._getCurrIter()
@@ -140,7 +140,7 @@ marginal likelihood.
             refVol = self._getFileName('ref_vol', iter=iterN) # reference volume of the step.
             #TODO check if the input is already a single mrc stack
             self.writeParticlesByMic(imgFn)
-            ImageHandler().convert(vol.getLocation(), volFn) # convert the reference volume into a mrc volume
+            em.ImageHandler().convert(vol.getLocation(), volFn) # convert the reference volume into a mrc volume
             copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
             
         for ref in self._allRefs():
@@ -179,14 +179,14 @@ marginal likelihood.
     def reconstructVolumeStep(self, iterN, ref, paramsDic):
         """Reconstruct a volume from a SetOfParticles with its current parameters refined
         """
-        imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
         initParticle = 1
         finalParticle = imgSet.getSize()
         iterDir = self._iterWorkingDir(iterN)
         
         os.environ['NCPUS'] = str(self.cpuList[ref-1])
         paramsDic['frealign'] = FREALIGNMP_PATH
-        paramsDic['outputParFn'] = self._getFileName('output_vol_par_class', iter=iterN, ref=ref)
+        paramsDic['outputParFn'] = self._getBaseName('output_vol_par_class', iter=iterN, ref=ref)
         paramsDic['initParticle'] = initParticle
         paramsDic['finalParticle'] = finalParticle
 #         paramsDic['paramRefine'] = '0, 0, 0, 0, 0'
@@ -200,7 +200,7 @@ marginal likelihood.
         self.runJob('', args % params3DR, cwd=iterDir)
     
     def calculateOCCStep(self, iterN, isLastIterStep):
-        imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
         numberOfClasses = self.numberOfRef
         cpusRef = self._cpusPerClass(self.numberOfBlocks, numberOfClasses)
         iterDir = self._iterWorkingDir(iterN)
@@ -229,9 +229,8 @@ marginal likelihood.
             self._setLastIter(iterN)
     
     def createOutputStep(self):
-        from convert import readSetOfClasses3D
         numberOfClasses = self.numberOfRef
-        imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
         volumes = self._createSetOfVolumes()
         volumes.setSamplingRate(imgSet.getSamplingRate())
         
@@ -240,26 +239,32 @@ marginal likelihood.
         
         for ref in range(1, numberOfClasses + 1):
             vol = Volume()
-            filepar = self._getBaseName('output_par_class', iter=self._getLastIter(), ref=ref)
+            filepar = self._getFileName('output_par_class', iter=self._getLastIter(), ref=ref)
             volFn = self._getFileName('iter_vol_class', iter=self._getLastIter(), ref=ref)
             vol.setFileName(volFn)
             volumes.append(vol)
             fileparList.append(filepar)
             volumeList.append(volFn)
         
-        classes = self._createSetOfClasses3D(imgSet)
-        readSetOfClasses3D(classes, fileparList, volumeList)
-        
+        clsSet = self._createSetOfClasses3D(imgSet)
+        params = {'orderBy' : ['_micId', 'id'],
+                  'direction' : 'ASC'
+                  }
+        clsSet.classifyItems(updateItemCallback=self._updateParticle,
+                     updateClassCallback=self._updateClass,
+                     itemDataIterator=self._iterRows(numberOfClasses),
+                     iterParams=params)
+
         # Define the outputs and relations
-        self._defineOutputs(outputClasses=classes)
+        self._defineOutputs(outputClasses=clsSet)
         self._defineOutputs(outputVolumes=volumes)
         #TODO: save alignment
 
-        self._defineSourceRelation(imgSet, classes)
-        self._defineSourceRelation(imgSet, volumes)
+        self._defineSourceRelation(self._getInputParticlesPointer(), clsSet)
+        self._defineSourceRelation(self._getInputParticlesPointer(), volumes)
         if not self.doContinue:
-            self._defineSourceRelation(self.input3DReference.get(), classes)
-            self._defineSourceRelation(self.input3DReference.get(), volumes)
+            self._defineSourceRelation(self.input3DReference, clsSet)
+            self._defineSourceRelation(self.input3DReference, volumes)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
@@ -294,7 +299,7 @@ marginal likelihood.
         paramDics['stopParam'] = 0   #The stopParam must be 0 if you want obtain a 3D reconstruction.
         paramDics['volume'] = self._getBaseName('iter_vol_class', iter=iterN, ref=ref)
         paramDics['inputParFn'] = self._getBaseName('output_par_class', iter=iterN, ref=ref)
-        paramDics['imgFnMatch'] = self._getFileName('match_class', iter=iterN, ref=ref)
+        paramDics['imgFnMatch'] = self._getBaseName('match_class', iter=iterN, ref=ref)
         paramDics['outputShiftFn'] = self._getFileName('shift_class', iter=iterN, ref=ref)
         paramDics['3Dweigh'] = self._getFileName('weight_class', iter=iterN, ref=ref)
         paramDics['FSC3DR1'] = self._getFileName('vol1_class', iter=iterN, ref=ref)
@@ -367,7 +372,7 @@ marginal likelihood.
                 f2.close()
                 f1.close()
         else:
-            file2 = self._getFileName('input_par_block_class',prevIter=prevIter, iter=iterN, ref=ref, block=block)
+            file2 = self._getFileName('input_par_block_class',prevIter=prevIter, iter=iterN, ref=ref, block=1)
             copyFile(file1, file2)
     
     def _rsampleCommand(self):
@@ -387,7 +392,6 @@ eot
 """
         return args
     
-    
     def _allRefs(self):
         """ Iterate over all references. """
         for i in range(1, self.numberOfRef+1):
@@ -400,10 +404,8 @@ eot
     
     def _particlesInBlock(self, block, numberOfBlocks):
         """calculate the initial and final particles that belongs to this block"""
-        
-        imgSet = self.inputParticles.get()
-        
-        blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
+        sortedMicIdList = sorted(self._getMicIdList(), key=lambda k: k['_micId'])
+        blockParticles = self._particlesPerBlock(numberOfBlocks, sortedMicIdList)
         initPart = 0
         lastPart = 0
         for i in range(block):
@@ -411,4 +413,38 @@ eot
             lastPart = lastPart + blockParticles[i]
         
         return initPart, lastPart
-
+    
+    def _updateParticle(self, item, row):
+        from convert import rowToAlignment, OrderedDict, HEADER_COLUMNS
+        item.setClassId(row[0])
+        vals = OrderedDict(zip(HEADER_COLUMNS, row[1]))
+        item.setTransform(rowToAlignment(vals, item.getSamplingRate()))
+    
+    def _updateClass(self, item):
+        classId = item.getObjId()
+        volFn = self._getFileName('iter_vol_class', iter=self._getLastIter(), ref=classId)
+        item.getRepresentative().setLocation(volFn)
+    
+    def _iterRows(self, numberOfClasses):
+        filePar = self._getFileName('output_par_class', iter=self._getLastIter(), ref=1)
+        f1 = open(filePar)
+        for i, line in enumerate(f1):
+            if not line.startswith("C"):
+                values = map(float, line.split())
+                occValue = values[11]
+                classNum = 1
+                
+                for ref in range(2, numberOfClasses+1):
+                    filePar2 = self._getFileName('output_par_class', iter=self._getLastIter(), ref=ref)
+                    f2 = open(filePar2)
+                    line2 = f2.readlines()[i]
+                    val2 = map(float, line2.split())
+                    occNewValue = val2[11]
+                    
+                    if occNewValue > occValue:
+                        occValue = occNewValue
+                        classNum = ref
+                        values = val2
+                    
+                    f2.close()
+                yield classNum, values

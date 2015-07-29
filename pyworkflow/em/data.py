@@ -1391,7 +1391,8 @@ class SetOfClasses(EMSet):
                       updateItemCallback=None,
                       updateClassCallback=None,
                       itemDataIterator=None,
-                      classifyDisabled=False):
+                      classifyDisabled=False,
+                      iterParams=None):
         """ Classify items from the self.getImages() and add the needed classes.
         This function iterates over each item in the images and call
         the updateItemCallback to register the information coming from
@@ -1401,8 +1402,9 @@ class SetOfClasses(EMSet):
         """
         clsDict = {} # Dictionary to store the (classId, classSet) pairs
         inputSet = self.getImages()
+        iterParams = iterParams or {}
         
-        for item in inputSet:
+        for item in inputSet.iterItems(**iterParams):
             # copy items if enabled or copyDisabled=True
             if classifyDisabled or item.isEnabled():
                 newItem = item.clone()

@@ -116,8 +116,8 @@ class ProtExtractCoords(ProtParticlePicking):
         outputCoords.setBoxSize(boxSize)
         
         self._defineOutputs(outputCoordinates=outputCoords)
-        self._defineSourceRelation(inputParticles, outputCoords)
-        self._defineSourceRelation(inputMics, outputCoords)
+        self._defineSourceRelation(self.inputParticles, outputCoords)
+        self._defineSourceRelation(self.inputMicrographs, outputCoords)
                 
     def _summary(self):
         summary = []
