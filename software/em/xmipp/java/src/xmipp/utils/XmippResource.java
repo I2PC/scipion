@@ -80,7 +80,8 @@ public class XmippResource {
     	if (iconsPool.containsKey(name))
     		ii = iconsPool.get(name);
     	else {
-    		ii = new ImageIcon(String.format("%s%sresources%s%s", PATH_ICONS, File.separator, File.separator, name));
+    		String path = String.format("%s%sresources%s%s", PATH_ICONS, File.separator, File.separator, name);
+    		ii = new ImageIcon(path);
     		iconsPool.put(name, ii);
     	}
     	return ii;
