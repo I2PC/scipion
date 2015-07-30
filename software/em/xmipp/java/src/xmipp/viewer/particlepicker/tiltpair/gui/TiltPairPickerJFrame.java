@@ -225,6 +225,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		if (canvas == null) {
 			canvas = new UntiltedMicrographCanvas(this);
 			tiltedcanvas = new TiltedMicrographCanvas(this);
+			tiltedcanvas.getIw().setLocation(canvas.getIw().getWidth(), canvas.getIw().getLocation().y);
 			List<UntiltedParticle> particles = getMicrograph().getParticles();
                         
                         // needs both canvas to be initialized
@@ -235,7 +236,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 			tiltedcanvas.updateMicrograph();
 
 		}
-		tiltedcanvas.getIw().setLocation(canvas.getIw().getWidth(), canvas.getIw().getLocation().y);
 	}
 
 	public ParticlePickerCanvas getCanvas() {
