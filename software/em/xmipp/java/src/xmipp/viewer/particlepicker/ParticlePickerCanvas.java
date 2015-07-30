@@ -17,13 +17,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 
@@ -138,7 +136,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	protected void setActiveMoved(boolean b)
 	{
 		activemoved = b;
-		
 	}
 
 	protected void refresh()
@@ -146,14 +143,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		getFrame().updateMicrographsModel();
 		getFrame().setChanged(true);
 		repaint();
-
-	}
-
-
-	public void display(double xlocation, double ylocation)
-	{
-		
-			XmippWindowUtil.setLocation(xlocation, ylocation, iw);
 	}
 
 	public ImageWindow getIw()
