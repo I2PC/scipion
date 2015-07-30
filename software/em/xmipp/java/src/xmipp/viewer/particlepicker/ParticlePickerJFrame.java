@@ -168,7 +168,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                     }
                 });
                 
-                savebt = XmippWindowUtil.getTextButton(bundle.getString("save"), new ActionListener()
+                savebt = XmippWindowUtil.getTextIconButton(bundle.getString("save"), "save.gif", new ActionListener()
                 {
                     
                     @Override
@@ -214,7 +214,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                         
                     }
                 });
-                closebt = XmippWindowUtil.getTextButton("Close", new ActionListener()
+                closebt = XmippWindowUtil.getTextIconButton("Close", "fa-times.png", new ActionListener()
                 {
                     
                     @Override
@@ -897,23 +897,23 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
         
-        protected void readSizeFromTextField()
+    protected void readSizeFromTextField()
+    {
+        
+        int size = ((Number) sizetf.getValue()).intValue();
+        if (size == getParticlePicker().getSize())
+            return;
+
+        if (!getParticlePicker().isValidSize(ParticlePickerJFrame.this, size))
         {
-            
-                int size = ((Number) sizetf.getValue()).intValue();
-                if (size == getParticlePicker().getSize())
-                    return;
 
-                if (!getParticlePicker().isValidSize(ParticlePickerJFrame.this, size))
-                {
-
-                    int prevsize = getParticlePicker().getSize();
-                    sizetf.setText(Integer.toString(prevsize));
-                    return;
-                }
-                updateSize(size);
-           
+            int prevsize = getParticlePicker().getSize();
+            sizetf.setText(Integer.toString(prevsize));
+            return;
         }
+        updateSize(size);
+       
+    }
 
 	public void updateSize(int size)
 	{
@@ -945,10 +945,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		dispose();
 		if (getCanvas() != null)
 			getCanvas().getIw().close();
-
-		
 		XmippApplication.removeInstance(false);
-
 	}
 
 	public abstract String importParticles(Format format, String dir, String preffix, String suffix, float scale, boolean invertx, boolean inverty);
