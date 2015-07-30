@@ -121,6 +121,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JToolBar tb;
     protected ResourceBundle bundle;
     protected String command;
+    protected JButton closebt;
         
         
 
@@ -211,6 +212,15 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                         else
                             close();
                         
+                    }
+                });
+                closebt = XmippWindowUtil.getTextButton("Close", new ActionListener()
+                {
+                    
+                    @Override
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        close();
                     }
                 });
                 if(picker.isScipionSave())

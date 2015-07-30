@@ -367,8 +367,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			setDrawingSize(previousDstWidth, previousDstHeight);
 			if (previousRect.width < imageWidth && previousRect.height < imageHeight)
 				setSourceRect(previousRect);
-			else
-				setMagnification(zoom);
+			setMagnification(zoom);
 			iw.pack();
 		}
 		else
