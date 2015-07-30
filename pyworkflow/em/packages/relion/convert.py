@@ -726,7 +726,7 @@ def convertBinaryFiles(imgSet, outputDir, extension='mrcs'):
     elif ext == 'mrc' and extension == 'mrcs':
         mapFunc = createBinaryLink
         print "convertBinaryFiles: creating soft links (mrcs -> mrc)."
-    elif ext.endswith('.hdf'): # assume eman .hdf format
+    elif ext.endswith('hdf'): # assume eman .hdf format
         mapFunc = convertStack
         print "convertBinaryFiles: converting stacks. (%s -> %s)" % (extension, ext)
     else:
