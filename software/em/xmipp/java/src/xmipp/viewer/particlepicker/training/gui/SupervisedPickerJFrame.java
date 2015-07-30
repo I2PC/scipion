@@ -284,7 +284,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             tb.add(centerparticlebt, 0);
             add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2, 1, GridBagConstraints.WEST));
 
-            
             //add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 1));
 
             autopicklb = new JLabel(bundle.getString("autopick"));
@@ -295,7 +294,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             initMicrographsPane();
             add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 4, 2, 1, GridBagConstraints.HORIZONTAL));
             JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-
             actionspn.add(closebt);
             actionspn.add(savebt);
             actionspn.add(saveandexitbt);
