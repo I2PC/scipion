@@ -81,6 +81,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
 		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		actionspn.add(savebt);
+		actionspn.add(closebt);
 		actionspn.add(saveandexitbt);
 		add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3,
 				GridBagConstraints.HORIZONTAL));
