@@ -296,6 +296,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 4, 2, 1, GridBagConstraints.HORIZONTAL));
             JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
+            actionspn.add(closebt);
             actionspn.add(savebt);
             actionspn.add(saveandexitbt);
             add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 5, 2, 1, GridBagConstraints.HORIZONTAL));

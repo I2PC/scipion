@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:    Laura del Cano (ldelcano@cnb.csic.es)
+# * Authors:    Jose Luis Vilas (jlvilas@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -27,10 +27,10 @@
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportAverages
 
-from pyworkflow.em.packages.cryoem_scipion import ProtCryoem
+from pyworkflow.em.packages.simple import ProtPrime
 
 
-class TestCryoEmBase(BaseTest):
+class TestSimpleBase(BaseTest):
     
     def runInitialModel(self, samplingRate, symmetry, 
                         numberOfIterations, numberOfModels):
@@ -44,18 +44,18 @@ class TestCryoEmBase(BaseTest):
         self.assertIsNotNone(protImportAvg.getFiles(), "There was a problem with the import")
 
      
-        print "Run CryoEM"
-        protIniModel = self.newProtocol(ProtCryoem,
+        print "Run Simple"
+        protIniModel = self.newProtocol(ProtPrime,
                                       symmetry=symmetry, 
                                       numberOfIterations=numberOfIterations, 
                                       numberOfModels=numberOfModels, 
                                       numberOfThreads=4)
-        protIniModel.inputAverages.set(protImportAvg.outputAverages)
+        protIniModel.inputClasses.set(protImportAvg.outputAverages)
         self.launchProtocol(protIniModel)
-        self.assertIsNotNone(protIniModel.outputVol, "There was a problem with cryoem initial model protocol")
+        self.assertIsNotNone(protIniModel.outputVol, "There was a problem with simple initial model protocol")
 
 
-class TestCryoEmMDA(TestCryoEmBase):
+class TestSimpleMDA(TestSimpleBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -66,7 +66,7 @@ class TestCryoEmMDA(TestCryoEmBase):
         self.runInitialModel(3.5, 'd6', 5, 2)
 
 
-class TestCryoEmGroel(TestCryoEmBase):
+class TestSimpleGroel(TestSimpleBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
