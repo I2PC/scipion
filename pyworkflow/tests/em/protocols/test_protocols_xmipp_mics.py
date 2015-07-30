@@ -82,7 +82,7 @@ class TestXmippBase(BaseTest):
         cls.proj.launchProtocol(cls.protPP, wait=True)
         # check that faked picking has run ok
         if cls.protPP.outputCoordinates is None:
-            raise Exception('Faked particle picking: %s, failed. outputCoordinates is None.' % coordsFolder)
+            raise Exception('Faked particle picking failed. outputCoordinates is None.')
         return cls.protPP
 
 

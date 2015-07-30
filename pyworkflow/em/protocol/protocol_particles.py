@@ -127,9 +127,12 @@ class ProtParticlePicking(ProtParticles):
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
         return methodsMsgs
-
+    
+    def getInputMicrographsPointer(self):
+        return self.inputMicrographs
+    
     def getInputMicrographs(self):
-        return self.inputMicrographs.get()
+        return self.getInputMicrographsPointer().get()
     
     def getCoords(self):
         count = self.getOutputsSize()
@@ -149,7 +152,7 @@ class ProtParticlePicking(ProtParticles):
         coordSet.setObjComment(self.getSummary(coordSet))
         outputs = {outputName: coordSet}
         self._defineOutputs(**outputs)
-        self._defineSourceRelation(self.inputMicrographs, coordSet)
+        self._defineSourceRelation(self.getInputMicrographsPointer(), coordSet)
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         pass
