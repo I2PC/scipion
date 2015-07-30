@@ -27,17 +27,13 @@
 This module contains the protocol to obtain a refined 3D recontruction from a set of particles using Frealign
 """
 import os
-from pyworkflow.utils import *
-from pyworkflow.em import *
-from data import *
-from grigoriefflab import *
-from constants import *
+from pyworkflow.utils import join
+import pyworkflow.em as em 
 from protocol_frealign_base import ProtFrealignBase
 from convert import readSetOfParticles
 
 
-
-class ProtFrealign(ProtFrealignBase, ProtRefine3D):
+class ProtFrealign(ProtFrealignBase, em.ProtRefine3D):
     """ Protocol to refine a 3D map using Frealign. The algorithms implemented
 are optimized to perform  efficiently the correction for the contrast
 transfer function of the microscope and refinement of three-dimensional
@@ -50,12 +46,11 @@ reconstructions.
     
     def createOutputStep(self):
         lastIter = self._getLastIter()
-        inputSet = self.inputParticles.get()
-        lastIterDir = self._iterWorkingDir(lastIter)
+        inputSet = self._getInputParticles()
 
         # Register output volume
-        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
-        vol = Volume()
+        volFn = self._getFileName('iter_vol', iter=lastIter)
+        vol = em.Volume()
         vol.setFileName(volFn)
         vol.setSamplingRate(inputSet.getSamplingRate())
         self._defineOutputs(outputVolume=vol)
@@ -67,14 +62,12 @@ reconstructions.
         partSet.copyInfo(inputSet)
         readSetOfParticles(inputSet, partSet, file2)
         self._defineOutputs(outputParticles=partSet)
-        self._defineTransformRelation(inputSet, partSet)
+        self._defineTransformRelation(self._getInputParticlesPointer(), partSet)
         
         if not self.doContinue:
             self._defineSourceRelation(self.input3DReference, vol)
             self._defineSourceRelation(self.input3DReference, partSet)
-            
-        #convert to scipion
-
+    
     #--------------------------- INFO functions ----------------------------------------------------
     def _citations(self):
         return ['Lyumkis2013', 'Sindelar2012', 'Grigorieff2007', 'Wolf2006', 'Stewart2004', 'Grigorieff1998']

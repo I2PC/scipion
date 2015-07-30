@@ -99,7 +99,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         
         # Parameters needed to preprocess the micrographs
         self.params = {'downFactor': self.downFactor.get(),
-                       'cropPixels': self.cropPixels.get(),
+                       'cropPixels': 2 * self.cropPixels.get(),
                        'logA': self.logA.get(),
                        'logB': self.logB.get(),
                        'logC': self.logC.get(),
@@ -191,9 +191,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             return ["*Output Micrographs* not ready yet."]
 
         summary = []
-        summary.append("Micrographs preprocessed: %d" % self.inputMicrographs.get().getSize())
+        summary.append("Micrographs preprocessed: *%d*" % self.inputMicrographs.get().getSize())
         if self.doCrop:
-            summary.append("Number of pixels cropped: %d" % self.cropPixels)
+            summary.append("Cropped *%d* pixels per each border." % self.cropPixels)
         if self.doLog:
             summary.append("Formula applied: %f - %f ln(x + %f)" % (self.logA, self.logB, self.logC,))
         if self.doRemoveBadPix:

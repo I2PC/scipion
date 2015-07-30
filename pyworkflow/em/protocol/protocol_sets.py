@@ -138,6 +138,8 @@ class ProtUnionSet(ProtSets):
                 outputSet.append(obj)
 
         self._defineOutputs(outputSet=outputSet)
+        for itemSet in self.inputSets:
+            self._defineSourceRelation(itemSet, outputSet)
 
     def getObjDict(self, includeClass=False):
         return super(ProtUnionSet, self).getObjDict(includeClass)

@@ -881,6 +881,9 @@ class Protocol(Step):
         if self.runMode == MODE_RESTART:
             cleanPath(*paths)
             self.__deleteOutputs()
+            # Delete the relations created by this protocol
+            # (delete this in both project and protocol db)
+            self.mapper.deleteRelations(self)
         # Create workingDir, extra and tmp paths
         makePath(*paths)
         

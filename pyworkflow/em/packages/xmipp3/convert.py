@@ -659,20 +659,20 @@ def writeSetOfCoordinates(posDir, coordSet):
     md = xmipp.MetaData()
     # Write properties block
     objId = md.addObject()
-    micName = removeBaseExt(micName)
-    md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
+#     micName = removeBaseExt(micName)
+#     md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
     #md.setValue(xmipp.MDL_COLOR, int(-16776961), objId)
     md.setValue(xmipp.MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
     md.setValue(xmipp.MDL_PICKING_STATE, 'Manual', objId)
     
     md.write('properties@%s' % configFn)
 
-    # Write filters block
-    md = xmipp.MetaData()    
-    objId = md.addObject()
-    md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
-    md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
-    md.write('filters@%s' % configFn, xmipp.MD_APPEND)
+#     # Write filters block
+#     md = xmipp.MetaData()    
+#     objId = md.addObject()
+#     md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
+#     md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
+#     md.write('filters@%s' % configFn, xmipp.MD_APPEND)
     
     return posDict.values()
 

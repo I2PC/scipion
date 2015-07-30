@@ -194,7 +194,7 @@ class TestBrandeisCtffind4(TestBrandeisBase):
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
 
 
-class TestBrandeisFrealign(TestBrandeisBase):
+class TestFrealignRefine(TestBrandeisBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -212,12 +212,52 @@ class TestBrandeisFrealign(TestBrandeisBase):
                                     doInvert=False,
                                     input3DReference = self.protImportVol.outputVolume,
                                     useInitialAngles=True,
-                                    mode=MOD_RECONSTRUCTION,
+                                    mode=MOD_REFINEMENT,
                                     innerRadius=0.,
                                     outerRadius=241.,
                                     symmetry='C1',
                                     numberOfThreads=4,
-                                    numberOfIterations=1,
+                                    numberOfIterations=2,
+                                    doWienerFilter=False,
+                                    resolution=2.,
+                                    highResolRefine=2.,
+                                    resolClass=2.,
+                                    writeMatchProjections=False,
+                                    score=0,
+                                    )
+        frealign.inputParticles.set(self.protImportPart.outputParticles)
+        frealign.input3DReference.set(self.protImportVol.outputVolume)
+        self.launchProtocol(frealign)
+        print "Assert is missing: testFrealign"
+
+
+class TestFrealignClassify(TestBrandeisBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        dataProject='grigorieff'
+        dataset = DataSet.getDataSet(dataProject)
+        TestBrandeisBase.setData()
+        particlesPattern   = dataset.getFile('particles.sqlite')
+        volFn              = dataset.getFile('ref_volume.vol')
+        cls.protImportPart = cls.runImportParticleGrigorieff(particlesPattern)
+        cls.protImportVol  = cls.runImportVolumesGrigorieff(volFn)
+
+    def testFrealignClassify(self):
+        frealign = self.newProtocol(ProtFrealignClassify,
+                                    inputParticles = self.protImportPart.outputParticles,
+                                    doInvert=False,
+                                    input3DReference = self.protImportVol.outputVolume,
+                                    numberOfIterations=3,
+                                    itRefineAngles = 2,
+                                    itRefineShifts = 3,
+                                    numberOfClasses = 2,
+                                    useInitialAngles=True,
+                                    mode=MOD_REFINEMENT,
+                                    innerRadius=0.,
+                                    outerRadius=241.,
+                                    symmetry='C1',
+                                    numberOfThreads=4,
                                     doWienerFilter=False,
                                     resolution=2.,
                                     highResolRefine=2.,

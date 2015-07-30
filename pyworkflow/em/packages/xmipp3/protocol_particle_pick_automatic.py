@@ -105,7 +105,6 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                     
         self._insertFunctionStep('_createOutput',self._getExtraPath(), prerequisites=deps)
         
-    
     #--------------------------- STEPS functions --------------------------------------------
     def copyInputFilesStep(self):
         # Copy training model files to current run

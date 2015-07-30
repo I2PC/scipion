@@ -45,6 +45,9 @@ class ProtCTFAssign(ProtCTFMicrographs):
         def onChangeInputType():
             pointerClass = 'SetOf' + self.getEnumText('inputType')
             self.inputSetsParam.setPointerClass(pointerClass)
+        # Initial update
+        onChangeInputType()
+        # Now keep track of changes and update
         self.inputType.trace(onChangeInputType)
     
     #--------------------------- DEFINE param functions --------------------------------------------

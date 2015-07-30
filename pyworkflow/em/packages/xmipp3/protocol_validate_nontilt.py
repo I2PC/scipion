@@ -164,7 +164,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         
         outputVols.setSamplingRate(volume.getSamplingRate())
         self._defineOutputs(outputVolumes=outputVols)
-        #self._defineTransformRelation(self.inputVolumes.get(), volume)
+        self._defineTransformRelation(self.inputVolumes, outputVols)
         
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

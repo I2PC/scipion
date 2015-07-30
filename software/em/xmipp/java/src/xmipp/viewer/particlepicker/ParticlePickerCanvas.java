@@ -1,6 +1,5 @@
 package xmipp.viewer.particlepicker;
 
-import ij.ImagePlus;
 import ij.gui.ImageWindow;
 
 import java.awt.BasicStroke;
@@ -26,7 +25,6 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
-import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
@@ -40,7 +38,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	protected Micrograph micrograph;
 	protected ParticlePicker picker;
 	protected XmippImageWindow iw;
-	
+	protected Cursor eraserCursor = Toolkit.getDefaultToolkit().createCustomCursor(XmippResource.getIcon("eraser.png").getImage(), new Point(0, 0), "Eraser");
 
 	
         
@@ -197,35 +195,27 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public void mouseEntered(MouseEvent e)
 	{
 		super.mouseEntered(e);
-		setCursor(crosshairCursor);
+		setCustomCursor(e);
 	}
 
-	public void mouseMoved(MouseEvent e)
+
+	
+	public void mouseExited(MouseEvent e)
 	{
-		super.mouseMoved(e);
-		setCustomCursor(e);
+		super.mouseExited(e);
+		setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 
 	}
 	
 	
 	protected void setCustomCursor(MouseEvent e)
 	{
-		if (!getFrame().isEraserMode())
-			setCursor(crosshairCursor);
-		else if (getFrame().isPickingAvailable(e))
-
+		if (getFrame().isPickingAvailable(e))
 		{
-
-			final int x = e.getX();
-			final int y = e.getY();
-			// only display a hand if the cursor is over the items
-			final Rectangle cellBounds = iw.getBounds();
-			Toolkit toolkit = Toolkit.getDefaultToolkit();
-			Cursor eraserCursor = toolkit.createCustomCursor(XmippResource.getIcon("eraser.png").getImage(), new Point(0, 0), "Eraser");
-			if (cellBounds != null && cellBounds.contains(x, y))
-				setCursor(eraserCursor);
-			else
-				setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+				if (!getFrame().isEraserMode())
+					setCursor(crosshairCursor);
+				else 
+					setCursor(eraserCursor);
 		}
 	}
 

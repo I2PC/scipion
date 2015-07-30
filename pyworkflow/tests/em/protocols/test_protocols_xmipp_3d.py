@@ -771,6 +771,30 @@ class TestXmippProjMatching(TestXmippBase):
         self.assertIsNotNone(protProjMatch.outputVolume, "There was a problem with Projection Matching")
 
 
+class TestPdbImport(TestXmippBase):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('nma')
+        cls.pdb = cls.dataset.getFile('pdb')
+    
+    def testImportPdbFromId(self):
+        print "Run convert a pdb from database"
+        protConvert = self.newProtocol(ProtImportPdb, pdbId="3j3i")
+        self.launchProtocol(protConvert)
+        self.assertIsNotNone(protConvert.outputPdb.getFileName(), 
+                             "There was a problem with the import")
+        
+    def testImportPdbFromFn(self):
+        print "Run convert a pdb from file"
+        protConvert = self.newProtocol(ProtImportPdb, 
+                                       inputPdbData=ProtImportPdb.IMPORT_FROM_FILES, 
+                                       pdbFile=self.pdb)
+        self.launchProtocol(protConvert)
+        self.assertIsNotNone(protConvert.outputPdb.getFileName(), 
+                             "There was a problem with the import")
+        
 class TestXmippPdbConvert(TestXmippBase):
     
     @classmethod
@@ -789,11 +813,15 @@ class TestXmippPdbConvert(TestXmippBase):
         
     def testXmippPdbConvertFromObj(self):
         print "Run convert a pdb from import"
-        protImport = self.newProtocol(ProtImportPdb, pdbPath=self.pdb)
+        protImport = self.newProtocol(ProtImportPdb, 
+                                      inputPdbData=ProtImportPdb.IMPORT_FROM_FILES, 
+                                      pdbFile=self.pdb)
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputPdb.getFileName(), "There was a problem with the import")
         
-        protConvert = self.newProtocol(XmippProtConvertPdb, inputPdbData=1, sampling=3, setSize=True, size=20)
+        protConvert = self.newProtocol(XmippProtConvertPdb, 
+                                       inputPdbData=XmippProtConvertPdb.IMPORT_OBJ, 
+                                       sampling=3, setSize=True, size=20)
         protConvert.pdbObj.set(protImport.outputPdb)
         self.launchProtocol(protConvert)
         self.assertIsNotNone(protConvert.outputVolume.getFileName(), "There was a problem with the convertion")

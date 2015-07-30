@@ -486,7 +486,7 @@ class ProtFrealignBase(EMProtocol):
     def _insertContinueStep(self):
         if self.doContinue:
             continueRun = self.continueRun.get()
-            self.inputParticles.set(continueRun.inputParticles.get())
+            self.inputParticles.set(None)
             self.doInvert.set(continueRun.doInvert.get())
             self.symmetry.set(continueRun.symmetry.get())
             self.useInitialAngles.set(False)
@@ -577,8 +577,7 @@ class ProtFrealignBase(EMProtocol):
         iterDir = self._iterWorkingDir(iterN)
         self._enterDir(iterDir)
 
-        ##imgSet = self.inputParticles.get()
-        inputParticles = self.inputParticles.get()
+        inputParticles = self._getInputParticles()
         magnification = inputParticles.getAcquisition().getMagnification()
         params = {}
 
@@ -624,9 +623,7 @@ class ProtFrealignBase(EMProtocol):
     def writeInitialAnglesStep(self):
         """This function write a .par file with all necessary information for a refinement"""
 
-        #imgSet = self.inputParticles.get()
-        #frealign need to have a numeric micId not longer than 5 digits
-        micIdList = self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
+        micIdList = self._getInputParticles().aggregate(['count'],'_micId',['_micId'])
         self.micIdMap={}
         counter = 0;
         for mic in micIdList:
@@ -661,7 +658,6 @@ class ProtFrealignBase(EMProtocol):
         param = {}
 
         iterDir = self._iterWorkingDir(iterN)
-
         iniPart, lastPart = self._initFinalBlockParticles(block)
         prevIter = iterN - 1
         param['inputParFn'] = self._getBaseName('input_par_block', block= block, iter=iterN, prevIter=prevIter)
@@ -691,7 +687,7 @@ class ProtFrealignBase(EMProtocol):
         self._mergeAllParFiles(iterN, self.numberOfBlocks)  # merge all parameter files generated in a refineIterStep function.
         
         initParticle = 1
-        finalParticle = self.inputParticles.get().getSize()
+        finalParticle = self._getInputParticles().getSize()
 
         os.environ['NCPUS'] = str(self.numberOfBlocks)
         paramsDic['frealign'] = FREALIGNMP_PATH
@@ -716,11 +712,7 @@ class ProtFrealignBase(EMProtocol):
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
-        if self.doContinue:
-            continueRun = self.continueRun.get()
-            imgSet = continueRun.inputParticles.get()
-        else:
-            imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
 
         if not exists(FREALIGN_PATH):
             errors.append('Missing ' + FREALIGN_PATH)
@@ -744,8 +736,8 @@ class ProtFrealignBase(EMProtocol):
     
     def _summary(self):
         summary = []
-        if self.inputParticles.get() is not None:
-            summary.append("Number of particles:  %d" % self.inputParticles.get().getSize())
+        if self._getInputParticles() is not None:
+            summary.append("Number of particles:  %d" % self._getInputParticles().getSize())
         if self.input3DReference.get() is not None:
             summary.append("Input volume:  %s" % self.input3DReference.get().getFileName())
 
@@ -767,7 +759,7 @@ class ProtFrealignBase(EMProtocol):
     def _getParamsIteration(self, iterN):
         """ Defining the current iteration
         """
-        imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
 
         #Prepare arguments to call program fralign_v9.exe
         paramsDic = {'frealign': FREALIGN_PATH,
@@ -1201,12 +1193,12 @@ eot
     
     def iterParticlesByMic(self):
         """ Iterate the particles ordered by micrograph """
-        for i, part in enumerate(self.inputParticles.get().iterItems(orderBy=['_micId', 'id'],
+        for i, part in enumerate(self._getInputParticles().iterItems(orderBy=['_micId', 'id'],
                                                                      direction='ASC')):
             yield i, part
     
     def writeParticlesByMic(self, stackFn):
-        self.inputParticles.get().writeStack(stackFn,
+        self._getInputParticles().writeStack(stackFn,
                                              orderBy=['_micId', 'id'],
                                              direction='ASC')
         if self.doInvert:
@@ -1216,8 +1208,12 @@ eot
             moveFile(tmpFile, stackFn)
     
     def _getMicIdList(self):
-        if self._micList == []:
-            self._micList = self.inputParticles.get().aggregate(['count'],'_micId',['_micId'])
+        imgSet = self._getInputParticles()
+        imgHasmicId = imgSet.getFirstItem().hasMicId()
+        if self._micList == [] and imgHasmicId:
+            self._micList = self._getInputParticles().aggregate(['count'],'_micId',['_micId'])
+        elif not imgHasmicId:
+            self._micList = [{'count' : self._getInputParticles().getSize(),'_micId' : 0}]
         return self._micList
     
     def _getMicCounter(self):
@@ -1228,9 +1224,19 @@ eot
             micIdMap[mic['_micId']]=counter
             counter = counter +1
         return micIdMap
+
+    def _getInputParticlesPointer(self):
+        if self.doContinue and self.inputParticles is None:
+            self.inputParticles.set(self.continueRun.get().inputParticles.get())
+        return self.inputParticles
+    
+    def _getInputParticles(self):
+        return self._getInputParticlesPointer().get()
     
     def _defNumberOfCPUs(self):
         self._micList = []
         cpus = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
         numberOfMics = len(self._getMicIdList())
         return min(cpus, numberOfMics)
+    
+    

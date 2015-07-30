@@ -850,7 +850,8 @@ class PointerList(List):
             pointer = Pointer()
             pointer.set(value)
         else:
-            raise Exception("Only subclasses of Object can be added to PointerList")
+            raise Exception("Only subclasses of Object can be added to PointerList\n"
+                            " Passing value: %s, type: %s" % (value, type(value)))
 
         List.append(self, pointer)
 
@@ -1121,6 +1122,12 @@ class Set(OrderedObject):
         set its value as an object attribute.
         """
         self.setAttributeValue(propertyName, self.getProperty(propertyName, defaultValue))
+        
+    def loadAllProperties(self):
+        """ Retrieve all properties stored by the mapper. """
+        for key in self._getMapper().getPropertyKeys():
+            if key != 'self':
+                self.loadProperty(key)
         
     def getIdSet(self):
         """ Return a Python set object containing all ids. """

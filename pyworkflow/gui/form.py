@@ -91,7 +91,8 @@ class PointerVar():
         if value is None:
             value = pwobj.Pointer(None)
         if not isinstance(value, pwobj.Pointer):
-            raise Exception('Pointer var should be used with pointers!!!')
+            raise Exception('Pointer var should be used with pointers!!!\n'
+                            ' Passing: %s, type: %s' % (value, type(value)))
         self._pointer.copy(value)
             
         label, _ = getPointerLabelAndInfo(self._pointer,
@@ -334,6 +335,11 @@ class SubclassesTreeProvider(TreeProvider):
             # Make sure we dont include previous output of the same 
             # protocol, it will cause a recursive loop
             if prot.getObjId() != self.protocol.getObjId():
+                # Check if the protocol itself is one of the desired classes
+                if any(issubclass(prot.getClass(), c) for c in classes):
+                    p = pwobj.Pointer(prot)
+                    objects.append(p)
+                
                 for paramName, attr in prot.iterOutputEM():
                     # If attr is a sub-classes of any desired one, add it to the list
                     # we should also check if there is a condition, the object 
@@ -902,10 +908,12 @@ class ParamWidget():
                          selectmode=self._selectmode)
         
         if dlg.values:
-            if isinstance(self.param, params.PointerParam):
-                self.set(dlg.values[0]) # only a single value for Poin
-            else: # MulitiPointerParam
+            if isinstance(self.param, params.MultiPointerParam):
                 self.set(dlg.values)
+            elif isinstance(self.param, params.PointerParam):
+                self.set(dlg.values[0])
+            else:
+                raise Exception('Invalid param class: %s' % type(self.param))
         
     def _removeObject(self, e=None):
         """ Remove an object from a MultiPointer param. """
