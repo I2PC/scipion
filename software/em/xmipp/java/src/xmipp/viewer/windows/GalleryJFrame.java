@@ -223,10 +223,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		catch (Exception e)
 		{
 			DEBUG.printException(e);
-                        setVisible(false);
-                        dispose();
-                        
-                        throw new IllegalArgumentException(e);
+            setVisible(false);
+            dispose();
+            
+            throw new IllegalArgumentException(e);
 		}
 	}
 
@@ -1797,7 +1797,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(HELP_ONLINE))
 				{
-					XmippWindowUtil.openURI("http://scipion.cnb.csic.es/docs/bin/view/TWiki/UserDocs");
+					XmippWindowUtil.openURI("http://scipion.cnb.csic.es/bin/view/TWiki/ShowJ");
 				}
 				else if (cmd.equals(KEY_ASSIST))
 				{
