@@ -500,7 +500,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         });
     }
 
-	protected abstract void openHelpURl();
+	protected void openHelpURl()
+	{
+		XmippWindowUtil.openURI("http://scipion.cnb.csic.es/docs/bin/view/TWiki/UserDocs");
+	}
 
 	protected abstract void resetMicrograph();
 

@@ -108,11 +108,11 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         return ppicker.getMicrograph();
     }
 
-    @Override
-    protected void openHelpURl() {
-        XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_particle_picking_v3");
-
-    }
+//    @Override
+//    protected void openHelpURl() {
+//        XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_particle_picking_v3");
+//
+//    }
 
     public double getThreshold() {
         if (thresholdsl == null) {
