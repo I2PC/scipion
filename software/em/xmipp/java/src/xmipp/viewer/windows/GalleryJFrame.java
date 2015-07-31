@@ -1573,7 +1573,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
-			addItem(KEY_ASSIST, "Key assist...");
+			addItem(KEY_ASSIST, "Tips...", "bulb.png");
 		}// function createItems
 
 		public void update()
@@ -1702,22 +1702,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(FILE_OPENWITH_CHIMERA))
 				{
-                                    if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
-                                    {
-                                        int result = fc.showOpenDialog(GalleryJFrame.this);
-                                        if(result != XmippFileChooser.CANCEL_OPTION)
-                                        {
-                                            String path = fc.getSelectedPath();
-                                            if(!Filename.isVolumeExt(path))
-                                            {
-                                                XmippDialog.showError(GalleryJFrame.this, XmippMessage.getFileTypeNotSupportedMsg(path));
-                                                return;
-                                            }
-                                            openChimera(path, true);
-                                        }
-                                    }
-                                    else
-                                        openChimera(data.getSelVolumeFile(), false);
+                    if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
+                    {
+                        int result = fc.showOpenDialog(GalleryJFrame.this);
+                        if(result != XmippFileChooser.CANCEL_OPTION)
+                        {
+                            String path = fc.getSelectedPath();
+                            if(!Filename.isVolumeExt(path))
+                            {
+                                XmippDialog.showError(GalleryJFrame.this, XmippMessage.getFileTypeNotSupportedMsg(path));
+                                return;
+                            }
+                            openChimera(path, true);
+                        }
+                    }
+                    else
+                        openChimera(data.getSelVolumeFile(), false);
 				}
 				else if (cmd.equals(FILE_OPENMICROGRAPHS))
 				{
@@ -1802,7 +1802,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				else if (cmd.equals(KEY_ASSIST))
 				{
 					if (quickhelpdlg == null)
-						quickhelpdlg = new QuickHelpJDialog(GalleryJFrame.this, false, "Key Assist", getKeyAssist());
+						quickhelpdlg = new QuickHelpJDialog(GalleryJFrame.this, false, "Tips", getKeyAssist());
 					quickhelpdlg.setVisible(true);
 
 				}

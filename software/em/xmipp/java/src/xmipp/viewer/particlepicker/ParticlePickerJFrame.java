@@ -383,7 +383,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
 		helpmn.add(hcontentsmi);
 
-		keyassistmi = new JMenuItem("Key assist...");
+		keyassistmi = new JMenuItem("Tips...", XmippResource.getIcon("bulb.png"));
 		keyassistmi.addActionListener(new ActionListener()
 		{
 

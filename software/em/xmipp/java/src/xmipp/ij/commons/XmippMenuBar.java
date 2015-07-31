@@ -297,7 +297,7 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(profilemn);
 //		addIJMenuItem(advancedmn, "Masks Tool Bar", "Masks Tool Bar", IJRequirement.IMAGEJ);// missing
 		// plugin
-		keyassistmi = new MenuItem("Key Assist");
+		keyassistmi = new MenuItem("Tips");
 		keyassistmi.addActionListener(new ActionListener()
 		{
 			
@@ -309,7 +309,7 @@ public class XmippMenuBar extends MenuBar
 				try
 				{
 				if(keyassistdlg == null)
-					keyassistdlg = new QuickHelpJDialog(null, false, "Key Assist...", getKeyAssist());
+					keyassistdlg = new QuickHelpJDialog(null, false, "Tips...", getKeyAssist());
 				keyassistdlg.setVisible(true);
 				}
 				catch(Exception e)
