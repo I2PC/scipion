@@ -76,7 +76,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		{
 			templatesfile = getOutputPath("templates.stk");
 			if (!new File(templatesfile).exists())
-
 				initTemplates(dtemplatesnum);
 			else
 			{
@@ -87,7 +86,6 @@ public class SupervisedParticlePicker extends ParticlePicker
                 templateindex = (templates.getStatistics()[2] == 0)? 0: getTemplatesNumber();
 			}
             templates.getRadialAvg(radialtemplates);
-
 
 			for (SupervisedPickerMicrograph m : micrographs)
 				loadMicrographData(m);

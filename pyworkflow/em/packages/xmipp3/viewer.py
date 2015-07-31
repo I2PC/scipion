@@ -38,7 +38,7 @@ from xmipp3 import getXmippPath, getEnviron
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, ParticlesTiltPair, CoordinatesTiltPair
 from convert import *
 from os.path import dirname, join
-from pyworkflow.utils import makePath, runJob, copyTree
+from pyworkflow.utils import makePath, runJob, copyTree, cleanPath
 import pyworkflow as pw
 import xmipp
 
@@ -201,6 +201,8 @@ class XmippViewer(Viewer):
             
             mdFn = getattr(micSet, '_xmippMd', None)
             tmpDir = self._getTmpPath(obj.getName())
+            
+            cleanPath(tmpDir)
             makePath(tmpDir)
             
             if mdFn:
