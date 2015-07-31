@@ -549,6 +549,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 moveFile(join(fnDirSignificant,"gallery%02d.doc"%i), fnGalleryMd)
 
                 fnAngles=join(fnGlobal,"anglesDisc%02d.xmd"%i)
+                useSignificant=False
                 for j in range(1,numberGroups+1):
                     fnAnglesGroup=join(fnDirSignificant,"angles_group%02d.xmd"%j)
                     if not exists(fnAnglesGroup):
@@ -562,13 +563,27 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         else:
                             fnGroup=fnImgs
                             fnGalleryGroupMd=fnGalleryMd
-                        args='-i %s --initgallery %s --odir %s --sym %s --iter 1 --alpha0 %f --alphaF %f --angularSampling %f --maxShift %d '\
-                             '--minTilt %f --maxTilt %f --useImed --angDistance %f --dontReconstruct'%\
-                             (fnGroup,fnGalleryGroupMd,fnDirSignificant,self.symmetryGroup,alpha,alpha,angleStep,\
-                              round(self.angularMaxShift.get()*newXdim/100),self.angularMinTilt.get(),self.angularMaxTilt.get(),2*angleStep)
-                        self.runJob('xmipp_reconstruct_significant',args)
-                        moveFile(join(fnDirSignificant,"angles_iter001_00.xmd"),join(fnDirSignificant,"angles_group%02d.xmd"%j))
-                        self.runJob("rm -f",fnDirSignificant+"/images_*iter00?_*.xmd",numberOfMpi=1)
+                        maxShift=round(self.angularMaxShift.get()*newXdim/100)
+                        if useSignificant:
+                            args='-i %s --initgallery %s --odir %s --sym %s --iter 1 --alpha0 %f --alphaF %f --angularSampling %f --maxShift %d '\
+                                 '--minTilt %f --maxTilt %f --useImed --angDistance %f --dontReconstruct'%\
+                                 (fnGroup,fnGalleryGroupMd,fnDirSignificant,self.symmetryGroup,alpha,alpha,angleStep,\
+                                  maxShift,self.angularMinTilt.get(),self.angularMaxTilt.get(),2*angleStep)
+                            self.runJob('xmipp_reconstruct_significant',args)
+                            moveFile(join(fnDirSignificant,"angles_iter001_00.xmd"),join(fnDirSignificant,"angles_group%02d.xmd"%j))
+                            self.runJob("rm -f",fnDirSignificant+"/images_*iter00?_*.xmd",numberOfMpi=1)
+                        else:
+                            R=self.particleRadius.get()
+                            if R<=0:
+                                R=self.inputParticles.get().getDimensions()[0]/2
+                            R=R*self.TsOrig/TsCurrent
+                            args='-i %s -o %s --ref %s --ctf %d@%s --Ri 0 --Ro %d --max_shift %d --search5d_shift 5.0 --search5d_step 2.0 --mem 2 --thr 1 --append --pad 2.0 --mpi_job_size 2'%\
+                                 (fnGroup,join(fnDirSignificant,"angles_group%02d.xmd"%j),fnGalleryGroup,j,fnCTFs,R,maxShift)
+                            # mpirun -np 12 -bynode `which xmipp_mpi_angular_projection_matching`  -i ctfGroup000129@Runs/001848_XmippProtProjMatch/extra/original_angles.doc 
+                            # -o ctfGroup000129@Runs/001848_XmippProtProjMatch/extra/iter_001/ProjMatchClasses/XmippProtProjMatch_Ref3D_001.sqlite 
+                            # --ref Runs/001848_XmippProtProjMatch/extra/iter_001/ReferenceLibrary/gallery_Ref3D_001.stk --ctf 000129@Runs/001848_XmippProtProjMatch/extra/CtfGroups/ctf_ctf.stk
+                            # --Ri 0.0 --Ro 170.0 --max_shift 1000.0 --search5d_shift 5.0 --search5d_step 2.0 --mem 2 --thr 1 --append --pad 2.0 --mpi_job_size 2
+                            self.runJob('xmipp_angular_projection_matching',args)
                         if j==1:
                             copyFile(fnAnglesGroup, fnAngles)
                         else:
