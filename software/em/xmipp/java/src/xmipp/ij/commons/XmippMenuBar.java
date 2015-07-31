@@ -38,6 +38,7 @@ import javax.vecmath.Color3f;
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
+import xmipp.utils.XmippWindowUtil;
 
 /**
  * 
@@ -71,6 +72,7 @@ public class XmippMenuBar extends MenuBar
 	protected CheckboxMenuItem ugmi;
 	protected MenuItem exitmi;
 	protected Menu helpmn;
+	protected MenuItem onlinemi;
 	protected MenuItem keyassistmi;
 	protected QuickHelpJDialog keyassistdlg;
 	protected boolean invertx;
@@ -297,6 +299,19 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(profilemn);
 //		addIJMenuItem(advancedmn, "Masks Tool Bar", "Masks Tool Bar", IJRequirement.IMAGEJ);// missing
 		// plugin
+		onlinemi = new MenuItem("Online Help");
+		onlinemi.addActionListener(new ActionListener()
+		{
+			
+			
+
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				XmippWindowUtil.openURI("http://scipion.cnb.csic.es/docs/bin/view/TWiki/UserDocs");
+			}
+		});
+		helpmn.add(onlinemi);
 		keyassistmi = new MenuItem("Tips");
 		keyassistmi.addActionListener(new ActionListener()
 		{
