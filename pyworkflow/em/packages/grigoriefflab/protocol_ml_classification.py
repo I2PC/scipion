@@ -234,26 +234,14 @@ marginal likelihood.
         volumes = self._createSetOfVolumes()
         volumes.setSamplingRate(imgSet.getSamplingRate())
         
-        fileparList = []
-        volumeList = []
-        
         for ref in range(1, numberOfClasses + 1):
             vol = Volume()
-            filepar = self._getFileName('output_par_class', iter=self._getLastIter(), ref=ref)
             volFn = self._getFileName('iter_vol_class', iter=self._getLastIter(), ref=ref)
             vol.setFileName(volFn)
             volumes.append(vol)
-            fileparList.append(filepar)
-            volumeList.append(volFn)
         
         clsSet = self._createSetOfClasses3D(imgSet)
-        params = {'orderBy' : ['_micId', 'id'],
-                  'direction' : 'ASC'
-                  }
-        clsSet.classifyItems(updateItemCallback=self._updateParticle,
-                     updateClassCallback=self._updateClass,
-                     itemDataIterator=self._iterRows(numberOfClasses),
-                     iterParams=params)
+        self._fill3DClasses(clsSet, numberOfClasses)
 
         # Define the outputs and relations
         self._defineOutputs(outputClasses=clsSet)
@@ -413,6 +401,16 @@ eot
             lastPart = lastPart + blockParticles[i]
         
         return initPart, lastPart
+    
+    def _fill3DClasses(self, clsSet, numberOfClasses):
+        params = {'orderBy' : ['_micId', 'id'],
+              'direction' : 'ASC'
+              }
+        
+        clsSet.classifyItems(updateItemCallback=self._updateParticle,
+                     updateClassCallback=self._updateClass,
+                     itemDataIterator=self._iterRows(numberOfClasses),
+                     iterParams=params)
     
     def _updateParticle(self, item, row):
         from convert import rowToAlignment, OrderedDict, HEADER_COLUMNS
