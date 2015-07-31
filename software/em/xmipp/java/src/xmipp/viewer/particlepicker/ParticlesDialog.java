@@ -101,9 +101,9 @@ public class ParticlesDialog extends Dialog
                                 
 				particlespn.add(c, XmippWindowUtil.getConstraints(constraints, j, i, 1));
 			}
-                // particlespn.revalidate();
-                sp.getVAdjustable().setValue(sp.getVAdjustable().getMaximum());
-                sp.getHAdjustable().setValue(sp.getHAdjustable().getMaximum());
+        // particlespn.revalidate();
+        sp.getVAdjustable().setValue(sp.getVAdjustable().getMaximum());
+        sp.getHAdjustable().setValue(sp.getHAdjustable().getMaximum());
 		pack();
 
 	}
@@ -114,7 +114,7 @@ public class ParticlesDialog extends Dialog
 	{
 		
 		setTitle("Particles");
-                setLayout(new BorderLayout());
+        setLayout(new BorderLayout());
 		constraints = new GridBagConstraints();
 		sp = new ScrollPane(ScrollPane.SCROLLBARS_AS_NEEDED);
                 

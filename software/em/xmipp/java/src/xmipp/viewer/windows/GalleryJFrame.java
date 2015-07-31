@@ -1573,7 +1573,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
-			addItem(KEY_ASSIST, "Key assist...");
+			addItem(KEY_ASSIST, "Tips...", "bulb.png");
 		}// function createItems
 
 		public void update()
@@ -1702,22 +1702,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(FILE_OPENWITH_CHIMERA))
 				{
-                                    if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
-                                    {
-                                        int result = fc.showOpenDialog(GalleryJFrame.this);
-                                        if(result != XmippFileChooser.CANCEL_OPTION)
-                                        {
-                                            String path = fc.getSelectedPath();
-                                            if(!Filename.isVolumeExt(path))
-                                            {
-                                                XmippDialog.showError(GalleryJFrame.this, XmippMessage.getFileTypeNotSupportedMsg(path));
-                                                return;
-                                            }
-                                            openChimera(path, true);
-                                        }
-                                    }
-                                    else
-                                        openChimera(data.getSelVolumeFile(), false);
+                    if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
+                    {
+                        int result = fc.showOpenDialog(GalleryJFrame.this);
+                        if(result != XmippFileChooser.CANCEL_OPTION)
+                        {
+                            String path = fc.getSelectedPath();
+                            if(!Filename.isVolumeExt(path))
+                            {
+                                XmippDialog.showError(GalleryJFrame.this, XmippMessage.getFileTypeNotSupportedMsg(path));
+                                return;
+                            }
+                            openChimera(path, true);
+                        }
+                    }
+                    else
+                        openChimera(data.getSelVolumeFile(), false);
 				}
 				else if (cmd.equals(FILE_OPENMICROGRAPHS))
 				{
@@ -1797,12 +1797,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(HELP_ONLINE))
 				{
-					XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome");
+					XmippWindowUtil.openURI("http://scipion.cnb.csic.es/docs/bin/view/TWiki/UserDocs");
 				}
 				else if (cmd.equals(KEY_ASSIST))
 				{
 					if (quickhelpdlg == null)
-						quickhelpdlg = new QuickHelpJDialog(GalleryJFrame.this, false, "Key Assist", getKeyAssist());
+						quickhelpdlg = new QuickHelpJDialog(GalleryJFrame.this, false, "Tips", getKeyAssist());
 					quickhelpdlg.setVisible(true);
 
 				}
@@ -1817,64 +1817,64 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		
 		protected void addRenderImageColumnItems()
 		{                  
-                        JMenuItem mi = getItem(DISPLAY_RENDERIMAGE);
-                        if(mi == null)
-                            mi = addItem(DISPLAY_RENDERIMAGE, "Render image");
-                        else
-                            mi.removeAll();
+            JMenuItem mi = getItem(DISPLAY_RENDERIMAGE);
+            if(mi == null)
+                mi = addItem(DISPLAY_RENDERIMAGE, "Render label");
+            else
+                mi.removeAll();
 			boolean rendercolumn = false;
 			
-                        // Create the popup menu.
-                        String id, column;
-                        for(ColumnInfo ci: data.getColumns())
-                        {
-                            if(ci.render)
-                            {
-                                column = ci.labelName;
-                                id = String.format("Display.RenderImage.%s_rb", column.replace(".", ""));
-                                mi = addItem(id, column);
-                                mi.addActionListener(new RenderColumnActionListener());
-                                if(data.getRenderColumn().toString().equals(column))
-                                        setItemSelected(id, true);
-                                rendercolumn = true;
-                            }
-                        }
-                        setItemEnabled(DISPLAY_RENDERIMAGE, rendercolumn);
+            // Create the popup menu.
+            String id, column;
+            for(ColumnInfo ci: data.getColumns())
+            {
+                if(ci.render)
+                {
+                    column = ci.labelName;
+                    id = String.format("Display.RenderImage.%s_rb", column.replace(".", ""));
+                    mi = addItem(id, column);
+                    mi.addActionListener(new RenderColumnActionListener());
+                    if(data.getRenderColumn().toString().equals(column))
+                            setItemSelected(id, true);
+                    rendercolumn = true;
+                }
+            }
+            setItemEnabled(DISPLAY_RENDERIMAGE, rendercolumn);
 
 		}
                 
-                protected void addDisplayLabelItems()
+        protected void addDisplayLabelItems()
 		{                  
-                        JMenuItem mi = getItem(DISPLAY_SHOWLABELS);
+            JMenuItem mi = getItem(DISPLAY_SHOWLABELS);
 			if(mi == null)
-                            mi = addItem(DISPLAY_SHOWLABELS, "Display label");
-                        else
-                            mi.removeAll();
-			
-                        // Create the popup menu.
-                        String id, column;
-                        List<String> displayLabels = null;
-                        if(data.parameters.getDisplayLabels() != null)
-                            displayLabels = Arrays.asList(data.parameters.getDisplayLabels());
-                        for(ColumnInfo ci: data.getColumns())
-                        {
-                            if(ci.visible)
-                            {
-                                column = ci.labelName;
-                                id = String.format("Display.ShowLabel.%s_cb", column.replace(".", ""));
-                                mi = addItem(id, column);
-                                mi.addActionListener(new DisplayLabelActionListener());
-                                
-                                if(displayLabels!= null && displayLabels.contains(column))
-                                        setItemSelected(id, true);
-                            }   
-                        }
+                mi = addItem(DISPLAY_SHOWLABELS, "Display label");
+            else
+                mi.removeAll();
+
+            // Create the popup menu.
+            String id, column;
+            List<String> displayLabels = null;
+            if(data.parameters.getDisplayLabels() != null)
+                displayLabels = Arrays.asList(data.parameters.getDisplayLabels());
+            for(ColumnInfo ci: data.getColumns())
+            {
+                if(ci.visible)
+                {
+                    column = ci.labelName;
+                    id = String.format("Display.ShowLabel.%s_cb", column.replace(".", ""));
+                    mi = addItem(id, column);
+                    mi.addActionListener(new DisplayLabelActionListener());
+                    
+                    if(displayLabels!= null && displayLabels.contains(column))
+                            setItemSelected(id, true);
+                }   
+            }
 
 		}
 
         
                 
-                class DisplayLabelActionListener implements ActionListener
+        class DisplayLabelActionListener implements ActionListener
 		{
 
 			@Override
@@ -1943,7 +1943,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
             row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
-                        boolean isscipion = data.isScipionInstance();
+            boolean isscipion = data.isScipionInstance();
 			setItemVisible(SET_CLASS, data.isClassificationMd() && !isscipion);
 			// This item visibility depends on current selection
 			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0 && !isscipion);

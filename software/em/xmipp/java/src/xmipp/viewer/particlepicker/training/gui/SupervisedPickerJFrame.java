@@ -108,11 +108,11 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         return ppicker.getMicrograph();
     }
 
-    @Override
-    protected void openHelpURl() {
-        XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_particle_picking_v3");
-
-    }
+//    @Override
+//    protected void openHelpURl() {
+//        XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_particle_picking_v3");
+//
+//    }
 
     public double getThreshold() {
         if (thresholdsl == null) {
@@ -286,8 +286,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
             //add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 1));
 
-            autopicklb = new JLabel(bundle.getString("autopick"));
-            add(autopicklb, XmippWindowUtil.getConstraints(constraints, 0, 3));
+            
             initSupervisedPickerPane();
             add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 3, 1, 1, GridBagConstraints.HORIZONTAL));
             enableSupervised(ppicker.getMode() == Mode.Supervised);
@@ -328,7 +327,10 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     }
 
     private void initSupervisedPickerPane() {
+    	
         sppickerpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        autopicklb = new JLabel(bundle.getString("autopick"));
+        sppickerpn.add(autopicklb);
         autopickchb = new JCheckBox();
         autopickchb.setSelected(ppicker.isAutopick());
 
