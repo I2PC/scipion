@@ -700,6 +700,10 @@ class SqliteFlatMapper(Mapper):
                       , orderBy='id'
                       , direction='ASC'
                       , where='1'):
+        # Just a sanity check for emtpy sets, that doesn't contains 'Properties' table
+        if not self.db.hasTable('Properties'):
+            return iter([]) if iterate else []
+            
         if self._objTemplate is None:
             self.__loadObjDict()
         objRows = self.db.selectAll(orderBy=orderBy,
@@ -799,9 +803,12 @@ class SqliteFlatDb(SqliteDb):
         self.SELECT_PROPERTY = "SELECT value FROM Properties WHERE key=?"
         self.SELECT_PROPERTY_KEYS = "SELECT key FROM Properties"
 
-
     def hasProperty(self, key):
         """ Return true if a property with this value is registered. """
+        # The database not will not have the 'Properties' table when
+        # there is not item inserted (ie an empty set)
+        if not self.hasTable('Properties'):
+            return False
         self.executeCommand(self.SELECT_PROPERTY, (key,))
         result = self.cursor.fetchone()
         return (result is not None)
@@ -810,6 +817,11 @@ class SqliteFlatDb(SqliteDb):
         """ Return the value of a given property with this key.
         If not found, the defaultValue will be returned.
         """
+        # The database not will not have the 'Properties' table when
+        # there is not item inserted (ie an empty set)
+        if not self.hasTable('Properties'):
+            return defaultValue
+        
         self.executeCommand(self.SELECT_PROPERTY, (key,))
         result = self.cursor.fetchone()
 
@@ -820,6 +832,9 @@ class SqliteFlatDb(SqliteDb):
 
     def setProperty(self, key, value):
         """ Insert or update the property with a value. """
+        # Just ignore the set property for empty sets
+        if not self.hasTable('Properties'):
+            return         
         if self.hasProperty(key):
             self.executeCommand(self.UPDATE_PROPERTY, (str(value), key))
         else:
