@@ -817,7 +817,9 @@ class SetOfImages(EMSet):
             sampling = -999.0
         if self._firstDim.isEmpty():
             try:
-                self._firstDim.set(self.getFirstItem().getDim())
+                firstItem = self.getFirstItem()
+                if firstItem is not None:
+                    self._firstDim.set(firstItem.getDim())
             except Exception, ex:
                 print "Error reading dimension: ", ex
                 import traceback
