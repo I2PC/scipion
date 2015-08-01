@@ -24,9 +24,11 @@
 # *
 # **************************************************************************
 
+import os
 from pyworkflow.utils.path import removeExt
 from pyworkflow.em.data import CTFModel
-from convert import parseCtffindOutput
+from convert import readCtfModel, ctffindOutputVersion
+
 
 
 class BrandeisImport():
@@ -37,14 +39,14 @@ class BrandeisImport():
         self.protocol = protocol
         self.copyOrLink = self.protocol.getCopyOrLink()
 
-
     def importCTF(self, mic, fileName):
-        defocusU, defocusV, defocusAngle = parseCtffindOutput(fileName)
         ctf = CTFModel()
-        ctf.copyObjId(mic)
-        ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
         ctf.setMicrograph(mic)
-        ctf.setPsdFile(removeExt(fileName) + "_psd.mrc")
+        readCtfModel(ctf, fileName, ctf4=ctffindOutputVersion(fileName)==4)
+        
+        for suffix in ['_psd.mrc', '.mrc']:
+            if os.path.exists(removeExt(fileName) + suffix):
+                ctf.setPsdFile(removeExt(fileName) + suffix)
         return ctf
 
 

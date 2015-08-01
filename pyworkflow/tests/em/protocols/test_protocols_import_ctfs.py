@@ -54,7 +54,7 @@ class TestImportCTFs(TestImportBase):
 
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem when importing ctfs.")
 
-    def testImportCTFFromGrigorieff(self):
+    def testImportCtffind3(self):
         #First, import a set of micrographs
         protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.dsXmipp.getFile('allMics'), samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
@@ -62,10 +62,29 @@ class TestImportCTFs(TestImportBase):
 
         protCTF = self.newProtocol(ProtImportCTF,
                                  importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
-                                 filesPath=self.dsGrigorieff.getFile('ctfsDir'),
-                                 filesPattern='*.out')
+                                 filesPath=self.dsGrigorieff.getFile('ctffind3'),
+                                 filesPattern='BPV*/*txt')
         protCTF.inputMicrographs.set(protImport.outputMicrographs)
-        protCTF.setObjLabel('import ctfs from grigorieff ')
+        protCTF.setObjLabel('import from ctffind3')
+        self.launchProtocol(protCTF)
+
+        self.assertIsNotNone(protCTF.outputCTF, "There was a problem when importing ctfs.")
+        
+    def testImportCtffind4(self):
+        #First, import a set of micrographs
+        protImport = self.newProtocol(ProtImportMicrographs, 
+                                      filesPath=self.dsXmipp.getFile('allMics'), 
+                                      samplingRate=1.237, 
+                                      voltage=300)
+        self.launchProtocol(protImport)
+        self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
+
+        protCTF = self.newProtocol(ProtImportCTF,
+                                 importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
+                                 filesPath=self.dsGrigorieff.getFile('ctffind4'),
+                                 filesPattern='BPV*/*txt')
+        protCTF.inputMicrographs.set(protImport.outputMicrographs)
+        protCTF.setObjLabel('import from ctffind4')
         self.launchProtocol(protCTF)
 
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem when importing ctfs.")

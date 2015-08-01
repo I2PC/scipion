@@ -169,6 +169,17 @@ def parseCtffind4Output(filename):
     return result
 
 
+def ctffindOutputVersion(filename):
+    """ Detect the ctffind version (3 or 4) that produced
+    the given filename.
+    """
+    f = open(filename)
+    for line in f:
+        if 'Output from CTFFind version 4.' in line:
+            return 4
+    return 3
+
+
 def setWrongDefocus(ctfModel):
     ctfModel.setDefocusU(-999)
     ctfModel.setDefocusV(-1)
