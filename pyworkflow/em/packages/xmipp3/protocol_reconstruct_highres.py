@@ -546,7 +546,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 args="-i %s -o %s --sampling_rate %f --sym %s --min_tilt_angle %f --max_tilt_angle %f"%\
                      (fnReferenceVol,fnGallery,angleStep,self.symmetryGroup,self.angularMinTilt.get(),self.angularMaxTilt.get())
                 if not useSignificant:
-		   args+=" --compute_neighbors --angular_distance -1 --experimental_images %s"%self._getExtraPath("images.xmd")
+                    args+=" --compute_neighbors --angular_distance -1 --experimental_images %s"%self._getExtraPath("images.xmd")
                 self.runJob("xmipp_angular_project_library",args)
                 cleanPath(join(fnDirSignificant,"gallery_angles%02d.doc"%i))
                 moveFile(join(fnDirSignificant,"gallery%02d.doc"%i), fnGalleryMd)
@@ -556,15 +556,15 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     if not exists(fnAnglesGroup):
                         if ctfPresent:
                             fnGroup="ctfGroup%06d@%s/ctf_groups.xmd"%(j,fnDirSignificant)
-			    if useSignificant:
-                               fnGalleryGroup=join(fnDirSignificant,"gallery_group%06d.stk"%j)
-                               fnGalleryGroupMd=join(fnDirSignificant,"gallery_group%06d.xmd"%j)
-                               self.runJob("xmipp_transform_filter",
-                                           "-i %s -o %s --fourier binary_file %d@%s --save_metadata_stack %s --keep_input_columns"%\
-                                           (fnGalleryMd,fnGalleryGroup,j,fnCTFs,fnGalleryGroupMd))
-		            else:
-			       fnGalleryGroup=fnGallery
-			       fnGalleryGroupMd=fnGalleryMd
+                            if useSignificant:
+                                fnGalleryGroup=join(fnDirSignificant,"gallery_group%06d.stk"%j)
+                                fnGalleryGroupMd=join(fnDirSignificant,"gallery_group%06d.xmd"%j)
+                                self.runJob("xmipp_transform_filter",
+                                            "-i %s -o %s --fourier binary_file %d@%s --save_metadata_stack %s --keep_input_columns"%\
+                                            (fnGalleryMd,fnGalleryGroup,j,fnCTFs,fnGalleryGroupMd))
+                            else:
+                                fnGalleryGroup=fnGallery
+                                fnGalleryGroupMd=fnGalleryMd
                         else:
                             fnGroup=fnImgs
                             fnGalleryGroupMd=fnGalleryMd
