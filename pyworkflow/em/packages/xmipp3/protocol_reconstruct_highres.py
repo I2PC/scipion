@@ -593,6 +593,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             copyFile(fnAnglesGroup, fnAngles)
                         else:
                             self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
+                if not useSignificant:
+                    self.runJob("xmipp_metadata_utilities","-i %s --set join %s image"%(fnAngles,fnImgs),numberOfMpi=1)
                 if self.saveSpace and ctfPresent:
                     self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
                 
