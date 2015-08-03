@@ -207,6 +207,12 @@ class ImageHandler(object):
         # Write to output
         self._img.write(self._convertToLocation(outputObj))
         
+    def __runXmippProgram(self, program, args):
+        """ Internal shortcut function to launch a Xmipp program. """
+        import pyworkflow.em.packages.xmipp3 as xmipp3
+        xmippEnv = xmipp3.getEnviron()
+        runJob(None, program, args, env=xmippEnv)        
+        
     def createCircularMask(self, radius, refImage, outputFile):
         """ Create a circular mask with the given radius (pixels)
         and with the same dimensions of the refImage.
@@ -216,11 +222,19 @@ class ImageHandler(object):
         #TODO: right now we need to call an xmipp program to create 
         # the spherical mask, it would be nicer to have such utility in the binding
         import pyworkflow.em.packages.xmipp3 as xmipp3
-        xmippEnv = xmipp3.getEnviron()
         inputRef = xmipp3.getImageLocation(refImage)
-        runJob(None, 'xmipp_transform_mask', 
-                    '-i %s --create_mask  %s --mask circular -%d' % (inputRef, outputFile, radius),
-                    env=xmippEnv)
+        self.__runXmippProgram('xmipp_transform_mask', 
+                               '-i %s --create_mask  %s --mask circular -%d' % (inputRef, outputFile, radius))
+        
+    def addNoise(self, inputFile, outputFile, std=1., avg=0.):
+        """ Add Gaussian noise to an input image (or stack) and produce noisy images.
+        Params:
+            inputFile: the filename of the input images
+            outputFile: the filename of the output noisy images
+            noiseStd: standard deviation for the Gaussian noise.
+        """
+        self.__runXmippProgram('xmipp_transform_add_noise', 
+                               '-i %s -o %s --type gaussian %f %f' % (inputFile, outputFile, std, avg))
         
     def isImageFile(self, imgFn):
         """ Check if imgFn has an image extension. The function
