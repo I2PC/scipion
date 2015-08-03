@@ -305,7 +305,7 @@ def rowToAlignment(alignmentRow, alignType):
     invTransform == True  -> for xmipp implies projection
     """
     is2D = alignType == em.ALIGN_2D
-    inverseTransform = alignType == em.ALIGN_PROJ
+    inverseTransform = True#alignType == em.ALIGN_PROJ
     
     if alignmentRow.containsAny(ALIGNMENT_DICT):
         alignment = em.Transform()
