@@ -359,14 +359,15 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         auxSet.copyInfo(imgSet)
         readSetOfParticles(fnImages, auxSet)
         
+        if self.downsampleType != SAME_AS_PICKING:
+            factor = self.samplingInput / self.samplingFinal
         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
         for img in auxSet:
             #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
             coord = self.inputCoords[img.getObjId()]
             if self.downsampleType != SAME_AS_PICKING:
-                factor = self.samplingFinal/self.samplingInput
-                coord.setX(coord.getX() / factor)
-                coord.setY(coord.getY() / factor)
+                x, y = coord.getPosition()
+                coord.setPosition(x*factor, y*factor)           
             ctfModel = img.getCTF()
             if ctfModel is not None:
                 ctfModel.setObjId(coord.getMicId())
