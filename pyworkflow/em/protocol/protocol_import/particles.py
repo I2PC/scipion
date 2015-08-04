@@ -23,8 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
 """
 In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
 """
@@ -32,7 +30,9 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 from os.path import exists
 
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import FloatParam, FileParam, BooleanParam, EnumParam
+import pyworkflow.protocol.params as params
+from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
 from images import ProtImportImages
 
@@ -47,6 +47,8 @@ class ProtImportParticles(ProtImportImages):
     IMPORT_FROM_XMIPP3 = 2
     IMPORT_FROM_RELION = 3
     IMPORT_FROM_SCIPION = 4
+    IMPORT_FROM_FREALIGN = 5
+    
     alignTypeList=[ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE]
 
     def _getImportChoices(self):
@@ -55,36 +57,37 @@ class ProtImportParticles(ProtImportImages):
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
         choices = ProtImportImages._getImportChoices(self)
-        return choices + ['emx', 'xmipp3', 'relion', 'scipion']#the order of this list is related to the constants defined
+        return choices + ['emx', 'xmipp3', 'relion', 'scipion', 'frealign']#the order of this list is related to the constants defined
     
     def _defineImportParams(self, form):
         """ Import files from: emx, xmipp3, relion, scipion  formats. """
-        form.addParam('emxFile', FileParam,
+        form.addParam('emxFile', params.FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
                       label='Input EMX file',
                       help="Select the EMX file containing particles information.\n"
                            "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
 
-        form.addParam('alignType', EnumParam,
+        form.addParam('alignType', params.EnumParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
                       default = 0,
                       choices =self.alignTypeList,
                       label='Alignment Type',
                       help="Is this a 2D alignment, a 3D alignment or a set of projections")
 #
-        form.addParam('mdFile', FileParam,
+        form.addParam('mdFile', params.FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Particles metadata file',
                       help="Select the particles Xmipp metadata file.\n"
                            "It is usually a images.xmd_ file result\n"
                            "from Xmipp protocols execution.")
         
-        form.addParam('starFile', FileParam,
+        form.addParam('starFile', params.FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_RELION,
                       label='Star file',
                       help="Select a *_data.star file from a.\n"
                            "previous Relion execution.")
-        form.addParam('ignoreIdColumn', BooleanParam, default=False,
+        
+        form.addParam('ignoreIdColumn', params.BooleanParam, default=False,
                       condition='(importFrom == %d)' % self.IMPORT_FROM_RELION,
                       label='Ignore ID column?',
                       help="Set this option to True to regenerate \n"
@@ -94,14 +97,27 @@ class ProtImportParticles(ProtImportImages):
                            "different metadatas and id's are not  \n"
                            "longer unique.")
         
-        form.addParam('sqliteFile', FileParam,
+        form.addParam('sqliteFile', params.FileParam,
               condition = '(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
               label='Particles sqlite file',
               help="Select the particles sqlite file.\n")
+
+        form.addParam('frealignLabel', params.LabelParam,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      label='For Frealign you need to import both stack and .par files.')  
+        form.addParam('stackFile', params.FileParam,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      label='Stack file',
+                      help="Select an stack file with the particles.")          
+        form.addParam('parFile', params.FileParam,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      label='Param file',
+                      help="Select a Frealign .par file with the refinement information.")        
+        
         
     def _defineAcquisitionParams(self, form):
         group = ProtImportImages._defineAcquisitionParams(self, form)
-        group.addParam('samplingRate', FloatParam,
+        group.addParam('samplingRate', params.FloatParam,
                    label=Message.LABEL_SAMP_RATE)
 
 
@@ -134,7 +150,11 @@ class ProtImportParticles(ProtImportImages):
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
             from dataimport import ScipionImport
             self.importFilePath = self.sqliteFile.get('').strip()
-            return ScipionImport(self, self.importFilePath)        
+            return ScipionImport(self, self.importFilePath)    
+        elif self.importFrom == self.IMPORT_FROM_FREALIGN:
+            self.importFilePath = self.parFile.get('').strip()
+            from pyworkflow.em.packages.grigoriefflab.dataimport import BrandeisImport
+            return BrandeisImport(self, self.parFile.get(), self.stackFile.get())
         else:
             self.importFilePath = ''
             return None 

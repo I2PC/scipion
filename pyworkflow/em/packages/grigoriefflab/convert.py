@@ -85,6 +85,10 @@ def readSetOfParticles(inputSet, outputSet, parFileName):
         particle.setTransform(rowToAlignment(row, samplingRate))
         # We assume that each particle have ctfModel
         # in order to be processed in Frealign
+        # JMRT: Since the CTF will be set, we can setup
+        # an empty CTFModel object
+        if not particle.hasCTF():
+            particle.setCTF(em.CTFModel())
         rowToCtfModel(row, particle.getCTF())
         outputSet.append(particle)
     outputSet.setAlignment(em.ALIGN_PROJ)
