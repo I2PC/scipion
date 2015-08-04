@@ -1533,18 +1533,18 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addSeparator(FILE);
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
 			// Display
-			addItem(DISPLAY, "Display");
-                        addItem(DISPLAY_INVERTY, "Render positive Y axis up");
+			
                         
-                        addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
+			addItem(DISPLAY, "Display");
+            addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
-                        addItem(DISPLAY_NORMALIZE, "Normalize", null, "control released N");
+            addItem(DISPLAY_NORMALIZE, "Normalize", null, "control released N");
+            addItem(DISPLAY_INVERTY, "Render positive Y up");
 			addSeparator(DISPLAY);
-                        addDisplayLabelItems();
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
 			
 			addRenderImageColumnItems();
-			
+			addDisplayLabelItems();
 			
 			addItem(DISPLAY_RESLICE, "Reslice");
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
