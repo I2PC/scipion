@@ -45,12 +45,21 @@ def _getCtffind4():
         return ctffind4
     else:
         return join(os.environ['CTFFIND4_HOME'], CTFFIND4)
+    
+def _getHome(key, default):
+    """ Get the required home path, if not present..
+    the default value will be used from EM_ROOT.
+    """
+    return os.environ.get(key, join(os.environ['EM_ROOT'], default))
 
 CTFFIND_PATH = join(os.environ['CTFFIND_HOME'], CTFFIND3)
 CTFFIND4_PATH = _getCtffind4()
-FREALIGN_PATH = join(os.environ['FREALIGN_HOME'], 'bin', FREALIGN)
-FREALIGNMP_PATH = join(os.environ['FREALIGN_HOME'], 'bin', FREALIGNMP)
-CALC_OCC_PATH = join(os.environ['FREALIGN_HOME'], 'bin', CALC_OCC)
-RSAMPLE_PATH = join(os.environ['FREALIGN_HOME'], 'bin', RSAMPLE)
-UNBLUR_PATH  = join(os.environ['UNBLUR_HOME'], 'bin', UNBLUR)
-SUMMOVIE_PATH  = join(os.environ['SUMMOVIE_HOME'], 'bin', SUMMOVIE)
+
+FREALING_HOME = _getHome('FREALIGN_HOME', 'frealign')
+FREALIGN_PATH = join(FREALING_HOME, 'bin', FREALIGN)
+FREALIGNMP_PATH = join(FREALING_HOME, 'bin', FREALIGNMP)
+CALC_OCC_PATH = join(FREALING_HOME, 'bin', CALC_OCC)
+RSAMPLE_PATH = join(FREALING_HOME, 'bin', RSAMPLE)
+
+UNBLUR_PATH  = join(_getHome('UNBLUR_HOME', 'unblur'), 'bin', UNBLUR)
+SUMMOVIE_PATH  = join(_getHome('SUMMOVIE_HOME', 'summovie'), 'bin', SUMMOVIE)
