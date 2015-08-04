@@ -784,7 +784,7 @@ class SetOfImages(EMSet):
         _,_,_, ndim = ImageHandler().getDimensions(fnStack)
         img = self.ITEM_TYPE()
         for i in range(1, ndim+1):
-            img.cleanObjId()
+            img.setObjId(None)
             img.setLocation(i, fnStack)
             if postprocessImage is not None:
                 postprocessImage(img)
