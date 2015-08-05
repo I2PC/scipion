@@ -12,6 +12,7 @@ import ij.gui.Roi;
 import ij.gui.Toolbar;
 import ij.process.ByteProcessor;
 import ij.process.FloatProcessor;
+
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -23,6 +24,7 @@ import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
@@ -30,7 +32,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
+
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.ScipionParams;
 import xmipp.utils.XmippWindowUtil;
@@ -48,8 +52,9 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
     private JToggleButton invertbt;
     private JToggleButton addbt;
     private final XmippImageWindow iw;
-    private JCheckBox smoothbt;
+    private JToggleButton smoothbt;
     private JFormattedTextField smoothtf;
+	private JButton refreshbt;
     
     public DesignMaskJFrame(XmippImageWindow iw)
     {
@@ -69,15 +74,26 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
         constraints.insets = new Insets(0, 5, 0, 5);
         constraints.anchor = GridBagConstraints.WEST;
         setLayout(new GridBagLayout());
-        JPanel optionspn = new JPanel();
+        JToolBar optionspn = new JToolBar();
+
+		optionspn.setFloatable(false);
         add(optionspn, XmippWindowUtil.getConstraints(constraints, 0, 0));
-        optionspn.add(new JLabel("Invert:"));
-        invertbt = new JCheckBox();
+        refreshbt = XmippWindowUtil.getIconButton("fa-refresh.png", new ActionListener()
+        {
+        	
+        	@Override
+        	public void actionPerformed(ActionEvent e)
+        	{
+        		refreshMask();
+        		
+        	}
+        });
+        optionspn.add(refreshbt);
+        invertbt = new JToggleButton("Invert");
         invertbt.addActionListener(this);
         optionspn.add(invertbt);
         
-        optionspn.add(new JLabel("Smooth:"));
-        smoothbt = new JCheckBox();
+        smoothbt = new JToggleButton("Smooth");
         smoothbt.addActionListener(this);
         optionspn.add(smoothbt);
         smoothtf = new JFormattedTextField(NumberFormat.getIntegerInstance());
@@ -158,7 +174,6 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
                     mask.getProcessor().invert();
                 if(isSmooth())
                     mask.getProcessor().blurGaussian(((Number) smoothtf.getValue()).intValue());
-                
                 
             } else 
                 createDefaultMask();
