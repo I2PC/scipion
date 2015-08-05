@@ -351,7 +351,6 @@ class SubclassesTreeProvider(TreeProvider):
                              attr.evalCondition(condition))):
                             p = pwobj.Pointer(prot, extended=paramName)
                             p._allowsSelection = True
-                            print "   prot: %s adding pointer %s" % (prot.getRunName(), p.getUniqueId())
                             objects.append(p)
                         # If attr is a set, then we should consider its elements
                         if isinstance(attr, em.EMSet):
@@ -382,7 +381,6 @@ class SubclassesTreeProvider(TreeProvider):
                     # in a more general manner
                     for subParam in ['_untilted', '_tilted']:
                         if hasattr(attr, subParam):
-                            print "prot: %s param: %s has %s" % (prot.getRunName(), paramName, subParam)
                             _checkParam('%s.%s' % (paramName, subParam), 
                                         getattr(attr, subParam))
                                 
@@ -913,8 +911,12 @@ class ParamWidget():
                 if not getattr(item, '_allowSelection', True):
                     return "Please select object of types: %s" % self.param.pointerClass.get()
 
-        dlg = ListDialog(self.parent, 
-                         "Select object of types: %s" % self.param.pointerClass.get(), 
+        title = "Select object of types: %s" % self.param.pointerClass.get()
+        pointerCond = self.param.pointerCondition.get()
+        if pointerCond:
+            title += " (condition: %s)" % pointerCond
+                                            
+        dlg = ListDialog(self.parent, title,
                          tp, "Double click an item to preview the object",
                          validateSelectionCallback=validateSelected,
                          selectmode=self._selectmode)
