@@ -105,9 +105,9 @@ leads to objective and high-quality results.
                                 itemDataIterator=md.iterRows(outImgsFn))
             
             self._defineOutputs(outputVolume=vol)
-            self._defineSourceRelation(imgSet, vol)
+            self._defineSourceRelation(self.inputParticles, vol)
             self._defineOutputs(outputParticles=outImgSet)
-            self._defineTransformRelation(imgSet, outImgSet)
+            self._defineTransformRelation(self.inputParticles, outImgSet)
         else:
             pass
     
@@ -117,9 +117,16 @@ leads to objective and high-quality results.
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
-        partSizeX, _, _ = self._getInputParticles().getDim()
-        volSizeX, _, _ = self.referenceVolume.get().getDim()
-        if partSizeX != volSizeX:
+        particlesDim = self._getInputParticles().getDim()
+        volumeDim = self.referenceVolume.get().getDim()
+        
+        if particlesDim is None:
+            errors.append('Can not get dimensions from input particles!!!')
+            
+        elif volumeDim is None:
+            errors.append('Can not get dimensions from reference volume!!!')
+            
+        elif particlesDim[0] != volumeDim[0]:
             errors.append('Volume and particles dimensions must be equal!!!')
 
         return errors

@@ -39,6 +39,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 	public void updateMicrograph()
 	{
+		um = getFrame().getMicrograph();
 		TiltedMicrograph m = getFrame().getMicrograph().getTiltedMicrograph();
 		updateMicrograph(m);
 

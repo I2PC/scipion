@@ -81,6 +81,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
 		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		actionspn.add(savebt);
+		actionspn.add(closebt);
 		actionspn.add(saveandexitbt);
 		add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3,
 				GridBagConstraints.HORIZONTAL));
@@ -224,6 +225,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		if (canvas == null) {
 			canvas = new UntiltedMicrographCanvas(this);
 			tiltedcanvas = new TiltedMicrographCanvas(this);
+			tiltedcanvas.getIw().setLocation(canvas.getIw().getWidth(), canvas.getIw().getLocation().y);
 			List<UntiltedParticle> particles = getMicrograph().getParticles();
                         
                         // needs both canvas to be initialized
@@ -234,7 +236,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 			tiltedcanvas.updateMicrograph();
 
 		}
-		tiltedcanvas.getIw().setLocation(canvas.getIw().getWidth(), canvas.getIw().getLocation().y);
 	}
 
 	public ParticlePickerCanvas getCanvas() {
@@ -324,11 +325,11 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 			loadParticles(false);
 	}
 
-	@Override
-	protected void openHelpURl() {
-		XmippWindowUtil
-				.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_tiltpair_picking_v3");
-	}
+//	@Override
+//	protected void openHelpURl() {
+//		XmippWindowUtil
+//				.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_tiltpair_picking_v3");
+//	}
 
 	public String importParticlesFromFiles(Format format, String file1,
 			String file2, float scale, boolean invertx, boolean inverty) {

@@ -42,6 +42,9 @@ class SqliteMapper(Mapper):
         except Exception, ex:
             raise Exception('Error creating SqliteMapper, dbName: %s\n error: %s' % (dbName, ex))
     
+    def close(self):
+        self.db.close()
+        
     def commit(self):
         self.db.commit()
         
@@ -288,7 +291,8 @@ class SqliteMapper(Mapper):
         objRows = self.db.selectObjectsByParent(parent_id=None)
         return self.__objectsFromRows(objRows, iterate, objectFilter)    
     
-    def insertRelation(self, relName, creatorObj, parentObj, childObj):
+    def insertRelation(self, relName, creatorObj, parentObj, childObj, 
+                       parentExt=None, childExt=None):
         """ This function will add a new relation between two objects.
         Params:
             relName: the name of the relation to be added.
@@ -299,7 +303,8 @@ class SqliteMapper(Mapper):
         for o in [creatorObj, parentObj, childObj]:
             if not o.hasObjId():
                 raise Exception("Before adding a relation, the object should be stored in mapper")
-        self.db.insertRelation(relName, creatorObj.getObjId(), parentObj.getObjId(), childObj.getObjId())
+        self.db.insertRelation(relName, creatorObj.getObjId(), parentObj.getObjId(), childObj.getObjId(), 
+                               parentExt, childExt)
     
     def __objectsFromIds(self, objIds):
         """Return a list of objects, given a list of id's
@@ -342,13 +347,19 @@ class SqliteMapper(Mapper):
         """ Delete all relations created by object creatorObj """
         self.db.deleteRelationsByCreator(creatorObj.getObjId())
     
-    def insertRelationData(self, relName, creatorId, parentId, childId):
-        self.db.insertRelation(relName, creatorId, parentId, childId)
+    def insertRelationData(self, relName, creatorId, parentId, childId,
+                           parentExtended=None, childExtended=None):
+        self.db.insertRelation(relName, creatorId, parentId, childId,
+                               parentExtended, childExtended)
     
     
 class SqliteObjectsDb(SqliteDb):
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
+    # Maintain the current version of the DB schema
+    # useful for future updates and backward compatibility
+    # version should be an interger number
+    VERSION = 1
     
     SELECT = "SELECT id, parent_id, name, classname, value, label, comment, datetime(creation, 'localtime') as creation FROM Objects WHERE "
     DELETE = "DELETE FROM Objects WHERE "
@@ -364,11 +375,21 @@ class SqliteObjectsDb(SqliteDb):
     def __init__(self, dbName, timeout=1000):
         SqliteDb.__init__(self)
         self._createConnection(dbName, timeout)
-        self.__createTables()
+        self._initialize()
 
+    def _initialize(self):
+        """ Create the required tables if needed. """
+        tables = self.getTables()
+        # Check if the tables have been created or not
+        if not tables:
+            self.__createTables()
+        else:
+            self.__updateTables()
+        
     def __createTables(self):
         """Create required tables if don't exists"""
         # Enable foreings keys
+        self.setVersion(self.VERSION)
         self.executeCommand("PRAGMA foreign_keys=ON")
         # Create the Objects table
         self.executeCommand("""CREATE TABLE IF NOT EXISTS Objects
@@ -392,9 +413,29 @@ class SqliteObjectsDb(SqliteDb):
                       comment   TEXT DEFAULT NULL,  -- relation comment, text used for annotations
                       object_parent_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE,
                       object_child_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE,
-                      creation  DATE                 -- creation date and time of the object
+                      creation  DATE,                 -- creation date and time of the object
+                      object_parent_extended TEXT DEFAULT NULL, -- extended property to consider internal objects
+                      object_child_extended TEXT DEFAULT NULL
                       )""")
         self.commit()
+        
+    def __updateTables(self):
+        """ This method is intended to update the table schema
+        in the case of dealing with old database version.
+        """
+        if self.getVersion() < self.VERSION: # This applies for version 1
+            # Add the extra column for pointer extended attribute in Relations table
+            # from version 1 on, there is not needed since the table will 
+            # already contains this column
+            columns = [c[1] for c in self.getTableColumns('Relations')]
+            if not 'object_parent_extended' in columns:
+                self.executeCommand("ALTER TABLE Relations "
+                                    "ADD COLUMN object_parent_extended  TEXT DEFAULT NULL")
+            if not 'object_child_extended' in columns:    
+                self.executeCommand("ALTER TABLE Relations "
+                                    "ADD COLUMN object_child_extended  TEXT DEFAULT NULL")
+            self.setVersion(self.VERSION)
+        
         
     def insertObject(self, name, classname, value, parent_id, label, comment):
         """Execute command to insert a new object. Return the inserted object id"""
@@ -407,16 +448,16 @@ class SqliteObjectsDb(SqliteDb):
             print "INSERT INTO Objects (parent_id, name, classname, value, label, comment, creation) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))", (parent_id, name, classname, value, label, comment)
             raise ex
         
-    def insertRelation(self, relName, parent_id, object_parent_id, object_child_id, **args):
+    def insertRelation(self, relName, parent_id, object_parent_id, object_child_id, 
+                       object_parent_extended=None, object_child_extended=None, **kwargs):
         """Execute command to insert a new object. Return the inserted object id"""
-        self.executeCommand("INSERT INTO Relations (parent_id, name, object_parent_id, object_child_id, creation) VALUES (?, ?, ?, ?, datetime('now'))",
-                            (parent_id, relName, object_parent_id, object_child_id))
+        self.executeCommand("INSERT INTO Relations "
+                            "(parent_id, name, object_parent_id, object_child_id, creation, "
+                            "object_parent_extended, object_child_extended) "
+                            " VALUES (?, ?, ?, ?, datetime('now'), ?, ?)",
+                            (parent_id, relName, object_parent_id, object_child_id,
+                             object_parent_extended, object_child_extended))
         return self.cursor.lastrowid
-    
-    def insertRelationRow(self, row):
-        """Execute command to insert a new object. Return the inserted object id"""
-        return self.insertRelation(row['name'], row['parent_id'], 
-                                   row['object_parent_id'], row['object_child_id'])
     
     def updateObject(self, objId, name, classname, value, parent_id, label, comment):
         """Update object data """
@@ -659,6 +700,10 @@ class SqliteFlatMapper(Mapper):
                       , orderBy='id'
                       , direction='ASC'
                       , where='1'):
+        # Just a sanity check for emtpy sets, that doesn't contains 'Properties' table
+        if not self.db.hasTable('Properties'):
+            return iter([]) if iterate else []
+            
         if self._objTemplate is None:
             self.__loadObjDict()
         objRows = self.db.selectAll(orderBy=orderBy,
@@ -703,7 +748,9 @@ class SqliteFlatMapper(Mapper):
     
     def deleteProperty(self, key):
         return self.db.deleteProperty(key)
-        
+    
+    def getPropertyKeys(self):
+        return self.db.getPropertyKeys()
         
 
 SELF = 'self'
@@ -711,7 +758,11 @@ SELF = 'self'
 class SqliteFlatDb(SqliteDb):
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
-
+    # Maintain the current version of the DB schema
+    # useful for future updates and backward compatibility
+    # version should be an interger number
+    VERSION = 1
+    
     CLASS_MAP = {'Integer': 'INTEGER',
                  'Float': 'REAL',
                  'Boolean': 'INTEGER'
@@ -750,10 +801,14 @@ class SqliteFlatDb(SqliteDb):
         self.DELETE_PROPERTY = "DELETE FROM Properties WHERE key=?"
         self.UPDATE_PROPERTY = "UPDATE Properties SET value=? WHERE key=?"
         self.SELECT_PROPERTY = "SELECT value FROM Properties WHERE key=?"
-
+        self.SELECT_PROPERTY_KEYS = "SELECT key FROM Properties"
 
     def hasProperty(self, key):
         """ Return true if a property with this value is registered. """
+        # The database not will not have the 'Properties' table when
+        # there is not item inserted (ie an empty set)
+        if not self.hasTable('Properties'):
+            return False
         self.executeCommand(self.SELECT_PROPERTY, (key,))
         result = self.cursor.fetchone()
         return (result is not None)
@@ -762,6 +817,11 @@ class SqliteFlatDb(SqliteDb):
         """ Return the value of a given property with this key.
         If not found, the defaultValue will be returned.
         """
+        # The database not will not have the 'Properties' table when
+        # there is not item inserted (ie an empty set)
+        if not self.hasTable('Properties'):
+            return defaultValue
+        
         self.executeCommand(self.SELECT_PROPERTY, (key,))
         result = self.cursor.fetchone()
 
@@ -772,10 +832,19 @@ class SqliteFlatDb(SqliteDb):
 
     def setProperty(self, key, value):
         """ Insert or update the property with a value. """
+        # Just ignore the set property for empty sets
+        if not self.hasTable('Properties'):
+            return         
         if self.hasProperty(key):
             self.executeCommand(self.UPDATE_PROPERTY, (str(value), key))
         else:
             self.executeCommand(self.INSERT_PROPERTY, (key, str(value)))
+            
+    def getPropertyKeys(self):
+        """ Return all properties stored of this object. """
+        self.executeCommand(self.SELECT_PROPERTY_KEYS)
+        keys = [r[0] for r in self.cursor.fetchall()]
+        return keys        
 
     def deleteProperty(self, key):
         self.executeCommand(self.DELETE_PROPERTY, (key,))
@@ -800,6 +869,7 @@ class SqliteFlatDb(SqliteDb):
         Each object will be stored in a single row.
         Each nested property of the object will be stored as a column value.
         """
+        self.setVersion(self.VERSION)
         # Create a general Properties table to store some needed values
         self.executeCommand("""CREATE TABLE IF NOT EXISTS Properties
                      (key       TEXT UNIQUE, -- property key                 

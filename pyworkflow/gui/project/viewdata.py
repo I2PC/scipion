@@ -197,8 +197,8 @@ class ProjectDataView(tk.Frame):
         
         self.dataTree.clear()
         for node in self._dataGraph.getNodes():
-            if node.object:
-                classNode = createClassNode(node.object.getClass())
+            if node.pointer:
+                classNode = createClassNode(node.pointer.get().getClass())
                 classNode.count += 1
         
         populateTree(self.dataTree, classesGraph.getRootNodes())
@@ -253,10 +253,10 @@ class ProjectDataView(tk.Frame):
         return node.box
 
     def _createDataItem(self, canvas, node, y):
-        if node.object is None:
+        if node.pointer is None:
             nodeText = "Project"
         else:
-            label = getObjectLabel(node.object, self.project.mapper)
+            label = getObjectLabel(node.pointer, self.project.mapper)
             nodeText = (label[:25]+'...') if len(label) > 25 else label
                 
         textColor = 'black'
@@ -284,10 +284,11 @@ class ProjectDataView(tk.Frame):
         lt.paint(self._createDataItem)
         self._dataCanvas.updateScrollRegion()
         
-    def _selectObject(self, obj):
+    def _selectObject(self, pobj):
+        obj = pobj.get()
         self._selected = obj
         self._infoText.setReadOnly(False)
-        self._infoText.setText('*Label:* ' + getObjectLabel(obj, self.project.mapper))
+        self._infoText.setText('*Label:* ' + getObjectLabel(pobj, self.project.mapper))
         self._infoText.addText('*Info:* ' + str(obj))
         self._infoText.addText('*Created:* ' + '2014-11-22')
         if obj.getObjComment():
@@ -295,12 +296,12 @@ class ProjectDataView(tk.Frame):
         self._infoText.setReadOnly(True)
         
     def _onClick(self, e=None):
-        if e.node.object:
-            self._selectObject(e.node.object)
+        if e.node.pointer:
+            self._selectObject(e.node.pointer)
     
     def _onDoubleClick(self, e=None):
-        if e.node.object:
-            self._selectObject(e.node.object)
+        if e.node.pointer:
+            self._selectObject(e.node.pointer)
             # Graph the first viewer available for this type of object
             ViewerClass = findViewers(self._selected.getClassName(), DESKTOP_TKINTER)[0] #
             viewer = ViewerClass(project=self.project)

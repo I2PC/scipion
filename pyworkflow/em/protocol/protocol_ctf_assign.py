@@ -45,6 +45,9 @@ class ProtCTFAssign(ProtCTFMicrographs):
         def onChangeInputType():
             pointerClass = 'SetOf' + self.getEnumText('inputType')
             self.inputSetsParam.setPointerClass(pointerClass)
+        # Initial update
+        onChangeInputType()
+        # Now keep track of changes and update
         self.inputType.trace(onChangeInputType)
     
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -108,8 +111,8 @@ class ProtCTFAssign(ProtCTFMicrographs):
                     outputParts.append(newParticle)
         
         self._defineOutputs(outputParticles=outputParts)
-        self._defineSourceRelation(inputSet, outputParts)
-        self._defineSourceRelation(inputCTF, outputParts)
+        self._defineSourceRelation(self.inputSet, outputParts)
+        self._defineSourceRelation(self.inputCTF, outputParts)
     
     def _microgrpahsOutputStep(self, inputSet, inputCTF):           
         outputMics = self._createSetOfMicrographs()
@@ -131,8 +134,8 @@ class ProtCTFAssign(ProtCTFMicrographs):
                 outputMics.append(newMic)
         
         self._defineOutputs(outputMicrographs=outputMics)
-        self._defineSourceRelation(inputSet, outputMics)
-        self._defineCtfRelation(outputMics, inputCTF)
+        self._defineSourceRelation(self.inputSet, outputMics)
+        self._defineCtfRelation(outputMics, self.inputCTF)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):

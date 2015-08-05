@@ -351,6 +351,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     if (hasCTF)
                     {
                         threadParams->ctf.readFromMetadataRow(*(threadParams->selFile),objId[threadParams->imageIndex]);
+                        threadParams->ctf.Tm=parent->Ts;
                         threadParams->ctf.produceSideInfo();
                     }
 

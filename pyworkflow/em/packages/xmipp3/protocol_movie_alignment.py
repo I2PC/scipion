@@ -104,12 +104,16 @@ class ProtMovieAlignment(ProtProcessMovies):
                       help="GPU may have several cores. Set it to zero if you do not know what we are talking about. First core index is 0, second 1 and so on.")
         
         # GROUP OPTICAL FLOW PARAMETERS
-        group = form.addGroup('Optical Flow parameters', expertLevel=LEVEL_ADVANCED, condition="alignMethod==%d or alignMethod==%d " % (AL_OPTICAL, AL_DOSEFGPUOPTICAL))
+        group = form.addGroup('Optical Flow parameters', expertLevel=LEVEL_ADVANCED, condition="alignMethod==%d or alignMethod==%d or alignMethod==%d " % (AL_OPTICAL, AL_DOSEFGPUOPTICAL, AL_CROSSCORRELATIONOPTICAL))
         
         group.addParam('winSize', IntParam, default=150,
                       label="Window size", expertLevel=LEVEL_ADVANCED,
                       help="Window size (shifts are assumed to be constant within this window).")
         
+        group.addParam('doSaveMovie', BooleanParam, default=False,
+                      label="Save movie", expertLevel=LEVEL_ADVANCED,
+                      help="Save Aligned movie")
+
         #---------------------------------- DosefGPU Params--------------------------------
         # GROUP DOSEFGPU PARAMETERS
         group = form.addGroup('DosefGPU/Croscorrelation parameters',condition="alignMethod==%d "
@@ -200,6 +204,8 @@ class ProtMovieAlignment(ProtProcessMovies):
             psdCorrName = self._getNameExt(movie.getFileName(),'_aligned_corrected', 'psd')
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
+            if self.run:
+                alignedMovie.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'_aligned', 'mrcs')))
             ####>>>This is wrong. Save an xmipp metadata
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
             alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
@@ -215,10 +221,12 @@ class ProtMovieAlignment(ProtProcessMovies):
             mic = em.Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
             mic.setFileName(self._getExtraPath(micName))
+
             mic.setMicName(micName)
             if alMethod == AL_OPTICAL or \
                alMethod == AL_DOSEFGPUOPTICAL or \
                alMethod == AL_CROSSCORRELATIONOPTICAL:
+
                 mic.plotPolar = em.Image()
                 mic.plotCart = em.Image()
                 mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
@@ -243,7 +251,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             """
         self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputMovies=movieSet)
-        self._defineSourceRelation(self.inputMovies.get(), micSet)
+        self._defineSourceRelation(self.inputMovies, micSet)
         """
         if alMethod == AL_DOSEFGPU:
             self._defineTransformRelation(inputMovies, micSet)
@@ -285,6 +293,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             
         # For simple average execution
         if alMethod == AL_AVERAGE:
+            doSaveMovie = self.doSaveMovie.get()#used later
             command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s' % locals()
             command += ' --nst %d --ned %d --simpleAverage --psd' % (firstFrame, lastFrame)
             try:
@@ -349,6 +358,7 @@ class ProtMovieAlignment(ProtProcessMovies):
            alMethod == AL_DOSEFGPUOPTICAL or\
            alMethod == AL_CROSSCORRELATIONOPTICAL:
             winSize = self.winSize.get()
+            doSaveMovie = self.doSaveMovie.get()
             if alMethod == AL_DOSEFGPUOPTICAL:
                 program = 'xmipp_movie_optical_alignment_gpu'
                 corrMovieName = self._getCorrMovieName(movieId)
@@ -362,9 +372,13 @@ class ProtMovieAlignment(ProtProcessMovies):
                 # Set to Zero for Optical Flow (output movie of dosefgpu)
                 firstFrame = 0
                 lastFrame = 0
+                if doSaveMovie:
+                    command += '--ssc '
             else:
                 program = 'xmipp_movie_optical_alignment_cpu'
                 command = '-i %(movieName)s%(movieSuffix)s ' % locals()
+                if doSaveMovie:
+                    command += '--ssc '
 
             command += '-o %(micName)s --winSize %(winSize)d ' % locals()
             command += '--nst %d --ned %d --psd ' % (firstFrame, lastFrame)
@@ -381,6 +395,10 @@ class ProtMovieAlignment(ProtProcessMovies):
 
         # Move output micrograph and related information to 'extra' folder
         moveFile(join(movieFolder, micName), self._getExtraPath())
+        if doSaveMovie:
+            outMovieName = self._getNameExt(movieName,'_aligned', 'mrcs')
+            moveFile(join(movieFolder, outMovieName), self._getExtraPath())
+
         if alMethod == AL_DOSEFGPU:
             # Copy the log file to have shifts information
             moveFile(join(movieFolder, logFile), self._getExtraPath())

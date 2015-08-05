@@ -138,7 +138,7 @@ def create_movies_project(request):
         protMovAlign = project.newProtocol(ProtMovieAlignment)
         protMovAlign.setObjLabel('xmipp - movie alignment')
         protMovAlign.inputMovies.set(protImport)
-        protMovAlign.inputMovies.setExtendedAttribute('outputMovies')
+        protMovAlign.inputMovies.setExtended('outputMovies')
         project.saveProtocol(protMovAlign)
         
     return HttpResponse(mimetype='application/javascript')

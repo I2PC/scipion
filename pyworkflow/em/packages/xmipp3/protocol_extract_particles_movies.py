@@ -298,7 +298,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                            postprocessImageRow=self._postprocessImageRow)
           
         self._defineOutputs(outputParticles=particleSet)
-        self._defineSourceRelation(inputMovies, particleSet)
+        self._defineSourceRelation(self.inputMovies, particleSet)
     
     #--------------------------- UTILS functions --------------------------------------------------
     #ROB: here

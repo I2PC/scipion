@@ -38,7 +38,7 @@ from xmipp3 import getXmippPath, getEnviron
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, ParticlesTiltPair, CoordinatesTiltPair
 from convert import *
 from os.path import dirname, join
-from pyworkflow.utils import makePath, runJob, copyTree
+from pyworkflow.utils import makePath, runJob, copyTree, cleanPath
 import pyworkflow as pw
 import xmipp
 
@@ -84,7 +84,7 @@ class XmippViewer(Viewer):
                 XmippParticlePickingAutomatic, 
                 XmippProtExtractParticlesPairs, 
                 XmippProtKerdensom, 
-                XmippProtParticlePicking, 
+                ProtParticlePicking, 
                 XmippProtParticlePickingPairs,
                 XmippProtProjectionOutliers, 
                 XmippProtRotSpectra, 
@@ -201,6 +201,8 @@ class XmippViewer(Viewer):
             
             mdFn = getattr(micSet, '_xmippMd', None)
             tmpDir = self._getTmpPath(obj.getName())
+            
+            cleanPath(tmpDir)
             makePath(tmpDir)
             
             if mdFn:
@@ -269,13 +271,13 @@ class XmippViewer(Viewer):
             parentProt = self.getProject().mapper.selectById(parentProtId)
             extraDir = parentProt._getExtraPath()
             
-            extraDir = parentProt._getExtraPath()
+ #           extraDir = parentProt._getExtraPath()
             #TODO: Review this if ever a non Xmipp CoordinatesTiltPair is available
-#             writeSetOfCoordinates(tmpDir, obj.getUntilted()) 
-#             writeSetOfCoordinates(tmpDir, obj.getTilted()) 
+            writeSetOfCoordinates(tmpDir, obj.getUntilted()) 
+            writeSetOfCoordinates(tmpDir, obj.getTilted()) 
             
         
-            launchTiltPairPickerGUI(mdFn, extraDir, self.protocol)
+            launchTiltPairPickerGUI(mdFn, tmpDir, self.protocol)
          
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             particles = obj.outputParticles
@@ -341,21 +343,6 @@ class XmippViewer(Viewer):
                                                       VISIBLE: labels, 
                                                       SORT_BY: '_xmipp_zScoreResCov desc', RENDER:labelRender}))
             
-        elif issubclass(cls, XmippProtParticlePicking):
-            if obj.getOutputsSize() >= 1:
-                #self._visualize(obj.getCoords())
-                micSet = obj.getInputMicrographs()
-                mdFn = getattr(micSet, '_xmippMd', None)
-                if mdFn:
-                    micsfn = mdFn.get()
-                else:  # happens if protocol is not an xmipp one
-                    micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
-                    writeSetOfMicrographs(micSet, micsfn)
-                    
-                posDir = obj._getExtraPath()    # extra dir istead of md file for SetOfCoordinates
-                memory = '%dg'%obj.memory.get(), 
-                launchSupervisedPickerGUI(micsfn, posDir, obj, memory=memory)
-            
         elif issubclass(cls, XmippParticlePickingAutomatic):
             micSet = obj.getInputMicrographs()
             mdFn = getattr(micSet, '_xmippMd', None)
@@ -368,19 +355,12 @@ class XmippViewer(Viewer):
             posDir = obj._getExtraPath()  
             memory = '%dg'%obj.memory.get(), 
             launchSupervisedPickerGUI(micsfn, posDir, obj, mode='review', memory=memory)
-
-        elif issubclass(cls, XmippProtParticlePickingPairs):
-            tmpDir = self._getTmpPath(obj.getName()) 
-            makePath(tmpDir)
-
-            mdFn = join(tmpDir, 'input_micrographs.xmd')
-            writeSetOfMicrographsPairs(obj.outputCoordinatesTiltPair.getUntilted().getMicrographs(),
-                                        obj.outputCoordinatesTiltPair.getTilted().getMicrographs(), 
-                                        mdFn) 
-            extraDir = obj._getExtraPath()
-            memory = '%dg'%obj.memory.get(), 
-            launchTiltPairPickerGUI(mdFn, extraDir, obj, memory=memory)
-
+            
+        elif issubclass(cls, ProtParticlePicking):
+            if obj.getOutputsSize() >= 1:
+                coordsSet = obj.getCoords()
+                self._visualize(coordsSet)    
+            
         elif issubclass(cls, ProtMovieAlignment):
             outputMics = obj.outputMicrographs
             plotLabels = 'psdCorr._filename plotPolar._filename plotCart._filename'
@@ -403,19 +383,5 @@ class XmippViewer(Viewer):
         return self._views
     
     
-# class ChimeraClient(CommandView):
-#     """ View for calling an external command. """
-#     def __init__(self, inputFile, projectionSize=256, 
-#                  angularDist=None, radius=None, sphere=None, **kwargs):
-# 
-#         cmd = 'xmipp_chimera_client --input "%(inputFile)s" --mode projector %(projectionSize)d' % locals()
-#         if angularDist:
-#             cmd += ' -a %(angularDist)s red %(radius)f' % locals() 
-#             if sphere > 0:
-#                 cmd += ' %f' % sphere
-#         CommandView.__init__(self, cmd + ' &', env=getEnviron())
-#         
-#     def show(self):
-#         from subprocess import call
-#         call(self._cmd, shell=True, env=self._env)
+
         

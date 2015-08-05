@@ -94,7 +94,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         self._fillClassesFromIter(classes2D, self._lastIter())
         
         self._defineOutputs(outputClasses=classes2D)
-        self._defineSourceRelation(partSet, classes2D)
+        self._defineSourceRelation(self.inputParticles, classes2D)
         
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):

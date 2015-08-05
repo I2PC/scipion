@@ -268,7 +268,7 @@ class XmippProtRCT(ProtInitialVolume):
         if self.doFilter.get():
             self._defineOutputs(outputFilteredVolumes=self.volumesFilterSet)
             
-        self._defineSourceRelation(self.inputParticlesTiltPair.get(), self.volumesSet)  
+        self._defineSourceRelation(self.inputParticlesTiltPair, self.volumesSet)  
              
     def _appendOutputVolume(self, volumeOut):  
                                   

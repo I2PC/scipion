@@ -4,17 +4,12 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-
 import javax.swing.SwingUtilities;
-
 import xmipp.jni.Particle;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippMessageDialog;
-import xmipp.viewer.particlepicker.Micrograph;
-import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
-import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;

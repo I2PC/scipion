@@ -54,14 +54,15 @@ class TiltPair(EMObject):
     def setTilted(self, tilted):
         self._tilted = tilted        
         
-class MicrographsTiltPair(EMSet):
-    """Represents a Micrographs Tilt Pair"""
-    ITEM_TYPE = TiltPair
+        
+class TiltPairSet(EMSet):
+    """ Base class for Tilt pairs sets. """
+    ITEM_TYPE = None
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
-        self._tilted = None#SetOfMicrographs()
-        self._untilted = None#SetOfMicrographs()
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
+        self._tilted = None
+        self._untilted = None
         
     def getUntilted(self):
         return self._untilted
@@ -86,40 +87,33 @@ class MicrographsTiltPair(EMSet):
         return globals()
 
     def close(self):
-        self._tilted.close()
-        self._untilted.close()
-        EMSet.close(self)
+        if self._tilted is not None:
+            self._tilted.close()
+        if self._untilted is not None:
+            self._untilted.close()
+        EMSet.close(self)    
+    
+    
+class MicrographsTiltPair(TiltPairSet):
+    """Represents a Micrographs Tilt Pair"""
+    ITEM_TYPE = TiltPair
 
     
-class CoordinatesTiltPair(EMSet):
+class CoordinatesTiltPair(TiltPairSet):
     """Represents a Coordinates Tilt Pair"""
     ITEM_TYPE = TiltPair
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
-        self._tilted = None#SetOfCoordinates()
-        self._untilted = None#SetOfCoordinates()
+    def __init__(self, **kwargs):
+        TiltPairSet.__init__(self, **kwargs)
         self._angles = SetOfAngles()
         self._micsPair = Pointer()
         
-    def getUntilted(self):
-        return self._untilted
-    
-    def getTilted(self):
-        return self._tilted
-    
     def getAngles(self):
         return self._angles
     
     def getMicsPair(self):
         return self._micsPair.get()
     
-    def setUntilted(self, untilted):
-        self._untilted = untilted
-        
-    def setTilted(self, tilted):
-        self._tilted = tilted
-        
     def setAngles(self, setAngles):
         self._angles = setAngles
         
@@ -127,9 +121,9 @@ class CoordinatesTiltPair(EMSet):
         self._micsPair.set(micsPair)
         
     def getFiles(self):
-        filePaths = set()
-        filePaths.add(self.getTilted().getFiles)
-        filePaths.add(self.getUntilted().getFiles)
+        filePaths = TiltPairSet.getFiles(self)
+        filePaths.add(self.getAngles().getFiles)
+        filePaths.add(self.getMicsPair().getFiles)
         
         return filePaths
 
@@ -137,9 +131,9 @@ class CoordinatesTiltPair(EMSet):
         return globals()
 
     def close(self):
-        self._tilted.close()
-        self._untilted.close()
-        EMSet.close(self)
+        TiltPairSet.close(self)
+        self.getAngles().close()
+
          
 class Angles(EMObject):
     """Represents a triplet of angles"""
@@ -170,45 +164,23 @@ class SetOfAngles(EMSet):
         return globals()  
     
     
-class ParticlesTiltPair(EMSet):
+class ParticlesTiltPair(TiltPairSet):
     """Represents a Particles Tilt Pair"""
     ITEM_TYPE = TiltPair
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
-        self._tilted = None#SetOfImages()
-        self._untilted = None#SetOfImages()
+    def __init__(self, **kwargs):
+        TiltPairSet.__init__(self, **kwargs)
         self._coordsPair = Pointer()
         
-    def getUntilted(self):
-        return self._untilted
-    
-    def getTilted(self):
-        return self._tilted
-
     def getCoordsPair(self):
         return self._coordsPair.get()
         
-    def setUntilted(self, untilted):
-        self._untilted = untilted
-        
-    def setTilted(self, tilted):
-        self._tilted = tilted
-
     def setCoordsPair(self, coordsPair):
         self._coordsPair.set(coordsPair)
                 
     def getFiles(self):
-        filePaths = set()
-        filePaths.add(self.getTilted().getFiles)
-        filePaths.add(self.getUntilted().getFiles)
+        filePaths = TiltPairSet.getFiles(self)
+        filePaths.add(self.getCoordsPair().getFiles)
         
         return filePaths    
-    
-    def _loadClassesDict(self):
-        return globals()
-
-    def close(self):
-        self._tilted.close()
-        self._untilted.close()
-        EMSet.close(self)
+        

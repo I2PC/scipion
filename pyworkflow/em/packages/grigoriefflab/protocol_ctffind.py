@@ -39,8 +39,13 @@ from convert import (readCtfModel, parseCtffindOutput, parseCtffind4Output)
 
 
 class ProtCTFFind(em.ProtCTFMicrographs):
-    """Estimates CTF on a set of micrographs
-    using either ctffind3 or ctffind4 program"""
+    """
+    Estimates CTF on a set of micrographs
+    using either ctffind3 or ctffind4 program.
+    
+    To find more information about ctffind4 go to:
+    http://grigoriefflab.janelia.org/ctffind4
+    """
     _label = 'ctffind'
     
     

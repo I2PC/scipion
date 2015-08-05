@@ -96,7 +96,7 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
         avg.copyInfo(self.inputParticles.get())
         avg.setLocation(NO_INDEX, self.getAverage())
         self._defineOutputs(outputAverage=avg)
-        self._defineSourceRelation(particles, avg)
+        self._defineSourceRelation(self.inputParticles, avg)
         
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(particles)
@@ -105,7 +105,7 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
         imgSet.readStack(outputStk, 
                          postprocessImage=lambda img: img.setTransform(Transform()))
         self._defineOutputs(outputParticles=imgSet)
-        self._defineTransformRelation(particles, imgSet)
+        self._defineTransformRelation(self.inputParticles, imgSet)
         
     def _summary(self):
         summary = []

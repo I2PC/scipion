@@ -786,7 +786,7 @@ if matlab:
                 'tom_xmipp_scale_pyramid',
                 'tom_xmipp_volume_segment',
 
-                'mirt_mexinterp',
+                'mirt3D_mexinterp',
 
                 'xmipp_nma_read_alignment',
                 'xmipp_nma_save_cluster',
