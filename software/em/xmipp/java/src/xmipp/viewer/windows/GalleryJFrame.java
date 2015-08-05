@@ -1549,10 +1549,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(DISPLAY_RESLICE, "Reslice");
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				addItem(DISPLAY_RESLICE_VIEWS[i], reslices[i]);
-                        addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
-                        
-                                                
-                        addItem(STATS, "Statistics");
+            addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
+            
+                                    
+            addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
 			addItem(STATS_FSC, "FSC");
@@ -1690,11 +1690,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					saveAs();
 				}
-                                else if (cmd.equals(FILE_EXPORTIMAGES))
+                else if (cmd.equals(FILE_EXPORTIMAGES))
 				{
-
-                                        exportImages();
-
+                	exportImages();
 				}
 				else if (cmd.equals(FILE_EXIT))
 				{
@@ -2138,22 +2136,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		try
 		{
 			data.saveMd(path, saveall, isoverwrite);
-                        String file;
-                        if (path.contains("@"))
-                                file = path.substring(path.lastIndexOf("@") + 1, path.length());
-                        else
-                        {
-                                file = path;
-                                path = getBlock() + "@" + file;
-                        }
-                        if(reload)
-                            {
-                            gallery.data.setFileName(file);
-                            if (path.contains("@"))
-                                    gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
-                            reloadFile(file, false);
-                            setGalleryTitle();
-                        }
+            String file;
+            if (path.contains("@"))
+                    file = path.substring(path.lastIndexOf("@") + 1, path.length());
+            else
+            {
+                    file = path;
+                    path = getBlock() + "@" + file;
+            }
+            if(reload)
+                {
+                gallery.data.setFileName(file);
+                if (path.contains("@"))
+                        gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
+                reloadFile(file, false);
+                setGalleryTitle();
+            }
 		}
 		catch (Exception e)
 		{

@@ -69,12 +69,8 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
         constraints.insets = new Insets(0, 5, 0, 5);
         constraints.anchor = GridBagConstraints.WEST;
         setLayout(new GridBagLayout());
-        
-        imagepn = new ImageJPanel(mask, width, height);
-        add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 0));
-        
         JPanel optionspn = new JPanel();
-        add(optionspn, XmippWindowUtil.getConstraints(constraints, 0, 1));
+        add(optionspn, XmippWindowUtil.getConstraints(constraints, 0, 0));
         optionspn.add(new JLabel("Invert:"));
         invertbt = new JCheckBox();
         invertbt.addActionListener(this);
@@ -90,6 +86,10 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
         smoothtf.addActionListener(this);
         smoothtf.setEnabled(false);
         optionspn.add(smoothtf);
+        imagepn = new ImageJPanel(mask, width, height);
+        add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 1));
+        
+        
         JPanel commandspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         add(commandspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 1, 1, GridBagConstraints.HORIZONTAL));
         
@@ -139,38 +139,37 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
    
     
     private void createMask() {
-            imp = IJ.getImage();
-            
-            width = imp.getCanvas().getWidth();
-            height = imp.getCanvas().getHeight();
+        imp = IJ.getImage();
+        
+        width = imp.getCanvas().getWidth();
+        height = imp.getCanvas().getHeight();
 
-            if (imp != null) {
-                Roi roi = imp.getRoi();
+        if (imp != null) {
+            Roi roi = imp.getRoi();
 
-                if (roi != null) {
-                    if (mask == null || !mask.isVisible()) {
-                        createDefaultMask();
-                    }
-
-                    mask.getProcessor().setColor(Color.WHITE);
-                    mask.getProcessor().fill(roi);
-                    if(isInvert())
-                        mask.getProcessor().invert();
-                    if(isSmooth())
-                        mask.getProcessor().blurGaussian(((Number) smoothtf.getValue()).intValue());
-                    
-                    
-                } else 
+            if (roi != null) {
+                if (mask == null || !mask.isVisible()) {
                     createDefaultMask();
-               
-                mask.getProcessor().multiply(1/mask.getProcessor().getMax());
-                mask.getProcessor().setMinAndMax(0, 1);
-                mask.updateAndDraw();    
+                }
+
+                mask.getProcessor().setColor(Color.WHITE);
+                mask.getProcessor().fill(roi);
+                if(isInvert())
+                    mask.getProcessor().invert();
+                if(isSmooth())
+                    mask.getProcessor().blurGaussian(((Number) smoothtf.getValue()).intValue());
                 
-            } else {
-                IJ.error("There are no images open.");
-            }
+                
+            } else 
+                createDefaultMask();
+           
+            mask.getProcessor().multiply(1/mask.getProcessor().getMax());
+            mask.getProcessor().setMinAndMax(0, 1);
+            mask.updateAndDraw();    
             
+        } else {
+            IJ.error("There are no images open.");
+        }
     }
     
     public boolean isInvert()
