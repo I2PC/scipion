@@ -31,16 +31,11 @@ from pyworkflow.em.data import CTFModel, SetOfParticles
 from convert import readCtfModel, ctffindOutputVersion, readSetOfParticles
 
 
-
-class BrandeisImport():
-    """ Class used to import different kind of objects
-    from Brandeis projects into Scipion.
-    """
-    def __init__(self, protocol, parFile, stackFile):
+class GrigorieffLabImportCTF():
+    """ Import CTF estimated with CTFFIND. """
+    def __init__(self, protocol):
         self.protocol = protocol
         self.copyOrLink = self.protocol.getCopyOrLink()
-        self.parFile = parFile
-        self.stackFile = stackFile
 
     def importCTF(self, mic, fileName):
         ctf = CTFModel()
@@ -51,6 +46,15 @@ class BrandeisImport():
             if os.path.exists(pwutils.removeExt(fileName) + suffix):
                 ctf.setPsdFile(pwutils.removeExt(fileName) + suffix)
         return ctf
+    
+    
+class GrigorieffLabImportParticles():
+    """ Import particles from a Frealign refinement. """
+    def __init__(self, protocol, parFile, stackFile):
+        self.protocol = protocol
+        self.copyOrLink = self.protocol.getCopyOrLink()
+        self.parFile = parFile
+        self.stackFile = stackFile
     
     def _setupSet(self, partSet):
         self.protocol.setSamplingRate(partSet)
