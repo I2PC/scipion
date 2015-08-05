@@ -154,6 +154,9 @@ class TestImportParticles(BaseTest):
             m1 = p1.getTransform().getMatrix()
             m2 = p2.getTransform().getMatrix()
             self.assertTrue(np.allclose(m1, m2, atol=0.01))
+            
+        self.assertTrue(protImport.outputParticles.hasCTF())
+        self.assertTrue(protImport.outputParticles.hasAlignmentProj())
 
     
 class TestBrandeisCtffind(TestBrandeisBase):
