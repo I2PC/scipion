@@ -73,7 +73,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	        if(XmippApplication.isScipion())
 	        {
 	            MenuItem createMaskmi = new MenuItem("Design Mask");
-	            
 	            createMaskmi.addActionListener(new ActionListener() {
 	
 	                @Override
@@ -193,9 +192,8 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
         @Override
 	public void windowClosing(WindowEvent e) {
             
-            super.windowClosing(e);
-            myClose();
-		
+        super.windowClosing(e);
+        myClose();
 	}
         
     public synchronized void myClose()
@@ -265,22 +263,26 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
                 }
             });
             imp.getCanvas().addComponentListener(new java.awt.event.ComponentAdapter()
-	{
-                    @Override
-		public void componentResized(ComponentEvent e)
-		{
-			maskfr.refreshMask();
-		}
-	});
+            {
+                @Override
+				public void componentResized(ComponentEvent e)
+				{
+					maskfr.refreshMask();
+				}
+			});
+            
         }
     }
 
-
-
+   
 	public synchronized boolean isClosing()
 	{
 		// TODO Auto-generated method stub
 		return closing;
 	}
+
+	
+	
+	
 
 }// class XmippImageWindow
