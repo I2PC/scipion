@@ -83,6 +83,7 @@ class GrigorieffLabImportParticles():
         self._setupSet(partSet)        
         # Now read the alignment parameters from par file
         readSetOfParticles(tmpSet, partSet, self.parFile)
+        partSet.setHasCTF(True)
         # Register the output set of particles
         self.protocol._defineOutputs(outputParticles=partSet)
         

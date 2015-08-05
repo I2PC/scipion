@@ -153,8 +153,8 @@ class ProtImportParticles(ProtImportImages):
             return ScipionImport(self, self.importFilePath)    
         elif self.importFrom == self.IMPORT_FROM_FREALIGN:
             self.importFilePath = self.parFile.get('').strip()
-            from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportCTF
-            return GrigorieffLabImportCTF(self, self.parFile.get(), self.stackFile.get())
+            from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportParticles
+            return GrigorieffLabImportParticles(self, self.parFile.get(), self.stackFile.get())
         else:
             self.importFilePath = ''
             return None 
