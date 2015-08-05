@@ -89,16 +89,14 @@ class ProtImportCTF(ProtImportFiles):
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
             return XmippImport(self, filesPath)
         elif importFrom == self.IMPORT_FROM_GRIGORIEFF:
-            from pyworkflow.em.packages.grigoriefflab.dataimport import BrandeisImport
-            return BrandeisImport(self)
+            from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportCTF
+            return GrigorieffLabImportCTF(self)
         else:
             return None
         
     #--------------------------- STEPS functions ---------------------------------------------------
     def importCTFStep(self, importFrom):
-
-        """ Copy ctfs matching the filename pattern.
-        """
+        """ Copy ctfs matching the filename pattern. """
         ci = self.getImportClass()
 
         inputMics = self.inputMicrographs.get()
