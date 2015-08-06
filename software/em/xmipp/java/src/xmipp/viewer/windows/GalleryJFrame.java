@@ -1502,10 +1502,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		reloadTableData();
 	}
         
-        protected void plotColumns() {
-            PlotJDialog dlg = new PlotJDialog(GalleryJFrame.this);
-            dlg.showDialog();
-        }
+    protected void plotColumns() {
+        PlotJDialog dlg = new PlotJDialog(GalleryJFrame.this);
+        dlg.showDialog();
+    }
 
 	protected class GalleryMenu extends XmippMenuBarCreator
 	{
@@ -1522,7 +1522,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.gif", "control released H");
 			addItem(FILE_OPENMICROGRAPHS, "Open colored particles");
 			addItem(FILE_INFO, "File info ...");
-                        
+			addExtraMenuItems();
 
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
@@ -1575,6 +1575,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
 			addItem(KEY_ASSIST, "Tips...", "bulb.png");
 		}// function createItems
+		
+		//To insert extra items inside file menu
+		public void addExtraMenuItems()
+		{}
 
 		public void update()
 		{
