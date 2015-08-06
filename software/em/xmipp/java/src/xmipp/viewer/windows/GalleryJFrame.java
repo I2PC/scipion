@@ -1531,7 +1531,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE, "File");
 			addItem(FILE_OPEN, "Open ...", null, "control released O");
 			addItem(FILE_OPENWITH_IJ, "Open with ImageJ", "ij.gif", "control released J");
-			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.gif", "control released H");
+			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.png", "control released H");
 			addItem(FILE_OPENMICROGRAPHS, "Open colored particles");
 			addItem(FILE_INFO, "File info ...");
 			addExtraMenuItems();
