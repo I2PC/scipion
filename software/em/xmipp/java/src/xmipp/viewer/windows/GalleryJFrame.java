@@ -192,6 +192,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private ExtractPickerJFrame extractframe;
 	private ButtonGroup reslicegroup;
 	protected JPanel buttonspn;
+	protected JButton searchbt;
+    protected JButton plotbt;
+	protected JButton chimerabt;
 
 	/** Some static initialization for fancy default dimensions */
 	static
@@ -204,8 +207,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
-        protected JButton searchbt;
-        protected JButton plotbt;
+        
 
 
 	/** Initialization function after GalleryData structure is created */
@@ -1132,6 +1134,16 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             }
         });
         toolBar.add(plotbt);
+        chimerabt = new JButton(XmippResource.getIcon("chimera.png"));
+        chimerabt.setEnabled(data.isVolumeMode());
+        chimerabt.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                openWithChimera();
+            }
+        });
+        toolBar.add(chimerabt);
 	}// function createToolbar
 
 	/** Create combos for selection of block and volume if its the case */
@@ -1605,7 +1617,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.getResliceView() == ImageGeneric.VIEWS[i]));
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
 			setItemEnabled(DISPLAY_RESLICE, volMode);
-                        setItemSelected(DISPLAY_NORMALIZE, data.getNormalized());
+            setItemSelected(DISPLAY_NORMALIZE, data.getNormalized());
 			setItemEnabled(MD_CLASSES, data.isClassificationMd());
 			setItemEnabled(MD_PLOT, data.isTableMode());
 			boolean isCol = data.isColumnFormat();
@@ -1616,6 +1628,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_SAVE_SELECTION, isCol);
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
 			reslicebt.setEnabled(volMode);
+			chimerabt.setEnabled(volMode);
             setItemVisible(METADATA, !isscipion);
             addDisplayLabelItems();
             addRenderImageColumnItems();
@@ -1704,22 +1717,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(FILE_OPENWITH_CHIMERA))
 				{
-                    if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
-                    {
-                        int result = fc.showOpenDialog(GalleryJFrame.this);
-                        if(result != XmippFileChooser.CANCEL_OPTION)
-                        {
-                            String path = fc.getSelectedPath();
-                            if(!Filename.isVolumeExt(path))
-                            {
-                                XmippDialog.showError(GalleryJFrame.this, XmippMessage.getFileTypeNotSupportedMsg(path));
-                                return;
-                            }
-                            openChimera(path, true);
-                        }
-                    }
-                    else
-                        openChimera(data.getSelVolumeFile(), false);
+                    openWithChimera();
 				}
 				else if (cmd.equals(FILE_OPENMICROGRAPHS))
 				{
@@ -2387,6 +2385,26 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             {
                     ex.printStackTrace();
             }
+        }
+        
+        protected void openWithChimera()
+        {
+        	if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
+            {
+                int result = fc.showOpenDialog(GalleryJFrame.this);
+                if(result != XmippFileChooser.CANCEL_OPTION)
+                {
+                    String path = fc.getSelectedPath();
+                    if(!Filename.isVolumeExt(path))
+                    {
+                        XmippDialog.showError(GalleryJFrame.this, XmippMessage.getFileTypeNotSupportedMsg(path));
+                        return;
+                    }
+                    openChimera(path, true);
+                }
+            }
+            else
+                openChimera(data.getSelVolumeFile(), false);
         }
        
 }// class JFrameGallery
