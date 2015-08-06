@@ -30,10 +30,11 @@ are called "batch" protocols.
 """
 
 import os
+from itertools import izip
 
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet, SetOfNormalModes
+from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet, SetOfNormalModes, SetOfParticles
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair, ParticlesTiltPair
 from pyworkflow.em.data import Mask
 
@@ -337,19 +338,23 @@ class ProtUserSubSet(BatchProtocol):
         print 'create subset from particles tilt pair'
         """ Create a subset of Micrographs Tilt Pair. """
         output = ParticlesTiltPair(filename=self._getPath('particles_pairs.sqlite'))
-        print "self._dbName=%s" % self._dbName
+        
+        inputU = particlesTiltPair.getUntilted()
+        inputT = particlesTiltPair.getTilted()
+        outputU = SetOfParticles(filename=self._getPath('particles_untilted.sqlite'))
+        outputT = SetOfParticles(filename=self._getPath('particles_tilted.sqlite'))
+        
         modifiedSet = ParticlesTiltPair(filename=self._dbName, prefix=self._dbPrefix)
 
-        for particlePairI in modifiedSet:
-            untilted = particlePairI.getUntilted()
-            tilted = particlePairI.getTilted()
-            if particlePairI.isEnabled():
-
-                micPairO = ParticlesTiltPair()
-                micPairO.setUntilted(untilted)
-                micPairO.setTilted(tilted)
-                output.append(micPairO)
+        for pair, u, t in izip(modifiedSet, inputU, inputT):
+            if pair.isEnabled():
+                output.append(pair)
+                outputU.append(u)
+                outputT.append(t)
         # Register outputs
+        output.setUntilted(outputU)
+        output.setTilted(outputT)
+        
         outputDict = {'outputParticlesTiltPair': output}
         self._defineOutputs(**outputDict)
         self._defineTransformRelation(particlesTiltPair, output)

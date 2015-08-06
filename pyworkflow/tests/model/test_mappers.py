@@ -291,7 +291,22 @@ class TestSqliteFlatMapper(BaseTest):
             
         mapper.commit()
         mapper.close()
+         
+    def test_emtpySet(self):
+        dbName = self.getOutputPath('empty.sqlite')
+        #dbName = '/tmp/downloads.sqlite'
         
+        print ">>> test empty set: dbName = '%s'" % dbName
+        # Check that writing an emtpy set do not fail
+        objSet = Set(filename=dbName)      
+        objSet.write()
+        objSet.close()       
+        
+        # Now let's try to open an empty set
+        objSet = Set(filename=dbName)
+        self.assertEqual(objSet.getSize(), 0)
+        items = [obj.clone() for obj in objSet]
+        self.assertEqual(len(items), 0)
         
 class TestXmlMapper(BaseTest):
     

@@ -1,10 +1,8 @@
 package xmipp.ij.commons;
 
-import ij.Executer;
+import ij.ImageJ;
 
 import java.awt.event.WindowEvent;
-
-import ij.ImageJ;
 
 public class XmippImageJ extends ImageJ
 {
