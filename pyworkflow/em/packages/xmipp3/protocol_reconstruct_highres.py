@@ -491,7 +491,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def calculateAngStep(self,newXdim,TsCurrent,ResolutionAlignment):
         k=newXdim*TsCurrent/ResolutionAlignment # Freq. index
         from math import atan2,pi
-        return atan2(1,k)*180.0/pi # Corresponding angular step
+        return atan2(1,k)*180.0/pi*2.0/3.0 # Corresponding angular step
 
     def globalAssignment(self,iteration):
         useSignificant=False
@@ -786,7 +786,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             args="-i %s -o %s --sym %s --weight"%(fnAngles,fnVol,self.symmetryGroup)
             row=getFirstRow(fnAngles)
             if row.containsLabel(MDL_CTF_DEFOCUSU) or row.containsLabel(MDL_CTF_MODEL):
-                args+=" --useCTF --sampling %f"%TsCurrent
+                args+=" --useCTF --sampling %f --minCTF 0.1"%TsCurrent
                 if self.phaseFlipped:
                     args+=" --phaseFlipped"
             self.runJob("xmipp_reconstruct_fourier",args)
