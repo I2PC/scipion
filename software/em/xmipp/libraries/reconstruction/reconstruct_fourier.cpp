@@ -462,7 +462,6 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
             }
         case PROCESS_IMAGE:
             {
-
                 MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
                 if (threadParams->weight==0.0)
                     break;
@@ -475,7 +474,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 bool assigned;
 
                 // Get the inverse of the sampling rate
-                double iTs=1/parent->Ts;
+                double iTs=parent->padding_factor_proj/parent->Ts;
 
                 do
                 {
@@ -588,7 +587,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                     if (std::isnan(wCTF))
                                         wCTF=0.0;
                                     if (fabs(wCTF)<parent->minCTF)
-                                        wCTF=1;
+                                        wCTF=0.0;
                                     else
                                         wCTF=1.0/wCTF;
                                     if (parent->phaseFlipped)
