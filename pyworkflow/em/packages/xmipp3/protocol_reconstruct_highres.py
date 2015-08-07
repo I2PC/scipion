@@ -693,7 +693,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         else:
                             fnAux=join(fnDirLocal,"aux.xmd")
                             self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
-                                        (join(fnDirPrevious,"images.xmd"),fnLocalImages,fnAux))
+                                        (join(fnDirPrevious,"angles.xmd"),fnLocalImages,fnAux),numberOfMpi=1)
                             self.adaptShifts(fnAux,TsPrevious,fnLocalAssignment,TsCurrent)
                             cleanPath(fnAux)
                     self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column image"%fnLocalAssignment,numberOfMpi=1)
@@ -754,10 +754,17 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             (fnAngles,self._getExtraPath("ssnrWeights.xmd")),numberOfMpi=1)
             if self.weightJumper and iteration>1:
                 fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
-                fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
+                if self.splitMethod == self.SPLIT_FIXED:
+                    fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
+                else:
+                    fnPreviousAngles=join(fnDirCurrent,"aux.xmd")
+                    self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
+                                (join(fnDirPrevious,"angles.xmd"),fnAngles,fnPreviousAngles),numberOfMpi=1)
                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s"%\
                             (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper"),numberOfMpi=1)
                 moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
+                if self.splitMethod == self.SPLIT_STOCHASTIC:
+                    cleanPath(fnPreviousAngles)
 
             if self.weightResiduals and exists(fnAnglesCont):
                 fnCovariance=join(fnDirLocal,"covariance%02d.stk"%i)
