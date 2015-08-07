@@ -523,7 +523,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             fnGlobal=join(fnDirCurrent,"globalAssignment")
             makePath(fnGlobal)
     
-            targetResolution=max(previousResolution*0.8,self.significantMaxResolution.get())
+            targetResolution=previousResolution*0.8
             TsCurrent=max(self.TsOrig,targetResolution/3)
             self.prepareImages(fnDirPrevious,fnGlobal,TsCurrent)
             self.prepareReferences(fnDirPrevious,fnGlobal,TsCurrent,targetResolution)
@@ -643,7 +643,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             fnDirLocal=join(fnDirCurrent,"localAssignment")
             makePath(fnDirLocal)
 
-            targetResolution=previousResolution
+            targetResolution=previousResolution*0.8
             TsCurrent=max(self.TsOrig,targetResolution/3)
             self.writeInfoField(fnDirLocal,"sampling",MDL_SAMPLINGRATE,TsCurrent)
             TsCurrent=self.readInfoField(fnDirLocal,"sampling",MDL_SAMPLINGRATE) # Write and read to guarantee consistency with previous directories 
@@ -688,7 +688,14 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             self.adaptShifts(fnGlobalAssignment,TsGlobal,fnLocalAssignment,TsCurrent)
                     else:
                         TsPrevious=self.readInfoField(fnDirPrevious,"sampling",MDL_SAMPLINGRATE)
-                        self.adaptShifts(join(fnDirPrevious,"angles%02d.xmd"%i),TsPrevious,fnLocalAssignment,TsCurrent)
+                        if self.splitMethod == self.SPLIT_FIXED:
+                            self.adaptShifts(join(fnDirPrevious,"angles%02d.xmd"%i),TsPrevious,fnLocalAssignment,TsCurrent)
+                        else:
+                            fnAux=join(fnDirLocal,"aux.xmd")
+                            self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
+                                        (join(fnDirPrevious,"images.xmd"),fnLocalImages,fnAux))
+                            self.adaptShifts(fnAux,TsPrevious,fnLocalAssignment,TsCurrent)
+                            cleanPath(fnAux)
                     self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column image"%fnLocalAssignment,numberOfMpi=1)
                     self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%(fnLocalAssignment,fnLocalImages),numberOfMpi=1)
     
