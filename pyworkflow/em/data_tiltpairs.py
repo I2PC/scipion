@@ -77,9 +77,9 @@ class TiltPairSet(EMSet):
         self._tilted = tilted
         
     def getFiles(self):
-        filePaths = set()
-        filePaths.add(self.getTilted().getFiles)
-        filePaths.add(self.getUntilted().getFiles)
+        filePaths = EMSet.getFiles(self)
+        filePaths.add(self.getTilted().getFiles())
+        filePaths.add(self.getUntilted().getFiles())
         
         return filePaths 
     

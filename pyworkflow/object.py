@@ -1135,6 +1135,12 @@ class Set(OrderedObject):
         for item in self.iterItems():
             s.add(item.getObjId())
         return s
+    
+    def getFiles(self):
+        files = set()
+        if self.getFileName():
+            files.add(self.getFileName())
+        return files
 
 
 def ObjectWrap(value):
