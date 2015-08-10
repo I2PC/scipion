@@ -170,8 +170,19 @@ public class MDSearchJDialog extends XmippDialog {
 				XmippWindowUtil.getConstraints(gbc, 0, row++, 2));
 
 		panel.add(mainPanel);
+		enableActions();
 	}// function initComponents
 
+	
+	protected void enableActions()
+	{
+		boolean isenabled = !data.isScipionInstance();
+		jtReplace.setEnabled(isenabled);
+		btnReplace.setEnabled(isenabled);
+		btnReplaceFind.setEnabled(isenabled);
+		btnReplaceAll.setEnabled(isenabled);
+	}
+	
 	@Override
 	public void handleActionPerformed(ActionEvent evt) {
 		Object o = evt.getSource();

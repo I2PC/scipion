@@ -1564,16 +1564,17 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
             
                                     
-            addItem(STATS, "Statistics");
-			addItem(STATS_AVGSTD, "Avg & Std images");
-			addItem(STATS_PCA, "PCA");
-			addItem(STATS_FSC, "FSC");
+            addItem(TOOLS, "Tools");
+			addItem(TOOLS_AVGSTD, "Avg & Std images");
+			addItem(TOOLS_PCA, "PCA");
+			addItem(TOOLS_FSC, "FSC");
+			addItem(TOOLS_PLOT, "Plot", "plot.png");
+			addItem(MD_FIND_REPLACE, "Find & Replace", "binocular.png", "control released F");
                         
 			// Metadata operations
 			addItem(METADATA, "Metadata");
                         
 			
-			addItem(MD_PLOT, "Plot", "plot.png");
 			addItem(MD_CLASSES, "Classes");
 			addItem(MD_EDIT_COLS, "Edit labels", "edit.gif");
 			addItem(MD_ADD_OBJECT, "Add new object", "new_object.gif");
@@ -1581,7 +1582,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(MD_REMOVE_SELECTION, "Remove selection");
 			addItem(MD_SAVE_SELECTION, "Save selection", "save.gif");
 			addSeparator(METADATA);
-			addItem(MD_FIND_REPLACE, "Find & Replace", "binocular.png", "control released F");
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
@@ -1619,9 +1619,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(DISPLAY_RESLICE, volMode);
             setItemSelected(DISPLAY_NORMALIZE, data.getNormalized());
 			setItemEnabled(MD_CLASSES, data.isClassificationMd());
-			setItemEnabled(MD_PLOT, data.isTableMode());
+			setItemEnabled(TOOLS_PLOT, data.isTableMode());
 			boolean isCol = data.isColumnFormat();
-			setItemEnabled(STATS, isCol && !volMode);
+			setItemEnabled(TOOLS, isCol && !volMode);
 			setItemEnabled(MD_ADD_OBJECT, isCol);
 			setItemEnabled(MD_REMOVE_DISABLED, isCol);
 			setItemEnabled(MD_REMOVE_SELECTION, isCol);
@@ -1683,11 +1683,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						isUpdating = false;
 					}
 				}
-				else if (cmd.equals(STATS_AVGSTD))
+				else if (cmd.equals(TOOLS_AVGSTD))
 					runInBackground(Worker.STATS);
-				else if (cmd.equals(STATS_PCA))
+				else if (cmd.equals(TOOLS_PCA))
 					runInBackground(Worker.PCA);
-				else if (cmd.equals(STATS_FSC))
+				else if (cmd.equals(TOOLS_FSC))
 					runInBackground(Worker.FSC);
 				else if (cmd.equals(FILE_OPEN))
 				{
@@ -1757,10 +1757,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 							break;
 						}
 				}
-				else if (cmd.equals(MD_PLOT))
+				else if (cmd.equals(TOOLS_PLOT))
 				{
-                                        plotColumns();
-					
+					plotColumns();
 				}
 				else if (cmd.equals(MD_CLASSES))
 				{
