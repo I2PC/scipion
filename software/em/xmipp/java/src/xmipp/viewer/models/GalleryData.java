@@ -399,6 +399,8 @@ public class GalleryData {
 			// Try to find at least one image to render
             // and take dimensions from that
             for (int i = 0; i < ids.length && image == null; ++i) {
+            	if(i == 100)//after 100 items if there is no image available break 
+            		break;
                 imageFn = md.getValueString(renderLabel, ids[i]);
                 if(imageFn != null)
                     imageFn = Filename.findImagePath(imageFn , filename, true);
@@ -567,6 +569,8 @@ public class GalleryData {
         String imageFn, mddir = md.getBaseDir();
         for (int i = 0; i < ids.length; ++i)
         {
+        	if( i == 100)
+        		break;
             imageFn = getValueFromLabel(i, ci.label);
             if(imageFn != null)
             {

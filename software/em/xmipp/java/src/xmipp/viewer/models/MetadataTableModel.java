@@ -99,7 +99,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                         
 			ColumnInfo ci = visibleLabels.get(column);
 			if (ci.render) {
+				
 				String key = getItemKey(row, ci.label);
+				
 				ImageItem item;
 				// If the element is on cache, just return it
 				if (cache.containsKey(key))
@@ -132,9 +134,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				case MetaData.LABEL_SIZET:
 					return md.getValueLong(label, id);
 				case MetaData.LABEL_STRING:
-	                                String str = md.getValueString(label, data.ids[row]);
-	                                if (ci.labelName.contains("_transform._matrix"))
-	                                    return String.format("<html>%s</html>", XmippUtil.formatNumbers(str).replace("],", "]<br>"));
+                    String str = md.getValueString(label, data.ids[row]);
+                    if (ci.labelName.contains("_transform._matrix"))
+                        return String.format("<html>%s</html>", XmippUtil.formatNumbers(str).replace("],", "]<br>"));
 	
 					return str;
 				case MetaData.LABEL_VECTOR_DOUBLE:
@@ -289,7 +291,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	protected void calculateCellSize() {
 		// DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
-		if (data.renderImages) {
+		if (data.hasRenderLabel()) {
 			super.calculateCellSize();
 			// DEBUG.printMessage(String.format("MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
 			// cellDim.height));
