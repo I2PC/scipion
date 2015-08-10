@@ -351,7 +351,6 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     if (hasCTF)
                     {
                         threadParams->ctf.readFromMetadataRow(*(threadParams->selFile),objId[threadParams->imageIndex]);
-                        threadParams->ctf.Tm=parent->Ts;
                         threadParams->ctf.produceSideInfo();
                     }
 
@@ -476,7 +475,6 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
                 // Get the inverse of the sampling rate
                 double iTs=parent->padding_factor_proj/parent->Ts;
-
                 do
                 {
                     minAssignedRow = -1;
@@ -584,7 +582,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                     XX(contFreq)=XX(freq)*iTs;
                                     YY(contFreq)=YY(freq)*iTs;
                                     threadParams->ctf.precomputeValues(XX(contFreq),YY(contFreq));
-                                    wCTF=threadParams->ctf.getValueAt();
+                                    wCTF=threadParams->ctf.getValuePureNoKAt();
                                     if (std::isnan(wCTF))
                                         wCTF=0.0;
                                     if (fabs(wCTF)<parent->minCTF)
