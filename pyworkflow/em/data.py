@@ -652,6 +652,9 @@ class EMSet(Set, EMObject):
             else:
                 if itemDataIterator is not None:
                     next(itemDataIterator) # just skip disabled data row
+                    
+    def getFiles(self):
+        return Set.getFiles(self)
   
   
 class SetOfImages(EMSet):
