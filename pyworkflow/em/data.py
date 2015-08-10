@@ -1075,10 +1075,7 @@ class Coordinate(EMObject):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
-            return self._micName.get()
-        else:
-            self.getFileName()
+        return self._micName.get()
 
 
 class SetOfCoordinates(EMSet):
