@@ -114,6 +114,10 @@ def prettyDelta(timedelta):
     return str(timedelta).split('.')[0]
 
 
+def prettyLog(msg):
+    print cyan(prettyTime(datetime.now(), secs=True)), msg
+
+
 class Timer(object):
     """ Simple Timer base in datetime.now and timedelta. """
     def tic(self):

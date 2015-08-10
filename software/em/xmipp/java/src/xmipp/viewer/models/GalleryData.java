@@ -1293,9 +1293,9 @@ public class GalleryData {
     public String getFileInfo() {
         File file = new File(getFileName());
 
-        String fileInfo = "Path: " + file.getAbsolutePath() + "\n\n";
+        String fileInfo = "Path: " + file.getAbsolutePath() + "\n";
 
-        fileInfo += "File Name: " + file.getName() + "\n" + "Last Modified: "
+        fileInfo += "Last Modified: "
                 + new Date(file.lastModified()) + "\n"
                 + "Size: " + Filename.humanReadableByteCount(file.length());
         return fileInfo;
@@ -1427,7 +1427,7 @@ public class GalleryData {
         resliceView = view;
     }
 
-    public boolean getWrap() {
+    public boolean isWrap() {
         return wrap;
     }
 
@@ -1757,13 +1757,27 @@ public class GalleryData {
     
     public Geometry getGeometry(long id, String type)
     {
-        if(!containsGeometryInfo(type))
-            return null;
+        
         double shiftx, shifty, psiangle;
-        shiftx = md.getValueDouble(MDLabel.MDL_SHIFT_X, id);
-        shifty = md.getValueDouble(MDLabel.MDL_SHIFT_Y, id);
-        psiangle = md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
-        boolean flip = md.getValueBoolean(MDLabel.MDL_FLIP, id);
+        boolean flip;
+        
+        if(md.containsLabel(MetaData.GEOMETRY_LABELS))
+        {
+	        shiftx = md.getValueDouble(MDLabel.MDL_SHIFT_X, id);
+	        shifty = md.getValueDouble(MDLabel.MDL_SHIFT_Y, id);
+	        psiangle = md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
+	        flip = md.getValueBoolean(MDLabel.MDL_FLIP, id);
+        }
+        else if(md.containsLabel(MetaData.GEOMETRY_RELION_LABELS))
+        {
+	        shiftx = md.getValueDouble(MDLabel.RLN_ORIENT_ORIGIN_X, id);
+	        shifty = md.getValueDouble(MDLabel.RLN_ORIENT_ORIGIN_Y, id);
+	        psiangle = md.getValueDouble(MDLabel.RLN_ORIENT_PSI, id);
+	        flip = md.getValueBoolean(MDLabel.MDL_FLIP, id);
+        }
+        else
+        	return null;
+        
         return new Geometry(shiftx, shifty, psiangle, flip);
     }
         
@@ -1827,8 +1841,13 @@ public class GalleryData {
                     imageid = imagesmd.addObject();
                     if (useGeo()) 
                     {
+                    	Geometry geo = getGeometry(id);
                         mdRow = new MDRow();
-                        md.getRow(mdRow, id);//copy geo info in mdRow
+                        //md.getRow(mdRow, id);//copy geo info in mdRow
+                        mdRow.setValueDouble(MDLabel.MDL_SHIFT_X, geo.shiftx);
+                        mdRow.setValueDouble(MDLabel.MDL_SHIFT_Y, geo.shifty);
+                        mdRow.setValueDouble(MDLabel.MDL_ANGLE_PSI, geo.psiangle);
+                        mdRow.setValueBoolean(MDLabel.MDL_FLIP, geo.flip);
                         imagesmd.setRow(mdRow, imageid);
                     }
                     imagesmd.setValueString(MDLabel.MDL_IMAGE, imagepath, imageid);
@@ -1878,4 +1897,9 @@ public class GalleryData {
 		this.zoom = zoom;
 	}
         
+	public boolean allowsVolumeMode()
+	{
+		boolean allowsVolumeMode = !selectedVolFn.isEmpty();
+		return allowsVolumeMode;
+	}
 }// class GalleryData

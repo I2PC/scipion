@@ -127,12 +127,17 @@ class ProtParticlePicking(ProtParticles):
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
         return methodsMsgs
-
+    
+    def getInputMicrographsPointer(self):
+        return self.inputMicrographs
+    
     def getInputMicrographs(self):
-        return self.inputMicrographs.get()
+        return self.getInputMicrographsPointer().get()
     
     def getCoords(self):
         count = self.getOutputsSize()
+        if count == 0:
+            return None
         suffix = str(count) if count > 1 else ''
         outputName = 'outputCoordinates' + suffix
         return getattr(self, outputName)
@@ -147,7 +152,7 @@ class ProtParticlePicking(ProtParticles):
         coordSet.setObjComment(self.getSummary(coordSet))
         outputs = {outputName: coordSet}
         self._defineOutputs(**outputs)
-        self._defineSourceRelation(micSet, coordSet)
+        self._defineSourceRelation(self.getInputMicrographsPointer(), coordSet)
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         pass
@@ -170,8 +175,7 @@ class ProtParticlePicking(ProtParticles):
     def getCoordsDir(self):
         pass
 
-    def registerCoords(self, args):
-        coordsDir = self.getCoordsDir()
+    def registerCoords(self, coordsDir):
         count = self.getOutputsSize()
         suffix = str(count + 1) if count > 0 else ''
         outputName = 'outputCoordinates' + suffix
@@ -183,7 +187,7 @@ class ProtParticlePicking(ProtParticles):
         outputset.setObjComment(summary)
         outputs = {outputName: outputset}
         self._defineOutputs(**outputs)
-        self._defineSourceRelation(inputset, outputset)
+        self._defineSourceRelation(self.inputMicrographs, outputset)
         self._store()
 
 

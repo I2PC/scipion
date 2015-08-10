@@ -87,7 +87,8 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         
     def launchParticlePickGUIStep(self):
         extraDir = self._getExtraPath()
-        process = launchTiltPairPickerGUI(self.memory.get(), self.micsFn, extraDir, 'manual', self)
+        memory = '%dg'%self.memory.get(), 
+        process = launchTiltPairPickerGUI(self.micsFn, extraDir, self, memory=memory)
         process.wait()
         print 'launch ended'
 
@@ -130,7 +131,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             outputset.append(TiltPair(coordU, coordT))
         
         self._defineOutputs(outputCoordinatesTiltPair=outputset)
-        self._defineSourceRelation(inputset, outputset)
+        self._defineSourceRelation(self.inputMicrographsTiltedPair, outputset)
         
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):
@@ -199,10 +200,9 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         return "\n".join(summary)
     
 
-    def registerCoords(self, args):
+    def registerCoords(self, coordsDir):
         from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
 
-        extradir = self._getExtraPath()
         count = self.getOutputsSize()
         suffix = str(count + 1) if count > 0 else ''
         inputset = self.inputMicrographsTiltedPair.get()
@@ -213,10 +213,10 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         tSuffix = 'Tilted' + suffix
         # Create Untilted and Tilted SetOfCoordinates
         uCoordSet = self._createSetOfCoordinates(uSet, suffix=uSuffix)
-        readSetOfCoordinates(extradir, uSet, uCoordSet)
+        readSetOfCoordinates(coordsDir, uSet, uCoordSet)
         uCoordSet.write()
         tCoordSet = self._createSetOfCoordinates(tSet, suffix=tSuffix)
-        readSetOfCoordinates(extradir, tSet, tCoordSet)
+        readSetOfCoordinates(coordsDir, tSet, tCoordSet)
         tCoordSet.write()
 
         # Read Angles from input micrographs
@@ -237,7 +237,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         outputset.setObjComment(summary)
         outputs = {outputName: outputset}
         self._defineOutputs(**outputs)
-        self._defineSourceRelation(inputset, outputset)
+        self._defineSourceRelation(self.inputMicrographsTiltedPair, outputset)
         self._store()
 
 

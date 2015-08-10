@@ -492,5 +492,6 @@ def _particlesFromEmx(protocol
             protocol._defineOutputs(outputCoordinates=partSet)
         
         if micSet is not None:
-            protocol._defineSourceRelation(micSet, partSet)
+            protocol._defineSourceRelation(protocol.outputMicrographs, 
+                                           partSet)
             

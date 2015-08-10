@@ -313,7 +313,6 @@ class TaggedText(Text):
 
     def matchHyperText(self, match, tag):
         """ Process when a match a found and store indexes inside string."""
-        #print "match found at: ", match.start(), match.end(), "mode: ", mode
         self.insert(tk.END, self.line[self.lastIndex:match.start()])
         g1 = match.group(tag)
 
@@ -336,7 +335,7 @@ class TaggedText(Text):
         self.lastIndex = 0
         #if protocol has been executed BUT crashee before create something
         #line=None (ROB)
-        if line!=None:
+        if line is not None:
             parseHyperText(line, self.matchHyperText)
             Text.addLine(self, line[self.lastIndex:])
 
@@ -358,6 +357,7 @@ class OutputText(Text):
         self.refreshAlarm = None  # Identifier returned by after()
         self.lineNo = 0
         self.offset = 0
+        self.lastLine = ''
         Text.__init__(self, master, **opts)
         self.hm = HyperlinkManager(self)
         self.doRefresh()
@@ -372,8 +372,13 @@ class OutputText(Text):
         if self.colors:
             configureColorTags(self)
 
+    def _removeLastLine(self):
+        line = int(self.index(tk.END).split('.')[0])
+        if line > 0:
+            line -= 1
+            self.delete('%d.0' % line, tk.END)
+        
     def addLine(self, line):
-        self.lineNo += 1
         renderLine(line, self._addChunk, self.lineNo)
 
     def _addChunk(self, txt, fmt=None):
@@ -390,6 +395,13 @@ class OutputText(Text):
         else:
             self.insert(tk.END, txt)
 
+    def _notifyLine(self, line):
+        if '\r' in self.lastLine and '\r' in line:
+            self._removeLastLine()
+            self.addNewline()
+            
+        self.lastLine = line        
+        
     def readFile(self, clear=False):
         self.setReadOnly(False)
         
@@ -403,7 +415,8 @@ class OutputText(Text):
                                                       self._addChunk,
                                                       offset=self.offset, 
                                                       lineNo=self.lineNo,
-                                                      maxSize=self.maxSize)
+                                                      maxSize=self.maxSize, 
+                                                      notifyLine=self._notifyLine)
         else:
             self.insert(tk.END, "File '%s' doesn't exist" % self.filename)
 
@@ -497,7 +510,7 @@ class TextFileViewer(tk.Frame):
             btn.grid(row=0, column=5, padx=(0, 5))
         if self._allowRefresh:
             btn = IconButton(right, "Refresh", Icon.ACTION_REFRESH, tooltip=Message.TOOLTIP_REFRESH, 
-                             command=self.refreshAll, bg=None)
+                             command=self._onRefresh, bg=None)
             btn.grid(row=0, column=6, padx=(0, 5), pady=2)
         if self._allowOpen:
             btn = IconButton(right, "Open external", Icon.ACTION_REFERENCES, tooltip=Message.TOOLTIP_EXTERNAL,
@@ -552,13 +565,18 @@ class TextFileViewer(tk.Frame):
         for font in self.fontDict.values():
             gui.changeFontSize(font, event)
               
-    def refreshAll(self, e=None):
+    def refreshAll(self, clear=False, goEnd=False):
         """ Refresh all output textareas. """
         for ta in self.taList:
-            ta.readFile(clear=True)
-            ta.goEnd()
+            ta.readFile(clear)
+            if goEnd:
+                ta.goEnd()
         if self._lastTabIndex is not None:
             self.notebook.select(self._lastTabIndex)
+            
+    def _onRefresh(self, e=None):
+        """ Action triggered when the 'Refresh' icon is clicked. """
+        self.refreshAll(clear=False, goEnd=True)
         
     def refreshOutput(self, e=None):
         if self.refreshAlarm:

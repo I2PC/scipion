@@ -177,7 +177,7 @@ class ProtPrime(em.ProtInitialVolume):
                 vol.append(aux)
             self._defineOutputs(outputVolumes=vol)
 
-        self._defineSourceRelation(vol, self.inputClasses)
+        self._defineSourceRelation(self.inputClasses, vol)
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):

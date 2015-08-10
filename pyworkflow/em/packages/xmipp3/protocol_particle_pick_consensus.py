@@ -74,6 +74,9 @@ class XmippProtConsensusPicking(ProtParticlePicking):
             deps.append(stepId)
         self._insertFunctionStep("createOutputStep", prerequisites=deps)
     
+    def getInputMicrographs(self):
+        return self.inputCoordinates[0].get().getMicrographs()
+    
     def _summary(self):
         message = []
         for i, coordinates in enumerate(self.inputCoordinates):
@@ -158,4 +161,4 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         self._defineOutputs(outputCoordinates=setOfCoordinates)
         
         for coordinates in self.inputCoordinates:
-            self._defineSourceRelation(coordinates.get(), self.outputCoordinates)
+            self._defineSourceRelation(coordinates, self.outputCoordinates)

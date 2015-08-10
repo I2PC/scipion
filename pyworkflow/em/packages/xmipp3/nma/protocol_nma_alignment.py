@@ -202,13 +202,15 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
     def createOutputStep(self):
         inputSet = self.inputParticles.get()
         partSet = self._createSetOfParticles()
+        pdbPointer = self.inputModes.get()._pdbPointer
+        
         readSetOfParticles(self.imgsFn, partSet,
                            extraLabels=[xmipp.MDL_NMA, xmipp.MDL_COST])
         partSet.copyInfo(inputSet)
         
         self._defineOutputs(outputParticles=partSet)
-        self._defineSourceRelation(self.getInputPdb(), partSet)
-        self._defineTransformRelation(inputSet, partSet)
+        self._defineSourceRelation(pdbPointer, partSet)
+        self._defineTransformRelation(self.inputParticles, partSet)
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):

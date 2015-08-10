@@ -85,6 +85,10 @@ def readSetOfParticles(inputSet, outputSet, parFileName):
         particle.setTransform(rowToAlignment(row, samplingRate))
         # We assume that each particle have ctfModel
         # in order to be processed in Frealign
+        # JMRT: Since the CTF will be set, we can setup
+        # an empty CTFModel object
+        if not particle.hasCTF():
+            particle.setCTF(em.CTFModel())
         rowToCtfModel(row, particle.getCTF())
         outputSet.append(particle)
     outputSet.setAlignment(em.ALIGN_PROJ)
@@ -138,38 +142,6 @@ def rowToCtfModel(ctfRow, ctfModel):
 
 
 #-------------- Old fuctions (before using EMX matrix for alignment) ------
-
-def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
-    """read from frealign .par.
-    """
-    imgSet = classes3DSet.getImages()
-
-    for ref, volFn in enumerate(volumeList):
-        class3D = em.Class3D()
-        class3D.setObjId(ref+1)
-        vol = em.Volume()
-        vol.copyObjId(class3D)
-        vol.setLocation(volFn)
-
-        class3D.setRepresentative(vol)
-        classes3DSet.append(class3D)
-
-        file1 = fileparList[ref]
-        f1 = open(file1)
-        for l in f1:
-            if not l.startswith('C'):
-                values = l.split()
-                prob = float(values[11])
-                if prob > 0:
-                    objId = int(values[7])
-                    img = imgSet[objId]
-                    class3D.append(img)
-        f1.close()
-
-        # Check if write function is necessary
-        class3D.write()
-
-
 def parseCtffindOutput(filename):
     """ Retrieve defocus U, V and angle from the
     output file of the ctffind3 execution.
@@ -199,6 +171,17 @@ def parseCtffind4Output(filename):
                 result = tuple(map(float, line.split()[1:]))
         f.close()
     return result
+
+
+def ctffindOutputVersion(filename):
+    """ Detect the ctffind version (3 or 4) that produced
+    the given filename.
+    """
+    f = open(filename)
+    for line in f:
+        if 'Output from CTFFind version 4.' in line:
+            return 4
+    return 3
 
 
 def setWrongDefocus(ctfModel):

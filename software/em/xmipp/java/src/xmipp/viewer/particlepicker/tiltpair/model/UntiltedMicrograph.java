@@ -56,6 +56,8 @@ public class UntiltedMicrograph extends Micrograph
 	public void reset(TiltPairPicker picker)
 	{
 		angles = null;
+		for(UntiltedParticle p: particles)
+			p.setTiltedParticle(null);
 		getParticles().clear();
 		getTiltedMicrograph().getParticles().clear();
 		//JMRT: I think is very very dangerous to delete the existing pos files.
@@ -143,10 +145,10 @@ public class UntiltedMicrograph extends Micrograph
 
 	public void setAlignerTiltedParticle(UntiltedParticle up)
 	{
-                tiltedmicrograph.removeParticle(up.getTiltedParticle());
+        tiltedmicrograph.removeParticle(up.getTiltedParticle());
 		Particle p = getAlignerTiltedParticle(up.getX(), up.getY());
-                if(!tiltedmicrograph.fits(p.getX(), p.getY(), up.getParticlePicker().getSize()))
-                        p = null;
+        if(!tiltedmicrograph.fits(p.getX(), p.getY(), up.getParticlePicker().getSize()))
+                p = null;
 		if (p != null)
 		{
 			TiltedParticle tp = new TiltedParticle(p.getX(), p.getY(), up);
