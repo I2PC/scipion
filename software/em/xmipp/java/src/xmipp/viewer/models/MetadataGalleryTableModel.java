@@ -177,6 +177,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                     
                     width = image.getWidth(); 
                     height = image.getHeight();
+                    
                     dim = new ImageDimension(width, height);
                 }
                 catch (Exception e)
