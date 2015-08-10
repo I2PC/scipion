@@ -34,7 +34,7 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 		if (particles.isEmpty())
 		{
 			particlespn.removeAll();
-			width = side * 4 + 10;
+			width = side * 6 + 10;
             height = maxHeight;
 			sp.setPreferredSize(new Dimension(width, height));
 			pack();
@@ -43,7 +43,7 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 
 		if (changesize)// first time or keep size
 		{
-			columns = 2;//Math.min(200, particles.size() * side * 2) / (side * 2);
+			columns = 3;//Math.min(200, particles.size() * side * 2) / (side * 2);
 			rows = (int) Math.ceil(particles.size() / (float) columns);
 			width = side * columns * 2;
 			height = Math.min(maxHeight, side * rows);
@@ -55,8 +55,8 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 		else
 		{
 			Dimension d = sp.getSize();
-                        width = (int) d.getWidth();
-                        height = (int)d.getHeight();
+            width = (int) d.getWidth();
+            height = (int)d.getHeight();
 			columns = (int) d.getWidth() / (side * 2);
 			rows = (int) Math.ceil((particles.size() / (float) columns));
 		}

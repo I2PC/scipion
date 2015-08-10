@@ -1293,9 +1293,9 @@ public class GalleryData {
     public String getFileInfo() {
         File file = new File(getFileName());
 
-        String fileInfo = "Path: " + file.getAbsolutePath() + "\n\n";
+        String fileInfo = "Path: " + file.getAbsolutePath() + "\n";
 
-        fileInfo += "File Name: " + file.getName() + "\n" + "Last Modified: "
+        fileInfo += "Last Modified: "
                 + new Date(file.lastModified()) + "\n"
                 + "Size: " + Filename.humanReadableByteCount(file.length());
         return fileInfo;
