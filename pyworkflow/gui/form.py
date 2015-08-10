@@ -1317,7 +1317,7 @@ class FormWindow(Window):
         # Run Name not editable
         #entry.configure(state='readonly')
         # Run mode
-        self.protocol.getDefinitionParam('')
+        self.protocol.getParam('')
         #self._createHeaderLabel(runFrame, Message.LABEL_RUNMODE).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
         #runSection.addContent()
         runSection.grid(row=0, column=0, sticky='news', padx=5, pady=5)
@@ -1660,7 +1660,7 @@ class FormWindow(Window):
             if isinstance(widget, LineWidget) or isinstance(widget, GroupWidget):
                 param = widget.param
             else:
-                param = self.protocol.getDefinitionParam(paramName)
+                param = self.protocol.getParam(paramName)
             cond = self.protocol.evalParamCondition(paramName) and self.protocol.evalParamExpertLevel(param)
             widget.display(cond)
             
@@ -1668,7 +1668,7 @@ class FormWindow(Window):
         """Check the conditions of all params affected
         by this param"""
         self.setParamFromVar(paramName)
-        param = self.protocol.getDefinitionParam(paramName)
+        param = self.protocol.getParam(paramName)
         
         for d in param._dependants:
             self._checkCondition(d)

@@ -30,9 +30,9 @@ In this module are two protocols to Import/Export data from/to EMX.
 
 from os.path import join, dirname, exists
 from collections import OrderedDict
-from pyworkflow.em.constants import ALIGN_NONE
 
-from pyworkflow.protocol.params import PointerParam, RelationParam, StringParam
+from pyworkflow.em.constants import ALIGN_NONE
+import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import EMProtocol, RELATION_CTF
 
 import emxlib
@@ -155,22 +155,56 @@ class ProtEmxExport(EMProtocol):
     EM software packages. See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]
     """
     _label = 'emx export'
+    
+    STACK_SINGLE = 0 # Write all images into a single stack
+    STACK_MICS = 1 # Write one stack per micrograph
+    _exportTypes = ['Micrographs',
+                    'Coordinates',
+                    'Particles', 
+                    'Averages']
+    
+    def __init__(self, **kwargs):
+        EMProtocol.__init__(self, **kwargs)
+        # We need to trace the changes of 'inputType' to 
+        # dynamically modify the property of pointerClass
+        # of the 'inputSets' parameter
+        def onChangeInputType():
+            inputText = self.getEnumText('inputType')
+            pointerClass = 'SetOf' + inputText
+            self.getParam('inputSet').setPointerClass(pointerClass)
+        
+        self.inputType.trace(onChangeInputType)    
+
             
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputSet', PointerParam, 
-                      pointerClass='SetOfMicrographs,SetOfCoordinates,SetOfParticles',
-                      label="Set to export",
-                      help="Select the microgrpahs, coordinates or particles set to be exported to EMX.")
-        form.addParam('ctfEstimation', RelationParam,
-                      allowsNull=True, relationName=RELATION_CTF, attributeName='getInputSet', 
+        form.addParam('inputType', params.EnumParam, choices=self._exportTypes, default=2, # Particles
+                      label='Input type:',
+                      help='Select the type of objects that you want to export.\n')
+        form.addParam('inputSet', params.PointerParam, 
+                                           pointerClass='SetOfMicrographs,SetOfCoordinates,SetOfParticles',
+                                           label="Set to export", important=True,
+                                           help="Select the micrographs, coordinates or particles set to be exported to EMX.")
+        form.addParam('outputStack', params.EnumParam, default=self.STACK_SINGLE,
+                      choices=['single stack', 'one stack per micrograph'],
+                      condition='inputType==2', # for Particles
+                      display=params.EnumParam.DISPLAY_LIST,
+                      label="Output images",
+                      help="Select how you want to export the particles binary file.\n"
+                            "*single stack*: write all particles into a single stack.\n"
+                            "*one stack per micrograph*: create one stack with particles\n"
+                            "   beloging to the same micrograph.")
+        
+        form.addParam('ctfEstimation', params.RelationParam, allowsNull=True, 
+                      condition='inputType==0', # for Micrographs
+                      relationName=RELATION_CTF, attributeName='getInputSet', 
                       label='Include CTF from', 
                       help='You can select a CTF estimation associated with these\n'
                            'micrographs to be included in the EMX file')
         
-        form.addParam('outputPrefix', StringParam, default='data',
-                      label='EMX files prefix',
+        form.addParam('outputPrefix', params.StringParam, default='data',
+                      label='EMX files prefix', 
                       help='Select how do you want to name the EMX files.'
                            'For example, if you use "data" as prefix, two'
                            'files will be generated:\n'
@@ -191,7 +225,11 @@ class ProtEmxExport(EMProtocol):
         from convert import exportData
         emxDir = self._getPath('emxData')
         xmlFile = self.outputPrefix.get() + '.emx'
-        binaryFile = self.outputPrefix.get() + '.mrc'
+        if self.outputStack == self.STACK_SINGLE:
+            binaryFile = self.outputPrefix.get() + '.mrc'
+        else:
+            binaryFile = None # None for binary file means to output one stack per micrograph
+            
         exportData(emxDir, self.inputSet.get(), ctfSet=self.ctfEstimation.get(), 
                    xmlFile=xmlFile, binaryFile=binaryFile)
     

@@ -205,7 +205,8 @@ class XmippProtML2D(ProtClassify2D):
     def _validate(self):
         errors = []
         if self.doMlf:
-            if not self.inputParticles.get().hasCTF():
+            inputParticles = self.inputParticles.get()
+            if inputParticles is not None and not inputParticles.hasCTF():
                 errors.append('Input particles does not have CTF information.\n'
                               'This is required when using ML in fourier space.')
         return errors

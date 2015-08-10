@@ -27,11 +27,9 @@ package xmipp.viewer.models;
 
 import ij.ImagePlus;
 
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
-import xmipp.ij.commons.ImagePlusFromFile;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
@@ -159,13 +157,14 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			// data.globalRender = true;
 		}
 		ImageDimension dim = null;
-        int width = 30, height = 30;
+        int width = 50, height = 50;
 		if (data.hasRenderLabel()) 
 		{
 			renderLabel = data.ciFirstRender;
 			// if (renderLabels) {
 			String imageFn = data.getSampleImage(renderLabel);
             if(imageFn != null)
+            {
                 try
                 {
                 	ImagePlusLoader loader;
@@ -185,8 +184,11 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                         dim = null;
                         e.printStackTrace();
                 }
+            }
+            
+            	
 		}
-
+		
 		if (dim == null)
 			dim = new ImageDimension(width);
 		dim.setZDim(data.ids.length);
