@@ -234,9 +234,9 @@ public class PlotJDialog extends XmippDialog
                 plotci = ci;
 			}
 		}
-                String ylabel = tfYLabel.getText().trim();
-                if(plots ==  1 && ylabel.isEmpty())
-                    ylabel = plotci.labelName;
+        String ylabel = tfYLabel.getText().trim();
+        if(plots ==  1 && ylabel.isEmpty())
+            ylabel = plotci.labelName;
 
 		if (!checked)
 		{
@@ -366,20 +366,20 @@ public class PlotJDialog extends XmippDialog
 			ColumnInfo ci = rows.get(row);
 			ColumnInfo.ColumnExtraInfo cei = rowsExtra.get(ci);
 			switch (column) {
-			case 1:
-				cei.plot = (Boolean) value;
-                                
-				break;
-			case 2:
-				cei.color = ColorEditor.colorToString((Color) value);
-				break;
-			case 3:
-				cei.linestyle = (String) value;
-				break;
-			case 4:
-				cei.marker = (String) value;
-				break;
-			}
+				case 1:
+					cei.plot = (Boolean) value;
+	                                
+					break;
+				case 2:
+					cei.color = ColorEditor.colorToString((Color) value);
+					break;
+				case 3:
+					cei.linestyle = (String) value;
+					break;
+				case 4:
+					cei.marker = (String) value;
+					break;
+				}
 		}
 
 		@Override
