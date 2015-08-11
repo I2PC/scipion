@@ -288,7 +288,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	protected void calculateCellSize() {
 		// DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
-		if (data.renderImages) {
+		if (data.renderImages && data.hasRenderLabel()) {
 			super.calculateCellSize();
 			// DEBUG.printMessage(String.format("MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
 			// cellDim.height));

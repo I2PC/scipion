@@ -384,6 +384,7 @@ public class GalleryData {
         
         if (!md.isColumnFormat() ) {
             mode = Mode.TABLE_MD;
+            renderImages = false;
         }
 
         if (isGalleryMode()) {
