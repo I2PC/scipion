@@ -30,10 +30,11 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 from os.path import exists, basename
 
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import FloatParam, FileParam
 from pyworkflow.utils.path import copyFile
-from pyworkflow.em.data import Volume, PdbFile
-from pyworkflow.em.convert import ImageHandler
+
+import pyworkflow.protocol.params as params
+from pyworkflow.em import Volume, ImageHandler, PdbFile
+from pyworkflow.em.convert import downloadPdb
 
 from base import ProtImportFiles
 from images import ProtImportImages
@@ -52,7 +53,7 @@ class ProtImportVolumes(ProtImportImages):
         """ Define acquisition parameters, it can be overriden
         by subclasses to change what parameters to include.
         """
-        form.addParam('samplingRate', FloatParam,
+        form.addParam('samplingRate', params.FloatParam,
                    label=Message.LABEL_SAMP_RATE)
     
     def _insertAllSteps(self):
@@ -123,19 +124,37 @@ class ProtImportVolumes(ProtImportImages):
 class ProtImportPdb(ProtImportFiles):
     """ Protocol to import a set of pdb volumes to the project"""
     _label = 'import pdb volumes'
+    IMPORT_FROM_ID = 0
+    IMPORT_FROM_FILES = 1 
     
     def __init__(self, **args):
         ProtImportFiles.__init__(self, **args)
        
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('pdbPath', FileParam, 
-                      label="PDB file",
+        form.addParam('inputPdbData', params.EnumParam, choices=['id', 'file'],
+                      label="Import PDB from", default=self.IMPORT_FROM_ID,
+                      display=params.EnumParam.DISPLAY_HLIST,
+                      help='Import PDB data from online server or a local file')
+        form.addParam('pdbId', params.StringParam, condition='inputPdbData == IMPORT_FROM_ID',
+                      label="Pdb Id ", allowsNull=True,
+                      help='Type a pdb Id (four alphanumeric characters).')
+        form.addParam('pdbFile', params.PathParam,
+                      label="File path", condition='inputPdbData == IMPORT_FROM_FILES', allowsNull=True,
                       help='Specify a path to desired PDB structure.')
          
     def _insertAllSteps(self):
-        self._insertFunctionStep('createOutputStep', self.pdbPath.get())
+        if self.inputPdbData == self.IMPORT_FROM_ID:
+            pdbPath = self._getPath('%s.pdb' % self.pdbId.get())
+            self._insertFunctionStep('pdbDownloadStep', pdbPath)
+        else:
+            pdbPath = self.pdbFile.get()
+        self._insertFunctionStep('createOutputStep', pdbPath)
         
+    def pdbDownloadStep(self, pdbPath):
+        """Download all pdb files in file_list and unzip them."""
+        downloadPdb(self.pdbId.get(), pdbPath, self._log)
+
     def createOutputStep(self, pdbPath):
         """ Copy the PDB structure and register the output object.
         """
@@ -150,13 +169,17 @@ class ProtImportPdb(ProtImportFiles):
         self._defineOutputs(outputPdb=pdb)
 
     def _summary(self):
-        summary = ['PDB file imported from *%s*' % self.pdbPath.get()]
+        if self.inputPdbData == self.IMPORT_FROM_ID:
+            summary = ['PDB imported from ID: *%s*' % self.pdbId]
+        else:
+            summary = ['PDB imported from file: *%s*' % self.pdbFile]
 
         return summary
     
     def _validate(self):
         errors = []
-        if not exists(self.pdbPath.get()):
+        if (self.inputPdbData == self.IMPORT_FROM_FILES and
+            not exists(self.pdbFile.get())):
             errors.append("PDB not found at *%s*" % self.pdbPath.get())
         #TODO: maybe also validate that if exists is a valid PDB file 
         return errors

@@ -138,6 +138,8 @@ class ProtUnionSet(ProtSets):
                 outputSet.append(obj)
 
         self._defineOutputs(outputSet=outputSet)
+        for itemSet in self.inputSets:
+            self._defineSourceRelation(itemSet, outputSet)
 
     def getObjDict(self, includeClass=False):
         return super(ProtUnionSet, self).getObjDict(includeClass)
@@ -334,7 +336,7 @@ class ProtSubSet(ProtSets):
         self._defineOutputs(**{key: outputSet})
         self._defineTransformRelation(inputFullSet, outputSet)
         if not self.chooseAtRandom.get():
-            self._defineSourceRelation(inputSubSet, outputSet)
+            self._defineSourceRelation(self.inputSubSet, outputSet)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):

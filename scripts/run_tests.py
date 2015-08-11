@@ -12,14 +12,15 @@ import argparse
 import unittest
 
 import pyworkflow as pw
-from pyworkflow.utils.utils import redStr
+import pyworkflow.utils as pwutils
 from pyworkflow.tests import GTestResult
 
 
 PATH_PATTERN = {'model': ('model em/data', 'test*.py'),
                 'xmipp': ('em/workflows', 'test*xmipp*.py'),
                 'mixed': ('em/workflows', 'test*mixed*.py'),
-                'protocols': ('em/protocols', 'test_protocols*.py')}
+                'protocols': ('em/protocols', 'test_protocols*.py'),
+                'programs': ('em/programs', 'test_program*py')}
 
 
 def main():
@@ -101,17 +102,17 @@ def printTests(tests, mode='modules'):
 
         # If there is a failure loading the test, show it
         if moduleName.startswith('unittest.loader.ModuleImportFailure'):
-            print redStr(moduleName), "  test:", t.id()
+            print pwutils.red(moduleName), "  test:", t.id()
             continue
 
         if moduleName != lastModule:
             lastModule = moduleName
-            print moduleName
+            print "scipion test %s" % moduleName
         if mode in ['classes', 'all'] and className != lastClass:
             lastClass = className
-            print "  %s" % className
+            print "  scipion test %s.%s" % (moduleName, className)
         if mode == 'all':
-            print "    %s" % testName
+            print "    scipion test %s.%s.%s" % (moduleName, className, testName)
 
 
 def runTests(tests):

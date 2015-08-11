@@ -36,18 +36,18 @@ import xmipp.viewer.models.ColumnInfo;
  */
 public class ScipionMetaData extends MetaData {
 
-    private List<ColumnInfo> columns;
-    private List<EMObject> emobjects;
-    private ScipionMetaData parent;
-    private boolean haschilds;
-    private static int labelscount = 0;
-    private ColumnInfo idci, labelci, commentci, enabledci;
-    private String preffix = "";
-    private String[] blocks;
-    private int enableds;
-    Boolean checkTmp;
-    HashMap<String, String> properties;
-    HashMap <Long, EMObject> idsmap;
+    protected List<ColumnInfo> columns;
+    protected List<EMObject> emobjects;
+    protected ScipionMetaData parent;
+    protected boolean haschilds;
+    protected static int labelscount = 0;
+    protected ColumnInfo idci, labelci, commentci, enabledci;
+    protected String preffix = "";
+    protected String[] blocks;
+    protected int enableds;
+    protected Boolean checkTmp;
+    protected HashMap<String, String> properties;
+    protected HashMap <Long, EMObject> idsmap;
     
 
     public ScipionMetaData(String dbfile) {

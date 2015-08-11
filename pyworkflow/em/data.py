@@ -652,6 +652,9 @@ class EMSet(Set, EMObject):
             else:
                 if itemDataIterator is not None:
                     next(itemDataIterator) # just skip disabled data row
+                    
+    def getFiles(self):
+        return Set.getFiles(self)
   
   
 class SetOfImages(EMSet):
@@ -784,7 +787,7 @@ class SetOfImages(EMSet):
         _,_,_, ndim = ImageHandler().getDimensions(fnStack)
         img = self.ITEM_TYPE()
         for i in range(1, ndim+1):
-            img.cleanObjId()
+            img.setObjId(None)
             img.setLocation(i, fnStack)
             if postprocessImage is not None:
                 postprocessImage(img)
@@ -817,7 +820,9 @@ class SetOfImages(EMSet):
             sampling = -999.0
         if self._firstDim.isEmpty():
             try:
-                self._firstDim.set(self.getFirstItem().getDim())
+                firstItem = self.getFirstItem()
+                if firstItem is not None:
+                    self._firstDim.set(firstItem.getDim())
             except Exception, ex:
                 print "Error reading dimension: ", ex
                 import traceback
@@ -1070,10 +1075,7 @@ class Coordinate(EMObject):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
-            return self._micName.get()
-        else:
-            self.getFileName()
+        return self._micName.get()
 
 
 class SetOfCoordinates(EMSet):
@@ -1391,7 +1393,8 @@ class SetOfClasses(EMSet):
                       updateItemCallback=None,
                       updateClassCallback=None,
                       itemDataIterator=None,
-                      classifyDisabled=False):
+                      classifyDisabled=False,
+                      iterParams=None):
         """ Classify items from the self.getImages() and add the needed classes.
         This function iterates over each item in the images and call
         the updateItemCallback to register the information coming from
@@ -1401,8 +1404,9 @@ class SetOfClasses(EMSet):
         """
         clsDict = {} # Dictionary to store the (classId, classSet) pairs
         inputSet = self.getImages()
+        iterParams = iterParams or {}
         
-        for item in inputSet:
+        for item in inputSet.iterItems(**iterParams):
             # copy items if enabled or copyDisabled=True
             if classifyDisabled or item.isEnabled():
                 newItem = item.clone()

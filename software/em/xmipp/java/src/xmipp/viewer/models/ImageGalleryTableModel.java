@@ -264,7 +264,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * @param height
 	 */
 	protected void calculateCellSize() {
-		
 		thumb_width = (int) (image_width * scale);
 		thumb_height = (int) (image_height * scale);
 
@@ -518,9 +517,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * This function will be called when a double click is performed under the
 	 * element at specified row and column
 	 */
-	public boolean handleDoubleClick(int row, int col) {
-		return false; // by default, do nothing
-	}
+	public abstract boolean handleDoubleClick(int row, int col) ;
 
 	/** Whether to display the labels */
 	public void setShowLabels() {
@@ -547,8 +544,9 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * Return a key string using label
 	 */
 	public String getItemKey(int index, int label) throws Exception {
-                
-		String format = data.getValueFromLabel(index, label) + "_i_(%d,%d)";
+		Object value = data.getValueFromLabel(index, label);
+		
+		String format = value + "_i_(%d,%d)";
 		if (data.useGeo)
 			format += "_geo";
 		if (data.wrap)

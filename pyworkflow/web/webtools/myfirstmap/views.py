@@ -134,7 +134,7 @@ def create_service_project(request):
         protRansac = project.newProtocol(XmippProtRansac)
         protRansac.setObjLabel('xmipp - ransac')
         protRansac.inputSet.set(protImport)
-        protRansac.inputSet.setExtendedAttribute('outputAverages')
+        protRansac.inputSet.setExtended('outputAverages')
         if testDataKey :
             setProtocolParams(protRansac, testDataKey)
         project.saveProtocol(protRansac)
@@ -143,7 +143,7 @@ def create_service_project(request):
         protEmanInitVol = project.newProtocol(EmanProtInitModel)
         protEmanInitVol.setObjLabel('eman - initial vol')
         protEmanInitVol.inputSet.set(protImport)
-        protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
+        protEmanInitVol.inputSet.setExtended('outputAverages')
         if testDataKey :
             setProtocolParams(protEmanInitVol, testDataKey)
         project.saveProtocol(protEmanInitVol)
@@ -152,7 +152,7 @@ def create_service_project(request):
         protSignificant = project.newProtocol(XmippProtReconstructSignificant)
         protSignificant.setObjLabel('xmipp - significant')
         protSignificant.inputSet.set(protImport)
-        protSignificant.inputSet.setExtendedAttribute('outputAverages')
+        protSignificant.inputSet.setExtended('outputAverages')
         if testDataKey :
             setProtocolParams(protSignificant, testDataKey)
         project.saveProtocol(protSignificant)
@@ -160,15 +160,15 @@ def create_service_project(request):
         # 3. Join result volumes
         p1 = Pointer()
         p1.set(protRansac)
-        p1.setExtendedAttribute('outputVolumes')
+        p1.setExtended('outputVolumes')
         
         p2 = Pointer()
         p2.set(protEmanInitVol)
-        p2.setExtendedAttribute('outputVolumes')
+        p2.setExtended('outputVolumes')
         
         p3 = Pointer()
         p3.set(protSignificant)
-        p3.setExtendedAttribute('outputVolume')
+        p3.setExtended('outputVolume')
         
         protJoin = project.newProtocol(XmippProtAlignVolumeForWeb)
         protJoin.setObjLabel('align volumes')
@@ -181,9 +181,9 @@ def create_service_project(request):
         protValidate = project.newProtocol(XmippProtValidateNonTilt)
         protValidate.setObjLabel('validate nontilt')
         protValidate.inputVolumes.set(protJoin)
-        protValidate.inputVolumes.setExtendedAttribute('outputVolumes')
+        protValidate.inputVolumes.setExtended('outputVolumes')
         protValidate.inputParticles.set(protImport)
-        protValidate.inputParticles.setExtendedAttribute('outputAverages')
+        protValidate.inputParticles.setExtended('outputAverages')
         protValidate.numberOfThreads.set(8)
         if testDataKey :
             setProtocolParams(protValidate, testDataKey)

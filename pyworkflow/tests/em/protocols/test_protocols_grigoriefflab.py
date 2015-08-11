@@ -25,6 +25,8 @@
 # **************************************************************************
 
 import unittest, sys
+import numpy as np
+
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.grigoriefflab import *
@@ -120,6 +122,43 @@ class TestBrandeisBase(BaseTest):
                                     importFrom=ProtImportParticles.IMPORT_FROM_FILES)
 
 
+class TestImportParticles(BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('grigorieff')
+
+    def test_import(self):
+        parFile = self.dataset.getFile('particles/particles_iter_002.par')
+        stackFile = self.dataset.getFile('particles/particles.mrc')
+        
+        protImport = self.newProtocol(ProtImportParticles,
+                                         objLabel='import parfile & stk',
+                                         parFile=parFile,
+                                         stackFile=stackFile,
+                                         samplingRate=9.90,
+                                         importFrom=ProtImportParticles.IMPORT_FROM_FREALIGN)
+
+        self.launchProtocol(protImport)      
+        # check that input images have been imported (a better way to do this?)
+        if protImport.outputParticles is None:
+            raise Exception('Import failed. Par file: %s' % parFile)
+        
+        self.assertTrue(protImport.outputParticles.getSize() == 180)
+        
+        goldFile = self.dataset.getFile('particles/particles.sqlite')
+        goldSet = SetOfParticles(filename=goldFile)
+        
+        for p1, p2 in izip(goldSet, protImport.outputParticles.iterItems(orderBy=['_micId', 'id'],
+                                                                     direction='ASC')):
+            m1 = p1.getTransform().getMatrix()
+            m2 = p2.getTransform().getMatrix()
+            self.assertTrue(np.allclose(m1, m2, atol=0.01))
+            
+        self.assertTrue(protImport.outputParticles.hasCTF())
+        self.assertTrue(protImport.outputParticles.hasAlignmentProj())
+
+    
 class TestBrandeisCtffind(TestBrandeisBase):
     @classmethod
     def setUpClass(cls):
@@ -194,7 +233,7 @@ class TestBrandeisCtffind4(TestBrandeisBase):
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
 
 
-class TestBrandeisFrealign(TestBrandeisBase):
+class TestFrealignRefine(TestBrandeisBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -212,12 +251,52 @@ class TestBrandeisFrealign(TestBrandeisBase):
                                     doInvert=False,
                                     input3DReference = self.protImportVol.outputVolume,
                                     useInitialAngles=True,
-                                    mode=MOD_RECONSTRUCTION,
+                                    mode=MOD_REFINEMENT,
                                     innerRadius=0.,
                                     outerRadius=241.,
                                     symmetry='C1',
                                     numberOfThreads=4,
-                                    numberOfIterations=1,
+                                    numberOfIterations=2,
+                                    doWienerFilter=False,
+                                    resolution=2.,
+                                    highResolRefine=2.,
+                                    resolClass=2.,
+                                    writeMatchProjections=False,
+                                    score=0,
+                                    )
+        frealign.inputParticles.set(self.protImportPart.outputParticles)
+        frealign.input3DReference.set(self.protImportVol.outputVolume)
+        self.launchProtocol(frealign)
+        print "Assert is missing: testFrealign"
+
+
+class TestFrealignClassify(TestBrandeisBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        dataProject='grigorieff'
+        dataset = DataSet.getDataSet(dataProject)
+        TestBrandeisBase.setData()
+        particlesPattern   = dataset.getFile('particles.sqlite')
+        volFn              = dataset.getFile('ref_volume.vol')
+        cls.protImportPart = cls.runImportParticleGrigorieff(particlesPattern)
+        cls.protImportVol  = cls.runImportVolumesGrigorieff(volFn)
+
+    def testFrealignClassify(self):
+        frealign = self.newProtocol(ProtFrealignClassify,
+                                    inputParticles = self.protImportPart.outputParticles,
+                                    doInvert=False,
+                                    input3DReference = self.protImportVol.outputVolume,
+                                    numberOfIterations=3,
+                                    itRefineAngles = 2,
+                                    itRefineShifts = 3,
+                                    numberOfClasses = 2,
+                                    useInitialAngles=True,
+                                    mode=MOD_REFINEMENT,
+                                    innerRadius=0.,
+                                    outerRadius=241.,
+                                    symmetry='C1',
+                                    numberOfThreads=4,
                                     doWienerFilter=False,
                                     resolution=2.,
                                     highResolRefine=2.,

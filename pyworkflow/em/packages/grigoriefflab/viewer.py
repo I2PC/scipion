@@ -35,7 +35,7 @@ import pyworkflow.em.showj as showj
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,IntParam,
-                                        EnumParam, BooleanParam, FloatParam)
+                                        EnumParam, HiddenBooleanParam, FloatParam)
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
 from protocol_ctffind import ProtCTFFind
@@ -43,8 +43,7 @@ from convert import readCtfModel
 
 
 LAST_ITER = 0
-ALL_ITERS = 1
-SELECTED_ITERS = 2
+SELECTED_ITERS = 1
 
 ANGDIST_2DPLOT = 0
 ANGDIST_CHIMERA = 1
@@ -66,7 +65,7 @@ class FrealignViewer(ProtocolViewer):
         self._env = os.environ.copy()
         form.addSection(label='Visualization')
         form.addParam('iterToShow', EnumParam, label="Iteration to visualize", default=0,
-                      choices=['last','all','selection'], display=EnumParam.DISPLAY_LIST)
+                      choices=['last','selection'], display=EnumParam.DISPLAY_HLIST)
         form.addParam('selectedIters', NumericRangeParam, default='1',
               label='Selected iterations', condition='iterToShow==%d' % SELECTED_ITERS,
               help="""
@@ -93,7 +92,7 @@ Examples:
         group = form.addGroup('Volumes')
         
         if not self.protocol.IS_REFINE:
-            group.addParam('showClasses3D', BooleanParam, default=CLASSES_ALL,
+            group.addParam('showClasses3D', EnumParam, default=CLASSES_ALL,
                            choices=['all', 'selection'], 
                            display=EnumParam.DISPLAY_HLIST,
                            label='CLASS 3D to visualize',
@@ -143,7 +142,7 @@ Examples:
                 }
 
 #===============================================================================
-# showImagesInClasses     
+# showImagesInClasses
 #===============================================================================
             
     def _showImagesInClasses(self, paramName=None):
@@ -212,7 +211,7 @@ Examples:
         else:
             for it in self._iterations:
                 for ref3d in self._refsList:
-                    volFn = self.protocol._getFileName('iter_vol_class', iter=it, ref3d=ref3d)
+                    volFn = self.protocol._getFileName('iter_vol_class', iter=it, ref=ref3d)
                 if exists(volFn):
                     files.append(volFn)
         
@@ -421,8 +420,6 @@ Examples:
         
         if self.iterToShow.get() == LAST_ITER:
             self._iterations = [self.lastIter]
-        elif self.iterToShow.get() == ALL_ITERS:
-            self._iterations = range(1, self.lastIter + 1)
         elif self.iterToShow.get() == SELECTED_ITERS:
             self._iterations = self._getListFromRangeString(self.selectedIters.get())
             
@@ -479,25 +476,21 @@ Examples:
         """ Return the file with the classes for this iteration.
         If the file doesn't exists, it will be created. 
         """
-        from convert import readSetOfClasses3D
-        
         dataClasses = self.protocol._getFileName('classes_scipion', iter=it)
         
         if clean:
             cleanPath(dataClasses)
         
         if not exists(dataClasses):
-            fileparList = []
-            volumeList = []
-            for ref in self._refsList:
-                filepar = self.protocol._getFileName('output_par_class', iter=it, ref=ref)
-                volFn = self.protocol._getFileName('iter_vol_class', iter=it, ref=ref)
-                fileparList.append(filepar)
-                volumeList.append(volFn)
-            
             clsSet = em.SetOfClasses3D(filename=dataClasses)
-            clsSet.setImages(self.inputParticles.get())
-            readSetOfClasses3D(clsSet, fileparList, volumeList)
+            clsSet.setImages(self.protocol._getInputParticles())
+            if self.protocol.doContinue:
+                numberOfRef = self.protocol.continueRun.get().numberOfClasses.get()
+            else:
+                numberOfRef = self.protocol.numberOfClasses.get()
+            
+            
+            self.protocol._fill3DClasses(clsSet, numberOfRef)
             clsSet.write()
             clsSet.close()
 

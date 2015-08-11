@@ -92,7 +92,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     def launchParticlePickGUIStep(self, micFn):
         # Launch the particle picking GUI
         extraDir = self._getExtraPath()
-        process = launchSupervisedPickerGUI(self.memory.get(), micFn, extraDir, 'manual', self)
+        memory = '%dg'%self.memory.get()
+        process = launchSupervisedPickerGUI(micFn, extraDir, self, memory=memory)
         process.wait()
 
     def _importFromFolderStep(self):
@@ -108,7 +109,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         coordSet = self._createSetOfCoordinates(self.inputMics)
         readSetOfCoordinates(posDir, self.inputMics, coordSet)
         self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(self.inputMics, coordSet)
+        self._defineSourceRelation(self.inputMicrographs, coordSet)
         
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):

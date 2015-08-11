@@ -196,16 +196,17 @@ class XmippProtML2D(ProtClassify2D):
         classes2DSet = self._createSetOfClasses2D(imgSet)
         readSetOfClasses2D(classes2DSet, self._getFileName('output_classes'))
         self._defineOutputs(outputClasses=classes2DSet)
-        self._defineSourceRelation(imgSet, classes2DSet)
+        self._defineSourceRelation(self.inputParticles, classes2DSet)
         if not self.doGenerateReferences:
-            self._defineSourceRelation(self.inputReferences.get(), classes2DSet)
+            self._defineSourceRelation(self.inputReferences, classes2DSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
     
     def _validate(self):
         errors = []
         if self.doMlf:
-            if not self.inputParticles.get().hasCTF():
+            inputParticles = self.inputParticles.get()
+            if inputParticles is not None and not inputParticles.hasCTF():
                 errors.append('Input particles does not have CTF information.\n'
                               'This is required when using ML in fourier space.')
         return errors

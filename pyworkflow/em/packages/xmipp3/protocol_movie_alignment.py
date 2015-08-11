@@ -171,7 +171,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             mic = em.Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
             mic.setFileName(self._getExtraPath(micName))
-            mic.setMicName(micName)
+            mic.setMicName(movie.getMicName())
             if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
                 mic.plotPolar = em.Image()
                 mic.plotCart = em.Image()
@@ -197,7 +197,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             """
         self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputMovies=movieSet)
-        self._defineSourceRelation(self.inputMovies.get(), micSet)
+        self._defineSourceRelation(self.inputMovies, micSet)
         """
         if alMethod == AL_DOSEFGPU:
             self._defineTransformRelation(inputMovies, micSet)

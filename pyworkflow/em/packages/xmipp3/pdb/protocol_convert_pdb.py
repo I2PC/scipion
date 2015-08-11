@@ -26,6 +26,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+
 import os, ftplib, gzip
 import sys
 
@@ -33,6 +34,8 @@ import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as const
 import pyworkflow.em as em
 from pyworkflow.utils import replaceBaseExt, removeExt
+
+
 
 class XmippProtConvertPdb(em.ProtInitialVolume):
     """ Covert a PDB file to a volume.  """
@@ -57,7 +60,7 @@ class XmippProtConvertPdb(em.ProtInitialVolume):
         form.addParam('pdbObj', params.PointerParam, pointerClass='PdbFile',
                       label="Input pdb ", condition='inputPdbData == IMPORT_OBJ', allowsNull=True,
                       help='Specify a pdb object.')
-        form.addParam('pdbFile', params.PathParam,
+        form.addParam('pdbFile', params.FileParam,
                       label="File path", condition='inputPdbData == IMPORT_FROM_FILES', allowsNull=True,
                       help='Specify a path to desired PDB structure.')
         form.addParam('sampling', params.FloatParam, default=1.0, 
@@ -77,75 +80,16 @@ class XmippProtConvertPdb(em.ProtInitialVolume):
         """ In this function the steps that are going to be executed should
         be defined. Two of the most used functions are: _insertFunctionStep or _insertRunJobStep
         """
-        if self.inputPdbData.get() == self.IMPORT_FROM_ID:
+        if self.inputPdbData == self.IMPORT_FROM_ID:
             self._insertFunctionStep('pdbDownloadStep')
-            self._insertFunctionStep('unzipStep')
         self._insertFunctionStep('convertPdbStep')
         self._insertFunctionStep('createOutput')
     
     #--------------------------- STEPS functions --------------------------------------------
     def pdbDownloadStep(self):
         """Download all pdb files in file_list and unzip them."""
-        pdbGz = self._getPdbFileName() + ".gz"
-        self.info("File to download and unzip: %s" % pdbGz)
+        em.downloadPdb(self.pdbId.get(), self._getPdbFileName(), self._log)
         
-        pdborgHostname = "ftp.wwpdb.org"
-        pdborgDirectory = "/pub/pdb/data/structures/all/pdb/"
-        prefix = "pdb"
-        suffix = ".ent.gz"
-        success = True
-        # Log into serverhttp://www.rcsb.org/pdb/files/2MP1.pdb.gz
-        print "Connecting..."
-        ftp = ftplib.FTP()
-        try:
-            ftp.connect(pdborgHostname)
-            ftp.login()
-        except ftplib.error_temp:
-            self.error("ERROR! Timeout reached!")
-            success = False
-        
-        if success:
-            # Download  file
-            _fileIn = "%s/%s%s%s" % (pdborgDirectory, prefix, self.pdbId.get(), suffix) 
-            _fileOut = pdbGz
-            try:
-                ftp.retrbinary("RETR %s" % _fileIn, open(_fileOut, "wb").write)
-            except ftplib.error_perm:
-                os.remove(_fileOut)
-                self.error("ERROR!  %s could not be retrieved!" % _fileIn)
-                success = False
-            # Log out
-            ftp.quit()
-    
-    # TODO unzip may go to utilities
-    def unzipStep(self):
-        """
-        Unzip pdbFile.gz using the gzip library and write to pdbFile.
-        CAUTION: deletes pdbFile.gz.
-        """
-        pdbFn = self._getPdbFileName()
-        pdbGz = pdbFn + ".gz"
-        
-        success = True
-        try:
-            f = gzip.open(pdbGz, 'r')
-            g = open(pdbFn, 'w')
-            g.writelines(f.readlines())
-            f.close()
-            g.close()
-        except:
-            e = sys.exc_info()[0]
-            self.error('ERROR opening gzipped file %s: %s' % (pdbGz, e))
-            success = False
-        
-        try:
-            if success:
-                os.remove(pdbGz)
-        except:
-            e = sys.exc_info()[0]
-            self.error('ERROR deleting gzipped file: %s' % e)
-            success = False
-    
     def convertPdbStep(self):
         """ Although is not mandatory, usually is used by the protocol to
         register the resulting outputs in the database.
@@ -174,8 +118,8 @@ class XmippProtConvertPdb(em.ProtInitialVolume):
         volume.setSamplingRate(self.sampling.get())
         volume.setFileName(self._getVolName())
         self._defineOutputs(outputVolume=volume)
-        if self.inputPdbData.get() == self.IMPORT_OBJ:
-            self._defineSourceRelation(self.pdbObj.get(), volume)
+        if self.inputPdbData == self.IMPORT_OBJ:
+            self._defineSourceRelation(self.pdbObj, volume)
     
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
@@ -187,9 +131,9 @@ class XmippProtConvertPdb(em.ProtInitialVolume):
         if not hasattr(self, 'outputVolume'):
             summary.append("outputVolume not ready yet.")
         else:
-            if self.inputPdbData.get() == self.IMPORT_FROM_ID:
+            if self.inputPdbData == self.IMPORT_FROM_ID:
                 summary.append("Input PDB ID: %s" % self.pdbId.get())
-            elif self.inputPdbData.get() == self.IMPORT_OBJ:
+            elif self.inputPdbData == self.IMPORT_OBJ:
                 summary.append("Input PDB File: %s" % self.pdbObj.get().getFileName())
             else:
                 summary.append("Input PDB File: %s" % self.pdbFile.get())
@@ -201,7 +145,7 @@ class XmippProtConvertPdb(em.ProtInitialVolume):
         empty the protocol can be executed.
         """
         errors = []
-        if self.inputPdbData.get() == self.IMPORT_FROM_ID:
+        if self.inputPdbData == self.IMPORT_FROM_ID:
             lenStr = len(self.pdbId.get())
             if lenStr <> 4:
                 errors = ["Pdb id is composed only by four alphanumeric characters"]
@@ -210,9 +154,9 @@ class XmippProtConvertPdb(em.ProtInitialVolume):
     
     #--------------------------- UTLIS functions --------------------------------------------
     def _getPdbFileName(self):
-        if self.inputPdbData.get() == self.IMPORT_FROM_ID:
+        if self.inputPdbData == self.IMPORT_FROM_ID:
             return self._getExtraPath('%s.pdb' % self.pdbId.get())
-        elif self.inputPdbData.get() == self.IMPORT_OBJ:
+        elif self.inputPdbData == self.IMPORT_OBJ:
             return self.pdbObj.get().getFileName()
         else:
             return self.pdbFile.get()

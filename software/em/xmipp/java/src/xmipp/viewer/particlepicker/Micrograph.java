@@ -2,13 +2,17 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.ImagePlus;
+
 import java.awt.Image;
 import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+
+import xmipp.ij.commons.IJCommand;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
@@ -60,7 +64,7 @@ public abstract class Micrograph {
              System.out.printf("path %s selfile %s\n", path, ParticlePicker.getPicker().selfile);
              file = Filename.findImagePath(path, ParticlePicker.getPicker().selfile, true);
              if(file == null)
-                throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
+                throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("micrograph", path));
         }
 		
 		this.name = name;
@@ -224,9 +228,7 @@ public abstract class Micrograph {
 			}
 	}
 
-	public void releaseImage() {
-		imp = null;
-	}
+	
 
 	public String getFile() {
 		return file;
@@ -242,19 +244,25 @@ public abstract class Micrograph {
 
 	public abstract boolean hasData();
         
-        public int getWidth()
-        {
-            if(width == 0)
-                loadDimensions();
-            return width;
-        }
-        
-        public int getHeigth()
-        {
-            if(height == 0)
-                loadDimensions();
-            return height;
-        }
+    public int getWidth()
+    {
+        if(width == 0)
+            loadDimensions();
+        return width;
+    }
+    
+    public int getHeigth()
+    {
+        if(height == 0)
+            loadDimensions();
+        return height;
+    }
+
+	public void releaseImage()
+	{
+		imp = null;
+		
+	}
         
 
 }

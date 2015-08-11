@@ -29,6 +29,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 		super(imp);
 		addMouseWheelListener(this);
+	
 
 	}
 
@@ -72,30 +73,12 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		}
 	}
 
-	public void setZoom(double zoom)
-	{
-                //double mag = getZoom();
-                //System.out.printf("Zoom is %f\n", zoom);
-                
-                if (getMagnification() > zoom)
-                {
-                    while (getMagnification() > zoom)
-                        zoomOut(0, 0);
-                }
-                else 
-                {
-                    while (getMagnification() < zoom)
-                        zoomIn(0, 0);
-                }
-                
-                if (getMagnification() <= 1.0)
-                    imp.repaintWindow();		
-	}
+	
+       
 
 	public void mouseReleased(MouseEvent e)
 	{
-		if (getTool() == Tool.IMAGEJ)// do nothing for ImageJ tool is mine is
-										// selected
+		if (getTool() == Tool.IMAGEJ)// do nothing for ImageJ tool is mine is selected
 		{
 			super.mouseReleased(e);
 			return;
@@ -123,14 +106,12 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
         //System.out.println("mouse wheel moved");  // sorry Airen :)
 		int x = e.getX();
 		int y = e.getY();
-
 		int rotation = e.getWheelRotation();
 		if (rotation < 0)
 			zoomIn(x, y);
 		else
 			zoomOut(x, y);
-		if (getMagnification() <= 1.0)
-			imp.repaintWindow();
+		
 
 	}
 
@@ -174,7 +155,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		double currmagnif = getMagnification();
 		Rectangle rect = getSrcRect();
 		imp = xiw.getImagePlusLoader().loadImagePlus();
-                imp.setTitle(xiw.getImagePlusLoader().getName());
+        imp.setTitle(xiw.getImagePlusLoader().getName());
 		ImageWindow iw = (ImageWindow) xiw;
 		iw.setImage(getImage());
 		iw.updateImage(getImage());

@@ -28,6 +28,7 @@ This module contains several conversion utilities
 """
 
 import os
+import sys
 import PIL
 
 from constants import NO_INDEX
@@ -206,6 +207,12 @@ class ImageHandler(object):
         # Write to output
         self._img.write(self._convertToLocation(outputObj))
         
+    def __runXmippProgram(self, program, args):
+        """ Internal shortcut function to launch a Xmipp program. """
+        import pyworkflow.em.packages.xmipp3 as xmipp3
+        xmippEnv = xmipp3.getEnviron()
+        runJob(None, program, args, env=xmippEnv)        
+        
     def createCircularMask(self, radius, refImage, outputFile):
         """ Create a circular mask with the given radius (pixels)
         and with the same dimensions of the refImage.
@@ -215,13 +222,99 @@ class ImageHandler(object):
         #TODO: right now we need to call an xmipp program to create 
         # the spherical mask, it would be nicer to have such utility in the binding
         import pyworkflow.em.packages.xmipp3 as xmipp3
-        xmippEnv = xmipp3.getEnviron()
         inputRef = xmipp3.getImageLocation(refImage)
-        runJob(None, 'xmipp_transform_mask', 
-                    '-i %s --create_mask  %s --mask circular -%d' % (inputRef, outputFile, radius),
-                    env=xmippEnv)
+        self.__runXmippProgram('xmipp_transform_mask', 
+                               '-i %s --create_mask  %s --mask circular -%d' % (inputRef, outputFile, radius))
+        
+    def addNoise(self, inputFile, outputFile, std=1., avg=0.):
+        """ Add Gaussian noise to an input image (or stack) and produce noisy images.
+        Params:
+            inputFile: the filename of the input images
+            outputFile: the filename of the output noisy images
+            noiseStd: standard deviation for the Gaussian noise.
+        """
+        self.__runXmippProgram('xmipp_transform_add_noise', 
+                               '-i %s -o %s --type gaussian %f %f' % (inputFile, outputFile, std, avg))
         
     def isImageFile(self, imgFn):
         """ Check if imgFn has an image extension. The function
         is implemented in the xmipp binding."""
         return xmipp.FileName(imgFn).isImage()
+
+
+def downloadPdb(pdbId, pdbFile, log=None):
+    pdbGz = pdbFile + ".gz"
+    result = (__downloadPdb(pdbId, pdbGz, log) and 
+              __unzipPdb(pdbGz, pdbFile, log))
+    return result
+    
+def __downloadPdb(pdbId, pdbGz, log):
+    import ftplib
+    """Download a pdb file given its id. """
+    if log:
+        log.info("File to download and unzip: %s" % pdbGz)
+    
+    pdborgHostname = "ftp.wwpdb.org"
+    pdborgDirectory = "/pub/pdb/data/structures/all/pdb/"
+    prefix = "pdb"
+    suffix = ".ent.gz"
+    success = True
+    # Log into serverhttp://www.rcsb.org/pdb/files/2MP1.pdb.gz
+    ftp = ftplib.FTP()
+    try:
+        ftp.connect(pdborgHostname)
+        ftp.login()
+    except ftplib.error_temp:
+        if log:
+            log.error("ERROR! Timeout reached!")
+        success = False
+    
+    if success:
+        # Download  file
+        _fileIn = "%s/%s%s%s" % (pdborgDirectory, prefix, pdbId, suffix) 
+        _fileOut = pdbGz
+        try:
+            ftp.retrbinary("RETR %s" % _fileIn, open(_fileOut, "wb").write)
+        except ftplib.error_perm:
+            os.remove(_fileOut)
+            if log:
+                log.error("ERROR!  %s could not be retrieved!" % _fileIn)
+            success = False
+        # Log out
+        ftp.quit()
+        
+    return success
+
+# TODO unzip may go to utilities
+def __unzipPdb(pdbGz, pdbFile, log, cleanFile=True):
+    """
+    Unzip a pdb file.
+    Params:
+        pdbGz: zipped pdb file.
+        pdbFile: output pdb file.
+        cleanFile: remove the zipped file.
+    """
+    import gzip
+    success = True
+    try:
+        f = gzip.open(pdbGz, 'r')
+        g = open(pdbFile, 'w')
+        g.writelines(f.readlines())
+        f.close()
+        g.close()
+    except:
+        e = sys.exc_info()[0]
+        if log:
+            log.error('ERROR opening gzipped file %s: %s' % (pdbGz, e))
+        success = False
+    
+    try:
+        if success:
+            os.remove(pdbGz)
+    except:
+        e = sys.exc_info()[0]
+        if log:
+            log.error('ERROR deleting gzipped file: %s' % e)
+        success = False
+        
+    return success
