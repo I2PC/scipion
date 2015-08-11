@@ -264,7 +264,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * @param height
 	 */
 	protected void calculateCellSize() {
-		
 		thumb_width = (int) (image_width * scale);
 		thumb_height = (int) (image_height * scale);
 
