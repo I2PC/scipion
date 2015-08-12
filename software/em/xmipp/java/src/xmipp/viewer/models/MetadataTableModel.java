@@ -54,8 +54,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	boolean ascending = true;
         
 
-	public MetadataTableModel(GalleryData data) throws Exception {
-		super(data);
+	public MetadataTableModel(GalleryData data, boolean[] selection) throws Exception {
+		super(data, selection);
 		cols = visibleLabels.size();
 		rows = n;
 		renderer.hackBorders = false;
