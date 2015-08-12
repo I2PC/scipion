@@ -136,7 +136,6 @@ class ProtImportParticles(ProtImportImages):
         if self.importFrom == self.IMPORT_FROM_EMX:
             from pyworkflow.em.packages.emxlib import EmxImport
             self.importFilePath = self.emxFile.get('').strip()
-            print "getImportClass", self.alignTypeList[self.alignType.get()]
             return EmxImport(self, self.importFilePath,
                                    self.alignTypeList[self.alignType.get()])
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
