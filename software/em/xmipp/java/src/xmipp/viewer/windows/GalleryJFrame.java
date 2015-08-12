@@ -290,10 +290,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			gallery.setColumns(data.getModelColumns());
 		else if (data.getModelRows() != null)
 			gallery.setRows(data.getModelRows());
-        int index = gallery.getFirstSelectedIndex();
-        if(index == -1)
-        	index = 0;
-        if(jsGoToImage != null && index + 1 != ((Integer)jsGoToImage.getValue()).intValue())
+        int index = gallery.getSelTo();
+        if(jsGoToImage != null)
         	jsGoToImage.setValue(index + 1);
 	}
 
@@ -625,13 +623,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					hdir = 1;
 					break;
 
-                                case KeyEvent.VK_SPACE:
-                                        int from = gallery.getSelFrom(), to = gallery.getSelTo();
-                                        for (int i = from; i <= to; ++i)
-                                            if (gallery.isSelected(i))
-                                                data.setEnabled(i, !data.isEnabled(i));
-                                        if(from != -1)
-                                            gallery.fireTableRowsUpdated(from, to);
+                case KeyEvent.VK_SPACE:
+                        int from = gallery.getSelFrom(), to = gallery.getSelTo();
+                        for (int i = from; i <= to; ++i)
+                            if (gallery.isSelected(i))
+                                data.setEnabled(i, !data.isEnabled(i));
+                        if(from != -1)
+                            gallery.fireTableRowsUpdated(from, to);
 				}
 				if (vdir != 0 || hdir != 0)
 				{
@@ -991,9 +989,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             	if(!data.isVolumeMd())
             		selection = gallery.getSelection();
             	reloadTableData(selection);
-            	Point coords = gallery.getCoords(gallery.getFirstSelectedIndex());
-				makeVisible(coords.y, coords.x);
-				
+            	if(gallery.getSelTo() != -1)
+            	{
+	            	Point coords = gallery.getCoords(gallery.getSelTo());
+					makeVisible(coords.y, coords.x);
+            	}
 	
         }
         
@@ -1403,17 +1403,25 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		if (!isUpdating)
 		{
-			
-			Integer intValue = ((Integer) jsGoToImage.getValue());
-			if (intValue <= 0)
-				intValue = 1;
-			else if (intValue >= gallery.getSize())
-				intValue = gallery.getSize();
-			if (jsGoToImage.getValue() != intValue)
-				jsGoToImage.setValue(intValue);
-			if(gallery.getFirstSelectedIndex() != -1)
-				goToImage(intValue - 1);
+			Integer oValue = ((Integer) jsGoToImage.getValue());
+			Integer value = oValue;
+			if (oValue <= 0)
+			{
+				value = 1;
+				isUpdating = true;
+			}
+			else if (oValue >= gallery.getSize())
+			{
+				value = gallery.getSize();
+				isUpdating = true;
+			}
+			if (oValue != value)
+				jsGoToImage.setValue(value);
+			if(oValue != 0 && oValue != gallery.getSelTo() + 1)//not me and not already selected
+				goToImage(value - 1);
 		}
+		else
+			isUpdating = false;
 	}
 
 	private void formComponentResized(java.awt.event.ComponentEvent evt)
@@ -1611,7 +1619,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		public void update()
 		{
                         
-                        boolean isscipion = data.isScipionInstance();
+            boolean isscipion = data.isScipionInstance();
 			boolean galMode = data.isGalleryMode();
 			boolean volMode = !data.getSelVolumeFile().isEmpty();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode || data.containsGeometryInfo("3D")|| data.containsGeometryInfo("Projection"));
@@ -1972,6 +1980,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		private void selectRange(int first, int last)
 		{
 			gallery.selectRange(first, last, true);
+			jsGoToImage.setValue(gallery.getSelTo() + 1);
 		}
 
 	
@@ -2002,11 +2011,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
 				selectRange(gallery.getIndex(row, col), gallery.getSize() - 1);
 			}
-                        else if (cmd.equals(INVERT_SELECT))
+            else if (cmd.equals(INVERT_SELECT))
 			{
 				for (int i = 0; i < data.size(); i++)
-                                    gallery.setSelected(i, !gallery.isSelected(i));
-                                gallery.fireTableDataChanged();
+                    gallery.setSelected(i, !gallery.isSelected(i));
+                gallery.fireTableDataChanged();
+                jsGoToImage.setValue(gallery.getSelTo() + 1);
 			}
 			else if (cmd.equals(ENABLED))
 			{

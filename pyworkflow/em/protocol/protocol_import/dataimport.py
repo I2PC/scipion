@@ -28,7 +28,7 @@ from os.path import join, basename, exists
 from collections import OrderedDict
 
 from pyworkflow.utils.path import findRootFrom
-from pyworkflow.em.data import SetOfParticles
+from pyworkflow.em.data import SetOfParticles, SetOfMicrographs
 from pyworkflow.em.constants import ALIGN_NONE
 
 
@@ -42,19 +42,30 @@ class ScipionImport():
         self.copyOrLink = protocol.getCopyOrLink()
     
     def importMicrographs(self):
-        """ Import a SetOfMicrographs from a given micrograph metadata.
-        (usually the result "micrographs.xmd" from Xmipp protocols)
-        If the CTF is found, a SetOfCTF will be also created.
-        """
-        pass
-            
+        """ Import a SetOfMicrographs from a given sqlite file. """
+        inputSet = SetOfMicrographs(filename=self._sqliteFile)
+        self._findImagesPath(inputSet)
+        
+        micSet = self.protocol._createSetOfMicrographs()
+        micSet.setObjComment('Micrographs imported from sqlite file:\n%s' % self._sqliteFile)
+
+        # Update both samplingRate and acquisition with parameters
+        # selected in the protocol form
+        self.protocol.setSamplingRate(micSet)
+        micSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
+        self.protocol.fillAcquisition(micSet.getAcquisition())
+        # Read the micrographs from the 'self._sqliteFile' metadata
+        # but fixing the filenames with new ones (linked or copy to extraDir)
+        micSet.copyItems(inputSet, updateItemCallback=self._updateParticle)
+        self.protocol._defineOutputs(outputMicrographs=micSet)
+
     def importParticles(self):
         """ Import particles from a metadata 'images.xmd' """
-        self._imgDict = {} # store which images stack have been linked/copied and the new path
+        inputSet = SetOfParticles(filename=self._sqliteFile)
+        inputSet.loadProperty('_alignment', ALIGN_NONE)
+        inputSet.loadProperty('_hasCtf', False)
+        self._findImagesPath(inputSet)
 
-        
-        inputSet = self._findPathAndCtf()
-        
         partSet = self.protocol._createSetOfParticles()
         partSet.copyInfo(inputSet)
         
@@ -68,22 +79,16 @@ class ScipionImport():
         partSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
         self.protocol._defineOutputs(outputParticles=partSet)
         
-    def _findPathAndCtf(self, warnings=True):
-        """ Find the relative path from which the micrographs exists
-        repect to the metadata location. Also check if it contains
-        CTF information and their relative root.
+    def _findImagesPath(self, inputSet):
+        """ Find the relative path from which the images exists
+        repect to the sqlite location. 
         """
-        inputSet = SetOfParticles(filename=self._sqliteFile)
-        inputSet.loadProperty('_alignment', ALIGN_NONE)
-        inputSet.loadProperty('_hasCtf', False)
+        self._imgDict = {} # store which images stack have been linked/copied and the new path
+        img = inputSet.getFirstItem()
+        self._imgPath = findRootFrom(self._sqliteFile, img.getFileName())
         
-        particle = inputSet.getFirstItem()
-        self._imgPath = findRootFrom(self._sqliteFile, particle.getFileName())
-        
-        if warnings and self._imgPath is None:
-            self.protocol.warning("Binary data was not found from metadata: %s" % self._sqliteFile)
-
-        return inputSet
+        if self._imgPath is None:
+            self.protocol.warning("Binary data was not found from sqlite: %s" % self._sqliteFile)
     
     def validate(self):
         """ Try to find errors on import. """
@@ -114,7 +119,12 @@ class ScipionImport():
         acquisition_info.xmd and microscope.xmd 
         """
         acquisitionDict = OrderedDict()
-            
+        inputSet = SetOfParticles(filename=self._sqliteFile)
+        acquisitionDict['samplingRate'] = inputSet.getProperty('_samplingRate')
+        acquisitionDict['voltage'] = inputSet.getProperty('_acquisition._voltage')
+        acquisitionDict['amplitudeContrast'] = inputSet.getProperty('_acquisition._amplitudeContrast')
+        acquisitionDict['magnification'] = int(float(inputSet.getProperty('_acquisition._magnification')))
+        
         return acquisitionDict
           
                 
