@@ -50,9 +50,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	// Also store the visible ones to fast access
 	public ArrayList<ColumnInfo> visibleLabels;
 
-	public MetadataGalleryTableModel(GalleryData data) throws Exception
+	public MetadataGalleryTableModel(GalleryData data, boolean[] selection) throws Exception
 	{
-		super(data);
+		super(data, selection);
 		data.normalize = false;
 	}
 

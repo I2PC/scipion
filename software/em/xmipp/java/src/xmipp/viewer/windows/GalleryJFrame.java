@@ -274,18 +274,27 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
 
+	protected void createModel() throws Exception
+	{
+		createModel(null);
+	}
 	/**
 	 * Function to create the gallery type depending on the filename
 	 * 
 	 * @throws Exception
 	 */
-	private void createModel() throws Exception
+	protected void createModel(boolean[] selection) throws Exception
 	{
-		gallery = data.createModel();
+		gallery = data.createModel(selection);
         if (data.getModelColumns() != null)
 			gallery.setColumns(data.getModelColumns());
 		else if (data.getModelRows() != null)
 			gallery.setRows(data.getModelRows());
+        int index = gallery.getFirstSelectedIndex();
+        if(index == -1)
+        	index = 0;
+        if(jsGoToImage != null && index + 1 != ((Integer)jsGoToImage.getValue()).intValue())
+        	jsGoToImage.setValue(index + 1);
 	}
 
 	public GalleryData getData()
@@ -441,8 +450,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				data.changeMode();
-				reloadTableData();
+				changeView();
 			}
 		});
 		enableToolBarActions();
@@ -736,11 +744,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	private void makeVisible(int row, int col)
 	{
-		//DEBUG.printMessage(String.format("gotoImage, index: %d, row: %d, col:%d", index, coords[0], coords[1]));
+		//System.out.println(String.format("gotoImage,  row: %d, col:%d", row, col));
 
 		// Gets current selected cell bounds.
 		Rectangle rect = table.getCellRect(row, col, true);
-
 		// Ensures item is visible
 		Point pos = jspContent.getViewport().getViewPosition();
 		rect.translate(-pos.x, -pos.y);
@@ -844,21 +851,25 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         else
             autoAdjustColumns(data.isAutoAdjust());
 	}
-
 	public void reloadTableData()
 	{
-		reloadTableData(true);
+		reloadTableData(true, null);
+	}
+
+	public void reloadTableData(boolean[] selection)
+	{
+		reloadTableData(true, selection);
 	}
 
 	/** Reload table data */
-	public void reloadTableData(boolean changed)
+	public void reloadTableData(boolean changed, boolean[] selection)
 	{
 		try
 		{
 			//DEBUG.printMessage("reloadTableData...");
 			if (table != null)
 				table.removeAll();
-			createModel();
+			createModel(selection);
 			// gallery.setShowLabels(menu.getShowLabel());
 			createTable();
 
@@ -900,7 +911,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void reloadMd(boolean changed) throws Exception
 	{
 		data.loadMd();
-		reloadTableData(changed);
+		reloadTableData(changed, gallery.getSelection());
 		data.setMdChanges(changed);
 
 	}// function reloadMd
@@ -975,9 +986,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         
         protected void changeView()
         {
-            			data.changeMode();
-				reloadTableData();
-				makeVisible(gallery.getFirstSelectedIndex(), 0);
+            	data.changeMode();
+            	boolean[] selection = null;
+            	if(!data.isVolumeMd())
+            		selection = gallery.getSelection();
+            	reloadTableData(selection);
+            	Point coords = gallery.getCoords(gallery.getFirstSelectedIndex());
+				makeVisible(coords.y, coords.x);
+				
 	
         }
         
@@ -1213,7 +1229,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         public void selectBlock(String block)
         {
             data.selectBlock(block);
-            
             jcbVolumes.invalidate();
             try
             {
@@ -1389,14 +1404,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		if (!isUpdating)
 		{
 			
-			Integer intValue = (Integer) jsGoToImage.getValue();
+			Integer intValue = ((Integer) jsGoToImage.getValue());
 			if (intValue <= 0)
 				intValue = 1;
 			else if (intValue >= gallery.getSize())
 				intValue = gallery.getSize();
 			if (jsGoToImage.getValue() != intValue)
 				jsGoToImage.setValue(intValue);
-			goToImage(intValue - 1);
+			if(gallery.getFirstSelectedIndex() != -1)
+				goToImage(intValue - 1);
 		}
 	}
 
@@ -2257,7 +2273,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	public void reloadFile(String file, boolean changed) throws Exception
 	{
-		createModel();
+		createModel(gallery.getSelection());
 		reloadMd(changed);
 		reloadCombos();
 	}
