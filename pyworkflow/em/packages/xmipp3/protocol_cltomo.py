@@ -31,6 +31,7 @@ from pyworkflow.em import *
 from constants import *
 from convert import writeSetOfVolumes, readSetOfClassesVol, readSetOfVolumes
 from xmipp import MetaData
+from xmipp3 import getEnviron
 
 
 class XmippProtCLTomo(ProtClassify3D):
@@ -88,9 +89,10 @@ class XmippProtCLTomo(ProtClassify3D):
         self._insertFunctionStep('createOutput')
     
     #--------------------------- STEPS functions --------------------------------------------
+
     def runCLTomo(self):
         fnVols=self._getPath('input_volumes.xmd')
-        writeSetOfVolumes(self,self.inputVolumes.get(), fnVols)
+        writeSetOfVolumes(self.inputVolumes.get(), fnVols)
         params= ' -i '            + fnVols + \
                 ' --oroot '       + self._getExtraPath("results") + \
                 ' --iter '        + str(self.numberOfIterations.get()) + \
@@ -111,7 +113,7 @@ class XmippProtCLTomo(ProtClassify3D):
                 params+=' --randomizeStartingOrientation'
         else:
             fnInitialVols=self._getExtraPath('intial_volumes.xmd')
-            writeSetOfVolumes(self,self.referenceList.get(), fnInitialVols)
+            writeSetOfVolumes(self.referenceList.get(), fnInitialVols)
             params+=' --ref0 '+fnInitialVols
         if self.inputMask.hasValue():
             params+=' --mask binary_file '+self.inputMask.get().getLocation()
@@ -120,7 +122,7 @@ class XmippProtCLTomo(ProtClassify3D):
         if self.dontAlign.get():
             params+=" --dontAlign"
 
-        self.runJob('xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))
+        self.runJob('xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params),env=self.getCLTomoEnviron())
     
     def createOutput(self):
         import glob
@@ -183,3 +185,8 @@ class XmippProtCLTomo(ProtClassify3D):
         return ['Chen2013']
 
     #--------------------------- UTILS functions --------------------------------------------
+    def getCLTomoEnviron(self):
+        env = getEnviron()
+        env.set('PYTHONPATH', os.path.join(os.environ['SCIPION_HOME'], 'software','lib','python2.7','site-packages','sh_alignment'),
+                Environ.BEGIN)
+        return env
