@@ -88,11 +88,11 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	public GalleryData data; // information about the gallery
 
 	public boolean adjustWidth = true; 
-        protected boolean[] selection;
-        protected int selfrom = -1, selto = -1;
+    protected boolean[] selection;
+    protected int selfrom = -1, selto = -1;
 	
 	// Initiazation function
-	public ImageGalleryTableModel(GalleryData data) throws Exception {
+	public ImageGalleryTableModel(GalleryData data, boolean[] selection) throws Exception {
 		this.data = data;
 		cols = 0;
 		dimension = loadDimension();
@@ -113,9 +113,26 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		}
 		// DEBUG.printMessage(String.format("col: %d, rows: %d", cols, rows));
 		//resizeCache(); NOw this is done when setZoomValue
-                selection = new boolean[data.ids.length];
-                selfrom = selto = -1;
+		//might be that the number of items is the same and we keep selection, although it is a different metadata
+        if(selection == null)
+        	this.selection = new boolean[data.ids.length];
+        else
+        {
+        	this.selection = selection;
+        	for(int i = 0; i < selection.length; i ++)
+        	{
+        		if(selection[i])
+        		{
+        			if(selfrom == -1)
+        				selfrom = i;
+        			selto = i;
+        		}
+        	}
+        }
+        
 	}
+	
+	
 	
 	public int getImageWidth()
 	{
@@ -800,7 +817,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
         if (data.isVolumeMd && data.isTableMode())
             data.selectedVolFn = isselected? data.getVolumeAt(index): data.getVolumeAt(0);
 
-            
     }
     
     public boolean isSelected(int index) {
