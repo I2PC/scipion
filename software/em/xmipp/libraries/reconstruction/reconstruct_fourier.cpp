@@ -348,12 +348,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     tilt = proj.tilt();
                     psi  = proj.psi();
                     weight = proj.weight();
-                    std::cout << "Processing " << proj.name() << std::endl;
                     if (hasCTF)
                     {
                         threadParams->ctf.readFromMetadataRow(*(threadParams->selFile),objId[threadParams->imageIndex]);
                         threadParams->ctf.produceSideInfo();
-                        std::cout << threadParams->ctf << std::endl;
                     }
 
                     threadParams->weight = 1.;
@@ -593,8 +591,6 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                         wCTF=1.0/wCTF;
                                     if (parent->phaseFlipped)
                                         wCTF=fabs(wCTF);
-                                    if (i==0)
-                                    	std::cout << "j=" << j << " XX(contFreq)=" << XX(contFreq) << " d=" << 1.0/XX(contFreq) << " wCTF=" << wCTF << std::endl;
                                 }
 
                                 SPEED_UP_temps012;
