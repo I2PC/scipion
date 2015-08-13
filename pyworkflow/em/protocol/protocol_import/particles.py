@@ -195,9 +195,6 @@ class ProtImportParticles(ProtImportImages):
             return None
         
     def _validate(self):
-        emxFile = self.emxFile.get()
-        if not exists(emxFile):
-            return ['file %s does not exist'%emxFile]
         ci = self.getImportClass()
         if ci is None:
             return ProtImportImages._validate(self)
