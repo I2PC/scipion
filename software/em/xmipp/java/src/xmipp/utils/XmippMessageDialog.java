@@ -76,7 +76,7 @@ public class XmippMessageDialog extends XmippDialog {
 		iconPanel.add(XmippWindowUtil.getIconLabel(iconPath));
 		iconPanel.setBackground(Color.white);
 		panel.add(iconPanel, BorderLayout.LINE_START);
-		JTextArea text = new JTextArea(message, 8, 40);
+		JTextArea text = new JTextArea(message, 5, 40);
 		text.setEditable(false);
 		text.setBackground(Color.white);
 		text.setBorder(BorderFactory.createEmptyBorder());

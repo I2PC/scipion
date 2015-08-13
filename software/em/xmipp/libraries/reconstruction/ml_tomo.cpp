@@ -3452,6 +3452,7 @@ ProgMLTomo::writeOutputFiles(const int iter,
             fn_tmp = formatString("%s_wedge%06d.vol", fn_base.c_str(), refno + 1);
             Vt.write(fn_tmp);
         }
+        refno++;
     }
     fn_tmp = fn_base + "_ref.xmd";
     MDref.write(fn_tmp);

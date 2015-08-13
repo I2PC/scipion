@@ -44,7 +44,7 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 	ImageGeneric volume;
 
 	public VolumeGalleryTableModel(GalleryData data) throws Exception {
-		super(data);
+		super(data, null);
 		data.normalize = true; // volumes are displayed with global
 								// normalization by default
 		selection = new boolean[n];

@@ -81,6 +81,10 @@ class BaseTest(unittest.TestCase):
             print "\n>>> ERROR running protocol %s" % prot.getRunName()
             print "    FAILED with error: %s\n" % prot.getErrorMessage()
             raise Exception("ERROR launching protocol.")
+        
+        if not prot.isFinished():
+            print "\n>>> ERROR running protocol %s" % prot.getRunName()
+            raise Exception("ERROR: Protocol not finished")
     
     @classmethod    
     def saveProtocol(cls, prot):

@@ -131,6 +131,11 @@ public class GalleryData {
         return false;
     }
 
+    public boolean isVolumeMd()
+    {
+    	return isVolumeMd;
+    }
+    
     public Integer getModelRows()
     {
         return rows;
@@ -167,7 +172,9 @@ public class GalleryData {
     	if (vol.contains("@"))
     		file = file.substring(file.lastIndexOf("@") + 1);
     	if(new File(file).exists())
+    	{
     		selectedVolFn = vol;
+    	}
     	else
     		throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(file));
     }
@@ -384,6 +391,7 @@ public class GalleryData {
         
         if (!md.isColumnFormat() ) {
             mode = Mode.TABLE_MD;
+            renderImages = false;
         }
 
         if (isGalleryMode()) {
@@ -399,6 +407,8 @@ public class GalleryData {
 			// Try to find at least one image to render
             // and take dimensions from that
             for (int i = 0; i < ids.length && image == null; ++i) {
+            	if(i == 100)//after 100 items if there is no image available break 
+            		break;
                 imageFn = md.getValueString(renderLabel, ids[i]);
                 if(imageFn != null)
                     imageFn = Filename.findImagePath(imageFn , filename, true);
@@ -428,7 +438,6 @@ public class GalleryData {
                         mode = Mode.GALLERY_VOL;
                     
                     isVolumeMd = true;
-
                     if (selectedVolFn.isEmpty()) {
                         selectedVolFn = imageFn;
                     }
@@ -567,6 +576,8 @@ public class GalleryData {
         String imageFn, mddir = md.getBaseDir();
         for (int i = 0; i < ids.length; ++i)
         {
+        	if( i == 100)
+        		break;
             imageFn = getValueFromLabel(i, ci.label);
             if(imageFn != null)
             {
@@ -645,24 +656,26 @@ public class GalleryData {
      *
      * @return
      */
-    public ImageGalleryTableModel createModel() {
+    public ImageGalleryTableModel createModel(boolean[] selection) {
+    	
         try {
             switch (mode) {
                 case GALLERY_VOL:
                     return new VolumeGalleryTableModel(this);
                 case GALLERY_MD:
                     if (md.size() > 0 && hasRenderLabel()) {
-                        return new MetadataGalleryTableModel(this);
+                    	
+                        return new MetadataGalleryTableModel(this, selection);
                     }
                 // else fall in the next case
                 case TABLE_MD:
                     mode = Mode.TABLE_MD; // this is necessary when coming from
                     // previous case
                     if (!md.isColumnFormat()) {
-                        return new MetadataRowTableModel(this);
+                        return  new MetadataRowTableModel(this);
                     }
 
-                    return new MetadataTableModel(this);
+                    return new MetadataTableModel(this, selection);
                 
             }
         } catch (Exception e) {
@@ -1293,9 +1306,9 @@ public class GalleryData {
     public String getFileInfo() {
         File file = new File(getFileName());
 
-        String fileInfo = "Path: " + file.getAbsolutePath() + "\n\n";
+        String fileInfo = "Path: " + file.getAbsolutePath() + "\n";
 
-        fileInfo += "File Name: " + file.getName() + "\n" + "Last Modified: "
+        fileInfo += "Last Modified: "
                 + new Date(file.lastModified()) + "\n"
                 + "Size: " + Filename.humanReadableByteCount(file.length());
         return fileInfo;

@@ -290,7 +290,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     public void reloadTableData(boolean changed)
     {
-        super.reloadTableData(changed);
+        super.reloadTableData(changed, gallery.getSelection());
         enableActions();
     }
 

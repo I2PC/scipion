@@ -29,17 +29,18 @@ This module implement the import/export of Micrographs and Particles to EMX
 
 from __future__ import print_function
 from os.path import join, dirname, basename, exists
-from pyworkflow.em.constants import ALIGN_NONE, ALIGN_PROJ
+from numpy.linalg import inv
+from collections import OrderedDict
 
+import pyworkflow.object as pwobj
 from pyworkflow.utils.path import createLink, makePath, cleanPath, replaceBaseExt
+from pyworkflow.em.constants import ALIGN_NONE, ALIGN_PROJ
 from pyworkflow.em.convert import ImageHandler, NO_INDEX
 from pyworkflow.em.data import (Micrograph, CTFModel, Particle, 
                                 Coordinate, Transform,
                                 SetOfMicrographs, SetOfCoordinates, 
                                 SetOfParticles, Acquisition)
 import emxlib
-from numpy.linalg import inv
-from collections import OrderedDict
 #from software.em.xmipp.protocols.protocol_preprocess_particles import createAcquisition
 
 
@@ -50,8 +51,6 @@ def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=Non
     emxData = emxlib.EmxData()
     micSet=None
     
-    if binaryFile is None:
-        binaryFile = xmlFile.replace('.emx', '.mrc')
 
     if isinstance(inputSet, SetOfMicrographs):
         _micrographsToEmx(emxData, inputSet, emxDir, ctfSet)
@@ -59,15 +58,19 @@ def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=Non
     elif isinstance(inputSet, SetOfCoordinates):
         micSet = inputSet.getMicrographs()
         _micrographsToEmx(emxData, micSet, emxDir, ctfSet)
-        _particlesToEmx(emxData, inputSet, None, micSet)
+        _particlesToEmx(emxData, inputSet, micSet, writeImages=False)
         
     elif isinstance(inputSet, SetOfParticles):
-        print ("SetOfParticles-----------------------------------------")
         if inputSet.hasCoordinates():
             micSet = inputSet.getCoordinates().getMicrographs()
             _micrographsToEmx(emxData, micSet, emxDir, writeData=False)
-        fnMrcs = join(emxDir, binaryFile)
-        _particlesToEmx(emxData, inputSet, fnMrcs, micSet)
+        
+        kwargs = {'writeImages': True}
+        if binaryFile is None:
+            kwargs['imagesPrefix'] = emxDir
+        else:
+            kwargs['imagesStack'] = join(emxDir, binaryFile)
+        _particlesToEmx(emxData, inputSet, micSet, **kwargs)
         
     fnXml = join(emxDir, xmlFile)
     emxData.write(fnXml)
@@ -217,23 +220,58 @@ def _micrographsToEmx(emxData, micSet, emxDir, ctfSet=None, writeData=True):
         emxData.addObject(emxMic)
     
     
-def _particlesToEmx(emxData, partSet, stackFn=None, micSet=None):
+def _particlesToEmx(emxData, partSet, micSet=None, **kwargs):
     """ Write a SetOfMicrograph as expected in EMX format 
     Params:
         micSet: input set of micrographs
         filename: the EMX file where to store the micrographs information.
+        micSet: micrographs set associated with the particles
+        **kwargs: writeImages: if set to False, only coordinates are exported.
+                  imagesStack: if passed all images will be output into a single
+                    stack file. 
+                  imagesPrefix: used when not imagesStack is passed. A different
+                    stack will be created per micrograph.
     """
-
+    writeImages = kwargs.get('writeImages', True)
+    imagesPrefix = kwargs.get('imagesPrefix', None)
+    micDict = {}
+    # Use singleMic for count all particles to be written to a single stack
+    imagesStack = kwargs.get('imagesStack', None)
+    singleMic = Micrograph()
+    singleMic.setFileName(imagesStack)
+    singleMic.counter = pwobj.Integer(0)
+    
+    def _getMicKey(particle):
+        coord = particle.getCoordinate()
+        if coord is None or coord.getMicName() is None:
+            return '%05d' % particle.getMicId()
+        else:
+            return coord.getMicName()
+        
+    def _getLocation(particle):
+        if imagesStack is not None:
+            mic = singleMic
+        else:
+            micKey = _getMicKey(particle)
+            if micKey not in micDict:
+                mic = Micrograph()
+                mic.setFileName(join(imagesPrefix, 'particles_%s.mrc' % micKey))
+                mic.counter = pwobj.Integer(0)
+                micDict[micKey] = mic
+            else:
+                mic = micDict[micKey]
+        # Count one more particle assigned to this micrograph            
+        mic.counter.increment()
+        return (mic.counter.get(), mic.getFileName())
+                
     ih = ImageHandler()
     partAlign = partSet.getAlignment()
-    for i, particle in enumerate(partSet):
-        if stackFn:
-            print ("stackFn-----------------------------------------")
-            loc = particle.getLocation()
-            newLoc = (i+1, stackFn)
-            ih.convert(loc, newLoc)
-            newFn = basename(stackFn)
-            particle.setLocation(i+1, newFn)
+    for particle in partSet:
+        if writeImages:
+            newLoc = _getLocation(particle)
+            ih.convert(particle, newLoc)
+            localFn = basename(newLoc[1])
+            particle.setLocation(newLoc[0], localFn)
             emxObj = _particleToEmx(emxData, particle, micSet, partAlign)
         else:
             emxObj = _coordinateToEmx(emxData, particle, micSet)
