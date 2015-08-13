@@ -10,7 +10,6 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.gui.Toolbar;
-import ij.process.ByteProcessor;
 import ij.process.FloatProcessor;
 
 import java.awt.Color;
@@ -29,11 +28,9 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
 
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.ScipionParams;
@@ -49,8 +46,8 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
     private JButton registerbt;
     protected int width, height;
     private ImagePlus imp;
-    private JToggleButton invertbt;
-    private JToggleButton addbt;
+    private JCheckBox invertbt;
+    private JCheckBox addbt;
     private final XmippImageWindow iw;
     private JToggleButton smoothbt;
     private JFormattedTextField smoothtf;
@@ -89,11 +86,11 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
         	}
         });
         optionspn.add(refreshbt);
-        invertbt = new JToggleButton("Invert");
+        invertbt = new JCheckBox("Invert:");
         invertbt.addActionListener(this);
         optionspn.add(invertbt);
         
-        smoothbt = new JToggleButton("Smooth");
+        smoothbt = new JCheckBox("Smooth:");
         smoothbt.addActionListener(this);
         optionspn.add(smoothbt);
         smoothtf = new JFormattedTextField(NumberFormat.getIntegerInstance());

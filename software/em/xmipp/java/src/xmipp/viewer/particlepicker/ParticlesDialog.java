@@ -23,6 +23,7 @@ public class ParticlesDialog extends Dialog
 	protected GridBagConstraints constraints;
 	protected int width, height, rows, columns, side;
 	public static final int maxHeight = (int)(0.9 * XmippWindowUtil.getScreenRectangle().height);
+	public static final int minWidth = 600;
 
 	public ParticlesDialog(ParticlePickerJFrame frame)
 	{
@@ -59,7 +60,7 @@ public class ParticlesDialog extends Dialog
 		if (particles.isEmpty())
 		{
 			particlespn.removeAll();
-            width = 200;
+            width = minWidth;
             height = maxHeight;
 			sp.setPreferredSize(new Dimension(width, height));
 			pack();
@@ -68,7 +69,7 @@ public class ParticlesDialog extends Dialog
 
 		if (resize) // first time or keep size
 		{
-			columns = Math.min(200, particles.size() * side) / side;
+			columns = Math.min(minWidth, particles.size() * side) / side;
 			rows = (int) Math.ceil(particles.size() / (float) columns);
 			width = side * columns + 20;
 			height = Math.min(side * rows, maxHeight);

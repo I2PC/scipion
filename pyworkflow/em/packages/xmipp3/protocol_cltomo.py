@@ -29,8 +29,9 @@ This sub-package contains protocols for performing subtomogram averaging.
 
 from pyworkflow.em import *  
 from constants import *
-from convert import createXmippInputVolumes, readSetOfClassesVol, readSetOfVolumes
+from convert import writeSetOfVolumes, readSetOfClassesVol, readSetOfVolumes
 from xmipp import MetaData
+from xmipp3 import getEnviron
 
 
 class XmippProtCLTomo(ProtClassify3D):
@@ -40,7 +41,7 @@ class XmippProtCLTomo(ProtClassify3D):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='General parameters')
-        form.addParam('volumelist', PointerParam, pointerClass="SetOfVolumes", label='Set of volumes',
+        form.addParam('inputVolumes', PointerParam, pointerClass="SetOfVolumes", label='Set of volumes',
                       help="Set of volumes to align")
         form.addParam('numberOfReferences',IntParam,label='Number of references', default=3,
                       help="How many references are computed at the end of the process")
@@ -88,8 +89,11 @@ class XmippProtCLTomo(ProtClassify3D):
         self._insertFunctionStep('createOutput')
     
     #--------------------------- STEPS functions --------------------------------------------
+
     def runCLTomo(self):
-        params= ' -i '            + createXmippInputVolumes(self,self.volumelist.get()) + \
+        fnVols=self._getPath('input_volumes.xmd')
+        writeSetOfVolumes(self.inputVolumes.get(), fnVols)
+        params= ' -i '            + fnVols + \
                 ' --oroot '       + self._getExtraPath("results") + \
                 ' --iter '        + str(self.numberOfIterations.get()) + \
                 ' --nref '        + str(self.numberOfReferences.get()) + \
@@ -108,7 +112,9 @@ class XmippProtCLTomo(ProtClassify3D):
             if self.randomizeOrientation.get():
                 params+=' --randomizeStartingOrientation'
         else:
-            params+=' --ref0 '+createXmippInputVolumes(self,self.referenceList.get(),self._getPath('references.xmd'))
+            fnInitialVols=self._getExtraPath('intial_volumes.xmd')
+            writeSetOfVolumes(self.referenceList.get(), fnInitialVols)
+            params+=' --ref0 '+fnInitialVols
         if self.inputMask.hasValue():
             params+=' --mask binary_file '+self.inputMask.get().getLocation()
         if self.generateAligned.get():
@@ -116,7 +122,7 @@ class XmippProtCLTomo(ProtClassify3D):
         if self.dontAlign.get():
             params+=" --dontAlign"
 
-        self.runJob('xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))
+        self.runJob('xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params),env=self.getCLTomoEnviron())
     
     def createOutput(self):
         import glob
@@ -125,10 +131,10 @@ class XmippProtCLTomo(ProtClassify3D):
             levelFiles.sort()
             lastLevelFile=levelFiles[-1]
             setOfClasses = self._createSetOfClassesVol()
-            setOfClasses.setImages(self.volumelist.get())
+            setOfClasses.setImages(self.inputVolumes.get())
             readSetOfClassesVol(setOfClasses,lastLevelFile)
             self._defineOutputs(outputClasses=setOfClasses)
-            self._defineSourceRelation(self.volumelist, self.outputClasses)
+            self._defineSourceRelation(self.inputVolumes, self.outputClasses)
         if self.generateAligned.get():
             setOfVolumes = self._createSetOfVolumes()
             fnAligned = self._getExtraPath('results_aligned.xmd')
@@ -137,10 +143,10 @@ class XmippProtCLTomo(ProtClassify3D):
             md.addItemId()
             md.write(fnAligned)
             readSetOfVolumes(fnAligned,setOfVolumes)
-            volumeList=self.volumelist.get()
+            volumeList=self.inputVolumes.get()
             setOfVolumes.setSamplingRate(volumeList.getSamplingRate())
             self._defineOutputs(alignedVolumes=setOfVolumes)
-            self._defineTransformRelation(self.volumelist, self.alignedVolumes)
+            self._defineTransformRelation(self.inputVolumes, self.alignedVolumes)
     
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
@@ -156,7 +162,7 @@ class XmippProtCLTomo(ProtClassify3D):
 
     def _validate(self):
         errors=[]
-        (Xdim1, Ydim1, Zdim1)=self.volumelist.get().getDimensions()
+        (Xdim1, Ydim1, Zdim1)=self.inputVolumes.get().getDimensions()
         if Xdim1!=Ydim1 or Ydim1!=Zdim1:
             errors.append("Input subvolumes are not cubic")
         N0=-1
@@ -179,3 +185,8 @@ class XmippProtCLTomo(ProtClassify3D):
         return ['Chen2013']
 
     #--------------------------- UTILS functions --------------------------------------------
+    def getCLTomoEnviron(self):
+        env = getEnviron()
+        env.set('PYTHONPATH', os.path.join(os.environ['SCIPION_HOME'], 'software','lib','python2.7','site-packages','sh_alignment'),
+                Environ.BEGIN)
+        return env

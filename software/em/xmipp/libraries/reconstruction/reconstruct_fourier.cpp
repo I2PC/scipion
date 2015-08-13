@@ -351,7 +351,6 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     if (hasCTF)
                     {
                         threadParams->ctf.readFromMetadataRow(*(threadParams->selFile),objId[threadParams->imageIndex]);
-                        threadParams->ctf.Tm=parent->Ts;
                         threadParams->ctf.produceSideInfo();
                     }
 
@@ -463,7 +462,6 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
             }
         case PROCESS_IMAGE:
             {
-
                 MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
                 if (threadParams->weight==0.0)
                     break;
@@ -476,8 +474,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 bool assigned;
 
                 // Get the inverse of the sampling rate
-                double iTs=1/parent->Ts;
-
+                double iTs=parent->padding_factor_proj/parent->Ts;
                 do
                 {
                     minAssignedRow = -1;
@@ -557,7 +554,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     Matrix1D<int> corner1(3), corner2(3);
 
                     // Some alias and calculations moved from heavy loops
-                    double wCTF=1;
+                    double wCTF=1, wModulator=1.0;
                     double blobRadiusSquared = parent->blob.radius * parent->blob.radius;
                     double iDeltaSqrt = parent->iDeltaSqrt;
                     Matrix1D<double> & blobTableSqrt = parent->blobTableSqrt;
@@ -580,17 +577,24 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 ZZ(freq)=0;
                                 if (XX(freq)*XX(freq)+YY(freq)*YY(freq)>parent->maxResolution2)
                                     continue;
+				wModulator=1.0;
                                 if (hasCTF && !reprocessFlag)
                                 {
                                     XX(contFreq)=XX(freq)*iTs;
                                     YY(contFreq)=YY(freq)*iTs;
                                     threadParams->ctf.precomputeValues(XX(contFreq),YY(contFreq));
-                                    wCTF=threadParams->ctf.getValueAt();
+                                    //wCTF=threadParams->ctf.getValueAt();
+				    wCTF=threadParams->ctf.getValuePureNoKAt();
+				    //wCTF=threadParams->ctf.getValuePureWithoutDampingAt();
+
                                     if (std::isnan(wCTF))
-                                        wCTF=0.0;
+                                        wModulator=wCTF=0.0;
                                     if (fabs(wCTF)<parent->minCTF)
-                                        wCTF=1;
-                                    else
+				    {
+                                        wModulator=fabs(wCTF);
+					wCTF=SGN(wCTF);
+                                    }
+				    else
                                         wCTF=1.0/wCTF;
                                     if (parent->phaseFlipped)
                                         wCTF=fabs(wCTF);
@@ -691,7 +695,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             if (d2 > blobRadiusSquared)
                                                 continue;
                                             int aux = (int)(d2 * iDeltaSqrt + 0.5);//Same as ROUND but avoid comparison
-                                            double w = VEC_ELEM(blobTableSqrt, aux)*threadParams->weight;
+                                            double w = VEC_ELEM(blobTableSqrt, aux)*threadParams->weight *wModulator;
 
                                             // Look for the location of this logical index
                                             // in the physical layout

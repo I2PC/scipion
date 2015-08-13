@@ -38,16 +38,31 @@ from glob import glob
 import pyworkflow as pw
 
 
-def findFile(filename, *paths):
+def findFileRecursive(filename, path):
+    for root, dirs, files in os.walk(path):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None   
+        
+        
+def findFile(filename, *paths, **kwargs):
     """ Search if the file is present in
     some path in the *paths provided.
     Return None if not found.
+    'recursive' can be passed in kwargs to iterate into subfolders.
     """
+    recursive = kwargs.get('recursive', False)
+    
     if filename:
         for p in paths:
             fn = join(p, filename)
             if exists(fn):
                 return fn
+            if recursive:
+                f = findFileRecursive(filename, p)
+                if f:
+                    return f
+            
     return None
 
 def findRootFrom(referenceFile, searchFile):
@@ -197,11 +212,11 @@ def createLink(source, dest):
     Try to use common path for source and dest to avoid errors. 
     Different relative paths may exist since there are different valid paths for a file,
     it depends on the current working dir path"""
+    if islink(dest):
+        os.remove(dest)
+        
     if exists(dest):
-        if isdir(dest):
-            shutil.rmtree(dest)
-        else:
-            os.remove(dest)
+        raise Exception('Destination %s exists and is not a link' % dest)
     #destDir = split(dest)[0]
     sourcedir = dirname(source)
     destdir = dirname(dest)
@@ -210,13 +225,13 @@ def createLink(source, dest):
     
 def createAbsLink(source, dest):
     """ Creates a link to a given file path"""
+    if islink(dest):
+        os.remove(dest)
+        
     if exists(dest):
-        if isdir(dest):
-            shutil.rmtree(dest)
-        else:
-            os.remove(dest)
+        raise Exception('Destination %s exists and is not a link' % dest)
 
-    os.symlink(source,dest)
+    os.symlink(source, dest)
     
 def getLastFile(pattern):
     """ Return the last file matching the pattern. """
@@ -248,7 +263,7 @@ colorName = {'30': 'gray',
              '37': 'white'}
 
 def renderTextFile(fname, add, offset=0, lineNo=0, numberLines=True,
-                   maxSize=400, headSize=40, tailSize=None):
+                   maxSize=400, headSize=40, tailSize=None, notifyLine=None):
     """
     Call callback function add() on each fragment of text from file fname,
     delimited by lines and/or color codes.
@@ -264,6 +279,8 @@ def renderTextFile(fname, add, offset=0, lineNo=0, numberLines=True,
                             maxSize, headSize, tailSize):
         if line is not None:
             lineNo += 1
+            if notifyLine is not None:
+                notifyLine(line)
             renderLine(line, add, lineNo, numberLines)
         else:
             add("""\n

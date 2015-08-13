@@ -652,6 +652,9 @@ class EMSet(Set, EMObject):
             else:
                 if itemDataIterator is not None:
                     next(itemDataIterator) # just skip disabled data row
+                    
+    def getFiles(self):
+        return Set.getFiles(self)
   
   
 class SetOfImages(EMSet):
@@ -1072,10 +1075,7 @@ class Coordinate(EMObject):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
-            return self._micName.get()
-        else:
-            self.getFileName()
+        return self._micName.get()
 
 
 class SetOfCoordinates(EMSet):
