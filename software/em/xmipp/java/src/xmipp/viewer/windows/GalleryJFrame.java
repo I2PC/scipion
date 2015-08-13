@@ -1496,7 +1496,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         if (evt.isShiftDown())
                                 gallery.selectRange(previousSelectedRow, previousSelectedCol, row, col);
                         else if (evt.isControlDown())
+                        {
                                 gallery.touchItem(row, col);
+                                jsGoToImage.setValue(gallery.getSelTo() + 1);
+                        }
                 }
 
                 if (!evt.isShiftDown())
