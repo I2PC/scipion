@@ -80,22 +80,29 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
 
 	// Multiply M1 and M2 over all rings and sum
 	// Assume M2 is already complex conjugated!
-	std::complex<double> auxC;
-	for (int iring = 0; iring < nrings; iring++) {
-		double w = (2. * PI * M1.ring_radius[iring]);
+	for (int iring = 0; iring < nrings; iring++)
+	{
+		double w = (TWOPI * M1.ring_radius[iring]);
 		int imax = M1.getSampleNo(iring);
 		const MultidimArray<std::complex<double> > &M1_iring = M1.rings[iring];
 		const MultidimArray<std::complex<double> > &M2_iring = M2.rings[iring];
 		double *ptr1 = (double*) MULTIDIM_ARRAY(M1_iring);
 		double *ptr2 = (double*) MULTIDIM_ARRAY(M2_iring);
 		double *ptrFsum = (double *) MULTIDIM_ARRAY(aux.Fsum);
-		for (int i = 0; i < imax; i++) {
+
+		// This loop multiplies complex vectors using Gauss's algorithm.
+		// https://en.wikipedia.org/wiki/Multiplication_algorithm#Gauss.27s_complex_multiplication_algorithm
+		for (int i = 0; i < imax; i++)
+		{
 			double a = *ptr1++;
 			double b = *ptr1++;
 			double c = *ptr2++;
 			double d = *ptr2++;
-			*(ptrFsum++) += w * (a * c - b * d);
-			*(ptrFsum++) += w * (b * c + a * d);
+			double k1 = c*(a + b);
+			double k2 = a*(d - c);
+			double k3 = b*(c + d);
+			*(ptrFsum++) += w * (k1 - k3);
+			*(ptrFsum++) += w * (k1 + k2);
 		}
 	}
 
@@ -107,6 +114,78 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
 	double Kaux = 360. / XSIZE(angles);
 	for (size_t i = 0; i < XSIZE(angles); i++)
 		DIRECT_A1D_ELEM(angles,i) = (double) i * Kaux;
+}
+
+void rotationalCorrelation_Mirrored(const Polar<std::complex<double> > &M1, const Polar<std::complex<double> > &M1_Mirrored,
+																const Polar<std::complex<double> > &M2,
+																MultidimArray<double> &angles,
+																RotationalCorrelationAux &aux,
+																RotationalCorrelationAux &aux_Mirrored)
+{
+	int nrings = M1.getRingNo();		// Get # rings from image M1.
+
+	// Fsum should already be set with the right size in the local_transformer
+	// (i.e. through a FourierTransform of corr)
+	aux.local_transformer.getFourierAlias(aux.Fsum);
+	aux_Mirrored.local_transformer.getFourierAlias(aux_Mirrored.Fsum);
+	memset((double*) MULTIDIM_ARRAY(aux.Fsum), 0, 2 * MULTIDIM_SIZE(aux.Fsum) * sizeof(double));
+	memset((double*) MULTIDIM_ARRAY(aux_Mirrored.Fsum), 0, 2 * MULTIDIM_SIZE(aux_Mirrored.Fsum) * sizeof(double));
+
+	// Multiply M1 by M2 and M3 by M2 over all rings and sum.
+	// Assume M2 is already complex conjugated!
+	for (int iring = 0; iring < nrings; iring++)
+	{
+		double w = (TWOPI * M1.ring_radius[iring]);
+		double w_Mirrored = (TWOPI * M1_Mirrored.ring_radius[iring]);
+		int imax = M1.getSampleNo(iring);
+		const MultidimArray<std::complex<double> > &M1_iring = M1.rings[iring];
+		const MultidimArray<std::complex<double> > &M2_iring = M2.rings[iring];
+		const MultidimArray<std::complex<double> > &M1_Mirrored_iring = M1_Mirrored.rings[iring];
+		double *ptr1 = (double*) MULTIDIM_ARRAY(M1_iring);
+		double *ptr2 = (double*) MULTIDIM_ARRAY(M2_iring);
+		double *ptr3 = (double*) MULTIDIM_ARRAY(M1_Mirrored_iring);
+		double *ptrFsum = (double *) MULTIDIM_ARRAY(aux.Fsum);
+		double *ptrFsum_Mirrored = (double *) MULTIDIM_ARRAY(aux_Mirrored.Fsum);
+
+		// This loop multiplies complex vectors using Gauss's algorithm.
+		// https://en.wikipedia.org/wiki/Multiplication_algorithm#Gauss.27s_complex_multiplication_algorithm
+		for (int i = 0; i < imax; i++)
+		{
+			double a = *ptr1++;
+			double b = *ptr1++;
+			double c = *ptr2++;
+			double d = *ptr2++;
+			double e = *ptr3++;
+			double f = *ptr3++;
+
+			double aux1 = (d - c);
+			double aux2 = (c + d);
+
+			double k1 = c*(a + b);
+			double k3 = b*aux2;
+			double k2 = a*aux1;
+
+			*(ptrFsum++) += w * (k1 - k3);
+			*(ptrFsum++) += w * (k1 + k2);
+
+			k1 = c*(e + f);
+			k3 = f*aux2;
+			k2 = e*aux1;
+			*(ptrFsum_Mirrored++) += w_Mirrored * (k1 - k3);
+			*(ptrFsum_Mirrored++) += w_Mirrored * (k1 + k2);
+		}
+	}
+
+	// Inverse FFT to get real-space correlations
+	// The local_transformer should already have corr as setReal!!
+	aux.local_transformer.inverseFourierTransform();
+	aux_Mirrored.local_transformer.inverseFourierTransform();
+	angles.resize(XSIZE(aux.local_transformer.getReal()));
+	double Kaux = 360. / XSIZE(angles);
+	for (size_t i = 0; i < XSIZE(angles); i++)
+	{
+		DIRECT_A1D_ELEM(angles,i) = (double) i * Kaux;
+	}
 }
 
 // Compute the normalized Polar Fourier transform --------------------------

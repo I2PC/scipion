@@ -81,10 +81,6 @@ public:
      * Will try to sent neighbours images to same node.
      */
     bool distributeJobs(size_t * imagesToSent, int node);
-    /** Function of slaves nodes to ask jobs to master.
-     * will return false if no more images to process.
-     */
-    bool requestJobs(std::vector<size_t> &imagesToProcess);
 
     /* Define accepted params ------------------------------------------------------------------- */
     void defineParams();

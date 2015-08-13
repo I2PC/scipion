@@ -799,6 +799,12 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
                            MultidimArray<double> &angles,
                            RotationalCorrelationAux &aux);
 
+void rotationalCorrelation_Mirrored(const Polar<std::complex<double> > &M1, const Polar<std::complex<double> > &M1_Mirrored,
+																			const Polar<std::complex<double> > &M2,
+																			MultidimArray<double> &angles,
+																			RotationalCorrelationAux &aux,
+																			RotationalCorrelationAux &aux_Mirrored);
+
 /** Compute a normalized polar Fourier transform of the input image.
     If plans is NULL, they are computed and returned. */
 void normalizedPolarFourierTransform(const MultidimArray<double> &in,
