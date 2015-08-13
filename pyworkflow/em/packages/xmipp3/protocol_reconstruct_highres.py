@@ -142,6 +142,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       'decide whether to perform it or not. Note that the significant angular assignment is a robust angular assignment '\
                       'meant to avoid local minima, although it may take time to calculate.')
         groupSignificant.addParam('globalMethod', EnumParam, label='Global alignment method', choices=['Significant','ProjMatch'], default=self.GLOBAL_PROJMATCH)
+        groupSignificant.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition="globalMethod==1",
+	              expertLevel=LEVEL_ADVANCED, help="In pixels")
         groupSignificant.addParam('significantSignificance', FloatParam, label="Significance (%)", default=99.75, condition="globalMethod==0")
         groupSignificant.addParam('significantGrayValues', BooleanParam, label="Optimize gray values?", default=True)
         groupContinuous = form.addGroup('Local')
@@ -601,8 +603,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             if R<=0:
                                 R=self.inputParticles.get().getDimensions()[0]/2
                             R=R*self.TsOrig/TsCurrent
-                            args='-i %s -o %s --ref %s --ctf %d@%s --Ri 0 --Ro %d --max_shift %d --search5d_shift 5.0 --search5d_step 2.0 --mem 2 --thr 1 --append --pad 2.0 --mpi_job_size 2'%\
-                                 (fnGroup,join(fnDirSignificant,"angles_group%02d.xmd"%j),fnGalleryGroup,j,fnCTFs,R,maxShift)
+                            args='-i %s -o %s --ref %s --ctf %d@%s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --thr 1 --append --pad 2.0 --mpi_job_size 2'%\
+                                 (fnGroup,join(fnDirSignificant,"angles_group%02d.xmd"%j),fnGalleryGroup,j,fnCTFs,R,maxShift,maxShift,self.shiftStep5d.get())
                             # mpirun -np 12 -bynode `which xmipp_mpi_angular_projection_matching`  -i ctfGroup000129@Runs/001848_XmippProtProjMatch/extra/original_angles.doc 
                             # -o ctfGroup000129@Runs/001848_XmippProtProjMatch/extra/iter_001/ProjMatchClasses/XmippProtProjMatch_Ref3D_001.sqlite 
                             # --ref Runs/001848_XmippProtProjMatch/extra/iter_001/ReferenceLibrary/gallery_Ref3D_001.stk --ctf 000129@Runs/001848_XmippProtProjMatch/extra/CtfGroups/ctf_ctf.stk
