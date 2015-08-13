@@ -33,7 +33,7 @@ from numpy.linalg import inv
 from collections import OrderedDict
 
 import pyworkflow.object as pwobj
-from pyworkflow.utils.path import createLink, makePath, cleanPath, replaceBaseExt
+import pyworkflow.utils as pwutils
 from pyworkflow.em.constants import ALIGN_NONE, ALIGN_PROJ
 from pyworkflow.em.convert import ImageHandler, NO_INDEX
 from pyworkflow.em.data import (Micrograph, CTFModel, Particle, 
@@ -46,8 +46,8 @@ import emxlib
 
 def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=None):
     """ Export micrographs, coordinates or particles to  EMX format. """
-    cleanPath(emxDir)
-    makePath(emxDir) 
+    pwutils.cleanPath(emxDir)
+    pwutils.makePath(emxDir) 
     emxData = emxlib.EmxData()
     micSet=None
     
@@ -77,7 +77,7 @@ def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=Non
     
     
 def importData(protocol, emxFile, outputDir, acquisition, 
-               samplingRate=None, copyOrLink=createLink,
+               samplingRate=None, copyOrLink=pwutils.createLink,
                alignType=ALIGN_NONE):
     """ Import objects into Scipion from a given EMX file. 
     Returns:
@@ -210,7 +210,7 @@ def _micrographsToEmx(emxData, micSet, emxDir, ctfSet=None, writeData=True):
     for mic in micSet:
         if writeData:
             loc = mic.getLocation()
-            fnMicBase = replaceBaseExt(loc[1], 'mrc')
+            fnMicBase = pwutils.replaceBaseExt(loc[1], 'mrc')
             newLoc = join(emxDir, fnMicBase)
             ih.convert(loc, newLoc)
             mic.setLocation(NO_INDEX, fnMicBase)
@@ -246,7 +246,7 @@ def _particlesToEmx(emxData, partSet, micSet=None, **kwargs):
         if coord is None or coord.getMicName() is None:
             return '%05d' % particle.getMicId()
         else:
-            return coord.getMicName()
+            return pwutils.removeExt(coord.getMicName())
         
     def _getLocation(particle):
         if imagesStack is not None:

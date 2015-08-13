@@ -495,7 +495,7 @@ class Micrograph(Image):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
+        if self._micName.get():
             return self._micName.get()
         else:
             self.getFileName()
