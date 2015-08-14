@@ -26,8 +26,8 @@
 #include "mpi_angular_projection_matching.h"
 
 /*Some constast to message passing tags */
-#define TAG_START_JOB	 	1
-#define TAG_STOP_JOB 		2
+#define TAG_JOB_REQUEST 1
+#define TAG_JOB_REPLY 2
 
 /*Constructor */
 MpiProgAngularProjectionMatching::MpiProgAngularProjectionMatching()
@@ -100,18 +100,12 @@ void MpiProgAngularProjectionMatching::readParams()
 
 void MpiProgAngularProjectionMatching::processAllImages()
 {
-	int		i=0, nodeID=0;					// Loop counters.
-	bool	pending_Images=true;			// More images to process flag.
-    std::vector<size_t> imagesToProcess;	// Data to be processed.
-    size_t numberOfImages = 0;				// # images to process in TAG_START_JOB message.
-    MPI_Status 	status[node->size-1];		// MPI status.
-
-	// Master distribute jobs.
-    if (node->isMaster())
+    if (node->isMaster())    //master distribute jobs
     {
-    	MPI_Request	requests[node->size-1];							// Non blocking requests.
-        size_t 		async_Buffers[node->size-1][mpi_job_size + 1];	// Transmission buffer for slave nodes.
-        size_t 		finishedImages = 0, totalImages = DFexp.size();
+
+        size_t finishingWorkers = 0;
+        size_t processedImages = 0, finishedImages = 0, totalImages = DFexp.size();
+        MPI_Status status;
 
         if (verbose)
         {
@@ -119,161 +113,34 @@ void MpiProgAngularProjectionMatching::processAllImages()
             init_progress_bar(totalImages);
         }
 
-        // Send first asynchronous messages to all nodes.
-        for (nodeID=1; nodeID<node->size; nodeID++)
+        while (finishingWorkers < node->size - 1)
         {
-        	// Check if there are more images to process.
-        	if (pending_Images)
-        	{
-				// Check if there are more images to send to nodes.
-				if (!distributeJobs(imagesBuffer, nodeID))
-				{
-					pending_Images = false;
-				}
-				else
-				{
-					// Copy data to be transmitted.
-					for (i=0; i<(imagesBuffer[0] + 1) ;i++)
-					{
-						async_Buffers[nodeID-1][i] = imagesBuffer[i];
-					}
+            //Receive a request of job from a worker
+            //the number of images processed should be sent in imagesBuffer[0]
+            MPI_Recv(&processedImages, 1, XMIPP_MPI_SIZE_T, MPI_ANY_SOURCE,
+                     TAG_JOB_REQUEST, MPI_COMM_WORLD, &status);
+            finishedImages += processedImages;
 
-					// Send asynchronous message to ith-node.
-					MPI_Isend( async_Buffers[nodeID-1], imagesBuffer[0] + 1, XMIPP_MPI_SIZE_T, nodeID,
-												TAG_START_JOB, MPI_COMM_WORLD, &requests[nodeID-1]);
-				}
-       		}
-       	}
-
-        int	nFinished=0;
-        int	finishedNodes[node->size-1];
-
-        // Loop that sends remaining images asynchronously.
-        while (pending_Images)
-        {
-        	// Test how many operations have finished.
-        	MPI_Testsome( node->size-1, requests, &nFinished, finishedNodes, status);
-
-        	// Send jobs to idle nodes.
-        	i = 0;
-        	while ((i<nFinished) && (pending_Images))
-        	{
-        		// Get operation identifier and add 1 to set node value.
-        		nodeID = finishedNodes[i] + 1;
-
-	            if (verbose)
-	            {
-            		finishedImages += async_Buffers[nodeID-1][0];
-	                progress_bar(finishedImages);
-	            }
-
-				// Check if there are more images to send to nodes.
-				if (!distributeJobs(imagesBuffer, nodeID))
-				{
-					pending_Images = false;
-				}
-				else
-				{
-					// Copy data to be transmitted.
-					for (int j=0; j<(imagesBuffer[0] + 1) ;j++)
-					{
-						async_Buffers[nodeID-1][j] = imagesBuffer[j];
-					}
-
-					// Send asynchronous message to ith-node.
-					MPI_Isend( async_Buffers[nodeID-1], imagesBuffer[0] + 1, XMIPP_MPI_SIZE_T, nodeID,
-												TAG_START_JOB, MPI_COMM_WORLD, &requests[nodeID-1]);
-				}
-
-				i++;
-        	}
-
-        	// Check if there are pending images for master.
-            if (pending_Images)
+            if (!distributeJobs(imagesBuffer, status.MPI_SOURCE))
             {
-				// Check if there are more images to send to nodes.
-				if (!distributeJobs(imagesBuffer, nodeID))
-				{
-					pending_Images = false;
-				}
-				else
-				{
-					numberOfImages = imagesBuffer[0];
-
-			        // Update output parameter with images to process.
-			        imagesToProcess.clear();
-			        for (size_t i = 1; i <= numberOfImages; ++i)
-			        {
-			            imagesToProcess.push_back(imagesBuffer[i]);
-			        }
-
-		        	// Process new images.
-		            processSomeImages(imagesToProcess);
-
-		            if (verbose)
-		            {
-			            finishedImages += numberOfImages;
-		                progress_bar(finishedImages);
-		            }
-				}
+                ++finishingWorkers;
             }
+            MPI_Send(imagesBuffer, imagesBuffer[0] + 1, XMIPP_MPI_SIZE_T,
+                     status.MPI_SOURCE, TAG_JOB_REPLY, MPI_COMM_WORLD);
+
+            if (verbose && processedImages > 0)
+                progress_bar(finishedImages);
         }
 
-        // Wait for all nodes until they finish their last job.
-        MPI_Waitall ( node->size-1, requests, status);
-
-        // Send asynchronous messages to all nodes.
-        for (nodeID=1; nodeID<node->size; nodeID++)
-        {
-			// Send asynchronous STOP message to ith-node (does not matter buffer content).
-			MPI_Isend( async_Buffers[nodeID-1], imagesBuffer[0] + 1, XMIPP_MPI_SIZE_T, nodeID,
-											TAG_STOP_JOB, MPI_COMM_WORLD, &requests[nodeID-1]);
-        }
-
-        // Wait for all nodes.
-        MPI_Waitall ( node->size-1, requests, status);
-    }
-    // Slaves really work.
-    else
+    } else            //slaves really work
     {
-    	bool 	finished = false;				// Loop control flag.
-        MPI_Request	requests;					// Asynchronous request.
-
-        // Get first message from master node.
-        MPI_Recv(imagesBuffer, mpi_job_size + 1, XMIPP_MPI_SIZE_T, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status[0]);
-
-        finished = false;
-        while(!finished)
+        std::vector<size_t> imagesToProcess;
+        while (requestJobs (imagesToProcess))
         {
-			// TAG_JOB_REPLY -> more images to process.
-			if (status[0].MPI_TAG == TAG_START_JOB)
-			{
-				// Copy data from buffer.
-				numberOfImages = imagesBuffer[0];
-				imagesToProcess.clear();
-				for (size_t i = 1; i <= numberOfImages; ++i)
-				{
-					imagesToProcess.push_back(imagesBuffer[i]);
-				}
-
-				// Start new reception.
-				MPI_Irecv( imagesBuffer, mpi_job_size + 1, XMIPP_MPI_SIZE_T, 0, MPI_ANY_TAG,
-																			MPI_COMM_WORLD, &requests);
-
-				// Process new images.
-				processSomeImages(imagesToProcess);
-
-	    		// Wait for reception.
-	    		MPI_Wait( &requests, &status[0]);
-			}
-			// Slave finishes.
-			else
-			{
-				finished = true;
-			}
+            processSomeImages(imagesToProcess);
         }
-        // At this point slave node finishes its execution.
     }
+
 }
 
 bool MpiProgAngularProjectionMatching::distributeJobs(size_t * imagesToSent,
@@ -330,6 +197,28 @@ bool MpiProgAngularProjectionMatching::distributeJobs(size_t * imagesToSent,
     return true;
 }
 
+bool MpiProgAngularProjectionMatching::requestJobs(
+    std::vector<size_t> &imagesToProcess)
+{
+    static size_t numberOfImages = 0;
+    MPI_Status status;
+
+    //Sent last receveiced numberOfImages, which should be processed by this worker
+    MPI_Send(&numberOfImages, 1, XMIPP_MPI_SIZE_T, 0, TAG_JOB_REQUEST,
+             MPI_COMM_WORLD);
+    //Get new job to do
+    MPI_Recv(imagesBuffer, mpi_job_size + 1, XMIPP_MPI_SIZE_T, 0,
+             TAG_JOB_REPLY, MPI_COMM_WORLD, &status);
+    numberOfImages = imagesBuffer[0];
+
+    if (numberOfImages == 0)
+        return false;
+
+    imagesToProcess.clear();
+    for (size_t i = 1; i <= numberOfImages; ++i)
+        imagesToProcess.push_back(imagesBuffer[i]);
+    return true;
+}
 
 void MpiProgAngularProjectionMatching::writeOutputFiles()
 {

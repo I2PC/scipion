@@ -533,7 +533,7 @@ void * threadRotationallyAlignOneImage( void * data )
 
     // Local variables
     MultidimArray<double>       Maux;
-    MultidimArray<double>       ang, corr, corr_Mirrored;
+    MultidimArray<double>       ang, corr;
     size_t                      myinit, myfinal, myincr;
     int                         refno;
     bool                        done_once=false;
@@ -541,7 +541,6 @@ void * threadRotationallyAlignOneImage( void * data )
     Polar<double>               P;
     Polar<std::complex <double> > fP,fPm;
     RotationalCorrelationAux    rotAux;
-    RotationalCorrelationAux    rotAux_Mirrored;
     Polar_fftw_plans            local_plans;
     size_t                         imgno = this_image - FIRST_IMAGE;
 
@@ -584,10 +583,6 @@ void * threadRotationallyAlignOneImage( void * data )
     rotAux.local_transformer.setReal(corr);
     rotAux.local_transformer.FourierTransform();
 
-    corr_Mirrored.resize(P.getSampleNoOuterRing());
-    rotAux_Mirrored.local_transformer.setReal(corr_Mirrored);
-	rotAux_Mirrored.local_transformer.FourierTransform();
-
     // All threads have to wait until the itrans loop is done
     barrier_wait(&(prm->thread_barrier));
 
@@ -616,7 +611,6 @@ void * threadRotationallyAlignOneImage( void * data )
         myfinal = -1;
         myincr = -1;
     }
-
     // Loop over all relevant "neighbours" (i.e. directions within the search range)
     //for (int i = myinit; i != myfinal; i+=myincr)
     for (size_t i = myinit; i != myfinal; i += myincr)
@@ -685,19 +679,13 @@ void * threadRotationallyAlignOneImage( void * data )
                 prm->stddev_ref[refno] << " " <<
                 prm->stddev_img[itrans];
 #endif
-                // Check straight and mirrored image in the same function.
-                rotationalCorrelation_Mirrored(prm->fP_img[itrans], prm->fPm_img[itrans], prm->fP_ref[refno],
-                																ang, rotAux, rotAux_Mirrored);
-
-                // Normalize straight and mirrored correlations.
-                double inorm=1.0/(prm->stddev_ref[refno] * prm->stddev_img[itrans]);
-                corr *= inorm ; // for normalized ccf
-                corr_Mirrored *= inorm; // for normalized ccf
-
-                // Get maximum correlation element.
+                // A. Check straight image
+                rotationalCorrelation(prm->fP_img[itrans],
+                                      prm->fP_ref[refno],
+                                      ang,rotAux);
+                corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
                 for (size_t k = 0; k < XSIZE(corr); k++)
                 {
-                	// Check if i-correlation is new maximum.
                     if (DIRECT_A1D_ELEM(corr,k)> maxcorr)
                     {
                         maxcorr = DIRECT_A1D_ELEM(corr,k);
@@ -707,11 +695,15 @@ void * threadRotationallyAlignOneImage( void * data )
                         //opt_refno = prm->mysampling.my_neighbors[imgno][i];
                         opt_flip = false;
                     }
-
-                    // Check if mirrored i-correlation is new maximum.
-                    if (DIRECT_A1D_ELEM(corr_Mirrored,k)> maxcorr)
+                }
+                // B. Check mirrored image
+                rotationalCorrelation(prm->fPm_img[itrans],prm->fP_ref[refno],ang,rotAux);
+                corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
+                for (size_t k = 0; k < XSIZE(corr); k++)
+                {
+                    if (DIRECT_A1D_ELEM(corr,k)> maxcorr)
                     {
-                        maxcorr = DIRECT_A1D_ELEM(corr_Mirrored,k);
+                        maxcorr = DIRECT_A1D_ELEM(corr,k);
                         opt_psi = DIRECT_A1D_ELEM(ang,k);
                         opt_refno = prm->mysampling.my_neighbors[imgno][i];
                         opt_flip = true;

@@ -72,4 +72,3 @@ gmon.out
 # Configuration for servers
 /pyworkflow/web/pages/resources/js/templates_libs/config.js
 /config.log
-/Debug/
