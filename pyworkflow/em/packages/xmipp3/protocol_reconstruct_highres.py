@@ -837,7 +837,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
         TsCurrent=self.readInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE)
         if not self.postBFactor and not self.postNonnegativity and not self.postMask and not self.postSymmetryWithinMask \
-           and not self.postSymmetryHelical and not self.postDoPseudo and self.postScript=="":
+           and not self.postSymmetryHelical and not self.postDoPseudo and self.postScript=="" and not self.postAdHocMask.hasValue():
             return
         for i in range(1,3):
             fnVol=join(fnDirCurrent,"volume%02d.vol"%i)
