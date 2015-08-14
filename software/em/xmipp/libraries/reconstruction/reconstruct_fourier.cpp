@@ -577,24 +577,29 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 ZZ(freq)=0;
                                 if (XX(freq)*XX(freq)+YY(freq)*YY(freq)>parent->maxResolution2)
                                     continue;
-				wModulator=1.0;
+                                wModulator=1.0;
                                 if (hasCTF && !reprocessFlag)
                                 {
                                     XX(contFreq)=XX(freq)*iTs;
                                     YY(contFreq)=YY(freq)*iTs;
                                     threadParams->ctf.precomputeValues(XX(contFreq),YY(contFreq));
                                     //wCTF=threadParams->ctf.getValueAt();
-				    wCTF=threadParams->ctf.getValuePureNoKAt();
-				    //wCTF=threadParams->ctf.getValuePureWithoutDampingAt();
+                                    wCTF=threadParams->ctf.getValuePureNoKAt();
+                                    //wCTF=threadParams->ctf.getValuePureWithoutDampingAt();
 
                                     if (std::isnan(wCTF))
-                                        wModulator=wCTF=0.0;
-                                    if (fabs(wCTF)<parent->minCTF)
-				    {
-                                        wModulator=fabs(wCTF);
-					wCTF=SGN(wCTF);
+                                    {
+                                    	if (i==0 && j==0)
+                                    		wModulator=wCTF=1.0;
+                                    	else
+                                    		wModulator=wCTF=0.0;
                                     }
-				    else
+                                    if (fabs(wCTF)<parent->minCTF)
+                                    {
+                                        wModulator=fabs(wCTF);
+                                        wCTF=SGN(wCTF);
+                                    }
+                                    else
                                         wCTF=1.0/wCTF;
                                     if (parent->phaseFlipped)
                                         wCTF=fabs(wCTF);
