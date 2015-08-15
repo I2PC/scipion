@@ -142,6 +142,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       'decide whether to perform it or not. Note that the significant angular assignment is a robust angular assignment '\
                       'meant to avoid local minima, although it may take time to calculate.')
         groupSignificant.addParam('globalMethod', EnumParam, label='Global alignment method', choices=['Significant','ProjMatch'], default=self.GLOBAL_PROJMATCH)
+        groupSignificant.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition="globalMethod==1",
+                  expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
         groupSignificant.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition="globalMethod==1",
 	              expertLevel=LEVEL_ADVANCED, help="In pixels")
         groupSignificant.addParam('significantSignificance', FloatParam, label="Significance (%)", default=99.75, condition="globalMethod==0")
@@ -420,7 +422,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         md.setValue(label,value,objId)
         md.write("%s@%s"%(block,join(fnDir,"iterInfo.xmd")),MD_APPEND)
     
-    def prepareImages(self,fnDirPrevious,fnDir,TsCurrent):
+    def prepareImages(self,fnDirPrevious,fnDir,TsCurrent,getShiftsFrom=''):
         print "Preparing images to sampling rate=",TsCurrent
         Xdim=self.inputParticles.get().getDimensions()[0]
         newXdim=long(round(Xdim*self.TsOrig/TsCurrent))
@@ -457,6 +459,17 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 self.runJob('xmipp_metadata_utilities','-i %s --set intersection %s/images%02d.xmd particleId particleId -o %s'%\
                             (fnSource,fnDir0,i,fnImagesi),numberOfMpi=1)
         cleanPath(fnSource)
+        
+        if getShiftsFrom!="":
+            fnPreviousAngles=join(getShiftsFrom,"angles.xmd")
+            TsPrevious=self.readInfoField(getShiftsFrom,"sampling",MDL_SAMPLINGRATE)
+            fnAux=join(fnDir,"aux.xmd")
+            for i in range(1,3):
+                fnImagesi=join(fnDir,"images%02d.xmd"%i)
+                self.runJob('xmipp_metadata_utilities','-i %s --set join %s particleId particleId -o %s'%\
+                            (fnImagesi,fnPreviousAngles,fnAux),numberOfMpi=1)
+                self.adaptShifts(fnAux, TsPrevious, fnImagesi, TsCurrent)
+            cleanPath(fnAux)
         
     def prepareReferences(self,fnDirPrevious,fnDir,TsCurrent,targetResolution):
         print "Preparing references to sampling rate=",TsCurrent
@@ -527,7 +540,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     
             targetResolution=previousResolution*0.8
             TsCurrent=max(self.TsOrig,targetResolution/3)
-            self.prepareImages(fnDirPrevious,fnGlobal,TsCurrent)
+            getShiftsFrom=''
+            if iteration>1:
+                getShiftsFrom=fnDirPrevious
+            self.prepareImages(fnDirPrevious,fnGlobal,TsCurrent,getShiftsFrom)
             self.prepareReferences(fnDirPrevious,fnGlobal,TsCurrent,targetResolution)
 
             # Calculate angular step at this resolution
@@ -604,11 +620,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                 R=self.inputParticles.get().getDimensions()[0]/2
                             R=R*self.TsOrig/TsCurrent
                             args='-i %s -o %s --ref %s --ctf %d@%s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --thr 1 --append --pad 2.0 --mpi_job_size 2'%\
-                                 (fnGroup,join(fnDirSignificant,"angles_group%02d.xmd"%j),fnGalleryGroup,j,fnCTFs,R,maxShift,maxShift,self.shiftStep5d.get())
-                            # mpirun -np 12 -bynode `which xmipp_mpi_angular_projection_matching`  -i ctfGroup000129@Runs/001848_XmippProtProjMatch/extra/original_angles.doc 
-                            # -o ctfGroup000129@Runs/001848_XmippProtProjMatch/extra/iter_001/ProjMatchClasses/XmippProtProjMatch_Ref3D_001.sqlite 
-                            # --ref Runs/001848_XmippProtProjMatch/extra/iter_001/ReferenceLibrary/gallery_Ref3D_001.stk --ctf 000129@Runs/001848_XmippProtProjMatch/extra/CtfGroups/ctf_ctf.stk
-                            # --Ri 0.0 --Ro 170.0 --max_shift 1000.0 --search5d_shift 5.0 --search5d_step 2.0 --mem 2 --thr 1 --append --pad 2.0 --mpi_job_size 2
+                                 (fnGroup,join(fnDirSignificant,"angles_group%02d.xmd"%j),fnGalleryGroup,j,fnCTFs,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get())
                             self.runJob('xmipp_angular_projection_matching',args)
                         if j==1:
                             copyFile(fnAnglesGroup, fnAngles)
@@ -658,7 +670,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 if TsGlobal==TsCurrent:
                     produceNewReferences=False
             if produceNewReferences:
-                self.prepareImages(fnDirPrevious,fnDirLocal,TsCurrent)
+                self.prepareImages(fnDirPrevious,fnDirLocal,TsCurrent,fnDirPrevious)
                 self.prepareReferences(fnDirPrevious,fnDirLocal,TsCurrent,targetResolution)
             else:
                 newXdim=self.readInfoField(fnDirGlobal,"size",MDL_XSIZE)
