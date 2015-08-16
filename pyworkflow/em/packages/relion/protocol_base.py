@@ -693,8 +693,9 @@ class ProtRelionBase(EMProtocol):
         return self._getIterNumber(0) or 1
     
     def _getIterClasses(self, it, clean=False):
-        """ Return the .star file with the classes for this iteration.
-        If the file doesn't exists, it will be created. 
+        """ Return a classes .sqlite file for this iteration.
+        If the file doesn't exists, it will be created by 
+        converting from this iteration data.star file.
         """
         data_classes = self._getFileName('classes_scipion', iter=it)
         
