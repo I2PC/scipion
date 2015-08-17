@@ -3369,17 +3369,17 @@ ProgMLTomo::addPartialDocfileData(const MultidimArray<double> &data,
     for (size_t imgno = first; imgno <= last; ++imgno)
     {
         index = imgno - first ;
-        MDimg.getRow(row, imgs_id[imgno]);
-        row.setValue(MDL_ANGLE_ROT, dAij(data, index, 0));
-        row.setValue(MDL_ANGLE_TILT, dAij(data, index, 1));
-        row.setValue(MDL_ANGLE_PSI, dAij(data, index, 2));
-        row.setValue(MDL_SHIFT_X, dAij(data, index, 3));
-        row.setValue(MDL_SHIFT_Y, dAij(data, index, 4));
-        row.setValue(MDL_SHIFT_Z, dAij(data, index, 5));
-        row.setValue(MDL_REF, ROUND(dAij(data, index, 6)));
+        size_t objId=imgs_id[imgno];
+        MDimg.setValue(MDL_ANGLE_ROT, dAij(data, index, 0),objId);
+        MDimg.setValue(MDL_ANGLE_TILT, dAij(data, index, 1),objId);
+        MDimg.setValue(MDL_ANGLE_PSI, dAij(data, index, 2),objId);
+        MDimg.setValue(MDL_SHIFT_X, dAij(data, index, 3),objId);
+        MDimg.setValue(MDL_SHIFT_Y, dAij(data, index, 4),objId);
+        MDimg.setValue(MDL_SHIFT_Z, dAij(data, index, 5),objId);
+        MDimg.setValue(MDL_REF, int(dAij(data, index, 6)),objId);
         if (do_missing)
-            row.setValue(MDL_REF, ROUND(dAij(data, index, 7)));
-        MDimg.setRow(row, imgs_id[imgno]);
+        	MDimg.setValue(MDL_MISSINGREGION_NR, int(dAij(data, index, 7)),objId);
+        MDimg.setValue(MDL_LL, dAij(data, index, 9),objId);
     }
 }
 
