@@ -39,8 +39,13 @@ MASK_OBJECT = 1
 
 
 class ProtGemPicker(em.ProtParticlePicking):
-    """Protocol to pick particles in a set of micrographs"""
-    _label = 'gempicker'
+    """
+    gEMpicker is a template-based cryo-EM particle picking program that use cross-correlation approach.
+    The user may define a template particle in one of several ways, and this is then used to pick other similar particles
+    from the micrographs by using a fast Fourier transform (FFT) to calculate the correlation score at each pixel between the template and the micrograph.
+    Multiple micrographs may be processed in parallel, and the calculation may be accelerated considerably by using one or more attached graphics processors (GPUs).
+    """
+    _label = 'auto-picking'
         
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
