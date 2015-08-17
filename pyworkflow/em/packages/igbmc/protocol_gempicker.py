@@ -231,6 +231,14 @@ class ProtGemPicker(em.ProtParticlePicking):
             if n > 1 and n != self.inputReferences.get().getSize():
                 errors.append('If the number of input masks is greater than one, \n'
                               'it should be equal to the number of references.')
+
+	value1 = round(self.thresholdLow,1)
+	value2 = round(self.thresholdHigh,1)
+	if self.thresholdLow < self.thresholdHigh and 0.0 <= value1 <= 1.0 and 0.0 <= value2 <= 1.0:
+	    pass
+	else:
+	    errors.append('Wrong threshold values!')
+
         return errors
         
     def _summary(self):
