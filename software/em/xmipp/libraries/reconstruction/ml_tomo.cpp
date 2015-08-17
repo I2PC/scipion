@@ -3497,9 +3497,9 @@ ProgMLTomo::writeOutputFiles(const int iter,
         fn_tmp = fn_base + "_ref.xmd";
         MDo.setValue(MDL_REFMD, fn_tmp, id);
 
-        /*        fn_tmp = fn_base + "_log.xmd";
-         MDLog.write(fn_tmp);
-
+        fn_tmp = fn_base + "_log.xmd";
+        MDo.write(fn_tmp);
+/*
          DFl.go_beginning();
          comment = "ml_tomo-logfile: Number of images= " + floatToString(sumw_allrefs);
          comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(avefracweight, 10, 5);
