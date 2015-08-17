@@ -302,8 +302,6 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 //	geoParams.only_apply_shifts=false;
 //	geoParams.wrap=DONT_WRAP;
 
-    std::cout << "rowIn:" << rowIn << std::endl;
-
 	rowIn.getValue(MDL_ANGLE_ROT,old_rot);
 	rowIn.getValue(MDL_ANGLE_TILT,old_tilt);
 	rowIn.getValue(MDL_ANGLE_PSI,old_psi);
