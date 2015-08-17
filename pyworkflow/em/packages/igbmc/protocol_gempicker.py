@@ -46,17 +46,14 @@ class ProtGemPicker(em.ProtParticlePicking):
     def _defineParams(self, form):
         
         em.ProtParticlePicking._defineParams(self, form)
-        
         form.addParam('inputReferences', params.PointerParam, 
-                      pointerClass='SetOfAverages',
+                      pointerClass='SetOfParticles',
                       label='Input References', important=True,
-                      help="Template averages to be used in picking.")
-        
+                      help="Template images (2D class averages or reprojections from a reference volume) to be used in picking.")
         form.addParam('refsHaveInvertedContrast', params.BooleanParam, default=False,
                       label='References have inverted contrast',
                       help='Set to Yes to indicate that the reference have inverted \n'
                            'contrast with respect to the particles in the micrographs.')
-        
         form.addParam('rotAngle', params.IntParam, default=5,
                       label='Rotational angle search',
                       help='In-plane rotating angle in degrees (0 = no rotation)')
@@ -67,6 +64,7 @@ class ProtGemPicker(em.ProtParticlePicking):
                       label='Low')
         line.addParam('thresholdHigh', params.FloatParam, default=0.5,
                       label='High')
+
         form.addParam('maxPeaks', params.IntParam, default=0,
                       label='Max particles per micrograph', expertLevel=LEVEL_ADVANCED,
                       help='Maximum number of particles picked from each micrograph (0 = no limit)')
@@ -76,7 +74,6 @@ class ProtGemPicker(em.ProtParticlePicking):
         form.addParam('boxDist', params.IntParam, default=0,
                       label='Min distance between particles (pix)', expertLevel=LEVEL_ADVANCED,
                       help='Minimal distance between the centers of picked particles (if 0, use reference image half-size)')
-        
         form.addParam('maskType', params.EnumParam, 
                       choices=['circular', 'object'], default=0, 
                       display=params.EnumParam.DISPLAY_HLIST,
