@@ -218,7 +218,7 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 			double val=DIRECT_MULTIDIM_ELEM(mP,n)-DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
 			DIRECT_MULTIDIM_ELEM(mE,n)=val;
 			cost+=fabs(val);
-			avg+=val;
+			//avg+=val;
 		}
 		else
 		{
@@ -228,10 +228,10 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 		}
 	}
 	cost*=prm->iMask2Dsum;
-	avg*=prm->iMask2Dsum;
+	//avg*=prm->iMask2Dsum;
 
-	covarianceMatrix(mE, prm->C);
-	double div=computeCovarianceMatrixDivergence(prm->C0,prm->C)/MAT_XSIZE(prm->C);
+	//covarianceMatrix(mE, prm->C);
+	//double div=computeCovarianceMatrixDivergence(prm->C0,prm->C)/MAT_XSIZE(prm->C);
 #ifdef DEBUG
 	std::cout << "A=" << A << std::endl;
 	Image<double> save;
@@ -273,7 +273,7 @@ double continuous2cost(double *x, void *_prm)
 	double deltaDefocusV=x[11];
 	double deltaDefocusAngle=x[12];
 	ProgAngularContinuousAssign2 *prm=(ProgAngularContinuousAssign2 *)_prm;
-	if (deltax*deltax+deltay*deltay>prm->maxShift*prm->maxShift)
+	if (prm->maxShift>0 && deltax*deltax+deltay*deltay>prm->maxShift*prm->maxShift)
 		return 1e38;
 	if (fabs(scalex)>prm->maxScale || fabs(scaley)>prm->maxScale)
 		return 1e38;
@@ -307,15 +307,15 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 	rowIn.getValue(MDL_ANGLE_PSI,old_psi);
 	rowIn.getValue(MDL_SHIFT_X,old_shiftX);
 	rowIn.getValue(MDL_SHIFT_Y,old_shiftY);
-	double old_scaleX=0, old_scaleY=0, old_grayA=1, old_grayB=0, old_contShiftX=0, old_contShiftY=0;
+	double old_scaleX=0, old_scaleY=0, old_grayA=1, old_grayB=0;
 	if (rowIn.containsLabel(MDL_CONTINUOUS_GRAY_A))
 	{
 		rowIn.getValue(MDL_CONTINUOUS_GRAY_A,old_grayA);
 		rowIn.getValue(MDL_CONTINUOUS_GRAY_B,old_grayB);
 		rowIn.getValue(MDL_CONTINUOUS_SCALE_X,old_scaleX);
 		rowIn.getValue(MDL_CONTINUOUS_SCALE_Y,old_scaleY);
-		rowIn.getValue(MDL_CONTINUOUS_X,old_contShiftX);
-		rowIn.getValue(MDL_CONTINUOUS_Y,old_contShiftY);
+		rowIn.getValue(MDL_CONTINUOUS_X,old_shiftX);
+		rowIn.getValue(MDL_CONTINUOUS_Y,old_shiftY);
 	}
 	rowIn.getValue(MDL_FLIP,old_flip);
 
@@ -342,14 +342,12 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     Matrix1D<double> p(12), steps(12);
     p(0)=old_grayA; // a in I'=a*I+b
     p(1)=old_grayB; // b in I'=a*I+b
-    p(2)=old_contShiftX-old_shiftX;
-    p(3)=old_contShiftY-old_shiftY;
     p(4)=old_scaleX;
     p(5)=old_scaleY;
 
     // Optimize
 	double cost=-1;
-	if (old_contShiftX*old_contShiftX+old_contShiftY*old_contShiftY>maxShift*maxShift ||
+	if ((maxShift>0 && old_shiftX*old_shiftX+old_shiftY*old_shiftY>maxShift*maxShift) ||
         fabs(old_scaleX)>maxScale || fabs(old_scaleY)>maxScale)
     	rowOut.setValue(MDL_ENABLED,-1);
 	else
@@ -376,8 +374,6 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 				p.initZeros();
 			    p(0)=old_grayA; // a in I'=a*I+b
 			    p(1)=old_grayB; // b in I'=a*I+b
-			    p(2)=old_contShiftX-old_shiftX;
-			    p(3)=old_contShiftY-old_shiftY;
 			    p(4)=old_scaleX;
 			    p(5)=old_scaleY;
 			}
@@ -405,8 +401,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 				scaleToSize(BSPLINE3,Ip(),I(),XSIZE(Ip()),YSIZE(Ip()));
 				I()=Ip();
 			}
-			A(0,2)=p(2);
-			A(1,2)=p(3);
+			A(0,2)=p(2)+old_shiftX;
+			A(1,2)=p(3)+old_shiftY;
 			A(0,0)=1+p(4);
 			A(1,1)=1+p(5);
 
@@ -443,8 +439,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     rowOut.setValue(MDL_CONTINUOUS_GRAY_B,p(1));
     rowOut.setValue(MDL_CONTINUOUS_SCALE_X,p(4));
     rowOut.setValue(MDL_CONTINUOUS_SCALE_Y,p(5));
-    rowOut.setValue(MDL_CONTINUOUS_X,p(2));
-    rowOut.setValue(MDL_CONTINUOUS_Y,p(3));
+    rowOut.setValue(MDL_CONTINUOUS_X,p(2)+old_shiftX);
+    rowOut.setValue(MDL_CONTINUOUS_Y,p(3)+old_shiftY);
     if (hasCTF)
     {
     	rowOut.setValue(MDL_CTF_DEFOCUSU,old_defocusU+p(9));
@@ -455,6 +451,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     }
 
 #ifdef DEBUG
+    std::cout << "p=" << p << std::endl;
     MetaData MDaux;
     MDaux.addRow(rowOut);
     MDaux.write("PPPmd.xmd");
@@ -463,8 +460,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     save.write("PPPprojection.xmp");
     save()=I();
     save.write("PPPexperimental.xmp");
-    save()=C;
-    save.write("PPPC.xmp");
+    //save()=C;
+    //save.write("PPPC.xmp");
     Ip.write("PPPexperimentalp.xmp");
     Ifiltered.write("PPPexperimentalFiltered.xmp");
     Ifilteredp.write("PPPexperimentalFilteredp.xmp");
