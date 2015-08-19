@@ -189,7 +189,7 @@ class XmippProtRansac(ProtInitialVolume):
 
         # Generate projection gallery from the initial volume
         if self.initialVolume.hasValue():
-            lastId = self._insertFunctionStep("projectInitialVolume",self)
+            lastId = self._insertFunctionStep("projectInitialVolume")
             
         return lastId
 
