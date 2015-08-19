@@ -52,7 +52,7 @@ class ProtGemPicker(em.ProtParticlePicking):
         
         em.ProtParticlePicking._defineParams(self, form)
         form.addParam('inputReferences', params.PointerParam, 
-                      pointerClass='SetOfParticles',
+                      pointerClass='SetOfParticles,SetOfAverages',
                       label='Input References', important=True,
                       help="Template images (2D class averages or reprojections from a reference volume) to be used in picking.")
         form.addParam('refsHaveInvertedContrast', params.BooleanParam, default=False,
