@@ -246,8 +246,6 @@ class XmippProtRansac(ProtInitialVolume):
         cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
         cleanPath(fnVol)
         cleanPath(self._getTmpPath(fnBase+'.xmd'))
-        if self.initialVolume.hasValue():
-            cleanPattern(self._getTmpPath("gallery_InitialVolume*"))
     
     def reconstructStep(self, fnRoot):
         from pyworkflow.em.metadata.utils import getSize
