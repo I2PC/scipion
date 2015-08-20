@@ -198,7 +198,8 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 	if (prm->old_flip)
 	{
 		MAT_ELEM(A,0,0)*=-1;
-		MAT_ELEM(A,1,0)*=-1;
+		MAT_ELEM(A,0,1)*=-1;
+		MAT_ELEM(A,0,2)*=-1;
 	}
 
 	applyGeometry(degree,prm->Ip(),prm->I(),A,IS_NOT_INV,DONT_WRAP,0.);
@@ -409,7 +410,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			if (old_flip)
 			{
 				MAT_ELEM(A,0,0)*=-1;
-				MAT_ELEM(A,1,0)*=-1;
+				MAT_ELEM(A,0,1)*=-1;
+				MAT_ELEM(A,0,2)*=-1;
 			}
 			applyGeometry(BSPLINE3,Ip(),I(),A,IS_NOT_INV,DONT_WRAP);
 			MultidimArray<double> &mIp=Ip();
