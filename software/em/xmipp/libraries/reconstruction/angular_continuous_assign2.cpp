@@ -349,8 +349,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 
     // Optimize
 	double cost=-1;
-	if ((maxShift>0 && old_shiftX*old_shiftX+old_shiftY*old_shiftY>maxShift*maxShift) ||
-        fabs(old_scaleX)>maxScale || fabs(old_scaleY)>maxScale)
+	if (fabs(old_scaleX)>maxScale || fabs(old_scaleY)>maxScale)
     	rowOut.setValue(MDL_ENABLED,-1);
 	else
 	{
