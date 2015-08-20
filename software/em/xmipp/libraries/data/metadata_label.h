@@ -1377,6 +1377,7 @@ private:
 
         MDL::addLabel(MDL_CONTINUOUS_X, LABEL_DOUBLE, "continuousX");
         MDL::addLabel(MDL_CONTINUOUS_Y, LABEL_DOUBLE, "continuousY");
+        MDL::addLabel(MDL_CONTINUOUS_FLIP, LABEL_BOOL, "continuousFlip");
         MDL::addLabel(MDL_CONTINUOUS_GRAY_A, LABEL_DOUBLE, "continuousA");
         MDL::addLabel(MDL_CONTINUOUS_GRAY_B, LABEL_DOUBLE, "continuousB");
         MDL::addLabel(MDL_CONTINUOUS_SCALE_X, LABEL_DOUBLE, "continuousScaleX");
