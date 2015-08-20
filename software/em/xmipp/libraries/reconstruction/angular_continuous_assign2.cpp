@@ -308,6 +308,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 	rowIn.getValue(MDL_ANGLE_PSI,old_psi);
 	rowIn.getValue(MDL_SHIFT_X,old_shiftX);
 	rowIn.getValue(MDL_SHIFT_Y,old_shiftY);
+	rowIn.getValue(MDL_FLIP,old_flip);
 	double old_scaleX=0, old_scaleY=0, old_grayA=1, old_grayB=0;
 	if (rowIn.containsLabel(MDL_CONTINUOUS_GRAY_A))
 	{
@@ -317,8 +318,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		rowIn.getValue(MDL_CONTINUOUS_SCALE_Y,old_scaleY);
 		rowIn.getValue(MDL_CONTINUOUS_X,old_shiftX);
 		rowIn.getValue(MDL_CONTINUOUS_Y,old_shiftY);
+		rowIn.getValue(MDL_CONTINUOUS_FLIP,old_flip);
 	}
-	rowIn.getValue(MDL_FLIP,old_flip);
 
 	if (rowIn.containsLabel(MDL_CTF_DEFOCUSU) || rowIn.containsLabel(MDL_CTF_MODEL))
 	{
@@ -443,6 +444,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     rowOut.setValue(MDL_CONTINUOUS_SCALE_Y,p(5));
     rowOut.setValue(MDL_CONTINUOUS_X,p(2)+old_shiftX);
     rowOut.setValue(MDL_CONTINUOUS_Y,p(3)+old_shiftY);
+    rowOut.setValue(MDL_CONTINUOUS_FLIP,old_flip);
     if (hasCTF)
     {
     	rowOut.setValue(MDL_CTF_DEFOCUSU,old_defocusU+p(9));

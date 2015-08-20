@@ -100,6 +100,7 @@ enum MDLabel
 
     MDL_CONTINUOUS_X, ///< X shift of continuous assignment
     MDL_CONTINUOUS_Y, ///< Y shift of continuous assignment
+    MDL_CONTINUOUS_FLIP, ///< Flip of continuous assignment
     MDL_CONTINUOUS_GRAY_A, ///< a value of continuous assignment
     MDL_CONTINUOUS_GRAY_B, ///< b value of continuous assignment
     MDL_CONTINUOUS_SCALE_X, ///< a value of continuous assignment
