@@ -24,14 +24,15 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.data import Transform
+
 """
 This sub-package contains protocol for particles filters operations
 """
-from os.path import join
+from os.path import join, exists
 
 from pyworkflow.protocol.params import IntParam, EnumParam
 from pyworkflow.em import ProtAlign2D, Particle, NO_INDEX
+from pyworkflow.em.data import Transform
 
 from ..constants import *
 from protocol_base import SpiderProtocol
@@ -90,22 +91,25 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
     def createOutputStep(self):
         """ Register the output (the alignment and the aligned particles.)
         """
+        outputStk = self._getFileName('particlesAligned')
+        if not exists(outputStk):
+            raise Exception('Ouptput stack %s not produced. ' % outputStk)
         particles = self.inputParticles.get()
         # Create the output average image
         avg = Particle()
         avg.copyInfo(self.inputParticles.get())
         avg.setLocation(NO_INDEX, self.getAverage())
         self._defineOutputs(outputAverage=avg)
-        self._defineSourceRelation(particles, avg)
+        self._defineSourceRelation(self.inputParticles, avg)
         
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(particles)
         imgSet.setAlignment2D()
-        outputStk = self._getFileName('particlesAligned')
+        
         imgSet.readStack(outputStk, 
                          postprocessImage=lambda img: img.setTransform(Transform()))
         self._defineOutputs(outputParticles=imgSet)
-        self._defineTransformRelation(particles, imgSet)
+        self._defineTransformRelation(self.inputParticles, imgSet)
         
     def _summary(self):
         summary = []

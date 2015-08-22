@@ -115,6 +115,7 @@ class TestEmxBase(tests.BaseTest):
                                          sphericalAberration=0.1,
                                          voltage=200)
         self.launchProtocol(protEmxImport)
+        self.assertIsNotNone(protEmxImport.outputParticles, "There was a problem with the 'emx: import alignment' outputParticles")
             
     def test_particlesReconstruction(self):
         """ Import an EMX file with particles and alignment information.
@@ -130,4 +131,5 @@ class TestEmxBase(tests.BaseTest):
                                          sphericalAberration=0.1,
                                          voltage=200)
         self.launchProtocol(protEmxImport)
+        self.assertIsNotNone(getattr(protEmxImport, 'outputParticles', None), "There was a problem with the 'emx: import projection' outputParticles")
 

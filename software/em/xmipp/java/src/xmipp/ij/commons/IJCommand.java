@@ -1,4 +1,4 @@
-package xmipp.viewer.particlepicker;
+package xmipp.ij.commons;
 
 public class IJCommand
 {

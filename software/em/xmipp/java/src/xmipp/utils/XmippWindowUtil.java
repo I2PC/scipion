@@ -125,6 +125,12 @@ public class XmippWindowUtil
 		btn.addActionListener(listener);
 		return btn;
 	}
+	
+	public static JButton getTextIconButton(String text, String icon, ActionListener listener){
+		JButton btn = new JButton(text, XmippResource.getIcon(icon));
+		btn.addActionListener(listener);
+		return btn;
+	}
 
 	public static JButton getTextButton(String text, ActionListener listener)
 	{
@@ -142,14 +148,14 @@ public class XmippWindowUtil
 		return label;
 	}
         
-        public static JButton getScipionIconButton(String text) {
-            Icon icon = XmippResource.getIcon("fa-plus-circle.png");
-            JButton button = new JButton(text.replace("Create ", ""), icon);
-            button.setToolTipText(text);
-            button.setBackground(firebrick);
-            button.setForeground(Color.WHITE);
-            return button;
-        }
+    public static JButton getScipionIconButton(String text) {
+        Icon icon = XmippResource.getIcon("fa-plus-circle.png");
+        JButton button = new JButton(text.replace("Create ", ""), icon);
+        button.setToolTipText(text);
+        button.setBackground(firebrick);
+        button.setForeground(Color.WHITE);
+        return button;
+    }
 
 	public static GridBagConstraints getConstraints(GridBagConstraints constraints, int x, int y, int columns, int rows)
 	{

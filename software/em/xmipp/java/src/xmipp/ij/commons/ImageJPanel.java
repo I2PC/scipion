@@ -48,7 +48,7 @@ public class ImageJPanel extends JPanel{
         this.imp = mask;
         this.width = width;
         this.height = height;
-        setPreferredSize(new Dimension(width, height));
+        setSize(new Dimension(width, height));
         repaint();
         
     }

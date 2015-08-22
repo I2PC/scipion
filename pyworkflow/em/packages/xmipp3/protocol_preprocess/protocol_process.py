@@ -178,7 +178,7 @@ class XmippProcessVolumes(ProtPreprocessVolumes):
             self._postprocessOutput(volumes)
             self._defineOutputs(outputVol=volumes)
             
-        self._defineTransformRelation(volInput, self.outputVol)
+        self._defineTransformRelation(self.inputVolumes, self.outputVol)
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _isSingleInput(self):

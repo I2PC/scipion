@@ -441,9 +441,11 @@ class Item(object):
         
     def setSelected(self, value):
         bw = 1
+        bc = 'black'
         if value:
-            bw = 2
-        self.canvas.itemconfig(self.id, width=bw)
+            bw = 3
+            bc = 'Firebrick'
+        self.canvas.itemconfig(self.id, width=bw, outline=bc)
 
         
 class TextItem(Item):

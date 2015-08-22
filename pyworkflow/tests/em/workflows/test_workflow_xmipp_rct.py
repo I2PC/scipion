@@ -194,7 +194,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
 #         protSubset = self.newProtocol(ProtUserSubSet)
 # 
 #         protSubset.inputObject.set(protCL2D.outputClasses)
-#         protSubset.inputObject.setExtendedItemId(5)
+#         protSubset.inputObject.setExtended(5)
 #         protSubset.outputClassName.set("SetOfParticles")
 #         protSubset.sqliteFile.set("%s," % self.classesSqlite)
 #         self.launchProtocol(protSubset)        

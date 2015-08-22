@@ -68,7 +68,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             type = data.hasClasses()? "Particles": setType.replace("SetOf", "");
             port = parameters.port;
             inputid = parameters.inputid;
-            String filename = data.getFileName();
             sqlitefile = data.getTmpFile("_selection");
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "create subset");
@@ -291,7 +290,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     public void reloadTableData(boolean changed)
     {
-        super.reloadTableData(changed);
+        super.reloadTableData(changed, gallery.getSelection());
         enableActions();
     }
 
@@ -385,14 +384,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     protected class ScipionGalleryMenu extends GalleryMenu//To customize showj menu for scipion
     {
-        @Override
-        protected void createItems() throws Exception
-        {
-            super.createItems();
-            addItem(FILE_LOAD_SEL, "Load selection ...");
-            addItem(FILE_SAVE_SEL, "Save selection as ...", "save_as.gif");
-        }
-
+        
         @Override
         protected void handleActionPerformed(ActionEvent evt)
         {
@@ -435,6 +427,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+
+		@Override
+		public void addExtraMenuItems()
+		{
+			addItem(FILE_LOAD_SEL, "Load selection ...");
+            addItem(FILE_SAVE_SEL, "Save selection ...", "save_as.gif");
+			
+		}
     }
         
         

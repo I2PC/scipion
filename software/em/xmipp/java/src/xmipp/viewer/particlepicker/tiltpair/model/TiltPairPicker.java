@@ -389,18 +389,18 @@ public class TiltPairPicker extends ParticlePicker
 		UntiltedMicrograph um = getMicrograph();
 		for (UntiltedParticle p : um.getParticles())
 			if (!getMicrograph().fits(p.getX(), p.getY(), size))
-                        {
+            {
 				valid = false;
-                                break;
-                        }
+                break;
+            }
 		for (TiltedParticle p : um.getTiltedMicrograph().getParticles())
 			if (!um.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
-                        {
+            {
 				valid = false;
-                                break;
-                        }
-                if (!valid) 
-                    XmippDialog.showInfo(parent, String.format("Particles out of bounds, %s not allowed.", size));
+                break;
+            }
+        if (!valid) 
+            XmippDialog.showInfo(parent, String.format("Particles out of bounds, %s not allowed.", size));
 		return valid;
 	}
 

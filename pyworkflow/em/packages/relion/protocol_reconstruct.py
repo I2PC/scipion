@@ -173,7 +173,7 @@ class ProtRelionReconstruct(ProtReconstruct3D):
         volume.setSamplingRate(imgSet.getSamplingRate())
         
         self._defineOutputs(outputVolume=volume)
-        self._defineSourceRelation(imgSet, volume)
+        self._defineSourceRelation(self.inputParticles, volume)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

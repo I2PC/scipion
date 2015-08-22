@@ -86,7 +86,7 @@ def writeSetOfVolumes(volSet, volXml, volDir):
     addPyTomPaths()
     
     from pytom.basic.structures import Particle, ParticleList, Wedge, SingleTiltWedge
-    from pytom.score.score import Score, PeakPrior
+    from pytom.score.score import Score, PeakPrior, xcfScore
     from pytom.frm.FRMAlignment import FRMScore
     
     w = SingleTiltWedge()
@@ -114,12 +114,15 @@ def writeSetOfVolumes(volSet, volXml, volDir):
         # where the programs will be executed
         volRel = os.path.relpath(volFn, os.path.dirname(volXml))
         p = Particle()
+        s = xcfScore()
+        s.setValue(1.0)
         pytomInfo = getattr(vol, 'pytomInfo', None)
         if pytomInfo is None:
             p.setWedge(w)
         else:
             p.fromXML(pytomInfo.get()) # Get stored XML format from PyTom
         p.setFilename(volRel)
+        p.setScore(s)
         pl.append(p)
         
     pl.toXMLFile(volXml)

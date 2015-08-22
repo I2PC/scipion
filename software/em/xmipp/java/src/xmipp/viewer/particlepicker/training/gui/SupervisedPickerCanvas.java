@@ -6,21 +6,16 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.util.List;
-
 import javax.swing.SwingUtilities;
-
 import xmipp.jni.Particle;
-import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
-import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.CenterParticleTask;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
-import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class SupervisedPickerCanvas extends ParticlePickerCanvas
 {

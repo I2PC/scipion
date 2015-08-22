@@ -16,7 +16,7 @@
 
 /*----------   Statistics --------------------------------------- */
 //Copy of the Metadata is required to remove disabled objects before computing stats
-void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, MDLabel image_label)
+void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, bool wrap, MDLabel image_label)
 {
 
     bool first = true;
@@ -29,11 +29,13 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool 
 
     Image<double> image, tmpImg;
     FileName fnImg;
+    ApplyGeoParams params;
+    params.wrap = wrap;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         MD.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
-            image.readApplyGeo(fnImg, MD,__iter.objId);
+            image.readApplyGeo(fnImg, MD,__iter.objId, params);
         else
             image.read(fnImg);
         if (first)
@@ -55,7 +57,7 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool 
     {
         MD.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
-            image.readApplyGeo(fnImg, MD,__iter.objId);
+            image.readApplyGeo(fnImg, MD,__iter.objId, params);
         else
             image.read(fnImg);
         tmpImg() = ((image() - _ave()));
