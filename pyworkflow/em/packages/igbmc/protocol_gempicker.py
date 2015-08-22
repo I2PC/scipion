@@ -30,7 +30,8 @@ from os.path import join
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
-from pyworkflow.utils.properties import Message 
+from pyworkflow.utils.properties import Message
+from pyworkflow.protocol.constants import LEVEL_ADVANCED 
 
 
 MASK_CIRCULAR = 0
@@ -38,42 +39,46 @@ MASK_OBJECT = 1
 
 
 class ProtGemPicker(em.ProtParticlePicking):
-    """Protocol to pick particles in a set of micrographs"""
-    _label = 'gempicker'
+    """
+    gEMpicker is a template-based cryo-EM particle picking program that use cross-correlation approach.
+    The user may define a template particle in one of several ways, and this is then used to pick other similar particles
+    from the micrographs by using a fast Fourier transform (FFT) to calculate the correlation score at each pixel between the template and the micrograph.
+    Multiple micrographs may be processed in parallel, and the calculation may be accelerated considerably by using one or more attached graphics processors (GPUs).
+    """
+    _label = 'auto-picking'
         
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         
         em.ProtParticlePicking._defineParams(self, form)
-        
         form.addParam('inputReferences', params.PointerParam, 
-                      pointerClass='SetOfAverages',
+                      pointerClass='SetOfParticles,SetOfAverages',
                       label='Input References', important=True,
-                      help="Template averages to be used in picking.")
-        
-        form.addParam('refsHaveInvertedContrast', params.BooleanParam,
+                      help="Template images (2D class averages or reprojections from a reference volume) to be used in picking.")
+        form.addParam('refsHaveInvertedContrast', params.BooleanParam, default=False,
                       label='References have inverted contrast',
                       help='Set to Yes to indicate that the reference have inverted \n'
                            'contrast with respect to the particles in the micrographs.')
-        
         form.addParam('rotAngle', params.IntParam, default=5,
                       label='Rotational angle search',
                       help='In-plane rotating angle in degrees (0 = no rotation)')
         
-        line = form.addLine('Threshold (0, 1]', 
-                            help='Threshold value for picking, select low and high values.')
-        line.addParam('threshold', params.FloatParam, default=0.2,
+        line = form.addLine('Threshold in the range [0-1]', 
+                            help='Threshold value for picking, select low and high values for cut-off.')
+        line.addParam('thresholdLow', params.FloatParam, default=0.1,
                       label='Low')
-        line.addParam('thresholdHigh', params.FloatParam, default=0.9,
+        line.addParam('thresholdHigh', params.FloatParam, default=0.5,
                       label='High')
-        
-        form.addParam('maxPiks', params.IntParam, default=0,
-                      label='Max particles per micrograph',
+
+        form.addParam('maxPeaks', params.IntParam, default=0,
+                      label='Max particles per micrograph', expertLevel=LEVEL_ADVANCED,
                       help='Maximum number of particles picked from each micrograph (0 = no limit)')
-        form.addParam('sizePiks', params.IntParam, default=0,
-                      label='Box size (pix)', 
-                      help='Size of picked images (if not provided or = 0, use search image size)')
-        
+        form.addParam('boxSize', params.IntParam, default=0,
+                      label='Box size (pix)', expertLevel=LEVEL_ADVANCED,
+                      help='Size of picked images (if 0, use search image size)')
+        form.addParam('boxDist', params.IntParam, default=0,
+                      label='Min distance between particles (pix)', expertLevel=LEVEL_ADVANCED,
+                      help='Minimal distance between the centers of picked particles (if 0, use reference image half-size)')
         form.addParam('maskType', params.EnumParam, 
                       choices=['circular', 'object'], default=0, 
                       display=params.EnumParam.DISPLAY_HLIST,
@@ -91,7 +96,12 @@ class ProtGemPicker(em.ProtParticlePicking):
                       condition='maskType==%d' % MASK_OBJECT, 
                       label="Mask objects", 
                       help="Select a mask file")
-               
+        form.addParam('useGPU', params.BooleanParam, default=True,
+                      label='Use GPU',
+                      help='Set to Yes to use GPU as well as CPU')
+        form.addParam('numberOfGPUs', params.IntParam, default=1,
+                      label='GPUs per process', condition='useGPU',
+                      help='Select number of GPUs per process')               
         form.addParallelSection(threads=1, mpi=0)
         
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -113,9 +123,14 @@ class ProtGemPicker(em.ProtParticlePicking):
         args += ' --dirRes=%s' % self._getExtraPath('') # put the output in the extra dir
         args += ' --angle2D=%d' % self.rotAngle
         args += ' --contrast=%d' % (0 if self.refsHaveInvertedContrast else 1) 
-        args += ' --thresh=%0.3f' % self.threshold
-        args += ' --threshHigh=%0.2f' % self.thresholdHigh
-        args += ' --nPickMax=%d' % self.maxPiks
+        args += ' --thresh=%0.3f' % self.thresholdLow
+        args += ' --threshHigh=%0.3f' % self.thresholdHigh
+        args += ' --nPickMax=%d' % self.maxPeaks
+        args += ' --boxSize=%d' % self.boxSize
+        args += ' --boxDist=%d' % self.boxDist
+        
+        if not self.useGPU:
+            numberOfGPUs = 0
 
         for mode in [0, 1]:
             self._insertFunctionStep('runGemPickerStep', mode, args)
@@ -177,19 +192,20 @@ class ProtGemPicker(em.ProtParticlePicking):
                 ih.convert(mask.get(), outMask)
                 
     def runGemPickerStep(self, mode, args):
-        #TODO: really launch the gEMPicker
         args += ' --mode=%d' % mode
-        args += ' --nGPU=%d' % 0 # Use 0 for now
+        args += ' --nGPU=%d' % self.numberOfGPUs
         args += ' --nCPU=%d' % self.numberOfThreads
         
         self.runJob('gEMpicker', args)
-        
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
         ih = em.ImageHandler()
         coordSet = self._createSetOfCoordinates(micSet)
-        coordSet.setBoxSize(self.inputReferences.get().getDim()[0]) #FIXME, the usre can change the box size
+        if self.boxSize == 0:
+            coordSet.setBoxSize(self.inputReferences.get().getDim()[0])
+        else:
+            coordSet.setBoxSize(self.boxSize.get())
         
         for mic in micSet:
             fnCoords = pwutils.replaceBaseExt(mic.getFileName(), 'txt')
@@ -220,6 +236,14 @@ class ProtGemPicker(em.ProtParticlePicking):
             if n > 1 and n != self.inputReferences.get().getSize():
                 errors.append('If the number of input masks is greater than one, \n'
                               'it should be equal to the number of references.')
+
+	value1 = round(self.thresholdLow,1)
+	value2 = round(self.thresholdHigh,1)
+	if self.thresholdLow < self.thresholdHigh and 0.0 <= value1 <= 1.0 and 0.0 <= value2 <= 1.0:
+	    pass
+	else:
+	    errors.append('Wrong threshold values!')
+
         return errors
         
     def _summary(self):
@@ -227,10 +251,10 @@ class ProtGemPicker(em.ProtParticlePicking):
         summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
         if(self.getOutputsSize() > 0):
             summary.append("Number of particles picked: %d" % self.getCoords().getSize())
-            summary.append("Particle size: %d" % self.getCoords().getBoxSize())
-            summary.append("Threshold: %0.2f" % self.threshold)
-            if self.extraParams.hasValue():
-                summary.append("And other parameters: %s" % self.extraParams)
+            summary.append("Particle size: %d px" % self.getCoords().getBoxSize())
+            summary.append("Threshold range: %0.3f - " % self.thresholdLow + "%0.3f" % self.thresholdHigh)
+#            if self.extraParams.hasValue():
+#                summary.append("And other parameters: %s" % self.extraParams)
         else:
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
@@ -239,12 +263,13 @@ class ProtGemPicker(em.ProtParticlePicking):
         methodsMsgs = []
         if self.getInputMicrographs() is None:
             return ['Input micrographs not available yet.']
-        methodsMsgs.append("Input micrographs %s of size %d." % (self.getObjectTag(self.getInputMicrographs()), self.getInputMicrographs().getSize()))
+        methodsMsgs.append("Input micrographs %s." % (self.getObjectTag(self.getInputMicrographs())))
 
         if self.getOutputsSize() > 0:
             output = self.getCoords()
-            methodsMsgs.append('%s: User picked %d particles with a particle size of %d and threshold %0.2f.'
-                               % (self.getObjectTag(output), output.getSize(), output.getBoxSize(), self.threshold.get()))
+            methodsMsgs.append("%s: User picked %d particles with a particle size of %d px and threshold range %0.3f - %0.3f."
+                               % (self.getObjectTag(output), output.getSize(), output.getBoxSize(),
+                                 self.thresholdLow.get(), self.thresholdHigh.get()))
         else:
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
@@ -254,4 +279,3 @@ class ProtGemPicker(em.ProtParticlePicking):
         return ['Hoang2013']
     
     #--------------------------- UTILS functions --------------------------------------------------
-    
