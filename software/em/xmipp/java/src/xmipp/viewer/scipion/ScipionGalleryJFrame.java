@@ -394,12 +394,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             {
                     if (cmd.equals(FILE_LOAD_SEL))
                     {
+                    	fc.setApproveButtonText("Open");
                         if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
                             loadSelection(fc.getSelectedPath());
                     }
                     if (cmd.equals(FILE_SAVE_SEL))
                     {
                         fc.setSelectedFile(new File(sqlitefile));
+                        fc.setApproveButtonText("Save");
                          if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
                             saveSelection(fc.getSelectedPath());
                     }
