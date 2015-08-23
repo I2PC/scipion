@@ -178,7 +178,7 @@ class RelionAutopickParams(EmWizard):
         print "Writing Xmipp coordinate files."
         micFn, coordDir = autopickFomProt.writeXmippCoords()
         print "Launching picking GUI..."
-        CoordinatesObjectView(autopickProt.getProject(), micFn, autopickFomProt, coordDir).show()
+        CoordinatesObjectView(autopickProt.getProject(), micFn, coordDir, autopickFomProt).show()
                                      
     
     
