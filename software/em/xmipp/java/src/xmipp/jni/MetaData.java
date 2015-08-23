@@ -459,6 +459,9 @@ public class MetaData {
 	/** Get the average and std images, result is left on input image */
 	public native void getStatsImages(ImageGeneric imageAvg,
 			ImageGeneric imageStd, boolean applyGeo, boolean wrap, int label);
+
+	public native void writeMdToStack(String filename, boolean applyGeo, boolean wrap, int label);
+
         
    	public native void getPCAbasis(ImageGeneric basis, int label);
 
