@@ -186,7 +186,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                 }
             }
             
-            	
 		}
 		
 		if (dim == null)
@@ -228,8 +227,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		long objId = data.ids[index];
 		ImagePlus imp = getImage(objId, imageFn);
 		ImageItem item = new ImageItem(index, imp);
-                
-		item.setImagePlus(imp);
 		return item;
 	}
 
