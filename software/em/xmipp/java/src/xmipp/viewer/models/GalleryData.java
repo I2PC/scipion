@@ -1840,6 +1840,10 @@ public class GalleryData {
        return null;
    }
    
+   public MetaData getImagesMd() {
+	   return getImagesMd(null, false);
+   }
+   
    public MetaData getImagesMd(boolean[] selection, boolean selected) {
         int idlabel = getRenderLabel();
         MDRow mdRow;

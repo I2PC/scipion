@@ -72,7 +72,7 @@ void getStatistics(MetaData md, Image<double> & _ave, Image<double> & _sd, bool 
 
 void writeMdToStack(const MetaData &md, const FileName &fnStack, bool apply_geo, bool wrap, MDLabel image_label)
 {
-    int i = 0;
+    size_t i = 0;
 
     if (md.isEmpty())
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "writeMdToStack: input MetaData is empty!!!");
@@ -81,6 +81,8 @@ void writeMdToStack(const MetaData &md, const FileName &fnStack, bool apply_geo,
     FileName fnImg;
     ApplyGeoParams params;
     params.wrap = wrap;
+
+    int mode = WRITE_OVERWRITE;
 
     FOR_ALL_OBJECTS_IN_METADATA(md)
     {
@@ -91,8 +93,8 @@ void writeMdToStack(const MetaData &md, const FileName &fnStack, bool apply_geo,
             image.readApplyGeo(fnImg, md, __iter.objId, params);
         else
             image.read(fnImg);
-
-        image.write(fnStack, i);
+        image.write(fnStack, i, false, mode);
+        mode = WRITE_APPEND;
     }
 } /* function writeMdToStack */
 
