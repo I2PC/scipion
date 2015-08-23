@@ -176,7 +176,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     def _fillClassesFromIter(self, clsSet, iteration):
         """ Create the SetOfClasses3D from a given iteration. """
         self._loadClassesInfo(iteration)
-        dataStar = self._getFileName('data', iter=self._lastIter())
+        dataStar = self._getFileName('data', iter=iteration)
         clsSet.classifyItems(updateItemCallback=self._updateParticle,
                              updateClassCallback=self._updateClass,
                              itemDataIterator=md.iterRows(dataStar))
