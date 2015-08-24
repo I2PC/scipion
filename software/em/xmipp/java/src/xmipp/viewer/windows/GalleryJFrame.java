@@ -32,6 +32,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -468,6 +469,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				});
 			}
 		});
+		setScipionImageIcon();
 	}
 
 	private void setInitialValues()
@@ -2433,6 +2435,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             }
             else
                 openChimera(data.getSelVolumeFile(), false);
+        }
+        
+        protected void setScipionImageIcon()
+        {
+                Image img = XmippResource.getIcon("scipion_logo.png").getImage();
+                setIconImage(img);
         }
        
 }// class JFrameGallery

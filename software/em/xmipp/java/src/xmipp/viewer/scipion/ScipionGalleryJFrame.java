@@ -52,14 +52,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public ScipionGalleryJFrame(ScipionGalleryData data) {
         super(data);
         readScipionParams((ScipionParams)data.parameters);
-        setScipionImageIcon();
+        
     }
       
-    private void setScipionImageIcon()
-    {
-            Image img = XmippResource.getIcon("scipion_logo.png").getImage();
-            setIconImage(img);
-    }
+  
 
     protected void readScipionParams(ScipionParams parameters)
     {
