@@ -30,6 +30,7 @@ import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Window;
@@ -41,6 +42,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -319,6 +321,12 @@ public class XmippWindowUtil
         }
         return output.toString();
 
+    }
+    
+    public static void setScipionImageIcon(Window w)
+    {
+            Image img = XmippResource.getIcon("scipion_logo.png").getImage();
+            w.setIconImage(img);
     }
 
 }
