@@ -299,7 +299,7 @@ double continuous2cost(double *x, void *_prm)
 }
 
 // Predict =================================================================
-#define DEBUG
+//#define DEBUG
 void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     rowOut=rowIn;
