@@ -78,6 +78,7 @@ class ProtImportMicrographs(ProtImportMicBase):
     
     IMPORT_FROM_EMX = 1
     IMPORT_FROM_XMIPP3 = 2
+    IMPORT_FROM_SCIPION = 3
 
     def _getImportChoices(self):
         """ Return a list of possible choices
@@ -85,7 +86,7 @@ class ProtImportMicrographs(ProtImportMicBase):
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
         choices = ProtImportImages._getImportChoices(self)
-        return choices + ['emx', 'xmipp3']
+        return choices + ['emx', 'xmipp3', 'scipion']
     
     def _defineImportParams(self, form):
         """ Just redefine to put some import parameters
@@ -103,6 +104,11 @@ class ProtImportMicrographs(ProtImportMicBase):
                       help="Select the micrographs Xmipp metadata file.\n"
                            "It is usually a _micrograph.xmd_ file result\n"
                            "from import, preprocess or downsample protocols.")
+        
+        form.addParam('sqliteFile', FileParam,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
+                      label='Micrographs sqlite file',
+                      help="Select the micrographs sqlite file.\n")
     
     #--------------------------- INSERT functions ---------------------------------------------------
     def _insertAllSteps(self):
@@ -178,6 +184,10 @@ class ProtImportMicrographs(ProtImportMicBase):
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
+        elif self.importFrom == self.IMPORT_FROM_SCIPION:
+            from dataimport import ScipionImport
+            self.importFilePath = self.sqliteFile.get('').strip()
+            return ScipionImport(self, self.importFilePath) 
         else:
             self.importFilePath = ''
             return None       

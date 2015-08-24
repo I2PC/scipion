@@ -131,6 +131,11 @@ public class GalleryData {
         return false;
     }
 
+    public boolean isVolumeMd()
+    {
+    	return isVolumeMd;
+    }
+    
     public Integer getModelRows()
     {
         return rows;
@@ -167,7 +172,9 @@ public class GalleryData {
     	if (vol.contains("@"))
     		file = file.substring(file.lastIndexOf("@") + 1);
     	if(new File(file).exists())
+    	{
     		selectedVolFn = vol;
+    	}
     	else
     		throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(file));
     }
@@ -431,7 +438,6 @@ public class GalleryData {
                         mode = Mode.GALLERY_VOL;
                     
                     isVolumeMd = true;
-
                     if (selectedVolFn.isEmpty()) {
                         selectedVolFn = imageFn;
                     }
@@ -650,24 +656,26 @@ public class GalleryData {
      *
      * @return
      */
-    public ImageGalleryTableModel createModel() {
+    public ImageGalleryTableModel createModel(boolean[] selection) {
+    	
         try {
             switch (mode) {
                 case GALLERY_VOL:
                     return new VolumeGalleryTableModel(this);
                 case GALLERY_MD:
                     if (md.size() > 0 && hasRenderLabel()) {
-                        return new MetadataGalleryTableModel(this);
+                    	
+                        return new MetadataGalleryTableModel(this, selection);
                     }
                 // else fall in the next case
                 case TABLE_MD:
                     mode = Mode.TABLE_MD; // this is necessary when coming from
                     // previous case
                     if (!md.isColumnFormat()) {
-                        return new MetadataRowTableModel(this);
+                        return  new MetadataRowTableModel(this);
                     }
 
-                    return new MetadataTableModel(this);
+                    return new MetadataTableModel(this, selection);
                 
             }
         } catch (Exception e) {
@@ -1830,6 +1838,10 @@ public class GalleryData {
                return id;
        }
        return null;
+   }
+   
+   public MetaData getImagesMd() {
+	   return getImagesMd(null, false);
    }
    
    public MetaData getImagesMd(boolean[] selection, boolean selected) {

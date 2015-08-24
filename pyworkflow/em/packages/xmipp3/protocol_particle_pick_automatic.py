@@ -141,7 +141,8 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         srcPaths = [self.xmippParticlePicking.get()._getExtraPath(k) for k in self.filesToCopy]
         # Check that all needed files exist
         if missingPaths(*srcPaths):
-            validateMsgs.append('Input supervised picking run is not valid.')
+            validateMsgs.append('Input picking run has not been trained, '
+                                'use *Autopick* for at least one micrograph')
             
         # If other set of micrographs is provided they should have same sampling rate and acquisition
         if self.micsToPick.get() == MICS_OTHER:

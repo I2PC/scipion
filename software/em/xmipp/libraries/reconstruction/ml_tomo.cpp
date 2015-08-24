@@ -3369,17 +3369,17 @@ ProgMLTomo::addPartialDocfileData(const MultidimArray<double> &data,
     for (size_t imgno = first; imgno <= last; ++imgno)
     {
         index = imgno - first ;
-        MDimg.getRow(row, imgs_id[imgno]);
-        row.setValue(MDL_ANGLE_ROT, dAij(data, index, 0));
-        row.setValue(MDL_ANGLE_TILT, dAij(data, index, 1));
-        row.setValue(MDL_ANGLE_PSI, dAij(data, index, 2));
-        row.setValue(MDL_SHIFT_X, dAij(data, index, 3));
-        row.setValue(MDL_SHIFT_Y, dAij(data, index, 4));
-        row.setValue(MDL_SHIFT_Z, dAij(data, index, 5));
-        row.setValue(MDL_REF, ROUND(dAij(data, index, 6)));
+        size_t objId=imgs_id[imgno];
+        MDimg.setValue(MDL_ANGLE_ROT, dAij(data, index, 0),objId);
+        MDimg.setValue(MDL_ANGLE_TILT, dAij(data, index, 1),objId);
+        MDimg.setValue(MDL_ANGLE_PSI, dAij(data, index, 2),objId);
+        MDimg.setValue(MDL_SHIFT_X, dAij(data, index, 3),objId);
+        MDimg.setValue(MDL_SHIFT_Y, dAij(data, index, 4),objId);
+        MDimg.setValue(MDL_SHIFT_Z, dAij(data, index, 5),objId);
+        MDimg.setValue(MDL_REF, int(dAij(data, index, 6)),objId);
         if (do_missing)
-            row.setValue(MDL_REF, ROUND(dAij(data, index, 7)));
-        MDimg.setRow(row, imgs_id[imgno]);
+        	MDimg.setValue(MDL_MISSINGREGION_NR, int(dAij(data, index, 7)),objId);
+        MDimg.setValue(MDL_LL, dAij(data, index, 9),objId);
     }
 }
 
@@ -3452,6 +3452,7 @@ ProgMLTomo::writeOutputFiles(const int iter,
             fn_tmp = formatString("%s_wedge%06d.vol", fn_base.c_str(), refno + 1);
             Vt.write(fn_tmp);
         }
+        refno++;
     }
     fn_tmp = fn_base + "_ref.xmd";
     MDref.write(fn_tmp);
@@ -3496,9 +3497,9 @@ ProgMLTomo::writeOutputFiles(const int iter,
         fn_tmp = fn_base + "_ref.xmd";
         MDo.setValue(MDL_REFMD, fn_tmp, id);
 
-        /*        fn_tmp = fn_base + "_log.xmd";
-         MDLog.write(fn_tmp);
-
+        fn_tmp = fn_base + "_log.xmd";
+        MDo.write(fn_tmp);
+/*
          DFl.go_beginning();
          comment = "ml_tomo-logfile: Number of images= " + floatToString(sumw_allrefs);
          comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(avefracweight, 10, 5);

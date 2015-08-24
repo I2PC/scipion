@@ -44,7 +44,7 @@ public class MetadataRowTableModel extends MetadataTableModel {
 	}
 	
 	public MetadataRowTableModel(GalleryData data) throws Exception {
-		super(data);
+		super(data, null);
 		cols = 1;
 		rows = visibleLabels.size();
 		id = data.md.firstObject();
