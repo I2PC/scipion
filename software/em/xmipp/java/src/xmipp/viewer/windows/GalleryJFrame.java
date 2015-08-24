@@ -1496,7 +1496,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         if (evt.isShiftDown())
                                 gallery.selectRange(previousSelectedRow, previousSelectedCol, row, col);
                         else if (evt.isControlDown())
+                        {
                                 gallery.touchItem(row, col);
+                                jsGoToImage.setValue(gallery.getSelTo() + 1);
+                        }
                 }
 
                 if (!evt.isShiftDown())
@@ -1564,7 +1567,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
 			addItem(FILE_SAVEAS, "Save as", "save_as.gif");
 
-                        addItem(FILE_EXPORTIMAGES, "Export images ...", "export_wiz.gif");
+            addItem(FILE_EXPORTIMAGES, "Export images ...", "export_wiz.gif");
 			addItem(FILE_REFRESH, "Refresh", "refresh.gif", "released F5");
 			addSeparator(FILE);
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
@@ -1624,7 +1627,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			boolean volMode = !data.getSelVolumeFile().isEmpty();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode || data.containsGeometryInfo("3D")|| data.containsGeometryInfo("Projection"));
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
-                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data.isScipionInstance()));
+            setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode);
 			setItemEnabled(FILE_SAVE, !volMode && !isscipion);
 			setItemEnabled(FILE_SAVEAS, !volMode && !isscipion);
 			
