@@ -131,6 +131,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
         form.addSection(label='Angular assignment')
         form.addParam('splitMethod', EnumParam, label='Image split method', choices=['Stochastic','Fixed'], default=self.SPLIT_STOCHASTIC)
+        form.addParam('multiresolution', BooleanParam, label='Multiresolution approach', default=True,
+                      help="In the multiresolution approach the sampling rate of the images is adapted to the current resolution")
         form.addParam('angularMaxShift', FloatParam, label="Max. shift (%)", default=10,
                       help='Maximum shift as a percentage of the image size')
         line=form.addLine('Tilt angle:', help='0 degrees represent top views, 90 degrees represent side views')
@@ -539,7 +541,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             makePath(fnGlobal)
     
             targetResolution=previousResolution*0.8
-            TsCurrent=max(self.TsOrig,targetResolution/3)
+            if self.multiresolution:
+                TsCurrent=max(self.TsOrig,targetResolution/3)
+            else:
+                TsCurrent=self.TsOrig
             getShiftsFrom=''
             if iteration>1:
                 getShiftsFrom=fnDirPrevious
@@ -658,7 +663,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             makePath(fnDirLocal)
 
             targetResolution=previousResolution*0.8
-            TsCurrent=max(self.TsOrig,targetResolution/3)
+            if self.multiresolution:
+                TsCurrent=max(self.TsOrig,targetResolution/3)
+            else:
+                TsCurrent=self.TsOrig
             self.writeInfoField(fnDirLocal,"sampling",MDL_SAMPLINGRATE,TsCurrent)
             TsCurrent=self.readInfoField(fnDirLocal,"sampling",MDL_SAMPLINGRATE) # Write and read to guarantee consistency with previous directories 
             
