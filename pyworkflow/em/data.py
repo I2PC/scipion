@@ -947,6 +947,7 @@ class SetOfAverages(SetOfParticles):
 class SetOfVolumes(SetOfImages):
     """Represents a set of Volumes"""
     ITEM_TYPE = Volume
+    REP_TYPE = Volume
     
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
@@ -1254,6 +1255,8 @@ class Class3D(SetOfParticles):
     Usually the representative of the class is a Volume 
     reconstructed from the particles assigned to the class.
     """
+    REP_TYPE = Volume
+    
     def copyInfo(self, other):
         """ Copy basic information (id and other properties) but not _mapperPath or _size
         from other set of micrographs to current one.
