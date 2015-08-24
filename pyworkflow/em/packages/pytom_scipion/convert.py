@@ -38,13 +38,17 @@ import pyworkflow.em as em
 def getPyTomPaths():
     """ Return the list of paths that need to be included for use PyTom. """
     PYTOM_HOME = os.environ['PYTOM_HOME']
+    SCIPION_HOME = os.environ['SCIPION_HOME']
     suffixes = ['pytomc', 'pytomc/swigModules', 
                 'pytomc/sh_alignment/frm/swig',                 
                 'pytomc/libs/libtomc/libs',
                 'external/lib', 'external/lib/python/site-packages']
     suffixPaths = [os.path.join(PYTOM_HOME, suffix) for suffix in suffixes]
-    
-    return [os.path.dirname(PYTOM_HOME)] + suffixPaths
+    paths = [os.path.dirname(PYTOM_HOME)] + suffixPaths
+    paths.append(os.path.join(SCIPION_HOME,"software","lib"))
+    paths.append(os.path.join(SCIPION_HOME,"software","lib","python2.7","site-packages"))
+
+    return paths
 
 
 def addPyTomPaths():
