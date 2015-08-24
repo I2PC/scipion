@@ -732,8 +732,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         args+=" --optimizeGray"
                     if self.contDefocus:
                         args+=" --optimizeDefocus"
-                        if self.phaseFlipped:
-                            args+=" --phaseFlipped"
+                    if self.phaseFlipped:
+                        args+=" --phaseFlipped"
                     if self.weightResiduals:
                         args+=" --oresiduals %s"%join(fnDirLocal,"residuals%02i.stk"%i)
                     self.runJob("xmipp_angular_continuous_assign2",args)
