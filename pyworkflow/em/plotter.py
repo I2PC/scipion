@@ -190,4 +190,4 @@ class PlotData():
         if column == 'id':
             return obj.getObjId()
         
-        return obj.getAttributeValue(column)
+        return obj.getNestedValue(column)

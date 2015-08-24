@@ -188,8 +188,10 @@ class XmippProtNMAChoose(XmippProtConvertToPseudoAtomsBase, XmippProtNMABase):
         self._defineOutputs(outputPdb=pdb)
         modes = NormalModes(filename=self._getPath('modes.xmd'))
         self._defineOutputs(outputModes=modes)
-        self._defineSourceRelation(finalStructure, self.outputPdb)
-        self._defineSourceRelation(self.outputPdb, self.outputModes)
+        
+        self._defineSourceRelation(self.inputStructures, self.outputPdb)
+        # ToDo: the self.outputPdb should be a Pointer, not an object
+#         self._defineSourceRelation(self.outputPdb, self.outputModes)
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):

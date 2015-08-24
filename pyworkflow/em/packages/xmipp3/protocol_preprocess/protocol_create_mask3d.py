@@ -70,14 +70,14 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         form.addParam('inputVolume', PointerParam, pointerClass="Volume", condition=isVolume, 
                       label="Input volume",
                       help="Select the volume that will be used to create the mask")
-        form.addParam('volumeOperation', EnumParam, default=OPERATION_THRESHOLD,
+        form.addParam('volumeOperation', EnumParam, default=OPERATION_THRESHOLD, condition=isVolume, 
                       choices=['Threshold','Segment','Only postprocess'],
                       label='Operation')
         #TODO: add wizard
         form.addParam('threshold', FloatParam, default=0.0,
-                      condition='volumeOperation==%d' % (OPERATION_THRESHOLD),
+                      condition='volumeOperation==%d and %s' % (OPERATION_THRESHOLD, isVolume),
                       label='Threshold')
-        isSegmentation = 'volumeOperation==%d' % (OPERATION_SEGMENT)
+        isSegmentation = 'volumeOperation==%d and %s' % (OPERATION_SEGMENT, isVolume)
         form.addParam('segmentationType', EnumParam, default=SEGMENTATION_DALTON, 
                       condition=isSegmentation,
                       label='Segmentation type',

@@ -82,7 +82,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
     def _fillClassesFromIter(self, clsSet, iteration):
         """ Create the SetOfClasses2D from a given iteration. """
         self._loadClassesInfo(iteration)
-        dataStar = self._getFileName('data', iter=self._lastIter())
+        dataStar = self._getFileName('data', iter=iteration)
         clsSet.classifyItems(updateItemCallback=self._updateParticle,
                              updateClassCallback=self._updateClass,
                              itemDataIterator=md.iterRows(dataStar))
@@ -94,7 +94,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         self._fillClassesFromIter(classes2D, self._lastIter())
         
         self._defineOutputs(outputClasses=classes2D)
-        self._defineSourceRelation(partSet, classes2D)
+        self._defineSourceRelation(self.inputParticles, classes2D)
         
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):

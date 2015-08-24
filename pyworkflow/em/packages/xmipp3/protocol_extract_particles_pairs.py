@@ -291,7 +291,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
 
         outputset.setCoordsPair(self.inputCoordinatesTiltedPairs.get())
         self._defineOutputs(outputParticlesTiltPair=outputset)
-        self._defineSourceRelation(self.inputCoordinatesTiltedPairs.get(), outputset)
+        self._defineSourceRelation(self.inputCoordinatesTiltedPairs, outputset)
             
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

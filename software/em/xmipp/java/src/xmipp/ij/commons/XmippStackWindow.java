@@ -6,40 +6,33 @@ import java.awt.Window;
 import java.awt.event.WindowEvent;
 
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
+import xmipp.utils.Params;
 
 public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	
 	private ImagePlusLoader ipl;
 	protected XmippMenuBar menu;
-	private Window window;
+	protected Params params;
 
-	public XmippStackWindow(Window window, ImagePlusLoader ipl, String title)
+	public XmippStackWindow(ImagePlusLoader ipl, String title, Params params)
 	{
 		super(ipl.getImagePlus(), new XmippImageCanvas(ipl.getImagePlus()));
-		this.window = window;
 		this.ipl = ipl;
 		imp.setTitle(title);
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);
 		//getCanvas().adjustMagnification();
 		XmippApplication.addInstance(true);
+		this.params = params;
 		
 	}
 	
-	public XmippStackWindow(ImagePlusLoader ipl)
+	public XmippStackWindow(ImagePlusLoader ipl, Params params)
 	{
-		this(null, ipl, ipl.getName());
+		this(ipl, ipl.getName(), params);
 	}
 	
-	public XmippStackWindow(Window window, ImagePlusLoader ipl)
-	{
-		this(window, ipl, ipl.getName());
-	}
 	
-	public XmippStackWindow(ImagePlusLoader ipl, String title)
-	{
-		this(null, ipl,title);
-	}
 
 
 	@Override
@@ -97,7 +90,10 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		return true;
 	}
 
-	
+	public Params getParams()
+    {
+        return params;
+    }
 
 
 }

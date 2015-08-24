@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+# * Authors:     Jose Luis Vilas (jlvilas@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -27,13 +27,8 @@
 This sub-package contains wrapper around cryoem algorithm
 """
 
-import os
-from glob import glob
-
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import pyworkflow.protocol.params as params
-from pyworkflow.utils.path import cleanPath, cleanPattern
-
 import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtInitialVolume
 import cryoem_scipion
@@ -47,38 +42,30 @@ class ProtCryoem(ProtInitialVolume):
     
     def _defineParams(self, form):
         form.addSection('Input')
-        form.addParam('inputClasses', params.PointerParam, label="Input classes", 
-                      pointerClass='SetOfClasses2D, SetOfAverages',
+        form.addParam('inputAverages', params.PointerParam, pointerClass='SetOfAverages',
+                      label="Input averages", important=True,
                       help='Select the input classes2D from the project.\n'
                            'It should be a SetOfClasses2D class with class representative')
         form.addParam('resize', params.IntParam, default=32, expertLevel=LEVEL_ADVANCED,
                       label='Resize the input images',
-                      help='In Angstrom.'
+                      help='In Angstrom.\n'
                       'Resize the input images to an image dxd in Angstrom.')
         form.addParam('stepscoarse', params.IntParam, default=2000, expertLevel=LEVEL_ADVANCED,
                       label='Number of steps for coarsing',
-                      help=''
-                      'It determinines the total number of sampling steps for the coarse phase.')
+                      help='It determinines the total number of sampling steps for the coarse phase.')
         form.addParam('stepsrefine', params.IntParam, default=1000, expertLevel=LEVEL_ADVANCED,
                       label='Number of steps for refining',
-                      help=''
-                      'It determinines the total number of sampling steps for the refine phase.')
+                      help='It determinines the total number of sampling steps for the refine phase.')
         form.addParam('rotations', params.IntParam, default=5000, expertLevel=LEVEL_ADVANCED,
                       label='Number of random rotations',
-                      help=''
-                      'It determinines the number of random rotations.')
+                      help='It determinines the number of random rotations.')
         form.addParam('counts', params.IntParam, default=10000, expertLevel=LEVEL_ADVANCED,
                       label='Counts per image',
-                      help=''
-                      'It determinines the number of counts per image.')
+                      help='It determinines the number of counts per image.')
         form.addParam('mixture', params.IntParam, default=500, expertLevel=LEVEL_ADVANCED,
                       label='Components mixture model',
-                      help=''
-                      'It determinines the number of components in the mixture model.')
+                      help='It determinines the number of components in the mixture model.')
         
-        
-        
-    
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):
@@ -91,16 +78,15 @@ class ProtCryoem(ProtInitialVolume):
 
     #--------------------------- STEPS functions --------------------------------------------        
     def convertInputStep(self):
-        self.inputClasses.get().writeStack(self._getExtraPath("classes.mrc:mrcs"))
+        self.inputAverages.get().writeStack(self._getExtraPath("classes.mrc:mrcs"))
                
     def runCryoemPseudoCoarse(self):
-        inputClasses = self.inputClasses.get()
+        inputAverages = self.inputAverages.get()
         resz = self.resize.get()
         stps_coar = self.stepscoarse.get()
         rota = self.rotations.get()
-                
-        xdim, _, _ = inputClasses.getDimensions()
-        Ts = float(inputClasses.getSamplingRate())
+        Ts = inputAverages.getSamplingRate()
+        
         args="%s/gmm-rec.py %s -v -o %s -s %d 50 50 -g -r %d -d %d -a %f -A %f"%(cryoem_scipion.CRYOEM_BIN,
                                                                        self._getExtraPath("classes.mrc"),\
                                                                        self._getExtraPath("coarseVolume.mrc"),\
@@ -120,17 +106,13 @@ class ProtCryoem(ProtInitialVolume):
         #-r number of random rotations
         self.runJob("python", args)
         print 'ZERO APROXIMATION - ENDED'
-        
  
     def runCryoemPseudoRefine(self):
-        inputClasses = self.inputClasses.get()
+        inputAverages = self.inputAverages.get()
         stps_ref = self.stepsrefine.get()
         cou = self.counts.get()
         mix = self.mixture.get()
-        
-        xdim, _, _ = inputClasses.getDimensions()
-
-        Ts = float(inputClasses.getSamplingRate())
+        Ts = float(inputAverages.getSamplingRate())
        
         args2 = "%s/gmm-rec.py %s -v -o %s -s %d -K %d -t %s -N %d -a %f -A %f"%(cryoem_scipion.CRYOEM_BIN,
                                                                                      self._getExtraPath("classes.mrc"),\
@@ -146,20 +128,19 @@ class ProtCryoem(ProtInitialVolume):
         #The number of counts per image is specified by **-N**.
         #The input pixel size of the original images is specified in Angstrom using **-a**.
         #After reconstruction, the final mixture is evaluated on a 3D grid with grid spacing given by **-A** in Angstrom, 
-                                                                                       #to be viewed in chimera.
+        #to be viewed in chimera.
         self.runJob("python", args2)
         print 'REFINEMENT - ENDED'
         
-        
     def createOutputStep(self):
-        inputClasses = self.inputClasses.get()
-        imgxdim, _, _ = inputClasses.getDimensions()
+        inputAverages = self.inputAverages.get()
+        imgxdim = inputAverages.getXDim()
         fnVol = self._getExtraPath("refine.mrc")
         volxdim, _, _, _ = em.ImageHandler().getDimensions(fnVol)
         
         if imgxdim != volxdim:
             fnVolOut = self._getPath("volume.vol")
-            args3 = "-i %s --dim %d -o %s"%(fnVol, xdim, fnVolOut)
+            args3 = "-i %s --dim %d -o %s"%(fnVol, imgxdim, fnVolOut)
             #TODO maybe change later using Python binding to resize images
             import pyworkflow.em.packages.xmipp3 as xmipp3
             self.runJob("xmipp_image_resize", args3, env=xmipp3.getEnviron())
@@ -168,23 +149,23 @@ class ProtCryoem(ProtInitialVolume):
         
         vol = em.Volume()
         vol.setLocation(fnVolOut)
-        vol.setSamplingRate(inputClasses.getSamplingRate())
-        self._defineOutputs(outputVol=vol)
-       
-        self._defineSourceRelation(vol, self.inputClasses)
+        vol.setSamplingRate(inputAverages.getSamplingRate())
+        
+        self._defineOutputs(outputVol=vol)       
+        self._defineSourceRelation(self.inputAverages, vol)
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
-        summary.append("Input classes: %s" % self.getObjectTag('inputClasses'))
+        summary.append("Input classes: %s" % self.getObjectTag('inputAverages'))
         return summary
     
     def _citations(self):
         return ['Joubert2015']
     
     def _methods(self):
-        if self.inputClasses.get() is not None:
+        if self.inputAverages.get() is not None:
             retval="We used *gmm-rec* program [Joubert2015] to produce an initial volume from the set of classes %s."
-            return [retval % self.getObjectTag('inputClasses')]
+            return [retval % self.getObjectTag('inputAverages')]
         else:
             return []

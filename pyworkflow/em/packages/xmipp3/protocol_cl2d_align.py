@@ -97,7 +97,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
         avg.setLocation(1, avgFile)
         avg.copyInfo(particles)
         self._defineOutputs(outputAverage=avg)
-        self._defineSourceRelation(particles, avg)
+        self._defineSourceRelation(self.inputParticles, avg)
             
         # Generate the Set of Particles with alignment
         alignedSet = self._createSetOfParticles()
@@ -105,7 +105,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
         alignedSet.setRepresentative(avg)
         readSetOfParticles(self.imgsFn, alignedSet)
         self._defineOutputs(outputParticles=alignedSet)
-        self._defineSourceRelation(particles, alignedSet)
+        self._defineSourceRelation(self.inputParticles, alignedSet)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):

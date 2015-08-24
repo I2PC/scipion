@@ -30,6 +30,7 @@ basic classes.
 """
 
 from itertools import izip
+from collections import OrderedDict
 
 # Binary relations always involve two objects, we 
 # call them parent-child objects, the following
@@ -319,12 +320,42 @@ class Object(object):
         """ Return all attributes and values in a dictionary.
         Nested attributes will be separated with a dot in the dict key.
         """
-        from collections import OrderedDict
         d = OrderedDict()
         if includeClass:
             d['self'] = (self.getClassName(),)
         self.__getObjDict('', d, includeClass)
         return d
+            
+    def __getMappedDict(self, prefix, objDict):
+        if prefix:
+            prefix += '.'
+        for k, v in self.getAttributesToStore():
+            if not v.isPointer():
+                kPrefix = prefix + k
+                objDict[kPrefix] = v
+                if not isinstance(v, Scalar):
+                    v.__getMappedDict(kPrefix, objDict)
+                        
+    def getMappedDict(self):
+        d = OrderedDict()
+        self.__getMappedDict('', d)
+        return d        
+    
+    def getNestedValue(self, key):
+        """ Retrieve the value of nested attributes like: _ctfModel.defocusU. """
+        attr = self
+        for p in key.split('.'):
+            attr = getattr(attr, p)
+        return attr.get()
+    
+    def getValuesFromDict(self, objDict):
+        """ Retrieve the values of the attributes
+        for each of the keys that comes in the objDict.
+        """
+        return [self.getNestedValue(k) for k in objDict if k != 'self']
+    
+    def getValuesFromMappedDict(self, mappedDict):
+        return [v.getObjValue() for v in mappedDict.values()]
     
     def copy(self, other, copyId=True, ignoreAttrs=[]):
         """ Copy all attributes values from one object to the other.
@@ -651,6 +682,7 @@ class Pointer(Object):
     """Reference object to other one"""
     EXTENDED_ATTR = '__attribute__'
     EXTENDED_ITEMID = '__itemid__'
+    _ERRORS = {}
     
     def __init__(self, value=None, **kwargs):
         Object.__init__(self, value, objIsPointer=True, **kwargs)
@@ -658,12 +690,9 @@ class Pointer(Object):
         # or the id of an item inside a set
         self._extended = String()
         
-        if 'extendedAttribute' in kwargs:
-            self.setExtendedAttribute(kwargs.get('extendedAttribute')) 
-        if 'extendedItemId' in kwargs:
-            self.setExtendedItemId(kwargs.get('extendedItemId'))
-        
-       
+        if 'extended' in kwargs:
+            self.setExtended(kwargs.get('extended')) 
+               
     def __str__(self):
         """String representation of a pointer"""
         if self.hasValue():
@@ -671,35 +700,38 @@ class Pointer(Object):
             strId = self.getObjValue().strId()
             return '-> %s (%s)' % (className, strId)
         return '-> None'
+    
+    def __clean(self, extended):
+        """ Remove old attributes conventions. """
+        #TODO: This replacements are needed now by backward compatibility
+        # reasons, when we used __attribute__ and __item__ to mark both cases
+        # in a future the following two lines can be removed.
+        ext = extended.replace(self.EXTENDED_ATTR, '')
+        ext = ext.replace(self.EXTENDED_ITEMID, '')
+        return ext
+        
 
     def hasValue(self):
         return self._objValue is not None
     
     def get(self, default=None):
         """ Get the pointed object. 
-        If the _extended property is set, then the extended attribute or item id
-        will be retrieved by the call to get().
+        By default all pointers store a "pointed object" value.
+        The _extended attribute allows to also point to internal
+        attributes or items (in case of sets) of the pointed object.
         """
         extended = self._extended.get()
         if extended:
-            if extended.startswith(self.EXTENDED_ATTR):
-                attribute = extended.split('__')[-1]
-                value = getattr(self._objValue, attribute, default)
-            elif extended.startswith(self.EXTENDED_ITEMID):
-                itemId = int(extended.split('__')[-1])
-                value = self._objValue[itemId]
-                value._parentObject = self._objValue
-            else:
-                # This is now only for compatibility reasons
-                try:
-                    itemId = int(extended)
-                    value = self._objValue[itemId]
-                    value._parentObject = self._objValue
-                except Exception:
-                    attribute = str(extended)
-                    value = getattr(self._objValue, attribute, default)
-                    
-                #raise Exception("Invalid value '%s' for pointer._extended property." % extended)
+            ext = self.__clean(extended)
+            parts = ext.split('.')
+            value = self._objValue
+            for p in parts:
+                if p.isdigit():
+                    value = value[int(p)] # item case
+                else:
+                    value = getattr(value, p, None)
+                if value is None:
+                    break
         else:
             value = self._objValue
             
@@ -713,40 +745,62 @@ class Pointer(Object):
         if hasattr(self, '_extended'):
             self._extended.set(None)
         
-    def setExtendedAttribute(self, attributeName):
-        """ Point to an attribute of the pointed object. """
-        self._extended.set(self.EXTENDED_ATTR + attributeName)
-        
-    def hasExtendedAttribute(self):
-        return (self._extended.hasValue() and
-                self._extended.get().startswith(self.EXTENDED_ATTR))
-        
-    def setExtendedItemId(self, itemId):
-        """ Point to an specific item of a pointed Set. """
-        self._extended.set(self.EXTENDED_ITEMID + str(itemId))
-         
-    def hasExtendedItemId(self):
-        return (self._extended.hasValue() and
-                self._extended.get().startswith(self.EXTENDED_ITEMID))       
-        
-        
     def hasExtended(self):
-        return self._extended.hasValue()
+        return bool(self._extended.get()) # consider empty string as false
     
     def getExtended(self):
-        return self._extended.get()
+        return self.__clean(self._extended.get(''))
+        
+    def setExtended(self, attribute):
+        """ Set the attribute name of the "pointed object"
+        that will be the result of the get() action. 
+        """
+        self._extended.set(attribute)
     
-    def getExtendedValue(self):
+    def getExtendedParts(self):
+        """ Return the extended components as a list. """
         if self.hasExtended():
-            return self._extended.get().split('__')[-1]
+            return self.getExtended().split('.')
         else:
-            return None
+            return []
+    
+    def setExtendedParts(self, parts):
+        """ Set the extedend attribute but using 
+        a list as input. 
+        """
+        self.setExtended('.'.join(parts))
+        
+    def addExtended(self, attribute):
+        """ Similar to setExtended, but concatenating more extensions
+        instead of replacing the previous value.
+        """
+        if self.hasExtended():
+            self._extended.set('%s.%s' % (self._extended.get(), attribute))
+        else:
+            self.setExtended(attribute)
+            
+    def removeExtended(self):
+        """ Remove the last part of the extended attribute. """
+        if self.hasExtended():
+            parts = self.getExtendedParts()
+            self.setExtendedParts(parts[:-1])
         
     def getAttributes(self):
         yield ('_extended', getattr(self, '_extended'))
         
     def pointsNone(self):
         return self.get() is None
+    
+    def getUniqueId(self):
+        """ Return an unique id concatenating the id
+        of the direct pointed object plus the extended 
+        attribute.
+        """
+        uniqueId = self.getObjValue().strId()
+        if self.hasExtended():
+            uniqueId += '.%s' % self.getExtended()
+        
+        return uniqueId
     
 
 class List(Object, list):
@@ -827,7 +881,8 @@ class PointerList(List):
             pointer = Pointer()
             pointer.set(value)
         else:
-            raise Exception("Only subclasses of Object can be added to PointerList")
+            raise Exception("Only subclasses of Object can be added to PointerList\n"
+                            " Passing value: %s, type: %s" % (value, type(value)))
 
         List.append(self, pointer)
 
@@ -1015,11 +1070,13 @@ class Set(OrderedObject):
     def __del__(self):
         # Close connections to db when destroy this object
         if self._mapper is not None:
+            #print "Closing DB: %s" % self.getFileName()
             self.close()
         
     def close(self):
-        self._mapper.close()
-        self._mapper = None
+        if self._mapper is not None:
+            self._mapper.close()
+            self._mapper = None
         
     def clear(self):
         self._mapper.clear()
@@ -1097,12 +1154,24 @@ class Set(OrderedObject):
         """
         self.setAttributeValue(propertyName, self.getProperty(propertyName, defaultValue))
         
+    def loadAllProperties(self):
+        """ Retrieve all properties stored by the mapper. """
+        for key in self._getMapper().getPropertyKeys():
+            if key != 'self':
+                self.loadProperty(key)
+        
     def getIdSet(self):
         """ Return a Python set object containing all ids. """
         s = set()
         for item in self.iterItems():
             s.add(item.getObjId())
         return s
+    
+    def getFiles(self):
+        files = set()
+        if self.getFileName():
+            files.add(self.getFileName())
+        return files
 
 
 def ObjectWrap(value):

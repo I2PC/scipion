@@ -1,5 +1,7 @@
 package xmipp.ij.commons;
 
+import xmipp.utils.Params;
+
 
 public interface XmippIJWindow
 {
@@ -18,5 +20,10 @@ public interface XmippIJWindow
 	public void openMaskToolbar();
 
 	public XmippImageCanvas getCanvas();
+	
+
+    public Params getParams();
+
+   
 	
 }

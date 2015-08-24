@@ -40,10 +40,14 @@ MASK_OBJECT = 1
 
 class ProtGemPicker(em.ProtParticlePicking):
     """
-    gEMpicker is a template-based cryo-EM particle picking program that use cross-correlation approach.
-    The user may define a template particle in one of several ways, and this is then used to pick other similar particles
-    from the micrographs by using a fast Fourier transform (FFT) to calculate the correlation score at each pixel between the template and the micrograph.
-    Multiple micrographs may be processed in parallel, and the calculation may be accelerated considerably by using one or more attached graphics processors (GPUs).
+    gEMpicker is a template-based cryo-EM particle picking program that use
+    cross-correlation approach. The user may define a template particle in 
+    one of several ways, and this is then used to pick other similar particles
+    from the micrographs by using a fast Fourier transform (FFT) to calculate 
+    the correlation score at each pixel between the template and the micrograph.
+    Multiple micrographs may be processed in parallel, and the calculation may 
+    be accelerated considerably by using one or more attached graphics 
+    processors (GPUs).
     """
     _label = 'auto-picking'
         
@@ -52,9 +56,10 @@ class ProtGemPicker(em.ProtParticlePicking):
         
         em.ProtParticlePicking._defineParams(self, form)
         form.addParam('inputReferences', params.PointerParam, 
-                      pointerClass='SetOfParticles,SetOfAverages',
+                      pointerClass='SetOfAverages',
                       label='Input References', important=True,
-                      help="Template images (2D class averages or reprojections from a reference volume) to be used in picking.")
+                      help="Template images (2D class averages or reprojections "
+                           "from a reference volume) to be used in picking.")
         form.addParam('refsHaveInvertedContrast', params.BooleanParam, default=False,
                       label='References have inverted contrast',
                       help='Set to Yes to indicate that the reference have inverted \n'
@@ -64,7 +69,8 @@ class ProtGemPicker(em.ProtParticlePicking):
                       help='In-plane rotating angle in degrees (0 = no rotation)')
         
         line = form.addLine('Threshold in the range [0-1]', 
-                            help='Threshold value for picking, select low and high values for cut-off.')
+                            help="Threshold value for picking, select low and high "
+                                 "values for cut-off.")
         line.addParam('thresholdLow', params.FloatParam, default=0.1,
                       label='Low')
         line.addParam('thresholdHigh', params.FloatParam, default=0.5,
@@ -72,13 +78,15 @@ class ProtGemPicker(em.ProtParticlePicking):
 
         form.addParam('maxPeaks', params.IntParam, default=0,
                       label='Max particles per micrograph', expertLevel=LEVEL_ADVANCED,
-                      help='Maximum number of particles picked from each micrograph (0 = no limit)')
+                      help="Maximum number of particles picked from each "
+                           "micrograph (0 = no limit)")
         form.addParam('boxSize', params.IntParam, default=0,
                       label='Box size (pix)', expertLevel=LEVEL_ADVANCED,
                       help='Size of picked images (if 0, use search image size)')
         form.addParam('boxDist', params.IntParam, default=0,
                       label='Min distance between particles (pix)', expertLevel=LEVEL_ADVANCED,
-                      help='Minimal distance between the centers of picked particles (if 0, use reference image half-size)')
+                      help="Minimal distance between the centers of picked "
+                           "particles (if 0, use reference image half-size)")
         form.addParam('maskType', params.EnumParam, 
                       choices=['circular', 'object'], default=0, 
                       display=params.EnumParam.DISPLAY_HLIST,
@@ -237,12 +245,14 @@ class ProtGemPicker(em.ProtParticlePicking):
                 errors.append('If the number of input masks is greater than one, \n'
                               'it should be equal to the number of references.')
 
-	value1 = round(self.thresholdLow,1)
-	value2 = round(self.thresholdHigh,1)
-	if self.thresholdLow < self.thresholdHigh and 0.0 <= value1 <= 1.0 and 0.0 <= value2 <= 1.0:
-	    pass
-	else:
-	    errors.append('Wrong threshold values!')
+        value1 = round(self.thresholdLow,1)
+        value2 = round(self.thresholdHigh,1)
+        
+        if (self.thresholdLow < self.thresholdHigh and 
+            0.0 <= value1 <= 1.0 and 0.0 <= value2 <= 1.0):
+            pass
+        else:
+            errors.append('Wrong threshold values!')
 
         return errors
         

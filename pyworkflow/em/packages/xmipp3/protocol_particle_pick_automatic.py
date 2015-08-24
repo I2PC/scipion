@@ -72,22 +72,6 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         form.addParallelSection(threads=1, mpi=1)
         
     #--------------------------- INSERT steps functions --------------------------------------------    
-    def getInputMicrographs(self):
-        """ Return the input micrographs that can be the same of the supervised
-        picking or other ones selected by the user. (This can be used to pick
-        a new set of micrographs with the same properties than a previous trained
-        ones. )
-        """ 
-        # Get micrographs to pick
-        if self.micsToPick == MICS_SAMEASPICKING:
-            inputPicking = self.xmippParticlePicking.get()
-            if inputPicking is None:
-                return None
-            else:
-                return inputPicking.inputMicrographs.get()
-        else:
-            return self.inputMicrographs.get()
-                
     def _insertAllSteps(self):
         """The Particle Picking proccess is realized for a set of micrographs"""
         
@@ -105,7 +89,6 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                     
         self._insertFunctionStep('_createOutput',self._getExtraPath(), prerequisites=deps)
         
-    
     #--------------------------- STEPS functions --------------------------------------------
     def copyInputFilesStep(self):
         # Copy training model files to current run
@@ -158,7 +141,8 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         srcPaths = [self.xmippParticlePicking.get()._getExtraPath(k) for k in self.filesToCopy]
         # Check that all needed files exist
         if missingPaths(*srcPaths):
-            validateMsgs.append('Input supervised picking run is not valid.')
+            validateMsgs.append('Input picking run has not been trained, '
+                                'use *Autopick* for at least one micrograph')
             
         # If other set of micrographs is provided they should have same sampling rate and acquisition
         if self.micsToPick.get() == MICS_OTHER:
@@ -183,13 +167,13 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
             isAutopick = pickingState != "Manual"
             manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
             autoParticlesSize = md.getValue(xmipp.MDL_PICKING_AUTOPARTICLES_SIZE, configobj)
-
-            summary.append("Manual particles picked: %d"%manualParticlesSize)
+            
+            summary.append("Manual particles picked: %s" % manualParticlesSize)
             summary.append("Particle size:%d" %(particleSize))
             autopick = "Yes" if isAutopick else "No"
             summary.append("Autopick: " + autopick)
             if isAutopick:
-                summary.append("Automatic particles picked: %d"%autoParticlesSize)
+                summary.append("Automatic particles picked: %s" % autoParticlesSize)
             summary.append("Last micrograph: " + activeMic)
         return "\n".join(summary)
 
@@ -202,6 +186,31 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     def _citations(self):
         return ['Abrishami2013']
     
+    #--------------------------- UTILS functions ---------------------------------------------------
     def getCoordsDir(self):
         return self._getExtraPath()
     
+    def getInputMicrographsPointer(self):
+        # Get micrographs to pick
+        if self.micsToPick == MICS_SAMEASPICKING:
+            inputPicking = self.xmippParticlePicking.get()
+            if inputPicking is None:
+                return None
+            else:
+                return inputPicking.inputMicrographs
+        else:
+            return self.inputMicrographs
+        
+    def getInputMicrographs(self):
+        """ Return the input micrographs that can be the same of the supervised
+        picking or other ones selected by the user. (This can be used to pick
+        a new set of micrographs with the same properties than a previous trained
+        ones. )
+        """ 
+        if self.getInputMicrographsPointer() is not None:
+            return self.getInputMicrographsPointer().get()
+        else:
+            return None
+
+
+

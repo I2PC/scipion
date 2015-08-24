@@ -349,29 +349,20 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
     def windowStep(self, args):
         self.runJob("xmipp_transform_window", args)
 
-    def createOutputStep(self):
-        volSet = self.inputVolumes.get()
-        if self._isSingleInput():
-            vol = Volume()
-            vol.copyInfo(volSet)
-            if self.doResize:
-                vol.setSamplingRate(self.samplingRate)
-            vol.setFileName(self.outputStk)
-            self._defineOutputs(outputVol=vol)
-        else:
-            volumes = self._createSetOfVolumes()
-            volumes.copyInfo(volSet)
+    def _preprocessOutput(self, volumes):
+        # We use the preprocess only whne input is a set
+        # we do not use postprocess to setup correctly
+        # the samplingRate before each volume is added
+        if not self._isSingleInput():
             if self.doResize:
                 volumes.setSamplingRate(self.samplingRate)
-            for i, vol in enumerate(volSet):
-                j = i + 1
-                vol.setSamplingRate(self.samplingRate)
-                vol.setLocation(j, self.outputStk)
-                volumes.append(vol)
-            self._defineOutputs(outputVol=volumes)
 
-        self._defineTransformRelation(volSet, self.outputVol)
-    
+    def _postprocessOutput(self, volumes):
+        # We use the postprocess only when input is a volume
+        if self._isSingleInput():
+            if self.doResize:
+                volumes.setSamplingRate(self.samplingRate)            
+     
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
         summary = []

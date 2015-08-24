@@ -113,8 +113,11 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
     def getInputReferences(self):
         return self.inputReferences.get()
     
+    def getInputMicrographsPointer(self):
+        return self.inputMicrographs
+    
     def getInputMicrographs(self):
-        return self.inputMicrographs.get()
+        return self.getInputMicrographsPointer().get()
         
     def getCoordsDir(self):
         return self._getTmpPath('xmipp_coordinates')
@@ -366,6 +369,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
         readSetOfCoordinates(coordSet, starFiles)
         
         self._defineOutputs(outputCoordinates=coordSet)
+        self._defineSourceRelation(self.getInputMicrographsPointer(), coordSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

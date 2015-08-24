@@ -215,6 +215,11 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             errors.append("Error: for non-automated ctf grouping, please provide a docfile!")
         if self.numberOfMpi<=1:
             errors.append("The number of MPI processes has to be larger than 1")
+        
+        xDimImg = self.inputParticles.get().getXDim()
+        xDimVol, _, _ = self.input3DReferences.get().getDim()
+        if xDimImg != xDimVol:
+            errors.append("The dimensions of the volume(s) and particles must be equal!!!!")
         return errors
     
     def _citations(self):

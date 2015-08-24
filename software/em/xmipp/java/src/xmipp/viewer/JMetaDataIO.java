@@ -10,9 +10,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.logging.Level;
+
+import xmipp.ij.commons.IJCommand;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.viewer.particlepicker.IJCommand;
 import static xmipp.viewer.particlepicker.ParticlePicker.getLogger;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
@@ -86,7 +87,8 @@ public class JMetaDataIO {
 
 	}
     
-        public static void saveConfig(SupervisedParticlePicker picker, String path)
+       
+    public static void saveConfig(SupervisedParticlePicker picker, String path)
 	{
                 //System.out.println("saving data on JMetaDataIO");
 		long id;

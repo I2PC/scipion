@@ -2,13 +2,17 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.ImagePlus;
+
 import java.awt.Image;
 import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+
+import xmipp.ij.commons.IJCommand;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;

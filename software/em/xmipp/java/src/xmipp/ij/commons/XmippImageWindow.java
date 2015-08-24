@@ -5,6 +5,7 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
+
 import java.awt.Label;
 import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
@@ -13,7 +14,9 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
+
 import javax.swing.SwingUtilities;
+
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
 import xmipp.utils.Params;
 import xmipp.utils.XmippWindowUtil;
@@ -57,7 +60,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		this.params = params;
 		XmippApplication.addInstance(true);
 		initComponents();
-                
+		
 	}
         
     protected void initComponents()
@@ -70,7 +73,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	        if(XmippApplication.isScipion())
 	        {
 	            MenuItem createMaskmi = new MenuItem("Design Mask");
-	            
 	            createMaskmi.addActionListener(new ActionListener() {
 	
 	                @Override
@@ -83,9 +85,9 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	                loadMaskFrame();
 	        }
         }
-        pixelslb = new Label("                                          ");
+        pixelslb = new Label("                                                ");
         add(pixelslb);
-        pack();
+        
     }
 
         @Override
@@ -190,9 +192,8 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
         @Override
 	public void windowClosing(WindowEvent e) {
             
-            super.windowClosing(e);
-            myClose();
-		
+        super.windowClosing(e);
+        myClose();
 	}
         
     public synchronized void myClose()
@@ -221,11 +222,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
     public Params getParams()
     {
         return params;
-    }
-
-    public void setParams(Params params)
-    {
-        this.params = params;
     }
 
 
@@ -267,22 +263,26 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
                 }
             });
             imp.getCanvas().addComponentListener(new java.awt.event.ComponentAdapter()
-	{
-                    @Override
-		public void componentResized(ComponentEvent e)
-		{
-			maskfr.refreshMask();
-		}
-	});
+            {
+                @Override
+				public void componentResized(ComponentEvent e)
+				{
+					maskfr.refreshMask();
+				}
+			});
+            
         }
     }
 
-
-
+   
 	public synchronized boolean isClosing()
 	{
 		// TODO Auto-generated method stub
 		return closing;
 	}
+
+	
+	
+	
 
 }// class XmippImageWindow

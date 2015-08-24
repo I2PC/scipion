@@ -114,6 +114,10 @@ def prettyDelta(timedelta):
     return str(timedelta).split('.')[0]
 
 
+def prettyLog(msg):
+    print cyan(prettyTime(datetime.now(), secs=True)), msg
+
+
 class Timer(object):
     """ Simple Timer base in datetime.now and timedelta. """
     def tic(self):
@@ -570,6 +574,7 @@ def startDebugger(mode='SCIPION_DEBUG', password='a'):
     if mode != 'SCIPION_DEBUG' or envVarOn('SCIPION_DEBUG'):
         try:
             from rpdb2 import start_embedded_debugger
+            print "Starting debugger..."
             start_embedded_debugger(password)
         except Exception:
             print "Error importing rpdb2 debugging module, consider installing winpdb."

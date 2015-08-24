@@ -305,7 +305,7 @@ def rowToAlignment(alignmentRow, alignType):
     invTransform == True  -> for xmipp implies projection
     """
     is2D = alignType == em.ALIGN_2D
-    inverseTransform = alignType == em.ALIGN_PROJ
+    inverseTransform = True#alignType == em.ALIGN_PROJ
     
     if alignmentRow.containsAny(ALIGNMENT_DICT):
         alignment = em.Transform()
@@ -726,7 +726,7 @@ def convertBinaryFiles(imgSet, outputDir, extension='mrcs'):
     elif ext == 'mrc' and extension == 'mrcs':
         mapFunc = createBinaryLink
         print "convertBinaryFiles: creating soft links (mrcs -> mrc)."
-    elif ext.endswith('.hdf'): # assume eman .hdf format
+    elif ext.endswith('hdf'): # assume eman .hdf format
         mapFunc = convertStack
         print "convertBinaryFiles: converting stacks. (%s -> %s)" % (extension, ext)
     else:

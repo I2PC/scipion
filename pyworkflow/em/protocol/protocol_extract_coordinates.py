@@ -26,20 +26,24 @@
 
 
 from pyworkflow.protocol.params import PointerParam, FloatParam, LEVEL_ADVANCED
-from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import Coordinate
 from collections import OrderedDict
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
+
+
 
 class ProtExtractCoords(ProtParticlePicking):
     """ 
     Extract the coordinates information from a set of particles.
     
     This protocol is useful when we want to re-extract the particles
-    (maybe resulting from classification and cleannign) with the 
+    (maybe resulting from classification and cleaning) with the 
     original dimensions. It can be also handy to visualize the resulting
-    particles in their location in the micrographs.
+    particles in their location on micrographs.
     """
+    # TESTS: 
+    # scipion test tests.em.protocols.test_protocols_xmipp_mics.TestXmippExtractParticles
+    
     _label = 'extract coordinates'
 
     def _defineParams(self, form):
@@ -56,11 +60,12 @@ class ProtExtractCoords(ProtParticlePicking):
                            'associate the coordinates from the particles.')
         
         form.addParam('correction', FloatParam, level=LEVEL_ADVANCED,
-                      label='Scale correction',
+                      label='Scale correction', default=0,
                       help='This parameter should not be used. '
                            'It is only now to correct for a wrong '
                            'tracking of the coordinates according to'
-                           'the particles pixel size.')
+                           'the particles pixel size.\n'
+                           'For now, 0 means no correction.')
 
         form.addParallelSection(threads=0, mpi=0)
 
@@ -75,8 +80,13 @@ class ProtExtractCoords(ProtParticlePicking):
         outputCoords = self._createSetOfCoordinates(inputMics)
 
         scale = inputParticles.getSamplingRate() / inputMics.getSamplingRate()
-        c =  self.correction.get() 
-        print "Scaling pixel size by: ", scale        
+        
+        #FIXME: the 'correction' as a temporarly hack for fixing the 
+        # coordinates scale according to the particles pixel size
+        if self.correction > 0:
+            scale_corrected = scale * self.correction.get()
+            
+        print "Scaling coordinates by a factor *%0.2f*" % scale        
         newCoord = Coordinate()
         
         firstCoord = inputParticles.getFirstItem().getCoordinate()
@@ -84,7 +94,6 @@ class ProtExtractCoords(ProtParticlePicking):
             
         # Create the micrographs dict using either micName or micId
         micDict = {}
-        missedDict = OrderedDict()
         
         for mic in inputMics:
             micKey = mic.getMicName() if hasMicName else mic.getObjId()
@@ -107,8 +116,8 @@ class ProtExtractCoords(ProtParticlePicking):
                 newCoord.copyObjId(particle)
                 #FIXME: the 'correction' as a temporarly hack for fixing the 
                 # coordinates scale according to the particles pixel size
-                newCoord.setX(coord.getX() * scale * c)
-                newCoord.setY(coord.getY() * scale * c)
+                x, y = coord.getPosition()
+                newCoord.setPosition(x*scale_corrected, y*scale_corrected)                
                 newCoord.setMicrograph(mic)
                 outputCoords.append(newCoord)
         
@@ -116,8 +125,8 @@ class ProtExtractCoords(ProtParticlePicking):
         outputCoords.setBoxSize(boxSize)
         
         self._defineOutputs(outputCoordinates=outputCoords)
-        self._defineSourceRelation(inputParticles, outputCoords)
-        self._defineSourceRelation(inputMics, outputCoords)
+        self._defineSourceRelation(self.inputParticles, outputCoords)
+        self._defineSourceRelation(self.inputMicrographs, outputCoords)
                 
     def _summary(self):
         summary = []
