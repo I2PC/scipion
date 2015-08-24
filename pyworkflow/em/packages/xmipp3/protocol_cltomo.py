@@ -82,6 +82,7 @@ class XmippProtCLTomo(ProtClassify3D):
         form.addParam('maxShiftX',FloatParam,default=360,label='Maximum shift X',help="In voxels")
         form.addParam('maxShiftY',FloatParam,default=360,label='Maximum shift Y',help="In voxels")
         form.addParam('maxShiftZ',FloatParam,default=360,label='Maximum shift Z',help="In voxels")
+        form.addParallelSection(threads=0, mpi=4)
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -122,7 +123,7 @@ class XmippProtCLTomo(ProtClassify3D):
         if self.dontAlign.get():
             params+=" --dontAlign"
 
-        self.runJob('xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params),env=self.getCLTomoEnviron())
+        self.runJob('xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params),env=self.getCLTomoEnviron(),numberOfMpi=1)
     
     def createOutput(self):
         import glob

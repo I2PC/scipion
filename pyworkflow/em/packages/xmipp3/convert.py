@@ -1041,7 +1041,8 @@ def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args)
     
     for objId in classesMd:
         classVol = ClassVol()
-        classVol = rowToClassVol(classesMd, objId, classVol)
+        classRow = rowFromMd(classesMd, objId)
+        classVol = rowToClass(classRow, classVol)
         classesVolSet.append(classVol)
         ref = classVol.getObjId()
         b = 'class%06d_images' % ref
