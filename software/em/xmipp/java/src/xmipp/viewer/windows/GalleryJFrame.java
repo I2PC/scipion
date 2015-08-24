@@ -469,7 +469,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				});
 			}
 		});
-		setScipionImageIcon();
+		XmippWindowUtil.setScipionImageIcon(this);
 	}
 
 	private void setInitialValues()
@@ -2437,10 +2437,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                 openChimera(data.getSelVolumeFile(), false);
         }
         
-        protected void setScipionImageIcon()
-        {
-                Image img = XmippResource.getIcon("scipion_logo.png").getImage();
-                setIconImage(img);
-        }
+       
        
 }// class JFrameGallery

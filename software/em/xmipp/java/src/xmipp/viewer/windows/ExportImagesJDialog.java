@@ -151,6 +151,8 @@ public class ExportImagesJDialog extends JDialog{
 
                     try {
                     	path = pathtf.getText();
+                    	if(path.endsWith(".mrcs"))
+                    		path += ":mrcs";
                     	int label = frame.data.getRenderColumn().label;
                     	MetaData md;
                     	if(frame.data.isScipionInstance())
