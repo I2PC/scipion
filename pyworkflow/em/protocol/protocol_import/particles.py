@@ -222,7 +222,7 @@ class ProtImportAverages(ProtImportParticles):
         return choices
             
     def _defineAcquisitionParams(self, form):
-        form.addParam('samplingRate', FloatParam, default=1.,
+        form.addParam('samplingRate', params.FloatParam, default=1.,
                    label=Message.LABEL_SAMP_RATE)
         group = ProtImportImages._defineAcquisitionParams(self, form)
         group.expertLevel.set(LEVEL_ADVANCED)
