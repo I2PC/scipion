@@ -36,14 +36,18 @@ from pyworkflow.em.data import SetOfVolumes, Volume
 from pyworkflow.em.metadata.utils import getFirstRow
 from convert import writeSetOfParticles
 from os.path import join, exists
+from pyworkflow.em.packages.xmipp3.convert import readSetOfParticles, setXmippAttributes
+import pyworkflow.em as em
 from pyworkflow.em.convert import ImageHandler
 from glob import glob
 
 from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAMPLINGRATE, MDL_WEIGHT_SSNR, \
-                  MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_ANGLE_DIFF, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_ORIGINAL, \
-                  MDL_COUNT, MDL_SHIFT_X, MDL_CONTINUOUS_X, MDL_WEIGHT_JUMPER, MDL_CTF_DEFOCUSU, MDL_CTF_MODEL, MDL_PARTICLE_ID, \
-                  MDL_ZSCORE_RESCOV, MDL_ZSCORE_RESVAR, MDL_ZSCORE_RESMEAN, Image
+                  MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_ANGLE_DIFF, \
+                  MDL_COUNT, MDL_SHIFT_X, MDL_SHIFT_Y, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_SCALE, MDL_MAXCC, MDL_WEIGHT_JUMPER, MDL_CTF_DEFOCUSU, \
+                  MDL_COST, MDL_CTF_MODEL, MDL_PARTICLE_ID
+
 from xmipp3 import HelicalFinder
+import pyworkflow.em.metadata as metadata
 
 """
 Falta: 
@@ -246,15 +250,37 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         lastIter=len(fnIterDir)-1
         fnLastDir=self._getExtraPath("Iter%03d"%lastIter)
         fnLastVol=join(fnLastDir,"volumeAvg.mrc")
+        Ts=self.readInfoField(fnLastDir,"size",MDL_XSIZE)
         if exists(fnLastVol):
             volume=Volume()
             volume.setFileName(fnLastVol)
-            Ts=self.readInfoField(fnLastDir,"size",MDL_XSIZE)
             volume.setSamplingRate(Ts)
             self._defineOutputs(outputVolume=volume)
             self._defineSourceRelation(self.inputParticles.get(),volume)
             self._defineSourceRelation(self.inputVolumes.get(),volume)
 
+        fnLastAngles=join(fnLastDir,"angles.xmd")
+        if exists(fnLastAngles):
+            fnAngles=self._getPath("angles.xmd")
+            self.runJob('xmipp_metadata_utilities','-i %s -o %s --operate modify_values "image=image1"'%(fnLastAngles,fnAngles),numberOfMpi=1)
+            self.runJob('xmipp_metadata_utilities','-i %s --operate sort particleId'%fnAngles,numberOfMpi=1)
+            self.runJob('xmipp_metadata_utilities','-i %s --operate drop_column image1'%fnAngles,numberOfMpi=1)
+            self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "itemId=particleId"'%fnAngles,numberOfMpi=1)
+            imgSetOut = self._createSetOfParticles()
+            imgSetOut.copyInfo(self.inputParticles.get())
+            readSetOfParticles(fnAngles,imgSetOut, postprocessImageRow=self._postprocessImageRow)
+            self._defineOutputs(outputParticles=imgSetOut)
+            self._defineSourceRelation(self.inputParticles, imgSetOut)
+    
+    def _postprocessImageRow(self, particle, row):
+        setXmippAttributes(particle, row, MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SCALE, MDL_MAXCC, MDL_WEIGHT)
+        if row.containsLabel(MDL_CONTINUOUS_X):
+            setXmippAttributes(particle, row, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_COST, MDL_WEIGHT_CONTINUOUS2)
+        if row.containsLabel(MDL_ANGLE_DIFF):
+            setXmippAttributes(MDL_ANGLE_DIFF, MDL_WEIGHT_JUMPER)
+        if row.containsLabel(MDL_WEIGHT_SSNR):
+            setXmippAttributes(particle, row, MDL_WEIGHT_SSNR)
+    
     def getNumberOfPreviousIterations(self):
         fnDirs=sorted(glob(self.continueRun.get()._getExtraPath("Iter???")))
         lastDir=fnDirs[-1]
