@@ -195,7 +195,7 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
     	prm->ctf.applyCTF(prm->P(),prm->Ts,prm->phaseFlipped);
     }
 
-    double cost=0, avg=0;
+    //double cost=0, avg=0;
 	if (prm->old_flip)
 	{
 		MAT_ELEM(A,0,0)*=-1;
@@ -211,25 +211,41 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 	//MultidimArray<double> &mIp=prm->Ip();
 	MultidimArray<double> &mIfilteredp=prm->Ifilteredp();
 	MultidimArray<double> &mE=prm->E();
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask2D)
+	mE.initZeros();
+	if (a!=1.0 || b!=0.0)
 	{
-		if (DIRECT_MULTIDIM_ELEM(mMask2D,n))
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask2D)
 		{
-			//DIRECT_MULTIDIM_ELEM(mIp,n)=a*DIRECT_MULTIDIM_ELEM(mIp,n)+b;
-			DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=a*DIRECT_MULTIDIM_ELEM(mIfilteredp,n)+b;
-			double val=DIRECT_MULTIDIM_ELEM(mP,n)-DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
-			DIRECT_MULTIDIM_ELEM(mE,n)=val;
-			cost+=fabs(val);
-			//avg+=val;
-		}
-		else
-		{
-			//DIRECT_MULTIDIM_ELEM(mIp,n)=0;
-			DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=0;
-			DIRECT_MULTIDIM_ELEM(mE,n)=0;
+			if (DIRECT_MULTIDIM_ELEM(mMask2D,n))
+			{
+				//DIRECT_MULTIDIM_ELEM(mIp,n)=a*DIRECT_MULTIDIM_ELEM(mIp,n)+b;
+				DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=a*DIRECT_MULTIDIM_ELEM(mIfilteredp,n)+b;
+				double val=DIRECT_MULTIDIM_ELEM(mP,n)-DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
+				DIRECT_MULTIDIM_ELEM(mE,n)=val;
+				//cost+=fabs(val);
+				//avg+=val;
+			}
+			else
+			{
+				//DIRECT_MULTIDIM_ELEM(mIp,n)=0;
+				DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=0;
+			}
 		}
 	}
-	cost*=prm->iMask2Dsum;
+	else
+	{
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask2D)
+		{
+			if (DIRECT_MULTIDIM_ELEM(mMask2D,n))
+			{
+				double val=DIRECT_MULTIDIM_ELEM(mP,n)-DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
+				DIRECT_MULTIDIM_ELEM(mE,n)=val;
+			}
+			else
+				DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=0;
+		}
+	}
+	//cost*=prm->iMask2Dsum;
 
 	//double corr=correlationIndex(mIfilteredp,mP);
 	double corr=correlationIndex(mIfilteredp,mP,&mMask2D);

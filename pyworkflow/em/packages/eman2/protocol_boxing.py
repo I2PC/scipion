@@ -109,7 +109,7 @@ class EmanProtBoxing(ProtParticlePicking):
     #--------------------------- INFO functions ---------------------------------------------------
     def _warnings(self):
         warnings = []
-        firstMic = self.inputMics.getFirstItem()
+        firstMic = self.inputMicrographs.get().getFirstItem()
         fnLower = firstMic.getFileName().lower()
         
         if '.tif' in fnLower:
