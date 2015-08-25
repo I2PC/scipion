@@ -887,7 +887,7 @@ public class ScipionMetaData extends MetaData {
     	String setType = getSetType();
     	if(setType == null)
     		return false;
-        return setType.equals("SetOfClasses2D") || setType.equals("SetOfClasses3D");
+        return setType.startsWith("SetOfClasses");
     }
     
     
