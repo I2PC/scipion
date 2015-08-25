@@ -1650,7 +1650,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_CLASSES, data.isClassificationMd());
 			setItemEnabled(TOOLS_PLOT, data.isTableMode());
 			boolean isCol = data.isColumnFormat();
-			setItemEnabled(TOOLS, isCol && !volMode);
+			boolean doStats = isCol && !volMode;
+			setItemEnabled(TOOLS_AVGSTD, doStats);
+			setItemEnabled(TOOLS_FSC, doStats);
+			setItemEnabled(TOOLS_PCA, doStats);
 			setItemEnabled(MD_ADD_OBJECT, isCol);
 			setItemEnabled(MD_REMOVE_DISABLED, isCol);
 			setItemEnabled(MD_REMOVE_SELECTION, isCol);
