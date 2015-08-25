@@ -39,7 +39,7 @@ from os.path import join, exists
 from pyworkflow.em.convert import ImageHandler
 from glob import glob
 
-from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAMPLINGRATE, MDL_WEIGHT_SSNR, MDL_WEIGHT_SIGNIFICANT, \
+from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAMPLINGRATE, MDL_WEIGHT_SSNR, \
                   MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_ANGLE_DIFF, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_ORIGINAL, \
                   MDL_COUNT, MDL_SHIFT_X, MDL_CONTINUOUS_X, MDL_WEIGHT_JUMPER, MDL_CTF_DEFOCUSU, MDL_CTF_MODEL, MDL_PARTICLE_ID, \
                   MDL_ZSCORE_RESCOV, MDL_ZSCORE_RESVAR, MDL_ZSCORE_RESMEAN, Image
@@ -61,7 +61,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     SPLIT_STOCHASTIC = 0
     SPLIT_FIXED = 1
     
-    GLOBAL_SIGNIFICANT = 0
     GLOBAL_PROJMATCH = 1
     
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -126,21 +125,17 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help="In the multiresolution approach the sampling rate of the images is adapted to the current resolution")
         form.addParam('angularMaxShift', FloatParam, label="Max. shift (%)", default=10,
                       help='Maximum shift as a percentage of the image size')
-        line=form.addLine('Tilt angle:', help='0 degrees represent top views, 90 degrees represent side views')
+        line=form.addLine('Tilt angle:', help='0 degrees represent top views, 90 degrees represent side views', expertLevel=LEVEL_ADVANCED)
         line.addParam('angularMinTilt', FloatParam, label="Min.", default=0, expertLevel=LEVEL_ADVANCED)
         line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90, expertLevel=LEVEL_ADVANCED)
         groupSignificant = form.addGroup('Global')
         groupSignificant.addParam('significantMaxResolution', FloatParam, label="Global assignment if resolution is worse than (A)", default=12,
-                      help='Significant assignment is always performed on the first iteration. Starting from the second, you may '\
-                      'decide whether to perform it or not. Note that the significant angular assignment is a robust angular assignment '\
-                      'meant to avoid local minima, although it may take time to calculate.')
-        groupSignificant.addParam('globalMethod', EnumParam, label='Global alignment method', choices=['Significant','ProjMatch'], expertLevel=LEVEL_ADVANCED, 
-                                  default=self.GLOBAL_PROJMATCH)
-        groupSignificant.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition="globalMethod==1",
+                      help='Global assignment is always performed on the first iteration. Starting from the second, you may '\
+                      'decide whether to perform it or not.')
+        groupSignificant.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0,
                   expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
-        groupSignificant.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition="globalMethod==1",
+        groupSignificant.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, 
 	              expertLevel=LEVEL_ADVANCED, help="In pixels")
-        groupSignificant.addParam('significantSignificance', FloatParam, label="Significance (%)", default=99.75, condition="globalMethod==0")
         groupSignificant.addParam('significantGrayValues', BooleanParam, label="Optimize gray values?", default=True)
         groupContinuous = form.addGroup('Local')
         groupContinuous.addParam('continuousMinResolution', FloatParam, label="Continuous assignment if resolution is better than (A)", default=15,
@@ -166,8 +161,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addSection(label='Weights')
         form.addParam('weightSSNR', BooleanParam, label="Weight by SSNR?", default=True,
                       help='Weight input images by SSNR')
-        form.addParam('weightSignificance', BooleanParam, label="Weight by Significance?", default=True, condition='globalMethod==1',
-                      help='Weight input images by angular assignment significance')
         form.addParam('weightContinuous', BooleanParam, label="Weight by Continuous cost?", default=True,
                       help='Weight input images by angular assignment cost')
         form.addParam('weightJumper', BooleanParam, label="Weight by angular stability?", default=True,
@@ -523,7 +516,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         return atan2(1,k)*180.0/pi*2.0/3.0 # Corresponding angular step
 
     def globalAssignment(self,iteration):
-        useSignificant=self.globalMethod==self.GLOBAL_SIGNIFICANT
         fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
         makePath(fnDirCurrent)
@@ -552,8 +544,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             angleStep=self.calculateAngStep(newXdim, TsCurrent, ResolutionAlignment)
             self.writeInfoField(fnGlobal,"angleStep",MDL_ANGLE_DIFF,float(angleStep))
             
-            # Significant alignment
-            alpha=1-0.01*self.significantSignificance.get()
+            # Global alignment
             for i in range(1,3):
                 fnDirSignificant=join(fnGlobal,"significant%02d"%i)
                 fnImgs=join(fnGlobal,"images%02d.xmd"%i)
@@ -580,8 +571,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnGalleryMd=join(fnDirSignificant,"gallery%02d.xmd"%i)
                 args="-i %s -o %s --sampling_rate %f --sym %s --min_tilt_angle %f --max_tilt_angle %f"%\
                      (fnReferenceVol,fnGallery,angleStep,self.symmetryGroup,self.angularMinTilt.get(),self.angularMaxTilt.get())
-                if not useSignificant:
-                    args+=" --compute_neighbors --angular_distance -1 --experimental_images %s"%self._getExtraPath("images.xmd")
+                args+=" --compute_neighbors --angular_distance -1 --experimental_images %s"%self._getExtraPath("images.xmd")
                 self.runJob("xmipp_angular_project_library",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                 cleanPath(join(fnDirSignificant,"gallery_angles%02d.doc"%i))
                 moveFile(join(fnDirSignificant,"gallery%02d.doc"%i), fnGalleryMd)
@@ -590,44 +580,27 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     fnAnglesGroup=join(fnDirSignificant,"angles_group%02d.xmd"%j)
                     if not exists(fnAnglesGroup):
                         if ctfPresent:
-                            fnGroup="ctfGroup%06d@%s/ctf_groups.xmd"%(j,fnDirSignificant)
-                            if useSignificant:
-                                fnGalleryGroup=join(fnDirSignificant,"gallery_group%06d.stk"%j)
-                                fnGalleryGroupMd=join(fnDirSignificant,"gallery_group%06d.xmd"%j)
-                                self.runJob("xmipp_transform_filter",
-                                            "-i %s -o %s --fourier binary_file %d@%s --save_metadata_stack %s --keep_input_columns"%\
-                                            (fnGalleryMd,fnGalleryGroup,j,fnCTFs,fnGalleryGroupMd),numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-                            else:
-                                fnGalleryGroup=fnGallery
-                                fnGalleryGroupMd=fnGalleryMd
+                            fnGroup="ctfGroup%06d@%s/ctf_groups.xmd"%(j,fnDirSignificant)                            
+                            fnGalleryGroup=fnGallery
+                            fnGalleryGroupMd=fnGalleryMd
                         else:
                             fnGroup=fnImgs
                             fnGalleryGroupMd=fnGalleryMd
                         maxShift=round(self.angularMaxShift.get()*newXdim/100)
-                        if useSignificant:
-                            args='-i %s --initgallery %s --odir %s --sym %s --iter 1 --alpha0 %f --alphaF %f --angularSampling %f --maxShift %d '\
-                                 '--minTilt %f --maxTilt %f --useImed --angDistance %f --dontReconstruct'%\
-                                 (fnGroup,fnGalleryGroupMd,fnDirSignificant,self.symmetryGroup,alpha,alpha,angleStep,\
-                                  maxShift,self.angularMinTilt.get(),self.angularMaxTilt.get(),2*angleStep)
-                            self.runJob('xmipp_reconstruct_significant',args)
-                            moveFile(join(fnDirSignificant,"angles_iter001_00.xmd"),join(fnDirSignificant,"angles_group%02d.xmd"%j))
-                            self.runJob("rm -f",fnDirSignificant+"/images_*iter00?_*.xmd",numberOfMpi=1)
-                        else:
-                            R=self.particleRadius.get()
-                            if R<=0:
-                                R=self.inputParticles.get().getDimensions()[0]/2
-                            R=R*self.TsOrig/TsCurrent
-                            args='-i %s -o %s --ref %s --ctf %d@%s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --thr %d --append --pad 2.0'%\
-                                 (fnGroup,join(fnDirSignificant,"angles_group%02d.xmd"%j),fnGalleryGroup,j,fnCTFs,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get(),self.numberOfThreads.get())
-                            if self.numberOfMpi>1:
-                                args+=" --mpi_job_size 2"
-                            self.runJob('xmipp_angular_projection_matching',args)
+                        R=self.particleRadius.get()
+                        if R<=0:
+                            R=self.inputParticles.get().getDimensions()[0]/2
+                        R=R*self.TsOrig/TsCurrent
+                        args='-i %s -o %s --ref %s --ctf %d@%s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --thr %d --append --pad 2.0'%\
+                             (fnGroup,join(fnDirSignificant,"angles_group%02d.xmd"%j),fnGalleryGroup,j,fnCTFs,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get(),self.numberOfThreads.get())
+                        if self.numberOfMpi>1:
+                            args+=" --mpi_job_size 2"
+                        self.runJob('xmipp_angular_projection_matching',args)
                         if j==1:
                             copyFile(fnAnglesGroup, fnAngles)
                         else:
                             self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
-                if not useSignificant:
-                    self.runJob("xmipp_metadata_utilities","-i %s --set join %s image"%(fnAngles,fnImgs),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities","-i %s --set join %s image"%(fnAngles,fnImgs),numberOfMpi=1)
                 if self.saveSpace and ctfPresent:
                     self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
                 
@@ -789,14 +762,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             #    moveFile(join(fnDirLocal,"covariance%02d.xmd"%i),fnAngles)
             
             md=MetaData(fnAngles)
-            doWeightSignificance=self.weightSignificance and md.containsLabel(MDL_WEIGHT_SIGNIFICANT)
             for objId in md:
                 weight=1.0
                 if self.weightSSNR:
                     aux=md.getValue(MDL_WEIGHT_SSNR,objId)
-                    weight*=aux
-                if doWeightSignificance:
-                    aux=md.getValue(MDL_WEIGHT_SIGNIFICANT,objId)
                     weight*=aux
                 if self.weightContinuous and exists(fnAnglesCont):
                     aux=md.getValue(MDL_WEIGHT_CONTINUOUS2,objId)
@@ -897,6 +866,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         (fnVol,fnPseudo,self.postPseudoRadius.get()*TsCurrent,TsCurrent),numberOfMpi=1)
             moveFile(fnPseudo+"_approximation.vol", fnVol)
             self.runJob("rm","-f "+fnPseudo+"*")
+            if self.symmetryGroup.get()!="c1":
+                self.runJob("xmipp_transform_symmetrize","-i %s --sym %s"%(fnVol,self.symmetryGroup.get()),numberOfMpi=1)
         
         if self.postScript!="":
             img = ImageHandler()
@@ -918,7 +889,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             for i in range(1,3):
                 if exists(fnGlobal):
                     cleanPath(join(fnGlobal,"images%02d.xmd"%i))
-                    cleanPath(join(fnGlobal,"significant%02d"%i))
                     cleanPath(join(fnGlobal,"volumeRef%02d.vol"%i))
                 if exists(fnLocal):
                     cleanPath(join(fnLocal,"images%02d.xmd"%i))
