@@ -1533,7 +1533,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         if(autoadjust)
             data.setModelDim(null, null);
         else
-            data.setModelDim((Integer)jsRows.getValue(), (Integer)jsColumns.getValue());
+        {
+        	int rows = (Integer)jsRows.getValue();
+        	int cols = (Integer)jsColumns.getValue();
+        	if(rows > 0 && cols > 0)
+        		data.setModelDim(rows, cols);
+        }
 		adjustColumns();
 	}
 
