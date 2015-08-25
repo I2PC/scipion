@@ -202,6 +202,16 @@ def rowToObject(row, obj, attrDict, extraLabels={}):
             labelStr = xmipp.label2Str(label)
             setattr(obj, '_xmipp_%s' % labelStr, row.getValueAsObject(label))
     
+
+def setXmippAttributes(obj, objRow, *labels):
+    """ Set an attribute to obj from a label that is not 
+    basic ones. The new attribute will be named _xmipp_LabelName
+    and the datatype will be set correctly.
+    """
+    for label in labels:
+        setattr(obj, '_xmipp_%s' % xmipp.label2Str(label), 
+                objRow.getValueAsObject(label))
+    
     
 def rowFromMd(md, objId):
     row = XmippMdRow()
