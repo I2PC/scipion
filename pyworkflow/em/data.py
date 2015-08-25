@@ -485,6 +485,7 @@ class Image(EMObject):
         filePaths.add(self.getFileName())
         return filePaths
 
+
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
     def __init__(self, **args):
@@ -613,8 +614,10 @@ class PdbFile(EMFile):
     
     
 class EMSet(Set, EMObject):
+    
     def _loadClassesDict(self):
-        return globals()
+        import pyworkflow.em as em
+        return em.getObjects()
     
     def copyInfo(self, other):
         """ Define a dummy copyInfo function to be used
