@@ -804,7 +804,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 args+=" --useCTF --sampling %f --minCTF %f"%(TsCurrent,self.minCTF.get())
                 if self.inputParticles.get().isPhaseFlipped():
                     args+=" --phaseFlipped"
-            self.runJob("xmipp_reconstruct_fourier",args)
+            self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get()+1)
             # Reconstruct ADMM
 #            args="-i %s -o %s --sym %s"%(fnAngles,fnVol,self.symmetryGroup)
 #            row=getFirstRow(fnAngles)
