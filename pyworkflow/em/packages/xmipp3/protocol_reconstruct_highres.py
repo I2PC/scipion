@@ -591,11 +591,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         if R<=0:
                             R=self.inputParticles.get().getDimensions()[0]/2
                         R=R*self.TsOrig/TsCurrent
-                        args='-i %s -o %s --ref %s --ctf %d@%s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --thr %d --append --pad 2.0'%\
-                             (fnGroup,join(fnDirSignificant,"angles_group%02d.xmd"%j),fnGalleryGroup,j,fnCTFs,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get(),self.numberOfThreads.get())
+                        args='-i %s -o %s --ref %s --ctf %d@%s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --append --pad 2.0'%\
+                             (fnGroup,join(fnDirSignificant,"angles_group%02d.xmd"%j),fnGalleryGroup,j,fnCTFs,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get())
                         if self.numberOfMpi>1:
                             args+=" --mpi_job_size 2"
-                        self.runJob('xmipp_angular_projection_matching',args)
+                        self.runJob('xmipp_angular_projection_matching',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                         if j==1:
                             copyFile(fnAnglesGroup, fnAngles)
                         else:
