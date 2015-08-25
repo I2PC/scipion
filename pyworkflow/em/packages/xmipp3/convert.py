@@ -944,7 +944,8 @@ def writeSetOfMicrographsPairs(uSet, tSet, filename):
     md.write(filename)   
 
     
-def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
+def __readSetOfClasses(classBaseSet, readSetFunc, 
+                       classesSet, filename, classesBlock='classes', **kwargs):
     """ Read a set of classes from an Xmipp metadata with the given
     convention of a block for classes and another block for each set of 
     images assigned to each class.
@@ -969,7 +970,7 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
         classRow = rowFromMd(classesMd, objId)
         classItem = rowToClass(classRow, classItem)
         # FIXME: the following is only valid for SetOfParticles
-        SetOfParticles.copyInfo(classItem, classesSet.getImages())
+        classBaseSet.copyInfo(classItem, classesSet.getImages())
         #classItem.copyInfo(classesSet.getImages())
         
         if preprocessClass:
@@ -981,16 +982,18 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
         b = 'class%06d_images' % ref
         
         if b in blocks:
-            #FIXME: we need to adapt the following line
-            # when we face classes of volumes and not just particles
-            readSetOfParticles('%s@%s' % (b, filename), classItem, **kwargs) 
+            readSetFunc('%s@%s' % (b, filename), classItem, **kwargs) 
 
         if postprocessClass:
             postprocessClass(classItem, classRow)
             
         # Update with new properties of classItem such as _size
         classesSet.update(classItem)
-        
+    
+    
+def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
+    __readSetOfClasses(SetOfParticles, readSetOfParticles,
+                       classesSet, filename, classesBlock, **kwargs)
         
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **kwargs):
     """ Just a wrapper to readSetOfClasses. """
@@ -1029,35 +1032,50 @@ def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
 
 
-def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args):
+def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **kwargs):
     """read from Xmipp image metadata.
         fnImages: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
         hasCtf: is True if the ctf information exists.
     """
+    __readSetOfClasses(SetOfVolumes, readSetOfVolumes,
+                       classesVolSet, filename, classesBlock, **kwargs)  
+    
+    return
+
+    # FIXME: Delete from here 
+    
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
-    samplingRate = classesVolSet.getImages().getSamplingRate()
     
+    # Provide a hook to be used if something is needed to be 
+    # done for special cases before converting row to class
+    preprocessClass = kwargs.get('preprocessClass', None)
+    postprocessClass = kwargs.get('postprocessClass', None)
+        
     for objId in classesMd:
-        classVol = ClassVol()
+        classVol = classesVolSet.ITEM_TYPE()
         classRow = rowFromMd(classesMd, objId)
         classVol = rowToClass(classRow, classVol)
+        # FIXME: the following is only valid for SetOfParticles
+        SetOfParticles.copyInfo(classVol, classesVolSet.getImages())
+        
+        if preprocessClass:
+            preprocessClass(classVol, classRow)
+                   
         classesVolSet.append(classVol)
         ref = classVol.getObjId()
         b = 'class%06d_images' % ref
         
         if b in blocks:
-            classImagesMd = xmipp.MetaData('%s@%s' % (b, filename))
+            readSetFunc = _readSetFunc()
+            readSetOfVolumes('%s@%s' % (b, filename), classVol, **kwargs) 
+
+        if postprocessClass:
+            postprocessClass(classVol, classRow)
             
-            for imgId in classImagesMd:
-                img = rowToParticle(classImagesMd, imgId, hasCtf=False)
-                img.setSamplingRate(samplingRate)
-                classVol.append(img)
-        # Update with new properties of class2D such as _size
+        # Update with new properties of classItem such as _size
         classesVolSet.update(classVol)                
-        # Check if write function is necessary
-        classVol.write()
 
 
 def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):    
