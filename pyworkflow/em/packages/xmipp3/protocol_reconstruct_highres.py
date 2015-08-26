@@ -54,7 +54,6 @@ Falta:
        a and b determination
        Threads in continuous2
        Max a and b changes
-       Crear output
        Viewer
 """
 
@@ -140,12 +139,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                   expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
         groupSignificant.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, 
 	              expertLevel=LEVEL_ADVANCED, help="In pixels")
-        groupSignificant.addParam('significantGrayValues', BooleanParam, label="Optimize gray values?", default=True)
         groupContinuous = form.addGroup('Local')
         groupContinuous.addParam('continuousMinResolution', FloatParam, label="Continuous assignment if resolution is better than (A)", default=15,
                       help='Continuous assignment can produce very accurate assignments if the initial assignment is correct.')
         groupContinuous.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True,
                       help='Optimize shifts within a limit')
+        groupContinuous.addParam('contMaxShiftVariation', FloatParam, label="Max. shift variation", default=2, expertLevel=LEVEL_ADVANCED,
+                                 help="Percentage of the image size")
         groupContinuous.addParam('contScale', BooleanParam, label="Optimize scale?", default=True,
                       help='Optimize scale within a limit')
         groupContinuous.addParam('contMaxScale', FloatParam, label="Max. scale variation", default=0.02, expertLevel=LEVEL_ADVANCED)
@@ -154,6 +154,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         groupContinuous.addParam('contGrayValues', BooleanParam, label="Optimize gray values?", default=True,
                       help='Optimize gray values. Do not perform this unless the reconstructed volume is gray-compatible with the projections,'\
                       ' i.e., the volumes haven been produced from projections')
+        groupContinuous.addParam('contMaxGrayScale', FloatParam, label="Max. gray scale variation", default=0.05, expertLevel=LEVEL_ADVANCED)
+        groupContinuous.addParam('contMaxGrayShift', FloatParam, label="Max. gray shift variation", default=0.15, expertLevel=LEVEL_ADVANCED,
+                                 help='As a factor of the image standard deviation')
         groupContinuous.addParam('contDefocus', BooleanParam, label="Optimize defocus?", default=True)
         groupContinuous.addParam('contMaxDefocus', FloatParam, label="Max. defocus variation", default=200, expertLevel=LEVEL_ADVANCED,
                                  help="In Angstroms")
@@ -630,13 +633,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 if self.saveSpace and ctfPresent:
                     self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
                 
-                if self.significantGrayValues and previousResolution>self.continuousMinResolution.get():
-                    fnRefinedStack=join(fnDirSignificant,"imagesRefined%02d.stk"%i)
-                    self.runJob("xmipp_angular_continuous_assign2","-i %s -o %s --ref %s --optimizeGray"%\
-                                (fnAngles,fnRefinedStack,fnReferenceVol))
-                    fnRefinedXmd=join(fnDirSignificant,"imagesRefined%02d.xmd"%i)
-                    moveFile(fnRefinedXmd,fnAngles)
-
     def adaptShifts(self, fnSource, TsSource, fnDest, TsDest):
         K=TsSource/TsDest
         copyFile(fnSource,fnDest)
@@ -725,13 +721,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --applyTo image1"%\
                        (fnLocalAssignment,fnLocalStk,TsCurrent,R,self.contPadding.get(),fnVol,previousResolution)
                     if self.contShift:
-                        args+=" --optimizeShift --max_shift %d"%round(self.angularMaxShift.get()*newXdim*0.01)
+                        args+=" --optimizeShift --max_shift %f"%(self.contMaxShiftVariation.get()*newXdim*0.01)
                     if self.contScale:
                         args+=" --optimizeScale --max_scale %f"%self.contMaxScale.get() 
                     if self.contAngles:
                         args+=" --optimizeAngles --max_angular_change %f"%maxAngle
                     if self.contGrayValues:
-                        args+=" --optimizeGray"
+                        args+=" --optimizeGray --max_gray_scale %f --max_gray_shift %f"%(self.contMaxGrayScale.get(),self.contMaxGrayShift.get())
                     if self.contDefocus:
                         args+=" --optimizeDefocus --max_defocus_change %f"%self.contMaxDefocus.get()
                     if self.inputParticles.get().isPhaseFlipped():
