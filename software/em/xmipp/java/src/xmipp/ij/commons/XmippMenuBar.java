@@ -585,9 +585,7 @@ public class XmippMenuBar extends MenuBar
 					{
 						filters.remove(getFilter(command));
 						xw.loadData();
-						ImagePlus imp = xw.getImagePlusLoader().getImagePlus();
-						for(IJCommand filter: filters)
-							IJ.run(imp, filter.getCommand(), filter.getOptions());
+						applyFilters();
 					}
 					
 				}
@@ -598,6 +596,13 @@ public class XmippMenuBar extends MenuBar
 			}
 		});
 	}//function addCommand
+	
+	public void applyFilters()
+	{
+		ImagePlus imp = xw.getImagePlusLoader().getImagePlus();
+		for(IJCommand filter: filters)
+			IJ.run(imp, filter.getCommand(), filter.getOptions());
+	}
 	
 	
 	public IJCommand getFilter(String command)
