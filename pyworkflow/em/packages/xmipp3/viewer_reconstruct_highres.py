@@ -97,7 +97,7 @@ class XmippReconstructHighResViewer(Viewer):
         
         # Jumper weights                                    
         if lastFullIter>0:
-            if prot.weightJumper:
+            if prot.weightJumper and lastFullIter>1:
                 import xmipp
                 xplotter = XmippPlotter(windowTitle="Jumper weight")
                 a = xplotter.createSubPlot("Jumper weight", "Weight", "Count")
