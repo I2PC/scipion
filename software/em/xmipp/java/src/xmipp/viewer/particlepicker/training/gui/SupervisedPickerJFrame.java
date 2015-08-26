@@ -52,30 +52,30 @@ import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
 public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
-    private SupervisedPickerCanvas canvas;
-    private JMenuBar mb;
-    private SupervisedParticlePicker ppicker;
-    private JPanel micrographpn;
-    private MicrographsTableModel micrographsmd;
+    protected SupervisedPickerCanvas canvas;
+    protected JMenuBar mb;
+    protected SupervisedParticlePicker ppicker;
+    protected JPanel micrographpn;
+    protected MicrographsTableModel micrographsmd;
 
-    private float positionx;
-    private JButton iconbt;
-    private JLabel manuallb;
-    private JLabel autolb;
-    private JSlider thresholdsl;
-    private JPanel thresholdpn;
-    private JFormattedTextField thresholdtf;
+    protected float positionx;
+    protected JButton iconbt;
+    protected JLabel manuallb;
+    protected JLabel autolb;
+    protected JSlider thresholdsl;
+    protected JPanel thresholdpn;
+    protected JFormattedTextField thresholdtf;
 
-    private JToggleButton centerparticlebt;
-    private JMenuItem exportmi;
-    private JCheckBox autopickchb;
-    private JPanel sppickerpn;
-    private JLabel autopicklb;
+    protected JToggleButton centerparticlebt;
+    protected JMenuItem exportmi;
+    protected JToggleButton autopickchb;
+    protected JPanel sppickerpn;
     
-    private JMenuItem templatesmi;
+    protected JMenuItem templatesmi;
     TemplatesJDialog templatesdialog;
-    private JLabel checkpercentlb;
-    private JFormattedTextField autopickpercenttf;
+    protected JLabel checkpercentlb;
+    protected JFormattedTextField autopickpercenttf;
+    protected JLabel thresholdlb;
 
     @Override
     public SupervisedParticlePicker getParticlePicker() {
@@ -329,11 +329,9 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     private void initSupervisedPickerPane() {
     	
         sppickerpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        autopicklb = new JLabel(bundle.getString("autopick"));
-        sppickerpn.add(autopicklb);
-        autopickchb = new JCheckBox();
+        sppickerpn.setBorder(BorderFactory.createTitledBorder(bundle.getString("autopick")));
+        autopickchb = new JToggleButton("Activate Training", XmippResource.getIcon("pick.png"));
         autopickchb.setSelected(ppicker.isAutopick());
-
         autopickchb.addActionListener(new ActionListener() {
 
             @Override
@@ -426,6 +424,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     protected void enableSupervised(boolean selected) {
 
         thresholdsl.setEnabled(selected);
+        thresholdlb.setEnabled(selected);
         thresholdtf.setEnabled(selected);
         sizesl.setEnabled(!selected);// not really, if there is some micrograph
         // in sup mode size cannot be changed
@@ -518,7 +517,8 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
     private void initThresholdPane() {
         thresholdpn = new JPanel();
-        thresholdpn.add(new JLabel("Threshold:"));
+        thresholdlb = new JLabel("Threshold:");
+        thresholdpn.add(thresholdlb);
         thresholdsl = new JSlider(0, 100, 0);
         thresholdsl.setPaintTicks(true);
         thresholdsl.setMajorTickSpacing(5);
