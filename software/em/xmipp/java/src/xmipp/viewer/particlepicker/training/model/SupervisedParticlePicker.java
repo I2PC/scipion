@@ -1043,28 +1043,28 @@ public class SupervisedParticlePicker extends ParticlePicker
 	 * @param frame
 	 * @param autopickout
 	 */
-	public void trainAndAutopick(SupervisedPickerJFrame frame)
+	public void trainAndAutopick(SupervisedPickerJFrame frame, SupervisedPickerMicrograph trainmic)
 	{
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Training and Autopicking...");
 		// Change the state of the micrograph and save changes
 		micrograph.setState(MicrographState.Supervised);
 		saveData(micrograph);
-                setChanged(false);
+        setChanged(false);
 		// Create the metadata with each micrograph and its .pos file
-		// Add all micrographs with manual particles except the current
+		// Add all micrographs with manual particles except the train
 		// micrograph
-                ArrayList<MDRow> trainRows = new ArrayList<MDRow>();
+        ArrayList<MDRow> trainRows = new ArrayList<MDRow>();
 		for (SupervisedPickerMicrograph m : micrographs)
 		{
-			if (m.hasManualParticles() && !m.equals(micrograph))
+			if (m.hasManualParticles() && !m.equals(trainmic))
 				addMicrographPos(trainRows, m);
 		}
-		// Add the current micrograph as the last one
-		if (micrograph.hasManualParticles())
-			addMicrographPos(trainRows, micrograph);
+		// Add the train micrograph as the last one
+			
+		addMicrographPos(trainRows, trainmic);
                 
-		new Thread(new TrainRunnable(frame, trainRows.toArray(new MDRow[]{}))).start();
+		new Thread(new TrainRunnable(frame, trainRows.toArray(new MDRow[]{}), trainmic)).start();
 	}
 
 	/** Helper function to add a micrograph and its .pos file */
