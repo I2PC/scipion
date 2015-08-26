@@ -96,29 +96,13 @@ class XmippReconstructHighResViewer(Viewer):
                 views.append(ObjectView(self._project, None, fnLastVolume, viewParams={showj.RENDER: 'image'}))
         
         # Jumper weights                                    
-        from numpy import arange
-        from matplotlib.ticker import FormatStrFormatter
-        import xmipp
-        
         if lastFullIter>0:
-            numberOfBins = 100
             if prot.weightJumper:
-                 xplotter = XmippPlotter(windowTitle="Jumper weight")
-                 a = xplotter.createSubPlot("Jumper weight", "Weight", "Count")
-
-#                     mDoutRef3D = xmipp.MetaData()
-#                     mDoutRef3D.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_REF3D, ref3d))
-#                     _frequency = "Frequency (%d)" % mDoutRef3D.size()
-# 
-#                     xplotterShift.createSubPlot("%s_ref3D_%d"%(xmipp.label2Str(xmipp.MDL_SHIFT_DIFF),ref3d), "pixels", _frequency)
-#                     xplotter.createSubPlot("%s_ref3D_%d"%(xmipp.label2Str(xmipp.MDL_ANGLE_DIFF),ref3d), "degrees", _frequency)
-#                     #mDoutRef3D.write("afterimportObject@mdIter.sqlite",MD_APPEND)
-#                     xplotter.plotMd(mDoutRef3D,
-#                                     xmipp.MDL_ANGLE_DIFF,
-#                                     xmipp.MDL_ANGLE_DIFF,
-#                                     color=colors[ref3d%lenColors],
-#                                     #nbins=50
-#                                     nbins=int(numberOfBins)
+                import xmipp
+                xplotter = XmippPlotter(windowTitle="Jumper weight")
+                a = xplotter.createSubPlot("Jumper weight", "Weight", "Count")
+                xplotter.plotMdFile(fnLastAngles,xmipp.MDL_WEIGHT_JUMPER,xmipp.MDL_WEIGHT_JUMPER,nbins=100)
+                views.append(xplotter)
 
         return views
 
