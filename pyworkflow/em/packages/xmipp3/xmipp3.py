@@ -823,3 +823,36 @@ class ScriptShowJ(ScriptAppIJ):
         elif self.checkParam('--label_relion') or self.getParam('-i').endswith('.star'):
             from protlib_import import relionLabelString
             os.environ['XMIPP_EXTRA_ALIASES'] = relionLabelString()
+            
+
+def createMetaDataFromPattern(pattern, isStack=False, label="image"):
+    ''' Create a metadata from files matching pattern'''
+    import glob
+    files = glob.glob(pattern)
+    files.sort()
+
+    label = xmipp.str2Label(label) #Check for label value
+    
+    mD = xmipp.MetaData()
+    inFile = xmipp.FileName()
+    
+    nSize = 1
+    for file in files:
+        fileAux=file
+        if isStack:
+            if file.endswith(".mrc"):
+                fileAux=file+":mrcs"
+            x, x, x, nSize = xmipp.getImageSize(fileAux)
+        if nSize != 1:
+            counter = 1
+            for jj in range(nSize):
+                inFile.compose(counter, fileAux)
+                objId = mD.addObject()
+                mD.setValue(label, inFile, objId)
+                mD.setValue(xmipp.MDL_ENABLED, 1, objId)
+                counter += 1
+        else:
+            objId = mD.addObject()
+            mD.setValue(label, fileAux, objId)
+            mD.setValue(xmipp.MDL_ENABLED, 1, objId)
+    return mD            
