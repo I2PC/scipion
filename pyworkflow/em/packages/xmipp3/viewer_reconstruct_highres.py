@@ -28,7 +28,7 @@
 # **************************************************************************
 
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, Viewer
-from pyworkflow.em.viewer import ObjectView
+from pyworkflow.em.viewer import ObjectView, DataView
 import pyworkflow.em.showj as showj
 from protocol_reconstruct_highres import XmippProtReconstructHighRes
 from plotter import XmippPlotter
@@ -48,42 +48,61 @@ class XmippReconstructHighResViewer(Viewer):
     def _visualize(self, prot, **kwargs):
         views = []
         
-        # Angle file
-	if hasattr(prot,"outputParticles"):
-            obj = prot.outputParticles
-            fn = obj.getFileName()
-            labels = 'id enabled _filename _xmipp_zScore _xmipp_cumulativeSSNR '
-            labels += '_ctfModel._defocusU _ctfModel._defocusV _xmipp_shiftX _xmipp_shiftY _xmipp_continuousX _xmipp_continuousY _xmipp_scale _xmipp_maxCC _xmipp_weight'
-            labels += " _xmipp_cost _xmipp_weightContinuous2 _xmipp_angleDiff _xmipp_weightJumper _xmipp_weightSSNR"
-            views.append(ObjectView(self._project, obj.strId(), fn,
-                                	  viewParams={showj.ORDER: labels, 
-                                                      showj.VISIBLE: labels, 
-                                                      showj.MODE: showj.MODE_MD,
-                                                      showj.RENDER:'_filename'}))
-
         # FSC
         from matplotlib.ticker import FuncFormatter
         self._plotFormatter = FuncFormatter(self._formatFreq) 
         xplotter = XmippPlotter(windowTitle="FSC")
         a = xplotter.createSubPlot("FSC", "Frequency (1/A)", "Zscore")
-        fnIterDirs = glob(prot._getExtraPath("Iter*"))
+        fnIterDirs = sorted(glob(prot._getExtraPath("Iter*")))
         legends = []
+        lastFullIter = -1
         for it in range(0,len(fnIterDirs)):
             fnDir = prot._getExtraPath("Iter%03d"%it)
             fnFSC = join(fnDir,"fsc.xmd")
             if exists(fnFSC):
+                lastFullIter=it
                 show = True
                 legends.append('iter %d' % it)
                 self._plotFSC(a, fnFSC)
                 xplotter.showLegend(legends)
         a.grid(True)
         views.append(xplotter)
+        
+        # Angle file
+        fnLastAngles=join(prot._getExtraPath("Iter%03d"%lastFullIter),"angles.xmd")
+        if hasattr(prot, "outputParticles"):
+            obj = prot.outputParticles
+            fn = obj.getFileName()
+            labels = 'id enabled _filename _xmipp_zScore _xmipp_cumulativeSSNR '
+            labels += '_ctfModel._defocusU _ctfModel._defocusV _xmipp_shiftX _xmipp_shiftY _xmipp_continuousX _xmipp_continuousY _xmipp_scale _xmipp_maxCC _xmipp_weight'
+            labels += " _xmipp_cost _xmipp_weightContinuous2 _xmipp_angleDiff _xmipp_weightJumper _xmipp_weightSSNR"
+            views.append(ObjectView(self._project, obj.strId(), fn,
+                                          viewParams={showj.ORDER: labels, 
+                                                      showj.VISIBLE: labels, 
+                                                      showj.MODE: showj.MODE_MD,
+                                                      showj.RENDER:'_filename'}))
+        else:
+            if lastFullIter>0:
+                views.append(DataView(fnLastAngles, viewParams={showj.MODE: showj.MODE_MD}))
 
         # Volume
-	if hasattr(prot,"outputVolume"):
+        if hasattr(prot, "outputVolume"):
             obj = prot.outputVolume
             fn = getImageLocation(obj)
             views.append(ObjectView(self._project, obj.strId(), fn, viewParams={showj.RENDER: 'image', showj.SAMPLINGRATE: obj.getSamplingRate()}))
+        else:
+            if lastFullIter>0:  
+                fnLastVolume=join(prot._getExtraPath("Iter%03d"%lastFullIter),"volumeAvg.mrc")
+                views.append(ObjectView(self._project, None, fnLastVolume, viewParams={showj.RENDER: 'image'}))
+        
+        # Jumper weights                                    
+        if lastFullIter>0:
+            if prot.weightJumper:
+                import xmipp
+                xplotter = XmippPlotter(windowTitle="Jumper weight")
+                a = xplotter.createSubPlot("Jumper weight", "Weight", "Count")
+                xplotter.plotMdFile(fnLastAngles,xmipp.MDL_WEIGHT_JUMPER,xmipp.MDL_WEIGHT_JUMPER,nbins=100)
+                views.append(xplotter)
 
         return views
 
