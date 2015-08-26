@@ -100,6 +100,8 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	public void loadData()
 	{
 		getCanvas().loadData(this);
+		if(params != null)//otherwise is picker window
+			menu.applyFilters();
 	}
 
 	@Override
