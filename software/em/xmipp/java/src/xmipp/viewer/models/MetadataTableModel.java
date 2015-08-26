@@ -36,10 +36,12 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
+import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
+import xmipp.utils.ScipionParams;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -235,7 +237,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                 int index = getIndex(row, col);
                 String file = getImageFilename(index, ci.label);
                 if(Filename.isVolume(file))
-                    ImagesWindowFactory.openMetadata(file, new Params(), Params.OPENING_MODE_GALLERY);
+                {
+                	Params params = XmippApplication.isScipion()? ((ScipionParams)data.parameters).getScipionParams(): new Params();
+                    ImagesWindowFactory.openMetadata(file, params, Params.OPENING_MODE_GALLERY);
+                }
                 else
                     openXmippImageWindow(index, ci.label);
 				return true;
