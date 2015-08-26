@@ -136,15 +136,14 @@ class XmippProtCLTomo(ProtClassify3D):
             readSetOfClassesVol(setOfClasses,lastLevelFile)
             self._defineOutputs(outputClasses=setOfClasses)
             self._defineSourceRelation(self.inputVolumes, self.outputClasses)
-        if self.generateAligned.get():
+        if self.generateAligned:
             setOfVolumes = self._createSetOfVolumes()
             fnAligned = self._getExtraPath('results_aligned.xmd')
-            self.runJob('xmipp_metadata_selfile_create', '-p %s -o %s -s'%(self._getExtraPath('results_aligned.stk'),fnAligned),numberOfMpi=1)
-            md=MetaData(fnAligned)
+            md = MetaData(self._getExtraPath('results_aligned.stk'))
             md.addItemId()
             md.write(fnAligned)
             readSetOfVolumes(fnAligned,setOfVolumes)
-            volumeList=self.inputVolumes.get()
+            volumeList = self.inputVolumes.get()
             setOfVolumes.setSamplingRate(volumeList.getSamplingRate())
             self._defineOutputs(alignedVolumes=setOfVolumes)
             self._defineTransformRelation(self.inputVolumes, self.alignedVolumes)
