@@ -44,36 +44,35 @@ public class CorrectAndAutopickRunnable implements Runnable
 			this.manualRows = manualRows;
 			this.automaticRows = automaticRows;
 			this.next = next;
-                        this.micrograph = frame.getMicrograph();
-                        this.picker = frame.getParticlePicker();
-                        this.classifier = picker.getClassifier();
+            this.micrograph = frame.getMicrograph();
+            this.picker = frame.getParticlePicker();
+            this.classifier = picker.getClassifier();
 		}
 
 		public void run()
 		{
-                    try
-                    {
-			classifier.correct(manualRows, automaticRows);
-
-			if (picker.getMode() == Mode.Supervised && next.getState() == MicrographState.Supervised)
-			{
-				next.getAutomaticParticles().clear();
-				next.setAutopickpercent(picker.getAutopickpercent());
-				autopickRows = classifier.autopick(next.getFile(), next.getAutopickpercent());
-				picker.loadParticles(next, autopickRows);
-                                picker.saveData(next);
-                                frame.setChanged(false);
-			}
-                        micrograph.resetParticlesRectangle();//after correct there is no need to keep this information for mic
-			frame.getCanvas().repaint();
-			frame.getCanvas().setEnabled(true);
-			XmippWindowUtil.releaseGUI(frame.getRootPane());
-                        frame.updateMicrographsModel(true);
-                    }
-                    catch(Exception e)
-                    {
-                        ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-                        XmippDialog.showError(frame, "Classifier error");
-                    }
+            try
+            {
+				classifier.correct(manualRows, automaticRows);
+	
+				if (picker.getMode() == Mode.Supervised && next.getState() == MicrographState.Supervised)
+				{
+					next.getAutomaticParticles().clear();
+					next.setAutopickpercent(picker.getAutopickpercent());
+					autopickRows = classifier.autopick(next.getFile(), next.getAutopickpercent());
+					picker.loadParticles(next, autopickRows);
+	                                picker.saveData(next);
+	                                frame.setChanged(false);
+				}
+				frame.getCanvas().repaint();
+				frame.getCanvas().setEnabled(true);
+				XmippWindowUtil.releaseGUI(frame.getRootPane());
+	            frame.updateMicrographsModel(true);
+            }
+            catch(Exception e)
+            {
+                ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+                XmippDialog.showError(frame, "Classifier error");
+            }
 		}
 	}

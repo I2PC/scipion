@@ -649,7 +649,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
         SupervisedPickerMicrograph next = ppicker.getMicrographs().get(index);
         SupervisedPickerMicrograph current = getMicrograph();
-        
+        current.resetParticlesRectangle();
         if (!current.equals(next))// app just started
         {
             int result = tryCorrectAndAutopick(current, next);
@@ -707,7 +707,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         }
         if (isautopick)// if not done before
         {
-            current.resetParticlesRectangle();
             ppicker.autopick(this, next);
         }
         
