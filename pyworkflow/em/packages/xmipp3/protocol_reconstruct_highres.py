@@ -242,7 +242,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
         self.runJob('xmipp_metadata_utilities','-i %s --fill image1 constant noImage'%self.imgsFn,numberOfMpi=1)
         self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "image1=image"'%self.imgsFn,numberOfMpi=1)
-        self.runJob('xmipp_metadata_utilities','-i %s --operate rename_column "itemId particleId"'%self.imgsFn,numberOfMpi=1)
+        self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "particleId=itemId"'%self.imgsFn,numberOfMpi=1)
         imgsFnId=self._getExtraPath('imagesId.xmd')
         self.runJob('xmipp_metadata_utilities','-i %s --operate keep_column particleId -o %s'%(self.imgsFn,imgsFnId),numberOfMpi=1)
 
@@ -279,7 +279,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         if row.containsLabel(MDL_CONTINUOUS_X):
             setXmippAttributes(particle, row, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_COST, MDL_WEIGHT_CONTINUOUS2)
         if row.containsLabel(MDL_ANGLE_DIFF):
-            setXmippAttributes(MDL_ANGLE_DIFF, MDL_WEIGHT_JUMPER)
+            setXmippAttributes(particle, row, MDL_ANGLE_DIFF, MDL_WEIGHT_JUMPER)
         if row.containsLabel(MDL_WEIGHT_SSNR):
             setXmippAttributes(particle, row, MDL_WEIGHT_SSNR)
     
