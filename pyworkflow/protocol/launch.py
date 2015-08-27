@@ -195,7 +195,9 @@ def _submit(hostConfig, submitDict):
     f = open(scripPath, 'w')
     #Ensure the path exists
     makeFilePath(scripPath)
-    f.write(template)
+    # Add some line ends because in some clusters it fails
+    # to submit jobs if the submit script does not have end of line
+    f.write(template+'\n\n')
     f.close()
     # This should format the command using a template like: 
     # "qsub %(JOB_SCRIPT)s"
