@@ -34,11 +34,13 @@ ProgAngularContinuousAssign2::ProgAngularContinuousAssign2()
     produces_a_metadata = true;
     each_image_produces_an_output = true;
     projector = NULL;
+    ctfImage = NULL;
 }
 
 ProgAngularContinuousAssign2::~ProgAngularContinuousAssign2()
 {
 	delete projector;
+	delete ctfImage;
 }
 
 // Read arguments ==========================================================
@@ -193,20 +195,38 @@ void ProgAngularContinuousAssign2::preProcess()
     	contCost = CONTCOST_CORR;
 }
 
+void ProgAngularContinuousAssign2::updateCTFImage(double defocusU, double defocusV, double angle)
+{
+	ctf.K=1; // get pure CTF with no envelope
+	currentDefocusU=ctf.DeltafU=defocusU;
+	currentDefocusV=ctf.DeltafV=defocusV;
+	currentAngle=ctf.azimuthal_angle=angle;
+	ctf.produceSideInfo();
+	if (ctfImage==NULL)
+	{
+		ctfImage = new MultidimArray<double>();
+		ctfImage->resizeNoCopy(projector->projection());
+		STARTINGY(*ctfImage)=STARTINGX(*ctfImage)=0;
+	}
+	ctf.generateCTF(YSIZE(projector->projection()),XSIZE(projector->projection()),*ctfImage,Ts);
+	if (phaseFlipped)
+		FOR_ALL_ELEMENTS_IN_ARRAY2D(*ctfImage)
+			A2D_ELEM(*ctfImage,i,j)=fabs(A2D_ELEM(*ctfImage,i,j));
+}
+
 //#define DEBUG
 double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt, double psi,
 		double a, double b, Matrix2D<double> &A, double deltaDefocusU, double deltaDefocusV, double deltaDefocusAngle, int degree)
 {
-	projectVolume(*(prm->projector), prm->P, (int)XSIZE(prm->I()), (int)XSIZE(prm->I()),  rot, tilt, psi);
     if (prm->hasCTF)
     {
-    	prm->ctf.DeltafU=prm->old_defocusU+deltaDefocusU;
-    	prm->ctf.DeltafV=prm->old_defocusV+deltaDefocusV;
-    	prm->ctf.azimuthal_angle=prm->old_defocusAngle+deltaDefocusAngle;
-    	prm->ctf.produceSideInfo();
-    	prm->ctf.applyCTF(prm->P(),prm->Ts,prm->phaseFlipped);
+    	double defocusU=prm->old_defocusU+deltaDefocusU;
+    	double defocusV=prm->old_defocusV+deltaDefocusV;
+    	double angle=prm->old_defocusAngle+deltaDefocusAngle;
+    	if (defocusU!=prm->currentDefocusU || defocusV!=prm->currentDefocusV || angle!=prm->currentAngle)
+    		prm->updateCTFImage(defocusU,defocusV,angle);
     }
-
+	projectVolume(*(prm->projector), prm->P, (int)XSIZE(prm->I()), (int)XSIZE(prm->I()),  rot, tilt, psi, (const MultidimArray<double> *)prm->ctfImage);
     double cost=0;
 	if (prm->old_flip)
 	{

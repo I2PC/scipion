@@ -121,6 +121,10 @@ public:
 	double Istddev;
 	// Continuous cost function
 	int contCost;
+	// Current defoci
+	double currentDefocusU, currentDefocusV, currentAngle;
+	// CTF image
+	MultidimArray<double> *ctfImage;
 public:
     /// Empty constructor
     ProgAngularContinuousAssign2();
@@ -148,6 +152,9 @@ public:
         At the input the pose parameters must have an initial guess of the
         parameters. At the output they have the estimated pose.*/
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
+
+    /** Update CTF image */
+    void updateCTFImage(double defocusU, double defocusV, double angle);
 
     /** Post process */
     void postProcess();
