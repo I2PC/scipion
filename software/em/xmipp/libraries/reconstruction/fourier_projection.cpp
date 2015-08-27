@@ -36,7 +36,7 @@ FourierProjector::FourierProjector(MultidimArray<double> &V, double paddFactor, 
     produceSideInfo();
 }
 
-void FourierProjector::project(double rot, double tilt, double psi)
+void FourierProjector::project(double rot, double tilt, double psi, const MultidimArray<double> *ctf)
 {
     double freqy, freqx;
     std::complex< double > f;
@@ -170,6 +170,12 @@ void FourierProjector::project(double rot, double tilt, double psi)
             // Phase shift to move the origin of the image to the corner
             double a=DIRECT_A2D_ELEM(phaseShiftImgA,i,j);
             double b=DIRECT_A2D_ELEM(phaseShiftImgB,i,j);
+            if (ctf!=NULL)
+            {
+            	double ctfij=DIRECT_A2D_ELEM(*ctf,i,j);
+            	a*=ctfij;
+            	b*=ctfij;
+            }
 
             // Multiply Fourier coefficient in volume times phase shift
             double ac = a * c;
@@ -242,8 +248,9 @@ void FourierProjector::produceSideInfo()
 }
 
 void projectVolume(FourierProjector &projector, Projection &P, int Ydim, int Xdim,
-                   double rot, double tilt, double psi)
+                   double rot, double tilt, double psi, const MultidimArray<double> *ctf)
 {
-	projector.project(rot,tilt,psi);
+	projector.project(rot,tilt,psi,ctf);
     P() = projector.projection();
 }
+

@@ -75,10 +75,11 @@ public:
      * The constructor of the class
      */
     FourierProjector(MultidimArray<double> &V, double paddFactor, double maxFreq, int BSplinedegree);
+
     /**
      * This method gets the volume's Fourier and the Euler's angles as the inputs and interpolates the related projection
      */
-    void project(double rot, double tilt, double psi);
+    void project(double rot, double tilt, double psi, const MultidimArray<double> *ctf=NULL);
 private:
     /*
      * This is a private method which provides the values for the class variable
@@ -90,7 +91,8 @@ private:
  * This function gets an object form the FourierProjection class and makes the desired projection in Fourier space
  */
 void projectVolume(FourierProjector &projector, Projection &P, int Ydim, int Xdim,
-                   double rot, double tilt, double psi);
+                   double rot, double tilt, double psi, const MultidimArray<double> *ctf=NULL);
+
 //@}
 
 #endif
