@@ -702,14 +702,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             self.adaptShifts(fnGlobalAssignment,TsGlobal,fnLocalAssignment,TsCurrent)
                     else:
                         TsPrevious=self.readInfoField(fnDirPrevious,"sampling",MDL_SAMPLINGRATE)
-                        if self.splitMethod == self.SPLIT_FIXED:
-                            self.adaptShifts(join(fnDirPrevious,"angles%02d.xmd"%i),TsPrevious,fnLocalAssignment,TsCurrent)
-                        else:
-                            fnAux=join(fnDirLocal,"aux.xmd")
-                            self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
-                                        (join(fnDirPrevious,"angles.xmd"),fnLocalImages,fnAux),numberOfMpi=1)
-                            self.adaptShifts(fnAux,TsPrevious,fnLocalAssignment,TsCurrent)
-                            cleanPath(fnAux)
+                        fnAux=join(fnDirLocal,"aux.xmd")
+                        self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
+                                    (join(fnDirPrevious,"angles.xmd"),fnLocalImages,fnAux),numberOfMpi=1)
+                        self.adaptShifts(fnAux,TsPrevious,fnLocalAssignment,TsCurrent)
+                        cleanPath(fnAux)
                     self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column image"%fnLocalAssignment,numberOfMpi=1)
                     self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%(fnLocalAssignment,fnLocalImages),numberOfMpi=1)
     
