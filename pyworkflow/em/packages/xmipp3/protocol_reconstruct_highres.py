@@ -50,11 +50,7 @@ from xmipp3 import HelicalFinder
 import pyworkflow.em.metadata as metadata
 
 """
-Falta: 
-       a and b determination
-       Threads in continuous2
-       Max a and b changes
-       Viewer
+Falta: Threads in continuous2
 """
 
 class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
@@ -76,7 +72,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       'run of type *%s* class and some of the input parameters'
                       'will be taken from it.' % self.getClassName())
         form.addParam('inputParticles', PointerParam, label="Full-size Images", important=True, 
-                      condition='not doContinue', pointerClass='SetOfParticles',
+                      pointerClass='SetOfParticles', allowsNull=True,
                       help='Select a set of images at full resolution')
         form.addParam('inputVolumes', PointerParam, label="Initial volumes", important=True,
                       condition='not doContinue', pointerClass='Volume, SetOfVolumes',
@@ -214,8 +210,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def _insertAllSteps(self):
         self.imgsFn=self._getExtraPath('images.xmd')
         if self.doContinue:
-            self.copyAttributes(self.continueRun.get(), 'inputParticles')
             self.copyAttributes(self.continueRun.get(), 'particleRadius')
+            if not self.inputParticles.hasValue():
+                self.copyAttributes(self.continueRun.get(), 'inputParticles')
+            else:
+                self._insertFunctionStep('convertInputStep', self.inputParticles.getObjId())
             self._insertFunctionStep('copyBasicInformation')
             firstIteration=self.getNumberOfPreviousIterations()+1
         else:
@@ -291,10 +290,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
     def copyBasicInformation(self):
         previousRun=self.continueRun.get()
-        copyFile(previousRun._getExtraPath('images.xmd'),self._getExtraPath('images.xmd'))
-        copyFile(previousRun._getExtraPath('imagesId.xmd'),self._getExtraPath('imagesId.xmd'))
+        if not self.inputParticles.hasValue():
+            copyFile(previousRun._getExtraPath('images.xmd'),self._getExtraPath('images.xmd'))
+            copyFile(previousRun._getExtraPath('imagesId.xmd'),self._getExtraPath('imagesId.xmd'))
         if previousRun.weightSSNR:
             copyFile(previousRun._getExtraPath('ssnrWeights.xmd'),self._getExtraPath('ssnrWeights.xmd'))
+        elif self.weightSSNR:
+            self.doWeightSSNR()
         
         lastIter=self.getNumberOfPreviousIterations()
         for i in range(0,lastIter+1):
@@ -930,6 +932,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             errors.append("Symmetrize within mask requires a mask")
         if self.significantMaxResolution.get()>=self.continuousMinResolution.get():
             errors.append("There is a gap in resolution for which no angular assignment is performed")
+        if not self.doContinue and not self.inputParticles.hasValue():
+            errors.append("You must provide input particles")
         return errors    
     
     def _summary(self):
