@@ -53,6 +53,7 @@ PLOT_POLAR = 1
 PLOT_POLARCART = 2
 PLOT_CHOICES = ['cartesian', 'polar', 'both']
 
+
 class ProtMovieAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
@@ -226,10 +227,16 @@ class ProtMovieAlignment(ProtProcessMovies):
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
         alMethod = self.alignMethod.get()
+        
+        # Some movie have .mrc or .mrcs format but it is recognized as a volume
+        if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
+            movieSuffix = ':mrcs'
+        else:
+            movieSuffix = ''
 
         # For simple average execution
         if alMethod == AL_AVERAGE:
-            command = '-i %(movieName)s -o %(micName)s' % locals()
+            command = '-i %(movieName)s%(movieSuffix)s  -o %(micName)s' % locals()
             command += ' --nst %d --ned %d --simpleAverage --psd' % (firstFrame, lastFrame)
             try:
                 self.runJob(program, command, cwd=movieFolder)
@@ -273,16 +280,12 @@ class ProtMovieAlignment(ProtProcessMovies):
             if alMethod == AL_DOSEFGPUOPTICAL:
                 program = 'xmipp_optical_alignment_gpu'
                 corrMovieName = self._getCorrMovieName(movieId)
-                command = '-i %(corrMovieName)s ' % locals()
+                command = '-i %(corrMovieName)s%(movieSuffix)s  ' % locals()
                 # Set to Zero for Optical Flow (output movie of dosefgpu)
                 firstFrame = 0
                 lastFrame = 0
             else:
-                # Some movie have .mrc or .mrcs format but it is recognized as a volume
-                if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
-                    movieSuffix = ':mrcs'
-                else:
-                    movieSuffix = ''
+                
                 command = '-i %(movieName)s%(movieSuffix)s ' % locals()
             command += '-o %(micName)s --winSize %(winSize)d' % locals()
             command += ' --nst %d --ned %d --psd' % (firstFrame, lastFrame)
