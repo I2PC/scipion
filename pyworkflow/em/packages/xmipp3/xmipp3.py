@@ -185,8 +185,14 @@ class XmippMdRow():
         for label, value in self._labelDict.iteritems():
             # TODO: Check how to handle correctly unicode type
             # in Xmipp and Scipion
-            if type(value) is unicode:
+            t = type(value)
+            
+            if t is unicode:
                 value = str(value)
+                
+            if t is int and xmipp.labelType(label) == xmipp.LABEL_SIZET:
+                value = long(value)
+                
             try:
                 md.setValue(label, value, objId)
             except Exception, ex:
