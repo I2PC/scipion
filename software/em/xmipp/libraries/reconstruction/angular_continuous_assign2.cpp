@@ -272,7 +272,7 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 	//save()=prm->C0;
 	//save.write("PPPc0.xmp");
 	//std::cout << "Cost=" << cost << " Div=" << div << " avg=" << avg << std::endl;
-	std::cout << "Corr=" << corr << std::endl;
+	std::cout << "Cost=" << cost << std::endl;
 	std::cout << "Press any key" << std::endl;
 	char c; std::cin >> c;
 #endif
@@ -518,7 +518,7 @@ void ProgAngularContinuousAssign2::postProcess()
 	ptrMdOut.removeDisabled();
 	if (contCost==CONTCOST_L1)
 	{
-		double minCost=-1e38;
+		double minCost=1e38;
 		FOR_ALL_OBJECTS_IN_METADATA(ptrMdOut)
 		{
 			double cost;
