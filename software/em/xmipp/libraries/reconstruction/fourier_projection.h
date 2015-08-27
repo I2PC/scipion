@@ -62,6 +62,9 @@ public:
     // Projection in real space
     Image<double> projection;
 
+    // Phase shift image
+    MultidimArray<double> phaseShiftImgB, phaseShiftImgA;
+
     // Original volume size
     int volumeSize;
 
