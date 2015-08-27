@@ -736,7 +736,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         args+=" --phaseFlipped"
                     #if self.weightResiduals:
                     #    args+=" --oresiduals %s"%join(fnDirLocal,"residuals%02i.stk"%i)
-                    self.runJob("xmipp_angular_continuous_assign2",args)
+                    self.runJob("xmipp_angular_continuous_assign2",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                     self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnLocalStk,R),numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
 
     def weightParticles(self, iteration):
