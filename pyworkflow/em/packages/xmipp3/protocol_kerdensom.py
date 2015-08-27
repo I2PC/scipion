@@ -175,7 +175,7 @@ class KendersomBaseClassify(ProtClassify2D):
         readSetOfClasses2D(classes2DSet, self._params['kclasses'], 
                            preprocessClass=self._preprocessClass)
         self._defineOutputs(outputClasses=classes2DSet)
-        self._defineSourceRelation(imgSet, classes2DSet)
+        self._defineSourceRelation(self.inputParticles, classes2DSet)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):

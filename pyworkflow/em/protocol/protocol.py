@@ -110,13 +110,6 @@ class EMProtocol(Protocol):
     def _createSetOfMovies(self, suffix=''):
         return self.__createSet(SetOfMovies, 'movies%s.sqlite', suffix)
 
-#    TODO: no set of aligment available any longer
-#    def _createSetOfAlignment(self, particles, suffix=''):
-#        alignment = self.__createSet(SetOfAlignment, 'alignment%s.sqlite', suffix)
-#        alignment.setParticles(particles)
-#
-#        return alignment
-     
     def _createSetOfAngles(self, suffix=''):
         return self.__createSet(SetOfAngles, 'tiltpairs_angles%s.sqlite', suffix)
        

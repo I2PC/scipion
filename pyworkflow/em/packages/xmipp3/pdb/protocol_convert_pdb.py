@@ -1,189 +1,142 @@
-#   I. Foche & J. Cuenca
-#   PDB downloading added by R. Marabini 
-#   using code from Michael J. Harms (pdb_download.py)
+# **************************************************************************
+# *
+# * Authors:  Jesus Cuenca (jcuenca@cnb.csic.es)
+# *           Roberto Marabini (rmarabini@cnb.csic.es)
+# *           Ignacio Foche
+# * 
+# *           
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
 
 import os, ftplib, gzip
 import sys
 
-from pyworkflow.em import *
-from pyworkflow.utils import *
-from os.path import isfile
+import pyworkflow.protocol.params as params
+import pyworkflow.protocol.constants as const
+import pyworkflow.em as em
+from pyworkflow.utils import replaceBaseExt, removeExt
 
-class XmippProtConvertPdb(ProtInitialVolume):
+
+
+class XmippProtConvertPdb(em.ProtInitialVolume):
     """ Covert a PDB file to a volume.  """
     _label = 'convert a PDB'
-    _pdb_file = ''
-    _sampling_rate = 0.0
-    _input_file = ''
-    _output_file = ''
-    _pdb_id = 1
-    _size = 0
-
-    # TODO unzip may go to utilities
-    def unzipStep(self, some_file, some_output):
-        """
-        Unzip some_file using the gzip library and write to some_output.
-        CAUTION: deletes some_file.
-        """
-        success = True
-        try:
-            f = gzip.open(some_file, 'r')
-            g = open(some_output, 'w')
-            g.writelines(f.readlines())
-            f.close()
-            g.close()
-        except:
-            e = sys.exc_info()[0]
-            self.error('ERROR opening gzipped file %s: %s' % (some_file, e))
-            success = False
-
-        try:
-            if success:
-                os.remove(some_file)
-        except:
-            e = sys.exc_info()[0]
-            self.error('ERROR deleting gzipped file: %s' % e)
-            success = False
-
-    def pdbDownloadStep(self, pdbId, fileOut):
-        """
-        Download all pdb files in file_list and unzip them.
-        """
-        pdborgHostname = "ftp.wwpdb.org"
-        pdborgDirectory = "/pub/pdb/data/structures/all/pdb/"
-        prefix = "pdb"
-        suffix = ".ent.gz"
-        success = True
-
-        # Log into server
-        print "Connecting..."
-        ftp = ftplib.FTP()
-        try:
-            ftp.connect(pdborgHostname)
-            ftp.login()
-        except ftplib.error_temp:
-            self.error("ERROR! Timeout reached!")
-            success = False
-
-        if success:
-            # Download  file
-            _fileIn = "%s/%s%s%s" % (pdborgDirectory, prefix, pdbId, suffix) 
-            _fileOut = fileOut + ".gz"
-            try:
-                ftp.retrbinary("RETR %s" % _fileIn, open(_fileOut, "wb").write)
-            except ftplib.error_perm:
-                os.remove(_fileOut)
-                self.error("ERROR!  %s could not be retrieved!" % _fileIn)
-                success = False
-            # Log out
-            ftp.quit()
-
+    IMPORT_FROM_ID = 0
+    IMPORT_OBJ = 1
+    IMPORT_FROM_FILES = 2 
+       
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         """ Define the parameters that will be input for the Protocol.
         This definition is also used to generate automatically the GUI.
         """
-
         form.addSection(label='Input')
-        form.addParam('pdb_file', PathParam, 
-                      label="Pattern",
-                      help='Specify a path or an url to desired PDB structure. Also www.pdb.org IDs are accepted')
-#        form.addParam('pdb_file', StringParam, label="FileName or PDB ID",
-#                       help='type local PDB File Name or PDB ID')
-        form.addParam('inputPdbData', EnumParam, choices=['file', 'id'],
-                      label="Retrieve PDB from", default=self._pdb_id,
-                      display=EnumParam.DISPLAY_HLIST,
-                      help='Retrieve PDB data from server or use local file')
-        form.addParam('sampling', FloatParam, default=1.0, 
+        form.addParam('inputPdbData', params.EnumParam, choices=['id', 'object', 'file'],
+                      label="Retrieve PDB from", default=self.IMPORT_FROM_ID,
+                      display=params.EnumParam.DISPLAY_HLIST,
+                      help='Retrieve PDB data from server, use a pdb Object, or a local file')
+        form.addParam('pdbId', params.StringParam, condition='inputPdbData == IMPORT_FROM_ID',
+                      label="Pdb Id ", allowsNull=True,
+                      help='Type a pdb Id (four alphanumeric characters).')
+        form.addParam('pdbObj', params.PointerParam, pointerClass='PdbFile',
+                      label="Input pdb ", condition='inputPdbData == IMPORT_OBJ', allowsNull=True,
+                      help='Specify a pdb object.')
+        form.addParam('pdbFile', params.FileParam,
+                      label="File path", condition='inputPdbData == IMPORT_FROM_FILES', allowsNull=True,
+                      help='Specify a path to desired PDB structure.')
+        form.addParam('sampling', params.FloatParam, default=1.0, 
                       label="Sampling rate (A/px)",
                       help='Sampling rate (Angstroms/pixel)')
-        form.addParam('setSize', BooleanParam, label='Set final size?', default=False)
-        form.addParam('size', IntParam, condition='setSize', allowsNull=True, 
+        form.addParam('setSize', params.BooleanParam, label='Set final size?', default=False)
+        form.addParam('size', params.IntParam, condition='setSize', allowsNull=True, 
                       label="Final size (px)",
                       help='Final size in pixels. If no value is provided, protocol will estimate it.')
-        form.addParam('centerPdb', BooleanParam, default=True, 
-                      expertLevel=LEVEL_ADVANCED, 
+        form.addParam('centerPdb', params.BooleanParam, default=True, 
+                      expertLevel=const.LEVEL_ADVANCED, 
                       label="Center PDB",
                       help='Center PDB with the center of mass')
-
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """ In this function the steps that are going to be executed should
         be defined. Two of the most used functions are: _insertFunctionStep or _insertRunJobStep
         """
-        # Taking all arguments
-        self._pdb_file = self.pdb_file.get()
-        self._sampling_rate = self.sampling.get()
-        self._setSize = self.setSize.get()
-        self._size = self.size.get()
-        self._centerPdb = self.centerPdb.get()
-        self._inputPdbData = self.inputPdbData.get()
-        
-        if self._inputPdbData == self._pdb_id:
-            _inFile = self._getTmpPath('%s.pdb' % self._pdb_file)
-            self._input_file = _inFile
-            _outFile = self._getPath('%s' % self._pdb_file)
-            self._pdb_file = self._pdb_file.lower()
-            self.info("File to download and unzip: %s" % (_inFile+".gz"))
-            self._insertFunctionStep('pdbDownloadStep', self._pdb_file, _inFile)
-            self._insertFunctionStep('unzipStep',(_inFile+".gz"), (_inFile))
+        if self.inputPdbData == self.IMPORT_FROM_ID:
+            self._insertFunctionStep('pdbDownloadStep')
         self._insertFunctionStep('convertPdbStep')
         self._insertFunctionStep('createOutput')
-
+    
+    #--------------------------- STEPS functions --------------------------------------------
+    def pdbDownloadStep(self):
+        """Download all pdb files in file_list and unzip them."""
+        em.downloadPdb(self.pdbId.get(), self._getPdbFileName(), self._log)
+        
     def convertPdbStep(self):
         """ Although is not mandatory, usually is used by the protocol to
         register the resulting outputs in the database.
         """
-        centerArg = _outFile = ''
-        if self._centerPdb:
-            centerArg = '--centerPDB'
-
-        sizeArg = ''
-        if self._setSize:
-            sizeArg = '--size'
+        pdbFn = self._getPdbFileName()
+        outFile = removeExt(self._getVolName())
+        args = '-i %s --sampling %f -o %s' % (pdbFn, self.sampling.get(), outFile)
+        
+        if self.centerPdb:
+            args += ' --centerPDB'
+        
+        if self.setSize:
+            args += ' --size'
+            
         if self.size.hasValue():
-            sizeArg += ' %d' % (self._size)
+            args += ' %d' % self.size.get()
 
-        if self._inputPdbData == self._pdb_id:
-            _inFile = self._input_file
-        else:
-            _inFile = self._pdb_file
-        _outFile = self._getPath(removeBaseExt(_inFile))
-        self.info("Input file: "+_inFile)
-        self.info("Output file: "+_outFile)
-        self._output_file = _outFile + ".vol"
+        self.info("Input file: " + pdbFn)
+        self.info("Output file: " +outFile)
+        
         program = "xmipp_volume_from_pdb"
-        args = '-i %s --sampling %f -o %s %s %s' % (_inFile, self._sampling_rate, _outFile, centerArg, sizeArg)
         self.runJob(program, args)
 
     def createOutput(self):
-        """ Although is not mandatory, usually is used by the protocol to
-        register the resulting outputs in the database.
-        """
-        volume = Volume()
+        volume = em.Volume()
         volume.setSamplingRate(self.sampling.get())
-        _outFile = self._output_file
-        #    _outFile = self._getPath(self._pdb_file.rsplit(".", 1)[ 0 ])
-        #_outFile = removeExt(self._output_file)
-        print "createOutput output file:"+self._output_file+" "+_outFile
-        volume.setFileName(self._output_file)
-        self._defineOutputs(volume=volume)
-      
+        volume.setFileName(self._getVolName())
+        self._defineOutputs(outputVolume=volume)
+        if self.inputPdbData == self.IMPORT_OBJ:
+            self._defineSourceRelation(self.pdbObj, volume)
+    
+    #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         """ Even if the full set of parameters is available, this function provides
         summary information about an specific run.
         """ 
         summary = [ ] 
         # Add some lines of summary information
-        if not hasattr(self, 'pdb_file'):
-            summary.append("PDB file not ready yet.")
+        if not hasattr(self, 'outputVolume'):
+            summary.append("outputVolume not ready yet.")
         else:
-            _inFile = self.pdb_file.get()
-            
-            if self.inputPdbData.get() == self._pdb_id:
-                summary.append("Input PDB ID: %s" % _inFile)
+            if self.inputPdbData == self.IMPORT_FROM_ID:
+                summary.append("Input PDB ID: %s" % self.pdbId.get())
+            elif self.inputPdbData == self.IMPORT_OBJ:
+                summary.append("Input PDB File: %s" % self.pdbObj.get().getFileName())
             else:
-                summary.append("Input PDB File: %s" % _inFile)
-            
-            # summary.append("Output volume: %s" % _inFile.rsplit( ".", 1 )[ 0 ]+".vol")
+                summary.append("Input PDB File: %s" % self.pdbFile.get())
         return summary
       
     def _validate(self):
@@ -192,10 +145,22 @@ class XmippProtConvertPdb(ProtInitialVolume):
         empty the protocol can be executed.
         """
         errors = []
-        if not (self.inputPdbData.get() == self._pdb_id):
-            if not isfile(self.pdb_file.get()):
-                errors = ["File %s does not exists" % self.pdb_file.get()]
-
-        # Add some errors if input is not valid
+        if self.inputPdbData == self.IMPORT_FROM_ID:
+            lenStr = len(self.pdbId.get())
+            if lenStr <> 4:
+                errors = ["Pdb id is composed only by four alphanumeric characters"]
+        
         return errors
+    
+    #--------------------------- UTLIS functions --------------------------------------------
+    def _getPdbFileName(self):
+        if self.inputPdbData == self.IMPORT_FROM_ID:
+            return self._getExtraPath('%s.pdb' % self.pdbId.get())
+        elif self.inputPdbData == self.IMPORT_OBJ:
+            return self.pdbObj.get().getFileName()
+        else:
+            return self.pdbFile.get()
+    
+    def _getVolName(self):
+        return self._getExtraPath(replaceBaseExt(self._getPdbFileName(), "vol"))
     

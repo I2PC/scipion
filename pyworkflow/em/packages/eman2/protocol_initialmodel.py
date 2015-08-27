@@ -138,7 +138,7 @@ class EmanProtInitModel(ProtInitialVolume):
             volumes.append(vol)
 
         self._defineOutputs(outputVolumes=volumes)
-        self._defineSourceRelation(classes2DSet, volumes)
+        self._defineSourceRelation(self.inputSet, volumes)
 
     #--------------------------- INFO functions -------------------------------------------- 
         

@@ -64,7 +64,6 @@ class XmippProtConsensusPicking(ProtParticlePicking):
                       help="How many times need a particle to be selected to be considered as a consensus particle. "\
                            "Set to -1 to indicate that it needs to be selected by all algorithms. Set to 1 to indicate that "\
                            "it suffices that only 1 algorithm selects the particle")
-        form.addParallelSection(threads=4, mpi=1)
         
 #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
@@ -74,6 +73,9 @@ class XmippProtConsensusPicking(ProtParticlePicking):
                                               micrograph.getObjId(), prerequisites=[])
             deps.append(stepId)
         self._insertFunctionStep("createOutputStep", prerequisites=deps)
+    
+    def getInputMicrographs(self):
+        return self.inputCoordinates[0].get().getMicrographs()
     
     def _summary(self):
         message = []
@@ -102,6 +104,8 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         
         # Add all coordinates in the first method
         N0 = coords[0].shape[0]
+        if N0==0:
+            return
         allCoords[0:N0,:] = coords[0]
         votes[0:N0] = 1
         
@@ -126,9 +130,13 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         else:
             consensus = self.consensus.get()
         consensusCoords = allCoords[votes>=consensus,:]
+        jaccardIdx = float(len(consensusCoords))/(float(len(allCoords))/len(self.inputCoordinates))
+        # COSS: Possible problem with concurrent writes
+        with open(self._getExtraPath('jaccard.txt'), "a") as fhJaccard:
+            fhJaccard.write("%d %f\n"%(micId,jaccardIdx))
         
         # Write the consensus file only if there
-        # are some coodinates (size > 0)
+        # are some coordinates (size > 0)
         if consensusCoords.size:
             np.savetxt(self._getExtraPath('consensus_%06d.txt' % micId), consensusCoords)
     
@@ -157,4 +165,4 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         self._defineOutputs(outputCoordinates=setOfCoordinates)
         
         for coordinates in self.inputCoordinates:
-            self._defineSourceRelation(coordinates.get(), self.outputCoordinates)
+            self._defineSourceRelation(coordinates, self.outputCoordinates)

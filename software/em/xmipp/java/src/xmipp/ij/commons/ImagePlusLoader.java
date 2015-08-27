@@ -59,6 +59,10 @@ public class ImagePlusLoader {
     public ImagePlusLoader(String fileName, boolean inverty) {
         this(fileName, null, null, false, false, inverty, -2);
     }
+    
+    public ImagePlusLoader(String fileName) {
+        this(fileName, null, null, false, false, false, -2);
+    }
 
     public ImagePlusLoader(String fileName, boolean useGeometry, boolean wrap, boolean inverty) {
         this(fileName, null, null, useGeometry, wrap, inverty, -2);
@@ -132,7 +136,7 @@ public class ImagePlusLoader {
     }
 
     public boolean allowsPoll() {
-        return impreader.allowsPoll;
+        return impreader.getAllowsPoll();
     }
 
     public String getName() {

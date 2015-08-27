@@ -84,9 +84,10 @@ public:
     bool doReconstruct;
 
     /** Use it for validation */
-    bool useForValidation = false;
+    bool useForValidation;
 
-    size_t numOrientationsPerParticle = 0;
+    size_t numOrientationsPerParticle;
+
 
 public: // Internal members
     size_t rank, Nprocessors;

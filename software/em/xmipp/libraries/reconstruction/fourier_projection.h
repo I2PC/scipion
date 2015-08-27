@@ -62,6 +62,9 @@ public:
     // Projection in real space
     Image<double> projection;
 
+    // Phase shift image
+    MultidimArray<double> phaseShiftImgB, phaseShiftImgA;
+
     // Original volume size
     int volumeSize;
 
@@ -86,7 +89,7 @@ private:
 /*
  * This function gets an object form the FourierProjection class and makes the desired projection in Fourier space
  */
-void projectVolume(FourierProjector &projection, Projection &P, int Ydim, int Xdim,
+void projectVolume(FourierProjector &projector, Projection &P, int Ydim, int Xdim,
                    double rot, double tilt, double psi);
 //@}
 

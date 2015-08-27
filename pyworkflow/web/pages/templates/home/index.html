@@ -44,6 +44,7 @@ div#bodyStyle {
 	width: 90%;
 	padding: 2em;
 	border-radius: 7px;
+	max-width:1400px;
 }
 
 header {
@@ -128,6 +129,7 @@ section{
 	background: -ms-linear-gradient(top, #d7d7d7 2%,#ffffff 70%,#ffffff 100%); /* IE10+ */
 	background: linear-gradient(to bottom, #d7d7d7 2%,#ffffff 70%,#ffffff 100%); /* W3C */
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d7d7d7', endColorstr='#ffffff',GradientType=0 ); /* IE6-9 */
+	
 	}
 	
 #titleSection{
@@ -152,6 +154,7 @@ section{
 	background-position:right;
 	display: inline-block;
 	background-size: contain;
+	
 }
 
 #topTextSection, #bottomTextSection{
@@ -167,7 +170,7 @@ section{
 	display: inline-block;
 	text-align: center;
 	vertical-align: middle;
-	padding: 13px 42px;
+	padding: 13px 20px;
 	border: 0px solid #a12727;
 	border-radius: 4px;
 	-webkit-box-shadow: #ff5959 0px 0px 0px 0px;
@@ -232,7 +235,7 @@ background: #992828;
 background: -webkit-gradient(linear, left top, left bottom, from(#ff4a4a), to(#992727));
 background: -moz-linear-gradient(top, #ff4a4a, #992727);
 background: linear-gradient(to bottom, #ff4a4a, #992727);
-margin-right: 10px;
+
 }
 .documentationButton:hover,
 .documentationButton:focus, .webtoolsButton:hover, .webtoolsButton:focus {
@@ -276,6 +279,8 @@ text-decoration: none;
 
 .webtoolsButton:before{
     background: url("{{abs_url}}/resources/fa-cogs.png") no-repeat left center transparent;
+    -webkit-filter: invert(100%);
+    
 }
 
 
@@ -311,6 +316,7 @@ text-decoration: none;
 		<section>
 			<div id="innerSection" style="min-height: 26em;">
 				<div id="innerContent">
+				<br/>
 					<h3>Scipion is an image processing framework to obtain 3D
 						models of macromolecular complexes using Electron Microscopy
 						(3DEM). It integrates several software packages and presents a
@@ -323,10 +329,10 @@ text-decoration: none;
 					<div id="buttonSection">
 						<a href="javascript:goWithSubDomainURL('/download_form/')" class="downloadButton"> 
 							Download 
-						</a>
+						</a>&nbsp;
 						<a href="javascript:goWithSubDomainURL('/services/')" class="webtoolsButton"> 
 							Web Tools 
-						</a>
+						</a>&nbsp;
 						<a href="http://scipion.cnb.csic.es/docs/" class="documentationButton">
 							Documentation 
 						</a>
@@ -334,11 +340,12 @@ text-decoration: none;
 					</div>
 				</div>
 			</div>
-		</section>
-		<div style="text-align: right; font-size: 0.9em;padding-top:1.2em;">
+			<div style="text-align: right; font-size: 0.9em;padding-top:1.2em;">
 			<a href="http://www.gnu.org/copyleft/gpl.html"> © 2015 · Scipion
 				is licenced under the GNU General Public License </a>
 		</div>
+		</section>
+		
 	</div>
 </body>
 </html>

@@ -41,7 +41,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 
     """Xmipp protocol to pick particles in a set of micrographs 
     either manually or using automatic picking support. Particles will be used in order to reconstruct a 3D molecule from it's 2D projections. """
-    _label = 'supervised picking'
+    _label = 'manual-picking (step 1)'
 
     
     def __init__(self, **args):        
@@ -92,7 +92,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     def launchParticlePickGUIStep(self, micFn):
         # Launch the particle picking GUI
         extraDir = self._getExtraPath()
-        process = launchSupervisedPickerGUI(self.memory.get(), micFn, extraDir, 'manual', self)
+        memory = '%dg'%self.memory.get()
+        process = launchSupervisedPickerGUI(micFn, extraDir, self, memory=memory)
         process.wait()
 
     def _importFromFolderStep(self):
@@ -108,7 +109,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         coordSet = self._createSetOfCoordinates(self.inputMics)
         readSetOfCoordinates(posDir, self.inputMics, coordSet)
         self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(self.inputMics, coordSet)
+        self._defineSourceRelation(self.inputMicrographs, coordSet)
         
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):

@@ -174,8 +174,7 @@ class ProjectWindow(ProjectBaseWindow):
         server_thread.start()
 
     def schedulePlot(self, path, *args):
-        self.enqueue(lambda: plotFile(path, *args).show())
-    
+        self.enqueue(lambda: plotFile(path, *args).show())    
 
     def runObjectCommand(self, cmd, inputStrId, objStrId):
         from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
@@ -306,7 +305,6 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
             window = self.server.window
             msg = self.request.recv(1024)
             tokens = shlex.split(msg)
-            #print msg
             if msg.startswith('run protocol'):
                 protocolName = tokens[2]
                 from pyworkflow.em import getProtocols

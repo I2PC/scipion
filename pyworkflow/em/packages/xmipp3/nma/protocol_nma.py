@@ -39,8 +39,7 @@ from pyworkflow.em.data import SetOfNormalModes
 from pyworkflow.em.packages.xmipp3 import XmippMdRow
 import xmipp
 from protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
-from convert import rowToMode
-        
+from convert import rowToMode, getNMAEnviron
         
 class XmippProtNMA(XmippProtNMABase):
     """ Flexible angular alignment using normal modes """
@@ -143,9 +142,10 @@ class XmippProtNMA(XmippProtNMABase):
         rc = self._getRc(self._getExtraPath('atoms_distance.hist'))
                 
         self._enterWorkingDir()
-        self.runJob('nma_record_info_PDB.py', "%d %d atoms.pdb %f %f" % (numberOfModes, RTBblockSize, rc, RTBForceConstant))
-        self.runJob("nma_elnemo_pdbmat","")
-        self.runJob("nma_diagrtb","")
+        self.runJob('nma_record_info_PDB.py', "%d %d atoms.pdb %f %f" % (numberOfModes, RTBblockSize, rc, RTBForceConstant),
+                    env=getNMAEnviron())
+        self.runJob("nma_elnemo_pdbmat","",env=getNMAEnviron())
+        self.runJob("nma_diagrtb","",env=getNMAEnviron())
 
         if not exists("diagrtb.eigenfacs"):
             msg = "Modes cannot be computed. Check the number of modes you asked to compute and/or consider "
@@ -180,7 +180,7 @@ class XmippProtNMA(XmippProtNMABase):
                 fhAni.write("\n")
         fhIn.close()
         fhAni.close()
-        self.runJob("nma_prepare_for_animate.py","")
+        self.runJob("nma_prepare_for_animate.py","",env=getNMAEnviron())
         cleanPath("vec_ani.txt")
         moveFile('vec_ani.pkl', 'extra/vec_ani.pkl')
 
@@ -193,11 +193,11 @@ class XmippProtNMA(XmippProtNMABase):
         if self.structureEM:
             fn = "pseudoatoms.pdb"
             self.runJob("nma_animate_pseudoatoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
-                      (fn,numberOfModes,amplitude,nFrames,downsample,pseudoAtomThreshold))
+                      (fn,numberOfModes,amplitude,nFrames,downsample,pseudoAtomThreshold),env=getNMAEnviron())
         else:
             fn="atoms.pdb"
             self.runJob("nma_animate_atoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d"%\
-                      (fn,numberOfModes,amplitude,nFrames))
+                      (fn,numberOfModes,amplitude,nFrames),env=getNMAEnviron())
         
         for mode in range(7,numberOfModes+1):
             fnAnimation = join("extra", "animations", "animated_mode_%03d" % mode)
@@ -262,4 +262,4 @@ class XmippProtNMA(XmippProtNMABase):
         inputPdb = self.inputStructure.get()
         nmSet.setPdb(inputPdb)
         self._defineOutputs(outputModes=nmSet)
-        self._defineSourceRelation(inputPdb, nmSet)
+        self._defineSourceRelation(self.inputStructure, nmSet)

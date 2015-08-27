@@ -44,7 +44,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String other;
     private JButton representativesbt;
     private InputFieldsMessageDialog dlg;
-    private String tmpdir;
     private JButton createvolbt;
     private String setType;
     private static final String runProtCreateSubset = "run protocol ProtUserSubSet inputObject=%s sqliteFile='%s','%s' outputClassName=%s other='%s' label='%s'";
@@ -53,14 +52,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public ScipionGalleryJFrame(ScipionGalleryData data) {
         super(data);
         readScipionParams((ScipionParams)data.parameters);
-        setScipionImageIcon();
+        
     }
       
-    private void setScipionImageIcon()
-    {
-            Image img = XmippResource.getIcon("scipion_logo.png").getImage();
-            setIconImage(img);
-    }
+  
 
     protected void readScipionParams(ScipionParams parameters)
     {
@@ -69,8 +64,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             type = data.hasClasses()? "Particles": setType.replace("SetOf", "");
             port = parameters.port;
             inputid = parameters.inputid;
-            String filename = data.getFileName();
-            tmpdir = new File(filename).getParent() + File.separator + "tmp";
             sqlitefile = data.getTmpFile("_selection");
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "create subset");
@@ -293,7 +286,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     public void reloadTableData(boolean changed)
     {
-        super.reloadTableData(changed);
+        super.reloadTableData(changed, gallery.getSelection());
         enableActions();
     }
 
@@ -352,7 +345,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 selection = gallery.getSelection();
             ((ScipionGalleryData)data).overwrite(sqlitefile, selection);
             XmippWindowUtil.runCommand(command, port);
-            close(false);
+            //close(false);
         } catch (SQLException ex) {
             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -387,14 +380,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     protected class ScipionGalleryMenu extends GalleryMenu//To customize showj menu for scipion
     {
-        @Override
-        protected void createItems() throws Exception
-        {
-            super.createItems();
-            addItem(FILE_LOAD_SEL, "Load selection ...");
-            addItem(FILE_SAVE_SEL, "Save selection as ...", "save_as.gif");
-        }
-
+        
         @Override
         protected void handleActionPerformed(ActionEvent evt)
         {
@@ -404,12 +390,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             {
                     if (cmd.equals(FILE_LOAD_SEL))
                     {
+                    	fc.setApproveButtonText("Open");
                         if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
                             loadSelection(fc.getSelectedPath());
                     }
                     if (cmd.equals(FILE_SAVE_SEL))
                     {
                         fc.setSelectedFile(new File(sqlitefile));
+                        fc.setApproveButtonText("Save");
                          if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
                             saveSelection(fc.getSelectedPath());
                     }
@@ -437,6 +425,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+
+		@Override
+		public void addExtraMenuItems()
+		{
+			addItem(FILE_LOAD_SEL, "Load selection ...");
+            addItem(FILE_SAVE_SEL, "Save selection ...", "save_as.gif");
+			
+		}
     }
         
         

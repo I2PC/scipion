@@ -90,7 +90,7 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
 class TestXmippCTFDiscrepancyBase2(TestWorkflow):
     """ 
     Same test as previous one, but using a different way 
-    of setting the inputCTF pointers using the extendedAttribute
+    of setting the inputCTF pointers using the extended
     property of pointers.
     """
     
@@ -120,9 +120,9 @@ class TestXmippCTFDiscrepancyBase2(TestWorkflow):
                                           samplingRate=1,
                                           emxFile=emxFn3
         )
-        pl = PointerList([Pointer(value=protEmxImport1, extendedAttribute='outputCTF'),
-                          Pointer(value=protEmxImport2, extendedAttribute='outputCTF'),
-                          Pointer(value=protEmxImport3, extendedAttribute='outputCTF')
+        pl = PointerList([Pointer(value=protEmxImport1, extended='outputCTF'),
+                          Pointer(value=protEmxImport2, extended='outputCTF'),
+                          Pointer(value=protEmxImport3, extended='outputCTF')
                           ])
         protCtfDiscrepancy = self.newProtocol(XmippProtCTFDiscrepancy)
         protCtfDiscrepancy.inputCTFs.set(pl)

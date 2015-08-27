@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -16,6 +15,8 @@ import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 
+import xmipp.ij.commons.IJCommand;
+import xmipp.ij.commons.XmippImageJ;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -41,11 +42,9 @@ public abstract class ParticlePicker {
     protected String selfile;
     
     protected String configfile;
-    protected final String[] availableFilters = new String[]{"Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
-                   "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
 
     
-    static String xmippsmoothfilter = "Xmipp Smooth Filter";
+    public static final String xmippsmoothfilter = "Xmipp Smooth Filter";
     public static final String particlesAutoBlock = "particles_auto";
 
     protected Color color;
@@ -54,12 +53,25 @@ public abstract class ParticlePicker {
     public static final int sizemax = 2000;
     protected String block;
 
-    protected static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW};
+    protected static Color[] colors = new Color[]{Color.GREEN, Color.BLUE, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW};
 
     protected static int nextcolor;
     public final HashMap<Format, String> emextensions;
     protected ParticlePickerParams params;
     protected static ParticlePicker picker;
+    protected double zoom = -1.f;
+    
+    
+    public double getZoom()
+    {
+    	return zoom;
+    }
+    
+    public void setZoom(double zoom)
+    {
+    	this.zoom = zoom;
+    }
+    
 
     public static Color getNextColor() {
         Color next = colors[nextcolor];
@@ -147,44 +159,58 @@ public abstract class ParticlePicker {
 
     public void loadConfig() {
 
-        String file = configfile;
-        filters.clear();
-        if (!new File(file).exists()) {
-            color = getNextColor();
-            size = getDefaultSize();
-            setMicrograph(getMicrographs().get(0));
-            filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
-            saveConfig();
-            return;
-        }
-
-        String mname;
-        int rgb;
-        try {
-            MetaData md = new MetaData("properties@" + file);
-            for (long id : md.findObjects()) {
-
-                mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
-                setMicrograph(getMicrograph(mname));
-                rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
-                color = new Color(rgb);
-                size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-            }
-            md.destroy();
-            String command, options;
-            if (MetaData.containsBlock(file, "filters")) {
-                md = new MetaData("filters@" + file);
-                long[] ids = md.findObjects();
-                for (long id : ids) {
-                    command = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD, id));
-                    options = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, id));
-                    if (options.equals("NULL")) {
-                        options = "";
-                    }
-                    filters.add(new IJCommand(command, options));
+    	try {
+	        String file = configfile;
+	        filters.clear();
+	        Micrograph m = getMicrographs().get(0);
+	        boolean existsConfig = new File(file).exists();
+	        color = getNextColor();
+	        if (!existsConfig) {
+	            size = getDefaultSize();
+	            setMicrograph(m);
+	            
+	        }
+	        else
+	        {
+		        String mname;
+		        int rgb;
+	            MetaData md = new MetaData("properties@" + file);
+	            long id = md.firstObject();
+	            if(md.containsLabel(MDLabel.MDL_MICROGRAPH))
+	            {
+	                mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+	                m = getMicrograph(mname);
+	            }
+                setMicrograph(m);
+                if(md.containsLabel(MDLabel.MDL_COLOR))
+                {
+                	rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
+                	color = new Color(rgb);
                 }
-                md.destroy();
+                size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
+	            md.destroy();
+	            String command, options;
+	            if (MetaData.containsBlock(file, "filters")) {
+	                md = new MetaData("filters@" + file);
+	                long[] ids = md.findObjects();
+	                for (long filterid : ids) {
+	                    command = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD, filterid));
+	                    options = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, filterid));
+	                    if (options.equals("NULL")) {
+	                        options = "";
+	                    }
+	                    filters.add(new IJCommand(command, options));
+	                }
+	                md.destroy();
+	            }
+	        }
+            if (!existsConfig || (existsConfig && !MetaData.containsBlock(file, "filters")))
+            {
+            	filters.add(new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma=2"));
+            	filters.add(new IJCommand(XmippImageJ.enhanceContrastFilter, "saturated=0.4"));
+            	saveConfig();
             }
+            
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, e.getMessage(), e);
             throw new IllegalArgumentException(e.getMessage());
@@ -222,7 +248,8 @@ public abstract class ParticlePicker {
     }
 
     protected void saveConfig(MetaData md, long id) {
-        md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
+        Micrograph m = getMicrograph();
+        md.setValueString(MDLabel.MDL_MICROGRAPH, m.getName(), id);
         md.setValueInt(MDLabel.MDL_COLOR, getColor().getRGB(), id);
         md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, getSize(), id);
     }
@@ -247,18 +274,33 @@ public abstract class ParticlePicker {
          
         return Format.None;
     }
+    
+    
+    
 
-    public Format detectFormat(String path, String preffix, String suffix) {
-        String file;
-        Format f;
-        for (Micrograph m : getMicrographs())
-        {
-            file = Filename.join(path, preffix + m.getName() + suffix);
-            f = detectFileFormat(file);
-            if(f != Format.None)
-                return f;
-        }
-        return Format.None;
+    public Format detectFormat(String path, String preffix, StringBuffer suffix) {
+    	Format f;
+    	if(suffix.length() == 0)
+	    	for(String ext: emextensions.values())
+			{
+	    		suffix.setLength(0); 
+	    		suffix.append(ext);
+				f = detectFormat(path, preffix, suffix);
+				if(f != Format.None)
+					return f;
+			}
+    	else
+    	{
+	        String file;
+	        for (Micrograph m : getMicrographs())
+	        {
+	            file = Filename.join(path, preffix + m.getName() + suffix);
+	            f = detectFileFormat(file);
+	            if(f != Format.None)
+	                return f;
+	        }
+    	}
+    	return Format.None;
     }
 
     public String getExportFile(String path) {
@@ -288,14 +330,6 @@ public abstract class ParticlePicker {
 
 
 
-    protected boolean isRegisteredFilter(String command2) {
-        for (IJCommand f : filters) {
-            if (f.getCommand().equals(command2)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     public void updateFilters(String command) {
         if (command != null) {
@@ -303,23 +337,48 @@ public abstract class ParticlePicker {
             if (Recorder.getCommandOptions() != null) {
                 options = Recorder.getCommandOptions();
             }
-
-            if (!isFilterSelected(command) && Arrays.asList(availableFilters).contains(command)) {
+            //boolean isavailable = availableFilters.contains(command);
+            boolean isadded = isFilterAdded(command);
+            if (!isadded) {
                 addFilter(command, options);
             } else if (!(options == null || options.equals(""))) {
-                for (IJCommand f : filters) {
-                    if (f.getCommand().equals(command)) {
-                        f.setOptions(options);
-                    }
-                }
+                setFilterOptions(command, options);
             }
-
             saveConfig();
         }
     }
+    
+    void removeFilter(String filter) {
+        for (IJCommand f : filters) {
+            if (f.getCommand().equals(filter)) {
+                filters.remove(f);
+                saveConfig();
+                break;
+            }
+        }
+    }// function removeFilter
+
+    public boolean isFilterAdded(String filter) {
+        for (IJCommand f : filters) {
+            if (f.getCommand().equals(filter)) {
+                return true;
+            }
+        }
+        return false;
+    }// function isFilterSelected
+
 
     public String getMicrographsSelFile() {
         return selfile;
+    }
+    
+    public void setFilterOptions(String command, String options)
+    {
+    	for (IJCommand f : filters) {
+            if (f.getCommand().equals(command)) {
+                f.setOptions(options);
+            }
+        }
     }
 
     public void addFilter(String command, String options) {
@@ -410,24 +469,6 @@ public abstract class ParticlePicker {
         return null;
     }
 
-    void removeFilter(String filter) {
-        for (IJCommand f : filters) {
-            if (f.getCommand().equals(filter)) {
-                filters.remove(f);
-                saveConfig();
-                break;
-            }
-        }
-    }// function removeFilter
-
-    public boolean isFilterSelected(String filter) {
-        for (IJCommand f : filters) {
-            if (f.getCommand().equals(filter)) {
-                return true;
-            }
-        }
-        return false;
-    }// function isFilterSelected
 
     
 
@@ -497,7 +538,7 @@ public abstract class ParticlePicker {
 
     public void fillParticlesMdFromRelionFile(String file, Micrograph m, MetaData md) {
          MetaData relionmd = new MetaData(file);
-         if(!md.containsLabel(MDLabel.RLN_IMAGE_COORD_X))
+         if(!relionmd.containsLabel(MDLabel.RLN_IMAGE_COORD_X))
          	throw new IllegalArgumentException(String.format("File %s format is not supported", file));
          long[] ids = relionmd.findObjects();
          int xcoor, ycoor;

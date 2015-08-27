@@ -79,7 +79,9 @@ public class MetaData {
 	// }
 
 	public final static int GEOMETRY_LABELS[] = { MDLabel.MDL_FLIP,
-			MDLabel.MDL_ANGLE_PSI, MDLabel.MDL_SHIFT_X, MDLabel.MDL_SHIFT_Y };
+			MDLabel.MDL_ANGLE_PSI, MDLabel.MDL_SHIFT_X, MDLabel.MDL_SHIFT_Y};
+	
+	public final static int GEOMETRY_RELION_LABELS[] = { MDLabel.RLN_ORIENT_ORIGIN_X,  MDLabel.RLN_ORIENT_ORIGIN_Y, MDLabel.RLN_ORIENT_PSI, MDLabel.RLN_ORIENT_FLIP};
 
 	public final static int MICROGRAPH_BASIC_LABELS[] = {
 			MDLabel.MDL_MICROGRAPH, MDLabel.MDL_PSD, MDLabel.MDL_CTF_MODEL };
@@ -148,14 +150,28 @@ public class MetaData {
 
 	public boolean containsGeometryInfo(String type) {
 		try {
-			for (int i = 0; i < GEOMETRY_LABELS.length; i++)
-				if (containsLabel(GEOMETRY_LABELS[i]))
-					return true;
+			boolean contains = containsLabel(GEOMETRY_LABELS);
+			if(!contains)
+				contains = containsLabel(GEOMETRY_RELION_LABELS);
+			return contains;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return false;
 	}
+	
+	public boolean containsLabel(int[] labels) {
+		try {
+			for (int i = 0; i < labels.length; i++)
+				if (containsLabel(labels[i]))
+					return true;
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
 	
 	public boolean containsMicrographParticles() {
 		try {
@@ -442,7 +458,10 @@ public class MetaData {
 
 	/** Get the average and std images, result is left on input image */
 	public native void getStatsImages(ImageGeneric imageAvg,
-			ImageGeneric imageStd, boolean applyGeo, int label);
+			ImageGeneric imageStd, boolean applyGeo, boolean wrap, int label);
+
+	public native void writeMdToStack(String filename, boolean applyGeo, boolean wrap, int label);
+
         
    	public native void getPCAbasis(ImageGeneric basis, int label);
 

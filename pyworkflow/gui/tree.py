@@ -304,7 +304,14 @@ class ObjectTreeProvider(TreeProvider):
             t = obj.getName().split('.')[-1] 
             if  t.startswith('__item__'):
                 t = "%s [%s]" % (cls, t.replace('__item__', ''))
-        if obj.get() is not None:
+                
+        value = obj.get()
+        if value is None:
+            if obj.isPointer():
+                t += " = %s" % str(obj.getObjValue())
+            else:
+                t += " = None"
+        else:
             t += " = %s" % str(obj)
             
         info = {'key': obj.getObjId(), 'parent': self._parentDict.get(obj.getObjId(), None),
@@ -336,7 +343,8 @@ class ObjectTreeProvider(TreeProvider):
     def _getChilds(self, obj):
         childs = []
         grandchilds = []
-        for _, v in obj.getAttributesToStore():
+        
+        for a, v in obj.getAttributesToStore():
             childs.append(v)
             self._parentDict[v.getObjId()] = obj
             grandchilds += self._getChilds(v)

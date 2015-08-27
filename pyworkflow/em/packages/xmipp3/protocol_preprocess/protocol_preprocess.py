@@ -177,7 +177,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
         self.runJob('xmipp_transform_filter', args)
     
     def normalizeStep(self, args, changeInserts):
-        self.runJob("xmipp_transform_normalize", args % locals())
+        self.runJob("xmipp_transform_normalize", args)
     
     def centerStep(self, args, changeInserts):
         self.runJob("xmipp_transform_center_image", args % locals())
@@ -291,6 +291,8 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
 
 class XmippProtPreprocessVolumes(XmippProcessVolumes):
     """ Protocol for Xmipp-based preprocess for volumes """
+    import pyworkflow.em.metadata as md
+    
     _label = 'preprocess volumes'
     
     # Aggregation constants
@@ -393,11 +395,15 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         
         if self.doAdjust:
             self._insertFunctionStep("projectionStep", changeInserts)
-            self._insertFunctionStep("adjustStep", changeInserts)
+            self._insertFunctionStep("adjustStep", self.isFirstStep, changeInserts)
+            if self.isFirstStep:
+                self.isFirstStep = False
 
         if self.doSegment:
             args = self._argsSegment()
             self._insertFunctionStep("segmentStep", args, changeInserts)
+            if self.isFirstStep:
+                self.isFirstStep = False
         
         if self.doNormalize:
             args = self._argsNormalize()
@@ -416,7 +422,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         self.runJob('xmipp_transform_filter', args)
     
     def normalizeStep(self, args, changeInserts):
-        self.runJob("xmipp_transform_normalize", args % locals())
+        self.runJob("xmipp_transform_normalize", args)
         
     def changeHandStep(self, args, changeInserts):
         self.runJob("xmipp_transform_mirror", args)
@@ -448,38 +454,50 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             ' --alpha0 0.005 --dontReconstruct' % params
             self.runJob("xmipp_reconstruct_significant", sigArgs)
     
-    def adjustStep(self, changeInserts):
-        import pyworkflow.em.metadata as md
+    def adjustStep(self, isFirstStep, changeInserts):
+        if isFirstStep:
+            inputFn = self.inputFn
+        else:
+            if self._isSingleInput():
+                inputFn = self.outputStk
+            else:
+                inputFn = self.outputMd
+
         if self._isSingleInput():
             args = self._argsAdjust(0)
-            localArgs = self._adjustLocalArgs(self.inputFn, self.outputStk, args)
+            localArgs = self._adjustLocalArgs(inputFn, self.outputStk, args)
             self.runJob("xmipp_transform_adjust_volume_grey_levels", localArgs)
         else:
-            numberOfVols = self.inputVolumes.get().getSize()
             volMd = md.MetaData(self.inputFn)
-            firstStep = self.isFirstStep
+            outVolMd = md.MetaData(self.outputMd)
             for objId in volMd:
                 args = self._argsAdjust(objId-1)
                 inputVol = volMd.getValue(md.MDL_IMAGE, objId)
-                outputVol = locationToXmipp(objId, self.outputStk)
+                outputVol = outVolMd.getValue(md.MDL_IMAGE, objId)
                 localArgs = self._adjustLocalArgs(inputVol, outputVol, args)
-                if firstStep and objId < numberOfVols:
-                    self.isFirstStep = True
                 self.runJob("xmipp_transform_adjust_volume_grey_levels", localArgs)
     
     def segmentStep(self, args, changeInserts):
         fnMask = self._getTmpPath("mask.vol")
+        if self.isFirstStep:
+            inputFn = self.inputFn
+        else:
+            if self._isSingleInput():
+                inputFn = self.outputStk
+            else:
+                inputFn = self.outputMd
+        
         if self._isSingleInput():
-            localArgs = self._segmentLocalArgs(self.inputFn, fnMask, args)
-            maskArgs = self._segMentMaskArgs(self.inputFn, self.outputStk, fnMask)
+            localArgs = self._segmentLocalArgs(inputFn, fnMask, args)
+            maskArgs = self._segMentMaskArgs(inputFn, self.outputStk, fnMask)
             self._segmentVolume(localArgs, maskArgs, fnMask)
         else:
-            numberOfVols = self.inputVolumes.get().getSize()
-            
-            for i in range(1, numberOfVols + 1):
-                inputVol = locationToXmipp(i, self.inputFn)
-                outputVol = locationToXmipp(i, self.outputStk)
-                localArgs = self._segmentLocalArgs(self.inputFn, fnMask, args)
+            volMd = md.MetaData(inputFn)
+            outVolMd = md.MetaData(self.outputMd)
+            for objId in volMd:
+                inputVol = volMd.getValue(md.MDL_IMAGE, objId)
+                outputVol = outVolMd.getValue(md.MDL_IMAGE, objId)
+                localArgs = self._segmentLocalArgs(inputVol, fnMask, args)
                 maskArgs = self._segMentMaskArgs(inputVol, outputVol, fnMask)
                 self._segmentVolume(localArgs, maskArgs, fnMask)
     
@@ -565,11 +583,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         return args
     
     def _adjustLocalArgs(self, inputVol, outputVol, args):
-            if self.isFirstStep:
-                localArgs = "-i %s -o %s" % (inputVol, outputVol) + args
-                self._setFalseFirstStep()
-            else:
-                localArgs = "-i %s" % outputVol + args
+            localArgs = "-i %s -o %s" % (inputVol, outputVol) + args
             return localArgs
     
     def _argsSegment(self):

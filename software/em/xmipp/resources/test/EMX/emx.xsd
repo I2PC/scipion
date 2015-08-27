@@ -157,6 +157,7 @@
     <xsd:element name="activeFlag" type="xsd:integer" maxOccurs="1" minOccurs="0"/>
     <xsd:element name="amplitudeContrast" type="decimalBTzeroANDone" maxOccurs="1" minOccurs="0"/>
     <xsd:element name="fom" type="decimalBTzeroANDone" maxOccurs="1" minOccurs="0"/>
+    <xsd:element name="weight" type="decimalBTzeroANDone" maxOccurs="1" minOccurs="0"/>
     <xsd:element name="pixelSpacing" maxOccurs="1" minOccurs="0">
 	<xsd:complexType>
 	<xsd:all>
@@ -210,6 +211,7 @@
 	      </xsd:complexType>
 	    </xsd:element>
 	    <xsd:element name="fom" type="decimalBTzeroANDone" maxOccurs="1" minOccurs="0"/>
+            <xsd:element name="weight" type="decimalBTzeroANDone" maxOccurs="1" minOccurs="0"/>
 	    <xsd:element name="pixelSpacing" maxOccurs="1" minOccurs="0">
 	      <xsd:complexType>
 		<xsd:all>

@@ -78,7 +78,7 @@ public class ImagesWindowFactory {
 			XmippDialog.showError(null, String.format(
 					"Couldn't open file: '%s'\nError: %s", filename,
 					e.getMessage()));
-			DEBUG.printException(e);
+			e.printStackTrace();
 		}
 	}
 
@@ -96,7 +96,7 @@ public class ImagesWindowFactory {
 			Params parameters) {
 		try {
 			ImagePlusLoader ipl = new ImagePlusLoader(filename, false);
-			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
+			XmippIJWindow xiw = openXmippImageWindow(ipl,
 					parameters);
 			if (parameters.mask_toolbar)
 				xiw.openMaskToolbar();
@@ -104,7 +104,7 @@ public class ImagesWindowFactory {
 			XmippDialog.showError(null, String.format(
 					"Couldn't open file: '%s'\nError: %s", filename,
 					e.getMessage()));
-			DEBUG.printException(e);
+			e.printStackTrace();
 		}
 	}
 
@@ -123,23 +123,23 @@ public class ImagesWindowFactory {
 		return imp;
 	}
 
-	public static XmippIJWindow openXmippImageWindow(Window window,
+	public static XmippIJWindow openXmippImageWindow(
 			ImagePlus imp, Params params) {
-		return openXmippImageWindow(window, new ImagePlusLoader(imp), params);
+		return openXmippImageWindow(new ImagePlusLoader(imp), params);
 	}
 
-	public static XmippIJWindow openXmippImageWindow(Window window,
+	public static XmippIJWindow openXmippImageWindow(
 			ImagePlusLoader impLoader, Params parameters) {
-		return openXmippImageWindow(window, impLoader, impLoader.getName(), parameters);
+		return openXmippImageWindow(impLoader, impLoader.getName(), parameters);
 		
 	}
-	public static XmippIJWindow openXmippImageWindow(Window window,
+	public static XmippIJWindow openXmippImageWindow(
 			ImagePlusLoader impLoader, String title, Params parameters) {
                 
 		XmippIJWindow iw;
 		
 		if (impLoader.isStackOrVolume())
-			iw = (title != null)? new XmippStackWindow(window, impLoader, title): new XmippStackWindow(window, impLoader);
+			iw = (title != null)? new XmippStackWindow(impLoader, title, parameters): new XmippStackWindow(impLoader, parameters);
 		else
 			iw = (title != null )? new XmippImageWindow(impLoader, title, parameters): new XmippImageWindow(impLoader, parameters);
                 

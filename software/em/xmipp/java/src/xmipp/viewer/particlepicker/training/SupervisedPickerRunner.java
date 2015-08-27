@@ -17,7 +17,7 @@ public class SupervisedPickerRunner implements Runnable {
 
    
 
-    public SupervisedPickerRunner(String[] args) throws ParseException {
+    public SupervisedPickerRunner(String[] args) {
 
         params = new ParticlePickerParams(args);
 
@@ -27,29 +27,26 @@ public class SupervisedPickerRunner implements Runnable {
     @Override
     public void run() {
         
+    	try {
             SupervisedParticlePicker ppicker = null;
             
-            if (params.mode == Mode.Manual) 
-                ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads, params.fast, params.incore, params);
-            else 
-                ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.mode, params);
+            ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads, params.fast, params.incore, params);
             if(params.isScipion())
                 XmippApplication.setIsScipion(true);
             new SupervisedPickerJFrame(ppicker);
+    	} catch (Exception e) {
+    		ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+    		if (!e.getMessage().isEmpty())
+    			XmippDialog.showException(null, e);
+    		
+    	}
        
 
     }
 
     public static void main(String[] args) {
-        try {
             SupervisedPickerRunner spr = new SupervisedPickerRunner(args);
             SwingUtilities.invokeLater(spr);
-        } catch (Exception e) {
-            System.out.println("Error catched on main");
-            ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-            XmippDialog.showException(null, e);
-
-        }
 
     }
 

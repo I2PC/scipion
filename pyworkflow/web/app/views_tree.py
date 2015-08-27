@@ -72,7 +72,7 @@ def populateProtTree(tree, obj):
             if prot is not None:
                 for k, v in emProtocolsDict.iteritems():
                     if not v is prot and issubclass(v, prot):
-                        protItem = TreeItem(k, 'protocol_class', 'python_file.gif', None, protClassName, v)
+                        protItem = TreeItem(k, 'protocol_class', '/python_file.gif', None, protClassName, v)
                         item.childs.append(protItem)
         else:
             item.protClass = protClassName
@@ -98,7 +98,7 @@ def getProtChildrens(tree):
     if tree.tag == 'protocol':
         html += '<li><span class="protocol">'
         if tree.icon != None:
-            html += '<img src="/resources/'+ tree.icon +'"/>'
+            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/'+ tree.icon +'"/>'
         function = 'javascript:popup("/form/?protocolClass='+ tree.protClass +'")'
         html += ' <a href=' + function + '>'+ tree.name +'</a>'
         html += '</span></li>'
@@ -106,7 +106,7 @@ def getProtChildrens(tree):
     elif tree.tag == 'protocol_class':
         html += '<li><span class="protocol_class">'
         if tree.icon != None:
-            html += '<img src="/resources/'+ tree.icon +'"/>'
+            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/'+ tree.icon +'"/>'
         function = 'javascript:popup("/form/?protocolClass='+ tree.protRealClass +'")'
         html += ' <a href=' + function + '>'+ tree.name +'</a>'
         html += '</span></li>'
@@ -117,7 +117,7 @@ def getProtChildrens(tree):
             openItem = "closed"
         html += '<li class="'+ openItem +'"><span class="protocol_base">'
         if tree.icon != None:
-            html += '<img src="/resources/' + tree.icon +'"/>'
+            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/' + tree.icon +'"/>'
         html += tree.name + '</span>'
     
         html += '<ul>'
@@ -129,7 +129,7 @@ def getProtChildrens(tree):
     elif tree.tag == 'url':
         html += '<li><span class="protocol">'
         if tree.icon != None:
-            html += '<img src="/resources/'+ tree.icon +'"/>'
+            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/'+ tree.icon +'"/>'
         function = 'javascript:popup("'+ tree.protClass +'")'
         html += ' <a href=' + function + '>'+ tree.name +'</a>'
         html += '</span></li>'

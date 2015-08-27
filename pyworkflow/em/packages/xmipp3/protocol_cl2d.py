@@ -245,7 +245,7 @@ class XmippProtCL2D(ProtClassify2D):
         readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
-        self._defineSourceRelation(inputParticles, classes2DSet)
+        self._defineSourceRelation(self.inputParticles, classes2DSet)
     
     def analyzeOutOfCores(self,subset):
         """ Analyze which images are out of cores """
@@ -295,10 +295,14 @@ class XmippProtCL2D(ProtClassify2D):
         if isinstance(self.initialClasses.get(), SetOfClasses2D):
             if not self.initialClasses.get().hasRepresentatives():
                 validateMsgs.append("The input classes should have representatives.")
-        if self.inputParticles.get().getSamplingRate()<3:
-            self.warning("The sampling rate is smaller than 3 A/pix, consider downsampling the input images to speed-up the process. "\
-                         "Probably you don't want such a precise 2D classification.")
         return validateMsgs
+    
+    def _warnings(self):
+        validateMsgs = []
+        if self.inputParticles.get().getSamplingRate() < 3:
+            validateMsgs.append("The sampling rate is smaller than 3 A/pix, consider downsampling the input images to speed-up the process. "\
+                         "Probably you don't want such a precise 2D classification.")
+        return validateMsgs       
 
     def _citations(self):
         citations=['Sorzano2010a']

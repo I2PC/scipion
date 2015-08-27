@@ -77,7 +77,8 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
         # The command will be launched from the working dir
         # so, let's make the micrograph path relative to that
         img.setFileName(os.path.join('extra', newName))
-        img.setCTF(self.ctfDict[img.getMicName()])
+        if self.ctfRelations.get() is not None:
+            img.setCTF(self.ctfDict[img.getMicName()])
         
     def _getMicStarFile(self, mic):
         return self._getExtraPath(pwutils.replaceBaseExt(mic.getFileName(), 'star'))            
@@ -89,8 +90,9 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
         self._ih = ImageHandler() # used to convert micrographs
         # Match ctf information against the micrographs
         self.ctfDict = {}
-        for ctf in self.ctfRelations.get():
-            self.ctfDict[ctf.getMicrograph().getMicName()] = ctf.clone()
+        if self.ctfRelations.get() is not None:
+            for ctf in self.ctfRelations.get():
+                self.ctfDict[ctf.getMicrograph().getMicName()] = ctf.clone()
         
         micStar = self._getPath('input_micrographs.star')
         writeSetOfMicrographs(self.getInputMicrographs(), micStar, 
@@ -111,8 +113,11 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
     def getInputReferences(self):
         return self.inputReferences.get()
     
+    def getInputMicrographsPointer(self):
+        return self.inputMicrographs
+    
     def getInputMicrographs(self):
-        return self.inputMicrographs.get()
+        return self.getInputMicrographsPointer().get()
         
     def getCoordsDir(self):
         return self._getTmpPath('xmipp_coordinates')
@@ -164,7 +169,7 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
     problems, the autopicking program can only be run sequentially (hence there is no option to use 
     more than one single MPI processor).
     """
-    _label = 'auto-picking (1)'
+    _label = 'auto-picking (step 1)'
     
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -272,6 +277,9 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
         if self.particleDiameter > self.getInputDimA():
             errors.append('Particle diameter (%d) can not be greater than size (%d)' % 
                           (self.particleDiameter, self.getInputDimA()))
+        if self.ctfRelations.get() is None and self.refsCtfCorrected:
+            errors.append("References CTF corrected parameter must be set to False or set ctf relations.")
+            
         return errors
     
     def _summary(self):
@@ -297,7 +305,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
     job-type. In this second stage, the protocol reads the FOM maps to optimize
     the 'Threshold' and 'Inter-particle distance'.
     """
-    _label = 'auto-picking (2)'
+    _label = 'auto-picking (step 2)'
     
     
     def __init__(self, **kwargs):        
@@ -361,6 +369,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
         readSetOfCoordinates(coordSet, starFiles)
         
         self._defineOutputs(outputCoordinates=coordSet)
+        self._defineSourceRelation(self.getInputMicrographsPointer(), coordSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

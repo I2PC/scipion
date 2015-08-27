@@ -30,6 +30,7 @@ import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Window;
@@ -41,6 +42,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -125,6 +127,12 @@ public class XmippWindowUtil
 		btn.addActionListener(listener);
 		return btn;
 	}
+	
+	public static JButton getTextIconButton(String text, String icon, ActionListener listener){
+		JButton btn = new JButton(text, XmippResource.getIcon(icon));
+		btn.addActionListener(listener);
+		return btn;
+	}
 
 	public static JButton getTextButton(String text, ActionListener listener)
 	{
@@ -142,14 +150,14 @@ public class XmippWindowUtil
 		return label;
 	}
         
-        public static JButton getScipionIconButton(String text) {
-            Icon icon = XmippResource.getIcon("fa-plus-circle.png");
-            JButton button = new JButton(text.replace("Create ", ""), icon);
-            button.setToolTipText(text);
-            button.setBackground(firebrick);
-            button.setForeground(Color.WHITE);
-            return button;
-        }
+    public static JButton getScipionIconButton(String text) {
+        Icon icon = XmippResource.getIcon("fa-plus-circle.png");
+        JButton button = new JButton(text.replace("Create ", ""), icon);
+        button.setToolTipText(text);
+        button.setBackground(firebrick);
+        button.setForeground(Color.WHITE);
+        return button;
+    }
 
 	public static GridBagConstraints getConstraints(GridBagConstraints constraints, int x, int y, int columns, int rows)
 	{
@@ -313,6 +321,12 @@ public class XmippWindowUtil
         }
         return output.toString();
 
+    }
+    
+    public static void setScipionImageIcon(Window w)
+    {
+            Image img = XmippResource.getIcon("scipion_logo.png").getImage();
+            w.setIconImage(img);
     }
 
 }

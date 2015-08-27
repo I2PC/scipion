@@ -78,6 +78,7 @@ class ProtImportMicrographs(ProtImportMicBase):
     
     IMPORT_FROM_EMX = 1
     IMPORT_FROM_XMIPP3 = 2
+    IMPORT_FROM_SCIPION = 3
 
     def _getImportChoices(self):
         """ Return a list of possible choices
@@ -85,7 +86,7 @@ class ProtImportMicrographs(ProtImportMicBase):
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
         choices = ProtImportImages._getImportChoices(self)
-        return choices + ['emx', 'xmipp3']
+        return choices + ['emx', 'xmipp3', 'scipion']
     
     def _defineImportParams(self, form):
         """ Just redefine to put some import parameters
@@ -103,7 +104,13 @@ class ProtImportMicrographs(ProtImportMicBase):
                       help="Select the micrographs Xmipp metadata file.\n"
                            "It is usually a _micrograph.xmd_ file result\n"
                            "from import, preprocess or downsample protocols.")
-
+        
+        form.addParam('sqliteFile', FileParam,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
+                      label='Micrographs sqlite file',
+                      help="Select the micrographs sqlite file.\n")
+    
+    #--------------------------- INSERT functions ---------------------------------------------------
     def _insertAllSteps(self):
         importFrom = self.importFrom.get()
         ci = self.getImportClass()
@@ -113,21 +120,8 @@ class ProtImportMicrographs(ProtImportMicBase):
         else:
             self._insertFunctionStep('importMicrographsStep', importFrom,
                                      self.importFilePath)
-            
-    def getImportClass(self):
-        """ Return the class in charge of importing the files. """
-        if self.importFrom == self.IMPORT_FROM_EMX:
-            from pyworkflow.em.packages.emxlib import EmxImport
-            self.importFilePath = self.emxFile.get('').strip()
-            return EmxImport(self, self.importFilePath)
-        elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
-            self.importFilePath = self.mdFile.get('').strip()
-            return XmippImport(self, self.mdFile.get())
-        else:
-            self.importFilePath = ''
-            return None       
-        
+    
+    #--------------------------- STEPS functions ---------------------------------------------------
     def importMicrographsStep(self, importFrom, *args):
         ci = self.getImportClass()
         ci.importMicrographs()
@@ -151,18 +145,25 @@ class ProtImportMicrographs(ProtImportMicBase):
             summary += '\n_WARNING_: Binary files copied into project (extra disk space)'
             
         self.summaryVar.set(summary)
-        
-    def loadAcquisitionInfo(self):
-        ci = self.getImportClass()
-        if exists(self.importFilePath):
-            return ci.loadAcquisitionInfo()
-        else:
-            return None
-        
+    
+    #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
+        from pyworkflow.em.convert import ImageHandler
         ci = self.getImportClass()
         if ci is None:
-            return ProtImportMicBase._validate(self)
+            errors = ProtImportMicBase._validate(self)
+            for micFn, _ in self.iterFiles():
+                imgh = ImageHandler()
+                if imgh.isImageFile(micFn):
+                    _, _, z, n = imgh.getDimensions(micFn)
+                    if n > 1 or z > 1:
+                        errors.append("The protocol not support micrographs stored in stacks. "
+                                      "If you want to obtain your micrographs individually, "
+                                      "you can run the following command:\n"
+                                      "scipion run scipion_directory/scripts/split_stacks.py --files *your files* --ext *extension*")
+                        break
+            return errors
+            
         else:
             return ci.validateMicrographs()
     
@@ -171,7 +172,33 @@ class ProtImportMicrographs(ProtImportMicBase):
             return ProtImportMicBase._summary(self)
         else:
             return [self.summaryVar.get('No summary information.')]
-        
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def getImportClass(self):
+        """ Return the class in charge of importing the files. """
+        if self.importFrom == self.IMPORT_FROM_EMX:
+            from pyworkflow.em.packages.emxlib import EmxImport
+            self.importFilePath = self.emxFile.get('').strip()
+            return EmxImport(self, self.importFilePath)
+        elif self.importFrom == self.IMPORT_FROM_XMIPP3:
+            from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
+            self.importFilePath = self.mdFile.get('').strip()
+            return XmippImport(self, self.mdFile.get())
+        elif self.importFrom == self.IMPORT_FROM_SCIPION:
+            from dataimport import ScipionImport
+            self.importFilePath = self.sqliteFile.get('').strip()
+            return ScipionImport(self, self.importFilePath) 
+        else:
+            self.importFilePath = ''
+            return None       
+    
+    def loadAcquisitionInfo(self):
+        ci = self.getImportClass()
+        if exists(self.importFilePath):
+            return ci.loadAcquisitionInfo()
+        else:
+            return None
+
 
 class ProtImportMovies(ProtImportMicBase):
     """Protocol to import a set of movies (from direct detector cameras) to the project"""

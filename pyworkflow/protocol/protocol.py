@@ -64,7 +64,10 @@ class Step(OrderedObject):
         self.interactive = Boolean(False)
         self._resultFiles = String()
         self._index = None
-        
+
+    def getIndex(self):
+        return self._index
+
     def _preconditions(self):
         """ Check if the necessary conditions to
         step execution are met""" 
@@ -384,7 +387,7 @@ class Protocol(Step):
         """ Access the protocol definition. """
         return self._definition
     
-    def getDefinitionParam(self, paramName):
+    def getParam(self, paramName):
         """ Return a _definition param give its name. """
         return self._definition.getParam(paramName)
     
@@ -397,7 +400,7 @@ class Protocol(Step):
             the string value corresponding to the enum choice.
         """
         index = getattr(self, paramName).get() # self.getAttributeValue(paramName)
-        return self.getDefinitionParam(paramName).choices[index]
+        return self.getParam(paramName).choices[index]
     
     def evalParamCondition(self, paramName):
         """ Eval if the condition of paramName in _definition
@@ -407,7 +410,7 @@ class Protocol(Step):
     
     def evalExpertLevel(self, paramName):
         """ Return the expert level evaluation for a param with the given name. """
-        return self.evalParamExpertLevel(self.getDefinitionParam(paramName))
+        return self.evalParamExpertLevel(self.getParam(paramName))
     
     def evalParamExpertLevel(self, param):
         """ Return True if the param has an expert level is less than 
@@ -434,7 +437,7 @@ class Protocol(Step):
         od = self.getObjDict()
         
         for attrName in od:
-            if self.getDefinitionParam(attrName) is not None:
+            if self.getParam(attrName) is not None:
                 d[attrName] = od[attrName]
                 
         return d
@@ -842,6 +845,8 @@ class Protocol(Step):
             rCreator = r['parent_id']
             rParent = r['object_parent_id']
             rChild = r['object_child_id']
+            rParentExt = r['object_parent_extended']
+            rChildExt = r['object_child_extended']
             
             if rParent in copyDict:
                 rParent = copyDict.get(rParent).getObjId()
@@ -849,8 +854,8 @@ class Protocol(Step):
             if rChild in copyDict:
                 rChild = copyDict.get(rChild).getObjId()
             
-            self.mapper.insertRelationData(rName, rCreator, rParent, rChild)
-        
+            self.mapper.insertRelationData(rName, rCreator, rParent, rChild,
+                                           rParentExt, rChildExt)
         
     def getRelations(self):
         """ Return the relations created by this protocol. """
@@ -858,7 +863,19 @@ class Protocol(Step):
     
     def _defineRelation(self, relName, parentObj, childObj):
         """ Insert a new relation in the mapper using self as creator. """
-        self.mapper.insertRelation(relName, self, parentObj, childObj)
+        parentExt = None
+        childExt = None
+        
+        if parentObj.isPointer():
+            parentExt = parentObj.getExtended()
+            parentObj = parentObj.getObjValue()
+            
+        if childObj.isPointer():
+            childExt = childObj.getExtended()
+            childObj = childObj.getObjValue()
+            
+        self.mapper.insertRelation(relName, self, parentObj, childObj,
+                                   parentExt, childExt)
         
     def makePathsAndClean(self):
         """ Create the necessary path or clean
@@ -870,6 +887,9 @@ class Protocol(Step):
         if self.runMode == MODE_RESTART:
             cleanPath(*paths)
             self.__deleteOutputs()
+            # Delete the relations created by this protocol
+            # (delete this in both project and protocol db)
+            self.mapper.deleteRelations(self)
         # Create workingDir, extra and tmp paths
         makePath(*paths)
         
@@ -983,10 +1003,14 @@ class Protocol(Step):
     def getLogPaths(self):
         return map(self._getLogsPath, ['run.stdout', 'run.stderr', 'run.log'])
 
+    def getSteps(self):
+        """ Return the steps.sqlite file under logs directory. """
+        return self._steps
+    
     def getStepsFile(self):
         """ Return the steps.sqlite file under logs directory. """
         return self._getLogsPath('steps.sqlite')
-    
+
     def __openLogsFiles(self, mode):
         self.__fOut = open(self.getLogPaths()[0], mode)
         self.__fErr = open(self.getLogPaths()[1], mode)
@@ -1493,7 +1517,8 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
         
     from pyworkflow.project import Project
     project = Project(projectPath)
-    project.load(dbPath=os.path.join(projectPath, protDbPath), chdir=chdir)     
+    project.load(dbPath=os.path.join(projectPath, protDbPath), chdir=chdir,
+                 loadAllConfig=False)     
     protocol = project.getProtocol(protId)
     return protocol
 

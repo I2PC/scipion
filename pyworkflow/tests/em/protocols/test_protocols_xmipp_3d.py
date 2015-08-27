@@ -297,6 +297,7 @@ class TestXmippPreprocessVolumes(TestXmippBase):
         self.proj.launchProtocol(protPreprocessVol4, wait=True)
         self.assertIsNotNone(protPreprocessVol4.outputVol, "There was a problem with a volume")
 
+
 class TestXmippResolution3D(TestXmippBase):
     @classmethod
     def setUpClass(cls):
@@ -615,7 +616,6 @@ class TestXmippProtAlignVolume(TestXmippBase):
         self.launchProtocol(protAlign)
         
 
-
 class TestXmippConvertToPseudoatoms(TestXmippBase):
     @classmethod
     def setUpClass(cls):
@@ -684,6 +684,7 @@ class TestXmippRansacMda(TestXmippBase):
         self.launchProtocol(protRansac)
         self.assertIsNotNone(protRansac.outputVolumes, "There was a problem with ransac protocol")
 
+
 class TestXmippRansacGroel(TestXmippRansacMda):
     @classmethod
     def setUpClass(cls):
@@ -698,6 +699,7 @@ class TestXmippRansacGroel(TestXmippRansacMda):
         cls.dimRed = True
         cls.numVolumes = 10
         cls.maxFreq = 12
+
 
 class TestXmippProjMatching(TestXmippBase):
 
@@ -767,6 +769,72 @@ class TestXmippProjMatching(TestXmippBase):
         protProjMatch.input3DReferences.set(protImportVol.outputVolume)
         self.launchProtocol(protProjMatch)
         self.assertIsNotNone(protProjMatch.outputVolume, "There was a problem with Projection Matching")
+
+
+class TestPdbImport(TestXmippBase):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('nma')
+        cls.pdb = cls.dataset.getFile('pdb')
+    
+    def testImportPdbFromId(self):
+        print "Run convert a pdb from database"
+        protConvert = self.newProtocol(ProtImportPdb, pdbId="3j3i")
+        self.launchProtocol(protConvert)
+        self.assertIsNotNone(protConvert.outputPdb.getFileName(), 
+                             "There was a problem with the import")
+        
+    def testImportPdbFromFn(self):
+        print "Run convert a pdb from file"
+        protConvert = self.newProtocol(ProtImportPdb, 
+                                       inputPdbData=ProtImportPdb.IMPORT_FROM_FILES, 
+                                       pdbFile=self.pdb)
+        self.launchProtocol(protConvert)
+        self.assertIsNotNone(protConvert.outputPdb.getFileName(), 
+                             "There was a problem with the import")
+        
+class TestXmippPdbConvert(TestXmippBase):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('nma')
+        cls.pdb = cls.dataset.getFile('pdb')
+    
+    def testXmippPdbConvertFromDb(self):
+        print "Run convert a pdb from database"
+        protConvert = self.newProtocol(XmippProtConvertPdb, pdbId="3j3i", sampling=4, setSize=True, size=100)
+        self.launchProtocol(protConvert)
+        self.assertIsNotNone(protConvert.outputVolume.getFileName(), "There was a problem with the convertion")
+        self.assertAlmostEqual(protConvert.outputVolume.getSamplingRate(), protConvert.sampling.get(), places=1, msg="wrong sampling rate")
+        self.assertAlmostEqual(protConvert.outputVolume.getDim()[0], protConvert.size.get(), places=1, msg="wrong size")
+        
+    def testXmippPdbConvertFromObj(self):
+        print "Run convert a pdb from import"
+        protImport = self.newProtocol(ProtImportPdb, 
+                                      inputPdbData=ProtImportPdb.IMPORT_FROM_FILES, 
+                                      pdbFile=self.pdb)
+        self.launchProtocol(protImport)
+        self.assertIsNotNone(protImport.outputPdb.getFileName(), "There was a problem with the import")
+        
+        protConvert = self.newProtocol(XmippProtConvertPdb, 
+                                       inputPdbData=XmippProtConvertPdb.IMPORT_OBJ, 
+                                       sampling=3, setSize=True, size=20)
+        protConvert.pdbObj.set(protImport.outputPdb)
+        self.launchProtocol(protConvert)
+        self.assertIsNotNone(protConvert.outputVolume.getFileName(), "There was a problem with the convertion")
+        self.assertAlmostEqual(protConvert.outputVolume.getSamplingRate(), protConvert.sampling.get(), places=1, msg="wrong sampling rate")
+        self.assertAlmostEqual(protConvert.outputVolume.getDim()[0], protConvert.size.get(), places=1, msg="wrong size")
+
+    def testXmippPdbConvertFromFn(self):
+        print "Run convert a pdb from file"
+        protConvert = self.newProtocol(XmippProtConvertPdb,inputPdbData=2, pdbFile=self.pdb, sampling=2, setSize=True)
+        self.launchProtocol(protConvert)
+        self.assertIsNotNone(protConvert.outputVolume.getFileName(), "There was a problem with the convertion")
+        self.assertAlmostEqual(protConvert.outputVolume.getSamplingRate(), protConvert.sampling.get(), places=1, msg="wrong sampling rate")
+        self.assertAlmostEqual(protConvert.outputVolume.getDim()[0], 48, places=1, msg="wrong size")
 
 
 if __name__ == "__main__":

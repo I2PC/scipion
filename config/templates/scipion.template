@@ -12,26 +12,33 @@ SCIPION_TESTS = data/tests
 SCIPION_SOFTWARE = software
 
 [REMOTE]
-SCIPION_URL = http://scipionwiki.cnb.csic.es/files/scipion
+SCIPION_URL = http://scipion.cnb.csic.es/downloads/scipion
 SCIPION_URL_SOFTWARE = %(SCIPION_URL)s/software
 SCIPION_URL_TESTDATA = %(SCIPION_URL)s/data/tests
 
 [PACKAGES]
 EM_ROOT = software/em
-XMIPP_HOME = %(EM_ROOT)s/xmipp
-SPIDER_DIR = %(EM_ROOT)s/spider/spider
-EMAN2DIR = %(EM_ROOT)s/eman
-FREALIGN_HOME = %(EM_ROOT)s/frealign
+
+BSOFT_HOME = %(EM_ROOT)s/bsoft
 CTFFIND_HOME = %(EM_ROOT)s/ctffind
 CTFFIND4_HOME = %(EM_ROOT)s/ctffind4
+DOGPICKER_HOME = %(EM_ROOT)s/dogpicker
+EMAN2DIR = %(EM_ROOT)s/eman
+FREALIGN_HOME = %(EM_ROOT)s/frealign
+MATLAB_BINDIR = None
+MATLAB_LIBDIR = None
+MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr
+MOTIONCORR_CUDA_LIB = None
+NMA_HOME = %(EM_ROOT)s/nma
+PYTOM_HOME = %(EM_ROOT)s/pytom
 RELION_HOME = %(EM_ROOT)s/relion
 RESMAP_HOME = %(EM_ROOT)s/resmap
-BSOFT_HOME = %(EM_ROOT)s/bsoft
-DOSEFGPU_HOME = %(EM_ROOT)s/dosefgpu
-DOSEFGPU_CUDA_LIB = None
 SIMPLE_HOME = %(EM_ROOT)s/simple
-PYTOM_HOME = %(EM_ROOT)s/pytom
-DOGPICKER_HOME = %(EM_ROOT)s/dogpicker
+SPIDER_DIR = %(EM_ROOT)s/spider/spider
+SUMMOVIE_HOME = None
+UNBLUR_HOME = %(EM_ROOT)s/unblur
+XMIPP_HOME = %(EM_ROOT)s/xmipp
+
 # Some visualization packages
 CHIMERA_HOME = %(EM_ROOT)s/chimera
 CHIMERA_HEADLESS_HOME = %(EM_ROOT)s/chimera_headless

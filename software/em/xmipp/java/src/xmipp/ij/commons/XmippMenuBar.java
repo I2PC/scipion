@@ -1,14 +1,19 @@
 /*
- * To change this template, choose Tools | Templates
+cd * To change this template, choose Tools | Templates
  * and openTableFileImageItem the template in the editor.
  */
 package xmipp.ij.commons;
 
+import ij.CommandListener;
+import ij.Executer;
 import ij.IJ;
+import ij.ImageListener;
 import ij.ImagePlus;
+import ij.plugin.frame.Recorder;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
+
 import java.awt.CheckboxMenuItem;
 import java.awt.Frame;
 import java.awt.Menu;
@@ -21,14 +26,19 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.vecmath.Color3f;
+
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
+import xmipp.utils.XmippWindowUtil;
 
 /**
  * 
@@ -37,36 +47,40 @@ import xmipp.utils.XmippFileChooser;
 public class XmippMenuBar extends MenuBar
 {
 
+	protected final XmippIJWindow xw;
 	protected Menu filemn;
 	protected Menu imagemn;
 	protected Menu advancedmn;
-	private MenuItem savemi;
-	private MenuItem saveasmi;
-	private MenuItem openwith3dmi;
-	private Menu infomn;
-	private Menu adjustmn;
-	private Menu transformmn;
-	private Menu filtersmn;
-	private Menu thresholdingmn;
-	private Menu binarymn;
-	private Menu processmn;
-	private Menu drawmn;
-	private MenuItem imagejmi;
-	private Menu profilemn;
-	private CheckboxMenuItem pollmi;
+	protected MenuItem savemi;
+	protected MenuItem saveasmi;
+	protected MenuItem openwith3dmi;
+	protected Menu infomn;
+//	protected Menu adjustmn;
+	protected Menu transformmn;
+//	protected Menu filtersmn;
+	protected Menu thresholdingmn;
+	protected Menu binarymn;
+	protected Menu processmn;
+	protected Menu drawmn;
+	protected MenuItem imagejmi;
+	protected Menu profilemn;
+	protected CheckboxMenuItem pollmi;
 	protected Object timer;
-	private final XmippIJWindow xw;
-	private PollTimer polltimer;
-	private MenuItem refreshmi;
-	private CheckboxMenuItem wrapmi;
-	private CheckboxMenuItem ugmi;
-	private MenuItem exitmi;
-	private Menu helpmn;
-	private MenuItem keyassistmi;
-	private QuickHelpJDialog keyassistdlg;
-	private boolean invertx;
-	private boolean inverty;
-        
+	protected PollTimer polltimer;
+	protected MenuItem refreshmi;
+	protected CheckboxMenuItem wrapmi;
+	protected CheckboxMenuItem ugmi;
+	protected MenuItem exitmi;
+	protected Menu helpmn;
+	protected MenuItem onlinemi;
+	protected MenuItem keyassistmi;
+	protected QuickHelpJDialog keyassistdlg;
+	protected boolean invertx;
+	protected boolean inverty;
+	protected CheckboxMenuItem activemi;
+	protected String command;
+	protected List<IJCommand> filters;
+	protected ImagePlusLoader iploader;
 
 	enum IJRequirement
 	{
@@ -76,7 +90,9 @@ public class XmippMenuBar extends MenuBar
 
 	public XmippMenuBar(XmippIJWindow xw)
 	{
+		filters = new ArrayList<IJCommand>();
 		this.xw = xw;
+		this.iploader = xw.getImagePlusLoader();
 		// menubar menus
 		filemn = new Menu("File");
 		imagemn = new Menu("Image");
@@ -89,29 +105,29 @@ public class XmippMenuBar extends MenuBar
 		add(helpmn);
 
 		// menubar file menu
-		savemi = new MenuItem("Save");
-		savemi.setShortcut(new MenuShortcut(KeyEvent.VK_S));
-		savemi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				try
-				{
-					if(XmippMenuBar.this.xw.getImagePlusLoader().existsFile())
-						XmippMenuBar.this.xw.saveData();
-					else
-						XmippMenuBar.this.saveAs();
-				}
-				catch (Exception ex)
-				{
-					ex.printStackTrace();
-					XmippDialog.showInfo(null, ex.getMessage());
-				}
-
-			}
-		});
+//		savemi = new MenuItem("Save");
+//		savemi.setShortcut(new MenuShortcut(KeyEvent.VK_S));
+//		savemi.addActionListener(new ActionListener()
+//		{
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e)
+//			{
+//				try
+//				{
+//					if(XmippMenuBar.this.iploader.existsFile())
+//						XmippMenuBar.this.xw.saveData();
+//					else
+//						XmippMenuBar.this.saveAs();
+//				}
+//				catch (Exception ex)
+//				{
+//					ex.printStackTrace();
+//					XmippDialog.showInfo(null, ex.getMessage());
+//				}
+//
+//			}
+//		});
 		saveasmi = new MenuItem("Save As...");
 		saveasmi.addActionListener(new ActionListener()
 		{
@@ -120,32 +136,46 @@ public class XmippMenuBar extends MenuBar
 			public void actionPerformed(ActionEvent e)
 			{
 				saveAs();
-
 			}
 		});
 
-		openwith3dmi = new MenuItem("Open with 3D Viewer");
-		openwith3dmi.setEnabled(xw.isVolume());
+//		openwith3dmi = new MenuItem("Open with 3D Viewer");
+//		openwith3dmi.setEnabled(xw.isVolume());
 //		openwith3dmi.setEnabled(Filename.isVolume(xw.getImageFilePath()));
-		openwith3dmi.addActionListener(new ActionListener()
+//		openwith3dmi.addActionListener(new ActionListener()
+//		{
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent arg0)
+//			{
+//				ImagePlus imp = XmippMenuBar.this.iploader.getImagePlus();
+//				if (imp.getImageStackSize() == 1)
+//					XmippDialog.showInfo(null, "Only for Stack");
+//				else
+//					openImagePlusAs3D(imp);
+//				
+//			}
+//		});
+//		filemn.add(openwith3dmi);
+		MenuItem volviewermi = new MenuItem("Open with Volume Viewer/3D Slicer");
+		volviewermi.setActionCommand("Volume Viewer");
+		volviewermi.setEnabled(xw.isVolume());
+		volviewermi.addActionListener(new ActionListener()
 		{
 			
 			@Override
-			public void actionPerformed(ActionEvent arg0)
+			public void actionPerformed(ActionEvent e)
 			{
-				ImagePlus imp = XmippMenuBar.this.xw.getImagePlusLoader().getImagePlus();
-				if (imp.getImageStackSize() == 1)
-					XmippDialog.showInfo(null, "Only for Stack");
-				else
-					openImagePlusAs3D(imp);
+				MenuItem mi = (MenuItem) e.getSource();
+				runCommand(mi.getActionCommand());
 				
 			}
 		});
-		filemn.add(openwith3dmi);
-		addIJMenuItem(filemn, "Open with Volume Viewer/3D Slicer", "Volume Viewer", IJRequirement.VOLUME);
-		addIJMenuItem(filemn, "Open with VolumeJ", "VolumeJ ", IJRequirement.VOLUME);
+		filemn.add(volviewermi);
+//		addIJMenuItem(filemn, "Open with Volume Viewer/3D Slicer", "Volume Viewer", IJRequirement.VOLUME);
+//		addIJMenuItem(filemn, "Open with VolumeJ", "VolumeJ ", IJRequirement.VOLUME);
 		refreshmi = new MenuItem("Refresh");
-		refreshmi.setEnabled(xw.getImagePlusLoader().allowsPoll());
+		refreshmi.setEnabled(iploader.allowsPoll());
 		refreshmi.setShortcut(new MenuShortcut(KeyEvent.VK_F5));
 		refreshmi.addActionListener(new ActionListener()
 		{
@@ -159,7 +189,7 @@ public class XmippMenuBar extends MenuBar
 		});
 
 		pollmi = new CheckboxMenuItem("Poll");
-		pollmi.setEnabled(xw.getImagePlusLoader().allowsPoll());
+		pollmi.setEnabled(iploader.allowsPoll());
 		pollmi.addItemListener(new ItemListener()
 		{
 
@@ -175,8 +205,8 @@ public class XmippMenuBar extends MenuBar
 		});
 		
 		ugmi = new CheckboxMenuItem("Use Geometry");
-		ugmi.setEnabled(xw.getImagePlusLoader().hasGeometry());
-		ugmi.setState(xw.getImagePlusLoader().getUseGeometry());
+		ugmi.setEnabled(iploader.hasGeometry());
+		ugmi.setState(iploader.getUseGeometry());
 		ugmi.addItemListener(new ItemListener()
 		{
 
@@ -191,8 +221,8 @@ public class XmippMenuBar extends MenuBar
 
 		
 		wrapmi = new CheckboxMenuItem("Wrap");
-		wrapmi.setEnabled(xw.getImagePlusLoader().hasGeometry());
-		wrapmi.setState(xw.getImagePlusLoader().isWrap());
+		wrapmi.setEnabled(iploader.hasGeometry());
+		wrapmi.setState(iploader.isWrap());
 		wrapmi.addItemListener(new ItemListener()
 		{
 
@@ -218,9 +248,9 @@ public class XmippMenuBar extends MenuBar
 
 
 
-		filemn.add(savemi);
+//		filemn.add(savemi);
 		filemn.add(saveasmi);
-		addIJMenuItem(filemn, "Duplicate", "Duplicate...", IJRequirement.IMAGEJ);
+//		addIJMenuItem(filemn, "Duplicate", "Duplicate...", IJRequirement.IMAGEJ);
 		filemn.add(refreshmi);
 		filemn.add(pollmi);
 		filemn.add(ugmi);
@@ -228,49 +258,47 @@ public class XmippMenuBar extends MenuBar
 		filemn.add(exitmi);
 
 		// menubar image menu
-		infomn = new Menu("Info");
-		adjustmn = new Menu("Adjust");
-		transformmn = new Menu("Transform");
-		filtersmn = new Menu("Filters");
+//		infomn = new Menu("Info");
+//		adjustmn = new Menu("Adjust");
+//		filtersmn = new Menu("Filters");
 
-		imagemn.add(infomn);
-		imagemn.add(adjustmn);
-		imagemn.add(transformmn);
-		imagemn.add(filtersmn);
-		addIJMenuItem(imagemn, "Masks Tool Bar", "Masks Tool Bar", IJRequirement.IMAGEJ);// missing
-																							// plugin
+//		imagemn.add(infomn);
+//		imagemn.add(adjustmn);
+//		imagemn.add(transformmn);
+//		imagemn.add(filtersmn);
+		
 
 		// image info menu
-		addIJMenuItem(infomn, "Show Info", "Show Info...");
-		addIJMenuItem(infomn, "Properties", "Properties...");
-		addIJMenuItem(infomn, "Histogram", "Histogram", IJRequirement.IMAGEJ);
-		addIJMenuItem(infomn, "Plot Profile", "Plot Profile", IJRequirement.IMAGEJ);
+//		addIJMenuItem(infomn, "Show Info", "Show Info...");
+//		addIJMenuItem(infomn, "Properties", "Properties...");
+//		addIJMenuItem(infomn, "Histogram", "Histogram", IJRequirement.IMAGEJ);
+//		addIJMenuItem(infomn, "Plot Profile", "Plot Profile", IJRequirement.IMAGEJ);
 
 		// image adjust menu
-		addIJMenuItem(adjustmn, "Brightness/Contrast", "Brightness/Contrast...");
-		addIJMenuItem(adjustmn, "Enhance Contrast", "Enhance Contrast");
 
-		addIJMenuItem(adjustmn, "Crop", "Crop", IJRequirement.IMAGEJ);
-		addIJMenuItem(adjustmn, "Scale", "Scale...");
-		addIJMenuItem(adjustmn, "Untilt Stack", "Untilt Stack", IJRequirement.STACK);
+//		addIJMenuItem(adjustmn, "Crop", "Crop", IJRequirement.IMAGEJ);
+//		addIJMenuItem(adjustmn, "Scale", "Scale...");
+//		addIJMenuItem(adjustmn, "Untilt Stack", "Untilt Stack", IJRequirement.STACK);
 
-		addIJMenuItem(adjustmn, "Reslice", "Reslice [/]...", IJRequirement.VOLUME);
+//		addIJMenuItem(adjustmn, "Reslice", "Reslice [/]...", IJRequirement.VOLUME);
 
 		// image transform menu
-		addIJMenuItem(transformmn, "Flip Horizontally", "Flip Horizontally", IJRequirement.INVERTX);
-		addIJMenuItem(transformmn, "Flip Vertically", "Flip Vertically", IJRequirement.INVERTY);
-		addIJMenuItem(transformmn, "Rotate 90 Degrees Left", "Rotate 90 Degrees Left");
-		addIJMenuItem(transformmn, "Rotate 90 Degrees Right", "Rotate 90 Degrees Right");
+		
+//		addIJMenuItem(transformmn, "Rotate 90 Degrees Left", "Rotate 90 Degrees Left");
+//		addIJMenuItem(transformmn, "Rotate 90 Degrees Right", "Rotate 90 Degrees Right");
 
 		// image filters menu
-		addIJMenuItem(filtersmn, "Bandpass Filter", "Bandpass Filter...");
-                addIJMenuItem(filtersmn, "Gaussian Blur", "Gaussian Blur...");
-		addIJMenuItem(filtersmn, "Anisotropic Diffusion", "Anisotropic Diffusion...", IJRequirement.EIGHTBIT);
-		addIJMenuItem(filtersmn, "Mean Shift", "Mean Shift");
-
+		CheckboxMenuItem gbmi = addIJMenuItem(imagemn, XmippImageJ.gaussianBlurFilter);
+		addIJMenuItem(imagemn, XmippImageJ.bandPassFilter);
+//		addIJMenuItem(imagemn, XmippImageJ.anisotropicDiffFilter, IJRequirement.EIGHTBIT);
+		CheckboxMenuItem ecmi = addIJMenuItem(imagemn, XmippImageJ.enhanceContrastFilter);
+		addIJMenuItem(imagemn, XmippImageJ.brightnessContrastFilter);
+		addIJMenuItem(imagemn, XmippImageJ.invertLUTFilter);
+		addIJMenuItem(imagemn, XmippImageJ.substractBackgroundFilter);
 		// menubar advanced menu
 		imagejmi = new MenuItem("ImageJ");
 		imagejmi.setShortcut(new MenuShortcut(KeyEvent.VK_I));
+		transformmn = new Menu("Transform");
 		thresholdingmn = new Menu("Thresholding");
 		binarymn = new Menu("Binary");
 		processmn = new Menu("Process");
@@ -283,8 +311,22 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(processmn);
 		advancedmn.add(drawmn);
 		advancedmn.add(profilemn);
-		
-		keyassistmi = new MenuItem("Key Assist");
+//		addIJMenuItem(advancedmn, "Masks Tool Bar", "Masks Tool Bar", IJRequirement.IMAGEJ);// missing
+		// plugin
+		onlinemi = new MenuItem("Online Help");
+		onlinemi.addActionListener(new ActionListener()
+		{
+			
+			
+
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				XmippWindowUtil.openURI("http://scipion.cnb.csic.es/bin/view/TWiki/ShowJ");
+			}
+		});
+		helpmn.add(onlinemi);
+		keyassistmi = new MenuItem("Tips");
 		keyassistmi.addActionListener(new ActionListener()
 		{
 			
@@ -296,7 +338,7 @@ public class XmippMenuBar extends MenuBar
 				try
 				{
 				if(keyassistdlg == null)
-					keyassistdlg = new QuickHelpJDialog(null, false, "Key Assist...", getKeyAssist());
+					keyassistdlg = new QuickHelpJDialog(null, false, "Tips...", getKeyAssist());
 				keyassistdlg.setVisible(true);
 				}
 				catch(Exception e)
@@ -307,6 +349,8 @@ public class XmippMenuBar extends MenuBar
 		});
 		helpmn.add(keyassistmi);
 		
+		addIJMenuItem(transformmn, "Flip Horizontally", "Flip Horizontally", IJRequirement.INVERTX);
+		addIJMenuItem(transformmn, "Flip Vertically", "Flip Vertically", IJRequirement.INVERTY);
 
 		// advanced threshold menu
 		addIJMenuItem(thresholdingmn, "Threshold", "Threshold...");
@@ -334,8 +378,7 @@ public class XmippMenuBar extends MenuBar
 
 		// advanced process menu
 
-		addIJMenuItem(processmn, "Subtract Background", "Subtract Background...");
-		addIJMenuItem(processmn, "Gaussian Blur", "Gaussian Blur...");
+		
 		addIJMenuItem(processmn, "Convolve", "Convolve...");
 		addIJMenuItem(processmn, "Median", "Median...");
 		addIJMenuItem(processmn, "FFT", "FFT", IJRequirement.IMAGEJ);// memory error
@@ -362,17 +405,74 @@ public class XmippMenuBar extends MenuBar
 				XmippUtil.showImageJ(Tool.VIEWER);
 			}
 		});
+		addFilterAppliedListener();
+		ImagePlus imp = iploader.getImagePlus();
+		if(xw.getParams() != null && imp.getWidth() > 1024 && imp.getStackSize() == 1)
+		{
+			gbmi.setState(true);
+			IJCommand ijcmd = new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma =2");
+			IJ.run(imp, ijcmd.getCommand(), ijcmd.getOptions());
+			filters.add(ijcmd);
+			ecmi.setState(true);
+			ijcmd = new IJCommand(XmippImageJ.enhanceContrastFilter, "saturated=0.4");
+			IJ.run(imp, ijcmd.getCommand(), ijcmd.getOptions());
+			filters.add(ijcmd);
+		}
+			
+	}
+	
+	protected void addFilterAppliedListener() {
 
+        Recorder.record = true;
+     // detecting if a command is thrown by ImageJ
+        Executer.addCommandListener(new CommandListener() {
+            public String commandExecuting(String command) {
+
+
+                XmippMenuBar.this.command = command;
+                return command;
+
+            }
+        });
+
+        // detecting if a command is thrown by ImageJ
+        
+        ImagePlus.addImageListener(new ImageListener() {
+
+            @Override
+            public void imageUpdated(ImagePlus imp) {
+            	//activemi will contain last filter selected, if its the command runned we confirm selection
+            	if(activemi != null && activemi.getActionCommand().equals(command))
+            	{
+                   activemi.setState(true);
+                   String options = Recorder.getCommandOptions();
+                   filters.add(new IJCommand(command, options));
+                   activemi = null;
+            	}
+                
+            }
+
+            @Override
+            public void imageOpened(ImagePlus arg0) {
+
+            }
+
+            @Override
+            public void imageClosed(ImagePlus arg0) {
+                // TODO Auto-generated method stub
+
+            }
+        });
 	}
         
 
-        protected void close()
-        {
-            Frame w = (Frame)xw;
-            w.setVisible(false);
-            w.dispose();
-            XmippApplication.removeInstance(false);
-        }
+    protected void close()
+    {
+        Frame w = (Frame)xw;
+        w.setVisible(false);
+        w.dispose();
+        XmippApplication.removeInstance(false);
+    }
 
 	
 	protected void useGeometry(boolean ug)
@@ -381,7 +481,7 @@ public class XmippMenuBar extends MenuBar
 		xw.loadData();
 	}
 
-	private void saveAs()
+	protected void saveAs()
 	{
 		XmippFileChooser fc = new XmippFileChooser();
 		int returnVal = fc.showOpenDialog(null);
@@ -432,25 +532,29 @@ public class XmippMenuBar extends MenuBar
 			IJ.error("Java 3D not found. Please, check your installation.");
 		}
 	}
-
-	private void addIJMenuItem(Menu mn, String name, String command, IJRequirement... requirements)
+	
+	protected CheckboxMenuItem addIJMenuItem(Menu mn, String command, IJRequirement... requirements)
 	{
-		MenuItem mi = new MenuItem(name);
-		addCommand(mi, command, requirements);
-		mn.add(mi);
+		return addIJMenuItem(mn, command, command, requirements);
 
 	}
 
-	private void poll()
+	protected CheckboxMenuItem addIJMenuItem(Menu mn, String name, String command, IJRequirement... requirements)
 	{
-		{
+		CheckboxMenuItem mi = new CheckboxMenuItem(name);
+		addCommand(mi, command, requirements);
+		mn.add(mi);
+		return mi;
+	}
+
+	protected void poll()
+	{
 			if (timer == null)
 				polltimer = new PollTimer(xw);
 			polltimer.start();
-		}
 	}
 
-	protected void addCommand(MenuItem mi, String command, final IJRequirement... requirements)
+	protected void addCommand(CheckboxMenuItem mi, String command, final IJRequirement... requirements)
 	{
 		mi.setActionCommand(command);
 		for (IJRequirement requirement : requirements)
@@ -460,30 +564,58 @@ public class XmippMenuBar extends MenuBar
 			if (requirement == IJRequirement.VOLUME && !xw.isVolume())
 				mi.setEnabled(false);
 		}
-		mi.addActionListener(new ActionListener()
+		mi.addItemListener(new ItemListener()
 		{
 
 			@Override
-			public void actionPerformed(ActionEvent e)
+			public void itemStateChanged(ItemEvent e)
 			{
-
 				try
 				{
-					MenuItem mi = (MenuItem) e.getSource();
-					
+					CheckboxMenuItem mi = (CheckboxMenuItem) e.getSource();
 					String command = mi.getActionCommand();
-					runCommand(command, requirements);
+					if(mi.getState())//checked
+					{
+						activemi = mi;
+						mi.setState(false);//confirm selected only after filter applied
+						runCommand(command, requirements);
+						
+					}
+					else
+					{
+						filters.remove(getFilter(command));
+						xw.loadData();
+						applyFilters();
+					}
+					
 				}
 				catch (Exception ex)
 				{
-					XmippDialog.showInfo(null, ex.getMessage());
+					ex.printStackTrace();
 				}
 			}
 		});
 	}//function addCommand
 	
+	public void applyFilters()
+	{
+		ImagePlus imp = xw.getImagePlusLoader().getImagePlus();
+		for(IJCommand filter: filters)
+			IJ.run(imp, filter.getCommand(), filter.getOptions());
+	}
+	
+	
+	public IJCommand getFilter(String command)
+	{
+		for(IJCommand filter: filters)
+		{
+			if(filter.getCommand().equals(command))
+				return filter;
+		}
+		return null;
+	}
 	/** Run ImageJ command */
-	public void runCommand(String command, IJRequirement[] requirements){
+	public void runCommand(String command, IJRequirement... requirements){
 		if (requirements != null)
 			for (IJRequirement requirement : requirements)
 				switch (requirement)
@@ -517,7 +649,8 @@ public class XmippMenuBar extends MenuBar
 					break;
 				
 				}
-		IJ.run(xw.getImagePlusLoader().getImagePlus(), command, "");
+		ImagePlus imp = xw.getImagePlusLoader().getImagePlus();
+		IJ.run(imp, command, "");
 	}//function runCommand
 	
 	public Map<Object, Object> getKeyAssist()

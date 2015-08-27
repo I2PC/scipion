@@ -27,10 +27,12 @@
 This sub-package contains wrapper around reconstruct_significant Xmipp program
 """
 
+from pyworkflow.utils import Timer
 from pyworkflow.em import *  
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfVolumes, volumeToRow
 from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
 from convert import writeSetOfClasses2D, writeSetOfParticles
+import pyworkflow.em.metadata as metadata
 
 
 
@@ -110,51 +112,93 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                       label='Do not apply Fisher', help="Images are preselected using Fisher's confidence interval on the correlation "
                       "coefficient. Check this box if you do not want to make this preselection.")
 
-        form.addParallelSection(threads=1, mpi=8)
+        form.addParallelSection(threads=0, mpi=8)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     
-    def _insertAllSteps(self):
-        """ Mainly prepare the command line for calling reconstruct_significant program"""
-        
-        # Convert input images if necessary
-        self.imgsFn = self._getExtraPath('input_classes.xmd')
-        self._insertFunctionStep('convertInputStep', self.imgsFn)
-
+    def getSignificantArgs(self, imgsFn):
+        """ Return the arguments needed to launch the program. """
         # Prepare arguments to call program: xmipp_classify_CL2D
-        self._params = {'imgsFn': self.imgsFn, 
+        self._params = {'imgsFn': imgsFn, 
                         'extraDir': self._getExtraPath(),
                         'symmetryGroup': self.symmetryGroup.get(),
                         'angularSampling': self.angularSampling.get(),
                         'minTilt': self.minTilt.get(),
                         'maxTilt': self.maxTilt.get(),
                         'maximumShift': self.maximumShift.get(),
-                        'alpha0': 1-self.alpha0.get()/100.0,
-                        'alphaF': 1-self.alphaF.get()/100.0,
-                        'iter': self.iter.get(),
                         'angDistance': self.angDistance.get()
                         }
-        args = '-i %(imgsFn)s --odir %(extraDir)s --sym %(symmetryGroup)s --angularSampling %(angularSampling)f '\
-               '--minTilt %(minTilt)f --maxTilt %(maxTilt)f --maxShift %(maximumShift)f --iter %(iter)d --alpha0 %(alpha0)f '\
-               '--alphaF %(alphaF)f --angDistance %(angDistance)f'% self._params
+        args = '-i %(imgsFn)s --sym %(symmetryGroup)s --angularSampling %(angularSampling)f '\
+               '--minTilt %(minTilt)f --maxTilt %(maxTilt)f --maxShift %(maximumShift)f '\
+               '--dontReconstruct --angDistance %(angDistance)f' % self._params
         
-        if self.thereisRefVolume:
-            args += " --initvolumes " + self._getExtraPath('input_volumes.xmd')
-        else:
-            args += " --numberOfVolumes %d"%self.Nvolumes.get()
         if self.useImed:
             args += " --useImed"
         if self.strictDir:
             args += " --strictDirection"
         if self.dontApplyFisher:
             args += " --dontApplyFisher"
-        if self.keepIntermediate:
-            args += " --keepIntermediateVolumes"
-        self._insertRunJobStep("xmipp_reconstruct_significant", args)
-
+            
+        return args
+        
+    def _insertAllSteps(self):
+        # Convert input images if necessary
+        self.imgsFn = self._getExtraPath('input_classes.xmd')
+        self._insertFunctionStep('convertInputStep', self.imgsFn)
+        
+        args = self.getSignificantArgs(self.imgsFn)    
+        n = self.iter.get()
+        alpha0 = self.alpha0.get()
+        deltaAlpha = (self.alphaF.get() - alpha0) / n
+        
+        # Insert one step per iteration
+        for i in range(n):
+            alpha = 1 - (alpha0 + deltaAlpha * i)/100.0
+            self._insertFunctionStep('significantStep', i+1, alpha, args)           
+            
         self._insertFunctionStep('createOutputStep')        
 
-    #--------------------------- STEPS functions --------------------------------------------        
+    #--------------------------- STEPS functions --------------------------------------------   
+    def significantStep(self, iterNumber, alpha, args):
+        iterDir = self._getTmpPath('iter%03d' % iterNumber)
+        makePath(iterDir)
+        args += ' --odir %s' % iterDir
+        args += ' --alpha0 %f --alphaF %f' % (alpha, alpha)
+        prevVolFn = self.getIterVolume(iterNumber-1)
+        volFn = self.getIterVolume(iterNumber)
+        
+        if iterNumber == 1:
+            if self.thereisRefVolume:
+                args += " --initvolumes " + self._getExtraPath('input_volumes.xmd')
+            else:
+                args += " --numberOfVolumes %d" % self.Nvolumes
+        else:
+            args += " --initvolumes %s" % prevVolFn
+        
+        t = Timer()
+        t.tic()
+        self.runJob("xmipp_reconstruct_significant", args)
+        t.toc('Significant took: ')
+        
+        anglesFn = self._getExtraPath('angles_iter%03d.xmd' % iterNumber)
+        moveFile(os.path.join(iterDir, 'angles_iter001_00.xmd'), anglesFn)
+        reconsArgs = ' -i %s' %  anglesFn
+        reconsArgs += ' -o %s' % volFn
+        reconsArgs += ' --weight -v 0  --sym %s ' % self.symmetryGroup
+
+        print "Number of images for reconstruction: ", metadata.getSize(anglesFn)
+        t.tic()
+        self.runJob("xmipp_reconstruct_fourier", reconsArgs)
+        t.toc('Reconstruct fourier took: ')
+        
+        xdim = self.inputSet.get().getDim()[0]
+        maskArgs = "-i %s --mask circular %d -v 0" % (volFn, -xdim/2)
+        self.runJob('xmipp_transform_mask', maskArgs, numberOfMpi=1)
+        
+        if not self.keepIntermediate:
+            cleanPath(prevVolFn, iterDir)
+            
+        
     def convertInputStep(self, classesFn):
         inputSet = self.inputSet.get()
         
@@ -174,52 +218,31 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                 md = xmipp.MetaData()
                 row.writeToMd(md, md.addObject())
                 md.write(fnVolumes)
-
-    def getLastIteration(self,Nvolumes):
-        lastIter=-1
-        for n in range(self.iter.get()+1):
-            NvolumesIter=len(glob(self._getExtraPath('volume_iter%03d_*.vol'%n)))
-            if NvolumesIter==0:
-                continue
-            elif NvolumesIter==Nvolumes:
-                lastIter=n
-            else:
-                break
-        return lastIter
-    
-    def getNumberOfVolumes(self):
-        if self.thereisRefVolume:
-            inputVolume= self.refVolume.get()
-            if isinstance(inputVolume, SetOfVolumes):
-                Nvolumes=inputVolume.getSize()
-            else:
-                Nvolumes=1
-        else:
-            Nvolumes=self.Nvolumes.get()
-        return Nvolumes
         
     def createOutputStep(self):
-        Nvolumes=self.getNumberOfVolumes()
-        lastIter=self.getLastIteration(Nvolumes)
+        Nvolumes = self.getNumberOfVolumes()
+        lastIter = self.getLastIteration(Nvolumes)
         if Nvolumes==1:
             vol = Volume()
             vol.setObjComment('significant volume 1')
-            vol.setLocation(self._getExtraPath('volume_iter%03d_00.vol'%lastIter))
+            vol.setLocation(self.getIterVolume(lastIter))
             vol.setSamplingRate(self.inputSet.get().getSamplingRate())
             self._defineOutputs(outputVolume=vol)
+            output = vol
         else:
-            vol = self._createSetOfVolumes()
-            vol.setSamplingRate(self.inputSet.get().getSamplingRate())
-            fnVolumes=glob(self._getExtraPath('volume_iter%03d_*.vol')%lastIter)
+            volSet = self._createSetOfVolumes()
+            volSet.setSamplingRate(self.inputSet.get().getSamplingRate())
+            fnVolumes = glob(self._getExtraPath('volume_iter%03d_*.vol')%lastIter)
             fnVolumes.sort()
             for i, fnVolume in enumerate(fnVolumes):
                 vol = Volume()
                 vol.setObjComment('significant volume %02d' % (i+1))
                 vol.setLocation(fnVolume)
-                vol.append(aux)
-            self._defineOutputs(outputVolumes=vol)
+                volSet.append(vol)
+            self._defineOutputs(outputVolumes=volSet)
+            output = volSet
 
-        self._defineSourceRelation(vol, self.inputSet)
+        self._defineSourceRelation(self.inputSet, output)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -276,3 +299,35 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             if self.hasAttribute('outputVolume'):
                 retval+=" The reconstructed volume was %s." % self.getObjectTag('outputVolume')
         return [retval]
+
+
+    #--------------------------- UTILS functions --------------------------------------------
+
+    def getIterVolume(self, iterNumber):
+        return self._getExtraPath('volume_iter%03d.vol' % iterNumber)
+    
+    def getIterTmpVolume(self, iterNumber):
+        self._getTmpPath('iter%03d' % iterNumber, 'volume_iter001.vol')
+        
+    def getLastIteration(self,Nvolumes):
+        lastIter =-1
+        for n in range(1, self.iter.get()+1):
+            NvolumesIter=len(glob(self._getExtraPath('volume_iter%03d*.vol' % n)))
+            if NvolumesIter==0:
+                continue
+            elif NvolumesIter==Nvolumes:
+                lastIter=n
+            else:
+                break
+        return lastIter
+    
+    def getNumberOfVolumes(self):
+        if self.thereisRefVolume:
+            inputVolume= self.refVolume.get()
+            if isinstance(inputVolume, SetOfVolumes):
+                Nvolumes=inputVolume.getSize()
+            else:
+                Nvolumes=1
+        else:
+            Nvolumes=self.Nvolumes.get()
+        return Nvolumes

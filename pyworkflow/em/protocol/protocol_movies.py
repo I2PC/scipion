@@ -42,6 +42,7 @@ from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
 #from pyworkflow.em.packages.dosefgpu.protocol_dosefgpu import ProtDosefGpu
 #from pyworkflow.em.protocol import ProtProcessMovies
+#from pyworkflow.utils import startDebugger
 
 PLOT_CART = 0
 PLOT_POLAR = 1
@@ -50,7 +51,7 @@ PLOT_POLAR = 1
 class ProtProcessMovies(ProtPreprocessMicrographs):
     """
     Protocol base for processing movies from direct detectors cameras.
-    This base class will iterate throught the movies (extract them if compressed)
+    This base class will iterate through the movies (extract them if compressed)
     and call a _processMovie method for each one.
     """
     
@@ -80,6 +81,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def _insertAllSteps(self):
         # Build the list of all processMovieStep ids by 
         # inserting each of the steps for each movie
+        self.samplingRate = self.inputMovies.get().getSamplingRate()
         allMovies = [self._insertMovieStep(movie) for movie in self.inputMovies.get()]
         self._insertFunctionStep('createOutputStep', prerequisites=allMovies)
 
@@ -99,7 +101,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def processMovieStep(self, movieId, movieFn, *args):
         movieFolder = self._getMovieFolder(movieId)
         movieName = basename(movieFn)
-        
+        #export SCIPION_DEBUG=1 # passwd=a
+        #startDebugger()
+
         if self._filterMovie(movieId, movieFn):
             makePath(movieFolder)
             createLink(movieFn, join(movieFolder, movieName))
@@ -117,7 +121,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             
             if movieMrc.endswith('.em'):
                 movieMrc = movieMrc + ":ems"
-
 
             self._processMovie(movieId, movieMrc, movieFolder, *args)
             

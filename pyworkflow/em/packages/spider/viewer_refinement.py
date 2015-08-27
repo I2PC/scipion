@@ -297,15 +297,23 @@ Examples:
         for anglesFile in files:
             fscDoc = SpiderDocFile(anglesFile)
             for values in fscDoc:
-                yield values[1], values[2]
+                theta = values[1]
+                phi = values[2]
+                
+                if theta > 90:
+                    theta = abs(180. - theta)
+                    phi += 180
+                yield phi, theta
             fscDoc.close()
         
     def _displayAngDist(self, *args):
+        #print "_displayAngDist...."
         iterations = self._getIterations()
         nparts = self.protocol.inputParticles.get().getSize()
         views = []
         
         if self.displayAngDist == ANGDIST_2DPLOT:
+	    #print " self.displayAngDist == ANGDIST_2DPLO "
             for it in iterations:
                 anglesSqlite = self._getFinalPath('angular_dist_%03d.sqlite' % it)
                 title = 'Angular distribution iter %03d' % it

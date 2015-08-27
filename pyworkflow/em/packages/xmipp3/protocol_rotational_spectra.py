@@ -161,7 +161,7 @@ class XmippProtRotSpectra(KendersomBaseClassify):
                            preprocessClass=self._preprocessClass,
                            postprocessImageRow=self._postprocessImageRow)
         self._defineOutputs(outputClasses=classes2DSet)
-        self._defineSourceRelation(imgSet, classes2DSet)
+        self._defineSourceRelation(self.inputParticles, classes2DSet)
                 
     def _preprocessClass(self, classItem, classRow):
         KendersomBaseClassify._preprocessClass(self, classItem, classRow)

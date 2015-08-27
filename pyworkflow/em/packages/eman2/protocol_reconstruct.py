@@ -206,7 +206,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
             args += " --ac %f" % (100 * acq.getAmplitudeContrast())
             if not partSet.isPhaseFlipped():
                 args += " --phaseflip"
-            args += " --apix %f --allparticles --autofit --curdefocusfix --storeparm -v 8" % (partSet.getSamplingRate())
+            args += " --computesf --apix %f --allparticles --autofit --curdefocusfix --storeparm -v 8" % (partSet.getSamplingRate())
             self.runJob(program, args, cwd=self._getExtraPath())
         
         program = getEmanProgram('e2buildsets.py')
@@ -225,7 +225,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
         vol.setFileName(self._getFileName("volume"))
         vol.copyInfo(partSet)
         self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(partSet, vol)
+        self._defineSourceRelation(self.inputParticles, vol)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

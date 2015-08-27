@@ -33,6 +33,7 @@ from glob import glob
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
 from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
+from convert import getNMAEnviron
 import xmipp
 
 #from xmipp3 import XmippProtocol
@@ -94,9 +95,9 @@ class XmippProtNMABase(EMProtocol):
         fnDistanceHist=os.path.join(baseDir,'extra',fnBase+'_distance.hist')
         rc = self._getRc(fnDistanceHist)
         self._enterWorkingDir()
-        self.runJob('nma_record_info.py', "%d %s.pdb %d" % (numberOfModes, fnBase, rc))
-        self.runJob("nma_pdbmat.pl","pdbmat.dat")
-        self.runJob("nma_diag_arpack","")
+        self.runJob('nma_record_info.py', "%d %s.pdb %d" % (numberOfModes, fnBase, rc),env=getNMAEnviron())
+        self.runJob("nma_pdbmat.pl","pdbmat.dat",env=getNMAEnviron())
+        self.runJob("nma_diag_arpack","",env=getNMAEnviron())
         if not exists("fort.11"):
             self._printWarnings(redStr("Modes cannot be computed. Check the number of modes you asked to compute and/or consider increasing cut-off distance. The maximum number of modes allowed by the method for pseudoatomic normal mode analysis is 3 times the number of pseudoatoms but the protocol allows only up to 200 modes as 20-100 modes are usually enough.  If the number of modes is below the minimum between 200 and 3 times the number of pseudoatoms, consider increasing cut-off distance."))
         cleanPath("diag_arpack.in", "pdbmat.dat")
@@ -136,13 +137,13 @@ class XmippProtNMABase(EMProtocol):
     def reformatOutputStep(self,fnPseudoatoms):
         self._enterWorkingDir()
         n = self._countAtoms(fnPseudoatoms)
-        self.runJob("nma_reformat_vector_foranimate.pl","%d fort.11" % n)
+        self.runJob("nma_reformat_vector_foranimate.pl","%d fort.11" % n,env=getNMAEnviron())
         self.runJob("cat","vec.1* > vec_ani.txt")
         self.runJob("rm","-f vec.1*")
-        self.runJob("nma_reformat_vector.pl","%d fort.11" % n)
+        self.runJob("nma_reformat_vector.pl","%d fort.11" % n,env=getNMAEnviron())
         makePath("modes")
         self.runJob("mv","-f vec.* modes")
-        self.runJob("nma_prepare_for_animate.py","")
+        self.runJob("nma_prepare_for_animate.py","",env=getNMAEnviron())
         self.runJob("rm","-f vec_ani.txt fort.11 matrice.sdijf")
         moveFile('vec_ani.pkl','extra/vec_ani.pkl')
         self._leaveWorkingDir()
@@ -173,10 +174,10 @@ class XmippProtNMABase(EMProtocol):
         fnDiag = "diagrtb.eigenfacs"
         
         if structureEM:
-            self.runJob("nma_reformatForElNemo.sh", "%d" % numberOfModes)
+            self.runJob("nma_reformatForElNemo.sh", "%d" % numberOfModes,env=getNMAEnviron())
             fnDiag = "diag_arpack.eigenfacs"
             
-        self.runJob("echo", "%s | nma_check_modes" % fnDiag)
+        self.runJob("echo", "%s | nma_check_modes" % fnDiag,env=getNMAEnviron())
         cleanPath(fnDiag)
         
         fh = open("Chkmod.res")
@@ -219,7 +220,7 @@ class XmippProtNMABase(EMProtocol):
                                                         
     def _validate(self):
         errors = []
-        xmippBin = join(os.environ['XMIPP_HOME'], 'bin')
+        nmaBin = os.environ['NMA_HOME']
         nma_programs = ['nma_check_modes',
                         'nma_diag_arpack',
                         'nma_diagrtb',
@@ -227,9 +228,9 @@ class XmippProtNMABase(EMProtocol):
         # Check Xmipp was compiled with NMA flag to True and
         # some of the nma programs are under the Xmipp/bin/ folder
         for prog in nma_programs:
-            if not exists(join(xmippBin, prog)):
-                errors.append("Some NMA programs are missing in the Xmipp folder.")
-                errors.append("Check that Xmipp was installed with NMA flag set.")
+            if not exists(join(nmaBin, prog)):
+                errors.append("Some NMA programs are missing in the NMA folder.")
+                errors.append("Check that Scipion was installed with NMA: 'scipion install nma'")
                 break
                 
         return errors

@@ -26,15 +26,18 @@
 package xmipp.viewer.models;
 
 import ij.ImagePlus;
+
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
 import java.util.ArrayList;
+
 import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
+
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MDRow;
@@ -66,7 +69,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	protected float scale = (float) 1.;
 	// protected int zoom = 100;
 	// Cache class to reuse of already loaded items
-	protected Cache<String, ImageItem> cache = new Cache<String, ImageItem>();
+	protected Cache<String, ImageItem> cache;
 	// Filename
 	// Hold gallery dimensions
 	protected ImageDimension dimension;
@@ -85,11 +88,10 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	public GalleryData data; // information about the gallery
 
 	public boolean adjustWidth = true; 
-        protected boolean[] selection;
-        protected int selfrom = -1, selto = -1;
+    protected boolean[] selection;
 	
 	// Initiazation function
-	public ImageGalleryTableModel(GalleryData data) throws Exception {
+	public ImageGalleryTableModel(GalleryData data, boolean[] selection) throws Exception {
 		this.data = data;
 		cols = 0;
 		dimension = loadDimension();
@@ -110,9 +112,15 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		}
 		// DEBUG.printMessage(String.format("col: %d, rows: %d", cols, rows));
 		//resizeCache(); NOw this is done when setZoomValue
-                selection = new boolean[data.ids.length];
-                selfrom = selto = -1;
+		//might be that the number of items is the same and we keep selection, although it is a different metadata
+        if(selection == null)
+        	this.selection = new boolean[data.ids.length];
+        else
+        	this.selection = selection;
+        
 	}
+	
+	
 	
 	public int getImageWidth()
 	{
@@ -132,12 +140,11 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * depending on images size and available memory
 	 */
 	protected void resizeCache() {
-		//int imageSize = dimension.getXDim() * dimension.getYDim()
-		//		* Cache.MAXPXSIZE;
-		int imageSize = thumb_height * thumb_width * Cache.MAXPXSIZE;
-		int elements = imageSize > 0 ? Cache.MEMORY_SIZE / imageSize : 1;
-		//System.err.format("Cache elements: %d\n", elements);
-		cache.resize(elements > 0 ? elements : 1);
+		int limit = Cache.getLimit(thumb_width, thumb_height);
+		if(cache == null)
+			cache = new Cache(limit);
+		else
+			cache.resize(limit > 0 ? limit : 1);
 	}
 
 	@Override
@@ -171,16 +178,17 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 				if (cache.containsKey(key))
 					item = cache.get(key);
 				else {
-					// If not, create the item and store it for future
+//					// If not, create the item and store it for future
 					item = createItem(index, key);
 					cache.put(key, item);
 				}
-				setupItem(item, index);
+				setupItem(item);
 				return item;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		
 		return null;
 	}
 
@@ -203,9 +211,9 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 
 
-	protected void setupItem(ImageItem item, int index) {
+	protected void setupItem(ImageItem item) {
 		ImagePlus imp = item.getImagePlus();
-		if (imp != null) { // When image is missing this will be null
+		if (imp != null && imp.getProcessor() != null) { // When image is missing this will be null
 			if (data.normalize)
 				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
 			else
@@ -261,7 +269,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * @param height
 	 */
 	protected void calculateCellSize() {
-		
 		thumb_width = (int) (image_width * scale);
 		thumb_height = (int) (image_height * scale);
 
@@ -352,8 +359,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 */
 	public int getIndex(int row, int col) {
                 
-                return row * cols + col; 
-		
+		return row * cols + col; 
 	}
         
        
@@ -453,18 +459,17 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	/** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col) {
-            
-                setSelected(row, col, !isSelected(row, col));
-                adjustWidth = false;
-                fireTableCellUpdated(row, col);
+        setSelected(row, col, !isSelected(row, col));
+        adjustWidth = false;
+        fireTableCellUpdated(row, col);
 	}
         
         /** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col, boolean isselected) {
 		
-                setSelected(row, col, isselected);
-                adjustWidth = false;
-                fireTableCellUpdated(row, col);	
+        setSelected(row, col, isselected);
+        adjustWidth = false;
+        fireTableCellUpdated(row, col);	
 	}
 	
 	
@@ -511,21 +516,19 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * not show at all if the return is false
 	 */
 	public abstract boolean handleRightClick(int row, int col,
-			XmippPopupMenuCreator xpopup);
+		XmippPopupMenuCreator xpopup);
 
 	/**
 	 * This function will be called when a double click is performed under the
 	 * element at specified row and column
 	 */
-	public boolean handleDoubleClick(int row, int col) {
-		return false; // by default, do nothing
-	}
+	public abstract boolean handleDoubleClick(int row, int col) ;
 
 	/** Whether to display the labels */
 	public void setShowLabels() {
 		
-			calculateCellSize();
-			fireTableStructureChanged();
+		calculateCellSize();
+		fireTableStructureChanged();
 		
 	}
 
@@ -546,8 +549,9 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * Return a key string using label
 	 */
 	public String getItemKey(int index, int label) throws Exception {
-                
-		String format = data.getValueFromLabel(index, label) + "_i_(%d,%d)";
+		Object value = data.getValueFromLabel(index, label);
+		
+		String format = value + "_i_(%d,%d)";
 		if (data.useGeo)
 			format += "_geo";
 		if (data.wrap)
@@ -612,8 +616,9 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 			index = ImageGalleryTableModel.this.getIndex(row, col);
 		}
 
-		public ImageItem(int index) {
+		public ImageItem(int index, ImagePlus imp) {
 			this.index = index;
+			this.image = imp;
 		}
 
 		public int getIndex() {
@@ -741,7 +746,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
             for (int i = 0; i < selection.length; ++i) {
                 selection[i] = false;
             }
-            selfrom = selto = -1;
 
         }
         
@@ -752,9 +756,9 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
         int count = 0;
 
         if (!data.isVolumeMode() && hasSelection()) {
-            for (int i = selfrom; i <= selto; ++i) {
+            for (int i = 0; i < selection.length; i++) {
                 if (selection[i]) {
-                    ++count;
+                    count++;
                 }
             }
         }
@@ -768,40 +772,12 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
     
     public void setSelected(int index, boolean isselected) {
         
-        if(isselected && (selfrom > index || selfrom == -1))
-            selfrom = index;
-        if(isselected && selto < index)
-            selto = index;
-        boolean hasSelection = (isselected || selto != selfrom || selfrom != index);
+        
         selection[index] = isselected;
-        if(!isselected && selfrom == index)
-        {
-            selfrom = -1;
-            if(hasSelection)
-                for(int i = index; i <= selto; i ++)
-                    if(selection[i])
-                    {
-                        selfrom = i;
-                        break;
-                    }
-        }       
-        
-        if(!isselected && selto == index)
-        {
-            selto = -1;
-            if(hasSelection)
-                for(int i = index; i >= selfrom; i --)
-                    if(selection[i])
-                    {
-                        selto = i;
-                        break;
-                    }
-        }      
-        
+       
         if (data.isVolumeMd && data.isTableMode())
             data.selectedVolFn = isselected? data.getVolumeAt(index): data.getVolumeAt(0);
 
-            
     }
     
     public boolean isSelected(int index) {
@@ -811,16 +787,27 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
     
     public int getSelFrom()
     {
-        return selfrom;
+    	for(int i = 0; i < selection.length; i ++)
+    	{
+    		if(selection[i])
+	    		return i;
+    	}
+    	return -1;
     }
 
     public int getSelTo()
     {
+    	int selto = -1;
+    	for(int i = 0; i < selection.length; i ++)
+    	{
+    		if(selection[i])
+    			selto = i;
+    	}
         return selto;
     }
     
       public boolean hasSelection() {
-        if(selfrom == -1)
+        if(getSelFrom() == -1)
             return false;
         return true;
     }
@@ -828,5 +815,10 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
     public void setSelected(int row, int col, boolean b) {
           setSelected(getIndex(row, col), b);
     }
+
+	public ColumnInfo getColumn(int row, int col)
+	{
+		return data.ciFirstRender;
+	}
 
 }

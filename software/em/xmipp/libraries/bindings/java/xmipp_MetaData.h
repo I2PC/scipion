@@ -396,9 +396,10 @@ extern "C"
      * Signature: (Lxmipp/ImageGeneric;)V
      */
     JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
-    (JNIEnv *, jobject, jobject, jobject, jboolean, jint);
+    (JNIEnv *, jobject, jobject, jobject, jboolean, jboolean, jint);
 
-
+    JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeMdToStack
+    (JNIEnv *env, jobject jmetadata, jstring filename, jboolean applyGeo, jboolean wrap, jint label);
 
 
     /*

@@ -100,7 +100,6 @@ class TestImportMicrographs(TestImportBase):
         protEmxImport.setObjLabel('from emx (with coords)')
         self.launchProtocol(protEmxImport)
         _checkOutput(protEmxImport, [], size=1)
-
     
     def test_fromEmx(self):
         """ Import an EMX file with micrographs and defocus
@@ -117,7 +116,6 @@ class TestImportMicrographs(TestImportBase):
         
         self.checkMicSet(protEmxImport.outputMicrographs, 
                          goldFn=self.dsEmx.getFile('emxMicrographCtf1Gold'))
-
     
     def test_fromXmipp(self):
         """ Import an EMX file with micrographs and defocus
@@ -147,4 +145,38 @@ class TestImportMicrographs(TestImportBase):
         self.launchProtocol(prot2)
         self.checkMicSet(prot2.outputMicrographs, 
                  goldFn=micsMd.replace('.xmd', '_gold.sqlite'))
+    
+    def test_fromScipion(self):
+        """ Import an EMX file with micrographs and defocus
+        """
+        micsSqlite = self.dsXmipp.getFile('micrographs/micrographs.sqlite')
+        print "Importing from sqlite: ", micsSqlite
+        
+        micSet = SetOfMicrographs(filename=micsSqlite)
+        # Gold values
+        #_samplingRate -> 1.237
+        #_acquisition._voltage -> 300.0
+        #_acquisition._magnification -> 50000.0
+
+        for k in ['_samplingRate','_acquisition._voltage','_acquisition._magnification']:
+            print k, "->", micSet.getProperty(k)
+        prot = self.newProtocol(ProtImportMicrographs,
+                                 objLabel='from scipion',
+                                 importFrom=ProtImportMicrographs.IMPORT_FROM_SCIPION,
+                                 sqliteFile=micsSqlite,
+                                 samplingRate=float(micSet.getProperty('_samplingRate')),
+                                 voltage=float(micSet.getProperty('_acquisition._voltage')),
+                                 magnification=int(float(micSet.getProperty('_acquisition._magnification')))
+                                )
+         
+        self.launchProtocol(prot)
+        
+        micSet = getattr(prot, 'outputMicrographs', None)
+        self.assertIsNotNone(micSet)
+        
+        self.assertAlmostEqual(1.237, micSet.getSamplingRate())
+        
+        acq = micSet.getAcquisition()
+        self.assertAlmostEqual(300., acq.getVoltage())
+        self.assertAlmostEqual(50000., acq.getMagnification())
         

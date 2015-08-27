@@ -95,6 +95,7 @@ CTF_EXTRA_LABELS = [
     xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
     xmipp.MDL_CTF_CRIT_FITTINGSCORE,
     xmipp.MDL_CTF_CRIT_FITTINGCORR13,
+    xmipp.MDL_CTF_CRIT_MAXFREQ,
     xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
     xmipp.MDL_CTF_CRIT_PSDVARIANCE,
     xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
@@ -200,6 +201,16 @@ def rowToObject(row, obj, attrDict, extraLabels={}):
         if label not in attrLabels and row.hasLabel(label):
             labelStr = xmipp.label2Str(label)
             setattr(obj, '_xmipp_%s' % labelStr, row.getValueAsObject(label))
+    
+
+def setXmippAttributes(obj, objRow, *labels):
+    """ Set an attribute to obj from a label that is not 
+    basic ones. The new attribute will be named _xmipp_LabelName
+    and the datatype will be set correctly.
+    """
+    for label in labels:
+        setattr(obj, '_xmipp_%s' % xmipp.label2Str(label), 
+                objRow.getValueAsObject(label))
     
     
 def rowFromMd(md, objId):
@@ -591,7 +602,27 @@ def readCTFModel(filename, mic):
     md = xmipp.MetaData(filename)
     return mdToCTFModel(md, mic)
         
-        
+
+def openMd(fn):
+    # We are going to write metadata directy to file to do it faster
+    f = open(fn, 'w')
+    s = """# XMIPP_STAR_1 * 
+#
+data_header
+loop_
+ _pickingMicrographState
+Manual 
+data_particles
+loop_
+ _itemId
+ _enabled
+ _xcoor
+ _ycoor
+ _micrographId
+"""
+    f.write(s)
+    return f
+
 def writeSetOfCoordinates(posDir, coordSet):
     """ Write a pos file on metadata format for each micrograph 
     on the coordSet. 
@@ -599,52 +630,61 @@ def writeSetOfCoordinates(posDir, coordSet):
         posDir: the directory where the .pos files will be written.
         coordSet: the SetOfCoordinates that will be read.
     """
-    posFiles = []
     boxSize = coordSet.getBoxSize() or 100  
     
-    # Write pos metadatas (one per micrograph)    
+    # Create a dictionary with the pos filenames for each micrograph
+    posDict = {}
     for mic in coordSet.iterMicrographs():
         micName = mic.getFileName()
         posFn = join(posDir, replaceBaseExt(micName, "pos"))
+        posDict[mic.getObjId()] = posFn
         
-        md = xmipp.MetaData()
-        for coord in coordSet.iterCoordinates(micrograph=mic):
-            objId = md.addObject()
-            coordRow = XmippMdRow()
-            coordinateToRow(coord, coordRow)
-            coordRow.writeToMd(md, objId)
-            
-        if not md.isEmpty():
-            md2 = xmipp.MetaData()    
-            objId = md2.addObject()
-            md2.setValue(xmipp.MDL_PICKING_MICROGRAPH_STATE, 'Manual', objId)
-            # Write header block
-            md2.write('header@%s' % posFn)
-            # Write particles block
-            md.write('particles@%s' % posFn, xmipp.MD_APPEND)
-            posFiles.append(posFn)
-            
+    
+    f = None
+    lastMicId = None
+    c = 0
+    
+    for coord in coordSet.iterItems(orderBy='_micId'):
+        micId = coord.getMicId()
+    
+        if micId != lastMicId:
+            # we need to close previous opened file
+            if f:
+                f.close()
+                print "Micrograph %s (%d)" % (lastMicId, c)
+                c = 0
+            f = openMd(posDict[micId])
+            lastMicId = micId
+        c += 1
+        f.write(" %06d   1   %d  %d   %06d\n" % (coord.getObjId(), 
+                                                 coord.getX(), coord.getY(), 
+                                                 micId))
+    
+    if f:
+        f.close()
+        print "Micrograph %s (%d)" % (lastMicId, c)
+    
     # Write config.xmd metadata
     configFn = join(posDir, 'config.xmd')
     md = xmipp.MetaData()
     # Write properties block
     objId = md.addObject()
-    micName = removeBaseExt(micName)
-    md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
+#     micName = removeBaseExt(micName)
+#     md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
     #md.setValue(xmipp.MDL_COLOR, int(-16776961), objId)
     md.setValue(xmipp.MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
     md.setValue(xmipp.MDL_PICKING_STATE, 'Manual', objId)
     
     md.write('properties@%s' % configFn)
 
-    # Write filters block
-    md = xmipp.MetaData()    
-    objId = md.addObject()
-    md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
-    md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
-    md.write('filters@%s' % configFn, xmipp.MD_APPEND)
+#     # Write filters block
+#     md = xmipp.MetaData()    
+#     objId = md.addObject()
+#     md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
+#     md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
+#     md.write('filters@%s' % configFn, xmipp.MD_APPEND)
     
-    return posFiles
+    return posDict.values()
 
 
 def readSetOfCoordinates(outputDir, micSet, coordSet):
@@ -914,7 +954,8 @@ def writeSetOfMicrographsPairs(uSet, tSet, filename):
     md.write(filename)   
 
     
-def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
+def __readSetOfClasses(classBaseSet, readSetFunc, 
+                       classesSet, filename, classesBlock='classes', **kwargs):
     """ Read a set of classes from an Xmipp metadata with the given
     convention of a block for classes and another block for each set of 
     images assigned to each class.
@@ -939,7 +980,7 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
         classRow = rowFromMd(classesMd, objId)
         classItem = rowToClass(classRow, classItem)
         # FIXME: the following is only valid for SetOfParticles
-        SetOfParticles.copyInfo(classItem, classesSet.getImages())
+        classBaseSet.copyInfo(classItem, classesSet.getImages())
         #classItem.copyInfo(classesSet.getImages())
         
         if preprocessClass:
@@ -951,16 +992,18 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
         b = 'class%06d_images' % ref
         
         if b in blocks:
-            #FIXME: we need to adapt the following line
-            # when we face classes of volumes and not just particles
-            readSetOfParticles('%s@%s' % (b, filename), classItem, **kwargs) 
+            readSetFunc('%s@%s' % (b, filename), classItem, **kwargs) 
 
         if postprocessClass:
             postprocessClass(classItem, classRow)
             
         # Update with new properties of classItem such as _size
         classesSet.update(classItem)
-        
+    
+    
+def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
+    __readSetOfClasses(SetOfParticles, readSetOfParticles,
+                       classesSet, filename, classesBlock, **kwargs)
         
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **kwargs):
     """ Just a wrapper to readSetOfClasses. """
@@ -999,34 +1042,50 @@ def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
 
 
-def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args):
+def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **kwargs):
     """read from Xmipp image metadata.
         fnImages: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
         hasCtf: is True if the ctf information exists.
     """
+    __readSetOfClasses(SetOfVolumes, readSetOfVolumes,
+                       classesVolSet, filename, classesBlock, **kwargs)  
+    
+    return
+
+    # FIXME: Delete from here 
+    
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
-    samplingRate = classesVolSet.getImages().getSamplingRate()
     
+    # Provide a hook to be used if something is needed to be 
+    # done for special cases before converting row to class
+    preprocessClass = kwargs.get('preprocessClass', None)
+    postprocessClass = kwargs.get('postprocessClass', None)
+        
     for objId in classesMd:
-        classVol = ClassVol()
-        classVol = rowToClassVol(classesMd, objId, classVol)
+        classVol = classesVolSet.ITEM_TYPE()
+        classRow = rowFromMd(classesMd, objId)
+        classVol = rowToClass(classRow, classVol)
+        # FIXME: the following is only valid for SetOfParticles
+        SetOfParticles.copyInfo(classVol, classesVolSet.getImages())
+        
+        if preprocessClass:
+            preprocessClass(classVol, classRow)
+                   
         classesVolSet.append(classVol)
         ref = classVol.getObjId()
         b = 'class%06d_images' % ref
         
         if b in blocks:
-            classImagesMd = xmipp.MetaData('%s@%s' % (b, filename))
+            readSetFunc = _readSetFunc()
+            readSetOfVolumes('%s@%s' % (b, filename), classVol, **kwargs) 
+
+        if postprocessClass:
+            postprocessClass(classVol, classRow)
             
-            for imgId in classImagesMd:
-                img = rowToParticle(classImagesMd, imgId, hasCtf=False)
-                img.setSamplingRate(samplingRate)
-                classVol.append(img)
-        # Update with new properties of class2D such as _size
+        # Update with new properties of classItem such as _size
         classesVolSet.update(classVol)                
-        # Check if write function is necessary
-        classVol.write()
 
 
 def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):    
