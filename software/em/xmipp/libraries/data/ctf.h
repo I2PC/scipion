@@ -29,6 +29,7 @@
 #include "xmipp_program.h"
 #include "xmipp_filename.h"
 #include "metadata.h"
+#include "xmipp_fft.h"
 
 
 const int CTF_BASIC_LABELS_SIZE = 5;
@@ -646,20 +647,19 @@ public:
     void lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> &freq, int iwhat=0);
 
     /// Apply CTF to an image
-    void applyCTF(MultidimArray < std::complex<double> > &FFTI, double Ts, bool absPhase=false);
+    void applyCTF(MultidimArray < std::complex<double> > &FFTI, const MultidimArray<double> &I, double Ts, bool absPhase=false);
 
     /// Apply CTF to an image
     void applyCTF(MultidimArray <double> &I, double Ts, bool absPhase=false);
 
     /** Generate CTF image.
         The sample image is used only to take its dimensions. */
-    template <class T>
-    void generateCTF(const MultidimArray<T> &sample_image,
-                      MultidimArray < std::complex<double> > &CTF)
+    template <class T1, class T2>
+    void generateCTF(const MultidimArray<T1> &sample_image, MultidimArray <T2> &CTF, double Ts=-1)
     {
         if ( ZSIZE(sample_image) > 1 )
             REPORT_ERROR(ERR_MULTIDIM_DIM,"ERROR: Generate_CTF only works with 2D sample images, not 3D.");
-        generateCTF(YSIZE(sample_image), XSIZE(sample_image), CTF);
+        generateCTF(YSIZE(sample_image), XSIZE(sample_image), CTF, Ts);
         STARTINGX(CTF) = STARTINGX(sample_image);
         STARTINGY(CTF) = STARTINGY(sample_image);
     }
@@ -677,9 +677,41 @@ public:
      */
     void getAverageProfile(double fmax, int nsamples, MultidimArray<double> &profiles);
 
-    /// Generate CTF image.
-    void generateCTF(int Ydim, int Xdim,
-                      MultidimArray < std::complex<double> > &CTF);
+//#define DEBUG
+   /// Generate CTF image.
+    template <class T>
+    void generateCTF(int Ydim, int Xdim, MultidimArray < T > &CTF, double Ts=-1)
+    {
+        CTF.resizeNoCopy(Ydim, Xdim);
+        if (Ts<0)
+        	Ts=Tm;
+		#ifdef DEBUG
+			std::cout << "CTF:\n" << *this << std::endl;
+		#endif
+
+        double iTs=1.0/Ts;
+        for (int i=0; i<Ydim; ++i)
+        {
+        	double wy;
+        	FFT_IDX2DIGFREQ(i, YSIZE(CTF), wy);
+            double fy=wy*iTs;
+        	for (int j=0; j<Xdim; ++j)
+        	{
+            	double wx;
+            	FFT_IDX2DIGFREQ(j, XSIZE(CTF), wx);
+                double fx=wx*iTs;
+				precomputeValues(fx, fy);
+				A2D_ELEM(CTF, i, j) = (T) getValueAt();
+				#ifdef DEBUG
+						if (i == 0)
+							std::cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
+							<< " " << CTF(i, j) << std::endl;
+				#endif
+        	}
+        }
+    }
+    #undef DEBUG
+
 
     /** Check physical meaning.
         true if the CTF parameters have physical meaning.

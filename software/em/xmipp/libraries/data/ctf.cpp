@@ -505,7 +505,7 @@ void CTFDescription::lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> 
 #undef DEBUG
 
 /* Apply the CTF to an image ----------------------------------------------- */
-void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI, double Ts, bool absPhase)
+void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI, const MultidimArray<double> &I, double Ts, bool absPhase)
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
@@ -517,7 +517,7 @@ void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI, doub
     {
         XX(idx) = j;
         YY(idx) = i;
-        FFT_idx2digfreq(FFTI, idx, freq);
+        FFT_idx2digfreq(I, idx, freq);
         precomputeValues(XX(freq)*iTs, YY(freq)*iTs);
         double ctf = getValueAt();
         if (absPhase)
@@ -532,7 +532,7 @@ void CTFDescription::applyCTF(MultidimArray <double> &I, double Ts, bool absPhas
 	MultidimArray<double> FFTI;
 	transformer.setReal(I);
 	transformer.FourierTransform();
-	applyCTF(transformer.fFourier, Ts, absPhase);
+	applyCTF(transformer.fFourier, I, Ts, absPhase);
 	transformer.inverseFourierTransform();
 }
 
@@ -602,39 +602,6 @@ void CTFDescription::getAverageProfile(double fmax, int nsamples,
     }
     profiles*=1.0/360;
 }
-
-/* Generate CTF Image ------------------------------------------------------ */
-//#define DEBUG
-void CTFDescription::generateCTF(int Ydim, int Xdim,
-                                 MultidimArray < std::complex<double> > &CTF)
-{
-    Matrix1D<int>    idx(2);
-    Matrix1D<double> freq(2);
-    CTF.resize(Ydim, Xdim);
-#ifdef DEBUG
-
-    std::cout << "CTF:\n" << *this << std::endl;
-#endif
-
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(CTF)
-    {
-        XX(idx) = j;
-        YY(idx) = i;
-        FFT_idx2digfreq(CTF, idx, freq);
-        digfreq2contfreq(freq, freq, Tm);
-        precomputeValues(XX(freq), YY(freq));
-        //FIXME: Check why not to use the macro
-        CTF(i, j) = getValueAt();
-#ifdef DEBUG
-
-        if (i == 0)
-            std::cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
-            << " " << CTF(i, j) << std::endl;
-#endif
-
-    }
-}
-#undef DEBUG
 
 /* Physical meaning -------------------------------------------------------- */
 //#define DEBUG

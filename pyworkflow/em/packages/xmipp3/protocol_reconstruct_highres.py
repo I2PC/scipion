@@ -242,7 +242,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
         self.runJob('xmipp_metadata_utilities','-i %s --fill image1 constant noImage'%self.imgsFn,numberOfMpi=1)
         self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "image1=image"'%self.imgsFn,numberOfMpi=1)
-        self.runJob('xmipp_metadata_utilities','-i %s --operate rename_column "itemId particleId"'%self.imgsFn,numberOfMpi=1)
+        self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "particleId=itemId"'%self.imgsFn,numberOfMpi=1)
         imgsFnId=self._getExtraPath('imagesId.xmd')
         self.runJob('xmipp_metadata_utilities','-i %s --operate keep_column particleId -o %s'%(self.imgsFn,imgsFnId),numberOfMpi=1)
 
@@ -279,7 +279,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         if row.containsLabel(MDL_CONTINUOUS_X):
             setXmippAttributes(particle, row, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_COST, MDL_WEIGHT_CONTINUOUS2)
         if row.containsLabel(MDL_ANGLE_DIFF):
-            setXmippAttributes(MDL_ANGLE_DIFF, MDL_WEIGHT_JUMPER)
+            setXmippAttributes(particle, row, MDL_ANGLE_DIFF, MDL_WEIGHT_JUMPER)
         if row.containsLabel(MDL_WEIGHT_SSNR):
             setXmippAttributes(particle, row, MDL_WEIGHT_SSNR)
     
@@ -702,14 +702,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             self.adaptShifts(fnGlobalAssignment,TsGlobal,fnLocalAssignment,TsCurrent)
                     else:
                         TsPrevious=self.readInfoField(fnDirPrevious,"sampling",MDL_SAMPLINGRATE)
-                        if self.splitMethod == self.SPLIT_FIXED:
-                            self.adaptShifts(join(fnDirPrevious,"angles%02d.xmd"%i),TsPrevious,fnLocalAssignment,TsCurrent)
-                        else:
-                            fnAux=join(fnDirLocal,"aux.xmd")
-                            self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
-                                        (join(fnDirPrevious,"angles.xmd"),fnLocalImages,fnAux),numberOfMpi=1)
-                            self.adaptShifts(fnAux,TsPrevious,fnLocalAssignment,TsCurrent)
-                            cleanPath(fnAux)
+                        fnAux=join(fnDirLocal,"aux.xmd")
+                        self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
+                                    (join(fnDirPrevious,"angles.xmd"),fnLocalImages,fnAux),numberOfMpi=1)
+                        self.adaptShifts(fnAux,TsPrevious,fnLocalAssignment,TsCurrent)
+                        cleanPath(fnAux)
                     self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column image"%fnLocalAssignment,numberOfMpi=1)
                     self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%(fnLocalAssignment,fnLocalImages),numberOfMpi=1)
     
@@ -736,7 +733,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         args+=" --phaseFlipped"
                     #if self.weightResiduals:
                     #    args+=" --oresiduals %s"%join(fnDirLocal,"residuals%02i.stk"%i)
-                    self.runJob("xmipp_angular_continuous_assign2",args)
+                    self.runJob("xmipp_angular_continuous_assign2",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                     self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnLocalStk,R),numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
 
     def weightParticles(self, iteration):
