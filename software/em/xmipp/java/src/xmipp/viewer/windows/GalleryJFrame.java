@@ -32,6 +32,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -468,6 +469,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				});
 			}
 		});
+		XmippWindowUtil.setScipionImageIcon(this);
 	}
 
 	private void setInitialValues()
@@ -1496,7 +1498,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         if (evt.isShiftDown())
                                 gallery.selectRange(previousSelectedRow, previousSelectedCol, row, col);
                         else if (evt.isControlDown())
+                        {
                                 gallery.touchItem(row, col);
+                                jsGoToImage.setValue(gallery.getSelTo() + 1);
+                        }
                 }
 
                 if (!evt.isShiftDown())
@@ -1528,7 +1533,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         if(autoadjust)
             data.setModelDim(null, null);
         else
-            data.setModelDim((Integer)jsRows.getValue(), (Integer)jsColumns.getValue());
+        {
+        	int rows = (Integer)jsRows.getValue();
+        	int cols = (Integer)jsColumns.getValue();
+        	if(rows > 0 && cols > 0)
+        		data.setModelDim(rows, cols);
+        }
 		adjustColumns();
 	}
 
@@ -1564,7 +1574,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
 			addItem(FILE_SAVEAS, "Save as", "save_as.gif");
 
-                        addItem(FILE_EXPORTIMAGES, "Export images ...", "export_wiz.gif");
+            addItem(FILE_EXPORTIMAGES, "Export images ...", "export_wiz.gif");
 			addItem(FILE_REFRESH, "Refresh", "refresh.gif", "released F5");
 			addSeparator(FILE);
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
@@ -1624,7 +1634,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			boolean volMode = !data.getSelVolumeFile().isEmpty();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode || data.containsGeometryInfo("3D")|| data.containsGeometryInfo("Projection"));
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
-                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data.isScipionInstance()));
+            setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode);
 			setItemEnabled(FILE_SAVE, !volMode && !isscipion);
 			setItemEnabled(FILE_SAVEAS, !volMode && !isscipion);
 			
@@ -1645,7 +1655,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_CLASSES, data.isClassificationMd());
 			setItemEnabled(TOOLS_PLOT, data.isTableMode());
 			boolean isCol = data.isColumnFormat();
-			setItemEnabled(TOOLS, isCol && !volMode);
+			boolean doStats = isCol && !volMode;
+			setItemEnabled(TOOLS_AVGSTD, doStats);
+			setItemEnabled(TOOLS_FSC, doStats);
+			setItemEnabled(TOOLS_PCA, doStats);
 			setItemEnabled(MD_ADD_OBJECT, isCol);
 			setItemEnabled(MD_REMOVE_DISABLED, isCol);
 			setItemEnabled(MD_REMOVE_SELECTION, isCol);
@@ -2431,5 +2444,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             else
                 openChimera(data.getSelVolumeFile(), false);
         }
+        
+       
        
 }// class JFrameGallery

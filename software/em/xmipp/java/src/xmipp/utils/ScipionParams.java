@@ -27,6 +27,12 @@ public class ScipionParams extends Params {
         super(args);
     }
     
+    public ScipionParams(int port, String inputid, String other) {
+        this.port = port;
+        this.inputid = inputid;
+        this.other = other;
+    }
+    
     public boolean isScipion()
     {
         return cmdLine.hasOption(SCIPION);
@@ -56,6 +62,10 @@ public class ScipionParams extends Params {
       
     }
     
+    public ScipionParams getScipionParams()
+    {
+    	return new ScipionParams(port, inputid, other);
+    }
     
     
     

@@ -37,6 +37,7 @@ from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet, SetOfNormalModes, SetOfParticles
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair, ParticlesTiltPair
 from pyworkflow.em.data import Mask
+from pyworkflow.utils import moveFile
 
 
 
@@ -419,7 +420,10 @@ class ProtCreateMask(BatchProtocol):
 
     def createMaskStep(self):
         inputObj = self.inputObj.get()
-        maskFile=self.maskFile.get()
+        maskSrc=self.maskFile.get()
+        basename = os.path.basename(maskSrc)
+        maskDst = self._getPath(basename)
+        moveFile(maskSrc, maskDst)
         samplingRate = None
         if(hasattr(inputObj, "getSamplingRate")):
             samplingRate = inputObj.getSamplingRate()
@@ -432,7 +436,7 @@ class ProtCreateMask(BatchProtocol):
             raise Exception("sampling rate required")
         
         mask = Mask()
-        mask.setFileName(maskFile)
+        mask.setFileName(maskDst)
         mask.setSamplingRate(samplingRate)
         self._defineOutputs(outputMask=mask)
         self._defineSourceRelation(self.inputObj, self.outputMask)

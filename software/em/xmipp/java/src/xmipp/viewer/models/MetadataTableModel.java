@@ -36,10 +36,12 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
+import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
+import xmipp.utils.ScipionParams;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -235,7 +237,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                 int index = getIndex(row, col);
                 String file = getImageFilename(index, ci.label);
                 if(Filename.isVolume(file))
-                    ImagesWindowFactory.openMetadata(file, new Params(), Params.OPENING_MODE_GALLERY);
+                {
+                	Params params = XmippApplication.isScipion()? ((ScipionParams)data.parameters).getScipionParams(): new Params();
+                    ImagesWindowFactory.openMetadata(file, params, Params.OPENING_MODE_GALLERY);
+                }
                 else
                     openXmippImageWindow(index, ci.label);
 				return true;
@@ -376,22 +381,27 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				TableCellRenderer rend;
 				Component comp;
 				boolean non_empty = data.md.size() > 0;
-
-				for (int i = 0; i < visibleLabels.size(); ++i) {
-					ColumnInfo col = visibleLabels.get(i);
+				TableColumn tc;
+				ColumnInfo col;
+				for (int i = 0; i < visibleLabels.size(); i++) {
+					 col = visibleLabels.get(i);
+					tc = getColumn(i);
 					width = 0;
 					// Calculate width of the cell
 					if (col.render) {
 						width = cellDim.width;
 					} else if (non_empty) {
 						// else {
-						rend = table.getCellRenderer(0, i);
-						comp = rend.getTableCellRendererComponent(table,
-								getValueAt(0, i), false, false, 0, 0);
-						width = comp.getPreferredSize().width + 10;
+						
+						rend = tc.getCellRenderer();
+						if(rend != null)
+						{
+							Object value = getValueAt(0, i);
+							comp = rend.getTableCellRendererComponent(table, value, false, false, 0, i);
+							width = comp.getPreferredSize().width + 10;
+						}
 					}
 					// Calculate width of the header
-					TableColumn tc = getColumn(i);
 					rend = tc.getHeaderRenderer();
 					if (rend == null)
 						rend = table.getTableHeader().getDefaultRenderer();

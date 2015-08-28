@@ -130,6 +130,7 @@ public class PlotJDialog extends XmippDialog
             public void actionPerformed(ActionEvent ae) {
                 binslb.setVisible(isHistogram());
                 tfBins.setVisible(isHistogram());
+                
                 validate();
                 pack();
             }
@@ -138,6 +139,7 @@ public class PlotJDialog extends XmippDialog
         binslb = new JLabel("Bins");
         binslb.setVisible(false);
         tfBins = new JTextField(10);
+        tfBins.setText("50");
         tfBins.setVisible(false);
         plotPanel.add(binslb);
         plotPanel.add(tfBins);

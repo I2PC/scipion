@@ -185,6 +185,8 @@ public class GalleryData {
     }
 
     public void setModelDim(Integer rows, Integer cols) {
+    	if(cols != null && cols == 0)
+    		throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("columns", 0));
         this.rows = rows;
         this.columns = cols;
     }
@@ -1838,6 +1840,10 @@ public class GalleryData {
                return id;
        }
        return null;
+   }
+   
+   public MetaData getImagesMd() {
+	   return getImagesMd(null, false);
    }
    
    public MetaData getImagesMd(boolean[] selection, boolean selected) {

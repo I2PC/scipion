@@ -34,6 +34,10 @@
 /**@defgroup AngularPredictContinuous2 angular_continuous_assign2 (Continuous angular assignment)
    @ingroup ReconsLibrary */
 //@{
+
+#define CONTCOST_CORR 0
+#define CONTCOST_L1 1
+
 /** Predict Continuous Parameters. */
 class ProgAngularContinuousAssign2: public XmippMetadataProgram
 {
@@ -52,6 +56,10 @@ public:
     double maxResol;
     /** Maximum defocus change (A) */
     double maxDefocusChange;
+    /** Maximum gray scale change */
+    double maxA;
+    /** Maximum gray shift change */
+    double maxB;
     /** Sampling rate */
     double Ts;
     /** Maximum radius */
@@ -99,6 +107,8 @@ public:
 	double old_shiftX, old_shiftY;
 	// Original flip
 	bool old_flip;
+	// Original gray scale
+	double old_grayA, old_grayB;
 	// Has CTF
 	bool hasCTF;
 	// Original defocus
@@ -107,6 +117,14 @@ public:
 	CTFDescription ctf;
 	// Covariance matrices
 	Matrix2D<double> C0, C;
+	// Image stddev
+	double Istddev;
+	// Continuous cost function
+	int contCost;
+	// Current defoci
+	double currentDefocusU, currentDefocusV, currentAngle;
+	// CTF image
+	MultidimArray<double> *ctfImage;
 public:
     /// Empty constructor
     ProgAngularContinuousAssign2();
@@ -134,6 +152,9 @@ public:
         At the input the pose parameters must have an initial guess of the
         parameters. At the output they have the estimated pose.*/
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
+
+    /** Update CTF image */
+    void updateCTFImage(double defocusU, double defocusV, double angle);
 
     /** Post process */
     void postProcess();

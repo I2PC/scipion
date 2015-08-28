@@ -15,14 +15,19 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+
+import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippWindowUtil;
@@ -94,11 +99,14 @@ public class ExportImagesJDialog extends JDialog{
             }
         });
         add(browsebt, XmippWindowUtil.getConstraints(c, 2, 0));
-        add(new JLabel("Apply Geometry:"), XmippWindowUtil.getConstraints(c, 0, 1));
+        JLabel applygeolb = new JLabel("Apply Geometry:"); 
+        add(applygeolb, XmippWindowUtil.getConstraints(c, 0, 1));
         
 
         applygeochb = new JCheckBox();
         applygeochb.setSelected(frame.data.useGeo());
+        applygeochb.setEnabled(frame.data.containsGeometryInfo());
+        applygeolb.setEnabled(frame.data.containsGeometryInfo());
         add(applygeochb, XmippWindowUtil.getConstraints(c, 1, 1));
         add(new JLabel(note1), XmippWindowUtil.getConstraints(c, 0, 2, GridBagConstraints.HORIZONTAL));
         add(new JLabel(note2), XmippWindowUtil.getConstraints(c, 0, 3, GridBagConstraints.HORIZONTAL));
@@ -135,24 +143,35 @@ public class ExportImagesJDialog extends JDialog{
     
     private void saveImages()
     {
-        try {
-            path = pathtf.getText();
-            File tmpfile = File.createTempFile("temp", ".xmd");
-            frame.saveMd(tmpfile.getAbsolutePath(), false, true, false);//remove disabled on tmpfile to export afterwords
-            String[] command = new String[]{"xmipp_transform_geometry", tmpfile.getAbsolutePath(), "-o", path, "--label", frame.data.getRenderColumn().labelName};
-            if(applygeochb.isSelected())
-                command = new String[]{"xmipp_transform_geometry", tmpfile.getAbsolutePath(), "-o", path, "--label", frame.data.getRenderColumn().labelName, "--apply_transform"};
-                       
-            XmippWindowUtil.executeGUICommand(command, ExportImagesJDialog.this.frame, "Exporting images ...");
-            
-        } catch (Exception ex) {
-            String msg = ex.getMessage();
-            if(msg == null || msg.isEmpty())
+            XmippWindowUtil.blockGUI(frame, "Exporting images..");
+            new Thread(new Runnable() {
 
-                ex.printStackTrace();
-            else
-                XmippDialog.showError(null, msg);
-        }
+                @Override
+                public void run() {
+
+                    try {
+                    	path = pathtf.getText();
+                    	if(path.endsWith(".mrcs"))
+                    		path += ":mrcs";
+                    	int label = frame.data.getRenderColumn().label;
+                    	MetaData md;
+                    	if(frame.data.isScipionInstance())
+                    	{
+                    		md = frame.data.getImagesMd();//reads only enabled objects
+                    		label = MDLabel.MDL_IMAGE;
+                    	}
+                    	else
+                    		md = frame.data.getMd();
+
+                    	md.writeMdToStack(path, applygeochb.isSelected(), frame.data.isWrap(), label);
+                        XmippWindowUtil.releaseGUI(frame.getRootPane());
+
+                    } catch (Exception ex) {
+                        throw new IllegalArgumentException(ex.getMessage());
+                    }
+
+                }
+            }).start();
     }
     
     
