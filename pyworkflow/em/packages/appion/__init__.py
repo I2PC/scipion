@@ -32,5 +32,6 @@ _references = ['Yoquese']
 
 from convert import getEnviron
 from protocol_picking import DogPickerProtPicking
+from wizard import DogPickerWizard
 
 _environ = getEnviron()

@@ -6,18 +6,12 @@
 
 package xmipp.viewer.particlepicker;
 
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
-import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 /**
@@ -67,6 +61,7 @@ public class ParticlePickerParams {
         options.addOption(FASTOPT, true, "");
         options.addOption(INCOREOPT, true, "");
         options.addOption(SCIPIONOPT, true, "");
+        options.addOption(CLASSIFIER, true, "");
     }
 
     public void processArgs(String args[]) throws ParseException {
