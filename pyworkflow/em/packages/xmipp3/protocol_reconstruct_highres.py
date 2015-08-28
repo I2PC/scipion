@@ -211,6 +211,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self.imgsFn=self._getExtraPath('images.xmd')
         if self.doContinue:
             self.copyAttributes(self.continueRun.get(), 'particleRadius')
+            self.copyAttributes(self.continueRun.get(), 'inputVolumes')
             if not self.inputParticles.hasValue():
                 self.copyAttributes(self.continueRun.get(), 'inputParticles')
             else:
