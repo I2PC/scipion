@@ -158,7 +158,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		}
 		ImageDimension dim = null;
         int width = 50, height = 50;
-		if (data.hasRenderLabel()) 
+		if (data.hasRenderLabel() && data.renderImages) 
 		{
 			renderLabel = data.ciFirstRender;
 			// if (renderLabels) {
