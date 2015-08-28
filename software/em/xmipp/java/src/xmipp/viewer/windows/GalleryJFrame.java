@@ -1697,11 +1697,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				
 				else if (cmd.equals(DISPLAY_RENDERIMAGES))
 				{
-                                        if(gallery instanceof MetadataTableModel)
-                                        {
-                                            ((MetadataTableModel) gallery).setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
-                                            setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
-                                        }
+                    if(gallery instanceof MetadataTableModel)
+                    {
+                        ((MetadataTableModel) gallery).setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
+                        setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
+                    }
 					makeVisible(gallery.getFirstSelectedIndex(), 0);
 				}
 				
