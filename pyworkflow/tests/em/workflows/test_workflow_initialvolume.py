@@ -289,7 +289,8 @@ class TestSignificant(tests.BaseTest):
                 'iter': 3,
                 'numberOfMpi': cpus,
                 'inputSet': protImport.outputAverages,
-                'Nvolumes': 1
+                'Nvolumes': 1,
+                'alpha0':98.0
                 }
         # Run significant with one volume
         self._runSignificant(protImport.outputAverages, args)

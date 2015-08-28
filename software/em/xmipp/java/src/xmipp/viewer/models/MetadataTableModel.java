@@ -368,7 +368,6 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		@Override
 		public void adjustColumnsWidth(JTable table) {
 			try {
-				
 				if (visibleLabels.size() != getColumnCount())
 					return;
 				
@@ -393,7 +392,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 					} else if (non_empty) {
 						// else {
 						
-						rend = tc.getCellRenderer();
+						rend = table.getCellRenderer(0, i);
 						if(rend != null)
 						{
 							Object value = getValueAt(0, i);
