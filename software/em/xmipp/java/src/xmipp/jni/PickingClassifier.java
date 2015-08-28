@@ -1,7 +1,7 @@
 package xmipp.jni;
 
 
-public class PickingClassifier
+public class PickingClassifier extends Classifier
 {
 
     // pointer to AutoParticlePicking2 class in C++ space. Needed by native library.
@@ -40,5 +40,11 @@ public class PickingClassifier
         super.finalize();
         destroy();
     }
+    
+    @Override
+	public boolean needsTraining()
+	{
+		return true;
+	}
 
 }

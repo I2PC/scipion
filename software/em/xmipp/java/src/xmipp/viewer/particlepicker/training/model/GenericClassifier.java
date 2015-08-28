@@ -46,7 +46,7 @@ public class GenericClassifier extends Classifier
 	
 	
 	@Override
-	public Particle[] autopick(String micrograph, int percent, JFrame frame)
+	public Particle[] autopick(String micrograph, int percent)
 	{
 		String command = properties.getProperty("command");
 		for(Classifier.Parameter param: params)
@@ -75,7 +75,7 @@ public class GenericClassifier extends Classifier
 	}
 
 	@Override
-	public void setParticleSize(int psize)
+	public void setSize(int psize)
 	{
 		// TODO Auto-generated method stub
 		

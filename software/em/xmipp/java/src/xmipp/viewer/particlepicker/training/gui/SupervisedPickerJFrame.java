@@ -14,6 +14,7 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -26,10 +27,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import xmipp.jni.Classifier;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -76,6 +80,8 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     protected JLabel checkpercentlb;
     protected JFormattedTextField autopickpercenttf;
     protected JLabel thresholdlb;
+    protected JPanel gpickerpn;
+	private JButton autopickbt;
 
     @Override
     public SupervisedParticlePicker getParticlePicker() {
@@ -288,6 +294,14 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
             
             initSupervisedPickerPane();
+            if(!ppicker.getClassifier().needsTraining())
+            {
+            	sppickerpn.setVisible(false);
+            	initGenericPickerPane();
+            	add(gpickerpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 2, 1, GridBagConstraints.HORIZONTAL));
+            }
+            else
+            	add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
             add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 3, 1, 1, GridBagConstraints.HORIZONTAL));
             enableSupervised(ppicker.getMode() == Mode.Supervised);
             initMicrographsPane();
@@ -822,6 +836,32 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         return msg;
     }
     
+    protected void initGenericPickerPane()
+    {
+    	gpickerpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    	gpickerpn.setBorder(BorderFactory.createTitledBorder("Autopick"));
+    	List<Classifier.Parameter> parameters = ppicker.getClassifier().getParams();
+    	JTextField tf;
+    	for(Classifier.Parameter param: parameters)
+    	{
+    		gpickerpn.add(new JLabel(param.label));
+    		tf = new JTextField(5);
+    		tf.setToolTipText(param.help);
+    		tf.setText(param.value);
+    		gpickerpn.add(tf);
+    	}
+    	autopickbt = XmippWindowUtil.getTextButton("Run", new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				ppicker.getClassifier().autopick(getMicrograph().getFile(), ppicker.getAutopickpercent());
+				
+			}});
+    	autopickbt.setBackground(XmippWindowUtil.firebrick);
+    	autopickbt.setForeground(Color.WHITE);
+    	gpickerpn.add(autopickbt);
+    }
     
 
 }

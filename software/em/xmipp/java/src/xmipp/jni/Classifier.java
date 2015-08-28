@@ -10,9 +10,9 @@ public abstract class Classifier
 	
 	public abstract int getTrainingParticlesMinimum();
 	
-	public abstract void setParticleSize(int psize);
+	public abstract void setSize(int psize);
 	
-	public abstract Particle[] autopick(String micrograph, int percent, JFrame frame);
+	public abstract Particle[] autopick(String micrograph, int percent);
 	
 	public class Parameter
 	{
