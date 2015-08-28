@@ -6,6 +6,7 @@
 
 package xmipp.viewer.particlepicker.training;
 
+import xmipp.jni.Classifier;
 import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
 import xmipp.utils.XmippWindowUtil;
@@ -23,15 +24,15 @@ public class AutopickRunnable implements Runnable
 		private SupervisedPickerJFrame frame;
 		private Particle[] autopickRows;
 		private SupervisedPickerMicrograph micrograph;
-                private final SupervisedParticlePicker picker;
-                private final PickingClassifier classifier;
+        private final SupervisedParticlePicker picker;
+        private final Classifier classifier;
                 
 		public AutopickRunnable(SupervisedPickerJFrame frame, SupervisedPickerMicrograph micrograph)
 		{
 			this.frame = frame;
 			this.micrograph = micrograph;
-                        this.picker = frame.getParticlePicker();
-                        this.classifier = picker.getClassifier();
+            this.picker = frame.getParticlePicker();
+            this.classifier = picker.getClassifier();
 		}
 
 		public void run()

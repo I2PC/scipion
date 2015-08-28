@@ -35,6 +35,7 @@ public class ParticlePickerParams {
     public final static String THREADSOPT = "threads";
     public final static String FASTOPT = "fast";
     public final static String INCOREOPT = "incore";
+    public final static String CLASSIFIER = "classifier";
     private CommandLine cmdLine;
     
     
@@ -45,6 +46,7 @@ public class ParticlePickerParams {
     public Integer threads = 1;
     public boolean fast;
     public boolean incore;
+    public String classifierProperties;
     
     public ParticlePickerParams(String[] args)
     {
@@ -94,6 +96,10 @@ public class ParticlePickerParams {
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
             if(cmdargs != null)
                 port = Integer.parseInt(cmdargs[0]);
+        }
+        if (cmdLine.hasOption(CLASSIFIER)) {
+            classifierProperties = cmdLine.getOptionValue(CLASSIFIER);
+           
         }
 
     }

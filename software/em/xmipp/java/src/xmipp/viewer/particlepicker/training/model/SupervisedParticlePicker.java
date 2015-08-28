@@ -57,7 +57,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	private ImageGeneric radialtemplates;
 	private String templatesfile;
 	private int templateindex;
-	private PickingClassifier classifier;
+	private Classifier classifier;
     private UpdateTemplatesTask uttask;
     private TemplatesJDialog dialog;
     private boolean isautopick;
@@ -93,6 +93,10 @@ public class SupervisedParticlePicker extends ParticlePicker
 			for (SupervisedPickerMicrograph m : micrographs)
 				loadMicrographData(m);
 			classifier = new PickingClassifier(getSize(), getOutputPath("model"), selfile);
+			if(params.classifierProperties != null)
+				classifier = new GenericClassifier(params.classifierProperties);
+			else
+				classifier = new PickingClassifier(getSize(), getOutputPath("model"), selfile);
 		}
 		catch (Exception e)
 		{
@@ -617,8 +621,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	public void setMode(Mode mode)
 	{
-		if (mode == Mode.Supervised && getManualParticlesNumber() < classifier.getParticlesThreshold())
-			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", classifier.getParticlesThreshold(), Mode.Supervised));
+		if (mode == Mode.Supervised && getManualParticlesNumber() < classifier.getTrainingParticlesMinimum())
+			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", classifier.getTrainingParticlesMinimum(), Mode.Supervised));
 		this.mode = mode;
                 if(mode == Mode.Supervised)
                     isautopick = true;
@@ -1201,17 +1205,18 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	}
 
+	//This method will only be called from the interface if xmipp picker is used
 	public void correct()
 	{
 		micrograph.setState(MicrographState.Corrected);
 		saveData(micrograph);
 		MDRow[] manualRows = getAddedRows(micrograph);
 		MDRow[] autoRows = getAutomaticRows(micrograph);
-		classifier.correct(manualRows, autoRows);
+		((PickingClassifier)classifier).correct(manualRows, autoRows);
 	}
         
     public int getParticlesThreshold() {
-        return classifier.getParticlesThreshold();
+        return classifier.getTrainingParticlesMinimum();
     }
     
      

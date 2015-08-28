@@ -47,4 +47,11 @@ public class PickingClassifier extends Classifier
 		return true;
 	}
 
+	@Override
+	public int getTrainingParticlesMinimum()
+	{
+		// TODO Auto-generated method stub
+		return 15;
+	}
+
 }
