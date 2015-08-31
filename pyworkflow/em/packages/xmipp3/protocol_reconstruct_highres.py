@@ -42,7 +42,7 @@ from pyworkflow.em.convert import ImageHandler
 from glob import glob
 
 from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAMPLINGRATE, MDL_WEIGHT_SSNR, \
-                  MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_ANGLE_DIFF, \
+                  MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_CONTINUOUS_SCALE_X, MDL_CONTINUOUS_SCALE_Y, MDL_ANGLE_DIFF, \
                   MDL_COUNT, MDL_SHIFT_X, MDL_SHIFT_Y, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_SCALE, MDL_MAXCC, MDL_WEIGHT_JUMPER, MDL_CTF_DEFOCUSU, \
                   MDL_COST, MDL_CTF_MODEL, MDL_PARTICLE_ID
 
@@ -278,7 +278,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def _postprocessImageRow(self, particle, row):
         setXmippAttributes(particle, row, MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SCALE, MDL_MAXCC, MDL_WEIGHT)
         if row.containsLabel(MDL_CONTINUOUS_X):
-            setXmippAttributes(particle, row, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_COST, MDL_WEIGHT_CONTINUOUS2)
+            setXmippAttributes(particle, row, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_COST, MDL_WEIGHT_CONTINUOUS2, MDL_CONTINUOUS_SCALE_X, MDL_CONTINUOUS_SCALE_Y)
         if row.containsLabel(MDL_ANGLE_DIFF):
             setXmippAttributes(particle, row, MDL_ANGLE_DIFF, MDL_WEIGHT_JUMPER)
         if row.containsLabel(MDL_WEIGHT_SSNR):
