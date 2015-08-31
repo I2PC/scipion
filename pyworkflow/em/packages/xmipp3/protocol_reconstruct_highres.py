@@ -260,7 +260,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             volume.setSamplingRate(Ts)
             self._defineOutputs(outputVolume=volume)
             self._defineSourceRelation(self.inputParticles.get(),volume)
-            self._defineSourceRelation(self.inputVolumes.get(),volume)
+            #self._defineSourceRelation(self.inputVolumes.get(),volume)
 
         fnLastAngles=join(fnLastDir,"angles.xmd")
         if exists(fnLastAngles):
