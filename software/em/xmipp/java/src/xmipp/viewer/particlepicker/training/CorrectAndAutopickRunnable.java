@@ -28,13 +28,12 @@ public class CorrectAndAutopickRunnable implements Runnable
 
 		private final MDRow[] manualRows;
 		private final MDRow[] automaticRows;
-                private Particle[] autopickRows;
+        private Particle[] autopickRows;
 
 		private SupervisedPickerMicrograph next;
 		private SupervisedPickerJFrame frame;
-                private final SupervisedParticlePicker picker;
-                private final PickingClassifier classifier;
-    private final SupervisedPickerMicrograph micrograph;
+        private final SupervisedParticlePicker picker;
+        private final PickingClassifier classifier;
                 
 
 		public CorrectAndAutopickRunnable(SupervisedPickerJFrame frame, MDRow[] manualRows, MDRow[] automaticRows,
@@ -44,7 +43,6 @@ public class CorrectAndAutopickRunnable implements Runnable
 			this.manualRows = manualRows;
 			this.automaticRows = automaticRows;
 			this.next = next;
-            this.micrograph = frame.getMicrograph();
             this.picker = frame.getParticlePicker();
             this.classifier = picker.getClassifier();
 		}
@@ -61,8 +59,8 @@ public class CorrectAndAutopickRunnable implements Runnable
 					next.setAutopickpercent(picker.getAutopickpercent());
 					autopickRows = classifier.autopick(next.getFile(), next.getAutopickpercent());
 					picker.loadParticles(next, autopickRows);
-	                                picker.saveData(next);
-	                                frame.setChanged(false);
+                    picker.saveData(next);
+                    frame.setChanged(false);
 				}
 				frame.getCanvas().repaint();
 				frame.getCanvas().setEnabled(true);

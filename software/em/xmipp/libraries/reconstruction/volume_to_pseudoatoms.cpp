@@ -24,10 +24,10 @@
  ***************************************************************************/
 
 #include "volume_to_pseudoatoms.h"
-#include "fourier_filter.h"
 #include <data/pdb.h>
 #include <algorithm>
 #include <stdio.h>
+#include <list>
 
 /* Pseudo atoms ------------------------------------------------------------ */
 PseudoAtom::PseudoAtom()
@@ -235,8 +235,16 @@ void ProgVolumeToPseudoatoms::produceSideInfo()
         pthread_create( (threadIds+i), NULL, optimizeCurrentAtomsThread,
                         (void *) (threadArgs+i));
     }
+
+    // Filter for the difference volume
+    Filter.FilterBand=LOWPASS;
+    Filter.FilterShape=REALGAUSSIAN;
+    Filter.w1=sigma;
+    Filter.generateMask(Vin());
+    Filter.do_generate_3dmask=false;
 }
 
+#ifdef NEVER_DEFINED
 //#define DEBUG
 void ProgVolumeToPseudoatoms::placeSeeds(int Nseeds)
 {
@@ -308,6 +316,88 @@ void ProgVolumeToPseudoatoms::placeSeeds(int Nseeds)
     }
 }
 #undef DEBUG
+#endif
+
+class SeedCandidate
+{
+public:
+	int k,i,j;
+	double v;
+	bool operator < (const SeedCandidate& c) const {return v>c.v;}
+};
+
+void ProgVolumeToPseudoatoms::placeSeeds(int Nseeds)
+{
+    // Convolve the difference with the Gaussian to know
+    // where it would be better to put a Gaussian
+    MultidimArray<double> Vdiff=Vin();
+    Vdiff-=Vcurrent();
+    Filter.applyMaskSpace(Vdiff);
+
+    // Look for the Nseeds
+    const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
+    size_t idx=0;
+    std::list<SeedCandidate> candidateList;
+    size_t listSize=0;
+    double lastValue=0;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(Vdiff)
+    {
+        if (!useMask || useMask && DIRECT_MULTIDIM_ELEM(iMask3D,idx))
+        {
+        	double v=A3D_ELEM(Vdiff,k,i,j);
+        	if (listSize==0 || v>lastValue)
+        	{
+        		// Check if there is any other candidate around
+        		bool found=false;
+        		for (std::list<SeedCandidate>::iterator iter=candidateList.begin(); iter!=candidateList.end(); iter++)
+        			if (std::abs(iter->k-k)<sigma && std::abs(iter->i-i)<sigma && std::abs(iter->j-j)<sigma)
+        			{
+        				found=true;
+        				break;
+        			}
+        		if (!found)
+        		{
+					SeedCandidate aux;
+					aux.v=v;
+					aux.k=k;
+					aux.i=i;
+					aux.j=j;
+					candidateList.push_back(aux);
+					candidateList.sort();
+					listSize++;
+					if (listSize>Nseeds)
+					{
+						candidateList.pop_back();
+						listSize--;
+					}
+					lastValue=candidateList.back().v;
+        		}
+        	}
+        }
+        idx++;
+    }
+
+    // Place atoms
+	for (std::list<SeedCandidate>::iterator iter=candidateList.begin(); iter!=candidateList.end(); iter++)
+    {
+        PseudoAtom a;
+        VEC_ELEM(a.location,0)=iter->k;
+        VEC_ELEM(a.location,1)=iter->i;
+        VEC_ELEM(a.location,2)=iter->j;
+        if (allowIntensity)
+            a.intensity=iter->v;
+        else
+        {
+            if (iter->v<smallAtom)
+                break;
+            a.intensity=smallAtom;
+        }
+        atoms.push_back(a);
+
+        // Remove this density from the difference
+        drawGaussian(iter->k,iter->i,iter->j,Vdiff,-a.intensity);
+    }
+}
 
 /* Remove seeds ------------------------------------------------------------ */
 void ProgVolumeToPseudoatoms::removeSeeds(int Nseeds)
@@ -475,14 +565,14 @@ void ProgVolumeToPseudoatoms::drawApproximation()
     const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
     const MultidimArray<double> &mVcurrent=Vcurrent();
     const MultidimArray<double> &mVin=Vin();
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(mVcurrent)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mVcurrent)
     {
-        if (useMask && A3D_ELEM(iMask3D,k,i,j)==0)
+        if (useMask && DIRECT_MULTIDIM_ELEM(iMask3D,n)==0)
             continue;
-        double Vinv=A3D_ELEM(mVin,k,i,j);
+        double Vinv=DIRECT_MULTIDIM_ELEM(mVin,n);
         if (Vinv<=0)
             continue;
-        double vdiff=Vinv-A3D_ELEM(mVcurrent,k,i,j);
+        double vdiff=Vinv-DIRECT_MULTIDIM_ELEM(mVcurrent,n);
         double vperc=fabs(vdiff);
         energyDiff+=vdiff*vdiff;
         percentageDiff+=vperc;
