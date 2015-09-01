@@ -158,7 +158,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		}
 		ImageDimension dim = null;
         int width = 50, height = 50;
-		if (data.hasRenderLabel()) 
+		if (data.hasRenderLabel() && data.renderImages) 
 		{
 			renderLabel = data.ciFirstRender;
 			// if (renderLabels) {
@@ -176,13 +176,12 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                     
                     width = image.getWidth(); 
                     height = image.getHeight();
-                    
                     dim = new ImageDimension(width, height);
                 }
                 catch (Exception e)
                 {
-                        dim = null;
-                        e.printStackTrace();
+                    dim = null;
+                    e.printStackTrace();
                 }
             }
             
@@ -190,7 +189,11 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		
 		if (dim == null)
 			dim = new ImageDimension(width);
+		// Zdim will always be used as number of elements to display
 		dim.setZDim(data.ids.length);
+		n = dim.getZDim();
+		image_width = dim.getXDim();
+		image_height = dim.getYDim();
 		return dim;
 	}
 
