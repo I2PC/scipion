@@ -42,7 +42,7 @@ from pyworkflow.em.convert import ImageHandler
 from glob import glob
 
 from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAMPLINGRATE, MDL_WEIGHT_SSNR, \
-                  MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_ANGLE_DIFF, \
+                  MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_CONTINUOUS_SCALE_X, MDL_CONTINUOUS_SCALE_Y, MDL_ANGLE_DIFF, \
                   MDL_COUNT, MDL_SHIFT_X, MDL_SHIFT_Y, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_SCALE, MDL_MAXCC, MDL_WEIGHT_JUMPER, MDL_CTF_DEFOCUSU, \
                   MDL_COST, MDL_CTF_MODEL, MDL_PARTICLE_ID
 
@@ -60,7 +60,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     SPLIT_STOCHASTIC = 0
     SPLIT_FIXED = 1
     
-    GLOBAL_PROJMATCH = 1
+    GLOBAL_ALIGNMENT = 0
+    LOCAL_ALIGNMENT = 1
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -127,50 +128,45 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         line=form.addLine('Tilt angle:', help='0 degrees represent top views, 90 degrees represent side views', expertLevel=LEVEL_ADVANCED)
         line.addParam('angularMinTilt', FloatParam, label="Min.", default=0, expertLevel=LEVEL_ADVANCED)
         line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90, expertLevel=LEVEL_ADVANCED)
-        groupSignificant = form.addGroup('Global')
-        groupSignificant.addParam('significantMaxResolution', FloatParam, label="Global assignment if resolution is worse than (A)", default=12,
-                      help='Global assignment is always performed on the first iteration. Starting from the second, you may '\
-                      'decide whether to perform it or not.')
-        groupSignificant.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0,
+        form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Global','Local'], default=self.GLOBAL_ALIGNMENT)
+
+        form.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition='alignmentMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
-        groupSignificant.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, 
+        form.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition='alignmentMethod==0', 
 	              expertLevel=LEVEL_ADVANCED, help="In pixels")
-        groupContinuous = form.addGroup('Local')
-        groupContinuous.addParam('continuousMinResolution', FloatParam, label="Continuous assignment if resolution is better than (A)", default=15,
-                      help='Continuous assignment can produce very accurate assignments if the initial assignment is correct.')
-        groupContinuous.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True,
+
+        form.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True, condition='alignmentMethod==1',
                       help='Optimize shifts within a limit')
-        groupContinuous.addParam('contMaxShiftVariation', FloatParam, label="Max. shift variation", default=2, expertLevel=LEVEL_ADVANCED,
+        form.addParam('contMaxShiftVariation', FloatParam, label="Max. shift variation", default=2, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                                  help="Percentage of the image size")
-        groupContinuous.addParam('contScale', BooleanParam, label="Optimize scale?", default=True,
+        form.addParam('contScale', BooleanParam, label="Optimize scale?", default=True, condition='alignmentMethod==1',
                       help='Optimize scale within a limit')
-        groupContinuous.addParam('contMaxScale', FloatParam, label="Max. scale variation", default=0.02, expertLevel=LEVEL_ADVANCED)
-        groupContinuous.addParam('contAngles', BooleanParam, label="Optimize angles?", default=True,
+        form.addParam('contMaxScale', FloatParam, label="Max. scale variation", default=0.02, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED)
+        form.addParam('contAngles', BooleanParam, label="Optimize angles?", default=True, condition='alignmentMethod==1',
                       help='Optimize angles within a limit')
-        groupContinuous.addParam('contGrayValues', BooleanParam, label="Optimize gray values?", default=True,
+        form.addParam('contGrayValues', BooleanParam, label="Optimize gray values?", default=False, condition='alignmentMethod==1',
                       help='Optimize gray values. Do not perform this unless the reconstructed volume is gray-compatible with the projections,'\
                       ' i.e., the volumes haven been produced from projections')
-        groupContinuous.addParam('contMaxGrayScale', FloatParam, label="Max. gray scale variation", default=0.05, expertLevel=LEVEL_ADVANCED)
-        groupContinuous.addParam('contMaxGrayShift', FloatParam, label="Max. gray shift variation", default=0.15, expertLevel=LEVEL_ADVANCED,
+        form.addParam('contMaxGrayScale', FloatParam, label="Max. gray scale variation", default=0.05, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED)
+        form.addParam('contMaxGrayShift', FloatParam, label="Max. gray shift variation", default=0.15, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                                  help='As a factor of the image standard deviation')
-        groupContinuous.addParam('contDefocus', BooleanParam, label="Optimize defocus?", default=True)
-        groupContinuous.addParam('contMaxDefocus', FloatParam, label="Max. defocus variation", default=200, expertLevel=LEVEL_ADVANCED,
+        form.addParam('contDefocus', BooleanParam, label="Optimize defocus?", condition='alignmentMethod==1', default=True)
+        form.addParam('contMaxDefocus', FloatParam, label="Max. defocus variation", default=200, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                                  help="In Angstroms")
-        groupContinuous.addParam('contPadding', IntParam, label="Fourier padding factor", default=2, expertLevel=LEVEL_ADVANCED,
+        form.addParam('contPadding', IntParam, label="Fourier padding factor", default=2, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                       help='The volume is zero padded by this factor to produce projections')
-        form.addParam('minCTF', FloatParam, label="Minimum CTF value", default=0.03, expertLevel=LEVEL_ADVANCED,
-                      help='A Fourier coefficient is not considered if its CTF is below this value. Note that setting a too low value for this parameter amplifies noise.')
         
         form.addSection(label='Weights')
         form.addParam('weightSSNR', BooleanParam, label="Weight by SSNR?", default=True,
                       help='Weight input images by SSNR')
-        form.addParam('weightContinuous', BooleanParam, label="Weight by Continuous cost?", default=True,
+        form.addParam('weightContinuous', BooleanParam, label="Weight by Continuous cost?", default=True, condition='alignmentMethod==1',
                       help='Weight input images by angular assignment cost')
         form.addParam('weightJumper', BooleanParam, label="Weight by angular stability?", default=True,
                       help='Weight input images by angular stability between iterations')
-
+        form.addParam('minCTF', FloatParam, label="Minimum CTF value", default=0.03, expertLevel=LEVEL_ADVANCED,
+                      help='A Fourier coefficient is not considered if its CTF is below this value. Note that setting a too low value for this parameter amplifies noise.')
+        
         form.addSection(label='Post-processing')
-        form.addParam('postNonnegativity', BooleanParam, label="Remove negative values?", default=True)        
         form.addParam('postAdHocMask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True,
                       help='The mask values must be between 0 (remove these pixels) and 1 (let them pass). Smooth masks are recommended.')
         groupSymmetry = form.addGroup('Symmetry')
@@ -178,7 +174,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         groupSymmetry.addParam('postSymmetryWithinMaskType', StringParam, label="Mask symmetry", default="i1", condition="postSymmetryWithinMask",
                            help='If See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
                            'If no symmetry is present, give c1')
-        groupSymmetry.addParam('postSymmetryWithinMaskMask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True,
+        groupSymmetry.addParam('postSymmetryWithinMaskMask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True, condition="postSymmetryWithinMask",
                                help='The mask values must be between 0 (remove these pixels) and 1 (let them pass). Smooth masks are recommended.')
         groupSymmetry.addParam('postSymmetryHelical', BooleanParam, label="Apply helical symmetry?", default=False)
         groupSymmetry.addParam('postSymmetryHelicalRadius', IntParam, label="Radius", default=-1, condition='postSymmetryHelical',
@@ -230,8 +226,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self._insertFunctionStep("createOutput")
     
     def insertIteration(self,iteration):
-        self._insertFunctionStep('globalAssignment',iteration)
-        self._insertFunctionStep('localAssignment',iteration)
+        if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
+            self._insertFunctionStep('globalAssignment',iteration)
+        else:
+            self._insertFunctionStep('localAssignment',iteration)
         self._insertFunctionStep('weightParticles',iteration)
         self._insertFunctionStep('reconstruct',iteration)
         self._insertFunctionStep('postProcessing',iteration)
@@ -243,6 +241,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
         self.runJob('xmipp_metadata_utilities','-i %s --fill image1 constant noImage'%self.imgsFn,numberOfMpi=1)
         self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "image1=image"'%self.imgsFn,numberOfMpi=1)
+        self.runJob('xmipp_metadata_utilities','-i %s --fill particleId constant 1'%self.imgsFn,numberOfMpi=1)
         self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "particleId=itemId"'%self.imgsFn,numberOfMpi=1)
         imgsFnId=self._getExtraPath('imagesId.xmd')
         self.runJob('xmipp_metadata_utilities','-i %s --operate keep_column particleId -o %s'%(self.imgsFn,imgsFnId),numberOfMpi=1)
@@ -278,7 +277,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def _postprocessImageRow(self, particle, row):
         setXmippAttributes(particle, row, MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SCALE, MDL_MAXCC, MDL_WEIGHT)
         if row.containsLabel(MDL_CONTINUOUS_X):
-            setXmippAttributes(particle, row, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_COST, MDL_WEIGHT_CONTINUOUS2)
+            setXmippAttributes(particle, row, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_COST, MDL_WEIGHT_CONTINUOUS2, MDL_CONTINUOUS_SCALE_X, MDL_CONTINUOUS_SCALE_Y)
         if row.containsLabel(MDL_ANGLE_DIFF):
             setXmippAttributes(particle, row, MDL_ANGLE_DIFF, MDL_WEIGHT_JUMPER)
         if row.containsLabel(MDL_WEIGHT_SSNR):
@@ -553,7 +552,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         makePath(fnDirCurrent)
         previousResolution=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
 
-        if iteration==1 or previousResolution>=self.significantMaxResolution.get():
+        if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
             fnGlobal=join(fnDirCurrent,"globalAssignment")
             makePath(fnGlobal)
     
@@ -649,12 +648,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
     def localAssignment(self,iteration):
         fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
-        previousResolution=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
-        if previousResolution<=self.continuousMinResolution.get():
+        if self.alignmentMethod==self.LOCAL_ALIGNMENT:
             fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
             fnDirLocal=join(fnDirCurrent,"localAssignment")
             makePath(fnDirLocal)
 
+            previousResolution=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
             targetResolution=previousResolution*0.8
             if self.multiresolution:
                 TsCurrent=max(self.TsOrig,targetResolution/3)
@@ -789,7 +788,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 if self.weightSSNR:
                     aux=md.getValue(MDL_WEIGHT_SSNR,objId)
                     weight*=aux
-                if self.weightContinuous and exists(fnAnglesCont):
+                if self.weightContinuous and exists(fnAnglesCont) and self.alignmentMethod==self.LOCAL_ALIGNMENT:
                     aux=md.getValue(MDL_WEIGHT_CONTINUOUS2,objId)
                     weight*=aux
                 #if self.weightResiduals and exists(fnAnglesCont):
@@ -838,7 +837,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def postProcessing(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
         TsCurrent=self.readInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE)
-        if not self.postNonnegativity and not self.postSymmetryWithinMask \
+        if not self.postSymmetryWithinMask \
            and not self.postSymmetryHelical and not self.postDoPseudo and self.postScript=="" and not self.postAdHocMask.hasValue():
             return
         for i in range(1,3):
@@ -847,59 +846,56 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             copyFile(fnVol,fnBeforeVol)
             volXdim = self.readInfoField(fnDirCurrent, "size", MDL_XSIZE)
             
-            if self.postNonnegativity:
-                self.runJob("xmipp_transform_threshold","-i %s --select below 0 --substitute value 0"%fnVol,numberOfMpi=1)
-            
             if self.postAdHocMask.hasValue():
                 fnMask=join(fnDirCurrent,"mask.vol")
                 self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
                 self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVol,fnMask),numberOfMpi=1)
                 cleanPath(fnMask)
 
-        if self.postSymmetryWithinMask:
-            if self.postMaskSymmetry!="c1":
-                fnMask=join(fnDirCurrent,"mask.vol")
-                self.prepareMask(self.postSymmetryWithinMaskMask.get(),fnMask,TsCurrent,volXdim)
-                self.runJob("xmipp_transform_symmetrize","-i %s --sym %s --mask_in %s"%\
-                            (fnVol,self.postSymmetryWithinMaskType.get(),fnMask),numberOfMpi=1)
-                cleanPath(fnMask)
-        
-        if self.postSymmetryHelical:
-            z0=float(self.postSymmetryHelicalMinZ.get())
-            zF=float(self.postSymmetryHelicalMaxZ.get())
-            zStep=(zF-z0)/10
-            rot0=float(self.postSymmetryHelicalMinRot.get())
-            rotF=float(self.postSymmetryHelicalMaxRot.get())
-            rotStep=(rotF-rot0)/10
-            fnCoarse=join(fnDirCurrent,"coarseHelical%02d.xmd"%i)
-            fnFine=join(fnDirCurrent,"fineHelical%02d.xmd"%i)
-            radius=int(self.postSymmetryHelicalRadius.get())
-            height=int(volXdim)
-            self.runCoarseSearch(fnVol, z0, zF, zStep, rot0, rotF, rotStep, 1, fnCoarse, radius, height)
-            self.runFineSearch(fnVol, fnCoarse, fnFine, z0, zF, rot0, rotF, radius, height)
-            cleanPath(fnCoarse)
-            self.runSymmetrize(fnVol, fnFine, fnVol, radius, height)
-            if self.postSymmetryHelicalDihedral:
-                self.runApplyDihedral(fnVol, fnFine, join(fnDirCurrent,"rotatedHelix.vol"), radius, height)
-
-        if self.postDoPseudo:
-            fnPseudo=join(fnDirCurrent,"pseudo")
-            self.runJob("xmipp_volume_to_pseudoatoms","-i %s -o %s --sigma %f --sampling_rate %f --verbose 2 --targetError 1"%\
-                        (fnVol,fnPseudo,self.postPseudoRadius.get()*TsCurrent,TsCurrent),numberOfMpi=1)
-            moveFile(fnPseudo+"_approximation.vol", fnVol)
-            self.runJob("rm","-f "+fnPseudo+"*")
-            if self.symmetryGroup.get()!="c1":
-                self.runJob("xmipp_transform_symmetrize","-i %s --sym %s"%(fnVol,self.symmetryGroup.get()),numberOfMpi=1)
-        
-        if self.postScript!="":
-            img = ImageHandler()
-            volXdim, _, _, _ =img.getDimensions((1,fnVol))
-            scriptArgs = {'volume': fnVol,
-                          'sampling': TsCurrent,
-                          'dim': volXdim,
-                          'iterDir': fnDirCurrent}
-            cmd = self.postScript % scriptArgs
-            self.runJob(cmd, '', numberOfMpi=1)
+            if self.postSymmetryWithinMask:
+                if self.postMaskSymmetry!="c1":
+                    fnMask=join(fnDirCurrent,"mask.vol")
+                    self.prepareMask(self.postSymmetryWithinMaskMask.get(),fnMask,TsCurrent,volXdim)
+                    self.runJob("xmipp_transform_symmetrize","-i %s --sym %s --mask_in %s"%\
+                                (fnVol,self.postSymmetryWithinMaskType.get(),fnMask),numberOfMpi=1)
+                    cleanPath(fnMask)
+            
+            if self.postSymmetryHelical:
+                z0=float(self.postSymmetryHelicalMinZ.get())
+                zF=float(self.postSymmetryHelicalMaxZ.get())
+                zStep=(zF-z0)/10
+                rot0=float(self.postSymmetryHelicalMinRot.get())
+                rotF=float(self.postSymmetryHelicalMaxRot.get())
+                rotStep=(rotF-rot0)/10
+                fnCoarse=join(fnDirCurrent,"coarseHelical%02d.xmd"%i)
+                fnFine=join(fnDirCurrent,"fineHelical%02d.xmd"%i)
+                radius=int(self.postSymmetryHelicalRadius.get())
+                height=int(volXdim)
+                self.runCoarseSearch(fnVol, z0, zF, zStep, rot0, rotF, rotStep, 1, fnCoarse, radius, height)
+                self.runFineSearch(fnVol, fnCoarse, fnFine, z0, zF, rot0, rotF, radius, height)
+                cleanPath(fnCoarse)
+                self.runSymmetrize(fnVol, fnFine, fnVol, radius, height)
+                if self.postSymmetryHelicalDihedral:
+                    self.runApplyDihedral(fnVol, fnFine, join(fnDirCurrent,"rotatedHelix.vol"), radius, height)
+    
+            if self.postDoPseudo:
+                fnPseudo=join(fnDirCurrent,"pseudo")
+                self.runJob("xmipp_volume_to_pseudoatoms","-i %s -o %s --sigma %f --sampling_rate %f --verbose 2 --targetError 1 --thr %d"%\
+                            (fnVol,fnPseudo,self.postPseudoRadius.get()*TsCurrent,TsCurrent,self.numberOfMpi.get()*self.numberOfThreads.get()),numberOfMpi=1)
+                moveFile(fnPseudo+"_approximation.vol", fnVol)
+                self.runJob("rm","-f "+fnPseudo+"*")
+                if self.symmetryGroup.get()!="c1":
+                    self.runJob("xmipp_transform_symmetrize","-i %s --sym %s"%(fnVol,self.symmetryGroup.get()),numberOfMpi=1)
+            
+            if self.postScript!="":
+                img = ImageHandler()
+                volXdim, _, _, _ =img.getDimensions((1,fnVol))
+                scriptArgs = {'volume': fnVol,
+                              'sampling': TsCurrent,
+                              'dim': volXdim,
+                              'iterDir': fnDirCurrent}
+                cmd = self.postScript % scriptArgs
+                self.runJob(cmd, '', numberOfMpi=1)
 
     def cleanDirectory(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
@@ -928,8 +924,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             errors.append("The set of input volumes should have exactly 2 volumes")
         if self.postSymmetryWithinMask and not self.postSymmetryWithinMaskMask.hasValue():
             errors.append("Symmetrize within mask requires a mask")
-        if self.significantMaxResolution.get()>=self.continuousMinResolution.get():
-            errors.append("There is a gap in resolution for which no angular assignment is performed")
         if not self.doContinue and not self.inputParticles.hasValue():
             errors.append("You must provide input particles")
         return errors    
