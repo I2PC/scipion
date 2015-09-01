@@ -63,6 +63,9 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		if (data.resliceView != ImageGeneric.Z_NEG)
 			volume.reslice(data.resliceView);
 		ImageDimension dim = new ImageDimension(volume);
+		n = dim.getZDim();
+		image_width = dim.getXDim();
+		image_height = dim.getYDim();
 		return dim;
 	}
 

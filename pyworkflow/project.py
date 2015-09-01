@@ -645,7 +645,7 @@ class Project(object):
         protocolsList = json.load(f)
         
         emProtocols = em.getProtocols()
-        newDict = {}
+        newDict = OrderedDict()
         
         # First iteration: create all protocols and setup parameters
         for protDict in protocolsList:
@@ -697,6 +697,8 @@ class Project(object):
             
         f.close()
         self.mapper.commit()
+        
+        return newDict
             
     
     def saveProtocol(self, protocol):

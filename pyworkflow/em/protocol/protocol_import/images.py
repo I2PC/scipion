@@ -149,7 +149,27 @@ class ProtImportImages(ProtImportFiles):
         return outFiles
     
     #--------------------------- INFO functions ----------------------------------------------------
-    
+    def _validateImages(self):
+        errors = []
+        ih = ImageHandler()
+        
+        for imgFn, _ in self.iterFiles():
+            # try to read the header of the imported images
+            # except for the special case of compressed movies (bz2 extension)
+            if not (imgFn.endswith('bz2') or ih.isImageFile(imgFn)): 
+                if not errors: # if empty add the first line
+                    errors.append("Error reading the following images:")
+                errors.append('  %s' % imgFn)
+        
+        return errors
+        
+    def _validate(self):
+        errors = ProtImportFiles._validate(self)
+        if self.importFrom == self.IMPORT_FROM_FILES:
+            errors += self._validateImages()
+        
+        return errors
+        
     def _summary(self):
         summary = []
         outputSet = self._getOutputSet()

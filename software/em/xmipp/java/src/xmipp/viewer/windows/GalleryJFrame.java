@@ -32,10 +32,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -47,7 +45,6 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,7 +79,6 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.LookAndFeel;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
@@ -99,7 +95,6 @@ import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.QuickHelpJDialog;
-import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
@@ -1251,7 +1246,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         	boolean hasRender = data.allowGallery();
         	boolean isCol = data.isColumnFormat();
         	
-			btnChangeView.setEnabled(hasRender && isCol);
+			btnChangeView.setEnabled(hasRender && isCol && data.renderImages());
 			jsZoom.setEnabled(hasRender);
 			jlZoom.setEnabled(hasRender);
 			
@@ -1642,15 +1637,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo());
 			setItemSelected(DISPLAY_WRAP, data.containsGeometryInfo() && data.isWrap());
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo());
-                        setItemSelected(DISPLAY_INVERTY, data.isInvertY());
-			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
+            setItemSelected(DISPLAY_INVERTY, data.isInvertY());
+			setItemEnabled(DISPLAY_RENDERIMAGES, data.isTableMode() && data.isColumnFormat());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.renderImages());
-                        setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
+            setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
 			setItemEnabled(DISPLAY_RENDERIMAGE, galMode);
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.getResliceView() == ImageGeneric.VIEWS[i]));
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
-			setItemEnabled(DISPLAY_RESLICE, volMode);
+			setItemEnabled(DISPLAY_RESLICE, data.isVolumeMode());
             setItemSelected(DISPLAY_NORMALIZE, data.getNormalized());
 			setItemEnabled(MD_CLASSES, data.isClassificationMd());
 			setItemEnabled(TOOLS_PLOT, data.isTableMode());
@@ -1664,7 +1659,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_REMOVE_SELECTION, isCol);
 			setItemEnabled(MD_SAVE_SELECTION, isCol);
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
-			reslicebt.setEnabled(volMode);
+			reslicebt.setEnabled(data.isVolumeMode());
 			chimerabt.setEnabled(volMode);
             setItemVisible(METADATA, !isscipion);
             addDisplayLabelItems();
@@ -1697,11 +1692,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				
 				else if (cmd.equals(DISPLAY_RENDERIMAGES))
 				{
-                                        if(gallery instanceof MetadataTableModel)
-                                        {
-                                            ((MetadataTableModel) gallery).setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
-                                            setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
-                                        }
+                    if(gallery instanceof MetadataTableModel)
+                    {
+                        ((MetadataTableModel) gallery).setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
+                        setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
+                        btnChangeView.setEnabled(data.hasRenderLabel() && data.renderImages());
+                    }
 					makeVisible(gallery.getFirstSelectedIndex(), 0);
 				}
 				
@@ -1715,7 +1711,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						isUpdating = true;
 						((MetadataGalleryTableModel) gallery).updateColumnInfo(columns);
 						gallery.fireTableDataChanged();
-						setItemEnabled(DISPLAY_RENDERIMAGES, data.renderImages());
+						//setItemEnabled(DISPLAY_RENDERIMAGES, data.renderImages());
 						// menu.enableRenderImages(data.globalRender);
 						isUpdating = false;
 					}
