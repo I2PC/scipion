@@ -1645,7 +1645,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.getResliceView() == ImageGeneric.VIEWS[i]));
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
-			setItemEnabled(DISPLAY_RESLICE, volMode);
+			setItemEnabled(DISPLAY_RESLICE, data.isVolumeMode());
             setItemSelected(DISPLAY_NORMALIZE, data.getNormalized());
 			setItemEnabled(MD_CLASSES, data.isClassificationMd());
 			setItemEnabled(TOOLS_PLOT, data.isTableMode());
@@ -1659,7 +1659,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_REMOVE_SELECTION, isCol);
 			setItemEnabled(MD_SAVE_SELECTION, isCol);
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
-			reslicebt.setEnabled(volMode);
+			reslicebt.setEnabled(data.isVolumeMode());
 			chimerabt.setEnabled(volMode);
             setItemVisible(METADATA, !isscipion);
             addDisplayLabelItems();
