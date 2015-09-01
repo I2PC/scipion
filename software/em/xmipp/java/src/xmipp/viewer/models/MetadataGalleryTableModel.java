@@ -165,24 +165,18 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			String imageFn = data.getSampleImage(renderLabel);
             if(imageFn != null)
             {
-                try
-                {
                 	ImagePlusLoader loader;
                 	if(Filename.isStackOrVolume(imageFn))
                         loader = new ImagePlusLoader(imageFn, null, null, false, false, false, ImageGeneric.MID_SLICE);
                     else  
                         loader = new ImagePlusLoader(imageFn);
                     ImagePlus image = loader.getImagePlus();
-                    
-                    width = image.getWidth(); 
-                    height = image.getHeight();
-                    dim = new ImageDimension(width, height);
-                }
-                catch (Exception e)
-                {
-                    dim = null;
-                    e.printStackTrace();
-                }
+                    if(image != null && image.getWidth() > 0)
+                    {
+	                    width = image.getWidth(); 
+	                    height = image.getHeight();
+	                    dim = new ImageDimension(width, height);
+                    }
             }
             
 		}
