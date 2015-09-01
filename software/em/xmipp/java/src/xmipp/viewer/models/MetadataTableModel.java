@@ -277,6 +277,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			if (ci.allowRender && ci.render != value) {
 				ci.render = value;
 				changed = true;
+				if(data.ciFirstRender == null && value)
+					data.ciFirstRender = ci;
 			}
 		try
 		{
@@ -286,6 +288,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				calculateCellSize();
 				fireTableDataChanged();
 			}
+			
 		}
 		catch (Exception e)
 		{
@@ -301,11 +304,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	protected void calculateCellSize() {
-		// DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
+		//System.out.println(String.format("MetadataTable:calculateSize renderLabel %s hasRenderLabel %s", data.renderImages, data.hasRenderLabel()));
 		if (data.renderImages && data.hasRenderLabel()) {
 			super.calculateCellSize();
-			// DEBUG.printMessage(String.format("MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
-			// cellDim.height));
+			//System.out.println(String.format("MetadataTable:calculateSize w:%d, h:%d", cellDim.width, cellDim.height));
 
 		} else {
 			int font_height;
