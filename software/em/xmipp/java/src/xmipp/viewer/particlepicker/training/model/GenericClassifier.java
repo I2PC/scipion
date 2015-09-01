@@ -4,9 +4,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
+
 import javax.swing.JFrame;
+
 import xmipp.jni.Classifier;
 import xmipp.jni.Particle;
+import xmipp.utils.XmippWindowUtil;
 
 public class GenericClassifier extends Classifier
 {
@@ -55,16 +58,19 @@ public class GenericClassifier extends Classifier
 		}
 		command = command.replace("%(micrograph)", micrograph);
 		System.out.println(command);
+		Particle[] particles = new Particle[1];
 		try
 		{
-			//XmippWindowUtil.executeGUICommand(command, frame, "Autopicking ...");
+			XmippWindowUtil.executeCommand(command, true);
+			Particle p = new Particle(0, 0);
+			particles[0] = p;
 		}
 		catch (Exception e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return null;
+		return particles;
 	}
 
 	@Override

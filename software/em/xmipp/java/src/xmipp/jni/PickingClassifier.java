@@ -29,7 +29,7 @@ public class PickingClassifier extends Classifier
 	
 	public synchronized native void setSize(int psize);
         
-        public native int getParticlesThreshold();
+    public native int getParticlesThreshold();
 	
 	
 	

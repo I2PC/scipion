@@ -41,8 +41,8 @@ public class AutopickRunnable implements Runnable
 			micrograph.setAutopickpercent(picker.getAutopickpercent());
 			autopickRows = classifier.autopick(micrograph.getFile(), micrograph.getAutopickpercent());
 			picker.loadParticles(micrograph, autopickRows);
-                        picker.saveData(micrograph);
-                        frame.setChanged(false);
+            picker.saveData(micrograph);
+            frame.setChanged(false);
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
 			XmippWindowUtil.releaseGUI(frame.getRootPane());
