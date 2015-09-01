@@ -1642,10 +1642,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo());
 			setItemSelected(DISPLAY_WRAP, data.containsGeometryInfo() && data.isWrap());
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo());
-                        setItemSelected(DISPLAY_INVERTY, data.isInvertY());
-			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
+            setItemSelected(DISPLAY_INVERTY, data.isInvertY());
+			setItemEnabled(DISPLAY_RENDERIMAGES, data.isTableMode() && data.isColumnFormat());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.renderImages());
-                        setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
+            setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
 			setItemEnabled(DISPLAY_RENDERIMAGE, galMode);
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.getResliceView() == ImageGeneric.VIEWS[i]));
@@ -1715,7 +1715,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						isUpdating = true;
 						((MetadataGalleryTableModel) gallery).updateColumnInfo(columns);
 						gallery.fireTableDataChanged();
-						setItemEnabled(DISPLAY_RENDERIMAGES, data.renderImages());
+						//setItemEnabled(DISPLAY_RENDERIMAGES, data.renderImages());
 						// menu.enableRenderImages(data.globalRender);
 						isUpdating = false;
 					}

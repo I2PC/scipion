@@ -278,10 +278,19 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				ci.render = value;
 				changed = true;
 			}
-		if (changed) {
-			data.renderImages = value;
-			calculateCellSize();
-			fireTableDataChanged();
+		try
+		{
+			if (changed) {
+				data.renderImages = value;
+				loadDimension();
+				calculateCellSize();
+				fireTableDataChanged();
+			}
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
