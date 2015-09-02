@@ -11,6 +11,7 @@ import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
+import xmipp.viewer.particlepicker.training.model.GenericClassifier;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
@@ -38,10 +39,18 @@ public class AutopickRunnable implements Runnable
 		public void run()
 		{
 			micrograph.getAutomaticParticles().clear();
-			micrograph.setAutopickpercent(picker.getAutopickpercent());
-			autopickRows = classifier.autopick(micrograph.getFile(), micrograph.getAutopickpercent());
-			picker.loadParticles(micrograph, autopickRows);
-            picker.saveData(micrograph);
+			if(classifier instanceof PickingClassifier)
+			{
+				micrograph.setAutopickpercent(picker.getAutopickpercent());
+				autopickRows = ((PickingClassifier)classifier).autopick(micrograph.getFile(), micrograph.getAutopickpercent());
+				picker.loadParticles(micrograph, autopickRows);
+	            picker.saveData(micrograph);
+			}
+			else 
+			{
+				((GenericClassifier)classifier).autopick(micrograph);
+				picker.loadMicrographData(micrograph);
+			}
             frame.setChanged(false);
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);

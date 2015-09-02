@@ -33,6 +33,7 @@ from protocol_picking import DogPickerProtPicking
 from pyworkflow.em import CoordinatesObjectView
 from pyworkflow.em.showj import CLASSIFIER
 from pyworkflow.em.packages.xmipp3 import writeSetOfMicrographs
+from pyworkflow.utils import makePath, cleanPath
 #===============================================================================
 # PICKER
 #===============================================================================
@@ -44,20 +45,27 @@ class DogPickerWizard(EmWizard):
     def show(self, form):
         autopickProt = form.protocol
         micSet = autopickProt.getInputMicrographs()
+        if not micSet:
+            print 'must specify input micrographs'
+            return
         project = autopickProt.getProject()
-        micfn = project.getTmpPath(micSet.getName() + '_micrographs.xmd')
-        writeSetOfMicrographs(micSet, micfn)
-        coordsDir = autopickProt.getProject().getTmpPath()
+        coordsDir = project.getTmpPath(micSet.getName())
+        cleanPath(coordsDir)
+        makePath(coordsDir)
         # Get current values of the properties
+        micfn = os.path.join(coordsDir, 'micrographs.xmd')
+        writeSetOfMicrographs(micSet, micfn)
         dogpickerConf = os.path.join(coordsDir, 'dogpicker.conf')
         f = open(dogpickerConf, "w")
 
         args = {
           "dogpicker" : os.path.join(os.environ['DOGPICKER_HOME'], "ApDogPicker.py"),
+          "convert" : os.path.join(os.environ['SCIPION_HOME'], os.path.join('pyworkflow','apps', 'pw_convert.py')),
+          'coordsDir':coordsDir,
+          'micsSqlite': micSet.getFileName(),
           "diameter": autopickProt.diameter,
           "threshold": autopickProt.threshold,
-          "apix": micSet.getSamplingRate(),
-          "dogpickerOut": os.path.join(coordsDir, 'dogpicker.out')
+          "apix": micSet.getSamplingRate()
           }
 
 
@@ -69,7 +77,8 @@ class DogPickerWizard(EmWizard):
         threshold.value =  %(threshold)s
         threshold.label = Threshold
         threshold.help = some help
-        command = %(dogpicker)s  --thresh=%%(threshold) --diam=%%(diameter) --apix=%(apix)s  --image=%%(micrograph) --outfile=%(dogpickerOut)s 
+        autopickCommand = %(dogpicker)s  --thresh=%%(threshold) --diam=%%(diameter) --apix=%(apix)s  --image=%%(micrograph) --outfile=%(coordsDir)s/%%(micrographtxt) 
+        convertCommand = %(convert)s --coordinates --from dogpicker --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
         """ % args)
         print "Launching picking GUI..."
         CoordinatesObjectView(project, micfn, coordsDir, autopickProt, pickerConf=dogpickerConf).show()

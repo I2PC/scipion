@@ -11,6 +11,7 @@ import xmipp.jni.Classifier;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippWindowUtil;
 
+
 public class GenericClassifier extends Classifier
 {
 
@@ -48,29 +49,29 @@ public class GenericClassifier extends Classifier
 	}
 	
 	
-	@Override
-	public Particle[] autopick(String micrograph, int percent)
+	public void autopick(SupervisedPickerMicrograph micrograph)
 	{
-		String command = properties.getProperty("command");
+		String autopickCommand = properties.getProperty("autopickCommand");
+		String convertCommand = properties.getProperty("convertCommand");
 		for(Classifier.Parameter param: params)
 		{
-			command = command.replace("%(" + param.name + ")", param.value);
+			autopickCommand = autopickCommand.replace("%(" + param.name + ")", param.value);
 		}
-		command = command.replace("%(micrograph)", micrograph);
-		System.out.println(command);
-		Particle[] particles = new Particle[1];
+		String micrographtxt = micrograph.getName() + ".txt";
+		autopickCommand = autopickCommand.replace("%(micrograph)", micrograph.getFile());
+		autopickCommand = autopickCommand.replace("%(micrographtxt)", micrographtxt);
+		System.out.println(autopickCommand);
 		try
 		{
-			XmippWindowUtil.executeCommand(command, true);
-			Particle p = new Particle(0, 0);
-			particles[0] = p;
+			XmippWindowUtil.executeCommand(autopickCommand, true);
+			String output = XmippWindowUtil.executeCommand(convertCommand, true);
+			System.out.println(output);
 		}
 		catch (Exception e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return particles;
 	}
 
 	@Override

@@ -12,7 +12,6 @@ public abstract class Classifier
 	
 	public abstract void setSize(int psize);
 	
-	public abstract Particle[] autopick(String micrograph, int percent);
 	
 	public class Parameter
 	{
