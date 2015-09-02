@@ -60,12 +60,10 @@ public class GenericClassifier extends Classifier
 		String micrographtxt = micrograph.getName() + ".txt";
 		autopickCommand = autopickCommand.replace("%(micrograph)", micrograph.getFile());
 		autopickCommand = autopickCommand.replace("%(micrographtxt)", micrographtxt);
-		System.out.println(autopickCommand);
 		try
 		{
 			XmippWindowUtil.executeCommand(autopickCommand, true);
 			String output = XmippWindowUtil.executeCommand(convertCommand, true);
-			System.out.println(output);
 		}
 		catch (Exception e)
 		{
