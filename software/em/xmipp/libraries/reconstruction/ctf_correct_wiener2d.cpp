@@ -36,10 +36,28 @@ void ProgCorrectWiener2D::produceSideInfo()
 {
 	FileName fn_img;
 	Image<double> img;
-    md.read(fn_input);
- 	md.getValue(MDL_IMAGE, fn_img, md.firstObject());
-    img.read(fn_img);
-    img.getDimensions(Xdim,Ydim,Zdim,Ndim);
+
+	try
+	{
+		md.read(fn_input);
+	}
+
+	catch (XmippError &xe)
+	{
+		std::cerr <<  xe.msg.c_str() << std::endl;
+	}
+
+	try
+	{
+		md.getValue(MDL_IMAGE, fn_img, md.firstObject());
+		img.read(fn_img, HEADER);
+		img.getDimensions(Xdim,Ydim,Zdim,Ndim);
+	}
+	catch (XmippError &xe)
+	{
+		std::cerr <<  xe.msg.c_str() << std::endl;
+	}
+
 }
 
 // Read arguments ==========================================================
@@ -71,42 +89,55 @@ void ProgCorrectWiener2D::defineParams()
 // Define parameters ==========================================================
 void ProgCorrectWiener2D::run()
 {
-	produceSideInfo();
-	MetaData mdOut;
 
-	mdOut = md;
+	produceSideInfo();
 
 	FileName fn_img;
 	Image<double> img;
+	MetaData mdOut;
 
     if (md.size() == 0)
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,
                      "Program should never execute this line, something went wrong");
 
     MultidimArray<double> Mwien;
+    size_t imgNum  = 0;
+	if (rank==0)
+		init_progress_bar(md.size());
 
-    // Loop over all images in the metadata
-    int imgNum = 1;
-    FOR_ALL_OBJECTS_IN_METADATA(mdOut)
-    {
-    	 mdOut.getValue(MDL_IMAGE, fn_img, __iter.objId);
-    	 img.read(fn_img);
-    	 img.getDimensions(Xdim,Ydim,Zdim,Ndim);
-    	 CTFDescription ctf;
-    	 ctf.readFromMetadataRow(mdOut, __iter.objId);
+	MDRow row;
+	FOR_ALL_OBJECTS_IN_METADATA(md)
+	{
+		if ( (imgNum+1)%Nprocessors == rank )
+		{
 
-    	 generateWienerFilter(Mwien,ctf);
-    	 applyWienerFilter(Mwien,img());
+			md.getRow(row,__iter.objId);
+			md.getValue(MDL_IMAGE, fn_img, __iter.objId);
 
-    	 //generate Output
-    	 FileName outFileName;
-    	 FileName rootName = (fn_out.removeAllExtensions()).addExtension(".stk");
-    	 outFileName.compose(imgNum,rootName);
-    	 img.write(outFileName);
-    	 imgNum++;
-    	 mdOut.setValue(MDL_IMAGE, outFileName, __iter.objId);
+			img.read(fn_img);
+			CTFDescription ctf;
+			ctf.readFromMetadataRow(md, __iter.objId);
+			generateWienerFilter(Mwien,ctf);
+			applyWienerFilter(Mwien,img());
+			//generate Output
+			FileName outFileName;
+			FileName rootName = (fn_out.removeAllExtensions()).addExtension("stk");
+			outFileName.compose(imgNum+1,rootName);
+			img.write(outFileName);
 
-    }
+			row.setValue(MDL_IMAGE, outFileName);
+			mdPartial.addRow(row);
+			//mdPartial.setValue(MDL_IMAGE, outFileName, mdPartial.lastObject());
+		}
+		imgNum++;
+		if (rank ==0)
+			progress_bar(imgNum);
+	}
+
+	synchronize();
+	gatherResults();
+
+	mdOut.unionAll(mdPartial);
 
     mdOut.removeLabel(MDL_CTF_DEFOCUSA);
     mdOut.removeLabel(MDL_CTF_DEFOCUSU);
@@ -129,7 +160,18 @@ void ProgCorrectWiener2D::run()
     mdOut.removeLabel(MDL_CTF_BG_SQRT_K);
     mdOut.removeLabel(MDL_CTF_BG_SQRT_U);
     mdOut.removeLabel(MDL_CTF_BG_SQRT_V);
-    mdOut.write("kk.xmd");
+    mdOut.removeLabel(MDL_CTF_CA);
+    mdOut.removeLabel(MDL_CTF_CONVERGENCE_CONE);
+    mdOut.removeLabel(MDL_CTF_ENERGY_LOSS);
+    mdOut.removeLabel(MDL_CTF_ENVELOPE);
+    mdOut.removeLabel(MDL_CTF_LENS_STABILITY);
+    mdOut.removeLabel(MDL_CTF_TRANSVERSAL_DISPLACEMENT);
+    mdOut.removeLabel(MDL_CTF_LONGITUDINAL_DISPLACEMENT);
+    mdOut.removeLabel(MDL_CTF_K);
+
+
+
+    mdOut.write(fn_out);
 
 }
 
@@ -168,15 +210,15 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien,CTFD
 			dAij(ctfIm, i, j) = dAij(ctfComplex, i, j).real();
 	}
 
-#ifdef DEBUG
 
+#ifdef DEBUG
 	{
 		Image<double> save;
 		save()=ctfIm;
 		save.write("ctf.spi");
-		std::cout << "Press any key\n";
-		char c;
-		std::cin >> c;
+		//std::cout << "Press any key\n";
+		//char c;
+		//std::cin >> c;
 	}
 #endif
 #undef DEBUG
@@ -187,7 +229,6 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien,CTFD
 		result = (DIRECT_N_YX_ELEM (ctfIm, 0, 0, i, j  ));
 		dAij(Mwien,i,j) = (result *result);
 	}
-
 
 #ifdef DEBUG
 
@@ -211,7 +252,6 @@ if (wiener_constant < 0.)
 		dAij(Mwien,i,j) += valueW;
 		dAij(Mwien,i,j) = dAij(ctfIm, i, j)/dAij(Mwien, i, j);
 	}
-
 }
 else
 {

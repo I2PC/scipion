@@ -59,13 +59,9 @@ public:
 
     bool isIsotropic;
 
-protected:
+    MetaData mdPartial;
 
     size_t Xdim, Ydim, Zdim, Ndim;
-
-    ///auxiliary matrices to speed up process
-    MultidimArray<double> diff;
-    MultidimArray<int> dd;
 
     /// Wiener filter constant
     double wiener_constant;
@@ -91,12 +87,10 @@ public:
     void generateWienerFilter(MultidimArray<double> &Mwien, CTFDescription &ctf);
 
     /// Gather alignment
-    virtual void gatherClusterability() {}
+    virtual void gatherResults() {}
 
     /// Synchronize with other processors
     virtual void synchronize() {}
-
-protected:
 
 	void produceSideInfo();
 
