@@ -92,9 +92,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 			for (SupervisedPickerMicrograph m : micrographs)
 				loadMicrographData(m);
-			classifier = new PickingClassifier(getSize(), getOutputPath("model"), selfile);
 			if(params.classifierProperties != null)
+			{
 				classifier = new GenericClassifier(params.classifierProperties);
+				setMode(Mode.Supervised);
+			}
 			else
 				classifier = new PickingClassifier(getSize(), getOutputPath("model"), selfile);
 		}
@@ -1120,8 +1122,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
                 frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Autopicking...");
-		next.setState(MicrographState.Supervised);
-		saveData(next);
+		
 		new Thread(new AutopickRunnable(frame, next)).start();
 
 	}

@@ -8,6 +8,7 @@ import java.util.Properties;
 import javax.swing.JFrame;
 
 import xmipp.jni.Classifier;
+import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippWindowUtil;
 
@@ -64,6 +65,7 @@ public class GenericClassifier extends Classifier
 		{
 			XmippWindowUtil.executeCommand(autopickCommand, true);
 			String output = XmippWindowUtil.executeCommand(convertCommand, true);
+			System.out.println(output);
 		}
 		catch (Exception e)
 		{

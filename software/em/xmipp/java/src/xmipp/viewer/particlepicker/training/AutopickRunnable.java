@@ -12,6 +12,7 @@ import xmipp.jni.PickingClassifier;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.GenericClassifier;
+import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
@@ -41,6 +42,7 @@ public class AutopickRunnable implements Runnable
 			micrograph.getAutomaticParticles().clear();
 			if(classifier instanceof PickingClassifier)
 			{
+				micrograph.setState(MicrographState.Supervised);
 				micrograph.setAutopickpercent(picker.getAutopickpercent());
 				autopickRows = ((PickingClassifier)classifier).autopick(micrograph.getFile(), micrograph.getAutopickpercent());
 				picker.loadParticles(micrograph, autopickRows);
@@ -55,7 +57,7 @@ public class AutopickRunnable implements Runnable
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
 			XmippWindowUtil.releaseGUI(frame.getRootPane());
-                        frame.updateMicrographsModel();
+            frame.updateMicrographsModel();
 		}
 
 	}

@@ -130,7 +130,7 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
         import pyworkflow.em.packages.xmipp3 as xmipp3
         micPath = os.path.join(coordPath, 'micrographs.xmd')
         xmipp3.writeSetOfMicrographs(micSet, micPath)
-        xmipp3.writeSetOfCoordinates(coordPath, coordSet)
+        xmipp3.writeSetOfCoordinates(coordPath, coordSet, ismanual=False)
         return micPath, coordPath
         
     def writeXmippOutputCoords(self):
