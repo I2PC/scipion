@@ -12,6 +12,7 @@ from pyworkflow.em import loadSetFromDb
 from pyworkflow.em.data import SetOfCoordinates 
 import os       
 from pyworkflow.utils import cleanPath
+import pyworkflow.utils as pwutils
 
 def main():
     parser = argparse.ArgumentParser(prog='Scipion Convert')
@@ -20,6 +21,7 @@ def main():
     parser.add_argument('--toType', help='Convert to output type')
     parser.add_argument('--input', help='Input file or folder')
     parser.add_argument('--output', help='Output file or folder')
+    parser.add_argument('--extra', help='To add extra parameters')
 
 
 
@@ -31,19 +33,30 @@ def main():
     output = args.output
     if args.coordinates:
         print 'converting coordinates ...'
+        micSet = loadSetFromDb(input)
+        outputDir = output
+        coordsfn = os.path.join(outputDir, 'coordinates.sqlite')
+        cleanPath(coordsfn)
+        coordSet = SetOfCoordinates(filename=coordsfn)
+        coordSet.setMicrographs(micSet)
         if fromType == 'dogpicker':
             if toType == 'xmipp': 
                 print 'from dogpicker to xmipp...'
-                micSet = loadSetFromDb(input)
-                workDir = output
-                coordsfn = os.path.join(workDir, 'coordinates.sqlite')
-                cleanPath(coordsfn)
-                coordSet = SetOfCoordinates(filename=coordsfn)
-                coordSet.setMicrographs(micSet)
                 from pyworkflow.em.packages.appion.convert import readSetOfCoordinates
-                readSetOfCoordinates(workDir, micSet, coordSet)
+                readSetOfCoordinates(outputDir, micSet, coordSet)
                 from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
-                writeSetOfCoordinates(workDir, coordSet, ismanual=False)
+                writeSetOfCoordinates(outputDir, coordSet, ismanual=False)
+        if fromType == 'relion':
+            if toType == 'xmipp': 
+                print 'from relion to xmipp...'
+                inputCoords = args.extra
+                starFiles = [os.path.join(inputCoords, pwutils.removeBaseExt(mic.getFileName()) + '_autopick.star')
+                     for mic in micSet]
+                from pyworkflow.em.packages.relion.convert import readSetOfCoordinates
+                readSetOfCoordinates(coordSet, starFiles)
+                from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
+                writeSetOfCoordinates(outputDir, coordSet, ismanual=False)
+        
     
 if __name__ == '__main__':
     main()

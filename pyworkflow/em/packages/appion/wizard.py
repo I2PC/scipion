@@ -55,7 +55,7 @@ class DogPickerWizard(EmWizard):
         # Get current values of the properties
         micfn = os.path.join(coordsDir, 'micrographs.xmd')
         writeSetOfMicrographs(micSet, micfn)
-        dogpickerConf = os.path.join(coordsDir, 'dogpicker.conf')
+        dogpickerConf = os.path.join(coordsDir, 'picker.conf')
         f = open(dogpickerConf, "w")
 
         args = {
@@ -77,7 +77,7 @@ class DogPickerWizard(EmWizard):
         threshold.value =  %(threshold)s
         threshold.label = Threshold
         threshold.help = some help
-        autopickCommand = %(dogpicker)s  --thresh=%%(threshold) --diam=%%(diameter) --apix=%(apix)s  --image=%%(micrograph) --outfile=%(coordsDir)s/%%(micrographtxt) 
+        autopickCommand = %(dogpicker)s  --thresh=%%(threshold) --diam=%%(diameter) --apix=%(apix)s  --image=%%(micrograph) --outfile=%(coordsDir)s/%%(micrographName).txt 
         convertCommand = %(convert)s --coordinates --from dogpicker --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
         """ % args)
         print "Launching picking GUI..."

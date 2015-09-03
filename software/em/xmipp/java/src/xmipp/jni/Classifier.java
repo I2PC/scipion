@@ -2,8 +2,6 @@ package xmipp.jni;
 
 import java.util.List;
 
-import javax.swing.JFrame;
-
 public abstract class Classifier
 {
 	protected List<Classifier.Parameter> params;
@@ -36,6 +34,8 @@ public abstract class Classifier
 	}
 	
 	public abstract boolean needsTraining();
+
+
 
 
 }

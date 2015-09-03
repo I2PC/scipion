@@ -8,9 +8,12 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.text.NumberFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,8 +35,11 @@ import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import xmipp.jni.Classifier;
+import xmipp.jni.Classifier.Parameter;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -82,6 +88,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     protected JLabel thresholdlb;
     protected JPanel gpickerpn;
 	private JButton autopickbt;
+	private HashMap<JTextField, Parameter> paramtfs;
 
     @Override
     public SupervisedParticlePicker getParticlePicker() {
@@ -841,6 +848,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     	gpickerpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
     	gpickerpn.setBorder(BorderFactory.createTitledBorder("Autopick"));
     	List<Classifier.Parameter> parameters = ppicker.getClassifier().getParams();
+    	paramtfs = new HashMap<JTextField, Classifier.Parameter>();
     	JTextField tf;
     	for(Classifier.Parameter param: parameters)
     	{
@@ -848,13 +856,35 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     		tf = new JTextField(5);
     		tf.setToolTipText(param.help);
     		tf.setText(param.value);
+    		tf.setActionCommand(param.name);
+    		tf.addFocusListener(new FocusListener()
+			{
+				
+				@Override
+				public void focusLost(FocusEvent e)
+				{
+					if(e.isTemporary())
+						return;
+					JTextField tf = (JTextField)e.getComponent();
+					paramtfs.get(tf).value = tf.getText();
+				}
+				
+				@Override
+				public void focusGained(FocusEvent e)
+				{
+					// TODO Auto-generated method stub
+					
+				}
+			});
     		gpickerpn.add(tf);
+    		paramtfs.put(tf, param);
     	}
     	autopickbt = XmippWindowUtil.getTextButton("Run", new ActionListener(){
 
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
+				
 				ppicker.autopick(SupervisedPickerJFrame.this, getMicrograph());
 				
 			}});
