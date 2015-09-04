@@ -1182,5 +1182,10 @@ public class ScipionMetaData extends MetaData {
         
         return minMax;
     }
+    
+    public boolean containsMicrographsInfo() 
+    {
+    	return self.equals("Micrograph") || self.equals("Movie");
+    }
    
 }
