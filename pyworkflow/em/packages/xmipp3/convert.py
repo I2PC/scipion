@@ -644,7 +644,7 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True):
             # we need to close previous opened file
             if f:
                 f.close()
-                print "Micrograph %s (%d)" % (lastMicId, c)
+                #print "Micrograph %s (%d)" % (lastMicId, c)
                 c = 0
             f = openMd(posDict[micId], ismanual=ismanual)
             lastMicId = micId

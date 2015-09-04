@@ -449,9 +449,11 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         thresholdsl.setEnabled(selected);
         thresholdlb.setEnabled(selected);
         thresholdtf.setEnabled(selected);
-        sizesl.setEnabled(!selected);// not really, if there is some micrograph
+        boolean isGenClassifier = selected && !ppicker.getClassifier().needsTraining();
+        sizelb.setEnabled(!selected || isGenClassifier);
+        sizesl.setEnabled(!selected || isGenClassifier);// not really, if there is some micrograph
         // in sup mode size cannot be changed
-        sizetf.setEnabled(!selected);
+        sizetf.setEnabled(!selected || isGenClassifier);
         importmi.setEnabled(!selected);
         //autopickpercenttf.setEnabled(selected);
         
@@ -866,7 +868,10 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 					if(e.isTemporary())
 						return;
 					JTextField tf = (JTextField)e.getComponent();
-					paramtfs.get(tf).value = tf.getText();
+					Classifier.Parameter param = paramtfs.get(tf);
+					if(param.name.equals("diameter"))//classifier diameter and particle size are the same
+						updateSize(Integer.parseInt(tf.getText()));
+					param.value = tf.getText();
 				}
 				
 				@Override
