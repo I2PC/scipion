@@ -172,7 +172,7 @@ public:
 
     /** translate string fn_sym to symmetry group, return false
         is translation is not possible. See 
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+        http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry
          for details. It also fill the symmetry information  */
     bool isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder);
 
