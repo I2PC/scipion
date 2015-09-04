@@ -128,6 +128,7 @@ class XmippProtCL2D(ProtClassify2D):
                            'in all the previous levels except possibly a few of them. Tolerance defines how few is few.'
                            'Tolerance=0 means that an image must be in all previous levels with the rest of images in'
                            'the core.', expertLevel=LEVEL_ADVANCED, condition='doCore and doStableCore')
+        form.addParam("computeHierarchy",BooleanParam, default=False, label="Compute class hierarchy")
 
         form.addParallelSection(threads=0, mpi=4)
 
@@ -227,7 +228,7 @@ class XmippProtCL2D(ProtClassify2D):
         prevMdFn = None
         for mdFn in levelMdFiles:
             self.runJob("xmipp_classify_evaluate_classes", "-i " + mdFn, numberOfMpi=1)
-            if prevMdFn is not None:
+            if self.computeHierarchy and prevMdFn is not None:
                 args = "--i1 %s --i2 %s -o %s" % (prevMdFn, mdFn, hierarchyFnOut)
                 if exists(hierarchyFnOut):
                     args += " --append"
