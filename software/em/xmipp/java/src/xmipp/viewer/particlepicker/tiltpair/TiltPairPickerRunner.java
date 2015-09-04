@@ -41,7 +41,7 @@ public class TiltPairPickerRunner implements Runnable {
     	try {
         
             TiltPairPicker ppicker = null;
-            ppicker = new TiltPairPicker(params.inputfile, params.outputdir, params.mode, params);
+            ppicker = new TiltPairPicker(params.inputfile, params.outputdir, params);
             
             if(params.isScipion())
                 XmippApplication.setIsScipion(true);
