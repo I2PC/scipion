@@ -717,6 +717,38 @@ public:
     }
     #undef DEBUG
 
+    template <class T>
+    void generateCTFWithoutDamping(int Ydim, int Xdim, MultidimArray < T > &CTF, double Ts=-1)
+    {
+        CTF.resizeNoCopy(Ydim, Xdim);
+        if (Ts<0)
+        	Ts=Tm;
+		#ifdef DEBUG
+			std::cout << "CTF:\n" << *this << std::endl;
+		#endif
+
+        double iTs=1.0/Ts;
+        for (int i=0; i<Ydim; ++i)
+        {
+        	double wy;
+        	FFT_IDX2DIGFREQ(i, YSIZE(CTF), wy);
+            double fy=wy*iTs;
+        	for (int j=0; j<Xdim; ++j)
+        	{
+            	double wx;
+            	FFT_IDX2DIGFREQ(j, XSIZE(CTF), wx);
+                double fx=wx*iTs;
+				precomputeValues(fx, fy);
+				A2D_ELEM(CTF, i, j) = (T) getValuePureWithoutDampingAt();
+				#ifdef DEBUG
+						if (i == 0)
+							std::cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
+							<< " " << CTF(i, j) << std::endl;
+				#endif
+        	}
+        }
+    }
+    #undef DEBUG
 
     /** Check physical meaning.
         true if the CTF parameters have physical meaning.
