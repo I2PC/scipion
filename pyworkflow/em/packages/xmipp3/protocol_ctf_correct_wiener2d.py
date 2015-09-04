@@ -24,8 +24,6 @@
 # *
 # **************************************************************************
 
-from os.path import join
-
 from pyworkflow.object import Float, String
 from pyworkflow.protocol.params import (PointerParam, IntParam, FloatParam, STEPS_PARALLEL,
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
@@ -67,7 +65,13 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
 
         form.addParam('wiener_constant', FloatParam, default=-1,expertLevel=LEVEL_ADVANCED,
                       label="Wiener constant",  
-                      help=' Wiener-filter constant (if < 0: use FREALIGN default)')                       
+                      help=' Wiener-filter constant (if < 0: use FREALIGN default)')
+        
+
+        form.addParam('correctEnvelope', BooleanParam, default='False',expertLevel=LEVEL_ADVANCED,
+                      label="Correct for CTF envelope",  
+                      help=' Only in cases where the envelope is well estimated correct for it')                       
+                       
         
         form.addParallelSection(threads=1, mpi=1)
 
@@ -95,6 +99,9 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
 
         if (self.isPhaseFlipped ):
             params +=  '  --phase_flipped '
+            
+        if (self.correctEnvelope):
+            params +=  '  --correct_envelope '
 
         print params 
         nproc = self.numberOfMpi.get()

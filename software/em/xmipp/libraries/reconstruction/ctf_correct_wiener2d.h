@@ -59,6 +59,8 @@ public:
 
     bool isIsotropic;
 
+    bool correct_envelope;
+
     MetaData mdPartial;
 
     size_t Xdim, Ydim, Zdim, Ndim;

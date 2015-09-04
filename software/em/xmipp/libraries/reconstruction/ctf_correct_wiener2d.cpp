@@ -69,8 +69,9 @@ void ProgCorrectWiener2D::readParams()
     fn_input = getParam("-i");
     phase_flipped = checkParam("--phase_flipped");
     pad = XMIPP_MAX(1.,getDoubleParam("--pad"));
-    isIsotropic = checkParam("--isIsotropic");;
+    isIsotropic = checkParam("--isIsotropic");
     wiener_constant  = getDoubleParam("--wc");
+    correct_envelope = checkParam("--correct_envelope");
 }
 
 // Define parameters ==========================================================
@@ -84,6 +85,7 @@ void ProgCorrectWiener2D::defineParams()
     addParamsLine("   [--isIsotropic]         : Must be considered the defocus isotropic?");
     addParamsLine("   [--wc <float=-1>]       : Wiener-filter constant (if < 0: use FREALIGN default)");
     addParamsLine("   [--pad <factor=2.> ]    : Padding factor for Wiener correction");
+    addParamsLine("   [--correct_envelope]     : Correct the CTF envelope");
 }
 
 // Define parameters ==========================================================
@@ -188,7 +190,7 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien,CTFD
 	Mwien.resize(paddim,paddim);
 
 	//NO entiendo esto:
-	//ctf.Tm /= sqrt(2.);
+	ctf.Tm /= pad;
 
 	if (isIsotropic)
 	{
@@ -200,7 +202,12 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien,CTFD
 
 	ctfIm.resize(1, 1, paddim, paddim,false);
 	//Esto puede estar mal. Cuidado con el sampling de la ctf!!!
-	ctf.generateCTF(paddim, paddim, ctfComplex);
+
+	if (correct_envelope)
+		ctf.generateCTF(paddim, paddim, ctfComplex);
+
+	else
+		ctf.generateCTFWithoutDamping(paddim, paddim, ctfComplex);
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctfIm)
 	{
