@@ -137,6 +137,7 @@ enum MDLabel
     MDL_CTF_TRANSVERSAL_DISPLACEMENT, ///< Transversal displacemente
     MDL_CTF_Q0, ///< Inelastic absorption
     MDL_CTF_K, ///< CTF gain
+	MDL_CTF_ENV_R0, ///< CTF Envelope polynomial parameter
     MDL_CTF_BG_GAUSSIAN_K, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN_SIGMAU, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN_SIGMAV, ///< CTF Background parameter
@@ -154,6 +155,7 @@ enum MDLabel
     MDL_CTF_BG_GAUSSIAN2_CU, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN2_CV, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN2_ANGLE, ///< CTF Background parameter
+	MDL_CTF_BG_R1, ///< CTF Background polynomial parameter
     MDL_CTF_CRIT_NONASTIGMATICVALIDITY, ///< Maximum frequency (in Angstroms) at which non-astigmatic CTF correction is valid
     MDL_CTF_CRIT_PSDCORRELATION90, ///< PSD correlation at 90 degrees
     MDL_CTF_CRIT_FIRSTZERORATIO, ///< First zero ratio
@@ -1329,6 +1331,7 @@ private:
         MDL::addLabelAlias(MDL_CTF_BG_BASELINE, "CTFBG_Baseline");//3.0
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "ctfBgGaussian2Angle");
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_ANGLE, "CTFBG_Gaussian2_Angle"); //3.0
+        MDL::addLabel(MDL_CTF_BG_R1, LABEL_DOUBLE, "ctfBgR1");
 
         MDL::addLabel(MDL_CTF_X0, LABEL_DOUBLE, "ctfX0");
         MDL::addLabel(MDL_CTF_XF, LABEL_DOUBLE, "ctfXF");
@@ -1413,6 +1416,7 @@ private:
         MDL::addLabel(MDL_CTF_GROUP, LABEL_INT, "ctfGroup");
         MDL::addLabel(MDL_CTF_INPUTPARAMS, LABEL_STRING, "ctfInputParams", TAGLABEL_TEXTFILE);
         MDL::addLabel(MDL_CTF_K, LABEL_DOUBLE, "ctfK");
+        MDL::addLabel(MDL_CTF_ENV_R0, LABEL_DOUBLE, "ctfEnvR0");
         MDL::addLabel(MDL_CTF_LAMBDA, LABEL_DOUBLE, "ctfLambda");
         MDL::addLabel(MDL_CTF_LENS_STABILITY, LABEL_DOUBLE, "ctfLensStability");
         MDL::addLabel(MDL_CTF_LONGITUDINAL_DISPLACEMENT, LABEL_DOUBLE, "ctfLongitudinalDisplacement");
