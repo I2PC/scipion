@@ -118,9 +118,9 @@ class ProtImportCTF(ProtImportFiles):
         for mic in inputMics:
             micName = mic.getMicName()
             micBase = removeBaseExt(mic.getFileName())
-            for fileName in files:
-                #TODO: Define how to match mics and ctf files (temporary solution is to expect micname inside ctf file name)
-                if  micBase in fileName or micName in fileName:
+            for fileName, fileId in self.iterFiles():
+                if (fileId == mic.getObjId() or
+                    micBase in fileName or micName in fileName):
                     ctf = ci.importCTF(mic, fileName)
                     ctfSet.append(ctf)
                     outputMics.append(mic)
