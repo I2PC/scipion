@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyglet.media.drivers.alsa.asound import struct__snd_pcm_hw_params
 
 from pyworkflow.protocol.params import (PointerParam, FloatParam,  
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
@@ -89,7 +90,7 @@ class ProtRelionReconstruct(ProtReconstruct3D):
                       help='Param *--ctf_intact_first_peak* in Relion.')
         form.addParam('onlyFlipPhases', BooleanParam, default=False,
                       condition='doCTF',
-                      label='Do not correct CTF-amplitudes? (only flip phases)',
+                      label='Only flip phases? (Do not correct CTF-amplitudes)',
                       help='Param *--only_flip_phases* in Relion.')
         line = form.addLine('Beam tilt in direction: ',
                             condition='doCTF',
@@ -136,7 +137,13 @@ class ProtRelionReconstruct(ProtReconstruct3D):
                 params += ' --only_flip_phases' 
             params += ' --beamtilt_x %0.3f' % self.beamTiltX.get()
             params += ' --beamtilt_y %0.3f' % self.beamTiltY.get()
-        
+            #are the images phase flipped?
+            if imgSet.isPhaseFlipped():
+                params += ' --ctf_phase_flipped'
+
+        if self.extraParams:
+            params += " " + self.extraParams
+
         self._insertFunctionStep('reconstructStep', params)
 
     #--------------------------- STEPS functions --------------------------------------------
