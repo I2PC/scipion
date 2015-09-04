@@ -122,6 +122,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
     protected ResourceBundle bundle;
     protected String command;
     protected JButton closebt;
+
+	protected JLabel sizelb;
         
         
 
@@ -830,7 +832,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		sizepn = new JPanel();
 
 		int size = getParticlePicker().getSize();
-		sizepn.add(new JLabel("Size:"));
+		sizelb = new JLabel("Size:");
+		sizepn.add(sizelb);
 		sizesl = new JSlider(10, ParticlePicker.sizemax, size);
 		sizesl.setPaintTicks(true);
 		sizesl.setMajorTickSpacing(100);
