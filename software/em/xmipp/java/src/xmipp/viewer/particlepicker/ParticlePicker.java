@@ -129,7 +129,7 @@ public abstract class ParticlePicker {
         this(null, selfile, ".", params);
     }
 
-    public ParticlePicker(String selfile, String outputdir, Mode mode, ParticlePickerParams params) {
+    public ParticlePicker(String selfile, String outputdir, ParticlePickerParams params) {
         this(null, selfile, outputdir, params);
     }
 
