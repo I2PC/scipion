@@ -495,7 +495,7 @@ class Micrograph(Image):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
+        if self._micName.get():
             return self._micName.get()
         else:
             self.getFileName()
@@ -652,6 +652,9 @@ class EMSet(Set, EMObject):
             else:
                 if itemDataIterator is not None:
                     next(itemDataIterator) # just skip disabled data row
+                    
+    def getFiles(self):
+        return Set.getFiles(self)
   
   
 class SetOfImages(EMSet):
@@ -784,7 +787,7 @@ class SetOfImages(EMSet):
         _,_,_, ndim = ImageHandler().getDimensions(fnStack)
         img = self.ITEM_TYPE()
         for i in range(1, ndim+1):
-            img.cleanObjId()
+            img.setObjId(None)
             img.setLocation(i, fnStack)
             if postprocessImage is not None:
                 postprocessImage(img)
@@ -817,7 +820,9 @@ class SetOfImages(EMSet):
             sampling = -999.0
         if self._firstDim.isEmpty():
             try:
-                self._firstDim.set(self.getFirstItem().getDim())
+                firstItem = self.getFirstItem()
+                if firstItem is not None:
+                    self._firstDim.set(firstItem.getDim())
             except Exception, ex:
                 print "Error reading dimension: ", ex
                 import traceback
@@ -942,6 +947,7 @@ class SetOfAverages(SetOfParticles):
 class SetOfVolumes(SetOfImages):
     """Represents a set of Volumes"""
     ITEM_TYPE = Volume
+    REP_TYPE = Volume
     
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
@@ -1070,10 +1076,7 @@ class Coordinate(EMObject):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
-            return self._micName.get()
-        else:
-            self.getFileName()
+        return self._micName.get()
 
 
 class SetOfCoordinates(EMSet):
@@ -1252,6 +1255,8 @@ class Class3D(SetOfParticles):
     Usually the representative of the class is a Volume 
     reconstructed from the particles assigned to the class.
     """
+    REP_TYPE = Volume
+    
     def copyInfo(self, other):
         """ Copy basic information (id and other properties) but not _mapperPath or _size
         from other set of micrographs to current one.

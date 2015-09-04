@@ -85,6 +85,10 @@ def readSetOfParticles(inputSet, outputSet, parFileName):
         particle.setTransform(rowToAlignment(row, samplingRate))
         # We assume that each particle have ctfModel
         # in order to be processed in Frealign
+        # JMRT: Since the CTF will be set, we can setup
+        # an empty CTFModel object
+        if not particle.hasCTF():
+            particle.setCTF(em.CTFModel())
         rowToCtfModel(row, particle.getCTF())
         outputSet.append(particle)
     outputSet.setAlignment(em.ALIGN_PROJ)
@@ -167,6 +171,17 @@ def parseCtffind4Output(filename):
                 result = tuple(map(float, line.split()[1:]))
         f.close()
     return result
+
+
+def ctffindOutputVersion(filename):
+    """ Detect the ctffind version (3 or 4) that produced
+    the given filename.
+    """
+    f = open(filename)
+    for line in f:
+        if 'Output from CTFFind version 4.' in line:
+            return 4
+    return 3
 
 
 def setWrongDefocus(ctfModel):

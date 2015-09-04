@@ -10,8 +10,8 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.gui.Toolbar;
-import ij.process.ByteProcessor;
 import ij.process.FloatProcessor;
+
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -23,14 +23,15 @@ import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
-import javax.swing.SwingUtilities;
+import javax.swing.JToolBar;
+
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.ScipionParams;
 import xmipp.utils.XmippWindowUtil;
@@ -45,11 +46,12 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
     private JButton registerbt;
     protected int width, height;
     private ImagePlus imp;
-    private JToggleButton invertbt;
-    private JToggleButton addbt;
+    private JCheckBox invertbt;
+    private JCheckBox addbt;
     private final XmippImageWindow iw;
-    private JCheckBox smoothbt;
+    private JToggleButton smoothbt;
     private JFormattedTextField smoothtf;
+	private JButton refreshbt;
     
     public DesignMaskJFrame(XmippImageWindow iw)
     {
@@ -69,19 +71,26 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
         constraints.insets = new Insets(0, 5, 0, 5);
         constraints.anchor = GridBagConstraints.WEST;
         setLayout(new GridBagLayout());
-        
-        imagepn = new ImageJPanel(mask, width, height);
-        add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 0));
-        
-        JPanel optionspn = new JPanel();
-        add(optionspn, XmippWindowUtil.getConstraints(constraints, 0, 1));
-        optionspn.add(new JLabel("Invert:"));
-        invertbt = new JCheckBox();
+        JToolBar optionspn = new JToolBar();
+
+		optionspn.setFloatable(false);
+        add(optionspn, XmippWindowUtil.getConstraints(constraints, 0, 0));
+        refreshbt = XmippWindowUtil.getIconButton("fa-refresh.png", new ActionListener()
+        {
+        	
+        	@Override
+        	public void actionPerformed(ActionEvent e)
+        	{
+        		refreshMask();
+        		
+        	}
+        });
+        optionspn.add(refreshbt);
+        invertbt = new JCheckBox("Invert:");
         invertbt.addActionListener(this);
         optionspn.add(invertbt);
         
-        optionspn.add(new JLabel("Smooth:"));
-        smoothbt = new JCheckBox();
+        smoothbt = new JCheckBox("Smooth:");
         smoothbt.addActionListener(this);
         optionspn.add(smoothbt);
         smoothtf = new JFormattedTextField(NumberFormat.getIntegerInstance());
@@ -90,6 +99,10 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
         smoothtf.addActionListener(this);
         smoothtf.setEnabled(false);
         optionspn.add(smoothtf);
+        imagepn = new ImageJPanel(mask, width, height);
+        add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 1));
+        
+        
         JPanel commandspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         add(commandspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 1, 1, GridBagConstraints.HORIZONTAL));
         
@@ -139,38 +152,36 @@ public class DesignMaskJFrame extends JFrame implements ActionListener{
    
     
     private void createMask() {
-            imp = IJ.getImage();
-            
-            width = imp.getCanvas().getWidth();
-            height = imp.getCanvas().getHeight();
+        imp = IJ.getImage();
+        
+        width = imp.getCanvas().getWidth();
+        height = imp.getCanvas().getHeight();
 
-            if (imp != null) {
-                Roi roi = imp.getRoi();
+        if (imp != null) {
+            Roi roi = imp.getRoi();
 
-                if (roi != null) {
-                    if (mask == null || !mask.isVisible()) {
-                        createDefaultMask();
-                    }
-
-                    mask.getProcessor().setColor(Color.WHITE);
-                    mask.getProcessor().fill(roi);
-                    if(isInvert())
-                        mask.getProcessor().invert();
-                    if(isSmooth())
-                        mask.getProcessor().blurGaussian(((Number) smoothtf.getValue()).intValue());
-                    
-                    
-                } else 
+            if (roi != null) {
+                if (mask == null || !mask.isVisible()) {
                     createDefaultMask();
-               
-                mask.getProcessor().multiply(1/mask.getProcessor().getMax());
-                mask.getProcessor().setMinAndMax(0, 1);
-                mask.updateAndDraw();    
+                }
+
+                mask.getProcessor().setColor(Color.WHITE);
+                mask.getProcessor().fill(roi);
+                if(isInvert())
+                    mask.getProcessor().invert();
+                if(isSmooth())
+                    mask.getProcessor().blurGaussian(((Number) smoothtf.getValue()).intValue());
                 
-            } else {
-                IJ.error("There are no images open.");
-            }
+            } else 
+                createDefaultMask();
+           
+            mask.getProcessor().multiply(1/mask.getProcessor().getMax());
+            mask.getProcessor().setMinAndMax(0, 1);
+            mask.updateAndDraw();    
             
+        } else {
+            IJ.error("There are no images open.");
+        }
     }
     
     public boolean isInvert()

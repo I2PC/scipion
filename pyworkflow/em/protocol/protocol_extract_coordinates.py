@@ -86,7 +86,7 @@ class ProtExtractCoords(ProtParticlePicking):
         if self.correction > 0:
             scale_corrected = scale * self.correction.get()
             
-        print "Scaling coordinates by a factor *0.2f*" % scale        
+        print "Scaling coordinates by a factor *%0.2f*" % scale        
         newCoord = Coordinate()
         
         firstCoord = inputParticles.getFirstItem().getCoordinate()

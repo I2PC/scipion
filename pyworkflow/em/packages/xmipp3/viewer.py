@@ -148,7 +148,7 @@ class XmippViewer(Viewer):
 
         if issubclass(cls, Volume):
             fn = getImageLocation(obj)
-            self._views.append(DataView(fn, viewParams={RENDER: 'image', SAMPLINGRATE: obj.getSamplingRate()}))
+            self._views.append(ObjectView(self._project, obj.strId(), fn, viewParams={RENDER: 'image', SAMPLINGRATE: obj.getSamplingRate()}))
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)

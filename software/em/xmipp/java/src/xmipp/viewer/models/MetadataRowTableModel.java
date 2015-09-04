@@ -44,7 +44,7 @@ public class MetadataRowTableModel extends MetadataTableModel {
 	}
 	
 	public MetadataRowTableModel(GalleryData data) throws Exception {
-		super(data);
+		super(data, null);
 		cols = 1;
 		rows = visibleLabels.size();
 		id = data.md.firstObject();
@@ -113,14 +113,14 @@ public class MetadataRowTableModel extends MetadataTableModel {
                     //fireTableCellUpdated(row, col);//item was clicked
 	}
         
-        public boolean isSelected(int row, int col) {
-           
-            return isSelected(row);
-        }
-        
-        public void setSelected(int row, int col, boolean b) {
-            setSelected(row, b);
-        }
+    public boolean isSelected(int row, int col) {
+       
+        return isSelected(row);
+    }
+    
+    public void setSelected(int row, int col, boolean b) {
+        setSelected(row, b);
+    }
 
 	//** Select a range of elements given the coordinates */
         @Override
@@ -128,11 +128,11 @@ public class MetadataRowTableModel extends MetadataTableModel {
 		int min = Math.min(first_row, last_row);
                 int max = Math.max(first_row, last_row);
 		for (int i = min; i <= max; i++)
-                    if(!isSelected(i))
-                    {
-			setSelected(i, true);
-                	fireTableCellUpdated(i, 0);
-                    }
+            if(!isSelected(i))
+            {
+				setSelected(i, true);
+	        	fireTableCellUpdated(i, 0);
+            }
 	}
         
           @Override

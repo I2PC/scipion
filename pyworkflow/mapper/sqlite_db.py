@@ -108,6 +108,9 @@ class SqliteDb():
         self.executeCommand("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         return [str(row['name']) for row in self._iterResults()]
     
+    def hasTable(self, tableName):
+        return tableName in self.getTables()
+    
     def getTableColumns(self, tableName):
         self.executeCommand('PRAGMA table_info(%s)' % tableName)
         return self.cursor.fetchall()

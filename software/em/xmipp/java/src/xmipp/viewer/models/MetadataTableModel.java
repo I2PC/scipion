@@ -36,10 +36,12 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
+import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
+import xmipp.utils.ScipionParams;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -54,8 +56,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	boolean ascending = true;
         
 
-	public MetadataTableModel(GalleryData data) throws Exception {
-		super(data);
+	public MetadataTableModel(GalleryData data, boolean[] selection) throws Exception {
+		super(data, selection);
 		cols = visibleLabels.size();
 		rows = n;
 		renderer.hackBorders = false;
@@ -85,9 +87,6 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	}
 
 	
-
-	
-
 	/**
 	 * Returns metadata value with java type
 	 */
@@ -99,7 +98,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                         
 			ColumnInfo ci = visibleLabels.get(column);
 			if (ci.render) {
+				
 				String key = getItemKey(row, ci.label);
+				
 				ImageItem item;
 				// If the element is on cache, just return it
 				if (cache.containsKey(key))
@@ -132,9 +133,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				case MetaData.LABEL_SIZET:
 					return md.getValueLong(label, id);
 				case MetaData.LABEL_STRING:
-	                                String str = md.getValueString(label, data.ids[row]);
-	                                if (ci.labelName.contains("_transform._matrix"))
-	                                    return String.format("<html>%s</html>", XmippUtil.formatNumbers(str).replace("],", "]<br>"));
+                    String str = md.getValueString(label, data.ids[row]);
+                    if (ci.labelName.contains("_transform._matrix"))
+                        return String.format("<html>%s</html>", XmippUtil.formatNumbers(str).replace("],", "]<br>"));
 	
 					return str;
 				case MetaData.LABEL_VECTOR_DOUBLE:
@@ -236,7 +237,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                 int index = getIndex(row, col);
                 String file = getImageFilename(index, ci.label);
                 if(Filename.isVolume(file))
-                    ImagesWindowFactory.openMetadata(file, new Params(), Params.OPENING_MODE_GALLERY);
+                {
+                	Params params = XmippApplication.isScipion()? ((ScipionParams)data.parameters).getScipionParams(): new Params();
+                    ImagesWindowFactory.openMetadata(file, params, Params.OPENING_MODE_GALLERY);
+                }
                 else
                     openXmippImageWindow(index, ci.label);
 				return true;
@@ -273,11 +277,23 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			if (ci.allowRender && ci.render != value) {
 				ci.render = value;
 				changed = true;
+				if(data.ciFirstRender == null && value)
+					data.ciFirstRender = ci;
 			}
-		if (changed) {
-			data.renderImages = value;
-			calculateCellSize();
-			fireTableDataChanged();
+		try
+		{
+			if (changed) {
+				data.renderImages = value;
+				loadDimension();
+				calculateCellSize();
+				fireTableDataChanged();
+			}
+			
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -288,11 +304,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	protected void calculateCellSize() {
-		// DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
-		if (data.renderImages) {
+		//System.out.println(String.format("MetadataTable:calculateSize renderLabel %s hasRenderLabel %s", data.renderImages, data.hasRenderLabel()));
+		if (data.renderImages && data.hasRenderLabel()) {
 			super.calculateCellSize();
-			// DEBUG.printMessage(String.format("MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
-			// cellDim.height));
+			//System.out.println(String.format("MetadataTable:calculateSize w:%d, h:%d", cellDim.width, cellDim.height));
 
 		} else {
 			int font_height;
@@ -364,7 +379,6 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		@Override
 		public void adjustColumnsWidth(JTable table) {
 			try {
-				
 				if (visibleLabels.size() != getColumnCount())
 					return;
 				
@@ -377,22 +391,27 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				TableCellRenderer rend;
 				Component comp;
 				boolean non_empty = data.md.size() > 0;
-
-				for (int i = 0; i < visibleLabels.size(); ++i) {
-					ColumnInfo col = visibleLabels.get(i);
+				TableColumn tc;
+				ColumnInfo col;
+				for (int i = 0; i < visibleLabels.size(); i++) {
+					 col = visibleLabels.get(i);
+					tc = getColumn(i);
 					width = 0;
 					// Calculate width of the cell
 					if (col.render) {
 						width = cellDim.width;
 					} else if (non_empty) {
 						// else {
+						
 						rend = table.getCellRenderer(0, i);
-						comp = rend.getTableCellRendererComponent(table,
-								getValueAt(0, i), false, false, 0, 0);
-						width = comp.getPreferredSize().width + 10;
+						if(rend != null)
+						{
+							Object value = getValueAt(0, i);
+							comp = rend.getTableCellRendererComponent(table, value, false, false, 0, i);
+							width = comp.getPreferredSize().width + 10;
+						}
 					}
 					// Calculate width of the header
-					TableColumn tc = getColumn(i);
 					rend = tc.getHeaderRenderer();
 					if (rend == null)
 						rend = table.getTableHeader().getDefaultRenderer();

@@ -1,5 +1,5 @@
 /*
- * To change this template, choose Tools | Templates
+cd * To change this template, choose Tools | Templates
  * and openTableFileImageItem the template in the editor.
  */
 package xmipp.ij.commons;
@@ -105,29 +105,29 @@ public class XmippMenuBar extends MenuBar
 		add(helpmn);
 
 		// menubar file menu
-		savemi = new MenuItem("Save");
-		savemi.setShortcut(new MenuShortcut(KeyEvent.VK_S));
-		savemi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				try
-				{
-					if(XmippMenuBar.this.iploader.existsFile())
-						XmippMenuBar.this.xw.saveData();
-					else
-						XmippMenuBar.this.saveAs();
-				}
-				catch (Exception ex)
-				{
-					ex.printStackTrace();
-					XmippDialog.showInfo(null, ex.getMessage());
-				}
-
-			}
-		});
+//		savemi = new MenuItem("Save");
+//		savemi.setShortcut(new MenuShortcut(KeyEvent.VK_S));
+//		savemi.addActionListener(new ActionListener()
+//		{
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e)
+//			{
+//				try
+//				{
+//					if(XmippMenuBar.this.iploader.existsFile())
+//						XmippMenuBar.this.xw.saveData();
+//					else
+//						XmippMenuBar.this.saveAs();
+//				}
+//				catch (Exception ex)
+//				{
+//					ex.printStackTrace();
+//					XmippDialog.showInfo(null, ex.getMessage());
+//				}
+//
+//			}
+//		});
 		saveasmi = new MenuItem("Save As...");
 		saveasmi.addActionListener(new ActionListener()
 		{
@@ -136,30 +136,44 @@ public class XmippMenuBar extends MenuBar
 			public void actionPerformed(ActionEvent e)
 			{
 				saveAs();
-
 			}
 		});
 
-		openwith3dmi = new MenuItem("Open with 3D Viewer");
-		openwith3dmi.setEnabled(xw.isVolume());
+//		openwith3dmi = new MenuItem("Open with 3D Viewer");
+//		openwith3dmi.setEnabled(xw.isVolume());
 //		openwith3dmi.setEnabled(Filename.isVolume(xw.getImageFilePath()));
-		openwith3dmi.addActionListener(new ActionListener()
+//		openwith3dmi.addActionListener(new ActionListener()
+//		{
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent arg0)
+//			{
+//				ImagePlus imp = XmippMenuBar.this.iploader.getImagePlus();
+//				if (imp.getImageStackSize() == 1)
+//					XmippDialog.showInfo(null, "Only for Stack");
+//				else
+//					openImagePlusAs3D(imp);
+//				
+//			}
+//		});
+//		filemn.add(openwith3dmi);
+		MenuItem volviewermi = new MenuItem("Open with Volume Viewer/3D Slicer");
+		volviewermi.setActionCommand("Volume Viewer");
+		volviewermi.setEnabled(xw.isVolume());
+		volviewermi.addActionListener(new ActionListener()
 		{
 			
 			@Override
-			public void actionPerformed(ActionEvent arg0)
+			public void actionPerformed(ActionEvent e)
 			{
-				ImagePlus imp = XmippMenuBar.this.iploader.getImagePlus();
-				if (imp.getImageStackSize() == 1)
-					XmippDialog.showInfo(null, "Only for Stack");
-				else
-					openImagePlusAs3D(imp);
+				MenuItem mi = (MenuItem) e.getSource();
+				runCommand(mi.getActionCommand());
 				
 			}
 		});
-		filemn.add(openwith3dmi);
-		addIJMenuItem(filemn, "Open with Volume Viewer/3D Slicer", "Volume Viewer", IJRequirement.VOLUME);
-		addIJMenuItem(filemn, "Open with VolumeJ", "VolumeJ ", IJRequirement.VOLUME);
+		filemn.add(volviewermi);
+//		addIJMenuItem(filemn, "Open with Volume Viewer/3D Slicer", "Volume Viewer", IJRequirement.VOLUME);
+//		addIJMenuItem(filemn, "Open with VolumeJ", "VolumeJ ", IJRequirement.VOLUME);
 		refreshmi = new MenuItem("Refresh");
 		refreshmi.setEnabled(iploader.allowsPoll());
 		refreshmi.setShortcut(new MenuShortcut(KeyEvent.VK_F5));
@@ -234,9 +248,9 @@ public class XmippMenuBar extends MenuBar
 
 
 
-		filemn.add(savemi);
+//		filemn.add(savemi);
 		filemn.add(saveasmi);
-		addIJMenuItem(filemn, "Duplicate", "Duplicate...", IJRequirement.IMAGEJ);
+//		addIJMenuItem(filemn, "Duplicate", "Duplicate...", IJRequirement.IMAGEJ);
 		filemn.add(refreshmi);
 		filemn.add(pollmi);
 		filemn.add(ugmi);
@@ -571,9 +585,7 @@ public class XmippMenuBar extends MenuBar
 					{
 						filters.remove(getFilter(command));
 						xw.loadData();
-						ImagePlus imp = xw.getImagePlusLoader().getImagePlus();
-						for(IJCommand filter: filters)
-							IJ.run(imp, filter.getCommand(), filter.getOptions());
+						applyFilters();
 					}
 					
 				}
@@ -584,6 +596,13 @@ public class XmippMenuBar extends MenuBar
 			}
 		});
 	}//function addCommand
+	
+	public void applyFilters()
+	{
+		ImagePlus imp = xw.getImagePlusLoader().getImagePlus();
+		for(IJCommand filter: filters)
+			IJ.run(imp, filter.getCommand(), filter.getOptions());
+	}
 	
 	
 	public IJCommand getFilter(String command)
@@ -596,7 +615,7 @@ public class XmippMenuBar extends MenuBar
 		return null;
 	}
 	/** Run ImageJ command */
-	public void runCommand(String command, IJRequirement[] requirements){
+	public void runCommand(String command, IJRequirement... requirements){
 		if (requirements != null)
 			for (IJRequirement requirement : requirements)
 				switch (requirement)

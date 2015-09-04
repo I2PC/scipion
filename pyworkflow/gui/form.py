@@ -341,39 +341,49 @@ class SubclassesTreeProvider(TreeProvider):
                     objects.append(p)
                 
                 for paramName, attr in prot.iterOutputEM():
-                    # If attr is a sub-classes of any desired one, add it to the list
-                    # we should also check if there is a condition, the object 
-                    # must comply with the condition
-                    p = None
-                    if (any(isinstance(attr, c) for c in classes) and
-                        (not condition or 
-                         attr.evalCondition(condition))):
-                        p = pwobj.Pointer(prot, extended=paramName)
-                        p._allowsSelection = True
-                        objects.append(p)
-                    # If attr is a set, then we should consider its elements
-                    if isinstance(attr, em.EMSet):
-                        # If the ITEM type match any of the desired classes
-                        # we will add some elements from the set
-                        if any(issubclass(attr.ITEM_TYPE, c) for c in classes):
-                            if p is None: # This means the set have not be added
-                                p = pwobj.Pointer(prot, extended=paramName)
-                                p._allowsSelection = False
-                                objects.append(p)
-                            # Add each item on the set to the list of objects
-                            try:
-                                for i, item in enumerate(attr):
-                                    if i == self.maxNum: # Only load up to NUM particles
-                                        break
-                                    pi = pwobj.Pointer(prot, extended=paramName)
-                                    pi.addExtended(item.getObjId())
-                                    pi._parentObject = p
-                                    objects.append(pi)
-                            except Exception, ex:
-                                print "Error loading items from:"
-                                print "  protocol: %s, attribute: %s" % (prot.getRunName(), paramName)
-                                print "  dbfile: ", os.path.join(project.getPath(), attr.getFileName())
-                                print ex
+                    def _checkParam(paramName, attr):
+                        # If attr is a sub-classes of any desired one, add it to the list
+                        # we should also check if there is a condition, the object 
+                        # must comply with the condition
+                        p = None
+                        if (any(isinstance(attr, c) for c in classes) and
+                            (not condition or 
+                             attr.evalCondition(condition))):
+                            p = pwobj.Pointer(prot, extended=paramName)
+                            p._allowsSelection = True
+                            objects.append(p)
+                        # If attr is a set, then we should consider its elements
+                        if isinstance(attr, em.EMSet):
+                            # If the ITEM type match any of the desired classes
+                            # we will add some elements from the set
+                            if any(issubclass(attr.ITEM_TYPE, c) for c in classes):
+                                if p is None: # This means the set have not be added
+                                    p = pwobj.Pointer(prot, extended=paramName)
+                                    p._allowsSelection = False
+                                    objects.append(p)
+                                # Add each item on the set to the list of objects
+                                try:
+                                    for i, item in enumerate(attr):
+                                        if i == self.maxNum: # Only load up to NUM particles
+                                            break
+                                        pi = pwobj.Pointer(prot, extended=paramName)
+                                        pi.addExtended(item.getObjId())
+                                        pi._parentObject = p
+                                        objects.append(pi)
+                                except Exception, ex:
+                                    print "Error loading items from:"
+                                    print "  protocol: %s, attribute: %s" % (prot.getRunName(), paramName)
+                                    print "  dbfile: ", os.path.join(project.getPath(), attr.getFileName())
+                                    print ex
+                    _checkParam(paramName, attr)
+                    # The following is a dirty fix for the RCT case where there
+                    # are inner output, maybe we should consider extend this for 
+                    # in a more general manner
+                    for subParam in ['_untilted', '_tilted']:
+                        if hasattr(attr, subParam):
+                            _checkParam('%s.%s' % (paramName, subParam), 
+                                        getattr(attr, subParam))
+                                
 
         return objects
         
@@ -901,8 +911,12 @@ class ParamWidget():
                 if not getattr(item, '_allowSelection', True):
                     return "Please select object of types: %s" % self.param.pointerClass.get()
 
-        dlg = ListDialog(self.parent, 
-                         "Select object of types: %s" % self.param.pointerClass.get(), 
+        title = "Select object of types: %s" % self.param.pointerClass.get()
+        pointerCond = self.param.pointerCondition.get()
+        if pointerCond:
+            title += " (condition: %s)" % pointerCond
+                                            
+        dlg = ListDialog(self.parent, title,
                          tp, "Double click an item to preview the object",
                          validateSelectionCallback=validateSelected,
                          selectmode=self._selectmode)
@@ -1303,7 +1317,7 @@ class FormWindow(Window):
         # Run Name not editable
         #entry.configure(state='readonly')
         # Run mode
-        self.protocol.getDefinitionParam('')
+        self.protocol.getParam('')
         #self._createHeaderLabel(runFrame, Message.LABEL_RUNMODE).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
         #runSection.addContent()
         runSection.grid(row=0, column=0, sticky='news', padx=5, pady=5)
@@ -1646,7 +1660,7 @@ class FormWindow(Window):
             if isinstance(widget, LineWidget) or isinstance(widget, GroupWidget):
                 param = widget.param
             else:
-                param = self.protocol.getDefinitionParam(paramName)
+                param = self.protocol.getParam(paramName)
             cond = self.protocol.evalParamCondition(paramName) and self.protocol.evalParamExpertLevel(param)
             widget.display(cond)
             
@@ -1654,7 +1668,7 @@ class FormWindow(Window):
         """Check the conditions of all params affected
         by this param"""
         self.setParamFromVar(paramName)
-        param = self.protocol.getDefinitionParam(paramName)
+        param = self.protocol.getParam(paramName)
         
         for d in param._dependants:
             self._checkCondition(d)

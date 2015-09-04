@@ -34,7 +34,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -46,7 +45,6 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -81,7 +79,6 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.LookAndFeel;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
@@ -98,7 +95,6 @@ import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.QuickHelpJDialog;
-import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
@@ -192,6 +188,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private ExtractPickerJFrame extractframe;
 	private ButtonGroup reslicegroup;
 	protected JPanel buttonspn;
+	protected JButton searchbt;
+    protected JButton plotbt;
+	protected JButton chimerabt;
 
 	/** Some static initialization for fancy default dimensions */
 	static
@@ -204,8 +203,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
-        protected JButton searchbt;
-        protected JButton plotbt;
+        
 
 
 	/** Initialization function after GalleryData structure is created */
@@ -272,18 +270,25 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
 
+	protected void createModel() throws Exception
+	{
+		createModel(null);
+	}
 	/**
 	 * Function to create the gallery type depending on the filename
 	 * 
 	 * @throws Exception
 	 */
-	private void createModel() throws Exception
+	protected void createModel(boolean[] selection) throws Exception
 	{
-		gallery = data.createModel();
+		gallery = data.createModel(selection);
         if (data.getModelColumns() != null)
 			gallery.setColumns(data.getModelColumns());
 		else if (data.getModelRows() != null)
 			gallery.setRows(data.getModelRows());
+        int index = gallery.getSelTo();
+        if(jsGoToImage != null)
+        	jsGoToImage.setValue(index + 1);
 	}
 
 	public GalleryData getData()
@@ -439,8 +444,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				data.changeMode();
-				reloadTableData();
+				changeView();
 			}
 		});
 		enableToolBarActions();
@@ -460,6 +464,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				});
 			}
 		});
+		XmippWindowUtil.setScipionImageIcon(this);
 	}
 
 	private void setInitialValues()
@@ -615,13 +620,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					hdir = 1;
 					break;
 
-                                case KeyEvent.VK_SPACE:
-                                        int from = gallery.getSelFrom(), to = gallery.getSelTo();
-                                        for (int i = from; i <= to; ++i)
-                                            if (gallery.isSelected(i))
-                                                data.setEnabled(i, !data.isEnabled(i));
-                                        if(from != -1)
-                                            gallery.fireTableRowsUpdated(from, to);
+                case KeyEvent.VK_SPACE:
+                        int from = gallery.getSelFrom(), to = gallery.getSelTo();
+                        for (int i = from; i <= to; ++i)
+                            if (gallery.isSelected(i))
+                                data.setEnabled(i, !data.isEnabled(i));
+                        if(from != -1)
+                            gallery.fireTableRowsUpdated(from, to);
 				}
 				if (vdir != 0 || hdir != 0)
 				{
@@ -734,11 +739,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	private void makeVisible(int row, int col)
 	{
-		//DEBUG.printMessage(String.format("gotoImage, index: %d, row: %d, col:%d", index, coords[0], coords[1]));
+		//System.out.println(String.format("gotoImage,  row: %d, col:%d", row, col));
 
 		// Gets current selected cell bounds.
 		Rectangle rect = table.getCellRect(row, col, true);
-
 		// Ensures item is visible
 		Point pos = jspContent.getViewport().getViewPosition();
 		rect.translate(-pos.x, -pos.y);
@@ -842,21 +846,25 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         else
             autoAdjustColumns(data.isAutoAdjust());
 	}
-
 	public void reloadTableData()
 	{
-		reloadTableData(true);
+		reloadTableData(true, null);
+	}
+
+	public void reloadTableData(boolean[] selection)
+	{
+		reloadTableData(true, selection);
 	}
 
 	/** Reload table data */
-	public void reloadTableData(boolean changed)
+	public void reloadTableData(boolean changed, boolean[] selection)
 	{
 		try
 		{
 			//DEBUG.printMessage("reloadTableData...");
 			if (table != null)
 				table.removeAll();
-			createModel();
+			createModel(selection);
 			// gallery.setShowLabels(menu.getShowLabel());
 			createTable();
 
@@ -898,7 +906,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void reloadMd(boolean changed) throws Exception
 	{
 		data.loadMd();
-		reloadTableData(changed);
+		reloadTableData(changed, gallery.getSelection());
 		data.setMdChanges(changed);
 
 	}// function reloadMd
@@ -973,9 +981,16 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         
         protected void changeView()
         {
-            			data.changeMode();
-				reloadTableData();
-				makeVisible(gallery.getFirstSelectedIndex(), 0);
+            	data.changeMode();
+            	boolean[] selection = null;
+            	if(!data.isVolumeMd())
+            		selection = gallery.getSelection();
+            	reloadTableData(selection);
+            	if(gallery.getSelTo() != -1)
+            	{
+	            	Point coords = gallery.getCoords(gallery.getSelTo());
+					makeVisible(coords.y, coords.x);
+            	}
 	
         }
         
@@ -1132,6 +1147,16 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             }
         });
         toolBar.add(plotbt);
+        chimerabt = new JButton(XmippResource.getIcon("chimera.png"));
+        chimerabt.setEnabled(data.isVolumeMode());
+        chimerabt.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                openWithChimera();
+            }
+        });
+        toolBar.add(chimerabt);
 	}// function createToolbar
 
 	/** Create combos for selection of block and volume if its the case */
@@ -1201,7 +1226,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         public void selectBlock(String block)
         {
             data.selectBlock(block);
-            
             jcbVolumes.invalidate();
             try
             {
@@ -1222,7 +1246,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         	boolean hasRender = data.allowGallery();
         	boolean isCol = data.isColumnFormat();
         	
-			btnChangeView.setEnabled(hasRender && isCol);
+			btnChangeView.setEnabled(hasRender && isCol && data.renderImages());
 			jsZoom.setEnabled(hasRender);
 			jlZoom.setEnabled(hasRender);
 			
@@ -1376,16 +1400,25 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		if (!isUpdating)
 		{
-			
-			Integer intValue = (Integer) jsGoToImage.getValue();
-			if (intValue <= 0)
-				intValue = 1;
-			else if (intValue >= gallery.getSize())
-				intValue = gallery.getSize();
-			if (jsGoToImage.getValue() != intValue)
-				jsGoToImage.setValue(intValue);
-			goToImage(intValue - 1);
+			Integer oValue = ((Integer) jsGoToImage.getValue());
+			Integer value = oValue;
+			if (oValue <= 0)
+			{
+				value = 1;
+				isUpdating = true;
+			}
+			else if (oValue >= gallery.getSize())
+			{
+				value = gallery.getSize();
+				isUpdating = true;
+			}
+			if (oValue != value)
+				jsGoToImage.setValue(value);
+			if(oValue != 0 && oValue != gallery.getSelTo() + 1)//not me and not already selected
+				goToImage(value - 1);
 		}
+		else
+			isUpdating = false;
 	}
 
 	private void formComponentResized(java.awt.event.ComponentEvent evt)
@@ -1460,7 +1493,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         if (evt.isShiftDown())
                                 gallery.selectRange(previousSelectedRow, previousSelectedCol, row, col);
                         else if (evt.isControlDown())
+                        {
                                 gallery.touchItem(row, col);
+                                jsGoToImage.setValue(gallery.getSelTo() + 1);
+                        }
                 }
 
                 if (!evt.isShiftDown())
@@ -1492,7 +1528,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         if(autoadjust)
             data.setModelDim(null, null);
         else
-            data.setModelDim((Integer)jsRows.getValue(), (Integer)jsColumns.getValue());
+        {
+        	int rows = (Integer)jsRows.getValue();
+        	int cols = (Integer)jsColumns.getValue();
+        	if(rows > 0 && cols > 0)
+        		data.setModelDim(rows, cols);
+        }
 		adjustColumns();
 	}
 
@@ -1502,10 +1543,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		reloadTableData();
 	}
         
-        protected void plotColumns() {
-            PlotJDialog dlg = new PlotJDialog(GalleryJFrame.this);
-            dlg.showDialog();
-        }
+    protected void plotColumns() {
+        PlotJDialog dlg = new PlotJDialog(GalleryJFrame.this);
+        dlg.showDialog();
+    }
 
 	protected class GalleryMenu extends XmippMenuBarCreator
 	{
@@ -1519,49 +1560,50 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE, "File");
 			addItem(FILE_OPEN, "Open ...", null, "control released O");
 			addItem(FILE_OPENWITH_IJ, "Open with ImageJ", "ij.gif", "control released J");
-			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.gif", "control released H");
+			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.png", "control released H");
 			addItem(FILE_OPENMICROGRAPHS, "Open colored particles");
 			addItem(FILE_INFO, "File info ...");
-                        
+			addExtraMenuItems();
 
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
 			addItem(FILE_SAVEAS, "Save as", "save_as.gif");
 
-                        addItem(FILE_EXPORTIMAGES, "Export images ...", "export_wiz.gif");
+            addItem(FILE_EXPORTIMAGES, "Export images ...", "export_wiz.gif");
 			addItem(FILE_REFRESH, "Refresh", "refresh.gif", "released F5");
 			addSeparator(FILE);
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
 			// Display
-			addItem(DISPLAY, "Display");
-                        addItem(DISPLAY_INVERTY, "Render positive Y axis up");
+			
                         
-                        addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
+			addItem(DISPLAY, "Display");
+            addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
-                        addItem(DISPLAY_NORMALIZE, "Normalize", null, "control released N");
+            addItem(DISPLAY_NORMALIZE, "Normalize", null, "control released N");
+            addItem(DISPLAY_INVERTY, "Render positive Y up");
 			addSeparator(DISPLAY);
-                        addDisplayLabelItems();
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
 			
 			addRenderImageColumnItems();
-			
+			addDisplayLabelItems();
 			
 			addItem(DISPLAY_RESLICE, "Reslice");
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				addItem(DISPLAY_RESLICE_VIEWS[i], reslices[i]);
-                        addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
-                        
-                                                
-                        addItem(STATS, "Statistics");
-			addItem(STATS_AVGSTD, "Avg & Std images");
-			addItem(STATS_PCA, "PCA");
-			addItem(STATS_FSC, "FSC");
+            addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
+            
+                                    
+            addItem(TOOLS, "Tools");
+			addItem(TOOLS_AVGSTD, "Avg & Std images");
+			addItem(TOOLS_PCA, "PCA");
+			addItem(TOOLS_FSC, "FSC");
+			addItem(TOOLS_PLOT, "Plot", "plot.png");
+			addItem(MD_FIND_REPLACE, "Find & Replace", "binocular.png", "control released F");
                         
 			// Metadata operations
 			addItem(METADATA, "Metadata");
                         
 			
-			addItem(MD_PLOT, "Plot", "plot.png");
 			addItem(MD_CLASSES, "Classes");
 			addItem(MD_EDIT_COLS, "Edit labels", "edit.gif");
 			addItem(MD_ADD_OBJECT, "Add new object", "new_object.gif");
@@ -1569,22 +1611,25 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(MD_REMOVE_SELECTION, "Remove selection");
 			addItem(MD_SAVE_SELECTION, "Save selection", "save.gif");
 			addSeparator(METADATA);
-			addItem(MD_FIND_REPLACE, "Find & Replace", "binocular.png", "control released F");
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
 			addItem(KEY_ASSIST, "Tips...", "bulb.png");
 		}// function createItems
+		
+		//To insert extra items inside file menu
+		public void addExtraMenuItems()
+		{}
 
 		public void update()
 		{
                         
-                        boolean isscipion = data.isScipionInstance();
+            boolean isscipion = data.isScipionInstance();
 			boolean galMode = data.isGalleryMode();
 			boolean volMode = !data.getSelVolumeFile().isEmpty();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode || data.containsGeometryInfo("3D")|| data.containsGeometryInfo("Projection"));
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
-                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data.isScipionInstance()));
+            setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode);
 			setItemEnabled(FILE_SAVE, !volMode && !isscipion);
 			setItemEnabled(FILE_SAVEAS, !volMode && !isscipion);
 			
@@ -1592,26 +1637,30 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo());
 			setItemSelected(DISPLAY_WRAP, data.containsGeometryInfo() && data.isWrap());
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo());
-                        setItemSelected(DISPLAY_INVERTY, data.isInvertY());
-			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
+            setItemSelected(DISPLAY_INVERTY, data.isInvertY());
+			setItemEnabled(DISPLAY_RENDERIMAGES, data.isTableMode() && data.isColumnFormat());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.renderImages());
-                        setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
+            setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
 			setItemEnabled(DISPLAY_RENDERIMAGE, galMode);
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.getResliceView() == ImageGeneric.VIEWS[i]));
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
-			setItemEnabled(DISPLAY_RESLICE, volMode);
-                        setItemSelected(DISPLAY_NORMALIZE, data.getNormalized());
+			setItemEnabled(DISPLAY_RESLICE, data.isVolumeMode());
+            setItemSelected(DISPLAY_NORMALIZE, data.getNormalized());
 			setItemEnabled(MD_CLASSES, data.isClassificationMd());
-			setItemEnabled(MD_PLOT, data.isTableMode());
+			setItemEnabled(TOOLS_PLOT, data.isTableMode());
 			boolean isCol = data.isColumnFormat();
-			setItemEnabled(STATS, isCol && !volMode);
+			boolean doStats = isCol && !volMode;
+			setItemEnabled(TOOLS_AVGSTD, doStats);
+			setItemEnabled(TOOLS_FSC, doStats);
+			setItemEnabled(TOOLS_PCA, doStats);
 			setItemEnabled(MD_ADD_OBJECT, isCol);
 			setItemEnabled(MD_REMOVE_DISABLED, isCol);
 			setItemEnabled(MD_REMOVE_SELECTION, isCol);
 			setItemEnabled(MD_SAVE_SELECTION, isCol);
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
-			reslicebt.setEnabled(volMode);
+			reslicebt.setEnabled(data.isVolumeMode());
+			chimerabt.setEnabled(volMode);
             setItemVisible(METADATA, !isscipion);
             addDisplayLabelItems();
             addRenderImageColumnItems();
@@ -1643,11 +1692,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				
 				else if (cmd.equals(DISPLAY_RENDERIMAGES))
 				{
-                                        if(gallery instanceof MetadataTableModel)
-                                        {
-                                            ((MetadataTableModel) gallery).setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
-                                            setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
-                                        }
+                    if(gallery instanceof MetadataTableModel)
+                    {
+                        ((MetadataTableModel) gallery).setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
+                        setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
+                        btnChangeView.setEnabled(data.hasRenderLabel() && data.renderImages());
+                    }
 					makeVisible(gallery.getFirstSelectedIndex(), 0);
 				}
 				
@@ -1661,16 +1711,16 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						isUpdating = true;
 						((MetadataGalleryTableModel) gallery).updateColumnInfo(columns);
 						gallery.fireTableDataChanged();
-						setItemEnabled(DISPLAY_RENDERIMAGES, data.renderImages());
+						//setItemEnabled(DISPLAY_RENDERIMAGES, data.renderImages());
 						// menu.enableRenderImages(data.globalRender);
 						isUpdating = false;
 					}
 				}
-				else if (cmd.equals(STATS_AVGSTD))
+				else if (cmd.equals(TOOLS_AVGSTD))
 					runInBackground(Worker.STATS);
-				else if (cmd.equals(STATS_PCA))
+				else if (cmd.equals(TOOLS_PCA))
 					runInBackground(Worker.PCA);
-				else if (cmd.equals(STATS_FSC))
+				else if (cmd.equals(TOOLS_FSC))
 					runInBackground(Worker.FSC);
 				else if (cmd.equals(FILE_OPEN))
 				{
@@ -1690,11 +1740,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					saveAs();
 				}
-                                else if (cmd.equals(FILE_EXPORTIMAGES))
+                else if (cmd.equals(FILE_EXPORTIMAGES))
 				{
-
-                                        exportImages();
-
+                	exportImages();
 				}
 				else if (cmd.equals(FILE_EXIT))
 				{
@@ -1702,22 +1750,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(FILE_OPENWITH_CHIMERA))
 				{
-                    if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
-                    {
-                        int result = fc.showOpenDialog(GalleryJFrame.this);
-                        if(result != XmippFileChooser.CANCEL_OPTION)
-                        {
-                            String path = fc.getSelectedPath();
-                            if(!Filename.isVolumeExt(path))
-                            {
-                                XmippDialog.showError(GalleryJFrame.this, XmippMessage.getFileTypeNotSupportedMsg(path));
-                                return;
-                            }
-                            openChimera(path, true);
-                        }
-                    }
-                    else
-                        openChimera(data.getSelVolumeFile(), false);
+                    openWithChimera();
 				}
 				else if (cmd.equals(FILE_OPENMICROGRAPHS))
 				{
@@ -1757,10 +1790,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 							break;
 						}
 				}
-				else if (cmd.equals(MD_PLOT))
+				else if (cmd.equals(TOOLS_PLOT))
 				{
-                                        plotColumns();
-					
+					plotColumns();
 				}
 				else if (cmd.equals(MD_CLASSES))
 				{
@@ -1957,6 +1989,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		private void selectRange(int first, int last)
 		{
 			gallery.selectRange(first, last, true);
+			jsGoToImage.setValue(gallery.getSelTo() + 1);
 		}
 
 	
@@ -1987,11 +2020,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
 				selectRange(gallery.getIndex(row, col), gallery.getSize() - 1);
 			}
-                        else if (cmd.equals(INVERT_SELECT))
+            else if (cmd.equals(INVERT_SELECT))
 			{
 				for (int i = 0; i < data.size(); i++)
-                                    gallery.setSelected(i, !gallery.isSelected(i));
-                                gallery.fireTableDataChanged();
+                    gallery.setSelected(i, !gallery.isSelected(i));
+                gallery.fireTableDataChanged();
+                jsGoToImage.setValue(gallery.getSelTo() + 1);
 			}
 			else if (cmd.equals(ENABLED))
 			{
@@ -2138,22 +2172,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		try
 		{
 			data.saveMd(path, saveall, isoverwrite);
-                        String file;
-                        if (path.contains("@"))
-                                file = path.substring(path.lastIndexOf("@") + 1, path.length());
-                        else
-                        {
-                                file = path;
-                                path = getBlock() + "@" + file;
-                        }
-                        if(reload)
-                            {
-                            gallery.data.setFileName(file);
-                            if (path.contains("@"))
-                                    gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
-                            reloadFile(file, false);
-                            setGalleryTitle();
-                        }
+            String file;
+            if (path.contains("@"))
+                    file = path.substring(path.lastIndexOf("@") + 1, path.length());
+            else
+            {
+                    file = path;
+                    path = getBlock() + "@" + file;
+            }
+            if(reload)
+                {
+                gallery.data.setFileName(file);
+                if (path.contains("@"))
+                        gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
+                reloadFile(file, false);
+                setGalleryTitle();
+            }
 		}
 		catch (Exception e)
 		{
@@ -2258,7 +2292,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	public void reloadFile(String file, boolean changed) throws Exception
 	{
-		createModel();
+		createModel(gallery.getSelection());
 		reloadMd(changed);
 		reloadCombos();
 	}
@@ -2386,5 +2420,27 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                     ex.printStackTrace();
             }
         }
+        
+        protected void openWithChimera()
+        {
+        	if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
+            {
+                int result = fc.showOpenDialog(GalleryJFrame.this);
+                if(result != XmippFileChooser.CANCEL_OPTION)
+                {
+                    String path = fc.getSelectedPath();
+                    if(!Filename.isVolumeExt(path))
+                    {
+                        XmippDialog.showError(GalleryJFrame.this, XmippMessage.getFileTypeNotSupportedMsg(path));
+                        return;
+                    }
+                    openChimera(path, true);
+                }
+            }
+            else
+                openChimera(data.getSelVolumeFile(), false);
+        }
+        
+       
        
 }// class JFrameGallery

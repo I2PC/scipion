@@ -89,16 +89,14 @@ class ProtImportCTF(ProtImportFiles):
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
             return XmippImport(self, filesPath)
         elif importFrom == self.IMPORT_FROM_GRIGORIEFF:
-            from pyworkflow.em.packages.grigoriefflab.dataimport import BrandeisImport
-            return BrandeisImport(self)
+            from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportCTF
+            return GrigorieffLabImportCTF(self)
         else:
             return None
         
     #--------------------------- STEPS functions ---------------------------------------------------
     def importCTFStep(self, importFrom):
-
-        """ Copy ctfs matching the filename pattern.
-        """
+        """ Copy ctfs matching the filename pattern. """
         ci = self.getImportClass()
 
         inputMics = self.inputMicrographs.get()
@@ -109,11 +107,20 @@ class ProtImportCTF(ProtImportFiles):
         SetOfMicrographs.copyInfo(outputMics, inputMics)
 
         createOutputMics = False
+        
+        files = [f for f, _ in self.iterFiles()]
+        n = len(files)
+        if n == 0:
+            raise Exception("No files where found in path: '%s'\n"
+                            "matching the pattern: '%s'" % (self.filesPath, self.filesPattern))
+        print "Matching files: ", len(files)
 
         for mic in inputMics:
-            for i, (fileName, fileId) in enumerate(self.iterFiles()):
+            micName = mic.getMicName()
+            micBase = removeBaseExt(mic.getFileName())
+            for fileName in files:
                 #TODO: Define how to match mics and ctf files (temporary solution is to expect micname inside ctf file name)
-                if removeBaseExt(mic.getFileName()) in removeBaseExt(fileName):
+                if  micBase in fileName or micName in fileName:
                     ctf = ci.importCTF(mic, fileName)
                     ctfSet.append(ctf)
                     outputMics.append(mic)
@@ -130,7 +137,6 @@ class ProtImportCTF(ProtImportFiles):
             self._defineCtfRelation(outputMics, ctfSet)
         else:
             self._defineCtfRelation(inputMics, ctfSet)
-
 
     #--------------------------- INFO functions ----------------------------------------------------
     
@@ -152,11 +158,19 @@ class ProtImportCTF(ProtImportFiles):
 
         return methods
     
+    def _validate(self):
+        errors = []
+        files = [f for f, _ in self.iterFiles()]
+        if not files:
+            errors.append("No files where found in path: '%s'\n"
+                          "matching the pattern: '%s'" % (self.filesPath, self.filesPattern))
+        return errors
+    
     #--------------------------- UTILS functions ---------------------------------------------------
     def getFormat(self):
-        for i, (fileName, fileId) in enumerate(self.iterFiles()):
-            if fileName.endswith('.out'):
-                return self.IMPORT_FROM_BRANDEIS
+        for fileName, _ in self.iterFiles():
+            if fileName.endswith('.out') or fileName.endswith('.txt'):
+                return self.IMPORT_FROM_GRIGORIEFF
             if fileName.endswith('.ctfparam'):
                 return self.IMPORT_FROM_XMIPP3
         return -1
