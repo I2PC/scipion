@@ -199,17 +199,13 @@ class XmippViewer(Viewer):
             if micSet is None:
                 raise Exception('visualize: SetOfCoordinates has no micrographs set.')
             
-            mdFn = getattr(micSet, '_xmippMd', None)
+            fn = micSet.getFileName()
             tmpDir = self._getTmpPath(obj.getName())
             
             cleanPath(tmpDir)
             makePath(tmpDir)
             
-            if mdFn:
-                fn = mdFn.get()
-            else:  # happens if protocol is not an xmipp one
-                fn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
-                writeSetOfMicrographs(micSet, fn)
+            
                 
 #             posDir = getattr(obj, '_xmippMd', None)  # extra dir istead of md file for SetOfCoordinates
 #             if posDir:

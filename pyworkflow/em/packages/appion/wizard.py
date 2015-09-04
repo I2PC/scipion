@@ -52,9 +52,10 @@ class DogPickerWizard(EmWizard):
         coordsDir = project.getTmpPath(micSet.getName())
         cleanPath(coordsDir)
         makePath(coordsDir)
+        micfn = micSet.getFileName()
         # Get current values of the properties
-        micfn = os.path.join(coordsDir, 'micrographs.xmd')
-        writeSetOfMicrographs(micSet, micfn)
+#         micfn = os.path.join(coordsDir, 'micrographs.xmd')
+#         writeSetOfMicrographs(micSet, micfn)
         dogpickerConf = os.path.join(coordsDir, 'picker.conf')
         f = open(dogpickerConf, "w")
 

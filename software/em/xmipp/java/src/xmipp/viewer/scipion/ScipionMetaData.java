@@ -1187,5 +1187,11 @@ public class ScipionMetaData extends MetaData {
     {
     	return self.equals("Micrograph") || self.equals("Movie");
     }
+
+	public String getSelf()
+	{
+		// TODO Auto-generated method stub
+		return self;
+	}
    
 }

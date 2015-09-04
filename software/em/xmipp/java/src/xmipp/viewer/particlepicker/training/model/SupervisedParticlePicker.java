@@ -23,6 +23,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.JMetaDataIO;
+import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
@@ -32,6 +33,7 @@ import xmipp.viewer.particlepicker.training.CorrectAndAutopickRunnable;
 import xmipp.viewer.particlepicker.training.TrainRunnable;
 import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
+import xmipp.viewer.scipion.ScipionMetaData;
 
 /**
  * Business object for Single Particle Picker GUI. Inherits from ParticlePicker
@@ -357,7 +359,16 @@ public class SupervisedParticlePicker extends ParticlePicker
     @Override
 	public void loadEmptyMicrographs()
 	{
-		if (micrographs == null)
+    	String selfile = getMicrographsSelFile();
+		if(selfile.endsWith(".sqlite"))
+			loadEmptyMicrographsFromSqlite();
+		else
+			loadEmptyMicrographsFromMd();
+	}
+    
+    public void loadEmptyMicrographsFromMd()
+    {
+    	if (micrographs == null)
 			micrographs = new ArrayList<SupervisedPickerMicrograph>();
 		else
 			micrographs.clear();
@@ -401,8 +412,47 @@ public class SupervisedParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 
-	}
+    }
 	
+    public void loadEmptyMicrographsFromSqlite()
+    {
+    	if (micrographs == null)
+			micrographs = new ArrayList<SupervisedPickerMicrograph>();
+		else
+			micrographs.clear();
+		SupervisedPickerMicrograph micrograph;
+		String  filename;
+		try
+		{
+			String selfile = getMicrographsSelFile();
+			ScipionMetaData md = new ScipionMetaData(selfile);
+
+			ColumnInfo ci;
+			if(md.getSelf().equals("Micrograph"))
+			{
+				ci = md.getColumnInfo("_filename");
+				long[] ids = md.findObjects();
+				for (long id : ids)
+				{
+
+					filename = md.getValueString(ci.label, id);
+					micrograph = new SupervisedPickerMicrograph(filename, null, null);
+					micrographs.add(micrograph);
+				}
+			}
+			else
+				throw new IllegalArgumentException(String.format("Labels MDL_MICROGRAPH or MDL_IMAGE not found in metadata %s", selfile));
+			
+			if (micrographs.isEmpty())
+				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
+			md.destroy();
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+    }
 	
 	
 	@Override
