@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyglet.media.drivers.alsa.asound import struct__snd_pcm_hw_params
 
 from pyworkflow.protocol.params import (PointerParam, FloatParam,  
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
@@ -141,8 +140,8 @@ class ProtRelionReconstruct(ProtReconstruct3D):
             if imgSet.isPhaseFlipped():
                 params += ' --ctf_phase_flipped'
 
-        if self.extraParams:
-            params += " " + self.extraParams
+        if self.extraParams.hasValue():
+            params += " " + self.extraParams.get()
 
         self._insertFunctionStep('reconstructStep', params)
 
