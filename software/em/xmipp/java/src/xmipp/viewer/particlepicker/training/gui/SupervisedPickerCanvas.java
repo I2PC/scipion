@@ -193,7 +193,7 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		List<ManualParticle> particles;
 		int index;
 		Color color = picker.getColor();
-		Color autoColor = picker.getColor().darker().darker();
+		Color autoColor = color.darker();
 		if (!getMicrograph().isEmpty())
 		{
 			particles = getMicrograph().getManualParticles();
@@ -206,13 +206,14 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 			List<AutomaticParticle> autoparticles = getMicrograph().getAutomaticParticles();
 			for (int i = 0; i < autoparticles.size(); i++)
 				if (!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= getFrame().getThreshold())
-					drawShape(g2, autoparticles.get(i), false, dashedst);
+					drawShape(g2, autoparticles.get(i), false, continuousst);
 
 		}
 		if (active != null)
 		{
 			boolean isauto = active instanceof AutomaticParticle;
-			color = isauto? autoColor: color;
+			
+			color = isauto? Color.red.darker(): Color.red;
 			g2.setColor(color);
 			drawShape(g2, active, true, activest);
 		}
