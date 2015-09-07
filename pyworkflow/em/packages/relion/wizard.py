@@ -170,16 +170,18 @@ class RelionAutopickParams(EmWizard):
         autopickProt = form.protocol
         autopickFomProt = autopickProt.getInputAutopick()
         # Get current values of the properties
-        _, values = self._getInputProtocol(self._targets, autopickProt)
-        threshold, distance = values
-        autopickFomProt.setStepsExecutor() # allow to use runJob
-        autopickFomProt.autopickStep(threshold, distance, '--read_fom_maps')
-        print "Writing Xmipp coordinate files."
-        micFn, coordsDir = autopickFomProt.writeXmippCoords()
-        
-        protDir = autopickFomProt.getWorkingDir()
-        
+#         _, values = self._getInputProtocol(self._targets, autopickProt)
+#         threshold, distance = values
+#         autopickFomProt.setStepsExecutor() # allow to use runJob
+#         autopickFomProt.autopickStep(threshold, distance, '--read_fom_maps')
+#         print "Writing Xmipp coordinate files."
+#         micFn, coordsDir = autopickFomProt.writeXmippCoords()
+        project = autopickProt.getProject()
         micSet = autopickFomProt.getInputMicrographs()
+        micfn = micSet.getFileName()
+        coordsDir = project.getTmpPath(micSet.getName())
+        cleanPath(coordsDir)
+        makePath(coordsDir)
         pickerConf = os.path.join(coordsDir, 'picker.conf')
         f = open(pickerConf, "w")
         
@@ -220,7 +222,7 @@ class RelionAutopickParams(EmWizard):
         convertCommand = %(convert)s --coordinates --from relion --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s --extra %(protDir)s/extra
         """ % args)
         print "Launching picking GUI..."
-        CoordinatesObjectView(autopickProt.getProject(), micFn, coordsDir, autopickFomProt, pickerConf=pickerConf).show()
+        CoordinatesObjectView(autopickProt.getProject(), micfn, coordsDir, autopickFomProt, pickerConf=pickerConf).show()
                                      
     
     

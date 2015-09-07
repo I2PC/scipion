@@ -49,10 +49,10 @@ class DogPickerWizard(EmWizard):
             print 'must specify input micrographs'
             return
         project = autopickProt.getProject()
+        micfn = micSet.getFileName()
         coordsDir = project.getTmpPath(micSet.getName())
         cleanPath(coordsDir)
         makePath(coordsDir)
-        micfn = micSet.getFileName()
         # Get current values of the properties
 #         micfn = os.path.join(coordsDir, 'micrographs.xmd')
 #         writeSetOfMicrographs(micSet, micfn)
