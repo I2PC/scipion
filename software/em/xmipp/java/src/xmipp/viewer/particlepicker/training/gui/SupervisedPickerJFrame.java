@@ -102,6 +102,8 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             this.ppicker = picker;
             initComponents();
             setChanged(false);
+            if(!ppicker.getClassifier().needsTraining())
+            	ppicker.autopick(this, getMicrograph());
         } catch (IllegalArgumentException ex) {
             //close();
             throw ex;
