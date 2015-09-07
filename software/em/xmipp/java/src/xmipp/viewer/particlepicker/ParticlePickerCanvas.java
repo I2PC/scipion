@@ -29,7 +29,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
 	public final static BasicStroke dashedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	public final static BasicStroke continuousst = new BasicStroke(2.0f);
-	public final static BasicStroke activest = new BasicStroke(4.0f);
+	public final static BasicStroke activest = new BasicStroke(3.0f);
 	//public final static BasicStroke activedst = new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
         
 	protected ParticlePickerJFrame frame;
@@ -245,7 +245,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		int radius = (int) (size / 2. * magnification);
 		x = getXOnImage(x);
 		y = getYOnImage(y);
-		int distance = Math.min(15, (int) (radius/4. * magnification));
+		int distance = Math.min(10, (int) (radius/4. * magnification));
 
 		if (getFrame().isShapeSelected(Shape.Rectangle) || all)
 			g2.drawRect(x - radius, y - radius, length, length);
