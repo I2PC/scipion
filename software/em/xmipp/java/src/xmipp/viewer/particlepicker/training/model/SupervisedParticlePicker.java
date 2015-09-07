@@ -67,16 +67,16 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	// private String reviewfile;
 
-	public SupervisedParticlePicker(String selfile, String outputdir, Mode mode, ParticlePickerParams params)
+	public SupervisedParticlePicker(String selfile, String outputdir, ParticlePickerParams params)
 	{
-		this(null, selfile, outputdir, mode, params);
+		this(null, selfile, outputdir, params);
 
 	}
 
-	public SupervisedParticlePicker(String block, String selfile, String outputdir, Mode mode, ParticlePickerParams params)
+	public SupervisedParticlePicker(String block, String selfile, String outputdir, ParticlePickerParams params)
 	{
 
-		super(block, selfile, outputdir, mode, params);
+		super(block, selfile, outputdir, params);
 		try
 		{
 			templatesfile = getOutputPath("templates.stk");
@@ -112,7 +112,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	
 	public SupervisedParticlePicker(String selfile, String outputdir, Integer threads, boolean fastmode, boolean incore, ParticlePickerParams params)
 	{
-		this(selfile, outputdir, Mode.Manual, params);
+		this(selfile, outputdir, params);
 
 		this.threads = threads;
 		this.fastmode = fastmode;
@@ -619,6 +619,7 @@ public class SupervisedParticlePicker extends ParticlePicker
                 throw new IllegalArgumentException("Cannot review picking in manual mode, use manual mode instead");
             if (mode != Mode.ReadOnly && mode != Mode.Review)
             	mode = configmode;
+            
 			md.destroy();
 		}
 		catch (Exception e)

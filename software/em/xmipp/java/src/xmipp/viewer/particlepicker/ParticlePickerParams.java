@@ -42,6 +42,11 @@ public class ParticlePickerParams {
     public boolean incore;
     public String classifierProperties;
     
+    public ParticlePickerParams(Mode mode)
+    {
+    	this.mode = mode;
+    }
+    
     public ParticlePickerParams(String[] args)
     {
         try {

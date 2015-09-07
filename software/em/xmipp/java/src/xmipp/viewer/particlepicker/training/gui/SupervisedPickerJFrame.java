@@ -454,6 +454,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         sizesl.setEnabled(!selected || isGenClassifier);// not really, if there is some micrograph
         // in sup mode size cannot be changed
         sizetf.setEnabled(!selected || isGenClassifier);
+        sizelb.setEnabled(!selected || isGenClassifier);
         importmi.setEnabled(!selected);
         //autopickpercenttf.setEnabled(selected);
         

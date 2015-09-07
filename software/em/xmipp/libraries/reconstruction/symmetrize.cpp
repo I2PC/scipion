@@ -65,7 +65,7 @@ void ProgSymmetrize::defineParams()
     addParamsLine("                         : Cnv, Cnh, Sn, Dn, Dnv, Dnh, T, Td, Th, O, Oh");
     addParamsLine("                         : I, I1, I2, I3, I4, I5, Ih, helical, dihedral, helicalDihedral");
     addParamsLine("                         :+ For a full description of symmetries look at");
-    addParamsLine("                         :+ http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry");
+    addParamsLine("                         :+ http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry");
     addParamsLine("   [--helixParams <z> <rot> <rotPhase=0>]: Helical parameters z(pixels), rot(degrees), rotPhase(degrees)");
     addParamsLine("                         :+ V(r,theta,z)=V(r,theta+rotHelix+rotPhase,z+zHelix)");
     addParamsLine("   [--no_group]          : For 3D volumes: do not generate symmetry subgroup");
