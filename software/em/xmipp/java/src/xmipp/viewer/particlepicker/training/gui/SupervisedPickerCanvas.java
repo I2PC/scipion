@@ -200,6 +200,7 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 			for (index = 0; index < particles.size(); index++)
 				drawShape(g2, particles.get(index), index == particles.size() - 1, continuousst);
 
+			g2.setColor(Color.blue);
 			List<AutomaticParticle> autoparticles = getMicrograph().getAutomaticParticles();
 			for (int i = 0; i < autoparticles.size(); i++)
 				if (!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= getFrame().getThreshold())
@@ -208,8 +209,9 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		}
 		if (active != null)
 		{
-			g2.setColor(Color.red);
-			BasicStroke activest = (active instanceof AutomaticParticle) ? activedst : activecst;
+			boolean isauto = active instanceof AutomaticParticle;
+			Color color = isauto? Color.blue.darker(): picker.getColor().darker();
+			g2.setColor(color);
 			drawShape(g2, active, true, activest);
 		}
 		Rectangle autopickout = getMicrograph().getRectangle();
