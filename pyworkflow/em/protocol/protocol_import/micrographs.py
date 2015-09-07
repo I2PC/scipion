@@ -161,7 +161,9 @@ class ProtImportMicrographs(ProtImportMicBase):
                                       "If you want to obtain your micrographs individually, "
                                       "you can run the following command:\n"
                                       "scipion run scipion_directory/scripts/split_stacks.py --files *your files* --ext *extension*")
-                        break
+                # JMRT: only check the first image, for large dataset
+                # even reading the header can take a while
+                break 
             return errors
             
         else:
