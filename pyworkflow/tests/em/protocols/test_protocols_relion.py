@@ -147,16 +147,16 @@ class TestRelionRefine(TestRelionBase):
         self.launchProtocol(relionNormalize)
   
         print "Run ProtRelionRefine"
-        relion3DClass = self.newProtocol(ProtRelionRefine3D, 
+        relionRefine = self.newProtocol(ProtRelionRefine3D, 
                                          doCTF=False, runMode=1, memoryPreThreads=1,
                                          maskDiameterA=340, symmetryGroup="d6",
                                          numberOfMpi=3, numberOfThreads=2)
-        relion3DClass.inputParticles.set(relionNormalize.outputParticles)
-        relion3DClass.referenceVolume.set(self.protImportVol.outputVolume)
-        self.launchProtocol(relion3DClass)
+        relionRefine.inputParticles.set(relionNormalize.outputParticles)
+        relionRefine.referenceVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(relionRefine)
           
-        self.assertIsNotNone(getattr(relion3DClass, 'outputClasses', None), 
-                             "There was a problem with Relion 3D:\n" + relion3DClass.getErrorMessage()) 
+        self.assertIsNotNone(getattr(relionRefine, 'outputVolume', None), 
+                             "There was a problem with Relion 3D:\n" + relionRefine.getErrorMessage()) 
 
         
 class TestRelionPreprocess(TestRelionBase):
