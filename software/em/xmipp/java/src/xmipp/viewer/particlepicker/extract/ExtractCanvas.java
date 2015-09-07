@@ -65,8 +65,7 @@ public class ExtractCanvas extends ParticlePickerCanvas
 		{
 			score = active.getScore(getFrame().getColorHelper().getId());
 			color = getFrame().getColorHelper().getColor(score);
-			Stroke stroke = active.isEnabled() ? activecst : activedst;
-			drawShape(g2, active.getX(), active.getY(), frame.getParticlePicker().getSize(), true, stroke, color);
+			drawShape(g2, active.getX(), active.getY(), frame.getParticlePicker().getSize(), true, activest, color);
 		}
 	}
 
