@@ -27,31 +27,117 @@ from base import ProgramTest
 
 import pyworkflow.em.packages.xmipp3 as xmipp3
 
+RM = 'rmarabini'
+COSS = 'coss'
+JMRT = 'delarosatrevin'
 
 
-class XmippTestProgAngularDiscreteAssign(ProgramTest):
+class XmippProgramTest(ProgramTest):
+    _counter = 0
+    
     @classmethod
     def setUpClass(cls):
         #cls.setTestDir(os.path.join(os.environ['SCIPION_TESTS', 'testXmipp']))
-        cls.program = 'xmipp_angular_discrete_assign'
+        cls.program = cls.getProgram()
         cls.env = xmipp3.getEnviron()
+        #cls._counter = 0 # count number of cases per test
+        
+    def runCase(self, *args, **kwargs):
+        if 'mpi' not in kwargs:
+            kwargs['mpi'] = 2 if self.program.startswith('xmipp_mpi') else 0
+        ProgramTest.runCase(self, *args, **kwargs)
         
         
-        """
-                <CASE
-            arguments="-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc"
-            changeDir="FALSE">
-            <PRERUN
-                command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol -o %o/reference.stk --sampling_rate 10" />
-                        <FILE filename="assigned_angles.txt"/>
-        </CASE>
-        """
+class AngularDiscreteAssign(XmippProgramTest):
+    _owner = RM
+    @classmethod
+    def getProgram(cls):
+        #cls.setTestDir(os.path.join(os.environ['SCIPION_TESTS', 'testXmipp']))
+        return 'xmipp_angular_discrete_assign'
         
     def test_case1(self):
-        """ Check that an ouput was generated and
-        the condition is valid. 
-        """
-        self.runCase("-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc",
+        self.runCase("-i input/aFewProjections.sel -o %o/assigned_angles.xmd --ref %o/reference.doc",
                      preruns=["xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol -o %o/reference.stk --sampling_rate 10"],
-                     outputs=['assigned_angles.txt'])
+                     outputs=['assigned_angles.xmd'])
         
+        
+class AngularDistance(XmippProgramTest):
+    _owner = COSS
+    @classmethod
+    def getProgram(cls):
+        #cls.setTestDir(os.path.join(os.environ['SCIPION_TESTS', 'testXmipp']))
+        return 'xmipp_angular_distance'
+        
+    def test_case1(self):
+        self.runCase("--ang1 input/discreteAssignment.xmd --ang2 input/aFewProjections.sel --oroot %o/angleComparison --sym c3 -v 2",
+                     outputs=['angleComparison.xmd'])        
+
+
+class AngularDistributionShow(XmippProgramTest):
+    _owner = RM
+    @classmethod
+    def getProgram(cls):
+        #cls.setTestDir(os.path.join(os.environ['SCIPION_TESTS', 'testXmipp']))
+        return 'xmipp_angular_distribution_show'
+        
+    def test_case1(self):
+        self.runCase("-i input/randomAngularDistribution.sel -o %o/distribution.xmd histogram",
+                     outputs=['distribution.xmd'])
+        
+    def test_case2(self):
+        self.runCase("-i input/randomAngularDistribution.sel -o %o/distribution.bild chimera",
+                     outputs=['distribution.bild'])
+        
+        
+class AngularNeighbourhood(XmippProgramTest):
+    _owner = RM
+    @classmethod
+    def getProgram(cls):
+        #cls.setTestDir(os.path.join(os.environ['SCIPION_TESTS', 'testXmipp']))
+        return 'xmipp_angular_neighbourhood'
+        
+    def test_case1(self):
+        self.runCase("-i1 input/randomAngularDistribution.sel -i2 input/aFewProjections.sel -o %o/neighborhood.sel",
+                     outputs=['neighborhood.sel'])  
+        
+  
+class AngularProjectLibrary(XmippProgramTest):
+    _owner = RM
+    @classmethod
+    def getProgram(cls):
+        #cls.setTestDir(os.path.join(os.environ['SCIPION_TESTS', 'testXmipp']))
+        return 'xmipp_angular_project_library'
+        
+    def test_case1(self):
+        self.runCase("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5",
+                     outputs=["output_projections.doc", "output_projections.stk"])         
+        
+    def test_case2(self):
+        self.runCase("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 "
+                     "--compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance -1",
+                     outputs=["output_projections.doc", "output_projections.stk", "output_projections_sampling.xmd"]) 
+         
+    def test_case3(self):
+        self.runCase("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 "
+                     "--compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance 10 ",
+                     outputs=["output_projections.doc", "output_projections.stk", "output_projections_sampling.xmd"])                
+         
+    def test_case4(self):
+        self.runCase("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 "
+                     "--compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance 10  --near_exp_data",
+                     outputs=["output_projections.doc", "output_projections.stk", "output_projections_sampling.xmd"])                
+        
+    def test_case5(self):
+        self.runCase("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --method real_space",
+                     outputs=["output_projections.doc", "output_projections.stk"]) 
+         
+
+class AngularProjectLibraryMpi(AngularProjectLibrary):
+    @classmethod
+    def getProgram(cls):
+        #cls.setTestDir(os.path.join(os.environ['SCIPION_TESTS', 'testXmipp']))
+        return 'xmipp_mpi_angular_project_library'
+    
+    
+
+     

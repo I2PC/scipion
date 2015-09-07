@@ -101,9 +101,10 @@ class ProgramTest(unittest.TestCase):
                 command.run(timeout=self._timeout)
                 pipe = ">>"
                 
-    def runCase(self, args, mpi=0, changeDir=False, preruns=None, postruns=None):
+    def runCase(self, args, mpi=0, changeDir=False, preruns=None, postruns=None, outputs=None):
         self._testDir = os.path.join(os.environ['SCIPION_TESTS'], 'testXmipp')
-        self.outputDir = os.path.join(self._testDir, 'test', self.program)
+        self._counter += 1
+        self.outputDir = os.path.join(self._testDir, 'test', '%s_%02d' % (self.program, self._counter))
         pwutils.cleanPath(self.outputDir)
         pwutils.makePath(self.outputDir)
         
@@ -118,6 +119,7 @@ class ProgramTest(unittest.TestCase):
         else:
             cmd = self.program
         
+        args = self._parseArgs(args)
         
         if changeDir:
             cmd = "cd %s ; %s %s > stdout.txt 2> stderr.txt" % (self.outputDir, cmd, args)
@@ -136,6 +138,10 @@ class ProgramTest(unittest.TestCase):
         
         if postruns:
             self._runCommands(postruns, 'postruns')
+            
+        if outputs:
+            for outFile in outputs:
+                self.assertTrue(os.path.exists(os.path.join(self.outputDir, outFile)))
             
         os.chdir(cwd)
         
