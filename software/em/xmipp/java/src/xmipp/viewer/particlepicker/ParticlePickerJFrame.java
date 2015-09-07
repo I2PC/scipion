@@ -702,12 +702,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 shapepn.add(new JLabel("Shape:"));
                 Icon icon = XmippResource.getIcon("circle.png");
 		circlechb = new JToggleButton(icon);
-		circlechb.setSelected(true);
+		//circlechb.setSelected(true);
 		circlechb.addItemListener(shapelistener);
                 
 		rectanglechb = new JToggleButton(XmippResource.getIcon("square.png"));
-                rectanglechb.setPreferredSize(null);
-		rectanglechb.setSelected(true);
+        rectanglechb.setPreferredSize(null);
+		//rectanglechb.setSelected(true);
 		rectanglechb.addItemListener(shapelistener);
 
 		centerchb = new JToggleButton(XmippResource.getIcon("plus.png"));

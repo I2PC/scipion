@@ -29,7 +29,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
 	public final static BasicStroke dashedst = new BasicStroke(2.0f);
 	public final static BasicStroke continuousst = new BasicStroke(2.0f);
-	public final static BasicStroke activest = new BasicStroke(3.0f);
+	public final static BasicStroke activest = new BasicStroke(4.0f);
         
 	protected ParticlePickerJFrame frame;
 	protected Micrograph micrograph;
