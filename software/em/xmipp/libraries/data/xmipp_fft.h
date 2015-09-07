@@ -278,6 +278,7 @@ void InverseFourierTransformHalf(const MultidimArray< std::complex< double > > &
  */
 void centerFFT2(MultidimArray<double> &v);
 
+
 /** CenterFFT
  * Relation with Matlab fftshift: forward true is equals to fftshift and forward false
  * equals to ifftshift
@@ -285,124 +286,265 @@ void centerFFT2(MultidimArray<double> &v);
 template <typename T>
 void CenterFFT(MultidimArray< T >& v, bool forward)
 {
+	bool firstTime=true;						// First time executing inner loops.
+
+	// Check dimension is between 1 and 3 inclusive.
     if ( v.getDim() > 0 && v.getDim() <= 3)
     {
-        // 3D
-        MultidimArray< T > aux;
-        size_t l;
-        long int shift;
+        // Shift in the X direction
+    	size_t l=0;
 
         // Shift in the X direction
-        if ((l = XSIZE(v)) > 1)
+        if (((l = XSIZE(v)) > 1) && (YSIZE(v) == 1) && (ZSIZE(v) == 1))
         {
-            aux.resizeNoCopy(l);
-            shift = (long int)(l / 2);
+        	size_t firstHalfSize=0;
+        	size_t secondHalfSize=0;
+        	MultidimArray< T > aux;
 
-            if (!forward)
-                shift = -shift;
+        	if (forward)
+        	{
+        		firstHalfSize  = (l + 1) / 2;
+        		secondHalfSize = l - firstHalfSize;
+        		aux.resizeNoCopy( firstHalfSize);
 
-            for (size_t k = 0; k < ZSIZE(v); k++)
-                for (size_t i = 0; i < YSIZE(v); i++)
+                for (size_t k = 0; k < ZSIZE(v); k++)
                 {
-                    // Shift the input in an auxiliar vector
-                    T *ptr_vkij = &dAkij(v, k, i, 0);
-                    for (size_t j = 0; j < l; ++j, ++ptr_vkij)
+                    for (size_t i = 0; i < YSIZE(v); i++)
                     {
-                        size_t jp = j + shift;
-
-                        if (-shift > (long int)j)
-                            jp = j + shift + l;
-                        else if (jp >= l)
-                            jp -= l;
-
-                        dAi(aux,jp) = *ptr_vkij;
+                    	memcpy( &dAi(aux, 0), &dAkij(v, k, i, 0), sizeof(T)*firstHalfSize);
+                        memcpy( &dAkij(v, k, i, 0), &dAkij(v, k, i, firstHalfSize), sizeof(T)*secondHalfSize);
+                        memcpy( &dAkij(v, k, i, secondHalfSize), &dAi(aux, 0), sizeof(T)*firstHalfSize);
                     }
-
-                    // Copy the vector
-                    memcpy(&dAkij(v, k, i, 0),&dAi(aux, 0),l*sizeof(T));
                 }
+        	}
+        	else
+        	{
+        		secondHalfSize = (l + 1) / 2;
+        		firstHalfSize  = l - secondHalfSize;
+        		aux.resizeNoCopy( secondHalfSize);
+
+                for (size_t k = 0; k < ZSIZE(v); k++)
+                {
+                    for (size_t i = 0; i < YSIZE(v); i++)
+                    {
+                        memcpy( &dAi(aux, 0), &dAkij(v, k, i, firstHalfSize), sizeof(T)*secondHalfSize);
+                        memcpy( &dAkij(v, k, i, secondHalfSize), &dAkij(v, k, i, 0), sizeof(T)*firstHalfSize);
+                        memcpy( &dAkij(v, k, i, 0), &dAi(aux, 0), sizeof(T)*secondHalfSize);
+                    }
+                }
+        	}
         }
-
-        // Shift in the Y direction
-        if ((l = YSIZE(v)) > 1)
+        else
         {
-            aux.resizeNoCopy(l);
-            shift = (long int)(l / 2);
+			// 3D
+			MultidimArray< T > aux;
+			size_t 	l=0;
+			long int shift;
 
-            if (!forward)
-                shift = -shift;
+			int		i=0;							// Loop counter.
+			int		halfRows=0;						// Half rows of the matrix.
+			int		rowSize=0;						// Size in bytes of the row.
 
-            size_t lmax=(l/4)*4;
-            for (size_t k = 0; k < ZSIZE(v); k++)
-                for (size_t j = 0; j < XSIZE(v); j++)
-                {
-                    // Shift the input in an auxiliar vector
-                    for (size_t i = 0; i < l; i++)
-                    {
-                    	size_t ip = i + shift;
+			// Size in bytes of first and second half row.
+			int		firstHalfRowSize=0, secondHalfRowSize=0;
 
-                        if (-shift > (long int)i)
-                            ip += l;
-                        else if (ip >= l)
-                            ip -= l;
+			// # elements in first and second half row.
+			int		nElemsFirstHalf_X=0, nElemsSecondHalf_X=0;
 
-                        dAi(aux,ip) = dAkij(v, k, i, j);
-                    }
+			MultidimArray< T >	tempVector;			// Temporary vector.
 
-                    // Copy the vector
-                    const T* ptrAux=&dAi(aux,0);
-                    for (size_t i = 0; i < lmax; i+=4,ptrAux+=4)
-                    {
-                        dAkij(v, k, i  , j) = *ptrAux;
-                        dAkij(v, k, i+1, j) = *(ptrAux+1);
-                        dAkij(v, k, i+2, j) = *(ptrAux+2);
-                        dAkij(v, k, i+3, j) = *(ptrAux+3);
-                    }
-                    for (size_t i = lmax; i < l; ++i, ++ptrAux)
-                        dAkij(v, k, i, j) = *ptrAux;
-                }
-        }
+			bool 	isOdd=false;					// Odd # rows in matrix.
+			MultidimArray< T >	savedRow;			// Temporary vector in odd matrix.
 
-        // Shift in the Z direction
-        if ((l = ZSIZE(v)) > 1)
-        {
-            aux.resizeNoCopy(l);
-            shift = (long int)(l / 2);
+			// Execute FFT in 2 dimensions before 3D.
+			if (forward)
+			{
+				for (size_t k=0; k<ZSIZE(v); k++)
+				{
+					// Pointers to upper and lower half matrix.
+					T		*upperHalfPtr, *lowerHalfSrcPtr, *lowerHalfDestPtr;
 
-            if (!forward)
-                shift = -shift;
-            size_t lmax=(l/4)*4;
-            for (size_t i = 0; i < YSIZE(v); i++)
-                for (size_t j = 0; j < XSIZE(v); j++)
-                {
-                    // Shift the input in an auxiliar vector
-                    for (size_t k = 0; k < l; k++)
-                    {
-                    	size_t kp = k + shift;
-                        if (-shift > (long int)k)
-                            kp += l;
-                        else if (kp >= l)
-                            kp -= l;
+					// This is computed first time only.
+					if (firstTime)
+					{
+						firstTime = false;
 
-                        dAi(aux,kp) = dAkij(v, k, i, j);
-                    }
+						// Compute # elements in each half vector in X-dimension.
+						nElemsFirstHalf_X = (XSIZE(v) + 1) / 2;
+						nElemsSecondHalf_X = XSIZE(v) - nElemsFirstHalf_X;
 
-                    // Copy the vector
-                    const T* ptrAux=&dAi(aux,0);
-                    for (size_t k = 0; k < lmax; k+=4,ptrAux+=4)
-                    {
-                        dAkij(v, k,   i, j) = *ptrAux;
-                        dAkij(v, k+1, i, j) = *(ptrAux+1);
-                        dAkij(v, k+2, i, j) = *(ptrAux+2);
-                        dAkij(v, k+3, i, j) = *(ptrAux+3);
-                    }
-                    for (size_t k = lmax; k < l; ++k, ++ptrAux)
-                        dAkij(v, k, i, j) = *ptrAux;
-                }
+						// Compute X dimension size in bytes.
+						rowSize = XSIZE(v)*sizeof(T);
+
+						// Allocate temporary vector.
+						firstHalfRowSize = nElemsFirstHalf_X*sizeof(T);
+						secondHalfRowSize = rowSize - firstHalfRowSize;
+						tempVector.resizeNoCopy( XSIZE(v));
+
+						// Compute # iterations.
+						halfRows = YSIZE(v) / 2;
+
+						// If even # rows then save row located in the middle of the matrix.
+						if ((YSIZE(v) % 2) != 0)
+						{
+							isOdd = true;
+							savedRow.resizeNoCopy( XSIZE(v));
+						}
+					}
+
+					// Initialize pointers to upper and lower matrix rows.
+					upperHalfPtr     = &dAkij(v, k, 0, 0);
+					lowerHalfSrcPtr  = upperHalfPtr + (halfRows*XSIZE(v));
+					lowerHalfDestPtr = lowerHalfSrcPtr;
+
+					// If even # rows then save row located in the middle of the matrix.
+					if (isOdd)
+					{
+						memcpy( &dAi(savedRow,0), lowerHalfSrcPtr, rowSize);
+
+						// Source and destination rows are not the same in odd matrix.
+						lowerHalfSrcPtr = lowerHalfSrcPtr + XSIZE(v);
+					}
+
+					// Half of the rows must be exchanged.
+					for (i=0; i<halfRows ;i++)
+					{
+						memcpy( &dAi(tempVector,0), upperHalfPtr, rowSize);
+						memcpy( upperHalfPtr, lowerHalfSrcPtr + nElemsFirstHalf_X, secondHalfRowSize);
+						memcpy( upperHalfPtr + nElemsSecondHalf_X, lowerHalfSrcPtr, firstHalfRowSize);
+						memcpy( lowerHalfDestPtr, &dAi(tempVector, nElemsFirstHalf_X), secondHalfRowSize);
+						memcpy( lowerHalfDestPtr + nElemsSecondHalf_X, &dAi(tempVector,0), firstHalfRowSize);
+
+						upperHalfPtr 	 = upperHalfPtr + XSIZE(v);
+						lowerHalfSrcPtr  = lowerHalfSrcPtr + XSIZE(v);
+						lowerHalfDestPtr = lowerHalfDestPtr + XSIZE(v);
+					}
+
+					// If # rows is odd then restore last row.
+					if (isOdd)
+					{
+						memcpy( lowerHalfDestPtr + nElemsSecondHalf_X, &dAi(savedRow,0), firstHalfRowSize);
+						memcpy( lowerHalfDestPtr, &dAi(savedRow, nElemsFirstHalf_X), secondHalfRowSize);
+					}
+				}
+			}
+			else
+			{
+				for (size_t k = 0; k<ZSIZE(v); k++)
+				{
+					// Pointers to upper and lower half matrix.
+					T		*upperHalfSrcPtr, *upperHalfDestPtr, *lowerHalfPtr;
+
+					// This is computed first time only.
+					if (firstTime)
+					{
+						firstTime = false;
+
+						// Compute # elements in each half vector in X-dimension.
+						nElemsSecondHalf_X = (XSIZE(v) + 1) / 2;
+						nElemsFirstHalf_X  = XSIZE(v) - nElemsSecondHalf_X;
+
+						// Allocate temporary vector.
+						rowSize = XSIZE(v)*sizeof(T);
+						firstHalfRowSize = nElemsFirstHalf_X*sizeof(T);
+						secondHalfRowSize = rowSize - firstHalfRowSize;
+						tempVector.resizeNoCopy(rowSize);
+
+						// Compute # iterations.
+						halfRows = YSIZE(v) / 2;
+
+						// If odd # rows then save last row.
+						if ((YSIZE(v) % 2) != 0)
+						{
+							isOdd = true;
+							savedRow.resizeNoCopy(XSIZE(v));
+						}
+					}
+
+					// Initialize pointers to quadrants.
+					upperHalfSrcPtr  = &dAkij(v, k, halfRows-1, 0);
+					lowerHalfPtr  	 = &dAkij(v, k, YSIZE(v)-1, 0);
+					upperHalfDestPtr = upperHalfSrcPtr;
+
+					// If odd # rows then save last row.
+					if (isOdd)
+					{
+						// Source and destination rows are not the same in odd matrix.
+						upperHalfDestPtr = upperHalfDestPtr + XSIZE(v);
+
+						memcpy( &dAi(savedRow,0), upperHalfDestPtr, rowSize);
+					}
+
+					// Half of the rows must be exchanged.
+					for (i=0; i<halfRows ;i++)
+					{
+						memcpy( &dAi(tempVector, 0), upperHalfSrcPtr, rowSize);
+						memcpy( upperHalfDestPtr, lowerHalfPtr + nElemsFirstHalf_X, secondHalfRowSize);
+						memcpy( upperHalfDestPtr + nElemsSecondHalf_X, lowerHalfPtr, firstHalfRowSize);
+						memcpy( lowerHalfPtr, &dAi(tempVector, nElemsFirstHalf_X), secondHalfRowSize);
+						memcpy( lowerHalfPtr + nElemsSecondHalf_X, &dAi(tempVector,0), firstHalfRowSize);
+
+						upperHalfSrcPtr  = upperHalfSrcPtr - XSIZE(v);
+						lowerHalfPtr     = lowerHalfPtr - XSIZE(v);
+						upperHalfDestPtr = upperHalfDestPtr - XSIZE(v);
+					}
+
+					// If # rows is odd then restore row at medium position.
+					if (isOdd)
+					{
+						memcpy( upperHalfDestPtr + nElemsSecondHalf_X, &dAi(savedRow, 0), firstHalfRowSize);
+						memcpy( upperHalfDestPtr, &dAi(savedRow, nElemsFirstHalf_X), secondHalfRowSize);
+					}
+				}
+			}
+
+			// Shift in the Z direction
+			if ((l = ZSIZE(v)) > 1)
+			{
+				aux.resizeNoCopy(l);
+				shift = (long int)(l / 2);
+
+				if (!forward)
+					shift = -shift;
+				size_t lmax=(l/4)*4;
+				for (size_t i = 0; i < YSIZE(v); i++)
+				{
+					for (size_t j = 0; j < XSIZE(v); j++)
+					{
+						// Shift the input in an auxiliary vector
+						for (size_t k = 0; k < l; k++)
+						{
+							size_t kp = k + shift;
+							if (-shift > (long int)k)
+								kp += l;
+							else if (kp >= l)
+								kp -= l;
+
+							dAi(aux,kp) = dAkij(v, k, i, j);
+						}
+
+						// Copy the vector
+						const T* ptrAux=&dAi(aux,0);
+						for (size_t k = 0; k < lmax; k+=4,ptrAux+=4)
+						{
+							dAkij(v, k,   i, j) = *ptrAux;
+							dAkij(v, k+1, i, j) = *(ptrAux+1);
+							dAkij(v, k+2, i, j) = *(ptrAux+2);
+							dAkij(v, k+3, i, j) = *(ptrAux+3);
+						}
+						for (size_t k = lmax; k < l; ++k, ++ptrAux)
+						{
+							dAkij(v, k, i, j) = *ptrAux;
+						}
+					}
+				}
+			}
         }
     }
     else
+    {
         REPORT_ERROR(ERR_MULTIDIM_DIM,"CenterFFT ERROR: Dimension should be 1, 2 or 3");
+    }
 }
 
 /** FFT shift 1D
