@@ -892,8 +892,10 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				
+				for(SupervisedPickerMicrograph m: ppicker.getMicrographs())
+					ppicker.resetMicrograph(m);
 				ppicker.autopick(SupervisedPickerJFrame.this, getMicrograph());
+				
 				
 			}});
     	autopickbt.setBackground(XmippWindowUtil.firebrick);
