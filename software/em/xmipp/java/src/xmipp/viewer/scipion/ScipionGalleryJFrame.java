@@ -52,14 +52,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public ScipionGalleryJFrame(ScipionGalleryData data) {
         super(data);
         readScipionParams((ScipionParams)data.parameters);
-        setScipionImageIcon();
+        
     }
       
-    private void setScipionImageIcon()
-    {
-            Image img = XmippResource.getIcon("scipion_logo.png").getImage();
-            setIconImage(img);
-    }
+  
 
     protected void readScipionParams(ScipionParams parameters)
     {
@@ -290,7 +286,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     public void reloadTableData(boolean changed)
     {
-        super.reloadTableData(changed);
+        super.reloadTableData(changed, gallery.getSelection());
         enableActions();
     }
 
@@ -394,12 +390,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             {
                     if (cmd.equals(FILE_LOAD_SEL))
                     {
+                    	fc.setApproveButtonText("Open");
                         if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
                             loadSelection(fc.getSelectedPath());
                     }
                     if (cmd.equals(FILE_SAVE_SEL))
                     {
                         fc.setSelectedFile(new File(sqlitefile));
+                        fc.setApproveButtonText("Save");
                          if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
                             saveSelection(fc.getSelectedPath());
                     }

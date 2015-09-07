@@ -161,9 +161,9 @@ void FourierProjector::produceSideInfo()
     transformer2D.FourierTransform(projection(),projectionFourier,false);
 }
 
-void projectVolume(FourierProjector &projection, Projection &P, int Ydim, int Xdim,
+void projectVolume(FourierProjector &projector, Projection &P, int Ydim, int Xdim,
                    double rot, double tilt, double psi)
 {
-    projection.project(rot,tilt,psi);
-    P() = projection.projection();
+	projector.project(rot,tilt,psi);
+    P() = projector.projection();
 }

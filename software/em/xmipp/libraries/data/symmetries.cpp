@@ -2111,7 +2111,7 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
 #undef DEBUG
 /** translate string fn_sym to symmetry group, return false
     is translation is not possible. See URL
-    http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry
      for details  */
 
 bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)

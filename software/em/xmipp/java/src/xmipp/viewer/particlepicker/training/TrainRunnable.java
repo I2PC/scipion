@@ -25,22 +25,24 @@ import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 public class TrainRunnable implements Runnable
 	{
 
-		private SupervisedPickerJFrame frame;
-		private MDRow[] trainInput;
-                private Rectangle rectangle;
-                private Particle[] autopickRows;
-                private SupervisedPickerMicrograph micrograph;
-                private final SupervisedParticlePicker picker;
-                private final PickingClassifier classifier;
+		protected SupervisedPickerJFrame frame;
+		protected MDRow[] trainInput;
+		protected Rectangle rectangle;
+		protected Particle[] autopickRows;
+		protected SupervisedPickerMicrograph micrograph;
+		protected final SupervisedParticlePicker picker;
+		protected final PickingClassifier classifier;
 
-		public TrainRunnable(SupervisedPickerJFrame frame, MDRow[] trainInput)
+		public TrainRunnable(SupervisedPickerJFrame frame, MDRow[] trainInput, SupervisedPickerMicrograph trainmic)
 		{
 			this.frame = frame;
 			this.trainInput = trainInput;
-                        this.micrograph = frame.getMicrograph();
-                        rectangle = micrograph.getRectangle();
-                        this.picker = frame.getParticlePicker();
-                        this.classifier = picker.getClassifier();
+            this.micrograph = frame.getMicrograph();
+            rectangle = trainmic.getRectangle();
+            if(trainmic != micrograph)
+            	trainmic.resetParticlesRectangle();
+            this.picker = frame.getParticlePicker();
+            this.classifier = picker.getClassifier();
 		}
 
 		public void run()
@@ -51,7 +53,7 @@ public class TrainRunnable implements Runnable
 				micrograph.setAutopickpercent(picker.getAutopickpercent());
 				autopickRows = classifier.autopick(micrograph.getFile(), micrograph.getAutopickpercent());
 				picker.loadParticles(micrograph, autopickRows);
-                                picker.saveData(micrograph);
+                picker.saveData(micrograph);
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
 				frame.getCanvas().repaint();

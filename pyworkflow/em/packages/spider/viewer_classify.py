@@ -58,13 +58,13 @@ class SpiderViewerClassify(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         group1 = form.addGroup('Dendogram')
-        group1.addParam('doShowDendrogram', LabelParam, label="Show dendrogram?", default=True,
+        group1.addParam('doShowDendrogram', LabelParam, label="Show dendrogram", default=True,
                       help='')
         group1.addParam('minHeight', FloatParam, default=0.5,
                       label='Minimum height',
                       help='The dendrogram will be show until that height')
         self.groupClass = form.addGroup('Classes')
-        self.groupClass.addParam('doShowClasses', LabelParam, label="Visualize class averages?", default=True,
+        self.groupClass.addParam('doShowClasses', LabelParam, label="Visualize class averages", default=True,
                       help='')
 
     def _getVisualizeDict(self):
@@ -219,6 +219,8 @@ class SpiderViewerWard(SpiderViewerClassify):
             self.protocol._fillParticlesFromNodes(particles, selectedNodes)
             prot._defineOutputs(outputParticles=particles)
         self._createSubsetProtocol(createParticles, runname)
+    
+    
         
         
 class SpiderImageBox(ImageBox):

@@ -815,6 +815,20 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
     XMIPP_JAVA_CATCH;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeMdToStack
+(JNIEnv *env, jobject jmetadata, jstring jfilename, jboolean applyGeo, jboolean wrap, jint label)
+{
+    XMIPP_JAVA_TRY
+    {
+        MetaData * md = GET_INTERNAL_METADATA(jmetadata);
+        jboolean aux=false;
+        const char * fnChars = env->GetStringUTFChars(jfilename, &aux);
+        FileName fn = fnChars;
+        writeMdToStack(*md, fn, applyGeo, wrap, (MDLabel)label);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
 
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
