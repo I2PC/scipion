@@ -209,7 +209,8 @@ ParametersProjection::ParametersProjection()
     tilt_range.Ndev=0.;
     psi_range.Navg=0.;
     psi_range.Ndev=0.;
-
+    doPhaseFlip=false;
+    applyShift=true;
 }
 
 void ParametersProjection::read(const FileName &fn_proj_param)

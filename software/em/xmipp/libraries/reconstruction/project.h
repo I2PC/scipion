@@ -173,9 +173,9 @@ public:
     Angle_range psi_range;
 
     //Do phase flip
-    bool doPhaseFlip = false;
+    bool doPhaseFlip;
     //Apply shift
-    bool applyShift = true;
+    bool applyShift;
 
     /// Document filename
     FileName fn_angle;
