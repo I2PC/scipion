@@ -728,6 +728,9 @@ void * threadRotationallyAlignOneImage( void * data )
 
 */
 
+                MultidimArray<double>  allCorrs;
+                allCorrs.resizeNoCopy(XSIZE(corr)*2);
+
                 // A. Check straight image
                 rotationalCorrelation(prm->fP_img[itrans],
                                       prm->fP_ref[refno],
@@ -735,19 +738,25 @@ void * threadRotationallyAlignOneImage( void * data )
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
 
                 size_t nIter = XMIPP_MIN(thread_data->numOrientations,corr.getSize());
-
-                for (size_t k = 0; k < XSIZE(corr); k++)
+                size_t bestLastCorr = 99e99;
+                for (size_t n = 0; n < nIter; n++)
                 {
-                    if (DIRECT_A1D_ELEM(corr,k)> maxcorr[0])
-                    {
-                        maxcorr[0] = DIRECT_A1D_ELEM(corr,k);
-                        opt_psi[0] = DIRECT_A1D_ELEM(ang,k);
-                        //FIXME not sure about FIRST_IMAGE
-                        opt_refno[0] = prm->mysampling.my_neighbors[imgno][i];/*+FIRST_IMAGE;*/
-                        //opt_refno = prm->mysampling.my_neighbors[imgno][i];
-                        opt_flip[0] = false;
-                    }
+                	for (size_t k = 0; k < XSIZE(corr); k++)
+                	{
+                		if ( (DIRECT_A1D_ELEM(corr,k)> maxcorr[n]) && (DIRECT_A1D_ELEM(corr,k)<bestLastCorr))
+                		{
+                			maxcorr[n] = DIRECT_A1D_ELEM(corr,k);
+                			opt_psi[n] = DIRECT_A1D_ELEM(ang,k);
+                			//FIXME not sure about FIRST_IMAGE
+                			opt_refno[n] = prm->mysampling.my_neighbors[imgno][i];/*+FIRST_IMAGE;*/
+                			//opt_refno = prm->mysampling.my_neighbors[imgno][i];
+                			opt_flip[n] = false;
+                		}
+                	}
+
+                	bestLastCorr = maxcorr[n];
                 }
+/*
                 // B. Check mirrored image
                 rotationalCorrelation(prm->fPm_img[itrans],prm->fP_ref[refno],ang,rotAux);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
@@ -761,6 +770,7 @@ void * threadRotationallyAlignOneImage( void * data )
                         opt_flip[0] = true;
                     }
                 }
+*/
 
 #ifdef DEBUG
                 std::cerr<<"mirror: corr "<<maxcorr;
@@ -783,7 +793,7 @@ void * threadRotationallyAlignOneImage( void * data )
         }
     }
 
-    std::cout << maxcorr[0] << std::endl;
+    std::cout << maxcorr[0] << " " << maxcorr[1]<<std::endl;
     std::cout << opt_refno[0] << std::endl;
 
 #ifdef TIMING
