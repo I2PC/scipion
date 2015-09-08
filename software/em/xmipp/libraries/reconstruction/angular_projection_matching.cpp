@@ -208,7 +208,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
     Polar<double>    P;
     Polar<std::complex <double> > fP;
 
-    numOrientations = 1;
+    numOrientations = 3;
 
     // Read Selfile and get dimensions
     MetaData MetaDataLeft;
@@ -683,6 +683,9 @@ void * threadRotationallyAlignOneImage( void * data )
                 prm->stddev_ref[refno] << " " <<
                 prm->stddev_img[itrans];
 #endif
+
+/*
+
                 // A. Check straight image
                 rotationalCorrelation(prm->fP_img[itrans],
                                       prm->fP_ref[refno],
@@ -690,14 +693,6 @@ void * threadRotationallyAlignOneImage( void * data )
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
                 corr.indexSort(indxCorr);
 
-/*                if (thread_id == 1)
-                {
-                	std::cout << corr << std::endl;
-                	std::cout << indxCorr << std::endl;
-                    exit(0);
-                }
-
-*/
                 size_t nIter = XMIPP_MIN(thread_data->numOrientations,corr.getSize());
                 for (size_t k = 0; k < nIter; k++)
                 {
@@ -732,17 +727,25 @@ void * threadRotationallyAlignOneImage( void * data )
                 }
 
 */
-                /*
+
+                // A. Check straight image
+                rotationalCorrelation(prm->fP_img[itrans],
+                                      prm->fP_ref[refno],
+                                      ang,rotAux);
+                corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
+
+                size_t nIter = XMIPP_MIN(thread_data->numOrientations,corr.getSize());
+
                 for (size_t k = 0; k < XSIZE(corr); k++)
                 {
-                    if (DIRECT_A1D_ELEM(corr,k)> maxcorr)
+                    if (DIRECT_A1D_ELEM(corr,k)> maxcorr[0])
                     {
-                        maxcorr = DIRECT_A1D_ELEM(corr,k);
-                        opt_psi = DIRECT_A1D_ELEM(ang,k);
+                        maxcorr[0] = DIRECT_A1D_ELEM(corr,k);
+                        opt_psi[0] = DIRECT_A1D_ELEM(ang,k);
                         //FIXME not sure about FIRST_IMAGE
-                        opt_refno = prm->mysampling.my_neighbors[imgno][i]/*+FIRST_IMAGE;
+                        opt_refno[0] = prm->mysampling.my_neighbors[imgno][i];/*+FIRST_IMAGE;*/
                         //opt_refno = prm->mysampling.my_neighbors[imgno][i];
-                        opt_flip = false;
+                        opt_flip[0] = false;
                     }
                 }
                 // B. Check mirrored image
@@ -750,14 +753,14 @@ void * threadRotationallyAlignOneImage( void * data )
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
                 for (size_t k = 0; k < XSIZE(corr); k++)
                 {
-                    if (DIRECT_A1D_ELEM(corr,k)> maxcorr)
+                    if (DIRECT_A1D_ELEM(corr,k)> maxcorr[0])
                     {
-                        maxcorr = DIRECT_A1D_ELEM(corr,k);
-                        opt_psi = DIRECT_A1D_ELEM(ang,k);
-                        opt_refno = prm->mysampling.my_neighbors[imgno][i];
-                        opt_flip = true;
+                        maxcorr[0] = DIRECT_A1D_ELEM(corr,k);
+                        opt_psi[0] = DIRECT_A1D_ELEM(ang,k);
+                        opt_refno[0] = prm->mysampling.my_neighbors[imgno][i];
+                        opt_flip[0] = true;
                     }
-                }*/
+                }
 
 #ifdef DEBUG
                 std::cerr<<"mirror: corr "<<maxcorr;
@@ -779,6 +782,9 @@ void * threadRotationallyAlignOneImage( void * data )
 
         }
     }
+
+    std::cout << maxcorr[0] << std::endl;
+    std::cout << opt_refno[0] << std::endl;
 
 #ifdef TIMING
     float all_rot_align = elapsed_time(t0);
