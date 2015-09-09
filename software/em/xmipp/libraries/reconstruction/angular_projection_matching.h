@@ -133,12 +133,14 @@ public:
     bool phase_flipped;
     /** Threads */
     int threads;
+    //Numbre of possible orientations
+    int number_orientations;
     /** Number of translations in 5D search */
     size_t nr_trans;
     /** Thread barrier */
     barrier_t thread_barrier;
 
-    size_t numOrientations;
+    int numOrientations;
 
     /** scale params */
     bool do_scale;

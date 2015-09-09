@@ -51,6 +51,8 @@ void ProgAngularProjectionMatching::readParams()
     search5d_shift  = getIntParam("--search5d_shift");
     search5d_step = getIntParam("--search5d_step");
     max_shift = getDoubleParam("--max_shift");
+    numOrientations = getIntParam("--number_orientations");
+
     avail_memory = getDoubleParam("--mem");
     if (checkParam("--ctf"))
         fn_ctf  = getParam("--ctf");
@@ -110,6 +112,7 @@ void ProgAngularProjectionMatching::defineParams()
     addParamsLine("  [--pad <pad=1>]             : Padding factor (for CTF correction only)");
     addParamsLine("  [--phase_flipped]            : Use this if the experimental images have been phase flipped");
     addParamsLine("  [--thr <threads=1>]           : Number of concurrent threads");
+    addParamsLine("  [--number_orientations <numOrientations=1>]  : Number of possible orientations for each experimental image");
     addParamsLine("  [--append]                : Append (versus overwrite) data to the output file");
 }
 
@@ -163,6 +166,11 @@ void ProgAngularProjectionMatching::show()
     {
         std::cout << "  -> Using "<<threads<<" parallel threads"<<std::endl;
     }
+
+    if (number_orientations != 1)
+    	 std::cout << "  -> Using "<<numOrientations<<" possible orientations for each particle"<<std::endl;
+
+
     std::cout << " ================================================================="<<std::endl;
 }
 
@@ -207,8 +215,6 @@ void ProgAngularProjectionMatching::produceSideInfo()
     MultidimArray<double> dataline(3);
     Polar<double>    P;
     Polar<std::complex <double> > fP;
-
-    numOrientations = 1;
 
     // Read Selfile and get dimensions
     MetaData MetaDataLeft;
@@ -772,7 +778,8 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         double &opt_yoff,
         double &maxcorr)
 {
-    MultidimArray<double> Mtrans,Mimg,Mref;
+
+	MultidimArray<double> Mtrans,Mimg,Mref;
     int refno;
     Mtrans.setXmippOrigin();
     Mimg.setXmippOrigin();
@@ -1110,6 +1117,8 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
         for(int n=0; n < counterValidCorrs; n++)
         {
+			//std::cout << " " << std::endl;
+        	//std::cout << maxcorr[n] << std::endl;
 			translationallyAlignOneImage(img(),
 										 opt_refno[n],
 										 opt_psi[n],
@@ -1118,6 +1127,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 										 opt_yoff[n],
 										 maxcorr[n]);
 
+			//std::cout << maxcorr[n] << std::endl;
 			if(do_scale && scale_nsteps > 0)
 	        {
 	            // Compute a better scale (scale_min -> scale_max)
