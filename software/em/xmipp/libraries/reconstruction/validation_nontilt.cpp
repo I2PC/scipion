@@ -34,7 +34,6 @@ ProgValidationNonTilt::ProgValidationNonTilt()
 {
 	rank=0;
 	Nprocessors=1;
-	sampling_rate = 1;
 }
 
 void ProgValidationNonTilt::readParams()
@@ -42,18 +41,16 @@ void ProgValidationNonTilt::readParams()
     fnDir = getParam("--odir");
     fnSym = getParam("--sym");
     fnInit = getParam("--volume");
-    sampling_rate = getDoubleParam("--sampling_rate");
+    useSignificant = checkParam("--useSignificant");
 }
 
 void ProgValidationNonTilt::defineParams()
 {
-    //usage
     addUsageLine("Validate a 3D reconstruction from its projections attending to directionality and spread of the angular assignments from a given significant value");
-    //params
     addParamsLine("  [--volume <md_file=\"\">]    : Volume to validate");
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
-    addParamsLine("  [--sampling_rate <s=1>]      : Sampling rate in A/px");
+    addParamsLine("  [--useSignificant]           : Use Significant as alignment method. If not use projection matching");
 }
 
 void ProgValidationNonTilt::run()
