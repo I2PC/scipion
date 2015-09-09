@@ -36,19 +36,11 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.assertIsNotNone(protImportVol.outputVolume, "There was a problem with the import")
         
         print "Preprocessing the micrographs..."
-        protPreprocess = self.newProtocol(XmippProtPreprocessMicrographs, doCrop=True, cropPixels=50)
+        protPreprocess = self.newProtocol(XmippProtPreprocessMicrographs, doCrop=True, cropPixels=25)
         protPreprocess.inputMicrographs.set(protImport.outputMicrographs)
         protPreprocess.setObjLabel('crop 50px')
         self.launchProtocol(protPreprocess)
         self.assertIsNotNone(protPreprocess.outputMicrographs, "There was a problem with the downsampling")
-
-        # Now estimate CTF on the micrographs with ctffind 
-        print "Performing CTFfind..."   
-        protCTF = self.newProtocol(ProtCTFFind, lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
-                              runMode=1, numberOfMpi=1, numberOfThreads=16)         
-        protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
-        protCTF.setObjLabel('CTF ctffind')
-        self.launchProtocol(protCTF)
         
         print "Running Eman import coordinates..."
         protPP = self.newProtocol(ProtImportCoordinates,
@@ -59,6 +51,14 @@ class TestMixedRelionTutorial(TestWorkflow):
         protPP.setObjLabel('import from Eman boxing')
         self.launchProtocol(protPP)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman import coordinates")
+
+        # Now estimate CTF on the micrographs with ctffind 
+        print "Performing CTFfind..."   
+        protCTF = self.newProtocol(ProtCTFFind, lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
+                              runMode=1, numberOfMpi=1, numberOfThreads=16)         
+        protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protCTF.setObjLabel('CTF ctffind')
+        self.launchProtocol(protCTF)
 
         print "Run extract particles with <Same as picking> option"
         protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=SAME_AS_PICKING, doRemoveDust=False,
@@ -150,19 +150,11 @@ class TestMixedFrealignClassify(TestWorkflow):
         self.assertIsNotNone(protImportVol.outputVolume, "There was a problem with the import")
         
         print "Preprocessing the micrographs..."
-        protPreprocess = self.newProtocol(XmippProtPreprocessMicrographs, doCrop=True, cropPixels=50)
+        protPreprocess = self.newProtocol(XmippProtPreprocessMicrographs, doCrop=True, cropPixels=25)
         protPreprocess.inputMicrographs.set(protImport.outputMicrographs)
         protPreprocess.setObjLabel('crop 50px')
         self.launchProtocol(protPreprocess)
         self.assertIsNotNone(protPreprocess.outputMicrographs, "There was a problem with the downsampling")
-
-        # Now estimate CTF on the micrographs with ctffind 
-        print "Performing CTFfind..."   
-        protCTF = self.newProtocol(ProtCTFFind, lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
-                              runMode=1, numberOfMpi=1, numberOfThreads=16)         
-        protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
-        protCTF.setObjLabel('CTF ctffind')
-        self.launchProtocol(protCTF)
 
         print "Running Eman import coordinates..."
         protPP = self.newProtocol(ProtImportCoordinates,
@@ -173,6 +165,14 @@ class TestMixedFrealignClassify(TestWorkflow):
         protPP.setObjLabel('import from Eman boxing')
         self.launchProtocol(protPP)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman import coordinates")
+
+        # Now estimate CTF on the micrographs with ctffind 
+        print "Performing CTFfind..."   
+        protCTF = self.newProtocol(ProtCTFFind, lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
+                              runMode=1, numberOfMpi=1, numberOfThreads=16)         
+        protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protCTF.setObjLabel('CTF ctffind')
+        self.launchProtocol(protCTF)
         
         print "Run extract particles with <Same as picking> option"
         protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=SAME_AS_PICKING, doRemoveDust=False,
