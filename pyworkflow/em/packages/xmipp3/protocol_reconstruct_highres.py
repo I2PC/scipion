@@ -541,7 +541,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def calculateAngStep(self,newXdim,TsCurrent,ResolutionAlignment):
         k=newXdim*TsCurrent/ResolutionAlignment # Freq. index
         from math import atan2,pi
-        return atan2(1,k)*180.0/pi*2.0/3.0 # Corresponding angular step
+        return atan2(1,k)*180.0/pi # Corresponding angular step
 
     def globalAssignment(self,iteration):
         fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
