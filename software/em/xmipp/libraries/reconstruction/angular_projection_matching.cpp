@@ -1021,9 +1021,11 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
     opt_scale   = (double *)malloc (numOrientations*sizeof(double));
     opt_rot   = (double *)calloc (numOrientations, sizeof(double));
     opt_tilt   = (double *)calloc (numOrientations, sizeof(double));
-    memset(opt_scale,1,sizeof(double)*numOrientations);
+
+    //memset(opt_scale,1.0,sizeof(double)*numOrientations);
     //memset(maxcorr,-99.e99,sizeof(double)*numOrientations);
-    memset(opt_refno,-1,sizeof(int)*numOrientations);
+    //memset(opt_refno,-1,sizeof(int)*numOrientations);
+
 
     structThreadRotationallyAlignOneImage * threads_d = (structThreadRotationallyAlignOneImage *)
             malloc ( threads * sizeof( structThreadRotationallyAlignOneImage ) );
@@ -1050,6 +1052,9 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
             for (size_t i=0; i<numOrientations ;i++)
             {
             	threads_d[c].maxcorr[i] = -99.e99;
+            	threads_d[c].opt_refno[i] = -1;
+            	opt_scale[i] = 1;
+            	opt_refno[i] = -1;
             }
             pthread_create( (th_ids+c), NULL, threadRotationallyAlignOneImage, (void *)(threads_d+c) );
         }
@@ -1136,7 +1141,6 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
 	        //Add the previously applied scale to the newly found one
 	        opt_scale[n] *= img.scale();
-
 	        //!a
 	        // Divide opt_shifts by old_scale
 

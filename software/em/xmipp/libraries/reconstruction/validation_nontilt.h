@@ -39,7 +39,7 @@ class ProgValidationNonTilt: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnDir, fnSym, fnInit;
+    FileName fnDir, fnSym, fnInit, fnParticles;
 
     MetaData mdPartial;
 
