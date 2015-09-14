@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from os.path import join
-
+from pyworkflow.utils.process import runJob
 from pyworkflow.object import Float, String
 from pyworkflow.protocol.params import (PointerParam, FloatParam, STEPS_PARALLEL,
                                         StringParam, BooleanParam, EnumParam, LEVEL_ADVANCED)
@@ -69,6 +69,9 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
                            'for a description of the symmetry format accepted by Xmipp') 
         
         form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Projection_Matching','Significant'], default=self.PROJECTION_MATCHING)
+
+        form.addParam('highPassFilter', FloatParam, label='Volume high-pass the (A)', default=15)
+        form.addParam('lowPassFilter' , FloatParam, label='Volume low-pass the (A)', default=50)        
         
         form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label="Angular Sampling (degrees)",  
@@ -78,7 +81,9 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
                       label="Number of orientations per particle",  
                       help='Number of possible orientations in which a particle can be \n')
         
-        form.addParallelSection(threads=1, mpi=1)
+        #form.addParallelSection(threads=1, mpi=1)
+        form.addParallelSection(threads=1, mpi=4)
+
 
     #--------------------------- INSERT steps functions --------------------------------------------
 
@@ -96,31 +101,34 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         
         for i, vol in enumerate(self._iterInputVols()):
             
-            volName = getImageLocation(vol)
-            volDir = self._getVolDir(i+1)
-            
+            volName = getImageLocation(vol)            
+            volDir = self._getVolDir(i+1)  
+            volNameFilt = (volDir + '_filt.vol')
+          
+            filterId=self._insertFunctionStep('filterVolumeStep',volName,volNameFilt,volDir,prerequisites=[convertId])
+                                    
             if (self.alignmentMethod == self.SIGNIFICANT):            
                 sigStepId = self._insertFunctionStep('significantStep', 
-                                                     volName, volDir,
+                                                     volNameFilt, volDir,
                                                      commonParams, 
-                                                     prerequisites=[convertId])
+                                                     prerequisites=[filterId])
                 
             else:            
 
                 pmStepId = self._insertFunctionStep('projectionLibraryStep', 
-                                                     volName, volDir,
-                                                     prerequisites=[convertId])
+                                                     volNameFilt, volDir,
+                                                     prerequisites=[filterId])
                 
                 
                 sigStepId = self._insertFunctionStep('projectionMatchingStep', 
-                                                     volName, volDir,
+                                                     volNameFilt, volDir,
                                                      commonParams, 
                                                      prerequisites=[pmStepId])
                             
 
             
             volStepId = self._insertFunctionStep('validationStep', 
-                                                 volName, volDir,
+                                                 volNameFilt, volDir,
                                                  sym, 
                                                  prerequisites=[sigStepId])
 
@@ -136,7 +144,20 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         """
         writeSetOfParticles(self.inputParticles.get(), 
                             self._getPath('input_particles.xmd'))
-                    
+        
+        
+        
+    def filterVolumeStep(self, volName, volNameFilt, volDir):
+        
+        params =  '  -i %s' % volName
+        params +=  ' -o %s' % volNameFilt
+        params += '  --fourier '
+        params += '  band_pass %f %f'  % (self.lowPassFilter.get(), self.highPassFilter.get())
+        params += '  --sampling %f ' % self.inputParticles.get().getSamplingRate()
+        
+        self.runJob('xmipp_transform_filter', 
+                    params, numberOfMpi=1,numberOfThreads=1)
+        
     def _getCommonParamsSignificant(self):
         
         params =  '  -i %s' % self._getPath('input_particles.xmd')        
@@ -167,7 +188,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         makePath(volDir)
         fnGallery= (volDir+'/gallery.stk')
         params = '-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance %f --experimental_images %s --max_tilt_angle 90'\
-                    %(volName,fnGallery,self.inputParticles.get().getSamplingRate(),self.symmetryGroup.get(), self.angularSampling.get(), self._getPath('input_particles.xmd'))
+                    %(volName,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(), -1, self._getPath('input_particles.xmd'))
         
         print params
         self.runJob("xmipp_angular_project_library", params, numberOfMpi=nproc, numberOfThreads=nT)                    
