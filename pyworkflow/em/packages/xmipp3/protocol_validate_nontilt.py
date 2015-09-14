@@ -46,10 +46,13 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
     _label = 'validate_nontilt'
     PROJECTION_MATCHING = 0
     SIGNIFICANT = 1
+    WEB = 0
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
-        self.stepsExecutionMode = STEPS_PARALLEL
+        
+        if (self.WEB == 1):
+            self.stepsExecutionMode = STEPS_PARALLEL
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -82,7 +85,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
                       help='Number of possible orientations in which a particle can be \n')
         
         #form.addParallelSection(threads=1, mpi=1)
-        form.addParallelSection(threads=1, mpi=4)
+        form.addParallelSection(threads=0, mpi=4)
 
 
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -192,7 +195,8 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         
         print params
         self.runJob("xmipp_angular_project_library", params, numberOfMpi=nproc, numberOfThreads=nT)                    
-    
+        #self.runJob("ldd","`which xmipp_mpi_angular_project_library`",numberOfMpi=1)                    
+
     def projectionMatchingStep(self, volName, volDir, params):
 
         nproc = self.numberOfMpi.get()
