@@ -574,7 +574,7 @@ class ProtRelionBase(EMProtocol):
                                     postprocessImageRow=self._postprocessImageRow)
                 mdMovies = md.MetaData(self._getFileName('movie_particles'))
                 mdParts = md.MetaData(self._getFileName('input_star'))
-                mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
+                mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
                 mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
                 
                 detectorPxSize = movieParticleSet.getAcquisition().getMagnification() * movieParticleSet.getSamplingRate() / 10000
