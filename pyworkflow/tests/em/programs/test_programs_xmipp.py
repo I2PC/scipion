@@ -138,6 +138,39 @@ class AngularProjectLibraryMpi(AngularProjectLibrary):
         #cls.setTestDir(os.path.join(os.environ['SCIPION_TESTS', 'testXmipp']))
         return 'xmipp_mpi_angular_project_library'
     
+    def test_case6(self):
+        self.runCase("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5",
+                     outputs=["output_projections.doc", "output_projections.stk"])
+        
+    def test_case7(self):
+        self.runCase("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance -1",
+                     outputs=["output_projections.doc", "output_projections.stk", "output_projections_sampling.xmd"])
+        
+    def test_case8(self):
+        self.runCase("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance 10",
+                     outputs=["output_projections.doc", "output_projections.stk", "output_projections_sampling.xmd"])
     
 
+class AngularProjectionMatching(XmippProgramTest):
+    _owner = RM
+    @classmethod
+    def getProgram(cls):
+        #cls.setTestDir(os.path.join(os.environ['SCIPION_TESTS', 'testXmipp']))
+        return 'xmipp_angular_projection_matching'
+    
+    def test_case1(self):
+        self.runCase("-i input/aFewProjections.sel -o %o/assigned_angles.xmd --ref %o/reference.stk --thr 3",
+                     preruns=["xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/reference.stk --sampling_rate 10 --compute_neighbors --angular_distance -1"],
+                     outputs=["reference.doc", "reference_sampling.xmd", "reference.stk", "assigned_angles.xmd"])       
      
+     
+class AngularProjectionMatchingMpi(AngularProjectionMatching):
+    @classmethod
+    def getProgram(cls):
+        #cls.setTestDir(os.path.join(os.environ['SCIPION_TESTS', 'testXmipp']))
+        return 'xmipp_mpi_angular_projection_matching'     
+    
+    def test_case2(self):
+        self.runCase("-i input/aFewProjections.sel -o %o/assigned_angles.xmd --ref %o/reference.stk --thr 3",
+                     preruns=["xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/reference.stk --sampling_rate 10 --compute_neighbors --angular_distance -1"],
+                     outputs=["reference.doc", "reference_sampling.xmd", "reference.stk", "assigned_angles.xmd"])    
