@@ -158,7 +158,8 @@ class TestBPV(tests.BaseTest):
                                       symmetryGroup=sym,
                                       numberOfMpi=cpus,
                                       numberOfThreads=1,
-                                      iter=15
+                                      iter=15,
+                                      alpha0=99.0
                                       )
         protSignificant.inputSet.set(protImport.outputAverages)
         self.launchProtocol(protSignificant)
