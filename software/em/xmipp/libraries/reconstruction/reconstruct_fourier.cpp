@@ -691,6 +691,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                         int iy=A1D_ELEM(yWrapped,inty);
                                         int iyneg=A1D_ELEM(yNegWrapped,inty);
 
+                                        int	size1=YXSIZE(VoutFourier)*(izneg)+((iyneg)*XSIZE(VoutFourier));
+                                        int	size2=YXSIZE(VoutFourier)*(iz)+((iy)*XSIZE(VoutFourier));
+                                        int	fixSize=0;
+
                                         for (int intx = XX(corner1); intx <= XX(corner2); ++intx)
                                         {
                                             // Compute distance to the center of the blob
@@ -728,12 +732,14 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                                 iyp = iyneg;
                                                 ixp = A1D_ELEM(xNegWrapped,intx);
                                                 conjugate=true;
+                                                fixSize = size1;
                                             }
                                             else
                                             {
                                                 izp=iz;
                                                 iyp=iy;
                                                 ixp=ix;
+                                                fixSize = size2;
                                             }
 #ifdef DEBUG
                                             std::cout << "   3: ix=" << ix << " iy=" << iy
@@ -751,9 +757,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             else
                                             {
                                                 double wEffective=w*wCTF;
-                                                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, izp,iyp,ixp));
+                                                size_t memIdx=fixSize + ixp;//YXSIZE(VoutFourier)*(izp)+((iyp)*XSIZE(VoutFourier))+(ixp);
+                                                double *ptrOut=(double *)&(DIRECT_A1D_ELEM(VoutFourier, memIdx));
                                                 ptrOut[0] += wEffective * ptrIn[0];
-                                                DIRECT_A3D_ELEM(fourierWeights, izp,iyp,ixp) += w;
+                                                DIRECT_A1D_ELEM(fourierWeights, memIdx) += w;
 
                                                 if (conjugate)
                                                     ptrOut[1]-=wEffective*ptrIn[1];
