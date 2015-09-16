@@ -93,7 +93,8 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
     def wienerStep(self):
         
         params =  '  -i %s' % self._getPath('input_particles.xmd')
-        params +=  '  -o %s' % self._getPath('corrected_ctf_particles.xmd')
+        params +=  '  -o %s' % self._getPath('corrected_ctf_particles.stk')
+        params +=  '  --save_metadata_stack %s' % self._getPath('corrected_ctf_particles.xmd')
         params +=  '  --pad %s' % self.padding_factor.get()
         params +=  '  --wc %s' % self.wiener_constant.get()
 
