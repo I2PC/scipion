@@ -89,7 +89,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       relationName=RELATION_CTF, attributeName='getInputMicrographs',
                       label='CTF estimation',
                       help='Choose some CTF estimation related to input micrographs. \n'
-                           'CTF estimation is need if you want to do phase flipping or \n'
+                           'CTF estimation is needed if you want to do phase flipping or \n'
                            'you want to associate CTF information to the particles.')
 
         form.addParam('boxSize', IntParam, default=0,
