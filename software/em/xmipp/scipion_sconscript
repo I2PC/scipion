@@ -128,6 +128,10 @@ addLib('XmippCondor',
        dirs=['external'],
        patterns=['condor/*.cpp'])
 
+addLib('XmippDelaunay',
+       dirs=['external'],
+       patterns=['delaunay/*.c'])
+
 addLib('XmippSqliteExt',
        dirs=['external/sqliteExt'],
        patterns=['extension-functions.c'],
@@ -141,8 +145,8 @@ addLib('XmippGtest',
        libs=['pthread']
        )
 
-EXT_LIBS = ['XmippAlglib', 'XmippBilib', 'XmippCondor']
-EXT_LIBS2 = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippSqliteExt']
+EXT_LIBS = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippDelaunay']
+EXT_LIBS2 = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippDelaunay', 'XmippSqliteExt']
 env.Alias('XmippExternal', EXT_LIBS)
 
 
@@ -179,7 +183,7 @@ addLib('XmippRecons',
        incs=bilib_incs,
        libs=['hdf5', 'hdf5_cpp', 'pthread',
              'fftw3_threads',
-             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor'])
+             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor', 'XmippDelaunay'])
 
 # Interface
 python_incs = ['#software/include/python2.7',
@@ -475,6 +479,7 @@ for p in ['angular_break_symmetry',
           'angular_projection_matching',
           'angular_project_library',
           'angular_rotate',
+          'assignation_tilt_pair',
 
           'classify_analyze_cluster',
           'classify_compare_classes',
