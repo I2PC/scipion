@@ -354,6 +354,7 @@ public:
                 // Note: we should use the OpenCV conversion to use it in optical flow
                 convert2Uint8(avgcurr,avgcurr8);
                 convert2Uint8(preimg,preimg8);
+                avgcurr.release();
 #ifdef GPU
 
                 d_avgcurr.upload(avgcurr8);
@@ -370,7 +371,10 @@ public:
 #else
 
                 calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, 0);
+                avgcurr8.release();
+                preimg8.release();
                 split(flow, planes);
+                flow.release();
                 flowx = planes[0];
                 flowy = planes[1];
 #endif
@@ -397,7 +401,8 @@ public:
 
                 flowx.convertTo(mapx, CV_32FC1);
                 flowy.convertTo(mapy, CV_32FC1);
-
+                flowx.release();
+                flowy.release();
                 for( int row = 0; row < mapx.rows; row++ )
                     for( int col = 0; col < mapx.cols; col++ )
                     {
@@ -421,10 +426,14 @@ public:
                 }
 #else
                 cv::remap(preimg, dest, mapx, mapy, cv::INTER_CUBIC);
+                preimg.release();
+                mapx.release();
+                mapy.release();
 #endif
-
                 opencv2Xmipp(dest, mappedImg);
+                dest.release();
                 avgStep += mappedImg;
+                mappedImg.clear();
             }
             avgCurr =  avgStep/cnt;
 
