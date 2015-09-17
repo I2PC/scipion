@@ -7,7 +7,7 @@
 //#define WINDOWS
 
 // Trigonometric defines.
-#define PI          3.1415926535
+//#define PI          3.1415926535
 
 #define FAILURE     0
 #define SUCCESS     1
@@ -31,7 +31,7 @@
 #define MAX_Y_COORD	10000
 
 // File name max length.
-#define FILENAME_MAX			200
+//#define FILENAME_MAX			200
 
 #define POINT_T		double
 

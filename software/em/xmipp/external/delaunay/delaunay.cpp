@@ -45,7 +45,7 @@ int		init_Delaunay( struct Delaunay_T *delaunay, int nPoints)
 	int		ret=SUCCESS; 		// Return value.
 
 	// Allocate DCEL.
-	delaunay->dcel = malloc(sizeof(struct DCEL_T));
+	delaunay->dcel = (struct DCEL_T *)malloc(sizeof(struct DCEL_T));
 
 	// Create DCEL data to store nPoints.
 	if (initialize_DCEL( delaunay->dcel, nPoints, nPoints*8, (nPoints+2)*2) == FAILURE)
@@ -847,9 +847,9 @@ int is_Strictly_Interior_To_Node(struct DCEL_T *dcel, struct Graph_T *graph, str
 	get_Vertex_Of_Node( graph, node_Index, &id1, &id2, &id3);
 
 	// Check if there is always a turn left.
-    if ((return_Turn( dcel, p, id1, id2) == LEFT) &&
-        (return_Turn( dcel, p, id2, id3) == LEFT) &&
-        (return_Turn( dcel, p, id3, id1) == LEFT))
+    if ((return_Turn( dcel, p, id1, id2) == LEFT_TURN) &&
+        (return_Turn( dcel, p, id2, id3) == LEFT_TURN) &&
+        (return_Turn( dcel, p, id3, id1) == LEFT_TURN))
     {
         // Point is interior.
         is_Interior = TRUE;
@@ -862,7 +862,7 @@ int is_Strictly_Interior_To_Node(struct DCEL_T *dcel, struct Graph_T *graph, str
 
 enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, int dest_ID)
 {
-    enum Turn_T turn=LEFT;         // Return value.
+    enum Turn_T turn=LEFT_TURN;         // Return value.
 
     // Normal source point.
     if (source_ID > 0)
@@ -878,7 +878,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
         {
         	if (source_ID == 1)
         	{
-        		turn = LEFT;
+        		turn = LEFT_TURN;
         	}
             // Check if point is over line from source_Index point to P-2.
         	else if (higher_Point( p, &dcel->vertex[source_ID-1].vertex, &lexicographic_Higher))
@@ -887,7 +887,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
             }
 			else
 			{
-				turn = LEFT;
+				turn = LEFT_TURN;
 			}
         }
         // Destination point is P-1.
@@ -896,7 +896,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
             // Check if point is over line from source_Index point to P-1.
             if (higher_Point( p, &dcel->vertex[source_ID-1].vertex, &lexicographic_Higher))
             {
-				turn = LEFT;
+				turn = LEFT_TURN;
             }
 			else
 			{
@@ -911,7 +911,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
         {
         	if (dest_ID == 1)
         	{
-        		turn = LEFT;
+        		turn = LEFT_TURN;
         	}
             // Check if point is over line from P-1 point to dest_Index point.
         	else if (higher_Point( p, &dcel->vertex[dest_ID-1].vertex, &lexicographic_Higher))
@@ -920,7 +920,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
             }
 			else
 			{
-				turn = LEFT;
+				turn = LEFT_TURN;
 			}
         }
         // Source point is P-2.
@@ -931,7 +931,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
             {
 				if (higher_Point( p, &dcel->vertex[dest_ID-1].vertex, &lexicographic_Higher))
 				{
-					turn = LEFT;
+					turn = LEFT_TURN;
 				}
 				else
 				{
@@ -941,7 +941,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
 			else
 			{
 				// Points can only do a left turn.
-				turn = LEFT;
+				turn = LEFT_TURN;
 			}
         }
     }
@@ -949,9 +949,9 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
 #ifdef DEBUG_RETURN_TURN
     printf("Turn between segment %d %d and point \n", source_ID, dest_ID);
     print_Point( p);
-    if (turn == LEFT)
+    if (turn == LEFT_TURN)
     {
-    	printf(" is LEFT\n");
+    	printf(" is LEFT_TURN\n");
     }
     else if (turn == RIGHT)
     {
@@ -1506,8 +1506,8 @@ void	check_Edge( struct DCEL_T *dcel, struct Graph_T *graph, int edge_ID)
 					// Check if negative vertex is P-2.
 					if (dcel->edges[edge_Index].origin_Vertex == P_MINUS_2)
 					{
-						// If turn LEFT then flip edge.
-						if (check_Turn( p, q, common1) == LEFT)
+						// If turn LEFT_TURN then flip edge.
+						if (check_Turn( p, q, common1) == LEFT_TURN)
 						{
 							flip_Edges = TRUE;
 						}
@@ -1530,8 +1530,8 @@ void	check_Edge( struct DCEL_T *dcel, struct Graph_T *graph, int edge_ID)
 					// Check if negative vertex is P-2.
 					if (dcel->edges[dcel->edges[edge_Index].twin_Edge-1].origin_Vertex == P_MINUS_2)
 					{
-						// If turn LEFT then flip edge.
-						if (check_Turn( p, q, common1) == LEFT)
+						// If turn LEFT_TURN then flip edge.
+						if (check_Turn( p, q, common1) == LEFT_TURN)
 						{
 							flip_Edges = TRUE;
 						}

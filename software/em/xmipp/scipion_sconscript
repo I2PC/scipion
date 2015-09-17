@@ -130,7 +130,7 @@ addLib('XmippCondor',
 
 addLib('XmippDelaunay',
        dirs=['external'],
-       patterns=['delaunay/*.c'])
+       patterns=['delaunay/*.cpp'])
 
 addLib('XmippSqliteExt',
        dirs=['external/sqliteExt'],

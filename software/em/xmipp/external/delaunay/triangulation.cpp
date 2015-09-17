@@ -154,7 +154,7 @@ void 	build_Triangulation( struct Triangulation_T *triang)
 			// Check type of turn with new point.
 			if ((check_Turn( &triang->dcel->vertex[convex_Peak[1]].vertex,
 							&triang->dcel->vertex[convex_Peak[0]].vertex,
-							&newVertex->vertex) == LEFT) ||
+							&newVertex->vertex) == LEFT_TURN) ||
 				(check_Turn( &triang->dcel->vertex[convex_Peak[1]].vertex,
 							&triang->dcel->vertex[convex_Peak[0]].vertex,
 							&newVertex->vertex) == COLINEAR))

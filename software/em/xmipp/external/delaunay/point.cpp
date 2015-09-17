@@ -81,7 +81,7 @@ enum Turn_T		check_Turn(struct Point_T *p1, struct Point_T *p2, struct Point_T *
 	// Higher than zero -> turn left.
 	else if (area > 0.0)
 	{
-		turn = LEFT;
+		turn = LEFT_TURN;
 	}
 	// Otherwise -> turn right.
 	else

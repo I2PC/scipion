@@ -40,7 +40,7 @@ int 	initialize_DCEL( struct DCEL_T *dcel, int nPoints, int nEdges, int nFaces)
 	dcel->sizeEdges = nEdges;
 
 	// Allocate array of edges.
-	dcel->edgeChecked = calloc( nEdges, sizeof(int));
+	dcel->edgeChecked = (int*) calloc( nEdges, sizeof(int));
 	dcel->edges = (struct Dcel_Edge_T *) malloc(sizeof(struct Dcel_Edge_T)*nEdges);
 
 	// Initialize faces attributes.
