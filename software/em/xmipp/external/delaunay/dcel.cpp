@@ -33,7 +33,7 @@ int 	initialize_DCEL( struct DCEL_T *dcel, int nPoints, int nEdges, int nFaces)
 	dcel->sizeVertex = nPoints;
 
 	// Allocate array of vertex.
-	dcel->vertex = (struct Dcel_Vertex_T *) malloc(sizeof(struct Dcel_Vertex_T)*nPoints);
+	dcel->vertex = (struct Dcel_Vertex_T *) calloc(nPoints, sizeof(struct Dcel_Vertex_T));
 
 	// Initialize edges attributes.
 	dcel->nEdges = 0;

@@ -694,11 +694,12 @@ int    get_Face_Points( struct Delaunay_T *delaunay, int face_ID, struct Point_T
 	{
 		// Get i-face.
 		face = get_Face( delaunay->dcel, i);
-		index = face->edge-1;
-		edge = get_Edge( delaunay->dcel, index);
 
-		if (index >= 0)
+		if (face->imaginaryFace != INVALID)
 		{
+			index = face->edge-1;
+			edge = get_Edge( delaunay->dcel, index);
+
 			faceIndex++;
 #ifdef DEBUG_GET_FACE_POINTS
 			printf("Face index %d. Target face %d\n", faceIndex, face_ID);
