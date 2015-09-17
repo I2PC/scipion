@@ -351,7 +351,6 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     if (hasCTF)
                     {
                         threadParams->ctf.readFromMetadataRow(*(threadParams->selFile),objId[threadParams->imageIndex]);
-                        threadParams->ctf.Tm=parent->Ts;
                         threadParams->ctf.produceSideInfo();
                     }
 
@@ -463,7 +462,6 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
             }
         case PROCESS_IMAGE:
             {
-
                 MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
                 if (threadParams->weight==0.0)
                     break;
@@ -476,8 +474,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 bool assigned;
 
                 // Get the inverse of the sampling rate
-                double iTs=1/parent->Ts;
-
+                double iTs=parent->padding_factor_proj/parent->Ts;
                 do
                 {
                     minAssignedRow = -1;
@@ -557,7 +554,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     Matrix1D<int> corner1(3), corner2(3);
 
                     // Some alias and calculations moved from heavy loops
-                    double wCTF=1;
+                    double wCTF=1, wModulator=1.0;
                     double blobRadiusSquared = parent->blob.radius * parent->blob.radius;
                     double iDeltaSqrt = parent->iDeltaSqrt;
                     Matrix1D<double> & blobTableSqrt = parent->blobTableSqrt;
@@ -580,16 +577,28 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 ZZ(freq)=0;
                                 if (XX(freq)*XX(freq)+YY(freq)*YY(freq)>parent->maxResolution2)
                                     continue;
+                                wModulator=1.0;
                                 if (hasCTF && !reprocessFlag)
                                 {
                                     XX(contFreq)=XX(freq)*iTs;
                                     YY(contFreq)=YY(freq)*iTs;
                                     threadParams->ctf.precomputeValues(XX(contFreq),YY(contFreq));
-                                    wCTF=threadParams->ctf.getValueAt();
+                                    //wCTF=threadParams->ctf.getValueAt();
+                                    wCTF=threadParams->ctf.getValuePureNoKAt();
+                                    //wCTF=threadParams->ctf.getValuePureWithoutDampingAt();
+
                                     if (std::isnan(wCTF))
-                                        wCTF=0.0;
+                                    {
+                                    	if (i==0 && j==0)
+                                    		wModulator=wCTF=1.0;
+                                    	else
+                                    		wModulator=wCTF=0.0;
+                                    }
                                     if (fabs(wCTF)<parent->minCTF)
-                                        wCTF=1;
+                                    {
+                                        wModulator=fabs(wCTF);
+                                        wCTF=SGN(wCTF);
+                                    }
                                     else
                                         wCTF=1.0/wCTF;
                                     if (parent->phaseFlipped)
@@ -682,6 +691,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                         int iy=A1D_ELEM(yWrapped,inty);
                                         int iyneg=A1D_ELEM(yNegWrapped,inty);
 
+                                        int	size1=YXSIZE(VoutFourier)*(izneg)+((iyneg)*XSIZE(VoutFourier));
+                                        int	size2=YXSIZE(VoutFourier)*(iz)+((iy)*XSIZE(VoutFourier));
+                                        int	fixSize=0;
+
                                         for (int intx = XX(corner1); intx <= XX(corner2); ++intx)
                                         {
                                             // Compute distance to the center of the blob
@@ -691,7 +704,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             if (d2 > blobRadiusSquared)
                                                 continue;
                                             int aux = (int)(d2 * iDeltaSqrt + 0.5);//Same as ROUND but avoid comparison
-                                            double w = VEC_ELEM(blobTableSqrt, aux)*threadParams->weight;
+                                            double w = VEC_ELEM(blobTableSqrt, aux)*threadParams->weight *wModulator;
 
                                             // Look for the location of this logical index
                                             // in the physical layout
@@ -719,12 +732,14 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                                 iyp = iyneg;
                                                 ixp = A1D_ELEM(xNegWrapped,intx);
                                                 conjugate=true;
+                                                fixSize = size1;
                                             }
                                             else
                                             {
                                                 izp=iz;
                                                 iyp=iy;
                                                 ixp=ix;
+                                                fixSize = size2;
                                             }
 #ifdef DEBUG
                                             std::cout << "   3: ix=" << ix << " iy=" << iy
@@ -742,9 +757,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             else
                                             {
                                                 double wEffective=w*wCTF;
-                                                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, izp,iyp,ixp));
+                                                size_t memIdx=fixSize + ixp;//YXSIZE(VoutFourier)*(izp)+((iyp)*XSIZE(VoutFourier))+(ixp);
+                                                double *ptrOut=(double *)&(DIRECT_A1D_ELEM(VoutFourier, memIdx));
                                                 ptrOut[0] += wEffective * ptrIn[0];
-                                                DIRECT_A3D_ELEM(fourierWeights, izp,iyp,ixp) += w;
+                                                DIRECT_A1D_ELEM(fourierWeights, memIdx) += w;
 
                                                 if (conjugate)
                                                     ptrOut[1]-=wEffective*ptrIn[1];

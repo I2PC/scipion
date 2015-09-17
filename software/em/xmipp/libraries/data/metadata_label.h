@@ -63,6 +63,7 @@ enum MDLabel
     MDL_ANGLE_DIFF, ///< difference between two angles (double,degrees)
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
     MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
+    MDL_APPLY_SHIFT,///<Apply shift when project the volume ,
     MDL_AVG, ///< average value (double)
     MDL_AVG_CHANGES_ORIENTATIONS, /// Average change in angular orientation (double degrees)
     MDL_AVG_CHANGES_OFFSETS, /// Average change in offset (double pixels)
@@ -100,10 +101,13 @@ enum MDLabel
 
     MDL_CONTINUOUS_X, ///< X shift of continuous assignment
     MDL_CONTINUOUS_Y, ///< Y shift of continuous assignment
+    MDL_CONTINUOUS_FLIP, ///< Flip of continuous assignment
     MDL_CONTINUOUS_GRAY_A, ///< a value of continuous assignment
     MDL_CONTINUOUS_GRAY_B, ///< b value of continuous assignment
     MDL_CONTINUOUS_SCALE_X, ///< a value of continuous assignment
     MDL_CONTINUOUS_SCALE_Y, ///< b value of continuous assignment
+
+    MDL_CTF_DATA_PHASE_FLIPPED, // Is the Data Phase-Flippled?
     MDL_CTF_INPUTPARAMS, ///< Parameters file for the CTF Model (std::string)
     MDL_CTF_MODEL, ///< Name for the CTF Model (std::string)
     MDL_CTF_MODEL2, ///< Name for another CTF model (std::string)
@@ -1282,6 +1286,7 @@ private:
         MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY");
         MDL::addLabel(MDL_ANGLE_Y2, LABEL_DOUBLE, "angleY2");
 
+        MDL::addLabel(MDL_APPLY_SHIFT, LABEL_BOOL, "applyShift");
         MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
         MDL::addLabel(MDL_AVG_CHANGES_ORIENTATIONS, LABEL_DOUBLE, "avgChanOrient");
         MDL::addLabel(MDL_AVG_CHANGES_OFFSETS, LABEL_DOUBLE, "avgChanOffset");
@@ -1329,6 +1334,7 @@ private:
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "ctfBgGaussian2Angle");
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_ANGLE, "CTFBG_Gaussian2_Angle"); //3.0
 
+        MDL::addLabel(MDL_CTF_DATA_PHASE_FLIPPED, LABEL_BOOL, "ctfPhaseFlipped");
         MDL::addLabel(MDL_CTF_X0, LABEL_DOUBLE, "ctfX0");
         MDL::addLabel(MDL_CTF_XF, LABEL_DOUBLE, "ctfXF");
         MDL::addLabel(MDL_CTF_Y0, LABEL_DOUBLE, "ctfY0");
@@ -1376,6 +1382,7 @@ private:
 
         MDL::addLabel(MDL_CONTINUOUS_X, LABEL_DOUBLE, "continuousX");
         MDL::addLabel(MDL_CONTINUOUS_Y, LABEL_DOUBLE, "continuousY");
+        MDL::addLabel(MDL_CONTINUOUS_FLIP, LABEL_BOOL, "continuousFlip");
         MDL::addLabel(MDL_CONTINUOUS_GRAY_A, LABEL_DOUBLE, "continuousA");
         MDL::addLabel(MDL_CONTINUOUS_GRAY_B, LABEL_DOUBLE, "continuousB");
         MDL::addLabel(MDL_CONTINUOUS_SCALE_X, LABEL_DOUBLE, "continuousScaleX");

@@ -62,16 +62,16 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	// private String reviewfile;
 
-	public SupervisedParticlePicker(String selfile, String outputdir, Mode mode, ParticlePickerParams params)
+	public SupervisedParticlePicker(String selfile, String outputdir, ParticlePickerParams params)
 	{
-		this(null, selfile, outputdir, mode, params);
+		this(null, selfile, outputdir, params);
 
 	}
 
-	public SupervisedParticlePicker(String block, String selfile, String outputdir, Mode mode, ParticlePickerParams params)
+	public SupervisedParticlePicker(String block, String selfile, String outputdir, ParticlePickerParams params)
 	{
 
-		super(block, selfile, outputdir, mode, params);
+		super(block, selfile, outputdir, params);
 		try
 		{
 			templatesfile = getOutputPath("templates.stk");
@@ -101,7 +101,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	
 	public SupervisedParticlePicker(String selfile, String outputdir, Integer threads, boolean fastmode, boolean incore, ParticlePickerParams params)
 	{
-		this(selfile, outputdir, Mode.Manual, params);
+		this(selfile, outputdir, params);
 
 		this.threads = threads;
 		this.fastmode = fastmode;
@@ -560,6 +560,7 @@ public class SupervisedParticlePicker extends ParticlePicker
                 throw new IllegalArgumentException("Cannot review picking in manual mode, use manual mode instead");
             if (mode != Mode.ReadOnly && mode != Mode.Review)
             	mode = configmode;
+            
 			md.destroy();
 		}
 		catch (Exception e)
@@ -1043,28 +1044,28 @@ public class SupervisedParticlePicker extends ParticlePicker
 	 * @param frame
 	 * @param autopickout
 	 */
-	public void trainAndAutopick(SupervisedPickerJFrame frame)
+	public void trainAndAutopick(SupervisedPickerJFrame frame, SupervisedPickerMicrograph trainmic)
 	{
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Training and Autopicking...");
 		// Change the state of the micrograph and save changes
 		micrograph.setState(MicrographState.Supervised);
 		saveData(micrograph);
-                setChanged(false);
+        setChanged(false);
 		// Create the metadata with each micrograph and its .pos file
-		// Add all micrographs with manual particles except the current
+		// Add all micrographs with manual particles except the train
 		// micrograph
-                ArrayList<MDRow> trainRows = new ArrayList<MDRow>();
+        ArrayList<MDRow> trainRows = new ArrayList<MDRow>();
 		for (SupervisedPickerMicrograph m : micrographs)
 		{
-			if (m.hasManualParticles() && !m.equals(micrograph))
+			if (m.hasManualParticles() && !m.equals(trainmic))
 				addMicrographPos(trainRows, m);
 		}
-		// Add the current micrograph as the last one
-		if (micrograph.hasManualParticles())
-			addMicrographPos(trainRows, micrograph);
+		// Add the train micrograph as the last one
+			
+		addMicrographPos(trainRows, trainmic);
                 
-		new Thread(new TrainRunnable(frame, trainRows.toArray(new MDRow[]{}))).start();
+		new Thread(new TrainRunnable(frame, trainRows.toArray(new MDRow[]{}), trainmic)).start();
 	}
 
 	/** Helper function to add a micrograph and its .pos file */

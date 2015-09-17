@@ -84,6 +84,8 @@ class ProtImportVolumes(ProtImportImages):
             # Second one considers single volumes (not in stack)
             if (z == 1 and n != 1) or (z !=1 and n == 1):
                 vol.setObjId(fileId)
+                if dst.endswith('.mrc'):
+                    dst += ':mrc'
                 vol.setLocation(dst)
                 volSet.append(vol)
             else:

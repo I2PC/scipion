@@ -485,6 +485,7 @@ class Image(EMObject):
         filePaths.add(self.getFileName())
         return filePaths
 
+
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
     def __init__(self, **args):
@@ -495,7 +496,7 @@ class Micrograph(Image):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
+        if self._micName.get():
             return self._micName.get()
         else:
             self.getFileName()
@@ -561,6 +562,7 @@ class Volume(Image):
     """ Represents an EM Volume object """
     def __init__(self, **args):
         Image.__init__(self, **args)
+        self._classId = Integer()
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
@@ -576,6 +578,16 @@ class Volume(Image):
                 return x, y, n
         return None
         
+    def getClassId(self):
+        return self._classId.get()
+    
+    def setClassId(self, classId):
+        self._classId.set(classId)
+        
+    def hasClassId(self):
+        return self._classId.hasValue()
+
+
 class VolumeMask(Volume):
     """ A 3D mask to be used with volumes. """
     pass
@@ -613,8 +625,13 @@ class PdbFile(EMFile):
     
     
 class EMSet(Set, EMObject):
+    
     def _loadClassesDict(self):
-        return globals()
+        import pyworkflow.em as em
+        classDict = em.getObjects()
+        classDict.update(globals())
+        
+        return classDict
     
     def copyInfo(self, other):
         """ Define a dummy copyInfo function to be used
@@ -652,6 +669,9 @@ class EMSet(Set, EMObject):
             else:
                 if itemDataIterator is not None:
                     next(itemDataIterator) # just skip disabled data row
+                    
+    def getFiles(self):
+        return Set.getFiles(self)
   
   
 class SetOfImages(EMSet):
@@ -944,6 +964,7 @@ class SetOfAverages(SetOfParticles):
 class SetOfVolumes(SetOfImages):
     """Represents a set of Volumes"""
     ITEM_TYPE = Volume
+    REP_TYPE = Volume
     
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
@@ -1072,10 +1093,7 @@ class Coordinate(EMObject):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
-            return self._micName.get()
-        else:
-            self.getFileName()
+        return self._micName.get()
 
 
 class SetOfCoordinates(EMSet):
@@ -1254,6 +1272,8 @@ class Class3D(SetOfParticles):
     Usually the representative of the class is a Volume 
     reconstructed from the particles assigned to the class.
     """
+    REP_TYPE = Volume
+    
     def copyInfo(self, other):
         """ Copy basic information (id and other properties) but not _mapperPath or _size
         from other set of micrographs to current one.

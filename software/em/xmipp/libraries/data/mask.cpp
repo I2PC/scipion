@@ -1852,17 +1852,8 @@ void ProgMask::readParams()
 /* Preprocess ------------------------------------------------------------- */
 void ProgMask::preProcess()
 {
-//    int max_length = 0;
-
     if (create_mask && input_is_stack)
         REPORT_ERROR(ERR_MD_NOOBJ, "Mask: Cannot create a mask for a selection file\n");
-
-    // Initialize progress bar
-    time_config();
-    if (!count && input_is_stack)
-        init_progress_bar(mdInSize);
-//    else
-//        max_length = maxFileNameLength(mdIn);
 }
 
 /* Postprocess ------------------------------------------------------------- */

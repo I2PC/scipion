@@ -55,6 +55,7 @@ PLOT_POLAR = 1
 PLOT_POLARCART = 2
 PLOT_CHOICES = ['cartesian', 'polar', 'both']
 
+
 class ProtMovieAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
@@ -186,15 +187,16 @@ class ProtMovieAlignment(ProtProcessMovies):
         micSet = self._createSetOfMicrographs()
         micSet.copyInfo(inputMovies)
         # Also create a Set of Movies with the alignment parameters
-        movieSet = self._createSetOfMovies()
-        movieSet.copyInfo(inputMovies)
-        movieSet.cropOffsetX = Integer(self.cropOffsetX)
-        movieSet.cropOffsetY = Integer(self.cropOffsetY)
-        movieSet.cropDimX = Integer(self.cropDimX)
-        movieSet.cropDimY = Integer(self.cropDimY)
-        movieSet.sumFrame0 = Integer(self.sumFrame0)
-        movieSet.sumFrameN = Integer(self.sumFrameN)
-
+        if self.doSaveMovie:
+            movieSet = self._createSetOfMovies()
+            movieSet.copyInfo(inputMovies)
+            movieSet.cropOffsetX = Integer(self.cropOffsetX)
+            movieSet.cropOffsetY = Integer(self.cropOffsetY)
+            movieSet.cropDimX = Integer(self.cropDimX)
+            movieSet.cropDimY = Integer(self.cropDimY)
+            movieSet.sumFrame0 = Integer(self.sumFrame0)
+            movieSet.sumFrameN = Integer(self.sumFrameN)
+            
         alMethod = self.alignMethod.get()
         for movie in self.inputMovies.get():
             micName = self._getNameExt(movie.getFileName(),'_aligned', 'mrc')
@@ -216,7 +218,8 @@ class ProtMovieAlignment(ProtProcessMovies):
                alMethod == AL_CROSSCORRELATIONOPTICAL:
                 movieCreatePlot(PLOT_POLAR, alignedMovie, True)
                 movieCreatePlot(PLOT_CART, alignedMovie, True)
-            movieSet.append(alignedMovie)
+            if self.doSaveMovie:
+                movieSet.append(alignedMovie)
 
             mic = em.Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
@@ -250,8 +253,9 @@ class ProtMovieAlignment(ProtProcessMovies):
                 movieSet.append(alignedMovie)
             """
         self._defineOutputs(outputMicrographs=micSet)
-        self._defineOutputs(outputMovies=movieSet)
         self._defineSourceRelation(self.inputMovies, micSet)
+        if self.doSaveMovie:
+            self._defineOutputs(outputMovies=movieSet)
         """
         if alMethod == AL_DOSEFGPU:
             self._defineTransformRelation(inputMovies, micSet)
@@ -284,7 +288,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
         alMethod = self.alignMethod.get()
-
+        
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
             movieSuffix = ':mrcs'
@@ -362,7 +366,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             if alMethod == AL_DOSEFGPUOPTICAL:
                 program = 'xmipp_movie_optical_alignment_gpu'
                 corrMovieName = self._getCorrMovieName(movieId)
-                command = '-i %(corrMovieName)s ' % locals()
+                command = '-i %(corrMovieName)s%(movieSuffix)s  ' % locals()
                 # Set to Zero for Optical Flow (output movie of dosefgpu)
                 firstFrame = 0
                 lastFrame = 0

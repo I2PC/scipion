@@ -103,9 +103,9 @@ class ProtImportFiles(ProtImport):
 
     def _getDefaultChoice(self):
         return  self.IMPORT_FROM_FILES
+    
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
-        from pyworkflow.em.convert import ImageHandler
         errors = []
         if self.importFrom == self.IMPORT_FROM_FILES:
             if not self.getPattern():
@@ -116,12 +116,6 @@ class ProtImportFiles(ProtImport):
                 if self.numberOfFiles == 0:
                     errors.append("There are no files matching the pattern " + "%s" % self.getPattern())
             
-            for imgFn, _ in self.iterFiles():
-                ih = ImageHandler()
-                if not ih.isImageFile(imgFn):
-                    errors.append("The imported files must be images.")
-                    break
-
         return errors
     
     #--------------------------- BASE methods to be overriden ------------------

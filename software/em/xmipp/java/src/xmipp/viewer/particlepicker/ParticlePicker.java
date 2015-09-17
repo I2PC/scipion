@@ -125,15 +125,15 @@ public abstract class ParticlePicker {
         return getParticlesAutoBlock(getOutputPath(m.getPosFile()));
     }
 
-    public ParticlePicker(String selfile, Mode mode, ParticlePickerParams params) {
-        this(null, selfile, ".", mode, params);
+    public ParticlePicker(String selfile, ParticlePickerParams params) {
+        this(null, selfile, ".", params);
     }
 
-    public ParticlePicker(String selfile, String outputdir, Mode mode, ParticlePickerParams params) {
-        this(null, selfile, outputdir, mode, params);
+    public ParticlePicker(String selfile, String outputdir, ParticlePickerParams params) {
+        this(null, selfile, outputdir, params);
     }
 
-    public ParticlePicker(String block, String selfile, String outputdir, Mode mode, ParticlePickerParams params) {
+    public ParticlePicker(String block, String selfile, String outputdir, ParticlePickerParams params) {
     	
         this.params = params;
         this.block = block;
@@ -141,7 +141,7 @@ public abstract class ParticlePicker {
         if(!new File(outputdir).isDirectory())
             throw new IllegalArgumentException(XmippMessage.getInvalidDirectoryMsg(outputdir));
         this.selfile = selfile;
-        this.mode = mode;
+        this.mode = params.mode;
         this.configfile = getOutputPath("config.xmd");
         picker = this;
         filters = new ArrayList<IJCommand>();
@@ -180,6 +180,8 @@ public abstract class ParticlePicker {
 	            {
 	                mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
 	                m = getMicrograph(mname);
+	                if(m == null)
+	                	m = getMicrographs().get(0);
 	            }
                 setMicrograph(m);
                 if(md.containsLabel(MDLabel.MDL_COLOR))

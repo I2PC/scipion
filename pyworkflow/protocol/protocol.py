@@ -387,7 +387,7 @@ class Protocol(Step):
         """ Access the protocol definition. """
         return self._definition
     
-    def getDefinitionParam(self, paramName):
+    def getParam(self, paramName):
         """ Return a _definition param give its name. """
         return self._definition.getParam(paramName)
     
@@ -400,7 +400,7 @@ class Protocol(Step):
             the string value corresponding to the enum choice.
         """
         index = getattr(self, paramName).get() # self.getAttributeValue(paramName)
-        return self.getDefinitionParam(paramName).choices[index]
+        return self.getParam(paramName).choices[index]
     
     def evalParamCondition(self, paramName):
         """ Eval if the condition of paramName in _definition
@@ -410,7 +410,7 @@ class Protocol(Step):
     
     def evalExpertLevel(self, paramName):
         """ Return the expert level evaluation for a param with the given name. """
-        return self.evalParamExpertLevel(self.getDefinitionParam(paramName))
+        return self.evalParamExpertLevel(self.getParam(paramName))
     
     def evalParamExpertLevel(self, param):
         """ Return True if the param has an expert level is less than 
@@ -437,7 +437,7 @@ class Protocol(Step):
         od = self.getObjDict()
         
         for attrName in od:
-            if self.getDefinitionParam(attrName) is not None:
+            if self.getParam(attrName) is not None:
                 d[attrName] = od[attrName]
                 
         return d

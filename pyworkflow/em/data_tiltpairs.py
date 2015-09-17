@@ -77,9 +77,9 @@ class TiltPairSet(EMSet):
         self._tilted = tilted
         
     def getFiles(self):
-        filePaths = set()
-        filePaths.add(self.getTilted().getFiles)
-        filePaths.add(self.getUntilted().getFiles)
+        filePaths = EMSet.getFiles(self)
+        filePaths.update(self.getTilted().getFiles())
+        filePaths.update(self.getUntilted().getFiles())
         
         return filePaths 
     
@@ -122,8 +122,8 @@ class CoordinatesTiltPair(TiltPairSet):
         
     def getFiles(self):
         filePaths = TiltPairSet.getFiles(self)
-        filePaths.add(self.getAngles().getFiles)
-        filePaths.add(self.getMicsPair().getFiles)
+        filePaths.update(self.getAngles().getFiles())
+        filePaths.update(self.getMicsPair().getFiles())
         
         return filePaths
 
@@ -180,7 +180,7 @@ class ParticlesTiltPair(TiltPairSet):
                 
     def getFiles(self):
         filePaths = TiltPairSet.getFiles(self)
-        filePaths.add(self.getCoordsPair().getFiles)
+        filePaths.update(self.getCoordsPair().getFiles())
         
         return filePaths    
         

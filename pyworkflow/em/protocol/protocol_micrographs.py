@@ -144,10 +144,10 @@ class ProtCTFMicrographs(ProtMicrographs):
         self._defineValues()
         self._prepareCommand()
         # For each micrograph insert the steps to process it
-        for micFn, micDir, _ in self._iterMicrographs():
+        for micFn, micDir, mic in self._iterMicrographs():
             # CTF estimation
             # Make estimation steps independent between them
-            stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir,
+            stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir, mic.getMicName(),
                                                   prerequisites=[]) # Make estimation steps independent between them
             estimDeps.append(stepId)
         return estimDeps
@@ -167,7 +167,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         return recalDeps
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _estimateCTF(self, micFn, micDir):
+    def _estimateCTF(self, micFn, micDir, micName):
         """ Do the CTF estimation with the specific program
         and the parameters required.
         Params:
