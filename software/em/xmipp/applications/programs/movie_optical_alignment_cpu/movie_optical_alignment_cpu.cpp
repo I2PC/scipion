@@ -264,7 +264,7 @@ public:
         motionInfFile=foname.replaceExtension("xmd");
         std::string extension=fname.getExtension();
         if (extension=="mrc")
-        	fname+=":mrcs";
+            fname+=":mrcs";
         movieStack.read(fname,HEADER);
         movieStack.getDimensions(aDim);
         imagenum = aDim.ndim;
@@ -293,7 +293,7 @@ public:
         mapy=cv::Mat::zeros(h, w,CV_32FC1);
         // Initialize the stack for the output movie
         if (saveCorrMovie)
-        	outputMovie.initZeros(imagenum, 1, h, w);
+            outputMovie.initZeros(imagenum, 1, h, w);
         tStart2=clock();
         // Compute the average of the whole stack
         fstFrame++; // Just to adapt to Li algorithm
@@ -363,6 +363,7 @@ public:
                 // Note: we should use the OpenCV conversion to use it in optical flow
                 convert2Uint8(avgcurr,avgcurr8);
                 convert2Uint8(preimg,preimg8);
+                avgcurr.release();
 #ifdef GPU
 
                 d_avgcurr.upload(avgcurr8);
@@ -379,7 +380,10 @@ public:
 #else
 
                 calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, 0);
+                avgcurr8.release();
+                preimg8.release();
                 split(flow, planes);
+                flow.release();
                 flowx = planes[0];
                 flowy = planes[1];
 #endif
@@ -406,7 +410,8 @@ public:
 
                 flowx.convertTo(mapx, CV_32FC1);
                 flowy.convertTo(mapy, CV_32FC1);
-
+                flowx.release();
+                flowy.release();
                 for( int row = 0; row < mapx.rows; row++ )
                     for( int col = 0; col < mapx.cols; col++ )
                     {
@@ -430,11 +435,18 @@ public:
                 }
 #else
                 cv::remap(preimg, dest, mapx, mapy, cv::INTER_CUBIC);
+                preimg.release();
+                mapx.release();
+                mapy.release();
 #endif
+
                 if (div==1 && saveCorrMovie)
-                	mappedImg.aliasImageInStack(outputMovie, i);
+                    mappedImg.aliasImageInStack(outputMovie, i);
+
                 opencv2Xmipp(dest, mappedImg);
+                dest.release();
                 avgStep += mappedImg;
+                mappedImg.clear();
             }
             avgCurr =  avgStep/cnt;
 
@@ -448,8 +460,8 @@ public:
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
         if (saveCorrMovie)
         {
-        	II()=outputMovie;
-        	II.write(foname.replaceExtension("mrcs"));
+            II()=outputMovie;
+            II.write(foname.replaceExtension("mrcs"));
         }
         if (psd)
         {
