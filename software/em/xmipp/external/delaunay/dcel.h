@@ -108,7 +108,7 @@ void    get_Extreme_Point( struct DCEL_T *dcel, int (*f)(struct Point_T *, struc
 // I/O DCEL interface.
 int 	read_DCEL( struct DCEL_T *dcel, char *fileName);
 int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName);
-void	write_DCEL( struct DCEL_T *dcel, int	type, char *fileName);
+int		write_DCEL( struct DCEL_T *dcel, int	type, char *fileName);
 void	print_DCEL( struct DCEL_T *dcel);
 int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel);
 void	generate_Points_DCEL( int nPoints, struct DCEL_T *dcel);

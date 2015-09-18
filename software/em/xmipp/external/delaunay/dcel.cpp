@@ -192,7 +192,7 @@ int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName)
     int     number_Points=0;    // Number of points of set.
 	FILE	*fd=NULL;           // File descriptor.
 
-    // Open configuration file.
+    // Open file.
 	if ((fd = fopen( fileName, "r")) == NULL)
 	{
 	    // Set default number of points.
@@ -245,94 +245,82 @@ int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName)
 }
 
 
-void	write_DCEL( struct DCEL_T *dcel, int	type, char *in_FileName)
+int		write_DCEL( struct DCEL_T *dcel, int	type, char *fileName)
 {
 	int		i=0;			// Loop counter.
-	int     opened=FALSE;   // Loop control flag.
-	int     file_ID=1;     // File id.
+	int		ret=SUCCESS;	// Return value.
 	FILE 	*fd=NULL;		// File descriptor.
-	char    fileName[1024]; // File name.
 
-	// Initialize loop.
-	opened = FALSE;
-	while (!opened)
+	// Open file.
+	if ((fd = fopen( fileName, "w")) == NULL)
 	{
-	    // Build file name.
-        sprintf( fileName, "%s_%d.txt", in_FileName, file_ID);
-
-        // Check if file exists.
-	    if ((fd = fopen( fileName, "r")) == NULL)
-	    {
-	        opened = TRUE;
-
-	        // Open in writting mode.
-	        fd = fopen( fileName, "w");
-	    }
-	    else
-	    {
-            // File exists -> close file.
-            fclose(fd);
-            fd = NULL;
-
-            // Try next file identifier.
-            file_ID++;
-	    }
+	    // Set default number of points.
+#ifdef LOGGING
+		sprintf( log_Text, "Error %d opening input file: %s\n", errno, fileName);
+		write_Log( log_Text);
+#endif
+	    printf("Error %d opening input file: %s\n", errno, fileName);
+		ret = FAILURE;
 	}
-
-	if (type == DCEL_TYPE)
-	{
-		// Write number of vertex.
-		fprintf( fd, "%d\n", dcel->nVertex);
-
-		// Write vertex.
-		for (i=0; i<dcel->nVertex; i++)
-		{
-			// Read x and y coordinates and edge id.
-			fprintf( fd, "%f ", dcel->vertex[i].vertex.x);
-			fprintf( fd, "%f ", dcel->vertex[i].vertex.y);
-			fprintf( fd, "%d\n", dcel->vertex[i].origin_Edge);
-		}
-
-		// Write number of edges.
-        fprintf( fd, "%d\n", dcel->nEdges);
-
-		// Write edges.
-		for (i=0; i<dcel->nEdges; i++)
-		{
-			// Read x and y coordinates and edge id.
-			fprintf( fd, "%d ", dcel->edges[i].origin_Vertex);
-			fprintf( fd, "%d ", dcel->edges[i].twin_Edge);
-			fprintf( fd, "%d ", dcel->edges[i].previous_Edge);
-			fprintf( fd, "%d ", dcel->edges[i].next_Edge);
-			fprintf( fd, "%d\n", dcel->edges[i].face);
-		}
-
-		// Write number of faces.
-		fprintf( fd, "%d\n", dcel->nFaces);
-
-		// Read faces.
-		for (i=0; i<dcel->nFaces; i++)
-		{
-			// Read x and y coordinates and edge id.
-			fprintf( fd, "%d\n", dcel->faces[i].edge);
-		}
-    }
 	else
 	{
-		// Write number of vertex.
-		fprintf( fd, "%d ", dcel->nVertex);
-
-		// Write vertex.
-		for (i=0; i<dcel->nVertex; i++)
+		if (type == DCEL_TYPE)
 		{
-			// Read x and y coordinates and edge id.
-			fprintf( fd, "%f ", dcel->vertex[i].vertex.x);
-			fprintf( fd, "%f ", dcel->vertex[i].vertex.y);
+			// Write number of vertex.
+			fprintf( fd, "%d\n", dcel->nVertex);
+
+			// Write vertex.
+			for (i=0; i<dcel->nVertex; i++)
+			{
+				// Read x and y coordinates and edge id.
+				fprintf( fd, "%f ", dcel->vertex[i].vertex.x);
+				fprintf( fd, "%f ", dcel->vertex[i].vertex.y);
+				fprintf( fd, "%d\n", dcel->vertex[i].origin_Edge);
+			}
+
+			// Write number of edges.
+			fprintf( fd, "%d\n", dcel->nEdges);
+
+			// Write edges.
+			for (i=0; i<dcel->nEdges; i++)
+			{
+				// Read x and y coordinates and edge id.
+				fprintf( fd, "%d ", dcel->edges[i].origin_Vertex);
+				fprintf( fd, "%d ", dcel->edges[i].twin_Edge);
+				fprintf( fd, "%d ", dcel->edges[i].previous_Edge);
+				fprintf( fd, "%d ", dcel->edges[i].next_Edge);
+				fprintf( fd, "%d\n", dcel->edges[i].face);
+			}
+
+			// Write number of faces.
+			fprintf( fd, "%d\n", dcel->nFaces);
+
+			// Read faces.
+			for (i=0; i<dcel->nFaces; i++)
+			{
+				// Read x and y coordinates and edge id.
+				fprintf( fd, "%d\n", dcel->faces[i].edge);
+			}
 		}
+		else
+		{
+			// Write number of vertex.
+			fprintf( fd, "%d ", dcel->nVertex);
+
+			// Write vertex.
+			for (i=0; i<dcel->nVertex; i++)
+			{
+				// Read x and y coordinates and edge id.
+				fprintf( fd, "%f ", dcel->vertex[i].vertex.x);
+				fprintf( fd, "%f ", dcel->vertex[i].vertex.y);
+			}
+		}
+
+		// Close file.
+		fclose(fd);
 	}
 
-	// Close file.
-    fclose(fd);
+	return(ret);
 }
 
 void	print_DCEL( struct DCEL_T *dcel)
