@@ -758,6 +758,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self.writeInfoField(fnDirCurrent,"size",MDL_XSIZE,Xdim)
                 
             if self.weightSSNR:
+                row=getFirstRow(fnAngles)
+                if row.containsLabel(MDL_WEIGHT_SSNR):
+                    self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column weightSSNR"%fnAngles,numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%\
                             (fnAngles,self._getExtraPath("ssnrWeights.xmd")),numberOfMpi=1)
             if self.weightJumper and iteration>1:
