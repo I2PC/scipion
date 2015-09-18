@@ -32,7 +32,7 @@
 #include <data/micrograph.h>
 #include <delaunay/delaunay.h>
 #include <delaunay/dcel.h>
-
+#include <geometry.h>
 
 void ProgassignationTiltPair::readParams()
 {
@@ -53,19 +53,10 @@ void ProgassignationTiltPair::defineParams()
     addParamsLine("  [--untiltcoor <md_file=\"\">]    : Volume to validate");
     addParamsLine("  [--tiltcoor <md_file=\"\">]    : Volume to validate");
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
-    addParamsLine("  [--maxshift <md_file=\"\">]   : Maximum shift");
+    addParamsLine("  [--maxshift <s=1000>]   : Maximum shift");
     addParamsLine("  [--particlesize <p=100>]   : Particle size");
-    addParamsLine("  [--threshold <d=0.3>]      : Sampling rate in A/px");
+    addParamsLine("  [--threshold <d=0.3>]      : if the distance between two points is lesser than threshold*particlesize, the they will be the same point");
 }
-
-
-void ProgassignationTiltPair::triangle_area(double x1, double y1,
-		double x2, double y2, double x3, double y3, double &trigarea)
-{
-    trigarea = ((x2 - x1)*(y3 - y1) - (x3 - x1)*(y2 - y1))/2.0;
-    (trigarea > 0.0) ? trigarea : -trigarea;
-}
-
 
 void ProgassignationTiltPair::run()
 {
@@ -75,77 +66,97 @@ void ProgassignationTiltPair::run()
     md_untilt.read(fnuntilt);
     md_tilt.read(fntilt);
 
-    //Metadadata size
-    int sis_un, sis_t;
-    sis_un = md_untilt.size();
-    sis_t = md_tilt.size();
-
-    int x_untilt[sis_un], y_untilt[sis_un], x_tilt[sis_t], y_tilt[sis_t];
-    int x_aux, y_aux;
-
-    int counter_u=0, counter_t=0;
-
-    //metadata coordinates are stored in arrays x_untilt, y_untilt
+    int x, y;
+    //storing points and creating Delaunay triangulations
+    struct Delaunay_T delaunay_untilt;
+    init_Delaunay( &delaunay_untilt, md_untilt.size()-1);
     FOR_ALL_OBJECTS_IN_METADATA(md_untilt)
     {
-        md_untilt.getValue(MDL_XCOOR, x_aux,__iter.objId);
-        md_untilt.getValue(MDL_YCOOR, y_aux,__iter.objId);
-        x_untilt[counter_u] = x_aux;
-        y_untilt[counter_u] = y_aux;
-        counter_u = counter_u + 1;
+        md_untilt.getValue(MDL_XCOOR, x, __iter.objId);
+        md_untilt.getValue(MDL_YCOOR, y, __iter.objId);
+		insert_Point( &delaunay_untilt, x, y);
     }
+    int tri_number_untilt = get_Number_Real_Faces(delaunay_untilt.dcel);
+    create_Delaunay_Triangulation( &delaunay_untilt);
 
+    struct Delaunay_T delaunay_tilt;
+    init_Delaunay( &delaunay_tilt, md_tilt.size()-1);
     FOR_ALL_OBJECTS_IN_METADATA(md_tilt)
     {
-        md_tilt.getValue(MDL_XCOOR, x_aux,__iter.objId);
-        md_tilt.getValue(MDL_YCOOR, y_aux,__iter.objId);
-        x_tilt[counter_t] = x_aux;
-        y_tilt[counter_t] = y_aux;
-        counter_t = counter_t + 1;
+        md_tilt.getValue(MDL_XCOOR, x,__iter.objId);
+        md_tilt.getValue(MDL_YCOOR, y,__iter.objId);
+        insert_Point( &delaunay_tilt, x, y);
     }
+    int tri_number_tilt = get_Number_Real_Faces(delaunay_tilt.dcel);
+    create_Delaunay_Triangulation( &delaunay_tilt);
 
-    //DELAUNAY TRIANGULATION//
-    struct Delaunay_T delaunay_untilt;
-    struct Delaunay_T delaunay_tilt;
 
-    double x, y;
-    int tri_number_untilt, tri_number_tilt;
-    //Untilt triangulation
-    if (init_Delaunay( &delaunay_untilt, counter_u-1) == 1)
-    {
-    	for (int i=0; i<counter_u-1 ;i++)
-    	{
-    		x = x_untilt[i];
-    		y = y_untilt[i];
-    		insert_Point( &delaunay_untilt, x, y);
-    	}
-    	tri_number_untilt = get_Number_Real_Faces( delaunay_untilt.dcel);
-    	create_Delaunay_Triangulation( &delaunay_untilt);
-    }
-
-    //Tilt triangulation
-    if (init_Delaunay( &delaunay_tilt, counter_t-1) == 1)
-    {
-    	for (int i=0; i<counter_t-1 ;i++)
-    	{
-    		x = (double) x_tilt[i];
-    		y = (double) y_tilt[i];
-
-    		insert_Point( &delaunay_tilt, x, y);
-    	}
-    	create_Delaunay_Triangulation( &delaunay_tilt);
-    	tri_number_tilt = get_Number_Real_Faces(delaunay_tilt.dcel); //Number of triangles in delaunay decomposition
-    }
-
-	struct Point_T p, q, r;
+    // Triangle areas
+    struct Point_T p, q, r, u1, u2, u3, t1, t2, t3;
+	MultidimArray<double> trig_untilt_area(tri_number_untilt+1), trig_tilt_area(tri_number_tilt+1), sortedArea;
 
 	for (int i=1; i<tri_number_untilt+1 ;i++)
 	{
-		get_Face_Points(&delaunay_tilt, 1, &p, &q, &r); //10 es el "numero" de triangulo
-		triangle_area(p.x, p.y,
-				double x2, double y2, double x3, double y3, double &trigarea)
-
+		get_Face_Points(&delaunay_untilt, i, &p, &q, &r); //i is the triangle number
+		A1D_ELEM(trig_untilt_area,i-1) = triangle_area(p.x, p.y, q.x, q.y, r.x, r.y);
 	}
+
+	for (int i=1; i<tri_number_tilt+1 ;i++)
+	{
+		get_Face_Points(&delaunay_tilt, i, &p, &q, &r);
+		A1D_ELEM(trig_tilt_area,i-1) = triangle_area(p.x, p.y, q.x, q.y, r.x, r.y);
+	}
+
+	trig_untilt_area.sort(sortedArea);
+
+
+
+	double threshold_area = sortedArea( round((tri_number_untilt+1)*0.2) );
+	Matrix2D<double> A;
+	Matrix1D<double> T;
+	Matrix2D<double> invW;
+
+	for (int k=0; k<tri_number_untilt; k++)
+	{
+		if (trig_untilt_area(k) < threshold_area)
+			continue;
+		for (int j=0; j<tri_number_untilt; j++)
+		{
+			if (trig_untilt_area(k) > trig_tilt_area(j))
+			{
+				get_Face_Points(&delaunay_untilt, k, &u1, &u2, &u3);
+				get_Face_Points(&delaunay_tilt, j, &t1, &t2, &t3);
+				for (int i=0; i<6; i++)
+					{
+						switch (i)
+						{
+							case 0:
+							def_affinity(u1.x, u1.y, u2.x, u2.y, u3.x, u3.y, t1.x, t1.y, t2.x, t2.y, t3.x, t3.y, A, T, invW);
+							case 1:
+							def_affinity(u1.x, u1.y, u3.x, u3.y, u2.x, u2.y, t1.x, t1.y, t3.x, t3.y, t2.x, t2.y, A, T, invW);
+							case 2:
+							def_affinity(u2.x, u2.y, u1.x, u1.y, u3.x, u3.y, t2.x, t2.y, t1.x, t1.y, t3.x, t3.y, A, T, invW);
+							case 3:
+							def_affinity(u2.x, u2.y, u3.x, u3.y, u1.x, u1.y, t2.x, t2.y, t3.x, t3.y, t1.x, t1.y, A, T, invW);
+							case 4:
+							def_affinity(u3.x, u3.y, u1.x, u1.y, u2.x, u2.y, t3.x, t3.y, t1.x, t1.y, t2.x, t2.y, A, T, invW);
+							case 5:
+							def_affinity(u3.x, u3.y, u2.x, u2.y, u1.x, u1.y, t3.x, t3.y, t2.x, t2.y, t1.x, t1.y, A, T, invW);
+						}
+						//***************
+					}
+				std::cout << "caca" << std::endl;
+			}
+		}
+	}
+
+
+
+
+#ifdef NEVERDEFINED
+
+
+
 
 
 	print_Point(&p);
@@ -158,7 +169,7 @@ void ProgassignationTiltPair::run()
 														 //Si no encuentra ningun punto o falla entonces devuelve un cero.
 
 
-    #ifdef NEVERDEFINED
+
 
     //Coordenadas triangulo untilt ==>
     //Coordenadas triangulo untilt ==>

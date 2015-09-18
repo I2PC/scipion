@@ -29,6 +29,7 @@
 
 #include <data/xmipp_program.h>
 #include <math.h>
+#include <alglib/src/ap.h>
 
 class ProgassignationTiltPair: public XmippProgram
 {
@@ -50,10 +51,6 @@ public:
     MetaData mdPartial;
 
 public:
-
-    //void delaunay_decomposition();
-
-    void triangle_area(double x1, double y1, double x2, double y2, double x3, double y3, double &trigarea);
 
     void defineParams();
 
