@@ -459,6 +459,26 @@ int 	get_Number_Vertex( struct DCEL_T *dcel)
 }
 
 
+/***************************************************************************
+* Name: insertPoint
+* IN:		point			input point
+* OUT:		N/A
+* IN/OUT:	dcel			dcel data
+* GLOBAL:	N/A
+* Description: Inserts a new point in the dcel without setting the edge
+* 				that departs from it.
+***************************************************************************/
+void 	insertPoint( struct DCEL_T *dcel, struct Point_T *point)
+{
+	// Update next vertex.
+	dcel->vertex[dcel->nVertex].vertex.x = point->x;
+	dcel->vertex[dcel->nVertex].vertex.y = point->y;
+	dcel->vertex[dcel->nVertex].origin_Edge = INVALID;
+
+	// Update number of vertex.
+	dcel->nVertex++;
+}
+
 
 void 	insertVertex( struct DCEL_T *dcel, struct Dcel_Vertex_T vertex)
 {

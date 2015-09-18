@@ -73,6 +73,7 @@ void	finalize_DCEL( struct DCEL_T *dcel);
 
 // Vertexes interface.
 int 	get_Number_Vertex( struct DCEL_T *dcel);
+void 	insertPoint( struct DCEL_T *dcel, struct Point_T *point);
 void 	insertVertex( struct DCEL_T *dcel, struct Dcel_Vertex_T vertex);
 void 	insert_Vertex_At( struct DCEL_T *dcel, struct Dcel_Vertex_T vertex, int index);
 void 	update_Vertex_Edge_At( struct DCEL_T *dcel, int edge_ID, int index);
