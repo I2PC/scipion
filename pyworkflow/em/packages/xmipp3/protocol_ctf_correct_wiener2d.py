@@ -97,6 +97,7 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
         params +=  '  --save_metadata_stack %s' % self._getPath('corrected_ctf_particles.xmd')
         params +=  '  --pad %s' % self.padding_factor.get()
         params +=  '  --wc %s' % self.wiener_constant.get()
+        params +=  '  --sampling_rate %s' % self.inputParticles.get().getSamplingRate()
 
         if (self.isPhaseFlipped ):
             params +=  '  --phase_flipped '

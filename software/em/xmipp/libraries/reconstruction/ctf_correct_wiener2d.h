@@ -55,6 +55,10 @@ public:
     /// Wiener filter constant
     double wiener_constant;
 
+    /// Sampling rate
+    double sampling_rate;
+
+
 public:
 
     void readParams();

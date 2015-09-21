@@ -34,6 +34,7 @@ void ProgCorrectWiener2D::readParams()
     isIsotropic = checkParam("--isIsotropic");
     wiener_constant  = getDoubleParam("--wc");
     correct_envelope = checkParam("--correct_envelope");
+    sampling_rate = getDoubleParam("--sampling_rate");
 }
 
 // Define parameters ==========================================================
@@ -45,6 +46,7 @@ void ProgCorrectWiener2D::defineParams()
     addKeywords("correct CTF by Wiener filtering");
     addParamsLine("   [--phase_flipped]       : Is the data already phase-flipped?");
     addParamsLine("   [--isIsotropic]         : Must be considered the defocus isotropic?");
+    addParamsLine("   [--sampling_rate <float=1.0>]     : Sampling rate of the input particles");
     addParamsLine("   [--wc <float=-1>]       : Wiener-filter constant (if < 0: use FREALIGN default)");
     addParamsLine("   [--pad <factor=2.> ]    : Padding factor for Wiener correction");
     addParamsLine("   [--correct_envelope]     : Correct the CTF envelope");
@@ -103,7 +105,8 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 	Mwien.resize(paddim,paddim);
 
 	//NO entiendo esto:
-	ctf.Tm /= pad;
+	ctf.Tm = sampling_rate;
+	//ctf.Tm /= pad;
 
 	if (isIsotropic)
 	{
@@ -130,12 +133,12 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 			dAij(ctfIm, i, j) = dAij(ctfComplex, i, j).real();
 	}
 
-
 #ifdef DEBUG
 	{
 		Image<double> save;
 		save()=ctfIm;
-		save.write("ctf.spi");
+		save.write("ctf2.spi");
+		exit(1);
 		//std::cout << "Press any key\n";
 		//char c;
 		//std::cin >> c;
