@@ -238,10 +238,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         fnFlipped = self._getTmpPath(baseMicName +"_flipped.xmp")
 
         args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s --downsampling %(downFactor)f"
-        # xmipp_ctf_phase_flip expects the sampling rate of the micrographs, that has been used
-        # to calculate the CTF, in the ctfparam file. If its no given, the program asumes that is equal to 1;
-        # therefore, downsampling factor must be equal to sampling rate of the final mics.
-        downFactor = self.samplingFinal
+        ctf=md.MetaData(fnCTF)
+        from xmipp import MDL_CTF_SAMPLING_RATE
+        downFactor = self.samplingFinal/ctf.getValue(MDL_CTF_SAMPLING_RATE,ctf.firstObject())
         self.runJob("xmipp_ctf_phase_flip", args % locals())
         
     def extractParticlesStep(self, micId, baseMicName, fnCTF, micrographToExtract):
