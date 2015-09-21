@@ -20,6 +20,7 @@
 # * You should have received a copy of the GNU General Public License
 # * along with this program; if not, write to the Free Software
 # * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
@@ -237,10 +238,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         """ Flip micrograph. """           
         fnFlipped = self._getTmpPath(baseMicName +"_flipped.xmp")
 
-        args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s --downsampling %(downFactor)f"
-        ctf=md.MetaData(fnCTF)
-        from xmipp import MDL_CTF_SAMPLING_RATE
-        downFactor = self.samplingFinal/ctf.getValue(MDL_CTF_SAMPLING_RATE,ctf.firstObject())
+        args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s --sampling %(samplingFinal)f"
+        samplingFinal=self.samplingFinal
         self.runJob("xmipp_ctf_phase_flip", args % locals())
         
     def extractParticlesStep(self, micId, baseMicName, fnCTF, micrographToExtract):
