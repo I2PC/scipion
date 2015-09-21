@@ -98,9 +98,10 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         """ Run the estimate CTF program """
         localParams = self.__params.copy()
         if self.doInitialCTF:
-            localParams['defocusU'] = self.ctfDict[micName]
-            localParams['defocus_range'] = 0.1*self.ctfDict[micName]
-            self._prepareArgs(localParams)
+            if self.ctfDict[micName]>0:
+                localParams['defocusU'] = self.ctfDict[micName]
+                localParams['defocus_range'] = 0.1*self.ctfDict[micName]
+                self._prepareArgs(localParams)
 
         # Create micrograph dir under extra directory
         makePath(micDir)
