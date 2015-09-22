@@ -100,7 +100,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         if self.doInitialCTF:
             if self.ctfDict[micName]>0:
                 localParams['defocusU'] = self.ctfDict[micName]
-                localParams['defocus_range'] = 0.1*self.ctfDict[micName]
+                localParams['defocus_range'] = 0.01*self.ctfDict[micName]
                 self._prepareArgs(localParams)
 
         # Create micrograph dir under extra directory
@@ -334,7 +334,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             fnCTFparam = self._getFileName('ctfparam', micDir=micDir)
             mdCTFParam = xmipp.MetaData(fnCTFparam)
             downFactor = mdCTFParam.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,mdCTFParam.firstObject())
-            cleanPath(fnCTFparam)
+            # cleanPath(fnCTFparam)
             
             params2 = {'psdFn': join(micDir, psdFile),
                        'defocusU': float(line[0]),
