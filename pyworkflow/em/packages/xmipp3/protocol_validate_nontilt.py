@@ -181,7 +181,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         params += ' --Ro %0.3f' % ((self.inputParticles.get().getDimensions()[0])/2)
         params += ' --max_shift %0.3f' % ((self.inputParticles.get().getDimensions()[0])/10)
         params += ' --append' 
-        params += ' --search5d_shift 5'
+        params += ' --search5d_shift %0.3f' % ((self.inputParticles.get().getDimensions()[0])/10)
         params += ' --number_orientations %0.3f' % self.numOrientations.get()
                      
         return params
