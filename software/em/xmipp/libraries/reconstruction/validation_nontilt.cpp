@@ -127,7 +127,8 @@ void ProgValidationNonTilt::run()
 			double P = 0;
 			for(size_t j=0; j<sum_u.size();j++)
 			{
-				P += H0.at(j)/H.at(j);
+				//P += H0.at(j)/H.at(j);
+				P += H0.at(size_t(significance_noise*nSamplesRandom))/H.at(j);
 				p.at(j) = H0.at(j)/H.at(j);
 			}
 
@@ -158,7 +159,7 @@ void ProgValidationNonTilt::run()
 	{
 		mdPartial.write(fnOut);
 		std::vector<double> P;
-		mdPartial.getColumnValues(MDL_WEIGHT_P,P);
+		mdPartial.getColumnValues(MDL_WEIGHT,P);
 		for (size_t idx=0; idx< P.size();idx++)
 		{
 			if (P[idx] > 1)
