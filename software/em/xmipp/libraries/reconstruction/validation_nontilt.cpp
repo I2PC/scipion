@@ -43,6 +43,7 @@ void ProgValidationNonTilt::readParams()
     fnSym = getParam("--sym");
     fnInit = getParam("--volume");
     useSignificant = checkParam("--useSignificant");
+    significance_noise = getDoubleParam("--significance_noise");
 }
 
 void ProgValidationNonTilt::defineParams()
@@ -52,6 +53,7 @@ void ProgValidationNonTilt::defineParams()
     addParamsLine("  [--volume <md_file=\"\">]    : Volume to validate");
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
+    addParamsLine("  [--significance_noise<float=0.95>] : Significane of the alignment with respect the noise");
     addParamsLine("  [--useSignificant]           : Use Significant as alignment method. If not use projection matching");
 }
 
@@ -95,6 +97,7 @@ void ProgValidationNonTilt::run()
 	double sum_w=0;
 	std::vector<double> H0(nSamplesRandom);
 	std::vector<double> H(nSamplesRandom);
+	std::vector<double> p(nSamplesRandom);
 
 	if (rank==0)
 		init_progress_bar(maxNImg);
@@ -123,7 +126,10 @@ void ProgValidationNonTilt::run()
 
 			double P = 0;
 			for(size_t j=0; j<sum_u.size();j++)
+			{
 				P += H0.at(j)/H.at(j);
+				p.at(j) = H0.at(j)/H.at(j);
+			}
 
 			P /= (nSamplesRandom);
 
@@ -133,6 +139,7 @@ void ProgValidationNonTilt::run()
 				rowP.setValue(MDL_ITEM_ID,idx);
 
 			rowP.setValue(MDL_WEIGHT,P);
+			rowP.setValue(MDL_WEIGHT_P,p.at(size_t(significance_noise*nSamplesRandom)));
 			mdPartial.addRow(rowP);
 			tempMd.clear();
 
@@ -151,7 +158,7 @@ void ProgValidationNonTilt::run()
 	{
 		mdPartial.write(fnOut);
 		std::vector<double> P;
-		mdPartial.getColumnValues(MDL_WEIGHT,P);
+		mdPartial.getColumnValues(MDL_WEIGHT_P,P);
 		for (size_t idx=0; idx< P.size();idx++)
 		{
 			if (P[idx] > 1)

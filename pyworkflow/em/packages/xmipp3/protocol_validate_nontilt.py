@@ -83,6 +83,10 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         form.addParam('numOrientations', FloatParam, default=6, expertLevel=LEVEL_ADVANCED,
                       label="Number of orientations per particle",  
                       help='Number of possible orientations in which a particle can be \n')
+                
+        form.addParam('significanceNoise', FloatParam, default=0.95, expertLevel=LEVEL_ADVANCED,
+                      label="Significance",  
+                      help='Significance of the aligniability with respect to a a set of uniformly distributed random points \n')
         
         #form.addParallelSection(threads=1, mpi=1)
         form.addParallelSection(threads=0, mpi=4)
@@ -226,6 +230,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         params  = '  --i %s' % (volDir+'/angles_iter001_00.xmd')
         params += '  --volume %s' % volName  
         params += ' --odir %s' % volDir
+        params += ' --significance_noise %s' % self.significanceNoise.get()
         params += ' --sym %s' % sym
         
         if (self.alignmentMethod == self.SIGNIFICANT):

@@ -47,6 +47,8 @@ public:
 
     bool useSignificant;
 
+    double significance_noise;
+
 public:
 
     void readParams();
