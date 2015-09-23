@@ -128,7 +128,7 @@ void ProgValidationNonTilt::run()
 			for(size_t j=0; j<sum_u.size();j++)
 			{
 				//P += H0.at(j)/H.at(j);
-				P += H0.at(size_t(significance_noise*nSamplesRandom))/H.at(j);
+				P += H0.at(size_t((1-significance_noise)*nSamplesRandom))/H.at(j);
 				p.at(j) = H0.at(j)/H.at(j);
 			}
 
