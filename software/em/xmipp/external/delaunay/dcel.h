@@ -89,6 +89,7 @@ int		are_Twins( struct DCEL_T *dcel, struct Dcel_Edge_T *edge1, struct Dcel_Edge
 int		is_External_Edge( struct DCEL_T *dcel, int index);
 void	set_Edge_Not_Checked( struct DCEL_T *dcel, int index, int	*n);
 int     get_Edge_Origin_Vertex( struct DCEL_T *dcel, int edge_Index);
+int 	get_Edge_In_Convex_Hull( struct DCEL_T *dcel, int faceID);
 struct  Dcel_Edge_T *get_Edge( struct DCEL_T *dcel, int index);
 void    copy_Edge( struct DCEL_T *dcel, int index, struct Dcel_Edge_T *edge);
 

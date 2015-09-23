@@ -6,7 +6,7 @@
 /*****************************************************************************
 * Private functions declaration
 *****************************************************************************/
-double 	Euclidean( struct Point_T *p, struct Point_T *q);
+TYPE 	Euclidean( struct Point_T *p, struct Point_T *q);
 
 
  /*****************************************************************************
@@ -20,9 +20,9 @@ double 	Euclidean( struct Point_T *p, struct Point_T *q);
 * 				function passed as parameter.
 * Complexity: 	O(1)
 *****************************************************************************/
-double distance( struct Point_T *p, struct Point_T *q)
+TYPE distance( struct Point_T *p, struct Point_T *q)
 {
-	double dist=0.0;
+	TYPE dist=0.0;
 
 	// Compute distance.
 	dist = Euclidean( p, q);
@@ -67,7 +67,7 @@ void	print_Point(struct Point_T *point)
 
 enum Turn_T		check_Turn(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3)
 {
-	double          area=0.0;       // Signed area.
+	TYPE          area=0.0;       // Signed area.
 	enum Turn_T     turn;           // Return value.
 
 	// Compute signed area of the triangle formed by p1, p2 and p3.
@@ -150,6 +150,20 @@ int		interior_Triangle(struct Point_T *p1, struct Point_T *p2, struct Point_T *p
 	return(is_In_Triangle);
 }
 
+
+int	has_Extreme_Coordinates(struct Point_T *p)
+{
+	int has_Extreme=FALSE;		// Return value.
+
+	if ((p->x >= MAX_X_COORD) || (p->y >= MAX_Y_COORD) ||
+		(p->x <= -MAX_X_COORD) || (p->y <= -MAX_Y_COORD))
+	{
+		has_Extreme = TRUE;
+	}
+
+	return(has_Extreme);
+}
+
 int	lower_X(struct Point_T *p1, struct Point_T *p2)
 {
 	// Return true if y coordinate is higher.
@@ -221,9 +235,9 @@ void copy_Point(struct Point_T *p1, struct Point_T *p2)
  * Complexity:	O(1)
  * */
 /********************************************************************/
-double Euclidean( struct Point_T *p, struct Point_T *q)
+TYPE Euclidean( struct Point_T *p, struct Point_T *q)
 {
-	double dist=0.0;
+	TYPE dist=0.0;
 
 	// Compute euclidean distance.
 	dist = sqrt(pow( p->x - q->x, 2) + pow( p->y - q->y, 2));
@@ -232,9 +246,9 @@ double Euclidean( struct Point_T *p, struct Point_T *q)
 }
 
 
-double		signed_Area(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3)
+TYPE signed_Area(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3)
 {
-	double	area=0.0;			// Return value.
+	TYPE	area=0.0;			// Return value.
 
 	area = (- p2->x*p1->y + p3->x*p1->y + p1->x*p2->y -
 			p3->x*p2->y - p1->x*p3->y +	p2->x*p3->y);

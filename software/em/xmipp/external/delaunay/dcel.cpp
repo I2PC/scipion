@@ -48,7 +48,7 @@ int 	initialize_DCEL( struct DCEL_T *dcel, int nPoints, int nEdges, int nFaces)
 	dcel->sizeFaces = nFaces;
 
 	// Allocate array of vertex.
-	dcel->faces = (struct Dcel_Face_T *) malloc(sizeof(struct Dcel_Face_T)*nFaces);
+	dcel->faces = (struct Dcel_Face_T *) calloc( nFaces, sizeof(struct Dcel_Face_T));
 
 	// Check error allocating memory.
 	if ((dcel->vertex == NULL) ||
@@ -330,22 +330,22 @@ void	print_DCEL( struct DCEL_T *dcel)
 	// Print number of vertex.
     printf("# vertices: %d\n", dcel->nVertex);
 
-	// Write vertex.
+	// Print vertex.
 	for (i=0; i<dcel->nVertex; i++)
 	{
-        // Read x and y coordinates and edge id.
+        // Print x and y coordinates and edge id.
 		printf("%d\t%f ", i+1, dcel->vertex[i].vertex.x);
 		printf("%f ", dcel->vertex[i].vertex.y);
 		printf("%d\n", dcel->vertex[i].origin_Edge);
     }
 
-	// Write number of edges.
+	// Print number of edges.
 	printf("# edges: %d\n", dcel->nEdges);
 
-	// Write edges.
+	// Print edges.
 	for (i=0; i<dcel->nEdges; i++)
 	{
-		// Read x and y coordinates and edge id.
+		// Print x and y coordinates and edge id.
 		printf("%d\t%d ", i+1, dcel->edges[i].origin_Vertex);
 		printf("%d ", dcel->edges[i].twin_Edge);
 		printf("%d ", dcel->edges[i].previous_Edge);
@@ -353,14 +353,14 @@ void	print_DCEL( struct DCEL_T *dcel)
 		printf("%d\n", dcel->edges[i].face);
     }
 
-	// Write number of faces.
+	// Print number of faces.
 	printf("# faces: %d\n", dcel->nFaces);
 
-	// Read faces.
+	// Print faces.
 	for (i=0; i<dcel->nFaces; i++)
 	{
-        // Read x and y coordinates and edge id.
-		printf("%d\t%d\n", i, dcel->faces[i].edge);
+        // Print x and y coordinates and edge id.
+		printf("%d\t%d\t%d\n", i, dcel->faces[i].edge,  dcel->faces[i].imaginaryFace);
     }
 }
 
@@ -459,6 +459,7 @@ int 	get_Number_Vertex( struct DCEL_T *dcel)
 }
 
 
+//#define DEBUG_INSERTPOINT
 /***************************************************************************
 * Name: insertPoint
 * IN:		point			input point
@@ -470,6 +471,19 @@ int 	get_Number_Vertex( struct DCEL_T *dcel)
 ***************************************************************************/
 void 	insertPoint( struct DCEL_T *dcel, struct Point_T *point)
 {
+#ifdef DEBUG_INSERTPOINT
+	if (dcel->nVertex == dcel->sizeVertex)
+	{
+		printf("DCEL is full. Size %d and # elements is %d.\n", dcel->sizeVertex, dcel->nVertex);
+		exit(0);
+		// PENDING
+	}
+	else
+	{
+		printf("Insert point (%lf,%lf) at position %d. Size %d\n", point->x, point->y,
+													dcel->nVertex, dcel->sizeVertex);
+	}
+#endif
 	// Update next vertex.
 	dcel->vertex[dcel->nVertex].vertex.x = point->x;
 	dcel->vertex[dcel->nVertex].vertex.y = point->y;
@@ -479,9 +493,31 @@ void 	insertPoint( struct DCEL_T *dcel, struct Point_T *point)
 	dcel->nVertex++;
 }
 
-
+//#define DEBUG_INSERTVERTEX
+/***************************************************************************
+* Name: insertVertex
+* IN:		vertex			input vertex
+* OUT:		N/A
+* IN/OUT:	dcel			dcel data
+* GLOBAL:	N/A
+* Description: Inserts a new vertex in the dcel
+***************************************************************************/
 void 	insertVertex( struct DCEL_T *dcel, struct Dcel_Vertex_T vertex)
 {
+#ifdef DEBUG_INSERTVERTEX
+	if (dcel->nVertex == dcel->sizeVertex)
+	{
+		printf("DCEL is full. Size %d and # elements is %d.\n", dcel->sizeVertex, dcel->nVertex);
+		exit(0);
+		// PENDING
+	}
+	else
+	{
+		printf("Insert point (%lf,%lf) at position %d. Size %d\n", vertex.vertex.x,
+									vertex.vertex.y, dcel->nVertex, dcel->sizeVertex);
+	}
+#endif
+
 	// Update next vertex.
 	dcel->vertex[dcel->nVertex].vertex.x = vertex.vertex.x;
 	dcel->vertex[dcel->nVertex].vertex.y = vertex.vertex.y;
@@ -538,8 +574,19 @@ int 	get_Number_Edges( struct DCEL_T *dcel)
 }
 
 
+//#define DEBUG_INSERTEDGE
 void 	insertEdge( struct DCEL_T *dcel, int origin, int twin, int prev, int next, int face)
 {
+#ifdef DEBUG_INSERTEDGE
+	if (dcel->nEdges == dcel->sizeEdges)
+	{
+		printf("DCEL edges array is full. Size %d # elements %d.\n", dcel->sizeEdges, dcel->nEdges);
+		// PENDING
+		exit(0);
+	}
+	printf("Added edge %d with origin %d Twin %d Prev %d Next %d Face %d.\n", dcel->nEdges + 1,
+															origin, twin, prev, next, face);
+#endif
 	// Update next edge.
 	dcel->edges[dcel->nEdges].origin_Vertex = origin;
 	dcel->edges[dcel->nEdges].twin_Edge = twin;
@@ -551,8 +598,17 @@ void 	insertEdge( struct DCEL_T *dcel, int origin, int twin, int prev, int next,
 	dcel->nEdges++;
 }
 
+//#define DEBUG_UPDATE_EDGE
 void    update_Edge( struct DCEL_T *dcel, 	int origin,	int twin, int prev, int next, int face, int index)
 {
+#ifdef DEBUG_UPDATE_EDGE
+	if (index >= dcel->nEdges)
+	{
+		printf("Trying to update index edge %d out of bounds %d\n", index, dcel->nEdges);
+		// PENDING
+		exit(0);
+	}
+#endif
     // Check if origin point field must be updated.
     if (origin != NO_UPDATE)
     {
@@ -634,6 +690,43 @@ int     get_Edge_Origin_Vertex( struct DCEL_T *dcel, int edge_Index)
     return(dcel->edges[edge_Index].origin_Vertex);
 }
 
+//#define DEBUG_GET_EDGE_IN_CONVEX_HULL
+int 	get_Edge_In_Convex_Hull( struct DCEL_T *dcel, int firstEdge_Index)
+{
+	int	found=FALSE;		// Loop control flag.
+	int	edge_Index=0;		// Edge index.
+
+	// Get first edge index.
+	edge_Index = firstEdge_Index;
+
+	// Check all edges in current face.
+	while (!found)
+	{
+#ifdef DEBUG_GET_EDGE_IN_CONVEX_HULL
+		printf("Checking convex hull edge index %d. Points are %d and %d\n", edge_Index,
+								dcel->edges[edge_Index].origin_Vertex,
+								dcel->edges[dcel->edges[edge_Index].twin_Edge-1].origin_Vertex);
+#endif
+		// Check origin and destination are positive.
+		if ((dcel->edges[edge_Index].origin_Vertex >= 0) &&
+			(dcel->edges[dcel->edges[edge_Index].twin_Edge-1].origin_Vertex >= 0))
+		{
+			found = TRUE;
+		}
+		// Next edge.
+		else
+		{
+			edge_Index = dcel->edges[edge_Index].next_Edge - 1;
+		}
+	}
+
+#ifdef DEBUG_GET_EDGE_IN_CONVEX_HULL
+	printf("Found edge %d.\n", edge_Index+1);
+#endif
+
+	return(edge_Index+1);
+}
+
 struct Dcel_Edge_T *get_Edge( struct DCEL_T *dcel, int index)
 {
 	// Return edge.
@@ -658,6 +751,7 @@ int     get_Number_Faces(struct DCEL_T *dcel)
 }
 
 
+//#define DEBUG_INSERTFACE
 /***************************************************************************
 * Name: insertFace
 * IN:	edge_ID			new edge assigned to face
@@ -668,12 +762,24 @@ int     get_Number_Faces(struct DCEL_T *dcel)
 ***************************************************************************/
 void 	insertFace( struct DCEL_T *dcel, int edge_ID)
 {
+#ifdef DEBUG_INSERTFACE
+	if (dcel->nFaces == dcel->sizeFaces)
+	{
+		printf("DCEL faces array is full. Size %d # elements %d.\n", dcel->sizeFaces, dcel->nFaces);
+		exit(0);
+		// PENDING
+	}
+#endif
 	// Update face edge.
 	dcel->faces[dcel->nFaces].edge = edge_ID;
+
+	// Set face as real.
+	dcel->faces[dcel->nFaces].imaginaryFace = VALID;
 
 	// Update number of faces.
 	dcel->nFaces++;
 }
+
 
 
 /***************************************************************************
