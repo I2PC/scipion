@@ -574,7 +574,7 @@ void    build_Voronoi( struct Voronoi_T *voronoi, struct DCEL_T *dcel)
 
 #define MAX_NEIGHBORS	50
 
-#define DEBUG_SELECT_CLOSEST_POINT
+//#define DEBUG_SELECT_CLOSEST_POINT
 /***************************************************************************
 * Name: select_Closest_Point
 * IN:	delaunay				delaunay triangulation
@@ -799,7 +799,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Voronoi_T *voronoi
 
 
 
-#define DEBUG_INNER_TO_VORONOI_AREA
+//#define DEBUG_INNER_TO_VORONOI_AREA
 /***************************************************************************
 * Name: inner_To_Voronoi_Area
 * IN:	voronoi					voronoi areas associated to delaunay triangulation

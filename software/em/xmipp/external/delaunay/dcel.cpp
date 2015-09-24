@@ -1044,14 +1044,15 @@ int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
 	return(ret);
 }
 
-void	generate_Points_DCEL( int nPoints, struct DCEL_T *dcel)
+void	generate_Points_DCEL( int nPoints, struct DCEL_T *dcel,
+												TYPE maxX, double maxY)
 {
 	int		i=0;						// Loop counter.
 	struct	Dcel_Vertex_T	point;		// Temporary point.
 	struct	Dcel_Vertex_T	bottom_Most;// Bottom most point.
 
 	// Initialize bottom most.
-	bottom_Most.vertex.x = MAX_X_COORD;
+	bottom_Most.vertex.x = maxX;
 	bottom_Most.vertex.y = MAX_Y_COORD;
 
 	// Generate random set of points.
@@ -1062,8 +1063,8 @@ void	generate_Points_DCEL( int nPoints, struct DCEL_T *dcel)
 	for (i=0; i<nPoints ;i++)
 	{
         // Generate new point.
-		point.vertex.x = (drand48() * (double) MAX_X_COORD) / 10.0;
-		point.vertex.y = (drand48() * (double) MAX_Y_COORD) / 10.0;
+		point.vertex.x = (drand48() * maxX);
+		point.vertex.y = (drand48() * maxY);
 
         // Insert new point.
         point.origin_Edge = -1;
