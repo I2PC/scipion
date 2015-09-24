@@ -9,12 +9,17 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef DEBUG
 #include <GL/glut.h>
 #endif
 
-#define     EXTERNAL_FACE       0
+/**************************************************************************
+* Defines
+**************************************************************************/
+#define MAX_NEIGHBORS		50
+#define EXTERNAL_FACE       0
 
 
 /*****************************************************************************
@@ -36,32 +41,71 @@ void		check_Edge( struct DCEL_T *dcel, struct Graph_T *graph, int edge_ID);
 void		flip_Edges_Dcel( struct DCEL_T *dcel, struct Graph_T *graph, int edge_ID);
 
 
-/*****************************************************************************
+/***************************************************************************
 * Public functions declaration
-*****************************************************************************/
+***************************************************************************/
+/***************************************************************************
+* Name: init_Delaunay
+* IN:		nPoints			# points in triangulation
+* OUT:		delaunay		delaunay data
+* IN/OUT:	N/A
+* RETURN:	SUCCESS if delaunay allocated. FAILURE i.o.c
+* Description: 	allocates structures to store "nPoints" points.
+***************************************************************************/
 int		init_Delaunay( struct Delaunay_T *delaunay, int nPoints)
 {
 	int		ret=SUCCESS; 		// Return value.
 
 	// Allocate DCEL.
 	delaunay->dcel = (struct DCEL_T *)malloc(sizeof(struct DCEL_T));
-
-	// Create DCEL data to store nPoints.
-	if (initialize_DCEL( delaunay->dcel, nPoints, nPoints*8, (nPoints+2)*2) == FAILURE)
+	if (delaunay->dcel == NULL)
 	{
-		printf("Error allocating memory when calling initialize_DCEL");
+#ifdef LOGGING
+		sprintf( log_Text, "Error allocating DCEL in init_Delaunay\n");
+		write_Log( log_Text);
+#endif
+		printf("Error allocating DCEL in init_Delaunay\n");
 		ret = FAILURE;
 	}
 	else
 	{
-		// Initialize graph.
-		ret = initialize_Graph( &delaunay->graph, delaunay->dcel->sizeVertex*10);
+		// Create DCEL data to store nPoints.
+		if (initialize_DCEL( delaunay->dcel, nPoints, nPoints*8, (nPoints+2)*2) == FAILURE)
+		{
+#ifdef LOGGING
+			sprintf( log_Text, "Error calling initialize_DCEL in init_Delaunay\n");
+			write_Log( log_Text);
+#endif
+			printf("Error allocating DCEL in init_Delaunay\n");
+			ret = FAILURE;
+		}
+		else
+		{
+			// Initialize graph.
+			if (initialize_Graph( &delaunay->graph, delaunay->dcel->sizeVertex*10) == FAILURE)
+			{
+#ifdef LOGGING
+				sprintf( log_Text, "Error allocating graph in init_Delaunay\n");
+				write_Log( log_Text);
+#endif
+				printf("Error allocating graph in init_Delaunay\n");
+				ret = FAILURE;
+			}
+		}
 	}
 
 	return(ret);
 }
 
 
+/***************************************************************************
+* Name: delete_Delaunay
+* IN:		N/A
+* OUT:		N/A
+* IN/OUT:	delaunay		delaunay data
+* RETURN:	N/A
+* Description: 	Free delaunay data.
+***************************************************************************/
 void	delete_Delaunay( struct Delaunay_T *delaunay)
 {
 	// Deallocate DCEL.
@@ -72,27 +116,108 @@ void	delete_Delaunay( struct Delaunay_T *delaunay)
 	finalize_Delaunay(delaunay);
 }
 
-void	insert_Point( struct Delaunay_T *delaunay, double x, double y)
-{
-	// Update coordinates.
-	delaunay->dcel->vertex[delaunay->dcel->nVertex].vertex.x = x;
-	delaunay->dcel->vertex[delaunay->dcel->nVertex].vertex.y = y;
 
-	// Increase # points.
-	delaunay->dcel->nVertex++;
+/***************************************************************************
+* Name: insert_Point
+* IN:		x				x coordinate of new point
+* 			y				y coordinate of new point
+* OUT:		N/A
+* IN/OUT:	delaunay		delaunay data
+* RETURN:	N/A
+* Description: 	Inserts a new point in the Delaunay set of points.
+***************************************************************************/
+int		insert_Point( struct Delaunay_T *delaunay, double x, double y)
+{
+	int		ret=SUCCESS;			// Return value.
+
+	// Check if dcel is full.
+	if (delaunay->dcel->nVertex == delaunay->dcel->sizeVertex)
+	{
+		printf("Dcel is full. Resizing DCEL\n");
+
+		// Resize vertex array.
+		if (resize_DCEL( delaunay->dcel, RESIZE_POINTS) == FAILURE)
+		{
+#ifdef LOGGING
+			sprintf("Error resizing DCEL in insert_Point.\n");
+			write_Log( log_Text);
+#endif
+			printf("Error resizing DCEL in insert_Point.\n");
+			ret = FAILURE;
+		}
+	}
+
+	if (ret == SUCCESS)
+	{
+		// Update coordinates.
+		delaunay->dcel->vertex[delaunay->dcel->nVertex].vertex.x = x;
+		delaunay->dcel->vertex[delaunay->dcel->nVertex].vertex.y = y;
+
+		// Increase # points.
+		delaunay->dcel->nVertex++;
+	}
+
+	return(ret);
 }
 
 
-void	create_Delaunay_Triangulation( struct Delaunay_T *delaunay)
+/***************************************************************************
+* Name: create_Delaunay_Triangulation
+* IN:		createVoronoi	determines if Voronoi areas must be computed.
+* OUT:		N/A
+* IN/OUT:	delaunay		delaunay data
+* RETURN:	SUCESS if Voronoi computed. FAILURE i.o.c.
+* Description: 	Computes the Delaunay triangulation using points stored in
+* 				the DCEL field of the "delaunay" data. If "createVoronoi"
+* 				TRUE, then it also computes the Voronoi area of the
+* 				triangulation
+***************************************************************************/
+int create_Delaunay_Triangulation( struct Delaunay_T *delaunay, int createVoronoi)
 {
+	int		ret=SUCCESS;		// Return value.
+
 	// Build Delaunay triangulation from scratch.
 	incremental_Delaunay( delaunay);
 
-	// Remove P_MINUS_2 and P_MINUS_1 data from dcel.
+	// Set as imaginary faces with vertex points P_MINUS_2 or P_MINUS_1.
 	purge_Delaunay( delaunay);
+
+	// Check if Voronoi areas must be computed.
+	if (createVoronoi)
+	{
+		// Allocate Voronoi structures.
+		if (initialize_Voronoi( &delaunay->voronoi, get_Number_Faces( delaunay->dcel)*2) == FAILURE)
+		{
+#ifdef LOGGING
+			sprintf("Error allocating Voronoi data in create_Delaunay_Triangulation.\n");
+			write_Log( log_Text);
+#endif
+			printf("Error allocating Voronoi data in create_Delaunay_Triangulation.\n");
+			ret = FAILURE;
+		}
+		else
+		{
+			// Build Voronoi diagram.
+			build_Voronoi( &delaunay->voronoi, delaunay->dcel);
+
+			// Set Voronoi flag as computed.
+			delaunay->voronoiComputed = TRUE;
+		}
+	}
+
+	return(ret);
 }
 
 
+
+/***************************************************************************
+* Name: initialize_Delaunay
+* IN:		dcel			dcel data
+* OUT:		N/A
+* IN/OUT:	delaunay		delaunay data
+* RETURN:	N/A
+* Description: 	Allocates graph and gets reference to input dcel
+***************************************************************************/
 int 	initialize_Delaunay(struct Delaunay_T *delaunay, struct DCEL_T *dcel)
 {
 	int		ret=SUCCESS;		// Return value.
@@ -101,12 +226,28 @@ int 	initialize_Delaunay(struct Delaunay_T *delaunay, struct DCEL_T *dcel)
 	delaunay->dcel = dcel;
 
 	// Initialize graph.
-	ret = initialize_Graph( &delaunay->graph, delaunay->dcel->nVertex*10);
+	if (initialize_Graph( &delaunay->graph, delaunay->dcel->nVertex*10) == FAILURE)
+	{
+#ifdef LOGGING
+		sprintf("Error allocating graph in DCEL in insert_Point.\n");
+		write_Log( log_Text);
+#endif
+		printf("Error allocating graph in DCEL in insert_Point.\n");
+		ret = FAILURE;
+	}
 
 	return(ret);
 }
 
 
+/***************************************************************************
+* Name: finalize_Delaunay
+* IN:		N/A
+* OUT:		N/A
+* IN/OUT:	delaunay		delaunay data
+* RETURN:	N/A
+* Description: 	Free graph, Voronoi areas and dereferences dcel.
+***************************************************************************/
 void 	finalize_Delaunay(struct Delaunay_T *delaunay)
 {
 	// Dereference DCEL.
@@ -114,9 +255,24 @@ void 	finalize_Delaunay(struct Delaunay_T *delaunay)
 
 	// Delete graph.
 	finalize_Graph( &delaunay->graph);
+
+	// Delete Voronoi.
+	finalize_Voronoi( &delaunay->voronoi);
+
+	// Set Voronoi diagram as not computed.
+	delaunay->voronoiComputed = FALSE;
 }
 
 
+/***************************************************************************
+* Name: incremental_Delaunay
+* IN:		N/A
+* OUT:		N/A
+* IN/OUT:	delaunay		delaunay data
+* RETURN:	N/A
+* Description:  Builds a Delaunay triangulation using the incremental
+* 				algorithm.
+***************************************************************************/
 void	incremental_Delaunay(struct Delaunay_T *delaunay)
 {
     int     point_Index=0;                  // Points loop counter.
@@ -159,6 +315,15 @@ void	incremental_Delaunay(struct Delaunay_T *delaunay)
 }
 
 
+/***************************************************************************
+* Name: build_Delaunay_From_Triangulation
+* IN:		N/A
+* OUT:		N/A
+* IN/OUT:	delaunay		delaunay data
+* RETURN:	N/A
+* Description:  Builds a Delaunay triangulation using the incremental
+* 				algorithm.
+***************************************************************************/
 void 	build_Delaunay_From_Triangulation(struct DCEL_T *dcel)
 {
 	int		i=0;							// Loop counters.
@@ -314,33 +479,18 @@ void 	build_Delaunay_From_Triangulation(struct DCEL_T *dcel)
 void    purge_Delaunay( struct Delaunay_T *delaunay)
 {
     int edge_Index=0;           // Next edge to update.
-    //int saved_Index=0;          // Next edge to update.
-    //int first_Index=0;          // Index of first edge updated.
-    //int point_Index=0;          // Index of next point in convex hull.
 
     // Initialize edge and point indexes.
-    //point_Index = 0;
     edge_Index = delaunay->dcel->edges[edge_Index].previous_Edge-1;
-    //first_Index = edge_Index;
 
     do
     {
-        // Update edge departing from point.
-    	//delaunay->dcel->vertex[point_Index].origin_Edge = delaunay->dcel->edges[edge_Index].twin_Edge;
-
         // Invalid current face.
         update_Face( delaunay->dcel, INVALID, delaunay->dcel->edges[edge_Index].face);
 
-        // Update edge so it belongs to convex hull.
-        //delaunay->dcel->edges[edge_Index].face = EXTERNAL_FACE;
-
         // Get index of edge departing from next point in convex hull.
-        //saved_Index = edge_Index;
         edge_Index = delaunay->dcel->edges[edge_Index].previous_Edge-1;
         edge_Index = delaunay->dcel->edges[edge_Index].twin_Edge-1;
-
-        // Get point index.
-        //point_Index = delaunay->dcel->edges[edge_Index].origin_Vertex-1;
 
         // Get index of next edge to update.
         edge_Index = delaunay->dcel->edges[edge_Index].previous_Edge-1;
@@ -356,24 +506,11 @@ void    purge_Delaunay( struct Delaunay_T *delaunay)
             edge_Index = delaunay->dcel->edges[edge_Index].previous_Edge-1;
         }
 
-        // Update next and previous links.
-        //delaunay->dcel->edges[edge_Index].next_Edge = saved_Index + 1;
-        //delaunay->dcel->edges[saved_Index].previous_Edge = edge_Index + 1;
     } while(delaunay->dcel->edges[edge_Index].origin_Vertex != 1);
     // Until top most point found again.
 
     // Invalid current face.
     update_Face( delaunay->dcel, INVALID, delaunay->dcel->edges[edge_Index].face);
-
-    // Update edge so it belongs to convex hull.
-    //delaunay->dcel->edges[edge_Index].face = EXTERNAL_FACE;
-
-    // Set edge in external face.
-    //delaunay->dcel->faces[EXTERNAL_FACE].edge = edge_Index+1;
-
-    // Update next and previous links to close convex hull.
-    //delaunay->dcel->edges[first_Index].next_Edge = edge_Index + 1;
-    //delaunay->dcel->edges[edge_Index].previous_Edge = first_Index + 1;
 }
 
 
@@ -588,6 +725,263 @@ void    select_Two_Closest( struct Delaunay_T *delaunay, int *first, int *second
             }
         }
     }
+}
+
+//#define DEBUG_SELECT_CLOSEST_POINT
+/***************************************************************************
+* Name: select_Closest_Point
+* IN:	delaunay				delaunay triangulation
+* 		voronoi					voronoi areas associated to delaunay triangulation
+* 		p						input point
+* OUT:		q					closest point to input "p" point
+* 			lowest_Distance		distance from input "p" to output "q"
+* RETURN:	True				TRUE if closest point found. False i.o.c.
+* Description: finds the closest point in the DCEl to an input "p" point.
+***************************************************************************/
+int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
+														struct Point_T *q,
+														double *lowest_Distance)
+{
+    int     i=0, j=0;			// Loop counters.
+    int     node_Index=0;  		// Index of current node analyzed.
+    int		found=FALSE;		// Loop control flag.
+    int		finished=FALSE;		// Loop control flag.
+	int		child_Index=0;		// Children node ID.
+    int     nChildren=0;        // Number of children of current node.
+    int		edge_Id=0;			// Edge identifier.
+
+    int		current_Point=0;	// Current point checked.
+    int		first_Point=0;		// First point checked.
+
+    // Circular buffer to store point candidates.
+    int		in=0;
+    int		out=0;
+    int		nItems=0;
+    int		candidatesSize=MAX_NEIGHBORS;
+    int		*candidates=NULL, *refCandidates=NULL;
+    int		allocationError=FALSE;		// Error allocating memory.
+
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+	printf("Point to search: ");
+	print_Point( p);
+#endif
+
+    // Loop while not leaf node found and not end of set of points and not.
+    finished = FALSE;
+    while (!finished)
+    {
+    	// If node is a leaf then triangle that surrounds point has been found.
+    	if (is_Leaf_Node( &delaunay->graph, node_Index))
+    	{
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+    		printf("Leaf node found: %d\n", node_Index);
+#endif
+    		// Allocate neighbors array.
+    		candidates = (int *) calloc( candidatesSize, sizeof(int));
+
+    		// Insert points from leaf node.
+    		for (i=0; i<N_POINTS ;i++)
+			{
+				if (delaunay->graph.nodes[node_Index].points_Index[i] >= 0)
+				{
+					candidates[in] = delaunay->graph.nodes[node_Index].points_Index[i];
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+					printf("Inserted point %d. # %d. In %d. Out %d\n", candidates[in], nItems+1, in, out);
+#endif
+					nItems++;
+					in++;
+				}
+			}
+
+			found = FALSE;
+			allocationError = FALSE;
+			while ((!found) && (!allocationError))
+			{
+				if (candidates[out] >= 0)
+				{
+					if (inner_To_Voronoi_Area( &delaunay->voronoi, candidates[out]-1, p))
+					{
+						// End inner and outer loops.
+						found = TRUE;
+						finished = TRUE;
+
+						// Update point and distance.
+						q->x = delaunay->dcel->vertex[candidates[out]-1].vertex.x;
+						q->y = delaunay->dcel->vertex[candidates[out]-1].vertex.y;
+						(*lowest_Distance) = distance( p, q);
+
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+						printf("Point %d found.\n", candidates[out]);
+			    		//getchar();
+#endif
+					}
+					else
+					{
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+						printf("Discard point %d.\n", candidates[out]);
+#endif
+						// Get first neighbor.
+						edge_Id = delaunay->dcel->vertex[candidates[out]-1].origin_Edge;
+						edge_Id = delaunay->dcel->edges[edge_Id - 1].twin_Edge;
+						current_Point = delaunay->dcel->edges[edge_Id - 1].origin_Vertex;
+						first_Point = current_Point;
+
+						do
+						{
+							// Check if circular buffer is full.
+							if (nItems == candidatesSize)
+							{
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+								printf("Circular buffer is full. Size %d and current # elements %d\n",
+																					nItems,
+																					candidatesSize);
+#endif
+								// Double size of the candidates array.
+								refCandidates = candidates;
+								candidatesSize = candidatesSize*2;
+								candidates = (int *) calloc( candidatesSize, sizeof(int));
+								if (candidates != NULL)
+								{
+									// Copy current candidates.
+									memcpy( candidates, refCandidates, candidatesSize/2);
+									free( refCandidates);
+								}
+								else
+								{
+#ifdef LOGGING
+									sprintf( log_Text, "Error allocating neighbors array in select_Closest_Point.\n");
+									write_Log( log_Text);
+#endif
+									printf("Error allocating neighbors array in select_Closest_Point.\n");
+									allocationError = TRUE;
+									break;
+								}
+							}
+
+							if (current_Point >= 0)
+							{
+								// Insert point.
+								candidates[in] = current_Point;
+								nItems++;
+								in++;
+								in = in % candidatesSize;
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+								printf("Inserted point %d. # %d. In %d. Out %d\n", current_Point, nItems, in, out);
+#endif
+							}
+
+							// Get next point.
+							edge_Id = delaunay->dcel->edges[edge_Id - 1].next_Edge;
+							edge_Id = delaunay->dcel->edges[edge_Id - 1].twin_Edge;
+							current_Point = delaunay->dcel->edges[edge_Id - 1].origin_Vertex;
+						}
+						while (current_Point != first_Point);
+
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+						printf("All %d neighbors inserted.\n", candidates[out]);
+#endif
+					}
+				}
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+				else
+				{
+					printf("Imaginary point %d.\n", candidates[out]);
+				}
+#endif
+				// Check next point.
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+				printf("Removed point %d. # %d. In %d. Out %d\n", candidates[out], nItems-1, in, out+1);
+#endif
+				out++;
+				nItems--;
+				out = out % candidatesSize;
+			}
+
+			// Free candidates circular buffer.
+			free( candidates);
+    	}
+    	else
+    	{
+			// Search triangle in children nodes.
+			i=0;
+			found = FALSE;
+			nChildren = get_nChildren_Node( &delaunay->graph, node_Index);
+
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+			printf("Start search in node %d\n", node_Index);
+#endif
+			while ((!found) && (i < nChildren))
+			{
+				// Get i-children.
+				child_Index = get_iChildren_Node( &delaunay->graph, node_Index, i);
+
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+				printf("Checking %d-child in node %d. Node %d\n", i, child_Index, node_Index);
+#endif
+				// Check if point is interior to i-child node.
+				if (is_Interior_To_Node( delaunay->dcel, &delaunay->graph, p, child_Index))
+				{
+					// Search in next children node.
+					node_Index = child_Index;
+
+					// End loop.
+					found = TRUE;
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+					printf("Point inside node %d\n", node_Index);
+#endif
+				}
+				// Next child.
+				else
+				{
+					i++;
+					if (i == nChildren)
+					{
+						// Point must be equal to an existing point. Retry all points in current node.
+						found = FALSE;
+						i=0;
+						while ((!found) && (i < nChildren))
+						{
+							// Get i-children.
+							child_Index = get_iChildren_Node( &delaunay->graph, node_Index, i);
+
+							// Get closest point between the three points of the triangle.
+							for (j=0; j<N_POINTS ;j++)
+							{
+								if (equal_Point( p, &delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex))
+								{
+									(*lowest_Distance) = 0.0;
+									q->x = delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.x;
+									q->y = delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.y;
+									found = TRUE;
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+									printf("Index point %d. Distance %lf\n", delaunay->graph.nodes[child_Index].points_Index[i], (*lowest_Distance));
+#endif
+								}
+							}
+
+							i++;
+						}
+
+						// End main loop and force inner loop to finish.
+						finished = TRUE;
+						i = nChildren;
+
+						if (!found)
+						{
+							printf( "ERROR: No nodes surround new point.\n");
+							print_Point( p);
+#ifdef LOGGING
+							sprintf( log_Text, "ERROR: No nodes surround new point.\n");
+							write_Log( log_Text);
+#endif
+						}
+					}
+				}
+			}
+    	}
+    }
+
+    return(found);
 }
 
 

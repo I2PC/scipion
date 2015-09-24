@@ -10,9 +10,13 @@
 #include "voronoi.h"
 
 
-void insert_Voronoi( struct Voronoi_T *voronoi_Set, struct Point_T *centre);
-int	 inner_To_Voronoi_Area( struct Voronoi_T *voronoi, int index,
-												struct Point_T *q);
+
+
+
+/**************************************************************************
+* Private function headers.
+**************************************************************************/
+int insert_Voronoi( struct Voronoi_T *voronoi_Set, struct Point_T *centre);
 
 
 /***************************************************************************
@@ -86,12 +90,24 @@ int    get_Voronoi_Centre( struct Voronoi_T *voronoi, int face, struct Point_T *
 * OUT:		N/A
 * IN/OUT:	voronoi			voronoi data
 * GLOBAL:	N/A
+* RETURN:	SUCCESS if "centre" inserted. FAILURE i.o.c.
 * Description: Inserts a new point in the Voronoi set.
 ***************************************************************************/
-void    insert_Voronoi( struct Voronoi_T *voronoi, struct Point_T *centre)
+int    insert_Voronoi( struct Voronoi_T *voronoi, struct Point_T *centre)
 {
+	int		ret=SUCCESS;		// Return value.
+
     // Insert centre.
-    insertPoint( &voronoi->dcel, centre);
+    if (insertPoint( &voronoi->dcel, centre) == FAILURE)
+    {
+#ifdef LOGGING
+		sprintf("Error inserting circumcentre in insert_Voronoi.\n");
+		write_Log( log_Text);
+#endif
+		ret = FAILURE;
+    }
+
+    return(ret);
 }
 
 
@@ -572,230 +588,8 @@ void    build_Voronoi( struct Voronoi_T *voronoi, struct DCEL_T *dcel)
 #endif
 }
 
-#define MAX_NEIGHBORS	50
 
-//#define DEBUG_SELECT_CLOSEST_POINT
-/***************************************************************************
-* Name: select_Closest_Point
-* IN:	delaunay				delaunay triangulation
-* 		voronoi					voronoi areas associated to delaunay triangulation
-* 		p						input point
-* OUT:		q					closest point to input "p" point
-* 			lowest_Distance		distance from input "p" to output "q"
-* RETURN:	True				TRUE if closest point found. False i.o.c.
-* Description: finds the closest point in the DCEl to an input "p" point.
-***************************************************************************/
-int select_Closest_Point( struct Delaunay_T *delaunay, struct Voronoi_T *voronoi,
-							struct Point_T *p, struct Point_T *q, double *lowest_Distance)
-{
-    int     i=0, j=0;			// Loop counters.
-    int     node_Index=0;  		// Index of current node analyzed.
-    int		found=FALSE;		// Loop control flag.
-    int		finished=FALSE;		// Loop control flag.
-	int		child_Index=0;		// Children node ID.
-    int     nChildren=0;        // Number of children of current node.
-    int		edge_Id=0;			// Edge identifier.
 
-    int		current_Point=0;	// Current point checked.
-    int		first_Point=0;		// First point checked.
-
-    // Circular buffer to store point candidates.
-    int		in=0;
-    int		out=0;
-    int		nItems=0;
-    int		candidates[MAX_NEIGHBORS];
-
-#ifdef DEBUG_SELECT_CLOSEST_POINT
-	printf("Point to search: ");
-	print_Point( p);
-#endif
-
-    // Loop while not leaf node found and not end of set of points and not.
-    finished = FALSE;
-    while (!finished)
-    {
-    	// If node is a leaf then triangle that surrounds point has been found.
-    	if (is_Leaf_Node( &delaunay->graph, node_Index))
-    	{
-#ifdef DEBUG_SELECT_CLOSEST_POINT
-    		printf("Leaf node found: %d\n", node_Index);
-#endif
-    		// Insert points from leaf node.
-    		for (i=0; i<N_POINTS ;i++)
-			{
-				if (delaunay->graph.nodes[node_Index].points_Index[i] >= 0)
-				{
-					candidates[in] = delaunay->graph.nodes[node_Index].points_Index[i];
-#ifdef DEBUG_SELECT_CLOSEST_POINT
-					printf("Inserted point %d.\n", candidates[in]);
-#endif
-					nItems++;
-					in++;
-				}
-			}
-
-			found = FALSE;
-			while (!found)
-			{
-				if (candidates[out] >= 0)
-				{
-					if (inner_To_Voronoi_Area( voronoi, candidates[out]-1, p))
-					{
-						// End inner and outer loops.
-						found = TRUE;
-						finished = TRUE;
-
-						// Update point and distance.
-						q->x = delaunay->dcel->vertex[candidates[out]-1].vertex.x;
-						q->y = delaunay->dcel->vertex[candidates[out]-1].vertex.y;
-						(*lowest_Distance) = distance( p, q);
-
-#ifdef DEBUG_SELECT_CLOSEST_POINT
-						printf("Point %d found.\n", candidates[out]);
-			    		//getchar();
-#endif
-					}
-					else
-					{
-#ifdef DEBUG_SELECT_CLOSEST_POINT
-						printf("Discard point %d.\n", candidates[out]);
-#endif
-						// Get first neighbor.
-						edge_Id = delaunay->dcel->vertex[candidates[out]-1].origin_Edge;
-						edge_Id = delaunay->dcel->edges[edge_Id - 1].twin_Edge;
-						current_Point = delaunay->dcel->edges[edge_Id - 1].origin_Vertex;
-						first_Point = current_Point;
-
-						do
-						{
-#ifdef DEBUG_SELECT_CLOSEST_POINT
-							if (nItems ==  MAX_NEIGHBORS)
-							{
-#ifdef LOGGING
-								sprintf( log_Text, "Error allocating neighbors array in select_Closest_Point.\n");
-								write_Log( log_Text);
-#endif
-								// PENDING
-								printf("Error allocating neighbors array in select_Closest_Point.\n");
-								exit(0);
-							}
-							if (current_Point >= 0)
-							{
-								printf("Inserted point %d.\n", current_Point);
-							}
-#endif
-							if (current_Point >= 0)
-							{
-								// Insert point.
-								candidates[in] = current_Point;
-								nItems++;
-								in++;
-								in = in % MAX_NEIGHBORS;
-							}
-
-							// Get next point.
-							edge_Id = delaunay->dcel->edges[edge_Id - 1].next_Edge;
-							edge_Id = delaunay->dcel->edges[edge_Id - 1].twin_Edge;
-							current_Point = delaunay->dcel->edges[edge_Id - 1].origin_Vertex;
-						}
-						while (current_Point != first_Point);
-					}
-				}
-#ifdef DEBUG_SELECT_CLOSEST_POINT
-				else
-				{
-					printf("Imaginary point %d.\n", candidates[out]);
-				}
-#endif
-				// Check next point.
-				out++;
-				nItems--;
-				out = out % MAX_NEIGHBORS;
-			}
-    	}
-    	else
-    	{
-			// Search triangle in children nodes.
-			i=0;
-			found = FALSE;
-			nChildren = get_nChildren_Node( &delaunay->graph, node_Index);
-
-#ifdef DEBUG_SELECT_CLOSEST_POINT
-			printf("Start search in node %d\n", node_Index);
-#endif
-			while ((!found) && (i < nChildren))
-			{
-				// Get i-children.
-				child_Index = get_iChildren_Node( &delaunay->graph, node_Index, i);
-
-#ifdef DEBUG_SELECT_CLOSEST_POINT
-				printf("Checking %d-child in node %d. Node %d\n", i, child_Index, node_Index);
-#endif
-				// Check if point is interior to i-child node.
-				if (is_Interior_To_Node( delaunay->dcel, &delaunay->graph, p, child_Index))
-				{
-					// Search in next children node.
-					node_Index = child_Index;
-
-					// End loop.
-					found = TRUE;
-#ifdef DEBUG_SELECT_CLOSEST_POINT
-					printf("Point inside node %d\n", node_Index);
-#endif
-				}
-				// Next child.
-				else
-				{
-					i++;
-					if (i == nChildren)
-					{
-						// Point must be equal to an existing point. Retry all points in current node.
-						found = FALSE;
-						i=0;
-						while ((!found) && (i < nChildren))
-						{
-							// Get i-children.
-							child_Index = get_iChildren_Node( &delaunay->graph, node_Index, i);
-
-							// Get closest point between the three points of the triangle.
-							for (j=0; j<N_POINTS ;j++)
-							{
-								if (equal_Point( p, &delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex))
-								{
-									(*lowest_Distance) = 0.0;
-									q->x = delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.x;
-									q->y = delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.y;
-									found = TRUE;
-#ifdef DEBUG_SELECT_CLOSEST_POINT
-									printf("Index point %d. Distance %lf\n", delaunay->graph.nodes[child_Index].points_Index[i], (*lowest_Distance));
-#endif
-								}
-							}
-
-							i++;
-						}
-
-						// End main loop and force inner loop to finish.
-						finished = TRUE;
-						i = nChildren;
-
-						if (!found)
-						{
-							printf( "ERROR: No nodes surround new point.\n");
-							print_Point( p);
-#ifdef LOGGING
-							sprintf( log_Text, "ERROR: No nodes surround new point.\n");
-							write_Log( log_Text);
-#endif
-						}
-					}
-				}
-			}
-    	}
-    }
-
-    return(found);
-}
 
 
 
@@ -895,6 +689,6 @@ void finalize_Voronoi(struct Voronoi_T *voronoi)
 	voronoi->computed = FALSE;
 
     // Free DCEL.
-    finalize_DCEL( &voronoi->dcel);
+	finalize_DCEL( &voronoi->dcel);
 }
 

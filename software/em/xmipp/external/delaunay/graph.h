@@ -46,7 +46,7 @@ void			get_Vertex_Of_Node( struct Graph_T *graph, int node_Index, int *index1, i
 int             is_Graph_Full(struct Graph_T *graph);
 
 // Graph modification interface.
-void            insert_Node(struct Graph_T *graph, struct Node_T *node);
+int            	insert_Node(struct Graph_T *graph, struct Node_T *node);
 struct Node_T   *get_Node(struct Graph_T *graph, int index);
 void            update_Node(struct Graph_T *graph, int index, int  nChildren, struct Node_T *node);
 int             is_Leaf_Node(struct Graph_T *graph, int index);
