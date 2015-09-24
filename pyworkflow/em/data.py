@@ -801,7 +801,7 @@ class SetOfImages(EMSet):
         return x, y, z
     
     def getXDim(self):
-        return self.getDim()[0]
+        return self.getDim()[0] if self.getDim() is not None else 0
     
     def isOddX(self):
         """ Return True if the first item x dimension is odd. """
