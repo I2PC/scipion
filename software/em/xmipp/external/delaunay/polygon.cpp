@@ -7,6 +7,12 @@
 #define MIN_SLOPE	0.0005
 
 /**************************************************************************
+* Private function headers
+**************************************************************************/
+void    compute_Segment( struct Point_T *p, struct Point_T *q, struct Segment_T *out);
+enum Segment_Direction compute_Direction( struct Segment_T *segment, struct Point_T *p, struct Point_T *q);
+
+/**************************************************************************
 * Public function bodies
 **************************************************************************/
 void        middle_Point(struct Point_T *p, struct Point_T *q, struct Point_T *middle)
@@ -202,3 +208,102 @@ struct Point_T 	get_Centre( struct Triangle_T *triang)
 
 	return(point);
 }
+
+
+
+/********************************************************************
+FUNCTION:   compute_Segment
+INPUT:      p   Point_T
+            q   Point_T
+OUTPUT:     out Segment_T
+PRE:        p != NULL, q != NULL
+POST:       m = (q->y - p->y) / (q->x - p->x)
+            n = p->y - (out->m*p->x)
+DESCRIPTION:Computes the values m and n of the pq line (y=mx + n).
+COMPLEXITY: O(1)
+*********************************************************************/
+void    compute_Segment( struct Point_T *p, struct Point_T *q, struct Segment_T *out)
+{
+    // Avoid divison by 0.
+    if ((q->x - p->x) != 0)
+    {
+        // Compute slope.
+        out->m = (q->y - p->y) / (q->x - p->x);
+    }
+    // Set a default value.
+    else
+    {
+        out->m = 1;
+    }
+
+    // Compute n.
+    out->n = p->y - (out->m*p->x);
+}
+
+
+enum Segment_Direction compute_Direction( struct Segment_T *segment, struct Point_T *p, struct Point_T *q)
+{
+    enum Segment_Direction direction=FROM_0_TO_90;       // Return value.
+
+    // Only first or third cuadrant.
+    if (segment->m > 0)
+    {
+        // First cuadrant.
+        if (p->y < q->y)
+        {
+            direction = FROM_0_TO_90;
+        }
+        // Third cuadrant.
+        else
+        {
+            direction = FROM_180_TO_270;
+        }
+    }
+    // Second or fourht cuadrant.
+    else if (segment->m < 0)
+    {
+        // First cuadrant.
+        if (p->y > q->y)
+        {
+            direction = FROM_270_TO_360;
+        }
+        // Third cuadrant.
+        else
+        {
+            direction = FROM_90_TO_180;
+        }
+    }
+    // Slope is zero -> line parallel to X axis.
+    else if (segment->m == 0)
+    {
+        // Paralle to X axis to the right.
+        if (p->x < q->x)
+        {
+            direction = HORIZONTAL_0;
+        }
+        // Paralle to X axis to the left.
+        else
+        {
+            direction = HORIZONTAL_180;
+        }
+    }
+    // Slope is infinite -> line parallel to Y axis.
+    else
+    {
+        // Paralle to Y axis upwards.
+        if (p->y < q->y)
+        {
+            direction = VERTICAL_90;
+        }
+        // Paralle to Y axis downwards.
+        else
+        {
+            direction = VERTICAL_270;
+        }
+    }
+
+    return(direction);
+}
+
+
+
