@@ -684,10 +684,13 @@ int	 inner_To_Voronoi_Area( struct Voronoi_T *voronoi, int index,
 ***************************************************************************/
 void finalize_Voronoi(struct Voronoi_T *voronoi)
 {
+	if (voronoi->computed)
+	{
+	    // Free DCEL.
+		finalize_DCEL( &voronoi->dcel);
+	}
+
     // Reset number of elements.
 	voronoi->computed = FALSE;
-
-    // Free DCEL.
-	finalize_DCEL( &voronoi->dcel);
 }
 
