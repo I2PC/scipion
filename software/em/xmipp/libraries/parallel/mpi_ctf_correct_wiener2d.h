@@ -23,51 +23,36 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef VALIDATION_NONTILT_H_
-#define VALIDATION_NONTILT_H_
-#define PI 3.14159265
+#ifndef MPI_CTF_CORRECT_WIENER2D_H_
+#define MPI_CTF_CORRECT_WIENER2D_H_
 
-#include <data/xmipp_program.h>
-#include <math.h>
+#include <reconstruction/ctf_correct_wiener2d.h>
+#include "parallel/xmipp_mpi.h"
 
-/**@defgroup Validation without tilt
-   @ingroup ReconsLibrary */
+/**@defgroup MpiProgCorrectWiener2D performs CTF correction on 2D images by wiener filtering (MPI)
+   @ingroup ParallelLibrary */
 //@{
-class ProgValidationNonTilt: public XmippProgram
+
+class MpiProgCorrectWiener2D: public ProgCorrectWiener2D
 {
-
-
 public:
-    /** Filenames */
-    FileName fnDir, fnSym, fnInit, fnParticles;
-
-    MetaData mdPartial;
-
-    size_t rank, Nprocessors;
-
-    bool useSignificant;
-
+	MpiNode *node;
 public:
+	// Empty constructor
+	MpiProgCorrectWiener2D();
 
-    void readParams();
+	// Destructor
+	~MpiProgCorrectWiener2D();
 
-    void defineParams();
+	// Redefine how to read the command line
+	void read(int argc, char** argv);
 
-    void run();
+	// Redefine how to synchronize
+	void synchronize();
 
-public:
-
-    ProgValidationNonTilt();
-
-    void obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
-
-    void obtainSumW(const MetaData & tempMd, double & sum_W, std::vector<double> & sum_u, std::vector<double> & H, const double factor);
-
-    /// Gather alignment
-    virtual void gatherClusterability() {}
-
-    /// Synchronize with other processors
-    virtual void synchronize() {}
-
+	// Redefine how to gather the alignment
+    void gatherResults();
 };
-#endif /* VALIDATION_NONTILT_H_ */
+//@}
+
+#endif /* MPI_CTF_CORRECT_WIENER2D_H_ */

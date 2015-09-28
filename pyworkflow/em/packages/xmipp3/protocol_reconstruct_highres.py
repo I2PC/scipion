@@ -189,9 +189,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                help="In angstroms")
         groupSymmetry.addParam('postSymmetryHelicalMaxZ', FloatParam, label="Max. Z shift", default=40, condition='postSymmetryHelical',
                                help="In angstroms")
-        form.addParam('postDoPseudo', BooleanParam, label="Convert to pseudoatoms", default=False)
-        form.addParam('postPseudoRadius', FloatParam, label="Pseudoatoms radius", default=1.1, condition="postDoPseudo",
-                      expertLevel=LEVEL_ADVANCED, help="In voxels")
         form.addParam('postScript', StringParam, label="Post-processing command", default="", expertLevel=LEVEL_ADVANCED, 
                       help='A command template that is used to post-process the reconstruction. The following variables can be used ' 
                            '%(sampling)s %(dim)s %(volume)s %(iterDir)s. The command should read Spider volumes and modify the input volume.'
@@ -544,7 +541,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def calculateAngStep(self,newXdim,TsCurrent,ResolutionAlignment):
         k=newXdim*TsCurrent/ResolutionAlignment # Freq. index
         from math import atan2,pi
-        return atan2(1,k)*180.0/pi*2.0/3.0 # Corresponding angular step
+        return atan2(1,k)*180.0/pi # Corresponding angular step
 
     def globalAssignment(self,iteration):
         fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
@@ -838,7 +835,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
         TsCurrent=self.readInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE)
         if not self.postSymmetryWithinMask \
-           and not self.postSymmetryHelical and not self.postDoPseudo and self.postScript=="" and not self.postAdHocMask.hasValue():
+           and not self.postSymmetryHelical and self.postScript=="" and not self.postAdHocMask.hasValue():
             return
         for i in range(1,3):
             fnVol=join(fnDirCurrent,"volume%02d.vol"%i)
@@ -878,15 +875,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 if self.postSymmetryHelicalDihedral:
                     self.runApplyDihedral(fnVol, fnFine, join(fnDirCurrent,"rotatedHelix.vol"), radius, height)
     
-            if self.postDoPseudo:
-                fnPseudo=join(fnDirCurrent,"pseudo")
-                self.runJob("xmipp_volume_to_pseudoatoms","-i %s -o %s --sigma %f --sampling_rate %f --verbose 2 --targetError 1 --thr %d"%\
-                            (fnVol,fnPseudo,self.postPseudoRadius.get()*TsCurrent,TsCurrent,self.numberOfMpi.get()*self.numberOfThreads.get()),numberOfMpi=1)
-                moveFile(fnPseudo+"_approximation.vol", fnVol)
-                self.runJob("rm","-f "+fnPseudo+"*")
-                if self.symmetryGroup.get()!="c1":
-                    self.runJob("xmipp_transform_symmetrize","-i %s --sym %s"%(fnVol,self.symmetryGroup.get()),numberOfMpi=1)
-            
             if self.postScript!="":
                 img = ImageHandler()
                 volXdim, _, _, _ =img.getDimensions((1,fnVol))
@@ -930,12 +918,74 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     
     def _summary(self):
         summary = []
-        summary.append("Images: %s" % self.inputParticles.getNameId())
-        summary.append("Volume(s): %s" % self.inputVolumes.getNameId())
-        summary.append("symmetry: %s" % self.symmetryGroup.get())
+        summary.append("Symmetry: %s" % self.symmetryGroup.get())
+        summary.append("Number of iterations: "+str(self.numberOfIterations))
+        if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
+            summary.append("Global alignment, shift search: %f in steps of %f"%(self.shiftSearch5d.get(), self.shiftStep5d.get()))
+        else:
+            auxStr="Local alignment, refining: "
+            if self.contShift:
+                auxStr+="shifts "
+            if self.contScale:
+                auxStr+="scale "
+            if self.contAngles:
+                auxStr+="angles "
+            if self.contGrayValues:
+                auxStr+="gray "
+            if self.contDefocus:
+                auxStr+="defocus"
+            summary.append(auxStr)
+        auxStr="Weights: "
+        if self.weightSSNR:
+            auxStr+="SSNR "
+        if self.weightContinuous and self.alignmentMethod==self.LOCAL_ALIGNMENT:
+            auxStr+="Continuous "
+        if self.weightJumper:
+            auxStr+="Jumper"
+        summary.append(auxStr)
+        if self.postSymmetryWithinMask:
+            summary.append("Symmetrizing within mask: "+self.postMaskSymmetry)
+        if self.postSymmetryHelical:
+            summary.append("Looking for helical symmetry")
         return summary
     
     def _methods(self):
-        methods = []
-        return methods
-    
+        strline = ''
+        if hasattr(self, 'outputVolume') or True:
+            strline += 'We processed %d particles from %s ' % (self.inputParticles.get().getSize(), 
+                                                                self.getObjectTag('inputParticles'))
+            strline += 'using %s as reference and Xmipp highres procedure. ' % (self.getObjectTag('inputVolumes'))
+            if self.symmetryGroup!="c1":
+                strline+="We imposed %s symmetry. "%self.symmetryGroup
+            strline += "We performed %d iterations of "%self.numberOfIterations.get()
+            if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
+                strline+=" global alignment (shift search: %f in steps of %f pixels)"%(self.shiftSearch5d.get(), self.shiftStep5d.get())
+            else:
+                strline+=" local alignment, refining "
+                if self.contShift:
+                    strline+="shifts "
+                if self.contScale:
+                    strline+="scale "
+                if self.contAngles:
+                    strline+="angles "
+                if self.contGrayValues:
+                    strline+="gray "
+                if self.contDefocus:
+                    strline+="defocus"
+            strline+=". "
+            if self.weightSSNR or (self.weightContinuous and self.alignmentMethod==self.LOCAL_ALIGNMENT) or self.weightJumper:
+                strline+="For reconstruction, we weighted the images according to "
+                if self.weightSSNR:
+                    strline+="their SSNR "
+                if self.weightContinuous and self.alignmentMethod==self.LOCAL_ALIGNMENT:
+                    strline+=", their correlation in the continuous alignment "
+                if self.weightJumper:
+                    strline+=", and their angular stability"
+                strline+=". "
+            if self.postAdHocMask.hasValue():
+                strline+="We masked the reconstruction with %s. "%self.getObjectTag('postAdHocMask')
+                if self.postSymmetryWithinMask:
+                    strline+="We imposed %s symmetry within the mask %s. "%(self.postSymmetryWithinMaskType.get(),self.getObjectTag('postSymmetryWithinMaskMask'))
+            if self.postSymmetryHelical:
+                strline+="Finally, we imposed helical symmetry. "
+        return [strline]

@@ -23,51 +23,5 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef VALIDATION_NONTILT_H_
-#define VALIDATION_NONTILT_H_
-#define PI 3.14159265
-
-#include <data/xmipp_program.h>
-#include <math.h>
-
-/**@defgroup Validation without tilt
-   @ingroup ReconsLibrary */
-//@{
-class ProgValidationNonTilt: public XmippProgram
-{
-
-
-public:
-    /** Filenames */
-    FileName fnDir, fnSym, fnInit, fnParticles;
-
-    MetaData mdPartial;
-
-    size_t rank, Nprocessors;
-
-    bool useSignificant;
-
-public:
-
-    void readParams();
-
-    void defineParams();
-
-    void run();
-
-public:
-
-    ProgValidationNonTilt();
-
-    void obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
-
-    void obtainSumW(const MetaData & tempMd, double & sum_W, std::vector<double> & sum_u, std::vector<double> & H, const double factor);
-
-    /// Gather alignment
-    virtual void gatherClusterability() {}
-
-    /// Synchronize with other processors
-    virtual void synchronize() {}
-
-};
-#endif /* VALIDATION_NONTILT_H_ */
+#include <reconstruction/ctf_correct_wiener2d.h>
+RUN_XMIPP_PROGRAM(ProgCorrectWiener2D)

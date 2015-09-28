@@ -23,29 +23,54 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef VALIDATION_NONTILT_H_
-#define VALIDATION_NONTILT_H_
-#define PI 3.14159265
+#ifndef CTF_CORRECT_WIENER2D_H_
+#define CTF_CORRECT_WIENER2D_H_
 
 #include <data/xmipp_program.h>
-#include <math.h>
+#include <data/xmipp_funcs.h>
+#include <data/metadata.h>
+#include <data/xmipp_fftw.h>
+#include <data/args.h>
+#include <data/ctf.h>
+#include <data/xmipp_image.h>
+#include <data/filters.h>
 
-/**@defgroup Validation without tilt
+/**@defgroup Correct CTF by Wiener filter in 2D
    @ingroup ReconsLibrary */
 //@{
-class ProgValidationNonTilt: public XmippProgram
+class ProgCorrectWiener2D: public XmippProgram
 {
 
 
 public:
-    /** Filenames */
-    FileName fnDir, fnSym, fnInit, fnParticles;
-
-    MetaData mdPartial;
 
     size_t rank, Nprocessors;
 
-    bool useSignificant;
+    /** Input metadata file */
+    FileName fn_input;
+
+    /** Output metadata file */
+    FileName fn_out;
+
+    bool phase_flipped;
+
+    /** Padding factor */
+    double	pad;
+
+    bool isIsotropic;
+
+    bool correct_envelope;
+
+    MetaData mdPartial;
+
+    size_t Xdim, Ydim, Zdim, Ndim;
+
+    /// Wiener filter constant
+    double wiener_constant;
+
+    //Input metadata
+	MetaData md;
+
 
 public:
 
@@ -57,17 +82,23 @@ public:
 
 public:
 
-    ProgValidationNonTilt();
+    ProgCorrectWiener2D();
 
-    void obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
+    void applyWienerFilter(MultidimArray<double> & Mwien, MultidimArray<double> & img);
 
-    void obtainSumW(const MetaData & tempMd, double & sum_W, std::vector<double> & sum_u, std::vector<double> & H, const double factor);
+    void generateWienerFilter(MultidimArray<double> &Mwien, CTFDescription &ctf);
 
     /// Gather alignment
-    virtual void gatherClusterability() {}
+    virtual void gatherResults() {}
 
     /// Synchronize with other processors
     virtual void synchronize() {}
 
+	void produceSideInfo();
+
 };
-#endif /* VALIDATION_NONTILT_H_ */
+
+
+
+
+#endif /* CTF_CORRECT_WIENER2D_H_ */
