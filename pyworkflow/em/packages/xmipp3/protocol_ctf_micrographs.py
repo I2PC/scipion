@@ -98,10 +98,13 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         """ Run the estimate CTF program """
         localParams = self.__params.copy()
         if self.doInitialCTF:
-            localParams['defocusU'] = self.ctfDict[micName]
-            localParams['defocus_range'] = 0.1*self.ctfDict[micName]
-            self._prepareArgs(localParams)
-
+            if self.ctfDict[micName]>0:
+                localParams['defocusU'] = self.ctfDict[micName]
+                localParams['defocus_range'] = 0.01*self.ctfDict[micName]
+        else:
+                localParams['defocusU']=(self._params['maxDefocus']+self._params['minDefocus'])/2
+                localParams['defocus_range']=(self._params['maxDefocus']-self._params['minDefocus'])/2
+        
         # Create micrograph dir under extra directory
         makePath(micDir)
         if not exists(micDir):
@@ -282,7 +285,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _prepareArgs(self,params):
-        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate %(samplingRate)s --overlap 0.7 "
+        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate %(samplingRate)s --defocusU %(defocusU)f --defocus_range %(defocus_range)f --overlap 0.7 "
         
         for par, val in params.iteritems():
             self._args += " --%s %s" % (par, str(val))
@@ -301,9 +304,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
                 'Q0': self._params['ampContrast'],
                 'min_freq': self._params['lowRes'],
                 'max_freq': self._params['highRes'],
-                'pieceDim': self._params['windowSize'],
-                'defocusU': (self._params['maxDefocus']+self._params['minDefocus'])/2,
-                'defocus_range': (self._params['maxDefocus']-self._params['minDefocus'])/2
+                'pieceDim': self._params['windowSize']
                 }
         self._prepareArgs(self.__params)
 
@@ -333,7 +334,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             fnCTFparam = self._getFileName('ctfparam', micDir=micDir)
             mdCTFParam = xmipp.MetaData(fnCTFparam)
             downFactor = mdCTFParam.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,mdCTFParam.firstObject())
-            cleanPath(fnCTFparam)
+            # cleanPath(fnCTFparam)
             
             params2 = {'psdFn': join(micDir, psdFile),
                        'defocusU': float(line[0]),

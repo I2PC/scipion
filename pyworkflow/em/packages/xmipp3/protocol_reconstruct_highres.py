@@ -249,7 +249,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         lastIter=len(fnIterDir)-1
         fnLastDir=self._getExtraPath("Iter%03d"%lastIter)
         fnLastVol=join(fnLastDir,"volumeAvg.mrc")
-        Ts=self.readInfoField(fnLastDir,"size",MDL_XSIZE)
+        Ts=self.readInfoField(fnLastDir,"sampling",MDL_SAMPLINGRATE)
         if exists(fnLastVol):
             volume=Volume()
             volume.setFileName(fnLastVol)

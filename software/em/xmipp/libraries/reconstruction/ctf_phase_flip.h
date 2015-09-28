@@ -49,6 +49,8 @@ public:
     FileName fnt_ctf;
     /** Downsampling factor */
     double downsampling;
+    /** Sampling rate of the input micrograph */
+    double Tm;
 
     /** Define parameters */
     void defineParams();
