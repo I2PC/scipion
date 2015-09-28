@@ -1463,6 +1463,7 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 			node->children_Index[2] = INVALID;
 			update_Node( graph, old_Node_ID1, 2, node);
 
+
 			// Insert two new nodes in first node splitted.
 			new_Node[0].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[colinear_Index].previous_Edge - 1);
 			new_Node[0].points_Index[1] = get_Edge_Origin_Vertex( dcel, colinear_Index);
