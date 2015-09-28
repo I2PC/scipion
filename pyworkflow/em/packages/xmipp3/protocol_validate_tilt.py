@@ -106,10 +106,10 @@ class XmippProtValidateTilt(ProtAnalysis3D):
             outputDir = self._getExtraPath("untilted")
                     
         firstImage = self.inputTiltPair.get().getUntilted().getFirstItem()
-        maxShift = 0.1 * firstImage.getDim()[0]
+        maxShift = 0.35 * firstImage.getDim()[0]
         
         params += ' --sym %s' % self.symmetryGroup.get()
-        params += ' --alpha0 %f --alphaF %f' % (self.alpha.get(),self.alpha.get())
+        params += ' --alpha0 %f --alphaF %f' % ((1-self.alpha.get())/100,(1-self.alpha.get())/100)
         params += ' --angularSampling %f' % self.angularSampling.get()
         params += ' --dontReconstruct'
         params += ' --iter 1'

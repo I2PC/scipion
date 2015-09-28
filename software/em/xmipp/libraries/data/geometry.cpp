@@ -371,20 +371,24 @@ bool point_inside_polygon(const std::vector< Matrix1D<double> > &polygon,
 void def_affinity(double u1x, double u1y, double u2x, double u2y, double u3x, double u3y, double t1x,
 		double t1y, double t2x, double t2y, double t3x, double t3y, Matrix2D<double> &A, Matrix1D<double> &T, Matrix2D<double> &invW)
 {
-	double det_ = (u1x*u2y - u1y*u2x - u1x*u3y + u1y*u3x + u2x*u3y - u2y*u3x);
+	double den = (u1x*u2y - u1y*u2x - u1x*u3y + u1y*u3x + u2x*u3y - u2y*u3x);
+
+	//std::cout << "den" <<k << std::endl;
 
 	invW.initZeros(6,6);
-	MAT_ELEM(invW,0,0) = MAT_ELEM(invW,2,3) = (u2y - u3y)/det_;
-	MAT_ELEM(invW,0,1) = MAT_ELEM(invW,2,4) = -(u1y - u3y)/det_;
-	MAT_ELEM(invW,0,2) = MAT_ELEM(invW,2,5) = (u1y - u2y)/det_;
+	MAT_ELEM(invW,0,0) = MAT_ELEM(invW,2,3) = (u2y - u3y)/den;
+	MAT_ELEM(invW,0,1) = MAT_ELEM(invW,2,4) = -(u1y - u3y)/den;
+	MAT_ELEM(invW,0,2) = MAT_ELEM(invW,2,5) = (u1y - u2y)/den;
 
-	MAT_ELEM(invW,1,0) = MAT_ELEM(invW,3,3) = -(u2x - u3x)/det_;
-	MAT_ELEM(invW,1,1) = MAT_ELEM(invW,3,4) = (u1x - u3x)/det_;
-	MAT_ELEM(invW,1,2) = MAT_ELEM(invW,3,5) = -(u1x - u2x)/det_;
+	MAT_ELEM(invW,1,0) = MAT_ELEM(invW,3,3) = -(u2x - u3x)/den;
+	MAT_ELEM(invW,1,1) = MAT_ELEM(invW,3,4) = (u1x - u3x)/den;
+	MAT_ELEM(invW,1,2) = MAT_ELEM(invW,3,5) = -(u1x - u2x)/den;
 
-	MAT_ELEM(invW,4,0) = MAT_ELEM(invW,5,3) = (u2x*u3y - u2y*u3x)/det_;
-	MAT_ELEM(invW,4,1) = MAT_ELEM(invW,5,4) = -(u1x*u3y - u1y*u3x)/det_;
-	MAT_ELEM(invW,4,2) = MAT_ELEM(invW,5,5) = (u1x*u2y - u1y*u2x)/det_;
+	MAT_ELEM(invW,4,0) = MAT_ELEM(invW,5,3) = (u2x*u3y - u2y*u3x)/den;
+	MAT_ELEM(invW,4,1) = MAT_ELEM(invW,5,4) = -(u1x*u3y - u1y*u3x)/den;
+	MAT_ELEM(invW,4,2) = MAT_ELEM(invW,5,5) = (u1x*u2y - u1y*u2x)/den;
+
+
 
 	Matrix1D<double> t_vec;
 	t_vec.initZeros(6);
@@ -395,29 +399,38 @@ void def_affinity(double u1x, double u1y, double u2x, double u2y, double u3x, do
 	VEC_ELEM(t_vec,4) = t2y;
 	VEC_ELEM(t_vec,5) = t3y;
 
-	double dettt;
-	dettt = invW.det();
+	double dettt = invW.det();
+	//std::cout << "determinant" << dettt << std::endl;
 
+	//Matrix1D<double> sol = invW*t_vec;
+	//std::cout << "sol = " << sol << std::endl;
 
-	if (abs(dettt) <  DBL_EPSILON )
+	if (fabs(dettt) <  DBL_EPSILON )
 	{
-		A.initZeros(6,6);
+		//std::cout << "I'm in if" << std::endl;
+		A.initZeros(2,2);
 	    T.initZeros(2);
 	    VEC_ELEM(T,0) = DBL_MAX ;
 	    VEC_ELEM(T,1) = DBL_MAX ;
 	}
 	else
 	{
+		//std::cout << "I'm in else" << std::endl;
 		Matrix1D<double> sol = invW*t_vec;
-		MAT_ELEM(A,0,0) = sol(0);
-		MAT_ELEM(A,0,1) = sol(1);
-		MAT_ELEM(A,1,0) = sol(2);
-		MAT_ELEM(A,1,1) = sol(3);
-		VEC_ELEM(T,0) = sol(4);
-		VEC_ELEM(T,1) = sol(5);
+		//std::cout << "sol = " << sol << std::endl;
+
+		A.initZeros(2,2);
+		T.initZeros(2);
+		//std::cout << A << std::endl;
+		MAT_ELEM(A,0,0) = VEC_ELEM(sol,0);
+		MAT_ELEM(A,0,1) = VEC_ELEM(sol,1);
+		MAT_ELEM(A,1,0) = VEC_ELEM(sol,2);
+		MAT_ELEM(A,1,1) = VEC_ELEM(sol,3);
+		VEC_ELEM(T,0) = VEC_ELEM(sol,4);
+		VEC_ELEM(T,1) = VEC_ELEM(sol,5);
+
+		//std::cout << "A ==" << sol << std::endl;
 	}
-
-
 }
 
 

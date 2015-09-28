@@ -1,6 +1,5 @@
 #include "defines.h"
 #include "graph.h"
-#include <GL/glut.h>
 #ifdef LOGGING
 #include "log.h"
 #endif

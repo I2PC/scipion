@@ -37,7 +37,7 @@ class ProgassignationTiltPair: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fntilt, fnuntilt, fnSym, fndir;
+    FileName fntilt, fnuntilt,  fndir, fnmic;
 
     /** Maximum shift*/
     int mshift;
@@ -45,8 +45,8 @@ public:
     /** Particle size*/
     int particle_size;
 
-    /** Radius*/
-    int radius;
+    /** threshold*/
+    int thr;
 
     MetaData mdPartial;
 
