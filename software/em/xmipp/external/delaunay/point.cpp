@@ -64,7 +64,7 @@ void	print_Point(struct Point_T *point)
 	printf("Point (%f, %f)\n", point->x, point->y);
 }
 
-
+//#define DEBUG_CHECK_TURN
 enum Turn_T		check_Turn(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3)
 {
 	TYPE          area=0.0;       // Signed area.
@@ -73,9 +73,12 @@ enum Turn_T		check_Turn(struct Point_T *p1, struct Point_T *p2, struct Point_T *
 	// Compute signed area of the triangle formed by p1, p2 and p3.
 	area = signed_Area( p1, p2, p3);
 
-	// If area is zero then points are colinear.
+	// If area is zero then points are collinear.
 	if (area == 0.0)
 	{
+#ifdef DEBUG_CHECK_TURN
+		printf("P (%lf,%lf). Q (%lf,%lf). R (%lf,%lf)\n", p1->x, p1->y, p2->x, p2->y, p3->x, p3->y);
+#endif
 		turn = COLINEAR;
 	}
 	// Higher than zero -> turn left.
