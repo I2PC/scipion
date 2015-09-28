@@ -51,6 +51,8 @@ void ProgAngularProjectionMatching::readParams()
     search5d_shift  = getIntParam("--search5d_shift");
     search5d_step = getIntParam("--search5d_step");
     max_shift = getDoubleParam("--max_shift");
+    numOrientations = getIntParam("--number_orientations");
+
     avail_memory = getDoubleParam("--mem");
     if (checkParam("--ctf"))
         fn_ctf  = getParam("--ctf");
@@ -110,6 +112,7 @@ void ProgAngularProjectionMatching::defineParams()
     addParamsLine("  [--pad <pad=1>]             : Padding factor (for CTF correction only)");
     addParamsLine("  [--phase_flipped]            : Use this if the experimental images have been phase flipped");
     addParamsLine("  [--thr <threads=1>]           : Number of concurrent threads");
+    addParamsLine("  [--number_orientations <numOrientations=1>]  : Number of possible orientations for each experimental image");
     addParamsLine("  [--append]                : Append (versus overwrite) data to the output file");
 }
 
@@ -163,6 +166,11 @@ void ProgAngularProjectionMatching::show()
     {
         std::cout << "  -> Using "<<threads<<" parallel threads"<<std::endl;
     }
+
+    if (number_orientations != 1)
+    	 std::cout << "  -> Using "<<numOrientations<<" possible orientations for each particle"<<std::endl;
+
+
     std::cout << " ================================================================="<<std::endl;
 }
 
@@ -525,15 +533,18 @@ void * threadRotationallyAlignOneImage( void * data )
     size_t thread_num = prm->threads;
     MultidimArray<double> *img = thread_data->img;
     size_t &this_image = thread_data->this_image;
-    int &opt_refno = thread_data->opt_refno;
-    double &opt_psi = thread_data->opt_psi;
-    bool &opt_flip = thread_data->opt_flip;
-    double &maxcorr = thread_data->maxcorr;
 
+
+    int *opt_refno = thread_data->opt_refno;
+    double *opt_psi = thread_data->opt_psi;
+    bool *opt_flip = thread_data->opt_flip;
+    double *maxcorr = thread_data->maxcorr;
+    size_t result_Index=0;
 
     // Local variables
     MultidimArray<double>       Maux;
     MultidimArray<double>       ang, corr;
+    MultidimArray<int>       	indxCorr;
     size_t                      myinit, myfinal, myincr;
     int                         refno;
     bool                        done_once=false;
@@ -552,7 +563,6 @@ void * threadRotationallyAlignOneImage( void * data )
     annotate_time(&t2);
 #endif
 
-    maxcorr = -99.e99;
     produceSplineCoefficients(BSPLINE3,Maux,*img);
     // Precalculate polar transform of each translation
     // This loop is also threaded
@@ -679,36 +689,48 @@ void * threadRotationallyAlignOneImage( void * data )
                 prm->stddev_ref[refno] << " " <<
                 prm->stddev_img[itrans];
 #endif
+
+                MultidimArray<double>  allCorr, allAng;
+                allCorr.resizeNoCopy(XSIZE(corr)*2);
+                allAng.resizeNoCopy(XSIZE(corr)*2);
+
                 // A. Check straight image
                 rotationalCorrelation(prm->fP_img[itrans],
                                       prm->fP_ref[refno],
                                       ang,rotAux);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
-                for (size_t k = 0; k < XSIZE(corr); k++)
-                {
-                    if (DIRECT_A1D_ELEM(corr,k)> maxcorr)
-                    {
-                        maxcorr = DIRECT_A1D_ELEM(corr,k);
-                        opt_psi = DIRECT_A1D_ELEM(ang,k);
-                        //FIXME not sure about FIRST_IMAGE
-                        opt_refno = prm->mysampling.my_neighbors[imgno][i]/*+FIRST_IMAGE*/;
-                        //opt_refno = prm->mysampling.my_neighbors[imgno][i];
-                        opt_flip = false;
-                    }
-                }
-                // B. Check mirrored image
+
+
+                memcpy(&dAi(allCorr,0),&dAi(corr,0),XSIZE(corr)*sizeof(double));
+                memcpy(&dAi(allAng,0),&dAi(ang,0),XSIZE(ang)*sizeof(double));
+
                 rotationalCorrelation(prm->fPm_img[itrans],prm->fP_ref[refno],ang,rotAux);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
-                for (size_t k = 0; k < XSIZE(corr); k++)
+                memcpy(&dAi(allCorr,XSIZE(corr)),&dAi(corr,0),XSIZE(corr)*sizeof(double));
+                memcpy(&dAi(allAng,XSIZE(corr)),&dAi(ang,0),XSIZE(corr)*sizeof(double));
+
+                size_t nIter = XMIPP_MIN(thread_data->numOrientations,corr.getSize());
+                double bestLastCorr = 99e99;
+                for (size_t n = 0; n < nIter; n++)
                 {
-                    if (DIRECT_A1D_ELEM(corr,k)> maxcorr)
-                    {
-                        maxcorr = DIRECT_A1D_ELEM(corr,k);
-                        opt_psi = DIRECT_A1D_ELEM(ang,k);
-                        opt_refno = prm->mysampling.my_neighbors[imgno][i];
-                        opt_flip = true;
-                    }
+                	for (size_t k = 0; k < XSIZE(allCorr); k++)
+                	{
+                		if ( (DIRECT_A1D_ELEM(allCorr,k)> maxcorr[n]) && (DIRECT_A1D_ELEM(allCorr,k)<bestLastCorr))
+                		{
+                			maxcorr[n] = DIRECT_A1D_ELEM(allCorr,k);
+                			opt_psi[n] = DIRECT_A1D_ELEM(allAng,k);
+                			//FIXME not sure about FIRST_IMAGE
+                			opt_refno[n] = prm->mysampling.my_neighbors[imgno][i];/*+FIRST_IMAGE;*/
+                			if ( k >= XSIZE(corr))
+                				opt_flip[n] = true;
+                			else
+                				opt_flip[n] = false;
+                		}
+                	}
+
+                	bestLastCorr = maxcorr[n];
                 }
+
 
 #ifdef DEBUG
                 std::cerr<<"mirror: corr "<<maxcorr;
@@ -730,6 +752,7 @@ void * threadRotationallyAlignOneImage( void * data )
 
         }
     }
+
 
 #ifdef TIMING
     float all_rot_align = elapsed_time(t0);
@@ -755,7 +778,8 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         double &opt_yoff,
         double &maxcorr)
 {
-    MultidimArray<double> Mtrans,Mimg,Mref;
+
+	MultidimArray<double> Mtrans,Mimg,Mref;
     int refno;
     Mtrans.setXmippOrigin();
     Mimg.setXmippOrigin();
@@ -965,22 +989,43 @@ void ProgAngularProjectionMatching::processAllImages()
 void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> &imagesToProcess)
 {
     Image<double> img;
-    double
-    opt_rot=0.,
-            opt_tilt=0.,
-                     opt_psi=0.,
-                             opt_xoff=0.,
-                                      opt_yoff=0.,
-                                               opt_scale=0.,
-                                                         maxcorr=-99.e99;
-    bool opt_flip=false;
-    int opt_refno=-1;
+    //double
+    //opt_rot=0.,
+            //opt_tilt=0.;
+                     //opt_psi=0.,
+                             //opt_xoff=0.,
+                                      //opt_yoff=0.,
+                                               //opt_scale=0.;
+                                                         //maxcorr=-99.e99;
+    bool * opt_flip; //=false;
+    int * opt_refno; //-1;
+    double * opt_psi;
+    double * maxcorr;
+    double * opt_xoff;
+    double * opt_yoff;
+    double * opt_scale;
+    double * opt_rot;
+    double * opt_tilt;
     size_t itemId=0;
     size_t nr_images = imagesToProcess.size();
     size_t idNew, imgid;
     FileName fn;
     // Call threads to calculate the rotational alignment of each image in the selfile
     pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
+    opt_refno = (int *)malloc (sizeof(int)*numOrientations);
+    opt_psi   = (double *)calloc (numOrientations, sizeof(double));
+    opt_flip = (bool *)calloc (numOrientations, sizeof(bool));
+    maxcorr   = (double *)malloc (sizeof(double)*numOrientations);
+    opt_xoff   = (double *)calloc (numOrientations, sizeof(double));
+    opt_yoff   = (double *)calloc (numOrientations, sizeof(double));
+    opt_scale   = (double *)malloc (numOrientations*sizeof(double));
+    opt_rot   = (double *)calloc (numOrientations, sizeof(double));
+    opt_tilt   = (double *)calloc (numOrientations, sizeof(double));
+
+    //memset(opt_scale,1.0,sizeof(double)*numOrientations);
+    //memset(maxcorr,-99.e99,sizeof(double)*numOrientations);
+    //memset(opt_refno,-1,sizeof(int)*numOrientations);
+
 
     structThreadRotationallyAlignOneImage * threads_d = (structThreadRotationallyAlignOneImage *)
             malloc ( threads * sizeof( structThreadRotationallyAlignOneImage ) );
@@ -999,10 +1044,18 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
             threads_d[c].prm = this;
             threads_d[c].img = &img();
             threads_d[c].this_image = imgid;
-            threads_d[c].opt_refno = opt_refno;
-            threads_d[c].opt_psi = opt_psi;
-            threads_d[c].opt_flip = opt_flip;
-            threads_d[c].maxcorr = maxcorr;
+            threads_d[c].opt_refno = (int *)malloc (sizeof(int)*numOrientations);
+            threads_d[c].opt_psi =  (double *)malloc (sizeof(double)*numOrientations);
+            threads_d[c].opt_flip =  (bool *) malloc (sizeof(bool)*numOrientations);
+            threads_d[c].maxcorr =  (double *)malloc (sizeof(double)*numOrientations);
+            threads_d[c].numOrientations = numOrientations;
+            for (size_t i=0; i<numOrientations ;i++)
+            {
+            	threads_d[c].maxcorr[i] = -99.e99;
+            	threads_d[c].opt_refno[i] = -1;
+            	opt_scale[i] = 1;
+            	opt_refno[i] = -1;
+            }
             pthread_create( (th_ids+c), NULL, threadRotationallyAlignOneImage, (void *)(threads_d+c) );
         }
         // Wait for threads to finish
@@ -1010,30 +1063,56 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
             pthread_join(*(th_ids+c),NULL);
 
         //Get optimal refno, psi, flip and maxcorr
-        for( int c = 0 ; c < threads ; c++ )
+        int * indexThreads = (int *) calloc(threads,sizeof(int));
+        size_t bestThreadCorr = 0;
+        double tempCorr;
+        size_t counterValidCorrs = 0;
+        bool validCorr = false;
+        for( int n = 0 ; n < numOrientations ; n++ )
         {
-            if (threads_d[c].maxcorr > maxcorr)
+        	tempCorr = -99.e99;
+        	validCorr = false;
+        	for( int c = 0 ; c < threads ; c++ )
+        	{
+        		if (threads_d[c].maxcorr[indexThreads[c]] > tempCorr)
+        		{
+        			if (not validCorr)
+        			{
+        				counterValidCorrs++;
+        				validCorr = true;
+        			}
+
+        			bestThreadCorr = c;
+        			tempCorr = threads_d[c].maxcorr[indexThreads[c]];
+        		}
+
+        	}
+
+        	if (not validCorr)
+        		break;
+
+        	opt_refno[n] = threads_d[bestThreadCorr].opt_refno[indexThreads[bestThreadCorr]];
+        	opt_psi[n] = threads_d[bestThreadCorr].opt_psi[indexThreads[bestThreadCorr]];
+        	opt_flip[n] = threads_d[bestThreadCorr].opt_flip[indexThreads[bestThreadCorr]];
+        	maxcorr[n] = threads_d[bestThreadCorr].maxcorr[indexThreads[bestThreadCorr]];
+        	indexThreads[bestThreadCorr]++;
+
+
+            if (opt_refno[n]>=0)
             {
-                maxcorr = threads_d[c].maxcorr;
-                opt_refno = threads_d[c].opt_refno;
-                opt_psi = threads_d[c].opt_psi;
-                opt_flip = threads_d[c].opt_flip;
+                opt_rot[n]  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno[n]]]);
+                opt_tilt[n] = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno[n]]]);
+            }
+            else
+            {
+                opt_rot[n]=0;
+                opt_tilt[n]=0;
             }
         }
 
+        free(indexThreads);
         // Flip order to loop through references
         loop_forward_refs = !loop_forward_refs;
-
-        if (opt_refno>=0)
-        {
-            opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
-            opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
-        }
-        else
-        {
-            opt_rot=0;
-            opt_tilt=0;
-        }
 
         //#define DEBUG
 #ifdef DEBUG
@@ -1041,61 +1120,87 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 #endif
 #undef DEBUG
 
-        translationallyAlignOneImage(img(),
-                                     opt_refno,
-                                     opt_psi,
-                                     opt_flip,
-                                     opt_xoff,
-                                     opt_yoff,
-                                     maxcorr);
+        for(int n=0; n < counterValidCorrs; n++)
+        {
+			//std::cout << " " << std::endl;
+        	//std::cout << maxcorr[n] << std::endl;
+			translationallyAlignOneImage(img(),
+										 opt_refno[n],
+										 opt_psi[n],
+										 opt_flip[n],
+										 opt_xoff[n],
+										 opt_yoff[n],
+										 maxcorr[n]);
+
+			//std::cout << maxcorr[n] << std::endl;
+			if(do_scale && scale_nsteps > 0)
+	        {
+	            // Compute a better scale (scale_min -> scale_max)
+	            scaleAlignOneImage(img(), opt_refno[n], opt_psi[n], opt_flip[n], opt_xoff[n], opt_yoff[n], img.scale(), opt_scale[n], maxcorr[n]);
+	        }
+
+	        //Add the previously applied scale to the newly found one
+	        opt_scale[n] *= img.scale();
+	        //!a
+	        // Divide opt_shifts by old_scale
+
+	        // Add previously applied translation to the newly found one
+	        opt_xoff[n] += img.Xoff();
+	        opt_yoff[n] += img.Yoff();
+
+	        // Output
+	        DFexp.getValue(MDL_IMAGE, fn, imgid);
+	        DFexp.getValue(MDL_ITEM_ID, itemId, imgid);
+
+	        idNew = DFo.addObject();
+	        DFo.setValue(MDL_ITEM_ID,itemId,idNew);
+	        DFo.setValue(MDL_IMAGE, fn,idNew);
+	        DFo.setValue(MDL_ANGLE_ROT, opt_rot[n],idNew);
+	        DFo.setValue(MDL_ANGLE_TILT,opt_tilt[n],idNew);
+	        DFo.setValue(MDL_ANGLE_PSI, opt_psi[n],idNew);
+	        /**/
+	        //opt_xoff=0;
+	        DFo.setValue(MDL_SHIFT_X,   opt_xoff[n],idNew);
+	        DFo.setValue(MDL_SHIFT_Y,   opt_yoff[n],idNew);
+	        DFo.setValue(MDL_REF,      opt_refno[n] /*+ FIRST_IMAGE*/,idNew);
+	        DFo.setValue(MDL_FLIP,     opt_flip[n],idNew);
+	        DFo.setValue(MDL_SCALE,    opt_scale[n],idNew);
+	        DFo.setValue(MDL_MAXCC,    maxcorr[n],idNew);
+
+        }
 
         /* FIXME ROB     */
         //opt_psi += img.psi();
         /*         */
 
-        opt_scale=1.0;
+        //opt_scale=1.0;
 
-        if(do_scale && scale_nsteps > 0)
-        {
-            // Compute a better scale (scale_min -> scale_max)
-            scaleAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, img.scale(), opt_scale, maxcorr);
-        }
-
-        //Add the previously applied scale to the newly found one
-        opt_scale *= img.scale();
-
-        //!a
-        // Divide opt_shifts by old_scale
-
-        // Add previously applied translation to the newly found one
-        opt_xoff += img.Xoff();
-        opt_yoff += img.Yoff();
-
-        // Output
-        DFexp.getValue(MDL_IMAGE, fn, imgid);
-        DFexp.getValue(MDL_ITEM_ID, itemId, imgid);
-
-        idNew = DFo.addObject();
-        DFo.setValue(MDL_ITEM_ID,itemId,idNew);
-        DFo.setValue(MDL_IMAGE, fn,idNew);
-        DFo.setValue(MDL_ANGLE_ROT, opt_rot,idNew);
-        DFo.setValue(MDL_ANGLE_TILT,opt_tilt,idNew);
-        DFo.setValue(MDL_ANGLE_PSI, opt_psi,idNew);
-        /**/
-        //opt_xoff=0;
-        DFo.setValue(MDL_SHIFT_X,   opt_xoff,idNew);
-        DFo.setValue(MDL_SHIFT_Y,   opt_yoff,idNew);
-        DFo.setValue(MDL_REF,      opt_refno /*+ FIRST_IMAGE*/,idNew);
-        DFo.setValue(MDL_FLIP,     opt_flip,idNew);
-        DFo.setValue(MDL_SCALE,    opt_scale,idNew);
-        DFo.setValue(MDL_MAXCC,    maxcorr,idNew);
         if (verbose && imgno % progress_bar_step == 0)
             progress_bar(imgno);
         //#endif
         //DFo.write("/dev/stderr");
     }//loop over images
     free(th_ids);
+
+    for( int c = 0 ; c < threads ; c++ )
+    {
+        free(threads_d[c].opt_refno);
+        free(threads_d[c].opt_psi);
+        free(threads_d[c].opt_flip);
+        free(threads_d[c].maxcorr);
+    }
+
+    free(opt_refno);
+    free(opt_psi);
+    free(opt_flip);
+    free(maxcorr);
+    free(opt_xoff);
+    free(opt_yoff);
+    free(opt_scale);
+    free(opt_rot);
+    free(opt_tilt);
     free(threads_d);
+
 }//function processSomeImages
 
 void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> &img)

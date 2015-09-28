@@ -249,6 +249,14 @@ class RelionImport():
         if self.ignoreIds:
             img.setObjId(None) # Force to generate a new id in Set
 
+        if self._micIdOrName:
+            micId = imgRow.getValue('rlnMicrographId', None)
+            micName = imgRow.getValue('rlnMicrographName', None)
+            if img.hasCoordinate():
+                coord = img.getCoordinate()
+                coord.setMicId(micId)
+                coord.setMicName(micName)
+    
     def loadAcquisitionInfo(self):
         """ Return a dictionary with acquisition values and 
         the sampling rate information.

@@ -61,7 +61,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
               expertLevel=params.LEVEL_ADVANCED,)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _estimateCTF(self, micFn, micDir):
+    def _estimateCTF(self, micFn, micDir, micName):
         """ Run ctffind, 3 or 4, with required parameters """
         # Create micrograph dir 
         pwutils.makePath(micDir)

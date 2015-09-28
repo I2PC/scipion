@@ -187,15 +187,16 @@ class ProtMovieAlignment(ProtProcessMovies):
         micSet = self._createSetOfMicrographs()
         micSet.copyInfo(inputMovies)
         # Also create a Set of Movies with the alignment parameters
-        movieSet = self._createSetOfMovies()
-        movieSet.copyInfo(inputMovies)
-        movieSet.cropOffsetX = Integer(self.cropOffsetX)
-        movieSet.cropOffsetY = Integer(self.cropOffsetY)
-        movieSet.cropDimX = Integer(self.cropDimX)
-        movieSet.cropDimY = Integer(self.cropDimY)
-        movieSet.sumFrame0 = Integer(self.sumFrame0)
-        movieSet.sumFrameN = Integer(self.sumFrameN)
-
+        if self.doSaveMovie:
+            movieSet = self._createSetOfMovies()
+            movieSet.copyInfo(inputMovies)
+            movieSet.cropOffsetX = Integer(self.cropOffsetX)
+            movieSet.cropOffsetY = Integer(self.cropOffsetY)
+            movieSet.cropDimX = Integer(self.cropDimX)
+            movieSet.cropDimY = Integer(self.cropDimY)
+            movieSet.sumFrame0 = Integer(self.sumFrame0)
+            movieSet.sumFrameN = Integer(self.sumFrameN)
+            
         alMethod = self.alignMethod.get()
         for movie in self.inputMovies.get():
             micName = self._getNameExt(movie.getFileName(),'_aligned', 'mrc')
@@ -217,7 +218,8 @@ class ProtMovieAlignment(ProtProcessMovies):
                alMethod == AL_CROSSCORRELATIONOPTICAL:
                 movieCreatePlot(PLOT_POLAR, alignedMovie, True)
                 movieCreatePlot(PLOT_CART, alignedMovie, True)
-            movieSet.append(alignedMovie)
+            if self.doSaveMovie:
+                movieSet.append(alignedMovie)
 
             mic = em.Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
@@ -251,8 +253,9 @@ class ProtMovieAlignment(ProtProcessMovies):
                 movieSet.append(alignedMovie)
             """
         self._defineOutputs(outputMicrographs=micSet)
-        self._defineOutputs(outputMovies=movieSet)
         self._defineSourceRelation(self.inputMovies, micSet)
+        if self.doSaveMovie:
+            self._defineOutputs(outputMovies=movieSet)
         """
         if alMethod == AL_DOSEFGPU:
             self._defineTransformRelation(inputMovies, micSet)

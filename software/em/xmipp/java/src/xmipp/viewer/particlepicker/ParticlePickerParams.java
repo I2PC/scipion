@@ -46,6 +46,11 @@ public class ParticlePickerParams {
     public boolean fast;
     public boolean incore;
     
+    public ParticlePickerParams(Mode mode)
+    {
+    	this.mode = mode;
+    }
+    
     public ParticlePickerParams(String[] args)
     {
         try {

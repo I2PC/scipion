@@ -90,14 +90,22 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         return []    
     
     def calculateConsensusStep(self, micId):
+        # Take the sampling rates
+        Tm = []
+        for coordinates in self.inputCoordinates:
+            Tm.append(coordinates.get().getMicrographs().getSamplingRate())
+        
         # Get all coordinates for this micrograph
         coords = []
         Ncoords = 0
+        n=0
         for coordinates in self.inputCoordinates:
             coordArray = np.asarray([x.getPosition() 
                                      for x in coordinates.get().iterCoordinates(micId)])
+            coordArray *= Tm[n]/Tm[0]
             coords.append(coordArray)
             Ncoords += coordArray.shape[0]
+            n+=1
         
         allCoords = np.zeros([Ncoords,2])
         votes = np.zeros(Ncoords)

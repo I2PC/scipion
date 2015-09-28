@@ -29,7 +29,7 @@
 """
 In this module are protocol base classes related to EM Micrographs
 """
-
+import os
 from os.path import join, basename, exists
 
 from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
@@ -125,7 +125,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             self._processMovie(movieId, movieMrc, movieFolder, *args)
             
             if self.cleanMovieData:
-                cleanPath(movieFolder)
+                print "erasing.....movieFolder: ", movieFolder
+                os.system('rm -rf %s' % movieFolder)
+#                 cleanPath(movieFolder)
             else:
                 self.info('Clean movie data DISABLED. Movie folder will remain in disk!!!')
         

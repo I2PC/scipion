@@ -34,47 +34,49 @@ ProgValidationNonTilt::ProgValidationNonTilt()
 {
 	rank=0;
 	Nprocessors=1;
-	sampling_rate = 1;
 }
 
 void ProgValidationNonTilt::readParams()
 {
-    fnDir = getParam("--odir");
+	fnParticles = getParam("--i");
+	fnDir = getParam("--odir");
     fnSym = getParam("--sym");
     fnInit = getParam("--volume");
-    sampling_rate = getDoubleParam("--sampling_rate");
+    useSignificant = checkParam("--useSignificant");
 }
 
 void ProgValidationNonTilt::defineParams()
 {
-    //usage
     addUsageLine("Validate a 3D reconstruction from its projections attending to directionality and spread of the angular assignments from a given significant value");
-    //params
+    addParamsLine("  [--i <md_file=\"\">]         : Metadata file with input projections");
     addParamsLine("  [--volume <md_file=\"\">]    : Volume to validate");
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
-    addParamsLine("  [--sampling_rate <s=1>]      : Sampling rate in A/px");
+    addParamsLine("  [--useSignificant]           : Use Significant as alignment method. If not use projection matching");
 }
 
 void ProgValidationNonTilt::run()
 {
     //Clustering Tendency and Cluster Validity Stephen D. Scott
     randomize_random_generator();
-    //char buffer[400];
-    //sprintf(buffer, "xmipp_reconstruct_significant -i %s  --initvolumes %s --odir %s --sym  %s --iter 1 --alpha0 %f --angularSampling %f",fnIn.c_str(), fnInit.c_str(),fnDir.c_str(),fnSym.c_str(),alpha0,angularSampling);
-    //system(buffer);
-
     MetaData md,mdOut,mdOut2;
-    FileName fnMd,fnOut,fnOut2;
-    fnMd = fnDir+"/angles_iter001_00.xmd";
+
+    FileName fnOut,fnOut2;
     fnOut = fnDir+"/clusteringTendency.xmd";
     fnOut2 = fnDir+"/validation.xmd";
-    size_t nSamplesRandom = 250;
+    size_t nSamplesRandom = 500;
 
-    md.read(fnMd);
+    md.read(fnParticles);
     size_t maxNImg;
     size_t sz = md.size();
-    md.getValue(MDL_IMAGE_IDX,maxNImg,sz);
+
+    if (useSignificant)
+    	md.getValue(MDL_IMAGE_IDX,maxNImg,sz);
+    else
+    {
+    	md.getValue(MDL_ITEM_ID,maxNImg,sz);
+
+    }
 
     String expression;
     MDRow rowP,row2;
@@ -90,7 +92,6 @@ void ProgValidationNonTilt::run()
 
 	MetaData tempMd;
 	std::vector<double> sum_u(nSamplesRandom);
-	//std::vector<double> sum_w(nSamplesRandom);
 	double sum_w=0;
 	std::vector<double> H0(nSamplesRandom);
 	std::vector<double> H(nSamplesRandom);
@@ -102,7 +103,11 @@ void ProgValidationNonTilt::run()
 	{
 		if ((idx+1)%Nprocessors==rank)
 		{
-			expression = formatString("imageIndex == %lu",idx);
+			if (useSignificant)
+				expression = formatString("imageIndex == %lu",idx);
+			else
+				expression = formatString("itemId == %lu",idx);
+
 			tempMd.importObjects(md, MDExpression(expression));
 
 			if (tempMd.size()==0)
@@ -121,14 +126,14 @@ void ProgValidationNonTilt::run()
 				P += H0.at(j)/H.at(j);
 
 			P /= (nSamplesRandom);
-			rowP.setValue(MDL_IMAGE_IDX,idx);
+
+			if (useSignificant)
+				rowP.setValue(MDL_IMAGE_IDX,idx);
+			else
+				rowP.setValue(MDL_ITEM_ID,idx);
+
 			rowP.setValue(MDL_WEIGHT,P);
 			mdPartial.addRow(rowP);
-
-			//sum_u.clear();
-			//sum_w.clear();
-			//H0.clear();
-			//H.clear();
 			tempMd.clear();
 
 			if (rank==0)
@@ -149,13 +154,16 @@ void ProgValidationNonTilt::run()
 		mdPartial.getColumnValues(MDL_WEIGHT,P);
 		for (size_t idx=0; idx< P.size();idx++)
 		{
-		if (P[idx] > 1)
-				
-			validation += 1;
+			if (P[idx] > 1)
 
-	        }
+				validation += 1;
 
-		validation /= (maxNImg+1);
+		}
+
+		if (useSignificant)
+			validation /= (md.size());
+		else
+			validation /= (md.size());
 
 	}
 
@@ -227,24 +235,38 @@ void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<doubl
         }
 
         sumWRan = 0;
-        double WRan, tempWRan, tempW1, tempW2;
+        double WRan=0;
+        double tempWRan, tempW1, tempW2, temp;
         for (size_t nS1=0; nS1<tempMd.size(); nS1++)
         {
             tempWRan = 1e3;
             for (size_t nS2=0; nS2<tempMd.size(); nS2++)
             {
-                a = std::abs(std::acos(xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2]));
-                if ( (a<tempWRan) && (a != 0))
+            	temp = xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2];
+                if (temp < 1)
+                	a = std::abs(std::acos(temp));
+                else
+                	a = 0;
+
+                if ( (a<tempWRan) && (a > 0.00001) && (temp<1) )
                 {
                     tempWRan = a;
                     tempW2 = weightV[nS2];
                     tempW1 = weightV[nS1];
                     WRan = a*std::exp(std::abs(tempW1-tempW2))*std::exp(-(tempW1+tempW2));
+                    if (WRan == 0)
+                    	WRan = a;
+
                 }
             }
             sumWRan += WRan;
         }
+
+        if (sumWRan == 0)
+        	sumWRan = 0.075*tempMd.size();
+
         sum_u.at(n)=sumWRan;
+
     }
 
     size_t idx = 0;
@@ -273,9 +295,11 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd, double & sum_W, 
     double rot,tilt,w;
     double x,y,z;
     double xx,yy,zz;
+    bool mirror;
     double w2;
     double tempW;
-    double W;
+    double W=0;
+    double temp;
     double sumW;
 
     sumW = 0;
@@ -283,6 +307,10 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd, double & sum_W, 
     {
         tempMd.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+        tempMd.getValue(MDL_FLIP,mirror,__iter.objId);
+        if (mirror == 1)
+        	tilt = tilt + 180;
+
         //tempMd.getValue(MDL_WEIGHT,w,__iter.objId);
         tempMd.getValue(MDL_MAXCC,w,__iter.objId);
         x = sin(tilt*PI/180.)*cos(rot*PI/180.);
@@ -296,22 +324,37 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd, double & sum_W, 
             tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter2.objId);
             //tempMd.getValue(MDL_WEIGHT,w2,__iter2.objId);
             tempMd.getValue(MDL_MAXCC,w2,__iter2.objId);
+            tempMd.getValue(MDL_FLIP,mirror,__iter2.objId);
+            if (mirror == 1)
+            	tilt = tilt + 180;
+
             xx = sin(tilt*PI/180.)*cos(rot*PI/180.);
             yy = sin(tilt*PI/180.)*sin(rot*PI/180.);
             zz = std::abs(cos(tilt*PI/180.));
-            a = std::abs(std::acos(x*xx+y*yy+z*zz));
+            temp = x*xx+y*yy+z*zz;
 
-            if ( (a<tempW) && (a != 0))
+            if (temp < 1)
+            	a = std::abs(std::acos(temp));
+            else
+            	a = 0;
+
+            if ( (a<tempW) && (a > 0.00001) && (temp<1 ))
             {
                 W = a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
                 tempW = a;
+
+                if (W == 0)
+                	W = a;
             }
         }
         sumW +=  W;
     }
 
-    sum_W = sumW;
+    //Here the problem is that maybe the changes are only in psi angle. We give the best solution assuming an angular sampling of 0.5º
+    if (sumW == 0)
+    	sumW = 0.075*tempMd.size();
 
+    sum_W = sumW;
     for (size_t n=0; n<sum_u.size(); n++)
     {
         H[n] = sumW/(sumW+factor*sum_u.at(n));
