@@ -171,6 +171,7 @@ int is_Graph_Full(struct Graph_T *graph)
 }
 
 
+//#define DEBUG_INSERT_NODE
 /***************************************************************************
 * Name: insert_Node
 * IN:	node		new node data
@@ -221,6 +222,11 @@ int insert_Node(struct Graph_T *graph, struct Node_T *node)
 
         // Increase number of elements.
         graph->nElements++;
+#ifdef DEBUG_INSERT_NODE
+        printf("New node points are %d,%d,%d\n", node->points_Index[0],
+        									node->points_Index[1],
+											node->points_Index[2]);
+#endif
     }
 
     return(ret);
@@ -242,7 +248,7 @@ struct Node_T *get_Node(struct Graph_T *graph, int index)
     return(&graph->nodes[index]);
 }
 
-
+//#define DEBUG_UPDATE_NODE
 /***************************************************************************
 * Name: update_Node
 * IN:	index			index of the node to update
@@ -286,6 +292,13 @@ void update_Node(struct Graph_T *graph, int index, int  nChildren, struct Node_T
 
 		// Update face ID.
 		graph->nodes[index].face_ID = node->face_ID;
+
+#ifdef DEBUG_UPDATE_NODE
+		printf("Updated node %d. Points are %d, %d and %d\n", index+1,
+													node->points_Index[0],
+													node->points_Index[1],
+													node->points_Index[2]);
+#endif
 	}
 }
 
