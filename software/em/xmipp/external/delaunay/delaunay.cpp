@@ -759,6 +759,8 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
     int		nItems=0;
     int		candidatesSize=MAX_NEIGHBORS;
     int		*candidates=NULL, *refCandidates=NULL;
+    int		*checked=NULL;
+    int		nElems=0;					// # elements to copy.
     int		allocationError=FALSE;		// Error allocating memory.
 
 #ifdef DEBUG_SELECT_CLOSEST_POINT
@@ -778,6 +780,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 #endif
     		// Allocate neighbors array.
     		candidates = (int *) calloc( candidatesSize, sizeof(int));
+    		checked = (int *) calloc( delaunay->dcel->nVertex, sizeof(int));
 
     		// Insert points from leaf node.
     		for (i=0; i<N_POINTS ;i++)
@@ -797,6 +800,9 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 			allocationError = FALSE;
 			while ((!found) && (!allocationError))
 			{
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+				printf("Checking Point %d.\n", candidates[out]);
+#endif
 				if (candidates[out] >= 0)
 				{
 					if (inner_To_Voronoi_Area( &delaunay->voronoi, candidates[out]-1, p))
@@ -836,6 +842,9 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 																					nItems,
 																					candidatesSize);
 #endif
+								// Compute # elements to copy.
+								nElems = candidatesSize - out;
+
 								// Double size of the candidates array.
 								refCandidates = candidates;
 								candidatesSize = candidatesSize*2;
@@ -843,7 +852,8 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 								if (candidates != NULL)
 								{
 									// Copy current candidates.
-									memcpy( candidates, refCandidates, candidatesSize/2);
+									memcpy( candidates, &refCandidates[out], nElems*sizeof(int));
+									memcpy( &candidates[nElems], refCandidates, (nItems-nElems)*sizeof(int));
 									free( refCandidates);
 								}
 								else
@@ -856,17 +866,30 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 									allocationError = TRUE;
 									break;
 								}
+
+								in = nItems;
+								out = 0;
 							}
 
 							if (current_Point >= 0)
 							{
-								// Insert point.
-								candidates[in] = current_Point;
-								nItems++;
-								in++;
-								in = in % candidatesSize;
+								if (!checked[out])
+								{
+									// Insert point.
+									candidates[in] = current_Point;
+									nItems++;
+									in++;
+									in = in % candidatesSize;
 #ifdef DEBUG_SELECT_CLOSEST_POINT
-								printf("Inserted point %d. # %d. In %d. Out %d\n", current_Point, nItems, in, out);
+									printf("Inserted point %d. # %d. In %d. Out %d\n", current_Point, nItems, in, out);
+#endif
+								}
+#ifdef DEBUG_SELECT_CLOSEST_POINT
+								else
+								{
+									printf("Point %d already checked.\n", current_Point);
+
+								}
 #endif
 							}
 
@@ -892,6 +915,8 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 				printf("Removed point %d. # %d. In %d. Out %d\n", candidates[out], nItems-1, in, out+1);
 #endif
+				checked[out] = TRUE;
+
 				out++;
 				nItems--;
 				out = out % candidatesSize;
@@ -899,6 +924,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 
 			// Free candidates circular buffer.
 			free( candidates);
+			free( checked);
     	}
     	else
     	{
