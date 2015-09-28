@@ -39,14 +39,14 @@
 double CTF_fitness(double *, void *);
 
 /* Number of CTF parameters */
-#define ALL_CTF_PARAMETERS           34
-#define CTF_PARAMETERS               28
-#define PARAMETRIC_CTF_PARAMETERS    15
-#define BACKGROUND_CTF_PARAMETERS    13
-#define SQRT_CTF_PARAMETERS           7
-#define ENVELOPE_PARAMETERS          10
+#define ALL_CTF_PARAMETERS           36
+#define CTF_PARAMETERS               30
+#define PARAMETRIC_CTF_PARAMETERS    16
+#define BACKGROUND_CTF_PARAMETERS    14
+#define SQRT_CTF_PARAMETERS           8
+#define ENVELOPE_PARAMETERS          11
 #define DEFOCUS_PARAMETERS            5
-#define FIRST_SQRT_PARAMETER         15
+#define FIRST_SQRT_PARAMETER         16
 #define FIRST_ENVELOPE_PARAMETER      4
 #define FIRST_DEFOCUS_PARAMETER       0
 
@@ -152,35 +152,37 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
     ASSIGN_CTF_PARAM(11, DeltaR);
     ASSIGN_CTF_PARAM(12, envR0);
     ASSIGN_CTF_PARAM(13, envR1);
-    ASSIGN_CTF_PARAM(14, Q0);
-    ASSIGN_CTF_PARAM(15, base_line);
-    ASSIGN_CTF_PARAM(16, sqrt_K);
-    ASSIGN_CTF_PARAM(17, sqU);
-    ASSIGN_CTF_PARAM(18, sqV);
-    ASSIGN_CTF_PARAM(19, sqrt_angle);
-    ASSIGN_CTF_PARAM(20, bgR1);
-    ASSIGN_CTF_PARAM(21, bgR2);
-    ASSIGN_CTF_PARAM(22, gaussian_K);
-    ASSIGN_CTF_PARAM(23, sigmaU);
+    ASSIGN_CTF_PARAM(14, envR2);
+    ASSIGN_CTF_PARAM(15, Q0);
+    ASSIGN_CTF_PARAM(16, base_line);
+    ASSIGN_CTF_PARAM(17, sqrt_K);
+    ASSIGN_CTF_PARAM(18, sqU);
+    ASSIGN_CTF_PARAM(19, sqV);
+    ASSIGN_CTF_PARAM(20, sqrt_angle);
+    ASSIGN_CTF_PARAM(21, bgR1);
+    ASSIGN_CTF_PARAM(22, bgR2);
+    ASSIGN_CTF_PARAM(23, bgR3);
+    ASSIGN_CTF_PARAM(24, gaussian_K);
+    ASSIGN_CTF_PARAM(25, sigmaU);
 
-    if (ia <= 24 && l > 0)
+    if (ia <= 26 && l > 0)
     {
         if (modelSimplification < 3)
         {
-            ctfmodel.sigmaV = p[24];
+            ctfmodel.sigmaV = p[26];
             l--;
         } //     7 *
         else
         {
-            ctfmodel.sigmaV = p[23];
+            ctfmodel.sigmaV = p[25];
             l--;
         }
     }
-    if (ia <= 25 && l > 0)
+    if (ia <= 27 && l > 0)
     {
         if (modelSimplification < 3)
         {
-            ctfmodel.gaussian_angle = p[25];
+            ctfmodel.gaussian_angle = p[27];
             l--;
         } //     8 *
         else
@@ -190,28 +192,28 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
         }
     }
 
-    ASSIGN_CTF_PARAM(26, cU);
+    ASSIGN_CTF_PARAM(28, cU);
 
-    if (ia <= 27 && l > 0)
+    if (ia <= 29 && l > 0)
     {
         if (modelSimplification < 3)
         {
-            ctfmodel.cV = p[27];
+            ctfmodel.cV = p[29];
             l--;
         } //    10 *
         else
         {
-            ctfmodel.cV = p[26];
+            ctfmodel.cV = p[28];
             l--;
         }
     }
 
-    ASSIGN_CTF_PARAM(28, gaussian_K2);
-    ASSIGN_CTF_PARAM(29, sigmaU2);
-    ASSIGN_CTF_PARAM(30, sigmaV2);
-    ASSIGN_CTF_PARAM(31, gaussian_angle2);
-    ASSIGN_CTF_PARAM(32, cU2);
-    ASSIGN_CTF_PARAM(33, cV2);
+    ASSIGN_CTF_PARAM(30, gaussian_K2);
+    ASSIGN_CTF_PARAM(31, sigmaU2);
+    ASSIGN_CTF_PARAM(32, sigmaV2);
+    ASSIGN_CTF_PARAM(33, gaussian_angle2);
+    ASSIGN_CTF_PARAM(34, cU2);
+    ASSIGN_CTF_PARAM(35, cV2);
 }//function assignCTFfromParameters
 
 
@@ -234,66 +236,68 @@ void assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
     ASSIGN_PARAM_CTF(11, DeltaR);
     ASSIGN_PARAM_CTF(12, envR0);
     ASSIGN_PARAM_CTF(13, envR1);
-    ASSIGN_PARAM_CTF(14, Q0);
-    ASSIGN_PARAM_CTF(15, base_line);
-    ASSIGN_PARAM_CTF(16, sqrt_K);
-    ASSIGN_PARAM_CTF(17, sqU);
-    ASSIGN_PARAM_CTF(18, sqV);
-    ASSIGN_PARAM_CTF(19, sqrt_angle);
-    ASSIGN_PARAM_CTF(20, bgR1);
-    ASSIGN_PARAM_CTF(21, bgR2);
-    ASSIGN_PARAM_CTF(22, gaussian_K);
-    ASSIGN_PARAM_CTF(23, sigmaU);
+    ASSIGN_PARAM_CTF(14, envR2);
+    ASSIGN_PARAM_CTF(15, Q0);
+    ASSIGN_PARAM_CTF(16, base_line);
+    ASSIGN_PARAM_CTF(17, sqrt_K);
+    ASSIGN_PARAM_CTF(18, sqU);
+    ASSIGN_PARAM_CTF(19, sqV);
+    ASSIGN_PARAM_CTF(20, sqrt_angle);
+    ASSIGN_PARAM_CTF(21, bgR1);
+    ASSIGN_PARAM_CTF(22, bgR2);
+    ASSIGN_PARAM_CTF(23, bgR3);
+    ASSIGN_PARAM_CTF(24, gaussian_K);
+    ASSIGN_PARAM_CTF(25, sigmaU);
 
-    if (ia <= 24 && l > 0)
+    if (ia <= 26 && l > 0)
     {
         if (modelSimplification < 3)
         {
-            p[24] = ctfmodel.sigmaV;
+            p[26] = ctfmodel.sigmaV;
             l--;
         }
         else
         {
-            p[24] = ctfmodel.sigmaU;
+            p[26] = ctfmodel.sigmaU;
             l--;
         }
     }
-    if (ia <= 25 && l > 0)
-    {
-        if (modelSimplification < 3)
-        {
-            p[25] = ctfmodel.gaussian_angle;
-            l--;
-        }
-        else
-        {
-            p[25] = 0;
-            l--;
-        }
-    }
-
-    ASSIGN_PARAM_CTF(26, cU);
-
     if (ia <= 27 && l > 0)
     {
         if (modelSimplification < 3)
         {
-            p[27] = ctfmodel.cV;
+            p[27] = ctfmodel.gaussian_angle;
             l--;
         }
         else
         {
-            p[27] = ctfmodel.cU;
+            p[27] = 0;
             l--;
         }
     }
 
-    ASSIGN_PARAM_CTF(28, gaussian_K2);
-    ASSIGN_PARAM_CTF(29, sigmaU2);
-    ASSIGN_PARAM_CTF(30, sigmaV2);
-    ASSIGN_PARAM_CTF(31, gaussian_angle2);
-    ASSIGN_PARAM_CTF(32, cU2);
-    ASSIGN_PARAM_CTF(33, cV2);
+    ASSIGN_PARAM_CTF(28, cU);
+
+    if (ia <= 29 && l > 0)
+    {
+        if (modelSimplification < 3)
+        {
+            p[29] = ctfmodel.cV;
+            l--;
+        }
+        else
+        {
+            p[29] = ctfmodel.cU;
+            l--;
+        }
+    }
+
+    ASSIGN_PARAM_CTF(30, gaussian_K2);
+    ASSIGN_PARAM_CTF(31, sigmaU2);
+    ASSIGN_PARAM_CTF(32, sigmaV2);
+    ASSIGN_PARAM_CTF(33, gaussian_angle2);
+    ASSIGN_PARAM_CTF(34, cU2);
+    ASSIGN_PARAM_CTF(35, cV2);
 }
 
 #define COPY_ctfmodel_TO_CURRENT_GUESS \

@@ -85,6 +85,8 @@ void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
 			row.getValueOrDefault(MDL_CTF_Q0, Q0, 0);
 			row.getValueOrDefault(MDL_CTF_K, K, 1);
 	        row.getValueOrDefault(MDL_CTF_ENV_R0, envR0, 0);
+	        row.getValueOrDefault(MDL_CTF_ENV_R1, envR1, 0);
+	        row.getValueOrDefault(MDL_CTF_ENV_R2, envR2, 0);
     	}
     	else if (row.containsLabel(MDL_CTF_MODEL))
     	{
@@ -119,6 +121,7 @@ void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_ANGLE, gaussian_angle2, 0);
         row.getValueOrDefault(MDL_CTF_BG_R1, bgR1, 0);
         row.getValueOrDefault(MDL_CTF_BG_R2, bgR2, 0);
+        row.getValueOrDefault(MDL_CTF_BG_R3, bgR3, 0);
 
         if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
             disable_if_not_K)
@@ -169,6 +172,7 @@ void CTFDescription::write(const FileName &fn)
         row.setValue(MDL_CTF_K, K);
         row.setValue(MDL_CTF_ENV_R0, envR0);
         row.setValue(MDL_CTF_ENV_R1, envR1);
+        row.setValue(MDL_CTF_ENV_R2, envR2);
     }
     if (enable_CTFnoise)
     {
@@ -191,6 +195,7 @@ void CTFDescription::write(const FileName &fn)
         row.setValue(MDL_CTF_BG_GAUSSIAN2_ANGLE, gaussian_angle2);
         row.setValue(MDL_CTF_BG_R1, bgR1);
         row.setValue(MDL_CTF_BG_R2, bgR2);
+        row.setValue(MDL_CTF_BG_R3, bgR3);
     }
     if (isLocalCTF)
     {
@@ -291,6 +296,7 @@ std::ostream & operator << (std::ostream &out, const CTFDescription &ctf)
         << "transversal_displace= " << ctf.DeltaR          << std::endl
         << "envR0=                " << ctf.envR0           << std::endl
         << "envR1=                " << ctf.envR1           << std::endl
+        << "envR2=                " << ctf.envR2           << std::endl
         << "Q0=                   " << ctf.Q0              << std::endl
         << "K=                    " << ctf.K               << std::endl
         ;
@@ -310,6 +316,7 @@ std::ostream & operator << (std::ostream &out, const CTFDescription &ctf)
         << "sqrt_angle=           " << ctf.sqrt_angle      << std::endl
         << "bg1=                  " << ctf.bgR1            << std::endl
         << "bg2=                  " << ctf.bgR2            << std::endl
+        << "bg3=                  " << ctf.bgR3            << std::endl
         << "base_line=            " << ctf.base_line       << std::endl
         << "gaussian_K2=          " << ctf.gaussian_K2     << std::endl
         << "sigmaU2=              " << ctf.sigmaU2         << std::endl
@@ -339,7 +346,7 @@ void CTFDescription::clearNoise()
     cU = cV = sigmaU = sigmaV = gaussian_angle = gaussian_K = 0;
     sqU = sqV = sqrt_K = sqrt_angle = 0;
     cU2 = cV2 = sigmaU2 = sigmaV2 = gaussian_angle2 = gaussian_K2 = 0;
-    bgR1 = bgR2 = 0.0;
+    bgR1 = bgR2 = bgR3 = 0.0;
     isLocalCTF = false;
 }
 
@@ -353,7 +360,7 @@ void CTFDescription::clearPureCtf()
     Cs = Ca = espr = ispr = alpha = DeltaF = DeltaR = 0;
     K = 1;
     Q0 = 0;
-    envR0 = envR1 = 0.0;
+    envR0 = envR1 = envR2 = 0.0;
     isLocalCTF = false;
 }
 
