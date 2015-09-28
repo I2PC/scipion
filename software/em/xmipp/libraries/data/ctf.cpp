@@ -289,6 +289,8 @@ std::ostream & operator << (std::ostream &out, const CTFDescription &ctf)
         << "convergence_cone=     " << ctf.alpha           << std::endl
         << "longitudinal_displace=" << ctf.DeltaF          << std::endl
         << "transversal_displace= " << ctf.DeltaR          << std::endl
+        << "envR0=                " << ctf.envR0           << std::endl
+        << "envR1=                " << ctf.envR1           << std::endl
         << "Q0=                   " << ctf.Q0              << std::endl
         << "K=                    " << ctf.K               << std::endl
         ;
@@ -306,6 +308,8 @@ std::ostream & operator << (std::ostream &out, const CTFDescription &ctf)
         << "sqU=                  " << ctf.sqU             << std::endl
         << "sqV=                  " << ctf.sqV             << std::endl
         << "sqrt_angle=           " << ctf.sqrt_angle      << std::endl
+        << "bg1=                  " << ctf.bgR1            << std::endl
+        << "bg2=                  " << ctf.bgR2            << std::endl
         << "base_line=            " << ctf.base_line       << std::endl
         << "gaussian_K2=          " << ctf.gaussian_K2     << std::endl
         << "sigmaU2=              " << ctf.sigmaU2         << std::endl
