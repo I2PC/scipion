@@ -38,15 +38,9 @@ int  initialize_Graph(struct Graph_T *graph, int  size)
 	{
 		printf( "Error allocating memory in initialize_Graph\n");
 	    ret = FAILURE;
-<<<<<<< Updated upstream
 #ifdef LOGGING
 		sprintf( log_Text, "Error allocating memory in initialize_Graph\n");
 		write_Log( log_Text);
-=======
-	    printf("Fail allocating graph\n");
-#ifdef DEBUG
-        write_Error(GRAPH_MEMORY_ALLOCATION_ERROR);
->>>>>>> Stashed changes
 #endif
 	}
 
