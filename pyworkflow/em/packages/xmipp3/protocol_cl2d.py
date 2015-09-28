@@ -128,7 +128,9 @@ class XmippProtCL2D(ProtClassify2D):
                            'in all the previous levels except possibly a few of them. Tolerance defines how few is few.'
                            'Tolerance=0 means that an image must be in all previous levels with the rest of images in'
                            'the core.', expertLevel=LEVEL_ADVANCED, condition='doCore and doStableCore')
-        form.addParam("computeHierarchy",BooleanParam, default=False, label="Compute class hierarchy")
+        form.addParam("computeHierarchy",BooleanParam, default=False, label="Compute class hierarchy", expertLevel=LEVEL_ADVANCED)
+        form.addParam("analyzeRejected",BooleanParam, default=False, label="Analyze rejected particles", expertLevel=LEVEL_ADVANCED,
+                      help="To see the analysis you need to browse the execution directory and go into the different levels")
 
         form.addParallelSection(threads=0, mpi=4)
 
@@ -176,12 +178,14 @@ class XmippProtCL2D(ProtClassify2D):
             args = "--dir %(extraDir)s --root level "
             # core analysis
             self._insertClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset=CLASSES_CORE)
-            self._insertFunctionStep('analyzeOutOfCores', CLASSES_CORE)
+            if self.analyzeRejected:
+                self._insertFunctionStep('analyzeOutOfCores', CLASSES_CORE)
 
             if self.numberOfClasses > (2 * self.numberOfInitialClasses.get()) and self.doStableCore: # Number of levels should be > 2
                 # stable core analysis
                 self._insertClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset=CLASSES_STABLE_CORE)
-                self._insertFunctionStep('analyzeOutOfCores', CLASSES_STABLE_CORE)
+                if self.analyzeRejected:
+                    self._insertFunctionStep('analyzeOutOfCores', CLASSES_STABLE_CORE)
 
     def _insertClassifySteps(self, program, args, subset=CLASSES):
         """ Defines four steps for the subset:
