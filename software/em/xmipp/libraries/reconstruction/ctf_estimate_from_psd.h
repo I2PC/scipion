@@ -81,8 +81,6 @@ public:
     
     /// Model simplification
     int                  modelSimplification;
-    /// Extended model
-    bool                 extendedModel;
 public:
     /// Read parameters
     void readParams();
