@@ -28,16 +28,15 @@ from os.path import join
 
 from pyworkflow.object import Float, String
 from pyworkflow.protocol.params import (PointerParam, IntParam, FloatParam, STEPS_PARALLEL,
-                                        StringParam, BooleanParam, LEVEL_ADVANCED)
-from pyworkflow.em.data import Volume
-from pyworkflow.em.protocol import ProtAnalysis3D
-from pyworkflow.utils.path import moveFile, makePath
-from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
-                                                   getImageLocation)
+                                        StringParam, LEVEL_ADVANCED)
+from pyworkflow.em.protocol import ProtParticlePicking
+from pyworkflow.utils.path import moveFile, replaceBaseExt
+
 import xmipp
+from convert import readSetOfCoordinates, izip
 
 
-class XmippProtValidateNonTilt(ProtAnalysis3D):
+class XmippProtAssignationTiltPair(ProtParticlePicking):
     """    
     From two sets of points (tilted and untilted) the protocol determines the affine transformation between
     these sets.
@@ -45,32 +44,36 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
     _label = 'assignation tiltpair'
     
     def __init__(self, *args, **kwargs):
-        ProtAnalysis3D.__init__(self, *args, **kwargs)
+        ProtParticlePicking.__init__(self, *args, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('untiltcoor', PointerParam, pointerClass='SetOfVolumes, Volume',
+        form.addParam('untiltcoor', PointerParam, pointerClass='SetOfParticles',
                       label="Untilt coordinates",  
                       help='Select the metadata with untilt coordinates.')     
 
-        form.addParam('tiltcoor', PointerParam, pointerClass='SetOfParticles, SetOfClasses2D', 
+        form.addParam('tiltcoor', PointerParam, pointerClass='SetOfParticles', 
                       label="Tilt coordinates",  
-                      help='Select the metadata with untilt coordinates.') 
+                      help='Select the metadata with untilt coordinates.')
+        
+        form.addParam('tiltmic', PointerParam, pointerClass='SetOfMicrographs', 
+                      label="Tilt micrography",  
+                      help='Select a tilt micrography for getting its size.')  
             
-        form.addParam('maxshift', IntParam, default='1000',
+        form.addParam('maxshift', IntParam, default='1000', expertLevel=LEVEL_ADVANCED,
                       label="Maximum shift (pixels)", 
                       help='Maximum allowed distance (in pixels) that the tilt micrograph can be shifted' 
                       'respect to the untilted micrograph') 
         
-        form.addParam('particlesize', IntParam, default=100,
+        form.addParam('particlesize', IntParam, default=100, 
                       label="Particle size (pixels)",  
                       help='It defines the size os the box which contains the particle')
 
-        form.addParam('threshold', FloatParam, default=0.25,
-                      label="Significance value",  
+        form.addParam('threshold', FloatParam, default=0.25, expertLevel=LEVEL_ADVANCED,
+                      label="Threshold value",  
                       help='Parameter between 0 and 1 that allows to define if \n' 
                       'a tilt point can be matched with a certain untilt point. \n'
                       'The matching is performed only if the distance is lesser than \n'
@@ -81,34 +84,50 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):        
-        convertId = self._insertFunctionStep('convertInputStep', self.inputParticles.get().getObjId())
+        '''tiltMic = self.tiltcoor.get().getMicrographs()
+        untiltMic = self.untiltcoor.get().getMicrographs()
+        
+        self._insertFunctionStep('convertInputStep')
         deps = [] # store volumes steps id to use as dependencies for last step
-        commonParams = self._getCommonParams()
-                
-        asigStepId = self._insertFunctionStep('assignationStep', commonParams, prerequisites=[convertId])            
-
-        deps.append(asigStepId)
+        for untiltMic, tiltMic in izip(untiltMic, tiltMic):
+            self._insertFunctionStep('assignationStep', untiltMic.getFileName(), tiltMic.getFileName())
+        
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)'''
+        
+        tiltMic = self.tiltmic.get()
+         
+        self._insertFunctionStep('convertInputStep')
+        deps = [] # store volumes steps id to use as dependencies for last step
+        for tiltMic in izip(tiltMic):
+            self._insertFunctionStep('assignationStep', tiltMic.getFileName())
         
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
         
-    def convertInputStep(self, particlesId):
-        """ Write the input images as a Xmipp metadata file. 
-        particlesId: is only need to detect changes in
-        input particles and cause restart from here.
+        
+    def convertInputStep(self):
+        """ Read the input metadatata.
         """
-        writeSetOfParticles(self.inputParticles.get(), 
-                            self._getPath('input_particles.xmd'))
-                    
-    def _getCommonParams(self):
-        params =  ' --untiltcoor %s' % self._getPath('input_particles.xmd')        
-        params += ' --tiltcoor %s' % self._getPath.get()
+        inputCoordsUntilt = self.untiltcoor.get()
+        inputCoordsTilt = self.tiltcoor.get()
+        
+        untiltMic = inputCoordsUntilt.getMicrographs()
+        tiltMic = inputCoordsTilt.getMicrographs()
+
+        
+        readSetOfCoordinates(self._getExtraPath('tilt'), tiltMic, inputCoordsTilt)
+        readSetOfCoordinates(self._getExtraPath('untilt'), untiltMic, inputCoordsUntilt)
+
+    
+    def assignationStep(self, fnuntilt, fntilt):
+
+        tiltMic = self.tiltmic.get()
+        params =  ' --untiltcoor %s' % join(self._getExtraPath('untilt'), replaceBaseExt(fnuntilt, 'pos'))        
+        params += ' --tiltcoor %s' % join(self._getExtraPath('tilt'), replaceBaseExt(fntilt, 'pos'))
+        params += ' --tiltmic %s' % tiltMic.getFileName()
         params += ' --maxshift %f' % self.maxshift.get()
         params += ' --particlesize %f' % self.particlesize.get()
         params += ' --threshold %f' % self.threshold.get()
 
-        return params
-    
-    def assignationStep(self, params):
 
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get() 
@@ -143,10 +162,12 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
     def _validate(self):
         validateMsgs = []
         # if there are Volume references, it cannot be empty.
-        if self.inputVolumes.get() and not self.inputVolumes.hasValue():
-            validateMsgs.append('Please provide an input reference volume.')
-        if self.inputParticles.get() and not self.inputParticles.hasValue():
-            validateMsgs.append('Please provide input particles.')            
+        #if self.inputVolumes.get() and not self.inputVolumes.hasValue():
+        #    validateMsgs.append('Please provide an input reference volume.')
+        if self.untiltcoor.get() and not self.untiltcoor.hasValue():
+            validateMsgs.append('Please provide input particles.')  
+        if self.tiltcoor.get() and not self.tiltcoor.hasValue():
+            validateMsgs.append('Please provide input particles.')         
         return validateMsgs
         
     
@@ -175,25 +196,6 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         return ['Vargas2014a']
     
     #--------------------------- UTILS functions --------------------------------------------
-    def _getVolDir(self, volIndex):
-        return self._getTmpPath('vol%03d' % volIndex)
-    
-    def _iterInputVols(self):
-        """ In this function we will encapsulate the logic
-        to iterate throught the input volumes.
-        This give the flexibility of having Volumes, SetOfVolumes or 
-        a combination of them as input and the protocol code
-        remain the same.
-        """
-        inputVols = self.inputVolumes.get()
-        
-        if isinstance(inputVols, Volume):
-            yield inputVols
-        else:
-            for vol in inputVols:
-                yield vol
-        
-        
     def _defineMetadataRootName(self, mdrootname,volId):
         
         if mdrootname=='P':
