@@ -40,7 +40,10 @@ void ProgassignationTiltPair::readParams()
 {
 	fnuntilt = getParam("--untiltcoor");
 	fntilt = getParam("--tiltcoor");
+<<<<<<< Updated upstream
 	fnmic = getParam("--tiltmic");
+=======
+>>>>>>> Stashed changes
 	fndir = getParam("--odir");
 	mshift = getIntParam("--maxshift");
 	particle_size = getIntParam("--particlesize");
@@ -53,6 +56,7 @@ void ProgassignationTiltPair::defineParams()
 	//usage
 	addUsageLine("Validate a 3D reconstruction from its projections attending to directionality and spread of the angular assignments from a given significant value");
 	//params
+<<<<<<< Updated upstream
 	addParamsLine("  [--untiltcoor <md_file=\"\">]    : Untilt coordinates");
 	addParamsLine("  [--tiltcoor <md_file=\"\">]    : Tilt coordinates");
 	addParamsLine("  [--tiltmic <md_file=\"\">]    : Tilt micrography");
@@ -60,6 +64,14 @@ void ProgassignationTiltPair::defineParams()
 	addParamsLine("  [--maxshift <s=1000>]   : Maximum shift");
 	addParamsLine("  [--particlesize <p=100>]   : Particle size");
 	addParamsLine("  [--threshold <d=0.3>]      : If the distance between two points is lesser than threshold*particlesize, they will be the same point");
+=======
+	addParamsLine("  [--untiltcoor <md_file=\"\">]    : Volume to validate");
+	addParamsLine("  [--tiltcoor <md_file=\"\">]    : Volume to validate");
+	addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
+	addParamsLine("  [--maxshift <s=1000>]   : Maximum shift");
+	addParamsLine("  [--particlesize <p=100>]   : Particle size");
+	addParamsLine("  [--threshold <d=0.3>]      : if the distance between two points is lesser than threshold*particlesize, the they will be the same point");
+>>>>>>> Stashed changes
 }
 
 double mean(Matrix1D<double> v)
@@ -75,12 +87,16 @@ void ProgassignationTiltPair::run()
 
 
 	//LOAD METADATA and TILTPAIRS
+<<<<<<< Updated upstream
 	MetaData md_untilt, md_tilt, M_in;
 	size_t Ndim, Zdim, Ydim , Xdim;
 
 	M_in.read(fnmic);
 	getImageSize(M_in,Xdim,Ydim,Zdim,Ndim);
 
+=======
+	MetaData md_untilt, md_tilt;
+>>>>>>> Stashed changes
 	md_untilt.read(fnuntilt);
 	md_tilt.read(fntilt);
 
@@ -102,7 +118,11 @@ void ProgassignationTiltPair::run()
 		len_u = len_u +1;
 	}
 
+<<<<<<< Updated upstream
 	create_Delaunay_Triangulation( &delaunay_untilt, 0);
+=======
+	create_Delaunay_Triangulation( &delaunay_untilt);
+>>>>>>> Stashed changes
 
 
 	int tri_number_untilt = get_Number_Real_Faces(delaunay_untilt.dcel);
@@ -116,8 +136,13 @@ void ProgassignationTiltPair::run()
 		md_tilt.getValue(MDL_YCOOR, y,__iter.objId);
 		insert_Point( &delaunay_tilt, x, y);
 	}
+<<<<<<< Updated upstream
 	write_DCEL(delaunay_tilt.dcel, 0, "tiltdata.txt");
 	create_Delaunay_Triangulation( &delaunay_tilt, 1);
+=======
+	write_DCEL(delaunay_untilt.dcel, 0, "tiltdata.txt");
+	create_Delaunay_Triangulation( &delaunay_tilt);
+>>>>>>> Stashed changes
 	int tri_number_tilt = get_Number_Real_Faces(delaunay_tilt.dcel);
 
 
@@ -154,10 +179,17 @@ void ProgassignationTiltPair::run()
 	double trace_A, det_A, sqrt_aux, Eig_A1, Eig_A2, discriminant_A, dist, estimator;
 	struct Point_T t_dist, t_closest;
 	double cos_tilt = t_mean_area/u_mean_area;
+<<<<<<< Updated upstream
 
 	std::cout << "cos_tilt" << cos_tilt << std::endl;
 	std::cout << "------------------------------"  << std::endl;
 
+=======
+
+	std::cout << "cos_tilt" << cos_tilt << std::endl;
+	std::cout << "------------------------------"  << std::endl;
+
+>>>>>>> Stashed changes
 	A.initZeros(2,2);
 
 	///////////// COARSE PHASE///////////////
@@ -229,6 +261,7 @@ void ProgassignationTiltPair::run()
 					//std::cout << "ux" << VEC_ELEM(ux,400) << std::endl;
 					//std::cout << "len_u = " << len_u << std::endl;
 					for (int tt=0; tt<len_u; tt++)
+<<<<<<< Updated upstream
 					{
 						VEC_ELEM(u,0) = VEC_ELEM(ux,tt);
 						VEC_ELEM(u,1) = VEC_ELEM(uy,tt);
@@ -253,6 +286,35 @@ void ProgassignationTiltPair::run()
 					std::cout << "len_u = " << len_u << std::endl;
 					for (int kk=0; kk<len_u; kk++)
 					{
+=======
+					{
+						VEC_ELEM(u,0) = VEC_ELEM(ux,tt);
+						VEC_ELEM(u,1) = VEC_ELEM(uy,tt);
+						t_test = A*u + T;
+						// Condition I: Affinity must be inside the micrography
+						//TODO fix micsize 4000x4000
+
+
+						if (VEC_ELEM(t_test,0)<0 || VEC_ELEM(t_test,0)>4000 || VEC_ELEM(t_test,1)<0 || VEC_ELEM(t_test,1)>4000)
+							continue;
+
+						t_dist.x = VEC_ELEM(t_test,0);
+						t_dist.y = VEC_ELEM(t_test,1);
+
+						//std::cout << "Entro1" << tt << std::endl;
+						select_Closest_Point(&delaunay_tilt, &t_dist, &t_closest, &dist);
+						//std::cout << "Entro2" << tt << std::endl;
+
+						VEC_ELEM(dist_vec,tt) = dist;
+						std::cout << "dist = " << dist << std::endl;
+					}
+					//std::cout << "caca " << std::endl;
+					int counter = 0;
+					int inliers2 = 0;
+					std::cout << "len_u = " << len_u << std::endl;
+					for (int kk=0; kk<len_u; kk++)
+					{
+>>>>>>> Stashed changes
 						if (VEC_ELEM(dist_vec,kk)>-1)
 						{
 							counter = counter + 1;

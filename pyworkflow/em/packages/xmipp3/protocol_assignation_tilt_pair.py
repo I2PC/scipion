@@ -72,7 +72,11 @@ class XmippProtAssignationTiltPair(ProtParticlePicking):
                       label="Particle size (pixels)",  
                       help='It defines the size os the box which contains the particle')
 
+<<<<<<< Updated upstream
         form.addParam('threshold', FloatParam, default=0.25, expertLevel=LEVEL_ADVANCED,
+=======
+        form.addParam('threshold', FloatParam, default=0.25,
+>>>>>>> Stashed changes
                       label="Threshold value",  
                       help='Parameter between 0 and 1 that allows to define if \n' 
                       'a tilt point can be matched with a certain untilt point. \n'
@@ -84,13 +88,18 @@ class XmippProtAssignationTiltPair(ProtParticlePicking):
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):        
+<<<<<<< Updated upstream
         '''tiltMic = self.tiltcoor.get().getMicrographs()
+=======
+        tiltMic = self.tiltcoor.get().getMicrographs()
+>>>>>>> Stashed changes
         untiltMic = self.untiltcoor.get().getMicrographs()
         
         self._insertFunctionStep('convertInputStep')
         deps = [] # store volumes steps id to use as dependencies for last step
         for untiltMic, tiltMic in izip(untiltMic, tiltMic):
             self._insertFunctionStep('assignationStep', untiltMic.getFileName(), tiltMic.getFileName())
+<<<<<<< Updated upstream
         
         self._insertFunctionStep('createOutputStep', prerequisites=deps)'''
         
@@ -104,6 +113,11 @@ class XmippProtAssignationTiltPair(ProtParticlePicking):
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
         
         
+=======
+        
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)
+        
+>>>>>>> Stashed changes
     def convertInputStep(self):
         """ Read the input metadatata.
         """
@@ -112,7 +126,10 @@ class XmippProtAssignationTiltPair(ProtParticlePicking):
         
         untiltMic = inputCoordsUntilt.getMicrographs()
         tiltMic = inputCoordsTilt.getMicrographs()
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         
         readSetOfCoordinates(self._getExtraPath('tilt'), tiltMic, inputCoordsTilt)
         readSetOfCoordinates(self._getExtraPath('untilt'), untiltMic, inputCoordsUntilt)
@@ -120,10 +137,15 @@ class XmippProtAssignationTiltPair(ProtParticlePicking):
     
     def assignationStep(self, fnuntilt, fntilt):
 
+<<<<<<< Updated upstream
         tiltMic = self.tiltmic.get()
         params =  ' --untiltcoor %s' % join(self._getExtraPath('untilt'), replaceBaseExt(fnuntilt, 'pos'))        
         params += ' --tiltcoor %s' % join(self._getExtraPath('tilt'), replaceBaseExt(fntilt, 'pos'))
         params += ' --tiltmic %s' % tiltMic.getFileName()
+=======
+        params =  ' --untiltcoor %s' % join(self._getExtraPath('untilt'), replaceBaseExt(fnuntilt, 'pos'))        
+        params += ' --tiltcoor %s' % join(self._getExtraPath('tilt'), replaceBaseExt(fntilt, 'pos'))
+>>>>>>> Stashed changes
         params += ' --maxshift %f' % self.maxshift.get()
         params += ' --particlesize %f' % self.particlesize.get()
         params += ' --threshold %f' % self.threshold.get()
