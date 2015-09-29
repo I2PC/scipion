@@ -783,7 +783,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 #endif
     		// Allocate neighbors array.
     		candidates = (int *) calloc( candidatesSize, sizeof(int));
-    		checked = (int *) calloc( delaunay->dcel->nVertex, sizeof(int));
+    		checked = (int *) calloc( delaunay->voronoi.dcel.nVertex, sizeof(int));
 
     		// Insert points from leaf node.
     		for (i=0; i<N_POINTS ;i++)
@@ -876,7 +876,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 
 							if (current_Point >= 0)
 							{
-								if (!checked[out])
+								if (!checked[current_Point])
 								{
 									// Insert point.
 									candidates[in] = current_Point;
@@ -918,7 +918,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 				printf("Removed point %d. # %d. In %d. Out %d\n", candidates[out], nItems-1, in, out+1);
 #endif
-				checked[out] = TRUE;
+				checked[candidates[out]] = TRUE;
 
 				out++;
 				nItems--;
