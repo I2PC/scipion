@@ -170,7 +170,7 @@ void ProgassignationTiltPair::run()
 	A.initZeros(2,2);
 
 	///////////// COARSE PHASE///////////////
-	for (int k=1; k<tri_number_untilt; k++)
+	for (int k=5; k<tri_number_untilt; k++)
 	{
 		//std::cout << k << "/" << tri_number_untilt << std::endl; //<< "  J = " << tri_number_tilt << std::endl;
 		if (trig_untilt_area(k) < threshold_area)
@@ -247,18 +247,20 @@ void ProgassignationTiltPair::run()
 						//std::cout << "u = (" << VEC_ELEM(u,0) << "," << VEC_ELEM(u,1) << ")" << std::endl;
 						//std::cout << "t = (" << t_dist.x << "," << t_dist.y << ")" << std::endl;
 						// Condition I: Affinity must be inside the micrography
+						//std::cout << "Xdim Y dim" << Xdim << " " << Ydim << std::endl;
+
 						if (VEC_ELEM(t_test,0)<0 || VEC_ELEM(t_test,0)>Xdim || VEC_ELEM(t_test,1)<0 || VEC_ELEM(t_test,1)>Ydim)
 							continue;
 
 
 						t_dist.x = VEC_ELEM(t_test,0);
 						t_dist.y = VEC_ELEM(t_test,1);
-						std::cout << "t = (" << t_dist.x << "," << t_dist.y << ")" << std::endl;
-						std::cout << "Entro1" << tt << std::endl;
+						//std::cout << "t = (" << t_dist.x << "," << t_dist.y << ")" << std::endl;
+						//std::cout << "Entro1" << tt << std::endl;
 						select_Closest_Point(&delaunay_tilt, &t_dist, &t_closest, &dist);
-						std::cout << "Entro " << tt << std::endl;
-						std::cout << "dist" << dist << std::endl;
-						std::cout << "coordenada x" << t_closest.x << " coordenada y " << t_closest.y << std::endl;
+						//std::cout << "Entro " << tt << std::endl;
+						//std::cout << "dist" << dist << std::endl;
+						//std::cout << "coordenada x" << t_closest.x << " coordenada y " << t_closest.y << std::endl;
 
 						VEC_ELEM(dist_vec,tt) = dist;
 						//exit (0);

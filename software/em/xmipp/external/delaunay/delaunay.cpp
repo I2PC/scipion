@@ -1000,6 +1000,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 
 						if (!found)
 						{
+							exit(0);
 							printf( "ERROR: No nodes surround new point.\n");
 							print_Point( p);
 #ifdef LOGGING
