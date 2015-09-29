@@ -971,9 +971,6 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 							// Get closest point between the three points of the triangle.
 							for (j=0; j<N_POINTS ;j++)
 							{
-								printf("Point %d is (%lf,%lf)\n", delaunay->graph.nodes[child_Index].points_Index[j],
-										delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.x,
-										delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.y);
 								if (equal_Point( p, &delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex))
 								{
 									(*lowest_Distance) = 0.0;
@@ -1471,12 +1468,7 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 			printf("Splitting first triangle\n");
 #endif
 			insert_Node( graph, &new_Node[0]);
-			/*
-			new_Node[1].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[colinear_Index].twin_Edge - 1].previous_Edge - 1);
-			new_Node[1].points_Index[1] = get_Edge_Origin_Vertex( dcel, dcel->edges[colinear_Index].twin_Edge - 1);
-			new_Node[1].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[colinear_Index].twin_Edge - 1].next_Edge - 1);
-			*/
-			printf("O %d D %d\n", dcel->edges[colinear_Index].origin_Vertex, dcel->edges[dcel->edges[colinear_Index].twin_Edge-1].origin_Vertex);
+
 			new_Node[1].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[colinear_Index].previous_Edge - 1);
 			new_Node[1].points_Index[1] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[dcel->edges[colinear_Index].previous_Edge-1].twin_Edge-1].previous_Edge-1);
 			new_Node[1].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[colinear_Index].previous_Edge - 1].twin_Edge-1);

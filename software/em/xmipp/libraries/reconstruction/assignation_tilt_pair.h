@@ -43,10 +43,10 @@ public:
     int mshift;
 
     /** Particle size*/
-    int particle_size;
+    double particle_size;
 
     /** threshold*/
-    int thr;
+    double thr;
 
     MetaData mdPartial;
 
