@@ -90,6 +90,8 @@ int		init_Delaunay( struct Delaunay_T *delaunay, int nPoints)
 #endif
 				printf("Error allocating graph in init_Delaunay\n");
 				ret = FAILURE;
+
+				delaunay->voronoiComputed = TRUE;
 			}
 		}
 	}
@@ -182,6 +184,8 @@ int create_Delaunay_Triangulation( struct Delaunay_T *delaunay, int createVorono
 	// Set as imaginary faces with vertex points P_MINUS_2 or P_MINUS_1.
 	purge_Delaunay( delaunay);
 
+	delaunay->voronoiComputed = FALSE;
+
 	// Check if Voronoi areas must be computed.
 	if (createVoronoi)
 	{
@@ -224,6 +228,7 @@ int 	initialize_Delaunay(struct Delaunay_T *delaunay, struct DCEL_T *dcel)
 
 	// Get reference to DCEL.
 	delaunay->dcel = dcel;
+	delaunay->voronoiComputed = FALSE;
 
 	// Initialize graph.
 	if (initialize_Graph( &delaunay->graph, delaunay->dcel->nVertex*10) == FAILURE)
@@ -250,17 +255,17 @@ int 	initialize_Delaunay(struct Delaunay_T *delaunay, struct DCEL_T *dcel)
 ***************************************************************************/
 void 	finalize_Delaunay(struct Delaunay_T *delaunay)
 {
-	// Dereference DCEL.
-	delaunay->dcel = NULL;
-
 	// Delete graph.
 	finalize_Graph( &delaunay->graph);
 
 	// Delete Voronoi.
-	finalize_Voronoi( &delaunay->voronoi);
+	if (delaunay->voronoiComputed)
+	{
+		finalize_Voronoi( &delaunay->voronoi);
+	}
 
-	// Set Voronoi diagram as not computed.
-	delaunay->voronoiComputed = FALSE;
+	// Dereference DCEL.
+	delaunay->dcel = NULL;
 }
 
 
@@ -1542,7 +1547,7 @@ double   modified_Signed_Area( struct DCEL_T *dcel, struct  Node_T *node)
 {
     double   area=0.0;           // Return value.
 
-    // Chec if any of the vertex is not real: P_MINUS_! or P_MINUS_2.
+    // Check if any of the vertex is not real: P_MINUS_! or P_MINUS_2.
     if ((node->points_Index[0] < 0) ||
         (node->points_Index[1] < 0) ||
         (node->points_Index[2] < 0))
