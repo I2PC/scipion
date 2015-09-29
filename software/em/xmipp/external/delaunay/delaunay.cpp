@@ -976,6 +976,9 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 							// Get closest point between the three points of the triangle.
 							for (j=0; j<N_POINTS ;j++)
 							{
+								printf("Point %d is (%lf,%lf)\n", delaunay->graph.nodes[child_Index].points_Index[j],
+										delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.x,
+										delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.y);
 								if (equal_Point( p, &delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex))
 								{
 									(*lowest_Distance) = 0.0;
@@ -1190,8 +1193,6 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
     int     node_Index=0;                   // Index of current node analyzed.
     int		found=FALSE;					// Loop control flag.
 	int		finished=FALSE;					// Loop control flag.
-	int		child_Index=0;					// Children node ID.
-    int     nChildren=0;                    // Number of children of current node.
     struct  Dcel_Vertex_T   *point=NULL;   // Pointer to points in DCEL.
 
     // Get new point to insert.
@@ -1208,7 +1209,7 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
     while (!finished)
     {
         // If node is a leaf then triangle found.
-        if (is_Leaf_Node( &delaunay->graph, node_Index))
+    	if (delaunay->graph.nodes[node_Index].nChildren == 0)
         {
             // Check if point is strictly interior (not over an edge).
             if (is_Strictly_Interior_To_Node(delaunay->dcel, &delaunay->graph, &point->vertex, node_Index))
@@ -1238,21 +1239,18 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
             // Search triangle in children nodes.
             i=0;
             found = FALSE;
-            nChildren = get_nChildren_Node( &delaunay->graph, node_Index);
-            while ((!found) && (i < nChildren))
+            while ((!found) && (i < delaunay->graph.nodes[node_Index].nChildren))
             {
-                // Get i-children.
-                child_Index = get_iChildren_Node( &delaunay->graph, node_Index, i);
-
 #ifdef DEBUG_ANALYZE_FACE
             	printf("Trying %d-child node %d in node %d.\n", i, child_Index, node_Index);
 #endif
 
                 // Check if point is interior to i-child node.
-                if (is_Interior_To_Node( delaunay->dcel, &delaunay->graph, &point->vertex, child_Index))
+                if (is_Interior_To_Node( delaunay->dcel, &delaunay->graph, &point->vertex,
+                						delaunay->graph.nodes[node_Index].children_Index[i]))
                 {
                     // Search in next children node.
-                    node_Index = child_Index;
+                    node_Index = delaunay->graph.nodes[node_Index].children_Index[i];
 
                     // End loop.
                     found = TRUE;
@@ -1265,7 +1263,7 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
                 else
                 {
                     i++;
-                    if (i == nChildren)
+                    if (i == delaunay->graph.nodes[node_Index].nChildren)
                     {
 #ifdef DEBUG_ANALYZE_FACE
                         printf("Point is not interior to any node.\n");
@@ -1473,7 +1471,6 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 			printf("Splitting first triangle\n");
 #endif
 			insert_Node( graph, &new_Node[0]);
-
 			new_Node[1].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[colinear_Index].previous_Edge - 1);
 			new_Node[1].points_Index[1] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[dcel->edges[colinear_Index].previous_Edge-1].twin_Edge-1].previous_Edge-1);
 			new_Node[1].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[colinear_Index].previous_Edge - 1].twin_Edge-1);
