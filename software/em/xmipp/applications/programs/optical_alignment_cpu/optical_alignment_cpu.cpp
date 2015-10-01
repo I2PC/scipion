@@ -52,7 +52,7 @@ public:
 
     int winSize, gpuDevice, fstFrame, lstFrame;
     int psdPieceSize;
-    bool doAverage, psd;
+    bool doAverage, psd, saveCorrMovie;
 
     void defineParams()
     {
@@ -64,6 +64,7 @@ public:
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
         addParamsLine("     [--simpleAverage]: if we want to just compute the simple average");
         addParamsLine("     [--psd]             : save raw PSD and corrected PSD");
+        addParamsLine("     [--ssc]             : save corrected stack");
 #ifdef GPU
 
         addParamsLine("     [--gpu <int=0>]         : GPU device to be used");
@@ -79,6 +80,8 @@ public:
         winSize   = getIntParam("--winSize");
         doAverage = checkParam("--simpleAverage");
         psd = checkParam("--psd");
+        saveCorrMovie = checkParam("--ssc");
+
 #ifdef GPU
 
         gpuDevice = getIntParam("--gpu");
@@ -251,8 +254,9 @@ public:
 
     int main2()
     {
-        // XMIPP structures are defined here
+
         MultidimArray<double> preImg, avgCurr, avgStep, mappedImg;
+        MultidimArray<double> outputMovie;
         Matrix1D<double> meanStdev;
         ImageGeneric movieStack, movieStackNormalize;
         Image<double> II;
@@ -273,14 +277,17 @@ public:
         cv::Mat flowx, flowy, mapx, mapy, flow, dest;
         cv::Mat flowxPre, flowyPre, flowxInBet, flowyInBet;// Using for computing the plot information
         cv::Mat avgcurr, avgstep, preimg, preimg8, avgcurr8;
-        cv::Mat planes[] = {flowx, flowy};
+        cv::Mat planes[]={flowx, flowy};
         cv::Scalar meanx, meany;
         cv::Scalar stddevx, stddevy;
 
         int imagenum, cnt = 2, div = 0;
         int h, w, idx, levelNum, levelCounter = 1;
 
-        motionInfFile = foname.replaceExtension("xmd");
+        motionInfFile=foname.replaceExtension("xmd");
+        std::string extension=fname.getExtension();
+        if (extension=="mrc")
+            fname+=":mrcs";
         movieStack.read(fname,HEADER);
         movieStack.getDimensions(aDim);
         imagenum = aDim.ndim;
@@ -306,15 +313,18 @@ public:
         d_calc.flags=0;
 #endif
         // Initialize variables with zero
+        // Initialize the stack for the output movie
+        if (saveCorrMovie)
+            outputMovie.initZeros(imagenum, 1, h, w);
         tStart2=clock();
         // Compute the average of the whole stack
         fstFrame++; // Just to adapt to Li algorithm
         lstFrame++; // Just to adapt to Li algorithm
         psdPieceSize = 400; // Currently we set it as a constant
         if (lstFrame>=imagenum || lstFrame==1)
-            lstFrame = imagenum;
-        imagenum -= (imagenum-lstFrame) + (fstFrame-1);
-        levelNum = sqrt(double(imagenum));
+            lstFrame=imagenum;
+        imagenum-=(imagenum-lstFrame) + (fstFrame-1);
+        levelNum=sqrt(double(imagenum));
         computeAvg(fname, fstFrame, lstFrame, avgCurr);
         // if the user want to save the PSD
         if (psd)
@@ -322,9 +332,9 @@ public:
             II() = avgCurr;
             II.write(foname);
             if (doAverage)
-                rawPSDFile = foname.removeLastExtension()+"_corrected";
+                rawPSDFile=foname.removeLastExtension()+"_corrected";
             else
-                rawPSDFile = foname.removeLastExtension()+"_raw";
+                rawPSDFile=foname.removeLastExtension()+"_raw";
             std::cerr<<"The file name is"<<rawPSDFile<<std::endl;
             String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
                                      foname.c_str(), rawPSDFile.c_str(), psdPieceSize);
@@ -430,23 +440,30 @@ public:
                 cv::remap(preimg, dest, planes[0], planes[1], cv::INTER_CUBIC);
 #endif
 
-                avgstep += dest;
+                if (div==1 && saveCorrMovie)
+                    mappedImg.aliasImageInStack(outputMovie, i);
+                avgstep+=dest;
             }
-            avgcurr =  avgstep/cnt;
+            avgcurr=avgstep/cnt;
             cout<<"Processing level "<<levelCounter<<"/"<<levelNum<<" has been finished"<<std::endl;
             printf("Processing time: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
-            cnt = cnt * 2;
-            levelCounter ++;
+            cnt=cnt*2;
+            levelCounter++;
         }
         opencv2Xmipp(avgcurr, avgCurr);
         II() = avgCurr;
         II.write(foname);
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
+        if (saveCorrMovie)
+        {
+            II()=outputMovie;
+            II.write(foname.replaceExtension("mrcs"));
+        }
         if (psd)
         {
             Image<double> psdCorr, psdRaw;
             MultidimArray<double> psdCorrArr, psdRawArr;
-            correctedPSDFile = foname.removeLastExtension()+"_corrected";
+            correctedPSDFile=foname.removeLastExtension()+"_corrected";
             String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
                                      foname.c_str(), correctedPSDFile.c_str(), psdPieceSize);
             String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
@@ -462,7 +479,7 @@ public:
                     DIRECT_A2D_ELEM(psdCorrArr,i,j)=DIRECT_A2D_ELEM(psdRawArr,i,j);
             psdCorr()=psdCorrArr;
             psdCorr.write(correctedPSDFile+".psd");
-            FileName auxFile = rawPSDFile.addExtension("psd");
+            FileName auxFile=rawPSDFile.addExtension("psd");
             auxFile.deleteFile();
         }
         return 0;
