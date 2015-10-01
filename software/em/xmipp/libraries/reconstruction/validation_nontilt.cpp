@@ -96,8 +96,6 @@ void ProgValidationNonTilt::run()
     double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
 */
     double correction = 1;
-
-
     double validation = 0;
 
 	MetaData tempMd;
@@ -172,16 +170,11 @@ void ProgValidationNonTilt::run()
 		for (size_t idx=0; idx< P.size();idx++)
 		{
 			if (P[idx] > 1)
-
-				validation += 1;
+				validation += 1.;
 
 		}
 
-		if (useSignificant)
-			validation /= (md.size());
-		else
-			validation /= (md.size());
-
+		validation /= (md.size());
 	}
 
     row2.setValue(MDL_IMAGE,fnInit);

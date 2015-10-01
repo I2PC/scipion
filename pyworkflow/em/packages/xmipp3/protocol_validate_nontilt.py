@@ -220,7 +220,6 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         params += '  --initvolumes %s' % volName  
         params += ' --odir %s' % volDir
         params += ' --iter %d' % 1
-        params += ' --initgallery %s' % fnGallery
         self.runJob('xmipp_reconstruct_significant', 
                     params, numberOfMpi=nproc,numberOfThreads=nT)
         
