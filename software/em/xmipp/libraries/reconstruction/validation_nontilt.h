@@ -63,6 +63,8 @@ public:
 
     void obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
 
+    void obtainSumU_2(const MetaData & mdGallery, const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
+
     void obtainSumW(const MetaData & tempMd, double & sum_W, std::vector<double> & sum_u, std::vector<double> & H, const double factor);
 
     /// Gather alignment

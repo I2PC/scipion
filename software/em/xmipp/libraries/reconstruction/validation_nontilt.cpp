@@ -61,14 +61,18 @@ void ProgValidationNonTilt::run()
 {
     //Clustering Tendency and Cluster Validity Stephen D. Scott
     randomize_random_generator();
-    MetaData md,mdOut,mdOut2;
+    MetaData md,mdGallery,mdOut,mdOut2;
+    MDRow row;
 
-    FileName fnOut,fnOut2;
+    FileName fnOut,fnOut2, fnGallery;
     fnOut = fnDir+"/clusteringTendency.xmd";
+    fnGallery = fnDir+"/gallery.doc";
     fnOut2 = fnDir+"/validation.xmd";
     size_t nSamplesRandom = 500;
 
     md.read(fnParticles);
+    mdGallery.read(fnGallery);
+
     size_t maxNImg;
     size_t sz = md.size();
 
@@ -77,7 +81,6 @@ void ProgValidationNonTilt::run()
     else
     {
     	md.getValue(MDL_ITEM_ID,maxNImg,sz);
-
     }
 
     String expression;
@@ -87,9 +90,14 @@ void ProgValidationNonTilt::run()
     SL.readSymmetryFile(fnSym.c_str());
     SL.isSymmetryGroup(fnSym.c_str(), symmetry, sym_order);
 
+/*
     double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
     double area_of_sphere_no_symmetry = 4.*PI;
     double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
+*/
+    double correction = 1;
+
+
     double validation = 0;
 
 	MetaData tempMd;
@@ -117,7 +125,8 @@ void ProgValidationNonTilt::run()
 				continue;
 
 			//compute H_0 from noise
-			obtainSumU(tempMd,sum_u,H0);
+			//obtainSumU(tempMd,sum_u,H0);
+			obtainSumU_2(mdGallery, tempMd,sum_u,H0);
 			//compute H from experimental
 			obtainSumW(tempMd,sum_w,sum_u,H,correction);
 
@@ -368,4 +377,108 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd, double & sum_W, 
         H[n] = sumW/(sumW+factor*sum_u.at(n));
     }
 }
+
+
+
+void ProgValidationNonTilt::obtainSumU_2(const MetaData & mdGallery, const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0)
+{
+
+	const size_t tempMdSz= tempMd.size();
+	const size_t numGallery= mdGallery.size();
+
+    double xRan,yRan,zRan;
+    size_t indx;
+    double sumWRan;
+    double * xRanArray = new double[tempMdSz];
+    double * yRanArray = new double[tempMdSz];
+    double * zRanArray  = new double[tempMdSz];
+    std::vector<double> weightV;
+    double a;
+
+    double rot,tilt,w;
+    bool mirror;
+
+    for (size_t n=0; n<sum_u.size(); n++)
+    {
+        sumWRan = 0;
+
+        for (size_t nS=0; nS<tempMd.size(); nS++)
+        {
+			indx = (size_t) (double( std::rand())*numGallery)/RAND_MAX;
+
+			while ( (indx ==0) || (indx > numGallery) )
+				indx = (size_t) (double( std::rand())*numGallery )/RAND_MAX;
+
+        	mdGallery.getValue(MDL_ANGLE_ROT,rot,indx);
+        	mdGallery.getValue(MDL_ANGLE_TILT,tilt,indx);
+        	mdGallery.getValue(MDL_FLIP,mirror,indx);
+
+            if (mirror == 1)
+            	tilt = tilt + 180;
+
+            xRan = sin(tilt*PI/180.)*cos(rot*PI/180.);
+            yRan = sin(tilt*PI/180.)*sin(rot*PI/180.);
+            zRan = std::abs(cos(tilt*PI/180.));
+
+            xRanArray[nS] = xRan;
+            yRanArray[nS] = yRan;
+            zRanArray[nS] = zRan;
+            //tempMd.getColumnValues(MDL_WEIGHT, weightV);
+            tempMd.getColumnValues(MDL_MAXCC, weightV);
+            std::random_shuffle(weightV.begin(), weightV.end());
+        }
+
+
+        sumWRan = 0;
+        double WRan=0;
+        double tempWRan, tempW1, tempW2, temp;
+        for (size_t nS1=0; nS1<tempMd.size(); nS1++)
+        {
+            tempWRan = 1e3;
+            for (size_t nS2=0; nS2<tempMd.size(); nS2++)
+            {
+            	temp = xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2];
+                if (temp < 1)
+                	a = std::abs(std::acos(temp));
+                else
+                	a = 0;
+
+                if ( (a<tempWRan) && (a > 0.00001) && (temp<1) )
+                {
+                    tempWRan = a;
+                    tempW2 = weightV[nS2];
+                    tempW1 = weightV[nS1];
+                    WRan = a*std::exp(std::abs(tempW1-tempW2))*std::exp(-(tempW1+tempW2));
+                    if (WRan == 0)
+                    	WRan = a;
+                }
+            }
+            sumWRan += WRan;
+        }
+
+        if (sumWRan == 0)
+        	sumWRan = 0.075*tempMd.size();
+
+        sum_u.at(n)=sumWRan;
+
+    }
+
+    size_t idx = 0;
+    while (idx < sum_u.size())
+    {
+        std::random_shuffle(sum_u.begin(), sum_u.end());
+
+        if(sum_u.at(0) != sum_u.at(1))
+        {
+            H0[idx] = sum_u.at(0)/(sum_u.at(0)+sum_u.at(1));
+            idx += 1;
+        }
+    }
+
+    delete xRanArray;
+    delete yRanArray;
+    delete zRanArray;
+
+}
+
 

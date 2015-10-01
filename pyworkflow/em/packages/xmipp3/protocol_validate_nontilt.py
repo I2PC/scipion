@@ -113,20 +113,19 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
             volNameFilt = (volDir + '_filt.vol')
           
             filterId=self._insertFunctionStep('filterVolumeStep',volName,volNameFilt,volDir,prerequisites=[convertId])
+            
+            pmStepId = self._insertFunctionStep('projectionLibraryStep', 
+                                                     volNameFilt, volDir,
+                                                     prerequisites=[filterId])
                                     
             if (self.alignmentMethod == self.SIGNIFICANT):            
                 sigStepId = self._insertFunctionStep('significantStep', 
                                                      volNameFilt, volDir,
                                                      commonParams, 
-                                                     prerequisites=[filterId])
+                                                     prerequisites=[pmStepId])
                 
             else:            
-
-                pmStepId = self._insertFunctionStep('projectionLibraryStep', 
-                                                     volNameFilt, volDir,
-                                                     prerequisites=[filterId])
-                
-                
+                              
                 sigStepId = self._insertFunctionStep('projectionMatchingStep', 
                                                      volNameFilt, volDir,
                                                      commonParams, 
@@ -215,10 +214,13 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
 
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get() 
-        makePath(volDir)  
+        makePath(volDir)
+        fnGallery= (volDir+'/gallery.stk')
+          
         params += '  --initvolumes %s' % volName  
         params += ' --odir %s' % volDir
         params += ' --iter %d' % 1
+        params += ' --initgallery %s' % fnGallery
         self.runJob('xmipp_reconstruct_significant', 
                     params, numberOfMpi=nproc,numberOfThreads=nT)
         
