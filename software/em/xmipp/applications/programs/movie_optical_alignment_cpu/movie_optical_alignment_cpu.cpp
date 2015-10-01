@@ -202,9 +202,8 @@ public:
     // Converts an OpenCV float matrix to an OpenCV Uint8 matrix
     void convert2Uint8(cv::Mat opencvDoubleMat, cv::Mat &opencvUintMat)
     {
-        cv::Point minLoc,maxLoc;
         double min,max;
-        cv::minMaxLoc(opencvDoubleMat, &min, &max, &minLoc, &maxLoc, cv::noArray());
+        cv::minMaxLoc(opencvDoubleMat, &min, &max);
         opencvDoubleMat.convertTo(opencvUintMat, CV_8U, 255.0/(max - min), -min * 255.0/(max - min));
     }
 
@@ -214,27 +213,51 @@ public:
 
         int N = (end-begin)+1;
         ImageGeneric movieStack;
-        MultidimArray<double> imgNormal, sumImg;
+        MultidimArray<double> imgNormal;
 
         movieStack.readMapped(movieFile,begin);
-        movieStack().getImage(imgNormal);
-        sumImg=imgNormal;
-
+        movieStack().getImage(avgImg);
         for (int i=begin;i<end;i++)
         {
             movieStack.readMapped(movieFile,i+1);
             movieStack().getImage(imgNormal);
-            sumImg += imgNormal;
+            avgImg+=imgNormal;
         }
-        avgImg = sumImg/double(N);
+        avgImg/=double(N);
+    }
+    void std_dev2(const cv::Mat planes[], const cv::Mat &flowx, const cv::Mat &flowy, Matrix1D<double> &meanStdDev)
+    {
+        double sumX=0, sumY=0 ;
+        double sqSumX=0, sqSumY=0;
+        double valSubtract;
+        int h=flowx.rows;
+        int w=flowx.cols;
+        int n=h*w;
+        for(int i=0;i<h;i++)
+            for(int j=0;j<w;j++)
+            {
+                valSubtract=planes[0].at<float>(i,j)-flowx.at<float>(i,j);
+                sumX+=valSubtract;
+                sqSumX+=valSubtract*valSubtract;
+                valSubtract=planes[1].at<float>(i,j)-flowy.at<float>(i,j);
+                sumY+=valSubtract;
+                sqSumY+=valSubtract*valSubtract;
+            }
+        meanStdDev(0)=sumX/double(n);
+        meanStdDev(1)=sqrt(sqSumX/double(n)-meanStdDev(0)*meanStdDev(0));
+        meanStdDev(2)=sumY/double(n);
+        meanStdDev(3)=sqrt(sqSumY/double(n)-meanStdDev(2)*meanStdDev(2));
+        //double mean = sum / n;
+        //double variance = sq_sum / n - mean * mean;
+        //return sqrt(variance);
     }
 
     int main2()
     {
-        // XMIPP structures are defined here
-        MultidimArray<double> preImg, avgCurr, avgStep;
-        MultidimArray<double> mappedImg, outputMovie;
 
+        MultidimArray<double> preImg, avgCurr, avgStep, mappedImg;
+        MultidimArray<double> outputMovie;
+        Matrix1D<double> meanStdev;
         ImageGeneric movieStack, movieStackNormalize;
         Image<double> II;
         MetaData MD; // To save plot information
@@ -251,7 +274,7 @@ public:
 #endif
 
         // Matrix required by Opencv
-        cv::Mat flowx, flowy, mapx, mapy, flow,dest;
+        cv::Mat flowx, flowy, mapx, mapy, flow, dest;
         cv::Mat flowxPre, flowyPre, flowxInBet, flowyInBet;// Using for computing the plot information
         cv::Mat avgcurr, avgstep, preimg, preimg8, avgcurr8;
         cv::Mat planes[]={flowx, flowy};
@@ -270,6 +293,7 @@ public:
         imagenum = aDim.ndim;
         h = aDim.ydim;
         w = aDim.xdim;
+        meanStdev.initZeros(4);
 
 
 #ifdef GPU
@@ -289,8 +313,6 @@ public:
         d_calc.flags=0;
 #endif
         // Initialize variables with zero
-        mapx=cv::Mat::zeros(h, w,CV_32FC1);
-        mapy=cv::Mat::zeros(h, w,CV_32FC1);
         // Initialize the stack for the output movie
         if (saveCorrMovie)
             outputMovie.initZeros(imagenum, 1, h, w);
@@ -300,9 +322,9 @@ public:
         lstFrame++; // Just to adapt to Li algorithm
         psdPieceSize = 400; // Currently we set it as a constant
         if (lstFrame>=imagenum || lstFrame==1)
-            lstFrame = imagenum;
-        imagenum -= (imagenum-lstFrame) + (fstFrame-1);
-        levelNum = sqrt(double(imagenum));
+            lstFrame=imagenum;
+        imagenum-=(imagenum-lstFrame) + (fstFrame-1);
+        levelNum=sqrt(double(imagenum));
         computeAvg(fname, fstFrame, lstFrame, avgCurr);
         // if the user want to save the PSD
         if (psd)
@@ -310,9 +332,9 @@ public:
             II() = avgCurr;
             II.write(foname);
             if (doAverage)
-                rawPSDFile = foname.removeLastExtension()+"_corrected";
+                rawPSDFile=foname.removeLastExtension()+"_corrected";
             else
-                rawPSDFile = foname.removeLastExtension()+"_raw";
+                rawPSDFile=foname.removeLastExtension()+"_raw";
             std::cerr<<"The file name is"<<rawPSDFile<<std::endl;
             String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
                                      foname.c_str(), rawPSDFile.c_str(), psdPieceSize);
@@ -325,13 +347,16 @@ public:
             else
                 foname.deleteFile();
         }
+        xmipp2Opencv(avgCurr, avgcurr);
+        avgCurr.clear();
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
 
         while (div!=1)
         {
             div = int(imagenum/cnt);
             // avgStep to hold the sum of aligned frames of each group at each step
-            avgStep.initZeros(h, w);
+            avgstep=cv::Mat::zeros(h, w,CV_32FC1);
+
             cout<<"Level "<<levelCounter<<"/"<<levelNum<<" of the pyramid is under processing"<<std::endl;
             // Compute time for each level
             tStart = clock();
@@ -356,23 +381,17 @@ public:
                     else
                         computeAvg(fname, i*div+fstFrame, (i+1)*div+fstFrame-1, preImg);
                 }
-
-                xmipp2Opencv(avgCurr, avgcurr);
                 xmipp2Opencv(preImg, preimg);
-
                 // Note: we should use the OpenCV conversion to use it in optical flow
                 convert2Uint8(avgcurr,avgcurr8);
                 convert2Uint8(preimg,preimg8);
-                avgcurr.release();
 #ifdef GPU
 
                 d_avgcurr.upload(avgcurr8);
                 d_preimg.upload(preimg8);
-
                 d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
                 d_flowx.download(flowx);
                 d_flowy.download(flowy);
-
                 d_avgcurr.release();
                 d_preimg.release();
                 d_flowx.release();
@@ -380,44 +399,29 @@ public:
 #else
 
                 calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, 0);
-                avgcurr8.release();
-                preimg8.release();
                 split(flow, planes);
-                flow.release();
-                flowx = planes[0];
-                flowy = planes[1];
 #endif
-
                 // Save the flows if we are in the last step
                 if (div==1)
                 {
                     if (i > 0)
                     {
-                        flowxInBet = flowx - flowxPre;
-                        flowyInBet = flowy - flowyPre;
-                        cv::meanStdDev(flowxInBet,meanx,stddevx);
-                        cv::meanStdDev(flowyInBet,meany,stddevy);
+                        std_dev2(planes,flowxPre,flowyPre,meanStdev);
                         size_t id=MD.addObject();
-                        MD.setValue(MDL_OPTICALFLOW_MEANX, double(meanx.val[0]), id);
-                        MD.setValue(MDL_OPTICALFLOW_MEANY, double(meany.val[0]), id);
-                        MD.setValue(MDL_OPTICALFLOW_STDX, double(stddevx.val[0]), id);
-                        MD.setValue(MDL_OPTICALFLOW_STDY, double(stddevy.val[0]), id);
+                        MD.setValue(MDL_OPTICALFLOW_MEANX, double(meanStdev(0)), id);
+                        MD.setValue(MDL_OPTICALFLOW_MEANY, double(meanStdev(2)), id);
+                        MD.setValue(MDL_OPTICALFLOW_STDX, double(meanStdev(1)), id);
+                        MD.setValue(MDL_OPTICALFLOW_STDY, double(meanStdev(3)), id);
                         MD.write(motionInfFile, MD_APPEND);
                     }
-                    flowxPre = flowx.clone();
-                    flowyPre = flowy.clone();
+                    flowxPre = planes[0].clone();
+                    flowyPre = planes[1].clone();
                 }
-
-                flowx.convertTo(mapx, CV_32FC1);
-                flowy.convertTo(mapy, CV_32FC1);
-                flowx.release();
-                flowy.release();
-                for( int row = 0; row < mapx.rows; row++ )
-                    for( int col = 0; col < mapx.cols; col++ )
+                for( int row = 0; row < planes[0].rows; row++ )
+                    for( int col = 0; col < planes[0].cols; col++ )
                     {
-                        mapx.at<float>(row,col) += (float)col;
-                        mapy.at<float>(row,col) += (float)row;
-
+                        planes[0].at<float>(row,col) += (float)col;
+                        planes[1].at<float>(row,col) += (float)row;
                     }
 #ifdef GPU
 
@@ -427,34 +431,26 @@ public:
                     d_preimg.upload(preimg);
                     remap(d_preimg,d_dest,d_mapx,d_mapy,cv::INTER_CUBIC);
                     d_dest.download(dest);
-
                     d_dest.release();
                     d_preimg.release();
                     d_mapx.release();
                     d_mapy.release();
                 }
 #else
-                cv::remap(preimg, dest, mapx, mapy, cv::INTER_CUBIC);
-                preimg.release();
-                mapx.release();
-                mapy.release();
+                cv::remap(preimg, dest, planes[0], planes[1], cv::INTER_CUBIC);
 #endif
 
                 if (div==1 && saveCorrMovie)
                     mappedImg.aliasImageInStack(outputMovie, i);
-
-                opencv2Xmipp(dest, mappedImg);
-                dest.release();
-                avgStep += mappedImg;
-                mappedImg.clear();
+                avgstep+=dest;
             }
-            avgCurr =  avgStep/cnt;
-
+            avgcurr=avgstep/cnt;
             cout<<"Processing level "<<levelCounter<<"/"<<levelNum<<" has been finished"<<std::endl;
             printf("Processing time: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
-            cnt = cnt * 2;
-            levelCounter ++;
+            cnt=cnt*2;
+            levelCounter++;
         }
+        opencv2Xmipp(avgcurr, avgCurr);
         II() = avgCurr;
         II.write(foname);
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
@@ -467,7 +463,7 @@ public:
         {
             Image<double> psdCorr, psdRaw;
             MultidimArray<double> psdCorrArr, psdRawArr;
-            correctedPSDFile = foname.removeLastExtension()+"_corrected";
+            correctedPSDFile=foname.removeLastExtension()+"_corrected";
             String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
                                      foname.c_str(), correctedPSDFile.c_str(), psdPieceSize);
             String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
@@ -483,7 +479,7 @@ public:
                     DIRECT_A2D_ELEM(psdCorrArr,i,j)=DIRECT_A2D_ELEM(psdRawArr,i,j);
             psdCorr()=psdCorrArr;
             psdCorr.write(correctedPSDFile+".psd");
-            FileName auxFile = rawPSDFile.addExtension("psd");
+            FileName auxFile=rawPSDFile.addExtension("psd");
             auxFile.deleteFile();
         }
         return 0;
