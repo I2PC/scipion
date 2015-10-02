@@ -559,18 +559,13 @@ Examples:
                 return []
     
     def _showExperimentalImages(self, paramName=None):
-        md = xmipp.MetaData()
+        views = []
         for ref3d in self._refsList:
             for it in self._iterations:
-
-                file_name = self.protocol._getFileName('docfileInputAnglesIters', iter=it)
-                file_name_ctf = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@" + file_name
-                if exists(file_name):
-                    md.read(file_name_ctf)
-                    return [self.createDataView(file_name_ctf)]
-                else:
-                    print "File %s does not exist" % file_name
-                    return []
+                fn = self.protocol._getIterParticles(it)
+                v = self.createScipionPartView(fn)
+                views.append(v)
+        return views
     
 #===============================================================================
 # Convergence
@@ -764,3 +759,21 @@ Examples:
                 value.append(val)
         f1.close()
         return value
+
+#===============================================================================
+# Utils Functions
+#===============================================================================
+    def createScipionPartView(self, filename, viewParams={}):
+        from pyworkflow.em import ObjectView
+        inputParticlesId = self.protocol.inputParticles.get().strId()
+        
+        labels =  'enabled id _size _filename _transform._matrix'
+        viewParams = {showj.ORDER:labels,
+                      showj.VISIBLE: labels, showj.RENDER:'_filename',
+                      'labels': 'id',
+                      }
+        
+        return ObjectView(self._project, 
+                          self.protocol.strId(), filename, other=inputParticlesId,
+#                           env=self._env,
+                          viewParams=viewParams)
