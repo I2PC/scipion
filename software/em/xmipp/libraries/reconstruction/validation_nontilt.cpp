@@ -97,6 +97,7 @@ void ProgValidationNonTilt::run()
 */
     double correction = 1;
     double validation = 0;
+    double num_images = 0;
 
 	MetaData tempMd;
 	std::vector<double> sum_u(nSamplesRandom);
@@ -167,14 +168,14 @@ void ProgValidationNonTilt::run()
 		mdPartial.write(fnOut);
 		std::vector<double> P;
 		mdPartial.getColumnValues(MDL_WEIGHT,P);
+
 		for (size_t idx=0; idx< P.size();idx++)
 		{
 			if (P[idx] > 1)
 				validation += 1.;
-
+			num_images++;
 		}
-
-		validation /= (md.size());
+		validation /= (num_images);
 	}
 
     row2.setValue(MDL_IMAGE,fnInit);
