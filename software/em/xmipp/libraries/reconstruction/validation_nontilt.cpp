@@ -173,7 +173,7 @@ void ProgValidationNonTilt::run()
 		{
 			if (P[idx] > 1)
 				validation += 1.;
-			num_images++;
+			num_images += 1.;
 		}
 		validation /= (num_images);
 	}
