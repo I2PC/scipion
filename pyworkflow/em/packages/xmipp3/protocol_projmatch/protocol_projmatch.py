@@ -374,8 +374,39 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     def getLastIter(self):
         return self._lastIter.get()
     
+    def _fillParticlesFromIter(self, partSet, iteration):
+        import pyworkflow.em.metadata as md
+        
+        imgSet = self.inputParticles.get()
+        imgFn = "all_exp_images@" + self._getFileName('docfileInputAnglesIters', iter=iteration, ref=1)
+        partSet.copyInfo(imgSet)
+        partSet.setAlignmentProj()
+        partSet.copyItems(imgSet,
+                            updateItemCallback=self._createItemMatrix,
+                            itemDataIterator=md.iterRows(imgFn))
+    
     def _createItemMatrix(self, item, row):
         from pyworkflow.em.packages.xmipp3.convert import createItemMatrix
         import pyworkflow.em as em
         
         createItemMatrix(item, row, align=em.ALIGN_PROJ)
+    
+    def _getIterParticles(self, it, clean=False):
+        import pyworkflow.em as em
+        """ Return a classes .sqlite file for this iteration.
+        If the file doesn't exists, it will be created by 
+        converting from this iteration data.star file.
+        """
+        dataParticles = self._getFileName('particlesScipion', iter=it)
+        
+        if clean:
+            cleanPath(dataParticles)
+            
+        if not exists(dataParticles):
+            partSet = em.SetOfParticles(filename=dataParticles)
+            self._fillParticlesFromIter(partSet, it)
+            partSet.write()
+            partSet.close()
+
+        return dataParticles
+

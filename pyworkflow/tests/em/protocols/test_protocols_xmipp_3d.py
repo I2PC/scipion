@@ -706,66 +706,47 @@ class TestXmippProjMatching(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
-        cls.allCrdsDir = cls.dataset.getFile('posAllDir')
-        cls.micsFn = cls.dataset.getFile('allMics')
-        cls.vol1 = cls.dataset.getFile('vol1')
+        cls.dataset = DataSet.getDataSet('relion_tutorial')
+        cls.vol = cls.dataset.getFile('volume')
 
     def testXmippProjMatching(self):
-        #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.micsFn, samplingRate=1.237, voltage=300)
-        self.launchProtocol(protImport)
-        self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
-#         self.validateFiles('protImport', protImport)
-
-        #Import a set of volumes
+        print "Import Particles"
+        protImportParts = self.newProtocol(ProtImportParticles,
+                                 objLabel='Particles from scipion',
+                                 importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                 sqliteFile=self.dataset.getFile('import/case2/particles.sqlite'),
+                                 magnification=50000,
+                                 samplingRate=7.08,
+                                 haveDataBeenPhaseFlipped=True
+                                 )
+        self.launchProtocol(protImportParts)
+        self.assertIsNotNone(protImportParts.getFiles(), "There was a problem with the import")
+        
+        print "Get a Subset of particles"
+        protSubset = self.newProtocol(ProtSubSet,
+                                         objLabel='100 Particles',
+                                         chooseAtRandom=True,
+                                         nElements=100)
+        protSubset.inputFullSet.set(protImportParts.outputParticles)
+        self.launchProtocol(protSubset)
+        
+        
         print "Import Volume"
-        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1, samplingRate=9.896)
+        protImportVol = self.newProtocol(ProtImportVolumes,
+                                         objLabel='Particles from scipion',
+                                         filesPath=self.vol,
+                                         samplingRate=7.08)
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
-#        self.validateFiles('protImportVol', protImportVol)
-
-        # Perform a downsampling on the micrographs
-        print "Downsampling..."
-        protDownsampling = self.newProtocol(XmippProtPreprocessMicrographs, doDownsample=True, downFactor=5, doCrop=False, runMode=1)
-        protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
-        self.launchProtocol(protDownsampling)
-        self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
-#         self.validateFiles('protDownsampling', protDownsampling)
-
-        # Now estimate CTF on the downsampled micrographs
-        print "Performing CTF..."
-        protCTF = self.newProtocol(XmippProtCTFMicrographs, numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)
-        protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)
-        self.launchProtocol(protCTF)
-        self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
-        # After CTF estimation, the output micrograph should have CTF info
-#         self.validateFiles('protCTF', protCTF)
-
-        print "Running import coordinates..."
-        protPP = self.newProtocol(ProtImportCoordinates,
-                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
-                                  filesPath=self.allCrdsDir,
-                                  filesPattern='*.pos', boxSize=110)
-
-        protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
-        self.launchProtocol(protPP)
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the import of coordinates")
-
-
-        print "Run extract particles with other downsampling factor"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, downsampleType=1, doFlip=True, downFactor=8, runMode=1, doInvert=True)
-        protExtract.inputCoordinates.set(protPP.outputCoordinates)
-        protExtract.ctfRelations.set(protCTF.outputCTF)
-        protExtract.inputMicrographs.set(protImport.outputMicrographs)
-        self.launchProtocol(protExtract)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-#         self.validateFiles('protExtract', protExtract)
-
+        
         print "Run Projection Matching"
-        protProjMatch = self.newProtocol(XmippProtProjMatch, ctfGroupMaxDiff=0.00001,
-                                         numberOfIterations=2, symmetry="i1")
-        protProjMatch.inputParticles.set(protExtract.outputParticles)
+        protProjMatch = self.newProtocol(XmippProtProjMatch,
+                                         ctfGroupMaxDiff=0.00001,
+                                         mpiJobSize=10,
+                                         numberOfIterations=2,
+                                         numberOfThreads=2,
+                                         numberOfMpi=3)
+        protProjMatch.inputParticles.set(protSubset.outputParticles)
         protProjMatch.input3DReferences.set(protImportVol.outputVolume)
         self.launchProtocol(protProjMatch)
         self.assertIsNotNone(protProjMatch.outputVolume, "There was a problem with Projection Matching")
