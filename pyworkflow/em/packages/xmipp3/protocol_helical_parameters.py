@@ -73,7 +73,7 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
     #--------------------------- STEPS functions --------------------------------------------
     def copyInput(self):
         if self.dihedral:
-            self.runJob("xmipp_transform_symmetrize","-i %s -o %s --sym dihedral" % (self.fnVol, self.fnVolSym))
+            self.runJob("xmipp_transform_symmetrize","-i %s -o %s --sym dihedral --dont_wrap" % (self.fnVol, self.fnVolSym))
         else:
             ImageHandler().convert(self.inputVolume.get(), self.fnVolSym)
                         
