@@ -215,7 +215,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get() 
         makePath(volDir)
-        fnGallery= (volDir+'/gallery.stk')
+        fnGallery= (volDir+'/gallery.doc')
           
         params += ' --initgallery  %s' % fnGallery
         params += ' --odir %s' % volDir
