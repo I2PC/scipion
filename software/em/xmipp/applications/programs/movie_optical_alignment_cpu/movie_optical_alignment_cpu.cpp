@@ -226,6 +226,8 @@ public:
             //avgimg+=imgNormal;
         }
         avgimg/=double(N);
+        imgNormal.clear();
+        movieStack.clear();
     }
     void std_dev2(const cv::Mat planes[], const cv::Mat &flowx, const cv::Mat &flowy, Matrix1D<double> &meanStdDev)
     {
@@ -297,7 +299,8 @@ public:
         w = aDim.xdim;
         meanStdev.initZeros(4);
         avgcurr=cv::Mat::zeros(h, w,CV_32FC1);
-
+        flowxPre=cv::Mat::zeros(h, w,CV_32FC1);
+		flowyPre=cv::Mat::zeros(h, w,CV_32FC1);
 #ifdef GPU
 
         // Object for optical flow
@@ -462,6 +465,7 @@ public:
             II()=outputMovie;
             II.write(foname.replaceExtension("mrcs"));
         }
+
         if (psd)
         {
             Image<double> psdCorr, psdRaw;
@@ -485,6 +489,21 @@ public:
             FileName auxFile=rawPSDFile.addExtension("psd");
             auxFile.deleteFile();
         }
+
+        // Release the memory
+        avgstep.release();
+        preimg.release();
+        avgcurr8.release();
+        preimg8.release();
+        flow.release();
+        planes[0].release();
+        planes[1].release();
+        flowxPre.release();
+        flowyPre.release();
+        movieStack.clear();
+        preImg.clear();
+        avgCurr.clear();
+        II.clear();
         return 0;
     }
 };
