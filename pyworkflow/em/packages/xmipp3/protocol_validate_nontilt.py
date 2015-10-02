@@ -217,7 +217,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         makePath(volDir)
         fnGallery= (volDir+'/gallery.stk')
           
-        params += '  --initvolumes %s' % volName  
+        params += ' --initgallery  %s' % fnGallery
         params += ' --odir %s' % volDir
         params += ' --iter %d' % 1
         self.runJob('xmipp_reconstruct_significant', 
