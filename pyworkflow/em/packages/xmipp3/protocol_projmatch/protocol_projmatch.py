@@ -397,6 +397,7 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         If the file doesn't exists, it will be created by 
         converting from this iteration data.star file.
         """
+        
         dataParticles = self._getFileName('particlesScipion', iter=it)
         
         if clean:
@@ -407,6 +408,11 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             self._fillParticlesFromIter(partSet, it)
             partSet.write()
             partSet.close()
+        else:
+            partSet = em.SetOfParticles(filename=dataParticles)
+            imgSet = self.inputParticles.get()
+            partSet.copyInfo(imgSet)
+            partSet.setAlignmentProj()
 
-        return dataParticles
+        return partSet
 
