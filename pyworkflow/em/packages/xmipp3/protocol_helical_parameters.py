@@ -23,6 +23,7 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
+import pyworkflow
 """
 This sub-package contains protocols for performing subtomogram averaging.
 """
@@ -32,6 +33,7 @@ from pyworkflow.em import *
 from xmipp import MetaData, MDL_ANGLE_ROT, MDL_SHIFT_Z
 from xmipp3 import HelicalFinder
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
 
 class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
@@ -47,6 +49,8 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
         form.addParam('cylinderRadius',IntParam,label='Cylinder radius', default=-1,
                       help="The helix is supposed to occupy this radius in voxels around the Z axis. Leave it as -1 for symmetrizing the whole volume")
         form.addParam('dihedral',BooleanParam,default=False,label='Apply dihedral symmetry')
+        form.addParam('forceDihedralX',BooleanParam,default=False,expertLevel=LEVEL_ADVANCED, label='Force the dihedral axis to be in X',
+                      help="If this option is chosen, then the dihedral axis is not searched and it is assumed that it is around X.")
 
         form.addSection(label='Search limits')
         form.addParam('rot0',FloatParam,default=0,label='Minimum rotational angle',help="In degrees")
@@ -73,7 +77,12 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
     #--------------------------- STEPS functions --------------------------------------------
     def copyInput(self):
         if self.dihedral:
-            self.runJob("xmipp_transform_symmetrize","-i %s -o %s --sym dihedral" % (self.fnVol, self.fnVolSym))
+            if not self.forceDihedralX:
+                self.runJob("xmipp_transform_symmetrize","-i %s -o %s --sym dihedral --dont_wrap" % (self.fnVol, self.fnVolSym))
+            else:
+                self.runJob("xmipp_transform_geometry","-i %s -o %s --rotate_volume axis 180 1 0 0" % (self.fnVol, self.fnVolSym))
+                self.runJob("xmipp_image_operate","-i %s --plus %s -o %s" % (self.fnVol, self.fnVolSym, self.fnVolSym))
+                self.runJob("xmipp_image_operate","-i %s --mult 0.5" % self.fnVolSym)
         else:
             ImageHandler().convert(self.inputVolume.get(), self.fnVolSym)
                         
