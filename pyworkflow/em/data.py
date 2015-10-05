@@ -1600,6 +1600,7 @@ class SetOfMovies(SetOfMicrographsBase):
     def __init__(self, **kwargs):
         SetOfMicrographsBase.__init__(self, **kwargs)
         self._gainFile = String()
+        self._darkFile = String()
         self._firstFrameNum = Integer(0)
         
     def setGain(self, gain):
@@ -1607,6 +1608,12 @@ class SetOfMovies(SetOfMicrographsBase):
         
     def getGain(self):
         return self._gainFile.get()
+
+    def setDark(self, dark):
+        self._darkFile.set(dark)
+        
+    def getDark(self):
+        return self._darkFile.get()
 
     def __str__(self):
         """ String representation of a set of movies. """
