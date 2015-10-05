@@ -562,8 +562,8 @@ Examples:
         views = []
         for ref3d in self._refsList:
             for it in self._iterations:
-                fn = self.protocol._getIterParticles(it)
-                v = self.createScipionPartView(fn)
+                partSet = self.protocol._getIterParticles(it)
+                v = self.createScipionPartView(partSet)
                 views.append(v)
         return views
     
@@ -763,9 +763,10 @@ Examples:
 #===============================================================================
 # Utils Functions
 #===============================================================================
-    def createScipionPartView(self, filename, viewParams={}):
+    def createScipionPartView(self, partSet, viewParams={}):
         from pyworkflow.em import ObjectView
         inputParticlesId = self.protocol.inputParticles.get().strId()
+        filename = partSet.getFileName()
         
         labels =  'enabled id _size _filename _transform._matrix'
         viewParams = {showj.ORDER:labels,
