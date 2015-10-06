@@ -934,7 +934,7 @@ class SetOfParticles(SetOfImages):
         from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
-        self.setHasCTF(other.hasCTF())    
+        self.setHasCTF(other.hasCTF())
 
 
 class SetOfAverages(SetOfParticles):

@@ -94,10 +94,12 @@ class ProtCTFAssign(ProtCTFMicrographs):
         
         missingSet = set() # Report missing micrographs only once
         
+        firstCoord = inputSet.getFirstItem().getCoordinate()
+        hasMicName = firstCoord.getMicName() is not None
+        
         for particle in inputSet:
             coord = particle.getCoordinate()
-            mic = coord.getMicrograph()
-            micKey = mic.getMicName()
+            micKey = coord.getMicName() if hasMicName else coord.getObjId()
             
             if micKey not in missingSet:
                 ctf = ctfDict.get(micKey, None)
