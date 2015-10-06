@@ -149,8 +149,8 @@ def insertMaskReferenceStep(self, iterN, refN, **kwargs):
         if self.getEnumText('maskType') == 'circular':
             args += ' --mask circular -%(maskRadius)s'
         else:
-            maskFn = self.maskFile.get()
-            args += ' --mask binary_file -%(maskFn)s'
+            maskFn = self.maskFile.get().getFileName()
+            args += ' --mask binary_file %(maskFn)s'
         
         # Here is used _insertFunctionStep instead of _insertRunJobStep cause xmipp_transform_mask is not implemented with mpi
         self._insertFunctionStep('transformMaskStep', args % locals(), **kwargs)
