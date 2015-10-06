@@ -555,7 +555,7 @@ def movieCreatePlot(plotType, movie, saveFig):
     for objId in md:
         meanX.append(md.getValue(xmipp.MDL_OPTICALFLOW_MEANX, objId))
         meanY.append(md.getValue(xmipp.MDL_OPTICALFLOW_MEANY, objId))
-        stdX.append(md.getValue(xmipp.MDL_OPTICALFLOW_STDY, objId))
+        stdX.append(md.getValue(xmipp.MDL_OPTICALFLOW_STDX, objId))
         stdY.append(md.getValue(xmipp.MDL_OPTICALFLOW_STDY, objId))
         colors.append((1, gr / 255.0, 0))
         ax.plot(colorBarX, colorBarY, c=(1, gr / 255.0, 0), linewidth=10)
@@ -566,7 +566,9 @@ def movieCreatePlot(plotType, movie, saveFig):
     # Plot in polar if needed
     if polarPosition:
         r = np.sqrt(np.power(np.asarray(meanX), 2) + np.power(np.asarray(meanY), 2))
-        theta = np.arctan2(meanY, meanX) * 180 / np.pi
+        #theta = np.arctan2(meanY, meanX) * 180 / np.pi
+        theta = np.arctan2(meanY, meanX)
+        theta[theta < 0] += 2*np.pi
         ax = figure.add_subplot(polarPosition, projection='polar')
         ax.set_title('Polar representation')
         c = ax.scatter(theta, r, c=colors, s=area, cmap=plt.cm.hsv)
