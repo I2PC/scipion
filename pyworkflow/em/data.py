@@ -1543,7 +1543,7 @@ class Movie(Micrograph):
         self._alignment = None
 
     def isCompressed(self):
-        return self.getFileName().endswith('bz2') 
+        return self.getFileName().endswith('bz2') or self.getFileName().endswith('tbz')
         
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
