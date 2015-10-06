@@ -220,4 +220,5 @@ class ProtImportMovies(ProtImportMicBase):
     def setSamplingRate(self, movieSet):
         ProtImportMicBase.setSamplingRate(self, movieSet)
         movieSet.setGain(self.gainFile.get())
+        movieSet.setDark(self.darkFile.get())
                     

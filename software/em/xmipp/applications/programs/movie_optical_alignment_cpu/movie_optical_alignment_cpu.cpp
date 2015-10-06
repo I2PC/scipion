@@ -48,11 +48,12 @@ class ProgOpticalAligment: public XmippProgram
 {
 
 public:
-    FileName fname, foname;
-
+    FileName fname, foname, gianRefFilename, darkRefFilename;
+    MultidimArray<double> gainImage, darkImage;
     int winSize, gpuDevice, fstFrame, lstFrame;
     int psdPieceSize;
     bool doAverage, psd, saveCorrMovie;
+    bool gainImageCorr, darkImageCorr;
 
     void defineParams()
     {
@@ -65,6 +66,8 @@ public:
         addParamsLine("     [--simpleAverage]: if we want to just compute the simple average");
         addParamsLine("     [--psd]             : save raw PSD and corrected PSD");
         addParamsLine("     [--ssc]             : save corrected stack");
+        addParamsLine("     [--gain <gainReference>]             : gain reference");
+        addParamsLine("     [--dark <darkReference>]             : dark reference");
 #ifdef GPU
 
         addParamsLine("     [--gpu <int=0>]         : GPU device to be used");
@@ -75,6 +78,14 @@ public:
     {
         fname     = getParam("-i");
         foname    = getParam("-o");
+        if ((gainImageCorr = checkParam("--gain")))
+        {
+            gianRefFilename = getParam("--gain");
+        }
+        if ((darkImageCorr = checkParam("--dark")))
+        {
+            darkRefFilename = getParam("--dark");
+        }
         fstFrame  = getIntParam("--nst");
         lstFrame  = getIntParam("--ned");
         winSize   = getIntParam("--winSize");
@@ -216,14 +227,21 @@ public:
 
         movieStack.readMapped(movieFile,begin);
         movieStack().getImage(imgNormal);
+        if (darkImageCorr)
+            imgNormal-=darkImage;
+        if (gainImageCorr)
+            imgNormal/=gainImage;
         xmipp2Opencv(imgNormal, avgimg);
         for (int i=begin;i<end;i++)
         {
             movieStack.readMapped(movieFile,i+1);
             movieStack().getImage(imgNormal);
+            if (darkImageCorr)
+                imgNormal-=darkImage;
+            if (gainImageCorr)
+                imgNormal/=gainImage;
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imgNormal)
             avgimg.at<float>(i,j)+=DIRECT_A2D_ELEM(imgNormal,i,j);
-            //avgimg+=imgNormal;
         }
         avgimg/=double(N);
         imgNormal.clear();
@@ -251,9 +269,6 @@ public:
         meanStdDev(1)=sqrt(sqSumX/double(n)-meanStdDev(0)*meanStdDev(0));
         meanStdDev(2)=sumY/double(n);
         meanStdDev(3)=sqrt(sqSumY/double(n)-meanStdDev(2)*meanStdDev(2));
-        //double mean = sum / n;
-        //double variance = sq_sum / n - mean * mean;
-        //return sqrt(variance);
     }
 
     int main2()
@@ -297,10 +312,20 @@ public:
         imagenum = aDim.ndim;
         h = aDim.ydim;
         w = aDim.xdim;
+        if (darkImageCorr)
+        {
+            II.read(darkRefFilename);
+            darkImage=II();
+        }
+        if (gainImageCorr)
+        {
+            II.read(gianRefFilename);
+            gainImage=II();
+        }
         meanStdev.initZeros(4);
         avgcurr=cv::Mat::zeros(h, w,CV_32FC1);
         flowxPre=cv::Mat::zeros(h, w,CV_32FC1);
-		flowyPre=cv::Mat::zeros(h, w,CV_32FC1);
+        flowyPre=cv::Mat::zeros(h, w,CV_32FC1);
 #ifdef GPU
 
         // Object for optical flow
@@ -334,7 +359,7 @@ public:
         // if the user want to save the PSD
         if (psd)
         {
-        	opencv2Xmipp(avgcurr, avgCurr);
+            opencv2Xmipp(avgcurr, avgCurr);
             II() = avgCurr;
             II.write(foname);
             if (doAverage)
@@ -378,6 +403,10 @@ public:
                 {
                     movieStack.readMapped(fname,i+1);
                     movieStack().getImage(preImg);
+                    if (darkImageCorr)
+                        preImg-=darkImage;
+                    if (gainImageCorr)
+                        preImg/=gainImage;
                     xmipp2Opencv(preImg, preimg);
                 }
                 else
@@ -447,7 +476,10 @@ public:
 #endif
 
                 if (div==1 && saveCorrMovie)
+                {
                     mappedImg.aliasImageInStack(outputMovie, i);
+                    opencv2Xmipp(dest, mappedImg);
+                }
                 avgstep+=dest;
             }
             avgcurr=avgstep/cnt;

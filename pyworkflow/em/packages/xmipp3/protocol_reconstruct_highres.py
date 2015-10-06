@@ -49,10 +49,6 @@ from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAM
 from xmipp3 import HelicalFinder
 import pyworkflow.em.metadata as metadata
 
-"""
-Falta: Threads in continuous2
-"""
-
 class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     """Reconstruct a volume at high resolution"""
     _label = 'highres'
