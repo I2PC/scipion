@@ -476,7 +476,10 @@ public:
 #endif
 
                 if (div==1 && saveCorrMovie)
+                {
+                	opencv2Xmipp(dest, mappedImg);
                     mappedImg.aliasImageInStack(outputMovie, i);
+                }
                 avgstep+=dest;
             }
             avgcurr=avgstep/cnt;
