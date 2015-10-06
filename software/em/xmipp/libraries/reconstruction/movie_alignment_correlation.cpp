@@ -33,6 +33,8 @@ void ProgMovieAlignmentCorrelation::readParams()
 {
     fnMovie = getParam("-i");
     fnOut = getParam("-o");
+    fnDark = getParam("--dark");
+    fnGain = getParam("--gain");
     maxShift = getDoubleParam("--max_shift");
     Ts = getDoubleParam("--sampling");
     maxFreq = getDoubleParam("--max_freq");
@@ -56,6 +58,8 @@ void ProgMovieAlignmentCorrelation::show()
     std::cout
     << "Input movie:         " << fnMovie            << std::endl
     << "Output metadata:     " << fnOut              << std::endl
+    << "Dark image:          " << fnDark             << std::endl
+    << "Gain image:          " << fnGain             << std::endl
     << "Max. Shift:          " << maxShift           << std::endl
     << "Max. Scale:          " << maxFreq            << std::endl
     << "Sampling:            " << Ts                 << std::endl
@@ -84,6 +88,8 @@ void ProgMovieAlignmentCorrelation::defineParams()
     addParamsLine("  [--frameRange <n0=-1> <nF=-1>]  : First and last frame to process, frame numbers start at 0");
     addParamsLine("  [--cropULCorner <x=0> <y=0>]    : crop up left corner (unit=px, index starts at 0)");
     addParamsLine("  [--cropDRCorner <x=-1> <y=-1>]    : crop down right corner (unit=px, index starts at 0), -1 -> no crop");
+    addParamsLine("  [--dark <fn=\"\">]           : Dark correction image");
+    addParamsLine("  [--gain <fn=\"\">]           : Gain correction image");
     addExampleLine("A typical example",false);
     addExampleLine("xmipp_movie_alignment_correlation -i movie.xmd --oaligned alignedMovie.stk --oavg alignedMicrograph.mrc");
     addSeeAlsoLine("xmipp_movie_optical_alignment_cpu");
@@ -177,11 +183,25 @@ void ProgMovieAlignmentCorrelation::run()
         init_progress_bar(movie.size());
     }
     FileName fnFrame;
-    Image<double> frame, cropedFrame,reducedFrame;
+    Image<double> frame, cropedFrame, reducedFrame, dark, gain;
     int n=0;
     FourierTransformer transformer;
     Matrix1D<double> w(2);
     std::complex<double> zero=0;
+
+    if (fnDark!="")
+    {
+    	dark.read(fnDark);
+        if (yDRcorner!=-1)
+            dark().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+    }
+    if (fnGain!="")
+    {
+    	gain.read(fnGain);
+        if (yDRcorner!=-1)
+            gain().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+        gain()=1.0/gain();
+    }
     FOR_ALL_OBJECTS_IN_METADATA(movie)
     {
 
@@ -195,6 +215,10 @@ void ProgMovieAlignmentCorrelation::run()
                 frame.read(fnFrame);
                 frame().window(cropedFrame(), yLTcorner, xLTcorner, yDRcorner, xDRcorner);
             }
+            if (XSIZE(dark())>0)
+            	cropedFrame()-=dark();
+            if (XSIZE(gain())>0)
+            	cropedFrame()*=gain();
 
             // Reduce the size of the input frame
             //scaleToSizeFourier(1,newYdim,newXdim,frame(),reducedFrame());
@@ -356,6 +380,10 @@ void ProgMovieAlignmentCorrelation::run()
                 frame.read(fnFrame);
                 frame().window(cropedFrame(), yLTcorner, xLTcorner, yDRcorner, xDRcorner);
             }
+            if (XSIZE(dark())>0)
+            	cropedFrame()-=dark();
+            if (XSIZE(gain())>0)
+            	cropedFrame()*=gain();
 
             double totalShiftX, totalShiftY;
             computeTotalShift(bestIref, j, shiftX, shiftY,XX(shift), YY(shift));
