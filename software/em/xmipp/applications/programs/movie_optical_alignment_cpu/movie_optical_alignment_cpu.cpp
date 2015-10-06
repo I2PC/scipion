@@ -477,8 +477,8 @@ public:
 
                 if (div==1 && saveCorrMovie)
                 {
-                	opencv2Xmipp(dest, mappedImg);
                     mappedImg.aliasImageInStack(outputMovie, i);
+                    opencv2Xmipp(dest, mappedImg);
                 }
                 avgstep+=dest;
             }
