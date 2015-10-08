@@ -149,6 +149,10 @@ private:
     */
     bool renameColumn(const std::vector<MDLabel> oldLabel, const std::vector<MDLabel> newlabel);
 
+    /** Insert a new register inserting input columns.
+     */
+    bool setObjectValues(const std::vector<MDObject*> & columnValues);
+
     /**Set the value of an object in an specified column.
      */
     bool setObjectValue(const int objId, const MDObject &value);

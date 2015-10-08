@@ -403,6 +403,7 @@ public:
      */
     void writeText(const FileName fn,  const std::vector<MDLabel>* desiredLabels) const;
 
+    void _parseObjects(std::istream &is, std::vector<MDObject*> & columnValues);
 
     /* Helper function to parse an MDObject and set its value.
      * The parsing will be from an input stream(istream)
@@ -977,6 +978,7 @@ public:
               bool asc=true,
               int limit=-1,
               int offset=0);
+
 
     /*
     * Sort a Metadata by a label.

@@ -266,6 +266,55 @@ size_t MDSql::size(void)
     return execSingleIntStmt(ss);
 }
 
+bool MDSql::setObjectValues(const std::vector<MDObject*> & columnValues)
+{
+    bool r = true;				// Return value.
+    std::stringstream ss;		// Stream.
+    int i=0;					// Loop index.
+    sqlite3_stmt * stmt;		// SQL statement.
+
+    // Initialize SQL sentence.
+    ss << "INSERT INTO " << tableName(tableId);
+
+    ss << " (" << MDL::label2StrSql(columnValues[0]->label);
+    // Add columns.
+    for (i=1; i<columnValues.size() ;i++)
+    {
+    	ss << "," << MDL::label2StrSql(columnValues[i]->label);
+    }
+    ss << ")";
+
+    ss << " VALUES (?";
+    // Add ? symbols.
+    for (i=1; i<columnValues.size() ;i++)
+    {
+    	ss << ",?";
+    }
+    ss << ");";
+
+    // Prepare statement.
+    rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
+
+    // Add values.
+    bindValue(stmt, 1, *(columnValues[0]));
+    for (i=1; i<columnValues.size() ;i++)
+    {
+    	bindValue(stmt, i+1, *(columnValues[i]));
+    }
+
+    // Execute statement.
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
+    {
+        std::cerr << "MDSql::setObjectValue(MDObject): " << std::endl
+        << "   " << ss.str() << std::endl
+        <<"    code: " << rc << " error: " << sqlite3_errmsg(db) << std::endl;
+        r = false;
+    }
+    sqlite3_finalize(stmt);
+    return r;
+}
+
 //set column with a given value
 bool MDSql::setObjectValue(const MDObject &value)
 {
