@@ -83,6 +83,7 @@ enum MDLabel
     MDL_CLASSIFICATION_FRC_05, ///< Digital frequency at which the FRC drops below 0.5 (double)
     MDL_COMMENT, ///< Serve to make annotations on the metadata row
     MDL_COST, ///< Cost for the image (double)
+    MDL_COST_PERCENTILE, ///< Cost percentile for the image (double)
     MDL_COUNT, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
     MDL_COUNT2, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
 
@@ -237,6 +238,7 @@ enum MDLabel
     MDL_MAPTOPOLOGY, ///< Map topology (KerDenSOM, ...)
     MDL_MASK, ///< Name of a mask associated to image
     MDL_MAXCC, ///< Maximum cross-correlation for the image (double)
+    MDL_MAXCC_PERCENTILE, ///< Percentile of the maximum cross-correlation for the image (double)
     MDL_MAX, ///< Maximum value (double)
     MDL_MICROGRAPH, ///< Name of a micrograph (std::string)
     MDL_MICROGRAPH_ID, ///< Micrograph unique id for reference (MDL_ITEM_ID should be used for Micrographs list)
@@ -1320,6 +1322,7 @@ private:
         MDL::addLabel(MDL_COLOR, LABEL_INT, "color");
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
+        MDL::addLabel(MDL_COST_PERCENTILE, LABEL_DOUBLE, "costPerc");
         MDL::addLabel(MDL_COUNT2, LABEL_SIZET, "count2");
         MDL::addLabel(MDL_COUNT, LABEL_SIZET, "count");
 
@@ -1554,6 +1557,7 @@ private:
         MDL::addLabel(MDL_MAPTOPOLOGY, LABEL_STRING, "mapTopology");
         MDL::addLabel(MDL_MASK, LABEL_STRING, "mask", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
+        MDL::addLabel(MDL_MAXCC_PERCENTILE, LABEL_DOUBLE, "maxCCPerc");
         MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
         MDL::addLabel(MDL_MICROGRAPH_ID, LABEL_SIZET, "micrographId");
         MDL::addLabel(MDL_MICROGRAPH, LABEL_STRING, "micrograph", TAGLABEL_MICROGRAPH);
