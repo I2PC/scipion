@@ -147,7 +147,13 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
     else if (helical)
         symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical);
     else if (helicalDihedral)
+    {
         symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical,NULL,true);
+        MultidimArray<double> Vrotated;
+        rotate(BSPLINE3,Vrotated,V_out,180.0,'X',WRAP);
+        V_out+=Vrotated;
+        V_out*=0.5;
+    }
     else if (dihedral)
     {
     	int zmax=(int)(0.1*ZSIZE(V_in));
