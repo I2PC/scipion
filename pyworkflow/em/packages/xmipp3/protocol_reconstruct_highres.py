@@ -812,47 +812,46 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def qualifyParticles(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
         fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
+        fnAngles=join(fnDirCurrent,"angles.xmd")
         fnAnglesQualified=join(fnDirCurrent,"angles_qualified.xmd")
-        for i in range(1,3):
-            fnAngles=join(fnDirCurrent,"angles%02d.xmd"%i)
-            
-            # Qualify according to CC and COST by defocus groups
-            row=getFirstRow(fnAngles)
-            if row.containsLabel(MDL_CTF_MODEL) or row.containsLabel(MDL_CTF_DEFOCUSU):
-                previousResolution=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
-                TsCurrent=self.readInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE)
-                self.runJob("xmipp_ctf_group","--ctfdat %s -o %s/ctf:stk --pad 2.0 --sampling_rate %f --phase_flipped  --error 0.1 --resol %f"%\
-                            (fnAngles,fnDirCurrent,TsCurrent,previousResolution),numberOfMpi=1)
-                moveFile("%s/ctf_images.sel"%fnDirCurrent,"%s/ctf_groups.xmd"%fnDirCurrent)
-                cleanPath("%s/ctf_split.doc"%fnDirCurrent)
-                cleanPath("%s/ctf_ctf.stk"%fnDirCurrent)
-                cleanPath("%s/ctfinfo.xmd"%fnDirCurrent)
-                md = MetaData("numberGroups@%s"%join(fnDirCurrent,"ctfInfo.xmd"))
-                numberGroups=md.getValue(MDL_COUNT,md.firstObject())
-                ctfPresent=True
-            else:
-                numberGroups=1
-                ctfPresent=False
+        
+        # Qualify according to CC and COST by defocus groups
+        row=getFirstRow(fnAngles)
+        if row.containsLabel(MDL_CTF_MODEL) or row.containsLabel(MDL_CTF_DEFOCUSU):
+            previousResolution=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
+            TsCurrent=self.readInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE)
+            self.runJob("xmipp_ctf_group","--ctfdat %s -o %s/ctf:stk --pad 2.0 --sampling_rate %f --phase_flipped  --error 0.1 --resol %f"%\
+                        (fnAngles,fnDirCurrent,TsCurrent,previousResolution),numberOfMpi=1)
+            moveFile("%s/ctf_images.sel"%fnDirCurrent,"%s/ctf_groups.xmd"%fnDirCurrent)
+            cleanPath("%s/ctf_split.doc"%fnDirCurrent)
+            cleanPath("%s/ctf_ctf.stk"%fnDirCurrent)
+            cleanPath("%s/ctfinfo.xmd"%fnDirCurrent)
+            md = MetaData("numberGroups@%s"%join(fnDirCurrent,"ctfInfo.xmd"))
+            numberGroups=md.getValue(MDL_COUNT,md.firstObject())
+            ctfPresent=True
+        else:
+            numberGroups=1
+            ctfPresent=False
 
-            for j in range(1,numberGroups+1):
-                fnAnglesGroup=join(fnDirCurrent,"angles_group%03d.xmd"%j)
-                if ctfPresent:
-                    fnGroup="ctfGroup%06d@%s/ctf_groups.xmd"%(j,fnDirCurrent)
-                else:
-                    fnGroup=fnAngles
-                if row.containsLabel(MDL_MAXCC):
-                    self.runJob("xmipp_metadata_utilities","-i %s --operate percentile maxCC maxCCPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)
-                    fnGroup=fnAnglesGroup    
-                if row.containsLabel(MDL_COST):
-                    self.runJob("xmipp_metadata_utilities","-i %s --operate percentile cost costPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)          
-                if not exists(fnAnglesQualified):
-                    copyFile(fnAnglesGroup, fnAnglesQualified)
-                else:
-                    self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAnglesQualified,fnAnglesGroup),numberOfMpi=1)
-                cleanPath(fnAnglesGroup)
+        for j in range(1,numberGroups+1):
+            fnAnglesGroup=join(fnDirCurrent,"angles_group%03d.xmd"%j)
             if ctfPresent:
-                cleanPath("%s/ctf_groups.xmd"%fnDirCurrent)
-        moveFile(fnAnglesQualified, join(fnDirCurrent,"angles.xmd"))
+                fnGroup="ctfGroup%06d@%s/ctf_groups.xmd"%(j,fnDirCurrent)
+            else:
+                fnGroup=fnAngles
+            if row.containsLabel(MDL_MAXCC):
+                self.runJob("xmipp_metadata_utilities","-i %s --operate percentile maxCC maxCCPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)
+                fnGroup=fnAnglesGroup    
+            if row.containsLabel(MDL_COST):
+                self.runJob("xmipp_metadata_utilities","-i %s --operate percentile cost costPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)          
+            if not exists(fnAnglesQualified):
+                copyFile(fnAnglesGroup, fnAnglesQualified)
+            else:
+                self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAnglesQualified,fnAnglesGroup),numberOfMpi=1)
+            cleanPath(fnAnglesGroup)
+        if ctfPresent:
+            cleanPath("%s/ctf_groups.xmd"%fnDirCurrent)
+        moveFile(fnAnglesQualified, fnAngles)
 
     def reconstruct(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
