@@ -87,13 +87,13 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
             ImageHandler().convert(self.inputVolume.get(), self.fnVolSym)
                         
     def coarseSearch(self):
-        self.runCoarseSearch(self.fnVol,self.dihedral.get(),float(self.z0.get()),float(self.zF.get()),float(self.zStep.get()),
+        self.runCoarseSearch(self.fnVolSym,self.dihedral.get(),float(self.z0.get()),float(self.zF.get()),float(self.zStep.get()),
                              float(self.rot0.get()),float(self.rotF.get()),float(self.rotStep.get()),
                              self.numberOfThreads.get(),self._getExtraPath('coarseParams.xmd'),
                              int(self.cylinderRadius.get()),int(self.height))
 
     def fineSearch(self):
-        self.runFineSearch(self.fnVol, self.dihedral.get(), self._getExtraPath('coarseParams.xmd'), self._getExtraPath('fineParams.xmd'), 
+        self.runFineSearch(self.fnVolSym, self.dihedral.get(), self._getExtraPath('coarseParams.xmd'), self._getExtraPath('fineParams.xmd'), 
                            float(self.z0.get()),float(self.zF.get()),float(self.rot0.get()),float(self.rotF.get()),
                              int(self.cylinderRadius.get()),int(self.height))
 
