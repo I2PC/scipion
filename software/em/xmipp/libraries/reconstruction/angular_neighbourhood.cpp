@@ -32,8 +32,8 @@
 // Read arguments ==========================================================
 void ProgAngularNeighbourhood::readParams()
 {
-    fn_sel = getParam("-i1");
-    fn_ref = getParam("-i2");
+    fn_sel = getParam("--i1");
+    fn_ref = getParam("--i2");
     fn_out = getParam("-o");
     maxdist = getDoubleParam("--dist");
     fn_sym = getParam("--sym");
@@ -61,8 +61,8 @@ void ProgAngularNeighbourhood::defineParams()
 {
     addUsageLine("Computes the images in Metadata1 that are within the neighbourhood of");
     addUsageLine("images in Metadata2. ");
-    addParamsLine("   -i1 <metadata>          : Metadata1 with images and their angles");
-    addParamsLine("   -i2 <metadata>          : Metadata2 with images and their angles");
+    addParamsLine("   --i1 <metadata>         : Metadata1 with images and their angles");
+    addParamsLine("   --i2 <metadata>         : Metadata2 with images and their angles");
     addParamsLine("   -o <metadata>           : Output metadata ");
     addParamsLine("                           :+For each image in Metadata2, there is a block ");
     addParamsLine("                           :+in the output metadata corresponding to all ");
