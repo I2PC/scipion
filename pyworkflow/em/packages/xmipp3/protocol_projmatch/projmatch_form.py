@@ -122,7 +122,7 @@ def _defineProjectionMatchingParams(self, form):
     
     # doMask, doSphericalMask now merged into maskType
     
-    groupMask.addParam('maskType', EnumParam, choices=['None', 'circular', 'binary file'], default=xmipp3.MASK2D_CIRCULAR, 
+    groupMask.addParam('maskType', EnumParam, choices=['None', 'circular', 'mask object'], default=xmipp3.MASK2D_CIRCULAR, 
                  label="Mask reference volumes", display=EnumParam.DISPLAY_COMBO,
                  help='Masking the reference volume will increase the signal to noise ratio. \n '
                       'Do not provide a very tight mask. \n ')
@@ -131,7 +131,7 @@ def _defineProjectionMatchingParams(self, form):
                  label='Radius of spherical mask (px)',
                  help='This is the radius (in pixels) of the spherical mask ')       
     
-    groupMask.addParam('maskFile', PointerParam,PointerClass="VolumeMask", allowNull=True, 
+    groupMask.addParam('inputMask', PointerParam, pointerClass="VolumeMask", allowNull=True, 
                  label='Binary mask file', condition='maskType == 2',
                  help='The mask file should have the same dimensions as your input particles. \n '
                       'The protein region should be 1 and the solvent should be 0.')  
