@@ -567,6 +567,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 ResolutionAlignment+=self.nextResolutionOffset.get()
             newXdim=self.readInfoField(fnGlobal,"size",MDL_XSIZE)
             angleStep=self.calculateAngStep(newXdim, TsCurrent, ResolutionAlignment)
+            angleStep=max(angleStep,3.0)
             self.writeInfoField(fnGlobal,"angleStep",MDL_ANGLE_DIFF,float(angleStep))
             
             # Global alignment
