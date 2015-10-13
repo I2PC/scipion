@@ -80,7 +80,7 @@ void ProgAngularNeighbourhood::run()
     show();
     fn_out.deleteFile();
     MetaData SF_out;
-    FileName fn2, fn1;
+    FileName fn2, fn1, fnAux;
 
     std::cerr << "Calculating ...\n";
     FOR_ALL_OBJECTS_IN_METADATA(DF2)
@@ -101,13 +101,17 @@ void ProgAngularNeighbourhood::run()
                                              true, check_mirrors, false);
             if (dist <= maxdist)
             {
-                DF1.getValue(MDL_IMAGE,fn1,__iter.objId);
-                SF_out.setValue(MDL_IMAGE, fn1, SF_out.addObject());
+            	MDRow row;
+            	DF1.getRow(row,__iter.objId);
+                SF_out.addRow(row);
             }
         }
 
         // finished reading all particles for this neighbourhood
-        SF_out.write((String)"neighbourhoodOf_"+fn2+"@"+fn_out,MD_APPEND);
+        fnAux=fn2.replaceCharacter('/','_');
+        fnAux=fnAux.replaceCharacter('@','_');
+        fnAux=fnAux.replaceCharacter('.','_');
+        SF_out.write((String)"neighbourhoodOf_"+fnAux.c_str()+"@"+fn_out,MD_APPEND);
         SF_out.clear();
     }
 }
