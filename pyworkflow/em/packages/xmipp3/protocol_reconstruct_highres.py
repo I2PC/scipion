@@ -587,6 +587,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 else:
                     numberGroups=1
                     ctfPresent=False
+                    fnCTFs=""
 
                 # Generate projections
                 fnReferenceVol=join(fnGlobal,"volumeRef%02d.vol"%i)
@@ -614,8 +615,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         if R<=0:
                             R=self.inputParticles.get().getDimensions()[0]/2
                         R=R*self.TsOrig/TsCurrent
-                        args='-i %s -o %s --ref %s --ctf %d@%s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --append --pad 2.0'%\
-                             (fnGroup,join(fnDirSignificant,"angles_group%03d.xmd"%j),fnGalleryGroup,j,fnCTFs,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get())
+                        args='-i %s -o %s --ref %s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --append --pad 2.0'%\
+                             (fnGroup,join(fnDirSignificant,"angles_group%03d.xmd"%j),fnGalleryGroup,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get())
+                        if ctfPresent:
+                            args+=" --ctf %d@%s"%(j,fnCTFs)
                         if self.numberOfMpi>1:
                             args+=" --mpi_job_size 2"
                         self.runJob('xmipp_angular_projection_matching',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
