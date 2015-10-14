@@ -247,8 +247,8 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 		{
 			if (DIRECT_MULTIDIM_ELEM(mMask2D,n))
 			{
-				DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=a*DIRECT_MULTIDIM_ELEM(mIfilteredp,n)+b;
-				double val=DIRECT_MULTIDIM_ELEM(mP,n)-DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
+				DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
+				double val=(a*DIRECT_MULTIDIM_ELEM(mP,n)+b)-DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
 				DIRECT_MULTIDIM_ELEM(mE,n)=val;
 				cost+=fabs(val);
 			}
@@ -465,12 +465,12 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			}
 			applyGeometry(BSPLINE3,Ip(),I(),A,IS_NOT_INV,DONT_WRAP);
 			MultidimArray<double> &mIp=Ip();
-			double a=p(0);
+			double ia=1.0/p(0);
 			double b=p(1);
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mIp)
 			{
 				if (DIRECT_MULTIDIM_ELEM(mask2D,n))
-					DIRECT_MULTIDIM_ELEM(mIp,n)=a*DIRECT_MULTIDIM_ELEM(mIp,n)+b;
+					DIRECT_MULTIDIM_ELEM(mIp,n)=ia*(DIRECT_MULTIDIM_ELEM(mIp,n)-b);
 				else
 					DIRECT_MULTIDIM_ELEM(mIp,n)=0.0;
 			}

@@ -857,6 +857,39 @@ void MetaData::_readColumns(std::istream& is, std::vector<MDObject*> & columnVal
         }
 }
 
+
+void MetaData::_parseObjects(std::istream &is, std::vector<MDObject*> & columnValues)
+{
+	size_t i=0;				// Loop counter.
+	std::stringstream ss;	// String that contains SQL sentence.
+
+	// Columns loop.
+	for (i=0; i<columnValues.size() ;i++)
+	{
+		columnValues[i]->fromStream(is);
+	    if (is.fail())
+	    {
+	       String errorMsg = formatString("MetaData: Error parsing column '%s' value.", MDL::label2Str(columnValues[i]->label).c_str());
+	       columnValues[i]->failed = true;
+	       std::cerr << "WARNING: " << errorMsg << std::endl;
+	       //REPORT_ERROR(ERR_MD_BADLABEL, (String)"read: Error parsing data column, expecting " + MDL::label2Str(object.label));
+	    }
+	    else
+	    {
+	    	// Check if current column label exists.
+	        if (columnValues[i]->label != MDL_UNDEFINED)
+	        {
+	            // Add label if not exists.
+	            addLabel(columnValues[i]->label);
+	        }
+	    }
+	}
+
+	// Insert elements in DB.
+	myMDSql->setObjectValues( columnValues);
+}
+
+
 /* Helper function to parse an MDObject and set its value.
  * The parsing will be from an input stream(istream)
  * and if parsing fails, an error will be raised
@@ -1021,10 +1054,8 @@ void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValu
             // anyway the number of lines will be counted in _parsedLines
             if (_maxRows == 0 || _parsedLines < _maxRows)
             {
-                std::stringstream ss(line);
-                id = addObject();
-                for (size_t i = 0; i < nCol; ++i)
-                    _parseObject(ss, *(columnValues[i]), id);
+            	std::stringstream ss(line);
+            	_parseObjects(ss, columnValues);
             }
             _parsedLines++;
         }
@@ -1816,7 +1847,9 @@ void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit,
         }
     }
     else
+    {
         sort(MDin, MDL::str2Label(sortLabel),asc, limit, offset);
+    }
 }
 
 void MetaData::split(size_t n, std::vector<MetaData> &results, const MDLabel sortLabel)
