@@ -266,40 +266,92 @@ size_t MDSql::size(void)
     return execSingleIntStmt(ss);
 }
 
-bool MDSql::setObjectValues(const std::vector<MDObject*> & columnValues)
+bool MDSql::setObjectValues(const std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels, bool firstTime)
 {
-    bool r = true;				// Return value.
-    std::stringstream ss;		// Stream.
-    int i=0;					// Loop index.
-    sqlite3_stmt * stmt;		// SQL statement.
+    bool r = true;					// Return value.
+    static std::stringstream ss;	// Stream.
+    int i=0, j=0;					// Loop indexes.
+    static sqlite3_stmt * stmt;		// SQL statement.
 
-    // Initialize SQL sentence.
-    ss << "INSERT INTO " << tableName(tableId);
-
-    ss << " (" << MDL::label2StrSql(columnValues[0]->label);
-    // Add columns.
-    for (i=1; i<columnValues.size() ;i++)
+    if (firstTime)
     {
-    	ss << "," << MDL::label2StrSql(columnValues[i]->label);
-    }
-    ss << ")";
+    	// Clear ss.
+    	ss.str(std::string());
 
-    ss << " VALUES (?";
-    // Add ? symbols.
-    for (i=1; i<columnValues.size() ;i++)
-    {
-    	ss << ",?";
+		// Initialize SQL sentence.
+		ss << "INSERT INTO " << tableName(tableId);
+
+		// Add columns.
+	    ss << " (";
+
+	    // If desired labels is null then add all columns.
+	    if (desiredLabels==NULL)
+	    {
+	    	ss << MDL::label2StrSql(columnValues[0]->label);
+			for (i=1; i<columnValues.size() ;i++)
+			{
+				ss << "," << MDL::label2StrSql(columnValues[i]->label);
+			}
+	    }
+	    // Add only desired columns.
+	    else
+	    {
+	    	ss << MDL::label2StrSql((*desiredLabels)[0]);
+			for (i=1; i<desiredLabels->size() ;i++)
+			{
+				ss << "," << MDL::label2StrSql((*desiredLabels)[i]);
+			}
+	    }
+	    ss << ")";
+
+	    // Add ? symbols.
+	    ss << " VALUES (?";
+
+	    // If desired labels is null then add all columns.
+	    if (desiredLabels==NULL)
+	    {
+			for (i=1; i<columnValues.size() ;i++)
+			{
+				ss << ",?";
+			}
+	    }
+	    // Add only desired columns.
+	    else
+	    {
+			for (i=1; i<desiredLabels->size() ;i++)
+			{
+				ss << ",?";
+			}
+	    }
+	    ss << ");";
     }
-    ss << ");";
 
     // Prepare statement.
-    rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
+    rc = sqlite3_prepare_v2(db, ss.str().c_str(), ss.str().length(), &stmt, &zLeftover);
 
     // Add values.
-    bindValue(stmt, 1, *(columnValues[0]));
-    for (i=1; i<columnValues.size() ;i++)
+    if (desiredLabels==NULL)
     {
-    	bindValue(stmt, i+1, *(columnValues[i]));
+        bindValue(stmt, 1, *(columnValues[0]));
+        for (i=1; i<columnValues.size() ;i++)
+        {
+        	bindValue(stmt, i+1, *(columnValues[i]));
+        }
+    }
+    // Add only desired columns.
+    else
+    {
+		for (i=0; i<desiredLabels->size() ;i++)
+		{
+			for (j=0; j<columnValues.size() ;j++)
+			{
+				if (columnValues[j]->label == (*desiredLabels)[i])
+				{
+					bindValue(stmt, i+1, *(columnValues[j]));
+					break;
+				}
+			}
+		}
     }
 
     // Execute statement.

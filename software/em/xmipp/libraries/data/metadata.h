@@ -284,7 +284,7 @@ protected:
      * @param pEnd  pointer to the position of the next '_data' in memory
      * @param maxRows if this number if greater than 0, only this number of rows will be parsed.
      */
-    void _readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValues);
+    void _readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels);
     void _readRowFormat(std::istream& is);
 
     /** This two variables will be used to read the metadata infomation (labels and size)
@@ -403,7 +403,7 @@ public:
      */
     void writeText(const FileName fn,  const std::vector<MDLabel>* desiredLabels) const;
 
-    void _parseObjects(std::istream &is, std::vector<MDObject*> & columnValues);
+    void _parseObjects(std::istream &is, std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels, bool firstTime);
 
     /* Helper function to parse an MDObject and set its value.
      * The parsing will be from an input stream(istream)
