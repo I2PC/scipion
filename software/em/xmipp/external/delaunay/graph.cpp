@@ -480,7 +480,7 @@ int resize_Graph(struct Graph_T *graph)
 
 	// Check if memory correctly allocated.
 	if ((graph->nodes == NULL) ||
-		(graph->face_Node_Assign))
+		(graph->face_Node_Assign == NULL))
 	{
 		// Reset pointers.
 		graph->nodes = nodes_Ref;

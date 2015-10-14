@@ -976,15 +976,16 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 							// Get closest point between the three points of the triangle.
 							for (j=0; j<N_POINTS ;j++)
 							{
-								printf("Point %d is (%lf,%lf)\n", delaunay->graph.nodes[child_Index].points_Index[j],
-										delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.x,
-										delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.y);
+								//printf("Point %d is (%lf,%lf)\n", delaunay->graph.nodes[child_Index].points_Index[j],
+								//		delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.x,
+								//		delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.y);
 								if (equal_Point( p, &delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex))
 								{
 									(*lowest_Distance) = 0.0;
 									q->x = delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.x;
 									q->y = delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.y;
 									found = TRUE;
+								//	printf("Found point (%lf,%lf) equal to (%lf,%lf)\n", q->x, q->y, p->x, p->y);
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 									printf("Index point %d. Distance %lf\n", delaunay->graph.nodes[child_Index].points_Index[i], (*lowest_Distance));
 #endif
@@ -1000,7 +1001,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 
 						if (!found)
 						{
-							exit(0);
+							//exit(0);
 							printf( "ERROR: No nodes surround new point.\n");
 							print_Point( p);
 #ifdef LOGGING

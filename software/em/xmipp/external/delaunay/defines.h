@@ -37,7 +37,7 @@
 #define FILENAME_MAX			200
 #endif
 
-#define TYPE		double
+#define TYPE		float
 
 // Point coordinate type.
 #define POINT_T		TYPE
