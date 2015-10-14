@@ -1065,7 +1065,7 @@ public:
     String toString(bool withFormat = false, bool isSql=false) const;
     bool fromStream(std::istream &is, bool fromString=false);
     friend std::istream& operator>> (std::istream& is, MDObject &value);
-    friend std::ostream& operator<< (std::ostream& is, MDObject &value);
+    friend std::ostream& operator<< (std::ostream& is, const MDObject &value);
     bool fromString(const String &str);
     bool fromChar(const char * str);
 
