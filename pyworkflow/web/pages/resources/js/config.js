@@ -1,4 +1,4 @@
-function getSubDomainURL(){return ""}
+function getSubDomainURL(){return "/m"}
 
 function getAbsoluteURL(url){
 	var domain = getSubDomainURL()
