@@ -277,11 +277,23 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			if (ci.allowRender && ci.render != value) {
 				ci.render = value;
 				changed = true;
+				if(data.ciFirstRender == null && value)
+					data.ciFirstRender = ci;
 			}
-		if (changed) {
-			data.renderImages = value;
-			calculateCellSize();
-			fireTableDataChanged();
+		try
+		{
+			if (changed) {
+				data.renderImages = value;
+				loadDimension();
+				calculateCellSize();
+				fireTableDataChanged();
+			}
+			
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -292,11 +304,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	protected void calculateCellSize() {
-		// DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
+		//System.out.println(String.format("MetadataTable:calculateSize renderLabel %s hasRenderLabel %s", data.renderImages, data.hasRenderLabel()));
 		if (data.renderImages && data.hasRenderLabel()) {
 			super.calculateCellSize();
-			// DEBUG.printMessage(String.format("MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
-			// cellDim.height));
+			//System.out.println(String.format("MetadataTable:calculateSize w:%d, h:%d", cellDim.width, cellDim.height));
 
 		} else {
 			int font_height;
@@ -368,7 +379,6 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		@Override
 		public void adjustColumnsWidth(JTable table) {
 			try {
-				
 				if (visibleLabels.size() != getColumnCount())
 					return;
 				
@@ -393,7 +403,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 					} else if (non_empty) {
 						// else {
 						
-						rend = tc.getCellRenderer();
+						rend = table.getCellRenderer(0, i);
 						if(rend != null)
 						{
 							Object value = getValueAt(0, i);
