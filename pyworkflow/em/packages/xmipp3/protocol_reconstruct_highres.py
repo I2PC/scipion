@@ -498,10 +498,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             if TsPrevious!=TsCurrent:
                 self.runJob("xmipp_image_resize","-i %s -o %s --dim %d"%(fnPreviousVol,fnReferenceVol,newXdim),numberOfMpi=1)
             else:
-                if self.nextLowPass or self.nextSpherical or self.nextPositivity or fnMask!='':
-                    copyFile(fnPreviousVol, fnReferenceVol)
-                else:
-                    createLink(fnPreviousVol, fnReferenceVol)
+                copyFile(fnPreviousVol, fnReferenceVol)
             self.runJob('xmipp_transform_filter','-i %s --fourier fsc %s --sampling %f'%(fnReferenceVol,join(fnDirPrevious,"fsc.xmd"),TsCurrent),numberOfMpi=1)
             if self.nextLowPass:
                 self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%\
