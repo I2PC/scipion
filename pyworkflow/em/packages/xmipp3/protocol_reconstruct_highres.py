@@ -33,7 +33,7 @@ from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, Bo
 from pyworkflow.utils.path import cleanPath, makePath, copyFile, moveFile, createLink
 from pyworkflow.em.protocol import ProtRefine3D
 from pyworkflow.em.data import SetOfVolumes, Volume
-from pyworkflow.em.metadata.utils import getFirstRow
+from pyworkflow.em.metadata.utils import getFirstRow, getSize
 from convert import writeSetOfParticles
 from os.path import join, exists
 from pyworkflow.em.packages.xmipp3.convert import readSetOfParticles, setXmippAttributes
@@ -412,7 +412,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self.runJob('xmipp_metadata_utilities',"-i %s --set natural_join %s"%(fnImagesRejected,fnImages),numberOfMpi=1)
             cleanPath(fnUsedId)
     
-            from pyworkflow.em.metadata.utils import getSize
             Nimages=getSize(fnImages)
             Nrepeated=getSize(join(fnDirCurrent,"angles.xmd"))
             Nunique=getSize(fnUsed)
@@ -610,6 +609,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         else:
                             fnGroup=fnImgs
                             fnGalleryGroupMd=fnGalleryMd
+                        if getSize(fnGroup)==0: # If the group is empty
+                            continue
                         maxShift=round(self.angularMaxShift.get()*newXdim/100)
                         R=self.particleRadius.get()
                         if R<=0:
