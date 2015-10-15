@@ -857,6 +857,66 @@ void MetaData::_readColumns(std::istream& is, std::vector<MDObject*> & columnVal
         }
 }
 
+
+void MetaData::_parseObjects(std::istream &is, std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels, bool firstTime)
+{
+	size_t i=0;				// Loop counter.
+	std::stringstream ss;	// String that contains SQL sentence.
+	size_t size=0;			// Column values vector size.
+
+	// Columns loop.
+	size = columnValues.size();
+	for (i=0; i<size ;i++)
+	{
+		columnValues[i]->fromStream(is);
+		if (is.fail())
+		{
+		   String errorMsg = formatString("MetaData: Error parsing column '%s' value.", MDL::label2Str(columnValues[i]->label).c_str());
+		   columnValues[i]->failed = true;
+		   std::cerr << "WARNING: " << errorMsg << std::endl;
+		   //REPORT_ERROR(ERR_MD_BADLABEL, (String)"read: Error parsing data column, expecting " + MDL::label2Str(object.label));
+		}
+		else
+		{
+			if (firstTime)
+			{
+				// Check if current column label exists.
+				if (columnValues[i]->label != MDL_UNDEFINED)
+				{
+					// If there are no desired labels then add all.
+		        	bool reallyAdd=false;
+		        	if (desiredLabels==NULL)
+		        	{
+		        		reallyAdd=true;
+		        	}
+		        	else
+		        	{
+		        		// Check if current column belongs to desired labels.
+		        		for (size_t j=0; j<desiredLabels->size(); ++j)
+		        		{
+		        			if ((*desiredLabels)[j]==columnValues[i]->label)
+		        			{
+		        				reallyAdd=true;
+		        				break;
+		        			}
+		        		}
+		        	}
+
+		        	// Add label if not exists.
+		        	if (reallyAdd)
+		        	{
+		        		addLabel(columnValues[i]->label);
+		        	}
+				}
+			}
+		}
+	}
+
+	// Insert elements in DB.
+	myMDSql->setObjectValues( columnValues, desiredLabels, firstTime);
+}
+
+
 /* Helper function to parse an MDObject and set its value.
  * The parsing will be from an input stream(istream)
  * and if parsing fails, an error will be raised
@@ -993,12 +1053,14 @@ void MetaData::_readRows(std::istream& is, std::vector<MDObject*> & columnValues
 
 /* This function will be used to parse the rows data in START format
  */
-void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValues)
+void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels)
 {
     String line;
     std::stringstream ss;
     size_t nCol = columnValues.size();
     size_t id, n = block.end - block.loop;
+    bool	firstTime=true;
+
     if (n==0)
         return;
 
@@ -1021,10 +1083,9 @@ void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValu
             // anyway the number of lines will be counted in _parsedLines
             if (_maxRows == 0 || _parsedLines < _maxRows)
             {
-                std::stringstream ss(line);
-                id = addObject();
-                for (size_t i = 0; i < nCol; ++i)
-                    _parseObject(ss, *(columnValues[i]), id);
+            	std::stringstream ss(line);
+            	_parseObjects( ss, columnValues, desiredLabels, firstTime);
+            	firstTime=false;
             }
             _parsedLines++;
         }
@@ -1312,7 +1373,7 @@ void MetaData::readStar(const FileName &filename,
                     // If block is empty, makes block.loop and block.end equal
                     if(block.loop == (block.end + 1))
                         block.loop--;
-                    _readRowsStar(block, columnValues);
+                    _readRowsStar(block, columnValues, desiredLabels);
                 }
                 else
                 {
@@ -1816,7 +1877,9 @@ void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit,
         }
     }
     else
+    {
         sort(MDin, MDL::str2Label(sortLabel),asc, limit, offset);
+    }
 }
 
 void MetaData::split(size_t n, std::vector<MetaData> &results, const MDLabel sortLabel)

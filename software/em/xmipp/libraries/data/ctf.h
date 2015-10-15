@@ -79,6 +79,7 @@ public:
     double u_sqrt;
     double u;
     double u2;
+    double u3;
     double u4;
     double ang;
     double deltaf;
@@ -316,6 +317,10 @@ public:
     double cV2;
     /// Second Gaussian angle
     double gaussian_angle2;
+    // Background polynomial
+    double bgR1, bgR2, bgR3;
+    // Envelope polynomial
+    double envR0, envR1, envR2;
 
     /** Empty constructor. */
     CTFDescription()
@@ -387,6 +392,7 @@ public:
         precomputed.ang=atan2(Y, X);
         precomputed.u2 = X * X + Y * Y;
         precomputed.u = sqrt(precomputed.u2);
+        precomputed.u3 = precomputed.u2 * precomputed.u;
         precomputed.u4 = precomputed.u2 * precomputed.u2;
         precomputed.u_sqrt = sqrt(precomputed.u);
         if (fabs(X) < XMIPP_EQUAL_ACCURACY &&
@@ -466,7 +472,7 @@ public:
         double EdeltaR = SINC(precomputed.u * DeltaR); // OK
         double aux=K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u;
         double Ealpha = exp(-K6 * aux * aux);
-        double E = Eespr * EdeltaF * EdeltaR * Ealpha;
+        double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
         if (show)
         {
             std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
@@ -503,7 +509,7 @@ public:
         double aux=(K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u);
         double Ealpha = exp(-K6 * aux * aux); // OK
         // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
-        double E = Eespr * EdeltaF * EdeltaR * Ealpha;
+        double E = Eespr * EdeltaF * EdeltaR * Ealpha + envR0+envR1*precomputed.u+envR2*precomputed.u2;
         if (show)
         {
             std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
@@ -538,7 +544,7 @@ public:
         double aux=(K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u);
         double Ealpha = exp(-K6 * aux * aux); // OK
         // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
-        double E = Eespr * EdeltaF * EdeltaR * Ealpha;
+        double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
         return -(Ksin*sine_part - Kcos*cosine_part)*E;
     }
 
@@ -559,7 +565,7 @@ public:
         double EdeltaR = sinc(u * DeltaR); // OK
         double Ealpha = exp(-K6 * (K7 * u2 * u + deltaf * u) * (K7 * u2 * u + deltaf * u)); // OK
         // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
-        double E = Eespr * EdeltaF * EdeltaR * Ealpha;
+        double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
         if (show)
         {
             std::cout << " Deltaf=" << deltaf << std::endl;
@@ -638,7 +644,8 @@ public:
         return base_line +
                gaussian_K*exp(-sigma*aux*aux) +
                sqrt_K*exp(-sq*precomputed.u_sqrt) -
-               gaussian_K2*exp(-sigma2*aux2*aux2);
+               gaussian_K2*exp(-sigma2*aux2*aux2)+
+			   bgR1*precomputed.u+bgR2*precomputed.u2+bgR3*precomputed.u3;
     }
 
     /** Returns the continuous frequency of the zero, maximum or minimum number n in the direction u.

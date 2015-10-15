@@ -127,7 +127,8 @@ def createFilenameTemplates(self):
             # ADDED FOR SCIPION
             'inputParticlesXmd': self._getPath('input_particles.xmd'),
             'inputParticlesDoc': self._getExtraPath(self.docFileWithOriginalAngles),
-            'sqliteClasses' : self._getPath('classes_scipion.sqlite')
+            'sqliteClasses' : self._getPath('classes_scipion.sqlite'), 
+            'particlesScipion' : self._getPath('particles_iter_%(iter)03d.sqlite')
             }
     myDict.update(self._params)
     self._updateFilenamesDict(myDict)

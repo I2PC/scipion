@@ -74,7 +74,7 @@ class XmippReconstructHighResViewer(Viewer):
             obj = prot.outputParticles
             fn = obj.getFileName()
             labels = 'id enabled _filename _xmipp_zScore _xmipp_cumulativeSSNR '
-            labels += '_ctfModel._defocusU _ctfModel._defocusV _xmipp_shiftX _xmipp_shiftY _xmipp_continuousX _xmipp_continuousY _xmipp_scale _xmipp_maxCC _xmipp_weight'
+            labels += '_ctfModel._defocusU _ctfModel._defocusV _xmipp_shiftX _xmipp_shiftY _xmipp_tilt _xmipp_continuousX _xmipp_continuousY _xmipp_scale _xmipp_maxCC _xmipp_weight'
             labels += " _xmipp_cost _xmipp_weightContinuous2 _xmipp_angleDiff _xmipp_weightJumper _xmipp_weightSSNR"
             views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={showj.ORDER: labels, 

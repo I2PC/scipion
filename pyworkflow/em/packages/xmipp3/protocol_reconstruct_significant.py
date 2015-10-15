@@ -191,7 +191,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         self.runJob("xmipp_reconstruct_fourier", reconsArgs)
         t.toc('Reconstruct fourier took: ')
         
-        xdim = self.inputSet.get().getDim()[0]
+        xdim = self.inputSet.get().getDimensions()[0]
         maskArgs = "-i %s --mask circular %d -v 0" % (volFn, -xdim/2)
         self.runJob('xmipp_transform_mask', maskArgs, numberOfMpi=1)
         

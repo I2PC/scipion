@@ -756,6 +756,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         rowToFunc: this function will be used to convert the row to Object
     """
     imgMd = xmipp.MetaData(filename)
+
     # By default remove disabled items from metadata
     # be careful if you need to preserve the original number of items
     if kwargs.get('removeDisabled', True):
@@ -773,13 +774,14 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         else:
             kwargs['alignType'] = ALIGN_NONE
     
-    for objId in imgMd:
-        imgRow = rowFromMd(imgMd, objId)
-        img = rowToFunc(imgRow, **kwargs)
-        imgSet.append(img)
-        
-    imgSet.setHasCTF(img.hasCTF())
-    imgSet.setAlignment(kwargs['alignType'])
+    if imgMd.size()>0:
+        for objId in imgMd:
+            imgRow = rowFromMd(imgMd, objId)
+            img = rowToFunc(imgRow, **kwargs)
+            imgSet.append(img)
+            
+        imgSet.setHasCTF(img.hasCTF())
+        imgSet.setAlignment(kwargs['alignType'])
         
 
 def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):

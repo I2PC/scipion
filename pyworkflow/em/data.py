@@ -818,7 +818,7 @@ class SetOfImages(EMSet):
         return x, y, z
     
     def getXDim(self):
-        return self.getDim()[0]
+        return self.getDim()[0] if self.getDim() is not None else 0
     
     def isOddX(self):
         """ Return True if the first item x dimension is odd. """
@@ -951,7 +951,7 @@ class SetOfParticles(SetOfImages):
         from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
-        self.setHasCTF(other.hasCTF())    
+        self.setHasCTF(other.hasCTF())
 
 
 class SetOfAverages(SetOfParticles):
@@ -1543,7 +1543,7 @@ class Movie(Micrograph):
         self._alignment = None
 
     def isCompressed(self):
-        return self.getFileName().endswith('bz2') 
+        return self.getFileName().endswith('bz2') or self.getFileName().endswith('tbz')
         
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
@@ -1600,6 +1600,7 @@ class SetOfMovies(SetOfMicrographsBase):
     def __init__(self, **kwargs):
         SetOfMicrographsBase.__init__(self, **kwargs)
         self._gainFile = String()
+        self._darkFile = String()
         self._firstFrameNum = Integer(0)
         
     def setGain(self, gain):
@@ -1607,6 +1608,12 @@ class SetOfMovies(SetOfMicrographsBase):
         
     def getGain(self):
         return self._gainFile.get()
+
+    def setDark(self, dark):
+        self._darkFile.set(dark)
+        
+    def getDark(self):
+        return self._darkFile.get()
 
     def __str__(self):
         """ String representation of a set of movies. """

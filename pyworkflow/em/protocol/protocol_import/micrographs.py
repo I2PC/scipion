@@ -213,8 +213,12 @@ class ProtImportMovies(ProtImportMicBase):
                       label='Gain image', 
                       help='A gain reference related to a set of movies'
                            ' for gain correction')
+        form.addParam('darkFile', FileParam,  
+                      label='Dark image', 
+                      help='A dark image related to a set of movies')
         
     def setSamplingRate(self, movieSet):
         ProtImportMicBase.setSamplingRate(self, movieSet)
         movieSet.setGain(self.gainFile.get())
+        movieSet.setDark(self.darkFile.get())
                     

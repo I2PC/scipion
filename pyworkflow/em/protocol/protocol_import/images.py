@@ -156,7 +156,7 @@ class ProtImportImages(ProtImportFiles):
         for imgFn, _ in self.iterFiles():
             # try to read the header of the imported images
             # except for the special case of compressed movies (bz2 extension)
-            if not (imgFn.endswith('bz2') or ih.isImageFile(imgFn)): 
+            if not (imgFn.endswith('bz2') or imgFn.endswith('tbz') or ih.isImageFile(imgFn)): 
                 if not errors: # if empty add the first line
                     errors.append("Error reading the following images:")
                 errors.append('  %s' % imgFn)
