@@ -60,7 +60,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		this.params = params;
 		XmippApplication.addInstance(true);
 		initComponents();
-		
+		XmippWindowUtil.setScipionImageIcon(this);
 	}
         
     protected void initComponents()
@@ -100,6 +100,8 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	public void loadData()
 	{
 		getCanvas().loadData(this);
+		if(params != null)//otherwise is picker window
+			menu.applyFilters();
 	}
 
 	@Override

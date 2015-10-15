@@ -305,7 +305,6 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
             window = self.server.window
             msg = self.request.recv(1024)
             tokens = shlex.split(msg)
-            #print msg
             if msg.startswith('run protocol'):
                 protocolName = tokens[2]
                 from pyworkflow.em import getProtocols

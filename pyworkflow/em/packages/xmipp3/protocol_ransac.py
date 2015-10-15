@@ -189,7 +189,7 @@ class XmippProtRansac(ProtInitialVolume):
 
         # Generate projection gallery from the initial volume
         if self.initialVolume.hasValue():
-            lastId = self._insertFunctionStep("projectInitialVolume",self)
+            lastId = self._insertFunctionStep("projectInitialVolume")
             
         return lastId
 
@@ -246,8 +246,6 @@ class XmippProtRansac(ProtInitialVolume):
         cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
         cleanPath(fnVol)
         cleanPath(self._getTmpPath(fnBase+'.xmd'))
-        if self.initialVolume.hasValue():
-            cleanPattern(self._getTmpPath("gallery_InitialVolume*"))
     
     def reconstructStep(self, fnRoot):
         from pyworkflow.em.metadata.utils import getSize

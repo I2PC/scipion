@@ -7,9 +7,15 @@ package xmipp.viewer.scipion;
 
 import ij.IJ;
 import ij.ImagePlus;
+
 import java.io.File;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import xmipp.ij.commons.ImagePlusFromFile;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.CTFDescription;
@@ -25,9 +32,6 @@ import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
-import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippMessage;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -48,6 +52,7 @@ public class ScipionMetaData extends MetaData {
     protected Boolean checkTmp;
     protected HashMap<String, String> properties;
     protected HashMap <Long, EMObject> idsmap;
+    protected String self;
     
 
     public ScipionMetaData(String dbfile) {
@@ -147,13 +152,17 @@ public class ScipionMetaData extends MetaData {
             rs = stmt.executeQuery(query);
             while (rs.next()) {
                 name = rs.getString("label_property");
-                if(name.equals("self"))
-                	continue;
                 alias = rs.getString("column_name");
                 clsname = rs.getString("class_name");
+                if(name.equals("self"))
+                {
+                	self = clsname;
+                	continue;
+                }
                 
                 type = getTypeMapping(clsname);
-
+                if(type == -1)
+                	continue;//complex object is empty, unless is matrix
                 labelscount++;
                 allowRender = isImage(name);
                 ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
@@ -586,8 +595,10 @@ public class ScipionMetaData extends MetaData {
         }
         if(type.equals("Boolean"))
             return MetaData.LABEL_INT;
-
-        return MetaData.LABEL_STRING;
+        
+        if(type.equals("String") || type.equals("Matrix"))
+        	return MetaData.LABEL_STRING;
+        return -1;
     }
 
     public String getPreffix() {
@@ -887,7 +898,7 @@ public class ScipionMetaData extends MetaData {
     	String setType = getSetType();
     	if(setType == null)
     		return false;
-        return setType.equals("SetOfClasses2D") || setType.equals("SetOfClasses3D");
+        return setType.startsWith("SetOfClasses");
     }
     
     
@@ -1133,7 +1144,7 @@ public class ScipionMetaData extends MetaData {
     
     public String getSetType() {
         if(properties == null)
-            return "SetOfParticles";//child md from classes set
+            return self + "s";//child md from classes set
         if(properties.isEmpty())
         	return "";
         return properties.get("self");
@@ -1170,6 +1181,11 @@ public class ScipionMetaData extends MetaData {
         }
         
         return minMax;
+    }
+    
+    public boolean containsMicrographsInfo() 
+    {
+    	return self.equals("Micrograph") || self.equals("Movie");
     }
    
 }

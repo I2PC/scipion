@@ -495,7 +495,7 @@ class Micrograph(Image):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
+        if self._micName.get():
             return self._micName.get()
         else:
             self.getFileName()
@@ -801,7 +801,7 @@ class SetOfImages(EMSet):
         return x, y, z
     
     def getXDim(self):
-        return self.getDim()[0]
+        return self.getDim()[0] if self.getDim() is not None else 0
     
     def isOddX(self):
         """ Return True if the first item x dimension is odd. """
@@ -934,7 +934,7 @@ class SetOfParticles(SetOfImages):
         from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
-        self.setHasCTF(other.hasCTF())    
+        self.setHasCTF(other.hasCTF())
 
 
 class SetOfAverages(SetOfParticles):
@@ -947,6 +947,7 @@ class SetOfAverages(SetOfParticles):
 class SetOfVolumes(SetOfImages):
     """Represents a set of Volumes"""
     ITEM_TYPE = Volume
+    REP_TYPE = Volume
     
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
@@ -1075,10 +1076,7 @@ class Coordinate(EMObject):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
-            return self._micName.get()
-        else:
-            self.getFileName()
+        return self._micName.get()
 
 
 class SetOfCoordinates(EMSet):
@@ -1257,6 +1255,8 @@ class Class3D(SetOfParticles):
     Usually the representative of the class is a Volume 
     reconstructed from the particles assigned to the class.
     """
+    REP_TYPE = Volume
+    
     def copyInfo(self, other):
         """ Copy basic information (id and other properties) but not _mapperPath or _size
         from other set of micrographs to current one.

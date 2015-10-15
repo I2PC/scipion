@@ -12,7 +12,7 @@ SCIPION_TESTS = data/tests
 SCIPION_SOFTWARE = software
 
 [REMOTE]
-SCIPION_URL = http://scipionwiki.cnb.csic.es/files/scipion
+SCIPION_URL = http://scipion.cnb.csic.es/downloads/scipion
 SCIPION_URL_SOFTWARE = %(SCIPION_URL)s/software
 SCIPION_URL_TESTDATA = %(SCIPION_URL)s/data/tests
 
