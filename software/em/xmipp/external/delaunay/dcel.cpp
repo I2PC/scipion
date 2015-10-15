@@ -896,8 +896,8 @@ int 	get_Number_Edges( struct DCEL_T *dcel)
 * Name: insertEdge
 * IN:		origin		origin point of the edge
 * 			twin		twin edge
-* 			next		next edge
 * 			prev		previous edge
+* 			next		next edge
 * 			face		edge face
 * OUT:		N/A
 * IN/OUT:	dcel		dcel DATA

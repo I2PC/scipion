@@ -762,7 +762,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
     int		nItems=0;
     int		candidatesSize=MAX_NEIGHBORS;
     int		*candidates=NULL, *refCandidates=NULL;
-    int		*checked=NULL;
+    int		*inserted=NULL;
     int		nElems=0;					// # elements to copy.
     int		allocationError=FALSE;		// Error allocating memory.
 
@@ -783,7 +783,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 #endif
     		// Allocate neighbors array.
     		candidates = (int *) calloc( candidatesSize, sizeof(int));
-    		checked = (int *) calloc( delaunay->voronoi.dcel.nVertex, sizeof(int));
+    		inserted = (int *) calloc( delaunay->voronoi.dcel.nVertex, sizeof(int));
 
     		// Insert points from leaf node.
     		for (i=0; i<N_POINTS ;i++)
@@ -791,6 +791,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 				if (delaunay->graph.nodes[node_Index].points_Index[i] >= 0)
 				{
 					candidates[in] = delaunay->graph.nodes[node_Index].points_Index[i];
+					inserted[candidates[in]] = TRUE;
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 					printf("Inserted point %d. # %d. In %d. Out %d\n", candidates[in], nItems+1, in, out);
 #endif
@@ -821,7 +822,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 						printf("Point %d found.\n", candidates[out]);
-			    		//getchar();
+			    		getchar();
 #endif
 					}
 					else
@@ -876,8 +877,10 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 
 							if (current_Point >= 0)
 							{
-								if (!checked[current_Point])
+								if (!inserted[current_Point])
 								{
+									inserted[current_Point] = TRUE;
+
 									// Insert point.
 									candidates[in] = current_Point;
 									nItems++;
@@ -905,6 +908,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 						printf("All %d neighbors inserted.\n", candidates[out]);
+						getchar();
 #endif
 					}
 				}
@@ -912,14 +916,14 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 				else
 				{
 					printf("Imaginary point %d.\n", candidates[out]);
+					getchar();
 				}
 #endif
 				// Check next point.
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 				printf("Removed point %d. # %d. In %d. Out %d\n", candidates[out], nItems-1, in, out+1);
+				getchar();
 #endif
-				checked[candidates[out]] = TRUE;
-
 				out++;
 				nItems--;
 				out = out % candidatesSize;
@@ -927,7 +931,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 
 			// Free candidates circular buffer.
 			free( candidates);
-			free( checked);
+			free( inserted);
     	}
     	else
     	{
@@ -1284,7 +1288,7 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
     int     new_Face_ID=0;							// Face identifier.
     int     prev_Edge_ID=0;							// Stores previous edge id.
     int     next_Edge_ID=0;							// Stores next edge id.
-    int     colinear_Edge_ID=0, colinear_Index=0;   // Edge identifier of collinear edge.
+    int     collinear_Edge_ID=0, collinear_Index=0; // Edge identifier of collinear edge.
 	int		flip_Candidates[2];						// Edges that must be cheked due to split operation.
     struct  Dcel_Face_T  *face=NULL;				// Pointer to current face.
 	int		old_Node_ID1=0, old_Node_ID2=0;			// Old nodes id.
@@ -1424,34 +1428,36 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
     else
     {
         // Get edge identifier where new point is collinear.
-        colinear_Edge_ID = select_Colinear_Edge( dcel, point_Index, face->edge);
-		if (colinear_Edge_ID != -1)
+        collinear_Edge_ID = select_Colinear_Edge( dcel, point_Index, face->edge);
+		if (collinear_Edge_ID != -1)
 		{
-			colinear_Index = colinear_Edge_ID - 1;
+			collinear_Index = collinear_Edge_ID - 1;
 
 			// Save previous and next edges ID.
-			prev_Edge_ID = dcel->edges[colinear_Index].previous_Edge;
-			next_Edge_ID = dcel->edges[colinear_Index].next_Edge;
+			prev_Edge_ID = dcel->edges[collinear_Index].previous_Edge;
+			next_Edge_ID = dcel->edges[collinear_Index].next_Edge;
 
 			// Store edges that must be checked after split of first triangle operation.
 			flip_Candidates[0] = next_Edge_ID;
 			flip_Candidates[1] = prev_Edge_ID;
 
 			// Store nodes ID that are going to be updated.
-			old_Node_ID1 = get_Node_Assigned( graph, dcel->edges[colinear_Index].face);
-			old_Node_ID2 = get_Node_Assigned( graph, dcel->edges[dcel->edges[colinear_Index].twin_Edge-1].face);
+			old_Node_ID1 = get_Node_Assigned( graph, dcel->edges[collinear_Index].face);
+			old_Node_ID2 = get_Node_Assigned( graph, dcel->edges[dcel->edges[collinear_Index].twin_Edge-1].face);
 
 			// Update current face with new edge: new_Edge_ID.
 			insertEdge( dcel, dcel->edges[prev_Edge_ID-1].origin_Vertex, new_Edge_ID+1, next_Edge_ID,
-																				colinear_Edge_ID, node->face_ID);
+																				collinear_Edge_ID, node->face_ID);
 
 			// Insert a new face with two new edges: new_Edge_ID+1 and new_Edge_ID+2.
 			insertEdge( dcel, point_Index+1, new_Edge_ID, new_Edge_ID+2, prev_Edge_ID, new_Face_ID);
-			insertEdge( dcel, dcel->edges[colinear_Index].origin_Vertex, new_Edge_ID+3, prev_Edge_ID,
+			insertEdge( dcel, dcel->edges[collinear_Index].origin_Vertex, new_Edge_ID+3, prev_Edge_ID,
 																				new_Edge_ID+1, new_Face_ID);
+			update_Vertex_Edge_At( dcel, new_Edge_ID+1, point_Index);
+			update_Face( dcel, new_Edge_ID, node->face_ID);
 
 			// Update existing edges.
-			update_Edge( dcel, point_Index+1, NO_UPDATE, new_Edge_ID, NO_UPDATE, NO_UPDATE, colinear_Index);
+			update_Edge( dcel, point_Index+1, NO_UPDATE, new_Edge_ID, NO_UPDATE, NO_UPDATE, collinear_Index);
 			update_Edge( dcel, NO_UPDATE, NO_UPDATE, NO_UPDATE, new_Edge_ID, NO_UPDATE, next_Edge_ID-1);
 			update_Edge( dcel, NO_UPDATE, NO_UPDATE, new_Edge_ID+1, new_Edge_ID+2, new_Face_ID, prev_Edge_ID-1);
 
@@ -1462,19 +1468,18 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 			node->children_Index[2] = INVALID;
 			update_Node( graph, old_Node_ID1, 2, node);
 
-
 			// Insert two new nodes in first node splitted.
-			new_Node[0].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[colinear_Index].previous_Edge - 1);
-			new_Node[0].points_Index[1] = get_Edge_Origin_Vertex( dcel, colinear_Index);
-			new_Node[0].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[colinear_Index].next_Edge - 1);
-			new_Node[0].face_ID = dcel->edges[colinear_Index].face;
+			new_Node[0].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[collinear_Index].previous_Edge - 1);
+			new_Node[0].points_Index[1] = get_Edge_Origin_Vertex( dcel, collinear_Index);
+			new_Node[0].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[collinear_Index].next_Edge - 1);
+			new_Node[0].face_ID = dcel->edges[collinear_Index].face;
 #ifdef DEBUG_SPLIT_TRIANGLE
 			printf("Splitting first triangle\n");
 #endif
 			insert_Node( graph, &new_Node[0]);
-			new_Node[1].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[colinear_Index].previous_Edge - 1);
-			new_Node[1].points_Index[1] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[dcel->edges[colinear_Index].previous_Edge-1].twin_Edge-1].previous_Edge-1);
-			new_Node[1].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[colinear_Index].previous_Edge - 1].twin_Edge-1);
+			new_Node[1].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[collinear_Index].previous_Edge - 1);
+			new_Node[1].points_Index[1] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[dcel->edges[collinear_Index].previous_Edge-1].twin_Edge-1].previous_Edge-1);
+			new_Node[1].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[collinear_Index].previous_Edge - 1].twin_Edge-1);
 			new_Node[1].face_ID = new_Face_ID;
 #ifdef DEBUG_SPLIT_TRIANGLE
 			printf("Splitting second triangle\n");
@@ -1482,10 +1487,10 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 			insert_Node( graph, &new_Node[1]);
 
 			// Update twin face.
-			colinear_Edge_ID = dcel->edges[colinear_Index].twin_Edge;
-			colinear_Index	 = colinear_Edge_ID-1;
-			prev_Edge_ID	 = dcel->edges[colinear_Index].previous_Edge;
-			next_Edge_ID	 = dcel->edges[colinear_Index].next_Edge;
+			collinear_Edge_ID = dcel->edges[collinear_Index].twin_Edge;
+			collinear_Index	 = collinear_Edge_ID-1;
+			prev_Edge_ID	 = dcel->edges[collinear_Index].previous_Edge;
+			next_Edge_ID	 = dcel->edges[collinear_Index].next_Edge;
 
 			// Insert a new face with two new edges: new_Edge_ID+3 and new_Edge_ID+4.
 			insertEdge( dcel, point_Index+1, new_Edge_ID+2, new_Edge_ID+4, next_Edge_ID, new_Face_ID+1);
@@ -1493,11 +1498,11 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 																				new_Edge_ID+3, new_Face_ID+1);
 
 			// Update current face with new edge: new_Edge_ID+5.
-			insertEdge( dcel, point_Index+1, new_Edge_ID+4, colinear_Edge_ID, prev_Edge_ID, dcel->edges[colinear_Index].face);
+			insertEdge( dcel, point_Index+1, new_Edge_ID+4, collinear_Edge_ID, prev_Edge_ID, dcel->edges[collinear_Index].face);
 
 			// Update existing edges.
 			update_Edge( dcel, NO_UPDATE, NO_UPDATE, new_Edge_ID+3, new_Edge_ID+4, new_Face_ID+1, next_Edge_ID-1);
-			update_Edge( dcel, NO_UPDATE, NO_UPDATE, NO_UPDATE, new_Edge_ID+5, NO_UPDATE, colinear_Index);
+			update_Edge( dcel, NO_UPDATE, NO_UPDATE, NO_UPDATE, new_Edge_ID+5, NO_UPDATE, collinear_Index);
 			update_Edge( dcel, NO_UPDATE, NO_UPDATE, new_Edge_ID+5, NO_UPDATE, NO_UPDATE, prev_Edge_ID-1);
 
 			// Insert two new faces.
@@ -1512,10 +1517,10 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 			update_Node( graph, old_Node_ID2, 2, node);
 
 			// Insert two new nodes in first node splitted.
-			new_Node[0].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[colinear_Index].previous_Edge - 1);
-			new_Node[0].points_Index[1] = get_Edge_Origin_Vertex( dcel, colinear_Index);
-			new_Node[0].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[colinear_Index].next_Edge - 1);
-			new_Node[0].face_ID = dcel->edges[colinear_Index].face;
+			new_Node[0].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[collinear_Index].previous_Edge - 1);
+			new_Node[0].points_Index[1] = get_Edge_Origin_Vertex( dcel, collinear_Index);
+			new_Node[0].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[collinear_Index].next_Edge - 1);
+			new_Node[0].face_ID = dcel->edges[collinear_Index].face;
 #ifdef DEBUG_SPLIT_TRIANGLE
 			printf("Splitting third triangle\n");
 #endif
@@ -1568,7 +1573,7 @@ double   modified_Signed_Area( struct DCEL_T *dcel, struct  Node_T *node)
 int     select_Colinear_Edge( struct DCEL_T *dcel, int point_Index, int edge_ID)
 {
 	int		edge_Index=0;					// Index of edge of current face.
-    int     colinear_Edge=0;				// Return value.
+    int     collinear_Edge=0;				// Return value.
 	int		id1=0, id2=0, id3=0;			// IDs of vertex points.
     struct  Point_T *p=NULL;				// Reference to new point.
 
@@ -1593,7 +1598,7 @@ int     select_Colinear_Edge( struct DCEL_T *dcel, int point_Index, int edge_ID)
 #ifdef DEBUG_SELECT_COLLINEAR_EDGE
 		printf("Collinear to points %d and %d\n", id1, id2);
 #endif
-		colinear_Edge = dcel->edges[edge_Index].previous_Edge;
+		collinear_Edge = dcel->edges[edge_Index].previous_Edge;
 	}
 	// Check if point is collinear to input edge.
 	else if (return_Turn( dcel, p, id2, id3) == COLINEAR)
@@ -1601,7 +1606,7 @@ int     select_Colinear_Edge( struct DCEL_T *dcel, int point_Index, int edge_ID)
 #ifdef DEBUG_SELECT_COLLINEAR_EDGE
 		printf("Collinear to points %d and %d\n", id2, id3);
 #endif
-		colinear_Edge = edge_ID;
+		collinear_Edge = edge_ID;
 	}
 	// Check if point is collinear to next edge.
 	else if (return_Turn( dcel, p, id3, id1) == COLINEAR)
@@ -1609,7 +1614,7 @@ int     select_Colinear_Edge( struct DCEL_T *dcel, int point_Index, int edge_ID)
 #ifdef DEBUG_SELECT_COLLINEAR_EDGE
 		printf("Collinear to points %d and %d\n", id3, id1);
 #endif
-		colinear_Edge = dcel->edges[edge_Index].next_Edge;
+		collinear_Edge = dcel->edges[edge_Index].next_Edge;
 	}
 	else
 	{
@@ -1618,14 +1623,14 @@ int     select_Colinear_Edge( struct DCEL_T *dcel, int point_Index, int edge_ID)
 		sprintf( log_Text, "Checking when point is collinear but it is not.\n");
 		write_Log( log_Text);
 #endif
-		colinear_Edge = -1;
+		collinear_Edge = -1;
 	}
 
 #ifdef DEBUG_SELECT_COLLINEAR_EDGE
-	printf("Collinear edge is %d\n", colinear_Edge);
+	printf("Collinear edge is %d\n", collinear_Edge);
 #endif
 
-	return(colinear_Edge);
+	return(collinear_Edge);
 }
 
 

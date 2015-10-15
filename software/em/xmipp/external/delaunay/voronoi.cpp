@@ -147,7 +147,8 @@ void build_Voronoi_Area( struct Voronoi_T *voronoi, struct DCEL_T *dcel, int poi
 	face = get_Face( dcel, dcel->edges[edgeID-1].face);
 
 #ifdef DEBUG_BUILD_VORONOI_AREA
-	printf("Starting with edge %d from face %d. Edge origin %d Destination %d\n",
+	printf("Initial point %d. Starting with edge %d from face %d. Edge origin %d Destination %d\n",
+									pointIndex,
 									edgeID,
 									dcel->edges[edgeID-1].face,
 									dcel->edges[edgeID-1].origin_Vertex,
@@ -192,6 +193,9 @@ void build_Voronoi_Area( struct Voronoi_T *voronoi, struct DCEL_T *dcel, int poi
 		// Save current circumentre.
 		centre.x = voronoi->dcel.vertex[originPoint].vertex.x;
 		centre.y = voronoi->dcel.vertex[originPoint].vertex.y;
+#ifdef DEBUG_BUILD_VORONOI_AREA
+		printf("Face circumcentre is (%lf,%lf)\n", centre.x, centre.y);
+#endif
 
 		// Get next adjacent face.
 		edgeID = dcel->edges[dcel->edges[edgeID-1].previous_Edge-1].twin_Edge;
@@ -269,9 +273,12 @@ void build_Voronoi_Area( struct Voronoi_T *voronoi, struct DCEL_T *dcel, int poi
 #ifdef LOGGING
 						sprintf( log_Text, "Collinear points in edge index %d\n", edgeID-1);
 						write_Log( log_Text);
-						// PENDING
-						exit(0);
 #endif
+#ifdef DEBUG_BUILD_VORONOI_AREA
+						printf("COLLINEAR\n");
+#endif
+						exit(0);
+
 					}
 
 					// Compute extreme of voronoi edge.
@@ -304,6 +311,9 @@ void build_Voronoi_Area( struct Voronoi_T *voronoi, struct DCEL_T *dcel, int poi
 				// Save current circumentre.
 				centre.x = voronoi->dcel.vertex[originPoint].vertex.x;
 				centre.y = voronoi->dcel.vertex[originPoint].vertex.y;
+#ifdef DEBUG_BUILD_VORONOI_AREA
+				printf("Face circumcentre is (%lf,%lf)\n", centre.x, centre.y);
+#endif
 			}
 			// Current face is an imaginary face.
 			else if (currentFace != 0)
@@ -520,11 +530,6 @@ void compute_Voronoi_Circumcentres( struct Voronoi_T *voronoi, struct DCEL_T *dc
 		// Check it is a valid face.
 		if (face->imaginaryFace != INVALID)
 		{
-#ifdef DEBUG_COMPUTE_VORONOI_CIRCUMCENTRES
-			printf("Face %d is real.\n", i);
-			nReal++;
-#endif
-
 			// Get edge index.
         	index = face->edge-1;
 
@@ -535,6 +540,13 @@ void compute_Voronoi_Circumcentres( struct Voronoi_T *voronoi, struct DCEL_T *dc
 
             // Compute circumcentre of each internal face.
             point = get_Centre( &triang);
+#ifdef DEBUG_COMPUTE_VORONOI_CIRCUMCENTRES
+            printf("Face %d is real and circumcentre is (%lf,%lf)\n", i, point.x, point.y);
+			printf("Points are %d %d %d\n", dcel->edges[index].origin_Vertex,
+					dcel->edges[dcel->edges[index].next_Edge-1].origin_Vertex,
+					dcel->edges[dcel->edges[index].previous_Edge-1].origin_Vertex);
+			nReal++;
+#endif
         }
         else
         {
