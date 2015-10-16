@@ -129,7 +129,7 @@ class Message():
     HELP_RUNMODE = """  
 Normally, each protocol is composed by several atomic steps.
 Each step could be computationally intensive, that's why
-the *Resume* execution mode will try to continue from the
+the *Continue* execution mode will try to continue from the
 last completed step. On the other hand, the *Restart* mode
 will clean the whole run directory and start from scratch.    
     """    
@@ -142,6 +142,12 @@ Define the number of processors to be used in the execution.
        in the same process that can share memory. They run in
        the same computer.     
     """
+    HELP_USEQUEUE = """  
+Select *Yes* if you want to submit the job to a Queue system.
+The queue commands for launch and stop jobs should be configured
+for the current host in the _hosts.conf_ file.    
+    """     
+    
     
     TITLE_NAME_RUN = ' Protocol Run: '
     TITLE_RUN = 'Run'

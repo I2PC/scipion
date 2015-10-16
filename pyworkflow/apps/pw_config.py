@@ -154,7 +154,7 @@ def checkPaths(conf):
     def get(var):
         try:
             return cf.get('BUILD', var)
-        except Error as e:
+        except Exception, e:
             print(red("While getting '%s' in section BUILD: %s" % (var, e)))
             return '/'
     allOk = True

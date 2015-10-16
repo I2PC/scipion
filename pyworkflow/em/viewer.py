@@ -172,8 +172,8 @@ class Classes3DView(ClassesView):
                              showj.MODE: 'metadata'}
         defaultViewParams.update(viewParams)
         ClassesView.__init__(self, project, inputid, path, other, defaultViewParams, **kwargs)
-            
-            
+
+
 class CoordinatesObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """
     def __init__(self, project, path, outputdir, protocol, pickerConf=None, viewParams={}, **kwargs):
