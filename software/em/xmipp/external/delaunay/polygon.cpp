@@ -1,4 +1,5 @@
 #include "defines.h"
+#include "float.h"
 #include <math.h>
 #include "polygon.h"
 #include <stdio.h>
@@ -9,7 +10,7 @@
 /**************************************************************************
 * Private function headers
 **************************************************************************/
-void    compute_Segment( struct Point_T *p, struct Point_T *q, struct Segment_T *out);
+int    compute_Segment( struct Point_T *p, struct Point_T *q, struct Segment_T *out);
 enum Segment_Direction compute_Direction( struct Segment_T *segment, struct Point_T *p, struct Point_T *q);
 
 /**************************************************************************
@@ -23,7 +24,7 @@ void        middle_Point(struct Point_T *p, struct Point_T *q, struct Point_T *m
 }
 
 
-
+//#define DEBUG_EXTEND_SEGMENT
 /********************************************************************
 FUNCTION:   extend_Segment
 INPUT:      p   Point_T
@@ -38,54 +39,74 @@ COMPLEXITY: O(1)
 *********************************************************************/
 void extend_Segment( struct Point_T *p, struct Point_T *q, struct Point_T *r)
 {
+	int		error=SUCCESS;
     struct Segment_T segment;         // Segment to store m and n values.
     enum Segment_Direction direction; // pq line direction.
 
     // Compute m and of pq line.
-    compute_Segment( p, q, &segment);
+#ifdef DEBUG_EXTEND_SEGMENT
+    printf("Px %f Py %f Qx %f Qy %f\n", p->x, p->y, q->x, q->y);
+#endif
+    error = compute_Segment( p, q, &segment);
 
-    // Compute direction of pq line.
-    direction = compute_Direction( &segment, p, q);
+    if (error == SUCCESS)
+    {
+		// Compute direction of pq line.
+		direction = compute_Direction( &segment, p, q);
 
-    // Line towards positive x coordinates values.
-    if ((direction == FROM_0_TO_90) || (direction == FROM_270_TO_360))
-    {
-        r->x = MAX_X_COORD;
+		// Line towards positive x coordinates values.
+		if ((direction == FROM_0_TO_90) || (direction == FROM_270_TO_360))
+		{
+			r->x = MAX_X_COORD;
 
-        // Set y value y=mx + n
-        r->y = segment.m*r->x + segment.n;
-    }
-    // Line towards negative x coordinates values.
-    else if ((direction == FROM_90_TO_180) || (direction == FROM_180_TO_270))
-    {
-        r->x = -MAX_X_COORD;
+			// Set y value y=mx + n
+			r->y = segment.m*r->x + segment.n;
+		}
+		// Line towards negative x coordinates values.
+		else if ((direction == FROM_90_TO_180) || (direction == FROM_180_TO_270))
+		{
+			r->x = -MAX_X_COORD;
 
-        // Set y value y=mx + n
-        r->y = segment.m*r->x + segment.n;
+			// Set y value y=mx + n
+			r->y = segment.m*r->x + segment.n;
+		}
+		// Line is parallel to X coordinates axis towards right.
+		else if (direction == HORIZONTAL_0)
+		{
+			r->x = MAX_X_COORD;
+			r->y = p->y;
+		}
+		// Line is parallel to X coordinates axis towards left.
+		else if (direction == HORIZONTAL_180)
+		{
+			r->x = -MAX_X_COORD;
+			r->y = p->y;
+		}
+		// Line is parallel to Y coordinates axis upwards.
+		else if (direction == VERTICAL_90)
+		{
+			r->x = p->x;
+			r->y = MAX_Y_COORD;
+		}
+		// Line is parallel to Y coordinates axis downwards.
+		else
+		{
+			r->x = p->x;
+			r->y = -MAX_Y_COORD;
+		}
     }
-    // Line is parallel to X coordinates axis towards right.
-    else if (direction == HORIZONTAL_0)
-    {
-        r->x = MAX_X_COORD;
-        r->y = p->y;
-    }
-    // Line is parallel to X coordinates axis towards left.
-    else if (direction == HORIZONTAL_180)
-    {
-        r->x = -MAX_X_COORD;
-        r->y = p->y;
-    }
-    // Line is parallel to Y coordinates axis upwards.
-    else if (direction == VERTICAL_90)
-    {
-        r->x = p->x;
-        r->y = MAX_Y_COORD;
-    }
-    // Line is parallel to Y coordinates axis downwards.
     else
     {
-        r->x = p->x;
-        r->y = -MAX_Y_COORD;
+    	if (error == -1)
+    	{
+    		r->x = p->x;
+    		r->y = -MAX_Y_COORD;
+    	}
+    	else
+    	{
+    		r->x = p->x;
+    		r->y = MAX_Y_COORD;
+    	}
     }
 }
 
@@ -210,7 +231,7 @@ struct Point_T 	get_Centre( struct Triangle_T *triang)
 }
 
 
-
+//#define DEBUG_COMPUTE_SEGMENT
 /********************************************************************
 FUNCTION:   compute_Segment
 INPUT:      p   Point_T
@@ -222,22 +243,38 @@ POST:       m = (q->y - p->y) / (q->x - p->x)
 DESCRIPTION:Computes the values m and n of the pq line (y=mx + n).
 COMPLEXITY: O(1)
 *********************************************************************/
-void    compute_Segment( struct Point_T *p, struct Point_T *q, struct Segment_T *out)
+int    compute_Segment( struct Point_T *p, struct Point_T *q, struct Segment_T *out)
 {
+	int		ret=SUCCESS;		// Return value.
+
     // Avoid divison by 0.
     if ((q->x - p->x) != 0)
     {
         // Compute slope.
         out->m = (q->y - p->y) / (q->x - p->x);
+
+        // Compute n.
+        out->n = p->y - (out->m*p->x);
     }
-    // Set a default value.
+    // m is +/-(infinite) but must be converted into a valid value.
     else
     {
-        out->m = 1;
+    	if (q->y < p->y)
+    	{
+    		out->m = -FLT_MAX;
+    		ret = -1;
+    	}
+    	else
+    	{
+    		out->m = -FLT_MAX;
+    		ret = -2;
+    	}
+#ifdef DEBUG_COMPUTE_SEGMENT
+    	printf("Slope is +/- inifinite and set to %f\n", out->m);
+#endif
     }
 
-    // Compute n.
-    out->n = p->y - (out->m*p->x);
+    return(ret);
 }
 
 
