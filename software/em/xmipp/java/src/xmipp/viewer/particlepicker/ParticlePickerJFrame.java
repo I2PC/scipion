@@ -277,6 +277,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                         loadMicrograph();
                     }
                 });
+                
+                XmippWindowUtil.setScipionImageIcon(this);
+                
             } catch (Exception ex) {
                 Logger.getLogger(ParticlePickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IllegalArgumentException(ex);
