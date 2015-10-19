@@ -37,6 +37,8 @@ class ProgMovieAlignmentCorrelation: public XmippProgram
 public:
     /** Filename of movie metadata */
     FileName fnMovie;
+    /** Correction images */
+    FileName fnDark, fnGain;
     /** Max shift */
     double maxShift;
     /** Sampling rate */

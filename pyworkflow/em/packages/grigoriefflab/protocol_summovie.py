@@ -29,6 +29,7 @@ This module contains the protocol for CTF estimation with Summovie3
 import os
 import sys
 import pyworkflow.utils as pwutils
+from os.path import exists
 from pyworkflow.em.protocol import ProtProcessMovies
 from pyworkflow.em import ImageHandler, DT_FLOAT, Micrograph
 from pyworkflow.protocol.params import  (IntParam,
@@ -245,4 +246,9 @@ eof
     def _methods(self):
         return []
 
+    def _validate(self):
+        errors=[]
+        if not exists(SUMMOVIE_PATH):
+            errors.append("Cannot find the Summovie program at: "+SUMMOVIE_PATH)
+        return errors
 

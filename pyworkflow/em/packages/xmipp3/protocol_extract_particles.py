@@ -20,6 +20,7 @@
 # * You should have received a copy of the GNU General Public License
 # * along with this program; if not, write to the Free Software
 # * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
@@ -89,7 +90,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       relationName=RELATION_CTF, attributeName='getInputMicrographs',
                       label='CTF estimation',
                       help='Choose some CTF estimation related to input micrographs. \n'
-                           'CTF estimation is need if you want to do phase flipping or \n'
+                           'CTF estimation is needed if you want to do phase flipping or \n'
                            'you want to associate CTF information to the particles.')
 
         form.addParam('boxSize', IntParam, default=0,
@@ -237,11 +238,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         """ Flip micrograph. """           
         fnFlipped = self._getTmpPath(baseMicName +"_flipped.xmp")
 
-        args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s --downsampling %(downFactor)f"
-        # xmipp_ctf_phase_flip expects the sampling rate of the micrographs, that has been used
-        # to calculate the CTF, in the ctfparam file. If its no given, the program asumes that is equal to 1;
-        # therefore, downsampling factor must be equal to sampling rate of the final mics.
-        downFactor = self.samplingFinal
+        args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s --sampling %(samplingFinal)f"
+        samplingFinal=self.samplingFinal
         self.runJob("xmipp_ctf_phase_flip", args % locals())
         
     def extractParticlesStep(self, micId, baseMicName, fnCTF, micrographToExtract):

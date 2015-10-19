@@ -75,6 +75,7 @@ void ProgValidationNonTilt::run()
     else
     {
     	md.getValue(MDL_ITEM_ID,maxNImg,sz);
+
     }
 
     String expression;
@@ -125,10 +126,14 @@ void ProgValidationNonTilt::run()
 				P += H0.at(j)/H.at(j);
 
 			P /= (nSamplesRandom);
-			rowP.setValue(MDL_IMAGE_IDX,idx);
+
+			if (useSignificant)
+				rowP.setValue(MDL_IMAGE_IDX,idx);
+			else
+				rowP.setValue(MDL_ITEM_ID,idx);
+
 			rowP.setValue(MDL_WEIGHT,P);
 			mdPartial.addRow(rowP);
-
 			tempMd.clear();
 
 			if (rank==0)
@@ -149,13 +154,16 @@ void ProgValidationNonTilt::run()
 		mdPartial.getColumnValues(MDL_WEIGHT,P);
 		for (size_t idx=0; idx< P.size();idx++)
 		{
-		if (P[idx] > 1)
-				
-			validation += 1;
+			if (P[idx] > 1)
 
-	        }
+				validation += 1;
 
-		validation /= (maxNImg+1);
+		}
+
+		if (useSignificant)
+			validation /= (md.size());
+		else
+			validation /= (md.size());
 
 	}
 
@@ -235,20 +243,30 @@ void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<doubl
             for (size_t nS2=0; nS2<tempMd.size(); nS2++)
             {
             	temp = xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2];
-            	a = std::abs(std::acos(temp));
-                if ( (a<tempWRan) && (a != 0) && (temp<=1) )
+                if (temp < 1)
+                	a = std::abs(std::acos(temp));
+                else
+                	a = 0;
+
+                if ( (a<tempWRan) && (a > 0.00001) && (temp<1) )
                 {
                     tempWRan = a;
                     tempW2 = weightV[nS2];
                     tempW1 = weightV[nS1];
                     WRan = a*std::exp(std::abs(tempW1-tempW2))*std::exp(-(tempW1+tempW2));
+                    if (WRan == 0)
+                    	WRan = a;
 
                 }
             }
             sumWRan += WRan;
         }
 
+        if (sumWRan == 0)
+        	sumWRan = 0.075*tempMd.size();
+
         sum_u.at(n)=sumWRan;
+
     }
 
     size_t idx = 0;
@@ -277,6 +295,7 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd, double & sum_W, 
     double rot,tilt,w;
     double x,y,z;
     double xx,yy,zz;
+    bool mirror;
     double w2;
     double tempW;
     double W=0;
@@ -288,6 +307,10 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd, double & sum_W, 
     {
         tempMd.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+        tempMd.getValue(MDL_FLIP,mirror,__iter.objId);
+        if (mirror == 1)
+        	tilt = tilt + 180;
+
         //tempMd.getValue(MDL_WEIGHT,w,__iter.objId);
         tempMd.getValue(MDL_MAXCC,w,__iter.objId);
         x = sin(tilt*PI/180.)*cos(rot*PI/180.);
@@ -301,23 +324,37 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd, double & sum_W, 
             tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter2.objId);
             //tempMd.getValue(MDL_WEIGHT,w2,__iter2.objId);
             tempMd.getValue(MDL_MAXCC,w2,__iter2.objId);
+            tempMd.getValue(MDL_FLIP,mirror,__iter2.objId);
+            if (mirror == 1)
+            	tilt = tilt + 180;
+
             xx = sin(tilt*PI/180.)*cos(rot*PI/180.);
             yy = sin(tilt*PI/180.)*sin(rot*PI/180.);
             zz = std::abs(cos(tilt*PI/180.));
             temp = x*xx+y*yy+z*zz;
-            a = std::abs(std::acos(temp));
 
-            if ( (a<tempW) && (a != 0) && (temp<=1 ))
+            if (temp < 1)
+            	a = std::abs(std::acos(temp));
+            else
+            	a = 0;
+
+            if ( (a<tempW) && (a > 0.00001) && (temp<1 ))
             {
                 W = a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
                 tempW = a;
+
+                if (W == 0)
+                	W = a;
             }
         }
         sumW +=  W;
     }
 
-    sum_W = sumW;
+    //Here the problem is that maybe the changes are only in psi angle. We give the best solution assuming an angular sampling of 0.5º
+    if (sumW == 0)
+    	sumW = 0.075*tempMd.size();
 
+    sum_W = sumW;
     for (size_t n=0; n<sum_u.size(); n++)
     {
         H[n] = sumW/(sumW+factor*sum_u.at(n));

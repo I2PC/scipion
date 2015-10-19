@@ -101,8 +101,8 @@ function createMovProject(elm) {
 	var projName = "mov"+randomString(16, '#aA')
 	
 	var selected = $("#testData input[type='radio']:checked").val();
-
-	var URL = getSubDomainURL() + "/create_movies_project/?prgitojectName=" + projName
+	var projectUrl = "http://" + document.domain + getSubDomainURL() + "/m_content/?p="+ projName
+	var URL = getSubDomainURL() + "/create_movies_project/?projectName=" + projName
 	if(selected != undefined){
 		URL += "&testData="+selected;
 	}
@@ -116,8 +116,8 @@ function createMovProject(elm) {
 			
 			var msg = "<p>Your <strong>url to access </strong> this <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
-			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/m_content/?p="+ projName+ "'>" +
-			"http://scipion.cnb.csic.es/m/m_content/?p="+ projName+ "</a>"+
+			"<a style='color:firebrick;' href='" +  projectUrl + "'>" +
+			projectUrl + "</a>"+
 			"</h3></p><br />" +
 			"<p>The access to this project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +

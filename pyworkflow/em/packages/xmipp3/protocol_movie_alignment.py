@@ -187,15 +187,16 @@ class ProtMovieAlignment(ProtProcessMovies):
         micSet = self._createSetOfMicrographs()
         micSet.copyInfo(inputMovies)
         # Also create a Set of Movies with the alignment parameters
-        movieSet = self._createSetOfMovies()
-        movieSet.copyInfo(inputMovies)
-        movieSet.cropOffsetX = Integer(self.cropOffsetX)
-        movieSet.cropOffsetY = Integer(self.cropOffsetY)
-        movieSet.cropDimX = Integer(self.cropDimX)
-        movieSet.cropDimY = Integer(self.cropDimY)
-        movieSet.sumFrame0 = Integer(self.sumFrame0)
-        movieSet.sumFrameN = Integer(self.sumFrameN)
-
+        if self.doSaveMovie:
+            movieSet = self._createSetOfMovies()
+            movieSet.copyInfo(inputMovies)
+            movieSet.cropOffsetX = Integer(self.cropOffsetX)
+            movieSet.cropOffsetY = Integer(self.cropOffsetY)
+            movieSet.cropDimX = Integer(self.cropDimX)
+            movieSet.cropDimY = Integer(self.cropDimY)
+            movieSet.sumFrame0 = Integer(self.sumFrame0)
+            movieSet.sumFrameN = Integer(self.sumFrameN)
+            
         alMethod = self.alignMethod.get()
         for movie in self.inputMovies.get():
             micName = self._getNameExt(movie.getFileName(),'_aligned', 'mrc')
@@ -217,7 +218,8 @@ class ProtMovieAlignment(ProtProcessMovies):
                alMethod == AL_CROSSCORRELATIONOPTICAL:
                 movieCreatePlot(PLOT_POLAR, alignedMovie, True)
                 movieCreatePlot(PLOT_CART, alignedMovie, True)
-            movieSet.append(alignedMovie)
+            if self.doSaveMovie:
+                movieSet.append(alignedMovie)
 
             mic = em.Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
@@ -251,8 +253,9 @@ class ProtMovieAlignment(ProtProcessMovies):
                 movieSet.append(alignedMovie)
             """
         self._defineOutputs(outputMicrographs=micSet)
-        self._defineOutputs(outputMovies=movieSet)
         self._defineSourceRelation(self.inputMovies, micSet)
+        if self.doSaveMovie:
+            self._defineOutputs(outputMovies=movieSet)
         """
         if alMethod == AL_DOSEFGPU:
             self._defineTransformRelation(inputMovies, micSet)
@@ -285,6 +288,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
         alMethod = self.alignMethod.get()
+        doSaveMovie = self.doSaveMovie.get()
         
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
@@ -293,10 +297,16 @@ class ProtMovieAlignment(ProtProcessMovies):
             movieSuffix = ''
             
         # For simple average execution
+        grayCorrected = False
         if alMethod == AL_AVERAGE:
-            doSaveMovie = self.doSaveMovie.get()#used later
             command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s' % locals()
             command += ' --nst %d --ned %d --simpleAverage --psd' % (firstFrame, lastFrame)
+            if self.inputMovies.get().getDark() is not None:
+                command += " --dark "+self.inputMovies.get().getDark()
+                grayCorrected=True
+            if self.inputMovies.get().getGain() is not None:
+                command += " --gain "+self.inputMovies.get().getGain()
+                grayCorrected=True
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
@@ -348,7 +358,14 @@ class ProtMovieAlignment(ProtProcessMovies):
             command += '--frameRange %d %d '%(firstFrame,_lastFrame)
             command += '--max_shift %d ' % 16#TODO expert param
             command += '--oavg %s ' % micName
-            command += '--oaligned %s ' % corrMovieName
+            command += ' --oaligned %s ' % corrMovieName
+            if self.inputMovies.get().getDark() is not None:
+                command += " --dark "+self.inputMovies.get().getDark()
+                grayCorrected=True
+            if self.inputMovies.get().getGain() is not None:
+                command += " --gain "+self.inputMovies.get().getGain()
+                grayCorrected=True
+            
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
@@ -385,6 +402,12 @@ class ProtMovieAlignment(ProtProcessMovies):
             command += '--nst %d --ned %d --psd ' % (firstFrame, lastFrame)
             if self.doGPU:
                 command += '--gpu %d ' % gpuId
+            if self.inputMovies.get().getDark() is not None and not grayCorrected:
+                command += " --dark "+self.inputMovies.get().getDark()
+                grayCorrected=True
+            if self.inputMovies.get().getGain() is not None and not grayCorrected:
+                command += " --gain "+self.inputMovies.get().getGain()
+                grayCorrected=True
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
@@ -532,7 +555,7 @@ def movieCreatePlot(plotType, movie, saveFig):
     for objId in md:
         meanX.append(md.getValue(xmipp.MDL_OPTICALFLOW_MEANX, objId))
         meanY.append(md.getValue(xmipp.MDL_OPTICALFLOW_MEANY, objId))
-        stdX.append(md.getValue(xmipp.MDL_OPTICALFLOW_STDY, objId))
+        stdX.append(md.getValue(xmipp.MDL_OPTICALFLOW_STDX, objId))
         stdY.append(md.getValue(xmipp.MDL_OPTICALFLOW_STDY, objId))
         colors.append((1, gr / 255.0, 0))
         ax.plot(colorBarX, colorBarY, c=(1, gr / 255.0, 0), linewidth=10)
@@ -543,7 +566,9 @@ def movieCreatePlot(plotType, movie, saveFig):
     # Plot in polar if needed
     if polarPosition:
         r = np.sqrt(np.power(np.asarray(meanX), 2) + np.power(np.asarray(meanY), 2))
-        theta = np.arctan2(meanY, meanX) * 180 / np.pi
+        #theta = np.arctan2(meanY, meanX) * 180 / np.pi
+        theta = np.arctan2(meanY, meanX)
+        theta[theta < 0] += 2*np.pi
         ax = figure.add_subplot(polarPosition, projection='polar')
         ax.set_title('Polar representation')
         c = ax.scatter(theta, r, c=colors, s=area, cmap=plt.cm.hsv)
