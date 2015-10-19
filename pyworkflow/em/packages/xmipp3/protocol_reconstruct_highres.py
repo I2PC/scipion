@@ -849,7 +849,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             if not exists(fnAnglesQualified):
                 copyFile(fnAnglesGroup, fnAnglesQualified)
             else:
-                self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAnglesQualified,fnAnglesGroup),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities","-i %s --set union_all %s"%(fnAnglesQualified,fnAnglesGroup),numberOfMpi=1)
             cleanPath(fnAnglesGroup)
         if ctfPresent:
             cleanPath("%s/ctf_groups.xmd"%fnDirCurrent)
