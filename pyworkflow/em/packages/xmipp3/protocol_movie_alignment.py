@@ -459,9 +459,10 @@ class ProtMovieAlignment(ProtProcessMovies):
                            alMethod == AL_CROSSCORRELATIONOPTICAL):
                 self.doGPU.set(False)
                 #errors.append("Crosscorrelation is not implemente in GPU")
-        alignMethod = self.alignMethod.get()
-        if alignMethod == 1 or alignMethod == 2:
-            errors.append("GPU methods are not available at the moment.")
+        # FIXME: JMRT: GPU should only be disable for web and temporarly
+        #alignMethod = self.alignMethod.get()
+        #if alignMethod == 1 or alignMethod == 2:
+        #    errors.append("GPU methods are not available at the moment.")
         return errors
 
     def _citations(self):

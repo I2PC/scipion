@@ -1,9 +1,7 @@
 package xmipp.viewer.particlepicker.tiltpair.model;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import xmipp.jni.Particle;
 import xmipp.jni.TiltPairAligner;
 import xmipp.utils.XmippMessage;
@@ -140,6 +138,14 @@ public class UntiltedMicrograph extends Micrograph
 		if (getAddedCount() < getAlignmentMin())
 			return null;
 		Particle p = tpa.getTiltedParticle(x, y);
+		return p;
+	}
+	
+	public Particle getAlignerUntiltedParticle(int x, int y)
+	{
+		if (getAddedCount() < getAlignmentMin())
+			return null;
+		Particle p = tpa.getUntiltedParticle(x, y);
 		return p;
 	}
 
