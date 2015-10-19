@@ -730,7 +730,7 @@ void    select_Two_Closest( struct Delaunay_T *delaunay, int *first, int *second
     }
 }
 
-//#define DEBUG_SELECT_CLOSEST_POINT
+#define DEBUG_SELECT_CLOSEST_POINT
 /***************************************************************************
 * Name: select_Closest_Point
 * IN:	delaunay				delaunay triangulation
@@ -764,6 +764,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
     int		*candidates=NULL, *refCandidates=NULL;
     int		*inserted=NULL;
     int		nElems=0;					// # elements to copy.
+    int		nDiscarded=0;
     int		allocationError=FALSE;		// Error allocating memory.
 
 #ifdef DEBUG_SELECT_CLOSEST_POINT
@@ -905,6 +906,14 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 							current_Point = delaunay->dcel->edges[edge_Id - 1].origin_Vertex;
 						}
 						while (current_Point != first_Point);
+
+						// Check if all vertices searched.
+						nDiscarded++;
+						if (nDiscarded == delaunay->dcel->nVertex)
+						{
+							allocationError = TRUE;
+							found = FALSE;
+						}
 
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 						printf("All %d neighbors inserted.\n", candidates[out]);
