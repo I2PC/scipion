@@ -49,6 +49,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
         this.params = params;
         XmippApplication.addInstance(true);
         initComponents();
+        XmippWindowUtil.setScipionImageIcon(this);
 	}
 
 
