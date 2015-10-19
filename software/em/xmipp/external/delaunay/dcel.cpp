@@ -185,7 +185,7 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 	return(ret);
 }
 
-
+//#define DEBUG_READ_FLAT_FILE
 int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName)
 {
     int     ret=SUCCESS;        // Return value.
@@ -217,6 +217,9 @@ int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName)
 	    }
 	    else
 	    {
+#ifdef DEBUG_READ_FLAT_FILE
+	    	printf("# points %d\n", number_Points);
+#endif
 			// Allocate DCEL structure.
 			if (initialize_DCEL( dcel, number_Points, number_Points*4*2, (number_Points+2)*2) == FAILURE)
 			{
@@ -232,7 +235,7 @@ int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName)
 				// Read initial set of points and close input file.
                 if (read_Points_DCEL( fd, number_Points, dcel) == FAILURE)
                 {
-					ret = FAILURE;
+    				ret = FAILURE;
                 }
 			}
 	    }
@@ -1630,6 +1633,7 @@ void  get_Extreme_Point( struct DCEL_T *dcel, int (*f)(struct Point_T *, struct 
 	}
 }
 
+//#define DEBUG_READ_POINTS_DCEL
 int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
 {
     int     ret=SUCCESS;                // Return value.
@@ -1646,7 +1650,7 @@ int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
     while ((i<nPoints) && (ret==SUCCESS))
 	{
 		// Read point.
-		if (fscanf( fd, "%lf", &point.vertex.x) != 1)
+		if (fscanf( fd, "%f", &point.vertex.x) != 1)
 		{
             ret = FAILURE;
 #ifdef LOGGING
@@ -1655,7 +1659,7 @@ int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
 #endif
             printf("Fail reading X coordinate of %dth point", i+1);
 		}
-		else if (fscanf( fd, "%lf", &point.vertex.y) != 1)
+		else if (fscanf( fd, "%f", &point.vertex.y) != 1)
 		{
             ret = FAILURE;
 #ifdef LOGGING
@@ -1666,6 +1670,9 @@ int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
 		}
 		else
 		{
+#ifdef DEBUG_READ_POINTS_DCEL
+			printf("Point read (%lf,%lf)\n", point.vertex.x, point.vertex.y);
+#endif
             // Insert new point.
             point.origin_Edge = -1;
             insertVertex( dcel, point);
