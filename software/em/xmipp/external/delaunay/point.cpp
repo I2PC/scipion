@@ -4,6 +4,11 @@
 
 
 /*****************************************************************************
+ * Defines section
+ ****************************************************************************/
+#define 	COLLINEAR_THRESHOLD		0.5
+
+/*****************************************************************************
 * Private functions declaration
 *****************************************************************************/
 TYPE 	Euclidean( struct Point_T *p, struct Point_T *q);
@@ -73,23 +78,33 @@ enum Turn_T		check_Turn(struct Point_T *p1, struct Point_T *p2, struct Point_T *
 	// Compute signed area of the triangle formed by p1, p2 and p3.
 	area = signed_Area( p1, p2, p3);
 
-	// If area is zero then points are collinear.
-	if (area == 0.0)
+#ifdef DEBUG_CHECK_TURN
+	printf("Area %f. P (%lf,%lf). Q (%lf,%lf). R (%lf,%lf)\n", area, p1->x, p1->y, p2->x, p2->y, p3->x, p3->y);
+#endif
+
+	// Higher than zero -> turn left.
+	if (area > COLLINEAR_THRESHOLD)
 	{
 #ifdef DEBUG_CHECK_TURN
-		printf("P (%lf,%lf). Q (%lf,%lf). R (%lf,%lf)\n", p1->x, p1->y, p2->x, p2->y, p3->x, p3->y);
+		printf("LEFT\n");
 #endif
-		turn = COLINEAR;
-	}
-	// Higher than zero -> turn left.
-	else if (area > 0.0)
-	{
 		turn = LEFT_TURN;
 	}
-	// Otherwise -> turn right.
+	// Lower than zero -> turn right.
+	else if (area < -COLLINEAR_THRESHOLD)
+	{
+#ifdef DEBUG_CHECK_TURN
+		printf("RIGHT\n");
+#endif
+		turn = RIGHT;
+	}
+	// If area is close to zero then points are collinear.
 	else
 	{
-		turn = RIGHT;
+#ifdef DEBUG_CHECK_TURN
+		printf("COLLINEAR\n");
+#endif
+		turn = COLINEAR;
 	}
 
 	return(turn);

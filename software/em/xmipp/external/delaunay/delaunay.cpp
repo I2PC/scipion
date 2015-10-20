@@ -730,7 +730,7 @@ void    select_Two_Closest( struct Delaunay_T *delaunay, int *first, int *second
     }
 }
 
-#define DEBUG_SELECT_CLOSEST_POINT
+//#define DEBUG_SELECT_CLOSEST_POINT
 /***************************************************************************
 * Name: select_Closest_Point
 * IN:	delaunay				delaunay triangulation
@@ -912,6 +912,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 						if (nDiscarded == delaunay->dcel->nVertex)
 						{
 							allocationError = TRUE;
+							finished = TRUE;
 							found = FALSE;
 						}
 
