@@ -36,6 +36,14 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_TiltPairAligner_getTiltedParticle
   (JNIEnv *, jobject, jint, jint);
 
 
+/*
+ * Class:     xmipp_TiltPairAligner
+ * Method:    getTiltedParticle
+ * Signature: (II)
+ */
+JNIEXPORT jobject JNICALL Java_xmipp_jni_TiltPairAligner_getUntiltedParticle
+  (JNIEnv *, jobject, jint, jint);
+
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_TiltPairAligner_computeAngles(JNIEnv *env,
 		jobject jobj);
 

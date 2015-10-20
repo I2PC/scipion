@@ -641,12 +641,15 @@ void generateModelSoFar(Image<double> &I, bool apply_log = false)
                             0, ALL_CTF_PARAMETERS, global_prm->modelSimplification);
     global_ctfmodel.produceSideInfo();
 
-    I().resize(*f);
+    I().initZeros(*f);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
     {
         XX(idx) = j;
         YY(idx) = i;
         FFT_idx2digfreq(*f, idx, freq);
+        double w=freq.module();
+        if (w>global_max_freq)
+        	continue;
         digfreq2contfreq(freq, freq, global_prm->Tm);
 
         // Decide what to save
@@ -830,8 +833,20 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
 
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
-    if (!((j >= Xdim / 2 && i >= Ydim / 2) || (j < Xdim / 2 && i < Ydim / 2)))
-        model(i, j) = enhancedPSD(i, j);
+    {
+		if (!((j >= Xdim / 2 && i >= Ydim / 2) || (j < Xdim / 2 && i < Ydim / 2)))
+			model(i, j) = enhancedPSD(i, j);
+		else
+		{
+            XX(idx) = j;
+            YY(idx) = i;
+            FFT_idx2digfreq(model, idx, freq);
+            double w=freq.module();
+            if (w>global_max_freq)
+            	model(i,j)=0;
+
+		}
+    }
 
     // Produce a centered image
     CenterFFT(model, true);
@@ -867,6 +882,9 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
         XX(idx) = j;
         YY(idx) = i;
         FFT_idx2digfreq(model, idx, freq);
+        double w=freq.module();
+        if (w>global_max_freq)
+        	continue;
         if (fabs(XX(freq))>0.03 && fabs(YY(freq))>0.03)
             mask(i,j)=(int)global_mask(i,j);
         digfreq2contfreq(freq, freq, global_prm->Tm);
