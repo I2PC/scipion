@@ -37,6 +37,7 @@ from protocol_refine3d import ProtRelionRefine3D
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_preprocess import ProtRelionPreprocessParticles
 from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
+from pyworkflow.utils.utils import readProperties
 
 #===============================================================================
 # MASKS
@@ -225,16 +226,7 @@ class RelionAutopickParams(EmWizard):
         print "Launching picking GUI..."
         process = CoordinatesObjectView(autopickProt.getProject(), micfn, coordsDir, autopickFomProt, pickerProps=pickerProps).show()
         process.wait()
-        myprops = {}
-        with open(pickerProps, 'r') as f:
-            for line in f:
-                line = line.rstrip() #removes trailing whitespace and '\n' chars
-        
-                if "=" not in line: continue #skips blanks and comments w/o =
-                if line.startswith("#"): continue #skips comments which contain =
-        
-                k, v = line.split("=", 1)
-                myprops[k] = v
+        myprops = readProperties(pickerProps)
         form.setVar('pickingThreshold', myprops['threshold.value'])
         form.setVar('interParticleDistance', myprops['ipd.value'])
     

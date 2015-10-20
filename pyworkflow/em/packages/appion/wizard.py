@@ -34,6 +34,7 @@ from pyworkflow.em import CoordinatesObjectView
 from pyworkflow.em.showj import CLASSIFIER
 from pyworkflow.em.packages.xmipp3 import writeSetOfMicrographs
 from pyworkflow.utils import makePath, cleanPath
+from pyworkflow.utils.utils import readProperties
 #===============================================================================
 # PICKER
 #===============================================================================
@@ -56,8 +57,8 @@ class DogPickerWizard(EmWizard):
         # Get current values of the properties
 #         micfn = os.path.join(coordsDir, 'micrographs.xmd')
 #         writeSetOfMicrographs(micSet, micfn)
-        dogpickerConf = os.path.join(coordsDir, 'picker.conf')
-        f = open(dogpickerConf, "w")
+        dogpickerProps = os.path.join(coordsDir, 'picker.conf')
+        f = open(dogpickerProps, "w")
 
         args = {
           "dogpicker" : os.path.join(os.environ['DOGPICKER_HOME'], "ApDogPicker.py"),
@@ -81,7 +82,11 @@ class DogPickerWizard(EmWizard):
         autopickCommand = %(dogpicker)s  --thresh=%%(threshold) --diam=%%(diameter) --apix=%(apix)s  --image=%%(micrograph) --outfile=%(coordsDir)s/%%(micrographName).txt 
         convertCommand = %(convert)s --coordinates --from dogpicker --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
         """ % args)
+        f.close()
         print "Launching picking GUI..."
-        CoordinatesObjectView(project, micfn, coordsDir, autopickProt, pickerConf=dogpickerConf).show()
-        
+        process = CoordinatesObjectView(project, micfn, coordsDir, autopickProt, pickerProps=dogpickerProps).show()
+        process.wait()
+        myprops = readProperties(dogpickerProps)
+        form.setVar('diameter', myprops['diameter.value'])
+        form.setVar('threshold', myprops['threshold.value'])
 
