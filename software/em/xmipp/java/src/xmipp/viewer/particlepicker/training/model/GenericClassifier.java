@@ -1,6 +1,9 @@
 package xmipp.viewer.particlepicker.training.model;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +14,7 @@ import javax.swing.JFrame;
 import xmipp.jni.Classifier;
 import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 
 
@@ -76,6 +80,7 @@ public class GenericClassifier extends Classifier
 			System.out.println(convertCommand);
 			output = XmippWindowUtil.executeCommand(convertCommand, true);
 			System.out.println(output);
+			writeProperties();
 		}
 		catch (Exception e)
 		{
@@ -103,5 +108,26 @@ public class GenericClassifier extends Classifier
 	public boolean needsTraining()
 	{
 		return false;
+	}
+	
+	public void writeProperties()
+	{
+		try
+		{
+			for(Classifier.Parameter param: params)
+				properties.setProperty(param.name + ".value", param.value);
+			File file = new File(classifierProperties);
+			FileOutputStream fileOut;
+			fileOut = new FileOutputStream(file);
+			properties.store(fileOut, "Favorite Things");
+			fileOut.close();
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			if(!e.getMessage().isEmpty())
+				XmippDialog.showError(null,e.getMessage());
+		}
 	}
 }

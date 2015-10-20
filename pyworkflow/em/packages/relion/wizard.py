@@ -182,8 +182,8 @@ class RelionAutopickParams(EmWizard):
         coordsDir = project.getTmpPath(micSet.getName())
         cleanPath(coordsDir)
         makePath(coordsDir)
-        pickerConf = os.path.join(coordsDir, 'picker.conf')
-        f = open(pickerConf, "w")
+        pickerProps = os.path.join(coordsDir, 'picker.conf')
+        f = open(pickerProps, "w")
         
         
         
@@ -221,8 +221,20 @@ class RelionAutopickParams(EmWizard):
         autopickCommand = %(autopickCommand)s 
         convertCommand = %(convert)s --coordinates --from relion --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s --extra %(protDir)s/extra
         """ % args)
+        f.close()
         print "Launching picking GUI..."
-        CoordinatesObjectView(autopickProt.getProject(), micfn, coordsDir, autopickFomProt, pickerConf=pickerConf).show()
-                                     
-    
+        process = CoordinatesObjectView(autopickProt.getProject(), micfn, coordsDir, autopickFomProt, pickerProps=pickerProps).show()
+        process.wait()
+        myprops = {}
+        with open(pickerProps, 'r') as f:
+            for line in f:
+                line = line.rstrip() #removes trailing whitespace and '\n' chars
+        
+                if "=" not in line: continue #skips blanks and comments w/o =
+                if line.startswith("#"): continue #skips comments which contain =
+        
+                k, v = line.split("=", 1)
+                myprops[k] = v
+        form.setVar('pickingThreshold', myprops['threshold.value'])
+        form.setVar('interParticleDistance', myprops['ipd.value'])
     
