@@ -393,7 +393,10 @@ class ProtMovieAlignment(ProtProcessMovies):
                 if doSaveMovie:
                     command += '--ssc '
             else:
-                program = 'xmipp_movie_optical_alignment_cpu'
+ 		if self.doGPU:
+		   program = 'xmipp_movie_optical_alignment_gpu'
+            	else:
+                   program = 'xmipp_movie_optical_alignment_cpu'
                 command = '-i %(movieName)s%(movieSuffix)s ' % locals()
                 if doSaveMovie:
                     command += '--ssc '
@@ -441,8 +444,10 @@ class ProtMovieAlignment(ProtProcessMovies):
             return 'xmipp_movie_optical_alignment_cpu'
         if alMethod == AL_OPTICAL:
             if self.doGPU:
+		print 'doGPU is set to 1'
                 return 'xmipp_movie_optical_alignment_gpu'
             else:
+		print 'doGPU is set to 0'
                 return 'xmipp_movie_optical_alignment_cpu'
         elif alMethod == AL_DOSEFGPU:
             return 'dosefgpu_driftcorr'
