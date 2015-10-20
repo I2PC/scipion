@@ -31,7 +31,7 @@ This sub-package contains the XmippParticlePicking protocol
 from pyworkflow.em import ProtParticlePicking, PointerParam, FloatParam, String, CoordinatesTiltPair, TiltPair
 from pyworkflow.utils.path import pw, getFiles, copyFile, join, exists
 from xmipp3 import XmippProtocol
-from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
+from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs, XmippProtocol
 from convert import writeSetOfMicrographsPairs
 from itertools import izip
 from pyworkflow.em.showj import launchTiltPairPickerGUI
