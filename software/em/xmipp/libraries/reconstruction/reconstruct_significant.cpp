@@ -695,6 +695,7 @@ void ProgReconstructSignificant::numberOfProjections()
       std::cout << " Number of projections taking into account angular sampling and symmetry " << numProjects << std::endl;
       std::cout << " changing alpha0 to " << alpha0 << std::endl;
     }
+
 }
 
 void ProgReconstructSignificant::produceSideinfo()

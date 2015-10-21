@@ -82,7 +82,7 @@ public:
         addParamsLine("[--useSplines+]                 : Use cubic B-Splines for the interpolations");
         addParamsLine("==Locate helical parameters==");
         addParamsLine("[-z <z0=1> <zF=10> <zstep=0.5>]          : Search space for the shift in Z");
-        addParamsLine("[--rotHelical <rot0=0> <rotF=357> <step=3>]: Search space for rotation around Z");
+        addParamsLine("[--rotHelical <rot0=-357> <rotF=357> <step=3>]: Search space for rotation around Z");
         addParamsLine("[--localHelical <z> <rot>]  : Perform a local search around this angle and shift");
         mask_prm.defineParams(this,INT_MASK,NULL,"Restrict the comparison to the mask area.",true);
         addExampleLine("A typical application for a rotational symmetry axis is ",false);

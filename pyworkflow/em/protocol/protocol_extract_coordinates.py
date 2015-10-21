@@ -84,7 +84,7 @@ class ProtExtractCoords(ProtParticlePicking):
         #FIXME: the 'correction' as a temporarly hack for fixing the 
         # coordinates scale according to the particles pixel size
         if self.correction > 0:
-            scale_corrected = scale * self.correction.get()
+            scale = scale * self.correction.get()
             
         print "Scaling coordinates by a factor *%0.2f*" % scale        
         newCoord = Coordinate()
@@ -117,7 +117,7 @@ class ProtExtractCoords(ProtParticlePicking):
                 #FIXME: the 'correction' as a temporarly hack for fixing the 
                 # coordinates scale according to the particles pixel size
                 x, y = coord.getPosition()
-                newCoord.setPosition(x*scale_corrected, y*scale_corrected)                
+                newCoord.setPosition(x*scale, y*scale)                
                 newCoord.setMicrograph(mic)
                 outputCoords.append(newCoord)
         

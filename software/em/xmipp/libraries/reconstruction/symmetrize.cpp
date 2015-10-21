@@ -73,9 +73,9 @@ void ProgSymmetrize::defineParams()
     addParamsLine("   [--sum]               : compute the sum of the images/volumes instead of the average. This is useful for symmetrizing pieces");
     addParamsLine("   [--mask_in <fileName>]: symmetrize only in the masked area");
     addExampleLine("Symmetrize a list of images with 6 fold symmetry",false);
-    addExampleLine("   xmipp_symmetrize -i input.sel --sym 6");
+    addExampleLine("   xmipp_transform_symmetrize -i input.sel --sym 6");
     addExampleLine("Symmetrize with i3 symmetry and the volume is not wrapped",false);
-    addExampleLine("   xmipp_symmetrize -i input.vol --sym i3 --dont_wrap");
+    addExampleLine("   xmipp_transform_symmetrize -i input.vol --sym i3 --dont_wrap");
 }
 
 /* Show ------------------------------------------------------------------- */
@@ -147,7 +147,13 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
     else if (helical)
         symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical);
     else if (helicalDihedral)
+    {
         symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical,NULL,true);
+        MultidimArray<double> Vrotated;
+        rotate(BSPLINE3,Vrotated,V_out,180.0,'X',WRAP);
+        V_out+=Vrotated;
+        V_out*=0.5;
+    }
     else if (dihedral)
     {
     	int zmax=(int)(0.1*ZSIZE(V_in));

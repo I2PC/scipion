@@ -448,21 +448,21 @@ def rowToParticle(partRow, **kwargs):
     rowToObject(partRow, img, {}, 
                 extraLabels=IMAGE_EXTRA_LABELS + kwargs.get('extraLabels', []))
 
-    # Provide a hook to be used if something is needed to be 
-    # done for special cases before converting image to row
-    postprocessImageRow = kwargs.get('postprocessImageRow', None)
-    if postprocessImageRow:
-        postprocessImageRow(img, partRow)
-    
     img.setCoordinate(rowToCoordinate(partRow))
     
     # copy micId if available from row to particle
     if partRow.hasLabel(md.RLN_MICROGRAPH_ID):
         img.setMicId(partRow.getValue(md.RLN_MICROGRAPH_ID))
+    
     # copy particleId if available from row to particle
     if partRow.hasLabel(md.RLN_PARTICLE_ID):
-        img._rlnParticleId = Integer(partRow.getValue(md.RLN_MICROGRAPH_ID))
-
+        img._rlnParticleId = Integer(partRow.getValue(md.RLN_PARTICLE_ID))
+    
+    # Provide a hook to be used if something is needed to be 
+    # done for special cases before converting image to row
+    postprocessImageRow = kwargs.get('postprocessImageRow', None)
+    if postprocessImageRow:
+        postprocessImageRow(img, partRow)
     return img
 
 

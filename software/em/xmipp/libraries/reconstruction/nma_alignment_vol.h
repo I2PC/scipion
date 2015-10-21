@@ -81,6 +81,9 @@ public:
  
     /// Align volumes
     bool alignVolumes;
+
+    /// Trust radius scale
+    double trustradius_scale;
 public:
 
     // Random generator seed

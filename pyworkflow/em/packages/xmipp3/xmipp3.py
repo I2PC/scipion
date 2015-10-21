@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from numpy.core.defchararray import endswith
 """
 This sub-package will contains Xmipp3.1 specific protocols
 """
@@ -40,7 +41,8 @@ import pyworkflow.dataset as ds
 from pyworkflow.object import ObjectWrap
 
 from pyworkflow.utils import Environ
-from pyworkflow.dataset import COL_RENDER_CHECKBOX, COL_RENDER_TEXT, COL_RENDER_IMAGE
+from pyworkflow.dataset import COL_RENDER_CHECKBOX, COL_RENDER_TEXT, COL_RENDER_IMAGE,\
+    COL_RENDER_VOLUME
 
 from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, \
         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, MDL_CTF_MODEL, MDL_SAMPLINGRATE, DT_DOUBLE, \
@@ -75,6 +77,20 @@ def getXmippPath(*paths):
         return os.path.join(os.environ['XMIPP_HOME'], *paths)  
     else:
         raise Exception('XMIPP_HOME environment variable not set')
+    
+def getMatlabEnviron(*toolPaths):
+    """ Return an Environment prepared for launching Matlab
+    scripts using the Xmipp binding.
+    """
+    env = getEnviron()
+    env.set('PATH', os.environ['MATLAB_BINDIR'], Environ.BEGIN)
+    env.set('LD_LIBRARY_PATH', os.environ['MATLAB_LIBDIR'], Environ.BEGIN)
+    for toolpath in toolPaths:
+        env.set('MATLABPATH', toolpath, Environ.BEGIN)
+    env.set('MATLABPATH', os.path.join(os.environ['XMIPP_HOME'], 'libraries', 'bindings', 'matlab'),
+            Environ.BEGIN)
+    
+    return env
     
     
 class XmippProtocol():
@@ -171,8 +187,14 @@ class XmippMdRow():
         for label, value in self._labelDict.iteritems():
             # TODO: Check how to handle correctly unicode type
             # in Xmipp and Scipion
-            if type(value) is unicode:
+            t = type(value)
+            
+            if t is unicode:
                 value = str(value)
+                
+            if t is int and xmipp.labelType(label) == xmipp.LABEL_SIZET:
+                value = long(value)
+                
             try:
                 md.setValue(label, value, objId)
             except Exception, ex:
@@ -360,12 +382,14 @@ class XmippDataSet(ds.DataSet):
         else:
             mdFn = self._filename
         md = xmipp.MetaData(mdFn)
-        
         return self._convertMdToTable(md)
         
-    def _getLabelRenderType(self, label):
+    def _getLabelRenderType(self, label, md):
         """ Return the way to render each label. """
         if xmipp.labelIsImage(label):
+            value = md.getValue(label, md.firstObject())
+            if value.endswith('.vol'):
+                return COL_RENDER_VOLUME
             return COL_RENDER_IMAGE
         
         labelType = xmipp.labelType(label)
@@ -375,18 +399,18 @@ class XmippDataSet(ds.DataSet):
         return COL_RENDER_TEXT
         
         
-    def _convertLabelToColumn(self, label):
+    def _convertLabelToColumn(self, label, md):
         """ From an Xmipp label, create the corresponding column. """
         return ds.Column(xmipp.label2Str(label), 
                          getLabelPythonType(label),
-                         renderType=self._getLabelRenderType(label))
+                         renderType=self._getLabelRenderType(label, md))
         
     def _convertMdToTable(self, md):
         """ Convert a metatada into a table. """
            
         labels = md.getActiveLabels()
         hasTransformation = self._hasTransformation(labels)  
-        columns = [self._convertLabelToColumn(l) for l in labels]        
+        columns = [self._convertLabelToColumn(l, md) for l in labels]        
         #NAPA de LUXE (xmipp deberia saber a que campo va asignado el transformation matrix)             
         if hasTransformation:
             columns.append(ds.Column("image_transformationMatrix", str))

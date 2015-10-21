@@ -266,6 +266,107 @@ size_t MDSql::size(void)
     return execSingleIntStmt(ss);
 }
 
+bool MDSql::setObjectValues(const std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels, bool firstTime)
+{
+    bool r = true;					// Return value.
+    static std::stringstream ss;	// Stream.
+    int i=0, j=0;					// Loop indexes.
+    static sqlite3_stmt * stmt;		// SQL statement.
+
+    if (firstTime)
+    {
+    	// Clear ss.
+    	ss.str(std::string());
+
+		// Initialize SQL sentence.
+		ss << "INSERT INTO " << tableName(tableId);
+
+		// Add columns.
+	    ss << " (";
+
+	    // If desired labels is null then add all columns.
+	    if (desiredLabels==NULL)
+	    {
+	    	ss << MDL::label2StrSql(columnValues[0]->label);
+			for (i=1; i<columnValues.size() ;i++)
+			{
+				ss << "," << MDL::label2StrSql(columnValues[i]->label);
+			}
+	    }
+	    // Add only desired columns.
+	    else
+	    {
+	    	ss << MDL::label2StrSql((*desiredLabels)[0]);
+			for (i=1; i<desiredLabels->size() ;i++)
+			{
+				ss << "," << MDL::label2StrSql((*desiredLabels)[i]);
+			}
+	    }
+	    ss << ")";
+
+	    // Add ? symbols.
+	    ss << " VALUES (?";
+
+	    // If desired labels is null then add all columns.
+	    if (desiredLabels==NULL)
+	    {
+			for (i=1; i<columnValues.size() ;i++)
+			{
+				ss << ",?";
+			}
+	    }
+	    // Add only desired columns.
+	    else
+	    {
+			for (i=1; i<desiredLabels->size() ;i++)
+			{
+				ss << ",?";
+			}
+	    }
+	    ss << ");";
+    }
+
+    // Prepare statement.
+    rc = sqlite3_prepare_v2(db, ss.str().c_str(), ss.str().length(), &stmt, &zLeftover);
+
+    // Add values.
+    if (desiredLabels==NULL)
+    {
+        bindValue(stmt, 1, *(columnValues[0]));
+        for (i=1; i<columnValues.size() ;i++)
+        {
+        	bindValue(stmt, i+1, *(columnValues[i]));
+        }
+    }
+    // Add only desired columns.
+    else
+    {
+		for (i=0; i<desiredLabels->size() ;i++)
+		{
+			for (j=0; j<columnValues.size() ;j++)
+			{
+				if (columnValues[j]->label == (*desiredLabels)[i])
+				{
+					bindValue(stmt, i+1, *(columnValues[j]));
+					break;
+				}
+			}
+		}
+    }
+
+    // Execute statement.
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
+    {
+        std::cerr << "MDSql::setObjectValue(MDObject): " << std::endl
+        << "   " << ss.str() << std::endl
+        <<"    code: " << rc << " error: " << sqlite3_errmsg(db) << std::endl;
+        r = false;
+    }
+    sqlite3_finalize(stmt);
+    return r;
+}
+
 //set column with a given value
 bool MDSql::setObjectValue(const MDObject &value)
 {

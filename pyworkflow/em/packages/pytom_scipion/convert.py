@@ -38,13 +38,17 @@ import pyworkflow.em as em
 def getPyTomPaths():
     """ Return the list of paths that need to be included for use PyTom. """
     PYTOM_HOME = os.environ['PYTOM_HOME']
+    SCIPION_HOME = os.environ['SCIPION_HOME']
     suffixes = ['pytomc', 'pytomc/swigModules', 
                 'pytomc/sh_alignment/frm/swig',                 
                 'pytomc/libs/libtomc/libs',
                 'external/lib', 'external/lib/python/site-packages']
     suffixPaths = [os.path.join(PYTOM_HOME, suffix) for suffix in suffixes]
-    
-    return [os.path.dirname(PYTOM_HOME)] + suffixPaths
+    paths = [os.path.dirname(PYTOM_HOME)] + suffixPaths
+    paths.append(os.path.join(SCIPION_HOME,"software","lib"))
+    paths.append(os.path.join(SCIPION_HOME,"software","lib","python2.7","site-packages"))
+
+    return paths
 
 
 def addPyTomPaths():
@@ -86,7 +90,7 @@ def writeSetOfVolumes(volSet, volXml, volDir):
     addPyTomPaths()
     
     from pytom.basic.structures import Particle, ParticleList, Wedge, SingleTiltWedge
-    from pytom.score.score import Score, PeakPrior
+    from pytom.score.score import Score, PeakPrior, xcfScore
     from pytom.frm.FRMAlignment import FRMScore
     
     w = SingleTiltWedge()
@@ -114,12 +118,15 @@ def writeSetOfVolumes(volSet, volXml, volDir):
         # where the programs will be executed
         volRel = os.path.relpath(volFn, os.path.dirname(volXml))
         p = Particle()
+        s = xcfScore()
+        s.setValue(1.0)
         pytomInfo = getattr(vol, 'pytomInfo', None)
         if pytomInfo is None:
             p.setWedge(w)
         else:
             p.fromXML(pytomInfo.get()) # Get stored XML format from PyTom
         p.setFilename(volRel)
+        p.setScore(s)
         pl.append(p)
         
     pl.toXMLFile(volXml)

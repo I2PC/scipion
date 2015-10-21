@@ -942,12 +942,13 @@ class ProtocolsView(tk.Frame):
             if prot is None:  # in case it is the main "Project" node
                 return
             g = self.project.getRunsGraph(refresh=False)
+            
             for node in g.getNodes():
                 if node.run and node.run.getObjId() in self._selection:
                     # This option is only for compatibility with all projects
                     if hasattr(node, 'item'):
                         node.item.setSelected(False)
-                    node.item.setSelected(False)
+
             item.setSelected(True)
         
         self._selection.clear()

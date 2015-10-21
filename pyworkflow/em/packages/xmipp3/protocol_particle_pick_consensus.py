@@ -90,14 +90,22 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         return []    
     
     def calculateConsensusStep(self, micId):
+        # Take the sampling rates
+        Tm = []
+        for coordinates in self.inputCoordinates:
+            Tm.append(coordinates.get().getMicrographs().getSamplingRate())
+        
         # Get all coordinates for this micrograph
         coords = []
         Ncoords = 0
+        n=0
         for coordinates in self.inputCoordinates:
             coordArray = np.asarray([x.getPosition() 
                                      for x in coordinates.get().iterCoordinates(micId)])
+            coordArray *= Tm[n]/Tm[0]
             coords.append(coordArray)
             Ncoords += coordArray.shape[0]
+            n+=1
         
         allCoords = np.zeros([Ncoords,2])
         votes = np.zeros(Ncoords)
@@ -130,9 +138,13 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         else:
             consensus = self.consensus.get()
         consensusCoords = allCoords[votes>=consensus,:]
+        jaccardIdx = float(len(consensusCoords))/(float(len(allCoords))/len(self.inputCoordinates))
+        # COSS: Possible problem with concurrent writes
+        with open(self._getExtraPath('jaccard.txt'), "a") as fhJaccard:
+            fhJaccard.write("%d %f\n"%(micId,jaccardIdx))
         
         # Write the consensus file only if there
-        # are some coodinates (size > 0)
+        # are some coordinates (size > 0)
         if consensusCoords.size:
             np.savetxt(self._getExtraPath('consensus_%06d.txt' % micId), consensusCoords)
     

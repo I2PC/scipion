@@ -731,7 +731,7 @@ public class ScipionMetaData extends MetaData {
             if(downsampleFactor == null)
                 downsampleFactor = 1.;
                 //read params from sqlite
-
+            
             return new EllipseCTF(id, Q0, Cs, downsampleFactor, Ts, kV, defU, defV, defAngle, D);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());

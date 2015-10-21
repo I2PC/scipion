@@ -29,6 +29,7 @@
 #include "xmipp_program.h"
 #include "xmipp_filename.h"
 #include "metadata.h"
+#include "xmipp_fft.h"
 
 
 const int CTF_BASIC_LABELS_SIZE = 5;
@@ -78,6 +79,7 @@ public:
     double u_sqrt;
     double u;
     double u2;
+    double u3;
     double u4;
     double ang;
     double deltaf;
@@ -315,6 +317,10 @@ public:
     double cV2;
     /// Second Gaussian angle
     double gaussian_angle2;
+    // Background polynomial
+    double bgR1, bgR2, bgR3;
+    // Envelope polynomial
+    double envR0, envR1, envR2;
 
     /** Empty constructor. */
     CTFDescription()
@@ -386,6 +392,7 @@ public:
         precomputed.ang=atan2(Y, X);
         precomputed.u2 = X * X + Y * Y;
         precomputed.u = sqrt(precomputed.u2);
+        precomputed.u3 = precomputed.u2 * precomputed.u;
         precomputed.u4 = precomputed.u2 * precomputed.u2;
         precomputed.u_sqrt = sqrt(precomputed.u);
         if (fabs(X) < XMIPP_EQUAL_ACCURACY &&
@@ -465,7 +472,7 @@ public:
         double EdeltaR = SINC(precomputed.u * DeltaR); // OK
         double aux=K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u;
         double Ealpha = exp(-K6 * aux * aux);
-        double E = Eespr * EdeltaF * EdeltaR * Ealpha;
+        double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
         if (show)
         {
             std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
@@ -502,7 +509,7 @@ public:
         double aux=(K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u);
         double Ealpha = exp(-K6 * aux * aux); // OK
         // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
-        double E = Eespr * EdeltaF * EdeltaR * Ealpha;
+        double E = Eespr * EdeltaF * EdeltaR * Ealpha + envR0+envR1*precomputed.u+envR2*precomputed.u2;
         if (show)
         {
             std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
@@ -537,7 +544,7 @@ public:
         double aux=(K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u);
         double Ealpha = exp(-K6 * aux * aux); // OK
         // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
-        double E = Eespr * EdeltaF * EdeltaR * Ealpha;
+        double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
         return -(Ksin*sine_part - Kcos*cosine_part)*E;
     }
 
@@ -558,7 +565,7 @@ public:
         double EdeltaR = sinc(u * DeltaR); // OK
         double Ealpha = exp(-K6 * (K7 * u2 * u + deltaf * u) * (K7 * u2 * u + deltaf * u)); // OK
         // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
-        double E = Eespr * EdeltaF * EdeltaR * Ealpha;
+        double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
         if (show)
         {
             std::cout << " Deltaf=" << deltaf << std::endl;
@@ -637,7 +644,8 @@ public:
         return base_line +
                gaussian_K*exp(-sigma*aux*aux) +
                sqrt_K*exp(-sq*precomputed.u_sqrt) -
-               gaussian_K2*exp(-sigma2*aux2*aux2);
+               gaussian_K2*exp(-sigma2*aux2*aux2)+
+			   bgR1*precomputed.u+bgR2*precomputed.u2+bgR3*precomputed.u3;
     }
 
     /** Returns the continuous frequency of the zero, maximum or minimum number n in the direction u.
@@ -646,20 +654,19 @@ public:
     void lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> &freq, int iwhat=0);
 
     /// Apply CTF to an image
-    void applyCTF(MultidimArray < std::complex<double> > &FFTI, double Ts, bool absPhase=false);
+    void applyCTF(MultidimArray < std::complex<double> > &FFTI, const MultidimArray<double> &I, double Ts, bool absPhase=false);
 
     /// Apply CTF to an image
     void applyCTF(MultidimArray <double> &I, double Ts, bool absPhase=false);
 
     /** Generate CTF image.
         The sample image is used only to take its dimensions. */
-    template <class T>
-    void generateCTF(const MultidimArray<T> &sample_image,
-                      MultidimArray < std::complex<double> > &CTF)
+    template <class T1, class T2>
+    void generateCTF(const MultidimArray<T1> &sample_image, MultidimArray <T2> &CTF, double Ts=-1)
     {
         if ( ZSIZE(sample_image) > 1 )
             REPORT_ERROR(ERR_MULTIDIM_DIM,"ERROR: Generate_CTF only works with 2D sample images, not 3D.");
-        generateCTF(YSIZE(sample_image), XSIZE(sample_image), CTF);
+        generateCTF(YSIZE(sample_image), XSIZE(sample_image), CTF, Ts);
         STARTINGX(CTF) = STARTINGX(sample_image);
         STARTINGY(CTF) = STARTINGY(sample_image);
     }
@@ -677,9 +684,73 @@ public:
      */
     void getAverageProfile(double fmax, int nsamples, MultidimArray<double> &profiles);
 
-    /// Generate CTF image.
-    void generateCTF(int Ydim, int Xdim,
-                      MultidimArray < std::complex<double> > &CTF);
+//#define DEBUG
+   /// Generate CTF image.
+    template <class T>
+    void generateCTF(int Ydim, int Xdim, MultidimArray < T > &CTF, double Ts=-1)
+    {
+        CTF.resizeNoCopy(Ydim, Xdim);
+        if (Ts<0)
+        	Ts=Tm;
+		#ifdef DEBUG
+			std::cout << "CTF:\n" << *this << std::endl;
+		#endif
+
+        double iTs=1.0/Ts;
+        for (int i=0; i<Ydim; ++i)
+        {
+        	double wy;
+        	FFT_IDX2DIGFREQ(i, YSIZE(CTF), wy);
+            double fy=wy*iTs;
+        	for (int j=0; j<Xdim; ++j)
+        	{
+            	double wx;
+            	FFT_IDX2DIGFREQ(j, XSIZE(CTF), wx);
+                double fx=wx*iTs;
+				precomputeValues(fx, fy);
+				A2D_ELEM(CTF, i, j) = (T) getValueAt();
+				#ifdef DEBUG
+						if (i == 0)
+							std::cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
+							<< " " << CTF(i, j) << std::endl;
+				#endif
+        	}
+        }
+    }
+    #undef DEBUG
+
+    template <class T>
+    void generateCTFWithoutDamping(int Ydim, int Xdim, MultidimArray < T > &CTF, double Ts=-1)
+    {
+        CTF.resizeNoCopy(Ydim, Xdim);
+        if (Ts<0)
+        	Ts=Tm;
+		#ifdef DEBUG
+			std::cout << "CTF:\n" << *this << std::endl;
+		#endif
+
+        double iTs=1.0/Ts;
+        for (int i=0; i<Ydim; ++i)
+        {
+        	double wy;
+        	FFT_IDX2DIGFREQ(i, YSIZE(CTF), wy);
+            double fy=wy*iTs;
+        	for (int j=0; j<Xdim; ++j)
+        	{
+            	double wx;
+            	FFT_IDX2DIGFREQ(j, XSIZE(CTF), wx);
+                double fx=wx*iTs;
+				precomputeValues(fx, fy);
+				A2D_ELEM(CTF, i, j) = (T) getValuePureWithoutDampingAt();
+				#ifdef DEBUG
+						if (i == 0)
+							std::cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
+							<< " " << CTF(i, j) << std::endl;
+				#endif
+        	}
+        }
+    }
+    #undef DEBUG
 
     /** Check physical meaning.
         true if the CTF parameters have physical meaning.

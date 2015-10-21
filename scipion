@@ -256,8 +256,8 @@ def main():
 #         if not exists(join(VARS['SCIPION_SOFTWARE'], 'log', 'success.log')):
 #             ok = False
         if not ok:
-            sys.exit('There is a problem with the installation. Please run:\n'
-                     '  %s install' % sys.argv[0])
+            sys.exit("There is a problem with the installation. Please run:\n"
+                     "  %s install" % sys.argv[0])
 
     if mode == MODE_MANAGER:
         runApp('pw_manager.py')
@@ -266,9 +266,7 @@ def main():
         runApp('pw_project.py', args='last')
         
     elif mode == MODE_PROJECT:
-        if n > 2:
-            projectName = sys.argv[2]
-            runApp('pw_project.py', args=projectName)
+        runApp('pw_project.py', args=sys.argv[2:])
 
     elif mode == MODE_WEBSERVER:
         if n > 2:
@@ -467,28 +465,38 @@ Arguments:
     elif mode == MODE_HELP:
         sys.stdout.write("""\
 Usage: scipion [MODE] [ARGUMENTS]
+
 MODE can be:
-    config                 Write default configuration.
     help                   Print this help message.
+
+    config                 Check and/or write Scipion's global and local configuration.
+
     install [OPTION]       Download and install all the necessary software to run Scipion.
                            OPTION can be:
                              --with-all-packages: download also all external em packages
-                             --with-xmipp=$XMIPP_HOME: use existing installation of xmipp
                              --help: show all the available options
+
     manager                Open the manager with a list of all projects.
+
     printenv               Print the environment variables used by the application.
-    project [PROJECT_NAME] Open the specified project. The name 'last' opens the last project.
+
+    project NAME           Open the specified project. The name 'last' opens the last project.
+
     last                   Same as 'project last'
+
     run COMMAND [ARG ...]  Run command in the Scipion environment.
-    stats                  Write git statistics to data/stats folder.
-    test [OPTION]          Run a test. They are located in pyworkflow/tests .
+
+    stats                  Write git statistics to the data/stats folder.
+
+    test OPTION            Run test(s). All tests are located in pyworkflow/tests .
                            OPTION can be:
-                             <test name>: name of the test to run
+                             <name>: name of the test to run
                              --show: list the available tests
                              --help: show all the available options
                            For example, to run the "test_object" test:
                              scipion test tests.model.test_object
-    testdata [OPTION]      Get/put tests data from/to the server to/from the SCIPION_TESTS folder.
+
+    testdata OPTION        Get(put) tests data, from(to) the server to(from) the $SCIPION_TESTS folder.
                            OPTION can be:
                              --download: copy dataset from remote location to local
                              --upload: copy dataset from local to remote
@@ -501,8 +509,10 @@ MODE can be:
                              scipion testdata --upload xmipp_tutorial
                              
     tutorial [NAME]        Create a new protocol with a tutorial workflow loaded.
-                           If NAME is empty, the list of available tutorials are shown. 
-    viewer | view | show [ARGS] Open a file with Scipion's showj program or Browser if a directory.
+                           If NAME is empty, the list of available tutorials are shown.
+
+    view | show NAME       Open a file with Scipion's showj, or a directory with Browser.
+
     webserver [OPTION]     Launch webserver. Scipion can be then controlled from a web browser.
                            OPTION can be:
                              django: open local django webserver (default)

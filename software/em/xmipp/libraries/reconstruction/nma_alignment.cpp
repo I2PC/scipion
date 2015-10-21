@@ -410,7 +410,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 	++imageCounter;
 
 	double rhoStart=trustradius_scale*250.;
-        double rhoEnd=trustradius_scale*50.;
+    double rhoEnd=trustradius_scale*50.;
 
 	int niter=10000;
 
