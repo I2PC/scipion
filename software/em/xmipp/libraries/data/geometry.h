@@ -446,6 +446,19 @@ void box_enclosing(const Matrix1D< double >& v0,
 bool point_inside_polygon(const std::vector< Matrix1D< double > > & polygon,
                           const Matrix1D< double >& point);
 
+/** Affine transformation
+ *
+ */
+void def_affinity(double u1x, double u1y, double u2x, double u2y, double u3x, double u3y, double t1x,
+		double t1y, double t2x, double t2y, double t3x, double t3y, Matrix2D<double> &A, Matrix1D<double> &T, Matrix2D<double> &invW);
+
+
+
+/** Area of a triangle
+ * Given the coordinates of three points this function calculates the area of the triangle
+ */
+double triangle_area(double x1, double y1, double x2, double y2, double x3, double y3);
+
 /** Line Plane Intersection
  *
  * Let ax+by+cz+D=0 be the equation of your plane (if your plane is defined by a

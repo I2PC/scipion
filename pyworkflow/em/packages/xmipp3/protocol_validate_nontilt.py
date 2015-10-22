@@ -43,10 +43,12 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
     """    
     Ranks a set of volumes according to their alignment reliability obtained from a clusterability test.
     """
+
     _label = 'validate_nontilt'
     PROJECTION_MATCHING = 0
     SIGNIFICANT = 1
     WEB = 0
+
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
