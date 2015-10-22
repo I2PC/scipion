@@ -13,11 +13,11 @@ public class PickingClassifier extends Classifier
 		System.loadLibrary("XmippJNI");
 	}
 	
-	public PickingClassifier(int particlesize, String output, String micsFn) throws Exception {
-        create(particlesize, output, micsFn);
+	public PickingClassifier(int particlesize, String output, MDRow[] mics) throws Exception {
+        create(particlesize, output, mics);
     }
 	
-	private native void create(int particle_size, String output, String micsFn);
+	private native void create(int particle_size, String output, MDRow[] mics);
 	
 	public native void destroy();
 
