@@ -566,30 +566,30 @@ class HelicalFinder():
         else:
             return "helical"
 
-    def runCoarseSearch(self,fnVol,dihedral,z0,zF,zStep,rot0,rotF,rotStep,Nthr,fnOut,cylinderRadius,height):
-        args="-i %s --sym %s -z %f %f %f --rotHelical %f %f %f --thr %d -o %s"%(fnVol,self.getSymmetry(dihedral),
-                                                                                z0,zF,zStep,rot0,rotF,rotStep,Nthr,fnOut)
+    def runCoarseSearch(self,fnVol,dihedral,z0,zF,zStep,rot0,rotF,rotStep,Nthr,fnOut,cylinderRadius,height,Ts):
+        args="-i %s --sym %s -z %f %f %f --rotHelical %f %f %f --thr %d -o %s --sampling %f"%(fnVol,self.getSymmetry(dihedral),
+                                                                                z0,zF,zStep,rot0,rotF,rotStep,Nthr,fnOut,Ts)
         if cylinderRadius>0:
             args+=" --mask cylinder %d %d"%(-cylinderRadius,-height)
         self.runJob('xmipp_volume_find_symmetry',args)
 
-    def runFineSearch(self, fnVol, dihedral, fnCoarse, fnFine, z0, zF, rot0, rotF, cylinderRadius, height):
+    def runFineSearch(self, fnVol, dihedral, fnCoarse, fnFine, z0, zF, rot0, rotF, cylinderRadius, height, Ts):
         md=MetaData(fnCoarse)
         objId=md.firstObject()
         rotInit=md.getValue(MDL_ANGLE_ROT,objId)
         zInit=md.getValue(MDL_SHIFT_Z,objId)
-        args="-i %s --sym %s --localHelical %f %f -o %s -z %f %f 1 --rotHelical %f %f 1 "%(fnVol,self.getSymmetry(dihedral),
-                                                                                           zInit,rotInit,fnFine,z0,zF,rot0,rotF)
+        args="-i %s --sym %s --localHelical %f %f -o %s -z %f %f 1 --rotHelical %f %f 1 --sampling %f"%(fnVol,self.getSymmetry(dihedral),
+                                                                                           zInit,rotInit,fnFine,z0,zF,rot0,rotF,Ts)
         if cylinderRadius>0:
             args+=" --mask cylinder %d %d"%(-cylinderRadius,-height)
         self.runJob('xmipp_volume_find_symmetry',args)
 
-    def runSymmetrize(self, fnVol, dihedral, fnParams, fnOut, cylinderRadius, height):
+    def runSymmetrize(self, fnVol, dihedral, fnParams, fnOut, cylinderRadius, height, Ts):
         md=MetaData(fnParams)
         objId=md.firstObject()
         rot0=md.getValue(MDL_ANGLE_ROT,objId)
         z0=md.getValue(MDL_SHIFT_Z,objId)
-        args="-i %s --sym %s --helixParams %f %f -o %s"%(fnVol,self.getSymmetry(dihedral),z0,rot0,fnOut)
+        args="-i %s --sym %s --helixParams %f %f -o %s --sampling %f"%(fnVol,self.getSymmetry(dihedral),z0,rot0,fnOut,Ts)
         self.runJob('xmipp_transform_symmetrize',args)
         if cylinderRadius>0:
             args="-i %s --mask cylinder %d %d"%(fnOut,-cylinderRadius,-height)
