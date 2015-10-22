@@ -562,6 +562,7 @@ void * _memmem ( const void *haystack, size_t haystack_len, const void *needle, 
 {
     const char *begin;
     const char *const last_possible = (const char *) haystack + haystack_len - needle_len;
+    const char *pNeedle=(const char *) needle;
 
     if (needle_len == 0)
         /* The first occurrence of the empty string is deemed to occur at
@@ -574,10 +575,8 @@ void * _memmem ( const void *haystack, size_t haystack_len, const void *needle, 
         return NULL;
 
     for (begin = (const char *) haystack; begin <= last_possible; ++begin)
-        if (begin[0] == ((const char *) needle)[0] &&
-            !memcmp ((const void *) &begin[1],
-                     (const void *) ((const char *) needle + 1),
-                     needle_len - 1))
+        if (begin[0] == pNeedle[0] &&
+            !memcmp (begin+1, pNeedle + 1, needle_len - 1))
             return (void *) begin;
 
     return NULL;

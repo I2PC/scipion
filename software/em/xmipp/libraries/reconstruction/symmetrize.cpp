@@ -73,9 +73,9 @@ void ProgSymmetrize::defineParams()
     addParamsLine("   [--sum]               : compute the sum of the images/volumes instead of the average. This is useful for symmetrizing pieces");
     addParamsLine("   [--mask_in <fileName>]: symmetrize only in the masked area");
     addExampleLine("Symmetrize a list of images with 6 fold symmetry",false);
-    addExampleLine("   xmipp_symmetrize -i input.sel --sym 6");
+    addExampleLine("   xmipp_transform_symmetrize -i input.sel --sym 6");
     addExampleLine("Symmetrize with i3 symmetry and the volume is not wrapped",false);
-    addExampleLine("   xmipp_symmetrize -i input.vol --sym i3 --dont_wrap");
+    addExampleLine("   xmipp_transform_symmetrize -i input.vol --sym i3 --dont_wrap");
 }
 
 /* Show ------------------------------------------------------------------- */
