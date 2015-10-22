@@ -733,7 +733,7 @@ class TestXmippProjMatching(TestXmippBase):
         
         print "Import Volume"
         protImportVol = self.newProtocol(ProtImportVolumes,
-                                         objLabel='Particles from scipion',
+                                         objLabel='Volume',
                                          filesPath=self.vol,
                                          samplingRate=7.08)
         self.launchProtocol(protImportVol)
