@@ -268,6 +268,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self._defineOutputs(outputParticles=imgSetOut)
             self._defineSourceRelation(self.inputParticles, imgSetOut)
     
+    def getLastIter(self):
+        fnDirs=sorted(glob(self._getExtraPath("Iter???")))
+        lastDir=fnDirs[-1]
+        return int(lastDir[-3:])
+    
     def _postprocessImageRow(self, particle, row):
         setXmippAttributes(particle, row, MDL_SHIFT_X, MDL_SHIFT_Y, MDL_ANGLE_TILT, MDL_SCALE, MDL_MAXCC, MDL_MAXCC_PERCENTILE, MDL_WEIGHT)
         if row.containsLabel(MDL_CONTINUOUS_X):
@@ -397,7 +402,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             fnUsed=join(fnDirCurrent,"imagesUsed.xmd")
             fnUsed1=join(fnDirCurrent,"imagesUsed01.xmd")
             fnUsed2=join(fnDirCurrent,"imagesUsed02.xmd")
-            self.runJob('xmipp_metadata_utilities',"-i %s --set union_all %s -o %s"%(fnUsed1,fnUsed2,fnUsed),numberOfMpi=1)
+            self.runJob('xmipp_metadata_utilities',"-i %s --set union %s -o %s"%(fnUsed1,fnUsed2,fnUsed),numberOfMpi=1)
             cleanPath(fnUsed1)
             cleanPath(fnUsed2)
             fnAngles=join(fnDirCurrent,"angles.xmd")
@@ -809,7 +814,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         fnAngles=join(fnDirCurrent,"angles.xmd")
         fnAngles1=join(fnDirCurrent,"angles01.xmd")
         fnAngles2=join(fnDirCurrent,"angles02.xmd")
-        self.runJob('xmipp_metadata_utilities',"-i %s --set union_all %s -o %s"%(fnAngles1,fnAngles2,fnAngles),numberOfMpi=1)
+        self.runJob('xmipp_metadata_utilities',"-i %s --set union %s -o %s"%(fnAngles1,fnAngles2,fnAngles),numberOfMpi=1)
 
     def qualifyParticles(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)

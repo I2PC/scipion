@@ -68,12 +68,20 @@ def isEmpty(filename):
     return getSize(filename) == 0
 
 
-def iterRows(md):
-    """ Iterate over the rows of the given metadata. """
+def iterRows(md, sortByLabel=None):
+    """ Iterate over the rows of the given metadata.
+    Params:
+        md: a MetaData object or a filename (MetaData will be read)
+        sortByLabel: a label to sort the metadata before iterate.
+    """
     # If md is string, take as filename and create the metadata
+
     if isinstance(md, basestring):
         md = MetaData(md)
-        
+
+    if sortByLabel is not None:
+        md.sort(sortByLabel)
+
     row = Row()
     
     for objId in md:

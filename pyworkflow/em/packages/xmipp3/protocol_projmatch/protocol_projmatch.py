@@ -383,7 +383,7 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         partSet.setAlignmentProj()
         partSet.copyItems(imgSet,
                             updateItemCallback=self._createItemMatrix,
-                            itemDataIterator=md.iterRows(imgFn))
+                            itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
     
     def _createItemMatrix(self, item, row):
         from pyworkflow.em.packages.xmipp3.convert import createItemMatrix

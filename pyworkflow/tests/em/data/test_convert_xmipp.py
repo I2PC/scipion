@@ -91,8 +91,8 @@ class TestBasic(BaseTest):
 
 
 SHOW_IMAGES  = False # Launch xmipp_showj to open intermediate results
-CLEAN_IMAGES = False # Remove the output temporary files
-PRINT_MATRIX = False
+CLEAN_IMAGES = True # Remove the output temporary files
+PRINT_MATRIX = True
 PRINT_FILES  = True
 
 
@@ -587,7 +587,84 @@ class TestAlignment(TestConvertBase):
 class TestReconstruct(TestConvertBase):
     IS_ALIGNMENT = False
     CMD = "xmipp_reconstruct_art -i %(mdFn)s -o %(outputFn)s"
-    
+
+    def tobeimplementedtest_forward_backwards(self):
+        """convert transformation matrixt to xmipp and back"""
+
+        mList = [[[0.71461016, 0.63371837, -0.29619813,  1.],#a1
+                  [-0.61309201, 0.77128059, 0.17101008,  2.],
+                  [0.33682409, 0.059391174, 0.93969262,  3.],
+                  [0,          0,          0,            1.]],
+                 [[0., 0., -1., 0.],#a2
+                  [0., 1., 0., 0.],
+                  [1., 0., 0., 0.],
+                  [0., 0., 0., 1.]],
+                 [[0., 1., 0., 0.],#a3
+                  [0., 0., 1., 0.],
+                  [1., 0., 0., 0.],
+                  [0., 0., 0., 1.]],
+                 [[ 0.22612257, 0.82379508, -0.51983678, 0.],#a4
+                  [-0.88564873, 0.39606407, 0.24240388,  0.],
+                  [ 0.40557978, 0.40557978, 0.81915206,  0.],
+                  [ 0.,          0.,          0.,           1.]],
+                 [[-0.78850311, -0.24329656,-0.56486255,   0.],#a5
+                  [ 0.22753462, -0.96866286, 0.099600501,  0.],
+                  [-0.57139379, -0.049990479, 0.81915206,  0.],
+                  [0.,            0.,           0.,           1.]],
+                 [[ 1.0, 0.0, 0.0, 0.0],#a6
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[0., 0., -1., 0.],#a7
+                  [-1., 0., 0.,  0.],
+                  [0., 1., 0.,  0.],
+                  [0., 0., 0., 1.]]
+                ]
+
+        aList = [np.array(m) for m in mList]
+        rowa = XmippMdRow()
+        rowb = XmippMdRow()
+
+        for i, a in enumerate(aList):
+            a = Transform(aList[i])
+            alignmentToRow(a, rowa, ALIGN_PROJ)
+            b=rowToAlignment(rowa, ALIGN_PROJ)
+            alignmentToRow(b, rowb, ALIGN_PROJ)
+            print "cmpMAtrix--------------------------","\n",a.getMatrix(),"\n", b.getMatrix()
+            print "cmpROW--------------------------","\n",rowa,"\n", rowb
+            if i%2 ==0:
+               rowa.setValue(MDL_FLIP,True)
+            b=rowToAlignment(rowa, ALIGN_PROJ)
+            alignmentToRow(b, rowb, ALIGN_PROJ)
+            print "cmpROWFLIP--------------------------","\n",rowa,"\n", rowb
+
+        #rowa.setValue(MDL_ANGLE_ROT, 171.516598)
+        #rowa.setValue(MDL_ANGLE_TILT, 83.655337)
+        #rowa.setValue(MDL_ANGLE_PSI, 133.953488)
+        #rowa.setValue(MDL_SHIFT_X,  -0.915030)
+        #rowa.setValue(MDL_SHIFT_Y, -0.909983)
+        #rowa.setValue(MDL_FLIP, True)
+        #a=rowToAlignment(rowa, ALIGN_PROJ)
+        #alignmentToRow(a, rowb, ALIGN_PROJ)
+        #print "image 153 rowa",rowa
+        #print "image 153 a",a.getMatrix()
+        #print "image 153 rowa",rowb
+
+
+
+        #rowa.setValue(MDL_ANGLE_ROT, 171.516598)
+        #rowa.setValue(MDL_ANGLE_TILT, 83.655337)
+        #rowa.setValue(MDL_ANGLE_PSI, 201.976744)
+        #rowa.setValue(MDL_SHIFT_X,  -0.013320)
+        #rowa.setValue(MDL_SHIFT_Y, -0.782359)
+        #rowa.setValue(MDL_FLIP, True)
+        #a=rowToAlignment(rowa, ALIGN_PROJ)
+        #alignmentToRow(a, rowb, ALIGN_PROJ)
+        #print "image 24 rowa",rowa
+        #print "image 24 a",a.getMatrix()
+        #print "image 24 rowa",rowb
+
+
     def test_reconstRotOnly(self):
         """ Check that for a given alignment object,
         the corresponding Xmipp metadata row is generated properly.

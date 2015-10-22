@@ -37,6 +37,7 @@ DATABASES = {
 ALLOWED_HOSTS = []
 # ALLOWED_HOSTS = ['localhost']
 
+SITE_URL = 'scipion.cnb.csic.es'
 # Subdomain where Scipion is hosted or working
 ABSOLUTE_URL = '/m'
 # ABSOLUTE_URL = '/examples'
