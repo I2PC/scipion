@@ -48,6 +48,9 @@ public:
     /** threshold*/
     double thr;
 
+    /** Tilt estimation angle*/
+    double tiltest;
+
     MetaData mdPartial;
 
 public:

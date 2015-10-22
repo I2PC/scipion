@@ -43,6 +43,7 @@ void ProgassignmentTiltPair::readParams()
 	fnmic = getParam("--tiltmicsize");
 	fndir = getParam("--odir");
 	mshift = getDoubleParam("--maxshift");
+	tiltest = getDoubleParam("--tiltangle");
 	particle_size = getDoubleParam("--particlesize");
 	thr = getDoubleParam("--threshold");
 }
@@ -58,16 +59,17 @@ void ProgassignmentTiltPair::defineParams()
 	addParamsLine("  [--tiltmicsize <img_file=\"\">]    : Tilt micrography");
 	addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
 	addParamsLine("  [--maxshift <s=1000>]   : Maximum shift");
+	addParamsLine("  [--tiltangle <s=-1>]   : Tilt angle estimation, the method will look for the assignment in the interval of [tiltangle-15º, til_angle+15º]");
 	addParamsLine("  [--particlesize <p=100>]   : Particle size");
 	addParamsLine("  [--threshold <d=0.3>]      : If the distance between two points is lesser than threshold*particlesize, they will be the same point");
 }
 
-double mean(Matrix1D<double> v)
-{
-	int Num_elem = v.vdim;
-	double sum_v = v.sum();
-	return sum_v/Num_elem;
-}
+//double mean(Matrix1D<double> v)
+//{
+//	int Num_elem = v.vdim;
+//	double sum_v = v.sum();
+//	return sum_v/Num_elem;
+//}
 
 void ProgassignmentTiltPair::search_affine_transform(int len_u, float u1x, float u1y, float u2x, float u2y, float u3x, float u3y, float t1x,
 		float t1y, float t2x, float t2y, float t3x, float t3y,
@@ -101,8 +103,9 @@ void ProgassignmentTiltPair::search_affine_transform(int len_u, float u1x, float
 		double trace_A = MAT_ELEM(A_matrix, 0, 0) + MAT_ELEM(A_matrix, 1, 1);
 		double det_A = MAT_ELEM(A_matrix, 0, 0)*MAT_ELEM(A_matrix, 1, 1) - MAT_ELEM(A_matrix, 0, 1)*MAT_ELEM(A_matrix, 1, 0);
 
-//		  if ( fabs(det_A - cos_tilt)>0.1)
-//			  continue;
+
+//		if ( fabs(det_A - cos_tilt_max)>0.2)
+//			continue;
 
 		double discriminant_A = 0.25*(trace_A)*(trace_A) - det_A;
 
@@ -120,7 +123,7 @@ void ProgassignmentTiltPair::search_affine_transform(int len_u, float u1x, float
 		dist_vec.initConstant(len_u, -1);
 		dist_vec2.initConstant(len_u, 10);
 		//std::cout << "len_u = " << len_u << std::endl;
-		//for (int tt=738; tt<len_u; tt++)
+
 		for (int tt=0; tt<len_u; tt++)
 		{
 			//std::cout << "u = " << VEC_ELEM(u,0) << "  " << VEC_ELEM(u,1) << std::endl;
@@ -132,22 +135,18 @@ void ProgassignmentTiltPair::search_affine_transform(int len_u, float u1x, float
 			if (VEC_ELEM(t_test,0)<0 || VEC_ELEM(t_test,0)>Xdim || VEC_ELEM(t_test,1)<0 || VEC_ELEM(t_test,1)>Ydim)
 				continue;
 
-
 			t_dist.x = VEC_ELEM(t_test,0);
 			t_dist.y = VEC_ELEM(t_test,1);
 
 			//std::cout << "Checkpoint 2 " << std::endl;
-			//std::cout << "Coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
-			//std::cout << "Closest " << select_Closest_Point(&delaunay_tilt, &t_dist, &t_closest, &dist) << std::endl;
 			if (!select_Closest_Point(delaunay_tilt, &t_dist, &t_closest, &dist) )
 			{
 				(*breakassignment) = 1;
 				//write_DCEL(delaunay_tilt.dcel, 0, "tiltdata_dcel.txt");
 				std::cout << "Coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
-				//getchar();
 				break;
 			}
-			//std::cout << "Checkpoint 3 " << std::endl;
+
 			VEC_ELEM(dist_vec,tt) = dist;
 			//std::cout << "dist = " << VEC_ELEM(dist_vec,tt) << std::endl;
 			//std::cout << "iteration tt = " << tt << std::endl;
@@ -173,21 +172,23 @@ void ProgassignmentTiltPair::search_affine_transform(int len_u, float u1x, float
 
 		if (counter == 0)
 			continue;
-		//std::cout << "ultimo for " << std::endl;
+
 		if (inliers2 > (*bestInliers))
 		{
 			estimator = dist2/inliers2;
 			(*bestInliers) = inliers2;
 			(*A_coarse) = A_matrix;
 			(*T_coarse) = T;
-			//std::cout << "INLIERS1 = " << (*bestInliers) << std::endl;
+			//std::cout << "det_A = " << det_A << std::endl;
+
 		}
 		else if ((inliers2 == (*bestInliers)) && (dist2/inliers2 < estimator) )
 		{
 			estimator = dist2/inliers2;
 			(*A_coarse) = A_matrix;
 			(*T_coarse) = T;
-			//std::cout << "INLIERS2 = " << (*bestInliers) << std::endl;
+			//std::cout << "det_A = " << det_A << std::endl;
+
 		}
 	}
 }
@@ -241,6 +242,15 @@ void ProgassignmentTiltPair::run()
 		insert_Point( &delaunay_tilt, x, y);
 		len_t = len_t +1;
 	}
+	int thrs;
+	if (len_u<len_t)
+	{
+		 thrs = len_u;
+	}
+	else
+	{
+		thrs = len_t;
+	}
 
 	write_DCEL(delaunay_tilt.dcel, 0, "tiltdata.txt");
 	create_Delaunay_Triangulation( &delaunay_tilt, 1);
@@ -262,8 +272,8 @@ void ProgassignmentTiltPair::run()
 		get_Face_Points(&delaunay_tilt, i, &p, &q, &r);
 		A1D_ELEM(trig_tilt_area,i-1) = triangle_area(p.x, p.y, q.x, q.y, r.x, r.y);
 	}
-	double t_mean_area=trig_tilt_area.computeAvg();
-	double u_mean_area=trig_untilt_area.computeAvg();
+//	double t_mean_area=trig_tilt_area.computeAvg();
+//	double u_mean_area=trig_untilt_area.computeAvg();
 
 	trig_untilt_area.sort(sortedArea);
 
@@ -276,7 +286,20 @@ void ProgassignmentTiltPair::run()
 	//Matrix2D<double> invW;
 	double trace_A, det_A, sqrt_aux, Eig_A1, Eig_A2, discriminant_A, dist, estimator;
 	struct Point_T t_dist, t_closest;
-	double cos_tilt = t_mean_area/u_mean_area;
+//	double cos_tilt = t_mean_area/u_mean_area;
+	double tilt_max = (tiltest + 15)*PI/180, tilt_min = (tiltest - 15)*PI/180, cos_tilt_max, cos_tilt_min;
+
+	if (tiltest == -1)
+	{
+		cos_tilt_max = 0;
+		cos_tilt_min = 1;
+	}
+	else
+	{
+		cos_tilt_max= cos(tilt_max);
+		cos_tilt_min= cos(tilt_min);
+		std::cout << "cos_tilt_max = " << cos_tilt_max << "   " << "cos_tilt_min = " << cos_tilt_min << std::endl;
+ 	}
 
 	if (verbose==1)
 	{
@@ -286,164 +309,58 @@ void ProgassignmentTiltPair::run()
 	std::cout << "Untilt triangles = " << tri_number_untilt << std::endl;
 	std::cout << "Tilt triangles = " << tri_number_tilt << std::endl;
 
-	///////////// COARSE PHASE///////////////
+	/////////////////////////////////////// COARSE PHASE ///////////////////////////////////////
 	if (verbose==1)
 		std::cerr << "Coarse Phase" << std::endl;
 
-	//for (int k=672; k<tri_number_untilt; k++)
 	for (int k=0; k<tri_number_untilt; k++)
 	{
-		//std::cout << "Iteration k = " << k << std::endl;
 		if (trig_untilt_area(k) < threshold_area)
 			continue;
 
-		//for (int j=394; j<tri_number_tilt; j++)
 		for (int j=0; j<tri_number_tilt; j++)
 		{
 			//std::cout << "Iteration k = " << k << "     Iteration j = " << j << std::endl;
-			if (trig_untilt_area(k) > trig_tilt_area(j))
-			{
-				get_Face_Points(&delaunay_untilt, k, &u1, &u2, &u3);
-				get_Face_Points(&delaunay_tilt, j, &t1, &t2, &t3);
 
-				search_affine_transform(len_u, u1.x, u1.y, u2.x, u2.y, u3.x, u3.y, t1.x,
-						t1.y, t2.x, t2.y, t3.x, t3.y,
-						ux, uy, Xdim, Ydim, &delaunay_tilt, &breakassignment, &bestInliers,
-						&A_coarse, &T_coarse);
+			if ( (trig_untilt_area(k) < trig_tilt_area(j)) )
+				continue;
 
-//#define OLD_CODE
-#ifdef OLD_CODE
-				for (int i=0; i<6; i++)
-				{
-					//std::cout << "Iteration i = " << i << std::endl;
-					if (i==0){
-						def_affinity(u1.x, u1.y, u2.x, u2.y, u3.x, u3.y, t1.x, t1.y, t2.x, t2.y, t3.x, t3.y, A_matrix, T, invW);}
-					if (i==1)
-						def_affinity(u1.x, u1.y, u3.x, u3.y, u2.x, u2.y, t1.x, t1.y, t3.x, t3.y, t2.x, t2.y, A_matrix, T, invW);
-					if (i==2)
-						def_affinity(u2.x, u2.y, u1.x, u1.y, u3.x, u3.y, t2.x, t2.y, t1.x, t1.y, t3.x, t3.y, A_matrix, T, invW);
-					if (i==3)
-						def_affinity(u2.x, u2.y, u3.x, u3.y, u1.x, u1.y, t2.x, t2.y, t3.x, t3.y, t1.x, t1.y, A_matrix, T, invW);
-					if (i==4)
-						def_affinity(u3.x, u3.y, u1.x, u1.y, u2.x, u2.y, t3.x, t3.y, t1.x, t1.y, t2.x, t2.y, A_matrix, T, invW);
-					if (i==5)
-						def_affinity(u3.x, u3.y, u2.x, u2.y, u1.x, u1.y, t3.x, t3.y, t2.x, t2.y, t1.x, t1.y, A_matrix, T, invW);
+//			if ( (trig_untilt_area(k)*cos_tilt_min < trig_tilt_area(j)) )
+//				continue;
 
-					trace_A = MAT_ELEM(A_matrix, 0, 0) + MAT_ELEM(A_matrix, 1, 1);
-					det_A = MAT_ELEM(A_matrix, 0, 0)*MAT_ELEM(A_matrix, 1, 1) - MAT_ELEM(A_matrix, 0, 1)*MAT_ELEM(A_matrix, 1, 0);
+//			if ( (trig_untilt_area(k)*cos_tilt_max > trig_tilt_area(j)) )
+//				continue;
 
-//					if ( fabs(det_A - cos_tilt)>0.1)
-//						continue;
+			//std::cout << "Checkpoint " << std::endl;
+			get_Face_Points(&delaunay_untilt, k, &u1, &u2, &u3);
+			get_Face_Points(&delaunay_tilt, j, &t1, &t2, &t3);
 
-					discriminant_A = 0.25*(trace_A)*(trace_A) - det_A;
+			search_affine_transform(len_u, u1.x, u1.y, u2.x, u2.y, u3.x, u3.y, t1.x,
+					t1.y, t2.x, t2.y, t3.x, t3.y,
+					ux, uy, Xdim, Ydim, &delaunay_tilt, &breakassignment, &bestInliers,
+					&A_coarse, &T_coarse);
 
-					if (discriminant_A < DBL_EPSILON)
-						continue;
-
-					sqrt_aux = sqrt(discriminant_A);
-					Eig_A1 = trace_A/2 + sqrt_aux;
-					Eig_A2 = trace_A/2 - sqrt_aux;
-
-					if (Eig_A1<0.34 || Eig_A2<0.34 || fabs(Eig_A1-1)>0.05)
-						continue;
-					dist_vec.initConstant(len_u, -1);
-					dist_vec2.initConstant(len_u, 10);
-					//std::cout << "len_u = " << len_u << std::endl;
-					//for (int tt=738; tt<len_u; tt++)
-					for (int tt=0; tt<len_u; tt++)
-					{
-						std::cout << "u = " << VEC_ELEM(u,0) << "  " << VEC_ELEM(u,1) << std::endl;
-						VEC_ELEM(u,0) = VEC_ELEM(ux,tt);
-						VEC_ELEM(u,1) = VEC_ELEM(uy,tt);
-						t_test = A_matrix*u + T;
-
-
-						if (VEC_ELEM(t_test,0)<0 || VEC_ELEM(t_test,0)>Xdim || VEC_ELEM(t_test,1)<0 || VEC_ELEM(t_test,1)>Ydim)
-							continue;
-
-						t_dist.x = VEC_ELEM(t_test,0);
-						t_dist.y = VEC_ELEM(t_test,1);
-//						t_dist.x = 2896.97;
-//						t_dist.y = 1998.47;
-
-						//std::cout << "Checkpoint 2 " << std::endl;
-						//std::cout << "Coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
-						//std::cout << "Closest " << select_Closest_Point(&delaunay_tilt, &t_dist, &t_closest, &dist) << std::endl;
-						if (!select_Closest_Point(&delaunay_tilt, &t_dist, &t_closest, &dist) )
-						{
-							breakassignment = 1;
-							write_DCEL(delaunay_tilt.dcel, 0, "tiltdata_dcel.txt");
-							std::cout << "Coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
-							//getchar();
-							break;
-						}
-						//std::cout << "Checkpoint 3 " << std::endl;
-						VEC_ELEM(dist_vec,tt) = dist;
-						//std::cout << "dist = " << VEC_ELEM(dist_vec,tt) << std::endl;
-						//std::cout << "iteration tt = " << tt << std::endl;
-
-					}
-
-					int counter = 0;
-					int inliers2 = 0;
-					double dist2 = 0;
-
-					for (int kk=0; kk<len_u; kk++)
-					{
-						if (VEC_ELEM(dist_vec,kk)>-1)
-						{
-							counter = counter + 1;
-							if (VEC_ELEM(dist_vec,kk) < thr*particle_size)
-							{
-								dist2 = VEC_ELEM(dist_vec,kk) + dist2;
-								inliers2 = inliers2 + 1;
-							}
-						}
-					}
-
-					if (counter == 0)
-						continue;
-					//std::cout << "ultimo for " << std::endl;
-					if (inliers2 > bestInliers)
-					{
-						estimator = dist2/inliers2;
-						bestInliers = inliers2;
-						A_coarse = A_matrix;
-						T_coarse = T;
-					}
-					if ((inliers2 == bestInliers) && (dist2/inliers2 < estimator) )
-					{
-						estimator = dist2/inliers2;
-						A_coarse = A_matrix;
-						T_coarse = T;
-					}
-				}
-#endif
-			}
 		//std::cout << "Iteration = " << k << ", " << j << std::endl;
 		}
 		if (verbose==1 && k%100==0)
 			progress_bar(k);
 	}
 	std::cout << "Coarse Inliers = " << bestInliers << std::endl;
+	////////////////////////////////////////////////////////////////////////////////////////////
 
-	////////////// REFINEMENT PHASE///////////////
 
-	if (bestInliers >3)
-	{
+	///////////////////////////////////// REFINEMENT PHASE /////////////////////////////////////
 		if (verbose==1)
 		std::cerr << "Refinement Phase" << std::endl;
 
 		dist_vec.initConstant(len_u, -1);
-		Matrix1D<double> t_cloy(bestInliers), u_clox(bestInliers), u_cloy(bestInliers);
+		Matrix1D<double> t_clo(2*bestInliers), X;
 		Matrix2D<double> invref, invW2;
-		PseudoInverseHelper pseudoInverter;
-		Matrix1D<double> t_clo(2*bestInliers);
+		//PseudoInverseHelper pseudoInverter;
 		invref.initZeros(2*bestInliers,6);
 		invW2.initZeros(2*bestInliers,6);
 		int count = 0;
 
-		Matrix1D<double> X;
 		PseudoInverseHelper h;
 		for (int k=0; k<len_u; k++)
 		{
@@ -475,7 +392,6 @@ void ProgassignmentTiltPair::run()
 
 				count = count + 1;
 			}
-			//std::cout << "vector = " << t_clo << std::endl;
 
 		}
 		if (breakassignment)
@@ -483,12 +399,16 @@ void ProgassignmentTiltPair::run()
 			std::cerr << "ERROR IN TRIANGULATION OR CLOSEST NEIGHBOUR" << std::endl;
 		}
 
-		Matrix2D<double> def_A;
+		Matrix2D<double> def_A, A_con;
+		Matrix1D<double> T_con;
+		T_con.initZeros(2);
+		A_con.initZeros(2,2);
 		def_A.initZeros(2,2);
 		def_T.initZeros(2);
+		bool flag;
 
 
-		if (count >= bestInliers)
+		if ((count >= bestInliers) && (count >= 0.2*thrs))
 		{
 			//std::cout << "Count > bestInliers" << std::endl;
 			h.A=invW2;
@@ -507,8 +427,9 @@ void ProgassignmentTiltPair::run()
 			std::cout << "A" << def_A << std::endl;
 			std::cout << "---------------------------" << std::endl;
 			std::cout << "T" << def_T << std::endl;
+			flag = true;
 		}
-		else
+		if (((count <= bestInliers) && (bestInliers >= 0.2*thrs)) && !flag)
 		{
 			std::cout << "Best fitting is gotten using coarse phase" << std::endl;
 			std::cout << "Coarse Inliers = " << bestInliers << std::endl;
@@ -518,14 +439,103 @@ void ProgassignmentTiltPair::run()
 			std::cout << "A" << def_A << std::endl;
 			std::cout << "---------------------------" << std::endl;
 			std::cout << "T" << def_T << std::endl;
+			flag = true;
+		}
+		if (((count <=bestInliers || count >=bestInliers) && ((count < 0.2*thrs) || (bestInliers < 0.2*thrs))) && !flag)
+		{
+			std::cerr << " Matching not found" << std::endl;
+			std::cerr << " Starting contingency method" << std::endl;
+
+			//Defining triangles in untilted space
+			double window=4*particle_size;
+			Matrix2D<double> triang_u(2*len_u, 4);
+			triang_u.initZeros(2*len_u,3);
+			for (int k = 0; k< len_u; k++)
+			{
+				for (int j=k+1; j<len_u; j++)
+				{
+					for (int l=j+1; l<len_u; l++)
+					{
+						if (( ( (VEC_ELEM(ux,j)<VEC_ELEM(ux,k)+window) && (VEC_ELEM(ux,j)>VEC_ELEM(ux,k)-window)) &&
+							( (VEC_ELEM(uy,j)<VEC_ELEM(uy,k)+window) && (VEC_ELEM(uy,j)>VEC_ELEM(uy,k)-window)) ) &&
+							( ( (VEC_ELEM(ux,l)<VEC_ELEM(ux,k)+window) && (VEC_ELEM(ux,l)>VEC_ELEM(ux,k)-window)) &&
+							( (VEC_ELEM(uy,l)<VEC_ELEM(uy,k)+window) && (VEC_ELEM(uy,l)>VEC_ELEM(uy,k)-window)) ))
+						{
+							MAT_ELEM(triang_u,2*k,0)   = VEC_ELEM(ux,k);
+							MAT_ELEM(triang_u,2*k+1,0) = VEC_ELEM(uy,k);
+							MAT_ELEM(triang_u,2*k,1)   = VEC_ELEM(ux,j);
+							MAT_ELEM(triang_u,2*k+1,1) = VEC_ELEM(uy,j);
+							MAT_ELEM(triang_u,2*k,2)   = VEC_ELEM(ux,l);
+							MAT_ELEM(triang_u,2*k+1,2) = VEC_ELEM(uy,l);
+							MAT_ELEM(triang_u,2*k,3) = triangle_area(VEC_ELEM(ux,k), VEC_ELEM(uy,k), VEC_ELEM(ux,j), VEC_ELEM(uy,j), VEC_ELEM(ux,l), VEC_ELEM(uy,l));
+						}
+					}
+				}
+			}
+			//Defining triangles in tilted space
+			Matrix2D<double> triang_t(2*len_u, 3);
+			triang_t.initZeros(2*len_t,4);
+			for (int k = 0; k< len_t; k++)
+			{
+				int count_contingency_t = 0;//
+				for (int j=k+1; j<len_t; j++)
+				{
+					for (int l=j+1; l<len_t; l++)
+					{
+						if (( ( (VEC_ELEM(tx,j)<VEC_ELEM(tx,k)+window) && (VEC_ELEM(tx,j)>VEC_ELEM(tx,k)-window)) &&
+							( (VEC_ELEM(ty,j)<VEC_ELEM(ty,k)+window) && (VEC_ELEM(ty,j)>VEC_ELEM(ty,k)-window)) ) &&
+							( ( (VEC_ELEM(tx,l)<VEC_ELEM(tx,k)+window) && (VEC_ELEM(tx,l)>VEC_ELEM(tx,k)-window)) &&
+							( (VEC_ELEM(ty,l)<VEC_ELEM(ty,k)+window) && (VEC_ELEM(ty,l)>VEC_ELEM(ty,k)-window)) ))
+						{
+							MAT_ELEM(triang_t,2*k,0)   = VEC_ELEM(tx,k);
+							MAT_ELEM(triang_t,2*k+1,0) = VEC_ELEM(ty,k);
+							MAT_ELEM(triang_t,2*k,1)   = VEC_ELEM(tx,j);
+							MAT_ELEM(triang_t,2*k+1,1) = VEC_ELEM(ty,j);
+							MAT_ELEM(triang_t,2*k,2)   = VEC_ELEM(tx,l);
+							MAT_ELEM(triang_t,2*k+1,2) = VEC_ELEM(ty,l);
+							MAT_ELEM(triang_t,2*k,3) = triangle_area(VEC_ELEM(tx,k), VEC_ELEM(ty,k), VEC_ELEM(tx,j), VEC_ELEM(ty,j), VEC_ELEM(tx,l), VEC_ELEM(ty,l));
+						}
+					}
+				}
+			}
+
+			//Searching the affine application
+			int bestInliers_con = 0;
+			for (int k=0; k<len_u; k++)
+			{
+
+				if (MAT_ELEM(triang_u,2*k,3)<MAT_ELEM(triang_t,2*k,3))
+					continue;
+
+
+				search_affine_transform(len_u, MAT_ELEM(triang_u,2*k,0), MAT_ELEM(triang_u,2*k+1,0), MAT_ELEM(triang_u,2*k,1), MAT_ELEM(triang_u,2*k+1,1),
+						MAT_ELEM(triang_u,2*k,2), MAT_ELEM(triang_u,2*k+1,2), MAT_ELEM(triang_t,2*k,0), MAT_ELEM(triang_t,2*k+1,0),
+						MAT_ELEM(triang_t,2*k,1), MAT_ELEM(triang_t,2*k+1,1), MAT_ELEM(triang_t,2*k,2), MAT_ELEM(triang_t,2*k+1,2),
+										ux, uy, Xdim, Ydim, &delaunay_tilt, &breakassignment, &bestInliers_con,
+										&A_con, &T_con);
+			}
+			std::cout << "Contingency Inliers = " << bestInliers_con << std::endl;
+			if ((bestInliers_con > bestInliers) && (bestInliers_con>count))
+			{
+				std::cout << "Best fitting is gotten using contingency phase" << std::endl;
+				std::cout << "Contingency Inliers = " << bestInliers_con << std::endl;
+				std::cout << "Refinement Inliers = " << count << std::endl;
+				def_A = A_con;
+				def_T = T_con;
+				std::cout << "A" << def_A << std::endl;
+				std::cout << "---------------------------" << std::endl;
+				std::cout << "T" << def_T << std::endl;
+			}
+			else
+			{
+				def_A = A_coarse;
+				def_T = T_coarse;
+			}
 		}
 
-		//std::cout << "Checkpoint 1" << std::endl;
-		//////WRITING TILT PAIRS/////////
-		//std::cout << "checkpoint 1" << std::endl;
+		///////////////////////////////////// WRITING TILT PAIRS /////////////////////////////////////
 		if (!breakassignment)
 		{
-		//std::cout << "Checkpoint 2" << std::endl;
 		for (int k=0; k<len_u; k++)
 		{
 			VEC_ELEM(u,0) = VEC_ELEM(ux,k);
@@ -533,127 +543,31 @@ void ProgassignmentTiltPair::run()
 			t_test = def_A*u + def_T;
 			t_dist.x = VEC_ELEM(t_test,0);
 			t_dist.y = VEC_ELEM(t_test,1);
-			//std::cout << "Checkpoint 1" << std::endl;
-			//std::cout << "Coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
 			if (!select_Closest_Point(&delaunay_tilt, &t_dist, &t_closest, &dist) )
 			{
 				breakassignment = 1;
 				break;
 			}
-			//std::cout << "Checkpoint 2" << std::endl;
 
 			if (dist<thr*particle_size)
 			{
 				objId = mduntilt.addObject();
-				//mduntilt.setValue(MDL_XCOOR,3,objId);
 				mduntilt.setValue(MDL_XCOOR,(int) VEC_ELEM(u,0),objId);
-				//std::cout << mduntilt;
 				mduntilt.setValue(MDL_YCOOR,(int) VEC_ELEM(u,1),objId);
-				//mduntilt.setValue(MDL_YCOOR,2,objId);
 
 				objId = mdtilt.addObject();
 				mdtilt.setValue(MDL_XCOOR,(int) t_closest.x,objId);
 				mdtilt.setValue(MDL_YCOOR,(int) t_closest.y,objId);
-
-
 			}
 		}
 		}
+
 		if (breakassignment)
 			std::cerr << "ERROR IN TRIANGULATION OR CLOSEST NEIGHBOUR" << std::endl;
 
 	mduntilt.write((String)"particles@"+fndir+'/'+fnuntilt.getBaseName() + ".pos" );
 	mdtilt.write((String)"particles@"+fndir+'/'+fntilt.getBaseName() + ".pos" );
-	}
-	else
-	{
-		std::cerr << " Matching not found" << std::endl;
-		std::cerr << " Starting contingency method" << std::endl;
-		//std::cout << "ux = " << ux << std::endl;
-		//std::cout << "uy = " << ux << std::endl;
-
-#define CONTINGENCY
-#ifdef CONTINGENCY
-	//Defining triangles in untilted space
-	double window=3*particle_size;
-	Matrix2D<double> triang_u(2*len_u, 4);
-	triang_u.initZeros(2*len_u,3);
-	for (int k = 0; k< len_u; k++)
-	{
-		//int count_contingency = 0;
-		for (int j=k+1; j<len_u; j++)
-		{
-			for (int l=j+1; l<len_u; l++)
-			{
-				if (( ( (VEC_ELEM(ux,j)<VEC_ELEM(ux,k)+window) && (VEC_ELEM(ux,j)>VEC_ELEM(ux,k)-window)) &&
-					( (VEC_ELEM(uy,j)<VEC_ELEM(uy,k)+window) && (VEC_ELEM(uy,j)>VEC_ELEM(uy,k)-window)) ) &&
-					( ( (VEC_ELEM(ux,l)<VEC_ELEM(ux,k)+window) && (VEC_ELEM(ux,l)>VEC_ELEM(ux,k)-window)) &&
-					( (VEC_ELEM(uy,l)<VEC_ELEM(uy,k)+window) && (VEC_ELEM(uy,l)>VEC_ELEM(uy,k)-window)) ))
-				{
-					MAT_ELEM(triang_u,2*k,0)   = VEC_ELEM(ux,k);
-					MAT_ELEM(triang_u,2*k+1,0) = VEC_ELEM(uy,k);
-					MAT_ELEM(triang_u,2*k,1)   = VEC_ELEM(ux,j);
-					MAT_ELEM(triang_u,2*k+1,1) = VEC_ELEM(uy,j);
-					MAT_ELEM(triang_u,2*k,2)   = VEC_ELEM(ux,l);
-					MAT_ELEM(triang_u,2*k+1,2) = VEC_ELEM(uy,l);
-					MAT_ELEM(triang_u,2*k,3) = triangle_area(VEC_ELEM(ux,k), VEC_ELEM(uy,k), VEC_ELEM(ux,j), VEC_ELEM(uy,j), VEC_ELEM(ux,l), VEC_ELEM(uy,l));
-					//count_contingency = count_contingency +1;
-				}
-			}
-		}
-	}
-#endif
-
-	//Defining triangles in tilted space
-	Matrix2D<double> triang_t(2*len_u, 3);
-	triang_t.initZeros(2*len_t,4);
-	for (int k = 0; k< len_t; k++)
-	{
-		int count_contingency_t = 0;//
-		for (int j=k+1; j<len_t; j++)
-		{
-			for (int l=j+1; l<len_t; l++)
-			{
-				if (( ( (VEC_ELEM(tx,j)<VEC_ELEM(tx,k)+window) && (VEC_ELEM(tx,j)>VEC_ELEM(tx,k)-window)) &&
-					( (VEC_ELEM(ty,j)<VEC_ELEM(ty,k)+window) && (VEC_ELEM(ty,j)>VEC_ELEM(ty,k)-window)) ) &&
-					( ( (VEC_ELEM(tx,l)<VEC_ELEM(tx,k)+window) && (VEC_ELEM(tx,l)>VEC_ELEM(tx,k)-window)) &&
-					( (VEC_ELEM(ty,l)<VEC_ELEM(ty,k)+window) && (VEC_ELEM(ty,l)>VEC_ELEM(ty,k)-window)) ))
-				{
-					MAT_ELEM(triang_t,2*k,0)   = VEC_ELEM(tx,k);
-					MAT_ELEM(triang_t,2*k+1,0) = VEC_ELEM(ty,k);
-					MAT_ELEM(triang_t,2*k,1)   = VEC_ELEM(tx,j);
-					MAT_ELEM(triang_t,2*k+1,1) = VEC_ELEM(ty,j);
-					MAT_ELEM(triang_t,2*k,2)   = VEC_ELEM(tx,l);
-					MAT_ELEM(triang_t,2*k+1,2) = VEC_ELEM(ty,l);
-					MAT_ELEM(triang_t,2*k,3) = triangle_area(VEC_ELEM(tx,k), VEC_ELEM(ty,k), VEC_ELEM(tx,j), VEC_ELEM(ty,j), VEC_ELEM(tx,l), VEC_ELEM(ty,l));
-					//count_contingency = count_contingency +1;
-				}
-			}
-		}
-	}
-//	std::cout << "triang = " << triang_u << std::endl;
-//	std::cout << "--------------------------------------------" << std::endl;
-//	std::cout << "triang = " << triang_t << std::endl;
-
-	//Searching the affine application
-
-//	for (int k=0; k<len_u; k++)
-//	{
-//		if (MAT_ELEM(triang_u,2*k,3)<MAT_ELEM(triang_t,2*k,3))
-//			continue;
-//
-//		search_affine_transform(len_u, u1.x, u1.y, u2.x, u2.y, u3.x, u3.y, t1.x,
-//								t1.y, t2.x, t2.y, t3.x, t3.y,
-//								ux, uy, Xdim, Ydim, &delaunay_tilt, &breakassignment, &bestInliers,
-//								&A_coarse, &T_coarse);
-//	}
-//
-//	double threshold_area = sortedArea( round((tri_number_untilt+1)*0.2) );
-//
-	}
-
-
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 	delete_Delaunay(&delaunay_untilt);
 	delete_Delaunay(&delaunay_tilt);
-
 }

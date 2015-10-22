@@ -60,7 +60,7 @@ from viewer_reconstruct_highres import XmippReconstructHighResViewer
 
 from plotter import XmippPlotter
 
-from protocol_assignation_tilt_pair import XmippProtAssignationTiltPair
+from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from protocol_apply_alignment import XmippProtApplyAlignment
 from protocol_break_symmetry import XmippProtAngBreakSymmetry
