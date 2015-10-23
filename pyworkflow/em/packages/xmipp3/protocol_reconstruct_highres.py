@@ -580,7 +580,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 # Create defocus groups
                 row=getFirstRow(fnImgs)
                 if row.containsLabel(MDL_CTF_MODEL) or row.containsLabel(MDL_CTF_DEFOCUSU):
-                    self.runJob("xmipp_ctf_group","--ctfdat %s -o %s/ctf:stk --pad 2.0 --sampling_rate %f --phase_flipped  --error 0.1 --resol %f"%\
+                    self.runJob("xmipp_ctf_group","--ctfdat %s -o %s/ctf:stk --pad 1.0 --sampling_rate %f --phase_flipped  --error 0.1 --resol %f"%\
                                 (fnImgs,fnDirSignificant,TsCurrent,targetResolution),numberOfMpi=1)
                     moveFile("%s/ctf_images.sel"%fnDirSignificant,"%s/ctf_groups.xmd"%fnDirSignificant)
                     cleanPath("%s/ctf_split.doc"%fnDirSignificant)
@@ -827,14 +827,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         if row.containsLabel(MDL_CTF_MODEL) or row.containsLabel(MDL_CTF_DEFOCUSU):
             previousResolution=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
             TsCurrent=self.readInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE)
-            self.runJob("xmipp_ctf_group","--ctfdat %s -o %s/ctf:stk --pad 2.0 --sampling_rate %f --phase_flipped  --error 0.1 --resol %f"%\
-                        (fnAngles,fnDirCurrent,TsCurrent,previousResolution),numberOfMpi=1)
+            numberGroups=50
+            self.runJob("xmipp_ctf_group","--ctfdat %s -o %s/ctf:stk --simple %d"%\
+                        (fnAngles,fnDirCurrent,TsCurrent,previousResolution,numberGroups),numberOfMpi=1)
             moveFile("%s/ctf_images.sel"%fnDirCurrent,"%s/ctf_groups.xmd"%fnDirCurrent)
-            cleanPath("%s/ctf_split.doc"%fnDirCurrent)
-            cleanPath("%s/ctf_ctf.stk"%fnDirCurrent)
-            cleanPath("%s/ctfinfo.xmd"%fnDirCurrent)
-            md = MetaData("numberGroups@%s"%join(fnDirCurrent,"ctfInfo.xmd"))
-            numberGroups=md.getValue(MDL_COUNT,md.firstObject())
             ctfPresent=True
         else:
             numberGroups=1
@@ -846,16 +842,17 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnGroup="ctfGroup%06d@%s/ctf_groups.xmd"%(j,fnDirCurrent)
             else:
                 fnGroup=fnAngles
-            if row.containsLabel(MDL_MAXCC):
-                self.runJob("xmipp_metadata_utilities","-i %s --operate percentile maxCC maxCCPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)
-                fnGroup=fnAnglesGroup    
-            if row.containsLabel(MDL_COST):
-                self.runJob("xmipp_metadata_utilities","-i %s --operate percentile cost costPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)          
-            if not exists(fnAnglesQualified):
-                copyFile(fnAnglesGroup, fnAnglesQualified)
-            else:
-                self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAnglesQualified,fnAnglesGroup),numberOfMpi=1)
-            cleanPath(fnAnglesGroup)
+            if getSize(fnGroup)>0:
+                if row.containsLabel(MDL_MAXCC):
+                    self.runJob("xmipp_metadata_utilities","-i %s --operate percentile maxCC maxCCPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)
+                    fnGroup=fnAnglesGroup    
+                if row.containsLabel(MDL_COST):
+                    self.runJob("xmipp_metadata_utilities","-i %s --operate percentile cost costPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)          
+                if not exists(fnAnglesQualified):
+                    copyFile(fnAnglesGroup, fnAnglesQualified)
+                else:
+                    self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAnglesQualified,fnAnglesGroup),numberOfMpi=1)
+                cleanPath(fnAnglesGroup)
         if ctfPresent:
             cleanPath("%s/ctf_groups.xmd"%fnDirCurrent)
         moveFile(fnAnglesQualified, fnAngles)
