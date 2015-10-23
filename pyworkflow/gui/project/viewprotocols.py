@@ -1209,7 +1209,7 @@ class ProtocolsView(tk.Frame):
         viewers = em.findViewers(prot.getClassName(), DESKTOP_TKINTER)
         if len(viewers):
             #TODO: If there are more than one viewer we should display a selection menu
-            firstViewer = viewers[0](project=self.project, protocol=prot) # Instanciate the first available viewer
+            firstViewer = viewers[0](project=self.project, protocol=prot, parent=self.windows) # Instanciate the first available viewer
             if isinstance(firstViewer, ProtocolViewer):
                 firstViewer.visualize(prot, windows=self.windows)
             else:
@@ -1220,7 +1220,9 @@ class ProtocolsView(tk.Frame):
                 if len(viewers):
                     #TODO: If there are more than one viewer we should display a selection menu
                     viewerclass = viewers[0]
-                    firstViewer = viewerclass(project=self.project, protocol=prot) # Instanciate the first available viewer
+                    firstViewer = viewerclass(project=self.project, 
+                                              protocol=prot,# Instanciate the first available viewer
+                                              parent=self.windows)
                     firstViewer.visualize(output, windows=self.windows, protocol=prot)#FIXME:Probably o longer needed protocol on args, already provided on init
             
         
