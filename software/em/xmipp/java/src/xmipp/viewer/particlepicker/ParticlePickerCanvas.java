@@ -125,7 +125,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 				manageActive(active.getX() + step, active.getY());
 			}
 		}
-		System.out.println("code " + code);
 		if (code == KeyEvent.VK_SPACE)
 		{
 			getFrame().circlechb.setSelected(tongleSetSelected);

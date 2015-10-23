@@ -45,7 +45,7 @@ public:
     FileName fn_input, fn_output;
     double   rot0,  rotF,  step_rot, rotLocal;
     double   tilt0, tiltF, step_tilt;
-    double   z0, zF, step_z, zLocal;
+    double   z0, zF, step_z, zLocal, Ts;
     bool     local;
     bool     helical, helicalDihedral;
     Mask mask_prm;
@@ -81,8 +81,9 @@ public:
         addParamsLine("[--localRot <rot0> <tilt0>]     : Perform a local search around this angle");
         addParamsLine("[--useSplines+]                 : Use cubic B-Splines for the interpolations");
         addParamsLine("==Locate helical parameters==");
-        addParamsLine("[-z <z0=1> <zF=10> <zstep=0.5>]          : Search space for the shift in Z");
-        addParamsLine("[--rotHelical <rot0=0> <rotF=357> <step=3>]: Search space for rotation around Z");
+        addParamsLine("[-z <z0=1> <zF=10> <zstep=0.5>] : Search space for the shift in Z (in Angstroms)");
+        addParamsLine("[--sampling <T=1>]              : Sampling rate in A/pix");
+        addParamsLine("[--rotHelical <rot0=-357> <rotF=357> <step=3>]: Search space for rotation around Z");
         addParamsLine("[--localHelical <z> <rot>]  : Perform a local search around this angle and shift");
         mask_prm.defineParams(this,INT_MASK,NULL,"Restrict the comparison to the mask area.",true);
         addExampleLine("A typical application for a rotational symmetry axis is ",false);
@@ -114,15 +115,16 @@ public:
         useSplines = checkParam("--useSplines");
         if (helical || helicalDihedral)
         {
+        	Ts=getDoubleParam("--sampling");
             local=checkParam("--localHelical");
             if (local)
             {
-                zLocal=getDoubleParam("--localHelical",0);
+                zLocal=getDoubleParam("--localHelical",0)/Ts;
                 rotLocal=getDoubleParam("--localHelical",1);
             }
-			z0=getDoubleParam("-z",0);
-			zF=getDoubleParam("-z",1);
-			step_z=getDoubleParam("-z",2);
+			z0=getDoubleParam("-z",0)/Ts;
+			zF=getDoubleParam("-z",1)/Ts;
+			step_z=getDoubleParam("-z",2)/Ts;
 			rot0=getDoubleParam("--rotHelical",0);
 			rotF=getDoubleParam("--rotHelical",1);
 			step_rot=getDoubleParam("--rotHelical",2);
@@ -315,13 +317,13 @@ public:
 
             }
             if (verbose!=0)
-                std::cout << "Symmetry parameters (z,rot)= " << best_z << " " << best_rot << " correlation=" << best_corr << std::endl;
+                std::cout << "Symmetry parameters (z,rot)= " << best_z*Ts << " " << best_rot << " correlation=" << best_corr << std::endl;
             if (fn_output!="")
             {
                 MetaData MD;
                 size_t id=MD.addObject();
                 MD.setValue(MDL_ANGLE_ROT,best_rot,id);
-                MD.setValue(MDL_SHIFT_Z,best_z,id);
+                MD.setValue(MDL_SHIFT_Z,best_z*Ts,id);
                 MD.write(fn_output);
                 if (!local)
                     helicalCorrelation.write(fn_output.removeAllExtensions()+".xmp");
