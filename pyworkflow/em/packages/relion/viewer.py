@@ -867,6 +867,16 @@ class PostprocessViewer(ProtocolViewer):
         else:
             return [md.RLN_POSTPROCESS_FSC_TRUE, md.RLN_POSTPROCESS_FSC_UNMASKED,
                     md.RLN_POSTPROCESS_FSC_MASKED, md.RLN_POSTPROCESS_FSC_RANDOM_MASKED]
+    
+    def _getLegend(self, label):
+        if label == md.RLN_POSTPROCESS_FSC_TRUE:
+            return 'Corrected'
+        elif label == md.RLN_POSTPROCESS_FSC_UNMASKED:
+            return 'Unmasked Maps'
+        elif label == md.RLN_POSTPROCESS_FSC_MASKED:
+            return 'Masked Maps'
+        else:
+            return 'Phase Randomized Masked Maps'
 
 
 class RelionAutopickViewer(Viewer):
