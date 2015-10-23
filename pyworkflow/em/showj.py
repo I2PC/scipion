@@ -265,7 +265,9 @@ def runJavaIJapp(memory, appName, args, env={}):
 
     args = getJavaIJappArguments(memory, appName, args)
     print 'java %s'%args
-    return subprocess.Popen('java ' + args, shell=True, env=env)
+    #return subprocess.Popen('java ' + args, shell=True, env=env)
+    cmd = ['java'] + args.split()
+    return subprocess.Popen(cmd, env=env)
 
 def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
         port = initProtocolTCPServer(protocol)
@@ -296,6 +298,7 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
             #try:
             functionPointer = getattr(protocol, functionName)
             functionPointer(*tokens[3:])
+            self.request.sendall('done\n')
             self.server.end = True
             #except:
             #    print 'protocol %s must implement %s'%(protocol.getName(), functionName)
@@ -318,6 +321,7 @@ def initProtocolTCPServer(protocol):
         server = MySocketServer((address, port), ProtocolTCPRequestHandler)
         server.protocol = protocol
         server_thread = threading.Thread(target=server.serve_forever)
+        server_thread.daemon = True
         server_thread.start()
         return port
 
