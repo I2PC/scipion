@@ -240,8 +240,9 @@ private:
     int columnMaxLength(MDLabel column);
 
     /**Functions to implement set operations */
-    void setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operation);
-    void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel columnLeft, MDLabel columnRight,SetOperation operation);
+    void setOperate(MetaData *mdPtrOut, const std::vector<MDLabel> &columns, SetOperation operation);
+    void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, const std::vector<MDLabel> &columnsLeft,
+    		const std::vector<MDLabel> &columnsRight, SetOperation operation);
     /** Function to dump DB to file */
     bool operate(const String &expression);
 

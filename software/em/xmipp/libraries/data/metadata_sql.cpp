@@ -851,7 +851,7 @@ int MDSql::columnMaxLength(MDLabel column)
     return execSingleIntStmt(ss);
 }
 
-void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operation)
+void MDSql::setOperate(MetaData *mdPtrOut, const std::vector<MDLabel> &columns, SetOperation operation)
 {
     std::stringstream ss, ss2;
     bool execStmt = true;
@@ -861,7 +861,6 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
     switch (operation)
     {
     case UNION:
-
         copyObjects(mdPtrOut->myMDSql);
         execStmt = false;
         break;
@@ -878,9 +877,16 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
         << " (" << ss2.str() << ")"
         << " SELECT " << ss2.str()
         << " FROM " << tableName(tableId)
-        << " WHERE "<< MDL::label2StrSql(column)
-        << " NOT IN (SELECT " << MDL::label2StrSql(column)
-        << " FROM " << tableName(mdPtrOut->myMDSql->tableId) << ");";
+        << " WHERE ";
+        for (size_t j=0; j<columns.size(); ++j)
+        {
+        	if (j>0)
+        		ss << " AND ";
+        	ss << MDL::label2StrSql(columns[j])
+				<< " NOT IN (SELECT " << MDL::label2StrSql(columns[j])
+				<< " FROM " << tableName(mdPtrOut->myMDSql->tableId) << ") ";
+        }
+        ss << ";";
         break;
     case DISTINCT:
     case REMOVE_DUPLICATE:
@@ -910,11 +916,18 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
     case INTERSECTION:
     case SUBSTRACTION:
         ss << "DELETE FROM " << tableName(mdPtrOut->myMDSql->tableId)
-        << " WHERE " << MDL::label2StrSql(column);
-        if (operation == INTERSECTION)
-            ss << " NOT";
-        ss << " IN (SELECT " << MDL::label2StrSql(column)
-        << " FROM " << tableName(tableId) << ");";
+        << " WHERE ";
+        for (size_t j=0; j<columns.size(); ++j)
+        {
+        	if (j>0)
+        		ss << " AND ";
+        	ss << MDL::label2StrSql(columns[j]);
+            if (operation == INTERSECTION)
+                ss << " NOT";
+			ss << " IN (SELECT " << MDL::label2StrSql(columns[j])
+			   << " FROM " << tableName(tableId) << ") ";
+        }
+        ss << ";";
         break;
     default:
         REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot use this operation for a set operation");
@@ -973,8 +986,8 @@ bool MDSql::equals(const MDSql &op)
 
 void MDSql::setOperate(const MetaData *mdInLeft,
                        const MetaData *mdInRight,
-                       MDLabel columnLeft,
-                       MDLabel columnRight,
+					   const std::vector<MDLabel> &columnsLeft,
+					   const std::vector<MDLabel> &columnsRight,
                        SetOperation operation)
 {
     std::stringstream ss, ss2, ss3;
@@ -994,7 +1007,6 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     case NATURAL_JOIN:
         /* We do not want natural join but natural join except for the obj-ID column */
         join_type = " INNER ";
-        columnLeft = columnRight = MDL_UNDEFINED;
         break;
     default:
         REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot use this operation for a set operation");
@@ -1021,8 +1033,11 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     }
     else
     {
-        mdInRight->addIndex(columnRight);
-        mdInLeft->addIndex(columnLeft);
+    	if (columnsRight.size()==1)
+    	{
+			mdInRight->addIndex(columnsRight[0]);
+			mdInLeft->addIndex(columnsLeft[0]);
+    	}
     }
     size = myMd->activeLabels.size();
     size_t sizeLeft = mdInLeft->activeLabels.size();
@@ -1045,8 +1060,17 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     << join_type << " JOIN " << tableName(mdInRight->myMDSql->tableId);
 
     if (operation != NATURAL_JOIN)
-        ss << " ON " << tableName(mdInLeft->myMDSql->tableId) << "." << MDL::label2StrSql(columnLeft)
-        << "=" << tableName(mdInRight->myMDSql->tableId) << "." << MDL::label2StrSql(columnRight) ;
+    {
+        ss << " ON (";
+        for (size_t j=0; j<columnsLeft.size(); ++j)
+        {
+        	if (j>0)
+        		ss << " AND ";
+        	ss << tableName(mdInLeft->myMDSql->tableId) << "." << MDL::label2StrSql(columnsLeft[j])
+               << "=" << tableName(mdInRight->myMDSql->tableId) << "." << MDL::label2StrSql(columnsRight[j]);
+        }
+        ss << ") ";
+    }
     else
     {
         sep = " ";
