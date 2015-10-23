@@ -43,7 +43,8 @@ void ProgSymmetrize::readParams()
     helicalDihedral=(fn_sym=="helicalDihedral");
     if (helical || helicalDihedral)
     {
-        zHelical=getDoubleParam("--helixParams",0);
+    	Ts=getDoubleParam("--sampling");
+        zHelical=getDoubleParam("--helixParams",0)/Ts;
         rotHelical=DEG2RAD(getDoubleParam("--helixParams",1));
         rotPhaseHelical=DEG2RAD(getDoubleParam("--helixParams",2));
     }
@@ -66,8 +67,9 @@ void ProgSymmetrize::defineParams()
     addParamsLine("                         : I, I1, I2, I3, I4, I5, Ih, helical, dihedral, helicalDihedral");
     addParamsLine("                         :+ For a full description of symmetries look at");
     addParamsLine("                         :+ http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry");
-    addParamsLine("   [--helixParams <z> <rot> <rotPhase=0>]: Helical parameters z(pixels), rot(degrees), rotPhase(degrees)");
+    addParamsLine("   [--helixParams <z> <rot> <rotPhase=0>]: Helical parameters z(Angstroms), rot(degrees), rotPhase(degrees)");
     addParamsLine("                         :+ V(r,theta,z)=V(r,theta+rotHelix+rotPhase,z+zHelix)");
+    addParamsLine("   [--sampling <T=1>]    : Sampling rate (A/pixel). Used only for helical parameters");
     addParamsLine("   [--no_group]          : For 3D volumes: do not generate symmetry subgroup");
     addParamsLine("   [--dont_wrap]         : by default, the image/volume is wrapped");
     addParamsLine("   [--sum]               : compute the sum of the images/volumes instead of the average. This is useful for symmetrizing pieces");
@@ -94,7 +96,7 @@ void ProgSymmetrize::show()
     if (helical)
         std::cout << "RotHelical: " << RAD2DEG(rotHelical) << std::endl
         << "RotPhaseHelical: " << RAD2DEG(rotPhaseHelical) << std::endl
-        << "ZHelical:   " << zHelical << std::endl;
+        << "ZHelical:   " << zHelical*Ts << std::endl;
 }
 
 /* Symmetrize ------------------------------------------------------- */

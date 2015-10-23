@@ -641,7 +641,7 @@ class TestXmippProtHelicalParameters(TestXmippBase):
 
     def testHelicalParameters(self):
         print "Run symmetrize helical"
-        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=True,rot0=50,rotF=70,rotStep=5,z0=5,zF=10,zStep=0.5)
+        protHelical = XmippProtHelicalParameters(cylinderOuterRadius=20,dihedral=True,rot0=50,rotF=70,rotStep=5,z0=5,zF=10,zStep=0.5)
         protHelical.inputVolume.set(self.protImport.outputVolume)
         self.proj.launchProtocol(protHelical, wait=True)
 

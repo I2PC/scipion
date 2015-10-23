@@ -627,11 +627,17 @@ void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
     extFile = _outFile.getExtension();
 
     if (extFile=="xml")
+    {
         writeXML(outFile, blockName, mode);
+    }
     else if(extFile=="sqlite")
+    {
         writeDB(outFile, blockName, mode);
+    }
     else
+    {
         writeStar(outFile, blockName, mode);
+    }
 }
 
 void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteModeMetaData mode) const
@@ -746,22 +752,36 @@ void MetaData::append(const FileName &outFile) const
 
 void MetaData::_writeRows(std::ostream &os) const
 {
+	size_t i=0;				// Loop counter.
+	size_t length=0;		// Loop upper bound.
+	bool firstTime=true;
 
+	// Metadata objects loop.
     FOR_ALL_OBJECTS_IN_METADATA(*this)
     {
-        for (size_t i = 0; i < activeLabels.size(); i++)
+        std::vector<MDObject> mdValues;
+
+        // Get metadata values.
+    	myMDSql->getObjectsValues( __iter.objId, activeLabels, &mdValues, firstTime);
+    	firstTime = false;
+
+    	// Build metadata line.
+    	length = activeLabels.size();
+    	for (i=0; i<length ;i++)
         {
             if (activeLabels[i] != MDL_STAR_COMMENT)
             {
-                MDObject mdValue(activeLabels[i]);
                 os.width(1);
-                myMDSql->getObjectValue(__iter.objId, mdValue);
-                mdValue.toStream(os, true);
+                mdValues[i].toStream(os, true);
                 os << " ";
             }
         }
+
         os << std::endl;
     }
+
+    // Finalize statement.
+    myMDSql->finalizePreparedStmt();
 }
 
 void MetaData::print() const
@@ -793,6 +813,7 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
             }
         }
         _writeRows(os);
+
         //Put the activeObject to the first, if exists
     }
     else //rowFormat
@@ -1091,6 +1112,10 @@ void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValu
         }
         iter = newline + 1; //go to next line
     }
+
+    // Finalize statement.
+    myMDSql->finalizePreparedStmt();
+
     delete[] buffer;
 }
 

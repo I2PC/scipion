@@ -53,6 +53,8 @@ public:
     double rotPhaseHelical;
     /// Helical shift
     double zHelical;
+    /// Sampling rate (used for helical)
+    double Ts;
     /// Do not generate subgroup
     bool            do_not_generate_subgroup;
     /// wrap or don't wrap input file during symmetrisation
