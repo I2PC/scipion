@@ -829,7 +829,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             TsCurrent=self.readInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE)
             numberGroups=50
             self.runJob("xmipp_ctf_group","--ctfdat %s -o %s/ctf:stk --simple %d"%\
-                        (fnAngles,fnDirCurrent,TsCurrent,previousResolution,numberGroups),numberOfMpi=1)
+                        (fnAngles,fnDirCurrent,numberGroups),numberOfMpi=1)
             moveFile("%s/ctf_images.sel"%fnDirCurrent,"%s/ctf_groups.xmd"%fnDirCurrent)
             ctfPresent=True
         else:
