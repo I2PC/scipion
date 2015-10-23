@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.relion.convert import getEnviron
 """
 This module contains the protocol base class for Relion protocols
 """
@@ -33,7 +34,7 @@ from os.path import exists
 
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
                                         IntParam, EnumParam, StringParam, LabelParam)
-from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPath
 
 import pyworkflow.em.metadata as md
@@ -140,6 +141,9 @@ class ProtRelionBase(EMProtocol):
                       help='If you set to *Yes*, you should select a previous'
                       'run of type *%s* class and most of the input parameters'
                       'will be taken from it.' % self.getClassName())
+        form.addParam('useRelion14', BooleanParam, default=True,
+              label="Use relion 1.4?",
+              help='If is true, the protocol will use relion 1.4 instead of relion 1.3')
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       condition='not doContinue',
                       important=True,
@@ -512,8 +516,7 @@ class ProtRelionBase(EMProtocol):
             args['--iter'] = self._getnumberOfIters()
             
         self._setSamplingArgs(args)
-        
-                        
+    
     def _setCTFArgs(self, args):        
         # CTF stuff
         if self.doCTF:
@@ -568,13 +571,15 @@ class ProtRelionBase(EMProtocol):
                     particle = imgSet[movieParticle.getParticleId()]
                     if particle is not None:
                         auxMovieParticles.append(movieParticle)
-                            
                 writeSetOfParticles(auxMovieParticles,
                                     self._getFileName('movie_particles'), None, originalSet=imgSet,
                                     postprocessImageRow=self._postprocessImageRow)
                 mdMovies = md.MetaData(self._getFileName('movie_particles'))
                 mdParts = md.MetaData(self._getFileName('input_star'))
-                mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
+                if self.useRelion14:
+                    mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
+                else:
+                    mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
                 mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
                 
                 detectorPxSize = movieParticleSet.getAcquisition().getMagnification() * movieParticleSet.getSamplingRate() / 10000
@@ -589,7 +594,7 @@ class ProtRelionBase(EMProtocol):
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
         params += ' --j %d' % self.numberOfThreads.get()
-        self.runJob(self._getProgram(), params)
+        self.runJob(self._getProgram(), params, env=getEnviron(self.useRelion14))
     
     def createOutputStep(self):
         pass # should be implemented in subclasses

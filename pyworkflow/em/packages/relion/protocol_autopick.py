@@ -102,12 +102,13 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
         writeReferences(self.getInputReferences(), self._getPath('input_references'))  
         
     def autopickMicrographStep(self, micStarFile, params, threshold, minDistance, fom):
+        from convert import getEnviron
         """ Launch the 'relion_autopick' for a micrograph with the given parameters. """
         # Call relion_autopick to allow picking of micrographs with different size
         params += ' --i %s' % relpath(micStarFile, self.getWorkingDir())
         params += ' --threshold %0.3f --min_distance %0.3f %s' % (threshold, minDistance, fom)
         
-        self.runJob(self._getProgram('relion_autopick'), params, cwd=self.getWorkingDir())      
+        self.runJob(self._getProgram('relion_autopick'), params, cwd=self.getWorkingDir(), env=getEnviron(self.useRelion14))      
 
     #--------------------------- UTILS functions --------------------------------------------
     def getInputReferences(self):
@@ -174,7 +175,9 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
-        
+        form.addParam('useRelion14', BooleanParam, default=True,
+                      label="Use relion 1.4?",
+                      help='If is true, the protocol will use relion 1.4 instead of relion 1.3')
         form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
                       label='Input micrographs (a few)', important=True,
                       help='Select a set with just a few micrographs to be used\n'
@@ -350,6 +353,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
     def _insertAutopickStep(self, mic, convertId):
         """ Prepare the command line for calling 'relion_autopick' program """
         params = self.getAutopickParams()
+        self.useRelion14 = self.getInputAutopick().useRelion14.get()
         # Use by default the references size as --min_distance
         return self._insertFunctionStep('autopickMicrographStep', self._getMicStarFile(mic), 
                                         params,

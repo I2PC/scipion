@@ -47,4 +47,4 @@ from wizard import *
 
 from viewer import *
 
-_environ = getEnviron()
+# _environ = getEnviron()

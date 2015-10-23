@@ -396,6 +396,13 @@ env.addPackage('pytom',
                default=False)
 
 env.addPackage('relion',
+               tar='relion-1.4.tgz',
+               commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
+                          ['relion_build.log',
+                           'bin/relion'])],
+               default=False)
+
+env.addPackage('relion1.3',
                tar='relion-1.3.tgz',
                commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',

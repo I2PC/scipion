@@ -100,15 +100,22 @@ ALIGNMENT_DICT = OrderedDict([
        ])
 
 
-def getEnviron():
+def getEnviron(relion14=True):
     """ Setup the environment variables needed to launch Relion. """
     environ = Environ(os.environ)
-    environ.update({
-            'PATH': join(os.environ['RELION_HOME'], 'bin'),
-            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
-            'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
-#            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib64'),
-            }, position=Environ.BEGIN)
+    if relion14:
+        environ.update({
+                'PATH': join(os.environ['RELION_HOME'], 'bin'),
+                'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
+                'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
+                }, position=Environ.BEGIN)
+    else:
+        environ.update({
+                'PATH': join(os.environ['RELION13_HOME'], 'bin'),
+                'LD_LIBRARY_PATH': join(os.environ['RELION13_HOME'], 'lib') + ":" + join(os.environ['RELION13_HOME'], 'lib64'),
+                'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
+                }, position=Environ.BEGIN)
+        
     return environ
 
 
