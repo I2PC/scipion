@@ -53,6 +53,8 @@ public:
     double rotPhaseHelical;
     /// Helical shift
     double zHelical;
+    /// Helical height fraction
+    double heightFraction;
     /// Sampling rate (used for helical)
     double Ts;
     /// Do not generate subgroup
@@ -94,7 +96,7 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
                       MultidimArray<double> &V_out,
                       bool wrap=true, bool do_outside_avg=false, bool sum=false, bool helical=false, bool dihedral=false,
                       bool helicalDihedral=false,
-                      double rotHelical=0.0, double rotPhaseHelical=0.0, double zHelical=0.0,
+                      double rotHelical=0.0, double rotPhaseHelical=0.0, double zHelical=0.0, double heightFraction=0.95,
                       const MultidimArray<double> * mask=NULL);
 
 /** Symmetrize image.*/

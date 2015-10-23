@@ -45,7 +45,7 @@ public:
     FileName fn_input, fn_output;
     double   rot0,  rotF,  step_rot, rotLocal;
     double   tilt0, tiltF, step_tilt;
-    double   z0, zF, step_z, zLocal, Ts;
+    double   z0, zF, step_z, zLocal, Ts, heightFraction;
     bool     local;
     bool     helical, helicalDihedral;
     Mask mask_prm;
@@ -84,7 +84,8 @@ public:
         addParamsLine("[-z <z0=1> <zF=10> <zstep=0.5>] : Search space for the shift in Z (in Angstroms)");
         addParamsLine("[--sampling <T=1>]              : Sampling rate in A/pix");
         addParamsLine("[--rotHelical <rot0=-357> <rotF=357> <step=3>]: Search space for rotation around Z");
-        addParamsLine("[--localHelical <z> <rot>]  : Perform a local search around this angle and shift");
+        addParamsLine("[--localHelical <z> <rot>]      : Perform a local search around this angle and shift");
+        addParamsLine("[--heightFraction <f=1>]        : Use this fraction of the volume");
         mask_prm.defineParams(this,INT_MASK,NULL,"Restrict the comparison to the mask area.",true);
         addExampleLine("A typical application for a rotational symmetry axis is ",false);
         addExampleLine("xmipp_volume_center -i volume.vol");
@@ -116,6 +117,7 @@ public:
         if (helical || helicalDihedral)
         {
         	Ts=getDoubleParam("--sampling");
+        	heightFraction=getDoubleParam("--heightFraction");
             local=checkParam("--localHelical");
             if (local)
             {
@@ -270,6 +272,16 @@ public:
         else
         {
             // If helical or helical dihedral
+        	if (heightFraction<=1.0)
+        	{
+        		int zFirst=FIRST_XMIPP_INDEX(round(heightFraction*ZSIZE(volume())));
+        		int zLast=LAST_XMIPP_INDEX(round(heightFraction*ZSIZE(volume())));
+        		MultidimArray<int> &mask=mask_prm.get_binary_mask();
+        		FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
+        			if (k<zFirst || k>zLast)
+        				A3D_ELEM(mask,k,i,j)=0;
+        	}
+
             if (!local)
             {
                 int ydim=0, xdim=0;
@@ -380,7 +392,7 @@ public:
             	return 1e38;
             if (zHelical<z0 || zHelical>zF || rotHelical<rot0 || rotHelical>rotF)
             	return 1e38;
-            symmetry_Helical(volume_sym, mVolume, zHelical, DEG2RAD(rotHelical), 0, &mask_prm.get_binary_mask(), helicalDihedral);
+            symmetry_Helical(volume_sym, mVolume, zHelical, DEG2RAD(rotHelical), 0, &mask_prm.get_binary_mask(), helicalDihedral, heightFraction);
 			double corr=correlationIndex(mVolume, volume_sym, &mask_prm.get_binary_mask());
 //#define DEBUG
 #ifdef DEBUG

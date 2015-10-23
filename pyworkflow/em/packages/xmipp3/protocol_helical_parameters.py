@@ -55,6 +55,10 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
                       help="If this option is chosen, then the dihedral axis is not searched and it is assumed that it is around X.")
 
         form.addSection(label='Search limits')
+        form.addParam('heightFraction',FloatParam,default=0.9,label='Height fraction',
+                      help="The helical parameters are only sought using the fraction indicated by this number. "\
+                           "In this way, you can avoid including planes that are poorly resolved at the extremes of the volume. " \
+                           "However, note that the algorithm can perfectly work with a fraction of 1.")
         form.addParam('rot0',FloatParam,default=0,label='Minimum rotational angle',help="In degrees")
         form.addParam('rotF',FloatParam,default=360,label='Maximum rotational angle',help="In degrees")
         form.addParam('rotStep',FloatParam,default=5,label='Angular step',help="In degrees")
@@ -89,19 +93,19 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
             ImageHandler().convert(self.inputVolume.get(), self.fnVolSym)
                         
     def coarseSearch(self):
-        self.runCoarseSearch(self.fnVolSym,self.dihedral.get(),float(self.z0.get()),float(self.zF.get()),float(self.zStep.get()),
+        self.runCoarseSearch(self.fnVolSym,self.dihedral.get(),float(self.heightFraction.get()),float(self.z0.get()),float(self.zF.get()),float(self.zStep.get()),
                              float(self.rot0.get()),float(self.rotF.get()),float(self.rotStep.get()),
                              self.numberOfThreads.get(),self._getExtraPath('coarseParams.xmd'),
                              int(self.cylinderInnerRadius.get()),int(self.cylinderOuterRadius.get()),int(self.height),self.inputVolume.get().getSamplingRate())
 
     def fineSearch(self):
         self.runFineSearch(self.fnVolSym, self.dihedral.get(), self._getExtraPath('coarseParams.xmd'), self._getExtraPath('fineParams.xmd'), 
-                           float(self.z0.get()),float(self.zF.get()),float(self.rot0.get()),float(self.rotF.get()),
+                           float(self.heightFraction.get()),float(self.z0.get()),float(self.zF.get()),float(self.rot0.get()),float(self.rotF.get()),
                              int(self.cylinderInnerRadius.get()),int(self.cylinderOuterRadius.get()),int(self.height),self.inputVolume.get().getSamplingRate())
 
     def symmetrize(self):
         self.runSymmetrize(self.fnVolSym, self.dihedral.get(), self._getExtraPath('fineParams.xmd'), self.fnVolSym, 
-                           self.cylinderInnerRadius.get(), self.cylinderOuterRadius.get(), self.height,self.inputVolume.get().getSamplingRate())
+                           float(self.heightFraction.get()), self.cylinderInnerRadius.get(), self.cylinderOuterRadius.get(), self.height,self.inputVolume.get().getSamplingRate())
 
     def createOutput(self):
         volume = Volume()

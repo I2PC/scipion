@@ -51,6 +51,7 @@ void ProgSymmetrize::readParams()
     do_not_generate_subgroup = checkParam("--no_group");
     wrap = !checkParam("--dont_wrap");
     sum = checkParam("--sum");
+    heightFraction = getDoubleParam("--heightFraction");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -69,6 +70,7 @@ void ProgSymmetrize::defineParams()
     addParamsLine("                         :+ http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry");
     addParamsLine("   [--helixParams <z> <rot> <rotPhase=0>]: Helical parameters z(Angstroms), rot(degrees), rotPhase(degrees)");
     addParamsLine("                         :+ V(r,theta,z)=V(r,theta+rotHelix+rotPhase,z+zHelix)");
+    addParamsLine("   [--heightFraction <f=0.95>]: Height fraction used for symmetrizing a helix");
     addParamsLine("   [--sampling <T=1>]    : Sampling rate (A/pixel). Used only for helical parameters");
     addParamsLine("   [--no_group]          : For 3D volumes: do not generate symmetry subgroup");
     addParamsLine("   [--dont_wrap]         : by default, the image/volume is wrapped");
@@ -96,14 +98,15 @@ void ProgSymmetrize::show()
     if (helical)
         std::cout << "RotHelical: " << RAD2DEG(rotHelical) << std::endl
         << "RotPhaseHelical: " << RAD2DEG(rotPhaseHelical) << std::endl
-        << "ZHelical:   " << zHelical*Ts << std::endl;
+        << "ZHelical:   " << zHelical*Ts
+		<< "Height fraction: " << heightFraction << std::endl;
 }
 
 /* Symmetrize ------------------------------------------------------- */
 void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
                       MultidimArray<double> &V_out,
                       bool wrap, bool do_outside_avg, bool sum, bool helical, bool dihedral, bool helicalDihedral,
-                      double rotHelical, double rotPhaseHelical, double zHelical,
+                      double rotHelical, double rotPhaseHelical, double zHelical, double heightFraction,
                       const MultidimArray<double> * mask)
 {
     Matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
@@ -147,10 +150,10 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
             arrayByScalar(V_out, 1.0/(SL.symsNo() + 1.0f), V_out, '*');
     }
     else if (helical)
-        symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical);
+        symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical,NULL,false,heightFraction);
     else if (helicalDihedral)
     {
-        symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical,NULL,true);
+        symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical,NULL,true,heightFraction);
         MultidimArray<double> Vrotated;
         rotate(BSPLINE3,Vrotated,V_out,180.0,'X',WRAP);
         V_out+=Vrotated;
@@ -240,7 +243,7 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
         if (SL.symsNo()>0 || helical || dihedral || helicalDihedral)
         {
             symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap,
-                             sum,helical,dihedral,helicalDihedral,rotHelical,rotPhaseHelical,zHelical,mmask);
+                             sum,helical,dihedral,helicalDihedral,rotHelical,rotPhaseHelical,zHelical,heightFraction,mmask);
         }
         else
             REPORT_ERROR(ERR_ARG_MISSING,"The symmetry description is not valid for volumes");
