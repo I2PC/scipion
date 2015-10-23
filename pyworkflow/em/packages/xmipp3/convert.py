@@ -1164,11 +1164,13 @@ def rowToAlignment(alignmentRow, alignType):
         """
     is2D = alignType == ALIGN_2D
     inverseTransform = alignType == ALIGN_PROJ
-    
+
     if _containsAny(alignmentRow, ALIGNMENT_DICT):
         alignment = Transform()
         angles = numpy.zeros(3)
         shifts = numpy.zeros(3)
+        flip = alignmentRow.getValue(xmipp.MDL_FLIP)
+
         shifts[0] = alignmentRow.getValue(xmipp.MDL_SHIFT_X, 0.)
         shifts[1] = alignmentRow.getValue(xmipp.MDL_SHIFT_Y, 0.)
         if not is2D:
@@ -1176,17 +1178,20 @@ def rowToAlignment(alignmentRow, alignType):
             angles[1] = alignmentRow.getValue(xmipp.MDL_ANGLE_TILT, 0.)
             shifts[2] = alignmentRow.getValue(xmipp.MDL_SHIFT_Z, 0.)
             angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
+            if flip:
+                angles[1] = 180 + angles[1] # tilt = tilt + 180
+                angles[2] = 180 - angles[2] # psi = -psi + 180
+                shifts[0] = -shifts[0] # shx = -shx
         else:
             psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             rot = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
             if rot !=0. and psi !=0:
                 print "HORROR rot and psi are different from zero in 2D case"
-            angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.) +\
+            angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.) + \
                         alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
-        flip = alignmentRow.getValue(xmipp.MDL_FLIP)
         #if alignment
         matrix = matrixFromGeometry(shifts, angles, inverseTransform)
-##
+
         if flip:
             if alignType==ALIGN_2D:
                 matrix[0,:2] *=  -1.#invert only the first two columns keep x
@@ -1194,8 +1199,9 @@ def rowToAlignment(alignmentRow, alignType):
             elif alignType==ALIGN_3D:
                 matrix[0,:3] *= -1.#now, invert first line excluding x
                 matrix[3,3] *= -1.
-            else:
-                matrix[0,:4] *= -1.#now, invert first line including x
+            elif alignType==ALIGN_PROJ:
+                pass
+                #matrix[0,:4] *= -1.#now, invert first line including x
 ##
         alignment.setMatrix(matrix)
         
@@ -1245,9 +1251,10 @@ def alignmentToRow(alignment, alignmentRow, alignType):
             pass
 
     else:
-        flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
-        if flip:
-            matrix[0,:4] *= -1.#now, invert first line including x
+        pass
+        #flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+        #if flip:
+        #    matrix[0,:4] *= -1.#now, invert first line including x
     shifts, angles = geometryFromMatrix(matrix, inverseTransform)
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
     alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
