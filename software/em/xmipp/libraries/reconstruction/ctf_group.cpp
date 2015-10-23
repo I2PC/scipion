@@ -731,7 +731,6 @@ void ProgCtfGroup::simpleRun()
     double minDefocus=ImagesMD.getColumnMin(MDL_CTF_DEFOCUSU);
     double maxDefocus=ImagesMD.getColumnMax(MDL_CTF_DEFOCUSU);
     double iStepDefocus=1.0/((maxDefocus-minDefocus)/simpleBins);
-    std::cout << "minDefocus=" << minDefocus << " maxDefocus=" << maxDefocus << std::endl;
 
     double defocus;
     FOR_ALL_OBJECTS_IN_METADATA(ImagesMD)
@@ -741,21 +740,26 @@ void ProgCtfGroup::simpleRun()
     	ImagesMD.setValue(MDL_DEFGROUP,defGroup,__iter.objId);
     }
 
-    std::cout << "Finished assigning" << std::endl;
-
     unlink( (fn_root+"_images.sel").c_str());
     FileName imagesInDefoculGroup;
     MetaData auxMetaData;
     auxMetaData.clear();
     auxMetaData.setComment("images (particles) per defocus group, block name is defocusgroup No");
     FileName fnGroup;
+    if (verbose>0)
+    {
+    	std::cerr << "Writing defocus groups ...\n";
+    	init_progress_bar(simpleBins);
+    }
     for(int i=1;i<=simpleBins; i++)
     {
-        std::cout << "Write " << i << std::endl;
         auxMetaData.importObjects(ImagesMD,MDValueEQ(MDL_DEFGROUP,i));
         fnGroup.assign( formatString("ctfGroup%06d@%s_images.sel", i, fn_root.c_str()) );
         auxMetaData.write( fnGroup, i > 1 ? MD_APPEND : MD_OVERWRITE);
+        if (verbose>0)
+        	progress_bar(i);
     }
+    progress_bar(simpleBins);
 }
 
 void ProgCtfGroup::run()
