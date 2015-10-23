@@ -829,10 +829,10 @@ class PostprocessViewer(ProtocolViewer):
         
         return [xplotter]
     
-    def _plotFSC(self, a, model):
+    def _plotFSC(self, a, model, label):
         mdStar = md.MetaData(model)
         resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
-        fsc = [mdStar.getValue(md.RLN_POSTPROCESS_FSC_TRUE, id) for id in mdStar]
+        fsc = [mdStar.getValue(label, id) for id in mdStar]
         self.maxfsc = max(fsc)
         self.minInv = min(resolution_inv)
         self.maxInv = max(resolution_inv)
