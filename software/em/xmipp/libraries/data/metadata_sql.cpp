@@ -374,7 +374,11 @@ bool MDSql::setObjectValues(const std::vector<MDObject*> & columnValues, const s
 
 void MDSql::finalizePreparedStmt(void)
 {
-    sqlite3_finalize( this->preparedStmt);
+	if (this->preparedStmt != NULL)
+	{
+		sqlite3_finalize( this->preparedStmt);
+		this->preparedStmt = NULL;
+	}
 }
 
 //set column with a given value
@@ -436,17 +440,17 @@ bool MDSql::setObjectValue(const int objId, const MDObject &value)
     return r;
 }
 
-bool MDSql::getObjectsValues(const size_t objId, std::vector<MDLabel> labels, std::vector<MDObject> *values, bool firstTime)
+bool MDSql::initializeGetObjectsValuesStatement(std::vector<MDLabel> labels)
 {
-	bool ret=true;				// Return value.
-	int i=0;					// Loop counter.
+	int 	i=0;					// Loop counter.
+	bool	initialized=true;		// Return value.
 
-	if (firstTime)
+	std::stringstream ss;		// Sentence string.
+	ss << "SELECT ";
+
+	// Add columns names.
+	if (labels.size() > 0)
 	{
-		std::stringstream ss;		// Sentence string.
-		ss << "SELECT ";
-
-		// Add columns names.
 		ss << MDL::label2StrSql(labels[0]);
 		for (i=1; i<labels.size() ;i++)
 		{
@@ -459,11 +463,23 @@ bool MDSql::getObjectsValues(const size_t objId, std::vector<MDLabel> labels, st
 		rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &this->preparedStmt, &zLeftover);
 		if (rc != SQLITE_OK)
 		{
-			ret = false;
+			initialized = false;
 			printf( "could not prepare statement: %s\n", sqlite3_errmsg(db) );
-			std::cout << ss.str() << std::endl << "ID " << objId << std::endl;
+			this->preparedStmt = NULL;
 		}
 	}
+	else
+	{
+		this->preparedStmt = NULL;
+	}
+
+	return(initialized);
+}
+
+bool MDSql::getObjectsValues(const size_t objId, std::vector<MDLabel> labels, std::vector<MDObject> *values)
+{
+	bool ret=true;				// Return value.
+	int i=0;					// Loop counter.
 
 	// Bind object id.
 	rc = sqlite3_bind_int(this->preparedStmt, 1, objId);
