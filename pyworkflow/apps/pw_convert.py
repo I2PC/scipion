@@ -32,7 +32,7 @@ def main():
     input = args.input
     output = args.output
     if args.coordinates:
-        print 'converting coordinates ...'
+        #print 'converting coordinates ...'
         micSet = loadSetFromDb(input)
         outputDir = output
         coordsfn = os.path.join(outputDir, 'coordinates.sqlite')
@@ -41,14 +41,14 @@ def main():
         coordSet.setMicrographs(micSet)
         if fromType == 'dogpicker':
             if toType == 'xmipp': 
-                print 'from dogpicker to xmipp...'
+                #print 'from dogpicker to xmipp...'
                 from pyworkflow.em.packages.appion.convert import readSetOfCoordinates
                 readSetOfCoordinates(outputDir, micSet, coordSet)
                 from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
                 writeSetOfCoordinates(outputDir, coordSet, ismanual=False)
         if fromType == 'relion':
             if toType == 'xmipp': 
-                print 'from relion to xmipp...'
+                #print 'from relion to xmipp...'
                 inputCoords = args.extra
                 starFiles = [os.path.join(inputCoords, pwutils.removeBaseExt(mic.getFileName()) + '_autopick.star')
                      for mic in micSet]

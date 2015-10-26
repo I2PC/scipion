@@ -223,7 +223,6 @@ class RelionAutopickParams(EmWizard):
         convertCommand = %(convert)s --coordinates --from relion --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s --extra %(protDir)s/extra
         """ % args)
         f.close()
-        print "Launching picking GUI..."
         process = CoordinatesObjectView(autopickProt.getProject(), micfn, coordsDir, autopickFomProt, pickerProps=pickerProps).show()
         process.wait()
         myprops = readProperties(pickerProps)

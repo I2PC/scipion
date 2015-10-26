@@ -71,15 +71,13 @@ public class GenericClassifier extends Classifier
 		String output;
 		try
 		{
-			System.out.println(autopickCommand);
 			if(runDir != null)
 				output = XmippWindowUtil.executeCommand(autopickCommand, true, runDir);
 			else
 				output = XmippWindowUtil.executeCommand(autopickCommand, true);
-			System.out.println(output);
-			System.out.println(convertCommand);
+			//System.out.println(output);
 			output = XmippWindowUtil.executeCommand(convertCommand, true);
-			System.out.println(output);
+			//System.out.println(output);
 			writeProperties();
 		}
 		catch (Exception e)
