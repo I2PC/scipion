@@ -753,9 +753,14 @@ class PostprocessViewer(ProtocolViewer):
                       label='Display masked volume with',
                       help='*slices*: display masked volume as 2D slices along z axis.\n'
                            '*chimera*: display masked volume as surface with Chimera.')
-        group.addParam('resolutionPlotsFSC', LabelParam, default=True,
-                      label='Display resolution plots (FSC) ?',
-                      help='')
+        group.addParam('resolutionPlotsFSC', EnumParam,
+                      choices=['Corrected', 'Unmasked Maps', 'Masked Maps', 'Phase Randomized Masked Maps', 'all'],
+                      default=FSC_CORRECTED, display=EnumParam.DISPLAY_COMBO, 
+                      label='Display resolution plots (FSC)',
+                      help='') 
+#         group.addParam('resolutionPlotsFSC', LabelParam, default=True,
+#                       label='Display resolution plots (FSC) ?',
+#                       help='')
         group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
                       expertLevel=LEVEL_ADVANCED,
                       label='Threshold in resolution plots',
@@ -801,17 +806,6 @@ class PostprocessViewer(ProtocolViewer):
 #===============================================================================
 # plotFSC            
 #===============================================================================
-    def _plotFSC(self, a, model):
-        mdStar = md.MetaData(model)
-        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
-        fsc = [mdStar.getValue(md.RLN_POSTPROCESS_FSC_TRUE, id) for id in mdStar]
-        self.maxfsc = max(fsc)
-        self.minInv = min(resolution_inv)
-        self.maxInv = max(resolution_inv)
-        a.plot(resolution_inv, fsc)
-        a.xaxis.set_major_formatter(self._plotFormatter)
-        a.set_ylim([-0.1, 1.1])
-            
     def _showFSC(self, paramName=None):
         threshold = self.resolutionThresholdFSC.get()
         n = 1
@@ -821,16 +815,30 @@ class PostprocessViewer(ProtocolViewer):
         
         xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
         a = xplotter.createSubPlot("GoldStandard FSC", 'Angstroms^-1', 'FSC', yformat=False)
-        
-        model_star = self.protocol._getExtraPath('postprocess.star')
-        if exists(model_star):
-            model = 'fsc@' + model_star
-            self._plotFSC(a, model)
+        legends = []
+        modelStar = self.protocol._getExtraPath('postprocess.star')
+        for label in self._getFSCLabels():
+            if exists(modelStar):
+                model = 'fsc@' + modelStar
+                self._plotFSC(a, model, label)
+                legends.append(self._getLegend(label))
+        xplotter.showLegend(legends)
         if threshold < self.maxfsc:
             a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
         a.grid(True)
         
         return [xplotter]
+    
+    def _plotFSC(self, a, model, label):
+        mdStar = md.MetaData(model)
+        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
+        fsc = [mdStar.getValue(label, id) for id in mdStar]
+        self.maxfsc = max(fsc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, fsc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
     
 #===============================================================================
 # Utils Functions
@@ -846,6 +854,29 @@ class PostprocessViewer(ProtocolViewer):
         if value:
             inv = 1/value
         return "1/%0.2f" % inv
+    
+    def _getFSCLabels(self):
+        if self.resolutionPlotsFSC.get() == 0:
+            return [md.RLN_POSTPROCESS_FSC_TRUE]
+        elif self.resolutionPlotsFSC.get() == 1:
+            return [md.RLN_POSTPROCESS_FSC_UNMASKED]
+        elif self.resolutionPlotsFSC.get() == 2:
+            return [md.RLN_POSTPROCESS_FSC_MASKED]
+        elif self.resolutionPlotsFSC.get() == 3:
+            return [md.RLN_POSTPROCESS_FSC_RANDOM_MASKED]
+        else:
+            return [md.RLN_POSTPROCESS_FSC_TRUE, md.RLN_POSTPROCESS_FSC_UNMASKED,
+                    md.RLN_POSTPROCESS_FSC_MASKED, md.RLN_POSTPROCESS_FSC_RANDOM_MASKED]
+    
+    def _getLegend(self, label):
+        if label == md.RLN_POSTPROCESS_FSC_TRUE:
+            return 'Corrected'
+        elif label == md.RLN_POSTPROCESS_FSC_UNMASKED:
+            return 'Unmasked Maps'
+        elif label == md.RLN_POSTPROCESS_FSC_MASKED:
+            return 'Masked Maps'
+        else:
+            return 'Phase Randomized Masked Maps'
 
 
 class RelionAutopickViewer(Viewer):

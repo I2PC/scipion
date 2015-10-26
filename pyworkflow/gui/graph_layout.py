@@ -252,7 +252,7 @@ class LevelTreeLayout(GraphLayout):
             # If the current right sibling has more levels
             # just add them to the current rightLimits
             for i in range(h, n2):
-                rightLimits.append(hL2[i])
+                rightLimits.append(hL2[i][1])
                 
         return sep + self.DX
     

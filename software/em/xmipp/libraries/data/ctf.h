@@ -67,7 +67,7 @@ bool containsCTFBasicLabels(const MetaData &md);
  * Raise error if neither CTF_MODEL or ALL CTF_BASIC_LABELS are found
  * in input images metadata.
  * */
-void groupCTFMetaData(const MetaData &imgMd, MetaData &ctfMd);
+void groupCTFMetaData(const MetaData &imgMd, MetaData &ctfMd, std::vector<MDLabel> &groupbyLabels);
 
 /**@defgroup CTFSupport CTF support classes
    @ingroup DataLibrary */

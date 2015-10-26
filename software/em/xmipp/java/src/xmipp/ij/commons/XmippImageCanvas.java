@@ -40,22 +40,25 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 			super.mousePressed(e);
 			return;
 		}
-
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
-		
-		
 		if (isDragImage(e))
 		{
 			setupScroll(x, y);
 			return;
 		}
-		
+		if(e.isControlDown())
+		{
+			 if (SwingUtilities.isLeftMouseButton(e))
+				 zoomIn(e.getX(), e.getY());
+			 if (SwingUtilities.isRightMouseButton(e))
+				 zoomOut(e.getX(), e.getY());
+		}
 	}
 
 	protected boolean isDragImage(MouseEvent e)
 	{
-		return SwingUtilities.isRightMouseButton(e) || (SwingUtilities.isLeftMouseButton(e) && e.isControlDown());
+		return (SwingUtilities.isRightMouseButton(e) && !e.isControlDown());
 	}
 
 	public void mouseDragged(MouseEvent e)

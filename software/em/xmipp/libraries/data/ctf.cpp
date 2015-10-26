@@ -36,7 +36,7 @@ bool containsCTFBasicLabels(const MetaData & md)
 	return true;
 }
 
-void groupCTFMetaData(const MetaData &imgMd, MetaData &ctfMd)
+void groupCTFMetaData(const MetaData &imgMd, MetaData &ctfMd, std::vector<MDLabel> &groupbyLabels)
 {
   //number of different CTFs
   if (imgMd.containsLabel(MDL_CTF_MODEL))
@@ -46,15 +46,14 @@ void groupCTFMetaData(const MetaData &imgMd, MetaData &ctfMd)
   }
   else if (containsCTFBasicLabels(imgMd))
   {
-      std::vector<MDLabel> groupbyLabels;
+      groupbyLabels.clear();
       for(int i=0; i < CTF_ALL_LABELS_SIZE; i++)
         if (imgMd.containsLabel(CTF_ALL_LABELS[i]))
           groupbyLabels.push_back(CTF_ALL_LABELS[i]);
       if (imgMd.containsLabel(MDL_MICROGRAPH_ID))
         groupbyLabels.push_back(MDL_MICROGRAPH_ID);
       else
-    	  REPORT_ERROR(ERR_MD_MISSINGLABEL,"ERROR: Input metadata has micrographId");
-      //MetaData auxMd;
+    	  REPORT_ERROR(ERR_MD_MISSINGLABEL,"ERROR: Input metadata does not have micrographId");
       ctfMd.aggregateGroupBy(imgMd, AGGR_COUNT, groupbyLabels, MDL_CTF_DEFOCUSU, MDL_COUNT);
   }
   else

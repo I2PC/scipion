@@ -89,6 +89,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
         pixelslb = new Label("                                                ");
         add(pixelslb);
         
+
     }
 
         @Override
