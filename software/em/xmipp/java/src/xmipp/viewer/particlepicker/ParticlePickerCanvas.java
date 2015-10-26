@@ -131,14 +131,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			getFrame().rectanglechb.setSelected(tongleSetSelected);
 			tongleSetSelected = !tongleSetSelected;
 		}
-		else if (code == KeyEvent.VK_PLUS)
-		{
-			zoomIn(x, y);
-		}
-		else if (code == KeyEvent.VK_MINUS)
-		{
-			zoomOut(x, y);
-		}
+		
 		
 		else
 			return;// do not repaint if not needed
@@ -179,13 +172,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	}
 
 	
-	@Override
-	public void mouseWheelMoved(MouseWheelEvent e)
-	{
-		super.mouseWheelMoved(e);
-		if (e.isShiftDown())// zoom change detected
-			getFrame().displayZoom(getMagnification());
-	}
+
 	
 	
 
@@ -232,10 +219,10 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	{
 		if (getFrame().isPickingAvailable(e))
 		{
-				if (!getFrame().isEraserMode())
-					setCursor(crosshairCursor);
-				else 
-					setCursor(eraserCursor);
+			if (!getFrame().isEraserMode())
+				setCursor(crosshairCursor);
+			else 
+				setCursor(eraserCursor);
 		}
 	}
 
