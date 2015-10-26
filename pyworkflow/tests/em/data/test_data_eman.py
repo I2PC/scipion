@@ -43,13 +43,11 @@ class TestEmanSetOfCoordinates(BaseTest):
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
         cls.micBd = cls.dataset.getFile( 'micsSqlite')
         cls.emanCoord = cls.dataset.getFile('boxingFile')
-        
-        
 
         
     def testIterate(self):
         """ Test reading an EmanSetOfCoordinates from an existing  directory """
-        eman2.loadEnvironment()
+#         eman2.getEnviron()
         emanSetCoords = EmanSetOfCoordinates(self.emanCoord)     
 #        #Set micrographs associated to coordinates
         emanSetMics = SetOfMicrographs(filename=self.micBd)
