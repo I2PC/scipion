@@ -28,10 +28,13 @@ This package contains the protocols and data for APPION
 """
 
 _logo = "ncbi_logo.png"
-_references = ['Yoquese']
 
+from bibtex import _bibtex
 from convert import getEnviron
 from protocol_picking import DogPickerProtPicking
 from wizard import DogPickerWizard
+
+
+#_references = ['Voss2009']
 
 _environ = getEnviron()

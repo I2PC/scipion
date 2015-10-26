@@ -34,6 +34,8 @@ import pyworkflow.em.metadata as md
 from pyworkflow.utils.path import makePath, moveFile, removeBaseExt, replaceBaseExt
 from convert import *
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
+from pyworkflow.protocol.params import RelationParam
+from pyworkflow.em.constants import RELATION_CTF
 
 
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
@@ -64,6 +66,14 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self._updateFilenamesDict(_templateDict)
     
     def _defineProcessParams(self, form):
+        form.addParam('doInitialCTF', BooleanParam, default=False, 
+              label="Use defoci from a previous CTF estimation")
+        form.addParam('ctfRelations', RelationParam, allowsNull=True,condition='doInitialCTF',
+                      relationName=RELATION_CTF, attributeName='getInputMicrographs',
+                      label='Previous CTF estimation',
+                      help='Choose some CTF estimation related to input micrographs. \n'
+                           'CTF estimation is need if you want to use the defocus found in a previous CTF estimation')
+
         form.addParam('doCTFAutoDownsampling', BooleanParam, default=True, 
               label="Automatic CTF downsampling detection", expertLevel=LEVEL_ADVANCED, 
               help='If this option is chosen, the algorithm automatically tries by default the '
@@ -75,16 +85,27 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
               label="Automatic rejection", expertLevel=LEVEL_ADVANCED,
               help='Automatically reject micrographs whose CTF looks suspicious')
     
-    #--------------------------- INSERT steps functions --------------------------------------------
+    def getInputMicrographs(self):
+        return self.inputMicrographs.get()
+
+   #--------------------------- INSERT steps functions --------------------------------------------
     def _insertFinalSteps(self, deps):
         stepId = self._insertFunctionStep('sortPSDStep', prerequisites=deps)
         return [stepId]
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _estimateCTF(self, micFn, micDir):
-        """ Run the estimate CTF program """        
+    def _estimateCTF(self, micFn, micDir, micName):
+        """ Run the estimate CTF program """
+        localParams = self.__params.copy()
+        if self.doInitialCTF:
+            if self.ctfDict[micName]>0:
+                localParams['defocusU'] = self.ctfDict[micName]
+                localParams['defocus_range'] = 0.01*self.ctfDict[micName]
+        else:
+                localParams['defocusU']=(self._params['maxDefocus']+self._params['minDefocus'])/2
+                localParams['defocus_range']=(self._params['maxDefocus']-self._params['minDefocus'])/2
+        
         # Create micrograph dir under extra directory
-        print "creating path micDir=", micDir
         makePath(micDir)
         if not exists(micDir):
             raise Exception("No created dir: %s " % micDir)
@@ -111,14 +132,14 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
                 deleteTmp=finalName
       
             # Update _params dictionary with mic and micDir
-            self._params['micFn'] = finalName
-            self._params['micDir'] = self._getFileName('prefix', micDir=micDir)
-            self._params['samplingRate'] = self.inputMics.getSamplingRate() * downFactor
+            localParams['micFn'] = finalName
+            localParams['micDir'] = self._getFileName('prefix', micDir=micDir)
+            localParams['samplingRate'] = self.inputMics.getSamplingRate() * downFactor
             
             # CTF estimation with Xmipp
             try:
-                self.runJob(self._program, self._args % self._params+" --downSamplingPerformed %f"%downFactor)
-                mdCTF = md.RowMetaData(self._getFileName('ctfparam', micDir=micDir))
+                self.runJob(self._program, self._args % localParams+" --downSamplingPerformed %f"%downFactor)
+                # mdCTF = md.RowMetaData(self._getFileName('ctfparam', micDir=micDir))
             except Exception:
                 break
             
@@ -234,6 +255,9 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         # downsampling factor must be greater than 1
         if self.ctfDownFactor.get() < 1:
             validateMsgs.append('Downsampling factor must be >=1.')
+        if self.doInitialCTF:
+            if not self.ctfRelations.hasValue():
+                validateMsgs.append('If you want to use a previous estimation of the CTF, the corresponding set of CTFs is needed')
         return validateMsgs
     
     def _summary(self):
@@ -260,10 +284,18 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         return papers
     
     #--------------------------- UTILS functions ---------------------------------------------------
+    def _prepareArgs(self,params):
+        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate %(samplingRate)s --defocusU %(defocusU)f --defocus_range %(defocus_range)f --overlap 0.7 "
+        
+        for par, val in params.iteritems():
+            self._args += " --%s %s" % (par, str(val))
+            
+        if self.doFastDefocus:
+            self._args += " --fastDefocus"
+
     def _prepareCommand(self):
         self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_micrograph'       
-        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate %(samplingRate)s --overlap 0.7 "
         
         # Mapping between base protocol parameters and the package specific command options
         self.__params = {'kV': self._params['voltage'],
@@ -272,17 +304,16 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
                 'Q0': self._params['ampContrast'],
                 'min_freq': self._params['lowRes'],
                 'max_freq': self._params['highRes'],
-                'pieceDim': self._params['windowSize'],
-                'defocusU': (self._params['maxDefocus']+self._params['minDefocus'])/2,
-                'defocus_range': (self._params['maxDefocus']-self._params['minDefocus'])/2
+                'pieceDim': self._params['windowSize']
                 }
-        
-        for par, val in self.__params.iteritems():
-            self._args += " --%s %s" % (par, str(val))
-            
-        if self.doFastDefocus:
-            self._args += " --fastDefocus"
-    
+        self._prepareArgs(self.__params)
+
+        if self.ctfRelations.hasValue():
+            self.ctfDict = {}
+            for ctf in self.ctfRelations.get():
+                ctfName = ctf.getMicrograph().getMicName()
+                self.ctfDict[ctfName] = ctf.getDefocusU()
+                    
     def _prepareRecalCommand(self, ctfModel):
         if self.recalculate:
             self._defineRecalValues(ctfModel)
@@ -303,7 +334,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             fnCTFparam = self._getFileName('ctfparam', micDir=micDir)
             mdCTFParam = xmipp.MetaData(fnCTFparam)
             downFactor = mdCTFParam.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,mdCTFParam.firstObject())
-            cleanPath(fnCTFparam)
+            # cleanPath(fnCTFparam)
             
             params2 = {'psdFn': join(micDir, psdFile),
                        'defocusU': float(line[0]),

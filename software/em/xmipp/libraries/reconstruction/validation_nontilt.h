@@ -39,14 +39,13 @@ class ProgValidationNonTilt: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnDir, fnSym, fnInit;
-
-    /** Sampling rate of the volume and projections */
-    double sampling_rate;
+    FileName fnDir, fnSym, fnInit, fnParticles;
 
     MetaData mdPartial;
 
     size_t rank, Nprocessors;
+
+    bool useSignificant;
 
 public:
 

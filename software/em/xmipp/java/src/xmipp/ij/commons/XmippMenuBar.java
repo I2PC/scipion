@@ -656,9 +656,9 @@ public class XmippMenuBar extends MenuBar
 	public Map<Object, Object> getKeyAssist()
 	{
 		Map<Object, Object> map = Collections.synchronizedMap(new LinkedHashMap<Object, Object>());
-		map.put("Shift + Scroll Up", "Zoom in");
-		map.put("Shift + Scroll Down", "Zoom out");
-		map.put("Right click + Mouse move", "Moves image previously expanded");
+		map.put("Shift + scroll up", "Zoom in");
+		map.put("Shift + scroll down", "Zoom out");
+		map.put("Right click + mouse move", "Moves image previously expanded");
 		return map;
 	}
         

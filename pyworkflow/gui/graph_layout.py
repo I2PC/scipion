@@ -179,8 +179,13 @@ class LevelTreeLayout(GraphLayout):
                 
             if n > 1:
                 offset = 0
+                # Keep right limits to compute the separation between siblings
+                # some times it not enough to compare with the left sibling
+                # for some child levels of the node
+                rightLimits = [r for l, r in childs[0]._layout['hLimits']]
+                
                 for i in range(n-1):
-                    sep = self._getChildsSeparation(childs[i], childs[i+1])
+                    sep = self._getChildsSeparation(childs[i], childs[i+1], rightLimits)
                     offset += sep
                     c = childs[i+1]
                     self.__setNodeOffset(c, offset)
@@ -221,22 +226,34 @@ class LevelTreeLayout(GraphLayout):
                     hLimits.append([l, r])
                 count += 1
                 
-    def _getChildsSeparation(self, child1, child2):
+    def _getChildsSeparation(self, child1, child2, rightLimits):
         '''Calcualte separation between siblings
         at each height level'''
         sep = 0 
-        hL1 = child1._layout['hLimits']
         hL2 = child2._layout['hLimits']
-        n1 = len(hL1)
+        n1 = len(rightLimits)
         n2 = len(hL2)
         h = min(n1, n2)
             
         for i in range(h):
-            right = hL1[i][1]
+            right = rightLimits[i]
             left = hL2[i][0]            
             if left + sep < right:
-                sep = right - left                
-  
+                sep = right - left
+            rightLimits[i] = hL2[i][1]
+                
+        if n1 > n2:
+            # If there are more levels in the rightLimits
+            # updated the last ones like if they belong 
+            # to next sibling is is now (sep + self.DX) away
+            for i in range(h, n1):
+                rightLimits[i] -= sep + self.DX
+        else:
+            # If the current right sibling has more levels
+            # just add them to the current rightLimits
+            for i in range(h, n2):
+                rightLimits.append(hL2[i][1])
+                
         return sep + self.DX
     
     def _applyNodeOffsets(self, node, x):

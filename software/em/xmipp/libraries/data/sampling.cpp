@@ -1665,16 +1665,12 @@ void Sampling::computeNeighbors(bool only_winner)
 
     double my_dotProduct;
     double winner_dotProduct;
-    Matrix1D<double>  row(3);
     Matrix2D<double>  L(4, 4), R(4, 4);
     std::vector<size_t>  aux_neighbors;
-    std::vector<double> aux_neighbors_psi;
-    std::vector <Matrix1D<double> > exp_data_projection_direction;
-    Matrix1D<double>  direction(3);
     bool new_reference=true;
     my_neighbors.clear();
 #ifdef MYPSI
-
+    std::vector<double> aux_neighbors_psi;
     my_neighbors_psi.clear();
 #endif
 
@@ -1701,94 +1697,102 @@ void Sampling::computeNeighbors(bool only_winner)
 #endif
 
         aux_neighbors.clear();
-        size_t * aux_neighborsArray = NULL;
-        for (size_t k = 0; k < R_repository.size(); k++,j++)
-        {
-            winner_dotProduct = -1.;
-            for (size_t i = 0; i < no_redundant_sampling_points_vector_size; ++i)
-            {
-                my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
-                                           exp_data_projection_direction_by_L_R[j]);
+    	if (cos_neighborhood_radius <= -1.0)
+    	{
+    		aux_neighbors=no_redundant_sampling_points_index;
+    		j+=R_repository.size();
+    	}
+    	else
+    	{
+			size_t * aux_neighborsArray = NULL;
+			for (size_t k = 0; k < R_repository.size(); k++,j++)
+			{
+				winner_dotProduct = -1.;
+				for (size_t i = 0; i < no_redundant_sampling_points_vector_size; ++i)
+				{
+					my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
+											   exp_data_projection_direction_by_L_R[j]);
 
-                if (my_dotProduct > cos_neighborhood_radius)
-                {
-                    if(aux_neighbors.size()==0)
-                    {
-                        aux_neighbors.push_back(no_redundant_sampling_points_index[i]);
-                        winner_dotProduct=my_dotProduct;
+					if (my_dotProduct > cos_neighborhood_radius)
+					{
+						if(aux_neighbors.size()==0)
+						{
+							aux_neighbors.push_back(no_redundant_sampling_points_index[i]);
+							winner_dotProduct=my_dotProduct;
 
-#ifdef MYPSI
+	#ifdef MYPSI
 
-                        aux_neighbors_psi.push_back(exp_data_projection_direction_by_L_R_psi[j]);
-#endif
+							aux_neighbors_psi.push_back(exp_data_projection_direction_by_L_R_psi[j]);
+	#endif
 
-                    }
-                    else
-                    {
-                        new_reference = true;
-                        if(only_winner)
-                        {
-                            if(winner_dotProduct<my_dotProduct)
-                            {
-                                if(winner_dotProduct!=-1)
-                                    aux_neighbors.pop_back();
-#ifdef MYPSI
+						}
+						else
+						{
+							new_reference = true;
+							if(only_winner)
+							{
+								if(winner_dotProduct<my_dotProduct)
+								{
+									if(winner_dotProduct!=-1)
+										aux_neighbors.pop_back();
+	#ifdef MYPSI
 
-                                if(winner_dotProduct!=-1)
-                                    aux_neighbors_psi.pop_back();
-#endif
+									if(winner_dotProduct!=-1)
+										aux_neighbors_psi.pop_back();
+	#endif
 
-                                winner_dotProduct=my_dotProduct;
-                            }
-                            else
-                            {
-                                new_reference=false;
-                            }
-                        }
-                        else
-                        {
-                            //precalculate size saves time here but
-                            //not in the whole loop
-                            aux_neighborsArray =  &aux_neighbors[0];
-                            size_t _size = aux_neighbors.size();
-                            //std::cerr << "DEBUG_JM: no_redundant_sampling_points_index[i]: " << no_redundant_sampling_points_index[i] << std::endl;
-                            // for (size_t kkk = 0; kkk < aux_neighbors.size(); ++kkk)
-                            //   std::cerr << aux_neighbors[kkk] << " ";
-                            for( size_t l=0;l<  _size;l++)
-                            {
-                                //if (aux_neighbors[l]==i)
-                                if (aux_neighborsArray[l]==no_redundant_sampling_points_index[i])
-                                {
-                                    new_reference=false;
-                                    break;
-                                }
-                            }
-                            //std::cerr << "DEBUG_JM: new_reference: " << new_reference << std::endl;
-                        }
-                        if (new_reference)
-                        {
-                            //std::cerr << formatString("DEBUG_JM: j %lu k %lu i %lu ", j, k, i) << std::endl;
-                            aux_neighbors.push_back(no_redundant_sampling_points_index[i]);
+									winner_dotProduct=my_dotProduct;
+								}
+								else
+								{
+									new_reference=false;
+								}
+							}
+							else
+							{
+								//precalculate size saves time here but
+								//not in the whole loop
+								aux_neighborsArray =  &aux_neighbors[0];
+								size_t _size = aux_neighbors.size();
+								//std::cerr << "DEBUG_JM: no_redundant_sampling_points_index[i]: " << no_redundant_sampling_points_index[i] << std::endl;
+								// for (size_t kkk = 0; kkk < aux_neighbors.size(); ++kkk)
+								//   std::cerr << aux_neighbors[kkk] << " ";
+								for( size_t l=0;l<  _size;l++)
+								{
+									//if (aux_neighbors[l]==i)
+									if (aux_neighborsArray[l]==no_redundant_sampling_points_index[i])
+									{
+										new_reference=false;
+										break;
+									}
+								}
+								//std::cerr << "DEBUG_JM: new_reference: " << new_reference << std::endl;
+							}
+							if (new_reference)
+							{
+								//std::cerr << formatString("DEBUG_JM: j %lu k %lu i %lu ", j, k, i) << std::endl;
+								aux_neighbors.push_back(no_redundant_sampling_points_index[i]);
 
-                            //for (size_t kkk = 0; kkk < aux_neighbors.size(); ++kkk)
-                            //  std::cerr << aux_neighbors[kkk] << " ";
-                            // std::cerr << std::endl;
+								//for (size_t kkk = 0; kkk < aux_neighbors.size(); ++kkk)
+								//  std::cerr << aux_neighbors[kkk] << " ";
+								// std::cerr << std::endl;
 
-#ifdef MYPSI
+	#ifdef MYPSI
 
-                            aux_neighbors_psi.push_back(exp_data_projection_direction_by_L_R_psi[j]);
-#endif
+								aux_neighbors_psi.push_back(exp_data_projection_direction_by_L_R_psi[j]);
+	#endif
 
-                        }
-                    }
-                    //same sampling point should appear only once
-                    //note that psi recorded here may be different from psi
-                    //recorded in _closest_sampling_points because
-                    //may refer to a different sampling point
-                    //in fact every point is degenerated
-                }
-            }//for i;
-        }//for k
+							}
+						}
+						//same sampling point should appear only once
+						//note that psi recorded here may be different from psi
+						//recorded in _closest_sampling_points because
+						//may refer to a different sampling point
+						//in fact every point is degenerated
+					}
+				}//for i;
+			}//for k
+    	}
         my_neighbors.push_back(aux_neighbors);
 #ifdef MYPSI
 

@@ -55,7 +55,7 @@ class ProtDosefGpu(ProtProcessMovies):
         line1 = group.addLine('Used in alignment',
                              help='First and last frames used in alignment.\n'
                                   'The first frame in the stack is *0*.' )
-        line1.addParam('alignFrame0', IntParam, default=0, label='Fisrt')
+        line1.addParam('alignFrame0', IntParam, default=0, label='First')
         line1.addParam('alignFrameN', IntParam, default=0, label='Last',
                       help='If *0*, use maximum value')
         

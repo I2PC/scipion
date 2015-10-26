@@ -209,7 +209,8 @@ ParametersProjection::ParametersProjection()
     tilt_range.Ndev=0.;
     psi_range.Navg=0.;
     psi_range.Ndev=0.;
-
+    doPhaseFlip=false;
+    applyShift=true;
 }
 
 void ParametersProjection::read(const FileName &fn_proj_param)
@@ -245,6 +246,12 @@ void ParametersProjection::read(const FileName &fn_proj_param)
             if (!fn_angle.exists())
                 REPORT_ERROR(ERR_IO_NOTEXIST, (String)"Prog_Project_Parameters::read: "
                              "file " + fn_angle + " doesn't exist");
+            else
+            {
+            	MD.getValue(MDL_CTF_DATA_PHASE_FLIPPED, doPhaseFlip, objId);
+            	MD.getValue(MDL_APPLY_SHIFT, applyShift, objId);
+            }
+
         if (MD.getValue(MDL_PRJ_ROT_RANGE,ParamVec, objId))
         {
             enable_angle_range = true;
@@ -914,6 +921,7 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
 int PROJECT_Effectively_project(const FileName &fnOut,
                                 bool singleProjection,
                                 projectionType projType,
+                                double sampling_rate,
                                 const ParametersProjection &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,
@@ -954,6 +962,8 @@ int PROJECT_Effectively_project(const FileName &fnOut,
 #endif
 
     bool existFlip = false;
+    bool hasCTF=false;
+
     int projIdx=FIRST_IMAGE;
     FileName fn_proj;              // Projection name
     RealShearsInfo *Vshears=NULL;
@@ -971,10 +981,9 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         createEmptyFile(fn_proj, prm.proj_Xdim, prm.proj_Ydim,
                         1, side.DF.size(), true,WRITE_OVERWRITE);
 
-    std::cout << SF << std::endl;
-
     if (side.DF.containsLabel(MDL_FLIP))
     	existFlip = true;
+
 
     FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
@@ -986,33 +995,25 @@ int PROJECT_Effectively_project(const FileName &fnOut,
 
         // Choose angles .....................................................
         double rot, tilt, psi, x=0, y=0;    // Actual projecting angles
-        bool flip;
+        bool flip=false;
         side.DF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         side.DF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
         side.DF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
-        if (side.DF.containsLabel(MDL_SHIFT_X))
-        	side.DF.getValue(MDL_SHIFT_X,x,__iter.objId);
-        if (side.DF.containsLabel(MDL_SHIFT_Y))
-        	side.DF.getValue(MDL_SHIFT_Y,y,__iter.objId);
 
+        if (prm.applyShift)
+        {
+        	if (side.DF.containsLabel(MDL_SHIFT_X))
+        		side.DF.getValue(MDL_SHIFT_X,x,__iter.objId);
+        	if (side.DF.containsLabel(MDL_SHIFT_Y))
+        		side.DF.getValue(MDL_SHIFT_Y,y,__iter.objId);
+        }
         realWRAP(rot, 0, 360);
         realWRAP(tilt, 0, 360);
         realWRAP(psi, 0, 360);
 
         if (existFlip)
-        {
         	side.DF.getValue(MDL_FLIP,flip,__iter.objId);
 
-        	if (flip==true)
-        	{
-        		double nrot, ntilt, npsi;
-        		Euler_mirrorX(rot, tilt, psi, nrot, ntilt, npsi);
-        		Euler_mirrorY(nrot, ntilt, npsi, nrot, ntilt, npsi);
-        		rot = nrot;
-        		tilt = ntilt;
-        		psi = npsi;
-        	}
-        }
 
         SF.setValue(MDL_ANGLE_ROT,rot,DFmov_objId);
         SF.setValue(MDL_ANGLE_TILT,tilt,DFmov_objId);
@@ -1029,6 +1030,18 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         //ROB: totally anoying behaviour in xmipp
         shiftX=-shiftX;
         shiftY=-shiftY;
+
+        //If there is CTF information use it
+        CTFDescription ctf;
+    	if (side.DF.containsLabel(MDL_CTF_DEFOCUSU) || side.DF.containsLabel(MDL_CTF_MODEL))
+    	{
+    		//JV he tenido que tocar esta función para poder acceder al sampling rate
+    		hasCTF = true;
+    		MDRow row;
+    		side.DF.getRow(row,__iter.objId);
+    		ctf.readFromMdRow(row);
+        	ctf.produceSideInfo();
+    	}
 
 #ifdef DEBUG
 
@@ -1059,6 +1072,11 @@ int PROJECT_Effectively_project(const FileName &fnOut,
             else if (projType == REALSPACE)
                 projectVolume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
+
+            if (hasCTF)
+            	ctf.applyCTF(proj(),sampling_rate, prm.doPhaseFlip);
+            hasCTF = false;
+
             Matrix1D<double> shifts(2);
             XX(shifts) = shiftX;
             YY(shifts) = shiftY;
@@ -1090,6 +1108,8 @@ int PROJECT_Effectively_project(const FileName &fnOut,
                 project_crystal(aux, proj, prm, side, prm_crystal, rot, tilt, psi);
             }
         }
+        if (flip)
+        	proj().selfReverseX();
 
         // Add noise in angles and voxels ....................................
         SF.setValue(MDL_ANGLE_ROT2,rot,DFmov_objId);
@@ -1098,9 +1118,12 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         rot  += rnd_gaus(prm.rot_range.Navg,  prm.rot_range.Ndev);
         tilt += rnd_gaus(prm.tilt_range.Navg, prm.tilt_range.Ndev);
         psi  += rnd_gaus(prm.psi_range.Navg,  prm.psi_range.Ndev);
+
+
         SF.setValue(MDL_ANGLE_ROT,realWRAP(rot, 0, 360),DFmov_objId);
         SF.setValue(MDL_ANGLE_TILT,realWRAP(tilt, 0, 360),DFmov_objId);
         SF.setValue(MDL_ANGLE_PSI,realWRAP(psi, 0, 360),DFmov_objId);
+
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
         // Save ..............................................................
@@ -1196,7 +1219,7 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
     {
         // Really project
         if (prm.singleProjection)
-            ProjNo = PROJECT_Effectively_project(prm.fnOut, prm.singleProjection, prm.projType,
+            ProjNo = PROJECT_Effectively_project(prm.fnOut, prm.singleProjection, prm.projType,prm.samplingRate,
                                                  proj_prm, side, crystal_proj_prm, proj, SF);
         else
         {
@@ -1206,7 +1229,7 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
             else
                 stackName = prm.fnOut.removeAllExtensions() + ".stk";
             FileName mdName = prm.fnOut.removeAllExtensions() + ".xmd";
-            ProjNo = PROJECT_Effectively_project(stackName, prm.singleProjection, prm.projType,
+            ProjNo = PROJECT_Effectively_project(stackName, prm.singleProjection, prm.projType,prm.samplingRate,
                                                  proj_prm, side, crystal_proj_prm, proj, SF);
             SF.setComment("Angles rot,tilt and psi contain noisy projection angles and rot2,tilt2 and psi2 contain actual projection angles");
             SF.write(mdName);

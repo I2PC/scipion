@@ -62,7 +62,7 @@ def main():
     if globalIsLocal:
         localSections = []
     else:
-        localSections = ['DIRS_LOCAL']
+        localSections = ['DIRS_LOCAL', 'PACKAGES']
 
     try:
         templatesDir = join(os.environ['SCIPION_HOME'], 'config', 'templates')
@@ -178,6 +178,8 @@ def checkPaths(conf):
     else:
         print(red("Errors found."))
         print("Please edit %s and check again." % conf)
+        print("To regenerate the config files trying to guess the paths, you "
+              "can run: scipion config --overwrite")
 
 
 def checkConf(fpath, ftemplate, remove=[], keep=[]):

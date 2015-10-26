@@ -1,8 +1,8 @@
 /***************************************************************************
  *
  * Authors:     Jose Roman Bilbao (jrbcast@ace.ual.es)
- *       		Roberto Marabini (roberto@cnb.csic.es)
- *       		Vahid Abrishami (vabrishamoi@cnb.csic.es)
+ *         Roberto Marabini (roberto@cnb.csic.es)
+ *         Vahid Abrishami (vabrishamoi@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -125,6 +125,7 @@ void ProgMPIRecFourier::run()
     MPI_Comm   new_comm;
     long int total_usecs;
     double total_time_processing=0., total_time_weightening=0., total_time_communicating=0., total_time;
+    int iter=0;
     int * ranks;
 
     // Real workers, rank=0 is the master, does not work
@@ -156,7 +157,7 @@ void ProgMPIRecFourier::run()
     MPI_Group_incl(orig_group, nProcs, ranks, &new_group);
     MPI_Comm_create(MPI_COMM_WORLD, new_group, &new_comm);
 
-    for (int iter=0;iter<=NiterWeight;iter++)
+    do
     {
         if (node->isMaster())
         {
@@ -430,8 +431,11 @@ void ProgMPIRecFourier::run()
                     std::cerr << "Wr" << node->rank << " " << "TAG_STOP" << std::endl;
 #endif
 
-                    if (iter != NiterWeight)
-                    {
+                    MPI_Allreduce(MPI_IN_PLACE, fourierWeights,
+                                  sizeout, MPI_DOUBLE,
+                                  MPI_SUM, new_comm);
+                    /*if (iter != NiterWeight)
+                {
                         MPI_Allreduce(MPI_IN_PLACE, fourierWeights,
                                             sizeout, MPI_DOUBLE,
                                             MPI_SUM, new_comm);
@@ -451,9 +455,9 @@ void ProgMPIRecFourier::run()
                             }
                         }
                         break;
-                    }
+                }*/
 
-                    else if ( node->rank == 1 )
+                    if ( node->rank == 1 )
                     {
                         // Reserve memory for the receive buffer
                         double * recBuffer = (double *) malloc (sizeof(double)*BUFFSIZE);
@@ -509,6 +513,24 @@ void ProgMPIRecFourier::run()
                         }
 
                         free( recBuffer );
+                        if (iter==0)
+                        {
+                            VoutFourierTmp=VoutFourier;
+                            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+                            {
+                                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+                                ptrOut[0] = 1;
+                            }
+                        }
+                        forceWeightSymmetry(FourierWeights);
+                        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+                        {
+                            double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+                            if (fabs(A3D_ELEM(FourierWeights,k,i,j))>1e-3)
+                            	ptrOut[0]/=A3D_ELEM(FourierWeights,k,i,j);
+                        }
+                        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FourierWeights)
+                                A3D_ELEM(FourierWeights,k,i,j)=0;
                         gettimeofday(&end_time,NULL);
 
                         if( fn_fsc != "")
@@ -571,9 +593,18 @@ void ProgMPIRecFourier::run()
                                                                 false,VDOUBLE);
                             */
                         }
-
-                        // Normalize global volume and store data
-                        finishComputations(fn_out);
+                        if (NiterWeight==0 || iter == NiterWeight-1)
+                        {
+                            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+                            {
+                                // Put back the weights to FourierWeights from temporary variable VoutFourier
+                                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+                                A3D_ELEM(FourierWeights,k,i,j) = ptrOut[0];
+                            }
+                            VoutFourier=VoutFourierTmp;
+                            // Normalize global volume and store data
+                            finishComputations(fn_out);
+                        }
                         break;
                     }
                     else
@@ -602,7 +633,7 @@ void ProgMPIRecFourier::run()
 
                     if ( max_i >= SF.size())
                         max_i  = SF.size()-1;
-                    if (iter == NiterWeight)
+                    if (iter == 0)
                         processImages( min_i, max_i, false, false);
                     else
                         processImages( min_i, max_i, false, true);
@@ -627,7 +658,9 @@ void ProgMPIRecFourier::run()
             }
             barrier_destroy( &barrier );
         }
+        iter++;
     }
+    while(iter<NiterWeight);
 }
 
 int  ProgMPIRecFourier::sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, MPI_Comm comm )
