@@ -50,7 +50,26 @@ from xmipp3 import HelicalFinder
 import pyworkflow.em.metadata as metadata
 
 class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
-    """Reconstruct a volume at high resolution"""
+    """This is a 3D refinement protocol whose main input is a volume and a set of particles.
+       The set of particles has to be at full size (the finer sampling rate available), but
+       the rest of inputs (reference volume and masks) can be at any downsampling factor.
+       The protocol scales the input images and volumes to a reasonable size depending on
+       the resolution of the previous iteration.
+       
+       The protocol works with any input volume, whichever its resolution, as long as it
+       is a reasonable initial volume for the set of particles. The protocol does not
+       resolve the heterogeneous problem (it assumes an homogeneous population),
+       although it is somewhat tolerant through the use of particle weights in the
+       reconstruction process.
+       
+       It is recommended to perform several global alignment iterations before entering
+       into the local iterations. The switch from global to local should be performed when
+       a substantial percentage of the particles do not move from one iteration to the next.
+       
+       The algorithm reports the cross correlation (global alignment) or cost (local) function
+       per defocus group, so that we can see which was the percentile of each particle in its
+       defocus group. You may want to perform iterations one by one, and remove from one
+       iteration to the next, those particles that worse fit the model."""
     _label = 'highres'
     
     SPLIT_STOCHASTIC = 0
