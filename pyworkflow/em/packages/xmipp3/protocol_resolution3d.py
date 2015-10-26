@@ -33,6 +33,7 @@ from pyworkflow.utils import *
 from math import floor
 from xmipp3 import XmippProtocol
 from convert import createXmippInputVolumes, readSetOfVolumes, locationToXmipp
+from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 import pyworkflow.em.metadata as md
 
 
@@ -69,8 +70,9 @@ by Rosenthal2003''')
     def _insertAllSteps(self):
         """Insert all steps to calculate the resolution of a 3D reconstruction. """
         
-        self.inputVol = locationToXmipp(*self.inputVolume.get().getLocation())
-        self.refVol = locationToXmipp(*self.referenceVolume.get().getLocation())
+        self.inputVol = getImageLocation(self.inputVolume.get())
+        if self.referenceVolume.hasValue():
+            self.refVol = getImageLocation(self.referenceVolume.get())
         
         if self.doFSC:
             self._insertFunctionStep('calculateFscStep')
