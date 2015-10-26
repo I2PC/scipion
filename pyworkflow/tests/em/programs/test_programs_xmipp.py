@@ -97,7 +97,7 @@ class AngularNeighbourhood(XmippProgramTest):
         return 'xmipp_angular_neighbourhood'
         
     def test_case1(self):
-        self.runCase("-i1 input/randomAngularDistribution.sel -i2 input/aFewProjections.sel -o %o/neighborhood.sel",
+        self.runCase("--i1 input/randomAngularDistribution.sel --i2 input/aFewProjections.sel -o %o/neighborhood.sel",
                      outputs=['neighborhood.sel'])  
         
   
