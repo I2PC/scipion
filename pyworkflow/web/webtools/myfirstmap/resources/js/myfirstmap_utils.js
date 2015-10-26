@@ -26,9 +26,8 @@
 
 function serviceProjForm(){
 	var title = 'Project creation'
-	var dialog = "<p>Your <strong>Project</strong> will be created.<br /><br />" +
-        "This process generates a unique <strong>url access</strong>.<br /><br />" +
-        "This url access should be used to have access to your data in future sessions.</p>" +
+	var dialog = "<p>Your <strong>project</strong> will be created with a unique <strong>url access</strong>.<br />" +
+        "Use this URL to access your data in future sessions.</p>" +
         "<p><br /></p>";
 	
     dialog += "<p>Confirm to generate it.</p>";
@@ -126,7 +125,8 @@ function downloadTestdata(elm){
 function createServProject(elm) {
 	var projName = "map"+randomString(16, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
-
+	
+	var projectUrl = "http://" + document.domain + getSubDomainURL() + "/m_content/?p="+ projName
 	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
 	if(selected != undefined){
 		URL += "&testData="+selected;
@@ -139,14 +139,14 @@ function createServProject(elm) {
 		success : function() {
 			var title = "ACCESS CODE"
 			
-			var msg = "<p>Your <strong>url to access </strong> this <strong>Project</strong> is:</p>" +
+			var msg = "<p>Your <strong>url to access </strong> this <strong>project</strong> is:</p>" +
 			"<br /><p><h3>" + 
-			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/content/?p="+ projName+ "'>" +
-			"http://scipion.cnb.csic.es/m/content/?p="+ projName+ "</a>"+
+			"<a style='color:firebrick;' href='"+ projectUrl + "'>" +
+			projectUrl + "</a>"+
 			"</h3></p><br />" +
-			"<p>The access to this project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
+			"<p>The project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
-			"in order to access this project in future sessions.</p>"+
+			"in order to access project in future sessions.</p>"+
 			"<p>If you experience any problem contact us on this email: <span style='color:firebrick;'>scipion at cnb.csic.es</span></p>";
 			
 			msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";

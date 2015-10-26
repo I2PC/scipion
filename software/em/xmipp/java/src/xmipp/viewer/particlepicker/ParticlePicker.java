@@ -180,6 +180,8 @@ public abstract class ParticlePicker {
 	            {
 	                mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
 	                m = getMicrograph(mname);
+	                if(m == null)
+	                	m = getMicrographs().get(0);
 	            }
                 setMicrograph(m);
                 if(md.containsLabel(MDLabel.MDL_COLOR))

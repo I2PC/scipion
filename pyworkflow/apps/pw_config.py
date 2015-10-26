@@ -154,7 +154,7 @@ def checkPaths(conf):
     def get(var):
         try:
             return cf.get('BUILD', var)
-        except Error as e:
+        except Exception, e:
             print(red("While getting '%s' in section BUILD: %s" % (var, e)))
             return '/'
     allOk = True
@@ -178,6 +178,8 @@ def checkPaths(conf):
     else:
         print(red("Errors found."))
         print("Please edit %s and check again." % conf)
+        print("To regenerate the config files trying to guess the paths, you "
+              "can run: scipion config --overwrite")
 
 
 def checkConf(fpath, ftemplate, remove=[], keep=[]):

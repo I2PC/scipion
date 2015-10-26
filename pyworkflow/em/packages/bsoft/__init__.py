@@ -34,6 +34,10 @@ _references = ['Heymann2007']
 
 
 from protocol_particle_pick import BsoftProtParticlePicking
+from protocol_bfilter import BsoftProtBfilter
+
+from wizard import BsoftFilterParticlesWizard
+
 
 from convert import getEnviron
 _environ = getEnviron()

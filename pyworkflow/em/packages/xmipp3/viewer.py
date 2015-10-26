@@ -41,6 +41,7 @@ from os.path import dirname, join
 from pyworkflow.utils import makePath, runJob, copyTree, cleanPath
 import pyworkflow as pw
 import xmipp
+import pyworkflow.gui.dialog as dialog
 
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
@@ -200,22 +201,29 @@ class XmippViewer(Viewer):
                 raise Exception('visualize: SetOfCoordinates has no micrographs set.')
             
             mdFn = getattr(micSet, '_xmippMd', None)
-            tmpDir = self._getTmpPath(obj.getName())
-            
-            cleanPath(tmpDir)
-            makePath(tmpDir)
-            
             if mdFn:
                 fn = mdFn.get()
             else:  # happens if protocol is not an xmipp one
                 fn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(micSet, fn)
+            tmpDir = self._getTmpPath(obj.getName())
+            if os.path.exists(tmpDir):
+                r = dialog.askYesNoCancel("Question", 
+                                   "It seems that you have edited this SetOfCoordinates before.\n"
+                                   "Do you wish to load the changes?\n\n"
+                                   "_Note_: If you choose *No*, the original coordinates will be loaded\n"
+                                   " and previous changes will be lost.", self._tkRoot)
                 
-#             posDir = getattr(obj, '_xmippMd', None)  # extra dir istead of md file for SetOfCoordinates
-#             if posDir:
-#                 copyTree(posDir.get(), tmpDir)
-#             else:
-            writeSetOfCoordinates(tmpDir, obj)# always write set of coordinates instead of reading pos dir, that could have changed
+                if r == dialog.RESULT_CANCEL:
+                    return
+                elif r == dialog.RESULT_NO:
+                    cleanPath(tmpDir)
+                    makePath(tmpDir)
+                    writeSetOfCoordinates(tmpDir, obj)# always write set of coordinates instead of reading pos dir, that could have changed
+            else:
+                makePath(tmpDir)
+                writeSetOfCoordinates(tmpDir, obj)# always write set of coordinates instead of reading pos dir, that could have changed
+            
 
             self._views.append(CoordinatesObjectView(self._project, fn, tmpDir, self.protocol))
 
@@ -275,8 +283,6 @@ class XmippViewer(Viewer):
             #TODO: Review this if ever a non Xmipp CoordinatesTiltPair is available
             writeSetOfCoordinates(tmpDir, obj.getUntilted()) 
             writeSetOfCoordinates(tmpDir, obj.getTilted()) 
-            
-        
             launchTiltPairPickerGUI(mdFn, tmpDir, self.protocol)
          
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):

@@ -230,8 +230,9 @@ class EmxObject:
                     if value is None:
                         out += "None"
                     else:
-                        out += value._pprintPK(printNone)
-                        #out += str(value) +"\n"
+                        #value is not a EMobject and therefore has no _pprintPK
+                        #out += value._pprintPK(printNone)
+                        out += str(value) +"\n"
             
         #other attributes
         out += "Other Attributes:\n"

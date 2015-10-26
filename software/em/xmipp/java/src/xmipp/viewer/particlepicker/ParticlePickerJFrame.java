@@ -21,6 +21,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
@@ -277,6 +278,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                         loadMicrograph();
                     }
                 });
+                
+                XmippWindowUtil.setScipionImageIcon(this);
+                
             } catch (Exception ex) {
                 Logger.getLogger(ParticlePickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IllegalArgumentException(ex);
@@ -702,12 +706,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 shapepn.add(new JLabel("Shape:"));
                 Icon icon = XmippResource.getIcon("circle.png");
 		circlechb = new JToggleButton(icon);
-		circlechb.setSelected(true);
+		//circlechb.setSelected(true);
 		circlechb.addItemListener(shapelistener);
                 
 		rectanglechb = new JToggleButton(XmippResource.getIcon("square.png"));
-                rectanglechb.setPreferredSize(null);
-		rectanglechb.setSelected(true);
+        rectanglechb.setPreferredSize(null);
+		//rectanglechb.setSelected(true);
 		rectanglechb.addItemListener(shapelistener);
 
 		centerchb = new JToggleButton(XmippResource.getIcon("plus.png"));
