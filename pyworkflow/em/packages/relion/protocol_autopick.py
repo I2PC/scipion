@@ -102,6 +102,7 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
         writeReferences(self.getInputReferences(), self._getPath('input_references'))  
         
     def autopickMicrographStep(self, micStarFile, params, threshold, minDistance, fom):
+        from convert import getEnviron
         """ Launch the 'relion_autopick' for a micrograph with the given parameters. """
         # Call relion_autopick to allow picking of micrographs with different size
         params += ' --i %s' % relpath(micStarFile, self.getWorkingDir())
@@ -174,7 +175,6 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
-        
         form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
                       label='Input micrographs (a few)', important=True,
                       help='Select a set with just a few micrographs to be used\n'
