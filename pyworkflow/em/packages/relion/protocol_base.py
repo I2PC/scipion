@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.relion.convert import getEnviron
 """
 This module contains the protocol base class for Relion protocols
 """
@@ -42,7 +41,7 @@ from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import convertBinaryVol, writeSqliteIterData, writeSetOfParticles
+from convert import convertBinaryVol, writeSqliteIterData, writeSetOfParticles, getVersion
 
 
 class ProtRelionBase(EMProtocol):
@@ -141,9 +140,6 @@ class ProtRelionBase(EMProtocol):
                       help='If you set to *Yes*, you should select a previous'
                       'run of type *%s* class and most of the input parameters'
                       'will be taken from it.' % self.getClassName())
-        form.addParam('useRelion14', BooleanParam, default=True,
-              label="Use relion 1.4?",
-              help='If is true, the protocol will use relion 1.4 instead of relion 1.3')
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       condition='not doContinue',
                       important=True,
@@ -437,7 +433,7 @@ class ProtRelionBase(EMProtocol):
                          'The command *relion_refine --sym D2 --print_symmetry_ops* prints a list of all symmetry operators for symmetry group D2. RELION uses XMIPP\'s libraries for symmetry operations. Therefore, look at the XMIPP Wiki for more details:  http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome?topic=Symmetry')
 
     #--------------------------- INSERT steps functions --------------------------------------------  
-    def _insertAllSteps(self): 
+    def _insertAllSteps(self):
         self._initialize()
         self._insertFunctionStep('convertInputStep', self._getInputParticles().getObjId())
         self._insertRelionStep()
@@ -576,7 +572,7 @@ class ProtRelionBase(EMProtocol):
                                     postprocessImageRow=self._postprocessImageRow)
                 mdMovies = md.MetaData(self._getFileName('movie_particles'))
                 mdParts = md.MetaData(self._getFileName('input_star'))
-                if self.useRelion14:
+                if getVersion() == "1.4":
                     mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
                 else:
                     mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
@@ -594,7 +590,7 @@ class ProtRelionBase(EMProtocol):
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
         params += ' --j %d' % self.numberOfThreads.get()
-        self.runJob(self._getProgram(), params, env=getEnviron(self.useRelion14))
+        self.runJob(self._getProgram(), params)
     
     def createOutputStep(self):
         pass # should be implemented in subclasses
@@ -602,6 +598,11 @@ class ProtRelionBase(EMProtocol):
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
+        if not getVersion():
+            errors.append("We couldn't detect Relion version. ")
+            errors.append("Please, check your configuration file and change RELION_HOME.")
+            errors.append("The path should contains either '1.3' or '1.4' ")
+            errors.append("to properly detect the version.")
         if self.doContinue:
             continueProtocol = self.continueRun.get()
             if (continueProtocol is not None and
@@ -614,7 +615,7 @@ class ProtRelionBase(EMProtocol):
         else:
             if self._getInputParticles().isOddX():
                 errors.append("Relion only works with even values for the image dimensions!")
-                
+        
             errors += self._validateNormal()
         return errors
     

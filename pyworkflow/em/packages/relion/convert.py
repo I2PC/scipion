@@ -100,23 +100,25 @@ ALIGNMENT_DICT = OrderedDict([
        ])
 
 
-def getEnviron(relion14=True):
+def getEnviron():
     """ Setup the environment variables needed to launch Relion. """
     environ = Environ(os.environ)
-    if relion14:
-        environ.update({
-                'PATH': join(os.environ['RELION_HOME'], 'bin'),
-                'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
-                'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
-                }, position=Environ.BEGIN)
-    else:
-        environ.update({
-                'PATH': join(os.environ['RELION13_HOME'], 'bin'),
-                'LD_LIBRARY_PATH': join(os.environ['RELION13_HOME'], 'lib') + ":" + join(os.environ['RELION13_HOME'], 'lib64'),
-                'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
-                }, position=Environ.BEGIN)
-        
+    environ.update({
+            'PATH': join(os.environ['RELION_HOME'], 'bin'),
+            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
+            'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
+            }, position=Environ.BEGIN)
     return environ
+
+
+def getVersion():
+    path = os.environ['RELION_HOME']
+    if '1.4' in path:
+        return '1.4'
+    elif '1.3' in path:
+        return '1.3'
+    else:
+        return ''
 
 
 def locationToRelion(index, filename):

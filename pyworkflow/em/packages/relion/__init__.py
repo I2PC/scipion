@@ -28,7 +28,6 @@ This sub-package will contains Relion protocols
 """
 
 from bibtex import _bibtex # Load bibtex dict with references
-
 _logo = "relion_logo.png"
 _references = ['Scheres2012a', 'Scheres2012b', 'Chen2012']
 
@@ -47,4 +46,4 @@ from wizard import *
 
 from viewer import *
 
-# _environ = getEnviron()
+_environ = getEnviron()

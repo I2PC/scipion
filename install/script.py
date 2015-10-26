@@ -395,14 +395,21 @@ env.addPackage('pytom',
                      matplotlib, mpi4py, pillow],
                default=False)
 
-env.addPackage('relion',
+env.addPackage('relion-1.4',
                tar='relion-1.4.tgz',
                commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
                            'bin/relion'])],
                default=False)
 
-env.addPackage('relion1.3',
+env.addPackage('relion-1.4_float',
+               tar='relion-1.4_float.tgz',
+               commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
+                          ['relion_build.log',
+                           'bin/relion'])],
+               default=False)
+
+env.addPackage('relion-1.3',
                tar='relion-1.3.tgz',
                commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',

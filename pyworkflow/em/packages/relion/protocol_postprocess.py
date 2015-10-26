@@ -45,9 +45,6 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
     def _defineParams(self, form):
         
         form.addSection(label='Input')
-        form.addParam('useRelion14', BooleanParam, default=True,
-                      label="Use relion 1.4?",
-                      help='If is true, the protocol will use relion 1.4 instead of relion 1.3')
         form.addParam('protRelionRefine', PointerParam, pointerClass="ProtRelionRefine3D",
                       label='Select a previous relion refine3D protocol',
                       help='Select a previous relion refine3D run to get the 3D half maps.')
@@ -177,8 +174,7 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
         
     #--------------------------- STEPS functions --------------------------------------------
     def postProcessStep(self, params):
-        from convert import getEnviron
-        self.runJob('relion_postprocess', params, env=getEnviron(self.useRelion14))
+        self.runJob('relion_postprocess', params)
         
     def createOutputStep(self):
         volume = Volume()

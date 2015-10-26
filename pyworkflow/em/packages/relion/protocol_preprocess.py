@@ -49,9 +49,6 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('useRelion14', BooleanParam, default=True,
-                      label="Use relion 1.4?",
-                      help='If is true, the protocol will use relion 1.4 instead of relion 1.3')
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       label="Input particles", important=True, 
                       help='Select the input images from the project.')   
@@ -125,7 +122,6 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
                             postprocessImageRow=self._postprocessImageRow)
     
     def processStep(self):
-        from convert import getEnviron
         # Enter here to generate the star file or to preprocess the images
         
         outputRadius = self._getOutputRadius()
@@ -154,7 +150,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         if self.doWindow:
             params += ' --window %d' % self.windowSize.get()
 
-        self.runJob(self._getProgram('relion_preprocess'), params, cwd=self._getPath(), env=getEnviron(self.useRelion14))
+        self.runJob(self._getProgram('relion_preprocess'), params, cwd=self._getPath())
         
         outputMrcs = glob(self._getPath('particles*.mrcs'))[0] # In Relion 1.3 it is produces particles.mrcs.mrcs
         partFn = self._getPath('particles.mrcs')
