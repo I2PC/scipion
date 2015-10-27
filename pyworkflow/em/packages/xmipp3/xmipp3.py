@@ -478,6 +478,8 @@ class ProjMatcher():
         from pyworkflow.utils.path import cleanPath
         # Generate gallery of projections        
         fnGallery = self._getExtraPath('gallery.stk')
+        if volume.endswith('.mrc'):
+            volume+=":mrc"
         
         self.runJob("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                    % (volume, fnGallery, angularSampling, symmetryGroup, images))

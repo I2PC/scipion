@@ -94,15 +94,19 @@ def loadHostsConf(hostsConf):
             host.mpiCommand.set(get('PARALLEL_COMMAND'))
             host.queueSystem = pwhosts.QueueSystemConfig()
             host.queueSystem.name.set(get('NAME'))
-            host.queueSystem.mandatory.set(get('MANDATORY'))
-            host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
-            host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
-            host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
-            host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
-
-            host.queueSystem.queues = OrderedDict()
-            for qName, qValues in json.loads(get('QUEUES')).iteritems():
-                host.queueSystem.queues[qName] = qValues
+            
+            # If the NAME is not provided or empty
+            # do no try to parse the rest of Queue parameters
+            if host.queueSystem.hasName(): 
+                host.queueSystem.mandatory.set(get('MANDATORY'))
+                host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
+                host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
+                host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
+                host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
+    
+                host.queueSystem.queues = OrderedDict()
+                for qName, qValues in json.loads(get('QUEUES')).iteritems():
+                    host.queueSystem.queues[qName] = qValues
                 
             hosts[hostName] = host
 
