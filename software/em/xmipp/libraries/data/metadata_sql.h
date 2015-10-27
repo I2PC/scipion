@@ -161,9 +161,13 @@ private:
      */
     bool setObjectValue(const MDObject &value);
 
+    /** Get the values of several objects.
+     */
+    bool getObjectsValues(const size_t objId, std::vector<MDLabel> labels, std::vector<MDObject> *values, bool firstTime);
+
     /** Get the value of an object.
      */
-    bool getObjectValue(const int objId, MDObject &value);
+    bool getObjectValue(const int objId, MDObject  &value);
 
     /** This function will select some elements from table.
      * The 'limit' is the maximum number of object
@@ -172,6 +176,8 @@ private:
      * if no query is provided by default all are returned
      */
     void selectObjects(std::vector<size_t> &objectsOut, const MDQuery *queryPtr = NULL);
+
+    void finalizePreparedStmt(void);
 
     /** return metadata size
      *
@@ -234,8 +240,9 @@ private:
     int columnMaxLength(MDLabel column);
 
     /**Functions to implement set operations */
-    void setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operation);
-    void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel columnLeft, MDLabel columnRight,SetOperation operation);
+    void setOperate(MetaData *mdPtrOut, const std::vector<MDLabel> &columns, SetOperation operation);
+    void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, const std::vector<MDLabel> &columnsLeft,
+    		const std::vector<MDLabel> &columnsRight, SetOperation operation);
     /** Function to dump DB to file */
     bool operate(const String &expression);
 
@@ -282,6 +289,9 @@ private:
     static const char *zLeftover;
     static int rc;
     static sqlite3_stmt *stmt;
+
+    static std::stringstream preparedStream;	// Stream.
+    static sqlite3_stmt * preparedStmt;	// SQL statement.
 
     ///Non-static attributes
     int tableId;

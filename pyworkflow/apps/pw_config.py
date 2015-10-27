@@ -62,7 +62,7 @@ def main():
     if globalIsLocal:
         localSections = []
     else:
-        localSections = ['DIRS_LOCAL']
+        localSections = ['DIRS_LOCAL', 'PACKAGES']
 
     try:
         templatesDir = join(os.environ['SCIPION_HOME'], 'config', 'templates')

@@ -460,10 +460,12 @@ class ProtMovieAlignment(ProtProcessMovies):
         if numThreads>1:
             if self.doGPU:
                 errors.append("GPU and Parallelization can not be used together")
+
         if self.doGPU and (alMethod == AL_CROSSCORRELATION or \
                            alMethod == AL_CROSSCORRELATIONOPTICAL):
                 self.doGPU.set(False)
                 #errors.append("Crosscorrelation is not implemente in GPU")
+
         # FIXME: JMRT: GPU should only be disable for web and temporarly
         #alignMethod = self.alignMethod.get()
         #if alignMethod == 1 or alignMethod == 2:

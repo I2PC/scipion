@@ -158,8 +158,11 @@ class QueueSystemConfig(OrderedObject):
         self.cancelCommand = String()
         self.submitTemplate = String()
         
+    def hasName(self):
+        return self.name.hasValue()
+    
     def hasValue(self):
-        return self.name.hasValue() and len(self.queues)
+        return self.hasName() and len(self.queues)
     
     def getName(self):
         return self.name.get()

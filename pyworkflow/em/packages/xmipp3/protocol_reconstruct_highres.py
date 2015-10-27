@@ -50,7 +50,26 @@ from xmipp3 import HelicalFinder
 import pyworkflow.em.metadata as metadata
 
 class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
-    """Reconstruct a volume at high resolution"""
+    """This is a 3D refinement protocol whose main input is a volume and a set of particles.
+       The set of particles has to be at full size (the finer sampling rate available), but
+       the rest of inputs (reference volume and masks) can be at any downsampling factor.
+       The protocol scales the input images and volumes to a reasonable size depending on
+       the resolution of the previous iteration.
+       
+       The protocol works with any input volume, whichever its resolution, as long as it
+       is a reasonable initial volume for the set of particles. The protocol does not
+       resolve the heterogeneous problem (it assumes an homogeneous population),
+       although it is somewhat tolerant through the use of particle weights in the
+       reconstruction process.
+       
+       It is recommended to perform several global alignment iterations before entering
+       into the local iterations. The switch from global to local should be performed when
+       a substantial percentage of the particles do not move from one iteration to the next.
+       
+       The algorithm reports the cross correlation (global alignment) or cost (local) function
+       per defocus group, so that we can see which was the percentile of each particle in its
+       defocus group. You may want to perform iterations one by one, and remove from one
+       iteration to the next, those particles that worse fit the model."""
     _label = 'highres'
     
     SPLIT_STOCHASTIC = 0
@@ -827,14 +846,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         if row.containsLabel(MDL_CTF_MODEL) or row.containsLabel(MDL_CTF_DEFOCUSU):
             previousResolution=self.readInfoField(fnDirPrevious,"resolution",MDL_RESOLUTION_FREQREAL)
             TsCurrent=self.readInfoField(fnDirCurrent,"sampling",MDL_SAMPLINGRATE)
-            self.runJob("xmipp_ctf_group","--ctfdat %s -o %s/ctf:stk --pad 2.0 --sampling_rate %f --phase_flipped  --error 0.1 --resol %f"%\
-                        (fnAngles,fnDirCurrent,TsCurrent,previousResolution),numberOfMpi=1)
+            numberGroups=50
+            self.runJob("xmipp_ctf_group","--ctfdat %s -o %s/ctf:stk --simple %d"%\
+                        (fnAngles,fnDirCurrent,numberGroups),numberOfMpi=1)
             moveFile("%s/ctf_images.sel"%fnDirCurrent,"%s/ctf_groups.xmd"%fnDirCurrent)
-            cleanPath("%s/ctf_split.doc"%fnDirCurrent)
-            cleanPath("%s/ctf_ctf.stk"%fnDirCurrent)
-            cleanPath("%s/ctfinfo.xmd"%fnDirCurrent)
-            md = MetaData("numberGroups@%s"%join(fnDirCurrent,"ctfInfo.xmd"))
-            numberGroups=md.getValue(MDL_COUNT,md.firstObject())
             ctfPresent=True
         else:
             numberGroups=1
@@ -846,16 +861,17 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnGroup="ctfGroup%06d@%s/ctf_groups.xmd"%(j,fnDirCurrent)
             else:
                 fnGroup=fnAngles
-            if row.containsLabel(MDL_MAXCC):
-                self.runJob("xmipp_metadata_utilities","-i %s --operate percentile maxCC maxCCPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)
-                fnGroup=fnAnglesGroup    
-            if row.containsLabel(MDL_COST):
-                self.runJob("xmipp_metadata_utilities","-i %s --operate percentile cost costPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)          
-            if not exists(fnAnglesQualified):
-                copyFile(fnAnglesGroup, fnAnglesQualified)
-            else:
-                self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAnglesQualified,fnAnglesGroup),numberOfMpi=1)
-            cleanPath(fnAnglesGroup)
+            if getSize(fnGroup)>0:
+                if row.containsLabel(MDL_MAXCC):
+                    self.runJob("xmipp_metadata_utilities","-i %s --operate percentile maxCC maxCCPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)
+                    fnGroup=fnAnglesGroup    
+                if row.containsLabel(MDL_COST):
+                    self.runJob("xmipp_metadata_utilities","-i %s --operate percentile cost costPerc -o %s"%(fnGroup,fnAnglesGroup),numberOfMpi=1)          
+                if not exists(fnAnglesQualified):
+                    copyFile(fnAnglesGroup, fnAnglesQualified)
+                else:
+                    self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAnglesQualified,fnAnglesGroup),numberOfMpi=1)
+                cleanPath(fnAnglesGroup)
         if ctfPresent:
             cleanPath("%s/ctf_groups.xmd"%fnDirCurrent)
         moveFile(fnAnglesQualified, fnAngles)

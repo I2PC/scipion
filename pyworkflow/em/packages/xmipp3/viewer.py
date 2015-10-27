@@ -41,7 +41,7 @@ from os.path import dirname, join
 from pyworkflow.utils import makePath, runJob, copyTree, cleanPath
 import pyworkflow as pw
 import xmipp
-from pyworkflow.gui.dialog import askYesNo
+import pyworkflow.gui.dialog as dialog
 
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
@@ -210,7 +210,15 @@ class XmippViewer(Viewer):
                 writeSetOfMicrographs(micSet, fn)
             tmpDir = self._getTmpPath(obj.getName())
             if os.path.exists(tmpDir):
-                if not askYesNo("Question", 'Tmp folder with data associated to this object has been detected. Do you wish to load it?', self._tkRoot):
+                r = dialog.askYesNoCancel("Question", 
+                                   "It seems that you have edited this SetOfCoordinates before.\n"
+                                   "Do you wish to load the changes?\n\n"
+                                   "_Note_: If you choose *No*, the original coordinates will be loaded\n"
+                                   " and previous changes will be lost.", self._tkRoot)
+                
+                if r == dialog.RESULT_CANCEL:
+                    return
+                elif r == dialog.RESULT_NO:
                     cleanPath(tmpDir)
                     makePath(tmpDir)
                     writeSetOfCoordinates(tmpDir, obj)# always write set of coordinates instead of reading pos dir, that could have changed

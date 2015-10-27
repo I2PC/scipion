@@ -261,10 +261,11 @@ protected:
      * ADD, SUBSTRACT of intersection part
      */
     void _setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation);
+    void _setOperates(const MetaData &mdIn, const std::vector<MDLabel> &labels, SetOperation operation);
     void _setOperates(const MetaData &mdInLeft,
                       const MetaData &mdInRight,
-                      const MDLabel labelLeft,
-                      const MDLabel labelRight,
+                      const std::vector<MDLabel> &labelsLeft,
+                      const std::vector<MDLabel> &labelsRight,
                       SetOperation operation);
     /** This function is for generalize the sets operations
      * in which the output has a single label
@@ -934,6 +935,17 @@ public:
      * Result in "calling" metadata. join may be done using different labels in each metadata
      */
     void join2(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel labelLeft, const MDLabel labelRight , JoinType type=LEFT);
+
+    /** Join two Metadatas
+     * Result in "calling" metadata
+     */
+    void join1(const MetaData &mdInLeft, const MetaData &mdInRight, const std::vector<MDLabel> &labels, JoinType type=LEFT);
+
+    /** Join two Metadatas
+     * Result in "calling" metadata. join may be done using different labels in each metadata
+     */
+    void join2(const MetaData &mdInLeft, const MetaData &mdInRight, const std::vector<MDLabel> &labelsLeft, const std::vector<MDLabel> &labelsRight,
+    		JoinType type=LEFT);
 
     /** Join two Metadatas using all common labels (NATURAL_JOIN)
      */

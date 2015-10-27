@@ -290,6 +290,7 @@ public class XmippWindowUtil
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out.println(command);
+            in.readLine();
             socket.close();
         
             
