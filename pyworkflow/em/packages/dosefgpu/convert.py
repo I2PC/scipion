@@ -36,7 +36,7 @@ def getEnviron():
     """ Return the envirion settings to run dosefgpu programs. """
     """ Setup the environment variables needed to launch Relion. """
     MOTIONCORR_HOME = os.environ.get('MOTIONCORR_HOME', 
-                                     join(os.environ['EM_ROOT', 'motioncorr']))
+                                     join(os.environ['EM_ROOT'], 'motioncorr'))
     environ = Environ(os.environ)
     environ.update({
             'PATH': join(MOTIONCORR_HOME, 'bin'),
