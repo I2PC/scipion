@@ -77,12 +77,14 @@ class XmippResolution3DViewer(ProtocolViewer):
         *args and **kwargs will be passed to self._createPlot function.
         """
         fscFn = self.protocol._defineFscName()
+        
         if not os.path.exists(fscFn):
             return [self.errorMessage('The FSC metadata was not produced\n'
                                       'Execute again the protocol with FSC\n'
                                       'and/or DPR options enabled.',
                                       title='Missing result file')]
-        plotter = self._createPlot(title, xmipp.FREQ_LABEL, plotLabel, md, 
+        md = xmipp.MetaData(fscFn)
+        plotter = self._createPlot(title, FREQ_LABEL, plotLabel, md, 
                                    xmipp.MDL_RESOLUTION_FREQ, resolutionLabel,
                                    **kwargs)
         return [plotter, em.DataView(fscFn)]
@@ -140,6 +142,7 @@ class XmippResolution3DViewer(ProtocolViewer):
         if os.path.exists(bfactorFile):
             f = open(bfactorFile)
             values = map(float, f.readline().split())
+            f.close()
             p1 = data.createEmptyPoint()
             p1.setX(values[0])
             p1.setY(values[1])
@@ -148,9 +151,9 @@ class XmippResolution3DViewer(ProtocolViewer):
             p2.setX(values[2])
             p2.setY(values[3])
             data.addPoint(p2)
-            data.bfactor=values[4]
+            data.bfactor = values[4]
         else:
-            data.bfactor=0
+            data.bfactor = 0
             
         return data
         
@@ -173,20 +176,19 @@ class XmippResolution3DViewer(ProtocolViewer):
         return [win]
     
     def _applyBfactor(self, e=None):
-        print "applying bfactor...."  
-        self.protocol.setStepsExecutor() # set default execution
-        vol = self.protocol.inputVolume.get()
-        volPath = getImageLocation(vol)
-        maxres = 10 # FIXME
-        args = '-i %s ' % volPath
-        pixelSize = vol.getSamplingRate()
-        args += '--sampling %f ' % pixelSize
-        args += '--maxres %d ' % maxres
         bFactorFile = self.protocol._getPath('bfactor.txt')
         f = open(bFactorFile)
         values = map(float, f.readline().split())
         f.close()
-        args += '--adhoc %f ' % values[4]
+        self.protocol.setStepsExecutor() # set default execution
+        vol = self.protocol.inputVolume.get()
+        volPath = getImageLocation(vol)
+        maxres = 1. / sqrt(values[2])
+        args = '-i %s ' % volPath
+        pixelSize = vol.getSamplingRate()
+        args += '--sampling %f ' % pixelSize
+        args += '--maxres %d ' % maxres
+        args += '--adhoc %f ' % -values[4]
         volName = os.path.basename(volPath)
         volOut = self.protocol._getPath(volName) 
         args += '-o %s ' % volOut
