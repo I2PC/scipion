@@ -83,7 +83,6 @@ class DogPickerWizard(EmWizard):
         convertCommand = %(convert)s --coordinates --from dogpicker --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
         """ % args)
         f.close()
-        print "Launching picking GUI..."
         process = CoordinatesObjectView(project, micfn, coordsDir, autopickProt, pickerProps=dogpickerProps).show()
         process.wait()
         myprops = readProperties(dogpickerProps)

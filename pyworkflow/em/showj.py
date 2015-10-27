@@ -271,13 +271,15 @@ def runJavaIJapp(memory, appName, args, env={}):
     return subprocess.Popen(cmd, env=env)
 
 def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g', pickerProps=None):
-        port = initProtocolTCPServer(protocol)
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %s --output %s --scipion %s"%(micsFn, outputDir, port)
+        args = "--input %s --output %s"%(micsFn, outputDir)
         if mode:
             args += " --mode %s"%mode    
         if pickerProps:
             args += " --classifier " + pickerProps
+        else:
+            port = initProtocolTCPServer(protocol)
+            args += " --scipion %s"%port
         return runJavaIJapp("%s" % memory, app, args)
     
 
