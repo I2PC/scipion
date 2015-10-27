@@ -26,6 +26,8 @@ import os
 from base import ProgramTest
 
 import pyworkflow.em.packages.xmipp3 as xmipp3
+from pyworkflow.tests import DataSet
+
 
 RM = 'rmarabini'
 COSS = 'coss'
@@ -33,13 +35,13 @@ JMRT = 'delarosatrevin'
 
 
 class XmippProgramTest(ProgramTest):
-    _counter = 0
     
     @classmethod
     def setUpClass(cls):
         #cls.setTestDir(os.path.join(os.environ['SCIPION_TESTS', 'testXmipp']))
         cls.program = cls.getProgram()
         cls.env = xmipp3.getEnviron()
+        cls.dataset = DataSet.getDataSet('xmipp_programs')
         #cls._counter = 0 # count number of cases per test
         
     def runCase(self, *args, **kwargs):

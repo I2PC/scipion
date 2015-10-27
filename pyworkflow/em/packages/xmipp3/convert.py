@@ -723,9 +723,9 @@ def readCoordinates(mic, fileName, coordsSet, outputDir):
             coordsSet.append(coord)
             # Add an unique ID that will be propagated to particles
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
-        if not posMd.isEmpty():
-            scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
-            posMd.write("particles@%s"  % scipionPosFile)
+        #if not posMd.isEmpty():
+         #   scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
+          #  posMd.write("particles@%s"  % scipionPosFile)
     
 
 def readPosCoordinates(posFile):

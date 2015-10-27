@@ -44,7 +44,8 @@ Protocols SPA = [
             {"tag": "protocol", "value": "XmippProtExtractParticles",   "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtExtractMovieParticles", "text": "default"},
-                {"tag": "protocol", "value": "XmippProtExtractParticlesPairs", "text": "default"}
+                {"tag": "protocol", "value": "XmippProtExtractParticlesPairs", "text": "default"},
+                {"tag": "protocol", "value": "XmippProtScreenParticles", "text": "default"}
             ]}]},
         {"tag": "protocol_group", "text": "Preprocess", "openItem": "False", "children": [
             {"tag": "protocol", "value": "XmippProtCropResizeParticles",   "text": "default"},
@@ -85,7 +86,8 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtML2D", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtKerdensom", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtRotSpectra", "text": "default"},
-                {"tag": "protocol", "value": "ProtClassesConsensus", "text": "default"}
+                {"tag": "protocol", "value": "ProtClassesConsensus", "text": "default"},
+                {"tag": "protocol", "value": "XmippProtScreenClasses", "text": "default"}
             ]}]}
     ]},
     {"tag": "section", "text": "3D", "children": [

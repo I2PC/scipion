@@ -31,6 +31,17 @@ import subprocess
 
 import pyworkflow.utils as pwutils
 
+import xmipp
+
+
+_countDict = {}
+
+def getCount(program):
+    global _countDict
+    count = _countDict.get(program, 0) + 1
+    _countDict[program] = count
+    
+    return count
 
 
 class Command(object):
@@ -102,12 +113,18 @@ class ProgramTest(unittest.TestCase):
                 pipe = ">>"
                 
     def runCase(self, args, mpi=0, changeDir=False, preruns=None, postruns=None, outputs=None):
-        self._testDir = os.path.join(os.environ['SCIPION_TESTS'], 'testXmipp')
-        self._counter += 1
-        self.outputDir = os.path.join(self._testDir, 'test', '%s_%02d' % (self.program, self._counter))
-        pwutils.cleanPath(self.outputDir)
-        pwutils.makePath(self.outputDir)
+        self._testDir = self.dataset.getPath()
+        _counter = getCount(self.program)
+        #self.outputDir = os.path.join(self._testDir, 'output', '%s_%02d' % (self.program, self._counter))
+        self.outputDir = os.path.join('tmpLink', '%s_%02d' % (self.program, _counter))
+        self.outputDirAbs = os.path.join(self._testDir, self.outputDir)
+        self.goldDir = os.path.join(self._testDir, 'gold', '%s_%02d' % (self.program, _counter))
         
+        # Clean and create the program output folder if not exists
+        pwutils.cleanPath(self.outputDirAbs)
+        pwutils.makePath(self.outputDirAbs)
+        
+        # Change to tests root folder (self._testDir)
         cwd = os.getcwd()
         os.chdir(self._testDir)
         
@@ -140,9 +157,34 @@ class ProgramTest(unittest.TestCase):
             self._runCommands(postruns, 'postruns')
             
         if outputs:
-            for outFile in outputs:
-                self.assertTrue(os.path.exists(os.path.join(self.outputDir, outFile)))
+            self._checkOutputs(outputs)
             
         os.chdir(cwd)
         
-        
+    def _checkOutputs(self, outputs, random=False):
+        """ Check that all output files are produced
+        and are equivalent to the ones in goldStandard folder.
+        """
+        for out in outputs:
+            outFile = os.path.join(self._testDir, self.outputDir, out)
+            fileGoldStd = os.path.join(self.goldDir, out)
+            
+            # Check the expect output file was produced
+            msg = "Missing expected output file:\n  output: %s" % outFile
+            self.assertTrue(os.path.exists(outFile), msg)
+            
+            if random:
+                print "WARNING: %s was created using a random seed, check skipped\n " % outFile
+            else:
+                fnGoldStd = xmipp.FileName(fileGoldStd)
+                if fnGoldStd.isImage():
+                    im1 = xmipp.Image(fileGoldStd)
+                    im2 = xmipp.Image(outFile)
+                    msg = "Images are not equal:\n  output: %s\n  gold: %s" % (outFile, fileGoldStd)
+                    self.assertTrue(im1.equal(im2, 0.001), msg)
+                elif fnGoldStd.isMetaData():
+                    msg = "MetaDatas are not equal:\n  output: %s\n  gold: %s" % (outFile, fileGoldStd)
+                    self.assertTrue(xmipp.compareTwoMetadataFiles(outFile, fileGoldStd), msg)
+                else:
+                    msg = "Files are not equal:\n  output: %s\n  gold: %s" % (outFile, fileGoldStd)
+                    self.assertTrue(xmipp.compareTwoFiles(outFile, fileGoldStd, 0), msg)
