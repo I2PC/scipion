@@ -51,10 +51,6 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
                       label="Input particles",  
                       help='Select the input projection images .') 
 
-        form.addParam('isPhaseFlipped', BooleanParam, default='False',
-                      label="Phase flipped data", 
-                      help='Is the data previously phase-flipped?.')     
-
         form.addParam('isIsotropic', BooleanParam, default='True',
                       label="Isotropic Correction", 
                       help='If true, Consider that there is not astigmatism and then it is performed an isotropic correction.') 
@@ -99,7 +95,7 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
         params +=  '  --wc %s' % self.wiener_constant.get()
         params +=  '  --sampling_rate %s' % self.inputParticles.get().getSamplingRate()
 
-        if (self.isPhaseFlipped ):
+        if (self.inputParticles.get().isPhaseFlipped()):
             params +=  '  --phase_flipped '
             
         if (self.correctEnvelope):
