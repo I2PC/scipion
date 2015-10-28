@@ -39,6 +39,13 @@ def main():
         cleanPath(coordsfn)
         coordSet = SetOfCoordinates(filename=coordsfn)
         coordSet.setMicrographs(micSet)
+        if fromType == 'eman2':
+            if toType == 'xmipp': 
+                #print 'from dogpicker to xmipp...'
+                from pyworkflow.em.packages.eman2.convert import readSetOfCoordinates
+                readSetOfCoordinates(outputDir, micSet, coordSet)
+                from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
+                writeSetOfCoordinates(outputDir, coordSet, ismanual=False)
         if fromType == 'dogpicker':
             if toType == 'xmipp': 
                 #print 'from dogpicker to xmipp...'
