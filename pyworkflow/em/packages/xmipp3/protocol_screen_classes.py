@@ -106,7 +106,7 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         anglesOutFn=self._getExtraPath("anglesCont.stk")
         residualsOutFn=self._getExtraPath("residuals.stk")
         projectionsOutFn=self._getExtraPath("projections.stk")
-        self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --oresiduals %s --oprojections %s --sampling %f" %\
+        self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --oresiduals %s --oprojections %s --sampling %f" %\
                     (anglesFn,anglesOutFn,volumeFn,residualsOutFn,projectionsOutFn,Ts))
     
     def joinStep(self, imgsFn, anglesContFn):
