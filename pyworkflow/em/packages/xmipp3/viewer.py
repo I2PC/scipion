@@ -316,8 +316,8 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtScreenClasses):
             if isinstance(obj.inputSet.get(), SetOfClasses2D):
                 fn = obj.outputClasses
-                labels = 'id enabled _size _representative._filename _xmipp_imageRef _xmipp_image1 _xmipp_maxCC'
-                labelRender = "_representative._filename _xmipp_imageRef _xmipp_image1"
+                labels = 'id enabled _size _representative._filename _xmipp_imageRef _xmipp_image _xmipp_imageResidual _xmipp_maxCC _xmipp_cost'
+                labelRender = "_representative._filename _xmipp_imageRef _xmipp_image _xmipp_imageResidual"
                 self._visualize(fn, viewParams={ORDER: labels, 
                                                           VISIBLE: labels, 
                                                           SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender,
