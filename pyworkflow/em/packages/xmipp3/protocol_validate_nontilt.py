@@ -284,7 +284,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
                 size +=1
             summary.append("Volumes to validate: *%d* " % size)
             summary.append("Angular sampling: %s" % self.angularSampling.get())
-            summary.append("Significance value: %s" % self.alpha.get())
+            summary.append("Significance value: %s" % self.significanceNoise.get())
 
         return summary
     
