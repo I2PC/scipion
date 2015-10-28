@@ -219,19 +219,18 @@ public:
     }
 
     // Computes the average of a number of frames in movies
-    void computeAvg(const FileName &movieFile, int begin, int end, cv::Mat &avgimg)
+    void computeAvg(const FileName &movieFile, int begin, int end, MultidimArray<double> &avgImg)
     {
         ImageGeneric movieStack;
         MultidimArray<double> imgNormal;
         int N=end-begin+1;
 
         movieStack.readMapped(movieFile,begin);
-        movieStack().getImage(imgNormal);
+        movieStack().getImage(avgImg);
         if (darkImageCorr)
-            imgNormal-=darkImage;
+        	avgImg-=darkImage;
         if (gainImageCorr)
-            imgNormal/=gainImage;
-        xmipp2Opencv(imgNormal, avgimg);
+        	avgImg/=gainImage;
         for (int i=begin;i<end;i++)
         {
             movieStack.readMapped(movieFile,i+1);
@@ -240,10 +239,9 @@ public:
                 imgNormal-=darkImage;
             if (gainImageCorr)
                 imgNormal/=gainImage;
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imgNormal)
-            avgimg.at<float>(i,j)+=DIRECT_A2D_ELEM(imgNormal,i,j);
+            avgImg+=imgNormal;
         }
-        avgimg/=double(N);
+        avgImg/=double(N);
         imgNormal.clear();
         movieStack.clear();
     }
@@ -323,7 +321,8 @@ public:
             gainImage=II();
         }
         meanStdev.initZeros(4);
-        avgcurr=cv::Mat::zeros(h, w,CV_32FC1);
+        //avgcurr=cv::Mat::zeros(h, w,CV_32FC1);
+        avgCurr.initZeros(h, w);
         flowxPre=cv::Mat::zeros(h, w,CV_32FC1);
         flowyPre=cv::Mat::zeros(h, w,CV_32FC1);
 #ifdef GPU
@@ -355,11 +354,10 @@ public:
             lstFrame=imagenum;
         imagenum=lstFrame-fstFrame+1;
         levelNum=sqrt(double(imagenum));
-        computeAvg(fname, fstFrame, lstFrame, avgcurr);
+        computeAvg(fname, fstFrame, lstFrame, avgCurr);
         // if the user want to save the PSD
         if (psd)
         {
-            opencv2Xmipp(avgcurr, avgCurr);
             II() = avgCurr;
             II.write(foname);
             if (doAverage)
@@ -378,9 +376,8 @@ public:
             else
                 foname.deleteFile();
         }
-        avgCurr.clear();
+        xmipp2Opencv(avgCurr, avgcurr);
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
-
         while (div!=1)
         {
             div = int(imagenum/cnt);
@@ -412,11 +409,11 @@ public:
                 else
                 {
                     if (i==cnt-1)
-                        computeAvg(fname, i*div+fstFrame, lstFrame, preimg);
+                        computeAvg(fname, i*div+fstFrame, lstFrame, preImg);
                     else
-                        computeAvg(fname, i*div+fstFrame, (i+1)*div+fstFrame-1, preimg);
+                        computeAvg(fname, i*div+fstFrame, (i+1)*div+fstFrame-1, preImg);
                 }
-                //xmipp2Opencv(preImg, preimg);
+                xmipp2Opencv(preImg, preimg);
                 // Note: we should use the OpenCV conversion to use it in optical flow
                 convert2Uint8(avgcurr,avgcurr8);
                 convert2Uint8(preimg,preimg8);
@@ -449,8 +446,8 @@ public:
                         MD.setValue(MDL_OPTICALFLOW_STDY, double(meanStdev(3)), id);
                         MD.write(motionInfFile, MD_APPEND);
                     }
-                    flowxPre = planes[0].clone();
-                    flowyPre = planes[1].clone();
+                    planes[0].copyTo(flowxPre);
+                    planes[1].copyTo(flowyPre);
                 }
                 for( int row = 0; row < planes[0].rows; row++ )
                     for( int col = 0; col < planes[0].cols; col++ )

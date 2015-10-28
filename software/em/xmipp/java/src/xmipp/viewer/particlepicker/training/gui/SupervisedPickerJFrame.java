@@ -726,7 +726,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     }
 
     public boolean isPickingAvailable(MouseEvent e) {
-        if (!super.isPickingAvailable()) {
+        if (!super.isPickingAvailable(e)) {
             return false;
         }
         return getMicrograph().getState() != MicrographState.Corrected;

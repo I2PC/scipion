@@ -46,19 +46,25 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
     def _defineParams(self, form):
         form.addSection(label='General parameters')
         form.addParam('inputVolume', PointerParam, pointerClass="Volume", label='Input volume')
-        form.addParam('cylinderRadius',IntParam,label='Cylinder radius', default=-1,
+        form.addParam('cylinderInnerRadius',IntParam,label='Cylinder inner radius', default=-1,
+                      help="The helix is supposed to occupy this radius in voxels around the Z axis. Leave it as -1 for symmetrizing the whole volume")
+        form.addParam('cylinderOuterRadius',IntParam,label='Cylinder outer radius', default=-1,
                       help="The helix is supposed to occupy this radius in voxels around the Z axis. Leave it as -1 for symmetrizing the whole volume")
         form.addParam('dihedral',BooleanParam,default=False,label='Apply dihedral symmetry')
         form.addParam('forceDihedralX',BooleanParam,default=False,expertLevel=LEVEL_ADVANCED, label='Force the dihedral axis to be in X',
                       help="If this option is chosen, then the dihedral axis is not searched and it is assumed that it is around X.")
 
         form.addSection(label='Search limits')
+        form.addParam('heightFraction',FloatParam,default=0.9,label='Height fraction',
+                      help="The helical parameters are only sought using the fraction indicated by this number. "\
+                           "In this way, you can avoid including planes that are poorly resolved at the extremes of the volume. " \
+                           "However, note that the algorithm can perfectly work with a fraction of 1.")
         form.addParam('rot0',FloatParam,default=0,label='Minimum rotational angle',help="In degrees")
         form.addParam('rotF',FloatParam,default=360,label='Maximum rotational angle',help="In degrees")
         form.addParam('rotStep',FloatParam,default=5,label='Angular step',help="In degrees")
-        form.addParam('z0',FloatParam,default=0,label='Minimum shift Z',help="In voxels")
-        form.addParam('zF',FloatParam,default=10,label='Maximum shift Z',help="In voxels")
-        form.addParam('zStep',FloatParam,default=0.5,label='Shift step',help="In voxels")
+        form.addParam('z0',FloatParam,default=0,label='Minimum shift Z',help="In Angstroms")
+        form.addParam('zF',FloatParam,default=10,label='Maximum shift Z',help="In Angstroms")
+        form.addParam('zStep',FloatParam,default=0.5,label='Shift step',help="In Angstroms")
         self.deltaZ=Float()
         self.deltaRot=Float()
         form.addParallelSection(threads=4, mpi=0)
@@ -87,19 +93,19 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
             ImageHandler().convert(self.inputVolume.get(), self.fnVolSym)
                         
     def coarseSearch(self):
-        self.runCoarseSearch(self.fnVolSym,self.dihedral.get(),float(self.z0.get()),float(self.zF.get()),float(self.zStep.get()),
+        self.runCoarseSearch(self.fnVolSym,self.dihedral.get(),float(self.heightFraction.get()),float(self.z0.get()),float(self.zF.get()),float(self.zStep.get()),
                              float(self.rot0.get()),float(self.rotF.get()),float(self.rotStep.get()),
                              self.numberOfThreads.get(),self._getExtraPath('coarseParams.xmd'),
-                             int(self.cylinderRadius.get()),int(self.height))
+                             int(self.cylinderInnerRadius.get()),int(self.cylinderOuterRadius.get()),int(self.height),self.inputVolume.get().getSamplingRate())
 
     def fineSearch(self):
         self.runFineSearch(self.fnVolSym, self.dihedral.get(), self._getExtraPath('coarseParams.xmd'), self._getExtraPath('fineParams.xmd'), 
-                           float(self.z0.get()),float(self.zF.get()),float(self.rot0.get()),float(self.rotF.get()),
-                             int(self.cylinderRadius.get()),int(self.height))
+                           float(self.heightFraction.get()),float(self.z0.get()),float(self.zF.get()),float(self.rot0.get()),float(self.rotF.get()),
+                             int(self.cylinderInnerRadius.get()),int(self.cylinderOuterRadius.get()),int(self.height),self.inputVolume.get().getSamplingRate())
 
     def symmetrize(self):
         self.runSymmetrize(self.fnVolSym, self.dihedral.get(), self._getExtraPath('fineParams.xmd'), self.fnVolSym, 
-                           self.cylinderRadius.get(), self.height)
+                           float(self.heightFraction.get()), self.cylinderInnerRadius.get(), self.cylinderOuterRadius.get(), self.height,self.inputVolume.get().getSamplingRate())
 
     def createOutput(self):
         volume = Volume()
@@ -118,7 +124,7 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
     def _summary(self):
         messages = []
         if self.deltaZ.hasValue():
-            messages.append('DeltaZ=%f (voxels) %f (Angstroms)'%(self.deltaZ.get(),self.deltaZ.get()*self.inputVolume.get().getSamplingRate()))
+            messages.append('DeltaZ=%f (voxels) %f (Angstroms)'%(self.deltaZ.get()/self.inputVolume.get().getSamplingRate(),self.deltaZ.get()))
             messages.append('DeltaRot=%f (degrees)'%self.deltaRot.get())      
         return messages
 
@@ -130,8 +136,7 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
         messages = []      
         messages.append('We looked for the helical symmetry parameters of the volume %s using Xmipp [delaRosaTrevin2013].' % self.getObjectTag('inputVolume'))
         if self.deltaZ.hasValue():
-            messages.append('We found them to be %f Angstroms and %f degrees.'%(self.deltaZ.get()*self.inputVolume.get().getSamplingRate(),
-                                                                                self.deltaRot.get()))
+            messages.append('We found them to be %f Angstroms and %f degrees.'%(self.deltaZ.get(),self.deltaRot.get()))
             messages.append('We symmetrized %s with these parameters and produced the volume %s.'%(self.getObjectTag('inputVolume'),
                                                                                                   self.getObjectTag('outputVolume')))
             if self.dihedral.get():

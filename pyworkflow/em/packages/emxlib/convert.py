@@ -400,7 +400,9 @@ def _transformFromEmx(emxParticle, part, transform,alignType):
         m = inv(m)
     else:#I know this is stupid but emx has changed so many times that I want to keep
          #this conditional just in case we need it
+        print ("ssSASSS", m)
         m = inv(m)
+        
     transform.setMatrix(m)
     print ("m",m,"transform",transform)
     transform.setObjId(part.getObjId())

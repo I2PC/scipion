@@ -352,7 +352,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected void createGUI()
 	{
 		// Create file chooser and set current dir
-		setIconImage(XmippResource.getIcon("xmipp_logo.png").getImage());
+		//setIconImage(XmippResource.getIcon("xmipp_logo.png").getImage());
 		if (data.getFileName() != null)
 			fc = new XmippFileChooser(new File(data.getFileName()));
 		else
@@ -2357,8 +2357,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public Map<Object, Object> getKeyAssist()
 	{
 		Map<Object, Object> map = Collections.synchronizedMap(new LinkedHashMap<Object, Object>());
-		map.put("Shift + Scroll Up/Ctrl + P", "Zoom in if images displayed");
-		map.put("Shift + Scroll Down/Ctrl + O", "Zoom out if images displayed");
+		map.put("Shift + scroll up/ctrl + P", "Zoom in if images displayed");
+		map.put("Shift + scroll down/ctrl + M", "Zoom out if images displayed");
 		map.put("Left click", "Selects a cell in gallery mode and a row in table mode");
 		map.put("Right click", "Selects a row in table mode and displays row menu");
 		map.put("Supr", "Delete selected cell in gallery mode and row in table mode");

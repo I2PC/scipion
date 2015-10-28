@@ -385,7 +385,8 @@ void ProgMLF2D::produceSideInfo()
 
         //CTF info now comes on input metadatas
         MetaData mdCTF;
-        groupCTFMetaData(MDimg, mdCTF);
+        std::vector<MDLabel> groupby;
+        groupCTFMetaData(MDimg, mdCTF, groupby);
 
         if (sampling > 0)
         {

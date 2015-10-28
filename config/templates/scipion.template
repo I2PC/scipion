@@ -31,11 +31,11 @@ MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr
 MOTIONCORR_CUDA_LIB = None
 NMA_HOME = %(EM_ROOT)s/nma
 PYTOM_HOME = %(EM_ROOT)s/pytom
-RELION_HOME = %(EM_ROOT)s/relion
+RELION_HOME = %(EM_ROOT)s/relion-1.4
 RESMAP_HOME = %(EM_ROOT)s/resmap
 SIMPLE_HOME = %(EM_ROOT)s/simple
 SPIDER_DIR = %(EM_ROOT)s/spider/spider
-SUMMOVIE_HOME = None
+SUMMOVIE_HOME = %(EM_ROOT)s/summovie
 UNBLUR_HOME = %(EM_ROOT)s/unblur
 XMIPP_HOME = %(EM_ROOT)s/xmipp
 

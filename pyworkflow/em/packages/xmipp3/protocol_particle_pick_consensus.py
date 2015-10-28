@@ -45,7 +45,20 @@ import numpy as np
 
 class XmippProtConsensusPicking(ProtParticlePicking):
     """
-    Protocol to estimate the agreement between different particle picking algorithms
+    Protocol to estimate the agreement between different particle picking algorithms. The protocol
+    takes several Sets of Coordinates calculated by different programs and/or different parameter
+    settings. Let's say     we consider N independent pickings. Then, a coordinate is considered
+    to be a correct particle if M pickers have selected the same particle (within a radius in
+    pixels specified in the form).
+    
+    If you want to be very strict, then set M=N; that is, a coordinate represents a particle if
+    it has been selected by all particles (this is the default behaviour). Then you may relax
+    this condition by setting M=N-1, N-2, ...
+    
+    If you want to be very flexible, set M=1, in this way it suffices that 1 picker has
+    selected the coordinate to be considered as a particle. Note that in this way, the cleaning
+    of the dataset has to be performed by other means (screen particles, 2D and 3D 
+    classification, ...).
     """
     _label = 'consensus picking'
     

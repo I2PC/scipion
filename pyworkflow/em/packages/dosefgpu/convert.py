@@ -35,10 +35,12 @@ from pyworkflow.em.data import MovieAlignment
 def getEnviron():
     """ Return the envirion settings to run dosefgpu programs. """
     """ Setup the environment variables needed to launch Relion. """
+    MOTIONCORR_HOME = os.environ.get('MOTIONCORR_HOME', 
+                                     join(os.environ['EM_ROOT'], 'motioncorr'))
     environ = Environ(os.environ)
     environ.update({
-            'PATH': join(os.environ['MOTIONCORR_HOME'], 'bin'),
-            'LD_LIBRARY_PATH': join(os.environ['MOTIONCORR_CUDA_LIB'])
+            'PATH': join(MOTIONCORR_HOME, 'bin'),
+            'LD_LIBRARY_PATH': join(os.environ.get('MOTIONCORR_CUDA_LIB', ''))                                    
             }, position=Environ.BEGIN)
     return environ  
 

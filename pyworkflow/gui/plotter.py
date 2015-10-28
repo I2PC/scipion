@@ -64,7 +64,6 @@ class Plotter(View):
             Plotter.setBackend('Agg')
         
         if figure is None:
-            self.fontsize = fontsize
             self.tightLayoutOn = True
             
             if figsize is None: # Set some defaults values
@@ -81,8 +80,6 @@ class Plotter(View):
             #import matplotlib.gridspec as gridspec
             #self.grid = gridspec.GridSpec(x, y)#, height_ratios=[7,4])
             #self.grid.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)  
-            self.gridx = x
-            self.gridy = y
             global figureCounter
             figureCounter += 1
             self.figure = plt.figure(figureCounter, figsize=figsize, dpi=dpi)
@@ -94,14 +91,18 @@ class Plotter(View):
                 self.figure.canvas.set_window_title(windowTitle) 
             self.plot_count = 0
             self.last_subplot = None
-            self.plot_title_fontsize = fontsize + 4
-            self.plot_axis_fontsize  = fontsize + 2
-            self.plot_text_fontsize  = fontsize
             self.plot_yformat = '%1.2e'
         else:
             self.figure = figure
             self.tightLayoutOn = False
             self.plot_count = 0
+            
+        self.fontsize = fontsize
+        self.plot_title_fontsize = fontsize + 4
+        self.plot_axis_fontsize  = fontsize + 2
+        self.plot_text_fontsize  = fontsize
+        self.gridx = x
+        self.gridy = y
             
     def activate(self):
         """ Activate this figure. """
