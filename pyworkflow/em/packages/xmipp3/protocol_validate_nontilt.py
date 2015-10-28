@@ -71,18 +71,22 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
                       help='See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Xmipp') 
         
-        form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Projection_Matching','Significant'], default=self.PROJECTION_MATCHING)
+        form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Projection_Matching','Significant'], default=self.SIGNIFICANT)
 
         form.addParam('highPassFilter', FloatParam, label='Volume high-pass the (A)', default=15)
-        form.addParam('lowPassFilter' , FloatParam, label='Volume low-pass the (A)', default=50)        
+        form.addParam('lowPassFilter' , FloatParam, label='Volume low-pass the (A)', default=150)        
         
         form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label="Angular Sampling (degrees)",  
                       help='Angular distance (in degrees) between neighboring projection points ')
 
-        form.addParam('numOrientations', FloatParam, default=6, expertLevel=LEVEL_ADVANCED,
+        form.addParam('numOrientations', FloatParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label="Number of orientations per particle",  
                       help='Number of possible orientations in which a particle can be \n')
+                
+        form.addParam('significanceNoise', FloatParam, default=0.95, expertLevel=LEVEL_ADVANCED,
+                      label="Significance",  
+                      help='Significance of the aligniability with respect to a a set of uniformly distributed random points \n')
         
         #form.addParallelSection(threads=1, mpi=1)
         form.addParallelSection(threads=0, mpi=4)
@@ -109,20 +113,19 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
             volNameFilt = (volDir + '_filt.vol')
           
             filterId=self._insertFunctionStep('filterVolumeStep',volName,volNameFilt,volDir,prerequisites=[convertId])
+            
+            pmStepId = self._insertFunctionStep('projectionLibraryStep', 
+                                                     volNameFilt, volDir,
+                                                     prerequisites=[filterId])
                                     
             if (self.alignmentMethod == self.SIGNIFICANT):            
                 sigStepId = self._insertFunctionStep('significantStep', 
                                                      volNameFilt, volDir,
                                                      commonParams, 
-                                                     prerequisites=[filterId])
+                                                     prerequisites=[pmStepId])
                 
             else:            
-
-                pmStepId = self._insertFunctionStep('projectionLibraryStep', 
-                                                     volNameFilt, volDir,
-                                                     prerequisites=[filterId])
-                
-                
+                              
                 sigStepId = self._insertFunctionStep('projectionMatchingStep', 
                                                      volNameFilt, volDir,
                                                      commonParams, 
@@ -155,8 +158,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         params =  '  -i %s' % volName
         params +=  ' -o %s' % volNameFilt
         params += '  --fourier '
-        params += '  band_pass %f %f'  % (self.lowPassFilter.get(), self.highPassFilter.get())
-        params += '  --sampling %f ' % self.inputParticles.get().getSamplingRate()
+        params += '  band_pass %f %f'  % (self.lowPassFilter.get()/self.inputParticles.get().getSamplingRate(), self.highPassFilter.get()/self.inputParticles.get().getSamplingRate())
         
         self.runJob('xmipp_transform_filter', 
                     params, numberOfMpi=1,numberOfThreads=1)
@@ -177,7 +179,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         params += ' --Ro %0.3f' % ((self.inputParticles.get().getDimensions()[0])/2)
         params += ' --max_shift %0.3f' % ((self.inputParticles.get().getDimensions()[0])/10)
         params += ' --append' 
-        params += ' --search5d_shift 5'
+        params += ' --search5d_shift %0.3f' % ((self.inputParticles.get().getDimensions()[0])/10)
         params += ' --number_orientations %0.3f' % self.numOrientations.get()
                      
         return params
@@ -211,8 +213,10 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
 
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get() 
-        makePath(volDir)  
-        params += '  --initvolumes %s' % volName  
+        makePath(volDir)
+        fnGallery= (volDir+'/gallery.doc')
+          
+        params += ' --initgallery  %s' % fnGallery
         params += ' --odir %s' % volDir
         params += ' --iter %d' % 1
         self.runJob('xmipp_reconstruct_significant', 
@@ -226,6 +230,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         params  = '  --i %s' % (volDir+'/angles_iter001_00.xmd')
         params += '  --volume %s' % volName  
         params += ' --odir %s' % volDir
+        params += ' --significance_noise %s' % self.significanceNoise.get()
         params += ' --sym %s' % sym
         
         if (self.alignmentMethod == self.SIGNIFICANT):
@@ -279,7 +284,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
                 size +=1
             summary.append("Volumes to validate: *%d* " % size)
             summary.append("Angular sampling: %s" % self.angularSampling.get())
-            summary.append("Significance value: %s" % self.alpha.get())
+            summary.append("Significance value: %s" % self.significanceNoise.get())
 
         return summary
     
