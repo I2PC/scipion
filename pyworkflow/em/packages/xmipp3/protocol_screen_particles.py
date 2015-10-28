@@ -34,13 +34,8 @@ from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
                                         LEVEL_ADVANCED, FloatParam)
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.utils.path import copyFile, replaceBaseExt
-
 from convert import writeSetOfParticles, readSetOfParticles
 
-
-
-        
-        
 class XmippProtScreenParticles(ProtProcessParticles):
     """ Classify particles according their similarity to the others in order to detect outliers. """
     _label = 'screen particles'
