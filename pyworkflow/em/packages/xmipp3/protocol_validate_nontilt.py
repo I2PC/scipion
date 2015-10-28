@@ -155,8 +155,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         params =  '  -i %s' % volName
         params +=  ' -o %s' % volNameFilt
         params += '  --fourier '
-        params += '  band_pass %f %f'  % (self.lowPassFilter.get(), self.highPassFilter.get())
-        params += '  --sampling %f ' % self.inputParticles.get().getSamplingRate()
+        params += '  band_pass %f %f'  % (self.lowPassFilter.get()/self.inputParticles.get().getSamplingRate(), self.highPassFilter.get()/self.inputParticles.get().getSamplingRate())        
         
         self.runJob('xmipp_transform_filter', 
                     params, numberOfMpi=1,numberOfThreads=1)
