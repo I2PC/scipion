@@ -56,85 +56,39 @@ class SparxGaussianProtPicking(ProtParticlePicking):
                       label='Higher')
 
         form.addParam('extraParams', StringParam, expertLevel=LEVEL_ADVANCED,
-              label='Additional parameters',
+              label='Additional parameters', default='gauss_width=1.0:pixel_input=1:pixel_output=1:invert_contrast=True:use_variance=True',
               help='Additional parameters for sparx guassian picker: \n  invert_contrast, use_variance,...')
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-
-#         self._params = {}
-#         # diameter must be passed in Armstrongs and therefore should be converted
-#         self._params['diam'] = self.diameter.get() * self.getInputMicrographs().getSamplingRate()
-#         # self._params['num-slices'] = self.numberSizes.get()
-#         # self._params['size-range'] = self.sizeRange.get()
-#         self._params['apix'] = self.inputMicrographs.get().getSamplingRate()
-#         self._params['thresh'] = self.threshold.get()
-#         # self._params['max-thresh'] = self.maxThreshold.get()
-#         # self._params['max-area'] = self.maxArea.get()
-#         # self._params['max-peaks'] = self.maxPeaks.get()
-# 
-#         args = ""
-#         for par, val in self._params.iteritems():
-#             args += " --%s=%s" % (par, str(val))
-# 
-#         if self.invert:
-#             args += " --invert"
-# 
-#         args += " " + self.extraParams.get('')
-# 
-#         deps = [] # Store all steps ids, final step createOutput depends on all of them
-# 
-#         ih = ImageHandler()
-# 
-#         for mic in self.inputMicrographs.get():
-#             # Create micrograph folder
-#             micName = mic.getFileName()
-#             micDir = self._getTmpPath(removeBaseExt(micName))
-#             makePath(micDir)
-# 
-#             # If needed convert micrograph to mrc format, otherwise link it
-#             if getExt(micName) != ".mrc":
-#                 fnMicBase = replaceBaseExt(micName, 'mrc')
-#                 inputMic = join(micDir, fnMicBase)
-#                 ih.convert(mic.getLocation(), inputMic)
-#             else:
-#                 inputMic = join(micDir, basename(micName))
-#                 createLink(micName, inputMic)
-# 
-#             # Insert step to execute program
-#             stepId = self._insertFunctionStep('executeDogpickerStep', inputMic, args)
-#             deps.append(stepId)
-# 
-# 
-#         self._insertFinalSteps(deps)
-        pass
+        args = {"lowerThreshold": self.lowerThreshold,
+                "higherThreshold": self.higherThreshold,
+                "boxSize": self.boxSize,
+                "extraParams": self.extraParams}
+        params = 'demoparms --makedb=thr_low=%(lowerThreshold)s:thr_hi=%(higherThreshold)s:boxsize=%(boxSize)s:%(extraParams)s'%args
+        self.runJob('sxprocess.py', params, cwd=self.getWorkingDir()) 
+        deps = [] # Store all steps ids, final step createOutput depends on all of them
+        for mic in self.inputMicrographs.get():
+            micFile = os.path.relpath(mic.getFileName(), self.workingDir.get())
+            stepId = self._insertFunctionStep('executeSparxGaussianPickerStep', micFile)
+            deps.append(stepId)
 
 
-    def _insertFinalSteps(self, deps):
-        # Insert step to create output objects
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
 
-
+    
     #--------------------------- STEPS functions ---------------------------------------------------
-    def executeSparxGaussianPickerStep(self, inputMic, args):
-
-        # Program to execute and it arguments
-#         program = "ApDogPicker.py"
-#         outputFile = self._getExtraPath(replaceBaseExt(inputMic, "txt"))
-# 
-#         args += " --image=%s --outfile=%s" % (inputMic, outputFile)
-# 
-#         # Run the command with formatted parameters
-# 
-#         self._log.info('Launching: ' + program + ' ' + args)
-#         self.runJob(program, args)
-        pass
+    def executeSparxGaussianPickerStep(self, micFile):
+        print micFile
+        params = '--gauss_autoboxer=demoparms --write_dbbox %s'%micFile
+        self.runJob('e2boxer.py', params, cwd=self.getWorkingDir()) 
+        
 
 
     def createOutputStep(self):
         coordSet = self._createSetOfCoordinates(self.getInputMicrographs())
-        self.readSetOfCoordinates(self._getExtraPath(), coordSet)
-        coordSet.setBoxSize(self.diameter.get())
+        self.readSetOfCoordinates(self.workingDir.get(), coordSet)
+        coordSet.setBoxSize(self.boxSize.get())
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.inputMicrographs, coordSet)
 

@@ -187,6 +187,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             
 
         } catch (Exception e) {
+        	e.printStackTrace();
             XmippDialog.showError(this, e.getMessage());
         }
     }
@@ -451,12 +452,11 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         thresholdsl.setEnabled(selected);
         thresholdlb.setEnabled(selected);
         thresholdtf.setEnabled(selected);
-        boolean isGenClassifier = selected && !ppicker.getClassifier().needsTraining();
-        sizelb.setEnabled(!selected || isGenClassifier);
-        sizesl.setEnabled(!selected || isGenClassifier);// not really, if there is some micrograph
+        sizelb.setEnabled(!selected);
+        sizesl.setEnabled(!selected);// not really, if there is some micrograph
         // in sup mode size cannot be changed
-        sizetf.setEnabled(!selected || isGenClassifier);
-        sizelb.setEnabled(!selected || isGenClassifier);
+        sizetf.setEnabled(!selected);
+        sizelb.setEnabled(!selected);
         importmi.setEnabled(!selected);
         //autopickpercenttf.setEnabled(selected);
         
@@ -848,6 +848,8 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         return msg;
     }
     
+    
+    
     protected void initGenericPickerPane()
     {
     	gpickerpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -871,10 +873,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 					if(e.isTemporary())
 						return;
 					JTextField tf = (JTextField)e.getComponent();
-					Classifier.Parameter param = paramtfs.get(tf);
-					if(param.name.equals("diameter"))//classifier diameter and particle size are the same
-						updateSize(Integer.parseInt(tf.getText()));
-					param.value = tf.getText();
+					updateParam(tf);
 				}
 				
 				@Override
@@ -884,8 +883,21 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 					
 				}
 			});
+    		tf.addActionListener(new ActionListener()
+			{
+				
+				@Override
+				public void actionPerformed(ActionEvent e)
+				{
+					JTextField tf = (JTextField)e.getSource();
+					updateParam(tf);
+					
+				}
+			});
     		gpickerpn.add(tf);
     		paramtfs.put(tf, param);
+    		if(param.name.equals("diameter") || param.name.equals("boxSize"))//classifier diameter and particle size are the same
+    			updateSize(Integer.parseInt(tf.getText()));
     	}
     	autopickbt = XmippWindowUtil.getTextButton("Run", new ActionListener(){
 
@@ -907,5 +919,14 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     	gpickerpn.add(autopickbt);
     }
     
+    protected void updateParam(JTextField tf)
+    {
+		Classifier.Parameter param = paramtfs.get(tf);
+		if(param.value.equals(tf.getText()))
+			return;
+		if(param.name.equals("diameter") || param.name.equals("boxSize"))//classifier diameter and particle size are the same
+			updateSize(Integer.parseInt(tf.getText()));
+		param.value = tf.getText();
+    }
 
 }

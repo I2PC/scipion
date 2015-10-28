@@ -68,11 +68,12 @@ public class GenericClassifier extends Classifier
 			autopickCommand = autopickCommand.replace("%(" + param.name + ")", param.value);
 		}
 		String micPath = micrograph.getFile();
+		if(runDir != null)
+			micPath = new File(runDir).toURI().relativize(new File(micPath).toURI()).getPath();
 		String name = micrograph.getName();
 		autopickCommand = autopickCommand.replace("%(micrograph)", micPath);
 		autopickCommand = autopickCommand.replace("%(micrographName)", name);
 		String output;
-		System.out.println(preprocessCommand);
 		try
 		{
 			if(runDir != null)
@@ -80,23 +81,24 @@ public class GenericClassifier extends Classifier
 				if(preprocessCommand != null)
 				{
 					output = XmippWindowUtil.executeCommand(preprocessCommand, true, runDir);
-					System.out.println(output);
+					//System.out.println("preprocess output \n" + output);
 				}
-				XmippWindowUtil.executeCommand(autopickCommand, true, runDir);
+				output = XmippWindowUtil.executeCommand(autopickCommand, true, runDir);
+				//System.out.println("autopick output \n" + output);
 			}
 			else
 			{
 				if(preprocessCommand != null)
 				{
 					output = XmippWindowUtil.executeCommand(preprocessCommand, true);
-					System.out.println(output);
+					//System.out.println("preprocess output \n" + output);
 				}
 				output = XmippWindowUtil.executeCommand(autopickCommand, true);
-				System.out.println(output);
+				//System.out.println("autopick output \n" + output);
 			}
 			
-			XmippWindowUtil.executeCommand(convertCommand, true);
-			//System.out.println(output);
+			output = XmippWindowUtil.executeCommand(convertCommand, true);
+			//System.out.println("convert output \n" + output);
 			writeProperties();
 		}
 		catch (Exception e)

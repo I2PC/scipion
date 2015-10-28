@@ -41,7 +41,7 @@ def main():
         coordSet.setMicrographs(micSet)
         if fromType == 'eman2':
             if toType == 'xmipp': 
-                #print 'from dogpicker to xmipp...'
+                #print 'from eman2 to xmipp...'
                 from pyworkflow.em.packages.eman2.convert import readSetOfCoordinates
                 readSetOfCoordinates(outputDir, micSet, coordSet)
                 from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
