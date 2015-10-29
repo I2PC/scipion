@@ -83,6 +83,7 @@ class TestImportParticles(TestImportBase):
                 'amplitudConstrast': 0.1,
                 'sphericalAberration': 2.,
                 'voltage': 100,
+                'alignType' : 3,
                 'samplingRate': 2.46,
                 'magnification': 10000,
                 'haveDataBeenPhaseFlipped': True
@@ -99,7 +100,7 @@ class TestImportParticles(TestImportBase):
         self.launchProtocol(protEmxImport)
 
     def test_fromXmipp(self):
-        """ Import an EMX file with Particles and defocus
+        """ Import an Xmipp file with Particles and defocus
         """
         prot1 = self.newProtocol(ProtImportParticles,
                                  importFrom=ProtImportParticles.IMPORT_FROM_XMIPP3,

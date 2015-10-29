@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Carlos Oscar Sorzano   (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,15 +25,24 @@
 # *
 # **************************************************************************
 
+import os
+import numpy as np
+import Tkinter as tk
+from math import sqrt
+
+from pyworkflow.utils.properties import Icon
 import pyworkflow.gui as gui
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.protocol.params import LabelParam
-from pyworkflow.em import *
-from pyworkflow.gui.form import FormWindow
-from protocol_resolution3d import *
+import pyworkflow.em as em
+from pyworkflow.gui.widgets import Button, HotButton
+import pyworkflow.gui.dialog as dialog
 from plotter import XmippPlotter
-from xmipp import *
-import numpy as np
+
+import xmipp
+
+from convert import getImageLocation
+from protocol_resolution3d import XmippProtResolution3D
 
 
 FREQ_LABEL = 'frequency (1/A)'
@@ -53,7 +63,7 @@ class XmippResolution3DViewer(ProtocolViewer):
         form.addParam('doShowDpr', LabelParam,
                       label="Display Differential Phase Residual?")
         form.addParam('doShowStructureFactor', LabelParam,
-                      label="Display Structure factor?")
+                      label="Display B-factor?")
 
     def _getVisualizeDict(self):
         return {'doShowFsc': self._viewFsc,
@@ -61,23 +71,36 @@ class XmippResolution3DViewer(ProtocolViewer):
                 'doShowStructureFactor': self._viewStructureFactor,
                 }
     
-    def _viewFsc(self, e=None):
+    def _loadPlots(self, title, plotLabel, resolutionLabel, **kwargs):
+        """ Check if the FSC metadata is generated and if so, 
+        read the plots and the metadata.
+        *args and **kwargs will be passed to self._createPlot function.
+        """
         fscFn = self.protocol._defineFscName()
-        md = MetaData(fscFn)
-        plotter = self._createPlot("Fourier Shell Correlation", FREQ_LABEL, 'FSC', 
-                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, color='r')
-        return [plotter, DataView(fscFn)]
         
+        if not os.path.exists(fscFn):
+            return [self.errorMessage('The FSC metadata was not produced\n'
+                                      'Execute again the protocol with FSC\n'
+                                      'and/or DPR options enabled.',
+                                      title='Missing result file')]
+        md = xmipp.MetaData(fscFn)
+        plotter = self._createPlot(title, FREQ_LABEL, plotLabel, md, 
+                                   xmipp.MDL_RESOLUTION_FREQ, resolutionLabel,
+                                   **kwargs)
+        return [plotter, em.DataView(fscFn)]
+        
+    def _viewFsc(self, e=None):
+        return self._loadPlots("Fourier Shell Correlation", 'FSC', 
+                               xmipp.MDL_RESOLUTION_FRC, color='r')
+
     def _viewDpr(self, e=None):
-        fscFn = self.protocol._defineFscName()
-        md = MetaData(fscFn)
-        return [self._createPlot("Differential Phase Residual", FREQ_LABEL, 'DPR', 
-                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_DPR),
-                DataView(fscFn)]
-    
-    def _createPlot(self, title, xTitle, yTitle, md, mdLabelX, mdLabelY, color='g'):        
-        xplotter = XmippPlotter(1, 1, figsize=(4,4), windowTitle="Plot")
-        xplotter.createSubPlot(title, xTitle, yTitle)
+        return self._loadPlots("Differential Phase Residual", 'DPR', 
+                       xmipp.MDL_RESOLUTION_DPR)
+        
+    def _createPlot(self, title, xTitle, yTitle, md, mdLabelX, mdLabelY, color='g', figure=None):        
+        xplotter = XmippPlotter(figure=figure)
+        xplotter.plot_title_fontsize = 11
+        xplotter.createSubPlot(title, xTitle, yTitle, 1, 1)
         xplotter.plotMdFile(md, mdLabelX, mdLabelY, color)
         return xplotter
 
@@ -119,6 +142,7 @@ class XmippResolution3DViewer(ProtocolViewer):
         if os.path.exists(bfactorFile):
             f = open(bfactorFile)
             values = map(float, f.readline().split())
+            f.close()
             p1 = data.createEmptyPoint()
             p1.setX(values[0])
             p1.setY(values[1])
@@ -127,25 +151,61 @@ class XmippResolution3DViewer(ProtocolViewer):
             p2.setX(values[2])
             p2.setY(values[3])
             data.addPoint(p2)
-            data.bfactor=values[4]
+            data.bfactor = values[4]
         else:
-            data.bfactor=0
+            data.bfactor = 0
             
         return data
         
     def _viewStructureFactor(self, e=None):
         strFactFn = self.protocol._defineStructFactorName()
-        self.md = MetaData(strFactFn)
-        plotter = self._createPlot("Structure Factor", 'frequency^2 (1/A^2)', 'log(Structure Factor)', 
-                               self.md, xmipp.MDL_RESOLUTION_FREQ2, xmipp.MDL_RESOLUTION_LOG_STRUCTURE_FACTOR)
+        self.md = xmipp.MetaData(strFactFn)
+        win = self.tkWindow(BfactorWindow, 
+                           title='Clustering Tool',
+                           callback=self._applyBfactor
+                            )
+        plotter = self._createPlot("Structure Factor", 'frequency^2 (1/A^2)', 
+                                   'log(Structure Factor)',
+                                   self.md, xmipp.MDL_RESOLUTION_FREQ2, 
+                                   xmipp.MDL_RESOLUTION_LOG_STRUCTURE_FACTOR,
+                                   figure=win.figure)
         self.path = PointPath(plotter.getLastSubPlot(), self._loadData(), 
                               callback=self._adjustPoints,
                               tolerance=0.1)
-        return [plotter]        
-
-
-from math import sqrt
-
+        
+        return [win]
+    
+    def _applyBfactor(self, e=None):
+        bFactorFile = self.protocol._getPath('bfactor.txt')
+        f = open(bFactorFile)
+        values = map(float, f.readline().split())
+        f.close()
+        self.protocol.setStepsExecutor() # set default execution
+        vol = self.protocol.inputVolume.get()
+        volPath = getImageLocation(vol)
+        maxres = 1. / sqrt(values[2])
+        args = '-i %s ' % volPath
+        pixelSize = vol.getSamplingRate()
+        args += '--sampling %f ' % pixelSize
+        args += '--maxres %d ' % maxres
+        args += '--adhoc %f ' % -values[4]
+        volName = os.path.basename(volPath)
+        volOut = self.protocol._getPath(volName) 
+        args += '-o %s ' % volOut
+        self.protocol.runJob('xmipp_volume_correct_bfactor', args)
+        
+        #args = '-i %s -o %s' % (volPath, self.protocol._getPath(volName))
+        #self.protocol.runJob('xmipp_image_convert', args)
+        volSet = self.protocol._createSetOfVolumes()
+        volSet.setSamplingRate(pixelSize)
+        newVol = vol.clone()
+        newVol.setObjId(None)
+        newVol.setLocation(volOut)
+        volSet.append(newVol)
+        volSet.write()
+        
+        self.getObjectView(volSet.getFileName()).show()
+        
 
 STATE_NO_POINTS = 0 # on points have been selected, double-click will add first one
 STATE_DRAW_POINTS = 1 # still adding points, double-click will set the last one
@@ -195,9 +255,7 @@ class PointPath():
     def onClick(self, event):
         if event.inaxes!=self.ax: 
             return
-        # ignore click event if toolbar is active
-        if self.ax.figure.canvas.manager.toolbar._active is not None: 
-            return
+
         ex = event.xdata
         ey = event.ydata
         
@@ -241,9 +299,6 @@ class PointPath():
     def onMotion(self, event):
         if self.dragIndex is None or self.drawing < 2: 
             return
-        # ignore click event if toolbar is active
-        if self.ax.figure.canvas.manager.toolbar._active is not None: 
-            return
         
         ex, ey = event.xdata, event.ydata
         point = self.pathData.getPoint(self.dragIndex)
@@ -262,4 +317,52 @@ class PointPath():
         self.path_line.set_data(xs, ys)
         self.path_points.set_data(xs, ys)
         self.ax.figure.canvas.draw()
+
+    
+class BfactorWindow(gui.Window):
+    """ This class creates a Window that will display Bfactor plot
+    to adjust two points to fit B-factor.
+    It will also contain a button to apply the B-factor to 
+    the volume and produce a new volumen that can be registered.
+    """
+    def __init__(self, **kwargs):
+        gui.Window.__init__(self, **kwargs)
+        
+        self.dim = kwargs.get('dim')
+        self.data = kwargs.get('data')
+        self.callback = kwargs.get('callback', None)
+        self.plotter = None
+         
+        content = tk.Frame(self.root)
+        self._createContent(content)
+        content.grid(row=0, column=0, sticky='news')
+        content.columnconfigure(0, weight=1)
+        #content.rowconfigure(1, weight=1)
+        
+    def _createContent(self, content):
+        self._createFigureBox(content)
+        
+    def _createFigureBox(self, content):
+        from pyworkflow.gui.matplotlib_image import FigureFrame
+        figFrame = FigureFrame(content, figsize=(6, 6))
+        figFrame.grid(row=0, column=0, padx=5, columnspan=2)
+        self.figure = figFrame.figure
+        
+        applyBtn = HotButton(content, text='Apply B-factor',
+                           command=self._onApplyBfactorClick)
+        applyBtn.grid(row=1, column=0, sticky='ne', padx=5, pady=5)
+        
+        closeBtn = Button(content, text='Close', imagePath=Icon.ACTION_CLOSE,
+                           command=self.close)
+        closeBtn.grid(row=1, column=1, sticky='ne', padx=5, pady=5)
+       
+    def _onApplyBfactorClick(self, e=None):
+        #self._runBeforePreWhitening(self.prot)
+        dialog.FlashMessage(self.root, "Applying B-factor...", 
+                            func=self.callback)
+        
+    def _onClosing(self):
+        if self.plotter:
+            self.plotter.close()
+        gui.Window._onClosing(self)
         
