@@ -860,7 +860,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     	for(Classifier.Parameter param: parameters)
     	{
     		gpickerpn.add(new JLabel(param.label));
-    		tf = new JTextField(5);
+    		tf = new JTextField(3);
     		tf.setToolTipText(param.help);
     		tf.setText(param.value);
     		tf.setActionCommand(param.name);

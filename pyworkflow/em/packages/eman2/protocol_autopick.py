@@ -40,6 +40,7 @@ class SparxGaussianProtPicking(ProtParticlePicking):
         
     def __init__(self, **args):     
         ProtParticlePicking.__init__(self, **args)
+        self.extraParams = 'pixel_input=1:pixel_output=1:invert_contrast=True:use_variance=True'
 
 
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -55,17 +56,19 @@ class SparxGaussianProtPicking(ProtParticlePicking):
         line.addParam('higherThreshold', FloatParam, default='30',
                       label='Higher')
 
-        form.addParam('extraParams', StringParam, expertLevel=LEVEL_ADVANCED,
-              label='Additional parameters', default='gauss_width=1.0:pixel_input=1:pixel_output=1:invert_contrast=True:use_variance=True',
-              help='Additional parameters for sparx guassian picker: \n  invert_contrast, use_variance,...')
+        form.addParam('gaussWidth', FloatParam, default='1',
+              label='Gauss Width')
+        
+    
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         args = {"lowerThreshold": self.lowerThreshold,
                 "higherThreshold": self.higherThreshold,
                 "boxSize": self.boxSize,
-                "extraParams": self.extraParams}
-        params = 'demoparms --makedb=thr_low=%(lowerThreshold)s:thr_hi=%(higherThreshold)s:boxsize=%(boxSize)s:%(extraParams)s'%args
+                "gaussWidth": self.gaussWidth,
+                'extraParams': self.extraParams}
+        params = 'demoparms --makedb=thr_low=%(lowerThreshold)s:thr_hi=%(higherThreshold)s:boxsize=%(boxSize)s:gauss_width=%(gaussWidth)s:%(extraParams)s'%args
         self.runJob('sxprocess.py', params, cwd=self.getWorkingDir()) 
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         for mic in self.inputMicrographs.get():
