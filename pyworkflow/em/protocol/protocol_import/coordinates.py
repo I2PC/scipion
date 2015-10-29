@@ -92,8 +92,8 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         coordsSet.setBoxSize(self.boxSize.get())
         ci = self.getImportClass()
         
-        for coordFile, _ in self.iterFiles():
-            mic = self.getMatchingMic(coordFile)
+        for coordFile, fileId in self.iterFiles():
+            mic = self.getMatchingMic(coordFile,fileId)
             if mic is not None:
                 def addCoordinate(coord):
                     coord.setMicrograph(mic)
@@ -171,16 +171,20 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
     def getInputMicrographs(self):
         return self.inputMicrographs.get()
     
-    def getMatchingMic(self, coordFile):
+    def getMatchingMic(self, coordFile, fileId):
         """ Given a coordinates file check if there is a micrograph
         that this files matches. 
         """
-        coordBase = removeBaseExt(coordFile)
-        for mic in self.inputMicrographs.get():
-            micBase = removeBaseExt(mic.getFileName())
-            if coordBase in micBase or micBase in coordBase: #temporal use of in
-                return mic
-        return None
+	micSet = self.inputMicrographs.get()
+	if fileId is None:
+            coordBase = removeBaseExt(coordFile)
+            for mic in micSet:
+                micBase = removeBaseExt(mic.getFileName())
+                if coordBase in micBase or micBase in coordBase: #temporal use of in
+                    return mic
+	    return None
+	else:
+	    return micSet[fileId]
         
     def correctCoordinatePosition(self, coord):
         mic = coord.getMicrograph()
