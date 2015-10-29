@@ -275,11 +275,15 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         else:
             #summary.append("Particles matched: " )
             if self.typeOfSet.get() == TYPE_PARTICLES:
-                summary.append("Particle box size: %d" %self.outputset.get().getBoxSize())
-                #summary.append("Particle box size: %d" %self.outputset.get().getSize())
+                aux = self.untiltPar.get()
+                aux2 = aux[1]
+                boxsize_t, y_, z_ = aux2.getDim()
+                summary.append("Particle box size: %d" %boxsize_t)
+                summary.append("Tilt pairs matched: %d" %self.outputCoordinatesTiltPair.__len__())
             else:
                 summary.append("Particle box size: %d" %self.untiltCoor.get().getBoxSize())
-                #summary.append("Particle box size: %d" %self.outputset.get().getSize())
+                summary.append("Tilt pairs size: %d" %self.outputCoordinatesTiltPair.__len__())
+                #
         return summary
     
     
@@ -297,6 +301,6 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         summary.append("Particles picked:")
         #summary.append("Particles picked: %d" %coordsSet.getSize())
         return "\n"#.join(summary)
-    
+#     
     
     
