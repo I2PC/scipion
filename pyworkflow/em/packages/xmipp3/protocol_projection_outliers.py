@@ -36,6 +36,7 @@ from pyworkflow.em.protocol import ProtAnalysis2D
 from pyworkflow.em.data import Class2D, SetOfClasses2D
 from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
+from math import floor
 
 import xmipp
 from xmipp3 import ProjMatcher
@@ -51,80 +52,49 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        
         form.addParam('inputSet', PointerParam, label="Input averages", important=True, 
-                      pointerClass='SetOfClasses2D, SetOfAverages',
-                      help='Select the input set to compare.'
-                           'It should be a SetOfClasses2D or a SetOfAverages')
+                      pointerClass='SetOfParticles', pointerCondition='hasAlignmentProj')
         form.addParam('inputVolume', PointerParam, label="Volume to compare classes to", important=True,
                       pointerClass='Volume',
                       help='Volume to be used for class comparison')
-        form.addParam('hasVolCTFCorrected', BooleanParam, default=False,
-                      label='Volume has been corrected by CTF?')        
-
-        form.addParam('symmetryGroup', StringParam, default="c1",
-                      label='Symmetry group', 
-                      help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
-                        'If no symmetry is present, give c1')
-        form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
-                      label='Angular sampling rate',
-                      help='In degrees.'
-                      ' This sampling defines how fine the projection gallery from the volume is explored.')
-        
         form.addParallelSection(threads=0, mpi=1)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        """ Mainly prepare the command line for call cl2d program"""
         # Convert input images if necessary
-        imgsFn = self._getPath('input_imgs.xmd')
-        outImgsFn = self._getExtraPath('output_imgs.xmd')
-        anglesFn = self._getExtraPath('angles.xmd')
+        self.imgsFn = self._getExtraPath('input_imgs.xmd')
         vol = self.inputVolume.get()
         
-        angSampling = self.angularSampling.get()
-        sym = self.symmetryGroup.get()
-        
-        self._insertFunctionStep("convertStep", imgsFn)
-        
-        self._insertFunctionStep("projMatchStep", vol.getFileName(), angSampling, sym, imgsFn, anglesFn, self._getDimensions())
-        self._insertFunctionStep("joinStep", imgsFn, anglesFn)
-        self._insertFunctionStep("produceAlignedImagesStep", self.hasVolCTFCorrected.get(), outImgsFn, imgsFn)
-        self._insertFunctionStep("evaluateStep", outImgsFn)
-#         self._insertFunctionStep("sortStep", outImgsFn)
-        self._insertFunctionStep("createOutputStep", outImgsFn)
+        self._insertFunctionStep("convertStep", self.imgsFn)
+        self._insertFunctionStep("produceResiduals", vol.getFileName(), self.imgsFn, vol.getSamplingRate())
+        self._insertFunctionStep("evaluateResiduals", self.imgsFn)
+        #self._insertFunctionStep("createOutputStep", self.imgsFn)
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self, imgsFn):
-        from convert import writeSetOfClasses2D, writeSetOfParticles
-        imgSet = self.inputSet.get()
-        if isinstance(imgSet, SetOfClasses2D):
-            writeSetOfClasses2D(imgSet, imgsFn, writeParticles=False)
-        else:
-            writeSetOfParticles(imgSet, imgsFn)
+        from convert import writeSetOfParticles
+        writeSetOfParticles(self.inputSet.get(), self.imgsFn)
     
-    def joinStep(self, imgsFn, anglesFn):
-        imgSet = self.inputSet.get()
-        if isinstance(imgSet, SetOfClasses2D):
-            self.runJob("xmipp_metadata_utilities", "-i classes@%s --set join %s --mode append" % (imgsFn, anglesFn), numberOfMpi=1)
-        else:
-            self.runJob("xmipp_metadata_utilities", "-i Particles@%s --set join %s --mode append" % (imgsFn, anglesFn), numberOfMpi=1)
+    def produceResiduals(self,volumeFn,anglesFn,Ts):
+        if volumeFn.endswith(".mrc"):
+            volumeFn+=":mrc"
+        anglesOutFn=self._getExtraPath("anglesCont.stk")
+        residualsOutFn=self._getExtraPath("residuals.stk")
+        projectionsOutFn=self._getExtraPath("projections.stk")
+        xdim=self.inputVolume.get().getDim()[0]
+        self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
+                    (anglesFn,anglesOutFn,volumeFn,floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
     
-    def evaluateStep(self, outImgsFn):
+    def evaluateResiduals(self, outImgsFn):
         # Evaluate each image
         fnAutoCorrelations = self._getExtraPath("autocorrelations.xmd")
         stkAutoCorrelations = self._getExtraPath("autocorrelations.stk")
-        stkDiff = self._getExtraPath("diff.stk")
-        args1 = " -i %s -o %s --save_metadata_stack %s"
-        args2 = " -i %s --set merge %s"
-        outClasses = 'classes_aligned@' + outImgsFn
-        self.runJob("xmipp_image_residuals", args1 % (stkDiff, stkAutoCorrelations, fnAutoCorrelations), numberOfMpi=1)
-        self.runJob("xmipp_metadata_utilities", '-i %s --operate rename_column "image image1"' % fnAutoCorrelations, numberOfMpi=1)
-        self.runJob("xmipp_metadata_utilities", args2 % (outClasses, fnAutoCorrelations), numberOfMpi=1)
+        stkResiduals = self._getExtraPath("residuals.stk")
+        anglesOutFn=self._getExtraPath("anglesCont.xmd")
+        self.runJob("xmipp_image_residuals", " -i %s -o %s --save_metadata_stack %s" % (stkResiduals, stkAutoCorrelations, fnAutoCorrelations), numberOfMpi=1)
+        self.runJob("xmipp_metadata_utilities", '-i %s --operate rename_column "image imageResidual"' % fnAutoCorrelations, numberOfMpi=1)
+        self.runJob("xmipp_metadata_utilities", '-i %s --set join %s imageResidual' % (anglesOutFn, fnAutoCorrelations), numberOfMpi=1)
         cleanPath(fnAutoCorrelations)
-    
-    def sortStep(self, outImgsFn):
-        self.runJob("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort zScoreResCov desc" % (outImgsFn), numberOfMpi=1)
     
     def createOutputStep(self, outImgsFn):
         inputSet = self.inputSet.get()
