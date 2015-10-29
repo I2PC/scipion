@@ -178,7 +178,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='Weight input images by angular assignment cost')
         form.addParam('weightJumper', BooleanParam, label="Weight by angular stability?", default=True,
                       help='Weight input images by angular stability between iterations')
-        form.addParam('minCTF', FloatParam, label="Minimum CTF value", default=0.03, expertLevel=LEVEL_ADVANCED,
+        form.addParam('minCTF', FloatParam, label="Minimum CTF value", default=0.1, expertLevel=LEVEL_ADVANCED,
                       help='A Fourier coefficient is not considered if its CTF is below this value. Note that setting a too low value for this parameter amplifies noise.')
         
         form.addSection(label='Post-processing')
@@ -212,7 +212,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                            'xmipp_transform_filter -i %(volume)s --fourier low_pass 15 --sampling %(sampling)s\n' 
                            '/home/joe/myScript %(volume)s sampling=%(sampling)s dim=%(dim)s')
 
-        form.addParallelSection(threads=4, mpi=1)
+        form.addParallelSection(threads=1, mpi=8)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -272,7 +272,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             volume.setSamplingRate(Ts)
             self._defineOutputs(outputVolume=volume)
             self._defineSourceRelation(self.inputParticles.get(),volume)
-            self._defineSourceRelation(self.inputVolumes.get(),volume)
+            #self._defineSourceRelation(self.inputVolumes.get(),volume)
 
         fnLastAngles=join(fnLastDir,"angles.xmd")
         if exists(fnLastAngles):
@@ -1056,4 +1056,3 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             if self.postSymmetryHelical:
                 strline+="Finally, we imposed helical symmetry. "
         return [strline]
-    

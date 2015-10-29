@@ -143,14 +143,20 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 		}
 	}
         
-        @Override
-	public void mouseWheelMoved(MouseWheelEvent e)
+	public void zoomIn(int sx, int sy)
 	{
-		super.mouseWheelMoved(e);
-		if (!e.isShiftDown())
-			return;
+		super.zoomIn(sx, sy);
+		
 		if(getParticlePicker().getZoom() != uc.getMagnification())
-			uc.mouseWheelMoved(e);	
+			uc.zoomIn(sx, sy);	
+	}
+	
+	public void zoomOut(int sx, int sy)
+	{
+		super.zoomOut(sx, sy);
+		
+		if(getParticlePicker().getZoom() != uc.getMagnification())
+			uc.zoomOut(sx, sy);	
 	}
 
 	@Override

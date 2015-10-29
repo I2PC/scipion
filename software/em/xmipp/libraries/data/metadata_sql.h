@@ -163,7 +163,7 @@ private:
 
     /** Get the values of several objects.
      */
-    bool getObjectsValues(const size_t objId, std::vector<MDLabel> labels, std::vector<MDObject> *values, bool firstTime);
+    bool getObjectsValues(const size_t objId, std::vector<MDLabel> labels, std::vector<MDObject> *values);
 
     /** Get the value of an object.
      */
@@ -274,6 +274,7 @@ private:
     bool dropTable();
     bool createTable(const std::vector<MDLabel> * labelsVector = NULL, bool withObjID=true);
     bool insertValues(double a, double b);
+    bool initializeGetObjectsValuesStatement(std::vector<MDLabel> labels);
     void prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt);
     bool execSingleStmt(const std::stringstream &ss);
     bool execSingleStmt(sqlite3_stmt *&stmt, const std::stringstream *ss = NULL);

@@ -234,6 +234,7 @@ MODE_PROTOCOLS = 'protocols'
 MODE_STATS = 'stats'
 MODE_ENV = 'printenv'
 MODE_RUN = 'run'
+MODE_PYTHON = 'python'
 MODE_TUTORIAL = 'tutorial'
 MODE_DEPENDENCIES = 'deps'
 
@@ -445,6 +446,10 @@ Arguments:
     elif mode == MODE_RUN:
         # Run any command with the environment of scipion loaded.
         runCmd(' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
+        
+    elif mode == MODE_PYTHON:
+        runScript(' '.join(['"%s"' % arg for arg in sys.argv[2:]]), 
+                  chdir=False)
 
     elif mode == MODE_TUTORIAL:
         runApp('pw_tutorial.py', sys.argv[2:])
@@ -485,6 +490,8 @@ MODE can be:
     last                   Same as 'project last'
 
     run COMMAND [ARG ...]  Run command in the Scipion environment.
+    
+    python [ARG ...]       Shortcut to 'scipion run python ...'
 
     stats                  Write git statistics to the data/stats folder.
 

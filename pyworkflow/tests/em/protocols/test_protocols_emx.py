@@ -62,6 +62,7 @@ class TestEmxBase(tests.BaseTest):
                                            objLabel='from emx (coordinatesT1)',
                                            importFrom=ProtImportParticles.IMPORT_FROM_EMX,
                                            emxFile=self.dataset.getFile('coordinatesT1'),
+                                           alignType=3,
                                            voltage=100,
                                            magnification=10000,
                                            samplingRate=2.46)
@@ -80,6 +81,7 @@ class TestEmxBase(tests.BaseTest):
                                          objLabel='emx - import ctf',
                                          importFrom=ProtImportParticles.IMPORT_FROM_EMX,
                                          emxFile=emxFn,
+                                         alignType=3,
                                          magnification=10000,
                                          samplingRate=2.8
                                          )
