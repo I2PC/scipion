@@ -734,7 +734,8 @@ class NmaAlignment(XmippProgramTest):
         self.runCase("-i 2tbv_prj00001.xmp  --pdb 2tbv.pdb --modes modelist.xmd --sampling_rate 6.4 -o output.xmd --resume",
                 preruns=["cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" ],
                 postruns=["xmipp_metadata_utilities -i %o/output.xmd --operate keep_column 'cost' -o %o/cost.xmd" ,'xmipp_metadata_utilities -i %o/cost.xmd --operate  modify_values "cost = round(cost*100.0)" '],
-                outputs=["cost.xmd"])
+                outputs=["cost.xmd"],
+		changeDir=True)
 
 
 class NmaAlignmentMpi(NmaAlignment):
@@ -747,7 +748,8 @@ class NmaAlignmentMpi(NmaAlignment):
         self.runCase("-i 2tbv_prj00001.xmp  --pdb 2tbv.pdb --modes modelist.xmd --sampling_rate 6.4 -o output.xmd --resume",
                 preruns=["cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" ],
                 postruns=["xmipp_metadata_utilities -i %o/output.xmd --operate keep_column 'cost' -o %o/cost.xmd" ,'xmipp_metadata_utilities -i %o/cost.xmd --operate  modify_values "cost = round(cost*100.0)" '],
-                outputs=["cost.xmd"])
+                outputs=["cost.xmd"],
+		changeDir=True)
 
 
 class RunMpi(XmippProgramTest):
@@ -771,7 +773,8 @@ class PdbNmaDeform(XmippProgramTest):
     def test_case1(self):
         self.runCase("--pdb 2tbv.pdb -o deformed.pdb --nma modelist.xmd --deformations 1000",
                 preruns=["cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" ],
-                outputs=["deformed.pdb"])
+                outputs=["deformed.pdb"],
+		changeDir=True)
 
 
 class PhantomCreate(XmippProgramTest):
