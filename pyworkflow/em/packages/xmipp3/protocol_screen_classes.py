@@ -38,7 +38,7 @@ from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
 import pyworkflow.em.metadata as md
 # import xmipp
 from xmipp3 import ProjMatcher
-
+from math import floor
         
 class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
     """Compares a set of classes or averages with the corresponding projections of a reference volume """
@@ -106,8 +106,9 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         anglesOutFn=self._getExtraPath("anglesCont.stk")
         residualsOutFn=self._getExtraPath("residuals.stk")
         projectionsOutFn=self._getExtraPath("projections.stk")
-        self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --oresiduals %s --oprojections %s --sampling %f" %\
-                    (anglesFn,anglesOutFn,volumeFn,residualsOutFn,projectionsOutFn,Ts))
+        xdim=self.inputVolume.get().getDim()[0]
+        self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
+                    (anglesFn,anglesOutFn,volumeFn,floor(xdim*0.1),residualsOutFn,projectionsOutFn,Ts))
     
     def joinStep(self, imgsFn, anglesContFn):
         imgSet = self.inputSet.get()

@@ -453,11 +453,11 @@ env.addPackage('nma',
                default=False)
 
 cryoem = env.addPackage(
-    'cryoem',
-    tar='cryoem-1.0.tgz',
-    default=False,
-    pythonMod=True,
-    deps=[numpy, scipy, matplotlib, cythongsl])
+                'cryoem',
+                tar='cryoem-1.0.tgz',
+                default=False,
+                pythonMod=True,
+                deps=[numpy, scipy, matplotlib, cythongsl])
 
 
 env.execute()
