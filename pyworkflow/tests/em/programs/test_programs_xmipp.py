@@ -773,7 +773,8 @@ class PdbNmaDeform(XmippProgramTest):
     def test_case1(self):
         self.runCase("--pdb 2tbv.pdb -o deformed.pdb --nma modelist.xmd --deformations 1000",
                 preruns=["cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" ],
-                outputs=["deformed.pdb"])
+                outputs=["deformed.pdb"],
+		changeDir=True)
 
 
 class PhantomCreate(XmippProgramTest):
