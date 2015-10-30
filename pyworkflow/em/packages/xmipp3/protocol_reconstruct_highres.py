@@ -43,7 +43,7 @@ from glob import glob
 
 from xmipp import MetaData, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FREQREAL, MDL_SAMPLINGRATE, MDL_WEIGHT_SSNR, \
                   MDL_WEIGHT, MD_APPEND, MDL_XSIZE, MDL_WEIGHT_CONTINUOUS2, MDL_CONTINUOUS_SCALE_X, MDL_CONTINUOUS_SCALE_Y, MDL_ANGLE_DIFF, \
-                  MDL_COUNT, MDL_SHIFT_X, MDL_SHIFT_Y, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_SCALE, MDL_MAXCC, MDL_MAXCC_PERCENTILE, MDL_WEIGHT_JUMPER, MDL_CTF_DEFOCUSU, \
+                  MDL_COUNT, MDL_SHIFT_X, MDL_SHIFT_Y, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_SCALE, MDL_MAXCC, MDL_MAXCC_PERCENTILE, MDL_WEIGHT_JUMPER, MDL_WEIGHT_JUMPER2, MDL_CTF_DEFOCUSU, \
                   MDL_COST, MDL_COST_PERCENTILE, MDL_CTF_MODEL, MDL_PARTICLE_ID, MDL_ANGLE_TILT
 
 from xmipp3 import HelicalFinder
@@ -799,6 +799,19 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
                 if self.splitMethod == self.SPLIT_STOCHASTIC:
                     cleanPath(fnPreviousAngles)
+                if iteration>2:
+                    fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-2))
+                    if self.splitMethod == self.SPLIT_FIXED:
+                        fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
+                    else:
+                        fnPreviousAngles=join(fnDirCurrent,"aux.xmd")
+                        self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
+                                    (join(fnDirPrevious,"angles.xmd"),fnAngles,fnPreviousAngles),numberOfMpi=1)
+                    self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s --set 2"%\
+                                (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper"),numberOfMpi=1)
+                    moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
+                    if self.splitMethod == self.SPLIT_STOCHASTIC:
+                        cleanPath(fnPreviousAngles)
 
             #if self.weightResiduals and exists(fnAnglesCont):
             #    fnCovariance=join(fnDirLocal,"covariance%02d.stk"%i)
@@ -825,8 +838,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 #    aux/=3
                 #    weight*=exp(-0.5*aux*aux)
                 if self.weightJumper and iteration>1:
-                    aux=md.getValue(MDL_WEIGHT_JUMPER,objId)
-                    weight*=aux
+                    w1=md.getValue(MDL_WEIGHT_JUMPER,objId)
+                    w2=1.0
+                    if iteration>2:
+                        w2=md.getValue(MDL_WEIGHT_JUMPER2,objId)
+                    weight*=w1*w2
+                        
                 md.setValue(MDL_WEIGHT,weight,objId)
             md.write(fnAngles)
             
