@@ -27,16 +27,14 @@
 This sub-package contains wrapper around Projection Outliers Xmipp program
 """
 
-from pyworkflow.object import Float
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam
-from pyworkflow.utils.path import cleanPath
-from pyworkflow.em.constants import ALIGN_PROJ
-from pyworkflow.em.protocol import ProtAnalysis2D
-from pyworkflow.em.data import Class2D, SetOfClasses2D
-from pyworkflow.em.packages.xmipp3.utils import iterMdRows
-from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
 from math import floor
+
+from pyworkflow.protocol.params import PointerParam
+from pyworkflow.utils.path import cleanPath
+from pyworkflow.em.protocol import ProtAnalysis2D
+from pyworkflow.em.data import SetOfClasses2D, Image
+from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLocation
+import pyworkflow.em.metadata as md
 
 import xmipp
 from xmipp3 import ProjMatcher
@@ -52,9 +50,9 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputSet', PointerParam, label="Input averages", important=True, 
+        form.addParam('inputSet', PointerParam, label="Input images", important=True, 
                       pointerClass='SetOfParticles', pointerCondition='hasAlignmentProj')
-        form.addParam('inputVolume', PointerParam, label="Volume to compare classes to", important=True,
+        form.addParam('inputVolume', PointerParam, label="Volume to compare images to", important=True,
                       pointerClass='Volume',
                       help='Volume to be used for class comparison')
         form.addParallelSection(threads=0, mpi=1)
@@ -67,8 +65,8 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         
         self._insertFunctionStep("convertStep", self.imgsFn)
         self._insertFunctionStep("produceResiduals", vol.getFileName(), self.imgsFn, vol.getSamplingRate())
-        self._insertFunctionStep("evaluateResiduals", self.imgsFn)
-        #self._insertFunctionStep("createOutputStep", self.imgsFn)
+        self._insertFunctionStep("evaluateResiduals")
+        self._insertFunctionStep("createOutputStep")
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self, imgsFn):
@@ -85,7 +83,7 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
                     (anglesFn,anglesOutFn,volumeFn,floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
     
-    def evaluateResiduals(self, outImgsFn):
+    def evaluateResiduals(self):
         # Evaluate each image
         fnAutoCorrelations = self._getExtraPath("autocorrelations.xmd")
         stkAutoCorrelations = self._getExtraPath("autocorrelations.stk")
@@ -96,25 +94,38 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         self.runJob("xmipp_metadata_utilities", '-i %s --set join %s imageResidual' % (anglesOutFn, fnAutoCorrelations), numberOfMpi=1)
         cleanPath(fnAutoCorrelations)
     
-    def createOutputStep(self, outImgsFn):
-        inputSet = self.inputSet.get()
-        if isinstance(inputSet, SetOfClasses2D):
-            outputSet = self._createSetOfClasses2D(inputSet.getImages())
-            outputName = 'outputClasses'
-        else: # SetOfAverages
-            outputSet = self._createSetOfAverages()
-            outputSet.setAlignment3D()
-            outputName = 'outputAverages'
-            
-        md = xmipp.MetaData(outImgsFn)
-        outputSet.copyInfo(inputSet)
-        outputSet.copyItems(inputSet, 
-                            updateItemCallback=self.updateItem,
-                            itemDataIterator=iterMdRows(md))
+    def createOutputStep(self):
+        outputSet = self._createSetOfParticles()
+        imgSet = self.inputSet.get()
+        imgFn = self._getExtraPath("anglesCont.xmd")
+        outputSet.copyInfo(imgSet)
+        outputSet.setAlignmentProj()
+        outputSet.copyItems(imgSet,
+                            updateItemCallback=self._processRow,
+                            itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
 
-        self._defineOutputs(**{outputName: outputSet})
-        self._defineTransformRelation(inputSet, outputSet)
-    
+        self._defineOutputs(outputParticles=outputSet)
+        self._defineSourceRelation(self.inputSet, outputSet)
+
+    def _processRow(self, particle, row):
+        setXmippAttributes(particle, row,
+                           xmipp.MDL_ZSCORE_RESVAR, xmipp.MDL_ZSCORE_RESMEAN, xmipp.MDL_ZSCORE_RESCOV, xmipp.MDL_IMAGE_ORIGINAL,
+                           xmipp.MDL_COST, xmipp.MDL_CONTINUOUS_GRAY_A, xmipp.MDL_CONTINUOUS_GRAY_B, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y)
+        def __setXmippImage(label):
+            attr = '_xmipp_' + xmipp.label2Str(label)
+            if not hasattr(particle, attr):
+                img = Image()
+                setattr(particle, attr, img)
+                img.setSamplingRate(particle.getSamplingRate())
+            else:
+                img = getattr(particle, attr)
+            img.setLocation(xmippToLocation(row.getValue(label)))
+        
+        __setXmippImage(xmipp.MDL_IMAGE)
+        __setXmippImage(xmipp.MDL_IMAGE_REF)
+        __setXmippImage(xmipp.MDL_IMAGE_RESIDUAL)
+        __setXmippImage(xmipp.MDL_IMAGE_COVARIANCE)
+
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
@@ -149,30 +160,3 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         else:
             xDim = imgSet.getDim()[0]
         return xDim
-    
-    def updateItem(self, item, row):
-        from convert import locationToXmipp
-        # ToDo: uncomment this lines when the output metadata has ITEM_ID
-#         if item.getObjId() != row.getValue(xmipp.MDL_ITEM_ID):
-#             raise Exception("The objId is not equal to ITEM_ID. Please, sort the metadata.")
-        if isinstance(item, Class2D):
-            img = item.getRepresentative()
-            index, fn = img.getLocation()
-        else:
-            index, fn = item.getLocation()
-            
-        objLoc = locationToXmipp(index, fn)
-        mdLoc = row.getValue(xmipp.MDL_IMAGE)
-        if objLoc != mdLoc:
-            print objLoc+" "+mdLoc
-            raise Exception("The image isn't the same. Please, sort the metadata.")
-
-        item._xmipp_maxCC = Float(row.getValue(xmipp.MDL_MAXCC))
-        item._xmipp_zScoreResCov = Float(row.getValue(xmipp.MDL_ZSCORE_RESCOV))
-        item._xmipp_zScoreResMean = Float(row.getValue(xmipp.MDL_ZSCORE_RESMEAN))
-        item._xmipp_zScoreResVar = Float(row.getValue(xmipp.MDL_ZSCORE_RESVAR))
-        if isinstance(item, Class2D):
-            particle = item.getRepresentative()
-        else:
-            particle = item
-        particle.setTransform(rowToAlignment(row, alignType=ALIGN_PROJ))
