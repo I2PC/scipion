@@ -95,6 +95,9 @@ class HostConfig():
     def getSubmitTemplate(self):
         return self.queueSystem.getSubmitTemplate()
     
+    def getQueuesDefault(self):
+        return self.queueSystem.queuesDefault
+    
     def getMpiCommand(self):
         return self.mpiCommand.get()
     
