@@ -799,7 +799,7 @@ class PhantomSimulateMicroscope(XmippProgramTest):
                 outputs=["smallStackPlusCtf.stk"])
     def test_case2(self):
         self.runCase("-i input/projectionsBacteriorhodopsin.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam --targetSNR 0.3",
-                outputs=["smallStackPlusCtf.stk"])
+                outputs=["smallStackPlusCtf.stk"],random=True)
 
 
 class PhantomTransform(XmippProgramTest):
