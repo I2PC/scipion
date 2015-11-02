@@ -91,7 +91,7 @@ def loadHostsConf(hostsConf):
 
                 if cp.has_option(hostName, var):
                     for key, value in json.loads(get(var)).iteritems():
-                        host.queueSystem.queues[key] = value                
+                        od[key] = value                
                 
                 return od
 

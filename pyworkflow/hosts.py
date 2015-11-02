@@ -196,11 +196,11 @@ class QueueSystemConfig(OrderedObject):
         # when mandatory was a boolean
         # now it should use the number of CPU
         # that should force to use the queue
-        if isinstance(mandatory, bool):
-            if mandatory:
-                mandatory = 1
-            else:
-                mandatory = 0 
+        if mandatory in ['False', 'false']:
+            mandatory = 0
+        elif mandatory in ['True', 'true']:
+            mandatory = 1
+            
         self.mandatory.set(mandatory)
     
     def setSubmitTemplate(self, submitTemplate):
