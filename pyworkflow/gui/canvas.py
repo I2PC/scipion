@@ -289,7 +289,7 @@ class Canvas(tk.Canvas, Scrollable):
                 for child in node.getChilds():
                     self._drawNodes(child, visitedDict)
             else:
-                self._setupParentProperties(node)
+                self._setupParentProperties(node, visitedDict)
                 
     def _setupParentProperties(self, node, visitedDict):
         """ This methods is used for collapsed nodes, in which 
