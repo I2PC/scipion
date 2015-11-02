@@ -1112,10 +1112,16 @@ class ProtocolsView(tk.Frame):
             self.outputViewer.addFile(out)
             self.outputViewer.addFile(log)
             self.outputViewer.setIndex(i) # Preserve the last selected tab
+            self.outputViewer.selectedText().goEnd()
+            # when there are not logs, force re-load next time
+            if (not os.path.exists(out) or
+                not os.path.exists(log)):
+                self._lastStatus = None
+                
         elif  prot.isActive() or prot.getStatus() != self._lastStatus:
+            doClear = self._lastStatus is None                
             self._lastStatus = prot.getStatus()
-            self.outputViewer.refreshAll()
-            
+            self.outputViewer.refreshAll(clear=doClear, goEnd=doClear)
 
     def _scheduleRunsUpdate(self, secs=1):
         #self.runsTree.after(secs*1000, self.refreshRuns)
@@ -1140,6 +1146,7 @@ class ProtocolsView(tk.Frame):
             self._selection.clear()
             self._selection.append(prot.getObjId())
             self._updateSelection()
+            self._lastStatus = None # clear lastStatus to force re-load the logs
             msg = ""
             
         # Update runs list display, even in save we
@@ -1202,6 +1209,7 @@ class ProtocolsView(tk.Frame):
     def _stopProtocol(self, prot):
         if pwgui.dialog.askYesNo(Message.TITLE_STOP_FORM, Message.LABEL_STOP_FORM, self.root):
             self.project.stopProtocol(prot)
+            self._lastStatus = None # force logs to re-load
             self._scheduleRunsUpdate()
 
     def _analyzeResults(self, prot):        
