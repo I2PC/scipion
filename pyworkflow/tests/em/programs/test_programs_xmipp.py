@@ -941,7 +941,7 @@ class TransformAddNoise(XmippProgramTest):
 
     def test_case1(self):
         self.runCase("-i input/cleanImage.spi --type gaussian 10 5 -o %o/noisyGaussian.spi",
-                outputs=["noisyGaussian.spi"])
+                outputs=["noisyGaussian.spi"], random=True)
 
 
 class TransformAdjustVolumeGreyLevels(XmippProgramTest):
