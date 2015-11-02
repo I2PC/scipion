@@ -699,7 +699,7 @@ class ClassifyCL2DCoreAnalysisMpi(XmippProgramTest):
     def test_case1(self):
         self.runCase("--dir %o/input/CL2DBacteriorhodopsin --root class --computeCore 3.000000 3.000000",
                 preruns=["mkdir %o/input ; cp -r input/CL2DBacteriorhodopsin %o/input ; rm -rf %o/input/CL2DBacteriorhodopsin/.svn ; cp input/projectionsBacteriorhodopsin.stk %o/input" ],
-                outputs=[])
+                outputs=['input/CL2DBacteriorhodopsin/level_00/class_classes_core.xmd'])
 
 
 class CtfCorrectIdrMpi(CtfCorrectIdr):
