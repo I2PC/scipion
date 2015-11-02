@@ -191,7 +191,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         self.runJob("xmipp_reconstruct_fourier", reconsArgs)
         t.toc('Reconstruct fourier took: ')
         
-        xdim = self.inputSet.get().getDim()[0]
+        xdim = self.inputSet.get().getDimensions()[0]
         maskArgs = "-i %s --mask circular %d -v 0" % (volFn, -xdim/2)
         self.runJob('xmipp_transform_mask', maskArgs, numberOfMpi=1)
         
@@ -228,6 +228,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             vol.setLocation(self.getIterVolume(lastIter))
             vol.setSamplingRate(self.inputSet.get().getSamplingRate())
             self._defineOutputs(outputVolume=vol)
+            output = vol
         else:
             volSet = self._createSetOfVolumes()
             volSet.setSamplingRate(self.inputSet.get().getSamplingRate())
@@ -239,8 +240,9 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                 vol.setLocation(fnVolume)
                 volSet.append(vol)
             self._defineOutputs(outputVolumes=volSet)
+            output = volSet
 
-        self._defineSourceRelation(vol, self.inputSet)
+        self._defineSourceRelation(self.inputSet, output)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):

@@ -1,9 +1,7 @@
 package xmipp.viewer.particlepicker.tiltpair.model;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import xmipp.jni.Particle;
 import xmipp.jni.TiltPairAligner;
 import xmipp.utils.XmippMessage;
@@ -56,6 +54,8 @@ public class UntiltedMicrograph extends Micrograph
 	public void reset(TiltPairPicker picker)
 	{
 		angles = null;
+		for(UntiltedParticle p: particles)
+			p.setTiltedParticle(null);
 		getParticles().clear();
 		getTiltedMicrograph().getParticles().clear();
 		//JMRT: I think is very very dangerous to delete the existing pos files.
@@ -140,13 +140,21 @@ public class UntiltedMicrograph extends Micrograph
 		Particle p = tpa.getTiltedParticle(x, y);
 		return p;
 	}
+	
+	public Particle getAlignerUntiltedParticle(int x, int y)
+	{
+		if (getAddedCount() < getAlignmentMin())
+			return null;
+		Particle p = tpa.getUntiltedParticle(x, y);
+		return p;
+	}
 
 	public void setAlignerTiltedParticle(UntiltedParticle up)
 	{
-                tiltedmicrograph.removeParticle(up.getTiltedParticle());
+        tiltedmicrograph.removeParticle(up.getTiltedParticle());
 		Particle p = getAlignerTiltedParticle(up.getX(), up.getY());
-                if(!tiltedmicrograph.fits(p.getX(), p.getY(), up.getParticlePicker().getSize()))
-                        p = null;
+        if(!tiltedmicrograph.fits(p.getX(), p.getY(), up.getParticlePicker().getSize()))
+                p = null;
 		if (p != null)
 		{
 			TiltedParticle tp = new TiltedParticle(p.getX(), p.getY(), up);

@@ -543,6 +543,15 @@ void correlation_matrix(const MultidimArray< std::complex< double > > & FFT1,
                         CorrelationAux &aux,
                         bool center=true);
 
+/** Correlation matrix.
+ * R must already be with the right size.
+ */
+void correlation_matrix(const MultidimArray< std::complex< double > > & FFT1,
+                        const MultidimArray< std::complex< double > > & FFT2,
+                        MultidimArray<double>& R,
+                        CorrelationAux &aux,
+                        bool center=true);
+
 /** Autocorrelation function of an image
  * @ingroup FourierOperations
  *

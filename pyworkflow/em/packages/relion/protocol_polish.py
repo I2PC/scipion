@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -34,7 +35,7 @@ from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtProcessParticles
 
 from protocol_base import ProtRelionBase
-
+from convert import getEnviron
 
 class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     """    
@@ -50,13 +51,15 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         """ This function is mean to be called after the 
         working dir for the protocol have been set. (maybe after recovery from mapper)
         """
+        refineRun = self.refineRun.get()
+        refineRun._initialize() # load filenames stuff
         self._createFilenameTemplates()
         self._createIterTemplates()
-        self._createFrameTemplates()
+        self._createFrameTemplates(refineRun)
     
-    def _createFrameTemplates(self):
+    def _createFrameTemplates(self, refineRun):
         """ Setup the regex on how to find iterations. """
-        self._frameTemplate = self._getFileName('guinier_frame', frame=0, iter=self._lastIter()).replace('000','???')
+        self._frameTemplate = self._getFileName('guinier_frame', frame=0, iter=refineRun._lastIter()).replace('000','???')
         # Frames will be identify by _frameXXX_ where XXX is the frame number
         # and is restricted to only 3 digits.
         self._frameRegex = re.compile('_frame(\d{3,3})_')
@@ -114,8 +117,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
                       help='')
         
         form.addParallelSection(threads=0, mpi=3) 
-        #TODO: Add an option to allow the user to decide if copy binary files or not        
-            
+    
     #--------------------------- INSERT steps functions --------------------------------------------  
 
     def _insertAllSteps(self): 
@@ -127,7 +129,6 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     def _insertPolishStep(self):
         refineRun = self.refineRun.get()
         imgSet = refineRun._getInputParticles()
-        refineRun._initialize() # load filenames stuff
         
         imgStar = self._getFileName('data', iter=refineRun._lastIter())
         
@@ -162,7 +163,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         """
         from pyworkflow.utils.path import copyTree
         copyTree(self.refineRun.get()._getExtraPath(), self._getExtraPath())
-        self.runJob(self._getProgram('relion_particle_polish'), params)
+        self.runJob(self._getProgram('relion_particle_polish'), params, env=getEnviron(self.refineRun.get().useRelion14))
     
     def organizeDataStep(self):
         from pyworkflow.utils import moveFile
@@ -191,21 +192,23 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     def createOutputStep(self):
         from pyworkflow.em import ALIGN_PROJ
         from pyworkflow.em.packages.relion.convert import readSetOfParticles
-        imgSet = self.refineRun.get()._getInputParticles()
+        refineRun = self.refineRun.get()
+        
+        imgSet = refineRun._getInputParticles()
         vol = Volume()
-        vol.setFileName(self._getFileName('volume_shiny', iter=self.refineRun._lastIter()))
+        vol.setFileName(self._getFileName('volume_shiny', iter=refineRun._lastIter()))
         vol.setSamplingRate(imgSet.getSamplingRate())
-        
         shinyPartSet = self._createSetOfParticles()
-        
         shinyPartSet.copyInfo(imgSet)
         readSetOfParticles(self._getFileName('shiny'), shinyPartSet, alignType=ALIGN_PROJ)
         
         self._defineOutputs(outputParticles=shinyPartSet)
-        self._defineSourceRelation(imgSet, shinyPartSet)
         self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(imgSet, vol)
-
+        
+        self._defineSourceRelation(refineRun.inputParticles, shinyPartSet)
+        self._defineSourceRelation(refineRun.inputMovieParticles, shinyPartSet)
+        self._defineSourceRelation(refineRun.inputParticles, vol)
+        self._defineSourceRelation(refineRun.inputMovieParticles, vol)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

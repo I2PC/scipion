@@ -16,24 +16,26 @@
 
 /*----------   Statistics --------------------------------------- */
 //Copy of the Metadata is required to remove disabled objects before computing stats
-void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, MDLabel image_label)
+void getStatistics(MetaData md, Image<double> & _ave, Image<double> & _sd, bool apply_geo, bool wrap, MDLabel image_label)
 {
 
     bool first = true;
     int n = 0;
     //Remove disabled images if present
-    MD.removeDisabled();
+    md.removeDisabled();
     // Calculate Mean
-    if (MD.isEmpty())
+    if (md.isEmpty())
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
 
     Image<double> image, tmpImg;
     FileName fnImg;
-    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    ApplyGeoParams params;
+    params.wrap = wrap;
+    FOR_ALL_OBJECTS_IN_METADATA(md)
     {
-        MD.getValue(image_label,fnImg,__iter.objId);
+        md.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
-            image.readApplyGeo(fnImg, MD,__iter.objId);
+            image.readApplyGeo(fnImg, md,__iter.objId, params);
         else
             image.read(fnImg);
         if (first)
@@ -51,11 +53,11 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool 
     _sd = _ave;
     _sd().initZeros();
     // Calculate SD
-    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    FOR_ALL_OBJECTS_IN_METADATA(md)
     {
-        MD.getValue(image_label,fnImg,__iter.objId);
+        md.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
-            image.readApplyGeo(fnImg, MD,__iter.objId);
+            image.readApplyGeo(fnImg, md,__iter.objId, params);
         else
             image.read(fnImg);
         tmpImg() = ((image() - _ave()));
@@ -65,6 +67,36 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool 
     _sd() /= (n - 1);
     _sd().selfSQRT();
 }
+
+/* Write all images in a MetaData to a binary stack (usually .stk or .mrcs) */
+
+void writeMdToStack(const MetaData &md, const FileName &fnStack, bool apply_geo, bool wrap, MDLabel image_label)
+{
+    size_t i = 0;
+
+    if (md.isEmpty())
+        REPORT_ERROR(ERR_MD_OBJECTNUMBER, "writeMdToStack: input MetaData is empty!!!");
+
+    ImageGeneric image;
+    FileName fnImg;
+    ApplyGeoParams params;
+    params.wrap = wrap;
+
+    int mode = WRITE_OVERWRITE;
+
+    FOR_ALL_OBJECTS_IN_METADATA(md)
+    {
+        i++;
+        md.getValue(image_label, fnImg, __iter.objId);
+
+        if (apply_geo)
+            image.readApplyGeo(fnImg, md, __iter.objId, params);
+        else
+            image.read(fnImg);
+        image.write(fnStack, i, false, mode);
+        mode = WRITE_APPEND;
+    }
+} /* function writeMdToStack */
 
 
 /*----------   Statistics --------------------------------------- */
@@ -98,22 +130,22 @@ Matrix2D<double> getMatrix(char* matrix)
 
 
 //Copy of the Metadata is required to remove disabled objects before computing stats
-void getAverageApplyGeo(MetaData MD, MultidimArray<double> & _ave, MDLabel image_label)
+void getAverageApplyGeo(MetaData md, MultidimArray<double> & _ave, MDLabel image_label)
 {
     bool first = true;
     int n = 0;
-    MD.removeDisabled();
+    md.removeDisabled();
     // Calculate Mean
-    if (MD.isEmpty())
+    if (md.isEmpty())
         return;
 
     Image<double> image;
     FileName fnImg;
 
-    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    FOR_ALL_OBJECTS_IN_METADATA(md)
     {
-        MD.getValue(image_label,fnImg,__iter.objId);
-        image.readApplyGeo(fnImg, MD,__iter.objId);
+        md.getValue(image_label,fnImg,__iter.objId);
+        image.readApplyGeo(fnImg, md,__iter.objId);
 
         if (first)
         {
@@ -130,7 +162,7 @@ void getAverageApplyGeo(MetaData MD, MultidimArray<double> & _ave, MDLabel image
 
 /*----------   Statistics --------------------------------------- */
 //Copy of the Metadata is required to remove disabled objects before computing stats
-void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
+void getStatistics(MetaData md, double& _ave, double& _sd, double& _min,
                    double& _max, bool apply_geo, MDLabel image_label)
 {
     _min = MAXDOUBLE;
@@ -138,19 +170,19 @@ void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
     _ave = _sd = 0;
     int n = 0;
     //Remove disabled images if present
-    MD.removeDisabled();
+    md.removeDisabled();
     // Calculate Mean
-    if (MD.isEmpty())
+    if (md.isEmpty())
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
 
     ImageGeneric image;
     double min, max, avg, stddev;
     FileName fnImg;
-    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    FOR_ALL_OBJECTS_IN_METADATA(md)
     {
-        MD.getValue(image_label,fnImg,__iter.objId);
+        md.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
-            image.readApplyGeo(fnImg, MD,__iter.objId);
+            image.readApplyGeo(fnImg, md,__iter.objId);
         else
             image.read(fnImg, DATA, ALL_IMAGES, true);
         image().computeStats(avg, stddev, min, max);
@@ -213,12 +245,12 @@ void getFourierStatistics(MetaData &MDin, double sam, MetaData &MDout,
     }
 }
 
-void getImageSize(const MetaData &MD, size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim, MDLabel image_label)
+void getImageSize(const MetaData &md, size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim, MDLabel image_label)
 {
-    if (!MD.isEmpty())
+    if (!md.isEmpty())
     {
         FileName fn_img;
-        MD.getValue(image_label, fn_img, MD.firstObject());
+        md.getValue(image_label, fn_img, md.firstObject());
         getImageSize(fn_img, Xdim, Ydim, Zdim, Ndim);
 
     }
@@ -406,7 +438,7 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
         }
         auxFn.compose(blocks[b],fnOut);
         md.write(auxFn, MD_APPEND);
-        //MD._write(fnOut,blocks[b],MD_APPEND);
+        //md._write(fnOut,blocks[b],MD_APPEND);
     }
 }
 

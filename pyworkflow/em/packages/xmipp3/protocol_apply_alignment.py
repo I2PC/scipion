@@ -118,10 +118,10 @@ class XmippProtApplyAlignment(ProtAlign2D):
         avg.copyInfo(alignedSet)
 
         self._defineOutputs(outputAverage=avg)
-        self._defineSourceRelation(particles, avg)
+        self._defineSourceRelation(self.inputParticles, avg)
 
         self._defineOutputs(outputParticles=alignedSet)
-        self._defineSourceRelation(particles, alignedSet)
+        self._defineSourceRelation(self.inputParticles, alignedSet)
                 
 
     #--------------------------- INFO functions --------------------------------------------

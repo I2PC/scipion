@@ -599,6 +599,14 @@ FileName FileName::replaceSubstring(const String &subOld, const String &subNew) 
     return result;
 }
 
+// Replace all appearances of one substring by other .......................................
+FileName FileName::replaceCharacter(char oldChar, char newChar) const
+{
+    FileName result = *this;
+    std::replace(result.begin(), result.end(), oldChar, newChar);
+    return result;
+}
+
 // Substitute one extension by other .......................................
 FileName FileName::replaceExtension(const String &newExt) const
 {

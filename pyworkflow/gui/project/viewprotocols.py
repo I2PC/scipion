@@ -427,11 +427,12 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                 image = getattr(obj, '_icon', '')
                 parent = self.inputParentDict[obj._parentKey]
                 
+                suffix = ''
                 if obj.hasExtended():
-                    extendedValue = obj.getExtendedValue()
-                    if obj.hasExtendedAttribute():
+                    extendedValue = obj.getExtended()
+                    if obj.hasExtended():
                         suffix = '[%s]' % extendedValue
-                    elif obj.hasExtendedItemId():
+                    elif obj.hasExtended():
                         suffix = '[Item %s]' % extendedValue
                     if obj.get() is None:
                         labelObj = obj.getObjValue()
@@ -440,7 +441,6 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                         labelObj = obj.get()
                 else:
                     labelObj = obj.get()
-                    suffix = ''
                     
                 objKey = obj._parentKey + str(labelObj.getObjId())
                 label = self.getObjectLabel(labelObj, self.mapper.getParent(labelObj))
@@ -483,6 +483,7 @@ class ProtocolsView(tk.Frame):
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
         self.root.bind("<Control-f>", self._findProtocol)
+        self.root.bind("<Control-a>", self._selectAllProtocols)
         self.__autoRefresh = None
         self.__autoRefreshCounter = 3 # start by 3 secs  
 
@@ -648,8 +649,11 @@ class ProtocolsView(tk.Frame):
             proc = psutil.Process(os.getpid())
             mem = psutil.virtual_memory()
             print "------------- refreshing ---------- "
-            print "  open files: ", len(proc.get_open_files())
-            print "  used memory: ", pwutils.prettySize(mem.used)
+            files = proc.get_open_files()
+            print "  open files: ", len(files)
+            for f in files:
+                print "    - %s, %s" % (f.path, f.fd)
+            print "  memory percent: ", proc.get_memory_percent()
         self.updateRunsTree(True)
         self.updateRunsGraph(True)
 
@@ -907,6 +911,12 @@ class ProtocolsView(tk.Frame):
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
 
+    def _selectAllProtocols(self, e=None):
+        self._selection.clear()
+        for prot in self.project.getRuns():
+            self._selection.append(prot.getObjId())
+        self._updateSelection()
+        
     def _updateSelection(self):
         self._fillSummary()
         self._fillMethod()
@@ -932,12 +942,13 @@ class ProtocolsView(tk.Frame):
             if prot is None:  # in case it is the main "Project" node
                 return
             g = self.project.getRunsGraph(refresh=False)
+            
             for node in g.getNodes():
                 if node.run and node.run.getObjId() in self._selection:
                     # This option is only for compatibility with all projects
                     if hasattr(node, 'item'):
                         node.item.setSelected(False)
-                    node.item.setSelected(False)
+
             item.setSelected(True)
         
         self._selection.clear()
@@ -1161,7 +1172,10 @@ class ProtocolsView(tk.Frame):
         protocols = self._getSelectedProtocols()
         if len(protocols) == 1:
             newProt = self.project.copyProtocol(protocols[0])
-            self._openProtocolForm(newProt)
+            if newProt is None:
+                self.windows.showError("Error copying protocol.!!!")
+            else:
+                self._openProtocolForm(newProt)
         else:
             self.project.copyProtocol(protocols)
             self.refreshRuns()
@@ -1195,7 +1209,7 @@ class ProtocolsView(tk.Frame):
         viewers = em.findViewers(prot.getClassName(), DESKTOP_TKINTER)
         if len(viewers):
             #TODO: If there are more than one viewer we should display a selection menu
-            firstViewer = viewers[0](project=self.project, protocol=prot) # Instanciate the first available viewer
+            firstViewer = viewers[0](project=self.project, protocol=prot, parent=self.windows) # Instanciate the first available viewer
             if isinstance(firstViewer, ProtocolViewer):
                 firstViewer.visualize(prot, windows=self.windows)
             else:
@@ -1206,7 +1220,9 @@ class ProtocolsView(tk.Frame):
                 if len(viewers):
                     #TODO: If there are more than one viewer we should display a selection menu
                     viewerclass = viewers[0]
-                    firstViewer = viewerclass(project=self.project, protocol=prot) # Instanciate the first available viewer
+                    firstViewer = viewerclass(project=self.project, 
+                                              protocol=prot,# Instanciate the first available viewer
+                                              parent=self.windows)
                     firstViewer.visualize(output, windows=self.windows, protocol=prot)#FIXME:Probably o longer needed protocol on args, already provided on init
             
         

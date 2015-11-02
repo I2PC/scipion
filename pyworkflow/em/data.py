@@ -485,6 +485,7 @@ class Image(EMObject):
         filePaths.add(self.getFileName())
         return filePaths
 
+
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
     def __init__(self, **args):
@@ -495,7 +496,7 @@ class Micrograph(Image):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
+        if self._micName.get():
             return self._micName.get()
         else:
             self.getFileName()
@@ -561,6 +562,7 @@ class Volume(Image):
     """ Represents an EM Volume object """
     def __init__(self, **args):
         Image.__init__(self, **args)
+        self._classId = Integer()
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
@@ -576,6 +578,16 @@ class Volume(Image):
                 return x, y, n
         return None
         
+    def getClassId(self):
+        return self._classId.get()
+    
+    def setClassId(self, classId):
+        self._classId.set(classId)
+        
+    def hasClassId(self):
+        return self._classId.hasValue()
+
+
 class VolumeMask(Volume):
     """ A 3D mask to be used with volumes. """
     pass
@@ -613,8 +625,13 @@ class PdbFile(EMFile):
     
     
 class EMSet(Set, EMObject):
+    
     def _loadClassesDict(self):
-        return globals()
+        import pyworkflow.em as em
+        classDict = em.getObjects()
+        classDict.update(globals())
+        
+        return classDict
     
     def copyInfo(self, other):
         """ Define a dummy copyInfo function to be used
@@ -652,6 +669,9 @@ class EMSet(Set, EMObject):
             else:
                 if itemDataIterator is not None:
                     next(itemDataIterator) # just skip disabled data row
+                    
+    def getFiles(self):
+        return Set.getFiles(self)
   
   
 class SetOfImages(EMSet):
@@ -784,7 +804,7 @@ class SetOfImages(EMSet):
         _,_,_, ndim = ImageHandler().getDimensions(fnStack)
         img = self.ITEM_TYPE()
         for i in range(1, ndim+1):
-            img.cleanObjId()
+            img.setObjId(None)
             img.setLocation(i, fnStack)
             if postprocessImage is not None:
                 postprocessImage(img)
@@ -798,7 +818,7 @@ class SetOfImages(EMSet):
         return x, y, z
     
     def getXDim(self):
-        return self.getDim()[0]
+        return self.getDim()[0] if self.getDim() is not None else 0
     
     def isOddX(self):
         """ Return True if the first item x dimension is odd. """
@@ -817,7 +837,9 @@ class SetOfImages(EMSet):
             sampling = -999.0
         if self._firstDim.isEmpty():
             try:
-                self._firstDim.set(self.getFirstItem().getDim())
+                firstItem = self.getFirstItem()
+                if firstItem is not None:
+                    self._firstDim.set(firstItem.getDim())
             except Exception, ex:
                 print "Error reading dimension: ", ex
                 import traceback
@@ -929,7 +951,7 @@ class SetOfParticles(SetOfImages):
         from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
-        self.setHasCTF(other.hasCTF())    
+        self.setHasCTF(other.hasCTF())
 
 
 class SetOfAverages(SetOfParticles):
@@ -942,6 +964,7 @@ class SetOfAverages(SetOfParticles):
 class SetOfVolumes(SetOfImages):
     """Represents a set of Volumes"""
     ITEM_TYPE = Volume
+    REP_TYPE = Volume
     
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
@@ -1070,10 +1093,7 @@ class Coordinate(EMObject):
         self._micName.set(micName)
     
     def getMicName(self):
-        if self._micName is not None:
-            return self._micName.get()
-        else:
-            self.getFileName()
+        return self._micName.get()
 
 
 class SetOfCoordinates(EMSet):
@@ -1252,6 +1272,8 @@ class Class3D(SetOfParticles):
     Usually the representative of the class is a Volume 
     reconstructed from the particles assigned to the class.
     """
+    REP_TYPE = Volume
+    
     def copyInfo(self, other):
         """ Copy basic information (id and other properties) but not _mapperPath or _size
         from other set of micrographs to current one.
@@ -1391,7 +1413,8 @@ class SetOfClasses(EMSet):
                       updateItemCallback=None,
                       updateClassCallback=None,
                       itemDataIterator=None,
-                      classifyDisabled=False):
+                      classifyDisabled=False,
+                      iterParams=None):
         """ Classify items from the self.getImages() and add the needed classes.
         This function iterates over each item in the images and call
         the updateItemCallback to register the information coming from
@@ -1401,8 +1424,9 @@ class SetOfClasses(EMSet):
         """
         clsDict = {} # Dictionary to store the (classId, classSet) pairs
         inputSet = self.getImages()
+        iterParams = iterParams or {}
         
-        for item in inputSet:
+        for item in inputSet.iterItems(**iterParams):
             # copy items if enabled or copyDisabled=True
             if classifyDisabled or item.isEnabled():
                 newItem = item.clone()
@@ -1519,13 +1543,15 @@ class Movie(Micrograph):
         self._alignment = None
 
     def isCompressed(self):
-        return self.getFileName().endswith('bz2') 
+        return self.getFileName().endswith('bz2') or self.getFileName().endswith('tbz')
         
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
         Consider compressed Movie files"""
         if not self.isCompressed():
-            return Image.getDim(self)
+            fn = self.getFileName()
+            if fn is not None and exists(fn.replace(':mrc', '')):
+                return ImageHandler().getDimensions(self)
         return None
     
     def hasAlignment(self):
@@ -1535,6 +1561,11 @@ class Movie(Micrograph):
         return self._alignment
     
     def setAlignment(self, alignment):
+        """Alignment are stored as a vector
+        containing x and y coordinates. In this way 1 2 3 4
+        are the data related with 2 frames with shifts (1,2)
+        and (3,4)
+        """
         self._alignment = alignment
     
     
@@ -1569,12 +1600,40 @@ class SetOfMovies(SetOfMicrographsBase):
     def __init__(self, **kwargs):
         SetOfMicrographsBase.__init__(self, **kwargs)
         self._gainFile = String()
+        self._darkFile = String()
+        self._firstFrameNum = Integer(0)
         
     def setGain(self, gain):
         self._gainFile.set(gain)
         
     def getGain(self):
         return self._gainFile.get()
+
+    def setDark(self, dark):
+        self._darkFile.set(dark)
+        
+    def getDark(self):
+        return self._darkFile.get()
+
+    def __str__(self):
+        """ String representation of a set of movies. """
+        sampling = self.getSamplingRate()
+
+        if not sampling:
+            print "FATAL ERROR: Object %s has no sampling rate!!!" % self.getName()
+            sampling = -999.0
+        ####self._firstFrameNum.set(self.getDimensions()[3])
+        if self._firstDim.isEmpty() or self._firstFrameNum==0:
+            try:
+                self._firstDim.set(self.getFirstItem().getDim())
+                self._firstFrameNum.set(self.getDimensions()[3])
+            except Exception, ex:
+                print "Error reading dimension: ", ex
+                import traceback
+                traceback.print_exc()
+        dimStr = str(self._firstDim)
+        s = "%s (%d items, %d frames, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), self._firstFrameNum, dimStr, sampling)
+        return s
     
     
 class MovieParticle(Particle):

@@ -34,6 +34,8 @@ void ProgCTFPhaseFlipping::defineParams()
     addParamsLine(" -i <file>               : Input micrograph");
     addParamsLine(" -o <file>               : Output micrograph");
     addParamsLine(" --ctf <ctfparam_file>   : CTF description");
+    addParamsLine(" [--sampling <T=-1>]     : Sampling rate of the input micrograph.");
+    addParamsLine("                         : If not given, then it is assumed to be the sampling rate in the ctfparam times the downsampling.");
     addParamsLine(" [--downsampling <D=1>]  : Downsampling factor of the input micrograph with respect to the original");
     addParamsLine("                         : micrograph.");
 }
@@ -44,6 +46,7 @@ void ProgCTFPhaseFlipping::readParams()
     fn_out       = getParam("-o");
     fnt_ctf      = getParam("--ctf");
     downsampling = getDoubleParam("--downsampling");
+    Tm           = getDoubleParam("--sampling");
 }
 
 void ProgCTFPhaseFlipping::show()
@@ -54,6 +57,7 @@ void ProgCTFPhaseFlipping::show()
     << "input_micrograph:      " << fn_in        << std::endl
     << "output_micrograph:     " << fn_out       << std::endl
     << "ctf_param_file:        " << fnt_ctf      << std::endl
+    << "sampling:              " << Tm           << std::endl
     << "downsampling:          " << downsampling << std::endl
     ;
 }
@@ -70,7 +74,10 @@ void ProgCTFPhaseFlipping::run()
     CTFDescription ctf;
     ctf.clear();
     ctf.read(fnt_ctf);
-    ctf.changeSamplingRate(ctf.Tm*downsampling);
+    if (Tm<0)
+    	ctf.changeSamplingRate(ctf.Tm*downsampling);
+    else
+    	ctf.changeSamplingRate(Tm);
     ctf.produceSideInfo();
 
     actualPhaseFlip(M_in(),ctf);

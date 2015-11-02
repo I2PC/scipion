@@ -20,6 +20,7 @@
 # * You should have received a copy of the GNU General Public License
 # * along with this program; if not, write to the Free Software
 # * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
@@ -89,7 +90,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       relationName=RELATION_CTF, attributeName='getInputMicrographs',
                       label='CTF estimation',
                       help='Choose some CTF estimation related to input micrographs. \n'
-                           'CTF estimation is need if you want to do phase flipping or \n'
+                           'CTF estimation is needed if you want to do phase flipping or \n'
                            'you want to associate CTF information to the particles.')
 
         form.addParam('boxSize', IntParam, default=0,
@@ -136,10 +137,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       help='Invert the contrast if your particles are black over a white background.')
         
         form.addParam('doFlip', BooleanParam, default=None,
-                      label='Phase flipping:',
-                      help='This option correct the phases contrast if your data are not'
-                           'phase-corrected. Use this option wisely, in dependence of the'
-                           'protocols that you will run.')
+                      label='Phase flipping (Recommended)', 
+                      help='Use the information from the CTF to compensate for phase reversals.')
+        
         form.addParam('doNormalize', BooleanParam, default=True,
                       label='Normalize (Recommended)', 
                       help='It subtract a ramp in the gray values and normalizes so that in the '
@@ -238,11 +238,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         """ Flip micrograph. """           
         fnFlipped = self._getTmpPath(baseMicName +"_flipped.xmp")
 
-        args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s --downsampling %(downFactor)f"
-        # xmipp_ctf_phase_flip expects the sampling rate of the micrographs, that has been used
-        # to calculate the CTF, in the ctfparam file. If its no given, the program asumes that is equal to 1;
-        # therefore, downsampling factor must be equal to sampling rate of the final mics.
-        downFactor = self.samplingFinal
+        args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s --sampling %(samplingFinal)f"
+        samplingFinal=self.samplingFinal
         self.runJob("xmipp_ctf_phase_flip", args % locals())
         
     def extractParticlesStep(self, micId, baseMicName, fnCTF, micrographToExtract):
@@ -359,14 +356,15 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         auxSet.copyInfo(imgSet)
         readSetOfParticles(fnImages, auxSet)
         
+        if self.downsampleType != SAME_AS_PICKING:
+            factor = self.samplingInput / self.samplingFinal
         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
         for img in auxSet:
             #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
             coord = self.inputCoords[img.getObjId()]
             if self.downsampleType != SAME_AS_PICKING:
-                factor = self.samplingFinal/self.samplingInput
-                coord.setX(coord.getX() / factor)
-                coord.setY(coord.getY() / factor)
+                x, y = coord.getPosition()
+                coord.setPosition(x*factor, y*factor)           
             ctfModel = img.getCTF()
             if ctfModel is not None:
                 ctfModel.setObjId(coord.getMicId())
@@ -377,7 +375,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=imgSet)
-        self._defineSourceRelation(self.inputCoords, imgSet)
+        self._defineSourceRelation(self.inputCoordinates, imgSet)
         #TODO: pass CTF relation from input micrographs to imgSet
     
     #--------------------------- INFO functions -------------------------------------------- 

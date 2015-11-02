@@ -24,7 +24,7 @@ public class TiltPairPickerRunner implements Runnable {
     private final ParticlePickerParams params;
 
 
-    public TiltPairPickerRunner(String[] args) throws ParseException {
+    public TiltPairPickerRunner(String[] args) {
 
         params = new ParticlePickerParams(args);
 
@@ -38,27 +38,27 @@ public class TiltPairPickerRunner implements Runnable {
 
     @Override
     public void run() {
+    	try {
         
             TiltPairPicker ppicker = null;
-            ppicker = new TiltPairPicker(params.inputfile, params.outputdir, params.mode, params);
+            ppicker = new TiltPairPicker(params.inputfile, params.outputdir, params);
             
             if(params.isScipion())
                 XmippApplication.setIsScipion(true);
 
             new TiltPairPickerJFrame(ppicker);
+    	} catch (Exception e) {
+    		ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+    		if (!e.getMessage().isEmpty())
+    			XmippDialog.showError(null, e.getMessage());
+    		
+    	}
         
     }
 
     public static void main(String[] args) {
-        try {
             TiltPairPickerRunner spr = new TiltPairPickerRunner(args);
             SwingUtilities.invokeLater(spr);
-        } catch (Exception e) {
-            System.out.println("Error catched on main");
-            ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-            XmippDialog.showException(null, e);
-
-        }
 
     }
 

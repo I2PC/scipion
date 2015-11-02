@@ -29,6 +29,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 		super(imp);
 		addMouseWheelListener(this);
+	
 
 	}
 
@@ -39,22 +40,25 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 			super.mousePressed(e);
 			return;
 		}
-
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
-		
-		
 		if (isDragImage(e))
 		{
 			setupScroll(x, y);
 			return;
 		}
-		
+		if(e.isControlDown())
+		{
+			 if (SwingUtilities.isLeftMouseButton(e))
+				 zoomIn(e.getX(), e.getY());
+			 if (SwingUtilities.isRightMouseButton(e))
+				 zoomOut(e.getX(), e.getY());
+		}
 	}
 
 	protected boolean isDragImage(MouseEvent e)
 	{
-		return SwingUtilities.isRightMouseButton(e) || (SwingUtilities.isLeftMouseButton(e) && e.isControlDown());
+		return (SwingUtilities.isRightMouseButton(e) && !e.isControlDown());
 	}
 
 	public void mouseDragged(MouseEvent e)
@@ -105,14 +109,12 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
         //System.out.println("mouse wheel moved");  // sorry Airen :)
 		int x = e.getX();
 		int y = e.getY();
-
 		int rotation = e.getWheelRotation();
 		if (rotation < 0)
 			zoomIn(x, y);
 		else
 			zoomOut(x, y);
-		if (getMagnification() <= 1.0)
-			imp.repaintWindow();
+		
 
 	}
 
@@ -156,7 +158,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		double currmagnif = getMagnification();
 		Rectangle rect = getSrcRect();
 		imp = xiw.getImagePlusLoader().loadImagePlus();
-                imp.setTitle(xiw.getImagePlusLoader().getName());
+        imp.setTitle(xiw.getImagePlusLoader().getName());
 		ImageWindow iw = (ImageWindow) xiw;
 		iw.setImage(getImage());
 		iw.updateImage(getImage());

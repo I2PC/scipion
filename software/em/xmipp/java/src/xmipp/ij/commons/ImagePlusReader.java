@@ -19,7 +19,6 @@ public abstract class ImagePlusReader {
 
     protected ImagePlus imp;
     protected ImageGeneric ig;
-    protected boolean allowsPoll;
     protected boolean useGeometry;
     protected boolean wrap;
     protected long modified;
@@ -48,23 +47,23 @@ public abstract class ImagePlusReader {
 		try
 		{
 			if(ig != null)
-                        {
-                            
-                             if(!hasIndex() )
-                                imp = XmippImageConverter.convertToImagePlus(ig);
-                            else 
-                             {
-                                if(ig.isStack())
-                                    imp = XmippImageConverter.convertToImagePlus(ig, index);//read image or volume on index
-                                else
-                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read image slice on volume
-                                
-                             }
-                             
-                        }
-                        
-                        checkResizeAndGeo();
-                        checkInvertY();
+            {
+                
+                 if(!hasIndex() )
+                    imp = XmippImageConverter.convertToImagePlus(ig);
+                else 
+                 {
+                    if(ig.isStack())
+                        imp = XmippImageConverter.convertToImagePlus(ig, index);//read image or volume on index
+                    else
+                        imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read image slice on volume
+                    
+                 }
+                 
+            }
+            
+            checkResizeAndGeo();
+            checkInvertY();
 			if(normalize)
 			{
 				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
@@ -197,5 +196,6 @@ public abstract class ImagePlusReader {
     public boolean isInvertY() {
         return inverty;
     }
+    
 
 }

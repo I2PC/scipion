@@ -5,6 +5,7 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
+
 import java.awt.Label;
 import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
@@ -13,7 +14,9 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
+
 import javax.swing.SwingUtilities;
+
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
 import xmipp.utils.Params;
 import xmipp.utils.XmippWindowUtil;
@@ -46,6 +49,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
         this.params = params;
         XmippApplication.addInstance(true);
         initComponents();
+        XmippWindowUtil.setScipionImageIcon(this);
 	}
 
 
@@ -57,30 +61,35 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		this.params = params;
 		XmippApplication.addInstance(true);
 		initComponents();
-                
+		XmippWindowUtil.setScipionImageIcon(this);
 	}
         
     protected void initComponents()
     {
+    	
         menu = new XmippMenuBar(this);
-        setMenuBar(menu);
-        if(XmippApplication.isScipion())
+        if(params != null)//otherwise is picker window
         {
-            MenuItem createMaskmi = new MenuItem("Design Mask");
-            
-            createMaskmi.addActionListener(new ActionListener() {
-
-                @Override
-                public void actionPerformed(ActionEvent ae) {
-                    loadMaskFrame();
-                }
-            });
-            menu.advancedmn.add(createMaskmi);
-            if(params!= null && params.isMask())
-                loadMaskFrame();
+	        setMenuBar(menu);
+	        if(XmippApplication.isScipion())
+	        {
+	            MenuItem createMaskmi = new MenuItem("Design Mask");
+	            createMaskmi.addActionListener(new ActionListener() {
+	
+	                @Override
+	                public void actionPerformed(ActionEvent ae) {
+	                    loadMaskFrame();
+	                }
+	            });
+	            menu.advancedmn.add(createMaskmi);
+	            if(params!= null && params.isMask())
+	                loadMaskFrame();
+	        }
         }
-        pixelslb = new Label("                                          ");
+        pixelslb = new Label("                                                ");
         add(pixelslb);
+        
+
     }
 
         @Override
@@ -93,6 +102,8 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	public void loadData()
 	{
 		getCanvas().loadData(this);
+		if(params != null)//otherwise is picker window
+			menu.applyFilters();
 	}
 
 	@Override
@@ -147,39 +158,37 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 
 	public void showPixels(int x, int y, int[] pixels)
 	{
-                if(pixelslb == null)//avoid error running showPixels before initialization
-                    return;
-                pixelslb.setText(pixelsToString(imp, x, y, pixels));
-		
-		
+        if(pixelslb == null)//avoid error running showPixels before initialization
+            return;
+        pixelslb.setText(pixelsToString(imp, x, y, pixels));
 		
 	}
         
     public static String pixelsToString(ImagePlus imp, int x, int y, int[] pixels)
     {
-            String text = "";
-	String value = "";
-	switch (imp.getType())
-	{
-                case ImagePlus.GRAY8:
-                case ImagePlus.GRAY16:
-                        double cValue = imp.getCalibration().getCValue(pixels[0]);
-                        if (cValue == pixels[0])
-                                value = String.valueOf(pixels[0]);
-                        else
-                                value = IJ.d2s(cValue) + " (" + pixels[0] + ")";
-                        text = String.format("x=%s, y=%s, value=%-5s", x, y, value);
-                        break;
-                case ImagePlus.GRAY32:
-                        text = String.format("x=%s, y=%s, value=%.2f", x, y, Float.intBitsToFloat(pixels[0]));
-                        break;
-                case ImagePlus.COLOR_256:
-                case ImagePlus.COLOR_RGB:
-                        value =  pixels[0] + "," + pixels[1] + "," + pixels[2];
-                        text = String.format("x=%s, y=%s, value=%-15s", x, y, value);
-                        break;
-            }
-            return text;
+        String text = "";
+		String value = "";
+		switch (imp.getType())
+		{
+            case ImagePlus.GRAY8:
+            case ImagePlus.GRAY16:
+                    double cValue = imp.getCalibration().getCValue(pixels[0]);
+                    if (cValue == pixels[0])
+                            value = String.valueOf(pixels[0]);
+                    else
+                            value = IJ.d2s(cValue) + " (" + pixels[0] + ")";
+                    text = String.format("x=%s, y=%s, value=%-5s", x, y, value);
+                    break;
+            case ImagePlus.GRAY32:
+                    text = String.format("x=%s, y=%s, value=%.2f", x, y, Float.intBitsToFloat(pixels[0]));
+                    break;
+            case ImagePlus.COLOR_256:
+            case ImagePlus.COLOR_RGB:
+                    value =  pixels[0] + "," + pixels[1] + "," + pixels[2];
+                    text = String.format("x=%s, y=%s, value=%-15s", x, y, value);
+                    break;
+        }
+        return text;
         
     }
         
@@ -187,9 +196,8 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
         @Override
 	public void windowClosing(WindowEvent e) {
             
-            super.windowClosing(e);
-            myClose();
-		
+        super.windowClosing(e);
+        myClose();
 	}
         
     public synchronized void myClose()
@@ -218,11 +226,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
     public Params getParams()
     {
         return params;
-    }
-
-    public void setParams(Params params)
-    {
-        this.params = params;
     }
 
 
@@ -264,22 +267,26 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
                 }
             });
             imp.getCanvas().addComponentListener(new java.awt.event.ComponentAdapter()
-	{
-                    @Override
-		public void componentResized(ComponentEvent e)
-		{
-			maskfr.refreshMask();
-		}
-	});
+            {
+                @Override
+				public void componentResized(ComponentEvent e)
+				{
+					maskfr.refreshMask();
+				}
+			});
+            
         }
     }
 
-
-
+   
 	public synchronized boolean isClosing()
 	{
 		// TODO Auto-generated method stub
 		return closing;
 	}
+
+	
+	
+	
 
 }// class XmippImageWindow

@@ -41,8 +41,7 @@ import pyworkflow.protocol as pwprot
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils.graph import Graph
-from pyworkflow.utils import getFreePort
+from pyworkflow.protocol.constants import MODE_RESTART
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
@@ -83,7 +82,9 @@ class Project(object):
         self._transformGraph = None
         self._sourceGraph = None
         self.address = ''
-        self.port = getFreePort()
+        self.port = pwutils.getFreePort()
+        self.mapper = None
+        self.settings = None
         # Host configuration
         self._hosts = None
         self._protocolViews = None
@@ -167,7 +168,8 @@ class Project(object):
         classesDict.update(em.getObjects())
         return SqliteMapper(sqliteFn, classesDict)
     
-    def load(self, dbPath=None, hostsConf=None, protocolsConf=None, chdir=True):
+    def load(self, dbPath=None, hostsConf=None, protocolsConf=None, chdir=True, 
+             loadAllConfig=True):
         """ Load project data, configuration and settings.
         Params:
             dbPath: the path to the project database.
@@ -177,6 +179,7 @@ class Project(object):
                 or read from ~/.config/scipion/hosts.conf
             settings: where to read the settings.
                 If None, use the settings.sqlite in project folder.
+            If forProtocol is True, the settings and protocols.conf will not be loaded.
         """
         if not os.path.exists(self.path):
             raise Exception("Cannot load project, path doesn't exist: %s" % self.path)
@@ -188,18 +191,19 @@ class Project(object):
         
         self._loadHosts(hostsConf)
         
-        self._loadProtocols(protocolsConf)
-        
-        #FIXME: Handle settings argument here
-        
-        # It is possible that settings does not exists if 
-        # we are loading a project after a Project.setDbName,
-        # used when running protocols
-        settingsPath = os.path.join(self.path, self.settingsPath) 
-        if os.path.exists(settingsPath):
-            self.settings = pwconfig.loadSettings(settingsPath)
-        else:
-            self.settings = None
+        if loadAllConfig:
+            self._loadProtocols(protocolsConf)
+            
+            #FIXME: Handle settings argument here
+            
+            # It is possible that settings does not exists if 
+            # we are loading a project after a Project.setDbName,
+            # used when running protocols
+            settingsPath = os.path.join(self.path, self.settingsPath) 
+            if os.path.exists(settingsPath):
+                self.settings = pwconfig.loadSettings(settingsPath)
+            else:
+                self.settings = None
             
     #---- Helper functions to load different pieces of a project
     def _loadDb(self, dbPath):
@@ -211,6 +215,11 @@ class Project(object):
         if not os.path.exists(absDbPath):
             raise Exception("Project database not found in '%s'" % absDbPath)
         self.mapper = self.createMapper(absDbPath)
+        
+    def closeMapper(self):
+        if self.mapper is not None:
+            self.mapper.close()
+            self.mapper = None
         
     def _loadHosts(self, hosts):
         """ Loads hosts configuration from hosts file. """
@@ -331,6 +340,9 @@ class Project(object):
         self._setupProtocol(protocol)
         #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean() # Create working dir if necessary
+        # Delete the relations created by this protocol
+        if protocol.getRunMode() == MODE_RESTART:
+            self.mapper.deleteRelations(self)
         self.mapper.commit()
         
         # Prepare a separate db for this run
@@ -373,6 +385,10 @@ class Project(object):
                 protocol.setObjComment(comment)
                 
                 self.mapper.store(protocol)
+                
+                # Close DB connections
+                prot2.getProject().closeMapper()
+                prot2.closeMappers()
             
             except Exception, ex:
                 print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
@@ -416,7 +432,6 @@ class Project(object):
         """
         return (not self.__protocolInList(child, protocols) and
                 not child.isSaved()) 
-        
     
     def _getProtocolsDependencies(self, protocols):
         error = ''
@@ -429,7 +444,6 @@ class Project(object):
                     error += '\n *%s* is referenced from:\n   - ' % prot.getRunName()
                     error += '\n   - '.join(deps) 
         return error
-        
     
     def _checkProtocolsDependencies(self, protocols, msg):
         """ Check if the protocols have depencies.
@@ -457,7 +471,10 @@ class Project(object):
         self._checkModificationAllowed(protocols, 'Cannot DELETE protocols')
         
         for prot in protocols:
-            self.mapper.delete(prot) # Delete from database
+            # Delete the relations created by this protocol
+            self.mapper.deleteRelations(prot)
+            # Delete from protocol from database
+            self.mapper.delete(prot) 
             wd = prot.workingDir.get()
             
             if wd.startswith(PROJECT_RUNS):
@@ -511,27 +528,32 @@ class Project(object):
         """
         matches = []
         for iKey, iAttr in childNode.run.iterInputAttributes():
-            value = iAttr.get()
-            if value is None:
-                if iAttr.getObjValue() is node.run:
-                    oKey = iAttr.getExtendedValue()
-                    matches.append((oKey, iKey))
+            # As this point iAttr should be always a Pointer that 
+            # points to the output of other protocol
+            if iAttr.getObjValue() is node.run:
+                oKey = iAttr.getExtended()
+                matches.append((oKey, iKey))
             else:
                 for oKey, oAttr in node.run.iterOutputAttributes(em.EMObject):
-                    if oAttr is iAttr.get():
+                    if oAttr.getObjId() == iAttr.get().getObjId():
                         matches.append((oKey, iKey))
-                
         
         return matches                    
         
+    def __cloneProtocol(self, protocol):
+        """ Make a copy of the protocol parameters, not outputs. """
+        newProt = self.newProtocol(protocol.getClass())
+        newProt.setObjLabel(protocol.getRunName() + ' (copy)')
+        newProt.copyDefinitionAttributes(protocol)
+        newProt.copyAttributes(protocol, 'hostName', '_useQueue', '_queueParams')
+        return newProt
+    
     def copyProtocol(self, protocol):
         """ Make a copy of the protocol, return a new one with copied values. """
         result = None
         
         if isinstance(protocol, pwprot.Protocol):
-            newProt = self.newProtocol(protocol.getClass())
-            newProt.copyDefinitionAttributes(protocol)
-            result = newProt
+            result = self.__cloneProtocol(protocol)
     
         elif isinstance(protocol, list):
             # Handle the copy of a list of protocols
@@ -539,8 +561,7 @@ class Project(object):
             newDict = {}
                         
             for prot in protocol:
-                newProt = self.newProtocol(prot.getClass())
-                newProt.copyDefinitionAttributes(prot)
+                newProt = self.__cloneProtocol(prot)
                 newDict[prot.getObjId()] = newProt
                 self.saveProtocol(newProt)
                          
@@ -561,7 +582,7 @@ class Project(object):
                         for oKey, iKey in matches:
                             childPointer = getattr(newChildProt, iKey)
                             childPointer.set(newProt)
-                            childPointer.setExtendedAttribute(oKey)
+                            childPointer.setExtended(oKey)
                         self.mapper.store(newChildProt)  
 
             self.mapper.commit()
@@ -588,18 +609,24 @@ class Project(object):
                      
         g = self.getRunsGraph(refresh=False)
         
+        #pwutils.startDebugger('a')
         for prot in protocols:
             protId = prot.getObjId()
             node = g.getNode(prot.strId())
             
             for childNode in node.getChilds():
                 childId = childNode.run.getObjId()
+                childProt = childNode.run
                 if childId in newDict:
                     childDict = newDict[childId]
                     # Get the matches between outputs/inputs of node and childNode
                     matches = self.__getIOMatches(node, childNode)
                     for oKey, iKey in matches:
-                        childDict[iKey] = '%s.%s%s' % (protId, pwobj.Pointer.EXTENDED_ATTR, oKey)
+                        inputAttr = getattr(childProt, iKey)
+                        if isinstance(inputAttr, pwobj.PointerList):
+                            childDict[iKey] = [p.getUniqueId() for p in inputAttr]
+                        else:
+                            childDict[iKey] = '%s.%s' % (protId, oKey) # equivalent to pointer.getUniqueId
                       
         f = open(filename, 'w')  
         
@@ -618,7 +645,7 @@ class Project(object):
         protocolsList = json.load(f)
         
         emProtocols = em.getProtocols()
-        newDict = {}
+        newDict = OrderedDict()
         
         # First iteration: create all protocols and setup parameters
         for protDict in protocolsList:
@@ -633,30 +660,45 @@ class Project(object):
                                         objLabel=protDict.get('object.label', None),
                                         objComment=protDict.get('object.comment', None))
                 newDict[protId] = prot
-                for paramName, attr in prot.iterDefinitionAttributes():
-                    if not attr.isPointer():
-                        if paramName in protDict:
-                            attr.set(protDict[paramName])
                 self.saveProtocol(prot)
         # Second iteration: update pointers values
+        def _setPointer(pointer, value):
+            # Properly setup the pointer value checking if the 
+            # id is already present in the dictionary
+            parts = value.split('.')
+            target = newDict.get(parts[0], None)
+            pointer.set(target)
+            if not pointer.pointsNone():
+                pointer.setExtendedParts(parts[1:])
+            
         for protDict in protocolsList:
             protId = protDict['object.id']
             
             if protId in newDict:
                 prot = newDict[protId]
                 for paramName, attr in prot.iterDefinitionAttributes():
-                        if attr.isPointer() and paramName in protDict:
-                            parts = protDict[paramName].split('.')
-                            if parts[0] in newDict:
-                                attr.set(newDict[parts[0]]) # set pointer to correct created protocol
-                                if len(parts) > 1: # set extended attribute part
-                                    attr._extended.set(parts[1])
-                            else:
-                                attr.set(None)
+                    if paramName in protDict:
+                        # If the attribute is a pointer, we should look
+                        # if the id is already in the dictionary and 
+                        # set the extended property
+                        if attr.isPointer():
+                            _setPointer(attr, protDict[paramName])
+                        # This case is similar to Pointer, but the values
+                        # is a list and we will setup a pointer for each value
+                        elif isinstance(attr, pwobj.PointerList):
+                            for value in protDict[paramName]:
+                                p = pwobj.Pointer()
+                                _setPointer(p, value)
+                                attr.append(p)
+                        # For "normal" parameters we just set the string value 
+                        else:
+                            attr.set(protDict[paramName])
                 self.mapper.store(prot)
             
         f.close()
         self.mapper.commit()
+        
+        return newDict
             
     
     def saveProtocol(self, protocol):
@@ -719,8 +761,7 @@ class Project(object):
             # Set important properties of the protocol
             workingDir = "%06d_%s" % (protocol.getObjId(), protocol.getClassName())
             self._setProtocolMapper(protocol)
-            #print protocol.strId(), protocol.getProject().getName()
-            #protocol.setName(name)
+
             protocol.setWorkingDir(self.getPath(PROJECT_RUNS, workingDir))
             # Update with changes
             self._storeProtocol(protocol)
@@ -730,12 +771,19 @@ class Project(object):
         """
         if self.runs is None or refresh:
             # Close db open connections to db files
+            if self.runs is not None:
+                for r in self.runs:
+                    r.closeMappers()
+            
             self.runs = self.mapper.selectByClass("Protocol", iterate=False)
             for r in self.runs:
                 self._setProtocolMapper(r)
                 # Update nodes that are running and are not invoked by other protocols
                 if r.isActive():
                     if not r.isChild():
+                        #pwutils.prettyLog("Updating protocol %s, because isActive (%s)" % (pwutils.green(r.getRunName()), 
+                        #                                                                   r.getStatus()))
+                        
                         self._updateProtocol(r)
             self.mapper.commit()
         
@@ -809,27 +857,46 @@ class Project(object):
         relations = self.mapper.getRelationsByName(relation)
         g = pwutils.graph.Graph(rootName='PROJECT')
         root = g.getRoot()
-        root.object = None
+        root.pointer = None
         runs = self.getRuns(refresh=refresh)
         
         for r in runs:
-            for _, attr in r.iterOutputAttributes(em.EMObject):
-                node = g.createNode(attr.strId(), attr.getNameId())
-                node.object = attr                
+            for paramName, attr in r.iterOutputAttributes(em.EMObject):
+                p = pwobj.Pointer(r, extended=paramName)
+                node = g.createNode(p.getUniqueId(), attr.getNameId())
+                node.pointer = p   
+                # The following alias if for backward compatibility
+                p2 = pwobj.Pointer(attr)
+                g.aliasNode(node, p2.getUniqueId())        
         
         for rel in relations:
-            pid = str(rel['object_parent_id'])
+            pObj = self.getObject(rel['object_parent_id'])
+            pExt = rel['object_parent_extended']
+            pp = pwobj.Pointer(pObj, extended=pExt) 
+            pid = pp.getUniqueId()
             parent = g.getNode(pid)
+            
+            while not parent and pp.hasExtended():
+                pp.removeExtended()
+                parent = g.getNode(pp.getUniqueId())
+            
             if not parent:
-                print "error, parent none: ", pid
+                print "project._getRelationGraph: ERROR, parent Node is None: ", pid
             else:
-                cid = str(rel['object_child_id'])
-                child = g.getNode(cid)
-                if not child:
-                    print "error, child none: ", cid, " label: ", 
-                    print "   parent: ", pid 
+                cObj = self.getObject(rel['object_child_id'])
+                if cObj:
+                    cExt = rel['object_child_extended']
+                    cp = pwobj.Pointer(cObj, extended=cExt)            
+                    child = g.getNode(cp.getUniqueId())
+                    
+                    if not child:
+                        print "project._getRelationGraph: ERROR, child Node is None: ", cp.getUniqueId()
+                        print "   parent: ", pid 
+                    else:
+                        parent.addChild(child)
                 else:
-                    parent.addChild(child)
+                    print "project._getRelationGraph: ERROR, child Obj is None, id: ", rel['object_child_id']
+                    print "   parent: ", pid 
             
         for n in g.getNodes():
             if n.isRoot() and not n is root:
@@ -874,15 +941,22 @@ class Project(object):
         graph = self.getTransformGraph()
         relations = self.mapper.getRelationsByName(relation)
         connection = self._getConnectedObjects(obj, graph)
+        
         objects = []
+        objectsDict = {}
         
         for rel in relations:
-            pid = str(rel['object_parent_id'])
-            parent = connection.get(pid, None)
-            if parent:
-                cid = str(rel['object_child_id'])
-                child = graph.getNode(cid).object
-                objects.append(child)
+            pObj = self.getObject(rel['object_parent_id'])
+            pExt = rel['object_parent_extended']
+            pp = pwobj.Pointer(pObj, extended=pExt) 
+            
+            if pp.getUniqueId() in connection:                
+                cObj = self.getObject(rel['object_child_id'])
+                cExt = rel['object_child_extended']
+                cp = pwobj.Pointer(cObj, extended=cExt)
+                if cp.hasValue() and cp.getUniqueId() not in objectsDict:            
+                    objects.append(cp)
+                    objectsDict[cp.getUniqueId()] = True
                 
         return objects
     
@@ -891,14 +965,18 @@ class Project(object):
         are connected to an object, either childs, ancestors or siblings. 
         """
         n = graph.getNode(obj.strId())
-        # Get the oldest ancestor of a node, before 
-        # reaching the root node
-        while not n.getParent().isRoot():
+        # Get the oldest ancestor of a node, before reaching the root node
+        while not n is None and not n.getParent().isRoot():
             n = n.getParent()
             
         connection = {}
-        for node in n.iterChilds():
-            connection[node.object.strId()] = node.object
+        
+        if n is not None:
+            # Iterate recursively all descendants
+            for node in n.iterChilds():
+                connection[node.pointer.getUniqueId()] = True
+                # Add also 
+                connection[node.pointer.get().strId()] = True  
         
         return connection
     

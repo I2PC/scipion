@@ -9,6 +9,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Stroke;
@@ -23,53 +24,22 @@ import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
-import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
 	public final static BasicStroke dashedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	public final static BasicStroke continuousst = new BasicStroke(2.0f);
-	public final static BasicStroke activedst = new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	public final static BasicStroke activecst = new BasicStroke(3.0f);
+	public final static BasicStroke activest = new BasicStroke(3.0f);
+	//public final static BasicStroke activedst = new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
         
 	protected ParticlePickerJFrame frame;
 	protected Micrograph micrograph;
 	protected ParticlePicker picker;
 	protected XmippImageWindow iw;
-	
-	public void display()
-	{
-		if (iw != null)
-		{
-			if(!iw.isClosing())
-			{
-				iw.setImage(getImage());
-			}
-			else
-				this.iw = new XmippImageWindow(getImage(), this, null);
-			fitToWindow();
-			double zoom = getFrame().getParticlePicker().getZoom();
-			if(zoom != -1.f)
-			{
-				setMagnification(zoom);
-			}
-			else//no zoom to keep
-				iw.maximize();
-			
-		}
-		else
-        {
-			
-			this.iw = new XmippImageWindow(getImage(), this, null);
-            iw.maximize();
-        }
-		getFrame().displayZoom(getMagnification());
-		iw.setTitle(getMicrograph().getName());
-		
-	}
+	protected Cursor eraserCursor = Toolkit.getDefaultToolkit().createCustomCursor(XmippResource.getIcon("eraser.png").getImage(), new Point(0, 0), "Eraser");
+
 	
         
 	public void setMicrograph(Micrograph m)
@@ -112,50 +82,73 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			@Override
 			public void keyPressed(KeyEvent e)
 			{
-
-				PickerParticle active = getActive();
-				if (active == null)
-					return;
-				int step = 1;
-				int code = e.getKeyCode();
-				if (code == KeyEvent.VK_UP)
-				{
-					setActiveMoved(true);
-					manageActive(active.getX(), active.getY() - step);
-				}
-				else if (code == KeyEvent.VK_DOWN)
-				{
-					setActiveMoved(true);
-					manageActive(active.getX(), active.getY() + step);
-				}
-				else if (code == KeyEvent.VK_LEFT)
-				{
-					setActiveMoved(true);
-					manageActive(active.getX() - step, active.getY());
-				}
-				else if (code == KeyEvent.VK_RIGHT)
-				{
-					setActiveMoved(true);
-					manageActive(active.getX() + step, active.getY());
-				}
-				else if (code == KeyEvent.VK_SPACE)
-				{
-					getFrame().circlechb.setSelected(tongleSetSelected);
-					getFrame().rectanglechb.setSelected(tongleSetSelected);
-					tongleSetSelected = !tongleSetSelected;
-				}
-				else
-					return;// do not repaint if not needed
-				repaint();
+				ParticlePickerCanvas.this.keyPressed(e);
 
 			}
 		});
 
 		addMouseMotionListener(this);
-		double zoom = picker.getZoom(); 
+
+		this.iw = new XmippImageWindow(getImage(), this, null);
+		getFrame().displayZoom(getMagnification());
+		iw.setTitle(getMicrograph().getName());
+
 	}
 	
-
+	public void keyPressed(KeyEvent e)
+	{
+		PickerParticle active = getActive();
+		int step = 1;
+		int code = e.getKeyCode();
+		int x = screenX(imp.getWidth()/2);
+		int y = screenY(imp.getHeight()/2);
+		if(active != null)
+		{
+			if (code == KeyEvent.VK_UP)
+			{
+				setActiveMoved(true);
+				manageActive(active.getX(), active.getY() - step);
+			}
+			else if (code == KeyEvent.VK_DOWN)
+			{
+				setActiveMoved(true);
+				manageActive(active.getX(), active.getY() + step);
+			}
+			else if (code == KeyEvent.VK_LEFT)
+			{
+				setActiveMoved(true);
+				manageActive(active.getX() - step, active.getY());
+			}
+			else if (code == KeyEvent.VK_RIGHT)
+			{
+				setActiveMoved(true);
+				manageActive(active.getX() + step, active.getY());
+			}
+		}
+		if (code == KeyEvent.VK_SPACE)
+		{
+			getFrame().circlechb.setSelected(tongleSetSelected);
+			getFrame().rectanglechb.setSelected(tongleSetSelected);
+			tongleSetSelected = !tongleSetSelected;
+		}
+		
+		
+		else
+			return;// do not repaint if not needed
+		repaint();
+	}
+	
+	public void zoomIn(int sx, int sy)
+	{
+		super.zoomIn(sx, sy);
+		getFrame().displayZoom(getMagnification());
+	}
+	
+	public void zoomOut(int sx, int sy)
+	{
+		super.zoomOut(sx, sy);
+		getFrame().displayZoom(getMagnification());
+	}
 
 	protected abstract Particle getLastParticle();
 
@@ -164,7 +157,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	protected void setActiveMoved(boolean b)
 	{
 		activemoved = b;
-		
 	}
 
 	protected void refresh()
@@ -172,17 +164,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		getFrame().updateMicrographsModel();
 		getFrame().setChanged(true);
 		repaint();
-
-	}
-
-
-	public void display(double xlocation, double ylocation)
-	{
-		boolean relocate = (iw == null);
-
-		display();
-		if (relocate)
-			XmippWindowUtil.setLocation(xlocation, ylocation, iw);
 	}
 
 	public ImageWindow getIw()
@@ -191,13 +172,10 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	}
 
 	
-	@Override
-	public void mouseWheelMoved(MouseWheelEvent e)
-	{
-		super.mouseWheelMoved(e);
-		if (e.isShiftDown())// zoom change detected
-			getFrame().displayZoom(getMagnification());
-	}
+
+	
+	
+
 
 	public void moveTo(PickerParticle p)
 	{
@@ -224,35 +202,27 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public void mouseEntered(MouseEvent e)
 	{
 		super.mouseEntered(e);
-		setCursor(crosshairCursor);
+		setCustomCursor(e);
 	}
 
-	public void mouseMoved(MouseEvent e)
+
+	
+	public void mouseExited(MouseEvent e)
 	{
-		super.mouseMoved(e);
-		setCustomCursor(e);
+		super.mouseExited(e);
+		setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 
 	}
 	
 	
 	protected void setCustomCursor(MouseEvent e)
 	{
-		if (!getFrame().isEraserMode())
-			setCursor(crosshairCursor);
-		else if (getFrame().isPickingAvailable(e))
-
+		if (getFrame().isPickingAvailable(e))
 		{
-
-			final int x = e.getX();
-			final int y = e.getY();
-			// only display a hand if the cursor is over the items
-			final Rectangle cellBounds = iw.getBounds();
-			Toolkit toolkit = Toolkit.getDefaultToolkit();
-			Cursor eraserCursor = toolkit.createCustomCursor(XmippResource.getIcon("eraser.png").getImage(), new Point(0, 0), "Eraser");
-			if (cellBounds != null && cellBounds.contains(x, y))
+			if (!getFrame().isEraserMode())
+				setCursor(crosshairCursor);
+			else 
 				setCursor(eraserCursor);
-			else
-				setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 		}
 	}
 
@@ -293,7 +263,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		int radius = (int) (size / 2. * magnification);
 		x = getXOnImage(x);
 		y = getYOnImage(y);
-		int distance = (int) (radius/3. * magnification);
+		int distance = Math.min(10, (int) (radius/4. * magnification));
 
 		if (getFrame().isShapeSelected(Shape.Rectangle) || all)
 			g2.drawRect(x - radius, y - radius, length, length);
@@ -301,10 +271,10 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			g2.drawOval(x - radius, y - radius, length, length);
 		if (getFrame().isShapeSelected(Shape.Center) || all)
 		{
+			g2.setStroke(activest);
 			g2.drawLine(x, y - distance, x, y + distance);
 			g2.drawLine(x + distance, y, x - distance, y);
 		}
-
 	}
 
 
@@ -375,17 +345,45 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		int width = imp.getWidth();
 		return y / m + width / 2.f;
 	}
-
+	
 	public void updateMicrograph()
 	{
 		Micrograph m = getFrame().getMicrograph();
+		updateMicrograph(m);
+	}
+
+	public void updateMicrograph(Micrograph m)
+	{
+		getMicrograph().releaseImage();
 		setMicrograph(m);
 		imp = m.getImagePlus(picker.getFilters());
 		m.runImageJFilters(picker.getFilters());
-		
 		refreshActive(null);
+		Rectangle previousRect = (Rectangle)srcRect.clone();
+		int previousDstWidth = dstWidth;
+		int previousDstHeight = dstHeight;
+		if(iw.isClosing())
+			iw = new XmippImageWindow(getImage(), this, null);
+		iw.setImage(imp);
+		double zoom = getParticlePicker().getZoom();
+		int imageWidth = imp.getWidth();
+		int imageHeight = imp.getHeight();
+		if(zoom != -1)
+		{
+			
+			setDrawingSize(previousDstWidth, previousDstHeight);
+			if (previousRect.width < imageWidth && previousRect.height < imageHeight)
+				setSourceRect(previousRect);
+			setMagnification(zoom);
+			iw.pack();
+		}
+		else
+			iw.maximize();
+		getFrame().displayZoom(getMagnification());
+		iw.setTitle(getMicrograph().getName());
 		
 	}
+
 
 
 	public abstract Micrograph getMicrograph();
@@ -430,17 +428,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	protected abstract void doCustomPaint(Graphics2D g2);
         
-         public void mouseWheelMoved(int x, int y, int rotation, Dimension size)
-	{
-                getIw().setSize(size);
-		if (rotation < 0)
-			zoomIn(x, y);
-		else
-			zoomOut(x, y);
-		if (getMagnification() <= 1.0)
-			imp.repaintWindow();
-
-	}
+   
          
     public abstract ParticlePicker getParticlePicker();
 

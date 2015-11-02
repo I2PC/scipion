@@ -202,6 +202,16 @@ def rowToObject(row, obj, attrDict, extraLabels={}):
             labelStr = xmipp.label2Str(label)
             setattr(obj, '_xmipp_%s' % labelStr, row.getValueAsObject(label))
     
+
+def setXmippAttributes(obj, objRow, *labels):
+    """ Set an attribute to obj from a label that is not 
+    basic ones. The new attribute will be named _xmipp_LabelName
+    and the datatype will be set correctly.
+    """
+    for label in labels:
+        setattr(obj, '_xmipp_%s' % xmipp.label2Str(label), 
+                objRow.getValueAsObject(label))
+    
     
 def rowFromMd(md, objId):
     row = XmippMdRow()
@@ -659,20 +669,20 @@ def writeSetOfCoordinates(posDir, coordSet):
     md = xmipp.MetaData()
     # Write properties block
     objId = md.addObject()
-    micName = removeBaseExt(micName)
-    md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
+#     micName = removeBaseExt(micName)
+#     md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
     #md.setValue(xmipp.MDL_COLOR, int(-16776961), objId)
     md.setValue(xmipp.MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
     md.setValue(xmipp.MDL_PICKING_STATE, 'Manual', objId)
     
     md.write('properties@%s' % configFn)
 
-    # Write filters block
-    md = xmipp.MetaData()    
-    objId = md.addObject()
-    md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
-    md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
-    md.write('filters@%s' % configFn, xmipp.MD_APPEND)
+#     # Write filters block
+#     md = xmipp.MetaData()    
+#     objId = md.addObject()
+#     md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
+#     md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
+#     md.write('filters@%s' % configFn, xmipp.MD_APPEND)
     
     return posDict.values()
 
@@ -713,9 +723,9 @@ def readCoordinates(mic, fileName, coordsSet, outputDir):
             coordsSet.append(coord)
             # Add an unique ID that will be propagated to particles
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
-        if not posMd.isEmpty():
-            scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
-            posMd.write("particles@%s"  % scipionPosFile)
+        #if not posMd.isEmpty():
+         #   scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
+          #  posMd.write("particles@%s"  % scipionPosFile)
     
 
 def readPosCoordinates(posFile):
@@ -746,6 +756,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         rowToFunc: this function will be used to convert the row to Object
     """
     imgMd = xmipp.MetaData(filename)
+
     # By default remove disabled items from metadata
     # be careful if you need to preserve the original number of items
     if kwargs.get('removeDisabled', True):
@@ -763,13 +774,14 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         else:
             kwargs['alignType'] = ALIGN_NONE
     
-    for objId in imgMd:
-        imgRow = rowFromMd(imgMd, objId)
-        img = rowToFunc(imgRow, **kwargs)
-        imgSet.append(img)
-        
-    imgSet.setHasCTF(img.hasCTF())
-    imgSet.setAlignment(kwargs['alignType'])
+    if imgMd.size()>0:
+        for objId in imgMd:
+            imgRow = rowFromMd(imgMd, objId)
+            img = rowToFunc(imgRow, **kwargs)
+            imgSet.append(img)
+            
+        imgSet.setHasCTF(img.hasCTF())
+        imgSet.setAlignment(kwargs['alignType'])
         
 
 def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
@@ -944,7 +956,8 @@ def writeSetOfMicrographsPairs(uSet, tSet, filename):
     md.write(filename)   
 
     
-def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
+def __readSetOfClasses(classBaseSet, readSetFunc, 
+                       classesSet, filename, classesBlock='classes', **kwargs):
     """ Read a set of classes from an Xmipp metadata with the given
     convention of a block for classes and another block for each set of 
     images assigned to each class.
@@ -969,7 +982,7 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
         classRow = rowFromMd(classesMd, objId)
         classItem = rowToClass(classRow, classItem)
         # FIXME: the following is only valid for SetOfParticles
-        SetOfParticles.copyInfo(classItem, classesSet.getImages())
+        classBaseSet.copyInfo(classItem, classesSet.getImages())
         #classItem.copyInfo(classesSet.getImages())
         
         if preprocessClass:
@@ -981,16 +994,18 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
         b = 'class%06d_images' % ref
         
         if b in blocks:
-            #FIXME: we need to adapt the following line
-            # when we face classes of volumes and not just particles
-            readSetOfParticles('%s@%s' % (b, filename), classItem, **kwargs) 
+            readSetFunc('%s@%s' % (b, filename), classItem, **kwargs) 
 
         if postprocessClass:
             postprocessClass(classItem, classRow)
             
         # Update with new properties of classItem such as _size
         classesSet.update(classItem)
-        
+    
+    
+def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
+    __readSetOfClasses(SetOfParticles, readSetOfParticles,
+                       classesSet, filename, classesBlock, **kwargs)
         
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **kwargs):
     """ Just a wrapper to readSetOfClasses. """
@@ -1029,34 +1044,50 @@ def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
 
 
-def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args):
+def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **kwargs):
     """read from Xmipp image metadata.
         fnImages: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
         hasCtf: is True if the ctf information exists.
     """
+    __readSetOfClasses(SetOfVolumes, readSetOfVolumes,
+                       classesVolSet, filename, classesBlock, **kwargs)  
+    
+    return
+
+    # FIXME: Delete from here 
+    
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
-    samplingRate = classesVolSet.getImages().getSamplingRate()
     
+    # Provide a hook to be used if something is needed to be 
+    # done for special cases before converting row to class
+    preprocessClass = kwargs.get('preprocessClass', None)
+    postprocessClass = kwargs.get('postprocessClass', None)
+        
     for objId in classesMd:
-        classVol = ClassVol()
-        classVol = rowToClassVol(classesMd, objId, classVol)
+        classVol = classesVolSet.ITEM_TYPE()
+        classRow = rowFromMd(classesMd, objId)
+        classVol = rowToClass(classRow, classVol)
+        # FIXME: the following is only valid for SetOfParticles
+        SetOfParticles.copyInfo(classVol, classesVolSet.getImages())
+        
+        if preprocessClass:
+            preprocessClass(classVol, classRow)
+                   
         classesVolSet.append(classVol)
         ref = classVol.getObjId()
         b = 'class%06d_images' % ref
         
         if b in blocks:
-            classImagesMd = xmipp.MetaData('%s@%s' % (b, filename))
+            readSetFunc = _readSetFunc()
+            readSetOfVolumes('%s@%s' % (b, filename), classVol, **kwargs) 
+
+        if postprocessClass:
+            postprocessClass(classVol, classRow)
             
-            for imgId in classImagesMd:
-                img = rowToParticle(classImagesMd, imgId, hasCtf=False)
-                img.setSamplingRate(samplingRate)
-                classVol.append(img)
-        # Update with new properties of class2D such as _size
+        # Update with new properties of classItem such as _size
         classesVolSet.update(classVol)                
-        # Check if write function is necessary
-        classVol.write()
 
 
 def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):    
@@ -1164,11 +1195,13 @@ def rowToAlignment(alignmentRow, alignType):
         """
     is2D = alignType == ALIGN_2D
     inverseTransform = alignType == ALIGN_PROJ
-    
+
     if _containsAny(alignmentRow, ALIGNMENT_DICT):
         alignment = Transform()
         angles = numpy.zeros(3)
         shifts = numpy.zeros(3)
+        flip = alignmentRow.getValue(xmipp.MDL_FLIP)
+
         shifts[0] = alignmentRow.getValue(xmipp.MDL_SHIFT_X, 0.)
         shifts[1] = alignmentRow.getValue(xmipp.MDL_SHIFT_Y, 0.)
         if not is2D:
@@ -1176,17 +1209,20 @@ def rowToAlignment(alignmentRow, alignType):
             angles[1] = alignmentRow.getValue(xmipp.MDL_ANGLE_TILT, 0.)
             shifts[2] = alignmentRow.getValue(xmipp.MDL_SHIFT_Z, 0.)
             angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
+            if flip:
+                angles[1] = 180 + angles[1] # tilt = tilt + 180
+                angles[2] = 180 - angles[2] # psi = -psi + 180
+                shifts[0] = -shifts[0] # shx = -shx
         else:
             psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             rot = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
             if rot !=0. and psi !=0:
                 print "HORROR rot and psi are different from zero in 2D case"
-            angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.) +\
+            angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.) + \
                         alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
-        flip = alignmentRow.getValue(xmipp.MDL_FLIP)
         #if alignment
         matrix = matrixFromGeometry(shifts, angles, inverseTransform)
-##
+
         if flip:
             if alignType==ALIGN_2D:
                 matrix[0,:2] *=  -1.#invert only the first two columns keep x
@@ -1194,8 +1230,9 @@ def rowToAlignment(alignmentRow, alignType):
             elif alignType==ALIGN_3D:
                 matrix[0,:3] *= -1.#now, invert first line excluding x
                 matrix[3,3] *= -1.
-            else:
-                matrix[0,:4] *= -1.#now, invert first line including x
+            elif alignType==ALIGN_PROJ:
+                pass
+                #matrix[0,:4] *= -1.#now, invert first line including x
 ##
         alignment.setMatrix(matrix)
         
@@ -1245,9 +1282,10 @@ def alignmentToRow(alignment, alignmentRow, alignType):
             pass
 
     else:
-        flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
-        if flip:
-            matrix[0,:4] *= -1.#now, invert first line including x
+        pass
+        #flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+        #if flip:
+        #    matrix[0,:4] *= -1.#now, invert first line including x
     shifts, angles = geometryFromMatrix(matrix, inverseTransform)
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
     alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])

@@ -172,21 +172,23 @@ class Classes3DView(ClassesView):
                              showj.MODE: 'metadata'}
         defaultViewParams.update(viewParams)
         ClassesView.__init__(self, project, inputid, path, other, defaultViewParams, **kwargs)
-            
-            
+
+
 class CoordinatesObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """
-    def __init__(self, project, path, outputdir, viewParams={}, **kwargs):
+    def __init__(self, project, path, outputdir, protocol, viewParams={}, **kwargs):
         DataView.__init__(self, path, **kwargs)
         self.project = project
         self.outputdir = outputdir
+        self.protocol = protocol
         
-    def getShowJParams(self):
-        params = '--input %s --output %s --mode readonly'%(self._path, self.outputdir)
-        return params
+#     def getShowJParams(self):
+#         params = '--input %s --output %s --mode %s'%(self._path, self.outputdir, self.mode)
+#         return params
     
     def show(self):
-        showj.runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), env=self._env)
+        #showj.runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), env=self._env)
+        showj.launchSupervisedPickerGUI(self._path, self.outputdir, self.protocol)
         
         
 class ImageView(View):
@@ -392,9 +394,6 @@ class ChimeraAngDistClient(ChimeraClient):
         maxweight = mdAngDist.aggregateSingle(md.AGGR_MAX, md.MDL_WEIGHT)
         minweight = mdAngDist.aggregateSingle(md.AGGR_MIN, md.MDL_WEIGHT)
         interval = maxweight - minweight
-        if interval < 1:
-            interval = 1
-        minweight = minweight - 1#to avoid 0 on normalized weight
 
         self.angulardist = []
         x2=self.xdim/2
@@ -407,7 +406,8 @@ class ChimeraAngDistClient(ChimeraClient):
             tilt = mdAngDist.getValue(angleTiltLabel, id)
             psi = mdAngDist.getValue(anglePsiLabel, id) if anglePsiLabel else 0
             weight = mdAngDist.getValue(md.MDL_WEIGHT, id)
-            weight = (weight - minweight)/interval
+            weight = 0 if interval == 0 else (weight - minweight)/interval#avoid cero division
+            weight = weight + 0.5#add 0.5 to avoid cero weight
             x, y, z = xmipp.Euler_direction(rot, tilt, psi)
             radius = weight * self.spheresMaxRadius
 

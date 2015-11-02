@@ -128,6 +128,9 @@ class XmippProtCL2D(ProtClassify2D):
                            'in all the previous levels except possibly a few of them. Tolerance defines how few is few.'
                            'Tolerance=0 means that an image must be in all previous levels with the rest of images in'
                            'the core.', expertLevel=LEVEL_ADVANCED, condition='doCore and doStableCore')
+        form.addParam("computeHierarchy",BooleanParam, default=False, label="Compute class hierarchy", expertLevel=LEVEL_ADVANCED)
+        form.addParam("analyzeRejected",BooleanParam, default=False, label="Analyze rejected particles", expertLevel=LEVEL_ADVANCED,
+                      help="To see the analysis you need to browse the execution directory and go into the different levels")
 
         form.addParallelSection(threads=0, mpi=4)
 
@@ -175,12 +178,14 @@ class XmippProtCL2D(ProtClassify2D):
             args = "--dir %(extraDir)s --root level "
             # core analysis
             self._insertClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset=CLASSES_CORE)
-            self._insertFunctionStep('analyzeOutOfCores', CLASSES_CORE)
+            if self.analyzeRejected:
+                self._insertFunctionStep('analyzeOutOfCores', CLASSES_CORE)
 
             if self.numberOfClasses > (2 * self.numberOfInitialClasses.get()) and self.doStableCore: # Number of levels should be > 2
                 # stable core analysis
                 self._insertClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset=CLASSES_STABLE_CORE)
-                self._insertFunctionStep('analyzeOutOfCores', CLASSES_STABLE_CORE)
+                if self.analyzeRejected:
+                    self._insertFunctionStep('analyzeOutOfCores', CLASSES_STABLE_CORE)
 
     def _insertClassifySteps(self, program, args, subset=CLASSES):
         """ Defines four steps for the subset:
@@ -227,7 +232,7 @@ class XmippProtCL2D(ProtClassify2D):
         prevMdFn = None
         for mdFn in levelMdFiles:
             self.runJob("xmipp_classify_evaluate_classes", "-i " + mdFn, numberOfMpi=1)
-            if prevMdFn is not None:
+            if self.computeHierarchy and prevMdFn is not None:
                 args = "--i1 %s --i2 %s -o %s" % (prevMdFn, mdFn, hierarchyFnOut)
                 if exists(hierarchyFnOut):
                     args += " --append"
@@ -245,7 +250,7 @@ class XmippProtCL2D(ProtClassify2D):
         readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
-        self._defineSourceRelation(inputParticles, classes2DSet)
+        self._defineSourceRelation(self.inputParticles, classes2DSet)
     
     def analyzeOutOfCores(self,subset):
         """ Analyze which images are out of cores """
@@ -299,11 +304,7 @@ class XmippProtCL2D(ProtClassify2D):
     
     def _warnings(self):
         validateMsgs = []
-        print "frist...."
-        print "self.inputParticles.get().getSamplingRate()", self.inputParticles.get().getSamplingRate()
-        print "self.inputParticles.get().getSamplingRate() < 3", self.inputParticles.get().getSamplingRate() < 3
         if self.inputParticles.get().getSamplingRate() < 3:
-            print "here......"
             validateMsgs.append("The sampling rate is smaller than 3 A/pix, consider downsampling the input images to speed-up the process. "\
                          "Probably you don't want such a precise 2D classification.")
         return validateMsgs       

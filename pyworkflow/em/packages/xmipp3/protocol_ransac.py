@@ -189,7 +189,7 @@ class XmippProtRansac(ProtInitialVolume):
 
         # Generate projection gallery from the initial volume
         if self.initialVolume.hasValue():
-            lastId = self._insertFunctionStep("projectInitialVolume",self)
+            lastId = self._insertFunctionStep("projectInitialVolume")
             
         return lastId
 
@@ -232,7 +232,7 @@ class XmippProtRansac(ProtInitialVolume):
         
         # Generate projections from this reconstruction
         fnGallery=self._getTmpPath('gallery_'+fnBase+'.stk')
-        self.runJob("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
+        self.runJob("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s --max_tilt_angle 90"\
                     %(fnVol,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(),fnOutputReducedClass))
             
         # Assign angles to the rest of images
@@ -246,8 +246,6 @@ class XmippProtRansac(ProtInitialVolume):
         cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
         cleanPath(fnVol)
         cleanPath(self._getTmpPath(fnBase+'.xmd'))
-        if self.initialVolume.hasValue():
-            cleanPattern(self._getTmpPath("gallery_InitialVolume*"))
     
     def reconstructStep(self, fnRoot):
         from pyworkflow.em.metadata.utils import getSize
@@ -437,7 +435,7 @@ class XmippProtRansac(ProtInitialVolume):
 #             volumesSet.update(vol)
         
         self._defineOutputs(outputVolumes=volumesSet)
-        self._defineSourceRelation(inputSet, volumesSet)
+        self._defineSourceRelation(self.inputSet, volumesSet)
         self._storeSummaryInfo(self.numVolumes.get())
     
     #--------------------------- INFO functions --------------------------------------------

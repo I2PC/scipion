@@ -623,6 +623,7 @@ public:
         initConstant(val);
     }
 
+
     /** Enumerate starting from 0 to size
      */
     void enumerate()
@@ -1377,6 +1378,28 @@ public:
             else if (val<minval)
             	minval = val;
         }
+    }
+
+    /** Mean and stddev value of the vector */
+    void computeMeanAndStddev(double &mean, double &stddev) const
+    {
+    	mean=stddev=0;
+        if (vdim == 0)
+            return;
+
+        double sum = 0, sum2 = 0;
+        for (size_t j = 0; j < vdim; ++j)
+        {
+        	double val=VEC_ELEM(*this,j);
+            sum+=val;
+            sum2+=val*val;
+        }
+        mean=sum/vdim;
+        stddev=sum2/vdim-mean*mean;
+        if (stddev<0)
+        	stddev=0;
+        else
+        	stddev=sqrt(stddev);
     }
 
     /** Index for the maximum element.

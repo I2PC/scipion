@@ -43,6 +43,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
+import xmipp.ij.commons.XmippApplication;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
@@ -107,15 +108,25 @@ public class ColumnsJDialog extends XmippDialog {
 						enableUpDown(true);
 					}
 				});
+		formatTable();
 	}// function initComponents
+	
+	protected void formatTable() {
+        tableColumns.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        tableColumns.getColumnModel().getColumn(0).setPreferredWidth(200);
+        tableColumns.getColumnModel().getColumn(1).setPreferredWidth(50);
+        tableColumns.getColumnModel().getColumn(2).setPreferredWidth(50);
+        tableColumns.getColumnModel().getColumn(3).setPreferredWidth(50);
+        
+    }
 
-	private void enableUpDown(boolean value) {
+	protected void enableUpDown(boolean value) {
 		btnUp.setEnabled(value);
 		btnDown.setEnabled(value);
 	}// function enableUpDown
 
 	// move the selection on the table, -1 up, 0 down
-	private void moveSelection(int deltha) {
+	protected void moveSelection(int deltha) {
 		int pos = tableColumns.getSelectedRow();
 		ColumnInfo ci = rows.remove(pos);
 		pos += deltha;
@@ -177,6 +188,10 @@ public class ColumnsJDialog extends XmippDialog {
 		public boolean isCellEditable(int row, int column) {
 			try {
 				if (column == 2 && !rows.get(row).allowRender)
+					return false;
+				GalleryJFrame frame = (GalleryJFrame)parent;
+				
+				if (column == 3 && frame.data.isScipionInstance())
 					return false;
 			} catch (Exception e) {
 				e.printStackTrace();

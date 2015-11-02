@@ -33,7 +33,7 @@ from os.path import exists
 
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
                                         IntParam, EnumParam, StringParam, LabelParam)
-from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPath
 
 import pyworkflow.em.metadata as md
@@ -41,7 +41,7 @@ from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import convertBinaryVol, writeSqliteIterData, writeSetOfParticles
+from convert import convertBinaryVol, writeSqliteIterData, writeSetOfParticles, getVersion
 
 
 class ProtRelionBase(EMProtocol):
@@ -125,6 +125,7 @@ class ProtRelionBase(EMProtocol):
         # Iterations will be identify by _itXXX_ where XXX is the iteration number
         # and is restricted to only 3 digits.
         self._iterRegex = re.compile('_it(\d{3,3})_')
+        
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -432,7 +433,7 @@ class ProtRelionBase(EMProtocol):
                          'The command *relion_refine --sym D2 --print_symmetry_ops* prints a list of all symmetry operators for symmetry group D2. RELION uses XMIPP\'s libraries for symmetry operations. Therefore, look at the XMIPP Wiki for more details:  http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome?topic=Symmetry')
 
     #--------------------------- INSERT steps functions --------------------------------------------  
-    def _insertAllSteps(self): 
+    def _insertAllSteps(self):
         self._initialize()
         self._insertFunctionStep('convertInputStep', self._getInputParticles().getObjId())
         self._insertRelionStep()
@@ -511,8 +512,7 @@ class ProtRelionBase(EMProtocol):
             args['--iter'] = self._getnumberOfIters()
             
         self._setSamplingArgs(args)
-        
-                        
+    
     def _setCTFArgs(self, args):        
         # CTF stuff
         if self.doCTF:
@@ -567,13 +567,15 @@ class ProtRelionBase(EMProtocol):
                     particle = imgSet[movieParticle.getParticleId()]
                     if particle is not None:
                         auxMovieParticles.append(movieParticle)
-                            
                 writeSetOfParticles(auxMovieParticles,
                                     self._getFileName('movie_particles'), None, originalSet=imgSet,
                                     postprocessImageRow=self._postprocessImageRow)
                 mdMovies = md.MetaData(self._getFileName('movie_particles'))
                 mdParts = md.MetaData(self._getFileName('input_star'))
-                mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
+                if getVersion() == "1.4":
+                    mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
+                else:
+                    mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
                 mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
                 
                 detectorPxSize = movieParticleSet.getAcquisition().getMagnification() * movieParticleSet.getSamplingRate() / 10000
@@ -596,6 +598,11 @@ class ProtRelionBase(EMProtocol):
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
+        if not getVersion():
+            errors.append("We couldn't detect Relion version. ")
+            errors.append("Please, check your configuration file and change RELION_HOME.")
+            errors.append("The path should contains either '1.3' or '1.4' ")
+            errors.append("to properly detect the version.")
         if self.doContinue:
             continueProtocol = self.continueRun.get()
             if (continueProtocol is not None and
@@ -608,7 +615,7 @@ class ProtRelionBase(EMProtocol):
         else:
             if self._getInputParticles().isOddX():
                 errors.append("Relion only works with even values for the image dimensions!")
-                
+        
             errors += self._validateNormal()
         return errors
     
@@ -634,7 +641,6 @@ class ProtRelionBase(EMProtocol):
         if self.hasAttribute('numberOfIterations'):
             iterMsg += '/%d' % self._getnumberOfIters()
         summary = [iterMsg]
-        
         if self._getInputParticles().isPhaseFlipped():
             msg = "Your images have been ctf-phase corrected"
         else:
@@ -644,7 +650,6 @@ class ProtRelionBase(EMProtocol):
         if self.doContinue:
             summary += self._summaryContinue()
         summary += self._summaryNormal()
-        
         return summary
     
     def _summaryNormal(self):
@@ -694,8 +699,9 @@ class ProtRelionBase(EMProtocol):
         return self._getIterNumber(0) or 1
     
     def _getIterClasses(self, it, clean=False):
-        """ Return the .star file with the classes for this iteration.
-        If the file doesn't exists, it will be created. 
+        """ Return a classes .sqlite file for this iteration.
+        If the file doesn't exists, it will be created by 
+        converting from this iteration data.star file.
         """
         data_classes = self._getFileName('classes_scipion', iter=it)
         
@@ -730,6 +736,10 @@ class ProtRelionBase(EMProtocol):
     
     def _getContinueIter(self):
         continueRun = self.continueRun.get()
+        
+        if continueRun is not None:
+            continueRun._initialize()
+        
         if self.doContinue:
             if self.continueIter.get() == 'last':
                 continueIter = continueRun._lastIter()
@@ -737,6 +747,7 @@ class ProtRelionBase(EMProtocol):
                 continueIter = int(self.continueIter.get())
         else:
             continueIter = 0
+            
         return continueIter
     
     def _getnumberOfIters(self):

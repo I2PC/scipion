@@ -88,6 +88,7 @@ public:
 
     size_t numOrientationsPerParticle;
 
+
 public: // Internal members
     size_t rank, Nprocessors;
 

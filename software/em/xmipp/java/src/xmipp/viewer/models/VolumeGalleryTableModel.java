@@ -44,7 +44,7 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 	ImageGeneric volume;
 
 	public VolumeGalleryTableModel(GalleryData data) throws Exception {
-		super(data);
+		super(data, null);
 		data.normalize = true; // volumes are displayed with global
 								// normalization by default
 		selection = new boolean[n];
@@ -63,6 +63,9 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		if (data.resliceView != ImageGeneric.Z_NEG)
 			volume.reslice(data.resliceView);
 		ImageDimension dim = new ImageDimension(volume);
+		n = dim.getZDim();
+		image_width = dim.getXDim();
+		image_height = dim.getYDim();
 		return dim;
 	}
 
@@ -118,7 +121,7 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 			int index = getIndex(row, col);
 			//ImagePlus imp = XmippImageConverter.convertToImagePlus(volume, ImageGeneric.FIRST_IMAGE, index + 1);
 			ImagePlusLoader loader = new ImagePlusLoader(index + 1, volume, data.inverty);
-			ImagesWindowFactory.openXmippImageWindow(data.window, loader, data.parameters);
+			ImagesWindowFactory.openXmippImageWindow(loader, data.parameters);
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();

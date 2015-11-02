@@ -45,6 +45,9 @@ class ProtCTFAssign(ProtCTFMicrographs):
         def onChangeInputType():
             pointerClass = 'SetOf' + self.getEnumText('inputType')
             self.inputSetsParam.setPointerClass(pointerClass)
+        # Initial update
+        onChangeInputType()
+        # Now keep track of changes and update
         self.inputType.trace(onChangeInputType)
     
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -83,19 +86,28 @@ class ProtCTFAssign(ProtCTFMicrographs):
     def _particlesOutputStep(self, inputSet, inputCTF):
         outputParts = self._createSetOfParticles()
         outputParts.copyInfo(inputSet)
-        
         ctfDict = {}
+        
+        firstCoord = inputSet.getFirstItem().getCoordinate()
+        hasMicName = firstCoord.getMicName() is not None
+        
         for ctf in inputCTF:
-            ctfName = ctf.getMicrograph().getMicName()
-            ctfDict[ctfName] = ctf
+            if hasMicName:
+                ctfName = ctf.getMicrograph().getMicName()
+            else:
+                ctfName = ctf.getMicrograph().getMicId()
+#             print "ctf: ", ctf.printAll(), ctfName
+            ctfDict[ctfName] = ctf.clone()
         
         missingSet = set() # Report missing micrographs only once
         
         for particle in inputSet:
-            coord = particle.getCoordinate()
-            mic = coord.getMicrograph()
-            micKey = mic.getMicName()
-            
+            if particle.hasCoordinate():
+                coord = particle.getCoordinate()
+                micKey = coord.getMicName() if hasMicName else particle.getMicId()
+            else:
+                micKey = particle.getMicId()
+           
             if micKey not in missingSet:
                 ctf = ctfDict.get(micKey, None)
                 
@@ -108,8 +120,8 @@ class ProtCTFAssign(ProtCTFMicrographs):
                     outputParts.append(newParticle)
         
         self._defineOutputs(outputParticles=outputParts)
-        self._defineSourceRelation(inputSet, outputParts)
-        self._defineSourceRelation(inputCTF, outputParts)
+        self._defineSourceRelation(self.inputSet, outputParts)
+        self._defineSourceRelation(self.inputCTF, outputParts)
     
     def _microgrpahsOutputStep(self, inputSet, inputCTF):           
         outputMics = self._createSetOfMicrographs()
@@ -131,8 +143,8 @@ class ProtCTFAssign(ProtCTFMicrographs):
                 outputMics.append(newMic)
         
         self._defineOutputs(outputMicrographs=outputMics)
-        self._defineSourceRelation(inputSet, outputMics)
-        self._defineCtfRelation(outputMics, inputCTF)
+        self._defineSourceRelation(self.inputSet, outputMics)
+        self._defineCtfRelation(outputMics, self.inputCTF)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
@@ -147,7 +159,13 @@ class ProtCTFAssign(ProtCTFMicrographs):
         is launched to be executed. It should return a list of errors. If the list is
         empty the protocol can be executed.
         """
-        #same micrographs in both CTF??
-        errors = [ ] 
+        errors = []
         # Add some errors if input is not valid
+        inputSet = self.inputSet.get()
+        if isinstance(inputSet, SetOfParticles):
+            part = inputSet.getFirstItem()
+            if not part.hasMicId():
+                errors.append("The input particles doesn't have any micrograph assigned.")
+        #same micrographs in both CTF??
         return errors
+    

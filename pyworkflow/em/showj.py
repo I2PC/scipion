@@ -265,21 +265,26 @@ def runJavaIJapp(memory, appName, args, env={}):
 
     args = getJavaIJappArguments(memory, appName, args)
     print 'java %s'%args
-    return subprocess.Popen('java ' + args, shell=True, env=env)
+    #return subprocess.Popen('java ' + args, shell=True, env=env)
+    cmd = ['java'] + args.split()
+    return subprocess.Popen(cmd, env=env)
 
-def launchSupervisedPickerGUI(memory, micsFn, outputDir, mode, protocol):
+def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
         port = initProtocolTCPServer(protocol)
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %s --output %s --mode %s  --scipion %s"%(micsFn, outputDir, mode, port)
-            
-        return runJavaIJapp("%dg" % memory, app, args)
+        args = "--input %s --output %s --scipion %s"%(micsFn, outputDir, port)
+        if mode:
+            args += " --mode %s"%mode    
+        return runJavaIJapp("%s" % memory, app, args)
     
 
-def launchTiltPairPickerGUI(memory, micsFn, outputDir, mode, protocol):
+def launchTiltPairPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
         port = initProtocolTCPServer(protocol)
         app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
-        args = "--input %s --output %s --mode %s  --scipion %s"%(micsFn, outputDir, mode, port)
-        return runJavaIJapp("%dg" % memory, app, args)
+        args = "--input %s --output %s  --scipion %s"%(micsFn, outputDir, port)
+        if mode:
+            args += " --mode %s"%mode    
+        return runJavaIJapp("%s" % memory, app, args)
     
 
 class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
@@ -288,12 +293,12 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
         protocol = self.server.protocol
         msg = self.request.recv(1024)
         tokens = shlex.split(msg)
-        print msg
         if msg.startswith('run function'):
             functionName = tokens[2]
             #try:
             functionPointer = getattr(protocol, functionName)
-            functionPointer(tokens[3:])
+            functionPointer(*tokens[3:])
+            self.request.sendall('done\n')
             self.server.end = True
             #except:
             #    print 'protocol %s must implement %s'%(protocol.getName(), functionName)
@@ -316,6 +321,7 @@ def initProtocolTCPServer(protocol):
         server = MySocketServer((address, port), ProtocolTCPRequestHandler)
         server.protocol = protocol
         server_thread = threading.Thread(target=server.serve_forever)
+        server_thread.daemon = True
         server_thread.start()
         return port
 

@@ -27,11 +27,9 @@ package xmipp.viewer.models;
 
 import ij.ImagePlus;
 
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
-import xmipp.ij.commons.ImagePlusFromFile;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
@@ -52,9 +50,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	// Also store the visible ones to fast access
 	public ArrayList<ColumnInfo> visibleLabels;
 
-	public MetadataGalleryTableModel(GalleryData data) throws Exception
+	public MetadataGalleryTableModel(GalleryData data, boolean[] selection) throws Exception
 	{
-		super(data);
+		super(data, selection);
 		data.normalize = false;
 	}
 
@@ -139,7 +137,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
             loader.setGeometry(data.getGeometry(data.ids[index]));
         if (data.getNormalized())
             loader.setNormalize(normalize_min, normalize_max);
-        ImagesWindowFactory.openXmippImageWindow(data.window, loader, data.parameters);
+        ImagesWindowFactory.openXmippImageWindow(loader, data.parameters);
     }
 
 
@@ -159,36 +157,37 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			// data.globalRender = true;
 		}
 		ImageDimension dim = null;
-        int width = 30, height = 30;
-		if (data.hasRenderLabel()) 
+        int width = 50, height = 50;
+		if (data.hasRenderLabel() && data.renderImages) 
 		{
 			renderLabel = data.ciFirstRender;
 			// if (renderLabels) {
 			String imageFn = data.getSampleImage(renderLabel);
             if(imageFn != null)
-                try
-                {
+            {
                 	ImagePlusLoader loader;
                 	if(Filename.isStackOrVolume(imageFn))
                         loader = new ImagePlusLoader(imageFn, null, null, false, false, false, ImageGeneric.MID_SLICE);
                     else  
                         loader = new ImagePlusLoader(imageFn);
                     ImagePlus image = loader.getImagePlus();
-                    
-                    width = image.getWidth(); 
-                    height = image.getHeight();
-                    dim = new ImageDimension(width, height);
-                }
-                catch (Exception e)
-                {
-                        dim = null;
-                        e.printStackTrace();
-                }
+                    if(image != null && image.getWidth() > 0)
+                    {
+	                    width = image.getWidth(); 
+	                    height = image.getHeight();
+	                    dim = new ImageDimension(width, height);
+                    }
+            }
+            
 		}
-
+		
 		if (dim == null)
 			dim = new ImageDimension(width);
+		// Zdim will always be used as number of elements to display
 		dim.setZDim(data.ids.length);
+		n = dim.getZDim();
+		image_width = dim.getXDim();
+		image_height = dim.getYDim();
 		return dim;
 	}
 
@@ -225,8 +224,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		long objId = data.ids[index];
 		ImagePlus imp = getImage(objId, imageFn);
 		ImageItem item = new ImageItem(index, imp);
-                
-		item.setImagePlus(imp);
 		return item;
 	}
 

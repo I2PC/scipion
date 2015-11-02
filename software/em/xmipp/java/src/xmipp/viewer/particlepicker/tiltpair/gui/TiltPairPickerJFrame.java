@@ -1,5 +1,7 @@
 package xmipp.viewer.particlepicker.tiltpair.gui;
 
+import ij.IJ;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -9,6 +11,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
@@ -19,8 +22,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import xmipp.ij.commons.XmippApplication;
 
+import xmipp.ij.commons.XmippApplication;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.Format;
@@ -78,6 +81,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
 		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		actionspn.add(savebt);
+		actionspn.add(closebt);
 		actionspn.add(saveandexitbt);
 		add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3,
 				GridBagConstraints.HORIZONTAL));
@@ -221,6 +225,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		if (canvas == null) {
 			canvas = new UntiltedMicrographCanvas(this);
 			tiltedcanvas = new TiltedMicrographCanvas(this);
+			tiltedcanvas.getIw().setLocation(canvas.getIw().getWidth(), canvas.getIw().getLocation().y);
 			List<UntiltedParticle> particles = getMicrograph().getParticles();
                         
                         // needs both canvas to be initialized
@@ -231,10 +236,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 			tiltedcanvas.updateMicrograph();
 
 		}
-		canvas.display();
-
-		tiltedcanvas.display();
-		tiltedcanvas.getIw().setLocation(canvas.getIw().getWidth(), canvas.getIw().getLocation().y);
 	}
 
 	public ParticlePickerCanvas getCanvas() {
@@ -294,12 +295,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 
 	@Override
 	protected void reloadImage() {
-		getCanvas().getMicrograph().releaseImage();
 		getCanvas().updateMicrograph();
-		getTiltedCanvas().getMicrograph().releaseImage();
 		getTiltedCanvas().updateMicrograph();
-		canvas.display();
-		getTiltedCanvas().display();
 
 	}
 
@@ -328,11 +325,11 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 			loadParticles(false);
 	}
 
-	@Override
-	protected void openHelpURl() {
-		XmippWindowUtil
-				.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_tiltpair_picking_v3");
-	}
+//	@Override
+//	protected void openHelpURl() {
+//		XmippWindowUtil
+//				.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_tiltpair_picking_v3");
+//	}
 
 	public String importParticlesFromFiles(Format format, String file1,
 			String file2, float scale, boolean invertx, boolean inverty) {
@@ -362,20 +359,25 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		return new TiltPairParticlesDialog(this);
 	}
         
-        public void close()
+    public void close()
 	{
 		setVisible(false);
 		dispose();
 		if (getCanvas() != null)
-                {
+        {
 			getCanvas().getIw().close();
-                        if(getTiltedCanvas() != null)
-                            getTiltedCanvas().getIw().close();
-                }
-
+            if(getTiltedCanvas() != null)
+                getTiltedCanvas().getIw().close();
+        }
 		
 		XmippApplication.removeInstance(false);
 
+	}
+    
+    public void applyFilter(String filter)
+	{
+		IJ.run(getMicrograph().getImagePlus(), filter, "");
+		IJ.run(getMicrograph().getTiltedMicrograph().getImagePlus(), filter, "");
 	}
 
 }// class TiltPairPickerJFrame

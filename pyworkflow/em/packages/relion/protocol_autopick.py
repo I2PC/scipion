@@ -102,6 +102,7 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
         writeReferences(self.getInputReferences(), self._getPath('input_references'))  
         
     def autopickMicrographStep(self, micStarFile, params, threshold, minDistance, fom):
+        from convert import getEnviron
         """ Launch the 'relion_autopick' for a micrograph with the given parameters. """
         # Call relion_autopick to allow picking of micrographs with different size
         params += ' --i %s' % relpath(micStarFile, self.getWorkingDir())
@@ -113,8 +114,11 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
     def getInputReferences(self):
         return self.inputReferences.get()
     
+    def getInputMicrographsPointer(self):
+        return self.inputMicrographs
+    
     def getInputMicrographs(self):
-        return self.inputMicrographs.get()
+        return self.getInputMicrographsPointer().get()
         
     def getCoordsDir(self):
         return self._getTmpPath('xmipp_coordinates')
@@ -171,7 +175,6 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
-        
         form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
                       label='Input micrographs (a few)', important=True,
                       help='Select a set with just a few micrographs to be used\n'
@@ -366,6 +369,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
         readSetOfCoordinates(coordSet, starFiles)
         
         self._defineOutputs(outputCoordinates=coordSet)
+        self._defineSourceRelation(self.getInputMicrographsPointer(), coordSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

@@ -149,8 +149,8 @@ def insertMaskReferenceStep(self, iterN, refN, **kwargs):
         if self.getEnumText('maskType') == 'circular':
             args += ' --mask circular -%(maskRadius)s'
         else:
-            maskFn = self.maskFile.get()
-            args += ' --mask binary_file -%(maskFn)s'
+            maskFn = self.inputMask.get().getFileName()
+            args += ' --mask binary_file %(maskFn)s'
         
         # Here is used _insertFunctionStep instead of _insertRunJobStep cause xmipp_transform_mask is not implemented with mpi
         self._insertFunctionStep('transformMaskStep', args % locals(), **kwargs)
@@ -669,8 +669,6 @@ def runFilterVolumeStep(self, iterN, refN, constantToAddToFiltration):
 
 
 def runCreateOutputStep(self):
-    import pyworkflow.em as em
-    import pyworkflow.em.metadata as md
     ''' Create standard output results_images, result_classes'''
     #creating results files
     imgSet = self.inputParticles.get()
@@ -703,24 +701,20 @@ def runCreateOutputStep(self):
     
         self._defineOutputs(outputVolumes=volumes)
         self._defineOutputs(outputClasses=classes)
-        self._defineSourceRelation(imgSet, volumes)
-        self._defineSourceRelation(imgSet, classes)
+        self._defineSourceRelation(self.inputParticles, volumes)
+        self._defineSourceRelation(self.inputParticles, classes)
     else:
         volFn = self._getFileName('reconstructedFileNamesIters', iter=lastIter, ref=1)
         vol = Volume()
         vol.setFileName(volFn)
         vol.setSamplingRate(imgSet.getSamplingRate())
         self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(imgSet, vol)
+        self._defineSourceRelation(self.inputParticles, vol)
         
         #create set of images
-        imgSetOut = self._createSetOfParticles()
-        imgFn = "all_exp_images@" + self._getFileName('docfileInputAnglesIters', iter=lastIter, ref=1)
+        imgSetOut = self._createSetOfParticles("_iter_%03d" %lastIter)
+        self._fillParticlesFromIter(imgSetOut, lastIter)
         
-        imgSetOut.copyInfo(imgSet)
-        imgSetOut.setAlignmentProj()
-        imgSetOut.copyItems(imgSet,
-                            updateItemCallback=self._createItemMatrix,
-                            itemDataIterator=md.iterRows(imgFn))
         self._defineOutputs(outputParticles=imgSetOut)
+        self._defineSourceRelation(self.inputParticles, imgSetOut)
     

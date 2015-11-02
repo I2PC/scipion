@@ -9,12 +9,14 @@ package xmipp.viewer.particlepicker;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
@@ -40,9 +42,14 @@ public class ParticlePickerParams {
     public String outputdir;
     public Integer port;
     public Mode mode;
-    public int threads;
+    public Integer threads = 1;
     public boolean fast;
     public boolean incore;
+    
+    public ParticlePickerParams(Mode mode)
+    {
+    	this.mode = mode;
+    }
     
     public ParticlePickerParams(String[] args)
     {
@@ -72,9 +79,15 @@ public class ParticlePickerParams {
         cmdLine = parser.parse(options, args);
         inputfile = cmdLine.getOptionValue(INPUTOPT);
         outputdir = cmdLine.getOptionValue(OUTPUTOPT);
-        String str = cmdLine.getOptionValue(MODEOPT);
-        mode = Mode.getMode(str);
-         if (cmdLine.hasOption(THREADSOPT)) 
+        mode = Mode.Manual;
+        if(cmdLine.hasOption(MODEOPT))
+        {
+	        String str = cmdLine.getOptionValue(MODEOPT);
+	        mode = Mode.getMode(str);
+	        if(!(mode == Mode.Review || mode == Mode.ReadOnly))
+	        	throw new IllegalArgumentException("Only Review and ReadOnly modes can be specified from the command line");
+        }
+        if (cmdLine.hasOption(THREADSOPT)) 
             threads = Integer.parseInt(cmdLine.getOptionValue(THREADSOPT));
         if (cmdLine.hasOption(FASTOPT)) 
             fast = Boolean.parseBoolean(cmdLine.getOptionValue(FASTOPT));
@@ -83,13 +96,9 @@ public class ParticlePickerParams {
         
        
         if (cmdLine.hasOption(SCIPIONOPT)) {
-            
-            
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
             if(cmdargs != null)
-            {
                 port = Integer.parseInt(cmdargs[0]);
-            }
         }
 
     }
