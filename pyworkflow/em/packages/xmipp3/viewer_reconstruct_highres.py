@@ -122,7 +122,7 @@ Examples:
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
         self.firstIter = 1
-        self.lastIter = self.protocol.getLastIter()
+        self.lastIter = self.protocol.getLastFinishedIter()
         
         if self.viewIter.get() == ITER_LAST:
             self._iterations = [self.lastIter]
