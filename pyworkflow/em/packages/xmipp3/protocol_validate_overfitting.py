@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+# * Authors:     C.O.S. Sorzano (coss@cnb.csic.es)
+# *              Mohsen Kazemi  (mkazemi@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,7 +25,7 @@
 # *
 # **************************************************************************
 
-from pyworkflow.protocol.params import (PointerParam, FloatParam, NumericListParam,
+from pyworkflow.protocol.params import (PointerParam, FloatParam, NumericListParam, IntParam,
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtReconstruct3D
@@ -54,6 +55,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                            'for a description of the symmetry format accepted by Xmipp') 
         form.addParam('numberOfParticles', NumericListParam, default="100 200 500 1000 2000 5000", expertLevel=LEVEL_ADVANCED,
                       label="Number of particles") 
+        form.addParam('numberOfIterations', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
+                      label="Number of times the randomization is performed.") 
         form.addParam('maxRes', FloatParam, default=-1, expertLevel=LEVEL_ADVANCED,
                       label="Maximum resolution (A)",  
                       help='Maximum resolution (in Angstrom) to consider \n'
@@ -80,8 +83,9 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         fractionCounter=0
         for number in numberOfParticles:
             if number<self.inputParticles.get().getSize():
-                self._insertFunctionStep('reconstructionStep',number,fractionCounter)
-                fractionCounter+=1
+                for iteration in range(0,self.numberOfIterations.get()):
+                    self._insertFunctionStep('reconstructionStep',number,fractionCounter,iteration)
+                fractionCounter+=1            
         #self._insertFunctionStep('createOutputStep')
         
     
@@ -91,7 +95,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         imgSet = self.inputParticles.get()
         writeSetOfParticles(imgSet, particlesMd)
 
-    def reconstructionStep(self, numberOfImages, fractionCounter):
+    def reconstructionStep(self, numberOfImages, fractionCounter, iteration):
         fnRoot=self._getExtraPath("fraction%02d"%fractionCounter)
         Ts=self.inputParticles.get().getSamplingRate()
         for i in range(0,2):
@@ -119,7 +123,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             maxFreq = mdFSC.getValue(xmipp.MDL_RESOLUTION_FREQREAL,id)
             if fscValue<0.5:
                 break
-        fh = open(fnRoot+"_freq.txt","w")
+        fh = open(fnRoot+"_freq.txt","a")
         fh.write("%f\n"%maxFreq)
         fh.close()
         cleanPath(fnRoot+"_fsc.xmd")
@@ -139,7 +143,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         return summary message for NORMAL EXECUTION. 
         """
         msg=[]
-        msg.append("Fraction of particles: "+self.fractionOfParticles.get())
+        msg.append("Fraction of particles: "+self.numberOfParticles.get())
         return msg
     
     #--------------------------- UTILS functions --------------------------------------------
