@@ -1514,8 +1514,8 @@ class FormWindow(Window):
             if mandatory and cores >= mandatory:
                 self.showWarning("You need to submit the job to queue since you \n"
                                  "are requesting a total of *%d* cores (MPI * threads)\n\n"
-                                 "_Note_: Your system is configured with MANDATORY = %d." % (cores, mandatory), 
-                                 "        This value can be changed in Scipion/config/hosts.conf")
+                                 "*Note*: Your system is configured with MANDATORY = %d.\n"  
+                                 "        This value can be changed in Scipion/config/hosts.conf" % (cores, mandatory))
                 return
         
         if (self.protocol.getRunMode() == params.MODE_RESTART and 
@@ -1789,6 +1789,10 @@ class QueueDialog(Dialog):
         self.queueDict = queueDict
         self.window = window
         self.queueName, self.queueParams = window.protocol.getQueueParams()
+        # If there is only one queue and not one selected, use the first one
+        if not self.queueName and len(queueDict.keys()) == 1:
+            self.queueName = queueDict.keys()[0]
+            
         Dialog.__init__(self, window.root, "Queue parameters")
         
     def body(self, bodyFrame):
