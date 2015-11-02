@@ -40,6 +40,7 @@ except ImportError:
 
 __version__ = 'v1.0.0'
 __nickname__ = 'Augusto'
+__releasedate__ = '15 Jan 2016'
 
 
 # This script tries to run ok with any python version. So we cannot
@@ -211,6 +212,12 @@ def runApp(app, args='', chdir=True):
     runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args), chdir)
 
 
+def printVersion():
+    """ Print Scipion version """
+    # Print the version and some more info
+    sys.stdout.write('\nScipion %s (%s)\n\n' % (__version__, __releasedate__))
+    
+
 
 #
 # Modes (first argument given to scipion).
@@ -242,9 +249,7 @@ MODE_DEPENDENCIES = 'deps'
 
 
 def main():
-    # Print the version and some more info
-    sys.stdout.write('\nScipion %s (%s)\n\n' % (__version__, 'aaa'))
-    
+    printVersion()
     # See in which "mode" the script is called. By default, it's MODE_MANAGER.
     n = len(sys.argv)
     if n > 1:
@@ -432,7 +437,7 @@ Arguments:
         runApp('gitstats/gitstats', args=[SCIPION_HOME, statsDir])
 
     elif mode == MODE_VERSION:
-        sys.stdout.write('%s\n' % __version__)
+        # Just exit, Scipion version will be printed anyway
         sys.exit(0)
 
     elif mode == MODE_RUNPROTOCOL:
