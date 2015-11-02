@@ -30,8 +30,9 @@ from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtReconstruct3D
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.utils import getFloatListFromValues
-from pyworkflow.utils.path import cleanPath
+from pyworkflow.utils.path import cleanPattern, cleanPath
 import os
+import xmipp
 
 class XmippProtValidateOverfitting(ProtReconstruct3D):
     """    
@@ -109,9 +110,20 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
 
         self.runJob('xmipp_resolution_fsc', "--ref %s -i %s -o %s --sampling_rate %f"%\
                     (fnRoot+"_00.vol",fnRoot+"_01.vol",fnRoot+"_fsc.xmd",Ts), numberOfMpi=1)
-        cleanPath(fnRoot+"_0?.vol")
-        cleanPath(fnRoot+"_images_0?.xmd")
-            
+        cleanPattern(fnRoot+"_0?.vol")
+        cleanPattern(fnRoot+"_images_0?.xmd")
+        
+        mdFSC = xmipp.MetaData(fnRoot+"_fsc.xmd")
+        for id in mdFSC:
+            fscValue = mdFSC.getValue(xmipp.MDL_RESOLUTION_FRC,id)
+            maxFreq = mdFSC.getValue(xmipp.MDL_RESOLUTION_FREQREAL,id)
+            if fscValue<0.5:
+                break
+        fh = open(fnRoot+"_freq.txt","w")
+        fh.write("%f\n"%maxFreq)
+        fh.close()
+        cleanPath(fnRoot+"_fsc.xmd")
+        
     def createOutputStep(self):
         imgSet = self.inputParticles.get()
         volume = Volume()
