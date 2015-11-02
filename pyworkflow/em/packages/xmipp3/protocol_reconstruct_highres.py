@@ -36,7 +36,7 @@ from pyworkflow.em.protocol import ProtRefine3D
 from pyworkflow.em.data import SetOfVolumes, Volume
 from pyworkflow.em.metadata.utils import getFirstRow, getSize
 from convert import writeSetOfParticles
-from os.path import join, exists
+from os.path import join, exists, split
 from pyworkflow.em.packages.xmipp3.convert import readSetOfParticles, setXmippAttributes
 from pyworkflow.em.convert import ImageHandler
 
@@ -288,9 +288,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self._defineOutputs(outputParticles=imgSetOut)
             self._defineSourceRelation(self.inputParticles, imgSetOut)
     
-    def getLastIter(self):
-        fnDirs=sorted(glob(self._getExtraPath("Iter???")))
-        lastDir=fnDirs[-1]
+    def getLastFinishedIter(self):
+        fnFscs=sorted(glob(self._getExtraPath("Iter???/fsc.xmd")))
+        lastDir=split(fnFscs[-1])[0]
         return int(lastDir[-3:])
     
     def _postprocessImageRow(self, particle, row):
