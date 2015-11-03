@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.showj import RENDER
+from pyworkflow.em.showj import RENDER, ORDER, VISIBLE, MODE, MODE_MD
 from pyworkflow.em.viewer import DataView
 import pyworkflow.em.metadata as md
 from pyworkflow.protocol.params import LabelParam, StringParam
@@ -46,7 +46,6 @@ class XmippValidateNonTiltViewer(ProtocolViewer):
     
     def _defineParams(self, form):
         form.addSection(label='Show Results Validate NonTilt')
-
         form.addParam('volForCurve', StringParam, default=1, 
                       label="Show info for volume")
         form.addParam('doShowVolume', LabelParam,
@@ -60,17 +59,13 @@ class XmippValidateNonTiltViewer(ProtocolViewer):
                 }        
         
     def _viewVolume(self, e=None):
-        
-        volId = int(self.volForCurve.get())
-        vol = self.protocol.outputVolumes[volId]
-        
-        if vol is None: # Wrong volume selection
-            return [self.errorMessage("Invalid volume id *%d*" % volId)]
-        
-        pFn = self.protocol._defineVolumeName(volId)
-        cm = DataView(pFn, viewParams={RENDER: 'image'})
+        import pyworkflow.em.metadata as md 
+        viewLabels = 'id enabled _index _filename _xmipp_weight'
+        cm = DataView(self.protocol.outputVolumes.getFileName(), viewParams={MODE : MODE_MD,
+                                                                             ORDER : viewLabels,
+                                                                             RENDER :'_filename',
+                                                                             VISIBLE : viewLabels})
         return [cm]
-
         
     def _viewP(self, e=None):
         volId = int(self.volForCurve.get())

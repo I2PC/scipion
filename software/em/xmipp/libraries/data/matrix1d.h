@@ -623,6 +623,7 @@ public:
         initConstant(val);
     }
 
+
     /** Enumerate starting from 0 to size
      */
     void enumerate()

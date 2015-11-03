@@ -63,6 +63,7 @@ from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from pyworkflow.em.showj import *
 from protocol_movie_alignment import ProtMovieAlignment
 from protocol_validate_nontilt import XmippProtValidateNonTilt
+from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 
 class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
@@ -93,7 +94,8 @@ class XmippViewer(Viewer):
                 XmippProtScreenParticles, 
                 XmippProtCTFMicrographs, 
                 ProtMovieAlignment,
-                XmippProtValidateNonTilt
+                XmippProtValidateNonTilt,
+                XmippProtAssignmentTiltPair
                 ]
     
     def __init__(self, **args):
@@ -333,21 +335,14 @@ class XmippViewer(Viewer):
                                                       MODE: MODE_MD}))
         
         elif issubclass(cls, XmippProtProjectionOutliers):
-            if isinstance(obj.inputSet.get(), SetOfClasses2D):
-                fn = obj.outputClasses
-                labels = 'id enabled _size _representative._index _representative._filename _xmipp_maxCC _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar'
-                labelRender = "_representative._filename"
-                self._visualize(fn, viewParams={ORDER: labels, 
-                                                          VISIBLE: labels, 
-                                                          SORT_BY: '_xmipp_zScoreResCov desc', RENDER:labelRender})
-            else:
-                fn = obj.outputAverages.getFileName()
-                labels = 'id enabled _index _filename  _xmipp_maxCC _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar _transform._matrix'
-                labelRender = "_filename"
-                self._views.append(ObjectView(self._project, obj.outputAverages.strId(), fn,
+                fn = obj.outputParticles.getFileName()
+                labels = 'id enabled _index _xmipp_image._filename _xmipp_imageRef._filename _xmipp_imageResidual._filename _xmipp_imageCovariance._filename _xmipp_cost _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar _xmipp_continuousA _xmipp_continuousB _xmipp_continuousX _xmipp_continuousY'
+                labelRender = "_xmipp_image._filename _xmipp_imageRef._filename _xmipp_imageResidual._filename _xmipp_imageCovariance._filename"
+                self._views.append(ObjectView(self._project, obj.outputParticles.strId(), fn,
                                               viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
-                                                      SORT_BY: '_xmipp_zScoreResCov desc', RENDER:labelRender}))
+                                                      SORT_BY: '_xmipp_cost asc', RENDER:labelRender,
+                                                      MODE: MODE_MD}))
             
         elif issubclass(cls, XmippParticlePickingAutomatic):
             micSet = obj.getInputMicrographs()
@@ -361,11 +356,17 @@ class XmippViewer(Viewer):
             posDir = obj._getExtraPath()  
             memory = '%dg'%obj.memory.get(), 
             launchSupervisedPickerGUI(micsfn, posDir, obj, mode='review', memory=memory)
-            
+
+         # We need this case to happens before the ProtParticlePicking one
+        elif issubclass(cls, XmippProtAssignmentTiltPair):
+            if obj.getOutputsSize() >= 1:
+                coordsSet = obj.getCoordsTiltPair()
+                self._visualize(coordsSet)  
+                
         elif issubclass(cls, ProtParticlePicking):
             if obj.getOutputsSize() >= 1:
                 coordsSet = obj.getCoords()
-                self._visualize(coordsSet)    
+                self._visualize(coordsSet)
             
         elif issubclass(cls, ProtMovieAlignment):
             outputMics = obj.outputMicrographs

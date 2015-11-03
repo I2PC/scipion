@@ -273,7 +273,7 @@ class CtfEstimateFromMicrograph(XmippProgramTest):
         self.runCase("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --dont_estimate_ctf",
                 outputs=["micrograph.psd"])
     def test_case2(self):
-        self.runCase("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --pieceDim 256 --downSamplingPerformed 2.5 --ctfmodelSize 256  --defocusU 14900 --defocusV 14900 --min_freq 0.01 --max_freq 0.4",
+        self.runCase("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --pieceDim 256 --downSamplingPerformed 2.5 --ctfmodelSize 256  --defocusU 14900 --defocusV 14900 --min_freq 0.01 --max_freq 0.3 --defocus_range 1000",
                 postruns=["xmipp_metadata_utilities -i %o/micrograph.ctfparam --operate keep_column 'ctfDefocusU ctfDefocusV' -o %o/Defocus.xmd" ,'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusU = round(ctfDefocusU/100.0)" ','xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusV = round(ctfDefocusV/100.0)" '],
                 outputs=["micrograph.psd","micrograph_enhanced_psd.xmp","micrograph.ctfparam","Defocus.xmd"])
 
@@ -699,7 +699,7 @@ class ClassifyCL2DCoreAnalysisMpi(XmippProgramTest):
     def test_case1(self):
         self.runCase("--dir %o/input/CL2DBacteriorhodopsin --root class --computeCore 3.000000 3.000000",
                 preruns=["mkdir %o/input ; cp -r input/CL2DBacteriorhodopsin %o/input ; rm -rf %o/input/CL2DBacteriorhodopsin/.svn ; cp input/projectionsBacteriorhodopsin.stk %o/input" ],
-                outputs=[])
+                outputs=['input/CL2DBacteriorhodopsin/level_00/class_classes_core.xmd'])
 
 
 class CtfCorrectIdrMpi(CtfCorrectIdr):
@@ -734,7 +734,8 @@ class NmaAlignment(XmippProgramTest):
         self.runCase("-i 2tbv_prj00001.xmp  --pdb 2tbv.pdb --modes modelist.xmd --sampling_rate 6.4 -o output.xmd --resume",
                 preruns=["cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" ],
                 postruns=["xmipp_metadata_utilities -i %o/output.xmd --operate keep_column 'cost' -o %o/cost.xmd" ,'xmipp_metadata_utilities -i %o/cost.xmd --operate  modify_values "cost = round(cost*100.0)" '],
-                outputs=["cost.xmd"])
+                outputs=["cost.xmd"],
+		changeDir=True)
 
 
 class NmaAlignmentMpi(NmaAlignment):
@@ -747,7 +748,8 @@ class NmaAlignmentMpi(NmaAlignment):
         self.runCase("-i 2tbv_prj00001.xmp  --pdb 2tbv.pdb --modes modelist.xmd --sampling_rate 6.4 -o output.xmd --resume",
                 preruns=["cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" ],
                 postruns=["xmipp_metadata_utilities -i %o/output.xmd --operate keep_column 'cost' -o %o/cost.xmd" ,'xmipp_metadata_utilities -i %o/cost.xmd --operate  modify_values "cost = round(cost*100.0)" '],
-                outputs=["cost.xmd"])
+                outputs=["cost.xmd"],
+		changeDir=True)
 
 
 class RunMpi(XmippProgramTest):
@@ -771,7 +773,8 @@ class PdbNmaDeform(XmippProgramTest):
     def test_case1(self):
         self.runCase("--pdb 2tbv.pdb -o deformed.pdb --nma modelist.xmd --deformations 1000",
                 preruns=["cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" ],
-                outputs=["deformed.pdb"])
+                outputs=["deformed.pdb"],
+		changeDir=True)
 
 
 class PhantomCreate(XmippProgramTest):
@@ -796,7 +799,7 @@ class PhantomSimulateMicroscope(XmippProgramTest):
                 outputs=["smallStackPlusCtf.stk"])
     def test_case2(self):
         self.runCase("-i input/projectionsBacteriorhodopsin.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam --targetSNR 0.3",
-                outputs=["smallStackPlusCtf.stk"])
+                outputs=["smallStackPlusCtf.stk"],random=True)
 
 
 class PhantomTransform(XmippProgramTest):
@@ -938,7 +941,7 @@ class TransformAddNoise(XmippProgramTest):
 
     def test_case1(self):
         self.runCase("-i input/cleanImage.spi --type gaussian 10 5 -o %o/noisyGaussian.spi",
-                outputs=["noisyGaussian.spi"])
+                outputs=["noisyGaussian.spi"], random=True)
 
 
 class TransformAdjustVolumeGreyLevels(XmippProgramTest):

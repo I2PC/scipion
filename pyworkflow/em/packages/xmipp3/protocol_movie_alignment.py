@@ -301,6 +301,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         if alMethod == AL_AVERAGE:
             command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s' % locals()
             command += ' --nst %d --ned %d --simpleAverage --psd' % (firstFrame, lastFrame)
+            doSaveMovie = False
             if self.inputMovies.get().getDark() is not None:
                 command += " --dark "+self.inputMovies.get().getDark()
                 grayCorrected=True

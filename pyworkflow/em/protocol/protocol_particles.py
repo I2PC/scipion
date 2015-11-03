@@ -141,6 +141,14 @@ class ProtParticlePicking(ProtParticles):
         suffix = str(count) if count > 1 else ''
         outputName = 'outputCoordinates' + suffix
         return getattr(self, outputName)
+    
+    def getCoordsTiltPair(self):
+        count = self.getOutputsSize()
+        if count == 0:
+            return None
+        suffix = str(count) if count > 1 else ''
+        outputName = 'outputCoordinatesTiltPair' + suffix
+        return getattr(self, outputName)
 
     def _createOutput(self, outputDir):
         micSet = self.getInputMicrographs()

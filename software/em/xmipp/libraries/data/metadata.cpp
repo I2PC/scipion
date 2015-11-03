@@ -754,7 +754,9 @@ void MetaData::_writeRows(std::ostream &os) const
 {
 	size_t i=0;				// Loop counter.
 	size_t length=0;		// Loop upper bound.
-	bool firstTime=true;
+
+	// Prepare statement.
+	myMDSql->initializeGetObjectsValuesStatement( activeLabels);
 
 	// Metadata objects loop.
     FOR_ALL_OBJECTS_IN_METADATA(*this)
@@ -762,8 +764,7 @@ void MetaData::_writeRows(std::ostream &os) const
         std::vector<MDObject> mdValues;
 
         // Get metadata values.
-    	myMDSql->getObjectsValues(__iter.objId, activeLabels, &mdValues, firstTime);
-    	firstTime = false;
+    	myMDSql->getObjectsValues( __iter.objId, activeLabels, &mdValues);
 
     	// Build metadata line.
     	length = activeLabels.size();
@@ -779,10 +780,8 @@ void MetaData::_writeRows(std::ostream &os) const
 
         os << std::endl;
     }
-
     // Finalize statement.
-    if (size()>0)
-    	myMDSql->finalizePreparedStmt();
+    myMDSql->finalizePreparedStmt();
 }
 
 void MetaData::print() const
@@ -883,7 +882,6 @@ void MetaData::_readColumns(std::istream& is, std::vector<MDObject*> & columnVal
 void MetaData::_parseObjects(std::istream &is, std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels, bool firstTime)
 {
 	size_t i=0;				// Loop counter.
-	std::stringstream ss;	// String that contains SQL sentence.
 	size_t size=0;			// Column values vector size.
 
 	// Columns loop.

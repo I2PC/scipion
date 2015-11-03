@@ -122,7 +122,7 @@ Examples:
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
         self.firstIter = 1
-        self.lastIter = self.protocol.getLastIter()
+        self.lastIter = self.protocol.getLastFinishedIter()
         
         if self.viewIter.get() == ITER_LAST:
             self._iterations = [self.lastIter]
@@ -173,7 +173,11 @@ Examples:
         for it in self._iterations:
             fnDir = self.protocol._getExtraPath("Iter%03d"%it)
             if choice == 0:
-                fnVolume = join(fnDir,"volume01.vol")
+                if self.protocol.alignmentMethod==self.protocol.GLOBAL_ALIGNMENT:
+                    fnDir = join(fnDir,'globalAssignment')
+                else:
+                    fnDir = join(fnDir,'localAssignment')
+                fnVolume = join(fnDir,"volumeRef01.vol")
             elif choice == 1:
                 fnVolume = join(fnDir,"volumeAvg.mrc")
             if exists(fnVolume):

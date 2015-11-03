@@ -85,6 +85,15 @@ def loadHostsConf(hostsConf):
                     return cp.get(hostName, var).replace('%_(', '%(')
                 else:
                     return default
+                
+            def getDict(var):
+                od = OrderedDict()
+
+                if cp.has_option(hostName, var):
+                    for key, value in json.loads(get(var)).iteritems():
+                        od[key] = value                
+                
+                return od
 
             host.setScipionHome(get('SCIPION_HOME', os.environ['SCIPION_HOME']))
             host.setScipionConfig(get('SCIPION_CONFIG'))
@@ -98,15 +107,14 @@ def loadHostsConf(hostsConf):
             # If the NAME is not provided or empty
             # do no try to parse the rest of Queue parameters
             if host.queueSystem.hasName(): 
-                host.queueSystem.mandatory.set(get('MANDATORY'))
+                host.queueSystem.setMandatory(get('MANDATORY', 0))
                 host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
                 host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
                 host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
                 host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
     
-                host.queueSystem.queues = OrderedDict()
-                for qName, qValues in json.loads(get('QUEUES')).iteritems():
-                    host.queueSystem.queues[qName] = qValues
+                host.queueSystem.queues = getDict('QUEUES')
+                host.queueSystem.queuesDefault = getDict('QUEUES_DEFAULT')
                 
             hosts[hostName] = host
 
