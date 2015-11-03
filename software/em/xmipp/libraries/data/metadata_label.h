@@ -61,8 +61,10 @@ enum MDLabel
     MDL_ANGLE_TILT2, ///< Tilting angle of an image (double,degrees)
     MDL_ANGLE_TILT_DIFF, ///< difference between tilt angles (double,degrees)
     MDL_ANGLE_DIFF, ///< difference between two angles (double,degrees)
+    MDL_ANGLE_DIFF2, ///< difference between two angles (double,degrees)
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
     MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
+    MDL_APPLY_SHIFT,///<Apply shift when project the volume ,
     MDL_AVG, ///< average value (double)
     MDL_AVG_CHANGES_ORIENTATIONS, /// Average change in angular orientation (double degrees)
     MDL_AVG_CHANGES_OFFSETS, /// Average change in offset (double pixels)
@@ -82,6 +84,7 @@ enum MDLabel
     MDL_CLASSIFICATION_FRC_05, ///< Digital frequency at which the FRC drops below 0.5 (double)
     MDL_COMMENT, ///< Serve to make annotations on the metadata row
     MDL_COST, ///< Cost for the image (double)
+    MDL_COST_PERCENTILE, ///< Cost percentile for the image (double)
     MDL_COUNT, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
     MDL_COUNT2, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
 
@@ -100,10 +103,13 @@ enum MDLabel
 
     MDL_CONTINUOUS_X, ///< X shift of continuous assignment
     MDL_CONTINUOUS_Y, ///< Y shift of continuous assignment
+    MDL_CONTINUOUS_FLIP, ///< Flip of continuous assignment
     MDL_CONTINUOUS_GRAY_A, ///< a value of continuous assignment
     MDL_CONTINUOUS_GRAY_B, ///< b value of continuous assignment
     MDL_CONTINUOUS_SCALE_X, ///< a value of continuous assignment
     MDL_CONTINUOUS_SCALE_Y, ///< b value of continuous assignment
+
+    MDL_CTF_DATA_PHASE_FLIPPED, // Is the Data Phase-Flippled?
     MDL_CTF_INPUTPARAMS, ///< Parameters file for the CTF Model (std::string)
     MDL_CTF_MODEL, ///< Name for the CTF Model (std::string)
     MDL_CTF_MODEL2, ///< Name for another CTF model (std::string)
@@ -136,6 +142,9 @@ enum MDLabel
     MDL_CTF_TRANSVERSAL_DISPLACEMENT, ///< Transversal displacemente
     MDL_CTF_Q0, ///< Inelastic absorption
     MDL_CTF_K, ///< CTF gain
+	MDL_CTF_ENV_R0, ///< CTF Envelope polynomial parameter
+	MDL_CTF_ENV_R1, ///< CTF Envelope polynomial parameter
+	MDL_CTF_ENV_R2, ///< CTF Envelope polynomial parameter
     MDL_CTF_BG_GAUSSIAN_K, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN_SIGMAU, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN_SIGMAV, ///< CTF Background parameter
@@ -153,6 +162,9 @@ enum MDLabel
     MDL_CTF_BG_GAUSSIAN2_CU, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN2_CV, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN2_ANGLE, ///< CTF Background parameter
+	MDL_CTF_BG_R1, ///< CTF Background polynomial parameter
+	MDL_CTF_BG_R2, ///< CTF Background polynomial parameter
+	MDL_CTF_BG_R3, ///< CTF Background polynomial parameter
     MDL_CTF_CRIT_NONASTIGMATICVALIDITY, ///< Maximum frequency (in Angstroms) at which non-astigmatic CTF correction is valid
     MDL_CTF_CRIT_PSDCORRELATION90, ///< PSD correlation at 90 degrees
     MDL_CTF_CRIT_FIRSTZERORATIO, ///< First zero ratio
@@ -227,6 +239,7 @@ enum MDLabel
     MDL_MAPTOPOLOGY, ///< Map topology (KerDenSOM, ...)
     MDL_MASK, ///< Name of a mask associated to image
     MDL_MAXCC, ///< Maximum cross-correlation for the image (double)
+    MDL_MAXCC_PERCENTILE, ///< Percentile of the maximum cross-correlation for the image (double)
     MDL_MAX, ///< Maximum value (double)
     MDL_MICROGRAPH, ///< Name of a micrograph (std::string)
     MDL_MICROGRAPH_ID, ///< Micrograph unique id for reference (MDL_ITEM_ID should be used for Micrographs list)
@@ -375,8 +388,10 @@ enum MDLabel
     MDL_VOLUME_SCORE3,/// < Score 3 for volumes
     MDL_VOLUME_SCORE4,/// < Score 4 for volumes
     MDL_WEIGHT, ///< Weight assigned to the image (double)
+    MDL_WEIGHT_P, ///< Weight assigned to the image accordint to its clusterability with a significance with respect noise (double)
     MDL_WEIGHT_CONTINUOUS2, ///< Weight due to angular continuous assignment
     MDL_WEIGHT_JUMPER, ///< Weight due to angular jumping
+    MDL_WEIGHT_JUMPER2, ///< Weight due to angular jumping
     MDL_WEIGHT_SIGNIFICANT, ///< Weight due to Angular significance
     MDL_WEIGHT_SSNR, ///< Weight due to SSNR
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
@@ -1053,7 +1068,7 @@ public:
     String toString(bool withFormat = false, bool isSql=false) const;
     bool fromStream(std::istream &is, bool fromString=false);
     friend std::istream& operator>> (std::istream& is, MDObject &value);
-    friend std::ostream& operator<< (std::ostream& is, MDObject &value);
+    friend std::ostream& operator<< (std::ostream& is, const MDObject &value);
     bool fromString(const String &str);
     bool fromChar(const char * str);
 
@@ -1279,9 +1294,11 @@ private:
         MDL::addLabelAlias(MDL_ANGLE_TILT2, "tilt2");
         MDL::addLabel(MDL_ANGLE_TILT_DIFF, LABEL_DOUBLE, "angleTiltDiff");
         MDL::addLabel(MDL_ANGLE_DIFF, LABEL_DOUBLE, "angleDiff");
+        MDL::addLabel(MDL_ANGLE_DIFF2, LABEL_DOUBLE, "angleDiff2");
         MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY");
         MDL::addLabel(MDL_ANGLE_Y2, LABEL_DOUBLE, "angleY2");
 
+        MDL::addLabel(MDL_APPLY_SHIFT, LABEL_BOOL, "applyShift");
         MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
         MDL::addLabel(MDL_AVG_CHANGES_ORIENTATIONS, LABEL_DOUBLE, "avgChanOrient");
         MDL::addLabel(MDL_AVG_CHANGES_OFFSETS, LABEL_DOUBLE, "avgChanOffset");
@@ -1309,6 +1326,7 @@ private:
         MDL::addLabel(MDL_COLOR, LABEL_INT, "color");
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
+        MDL::addLabel(MDL_COST_PERCENTILE, LABEL_DOUBLE, "costPerc");
         MDL::addLabel(MDL_COUNT2, LABEL_SIZET, "count2");
         MDL::addLabel(MDL_COUNT, LABEL_SIZET, "count");
 
@@ -1328,7 +1346,11 @@ private:
         MDL::addLabelAlias(MDL_CTF_BG_BASELINE, "CTFBG_Baseline");//3.0
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "ctfBgGaussian2Angle");
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_ANGLE, "CTFBG_Gaussian2_Angle"); //3.0
+        MDL::addLabel(MDL_CTF_BG_R1, LABEL_DOUBLE, "ctfBgR1");
+        MDL::addLabel(MDL_CTF_BG_R2, LABEL_DOUBLE, "ctfBgR2");
+        MDL::addLabel(MDL_CTF_BG_R3, LABEL_DOUBLE, "ctfBgR3");
 
+        MDL::addLabel(MDL_CTF_DATA_PHASE_FLIPPED, LABEL_BOOL, "ctfPhaseFlipped");
         MDL::addLabel(MDL_CTF_X0, LABEL_DOUBLE, "ctfX0");
         MDL::addLabel(MDL_CTF_XF, LABEL_DOUBLE, "ctfXF");
         MDL::addLabel(MDL_CTF_Y0, LABEL_DOUBLE, "ctfY0");
@@ -1376,6 +1398,7 @@ private:
 
         MDL::addLabel(MDL_CONTINUOUS_X, LABEL_DOUBLE, "continuousX");
         MDL::addLabel(MDL_CONTINUOUS_Y, LABEL_DOUBLE, "continuousY");
+        MDL::addLabel(MDL_CONTINUOUS_FLIP, LABEL_BOOL, "continuousFlip");
         MDL::addLabel(MDL_CONTINUOUS_GRAY_A, LABEL_DOUBLE, "continuousA");
         MDL::addLabel(MDL_CONTINUOUS_GRAY_B, LABEL_DOUBLE, "continuousB");
         MDL::addLabel(MDL_CONTINUOUS_SCALE_X, LABEL_DOUBLE, "continuousScaleX");
@@ -1411,6 +1434,9 @@ private:
         MDL::addLabel(MDL_CTF_GROUP, LABEL_INT, "ctfGroup");
         MDL::addLabel(MDL_CTF_INPUTPARAMS, LABEL_STRING, "ctfInputParams", TAGLABEL_TEXTFILE);
         MDL::addLabel(MDL_CTF_K, LABEL_DOUBLE, "ctfK");
+        MDL::addLabel(MDL_CTF_ENV_R0, LABEL_DOUBLE, "ctfEnvR0");
+        MDL::addLabel(MDL_CTF_ENV_R1, LABEL_DOUBLE, "ctfEnvR1");
+        MDL::addLabel(MDL_CTF_ENV_R2, LABEL_DOUBLE, "ctfEnvR2");
         MDL::addLabel(MDL_CTF_LAMBDA, LABEL_DOUBLE, "ctfLambda");
         MDL::addLabel(MDL_CTF_LENS_STABILITY, LABEL_DOUBLE, "ctfLensStability");
         MDL::addLabel(MDL_CTF_LONGITUDINAL_DISPLACEMENT, LABEL_DOUBLE, "ctfLongitudinalDisplacement");
@@ -1535,6 +1561,7 @@ private:
         MDL::addLabel(MDL_MAPTOPOLOGY, LABEL_STRING, "mapTopology");
         MDL::addLabel(MDL_MASK, LABEL_STRING, "mask", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
+        MDL::addLabel(MDL_MAXCC_PERCENTILE, LABEL_DOUBLE, "maxCCPerc");
         MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
         MDL::addLabel(MDL_MICROGRAPH_ID, LABEL_SIZET, "micrographId");
         MDL::addLabel(MDL_MICROGRAPH, LABEL_STRING, "micrograph", TAGLABEL_MICROGRAPH);
@@ -1709,9 +1736,11 @@ private:
         MDL::addLabel(MDL_VOLUME_SCORE3, LABEL_DOUBLE, "volScore3");
         MDL::addLabel(MDL_VOLUME_SCORE4, LABEL_DOUBLE, "volScore4");
         MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight");
+        MDL::addLabel(MDL_WEIGHT_P, LABEL_DOUBLE, "weight_clusterability");
         MDL::addLabelAlias(MDL_WEIGHT, "Weight");
         MDL::addLabel(MDL_WEIGHT_CONTINUOUS2, LABEL_DOUBLE, "weightContinuous2");
         MDL::addLabel(MDL_WEIGHT_JUMPER, LABEL_DOUBLE, "weightJumper");
+        MDL::addLabel(MDL_WEIGHT_JUMPER2, LABEL_DOUBLE, "weightJumper2");
         MDL::addLabel(MDL_WEIGHT_SIGNIFICANT, LABEL_DOUBLE, "weightSignificant");
         MDL::addLabel(MDL_WEIGHT_SSNR, LABEL_DOUBLE, "weightSSNR");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");

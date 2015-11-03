@@ -820,6 +820,59 @@ TEST_F( MetadataTest, MultiQuery)
     EXPECT_EQ(outMetadata,auxMetadata);
 }
 
+TEST_F( MetadataTest, JoinVector)
+{
+    MetaData auxMetadata, auxMetadata2;
+    MetaData auxMetadata3;
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,1.,id);
+    auxMetadata3.setValue(MDL_Y,2.,id);
+    auxMetadata3.setValue(MDL_Z,222.,id);
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,3.,id);
+    auxMetadata3.setValue(MDL_Y,4.,id);
+    auxMetadata3.setValue(MDL_Z,333.,id);
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,3.,id);
+    auxMetadata3.setValue(MDL_Y,4.,id);
+    auxMetadata3.setValue(MDL_Z,444.,id);
+
+    id = auxMetadata2.addObject();
+    auxMetadata2.setValue(MDL_X,1.,id);
+    auxMetadata2.setValue(MDL_Y,2.,id);
+    auxMetadata2.setValue(MDL_Z,3.,id);
+    auxMetadata2.setValue(MDL_ANGLE_ROT,0.,id);
+    id = auxMetadata2.addObject();
+    auxMetadata2.setValue(MDL_X,3.,id);
+    auxMetadata2.setValue(MDL_Y,4.,id);
+    auxMetadata2.setValue(MDL_Z,5.,id);
+    auxMetadata2.setValue(MDL_ANGLE_ROT,180.,id);
+
+    std::vector<MDLabel> labels;
+    labels.push_back(MDL_X);
+    labels.push_back(MDL_Y);
+    auxMetadata.join1(auxMetadata2,auxMetadata3,labels,LEFT);
+
+    MetaData outMetadata;
+    id = outMetadata.addObject();
+    outMetadata.setValue(MDL_X,1.,id);
+    outMetadata.setValue(MDL_Y,2.,id);
+    outMetadata.setValue(MDL_Z,3.,id);
+    outMetadata.setValue(MDL_ANGLE_ROT,0.,id);
+    id = outMetadata.addObject();
+    outMetadata.setValue(MDL_X,3.,id);
+    outMetadata.setValue(MDL_Y,4.,id);
+    outMetadata.setValue(MDL_Z,5.,id);
+    outMetadata.setValue(MDL_ANGLE_ROT,180.,id);
+    id = outMetadata.addObject();
+    outMetadata.setValue(MDL_X,3.,id);
+    outMetadata.setValue(MDL_Y,4.,id);
+    outMetadata.setValue(MDL_Z,5.,id);
+    outMetadata.setValue(MDL_ANGLE_ROT,180.,id);
+
+    EXPECT_EQ(outMetadata,auxMetadata);
+}
+
 TEST_F( MetadataTest, MDValueEQ)
 {
     try

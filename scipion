@@ -30,15 +30,17 @@ Main entry point to scipion. It launches the gui, tests, etc.
 """
 import sys
 import os
-from os.path import join, exists, dirname, basename
-import time
+from os.path import join, exists, dirname
+
 try:
     from ConfigParser import ConfigParser, ParsingError
 except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-__version__ = 'v.0.1.5 Phosphorus'
+__version__ = 'v1.0.0'
+__nickname__ = 'Augusto'
+__releasedate__ = '15 Jan 2016'
 
 
 # This script tries to run ok with any python version. So we cannot
@@ -106,6 +108,7 @@ for confFile in [SCIPION_CONFIG, SCIPION_LOCAL_CONFIG,
 # directories and packages.
 VARS = {
     'SCIPION_HOME': SCIPION_HOME,
+    'SCIPION_VERSION': __version__,
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
     'SCIPION_PYTHON': 'python',
     'SCIPION_CONFIG': SCIPION_CONFIG,
@@ -209,6 +212,12 @@ def runApp(app, args='', chdir=True):
     runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args), chdir)
 
 
+def printVersion():
+    """ Print Scipion version """
+    # Print the version and some more info
+    sys.stdout.write('\nScipion %s (%s)\n\n' % (__version__, __releasedate__))
+    
+
 
 #
 # Modes (first argument given to scipion).
@@ -234,11 +243,13 @@ MODE_PROTOCOLS = 'protocols'
 MODE_STATS = 'stats'
 MODE_ENV = 'printenv'
 MODE_RUN = 'run'
+MODE_PYTHON = 'python'
 MODE_TUTORIAL = 'tutorial'
 MODE_DEPENDENCIES = 'deps'
 
 
 def main():
+    printVersion()
     # See in which "mode" the script is called. By default, it's MODE_MANAGER.
     n = len(sys.argv)
     if n > 1:
@@ -256,8 +267,8 @@ def main():
 #         if not exists(join(VARS['SCIPION_SOFTWARE'], 'log', 'success.log')):
 #             ok = False
         if not ok:
-            sys.exit('There is a problem with the installation. Please run:\n'
-                     '  %s install' % sys.argv[0])
+            sys.exit("There is a problem with the installation. Please run:\n"
+                     "  %s install" % sys.argv[0])
 
     if mode == MODE_MANAGER:
         runApp('pw_manager.py')
@@ -266,9 +277,7 @@ def main():
         runApp('pw_project.py', args='last')
         
     elif mode == MODE_PROJECT:
-        if n > 2:
-            projectName = sys.argv[2]
-            runApp('pw_project.py', args=projectName)
+        runApp('pw_project.py', args=sys.argv[2:])
 
     elif mode == MODE_WEBSERVER:
         if n > 2:
@@ -332,16 +341,20 @@ def main():
         args = sys.argv[2:]
 
         if '--help' in args:
-            print("""usage: %s [<target>] [--no-scipy] [--no-opencv] [--show]
+            print("""Usage: %s [<target>] [--no-scipy] [--no-opencv] [--show]
 
 Installs Scipion. Also used to install only part of it, as specified
 in the <target>, or to add extra em packages to Scipion.
 
 Arguments:
   <target>      a library, a python module, an em package or a xmipp file
+   -j N         where N is the number of processors to use during installation
+  --help        show this help message
   --show        just show what would be done, without actually installing
   --no-opencv   do not install opencv (big) or anything that depends on it
   --no-scipy    do not install scipy or anything that depends on it
+  --no-xmipp    use this option only after a successfull compilation of Xmipp
+                to save some time when installing other packages 
 """ % ' '.join(sys.argv[:2]))
         else:
             # Create folders if needed.
@@ -424,7 +437,7 @@ Arguments:
         runApp('gitstats/gitstats', args=[SCIPION_HOME, statsDir])
 
     elif mode == MODE_VERSION:
-        sys.stdout.write('%s\n' % __version__)
+        # Just exit, Scipion version will be printed anyway
         sys.exit(0)
 
     elif mode == MODE_RUNPROTOCOL:
@@ -447,6 +460,10 @@ Arguments:
     elif mode == MODE_RUN:
         # Run any command with the environment of scipion loaded.
         runCmd(' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
+        
+    elif mode == MODE_PYTHON:
+        runScript(' '.join(['"%s"' % arg for arg in sys.argv[2:]]), 
+                  chdir=False)
 
     elif mode == MODE_TUTORIAL:
         runApp('pw_tutorial.py', sys.argv[2:])
@@ -467,28 +484,40 @@ Arguments:
     elif mode == MODE_HELP:
         sys.stdout.write("""\
 Usage: scipion [MODE] [ARGUMENTS]
+
 MODE can be:
-    config                 Write default configuration.
     help                   Print this help message.
+
+    config                 Check and/or write Scipion's global and local configuration.
+
     install [OPTION]       Download and install all the necessary software to run Scipion.
                            OPTION can be:
                              --with-all-packages: download also all external em packages
-                             --with-xmipp=$XMIPP_HOME: use existing installation of xmipp
                              --help: show all the available options
+
     manager                Open the manager with a list of all projects.
+
     printenv               Print the environment variables used by the application.
-    project [PROJECT_NAME] Open the specified project. The name 'last' opens the last project.
+
+    project NAME           Open the specified project. The name 'last' opens the last project.
+
     last                   Same as 'project last'
+
     run COMMAND [ARG ...]  Run command in the Scipion environment.
-    stats                  Write git statistics to data/stats folder.
-    test [OPTION]          Run a test. They are located in pyworkflow/tests .
+    
+    python [ARG ...]       Shortcut to 'scipion run python ...'
+
+    stats                  Write git statistics to the data/stats folder.
+
+    test OPTION            Run test(s). All tests are located in pyworkflow/tests .
                            OPTION can be:
-                             <test name>: name of the test to run
+                             <name>: name of the test to run
                              --show: list the available tests
                              --help: show all the available options
                            For example, to run the "test_object" test:
                              scipion test tests.model.test_object
-    testdata [OPTION]      Get/put tests data from/to the server to/from the SCIPION_TESTS folder.
+
+    testdata OPTION        Get(put) tests data, from(to) the server to(from) the $SCIPION_TESTS folder.
                            OPTION can be:
                              --download: copy dataset from remote location to local
                              --upload: copy dataset from local to remote
@@ -501,8 +530,10 @@ MODE can be:
                              scipion testdata --upload xmipp_tutorial
                              
     tutorial [NAME]        Create a new protocol with a tutorial workflow loaded.
-                           If NAME is empty, the list of available tutorials are shown. 
-    viewer | view | show [ARGS] Open a file with Scipion's showj program or Browser if a directory.
+                           If NAME is empty, the list of available tutorials are shown.
+
+    view | show NAME       Open a file with Scipion's showj, or a directory with Browser.
+
     webserver [OPTION]     Launch webserver. Scipion can be then controlled from a web browser.
                            OPTION can be:
                              django: open local django webserver (default)

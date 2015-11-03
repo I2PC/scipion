@@ -21,6 +21,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
@@ -122,6 +123,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
     protected ResourceBundle bundle;
     protected String command;
     protected JButton closebt;
+
+	protected JLabel sizelb;
         
         
 
@@ -275,6 +278,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                         loadMicrograph();
                     }
                 });
+                
+                XmippWindowUtil.setScipionImageIcon(this);
+                
             } catch (Exception ex) {
                 Logger.getLogger(ParticlePickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IllegalArgumentException(ex);
@@ -298,10 +304,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	protected abstract void loadMicrograph();
         
-        public String getResetMsg()
-        {
-            return "Are you sure you want to remove all particles from micrograph?";
-        }
+    public String getResetMsg()
+    {
+        return "Are you sure you want to remove all particles from micrograph?";
+    }
 
 	private void initMenuBar(ParticlePicker picker)
 	{
@@ -644,18 +650,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			return false;
 		if (getParticlePicker().getMode() == Mode.ReadOnly)
 			return false;
+		if (e.isControlDown())
+			return false;
 		return true;
 	}
 
-	public boolean isPickingAvailable()
-	{
-		if (getCanvas().getTool() != Tool.PICKER)
-			return false;
-		if (getParticlePicker().getMode() == Mode.ReadOnly)
-			return false;
-
-		return true;
-	}
+	
 
 	public class ColorActionListener implements ActionListener
 	{
@@ -697,14 +697,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		shapepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		ShapeItemListener shapelistener = new ShapeItemListener();
-                shapepn.add(new JLabel("Shape:"));
-                Icon icon = XmippResource.getIcon("circle.png");
+        shapepn.add(new JLabel("Shape:"));
+        Icon icon = XmippResource.getIcon("circle.png");
 		circlechb = new JToggleButton(icon);
-		circlechb.setSelected(true);
+		//circlechb.setSelected(true);
 		circlechb.addItemListener(shapelistener);
                 
 		rectanglechb = new JToggleButton(XmippResource.getIcon("square.png"));
-                rectanglechb.setPreferredSize(null);
+        rectanglechb.setPreferredSize(null);
 		rectanglechb.setSelected(true);
 		rectanglechb.addItemListener(shapelistener);
 
@@ -830,7 +830,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		sizepn = new JPanel();
 
 		int size = getParticlePicker().getSize();
-		sizepn.add(new JLabel("Size:"));
+		sizelb = new JLabel("Size:");
+		sizepn.add(sizelb);
 		sizesl = new JSlider(10, ParticlePicker.sizemax, size);
 		sizesl.setPaintTicks(true);
 		sizesl.setMajorTickSpacing(100);
@@ -923,7 +924,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		
 		sizetf.setValue(size);
 		sizesl.setValue(size);
-		getCanvas().repaint();
+		if(getCanvas() != null)
+			getCanvas().repaint();
 		getParticlePicker().setSize(size);
                 //updateMicrographsModel();
                 if(particlesdialog != null)
@@ -956,13 +958,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	public Map<Object, Object> getKeyAssist()
 	{
 		Map<Object, Object> map = Collections.synchronizedMap(new LinkedHashMap<Object, Object>());
-		map.put("Shift + Scroll Up", "Zoom in");
-		map.put("Shift + Scroll Down", "Zoom out");
-		map.put("Right click + Mouse move", "Moves image previously expanded");
+		map.put("Shift + scroll up / ctrl + left click", "Zoom in");
+		map.put("Shift + scroll down / ctrl + right click", "Zoom out");
+		map.put("Right click + mouse move", "Moves image previously expanded");
 		map.put("Left click", "Adds or selects a particle. If erase mode setted, deletes or disables selected particle");
-		map.put("Shift + Left click", "Deletes or disables selected particle");
-		map.put("Left click + Mouse move", "Moves selected particle. If erase mode setted, deletes or disables particle");
-		map.put("Left click + Mouse move", "Moves selected particle. If erase mode setted, deletes or disables particle");
+		map.put("Shift + left click", "Deletes or disables selected particle");
+		map.put("Left click + mouse move", "Moves selected particle. If erase mode setted, deletes or disables particle");
+		map.put("Left click + mouse move", "Moves selected particle. If erase mode setted, deletes or disables particle");
 		map.put("Left", "Moves selected particle to the left");
 		map.put("Right", "Moves selected particle to the right");
 		map.put("Up", "Moves selected particle up");

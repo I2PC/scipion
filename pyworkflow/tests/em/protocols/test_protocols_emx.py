@@ -29,7 +29,7 @@ import pyworkflow.tests as tests
 from pyworkflow.em.data import SetOfCoordinates, SetOfMicrographs
 from pyworkflow.em.protocol import ProtImportMicrographs, ProtImportParticles
 from pyworkflow.em.constants import ALIGN_2D
-
+from pyworkflow.em.packages.emxlib import ProtEmxExport
 
 
 class TestEmxBase(tests.BaseTest):
@@ -37,15 +37,32 @@ class TestEmxBase(tests.BaseTest):
     def setUpClass(cls):
         tests.setupTestProject(cls)
         cls.dataset = tests.DataSet.getDataSet('emx')
-    
+        cls.dsRelion = tests.DataSet.getDataSet('relion_tutorial')
+
+    def test_emx_export(self):
+
+        prot1 = self.newProtocol(ProtImportParticles,
+                                 objLabel='from scipion (to-reconstruct)',
+                                 importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                 sqliteFile=self.dsRelion.getFile('import/case2/particles.sqlite'),
+                                 magnification=10000,
+                                 samplingRate=7.08
+                                 )
+        self.launchProtocol(prot1)
+
+        protEmx = self.newProtocol(ProtEmxExport)
+        protEmx.inputSet.set(prot1.outputParticles)
+        self.launchProtocol(protEmx)
+
     def test_coodinatesTest1(self):
-        """ Import an EMX file with just one micrograph 
+        """ Import an EMX file with just one micrograph
         and a few coordinates.
         """
-        protEmxImport   = self.newProtocol(ProtImportParticles, 
+        protEmxImport   = self.newProtocol(ProtImportParticles,
                                            objLabel='from emx (coordinatesT1)',
                                            importFrom=ProtImportParticles.IMPORT_FROM_EMX,
                                            emxFile=self.dataset.getFile('coordinatesT1'),
+                                           alignType=3,
                                            voltage=100,
                                            magnification=10000,
                                            samplingRate=2.46)
@@ -54,7 +71,7 @@ class TestEmxBase(tests.BaseTest):
         # Reference coordinates
         coords = SetOfCoordinates(filename=self.dataset.getFile('coordinatesGoldT1'))
         tests.BaseTest.compareSets(self, protEmxImport.outputCoordinates, coords)
-        
+
     def test_particleImportDefocus(self):
         """ Import an EMX file with a stack of particles
         that has defocus
@@ -64,13 +81,14 @@ class TestEmxBase(tests.BaseTest):
                                          objLabel='emx - import ctf',
                                          importFrom=ProtImportParticles.IMPORT_FROM_EMX,
                                          emxFile=emxFn,
+                                         alignType=3,
                                          magnification=10000,
                                          samplingRate=2.8
                                          )
         self.launchProtocol(protEmxImport)
         micFn = self.dataset.getFile('micrographsGoldT2')
         mics = SetOfMicrographs(filename = micFn)
-            
+
         for mic1, mic2 in izip(mics, protEmxImport.outputMicrographs):
             # Remove the absolute path in the micrographs to 
             # really check that the attributes should be equal
@@ -99,8 +117,8 @@ class TestEmxBase(tests.BaseTest):
             mic1.setFileName(os.path.basename(mic1.getFileName()))
             mic2.setFileName(os.path.basename(mic2.getFileName()))
             self.assertTrue(mic1.equalAttributes(mic2, verbose=True))
-            
- 
+
+
     def test_particlesAlignment(self):
         """ Import an EMX file with particles and alignment information.
         """

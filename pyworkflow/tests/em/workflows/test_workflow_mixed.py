@@ -63,7 +63,7 @@ class TestMixedBPV(TestWorkflow):
         protPP = self.newProtocol(ProtImportCoordinates,
                                  importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.crdsDir,
-                                 filesPattern='info/*_info.json', boxSize=110)
+                                 filesPattern='*_info.json', boxSize=110)
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protPP)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman import coordinates")
@@ -142,7 +142,7 @@ class TestMixedBPV2(TestWorkflow):
         protPP = self.newProtocol(ProtImportCoordinates,
                                  importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.crdsDir,
-                                 filesPattern='info/*_info.json', boxSize=110)
+                                 filesPattern='*_info.json', boxSize=110)
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protPP)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman import coordinates")

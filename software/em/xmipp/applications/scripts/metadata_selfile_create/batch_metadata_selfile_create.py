@@ -27,11 +27,11 @@
 #!/usr/bin/env python
 
 import os
-from pyworkflow.em.packages.xmipp3 import XmippScript
+import pyworkflow.em.packages.xmipp3 as xmipp3
 
-class ScriptCreateMetadata(XmippScript):
+class ScriptCreateMetadata(xmipp3.XmippScript):
     def __init__(self):
-        XmippScript.__init__(self)
+        xmipp3.XmippScript.__init__(self)
         
     def defineParams(self):
         self.addUsageLine('Create a metadata from a file pattern.')
@@ -49,8 +49,7 @@ class ScriptCreateMetadata(XmippScript):
         pattern = self.getParam('--pattern')
         isStack = self.checkParam('-s')
         label = self.getParam('-l')
-        from protlib_utils import createMetaDataFromPattern
-        mD = createMetaDataFromPattern(pattern, isStack, label)                
+        mD = xmipp3.createMetaDataFromPattern(pattern, isStack, label)                
         outFile = self.getParam('-o')
         mD.write(outFile)
 

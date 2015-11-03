@@ -29,9 +29,9 @@ public class TiltPairPicker extends ParticlePicker
 	protected List<UntiltedMicrograph> micrographs;
 	private UntiltedMicrograph micrograph;
 
-	public TiltPairPicker(String selfile, String outputdir, Mode state, ParticlePickerParams params)
+	public TiltPairPicker(String selfile, String outputdir, ParticlePickerParams params)
 	{
-		super(selfile, outputdir, state, params);
+		super(selfile, outputdir, params);
 
 		for (UntiltedMicrograph um : micrographs)
 			loadMicrographParticles(um);

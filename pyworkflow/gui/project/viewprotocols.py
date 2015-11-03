@@ -825,7 +825,7 @@ class ProtocolsView(tk.Frame):
                                 tooltipDelay=1000)
         self.runsGraphCanvas.onClickCallback = self._runItemClick
         self.runsGraphCanvas.onDoubleClickCallback = self._runItemDoubleClick
-        self.runsGraphCanvas.onRightClickCallback = lambda e: self.provider.getObjectActions(e.node.run)
+        self.runsGraphCanvas.onRightClickCallback = self._runItemRightClick
         self.runsGraphCanvas.onControlClickCallback = self._runItemControlClick
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(0, weight=1)
@@ -933,6 +933,28 @@ class ProtocolsView(tk.Frame):
             self._selection.append(prot.getObjId())
         self._updateSelection()
                          
+    def _selectItemProtocol(self, prot):
+        """ Call this function when a new box (item) of a protocol
+        is selected. It should be called either from itemClick
+        or itemRightClick
+        """
+        self._selection.clear()
+        self._selection.append(prot.getObjId())
+        self._updateSelection()
+        self.runsGraphCanvas.update_idletasks()
+        
+    def _deselectItems(self, item):
+        """ Deselect all items except the item one
+        """
+        g = self.project.getRunsGraph(refresh=False)
+        
+        for node in g.getNodes():
+            if node.run and node.run.getObjId() in self._selection:
+                # This option is only for compatibility with all projects
+                if hasattr(node, 'item'):
+                    node.item.setSelected(False)
+        item.setSelected(True)
+        
     def _runItemClick(self, item=None):
         # Get last selected item for tree or graph
         if self.runsView == VIEW_LIST:
@@ -941,22 +963,23 @@ class ProtocolsView(tk.Frame):
             prot = item.node.run
             if prot is None:  # in case it is the main "Project" node
                 return
-            g = self.project.getRunsGraph(refresh=False)
-            for node in g.getNodes():
-                if node.run and node.run.getObjId() in self._selection:
-                    # This option is only for compatibility with all projects
-                    if hasattr(node, 'item'):
-                        node.item.setSelected(False)
-                    node.item.setSelected(False)
-            item.setSelected(True)
-        
-        self._selection.clear()
-        self._selection.append(prot.getObjId())
-        self._updateSelection()
-        self.runsGraphCanvas.update_idletasks()
+            self._deselectItems(item)
+        self._selectItemProtocol(prot)
         
     def _runItemDoubleClick(self, e=None):
         self._runActionClicked(ACTION_EDIT)
+        
+    def _runItemRightClick(self, item=None):
+        prot = item.node.run
+        if prot is None:  # in case it is the main "Project" node
+            return
+        n = len(self._selection)
+        # Only select item with right-click if there is a single
+        # item selection, not for multiple selection
+        if n <= 1:
+            self._deselectItems(item)
+            self._selectItemProtocol(prot)
+        return self.provider.getObjectActions(prot)
         
     def _runItemControlClick(self, item=None):
         # Get last selected item for tree or graph
@@ -1111,10 +1134,16 @@ class ProtocolsView(tk.Frame):
             self.outputViewer.addFile(out)
             self.outputViewer.addFile(log)
             self.outputViewer.setIndex(i) # Preserve the last selected tab
+            self.outputViewer.selectedText().goEnd()
+            # when there are not logs, force re-load next time
+            if (not os.path.exists(out) or
+                not os.path.exists(log)):
+                self._lastStatus = None
+                
         elif  prot.isActive() or prot.getStatus() != self._lastStatus:
+            doClear = self._lastStatus is None                
             self._lastStatus = prot.getStatus()
-            self.outputViewer.refreshAll()
-            
+            self.outputViewer.refreshAll(clear=doClear, goEnd=doClear)
 
     def _scheduleRunsUpdate(self, secs=1):
         #self.runsTree.after(secs*1000, self.refreshRuns)
@@ -1139,6 +1168,7 @@ class ProtocolsView(tk.Frame):
             self._selection.clear()
             self._selection.append(prot.getObjId())
             self._updateSelection()
+            self._lastStatus = None # clear lastStatus to force re-load the logs
             msg = ""
             
         # Update runs list display, even in save we
@@ -1201,6 +1231,7 @@ class ProtocolsView(tk.Frame):
     def _stopProtocol(self, prot):
         if pwgui.dialog.askYesNo(Message.TITLE_STOP_FORM, Message.LABEL_STOP_FORM, self.root):
             self.project.stopProtocol(prot)
+            self._lastStatus = None # force logs to re-load
             self._scheduleRunsUpdate()
 
     def _analyzeResults(self, prot):        
@@ -1208,7 +1239,7 @@ class ProtocolsView(tk.Frame):
         viewers = em.findViewers(prot.getClassName(), DESKTOP_TKINTER)
         if len(viewers):
             #TODO: If there are more than one viewer we should display a selection menu
-            firstViewer = viewers[0](project=self.project, protocol=prot) # Instanciate the first available viewer
+            firstViewer = viewers[0](project=self.project, protocol=prot, parent=self.windows) # Instanciate the first available viewer
             if isinstance(firstViewer, ProtocolViewer):
                 firstViewer.visualize(prot, windows=self.windows)
             else:
@@ -1219,7 +1250,9 @@ class ProtocolsView(tk.Frame):
                 if len(viewers):
                     #TODO: If there are more than one viewer we should display a selection menu
                     viewerclass = viewers[0]
-                    firstViewer = viewerclass(project=self.project, protocol=prot) # Instanciate the first available viewer
+                    firstViewer = viewerclass(project=self.project, 
+                                              protocol=prot,# Instanciate the first available viewer
+                                              parent=self.windows)
                     firstViewer.visualize(output, windows=self.windows, protocol=prot)#FIXME:Probably o longer needed protocol on args, already provided on init
             
         

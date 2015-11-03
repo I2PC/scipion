@@ -45,7 +45,20 @@ import numpy as np
 
 class XmippProtConsensusPicking(ProtParticlePicking):
     """
-    Protocol to estimate the agreement between different particle picking algorithms
+    Protocol to estimate the agreement between different particle picking algorithms. The protocol
+    takes several Sets of Coordinates calculated by different programs and/or different parameter
+    settings. Let's say     we consider N independent pickings. Then, a coordinate is considered
+    to be a correct particle if M pickers have selected the same particle (within a radius in
+    pixels specified in the form).
+    
+    If you want to be very strict, then set M=N; that is, a coordinate represents a particle if
+    it has been selected by all particles (this is the default behaviour). Then you may relax
+    this condition by setting M=N-1, N-2, ...
+    
+    If you want to be very flexible, set M=1, in this way it suffices that 1 picker has
+    selected the coordinate to be considered as a particle. Note that in this way, the cleaning
+    of the dataset has to be performed by other means (screen particles, 2D and 3D 
+    classification, ...).
     """
     _label = 'consensus picking'
     
@@ -90,14 +103,22 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         return []    
     
     def calculateConsensusStep(self, micId):
+        # Take the sampling rates
+        Tm = []
+        for coordinates in self.inputCoordinates:
+            Tm.append(coordinates.get().getMicrographs().getSamplingRate())
+        
         # Get all coordinates for this micrograph
         coords = []
         Ncoords = 0
+        n=0
         for coordinates in self.inputCoordinates:
             coordArray = np.asarray([x.getPosition() 
                                      for x in coordinates.get().iterCoordinates(micId)])
+            coordArray *= Tm[n]/Tm[0]
             coords.append(coordArray)
             Ncoords += coordArray.shape[0]
+            n+=1
         
         allCoords = np.zeros([Ncoords,2])
         votes = np.zeros(Ncoords)
@@ -130,9 +151,13 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         else:
             consensus = self.consensus.get()
         consensusCoords = allCoords[votes>=consensus,:]
+        jaccardIdx = float(len(consensusCoords))/(float(len(allCoords))/len(self.inputCoordinates))
+        # COSS: Possible problem with concurrent writes
+        with open(self._getExtraPath('jaccard.txt'), "a") as fhJaccard:
+            fhJaccard.write("%d %f\n"%(micId,jaccardIdx))
         
         # Write the consensus file only if there
-        # are some coodinates (size > 0)
+        # are some coordinates (size > 0)
         if consensusCoords.size:
             np.savetxt(self._getExtraPath('consensus_%06d.txt' % micId), consensusCoords)
     

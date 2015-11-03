@@ -78,7 +78,7 @@ void ProgRecFourier::readParams()
     phaseFlipped = checkParam("--phaseFlipped");
     minCTF = getDoubleParam("--minCTF");
     if (useCTF)
-    	Ts=getDoubleParam("--sampling");
+        Ts=getDoubleParam("--sampling");
 }
 
 // Show ====================================================================
@@ -102,10 +102,10 @@ void ProgRecFourier::show()
         else
             std::cout << " Do NOT use weights" << std::endl;
         if (useCTF)
-        	std::cout << "Using CTF information" << std::endl
-        	          << "Sampling rate: " << Ts << std::endl
-        	          << "Phase flipped: " << phaseFlipped << std::endl
-        	          << "Minimum CTF: " << minCTF << std::endl;
+            std::cout << "Using CTF information" << std::endl
+            << "Sampling rate: " << Ts << std::endl
+            << "Phase flipped: " << phaseFlipped << std::endl
+            << "Minimum CTF: " << minCTF << std::endl;
         std::cout << "\n Interpolation Function"
         << "\n   blrad                 : "  << blob.radius
         << "\n   blord                 : "  << blob.order
@@ -123,7 +123,12 @@ void ProgRecFourier::run()
     produceSideinfo();
     // Process all images in the selfile
     if (verbose)
-        init_progress_bar(NiterWeight*SF.size());
+    {
+        if (NiterWeight!=0)
+            init_progress_bar(NiterWeight*SF.size());
+        else
+            init_progress_bar(SF.size());
+    }
     // Create threads stuff
     barrier_init( &barrier, numThreads+1 );
     pthread_mutex_init( &workLoadMutex, NULL );
@@ -141,11 +146,11 @@ void ProgRecFourier::run()
         pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
     }
 
-    // Correcting the weights
-    correctWeight();
-
     //Computing interpolated volume
     processImages(0, SF.size() - 1, !fn_fsc.empty(), false);
+
+    // Correcting the weights
+    correctWeight();
 
     //Saving the volume
     finishComputations(fn_out);
@@ -190,13 +195,8 @@ void ProgRecFourier::produceSideinfo()
 
     Vout().clear(); // Free the memory so that it is available for FourierWeights
     transformerVol.getFourierAlias(VoutFourier);
+    VoutFourier.initZeros();
     FourierWeights.initZeros(VoutFourier);
-    // Initializing VoutFourier for calculating the weights
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
-    {
-        double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
-        ptrOut[0] = 1;
-    }
 
     // Ask for memory for the padded images
     size_t paddedImgSize=(size_t)(Xdim*padding_factor_proj);
@@ -316,13 +316,13 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
     y2precalculated.setXmippOrigin();
     z2precalculated.setXmippOrigin();
 
-	bool hasCTF=(threadParams->selFile->containsLabel(MDL_CTF_MODEL) || threadParams->selFile->containsLabel(MDL_CTF_DEFOCUSU)) &&
-			parent->useCTF;
-	if (hasCTF)
-        {
-		threadParams->ctf.enable_CTF=true;
-                threadParams->ctf.enable_CTFnoise=false;
-        }
+    bool hasCTF=(threadParams->selFile->containsLabel(MDL_CTF_MODEL) || threadParams->selFile->containsLabel(MDL_CTF_DEFOCUSU)) &&
+                parent->useCTF;
+    if (hasCTF)
+    {
+        threadParams->ctf.enable_CTF=true;
+        threadParams->ctf.enable_CTFnoise=false;
+    }
     do
     {
         barrier_wait( barrier );
@@ -350,8 +350,8 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     weight = proj.weight();
                     if (hasCTF)
                     {
-                    	threadParams->ctf.readFromMetadataRow(*(threadParams->selFile),objId[threadParams->imageIndex]);
-                    	threadParams->ctf.produceSideInfo();
+                        threadParams->ctf.readFromMetadataRow(*(threadParams->selFile),objId[threadParams->imageIndex]);
+                        threadParams->ctf.produceSideInfo();
                     }
 
                     threadParams->weight = 1.;
@@ -447,20 +447,24 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     for (int i=STARTINGY(mFourierWeights); i<=FINISHINGY(mFourierWeights); i++)
                         for (int j=STARTINGX(mFourierWeights); j<=FINISHINGX(mFourierWeights); j++)
                         {
-                            double weight_kij=A3D_ELEM(mFourierWeights,k,i,j);
-                            if (1.0/weight_kij>ACCURACY)
-                                A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*A3D_ELEM(mFourierWeights,k,i,j);
-                            else
-                                A3D_ELEM(parent->VoutFourier,k,i,j)=0;
+                        	if (parent->NiterWeight==0)
+                        		A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D;
+                        	else
+                        	{
+                        		double weight_kij=A3D_ELEM(mFourierWeights,k,i,j);
+                        		if (1.0/weight_kij>ACCURACY)
+                        			A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*A3D_ELEM(mFourierWeights,k,i,j);
+                        		else
+                        			A3D_ELEM(parent->VoutFourier,k,i,j)=0;
+                        	}
                         }
                 break;
             }
         case PROCESS_IMAGE:
             {
-
                 MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
                 if (threadParams->weight==0.0)
-                	break;
+                    break;
                 bool reprocessFlag = threadParams->reprocessFlag;
                 int * statusArray = parent->statusArray;
 
@@ -470,8 +474,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 bool assigned;
 
                 // Get the inverse of the sampling rate
-                double iTs=1/parent->Ts;
-
+                double iTs=parent->padding_factor_proj/parent->Ts;
                 do
                 {
                     minAssignedRow = -1;
@@ -551,7 +554,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     Matrix1D<int> corner1(3), corner2(3);
 
                     // Some alias and calculations moved from heavy loops
-                    double wCTF=1;
+                    double wCTF=1, wModulator=1.0;
                     double blobRadiusSquared = parent->blob.radius * parent->blob.radius;
                     double iDeltaSqrt = parent->iDeltaSqrt;
                     Matrix1D<double> & blobTableSqrt = parent->blobTableSqrt;
@@ -574,20 +577,32 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 ZZ(freq)=0;
                                 if (XX(freq)*XX(freq)+YY(freq)*YY(freq)>parent->maxResolution2)
                                     continue;
+                                wModulator=1.0;
                                 if (hasCTF && !reprocessFlag)
                                 {
-                                	XX(contFreq)=XX(freq)*iTs;
-                                	YY(contFreq)=YY(freq)*iTs;
-                                	threadParams->ctf.precomputeValues(XX(contFreq),YY(contFreq));
-                                	wCTF=threadParams->ctf.getValueAt();
-                                        if (std::isnan(wCTF))
-                                           wCTF=0.0;
-                                	if (fabs(wCTF)<parent->minCTF)
-                                		wCTF=1;
-                                	else
-                                		wCTF=1.0/wCTF;
-                                	if (parent->phaseFlipped)
-                                		wCTF=fabs(wCTF);
+                                    XX(contFreq)=XX(freq)*iTs;
+                                    YY(contFreq)=YY(freq)*iTs;
+                                    threadParams->ctf.precomputeValues(XX(contFreq),YY(contFreq));
+                                    //wCTF=threadParams->ctf.getValueAt();
+                                    wCTF=threadParams->ctf.getValuePureNoKAt();
+                                    //wCTF=threadParams->ctf.getValuePureWithoutDampingAt();
+
+                                    if (std::isnan(wCTF))
+                                    {
+                                    	if (i==0 && j==0)
+                                    		wModulator=wCTF=1.0;
+                                    	else
+                                    		wModulator=wCTF=0.0;
+                                    }
+                                    if (fabs(wCTF)<parent->minCTF)
+                                    {
+                                        wModulator=fabs(wCTF);
+                                        wCTF=SGN(wCTF);
+                                    }
+                                    else
+                                        wCTF=1.0/wCTF;
+                                    if (parent->phaseFlipped)
+                                        wCTF=fabs(wCTF);
                                 }
 
                                 SPEED_UP_temps012;
@@ -676,6 +691,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                         int iy=A1D_ELEM(yWrapped,inty);
                                         int iyneg=A1D_ELEM(yNegWrapped,inty);
 
+                                        int	size1=YXSIZE(VoutFourier)*(izneg)+((iyneg)*XSIZE(VoutFourier));
+                                        int	size2=YXSIZE(VoutFourier)*(iz)+((iy)*XSIZE(VoutFourier));
+                                        int	fixSize=0;
+
                                         for (int intx = XX(corner1); intx <= XX(corner2); ++intx)
                                         {
                                             // Compute distance to the center of the blob
@@ -685,7 +704,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             if (d2 > blobRadiusSquared)
                                                 continue;
                                             int aux = (int)(d2 * iDeltaSqrt + 0.5);//Same as ROUND but avoid comparison
-                                            double w = VEC_ELEM(blobTableSqrt, aux)*threadParams->weight;
+                                            double w = VEC_ELEM(blobTableSqrt, aux)*threadParams->weight *wModulator;
 
                                             // Look for the location of this logical index
                                             // in the physical layout
@@ -713,12 +732,14 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                                 iyp = iyneg;
                                                 ixp = A1D_ELEM(xNegWrapped,intx);
                                                 conjugate=true;
+                                                fixSize = size1;
                                             }
                                             else
                                             {
                                                 izp=iz;
                                                 iyp=iy;
                                                 ixp=ix;
+                                                fixSize = size2;
                                             }
 #ifdef DEBUG
                                             std::cout << "   3: ix=" << ix << " iy=" << iy
@@ -729,15 +750,17 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             // Add the weighted coefficient
                                             if (reprocessFlag)
                                             {
-                                            	// Use VoutFourier as temporary to save the memory
+                                                // Use VoutFourier as temporary to save the memory
                                                 double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, izp,iyp,ixp));
                                                 DIRECT_A3D_ELEM(fourierWeights, izp,iyp,ixp) += (w * ptrOut[0]);
                                             }
                                             else
                                             {
-                                            	double wEffective=w*wCTF;
-                                                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, izp,iyp,ixp));
+                                                double wEffective=w*wCTF;
+                                                size_t memIdx=fixSize + ixp;//YXSIZE(VoutFourier)*(izp)+((iyp)*XSIZE(VoutFourier))+(ixp);
+                                                double *ptrOut=(double *)&(DIRECT_A1D_ELEM(VoutFourier, memIdx));
                                                 ptrOut[0] += wEffective * ptrIn[0];
+                                                DIRECT_A1D_ELEM(fourierWeights, memIdx) += w;
 
                                                 if (conjugate)
                                                     ptrOut[1]-=wEffective*ptrIn[1];
@@ -1010,26 +1033,48 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
 void ProgRecFourier::correctWeight()
 {
-    for (int i=0;i<NiterWeight;i++)
+    // If NiterWeight=0 then set the weights to one
+	forceWeightSymmetry(FourierWeights);
+    if (NiterWeight==0)
     {
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FourierWeights)
-        	A3D_ELEM(FourierWeights,k,i,j)=0;
-        processImages(0, SF.size() - 1, !fn_fsc.empty(), true);
+        DIRECT_A3D_ELEM(FourierWeights, k,i,j)=1;
+
+    }
+    else
+    {
+        // Temporary save the Fourier of the volume
+        MultidimArray< std::complex<double> > VoutFourierTmp;
+        VoutFourierTmp=VoutFourier;
         forceWeightSymmetry(FourierWeights);
+        // Prepare the VoutFourier
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
         {
             double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
             if (fabs(A3D_ELEM(FourierWeights,k,i,j))>1e-3)
-            	ptrOut[0] /= A3D_ELEM(FourierWeights,k,i,j);
+                ptrOut[0] = 1.0/DIRECT_A3D_ELEM(FourierWeights, k,i,j);
         }
-    }
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
-    {
-    	// Put back the weights to FourierWeights from temporary variable VoutFourier
-        double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
-        A3D_ELEM(FourierWeights,k,i,j) = ptrOut[0];
-        // Set VoutFourier to zero for gridding
-        ptrOut[0] = 0;
+
+        for (int i=1;i<NiterWeight;i++)
+        {
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FourierWeights)
+            A3D_ELEM(FourierWeights,k,i,j)=0;
+            processImages(0, SF.size() - 1, !fn_fsc.empty(), true);
+            forceWeightSymmetry(FourierWeights);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+            {
+                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+                if (fabs(A3D_ELEM(FourierWeights,k,i,j))>1e-3)
+                    ptrOut[0] /= A3D_ELEM(FourierWeights,k,i,j);
+            }
+        }
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+        {
+            // Put back the weights to FourierWeights from temporary variable VoutFourier
+            double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+            A3D_ELEM(FourierWeights,k,i,j) = ptrOut[0];
+        }
+        VoutFourier = VoutFourierTmp;
     }
 }
 
@@ -1095,12 +1140,20 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
         double aux=radius*iDeltaFourier;
         double factor = Fourier_blob_table(ROUND(aux));
         double factor2=(pow(Sinc(radius/(2*(imgSize))),2));
-        A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor2*factor);
-        meanFactor2+=factor2;
+        if (NiterWeight!=0)
+        {
+            A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor2*factor);
+            meanFactor2+=factor2;
+        }
+        else
+            A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor);
     }
-    meanFactor2/=MULTIDIM_SIZE(mVout);
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)
-    A3D_ELEM(mVout,k,i,j) *= meanFactor2;
+    if (NiterWeight!=0)
+    {
+        meanFactor2/=MULTIDIM_SIZE(mVout);
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)
+        A3D_ELEM(mVout,k,i,j) *= meanFactor2;
+    }
     Vout.write(out_name);
 }
 

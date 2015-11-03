@@ -43,7 +43,7 @@ from pyworkflow.em.protocol.protocol_sets import (
     ProtSplitSet, ProtSubSet, ProtUnionSet)
 
 # Used by Roberto's test, where he creates the particles "by hand"
-from pyworkflow.em.data import Particle, SetOfParticles
+from pyworkflow.em.data import Particle, SetOfParticles, Acquisition
 from pyworkflow.utils.utils import prettyDict
 
 
@@ -224,6 +224,13 @@ class TestSets(BaseTest):
 
         imgSet = SetOfParticles(filename=inFileNameMetadata)
         imgSet.setSamplingRate(1.5)
+        acq = Acquisition()
+        acq.setAmplitudeContrast(0.1)
+        acq.setMagnification(10000)
+        acq.setVoltage(200)
+        acq.setSphericalAberration(2.0)
+        
+        imgSet.setAcquisition(acq)
         img = Particle()
 
         for i in range(1, 10):

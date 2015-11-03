@@ -136,7 +136,7 @@ public class ImagePlusLoader {
     }
 
     public boolean allowsPoll() {
-        return impreader.allowsPoll;
+        return impreader.getAllowsPoll();
     }
 
     public String getName() {

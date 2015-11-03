@@ -40,13 +40,18 @@ def label2Python(label):
     return LABEL_TYPES.get(labelType(label), str)
 
 
-def getFirstRow(filename):
-    """ Create a MetaData but only read the first row.
-    This method should be used for validations of labels
-    or metadata size, but the full metadata is not needed.
+def getFirstRow(mdOrFn):
+    """ Return the first object of a metadata.
+    Params:
+        mdOrFn: you can pass a metadata or a filename as argument.
     """
-    md = MetaData()
-    md.read(filename, 1)
+
+    if isinstance(mdOrFn, basestring):
+        md = MetaData()
+        md.read(mdOrFn, 1)
+    else: # mdOrFn is MetaData
+        md = mdOrFn
+        
     if md.getParsedLines():
         row = Row()
         row.readFromMd(md, md.firstObject())
@@ -68,12 +73,20 @@ def isEmpty(filename):
     return getSize(filename) == 0
 
 
-def iterRows(md):
-    """ Iterate over the rows of the given metadata. """
+def iterRows(md, sortByLabel=None):
+    """ Iterate over the rows of the given metadata.
+    Params:
+        md: a MetaData object or a filename (MetaData will be read)
+        sortByLabel: a label to sort the metadata before iterate.
+    """
     # If md is string, take as filename and create the metadata
+
     if isinstance(md, basestring):
         md = MetaData(md)
-        
+
+    if sortByLabel is not None:
+        md.sort(sortByLabel)
+
     row = Row()
     
     for objId in md:

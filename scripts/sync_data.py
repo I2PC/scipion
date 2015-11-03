@@ -28,6 +28,8 @@
 
 """
 Scipion data synchronization.
+
+Get(put) tests data, from(to) the server to(from) the $SCIPION_TESTS folder.
 """
 
 from __future__ import division
@@ -84,8 +86,7 @@ def main():
         sys.exit(0)
 
     if args.check_all:
-        datasets = [x.strip('./') for x in
-                    urlopen('%s/MANIFEST' % args.url).read().splitlines()]
+        datasets = [x.strip('./\n') for x in urlopen('%s/MANIFEST' % args.url)]
         print 'Checking datasets: %s' % ' '.join(datasets)
 
         all_uptodate = True
@@ -157,7 +158,7 @@ def get_parser():
     g.add_argument(
         '--upload', action='store_true',
         help=("Upload local dataset to the server. The dataset name must be "
-              "the name of its folder relative to the SCIPION_TESTS folder."))
+              "the name of its folder relative to the $SCIPION_TESTS folder."))
     g.add_argument(
         '--list', action='store_true',
         help=('List local datasets (from $SCIPION_TESTS) and remote ones '
@@ -215,8 +216,7 @@ def check(dataset, url, verbose=False, updateMANIFEST=False):
 
     try:
         md5sRemote = dict(x.split() for x in
-                          urlopen('%s/%s/MANIFEST' %
-                                  (url, dataset)).read().splitlines())
+                          urlopen('%s/%s/MANIFEST' % (url, dataset)))
 
         md5sLocal = dict(x.split() for x in
                          open('%s/MANIFEST' %
@@ -365,8 +365,8 @@ def upload(dataset, delete=False):
     """ Upload a dataset to our repository """
 
     localFolder = join(os.environ['SCIPION_TESTS'], dataset)
-    remoteLoc = 'scipion@asimov.cnb.csic.es'
-    remoteFolder = '/services/scipionwiki/data/htdocs/files/scipion/data/tests'
+    remoteLoc = 'scipion@scipion.cnb.csic.es'
+    remoteFolder = '/services/scipion/data/downloads/scipion/data/tests'
 
     if not exists(localFolder):
         sys.exit("ERROR: local folder %s does not exist." % localFolder)

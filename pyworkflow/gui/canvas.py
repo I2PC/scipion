@@ -288,6 +288,21 @@ class Canvas(tk.Canvas, Scrollable):
             if getattr(node, 'expanded', True):
                 for child in node.getChilds():
                     self._drawNodes(child, visitedDict)
+            else:
+                self._setupParentProperties(node, visitedDict)
+                
+    def _setupParentProperties(self, node, visitedDict):
+        """ This methods is used for collapsed nodes, in which 
+        the properties (width, height, x and y) is propagated
+        to the hidden childs.
+        """
+        for child in node.getChilds():
+            if child.getName() not in visitedDict:
+                child.width = node.width
+                child.height = node.height
+                child.x = node.x
+                child.y = node.y
+                self._setupParentProperties(child, visitedDict)
         
     def _updatePositions(self, node, visitedDict={}):
         """ Update position of nodes and create the edges. """

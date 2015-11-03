@@ -364,6 +364,14 @@ env.addPackage('ctffind4',
                tar='ctffind_V4.0.15.tgz',
                default=False)
 
+env.addPackage('summovie',
+               tar='summovie_1.0.2.tgz',
+               default=False)
+
+env.addPackage('unblur',
+               tar='unblur_1.0_150529.tgz',
+               default=False)
+
 env.addPackage('eman',
                tar='eman2.11.linux64.tgz',
                commands=[('./eman2-installer', 
@@ -387,7 +395,21 @@ env.addPackage('pytom',
                      matplotlib, mpi4py, pillow],
                default=False)
 
-env.addPackage('relion',
+env.addPackage('relion-1.4',
+               tar='relion-1.4.tgz',
+               commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
+                          ['relion_build.log',
+                           'bin/relion'])],
+               default=False)
+
+env.addPackage('relion-1.4_float',
+               tar='relion-1.4_float.tgz',
+               commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
+                          ['relion_build.log',
+                           'bin/relion'])],
+               default=False)
+
+env.addPackage('relion-1.3',
                tar='relion-1.3.tgz',
                commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
@@ -431,11 +453,11 @@ env.addPackage('nma',
                default=False)
 
 cryoem = env.addPackage(
-    'cryoem',
-    tar='cryoem-1.0.tgz',
-    default=False,
-    pythonMod=True,
-    deps=[numpy, scipy, matplotlib, cythongsl])
+                'cryoem',
+                tar='cryoem-1.0.tgz',
+                default=False,
+                pythonMod=True,
+                deps=[numpy, scipy, matplotlib, cythongsl])
 
 
 env.execute()

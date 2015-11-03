@@ -1224,7 +1224,7 @@ class FormWindow(Window):
         modeFrame.columnconfigure(0, weight=1)
         modeFrame.grid(row=r, column=1, sticky='new', columnspan=2)
         
-        # Host
+        # ---- Host---- 
         self._createHeaderLabel(runFrame, Message.LABEL_HOST, row=r, column=c, pady=0, padx=(15,5), sticky='ne')
         # Keep track of hostname selection
         self.hostVar = tk.StringVar()
@@ -1238,7 +1238,7 @@ class FormWindow(Window):
         self.hostCombo.grid(row=r, column=c+1, pady=5, sticky='nw')
         r = 2
 
-        # Parallel
+        # ---- Parallel---- 
         # some short notation
         allowThreads = self.protocol.allowThreads # short notation
         allowMpi = self.protocol.allowMpi # short notation
@@ -1276,7 +1276,7 @@ class FormWindow(Window):
                     procEntry.grid(row=0, column=1, padx=(0, 5), sticky='nw')
                     
             else:
-                # THREADS
+                # ---- THREADS---- 
                 if allowThreads:
                     self._createHeaderLabel(procFrame, Message.LABEL_THREADS, 
                                             sticky=sticky, row=r2, column=c2, pady=0)
@@ -1285,7 +1285,7 @@ class FormWindow(Window):
                     # Modify values to be used in MPI entry
                     c2 += 2
                     sticky = 'nw'
-                # MPI
+                # ---- MPI ---- 
                 if allowMpi:
                     self._createHeaderLabel(procFrame, Message.LABEL_MPI, 
                                             sticky=sticky, row=r2, column=c2, pady=0)
@@ -1298,7 +1298,7 @@ class FormWindow(Window):
             procFrame.columnconfigure(0, minsize=60)
             procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
         
-        # Queue
+        # ---- QUEUE ----
         self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', 
                                 column=c, padx=(15,5), pady=0)
         var, frame = ParamWidget.createBoolWidget(runFrame, bg='white', 
@@ -1311,7 +1311,7 @@ class FormWindow(Window):
         #                          command=self._editQueueParams)
         #btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
-                             command=self._createHelpCommand(Message.HELP_RUNMODE))
+                             command=self._createHelpCommand(Message.HELP_USEQUEUE))
         btnHelp.grid(row=2, column=c+3, padx=(5, 0), pady=2, sticky='ne')
         
         # Run Name not editable
@@ -1340,11 +1340,15 @@ class FormWindow(Window):
             if self.updateProtocolCallback:
                 self.updateProtocolCallback(self.protocol)
                 
+    def _getHostConfig(self):
+        """ Retrieve the hostConfig object for the select hostname"""
+        return self.protocol.getProject().getHostConfig(self.protocol.getHostName())
+        
     def _editQueueParams(self, e=None):
         """ Open the dialog to edit the queue parameters. """
         # Grab the host config from the project, since it 
         # have not been set in the protocol
-        hostConfig = self.protocol.getProject().getHostConfig(self.protocol.getHostName())
+        hostConfig = self._getHostConfig()
         queues = hostConfig.queueSystem.queues
         # If there is only one Queue and it has not parameters
         # dont bother to showing the QueueDialog
@@ -1498,8 +1502,20 @@ class FormWindow(Window):
         self._close(onlySave=True)
         
     def execute(self, e=None):
+        
         if self.protocol.useQueue():
             if not self._editQueueParams():
+                return
+        else: # use queue = No
+            hostConfig = self._getHostConfig()
+            cores = self.protocol.numberOfMpi.get(1) * self.protocol.numberOfThreads.get(1)
+            mandatory = hostConfig.queueSystem.getMandatory()
+
+            if mandatory and cores >= mandatory:
+                self.showWarning("You need to submit the job to queue since you \n"
+                                 "are requesting a total of *%d* cores (MPI * threads)\n\n"
+                                 "*Note*: Your system is configured with MANDATORY = %d.\n"  
+                                 "        This value can be changed in Scipion/config/hosts.conf" % (cores, mandatory))
                 return
         
         if (self.protocol.getRunMode() == params.MODE_RESTART and 
@@ -1773,6 +1789,10 @@ class QueueDialog(Dialog):
         self.queueDict = queueDict
         self.window = window
         self.queueName, self.queueParams = window.protocol.getQueueParams()
+        # If there is only one queue and not one selected, use the first one
+        if not self.queueName and len(queueDict.keys()) == 1:
+            self.queueName = queueDict.keys()[0]
+            
         Dialog.__init__(self, window.root, "Queue parameters")
         
     def body(self, bodyFrame):

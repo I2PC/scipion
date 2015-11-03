@@ -174,7 +174,6 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
         
     #--------------------------- STEPS functions --------------------------------------------
     def postProcessStep(self, params):
-        
         self.runJob('relion_postprocess', params)
         
     def createOutputStep(self):

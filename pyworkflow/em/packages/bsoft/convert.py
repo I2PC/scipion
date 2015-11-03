@@ -70,7 +70,7 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
     boxSize = None
     for mic in micSet:
         outputFile = join(outputDir, replaceBaseExt(mic.getFileName(), 'star'))
-        scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
+        #scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
         if exists(outputFile):
             posMd = xmipp.MetaData(outputFile)
         else:
@@ -86,8 +86,8 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
             coordSet.append(coord)      
             # Add an unique ID that will be propagated to particles
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
-        if not posMd.isEmpty():
-            posMd.write("particles@%s"  % scipionPosFile)
+#         if not posMd.isEmpty():
+#             posMd.write("particles@%s"  % scipionPosFile)
             
             
              #reading origin.x value and converting to particle size, can change, we take last value

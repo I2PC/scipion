@@ -68,6 +68,7 @@ void ProgNmaAlignmentVol::defineParams() {
 	addParamsLine("  [--centerPDB]                        : Center the PDB structure");
 	addParamsLine("  [--fixed_Gaussian <std=-1>]          : For pseudo-atoms fixed_Gaussian must be used.");
 	addParamsLine("                                       : Default standard deviation <std> is read from the PDB file.");
+	addParamsLine("  [--trustradius_scale <s=1>]          : Positive scaling factor to scale the initial trust region radius");
 	addParamsLine("==Combined elastic and rigid-body alignment==");
 	addParamsLine("  [--alignVolumes]                     : Align the deformed volume to the input volume before comparing");
 	addParamsLine("                                       : You need to compile Xmipp with SHALIGNMENT support (see install.sh)");
@@ -87,6 +88,7 @@ void ProgNmaAlignmentVol::readParams() {
 	fnmask = getParam("--mask");
 	do_centerPDB = checkParam("--centerPDB");
 	do_FilterPDBVol = checkParam("--filterVol");
+	trustradius_scale = abs(getDoubleParam("--trustradius_scale"));
 	if (do_FilterPDBVol)
 		cutoff_LPfilter = getDoubleParam("--filterVol");
 	useFixedGaussian = checkParam("--fixed_Gaussian");
@@ -108,7 +110,8 @@ void ProgNmaAlignmentVol::show() {
 			<< "Center PDB:           " << do_centerPDB << std::endl
 			<< "Filter PDB volume:    " << do_FilterPDBVol << std::endl
 			<< "Use pseudo-atoms:     " << useFixedGaussian << std::endl
-			<< "Pseudo-atom sigma:    " << sigmaGaussian << std::endl;
+			<< "Pseudo-atom sigma:    " << sigmaGaussian << std::endl
+			<< "Trust-region scale:   " << trustradius_scale << std::endl;
 }
 
 // Produce side information ================================================
@@ -266,9 +269,9 @@ void ProgNmaAlignmentVol::processImage(const FileName &fnImg,
 	for (int i = 0; i < dim; i++)
 		of->xStart[i] = 0.;
 
-	double rhoStart=250.;
-    double rhoEnd=50.;
-	int niter=10000;
+	double rhoStart=trustradius_scale*250.;
+    double rhoEnd=trustradius_scale*50.;
+    int niter=10000;
 	CONDOR(rhoStart, rhoEnd, niter, of);
 
 	trial = parameters = trial_best;
