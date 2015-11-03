@@ -134,8 +134,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
     def gatherResultsStep(self):
         fnFreqs = sorted(glob.glob(self._getExtraPath("fraction*_freq.txt")))
         fnRoot2 = self._getExtraPath("fractions Resolutions")
-        fractionCounter1 = 0
-        number1 = 0
+        #fractionCounter1 = 0
+        #number1 = 0
         #print "Found files: "
         for fnFreq in fnFreqs:
             #pass
@@ -150,11 +150,13 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             data[:] = [(x-meanRes)**2 for x in data]
             varRes = (sum(data)/len(data))
             stdRes = sqrt(varRes)
-            fractionCounter1+=1
-            number1+=1
+            #fractionCounter1+=1
+            #number1+=1
             #meanRes = float(sum(fnFreq.getValue())/len(fnFreq.getvalue()))
             fh2 = open(fnRoot2+"_mean_var.txt","a")
-            fh2.write("%d %d %f %f\n" % (fractionCounter1,number1,meanRes,stdRes))
+            fh2.write("%f %f\n" % (meanRes,stdRes))
+            #fh2.write("%d %d %f %f\n" % (fractionCounter1,number1,meanRes,stdRes))
+            
             fh2.close()
             
                              
