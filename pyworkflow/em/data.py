@@ -628,7 +628,10 @@ class EMSet(Set, EMObject):
     
     def _loadClassesDict(self):
         import pyworkflow.em as em
-        return em.getObjects()
+        classDict = em.getObjects()
+        classDict.update(globals())
+        
+        return classDict
     
     def copyInfo(self, other):
         """ Define a dummy copyInfo function to be used

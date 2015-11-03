@@ -284,6 +284,16 @@ class XmippImport():
         for objId in posMd:
             coord = rowToCoordinate(rowFromMd(posMd, objId))
             addCoordinate(coord)
+            
+    def getBoxSize(self, coordFile):
+        """ Try to infer the box size from the given coordinate file.
+        """
+        configFile = join(dirname(coordFile), 'config.xmd')
+        if exists(configFile):
+            firstRow = md.getFirstRow('properties@' + configFile)
+            return firstRow.getValue(md.MDL_PICKING_PARTICLE_SIZE)
+        
+        return None
 
     def importCTF(self, mic, fileName):
         ctf = readCTFModel(fileName, mic)

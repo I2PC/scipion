@@ -50,12 +50,7 @@ from xmipp3 import HelicalFinder
 import pyworkflow.em.metadata as metadata
 
 """
-Falta: 
-       a and b determination
-       Threads in continuous2
-       Max a and b changes
-       Crear output
-       Viewer
+Falta: Threads in continuous2
 """
 
 class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
@@ -77,7 +72,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       'run of type *%s* class and some of the input parameters'
                       'will be taken from it.' % self.getClassName())
         form.addParam('inputParticles', PointerParam, label="Full-size Images", important=True, 
-                      condition='not doContinue', pointerClass='SetOfParticles',
+                      pointerClass='SetOfParticles', allowsNull=True,
                       help='Select a set of images at full resolution')
         form.addParam('inputVolumes', PointerParam, label="Initial volumes", important=True,
                       condition='not doContinue', pointerClass='Volume, SetOfVolumes',
@@ -140,12 +135,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                   expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
         groupSignificant.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, 
 	              expertLevel=LEVEL_ADVANCED, help="In pixels")
-        groupSignificant.addParam('significantGrayValues', BooleanParam, label="Optimize gray values?", default=True)
         groupContinuous = form.addGroup('Local')
         groupContinuous.addParam('continuousMinResolution', FloatParam, label="Continuous assignment if resolution is better than (A)", default=15,
                       help='Continuous assignment can produce very accurate assignments if the initial assignment is correct.')
         groupContinuous.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True,
                       help='Optimize shifts within a limit')
+        groupContinuous.addParam('contMaxShiftVariation', FloatParam, label="Max. shift variation", default=2, expertLevel=LEVEL_ADVANCED,
+                                 help="Percentage of the image size")
         groupContinuous.addParam('contScale', BooleanParam, label="Optimize scale?", default=True,
                       help='Optimize scale within a limit')
         groupContinuous.addParam('contMaxScale', FloatParam, label="Max. scale variation", default=0.02, expertLevel=LEVEL_ADVANCED)
@@ -154,6 +150,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         groupContinuous.addParam('contGrayValues', BooleanParam, label="Optimize gray values?", default=True,
                       help='Optimize gray values. Do not perform this unless the reconstructed volume is gray-compatible with the projections,'\
                       ' i.e., the volumes haven been produced from projections')
+        groupContinuous.addParam('contMaxGrayScale', FloatParam, label="Max. gray scale variation", default=0.05, expertLevel=LEVEL_ADVANCED)
+        groupContinuous.addParam('contMaxGrayShift', FloatParam, label="Max. gray shift variation", default=0.15, expertLevel=LEVEL_ADVANCED,
+                                 help='As a factor of the image standard deviation')
         groupContinuous.addParam('contDefocus', BooleanParam, label="Optimize defocus?", default=True)
         groupContinuous.addParam('contMaxDefocus', FloatParam, label="Max. defocus variation", default=200, expertLevel=LEVEL_ADVANCED,
                                  help="In Angstroms")
@@ -211,8 +210,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def _insertAllSteps(self):
         self.imgsFn=self._getExtraPath('images.xmd')
         if self.doContinue:
-            self.copyAttributes(self.continueRun.get(), 'inputParticles')
             self.copyAttributes(self.continueRun.get(), 'particleRadius')
+            self.copyAttributes(self.continueRun.get(), 'inputVolumes')
+            if not self.inputParticles.hasValue():
+                self.copyAttributes(self.continueRun.get(), 'inputParticles')
+            else:
+                self._insertFunctionStep('convertInputStep', self.inputParticles.getObjId())
             self._insertFunctionStep('copyBasicInformation')
             firstIteration=self.getNumberOfPreviousIterations()+1
         else:
@@ -240,7 +243,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
         self.runJob('xmipp_metadata_utilities','-i %s --fill image1 constant noImage'%self.imgsFn,numberOfMpi=1)
         self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "image1=image"'%self.imgsFn,numberOfMpi=1)
-        self.runJob('xmipp_metadata_utilities','-i %s --operate rename_column "itemId particleId"'%self.imgsFn,numberOfMpi=1)
+        self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "particleId=itemId"'%self.imgsFn,numberOfMpi=1)
         imgsFnId=self._getExtraPath('imagesId.xmd')
         self.runJob('xmipp_metadata_utilities','-i %s --operate keep_column particleId -o %s'%(self.imgsFn,imgsFnId),numberOfMpi=1)
 
@@ -277,7 +280,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         if row.containsLabel(MDL_CONTINUOUS_X):
             setXmippAttributes(particle, row, MDL_CONTINUOUS_X, MDL_CONTINUOUS_Y, MDL_COST, MDL_WEIGHT_CONTINUOUS2)
         if row.containsLabel(MDL_ANGLE_DIFF):
-            setXmippAttributes(MDL_ANGLE_DIFF, MDL_WEIGHT_JUMPER)
+            setXmippAttributes(particle, row, MDL_ANGLE_DIFF, MDL_WEIGHT_JUMPER)
         if row.containsLabel(MDL_WEIGHT_SSNR):
             setXmippAttributes(particle, row, MDL_WEIGHT_SSNR)
     
@@ -288,10 +291,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
     def copyBasicInformation(self):
         previousRun=self.continueRun.get()
-        copyFile(previousRun._getExtraPath('images.xmd'),self._getExtraPath('images.xmd'))
-        copyFile(previousRun._getExtraPath('imagesId.xmd'),self._getExtraPath('imagesId.xmd'))
+        if not self.inputParticles.hasValue():
+            copyFile(previousRun._getExtraPath('images.xmd'),self._getExtraPath('images.xmd'))
+            copyFile(previousRun._getExtraPath('imagesId.xmd'),self._getExtraPath('imagesId.xmd'))
         if previousRun.weightSSNR:
             copyFile(previousRun._getExtraPath('ssnrWeights.xmd'),self._getExtraPath('ssnrWeights.xmd'))
+        elif self.weightSSNR:
+            self.doWeightSSNR()
         
         lastIter=self.getNumberOfPreviousIterations()
         for i in range(0,lastIter+1):
@@ -630,13 +636,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 if self.saveSpace and ctfPresent:
                     self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
                 
-                if self.significantGrayValues and previousResolution>self.continuousMinResolution.get():
-                    fnRefinedStack=join(fnDirSignificant,"imagesRefined%02d.stk"%i)
-                    self.runJob("xmipp_angular_continuous_assign2","-i %s -o %s --ref %s --optimizeGray"%\
-                                (fnAngles,fnRefinedStack,fnReferenceVol))
-                    fnRefinedXmd=join(fnDirSignificant,"imagesRefined%02d.xmd"%i)
-                    moveFile(fnRefinedXmd,fnAngles)
-
     def adaptShifts(self, fnSource, TsSource, fnDest, TsDest):
         K=TsSource/TsDest
         copyFile(fnSource,fnDest)
@@ -704,14 +703,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             self.adaptShifts(fnGlobalAssignment,TsGlobal,fnLocalAssignment,TsCurrent)
                     else:
                         TsPrevious=self.readInfoField(fnDirPrevious,"sampling",MDL_SAMPLINGRATE)
-                        if self.splitMethod == self.SPLIT_FIXED:
-                            self.adaptShifts(join(fnDirPrevious,"angles%02d.xmd"%i),TsPrevious,fnLocalAssignment,TsCurrent)
-                        else:
-                            fnAux=join(fnDirLocal,"aux.xmd")
-                            self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
-                                        (join(fnDirPrevious,"angles.xmd"),fnLocalImages,fnAux),numberOfMpi=1)
-                            self.adaptShifts(fnAux,TsPrevious,fnLocalAssignment,TsCurrent)
-                            cleanPath(fnAux)
+                        fnAux=join(fnDirLocal,"aux.xmd")
+                        self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
+                                    (join(fnDirPrevious,"angles.xmd"),fnLocalImages,fnAux),numberOfMpi=1)
+                        self.adaptShifts(fnAux,TsPrevious,fnLocalAssignment,TsCurrent)
+                        cleanPath(fnAux)
                     self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column image"%fnLocalAssignment,numberOfMpi=1)
                     self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%(fnLocalAssignment,fnLocalImages),numberOfMpi=1)
     
@@ -725,20 +721,20 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --applyTo image1"%\
                        (fnLocalAssignment,fnLocalStk,TsCurrent,R,self.contPadding.get(),fnVol,previousResolution)
                     if self.contShift:
-                        args+=" --optimizeShift --max_shift %d"%round(self.angularMaxShift.get()*newXdim*0.01)
+                        args+=" --optimizeShift --max_shift %f"%(self.contMaxShiftVariation.get()*newXdim*0.01)
                     if self.contScale:
                         args+=" --optimizeScale --max_scale %f"%self.contMaxScale.get() 
                     if self.contAngles:
                         args+=" --optimizeAngles --max_angular_change %f"%maxAngle
                     if self.contGrayValues:
-                        args+=" --optimizeGray"
+                        args+=" --optimizeGray --max_gray_scale %f --max_gray_shift %f"%(self.contMaxGrayScale.get(),self.contMaxGrayShift.get())
                     if self.contDefocus:
                         args+=" --optimizeDefocus --max_defocus_change %f"%self.contMaxDefocus.get()
                     if self.inputParticles.get().isPhaseFlipped():
                         args+=" --phaseFlipped"
                     #if self.weightResiduals:
                     #    args+=" --oresiduals %s"%join(fnDirLocal,"residuals%02i.stk"%i)
-                    self.runJob("xmipp_angular_continuous_assign2",args)
+                    self.runJob("xmipp_angular_continuous_assign2",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                     self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnLocalStk,R),numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
 
     def weightParticles(self, iteration):
@@ -934,6 +930,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             errors.append("Symmetrize within mask requires a mask")
         if self.significantMaxResolution.get()>=self.continuousMinResolution.get():
             errors.append("There is a gap in resolution for which no angular assignment is performed")
+        if not self.doContinue and not self.inputParticles.hasValue():
+            errors.append("You must provide input particles")
         return errors    
     
     def _summary(self):

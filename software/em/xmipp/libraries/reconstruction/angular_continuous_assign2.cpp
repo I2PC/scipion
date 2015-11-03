@@ -34,11 +34,13 @@ ProgAngularContinuousAssign2::ProgAngularContinuousAssign2()
     produces_a_metadata = true;
     each_image_produces_an_output = true;
     projector = NULL;
+    ctfImage = NULL;
 }
 
 ProgAngularContinuousAssign2::~ProgAngularContinuousAssign2()
 {
 	delete projector;
+	delete ctfImage;
 }
 
 // Read arguments ==========================================================
@@ -51,6 +53,8 @@ void ProgAngularContinuousAssign2::readParams()
     maxDefocusChange = getDoubleParam("--max_defocus_change");
     maxAngularChange = getDoubleParam("--max_angular_change");
     maxResol = getDoubleParam("--max_resolution");
+    maxA = getDoubleParam("--max_gray_scale");
+    maxB = getDoubleParam("--max_gray_shift");
     Ts = getDoubleParam("--sampling");
     Rmax = getIntParam("--Rmax");
     pad = getIntParam("--padding");
@@ -78,6 +82,8 @@ void ProgAngularContinuousAssign2::show()
     << "Max. Angular Change: " << maxAngularChange   << std::endl
     << "Max. Resolution:     " << maxResol           << std::endl
     << "Max. Defocus Change: " << maxDefocusChange   << std::endl
+	<< "Max. Gray Scale:     " << maxA               << std::endl
+	<< "Max. Gray Shift:     " << maxB               << std::endl
     << "Sampling:            " << Ts                 << std::endl
     << "Max. Radius:         " << Rmax               << std::endl
     << "Padding factor:      " << pad                << std::endl
@@ -108,6 +114,8 @@ void ProgAngularContinuousAssign2::defineParams()
     addParamsLine("  [--max_angular_change <a=5>] : Maximum angular change allowed (in degrees)");
     addParamsLine("  [--max_defocus_change <d=500>] : Maximum defocus change allowed (in Angstroms)");
     addParamsLine("  [--max_resolution <f=4>]     : Maximum resolution (A)");
+    addParamsLine("  [--max_gray_scale <a=0.05>]  : Maximum gray scale change");
+    addParamsLine("  [--max_gray_shift <b=0.05>]  : Maximum gray shift change as a factor of the image standard deviation");
     addParamsLine("  [--sampling <Ts=1>]          : Sampling rate (A/pixel)");
     addParamsLine("  [--Rmax <R=-1>]              : Maximum radius (px). -1=Half of volume size");
     addParamsLine("  [--padding <p=2>]            : Padding factor");
@@ -179,23 +187,47 @@ void ProgAngularContinuousAssign2::preProcess()
 
     // Transformation matrix
     A.initIdentity(3);
+
+    // Continuous cost
+    if (optimizeGrayValues)
+    	contCost = CONTCOST_L1;
+    else
+    	contCost = CONTCOST_CORR;
+}
+
+void ProgAngularContinuousAssign2::updateCTFImage(double defocusU, double defocusV, double angle)
+{
+	ctf.K=1; // get pure CTF with no envelope
+	currentDefocusU=ctf.DeltafU=defocusU;
+	currentDefocusV=ctf.DeltafV=defocusV;
+	currentAngle=ctf.azimuthal_angle=angle;
+	ctf.produceSideInfo();
+	if (ctfImage==NULL)
+	{
+		ctfImage = new MultidimArray<double>();
+		ctfImage->resizeNoCopy(projector->projection());
+		STARTINGY(*ctfImage)=STARTINGX(*ctfImage)=0;
+	}
+	ctf.generateCTF(YSIZE(projector->projection()),XSIZE(projector->projection()),*ctfImage,Ts);
+	if (phaseFlipped)
+		FOR_ALL_ELEMENTS_IN_ARRAY2D(*ctfImage)
+			A2D_ELEM(*ctfImage,i,j)=fabs(A2D_ELEM(*ctfImage,i,j));
 }
 
 //#define DEBUG
 double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt, double psi,
 		double a, double b, Matrix2D<double> &A, double deltaDefocusU, double deltaDefocusV, double deltaDefocusAngle, int degree)
 {
-	projectVolume(*(prm->projector), prm->P, (int)XSIZE(prm->I()), (int)XSIZE(prm->I()),  rot, tilt, psi);
     if (prm->hasCTF)
     {
-    	prm->ctf.DeltafU=prm->old_defocusU+deltaDefocusU;
-    	prm->ctf.DeltafV=prm->old_defocusV+deltaDefocusV;
-    	prm->ctf.azimuthal_angle=prm->old_defocusAngle+deltaDefocusAngle;
-    	prm->ctf.produceSideInfo();
-    	prm->ctf.applyCTF(prm->P(),prm->Ts,prm->phaseFlipped);
+    	double defocusU=prm->old_defocusU+deltaDefocusU;
+    	double defocusV=prm->old_defocusV+deltaDefocusV;
+    	double angle=prm->old_defocusAngle+deltaDefocusAngle;
+    	if (defocusU!=prm->currentDefocusU || defocusV!=prm->currentDefocusV || angle!=prm->currentAngle)
+    		prm->updateCTFImage(defocusU,defocusV,angle);
     }
-
-    //double cost=0, avg=0;
+	projectVolume(*(prm->projector), prm->P, (int)XSIZE(prm->I()), (int)XSIZE(prm->I()),  rot, tilt, psi, (const MultidimArray<double> *)prm->ctfImage);
+    double cost=0;
 	if (prm->old_flip)
 	{
 		MAT_ELEM(A,0,0)*=-1;
@@ -203,33 +235,25 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 		MAT_ELEM(A,0,2)*=-1;
 	}
 
-	//applyGeometry(degree,prm->Ip(),prm->I(),A,IS_NOT_INV,DONT_WRAP,0.);
 	applyGeometry(degree,prm->Ifilteredp(),prm->Ifiltered(),A,IS_NOT_INV,DONT_WRAP,0.);
 	const MultidimArray<double> &mP=prm->P();
-	//const MultidimArray<double> &mI=prm->I();
 	const MultidimArray<int> &mMask2D=prm->mask2D;
-	//MultidimArray<double> &mIp=prm->Ip();
 	MultidimArray<double> &mIfilteredp=prm->Ifilteredp();
 	MultidimArray<double> &mE=prm->E();
 	mE.initZeros();
-	if (a!=1.0 || b!=0.0)
+	if (prm->contCost==CONTCOST_L1)
 	{
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask2D)
 		{
 			if (DIRECT_MULTIDIM_ELEM(mMask2D,n))
 			{
-				//DIRECT_MULTIDIM_ELEM(mIp,n)=a*DIRECT_MULTIDIM_ELEM(mIp,n)+b;
 				DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=a*DIRECT_MULTIDIM_ELEM(mIfilteredp,n)+b;
 				double val=DIRECT_MULTIDIM_ELEM(mP,n)-DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
 				DIRECT_MULTIDIM_ELEM(mE,n)=val;
-				//cost+=fabs(val);
-				//avg+=val;
+				cost+=fabs(val);
 			}
 			else
-			{
-				//DIRECT_MULTIDIM_ELEM(mIp,n)=0;
 				DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=0;
-			}
 		}
 	}
 	else
@@ -245,11 +269,10 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 				DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=0;
 		}
 	}
-	//cost*=prm->iMask2Dsum;
-
-	//double corr=correlationIndex(mIfilteredp,mP);
-	double corr=correlationIndex(mIfilteredp,mP,&mMask2D);
-	//avg*=prm->iMask2Dsum;
+	if (prm->contCost==CONTCOST_L1)
+		cost*=prm->iMask2Dsum;
+	else
+		cost=-correlationIndex(mIfilteredp,mP,&mMask2D);
 
 	//covarianceMatrix(mE, prm->C);
 	//double div=computeCovarianceMatrixDivergence(prm->C0,prm->C)/MAT_XSIZE(prm->C);
@@ -269,15 +292,14 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 	//save()=prm->C0;
 	//save.write("PPPc0.xmp");
 	//std::cout << "Cost=" << cost << " Div=" << div << " avg=" << avg << std::endl;
-	std::cout << "Corr=" << corr << std::endl;
+	std::cout << "Cost=" << cost << std::endl;
 	std::cout << "Press any key" << std::endl;
 	char c; std::cin >> c;
 #endif
-	//return cost;
 	//return div+prm->penalization*fabs(avg);
 	//return cost+prm->penalization*fabs(avg);
 	//return div;
-	return -corr;
+	return cost;
 }
 
 
@@ -302,8 +324,10 @@ double continuous2cost(double *x, void *_prm)
 		return 1e38;
 	if (fabs(deltaRot)>prm->maxAngularChange || fabs(deltaTilt)>prm->maxAngularChange || fabs(deltaPsi)>prm->maxAngularChange)
 		return 1e38;
-//	COSS: if (fabs(a-1)>0.1)
-//		return 1e38;
+	if (fabs(a-prm->old_grayA)>prm->maxA)
+		return 1e38;
+	if (fabs(b)>prm->maxB*prm->Istddev)
+		return 1e38;
 	if (fabs(deltaDefocusU)>prm->maxDefocusChange || fabs(deltaDefocusV)>prm->maxDefocusChange)
 		return 1e38;
 	MAT_ELEM(prm->A,0,0)=1+scalex;
@@ -331,7 +355,9 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 	rowIn.getValue(MDL_SHIFT_X,old_shiftX);
 	rowIn.getValue(MDL_SHIFT_Y,old_shiftY);
 	rowIn.getValue(MDL_FLIP,old_flip);
-	double old_scaleX=0, old_scaleY=0, old_grayA=1, old_grayB=0;
+	double old_scaleX=0, old_scaleY=0;
+	old_grayA=1;
+	old_grayB=0;
 	if (rowIn.containsLabel(MDL_CONTINUOUS_GRAY_A))
 	{
 		rowIn.getValue(MDL_CONTINUOUS_GRAY_A,old_grayA);
@@ -359,6 +385,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		std::cout << "Processing " << fnImg << std::endl;
 	I.read(fnImg);
 	I().setXmippOrigin();
+	Istddev=I().computeStddev();
 
     Ifiltered()=I();
     filter.applyMaskSpace(Ifiltered());
@@ -391,7 +418,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			if (optimizeDefocus)
 				steps(9)=steps(10)=steps(11)=1.;
 			powellOptimizer(p, 1, 12, &continuous2cost, this, 0.01, cost, iter, steps, verbose>=2);
-			if (cost>1e30 || cost>0)
+			if (cost>1e30 || (cost>0 && contCost==CONTCOST_CORR))
 			{
 				rowOut.setValue(MDL_ENABLED,-1);
 				p.initZeros();
@@ -402,7 +429,6 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			}
 			else
 			{
-				//continuous2cost(p.adaptForNumericalRecipes(),this);
 				if (fnResiduals!="")
 				{
 					FileName fnResidual;
@@ -411,7 +437,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 					rowOut.setValue(MDL_IMAGE_RESIDUAL,fnResidual);
 				}
 			}
-			cost=-cost;
+			if (contCost==CONTCOST_CORR)
+				cost=-cost;
 			if (verbose>=2)
 				std::cout << "I'=" << p(0) << "*I" << "+" << p(1) << " Dshift=(" << p(2) << "," << p(3) << ") "
 				          << "scale=(" << 1+p(4) << "," << 1+p(5) << ") Drot=" << p(6) << " Dtilt=" << p(7)
@@ -441,7 +468,12 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			double a=p(0);
 			double b=p(1);
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mIp)
-				DIRECT_MULTIDIM_ELEM(mIp,n)=a*DIRECT_MULTIDIM_ELEM(mIp,n)+b;
+			{
+				if (DIRECT_MULTIDIM_ELEM(mask2D,n))
+					DIRECT_MULTIDIM_ELEM(mIp,n)=a*DIRECT_MULTIDIM_ELEM(mIp,n)+b;
+				else
+					DIRECT_MULTIDIM_ELEM(mIp,n)=0.0;
+			}
 			Ip.write(fnImgOut);
 		}
 		catch (XmippError XE)
@@ -502,40 +534,41 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 
 void ProgAngularContinuousAssign2::postProcess()
 {
-	/*
-	double minCost=-1e38;
 	MetaData &ptrMdOut=*getOutputMd();
 	ptrMdOut.removeDisabled();
-	FOR_ALL_OBJECTS_IN_METADATA(ptrMdOut)
+	if (contCost==CONTCOST_L1)
 	{
-		double cost;
-		ptrMdOut.getValue(MDL_COST,cost,__iter.objId);
-		if (cost<minCost)
-			minCost=cost;
+		double minCost=1e38;
+		FOR_ALL_OBJECTS_IN_METADATA(ptrMdOut)
+		{
+			double cost;
+			ptrMdOut.getValue(MDL_COST,cost,__iter.objId);
+			if (cost<minCost)
+				minCost=cost;
+		}
+		FOR_ALL_OBJECTS_IN_METADATA(ptrMdOut)
+		{
+			double cost;
+			ptrMdOut.getValue(MDL_COST,cost,__iter.objId);
+			ptrMdOut.setValue(MDL_WEIGHT_CONTINUOUS2,minCost/cost,__iter.objId);
+		}
 	}
-	FOR_ALL_OBJECTS_IN_METADATA(ptrMdOut)
+	else
 	{
-		double cost;
-		ptrMdOut.getValue(MDL_COST,cost,__iter.objId);
-		ptrMdOut.setValue(MDL_WEIGHT_CONTINUOUS2,minCost/cost,__iter.objId);
-	}
-	*/
-
-	double maxCost=-1e38;
-	MetaData &ptrMdOut=*getOutputMd();
-	ptrMdOut.removeDisabled();
-	FOR_ALL_OBJECTS_IN_METADATA(ptrMdOut)
-	{
-		double cost;
-		ptrMdOut.getValue(MDL_COST,cost,__iter.objId);
-		if (cost>maxCost)
-			maxCost=cost;
-	}
-	FOR_ALL_OBJECTS_IN_METADATA(ptrMdOut)
-	{
-		double cost;
-		ptrMdOut.getValue(MDL_COST,cost,__iter.objId);
-		ptrMdOut.setValue(MDL_WEIGHT_CONTINUOUS2,cost/maxCost,__iter.objId);
+		double maxCost=-1e38;
+		FOR_ALL_OBJECTS_IN_METADATA(ptrMdOut)
+		{
+			double cost;
+			ptrMdOut.getValue(MDL_COST,cost,__iter.objId);
+			if (cost>maxCost)
+				maxCost=cost;
+		}
+		FOR_ALL_OBJECTS_IN_METADATA(ptrMdOut)
+		{
+			double cost;
+			ptrMdOut.getValue(MDL_COST,cost,__iter.objId);
+			ptrMdOut.setValue(MDL_WEIGHT_CONTINUOUS2,cost/maxCost,__iter.objId);
+		}
 	}
 
 	ptrMdOut.write(fn_out.replaceExtension("xmd"));

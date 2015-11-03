@@ -19,7 +19,6 @@ public abstract class ImagePlusReader {
 
     protected ImagePlus imp;
     protected ImageGeneric ig;
-    protected boolean allowsPoll;
     protected boolean useGeometry;
     protected boolean wrap;
     protected long modified;
