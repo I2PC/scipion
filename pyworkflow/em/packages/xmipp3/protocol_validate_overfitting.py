@@ -34,6 +34,9 @@ from pyworkflow.utils import getFloatListFromValues
 from pyworkflow.utils.path import cleanPattern, cleanPath
 import os
 import xmipp
+import glob
+from pyworkflow.object import Float, String
+from math import sqrt
 
 class XmippProtValidateOverfitting(ProtReconstruct3D):
     """    
@@ -85,8 +88,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             if number<self.inputParticles.get().getSize():
                 for iteration in range(0,self.numberOfIterations.get()):
                     self._insertFunctionStep('reconstructionStep',number,fractionCounter,iteration)
-                fractionCounter+=1            
-        #self._insertFunctionStep('createOutputStep')
+                fractionCounter+=1     
+        self._insertFunctionStep('gatherResultsStep')
         
     
     #--------------------------- STEPS functions --------------------------------------------
@@ -96,8 +99,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         writeSetOfParticles(imgSet, particlesMd)
 
     def reconstructionStep(self, numberOfImages, fractionCounter, iteration):
-        fnRoot=self._getExtraPath("fraction%02d"%fractionCounter)
-        Ts=self.inputParticles.get().getSamplingRate()
+        fnRoot = self._getExtraPath("fraction%02d"%fractionCounter)
+        Ts = self.inputParticles.get().getSamplingRate()
         for i in range(0,2):
             fnImgs=fnRoot+"_images_%02d.xmd"%i
             self.runJob("xmipp_metadata_utilities","-i %s -o %s --operate random_subset %d"%\
@@ -128,15 +131,33 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         fh.close()
         cleanPath(fnRoot+"_fsc.xmd")
         
-    def createOutputStep(self):
-        imgSet = self.inputParticles.get()
-        volume = Volume()
-        volume.setFileName(self._getFileName('output_volume'))
-        volume.setSamplingRate(imgSet.getSamplingRate())
-        
-        self._defineOutputs(outputVolume=volume)
-        self._defineSourceRelation(self.inputParticles, volume)
-    
+    def gatherResultsStep(self):
+        fnFreqs = sorted(glob.glob(self._getExtraPath("fraction*_freq.txt")))
+        fnRoot2 = self._getExtraPath("fractions Resolutions")
+        fractionCounter1 = 0
+        number1 = 0
+        #print "Found files: "
+        for fnFreq in fnFreqs:
+            #pass
+            #print fnFreq
+            data = []
+            fnFreqOpen = open(fnFreq, "r")
+            for line in fnFreqOpen:
+                fields = line.split()
+                rowdata = map(float, fields)
+                data.extend(rowdata)
+            meanRes = (sum(data)/len(data))
+            data[:] = [(x-meanRes)**2 for x in data]
+            varRes = (sum(data)/len(data))
+            stdRes = sqrt(varRes)
+            fractionCounter1+=1
+            number1+=1
+            #meanRes = float(sum(fnFreq.getValue())/len(fnFreq.getvalue()))
+            fh2 = open(fnRoot2+"_mean_var.txt","a")
+            fh2.write("%d %d %f %f\n" % (fractionCounter1,number1,meanRes,stdRes))
+            fh2.close()
+            
+                             
     #--------------------------- INFO functions -------------------------------------------- 
     def _summary(self):
         """ Should be overriden in subclasses to 
@@ -144,6 +165,14 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         """
         msg=[]
         msg.append("Fraction of particles: "+self.numberOfParticles.get())
+        msg.append("Number of times taht reconstruction is performed per fraction: %2d" % self.numberOfIterations.get())
         return msg
     
+    def _methods(self):
+        messages = []
+        messages.append('B. Heymann***')
+        return messages
+    
+    def _citations(self):
+        return ['B. Heymann***']
     #--------------------------- UTILS functions --------------------------------------------
