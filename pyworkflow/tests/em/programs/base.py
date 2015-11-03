@@ -112,7 +112,7 @@ class ProgramTest(unittest.TestCase):
                 command.run(timeout=self._timeout)
                 pipe = ">>"
                 
-    def runCase(self, args, mpi=0, changeDir=False, preruns=None, postruns=None, outputs=None):
+    def runCase(self, args, mpi=0, changeDir=False, preruns=None, postruns=None, outputs=None, random=False):
         self._testDir = self.dataset.getPath()
         _counter = getCount(self.program)
         #self.outputDir = os.path.join(self._testDir, 'output', '%s_%02d' % (self.program, self._counter))
@@ -157,7 +157,7 @@ class ProgramTest(unittest.TestCase):
             self._runCommands(postruns, 'postruns')
             
         if outputs:
-            self._checkOutputs(outputs)
+            self._checkOutputs(outputs,random)
             
         os.chdir(cwd)
         

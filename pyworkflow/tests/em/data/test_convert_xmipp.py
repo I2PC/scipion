@@ -194,9 +194,10 @@ class TestConvertBase(BaseTest):
                 m2 = img.getTransform().getMatrix()
                 print "-"*5
                 print img.getFileName(), img.getIndex()
-                print 'm1:\n', m1
-                print 'm2:\n', m2
-                self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
+                print 'm1:\n', m1, geometryFromMatrix(m1, False)
+
+                print 'm2:\n', m2, geometryFromMatrix(m2, False)
+                #self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
 
         # Launch apply transformation and check result images
         runXmippProgram(self.CMD % locals())
@@ -588,7 +589,7 @@ class TestReconstruct(TestConvertBase):
     IS_ALIGNMENT = False
     CMD = "xmipp_reconstruct_art -i %(mdFn)s -o %(outputFn)s"
 
-    def tobeimplementedtest_forward_backwards(self):
+    def test_forward_backwards(self):
         """convert transformation matrixt to xmipp and back"""
 
         mList = [[[0.71461016, 0.63371837, -0.29619813,  1.],#a1
@@ -624,45 +625,45 @@ class TestReconstruct(TestConvertBase):
         aList = [np.array(m) for m in mList]
         rowa = XmippMdRow()
         rowb = XmippMdRow()
-
+        rowb1 = XmippMdRow()
+        rowb2 = XmippMdRow()
+        rowb3 = XmippMdRow()
+        labelList=[xmipp.MDL_ANGLE_ROT
+                  ,xmipp.MDL_ANGLE_TILT
+                  ,xmipp.MDL_ANGLE_PSI
+                  ,xmipp.MDL_SHIFT_X
+                  ,xmipp.MDL_SHIFT_Y
+                  ,xmipp.MDL_SHIFT_Z
+                  ]
         for i, a in enumerate(aList):
             a = Transform(aList[i])
             alignmentToRow(a, rowa, ALIGN_PROJ)
             b=rowToAlignment(rowa, ALIGN_PROJ)
             alignmentToRow(b, rowb, ALIGN_PROJ)
-            print "cmpMAtrix--------------------------","\n",a.getMatrix(),"\n", b.getMatrix()
-            print "cmpROW--------------------------","\n",rowa,"\n", rowb
-            if i%2 ==0:
-               rowa.setValue(MDL_FLIP,True)
+            #same two matrices
+            self.assertTrue(np.allclose(a.getMatrix(), b.getMatrix(), rtol=1e-2))
+            for label in labelList:
+                auxBtilt = rowb.getValue(label)
+                auxAtilt = rowa.getValue(label)
+                #same two rows
+                self.assertAlmostEqual(auxBtilt, auxAtilt, places=3, msg=None, delta=None)
+
+            rowa.setValue(MDL_FLIP,True)
             b=rowToAlignment(rowa, ALIGN_PROJ)
             alignmentToRow(b, rowb, ALIGN_PROJ)
-            print "cmpROWFLIP--------------------------","\n",rowa,"\n", rowb
+            aMatrix = a.getMatrix()
+            aMatrix[:,1] *= -1;aMatrix[:,2] *= -1;aMatrix[:,3] *= -1;
+            aMatrix[3,3]=1.
+            #same two matrices with flip
+            self.assertTrue(np.allclose(aMatrix, b.getMatrix(), rtol=1e-2))
 
-        #rowa.setValue(MDL_ANGLE_ROT, 171.516598)
-        #rowa.setValue(MDL_ANGLE_TILT, 83.655337)
-        #rowa.setValue(MDL_ANGLE_PSI, 133.953488)
-        #rowa.setValue(MDL_SHIFT_X,  -0.915030)
-        #rowa.setValue(MDL_SHIFT_Y, -0.909983)
-        #rowa.setValue(MDL_FLIP, True)
-        #a=rowToAlignment(rowa, ALIGN_PROJ)
-        #alignmentToRow(a, rowb, ALIGN_PROJ)
-        #print "image 153 rowa",rowa
-        #print "image 153 a",a.getMatrix()
-        #print "image 153 rowa",rowb
+ #* newrot = rot;
+ #* newtilt = tilt + 180;
+ #* newpsi = -(180 + psi);
 
-
-
-        #rowa.setValue(MDL_ANGLE_ROT, 171.516598)
-        #rowa.setValue(MDL_ANGLE_TILT, 83.655337)
-        #rowa.setValue(MDL_ANGLE_PSI, 201.976744)
-        #rowa.setValue(MDL_SHIFT_X,  -0.013320)
-        #rowa.setValue(MDL_SHIFT_Y, -0.782359)
-        #rowa.setValue(MDL_FLIP, True)
-        #a=rowToAlignment(rowa, ALIGN_PROJ)
-        #alignmentToRow(a, rowb, ALIGN_PROJ)
-        #print "image 24 rowa",rowa
-        #print "image 24 a",a.getMatrix()
-        #print "image 24 rowa",rowb
+ #* newrot = rot + 180;
+ #* newtilt = -tilt;
+ #* newpsi = -180 + psi;
 
 
     def test_reconstRotOnly(self):
@@ -771,7 +772,7 @@ class TestReconstruct(TestConvertBase):
                   [0., 1., 0., 0.],
                   [0., 0., 1., 0.],
                   [0., 0., 0., 1.]],
-                 [[  0.04341204, -0.82959837,  0.5566704,   7.42774284],#a2
+                 [[  0.04341204, -0.82959837,  0.5566704,   7.42774284],#-50, -40,-30
                   [  0.90961589,  0.26325835,  0.3213938, -20.82490128],
                   [ -0.41317591,  0.49240388,  0.76604444,  3.33947946],
                   [  0.,          0.,          0.,          1.        ]],
@@ -779,10 +780,10 @@ class TestReconstruct(TestConvertBase):
                   [  0.90961589,  -0.26325835,   0.3213938,   20.82490128],
                   [  0.41317591,   0.49240388,  -0.76604444,   3.33947946],
                   [  0.,           0.,           0.,           1.        ]],
-                 [[  -0.04341204, 0.82959837,  -0.5566704,   -7.42774284],#a4
-                  [  0.90961589,  0.26325835,  0.3213938, -20.82490128],
-                  [ -0.41317591,  0.49240388,  0.76604444,  3.33947946],
-                  [  0.,          0.,          0.,           1.        ]],
+  #               [[  -0.04341204, 0.82959837,  -0.5566704,   -7.42774284],#a4
+  #                [  0.90961589,  0.26325835,  0.3213938, -20.82490128],
+  #                [ -0.41317591,  0.49240388,  0.76604444,  3.33947946],
+  #                [  0.,          0.,          0.,           1.        ]],
                 ]
 
         self.launchTest('reconstRotandShiftFlip', mList, alignType=ALIGN_PROJ)
