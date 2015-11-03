@@ -138,6 +138,12 @@ class EmxImport():
                 
                 if objectClassName not in self.objDict:
                     errors.append("EMX object *%s* not found in EMX file:\n*%s*" % emxFile)
+        
+        if self.alignType != ALIGN_NONE:
+            f = open(emxFile)
+            if not 'transformationMatrix' in f.read():
+                errors.append("Align type different from None, but no transformation matrix found in file %s*" % emxFile)
+            f.close()
         return errors
     
     def validateMicrographs(self):

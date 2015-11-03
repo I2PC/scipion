@@ -28,18 +28,18 @@ public class ExtractParticlePicker extends ParticlePicker
 	private ArrayList<ColorHelper> colorby;
 
 
-	public ExtractParticlePicker(String selfile, int size, Mode mode, ParticlePickerParams params)
+	public ExtractParticlePicker(String selfile, int size, ParticlePickerParams params)
 	{
-		super(selfile, mode, params);
+		super(selfile, params);
 		setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
 			filters.add(new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma=2"));
 	}
 	
-	public ExtractParticlePicker(String block, String selfile, int size, Mode mode, ParticlePickerParams params)
+	public ExtractParticlePicker(String block, String selfile, int size, ParticlePickerParams params)
 	{
-		super(block, selfile, ".", mode, params);
+		super(block, selfile, ".", params);
 		setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
@@ -223,7 +223,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		try
 		
 		{
-			ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, size, Mode.Extract, null);
+			ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, size, new ParticlePickerParams(Mode.Extract));
 			return new ExtractPickerJFrame(picker, galleryfr);
 		}
 		catch(Exception e)

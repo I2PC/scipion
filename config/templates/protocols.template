@@ -32,25 +32,27 @@ Protocols SPA = [
     {"tag": "section", "text": "Particles", "children": [
         {"tag": "protocol_group", "text": "Picking", "openItem": "False", "children": [
             {"tag": "protocol", "value": "EmanProtBoxing",   "text": "default"},
+            {"tag": "protocol", "value": "SparxGaussianProtPicking",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtParticlePicking",   "text": "default"},
             {"tag": "protocol", "value": "XmippParticlePickingAutomatic",   "text": "default"},
+            {"tag": "protocol", "value": "XmippProtAssignmentTiltPair",   "text": "default"},
             {"tag": "protocol", "value": "ProtRelionAutopickFom",   "text": "default"},
             {"tag": "protocol", "value": "ProtRelionAutopick",   "text": "default"},
             {"tag": "protocol", "value": "BsoftProtParticlePicking",   "text": "default"},
             {"tag": "protocol", "value": "DogPickerProtPicking",   "text": "default"},
-            {"tag": "section", "text": "more", "openItem": "False", "children": [
-                {"tag": "protocol", "value": "XmippProtExtractMovieParticles", "text": "default"},
-                {"tag": "protocol", "value": "XmippProtExtractParticlesPairs", "text": "default"}
-            ]}
+            {"tag": "protocol", "value": "XmippProtConsensusPicking",   "text": "default"},
+            {"tag": "protocol", "value": "ProtExtractCoords",   "text": "default"}
          ]},
         {"tag": "protocol_group", "text": "Extract", "openItem": "False", "children": [
             {"tag": "protocol", "value": "XmippProtExtractParticles",   "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtExtractMovieParticles", "text": "default"},
-                {"tag": "protocol", "value": "XmippProtExtractParticlesPairs", "text": "default"}
+                {"tag": "protocol", "value": "XmippProtExtractParticlesPairs", "text": "default"},
+                {"tag": "protocol", "value": "XmippProtScreenParticles", "text": "default"}
             ]}]},
         {"tag": "protocol_group", "text": "Preprocess", "openItem": "False", "children": [
             {"tag": "protocol", "value": "XmippProtCropResizeParticles",   "text": "default"},
+	    {"tag": "protocol", "value": "XmippProtCTFCorrectWiener2D",    "text": "default"},
             {"tag": "protocol", "value": "XmippProtPreprocessParticles",   "text": "default"},
             {"tag": "protocol", "value": "ProtRelionPreprocessParticles",  "text": "default"}
             ]},
@@ -87,7 +89,8 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtML2D", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtKerdensom", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtRotSpectra", "text": "default"},
-                {"tag": "protocol", "value": "ProtClassesConsensus", "text": "default"}
+                {"tag": "protocol", "value": "ProtClassesConsensus", "text": "default"},
+                {"tag": "protocol", "value": "XmippProtScreenClasses", "text": "default"}
             ]}]}
     ]},
     {"tag": "section", "text": "3D", "children": [
@@ -117,6 +120,7 @@ Protocols SPA = [
             {"tag": "protocol", "value": "ProtRelionRefine3D",   "text": "default"},
             {"tag": "protocol", "value": "ProtFrealign",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtProjMatch",  "text": "default"},
+            {"tag": "protocol", "value": "XmippProtReconstructHighRes",  "text": "default"},
             {"tag": "protocol", "value": "EmanProtRefine",  "text": "default"},
             {"tag": "protocol", "value": "SpiderProtRefinement",  "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [

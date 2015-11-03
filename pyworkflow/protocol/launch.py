@@ -113,10 +113,11 @@ def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
                                                                      protocol.getDbPath(), 
                                                                      protStrId)
     hostConfig = protocol.getHostConfig()
-    useQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
+    useQueue = protocol.useQueue()
     # Check if need to submit to queue    
     if useQueue:        
-        submitDict = protocol.getSubmitDict()
+        submitDict = hostConfig.getQueuesDefault()
+        submitDict.update(protocol.getSubmitDict())
         submitDict['JOB_COMMAND'] = command
         jobId = _submit(hostConfig, submitDict)
     else:
@@ -195,7 +196,9 @@ def _submit(hostConfig, submitDict):
     f = open(scripPath, 'w')
     #Ensure the path exists
     makeFilePath(scripPath)
-    f.write(template)
+    # Add some line ends because in some clusters it fails
+    # to submit jobs if the submit script does not have end of line
+    f.write(template+'\n\n')
     f.close()
     # This should format the command using a template like: 
     # "qsub %(JOB_SCRIPT)s"

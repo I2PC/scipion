@@ -161,7 +161,9 @@ class ProtImportMicrographs(ProtImportMicBase):
                                       "If you want to obtain your micrographs individually, "
                                       "you can run the following command:\n"
                                       "scipion run scipion_directory/scripts/split_stacks.py --files *your files* --ext *extension*")
-                        break
+                # JMRT: only check the first image, for large dataset
+                # even reading the header can take a while
+                break 
             return errors
             
         else:
@@ -211,8 +213,12 @@ class ProtImportMovies(ProtImportMicBase):
                       label='Gain image', 
                       help='A gain reference related to a set of movies'
                            ' for gain correction')
+        form.addParam('darkFile', FileParam,  
+                      label='Dark image', 
+                      help='A dark image related to a set of movies')
         
     def setSamplingRate(self, movieSet):
         ProtImportMicBase.setSamplingRate(self, movieSet)
         movieSet.setGain(self.gainFile.get())
+        movieSet.setDark(self.darkFile.get())
                     

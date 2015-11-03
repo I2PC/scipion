@@ -92,6 +92,38 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_TiltPairAligner_getTiltedParticle(
 	return NULL;
 }
 
+JNIEXPORT jobject JNICALL Java_xmipp_jni_TiltPairAligner_getUntiltedParticle(
+		JNIEnv *env, jobject jobj, jint jx1, jint jy1) {
+	String msg;
+
+	try {
+		int x = 0, y = 0;
+		TiltPairAligner * tpa = GET_INTERNAL_TPA(jobj);
+		if (tpa != NULL) {
+			tpa->passToUntilted(jx1, jy1, x, y);
+			jclass pclass = env->FindClass("xmipp/jni/Particle");
+			jmethodID constructor = env->GetMethodID(pclass, "<init>", "(II)V");
+			jobject particle = env->NewObject(pclass, constructor, x, y);
+
+			return particle;
+		} else {
+			msg = "TiltPairAligner is null";
+		}
+	} catch (XmippError &xe) {
+		msg = xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		msg = e.what();
+	} catch (...) {
+		msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+	return NULL;
+}
+
 JNIEXPORT void JNICALL Java_xmipp_jni_TiltPairAligner_clear(JNIEnv *env,
 		jobject jobj) {
 	String msg;

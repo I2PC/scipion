@@ -141,6 +141,8 @@ void MpiProgAngularProjectionMatching::processAllImages()
         }
     }
 
+    // Synchronize all nodes.
+    //node->barrierWait();
 }
 
 bool MpiProgAngularProjectionMatching::distributeJobs(size_t * imagesToSent,

@@ -96,10 +96,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		cols = 0;
 		dimension = loadDimension();
 		columnModel = createColumnModel();
-		// Zdim will always be used as number of elements to display
-		n = dimension.getZDim();
-		image_width = dimension.getXDim();
-		image_height = dimension.getYDim();
+		
 		int zoom = 100;
 		if(data.getZoom() != null)
 			zoom = data.getZoom();

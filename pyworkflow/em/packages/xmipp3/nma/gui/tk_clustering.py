@@ -23,10 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module implement the wrappers aroung Xmipp CL2D protocol
-visualization program.
-"""
 
 from os.path import basename
 import Tkinter as tk

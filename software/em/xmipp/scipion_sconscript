@@ -128,6 +128,10 @@ addLib('XmippCondor',
        dirs=['external'],
        patterns=['condor/*.cpp'])
 
+addLib('XmippDelaunay',
+       dirs=['external'],
+       patterns=['delaunay/*.cpp'])
+
 addLib('XmippSqliteExt',
        dirs=['external/sqliteExt'],
        patterns=['extension-functions.c'],
@@ -141,8 +145,8 @@ addLib('XmippGtest',
        libs=['pthread']
        )
 
-EXT_LIBS = ['XmippAlglib', 'XmippBilib', 'XmippCondor']
-EXT_LIBS2 = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippSqliteExt']
+EXT_LIBS = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippDelaunay']
+EXT_LIBS2 = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippDelaunay', 'XmippSqliteExt']
 env.Alias('XmippExternal', EXT_LIBS)
 
 
@@ -179,7 +183,7 @@ addLib('XmippRecons',
        incs=bilib_incs,
        libs=['hdf5', 'hdf5_cpp', 'pthread',
              'fftw3_threads',
-             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor'])
+             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor', 'XmippDelaunay'])
 
 # Interface
 python_incs = ['#software/include/python2.7',
@@ -480,7 +484,8 @@ for p in ['angular_break_symmetry',
           'classify_compare_classes',
           'classify_evaluate_classes',
           'classify_kerdensom',
-
+			
+		  'ctf_correct_wiener2d',
           'ctf_correct_wiener3d',
           'ctf_correct_idr',
           'ctf_create_ctfdat',
@@ -497,6 +502,7 @@ for p in ['angular_break_symmetry',
           'flexible_alignment',
           'image_align',
           'image_align_tilt_pairs',
+          'image_assignment_tilt_pair',
           'image_common_lines',
           'image_convert',
           'image_find_center',
@@ -580,6 +586,7 @@ for p in ['angular_break_symmetry',
           'tomo_remove_fluctuations',
           'tomo_extract_subvolume',
           'validation_nontilt',
+          'validation_tilt_pairs',
 
           'volume_center',
           'volume_correct_bfactor',
@@ -610,6 +617,7 @@ for p in ['angular_break_symmetry',
           'mpi_classify_CL2D_core_analysis',
           'mpi_ctf_correct_idr',
           'mpi_ctf_sort_psds',
+          'mpi_ctf_correct_wiener2d',
           'mpi_image_operate',
           'mpi_image_rotational_pca',
           'mpi_image_resize',

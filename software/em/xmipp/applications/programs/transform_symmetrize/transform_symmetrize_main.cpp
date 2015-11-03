@@ -25,10 +25,4 @@
 
 #include <reconstruction/symmetrize.h>
 
-int main(int argc, char *argv[])
-{
-	ProgSymmetrize program;
-    program.read(argc, argv);
-    program.tryRun();
-}
-
+RUN_XMIPP_PROGRAM(ProgSymmetrize)

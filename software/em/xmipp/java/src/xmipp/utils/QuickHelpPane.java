@@ -51,7 +51,7 @@ public class QuickHelpPane extends JPanel
 		initHelpTable();
 		sp.setViewportView(helptb);
 		int height = Math.min(600, helptb.getRowHeight() * helpmap.size() + 5);
-		sp.setPreferredSize(new Dimension(700, height));
+		sp.setPreferredSize(new Dimension(800, height));
 		setVisible(true);
 	}
 
@@ -62,7 +62,6 @@ public class QuickHelpPane extends JPanel
 		helptb.setTableHeader(null);
 //		int lines = 2;
 //        helptb.setRowHeight( helptb.getRowHeight() * lines);
-		helptb.setDefaultRenderer(String.class, new MultilineCellRenderer());
 		helptb.setModel(new AbstractTableModel()
 		{
 			
@@ -110,9 +109,10 @@ public class QuickHelpPane extends JPanel
                         
                         
 		});
+		helptb.setDefaultRenderer(String.class, new MultilineCellRenderer());
 		helptb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		helptb.getColumnModel().getColumn(0).setPreferredWidth(200);
-		helptb.getColumnModel().getColumn(1).setPreferredWidth(500);
+		helptb.getColumnModel().getColumn(0).setPreferredWidth(250);
+		helptb.getColumnModel().getColumn(1).setPreferredWidth(550);
 		
 	}
 	

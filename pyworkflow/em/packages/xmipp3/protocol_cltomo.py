@@ -79,9 +79,9 @@ class XmippProtCLTomo(ProtClassify3D):
         form.addParam('maxRot',FloatParam,default=360,label='Maximum rotational angle',help="In degrees")
         form.addParam('maxTilt',FloatParam,default=360,label='Maximum tilt angle',help="In degrees")
         form.addParam('maxPsi',FloatParam,default=360,label='Maximum in-plane angle',help="In degrees")
-        form.addParam('maxShiftX',FloatParam,default=360,label='Maximum shift X',help="In voxels")
-        form.addParam('maxShiftY',FloatParam,default=360,label='Maximum shift Y',help="In voxels")
-        form.addParam('maxShiftZ',FloatParam,default=360,label='Maximum shift Z',help="In voxels")
+        form.addParam('maxShiftX',FloatParam,default=10,label='Maximum shift X',help="In voxels")
+        form.addParam('maxShiftY',FloatParam,default=10,label='Maximum shift Y',help="In voxels")
+        form.addParam('maxShiftZ',FloatParam,default=10,label='Maximum shift Z',help="In voxels")
         form.addParallelSection(threads=0, mpi=4)
 
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -136,15 +136,11 @@ class XmippProtCLTomo(ProtClassify3D):
             readSetOfClassesVol(setOfClasses,lastLevelFile)
             self._defineOutputs(outputClasses=setOfClasses)
             self._defineSourceRelation(self.inputVolumes, self.outputClasses)
-        if self.generateAligned.get():
+        if self.generateAligned:
             setOfVolumes = self._createSetOfVolumes()
             fnAligned = self._getExtraPath('results_aligned.xmd')
-            self.runJob('xmipp_metadata_selfile_create', '-p %s -o %s -s'%(self._getExtraPath('results_aligned.stk'),fnAligned))
-            md=MetaData(fnAligned)
-            md.addItemId()
-            md.write(fnAligned)
             readSetOfVolumes(fnAligned,setOfVolumes)
-            volumeList=self.inputVolumes.get()
+            volumeList = self.inputVolumes.get()
             setOfVolumes.setSamplingRate(volumeList.getSamplingRate())
             self._defineOutputs(alignedVolumes=setOfVolumes)
             self._defineTransformRelation(self.inputVolumes, self.alignedVolumes)

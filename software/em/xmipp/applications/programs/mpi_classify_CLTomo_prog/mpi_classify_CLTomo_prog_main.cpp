@@ -1532,9 +1532,10 @@ void ProgClassifyCL3D::run()
     if (generateAlignedVolumes)
     {
     	node->barrierWait();
-    	MetaData MDimages;
+    	MetaData MDimages, MDaligned;
     	MDimages.read(fnOut+"_images.xmd");
     	FileName fnAligned=fnOut+"_aligned.stk";
+    	FileName fnAlignedMD=fnOut+"_aligned.xmd";
     	if (node->rank==0)
     		createEmptyFile(fnAligned,(int)Xdim,(int)Ydim,(int)Zdim,MDimages.size());
     	node->barrierWait();
@@ -1543,6 +1544,7 @@ void ProgClassifyCL3D::run()
     	FileName fnImg;
     	Matrix2D<double> A,E,T;
         Matrix1D<double> r(3);
+        size_t itemId;
     	FOR_ALL_OBJECTS_IN_METADATA(MDimages)
     	{
     		if (idx%node->size==node->rank)
@@ -1568,8 +1570,33 @@ void ProgClassifyCL3D::run()
     			applyGeometry(BSPLINE3,Valigned(),V(),A,IS_NOT_INV,DONT_WRAP,0.);
     	        Valigned.write(fnAligned,idx,true,WRITE_REPLACE);
     		}
+    		if (node->rank==0)
+    		{
+    			MDimages.getValue(MDL_ITEM_ID,itemId,__iter.objId);
+				size_t newId=MDaligned.addObject();
+				MDaligned.setValue(MDL_IMAGE,formatString("%06d@%s",idx,fnAligned.c_str()),newId);
+				MDaligned.setValue(MDL_ITEM_ID,itemId,newId);
+    		}
     		++idx;
     	}
+
+    	if (node->rank == 0)
+		{
+    		MDaligned.write(fnAlignedMD);
+
+			// Correct the class groups
+			Q = vq.P.size();
+			MetaData SFq, SFqaligned;
+			FileName fnClass;
+			for (int q = 0; q < Q; q++)
+			{
+				fnClass=formatString("class%06d_images@%s_classes_level_%02d.xmd", q + 1, fnOut.c_str(), level);
+				SFq.read(fnClass);
+				SFq.renameColumn(MDL_IMAGE,MDL_IMAGE_ORIGINAL);
+				SFqaligned.join1(SFq,MDaligned,MDL_ITEM_ID);
+				SFqaligned.write(fnClass,MD_APPEND);
+			}
+		}
     }
     CLOSE_LOG();
 }

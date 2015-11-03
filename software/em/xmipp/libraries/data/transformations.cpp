@@ -68,6 +68,8 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
 
     if (scale != 1.)
     {
+    	if (scale==0.) // Protection against badly formed metadatas
+    		scale=1.0;
         if (dim == 2)
         {
             M3x3_BY_CT(A, A, scale);

@@ -125,7 +125,8 @@ function downloadTestdata(elm){
 function createServProject(elm) {
 	var projName = "map"+randomString(16, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
-
+	
+	var projectUrl = "http://" + document.domain + getSubDomainURL() + "/m_content/?p="+ projName
 	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
 	if(selected != undefined){
 		URL += "&testData="+selected;
@@ -140,8 +141,8 @@ function createServProject(elm) {
 			
 			var msg = "<p>Your <strong>url to access </strong> this <strong>project</strong> is:</p>" +
 			"<br /><p><h3>" + 
-			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/content/?p="+ projName+ "'>" +
-			"http://scipion.cnb.csic.es/m/content/?p="+ projName+ "</a>"+
+			"<a style='color:firebrick;' href='"+ projectUrl + "'>" +
+			projectUrl + "</a>"+
 			"</h3></p><br />" +
 			"<p>The project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +

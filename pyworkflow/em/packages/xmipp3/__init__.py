@@ -60,6 +60,7 @@ from viewer_reconstruct_highres import XmippReconstructHighResViewer
 
 from plotter import XmippPlotter
 
+from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from protocol_apply_alignment import XmippProtApplyAlignment
 from protocol_break_symmetry import XmippProtAngBreakSymmetry
@@ -69,6 +70,7 @@ from protocol_cltomo import XmippProtCLTomo
 # from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
+from protocol_ctf_correct_wiener2d import XmippProtCTFCorrectWiener2D
 from protocol_denoise_particles import XmippProtDenoiseParticles
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_movies import XmippProtExtractMovieParticles
@@ -77,6 +79,7 @@ from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D
 from protocol_movie_alignment import ProtMovieAlignment, ProtMovieAlignment
+from protocol_multireference_alignability import XmippProtMultiRefAlignability
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_particle_pick_consensus import XmippProtConsensusPicking
 from protocol_particle_pick import XmippProtParticlePicking 
@@ -95,6 +98,7 @@ from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_split_volume import XmippProtSplitvolume
 from protocol_validate_nontilt import XmippProtValidateNonTilt
+from protocol_validate_tilt import XmippProtValidateTilt
 from protocol_volume_strain import XmippProtVolumeStrain
 
 # Wizards

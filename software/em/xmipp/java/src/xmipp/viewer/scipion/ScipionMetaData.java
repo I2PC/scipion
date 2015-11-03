@@ -161,7 +161,8 @@ public class ScipionMetaData extends MetaData {
                 }
                 
                 type = getTypeMapping(clsname);
-
+                if(type == -1)
+                	continue;//complex object is empty, unless is matrix
                 labelscount++;
                 allowRender = isImage(name);
                 ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
@@ -594,8 +595,10 @@ public class ScipionMetaData extends MetaData {
         }
         if(type.equals("Boolean"))
             return MetaData.LABEL_INT;
-
-        return MetaData.LABEL_STRING;
+        
+        if(type.equals("String") || type.equals("Matrix"))
+        	return MetaData.LABEL_STRING;
+        return -1;
     }
 
     public String getPreffix() {
@@ -728,7 +731,7 @@ public class ScipionMetaData extends MetaData {
             if(downsampleFactor == null)
                 downsampleFactor = 1.;
                 //read params from sqlite
-
+            
             return new EllipseCTF(id, Q0, Cs, downsampleFactor, Ts, kV, defU, defV, defAngle, D);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
@@ -1179,5 +1182,16 @@ public class ScipionMetaData extends MetaData {
         
         return minMax;
     }
+    
+    public boolean containsMicrographsInfo() 
+    {
+    	return self.equals("Micrograph") || self.equals("Movie");
+    }
+
+	public String getSelf()
+	{
+		// TODO Auto-generated method stub
+		return self;
+	}
    
 }
