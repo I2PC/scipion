@@ -763,7 +763,7 @@ class PostprocessViewer(ProtocolViewer):
                       expertLevel=LEVEL_ADVANCED,
                       label='Threshold in resolution plots',
                       help='')
-        group.addParam('guinierPlots', LabelParam,
+        group.addParam('guinierPlots', params.LabelParam,
               default=True, label='Display guinier plots',
               help='')
 
@@ -1178,7 +1178,7 @@ Examples:
         xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Relative Guinier Plot')
         a = xplotter.createSubPlot("", 'Angstroms^-2', 'log(Amplitude)', yformat=False)
         legends = []
-        for label in self._getGuinerLabels():
+        for frame in self._frames:
             modelStar = self.protocol._getFileName('guinier_frame', iter=self.protocol._lastIter(), frame=frame)
             if exists(modelStar):
                 model = 'relative_guinier@' + modelStar
