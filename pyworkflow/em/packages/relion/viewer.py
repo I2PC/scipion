@@ -25,25 +25,23 @@
 # **************************************************************************
 
 import os
-
-
-from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-import pyworkflow.em.showj as showj
+from os.path import exists
 
 import pyworkflow.em as em
+import pyworkflow.em.showj as showj
 import pyworkflow.em.metadata as md
+from pyworkflow.em.plotter import EmPlotter
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
+import pyworkflow.protocol.params as params
+from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_polish import ProtRelionPolish
 from protocol_postprocess import ProtRelionPostprocess
-from protocol_autopick import ProtRelionAutopick
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
-                                        EnumParam, FloatParam, BooleanParam,
-                                        IntParam)
-from pyworkflow.em.plotter import EmPlotter
-from pyworkflow.utils.path import exists
+from protocol_autopick import ProtRelionAutopick, ProtRelionAutopickFom
+
 
 ITER_LAST = 0
 ITER_SELECTION = 1
@@ -125,8 +123,8 @@ class RelionViewer(ProtocolViewer):
     def _defineParams(self, form):
         self._env = os.environ.copy()
         form.addSection(label='Visualization')
-        form.addParam('viewIter', EnumParam, choices=['last', 'selection'], default=ITER_LAST, 
-                      display=EnumParam.DISPLAY_LIST,
+        form.addParam('viewIter', params.EnumParam, choices=['last', 'selection'], default=ITER_LAST, 
+                      display=params.EnumParam.DISPLAY_LIST,
                       label="Iteration to visualize", 
                       help="""
 *last*: only the last iteration will be visualized.
@@ -136,7 +134,7 @@ Examples:
 "2,6,9-11" -> [2,6,9,10,11]
 "2 5, 6-8" -> [2,5,6,7,8]                      
                            """)
-        form.addParam('iterSelection', NumericRangeParam, 
+        form.addParam('iterSelection', params.NumericRangeParam, 
                       condition='viewIter==%d' % ITER_SELECTION, 
                       label="Iterations list", 
                       help="Write the iteration list to visualize.")
@@ -146,7 +144,7 @@ Examples:
         group = form.addGroup('Particles')
         if self.protocol.IS_CLASSIFY:
 
-            group.addParam('showImagesInClasses', LabelParam, 
+            group.addParam('showImagesInClasses', params.LabelParam, 
                           label='Show classification in Scipion', important=True,
                           help='Display each class with the number of particles assigned. \n'
                                '*Note1*: The images of one class can be shown by \n'
@@ -154,66 +152,66 @@ Examples:
                                '*Note2*: This option convert the Relion star file to\n'
                                'Scipion format and can take several minutes if the \n'
                                'number of particles is high.')
-            group.addParam('showClassesOnly', LabelParam, 
+            group.addParam('showClassesOnly', params.LabelParam, 
                           label='Show classes only (*_model.star)',
                           help='Display the classes directly form the *_model.star file.')            
             changesLabel = 'Changes in Offset, Angles and Classes'
         else:
-            group.addParam('showImagesAngularAssignment', LabelParam, 
+            group.addParam('showImagesAngularAssignment', params.LabelParam, 
                            label='Particles angular assignment')
-        group.addParam('showOptimiserFile', LabelParam, 
+        group.addParam('showOptimiserFile', params.LabelParam, 
                        label='Show *_optimiser.star file')
         
         if self.protocol.IS_3D:
             group = form.addGroup('Volumes')
             
             if self.protocol.IS_CLASSIFY:
-                group.addParam('showClasses3D', EnumParam, default=CLASSES_ALL,
+                group.addParam('showClasses3D', params.EnumParam, default=CLASSES_ALL,
                                choices=['all', 'selection'], 
-                               display=EnumParam.DISPLAY_HLIST,
+                               display=params.EnumParam.DISPLAY_HLIST,
                                label='3D Class to visualize',
                                help='')
-                group.addParam('class3DSelection', NumericRangeParam, default='1',
+                group.addParam('class3DSelection', params.NumericRangeParam, default='1',
                               condition='showClasses3D == %d' % CLASSES_SEL,
                               label='Classes list',
                               help='')
             else:
-                group.addParam('showHalves', EnumParam, choices=['half1', 'half2', 'both', 'final'], default=0,
+                group.addParam('showHalves', params.EnumParam, choices=['half1', 'half2', 'both', 'final'], default=0,
                               label='Volume to visualize',
                               help='Select which half do you want to visualize.')
             
-            group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-                          default=VOLUME_SLICES, display=EnumParam.DISPLAY_HLIST, 
+            group.addParam('displayVol', params.EnumParam, choices=['slices', 'chimera'], 
+                          default=VOLUME_SLICES, display=params.EnumParam.DISPLAY_HLIST, 
                           label='Display volume with',
                           help='*slices*: display volumes as 2D slices along z axis.\n'
                                '*chimera*: display volumes as surface with Chimera.')
-            group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
-                          default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_HLIST, 
+            group.addParam('displayAngDist', params.EnumParam, choices=['2D plot', 'chimera'], 
+                          default=ANGDIST_2DPLOT, display=params.EnumParam.DISPLAY_HLIST, 
                           label='Display angular distribution',
                           help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                                '*chimera*: display angular distribution using Chimera with red spheres.') 
-            group.addParam('spheresScale', IntParam, default=100, 
+            group.addParam('spheresScale', params.IntParam, default=100, 
                           expertLevel=LEVEL_ADVANCED,
                           label='Spheres size',
                           help='')
             group = form.addGroup('Resolution')
-            group.addParam('resolutionPlotsSSNR', LabelParam, default=True,
+            group.addParam('resolutionPlotsSSNR', params.LabelParam, default=True,
                           label='Display SSNR plots',
                           help='Display signal to noise ratio plots (SSNR) ')
             if not self.protocol.IS_CLASSIFY:
-                group.addParam('resolutionPlotsFSC', LabelParam, default=True,
+                group.addParam('resolutionPlotsFSC', params.LabelParam, default=True,
                               label='Display resolution plots (FSC)',
                               help='')
-                group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
+                group.addParam('resolutionThresholdFSC', params.FloatParam, default=0.143, 
                               expertLevel=LEVEL_ADVANCED,
                               label='Threshold in resolution plots',
                               help='')
             
         form.addSection('Overall')      
-        form.addParam('showPMax', LabelParam, default=True,
+        form.addParam('showPMax', params.LabelParam, default=True,
                       label="Show average PMax",
                       help='Average (per class) of the maximum value\n of normalized probability function')      
-        form.addParam('showChanges', LabelParam, default=True,
+        form.addParam('showChanges', params.LabelParam, default=True,
                       label=changesLabel,
                       help='Visualize changes in orientation, offset and\n number images assigned to each class')
                                               
@@ -743,25 +741,25 @@ class PostprocessViewer(ProtocolViewer):
         form.addSection(label='Visualization')
         group = form.addGroup('3D analysis')
         
-        group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-                      display=EnumParam.DISPLAY_HLIST, default=VOLUME_SLICES,
+        group.addParam('displayVol', params.EnumParam, choices=['slices', 'chimera'], 
+                      display=params.EnumParam.DISPLAY_HLIST, default=VOLUME_SLICES,
                       label='Display volume with',
                       help='*slices*: display volumes as 2D slices along z axis.\n'
                            '*chimera*: display volumes as surface with Chimera.')
-        group.addParam('displayMaskedVol', EnumParam, choices=['slices', 'chimera'], 
-                      display=EnumParam.DISPLAY_HLIST, default=VOLUME_SLICES,
+        group.addParam('displayMaskedVol', params.EnumParam, choices=['slices', 'chimera'], 
+                      display=params.EnumParam.DISPLAY_HLIST, default=VOLUME_SLICES,
                       label='Display masked volume with',
                       help='*slices*: display masked volume as 2D slices along z axis.\n'
                            '*chimera*: display masked volume as surface with Chimera.')
-        group.addParam('resolutionPlotsFSC', EnumParam,
+        group.addParam('resolutionPlotsFSC', params.EnumParam,
                       choices=['Corrected', 'Unmasked Maps', 'Masked Maps', 'Phase Randomized Masked Maps', 'all'],
-                      default=FSC_CORRECTED, display=EnumParam.DISPLAY_COMBO, 
+                      default=FSC_CORRECTED, display=params.EnumParam.DISPLAY_COMBO, 
                       label='Display resolution plots (FSC)',
                       help='') 
-#         group.addParam('resolutionPlotsFSC', LabelParam, default=True,
+#         group.addParam('resolutionPlotsFSC', params.LabelParam, default=True,
 #                       label='Display resolution plots (FSC) ?',
 #                       help='')
-        group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
+        group.addParam('resolutionThresholdFSC', params.FloatParam, default=0.143, 
                       expertLevel=LEVEL_ADVANCED,
                       label='Threshold in resolution plots',
                       help='')
@@ -934,6 +932,16 @@ class PostprocessViewer(ProtocolViewer):
 
 
 
+class RelionAutopickViewerFOM(Viewer):
+    """ Class to visualize Relion postprocess protocol """
+    _targets = [ProtRelionAutopickFom]
+    _environments = [DESKTOP_TKINTER]
+    
+    def _visualize(self, obj, **args):
+        return [self.warnMessage('\n'.join(obj._summary()), 
+                                 "No output expected")]
+        
+
 class RelionAutopickViewer(Viewer):
     """ Class to visualize Relion postprocess protocol """
     _targets = [ProtRelionAutopick]
@@ -956,16 +964,16 @@ class RelionPolishViewer(ProtocolViewer):
         form.addSection(label='Visualization')
         
         group = form.addGroup('Particles')
-        group.addParam('displayShinyParticles', LabelParam, 
+        group.addParam('displayShinyParticles', params.LabelParam, 
                        label='Display Shiny Particles')
         
         group = form.addGroup('Volumes')
         
-        group.addParam('showHalves', EnumParam, choices=['half1', 'half2', 'both', 'final shiny'], default=0,
+        group.addParam('showHalves', params.EnumParam, choices=['half1', 'half2', 'both', 'final shiny'], default=0,
                       label='Volume to visualize',
                       help='Select which half do you want to visualize.')
-        group.addParam('viewFrame', EnumParam, choices=['all', 'selection'], default=0, 
-                      display=EnumParam.DISPLAY_HLIST, condition="showHalves<3",
+        group.addParam('viewFrame', params.EnumParam, choices=['all', 'selection'], default=0, 
+                      display=params.EnumParam.DISPLAY_HLIST, condition="showHalves<3",
                       label="Frame to visualize", 
                       help="""
 *all*: all frames volumes will be visualized.
@@ -975,39 +983,39 @@ Examples:
 "2,6,9-11" -> [2,6,9,10,11]
 "2 5, 6-8" -> [2,5,6,7,8]                      
                            """)
-        group.addParam('frameSelection', NumericRangeParam, 
+        group.addParam('frameSelection', params.NumericRangeParam, 
                       condition='showHalves<3 and viewFrame==1' , 
                       label="Frames list", default = 1,
                       help="Write the frame list to visualize.")
-        group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-                      default=VOLUME_SLICES, display=EnumParam.DISPLAY_HLIST, 
+        group.addParam('displayVol', params.EnumParam, choices=['slices', 'chimera'], 
+                      default=VOLUME_SLICES, display=params.EnumParam.DISPLAY_HLIST, 
                       label='Display volume with',
                       help='*slices*: display volumes as 2D slices along z axis.\n'
                            '*chimera*: display volumes as surface with Chimera.')
-        group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
-                      default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_HLIST, 
+        group.addParam('displayAngDist', params.EnumParam, choices=['2D plot', 'chimera'], 
+                      default=ANGDIST_2DPLOT, display=params.EnumParam.DISPLAY_HLIST, 
                       label='Display angular distribution',condition="showHalves==3",
                       help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                            '*chimera*: display angular distribution using Chimera with red spheres.') 
-        group.addParam('spheresScale', IntParam, default=100, 
+        group.addParam('spheresScale', params.IntParam, default=100, 
                       expertLevel=LEVEL_ADVANCED,condition="showHalves==3 and displayAngDist==%d" % ANGDIST_CHIMERA,
                       label='Spheres size',
                       help='')
         group = form.addGroup('Plots')
-        group.addParam('resolutionPlotsFSC', EnumParam,
+        group.addParam('resolutionPlotsFSC', params.EnumParam,
                       choices=['Corrected', 'Unmasked Maps', 'Masked Maps', 'Phase Randomized Masked Maps', 'all'],
-                      default=FSC_CORRECTED, display=EnumParam.DISPLAY_COMBO, 
+                      default=FSC_CORRECTED, display=params.EnumParam.DISPLAY_COMBO, 
                       label='Display resolution plots (FSC)',
                       help='') 
-        group.addParam('resolutionThresholdFSC', FloatParam, default=0.143, 
+        group.addParam('resolutionThresholdFSC', params.FloatParam, default=0.143, 
                       expertLevel=LEVEL_ADVANCED,
                       label='Threshold in resolution plots',
                       help='')
-        group.addParam('guinierPlots', LabelParam,
+        group.addParam('guinierPlots', params.LabelParam,
                       default=True, condition="showHalves<3",
                       label='Display guinier plots',
                       help='')
-        group.addParam('bfactorsPlot', LabelParam,
+        group.addParam('bfactorsPlot', params.LabelParam,
                       default=True,
                       label='Display bfactors plot',
                       help='')
