@@ -31,6 +31,8 @@ from pyworkflow.em import *
 
 from convert import writeSetOfParticles, readSetOfParticles, getImageLocation, \
     locationToXmipp, xmippToLocation, matrixFromGeometry
+from pyworkflow.em.packages.xmipp3.convert import createItemMatrix
+import pyworkflow.em as em
        
         
 class XmippProtCL2DAlign(ProtAlign2D):
@@ -84,7 +86,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
 
     #--------------------------- STEPS functions --------------------------------------------        
     def convertInputStep(self):
-        writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
+        writeSetOfParticles(self.inputParticles.get(),self.imgsFn,alignType=None)
 
     def createOutputStep(self):
         """ Store the setOfParticles object 
@@ -103,10 +105,14 @@ class XmippProtCL2DAlign(ProtAlign2D):
         alignedSet = self._createSetOfParticles()
         alignedSet.copyInfo(particles)
         alignedSet.setRepresentative(avg)
-        alignedSet.setAlignment(constants.ALIGN_2D)
-        readSetOfParticles(self.imgsFn, alignedSet)
+        alignedSet.copyItems(particles,
+                            updateItemCallback=self._createItemMatrix,
+                            itemDataIterator=md.iterRows(self.imgsFn, sortByLabel=md.MDL_ITEM_ID))
         self._defineOutputs(outputParticles=alignedSet)
         self._defineSourceRelation(self.inputParticles, alignedSet)
+
+    def _createItemMatrix(self, item, row):
+        createItemMatrix(item, row, align=em.ALIGN_2D)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
