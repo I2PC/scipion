@@ -37,6 +37,8 @@ import xmipp
 import glob
 from pyworkflow.object import Float, String
 from math import sqrt
+from plotter import XmippPlotter
+
 
 class XmippProtValidateOverfitting(ProtReconstruct3D):
     """    
@@ -90,6 +92,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                     self._insertFunctionStep('reconstructionStep',number,fractionCounter,iteration)
                 fractionCounter+=1     
         self._insertFunctionStep('gatherResultsStep')
+        #self._insertFunctionStep('createOutputStep')
         
     
     #--------------------------- STEPS functions --------------------------------------------
@@ -133,13 +136,12 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         
     def gatherResultsStep(self):
         fnFreqs = sorted(glob.glob(self._getExtraPath("fraction*_freq.txt")))
-        fnRoot2 = self._getExtraPath("fractions Resolutions")
-        #fractionCounter1 = 0
-        #number1 = 0
-        #print "Found files: "
+        subset = 0
+        
+        numberOfParticles=getFloatListFromValues(self.numberOfParticles.get())
+        validationMd = xmipp.MetaData()
+
         for fnFreq in fnFreqs:
-            #pass
-            #print fnFreq
             data = []
             fnFreqOpen = open(fnFreq, "r")
             for line in fnFreqOpen:
@@ -148,33 +150,37 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                 data.extend(rowdata)
             meanRes = (sum(data)/len(data))
             data[:] = [(x-meanRes)**2 for x in data]
-            varRes = (sum(data)/len(data))
+            varRes = (sum(data)/(len(data)-1))
             stdRes = sqrt(varRes)
-            #fractionCounter1+=1
-            #number1+=1
-            #meanRes = float(sum(fnFreq.getValue())/len(fnFreq.getvalue()))
-            fh2 = open(fnRoot2+"_mean_var.txt","a")
-            fh2.write("%f %f\n" % (meanRes,stdRes))
-            #fh2.write("%d %d %f %f\n" % (fractionCounter1,number1,meanRes,stdRes))
             
-            fh2.close()
-            
-                             
+            objId = validationMd.addObject()
+            validationMd.setValue(xmipp.MDL_COUNT,long(numberOfParticles[subset]),objId)
+            validationMd.setValue(xmipp.MDL_AVG,meanRes, objId)  
+            validationMd.setValue(xmipp.MDL_STDDEV,stdRes,objId)
+
+            subset += 1
+
+        validationMd.write(self._getExtraPath('results.xmd'))
+        #cleanPattern(self._getExtraPath("fraction*_freq.txt"))
+        
+    def _defineResultsName(self):
+        return self._getPath('results.xmd')  
+           
     #--------------------------- INFO functions -------------------------------------------- 
     def _summary(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
         msg=[]
-        msg.append("Fraction of particles: "+self.numberOfParticles.get())
-        msg.append("Number of times taht reconstruction is performed per fraction: %2d" % self.numberOfIterations.get())
+        msg.append("Number of particles: "+self.numberOfParticles.get())
+        msg.append("Number of times that reconstruction is performed per each particles subset: %2d" % self.numberOfIterations.get())
         return msg
     
     def _methods(self):
         messages = []
-        messages.append('B. Heymann***')
+        messages.append('B. Heymann "Validation of 3D EM Reconstructions"')
         return messages
     
     def _citations(self):
-        return ['B. Heymann***']
+        return ['B.Heymann2015']
     #--------------------------- UTILS functions --------------------------------------------

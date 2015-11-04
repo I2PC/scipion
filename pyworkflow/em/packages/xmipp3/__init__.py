@@ -51,6 +51,7 @@ from viewer_ml2d import XmippML2DViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
 from viewer_resolution3d import XmippResolution3DViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
+from viewer_validate_overfitting import XmippValidateOverfittingViewer
 from viewer_split_volume import XmippViewerSplitVolume
 from viewer_volume_strain import XmippVolumeStrainViewer
 from viewer_reconstruct_highres import XmippReconstructHighResViewer
