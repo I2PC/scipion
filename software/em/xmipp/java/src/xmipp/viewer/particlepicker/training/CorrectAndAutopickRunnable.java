@@ -44,7 +44,7 @@ public class CorrectAndAutopickRunnable implements Runnable
 			this.automaticRows = automaticRows;
 			this.next = next;
             this.picker = frame.getParticlePicker();
-            this.classifier = picker.getClassifier();
+            this.classifier = (PickingClassifier)picker.getClassifier();
 		}
 
 		public void run()

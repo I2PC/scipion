@@ -35,6 +35,7 @@
 #include <geometry.h>
 //#include <relion-1.3/include/relion-1.3/src/matrix1d.h>
 #include <data/matrix1d.h>
+//#include <data/multidim_array.h>
 
 void ProgassignmentTiltPair::readParams()
 {
@@ -64,17 +65,10 @@ void ProgassignmentTiltPair::defineParams()
 	addParamsLine("  [--threshold <d=0.3>]      : If the distance between two points is lesser than threshold*particlesize, they will be the same point");
 }
 
-//double mean(Matrix1D<double> v)
-//{
-//	int Num_elem = v.vdim;
-//	double sum_v = v.sum();
-//	return sum_v/Num_elem;
-//}
-
-void ProgassignmentTiltPair::search_affine_transform(int len_u, float u1x, float u1y, float u2x, float u2y, float u3x, float u3y, float t1x,
+void ProgassignmentTiltPair::search_affine_transform(float u1x, float u1y, float u2x, float u2y, float u3x, float u3y, float t1x,
 		float t1y, float t2x, float t2y, float t3x, float t3y,
-		Matrix1D<double> ux, Matrix1D<double> uy, size_t Xdim, size_t Ydim, struct Delaunay_T *delaunay_tilt, size_t *breakassignment, int *bestInliers,
-		Matrix2D<double> *A_coarse, Matrix1D<double> *T_coarse)
+		Matrix1D<double> ux, Matrix1D<double> uy, size_t Xdim, size_t Ydim, struct Delaunay_T &delaunay_tilt,
+		int &bestInliers, Matrix2D<double> &A_coarse, Matrix1D<double> &T_coarse)
 {
 	double estimator, dist;
 	struct Point_T t_dist, t_closest;
@@ -86,25 +80,24 @@ void ProgassignmentTiltPair::search_affine_transform(int len_u, float u1x, float
 
 	for (int i=0; i<6; i++)
 	{
-		//std::cout << "Iteration i = " << i << std::endl;
 		if (i==0){
 			def_affinity(u1x, u1y, u2x, u2y, u3x, u3y, t1x, t1y, t2x, t2y, t3x, t3y, A_matrix, T, invW);}
 		if (i==1)
-			def_affinity(u1x, u1y, u3x, u3y, u2x, u2y, t1x, t1y, t3x, t3y, t2x, t2y, A_matrix, T, invW);
+			def_affinity(u1x, u1y, u2x, u2y, u3x, u3y, t1x, t1y, t3x, t3y, t2x, t2y, A_matrix, T, invW);
 		if (i==2)
-			def_affinity(u2x, u2y, u1x, u1y, u3x, u3y, t2x, t2y, t1x, t1y, t3x, t3y, A_matrix, T, invW);
+			def_affinity(u1x, u1y, u2x, u2y, u3x, u3y, t2x, t2y, t1x, t1y, t3x, t3y, A_matrix, T, invW);
 		if (i==3)
-			def_affinity(u2x, u2y, u3x, u3y, u1x, u1y, t2x, t2y, t3x, t3y, t1x, t1y, A_matrix, T, invW);
+			def_affinity(u1x, u1y, u2x, u2y, u3x, u3y, t2x, t2y, t3x, t3y, t1x, t1y, A_matrix, T, invW);
 		if (i==4)
-			def_affinity(u3x, u3y, u1x, u1y, u2x, u2y, t3x, t3y, t1x, t1y, t2x, t2y, A_matrix, T, invW);
+			def_affinity(u1x, u1y, u2x, u2y, u3x, u3y, t3x, t3y, t1x, t1y, t2x, t2y, A_matrix, T, invW);
 		if (i==5)
-			def_affinity(u3x, u3y, u2x, u2y, u1x, u1y, t3x, t3y, t2x, t2y, t1x, t1y, A_matrix, T, invW);
+			def_affinity(u1x, u1y, u2x, u2y, u3x, u3y, t3x, t3y, t2x, t2y, t1x, t1y, A_matrix, T, invW);
 
 		double trace_A = MAT_ELEM(A_matrix, 0, 0) + MAT_ELEM(A_matrix, 1, 1);
 		double det_A = MAT_ELEM(A_matrix, 0, 0)*MAT_ELEM(A_matrix, 1, 1) - MAT_ELEM(A_matrix, 0, 1)*MAT_ELEM(A_matrix, 1, 0);
 
 
-//		if ( fabs(det_A - cos_tilt_max)>0.2)
+//		if ( fabs(det_A - cos_tilt_max)>0.1)
 //			continue;
 
 		double discriminant_A = 0.25*(trace_A)*(trace_A) - det_A;
@@ -120,13 +113,13 @@ void ProgassignmentTiltPair::search_affine_transform(int len_u, float u1x, float
 			continue;
 
 		Matrix1D<double> u(2), dist_vec, dist_vec2, t_test(2);
+		size_t len_u=VEC_XSIZE(ux);
+
 		dist_vec.initConstant(len_u, -1);
 		dist_vec2.initConstant(len_u, 10);
-		//std::cout << "len_u = " << len_u << std::endl;
 
-		for (int tt=0; tt<len_u; tt++)
+		for (size_t tt=0; tt<len_u; tt++)
 		{
-			//std::cout << "u = " << VEC_ELEM(u,0) << "  " << VEC_ELEM(u,1) << std::endl;
 			VEC_ELEM(u,0) = VEC_ELEM(ux,tt);
 			VEC_ELEM(u,1) = VEC_ELEM(uy,tt);
 			t_test = A_matrix*u + T;
@@ -138,26 +131,22 @@ void ProgassignmentTiltPair::search_affine_transform(int len_u, float u1x, float
 			t_dist.x = VEC_ELEM(t_test,0);
 			t_dist.y = VEC_ELEM(t_test,1);
 
-			//std::cout << "Checkpoint 2 " << std::endl;
-			if (!select_Closest_Point(delaunay_tilt, &t_dist, &t_closest, &dist) )
+			if (!select_Closest_Point(&delaunay_tilt, &t_dist, &t_closest, &dist) )
 			{
-				(*breakassignment) = 1;
-				//write_DCEL(delaunay_tilt.dcel, 0, "tiltdata_dcel.txt");
-				std::cout << "Coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
-				break;
+
+				write_DCEL(delaunay_tilt.dcel, 0, "tiltdata_dcel.txt");
+				std::cerr << "WARNING IN TRIANGULATION OR CLOSEST NEIGHBOUR" << std::endl;
+				printf("Maybe the warning involves the tilt coordinates ( %f , %f ) \n", t_dist.x, t_dist.y);
+				continue;
 			}
-
 			VEC_ELEM(dist_vec,tt) = dist;
-			//std::cout << "dist = " << VEC_ELEM(dist_vec,tt) << std::endl;
-			//std::cout << "iteration tt = " << tt << std::endl;
-
 		}
 
 		int counter = 0;
 		size_t inliers2 = 0;
 		double dist2 = 0;
 
-		for (int kk=0; kk<len_u; kk++)
+		for (size_t kk=0; kk<len_u; kk++)
 		{
 			if (VEC_ELEM(dist_vec,kk)>-1)
 			{
@@ -173,22 +162,19 @@ void ProgassignmentTiltPair::search_affine_transform(int len_u, float u1x, float
 		if (counter == 0)
 			continue;
 
-		if (inliers2 > (*bestInliers))
+		if (inliers2 > bestInliers)
 		{
 			estimator = dist2/inliers2;
-			(*bestInliers) = inliers2;
-			(*A_coarse) = A_matrix;
-			(*T_coarse) = T;
-			//std::cout << "det_A = " << det_A << std::endl;
-
+			bestInliers = inliers2;
+			A_coarse = A_matrix;
+			T_coarse = T;
+			std::cout << bestInliers << std::endl;
 		}
-		else if ((inliers2 == (*bestInliers)) && (dist2/inliers2 < estimator) )
+		else if ((inliers2 == bestInliers) && (dist2/inliers2 < estimator) )
 		{
 			estimator = dist2/inliers2;
-			(*A_coarse) = A_matrix;
-			(*T_coarse) = T;
-			//std::cout << "det_A = " << det_A << std::endl;
-
+			A_coarse = A_matrix;
+			T_coarse = T;
 		}
 	}
 }
@@ -196,9 +182,10 @@ void ProgassignmentTiltPair::search_affine_transform(int len_u, float u1x, float
 void ProgassignmentTiltPair::run()
 {
 	std::cout << "Starting..." << std::endl;
-	//LOAD METADATA and TILTPAIRS
+
+	//LOAD METADATA and TRIANGULATIONS
 	MetaData md_untilt, md_tilt, mduntilt, mdtilt;;
-	size_t Ndim, Zdim, Ydim , Xdim, objId, breakassignment = 0;
+	size_t Ndim, Zdim, Ydim , Xdim, objId;
 
 	getImageSize(fnmic, Xdim, Ydim, Zdim, Ndim);
 
@@ -206,13 +193,13 @@ void ProgassignmentTiltPair::run()
 	md_tilt.read(fntilt);
 
 	int x, y, len_u=0, len_t=0;
-	//storing points and creating Delaunay triangulations
+
+	//storing untilted points and creating Delaunay triangulation
 	struct Delaunay_T delaunay_untilt;
 	Matrix1D<double> ux(md_untilt.size()), uy(md_untilt.size()), tx(md_tilt.size()), ty(md_tilt.size());
 	init_Delaunay( &delaunay_untilt, md_untilt.size());
 	FOR_ALL_OBJECTS_IN_METADATA(md_untilt)
 	{
-
 		md_untilt.getValue(MDL_XCOOR, x, __iter.objId);
 		md_untilt.getValue(MDL_YCOOR, y, __iter.objId);
 
@@ -222,13 +209,10 @@ void ProgassignmentTiltPair::run()
 		insert_Point( &delaunay_untilt, x, y);
 		len_u = len_u +1;
 	}
-	//std::cout << "len_u = " << len_u << std::endl;
-
-
 	create_Delaunay_Triangulation( &delaunay_untilt, 0);
-
 	int tri_number_untilt = get_Number_Real_Faces(delaunay_untilt.dcel);
 
+	//storing tilted points and creating Delaunay triangulation
 	struct Delaunay_T delaunay_tilt;
 	init_Delaunay( &delaunay_tilt, md_tilt.size());
 	FOR_ALL_OBJECTS_IN_METADATA(md_tilt)
@@ -251,12 +235,11 @@ void ProgassignmentTiltPair::run()
 	{
 		thrs = len_t;
 	}
-
-	write_DCEL(delaunay_tilt.dcel, 0, "tiltdata.txt");
 	create_Delaunay_Triangulation( &delaunay_tilt, 1);
 	int tri_number_tilt = get_Number_Real_Faces(delaunay_tilt.dcel);
+	//////////////DATA LOAD AND TRIANGULATIONS FINISHED
 
-	// Triangle areas
+	//DETERMINING TRIANGLES AREAS
 	struct Point_T p, q, r, u1, u2, u3, t1, t2, t3;
 	MultidimArray<double> trig_untilt_area(tri_number_untilt+1), trig_tilt_area(tri_number_tilt+1), sortedArea;
 	Matrix1D<double> trig_untilt_area_1D(tri_number_untilt+1), trig_tilt_area_1D(tri_number_tilt+1);
@@ -272,21 +255,22 @@ void ProgassignmentTiltPair::run()
 		get_Face_Points(&delaunay_tilt, i, &p, &q, &r);
 		A1D_ELEM(trig_tilt_area,i-1) = triangle_area(p.x, p.y, q.x, q.y, r.x, r.y);
 	}
-//	double t_mean_area=trig_tilt_area.computeAvg();
-//	double u_mean_area=trig_untilt_area.computeAvg();
 
 	trig_untilt_area.sort(sortedArea);
 
 	double threshold_area = sortedArea( round((tri_number_untilt+1)*0.2) );
+	//////////////TRIANGLES ARES FINISHED
 
-	int bestInliers=0;
+	//DEFINING PARAMETERS FOR SEARCH_AFFINE_TRANSFORM
+	int bestInliers=0, bestInliers_con=0;
 	Matrix2D<double> A_coarse;
-
 	Matrix1D<double> T_coarse, def_T, t_test(2), u(2), dist_vec, dist_vec2;
-	//Matrix2D<double> invW;
+
 	double trace_A, det_A, sqrt_aux, Eig_A1, Eig_A2, discriminant_A, dist, estimator;
 	struct Point_T t_dist, t_closest;
-//	double cos_tilt = t_mean_area/u_mean_area;
+	//////////// DEFINING PARAMETERS FOR SEARCH_AFFINE_TRANSFORM
+
+	//TILT ANGLE ESTIMATION
 	double tilt_max = (tiltest + 15)*PI/180, tilt_min = (tiltest - 15)*PI/180, cos_tilt_max, cos_tilt_min;
 
 	if (tiltest == -1)
@@ -298,16 +282,16 @@ void ProgassignmentTiltPair::run()
 	{
 		cos_tilt_max= cos(tilt_max);
 		cos_tilt_min= cos(tilt_min);
-		std::cout << "cos_tilt_max = " << cos_tilt_max << "   " << "cos_tilt_min = " << cos_tilt_min << std::endl;
- 	}
+	}
+	////////////TILT ANGLE ESTIMATION
+
 
 	if (verbose==1)
 	{
 		std::cerr << "Exploring triangle matching" << std::endl;
 		init_progress_bar(tri_number_untilt);
 	}
-	std::cout << "Untilt triangles = " << tri_number_untilt << std::endl;
-	std::cout << "Tilt triangles = " << tri_number_tilt << std::endl;
+
 
 	/////////////////////////////////////// COARSE PHASE ///////////////////////////////////////
 	if (verbose==1)
@@ -321,32 +305,24 @@ void ProgassignmentTiltPair::run()
 		for (int j=0; j<tri_number_tilt; j++)
 		{
 			//std::cout << "Iteration k = " << k << "     Iteration j = " << j << std::endl;
-
 			if ( (trig_untilt_area(k) < trig_tilt_area(j)) )
 				continue;
 
-//			if ( (trig_untilt_area(k)*cos_tilt_min < trig_tilt_area(j)) )
-//				continue;
+			if ( (trig_untilt_area(k)*cos_tilt_min < trig_tilt_area(j)) || (trig_untilt_area(k)*cos_tilt_max > trig_tilt_area(j)) )
+				continue;
 
-//			if ( (trig_untilt_area(k)*cos_tilt_max > trig_tilt_area(j)) )
-//				continue;
-
-			//std::cout << "Checkpoint " << std::endl;
 			get_Face_Points(&delaunay_untilt, k, &u1, &u2, &u3);
 			get_Face_Points(&delaunay_tilt, j, &t1, &t2, &t3);
 
-			search_affine_transform(len_u, u1.x, u1.y, u2.x, u2.y, u3.x, u3.y, t1.x,
+			search_affine_transform(u1.x, u1.y, u2.x, u2.y, u3.x, u3.y, t1.x,
 					t1.y, t2.x, t2.y, t3.x, t3.y,
-					ux, uy, Xdim, Ydim, &delaunay_tilt, &breakassignment, &bestInliers,
-					&A_coarse, &T_coarse);
-
-		//std::cout << "Iteration = " << k << ", " << j << std::endl;
+					ux, uy, Xdim, Ydim, delaunay_tilt, bestInliers,
+					A_coarse, T_coarse);
 		}
 		if (verbose==1 && k%100==0)
 			progress_bar(k);
 	}
 	std::cout << "Coarse Inliers = " << bestInliers << std::endl;
-	////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	///////////////////////////////////// REFINEMENT PHASE /////////////////////////////////////
@@ -369,15 +345,12 @@ void ProgassignmentTiltPair::run()
 			t_test = A_coarse*u + T_coarse;
 			t_dist.x = VEC_ELEM(t_test,0);
 			t_dist.y = VEC_ELEM(t_test,1);
-			//std::cout << "Checkpoint 2 " << std::endl;
-			//std::cout << "Coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
 			if (!select_Closest_Point(&delaunay_tilt, &t_dist, &t_closest, &dist) )
 			{
-				breakassignment = 1;
-				std::cout << "Coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
-				break;
+				std::cerr << "WARNING IN TRIANGULATION OR CLOSEST NEIGHBOUR (in Coarse Phase)" << std::endl;
+				std::cout << "Maybe the warning involves the tilt coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
+				continue;
 			}
-			//std::cout << "dist = " << dist << std::endl;
 			if (dist<thr*particle_size)
 			{
 				VEC_ELEM(t_clo,count) = t_closest.x;
@@ -394,10 +367,7 @@ void ProgassignmentTiltPair::run()
 			}
 
 		}
-		if (breakassignment)
-		{
-			std::cerr << "ERROR IN TRIANGULATION OR CLOSEST NEIGHBOUR" << std::endl;
-		}
+
 
 		Matrix2D<double> def_A, A_con;
 		Matrix1D<double> T_con;
@@ -445,74 +415,86 @@ void ProgassignmentTiltPair::run()
 		{
 			std::cerr << " Matching not found" << std::endl;
 			std::cerr << " Starting contingency method" << std::endl;
-
+			std::cerr << " This phase can take a long time" << std::endl;
 			//Defining triangles in untilted space
 			double window=4*particle_size;
-			Matrix2D<double> triang_u(2*len_u, 4);
-			triang_u.initZeros(2*len_u,3);
+			double window_t=window *(1-0.34);  //0.34 (approx 0.3) is cos(70), tilts higher than 70 degrees are not considered
+			std::vector<Matrix1D<double> > allTrianglesU;
+			Matrix1D<double> triangleu(7);
 			for (int k = 0; k< len_u; k++)
 			{
+				VEC_ELEM(triangleu,0)=VEC_ELEM(ux,k);
+				VEC_ELEM(triangleu,1)=VEC_ELEM(uy,k);
 				for (int j=k+1; j<len_u; j++)
 				{
+					if ( ( (VEC_ELEM(ux,j)>VEC_ELEM(ux,k)+window) || (VEC_ELEM(ux,j)<VEC_ELEM(ux,k)-window)) ||
+					     ( (VEC_ELEM(uy,j)>VEC_ELEM(uy,k)+window) || (VEC_ELEM(uy,j)<VEC_ELEM(uy,k)-window)) )
+						continue;
+					VEC_ELEM(triangleu,2)=VEC_ELEM(ux,j);
+					VEC_ELEM(triangleu,3)=VEC_ELEM(uy,j);
 					for (int l=j+1; l<len_u; l++)
 					{
-						if (( ( (VEC_ELEM(ux,j)<VEC_ELEM(ux,k)+window) && (VEC_ELEM(ux,j)>VEC_ELEM(ux,k)-window)) &&
-							( (VEC_ELEM(uy,j)<VEC_ELEM(uy,k)+window) && (VEC_ELEM(uy,j)>VEC_ELEM(uy,k)-window)) ) &&
-							( ( (VEC_ELEM(ux,l)<VEC_ELEM(ux,k)+window) && (VEC_ELEM(ux,l)>VEC_ELEM(ux,k)-window)) &&
-							( (VEC_ELEM(uy,l)<VEC_ELEM(uy,k)+window) && (VEC_ELEM(uy,l)>VEC_ELEM(uy,k)-window)) ))
-						{
-							MAT_ELEM(triang_u,2*k,0)   = VEC_ELEM(ux,k);
-							MAT_ELEM(triang_u,2*k+1,0) = VEC_ELEM(uy,k);
-							MAT_ELEM(triang_u,2*k,1)   = VEC_ELEM(ux,j);
-							MAT_ELEM(triang_u,2*k+1,1) = VEC_ELEM(uy,j);
-							MAT_ELEM(triang_u,2*k,2)   = VEC_ELEM(ux,l);
-							MAT_ELEM(triang_u,2*k+1,2) = VEC_ELEM(uy,l);
-							MAT_ELEM(triang_u,2*k,3) = triangle_area(VEC_ELEM(ux,k), VEC_ELEM(uy,k), VEC_ELEM(ux,j), VEC_ELEM(uy,j), VEC_ELEM(ux,l), VEC_ELEM(uy,l));
-						}
+						if ( ( (VEC_ELEM(ux,l)>VEC_ELEM(ux,k)+window) || (VEC_ELEM(ux,l)<VEC_ELEM(ux,k)-window)) ||
+						     ( (VEC_ELEM(uy,l)>VEC_ELEM(uy,k)+window) || (VEC_ELEM(uy,l)<VEC_ELEM(uy,k)-window)) )
+							continue;
+
+						VEC_ELEM(triangleu,6) = triangle_area(VEC_ELEM(ux,k), VEC_ELEM(uy,k), VEC_ELEM(ux,j), VEC_ELEM(uy,j), VEC_ELEM(ux,l), VEC_ELEM(uy,l));
+						if (VEC_ELEM(triangleu,6) < threshold_area)
+							continue;
+
+						VEC_ELEM(triangleu,4) = VEC_ELEM(ux,l);
+						VEC_ELEM(triangleu,5) = VEC_ELEM(uy,l);
+						allTrianglesU.push_back(triangleu);
 					}
 				}
 			}
 			//Defining triangles in tilted space
-			Matrix2D<double> triang_t(2*len_u, 3);
-			triang_t.initZeros(2*len_t,4);
+			std::vector<Matrix1D<double> > allTrianglesT;
+			Matrix1D<double> trianglet(7);
 			for (int k = 0; k< len_t; k++)
 			{
-				int count_contingency_t = 0;//
+				VEC_ELEM(trianglet,0)=VEC_ELEM(tx,k);
+				VEC_ELEM(trianglet,1)=VEC_ELEM(ty,k);
 				for (int j=k+1; j<len_t; j++)
 				{
+					if ( ( (VEC_ELEM(tx,j)>VEC_ELEM(tx,k)+window_t) || (VEC_ELEM(tx,j)<VEC_ELEM(tx,k)-window_t)) ||
+						 ( (VEC_ELEM(ty,j)>VEC_ELEM(ty,k)+window_t) || (VEC_ELEM(ty,j)<VEC_ELEM(ty,k)-window_t)) )
+						continue;
+					VEC_ELEM(trianglet,2)=VEC_ELEM(tx,j);
+					VEC_ELEM(trianglet,3)=VEC_ELEM(ty,j);
 					for (int l=j+1; l<len_t; l++)
 					{
-						if (( ( (VEC_ELEM(tx,j)<VEC_ELEM(tx,k)+window) && (VEC_ELEM(tx,j)>VEC_ELEM(tx,k)-window)) &&
-							( (VEC_ELEM(ty,j)<VEC_ELEM(ty,k)+window) && (VEC_ELEM(ty,j)>VEC_ELEM(ty,k)-window)) ) &&
-							( ( (VEC_ELEM(tx,l)<VEC_ELEM(tx,k)+window) && (VEC_ELEM(tx,l)>VEC_ELEM(tx,k)-window)) &&
-							( (VEC_ELEM(ty,l)<VEC_ELEM(ty,k)+window) && (VEC_ELEM(ty,l)>VEC_ELEM(ty,k)-window)) ))
-						{
-							MAT_ELEM(triang_t,2*k,0)   = VEC_ELEM(tx,k);
-							MAT_ELEM(triang_t,2*k+1,0) = VEC_ELEM(ty,k);
-							MAT_ELEM(triang_t,2*k,1)   = VEC_ELEM(tx,j);
-							MAT_ELEM(triang_t,2*k+1,1) = VEC_ELEM(ty,j);
-							MAT_ELEM(triang_t,2*k,2)   = VEC_ELEM(tx,l);
-							MAT_ELEM(triang_t,2*k+1,2) = VEC_ELEM(ty,l);
-							MAT_ELEM(triang_t,2*k,3) = triangle_area(VEC_ELEM(tx,k), VEC_ELEM(ty,k), VEC_ELEM(tx,j), VEC_ELEM(ty,j), VEC_ELEM(tx,l), VEC_ELEM(ty,l));
-						}
+						if ( ( (VEC_ELEM(tx,l)>VEC_ELEM(tx,k)+window_t) || (VEC_ELEM(tx,l)<VEC_ELEM(tx,k)-window_t)) ||
+							 ( (VEC_ELEM(ty,l)>VEC_ELEM(ty,k)+window_t) || (VEC_ELEM(ty,l)<VEC_ELEM(ty,k)-window_t)) )
+							continue;
+						VEC_ELEM(trianglet,6) = triangle_area(VEC_ELEM(tx,k), VEC_ELEM(ty,k), VEC_ELEM(tx,j), VEC_ELEM(ty,j), VEC_ELEM(tx,l), VEC_ELEM(ty,l));
+						VEC_ELEM(trianglet,4) = VEC_ELEM(tx,l);
+						VEC_ELEM(trianglet,5) = VEC_ELEM(ty,l);
+						allTrianglesT.push_back(trianglet);
 					}
 				}
 			}
 
 			//Searching the affine application
-			int bestInliers_con = 0;
-			for (int k=0; k<len_u; k++)
+
+			for (size_t ku=0; ku<allTrianglesU.size(); ku++)
 			{
 
-				if (MAT_ELEM(triang_u,2*k,3)<MAT_ELEM(triang_t,2*k,3))
-					continue;
+				const Matrix1D<double> &triangleU=allTrianglesU[ku];
 
+				for (size_t kt=0; kt<allTrianglesT.size(); kt++)
+				{
+					const Matrix1D<double> &triangleT=allTrianglesT[kt];
 
-				search_affine_transform(len_u, MAT_ELEM(triang_u,2*k,0), MAT_ELEM(triang_u,2*k+1,0), MAT_ELEM(triang_u,2*k,1), MAT_ELEM(triang_u,2*k+1,1),
-						MAT_ELEM(triang_u,2*k,2), MAT_ELEM(triang_u,2*k+1,2), MAT_ELEM(triang_t,2*k,0), MAT_ELEM(triang_t,2*k+1,0),
-						MAT_ELEM(triang_t,2*k,1), MAT_ELEM(triang_t,2*k+1,1), MAT_ELEM(triang_t,2*k,2), MAT_ELEM(triang_t,2*k+1,2),
-										ux, uy, Xdim, Ydim, &delaunay_tilt, &breakassignment, &bestInliers_con,
-										&A_con, &T_con);
+					if (VEC_ELEM(triangleU,6)<VEC_ELEM(triangleT,6))
+						continue;
+
+					search_affine_transform(VEC_ELEM(triangleU,0), VEC_ELEM(triangleU,1), VEC_ELEM(triangleU,2), VEC_ELEM(triangleU,3),
+											VEC_ELEM(triangleU,4), VEC_ELEM(triangleU,5), VEC_ELEM(triangleT,0), VEC_ELEM(triangleT,1),
+											VEC_ELEM(triangleT,2), VEC_ELEM(triangleT,3), VEC_ELEM(triangleT,4), VEC_ELEM(triangleT,5),
+											ux, uy, Xdim, Ydim, delaunay_tilt, bestInliers_con,
+											A_con, T_con);
+				}
 			}
 			std::cout << "Contingency Inliers = " << bestInliers_con << std::endl;
 			if ((bestInliers_con > bestInliers) && (bestInliers_con>count))
@@ -526,16 +508,15 @@ void ProgassignmentTiltPair::run()
 				std::cout << "---------------------------" << std::endl;
 				std::cout << "T" << def_T << std::endl;
 			}
-			else
-			{
-				def_A = A_coarse;
-				def_T = T_coarse;
-			}
+//			else
+//			{
+//				def_A = A_coarse;
+//				def_T = T_coarse;
+//			}
 		}
 
 		///////////////////////////////////// WRITING TILT PAIRS /////////////////////////////////////
-		if (!breakassignment)
-		{
+
 		for (int k=0; k<len_u; k++)
 		{
 			VEC_ELEM(u,0) = VEC_ELEM(ux,k);
@@ -545,8 +526,9 @@ void ProgassignmentTiltPair::run()
 			t_dist.y = VEC_ELEM(t_test,1);
 			if (!select_Closest_Point(&delaunay_tilt, &t_dist, &t_closest, &dist) )
 			{
-				breakassignment = 1;
-				break;
+				std::cerr << "WARNING IN TRIANGULATION OR CLOSEST NEIGHBOUR (in writing phase)" << std::endl;
+				std::cout << "Maybe the warning involves the tilt coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
+				continue;
 			}
 
 			if (dist<thr*particle_size)
@@ -560,10 +542,7 @@ void ProgassignmentTiltPair::run()
 				mdtilt.setValue(MDL_YCOOR,(int) t_closest.y,objId);
 			}
 		}
-		}
 
-		if (breakassignment)
-			std::cerr << "ERROR IN TRIANGULATION OR CLOSEST NEIGHBOUR" << std::endl;
 
 	mduntilt.write((String)"particles@"+fndir+'/'+fnuntilt.getBaseName() + ".pos" );
 	mdtilt.write((String)"particles@"+fndir+'/'+fntilt.getBaseName() + ".pos" );

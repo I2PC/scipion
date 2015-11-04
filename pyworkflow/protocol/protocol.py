@@ -947,12 +947,13 @@ class Protocol(Step):
         
         self.info(greenStr('RUNNING PROTOCOL -----------------'))
         self._pid.set(os.getpid())
+        self.info('      Scipion: %s' % os.environ['SCIPION_VERSION'])
         self.info('   currentDir: %s' % os.getcwd())
-        self.info('   workingDir: ' + self.workingDir.get())
-        self.info('      runMode: %d' % self.runMode.get())
+        self.info('   workingDir: %s' % self.workingDir)
+        self.info('      runMode: %s' % MODE_CHOICES[self.runMode.get()])
         try:
-            self.info('          MPI: %d' % self.numberOfMpi.get())
-            self.info('      threads: %d' % self.numberOfThreads.get())
+            self.info('          MPI: %d' % self.numberOfMpi)
+            self.info('      threads: %d' % self.numberOfThreads)
         except Exception as e:
             self.info('  * Cannot get information about MPI/threads (%s)' % e)
 

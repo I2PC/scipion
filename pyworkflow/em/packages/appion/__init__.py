@@ -32,6 +32,7 @@ _logo = "ncbi_logo.png"
 from bibtex import _bibtex
 from convert import getEnviron
 from protocol_picking import DogPickerProtPicking
+from wizard import DogPickerWizard
 
 
 #_references = ['Voss2009']

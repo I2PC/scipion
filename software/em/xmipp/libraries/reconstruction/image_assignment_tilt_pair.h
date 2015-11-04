@@ -59,10 +59,10 @@ public:
 
     void readParams();
 
-    void search_affine_transform(int len_u, float u1x, float u1y, float u2x, float u2y, float u3x, float u3y, float t1x,
+    void search_affine_transform(float u1x, float u1y, float u2x, float u2y, float u3x, float u3y, float t1x,
     		float t1y, float t2x, float t2y, float t3x, float t3y,
-    		Matrix1D<double> ux, Matrix1D<double> uy, size_t Xdim, size_t Ydim, struct Delaunay_T *delaunay_tilt, size_t *breakassignment, int *bestInliers,
-    		Matrix2D<double> *A_coarse, Matrix1D<double> *T_coarse);
+    		Matrix1D<double> ux, Matrix1D<double> uy, size_t Xdim, size_t Ydim, struct Delaunay_T &delaunay_tilt, int &bestInliers,
+    		Matrix2D<double> &A_coarse, Matrix1D<double> &T_coarse);
 
     void run();
 

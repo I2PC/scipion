@@ -27,16 +27,17 @@
 from os.path import split, splitext
 
 from pyworkflow.object import Float, String
-from pyworkflow.protocol.params import (PointerParam, FloatParam, STEPS_PARALLEL, LEVEL_ADVANCED)
+from pyworkflow.protocol.params import (PointerParam, FloatParam, EnumParam, STEPS_PARALLEL, LEVEL_ADVANCED)
 from pyworkflow.utils.path import makePath
-from pyworkflow.em.data_tiltpairs import TiltPair, CoordinatesTiltPair
+from pyworkflow.em.data_tiltpairs import TiltPair, CoordinatesTiltPair, Coordinate
 from pyworkflow.em import ProtParticlePicking
 from pyworkflow.em.packages.xmipp3 import XmippProtocol
 
 import xmipp
 from convert import readSetOfCoordinates, writeSetOfCoordinates, izip
 
-
+TYPE_COORDINATES = 0
+TYPE_PARTICLES = 1
 
 
 class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
@@ -57,13 +58,37 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
                       label="Micrograph tilt pair",  
                       help='Select micrographs tilt pair.')
         
-        form.addParam('untiltcoor', PointerParam, pointerClass='SetOfCoordinates', 
-                      label="Untilt coordinates",  
+        form.addParam('typeOfSet', EnumParam, choices=['Coordinates', 'Particles'], 
+                      default=0, label='Input type', display=EnumParam.DISPLAY_COMBO, 
+                      help='Select a Set of Coordinates or a Set or Particles.')
+        
+        form.addParam('untiltCoor', PointerParam, pointerClass='SetOfCoordinates', 
+                      label="Untilted coordinates", condition='typeOfSet==%d' % TYPE_COORDINATES,  
                       help='Select the metadata with untilt coordinates.')
         
-        form.addParam('tiltcoor', PointerParam, pointerClass='SetOfCoordinates', 
-                      label="Tilt coordinates",  
-                      help='Select the metadata with tilt coordinates.')     
+        form.addParam('tiltCoor', PointerParam, pointerClass='SetOfCoordinates', 
+                      label="Tilted coordinates", condition='typeOfSet==%d' % TYPE_COORDINATES,   
+                      help='Select the metadata with tilt coordinates.')
+        
+        form.addParam('untiltPar', PointerParam, pointerClass='SetOfParticles', 
+                      label="Untilted particles", condition='typeOfSet==%d' % TYPE_PARTICLES,
+                      help='Select the metadata with untilt particles.')
+        
+        form.addParam('tiltPar', PointerParam, pointerClass='SetOfParticles', 
+                      label="Tilted particles", condition='typeOfSet==%d' % TYPE_PARTICLES,   
+                      help='Select the metadata with tilt particles.')
+        
+#         form.addParam('boxsiz', FloatParam, default=100, 
+#                       label="Box Size", condition='typeOfSet==%d' % TYPE_PARTICLES, 
+#                       help='Sometimes, particles do not have information about the particle size\n,'
+#                       'i.e. filtered by ZScore. In those cases, the particle size or box size is requiered \n'
+#                       'By default: boxSize = 100') 
+        
+        form.addParam('tiltAngle', FloatParam, default=-1, expertLevel=LEVEL_ADVANCED,
+                      label="Tilt angle",  
+                      help='Tilt angle estimation, the method will look for the assignment in the\n'
+                      ' interval of [tilt_angle-15, tilt_angle+15].\n'
+                      'By default: tilt angle = -1, if there is not any information about the tilt angle')     
         
         form.addParam('threshold', FloatParam, default=0.25, expertLevel=LEVEL_ADVANCED,
                       label="Threshold value",  
@@ -72,7 +97,7 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
                       'The matching is performed only if the distance is lesser than \n'
                       'threshold * particlesize.')
 
-        form.addParam('maxshift', FloatParam, default='1000', expertLevel=LEVEL_ADVANCED,
+        form.addParam('maxShift', FloatParam, default=1500, expertLevel=LEVEL_ADVANCED,
                       label="Maximum shift (pixels)", 
                       help='Maximum allowed distance (in pixels) that the tilt micrograph can be shifted' 
                       'respect to the untilted micrograph')         
@@ -84,23 +109,19 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
     def _insertAllSteps(self):        
         self.micsFn = self._getPath('input_micrographs.xmd')
         # Convert input into xmipp Metadata format
-        self._insertFunctionStep('convertInputStep')
+        convertId=self._insertFunctionStep('convertInputStep')
         deps = []
-        
         for tiltPair in self.tiltpair.get():
             micUntilted = tiltPair.getUntilted()
             micTilted = tiltPair.getTilted()
             Unpath, Unname = split(micUntilted.getFileName())
-            untiltpath, unna = split(self.untiltcoor.get().getFileName())
-            tiltpath, tna = split(self.tiltcoor.get().getFileName())
             Unname, ext = splitext(Unname)
             Tpath, Tname = split(micTilted.getFileName())
             Tname, ext = splitext(Tname)
             fnUntilt = 'particles@'+self._getExtraPath("untilted/")+Unname+'.pos'
-            print fnUntilt
             fnTilt = 'particles@'+self._getExtraPath("tilted/")+Tname+'.pos'
             fnmicsize = tiltPair.getTilted().getFileName()
-            stepId=self._insertFunctionStep('assignmentStep',fnUntilt,fnTilt, fnmicsize, self._getExtraPath())
+            stepId=self._insertFunctionStep('assignmentStep',fnUntilt, fnTilt, fnmicsize, self._getExtraPath(),prerequisites=[convertId])
             deps.append(stepId)
             
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
@@ -112,8 +133,44 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         # Get the converted input micrographs in Xmipp format
         makePath(self._getExtraPath("untilted"))
         makePath(self._getExtraPath("tilted"))
-        writeSetOfCoordinates(self._getExtraPath("untilted"),self.untiltcoor.get())
-        writeSetOfCoordinates(self._getExtraPath("tilted"),self.tiltcoor.get())
+        
+
+            
+        if self.typeOfSet.get() == TYPE_PARTICLES:
+            U_set = self.untiltPar.get().getCoordinates()
+            T_set = self.tiltPar.get().getCoordinates()
+
+            if (U_set or T_set) is None:
+                U_set = self._createSetOfCoordinates(self.tiltpair.get().getUntilted(), 
+                                                     suffix='_untilted')
+                T_set = self._createSetOfCoordinates(self.tiltpair.get().getTilted(), 
+                                                     suffix='_tilted')
+                
+                untiltPar = self.untiltPar.get()
+                for particle_u in untiltPar:  
+                    newCoord = particle_u.getCoordinate().clone()
+                    newCoord.copyObjId(particle_u)
+                    U_set.append(newCoord)
+#
+                tiltPar = self.tiltPar.get()
+                for particle_t in tiltPar:
+                    newCoord = particle_t.getCoordinate().clone()
+                    newCoord.copyObjId(particle_t)
+                    T_set.append(newCoord)
+
+                aux = self.untiltPar.get()
+                aux2 = aux[1]
+                bos, y_, z_ = aux2.getDim()
+                U_set.setBoxSize(bos)
+                T_set.setBoxSize(bos)
+        else:
+            U_set = self.untiltCoor.get()
+            T_set = self.tiltCoor.get() 
+            
+        print "type(U_set.getMicrographs())", U_set.getMicrographs()
+        print "type(T_set.getMicrographs())", T_set.getMicrographs()
+        writeSetOfCoordinates(self._getExtraPath("untilted"), U_set)
+        writeSetOfCoordinates(self._getExtraPath("tilted"), T_set)
     
     
     def assignmentStep(self,fnuntilt, fntilt, fnmicsize, Unpath):
@@ -121,8 +178,16 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         params =  ' --untiltcoor %s' % fnuntilt        
         params += ' --tiltcoor %s' % fntilt
         params += ' --tiltmicsize %s' % fnmicsize
-        params += ' --maxshift %f' % self.maxshift.get()
-        params += ' --particlesize %f' % self.untiltcoor.get().getBoxSize()
+        params += ' --maxshift %f' % self.maxShift.get()
+        if self.typeOfSet.get() == TYPE_PARTICLES:
+                aux = self.untiltPar.get()
+                aux2 = aux[1]
+                boxsize, y_, z_ = aux2.getDim()
+                params += ' --particlesize %f' % boxsize
+
+                
+        else:
+            params += ' --particlesize %f' % self.untiltCoor.get().getBoxSize()
         params += ' --threshold %f' % self.threshold.get()
         params += ' --odir %s' % Unpath
 
@@ -139,25 +204,40 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         uSet = inputset.getUntilted()
         tSet = inputset.getTilted()
         
-        
         # Create Untilted and Tilted SetOfCoordinates
         uCoordSet = self._createSetOfCoordinates(uSet, suffix='Untilted')
-        uCoordSet.setBoxSize(self.untiltcoor.get().getBoxSize())
+        if self.typeOfSet.get() == TYPE_PARTICLES:
+#             boxsize_u = self.untiltPar.get().getCoordinates().getBoxSize()
+#             if boxsize_u is None:
+                aux = self.untiltPar.get()
+                aux2 = aux[1]
+                boxsize_u, y_, z_ = aux2.getDim()
+        else:
+            boxsize_u = self.untiltCoor.get().getBoxSize()
+        
+        uCoordSet.setBoxSize(boxsize_u)    
         tCoordSet = self._createSetOfCoordinates(tSet, suffix='Tilted')
         readSetOfCoordinates(extradir, uSet, uCoordSet)
         uCoordSet.write()
-        tCoordSet.setBoxSize(self.tiltcoor.get().getBoxSize())
+        
+        if self.typeOfSet.get() == TYPE_PARTICLES:
+#             boxsize_t = self.tiltPar.get().getCoordinates().getBoxSize()
+#             if boxsize_t is None:
+                aux = self.tiltPar.get()
+                aux2 = aux[1]
+                boxsize_t, y_, z_ = aux2.getDim()
+        else:
+            boxsize_t = self.tiltCoor.get().getBoxSize()
+        
+        tCoordSet.setBoxSize(boxsize_t)
         readSetOfCoordinates(extradir, tSet, tCoordSet)
         tCoordSet.write()
-        
         
         # Create CoordinatesTiltPair object
         outputset = CoordinatesTiltPair(filename=self._getPath('coordinates_pairs.sqlite'))
         outputset.setTilted(tCoordSet)
         outputset.setUntilted(uCoordSet)
         outputset.setMicsPair(inputset)
-
-
 
         for coordU, coordT in izip(uCoordSet, tCoordSet):
             outputset.append(TiltPair(coordU, coordT))
@@ -169,12 +249,22 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
-        validateMsgs = []
-        if self.untiltcoor.get() and not self.untiltcoor.hasValue():
-            validateMsgs.append('Please provide input coordinates.')  
-        if self.tiltcoor.get() and not self.tiltcoor.hasValue():
-            validateMsgs.append('Please provide input coordinates.')         
-        return validateMsgs
+        
+        if self.typeOfSet.get() == TYPE_PARTICLES:
+            validateMsgs = []
+            if self.untiltPar.get() and not self.untiltPar.hasValue():
+                validateMsgs.append('Please provide input particles.')  
+            if self.tiltPar.get() and not self.tiltPar.hasValue():
+                validateMsgs.append('Please provide input particles.')         
+            return validateMsgs
+        else:
+            validateMsgs = []
+            if self.untiltCoor.get() and not self.untiltCoor.hasValue():
+                validateMsgs.append('Please provide input coordinates.')  
+            if self.tiltCoor.get() and not self.tiltCoor.hasValue():
+                validateMsgs.append('Please provide input coordinates.')         
+            return validateMsgs
+         
         
    
     def _summary(self):
@@ -184,7 +274,16 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
             summary.append("Output tilpairs not ready yet.")
         else:
             #summary.append("Particles matched: " )
-            summary.append("Particle box size: %d" %self.untiltcoor.get().getBoxSize())
+            if self.typeOfSet.get() == TYPE_PARTICLES:
+                aux = self.untiltPar.get()
+                aux2 = aux[1]
+                boxsize_t, y_, z_ = aux2.getDim()
+                summary.append("Particle box size: %d" %boxsize_t)
+                summary.append("Tilt pairs matched: %d" %self.outputCoordinatesTiltPair.__len__())
+            else:
+                summary.append("Particle box size: %d" %self.untiltCoor.get().getBoxSize())
+                summary.append("Tilt pairs size: %d" %self.outputCoordinatesTiltPair.__len__())
+                #
         return summary
     
     
@@ -202,6 +301,6 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         summary.append("Particles picked:")
         #summary.append("Particles picked: %d" %coordsSet.getSize())
         return "\n"#.join(summary)
-    
+#     
     
     
