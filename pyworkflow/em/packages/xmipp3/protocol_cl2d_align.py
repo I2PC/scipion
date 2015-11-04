@@ -86,7 +86,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
 
     #--------------------------- STEPS functions --------------------------------------------        
     def convertInputStep(self):
-        writeSetOfParticles(self.inputParticles.get(),self.imgsFn,alignType=None)
+        writeSetOfParticles(self.inputParticles.get(),self.imgsFn,alignType=constants.ALIGN_NONE)
 
     def createOutputStep(self):
         """ Store the setOfParticles object 
