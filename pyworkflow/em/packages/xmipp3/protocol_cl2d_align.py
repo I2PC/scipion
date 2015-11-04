@@ -108,6 +108,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
         alignedSet.copyItems(particles,
                             updateItemCallback=self._createItemMatrix,
                             itemDataIterator=md.iterRows(self.imgsFn, sortByLabel=md.MDL_ITEM_ID))
+        alignedSet.setAlignment(constants.ALIGN_2D)
         self._defineOutputs(outputParticles=alignedSet)
         self._defineSourceRelation(self.inputParticles, alignedSet)
 
