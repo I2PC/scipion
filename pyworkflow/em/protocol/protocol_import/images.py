@@ -29,6 +29,7 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 
 import sys
 from os.path import basename
+import time
 
 from pyworkflow.utils.path import commonPath
 from pyworkflow.utils.properties import Message
@@ -88,12 +89,19 @@ class ProtImportImages(ProtImportFiles):
     
     #--------------------------- INSERT functions ---------------------------------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('importImagesStep', self.getPattern(), 
+        
+        if self.dataStreaming:
+            funcName = 'importImagesStreamStep' 
+        else:
+            funcName = 'importImagesStep'
+        
+        self._insertFunctionStep(funcName, self.getPattern(), 
                                  self.voltage.get(), self.sphericalAberration.get(), 
                                  self.amplitudeContrast.get(), self.magnification.get())
         
     #--------------------------- STEPS functions ---------------------------------------------------
-    def importImagesStep(self, pattern, voltage, sphericalAberration, amplitudeContrast, magnification):
+    def importImagesStep(self, pattern, voltage, sphericalAberration, 
+                         amplitudeContrast, magnification):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -145,6 +153,80 @@ class ProtImportImages(ProtImportFiles):
         outputSet = self._getOutputName()
         args[outputSet] = imgSet
         self._defineOutputs(**args)
+        
+        return outFiles
+    
+    def importImagesStreamStep(self, pattern, voltage, sphericalAberration, 
+                         amplitudeContrast, magnification):
+        """ Copy images matching the filename pattern
+        Register other parameters.
+        """
+        self.info("Using pattern: '%s'" % pattern)
+        
+        createSetFunc = getattr(self, '_create' + self._outputClassName)
+        imgSet = createSetFunc()
+        imgSet.setIsPhaseFlipped(self.haveDataBeenPhaseFlipped.get())
+        acquisition = imgSet.getAcquisition()
+        
+        self.fillAcquisition(acquisition)
+        
+        # Call a function that should be implemented by each subclass
+        self.setSamplingRate(imgSet)
+        
+        outFiles = [imgSet.getFileName()]
+        imgh = ImageHandler()
+        img = imgSet.ITEM_TYPE()
+        img.setAcquisition(acquisition)
+        n = 1
+        copyOrLink = self.getCopyOrLink()
+        outputName = self._getOutputName()
+        outputKwargs = {outputName: imgSet}
+        
+        for i, (fileName, fileId) in enumerate(self.iterFiles()):
+            dst = self._getExtraPath(basename(fileName))
+            copyOrLink(fileName, dst)
+            
+            if self._checkStacks:
+                _, _, _, n = imgh.getDimensions(dst)
+                
+            if i > 0:
+                img1 = imgSet.getFirstItem()
+                print "img is None: ", img is None
+                if img:
+                    img1.printAll()
+                imgSet.enableAppend()
+            
+            if n > 1:
+                for index in range(1, n+1):
+                    img.cleanObjId()
+                    img.setMicId(fileId)
+                    img.setFileName(dst)
+                    img.setIndex(index)
+                    imgSet.append(img)
+            else:
+                img.setObjId(fileId)
+                img.setFileName(dst)
+                self._fillMicName(img, fileName) # fill the micName if img is a Micrograph.
+                imgSet.append(img)
+            outFiles.append(dst)
+
+            #imgSet.close()
+                        
+            time.sleep(5)
+            
+            imgSet.setStreamState(imgSet.STREAM_OPEN)
+            self._defineOutputs(**outputKwargs)
+            self._store(imgSet)
+            imgSet.write()
+            #imgSet.close()
+            
+            sys.stdout.write("\rImported %d/%d" % (i+1, self.numberOfFiles))
+            sys.stdout.flush()
+            
+        imgSet.setStreamState(imgSet.STREAM_CLOSED)
+        self._defineOutputs(**outputKwargs)
+        
+        print "\n"
         
         return outFiles
     
