@@ -1183,6 +1183,9 @@ class Set(OrderedObject):
     def getStreamState(self):
         return self._streamState.get()
     
+    def setStreamState(self, newState):
+        self._streamState.set(newState)
+    
     def isStreamOpen(self):
         return self.getStreamState() == self.STREAM_OPEN
     
