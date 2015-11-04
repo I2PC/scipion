@@ -109,7 +109,7 @@ class ProtImportFiles(ProtImport):
         
         group.addParam('timeout', params.IntParam, default=None, 
               expertLevel=params.LEVEL_ADVANCED, 
-              condition='keepRunning',
+              condition='dataStreaming',
               label="Timeout (secs)",
               help="Interval of time (in seconds) after which, if no new \n"
                    "file is detected, the protocol will ends.\n"
@@ -118,7 +118,7 @@ class ProtImportFiles(ProtImport):
         
         group.addParam('endTokenFile', params.StringParam, default=None, 
               expertLevel=params.LEVEL_ADVANCED, 
-              condition='keepRunning',
+              condition='dataStreaming',
               label="End token file",
               help="Specify an ending file if you want to have more control\n"
                    "about when to stop the import of files.")
