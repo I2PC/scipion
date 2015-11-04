@@ -62,6 +62,7 @@ VISIBLE = 'visible'
 ZOOM = 'zoom'
 SORT_BY = 'sortby'
 LABELS = 'labels'
+CLASSIFIER = 'classifier'
 
 SAMPLINGRATE = 'sampling_rate'
 CHIMERA_PORT = 'chimera_port'
@@ -269,12 +270,16 @@ def runJavaIJapp(memory, appName, args, env={}):
     cmd = ['java'] + args.split()
     return subprocess.Popen(cmd, env=env)
 
-def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
-        port = initProtocolTCPServer(protocol)
+def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g', pickerProps=None):
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %s --output %s --scipion %s"%(micsFn, outputDir, port)
+        args = "--input %s --output %s"%(micsFn, outputDir)
         if mode:
             args += " --mode %s"%mode    
+        if pickerProps:
+            args += " --classifier " + pickerProps
+        else:
+            port = initProtocolTCPServer(protocol)
+            args += " --scipion %s"%port
         return runJavaIJapp("%s" % memory, app, args)
     
 

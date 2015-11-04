@@ -825,7 +825,7 @@ class ProtocolsView(tk.Frame):
                                 tooltipDelay=1000)
         self.runsGraphCanvas.onClickCallback = self._runItemClick
         self.runsGraphCanvas.onDoubleClickCallback = self._runItemDoubleClick
-        self.runsGraphCanvas.onRightClickCallback = lambda e: self.provider.getObjectActions(e.node.run)
+        self.runsGraphCanvas.onRightClickCallback = self._runItemRightClick
         self.runsGraphCanvas.onControlClickCallback = self._runItemControlClick
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(0, weight=1)
@@ -933,6 +933,28 @@ class ProtocolsView(tk.Frame):
             self._selection.append(prot.getObjId())
         self._updateSelection()
                          
+    def _selectItemProtocol(self, prot):
+        """ Call this function when a new box (item) of a protocol
+        is selected. It should be called either from itemClick
+        or itemRightClick
+        """
+        self._selection.clear()
+        self._selection.append(prot.getObjId())
+        self._updateSelection()
+        self.runsGraphCanvas.update_idletasks()
+        
+    def _deselectItems(self, item):
+        """ Deselect all items except the item one
+        """
+        g = self.project.getRunsGraph(refresh=False)
+        
+        for node in g.getNodes():
+            if node.run and node.run.getObjId() in self._selection:
+                # This option is only for compatibility with all projects
+                if hasattr(node, 'item'):
+                    node.item.setSelected(False)
+        item.setSelected(True)
+        
     def _runItemClick(self, item=None):
         # Get last selected item for tree or graph
         if self.runsView == VIEW_LIST:
@@ -941,23 +963,23 @@ class ProtocolsView(tk.Frame):
             prot = item.node.run
             if prot is None:  # in case it is the main "Project" node
                 return
-            g = self.project.getRunsGraph(refresh=False)
-            
-            for node in g.getNodes():
-                if node.run and node.run.getObjId() in self._selection:
-                    # This option is only for compatibility with all projects
-                    if hasattr(node, 'item'):
-                        node.item.setSelected(False)
-
-            item.setSelected(True)
-        
-        self._selection.clear()
-        self._selection.append(prot.getObjId())
-        self._updateSelection()
-        self.runsGraphCanvas.update_idletasks()
+            self._deselectItems(item)
+        self._selectItemProtocol(prot)
         
     def _runItemDoubleClick(self, e=None):
         self._runActionClicked(ACTION_EDIT)
+        
+    def _runItemRightClick(self, item=None):
+        prot = item.node.run
+        if prot is None:  # in case it is the main "Project" node
+            return
+        n = len(self._selection)
+        # Only select item with right-click if there is a single
+        # item selection, not for multiple selection
+        if n <= 1:
+            self._deselectItems(item)
+            self._selectItemProtocol(prot)
+        return self.provider.getObjectActions(prot)
         
     def _runItemControlClick(self, item=None):
         # Get last selected item for tree or graph

@@ -18,7 +18,7 @@ public class SupervisedPickerMicrograph extends Micrograph
 	private MicrographState state;
 	private int autopickpercent;
 	private double threshold = 0.0;
-        private Rectangle rectangle;
+    private Rectangle rectangle;
 
 	public double getThreshold() {
 		return threshold;
@@ -180,7 +180,7 @@ public class SupervisedPickerMicrograph extends Micrograph
 		return autoparticles.size() - getAutomaticParticlesDeleted();
 	}
 
-	public void addAutomaticParticle(AutomaticParticle p)
+	public synchronized void addAutomaticParticle(AutomaticParticle p)
 	{
 		autoparticles.add(p);
 
@@ -220,7 +220,7 @@ public class SupervisedPickerMicrograph extends Micrograph
 
 	
 
-	public int getAutomaticParticlesDeleted(double threshold)
+	public synchronized int getAutomaticParticlesDeleted(double threshold)
 	{
 		int count = 0;
 		for (AutomaticParticle p : autoparticles)

@@ -603,27 +603,30 @@ def readCTFModel(filename, mic):
     return mdToCTFModel(md, mic)
         
 
-def openMd(fn):
+def openMd(fn, ismanual=True):
     # We are going to write metadata directy to file to do it faster
     f = open(fn, 'w')
+    block = 'data_particles' if ismanual else 'data_particles_auto'
+    state = 'Manual' if ismanual else 'Supervised'
     s = """# XMIPP_STAR_1 * 
 #
 data_header
 loop_
  _pickingMicrographState
-Manual 
-data_particles
+%s 
+%s
 loop_
  _itemId
  _enabled
  _xcoor
  _ycoor
+ _cost
  _micrographId
-"""
+"""%(state, block)
     f.write(s)
     return f
 
-def writeSetOfCoordinates(posDir, coordSet):
+def writeSetOfCoordinates(posDir, coordSet, ismanual=True):
     """ Write a pos file on metadata format for each micrograph 
     on the coordSet. 
     Params:
@@ -651,19 +654,20 @@ def writeSetOfCoordinates(posDir, coordSet):
             # we need to close previous opened file
             if f:
                 f.close()
-                print "Micrograph %s (%d)" % (lastMicId, c)
+                #print "Micrograph %s (%d)" % (lastMicId, c)
                 c = 0
-            f = openMd(posDict[micId])
+            f = openMd(posDict[micId], ismanual=ismanual)
             lastMicId = micId
         c += 1
-        f.write(" %06d   1   %d  %d   %06d\n" % (coord.getObjId(), 
-                                                 coord.getX(), coord.getY(), 
+        f.write(" %06d   1   %d  %d  %d   %06d\n" % (coord.getObjId(), 
+                                                 coord.getX(), coord.getY(), 1,
                                                  micId))
     
     if f:
         f.close()
         print "Micrograph %s (%d)" % (lastMicId, c)
     
+    state = 'Manual' if ismanual else 'Supervised'
     # Write config.xmd metadata
     configFn = join(posDir, 'config.xmd')
     md = xmipp.MetaData()
@@ -673,8 +677,7 @@ def writeSetOfCoordinates(posDir, coordSet):
 #     md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
     #md.setValue(xmipp.MDL_COLOR, int(-16776961), objId)
     md.setValue(xmipp.MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
-    md.setValue(xmipp.MDL_PICKING_STATE, 'Manual', objId)
-    
+    md.setValue(xmipp.MDL_PICKING_STATE, state, objId)
     md.write('properties@%s' % configFn)
 
 #     # Write filters block

@@ -32,6 +32,7 @@ Protocols SPA = [
     {"tag": "section", "text": "Particles", "children": [
         {"tag": "protocol_group", "text": "Picking", "openItem": "False", "children": [
             {"tag": "protocol", "value": "EmanProtBoxing",   "text": "default"},
+            {"tag": "protocol", "value": "SparxGaussianProtPicking",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtParticlePicking",   "text": "default"},
             {"tag": "protocol", "value": "XmippParticlePickingAutomatic",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtAssignmentTiltPair",   "text": "default"},

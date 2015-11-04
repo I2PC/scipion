@@ -202,6 +202,7 @@ class XmippViewer(Viewer):
             if micSet is None:
                 raise Exception('visualize: SetOfCoordinates has no micrographs set.')
             
+
             mdFn = getattr(micSet, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
@@ -226,7 +227,6 @@ class XmippViewer(Viewer):
                 makePath(tmpDir)
                 writeSetOfCoordinates(tmpDir, obj)# always write set of coordinates instead of reading pos dir, that could have changed
             
-
             self._views.append(CoordinatesObjectView(self._project, fn, tmpDir, self.protocol))
 
         elif issubclass(cls, SetOfParticles):
