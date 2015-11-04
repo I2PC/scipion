@@ -103,6 +103,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
         alignedSet = self._createSetOfParticles()
         alignedSet.copyInfo(particles)
         alignedSet.setRepresentative(avg)
+        alignedSet.setAlignment(constants.ALIGN_2D)
         readSetOfParticles(self.imgsFn, alignedSet)
         self._defineOutputs(outputParticles=alignedSet)
         self._defineSourceRelation(self.inputParticles, alignedSet)
