@@ -25,6 +25,7 @@
 import os
 from base import ProgramTest
 
+import pyworkflow.utils as pwutils
 import pyworkflow.em.packages.xmipp3 as xmipp3
 from pyworkflow.tests import DataSet
 
@@ -35,6 +36,8 @@ JMRT = 'delarosatrevin'
 JOTON = 'joton'
 DISCONTINUED = 'nobody'
 
+
+
 class XmippProgramTest(ProgramTest):
     
     @classmethod
@@ -43,12 +46,14 @@ class XmippProgramTest(ProgramTest):
         cls.program = cls.getProgram()
         cls.env = xmipp3.getEnviron()
         cls.dataset = DataSet.getDataSet('xmipp_programs')
+        print pwutils.cyan(">>>>> OWNER: %s" % cls._owner)
         #cls._counter = 0 # count number of cases per test
         
     def runCase(self, *args, **kwargs):
         if 'mpi' not in kwargs:
             kwargs['mpi'] = 2 if self.program.startswith('xmipp_mpi') else 0
         ProgramTest.runCase(self, *args, **kwargs)
+
 
 class AngularDiscreteAssign(XmippProgramTest):
     _owner = RM
