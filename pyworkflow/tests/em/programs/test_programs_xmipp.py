@@ -270,7 +270,7 @@ class CtfEnhancePsd(XmippProgramTest):
 
 
 class CtfEstimateFromMicrograph(XmippProgramTest):
-    _owner = RM
+    _owner = COSS
     @classmethod
     def getProgram(cls):
         return 'xmipp_ctf_estimate_from_micrograph'
@@ -896,7 +896,7 @@ class TomoDetectMissingWedge(XmippProgramTest):
 
 
 class TomoExtractSubvolume(XmippProgramTest):
-    _owner = COSS
+    _owner = RM
     @classmethod
     def getProgram(cls):
         return 'xmipp_tomo_extract_subvolume'
