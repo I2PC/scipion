@@ -85,7 +85,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         dataStar = self._getFileName('data', iter=iteration)
         clsSet.classifyItems(updateItemCallback=self._updateParticle,
                              updateClassCallback=self._updateClass,
-                             itemDataIterator=md.iterRows(dataStar))
+                             itemDataIterator=md.iterRows(dataStar, sortByLabel=md.RLN_IMAGE_ID))
         
     def createOutputStep(self):
         partSet = self.inputParticles.get()       

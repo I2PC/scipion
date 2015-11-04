@@ -251,7 +251,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
 
             outImgSet.copyItems(imgSet,
                                 updateItemCallback=self._setWeight,
-                                itemDataIterator=md.iterRows(clusterMd))
+                                itemDataIterator=md.iterRows(clusterMd, sortByLabel=md.MDL_ITEM_ID))
                         
             mdValidatoin = md.MetaData(validationMd)
             weight = mdValidatoin.getValue(md.MDL_WEIGHT, mdValidatoin.firstObject())
