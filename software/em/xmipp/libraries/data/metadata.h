@@ -606,13 +606,22 @@ public:
     void setColumnValues(const std::vector<MDObject> &valuesIn);
 
     /** Get all values of an MetaData row of an specified objId*/
-    bool getRow(MDRow &row, size_t id) const;
+    bool 	initGetRow(void);
+    bool 	execGetRow(MDRow &row, size_t id);
+    bool 	getRow(MDRow &row, size_t id) const;
+    bool 	getRow2(MDRow &row, size_t id);
 
     /** Copy all the values in the input row in the current metadata*/
-    void setRow(const MDRow &row, size_t id);
+    bool 	initSetRow(const MDRow &row);
+    bool 	execSetRow(const MDRow &row, size_t id);
+    void 	setRow(const MDRow &row, size_t id);
+    bool 	setRow2(const MDRow &row, size_t id);
 
     /** Add a new Row and set values, return the objId of newly added object */
-    size_t addRow(const MDRow &row);
+    bool 	initAddRow(const MDRow &row);
+    bool 	execAddRow(const MDRow &row);
+    size_t 	addRow(const MDRow &row);
+    bool  	addRow2(const MDRow &row);
 
     /** Set label values from string representation.
      */
