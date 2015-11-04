@@ -959,13 +959,20 @@ class Set(OrderedObject):
     """
     ITEM_TYPE = None # This property should be defined to know the item type
     
+    # This will be used for stream Set where data is populated on the fly
+    STREAM_OPEN = 1
+    STREAM_CLOSED = 2
+    
     def __init__(self, filename=None, prefix='', 
                  mapperClass=None, classesDict=None, **kwargs):
         # Use the object value to store the filename
         OrderedObject.__init__(self, **kwargs)
         self._mapper = None
         self._idCount = 0
-        self._size = Integer(0) # cached value of the number of images  
+        self._size = Integer(0) # cached value of the number of images
+        # It is a bit contradictory that initially a set is Closed
+        # but this is the default behaviour of the Set before Streamming extension
+        self._streamState = Integer(self.STREAM_CLOSED)  
         #self._idMap = {}#FIXME, remove this after id is the one in mapper
         self.setMapperClass(mapperClass)
         self._mapperPath = CsvList() # sqlite filename
@@ -1172,6 +1179,23 @@ class Set(OrderedObject):
         if self.getFileName():
             files.add(self.getFileName())
         return files
+    
+    def getStreamState(self):
+        return self._streamState.get()
+    
+    def isStreamOpen(self):
+        return self.getStreamState() == self.STREAM_OPEN
+    
+    def isStreamClosed(self):
+        return self.getStreamState() == self.STREAM_CLOSED 
+    
+    def enableAppend(self):
+        """ By default, when a Set is loaded, it is opened
+        in read-only mode, so no new insertions are allowed.
+        This function will allow to apppend more items
+        to an existing set.
+        """
+        self._getMapper().enableAppend()
 
 
 def ObjectWrap(value):
