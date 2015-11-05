@@ -161,12 +161,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             subset += 1
 
         validationMd.write(self._getExtraPath('results.xmd'))
-        fnResults = self._defineResultsName('results.xmd')
         #cleanPattern(self._getExtraPath("fraction*_freq.txt"))
         
-    def _defineResultsName(self):
-        return self._getPath('results.xmd')  
-           
     #--------------------------- INFO functions -------------------------------------------- 
     def _summary(self):
         """ Should be overriden in subclasses to 
@@ -185,3 +181,5 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
     def _citations(self):
         return ['B.Heymann2015']
     #--------------------------- UTILS functions --------------------------------------------
+    def _defineResultsName(self):
+        return self._getExtraPath('results.xmd')
