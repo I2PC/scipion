@@ -56,15 +56,15 @@ class XmippProgramTest(ProgramTest):
 
 
 class AngularDiscreteAssign(XmippProgramTest):
-    _owner = RM
+    _owner = COSS
     @classmethod
     def getProgram(cls):
         return 'xmipp_angular_discrete_assign'
 
     def test_case1(self):
-        self.runCase("-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc",
+        self.runCase("-i input/aFewProjections.sel -o %o/assigned_angles.xmd --ref %o/reference.doc",
                 preruns=["xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol -o %o/reference.stk --sampling_rate 10" ],
-                outputs=["assigned_angles.txt"])
+                outputs=["assigned_angles.xmd"])
 
 
 class AngularDistance(XmippProgramTest):
@@ -99,7 +99,7 @@ class AngularNeighbourhood(XmippProgramTest):
         return 'xmipp_angular_neighbourhood'
 
     def test_case1(self):
-        self.runCase("-i1 input/randomAngularDistribution.sel -i2 input/aFewProjections.sel -o %o/neighborhood.sel",
+        self.runCase("--i1 input/randomAngularDistribution.sel --i2 input/aFewProjections.sel -o %o/neighborhood.sel",
                 outputs=["neighborhood.sel"])
 
 
@@ -747,7 +747,7 @@ class RunMpi(XmippProgramTest):
         return 'xmipp_mpi_run'
 
     def test_case1(self):
-        self.runCase("-i commands.cmd",
+        self.runCase("-i commands.cmd", changeDir=True,
                 preruns=["cp input/commands.cmd %o" ],
                 outputs=["file1.txt","file2.txt","file3.txt","file4.txt"])
 
@@ -1279,24 +1279,7 @@ class XrayPsfCreate(XmippProgramTest):
 
 #xmipp no longer handle emx, import/export using scipion
 #class ExportEmx(XmippProgramTest):
-
-class ImportEmx(XmippProgramTest):
-    _owner = RM
-    @classmethod
-    def getProgram(cls):
-        return 'xmipp_import_emx'
-
-    def test_case1(self):
-        self.runCase("-i ../../input/importEmx/micCTF.emx -m mic",
-                outputs=["micrographs.xmd"])
-    def test_case2(self):
-        self.runCase("-i part_coor.emx -m coordinates",
-                preruns=["cp input/importEmx/part_coor.emx %o/." ],
-                outputs=["part_coor.pos"])
-    def test_case3(self):
-        self.runCase("-i part_align.emx -m alignment",
-                preruns=["cp input/importEmx/part_align.emx %o/." ],
-                outputs=["part_align.xmd"])
+#class ImportEmx(XmippProgramTest):
 
 
 class ReconstructWbp(XmippProgramTest):
@@ -1392,15 +1375,15 @@ class MlAlign2d(XmippProgramTest):
                          ])
 
 
-class MlAlign2dMpi(MlAlign2d):
-    _owner = RM
-    @classmethod
-    def getProgram(cls):
-        return 'xmipp_mpi_ml_align2d'
-
-    def test_case5(self):
-        self.runCase("-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d_ --fast --mirror",
-                outputs=["ml2d_images.xmd","ml2d_classes.stk","ml2d_classes.xmd"])
+#class MlAlign2dMpi(MlAlign2d):
+#    _owner = DISCONTINUED
+#    @classmethod
+#    def getProgram(cls):
+#        return 'xmipp_mpi_ml_align2d'
+#
+#    def test_case5(self):
+#        self.runCase("-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d_ --fast --mirror",random=True,
+#                outputs=["ml2d_images.xmd","ml2d_classes.stk","ml2d_classes.xmd"])
 
 
 class MlfAlign2d(XmippProgramTest):
