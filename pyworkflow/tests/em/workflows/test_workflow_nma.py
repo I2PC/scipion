@@ -51,8 +51,8 @@ class TestNMA(TestWorkflow):
         #------------------------------------------------
         
         # Import a PDB
-        protImportPdb = self.newProtocol(ProtImportPdb, 
-                                      pdbPath=self.ds.getFile('pdb'))
+        protImportPdb = self.newProtocol(ProtImportPdb, inputPdbData=1,
+                                      pdbFile=self.ds.getFile('pdb'))
         self.launchProtocol(protImportPdb)
         
         # Launch NMA for PDB imported

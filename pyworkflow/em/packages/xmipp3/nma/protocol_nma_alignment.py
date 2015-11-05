@@ -41,9 +41,10 @@ from pyworkflow.em.packages.xmipp3 import XmippMdRow
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles,\
     xmippToLocation, getImageLocation
 from pyworkflow.protocol.params import NumericRangeParam
-import xmipp 
 
 from convert import modeToRow
+
+import pyworkflow.em.metadata as md
 
 
 NMA_ALIGNMENT_WAV = 0
@@ -151,7 +152,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         else:
             modeSelection = getListFromRangeString(self.modeList.get())
             
-        md = xmipp.MetaData()
+        mdModes = md.MetaData()
         
         inputModes = self.inputModes.get()
         for mode in inputModes:
@@ -160,23 +161,23 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
             if not modeSelection or mode.getObjId() in modeSelection:
                 row = XmippMdRow()
                 modeToRow(mode, row)
-                row.writeToMd(md, md.addObject())
-        md.write(self.modesFn)
+                row.writeToMd(mdModes, mdModes.addObject())
+        mdModes.write(self.modesFn)
             
     def copyDeformationsStep(self, deformationMd):
         copyFile(deformationMd, self.imgsFn)
         # We need to update the image name with the good ones
         # and the same with the ids.
         inputSet = self.inputParticles.get()
-        md = xmipp.MetaData(self.imgsFn)
-        for objId in md:
-            imgPath = md.getValue(xmipp.MDL_IMAGE, objId)
+        mdImgs = md.MetaData(self.imgsFn)
+        for objId in mdImgs:
+            imgPath = mdImgs.getValue(md.MDL_IMAGE, objId)
             index, fn = xmippToLocation(imgPath)
             # Conside the index is the id in the input set
             particle = inputSet[index]
-            md.setValue(xmipp.MDL_IMAGE, getImageLocation(particle), objId)
-            md.setValue(xmipp.MDL_ITEM_ID, long(particle.getObjId()), objId)
-        md.write(self.imgsFn)
+            mdImgs.setValue(md.MDL_IMAGE, getImageLocation(particle), objId)
+            mdImgs.setValue(md.MDL_ITEM_ID, long(particle.getObjId()), objId)
+        mdImgs.write(self.imgsFn)
         
     def performNmaStep(self, atomsFn, modesFn):
         sampling = self.inputParticles.get().getSamplingRate()
@@ -204,14 +205,15 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         partSet = self._createSetOfParticles()
         pdbPointer = self.inputModes.get()._pdbPointer
         
-        readSetOfParticles(self.imgsFn, partSet,
-                           extraLabels=[xmipp.MDL_NMA, xmipp.MDL_COST])
         partSet.copyInfo(inputSet)
+        partSet.copyItems(partSet,
+                          updateItemCallback=self._updateParticle,
+                          itemDataIterator=md.iterRows(self.imgsFn, sortByLabel=md.MDL_ITEM_ID))
         
         self._defineOutputs(outputParticles=partSet)
         self._defineSourceRelation(pdbPointer, partSet)
         self._defineTransformRelation(self.inputParticles, partSet)
-
+    
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
@@ -243,3 +245,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         modesFn = self.inputModes.get().getFileName()
         return self._getBasePath(modesFn)
     
+    def _updateParticle(self, item, row):
+        item._xmipp_nma = row.getValue(md.MDL_NMA)
+        item._xmipp_cost = row.getValue(md.MDL_COST)
+
