@@ -133,7 +133,7 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         outputSet.copyInfo(inputSet)
         outputSet.copyItems(inputSet, 
                             updateItemCallback=self.updateItemMaxCC,
-                            itemDataIterator=iterMdRows(mdOut))
+                            itemDataIterator=iterMdRows(mdOut, sortByLabel=md.MDL_ITEM_ID))
 
         self._defineOutputs(**{outputName: outputSet})
         self._defineTransformRelation(inputSet, outputSet)

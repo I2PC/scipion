@@ -184,7 +184,7 @@ void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
     }
     I_out = I_in;
     MultidimArray<double> rotatedImg;
-    if ( (mask)==NULL)
+    if ( (mask)!=NULL)
          REPORT_ERROR(ERR_NOT_IMPLEMENTED,"mask symmetrization not implemented for images");
     for (int i = 1; i < symorder; i++)
     {
