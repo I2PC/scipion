@@ -218,8 +218,9 @@ class ClassifyKerdensom(XmippProgramTest):
         return 'xmipp_classify_kerdensom'
 
     def test_case1(self):
-        self.runCase("-i input/clusterVectors.xmd --oroot %o/kerdensom --deterministic_annealing 1",
-                outputs=["kerdensom_vectors.vec","kerdensom_vectors.xmd"])
+        self.runCase("-i input/clusterVectors.xmd --oroot %o/kerdensom --deterministic_annealing 1",random=True,
+                     postruns=["xmipp_image_vectorize -i %o/kerdensom_vectors.xmd -o %o/kerdensom_vectors.stk"],
+                     outputs=["kerdensom_vectors.stk", "kerdensom_vectors.xmd"])
 
 
 class CtfCorrectWiener3d(XmippProgramTest):
@@ -695,10 +696,6 @@ class CtfCorrectIdrMpi(CtfCorrectIdr):
     @classmethod
     def getProgram(cls):
         return 'xmipp_mpi_ctf_correct_idr'
-
-    def test_case2(self):
-        self.runCase("-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk",
-                outputs=["idr.stk"])
 
 
 class ImageSortMpi(XmippProgramTest):
