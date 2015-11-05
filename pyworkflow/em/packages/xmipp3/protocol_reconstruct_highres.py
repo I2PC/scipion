@@ -28,6 +28,7 @@ Protocol to perform high-resolution reconstructions
 """
 
 from glob import glob
+import math
 
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam, EnumParam
@@ -68,9 +69,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
        defocus group. You may want to perform iterations one by one, and remove from one
        iteration to the next, those particles that worse fit the model."""
     _label = 'highres'
-    
-    SPLIT_STOCHASTIC = 0
-    SPLIT_FIXED = 1
     
     GLOBAL_ALIGNMENT = 0
     LOCAL_ALIGNMENT = 1
@@ -132,7 +130,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='Remove reference volumes once they are not needed any more.')
 
         form.addSection(label='Angular assignment')
-        form.addParam('splitMethod', EnumParam, label='Image split method', choices=['Stochastic','Fixed'], default=self.SPLIT_FIXED, expertLevel=LEVEL_ADVANCED)
         form.addParam('multiresolution', BooleanParam, label='Multiresolution approach', default=True, expertLevel=LEVEL_ADVANCED,
                       help="In the multiresolution approach the sampling rate of the images is adapted to the current resolution")
         form.addParam('angularMaxShift', FloatParam, label="Max. shift (%)", default=10,
@@ -335,10 +332,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         makePath(fnDirCurrent)
         
         # Split data
-        if self.splitMethod == self.SPLIT_FIXED:
-            self.runJob("xmipp_metadata_split","-i %s --oroot %s/images -n 2"%(self.imgsFn,fnDirCurrent),numberOfMpi=1)
-            for i in range(1,3):
-                moveFile("%s/images%06d.xmd"%(fnDirCurrent,i),"%s/images%02d.xmd"%(fnDirCurrent,i))
+        self.runJob("xmipp_metadata_split","-i %s --oroot %s/images -n 2"%(self.imgsFn,fnDirCurrent),numberOfMpi=1)
+        for i in range(1,3):
+            moveFile("%s/images%06d.xmd"%(fnDirCurrent,i),"%s/images%02d.xmd"%(fnDirCurrent,i))
         
         # Get volume sampling rate
         TsCurrent=self.inputVolumes.get().getSamplingRate()
@@ -483,18 +479,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         R=min(round(R*self.TsOrig/TsCurrent*(1+self.angularMaxShift.get()*0.01)),newXdim/2)
         self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnNewParticles,R),numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
         fnSource=join(fnDir,"images.xmd")
-        if self.splitMethod==self.SPLIT_STOCHASTIC:
-            self.runJob('xmipp_metadata_utilities','-i %s --set intersection %s particleId particleId -o %s/all_images.xmd'%\
-                        (fnSource,self._getExtraPath('images.xmd'),fnDir),numberOfMpi=1)
-            self.runJob("xmipp_metadata_split","-i %s/all_images.xmd --oroot %s/images -n 2"%(fnDir,fnDir),numberOfMpi=1)
-            cleanPath("%s/all_images.xmd"%fnDir)
-            for i in range(1,3):
-                moveFile("%s/images%06d.xmd"%(fnDir,i),"%s/images%02d.xmd"%(fnDir,i))
-        else:
-            for i in range(1,3):
-                fnImagesi=join(fnDir,"images%02d.xmd"%i)
-                self.runJob('xmipp_metadata_utilities','-i %s --set intersection %s/images%02d.xmd particleId particleId -o %s'%\
-                            (fnSource,fnDir0,i,fnImagesi),numberOfMpi=1)
+        for i in range(1,3):
+            fnImagesi=join(fnDir,"images%02d.xmd"%i)
+            self.runJob('xmipp_metadata_utilities','-i %s --set intersection %s/images%02d.xmd particleId particleId -o %s'%\
+                        (fnSource,fnDir0,i,fnImagesi),numberOfMpi=1)
         cleanPath(fnSource)
         
         if getShiftsFrom!="":
@@ -558,8 +546,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
     def calculateAngStep(self,newXdim,TsCurrent,ResolutionAlignment):
         k=newXdim*TsCurrent/ResolutionAlignment # Freq. index
-        from math import atan2,pi
-        return atan2(1,k)*180.0/pi # Corresponding angular step
+        return math.atan2(1,k)*180.0/math.pi # Corresponding angular step
 
     def globalAssignment(self,iteration):
         fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
@@ -593,8 +580,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             
             # Global alignment
             for i in range(1,3):
-                fnDirSignificant=join(fnGlobal,"significant%02d"%i)
-                fnImgs=join(fnGlobal,"images%02d.xmd"%i)
+                fnDirSignificant=join(fnGlobal,"significant%02d%s"%i)
+                fnImgs=join(fnGlobal,"images%02d%s.xmd"%i)
                 makePath(fnDirSignificant)
 
                 # Create defocus groups
@@ -615,46 +602,47 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
                 # Generate projections
                 fnReferenceVol=join(fnGlobal,"volumeRef%02d.vol"%i)
-                fnGallery=join(fnDirSignificant,"gallery%02d.stk"%i)
-                fnGalleryMd=join(fnDirSignificant,"gallery%02d.xmd"%i)
-                args="-i %s -o %s --sampling_rate %f --sym %s --min_tilt_angle %f --max_tilt_angle %f"%\
-                     (fnReferenceVol,fnGallery,angleStep,self.symmetryGroup,self.angularMinTilt.get(),self.angularMaxTilt.get())
-                args+=" --compute_neighbors --angular_distance -1 --experimental_images %s"%self._getExtraPath("images.xmd")
-                self.runJob("xmipp_angular_project_library",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-                cleanPath(join(fnDirSignificant,"gallery_angles%02d.doc"%i))
-                moveFile(join(fnDirSignificant,"gallery%02d.doc"%i), fnGalleryMd)
-                fnAngles=join(fnGlobal,"anglesDisc%02d.xmd"%i)
-                for j in range(1,numberGroups+1):
-                    fnAnglesGroup=join(fnDirSignificant,"angles_group%03d.xmd"%j)
-                    if not exists(fnAnglesGroup):
-                        if ctfPresent:
-                            fnGroup="ctfGroup%06d@%s/ctf_groups.xmd"%(j,fnDirSignificant)                            
-                            fnGalleryGroup=fnGallery
-                            fnGalleryGroupMd=fnGalleryMd
-                        else:
-                            fnGroup=fnImgs
-                            fnGalleryGroupMd=fnGalleryMd
-                        if getSize(fnGroup)==0: # If the group is empty
-                            continue
-                        maxShift=round(self.angularMaxShift.get()*newXdim/100)
-                        R=self.particleRadius.get()
-                        if R<=0:
-                            R=self.inputParticles.get().getDimensions()[0]/2
-                        R=R*self.TsOrig/TsCurrent
-                        args='-i %s -o %s --ref %s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --append --pad 2.0'%\
-                             (fnGroup,join(fnDirSignificant,"angles_group%03d.xmd"%j),fnGalleryGroup,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get())
-                        if ctfPresent:
-                            args+=" --ctf %d@%s"%(j,fnCTFs)
-                        if self.numberOfMpi>1:
-                            args+=" --mpi_job_size 2"
-                        self.runJob('xmipp_angular_projection_matching',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-                        if j==1:
-                            copyFile(fnAnglesGroup, fnAngles)
-                        else:
-                            self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities","-i %s --set join %s image"%(fnAngles,fnImgs),numberOfMpi=1)
-                if self.saveSpace and ctfPresent:
-                    self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
+                for subset in ['a','b']:
+                    fnGallery=join(fnDirSignificant,"gallery%02d%s.stk"%(i,subset))
+                    fnGalleryMd=join(fnDirSignificant,"gallery%02d%s.xmd"%(i,subset))
+                    args="-i %s -o %s --sampling_rate %f --perturb %f --sym %s --min_tilt_angle %f --max_tilt_angle %f"%\
+                         (fnReferenceVol,fnGallery,angleStep,math.sin(angleStep*math.pi/180.0)/4,self.symmetryGroup,self.angularMinTilt.get(),self.angularMaxTilt.get())
+                    args+=" --compute_neighbors --angular_distance -1 --experimental_images %s"%self._getExtraPath("images.xmd")
+                    self.runJob("xmipp_angular_project_library",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+                    cleanPath(join(fnDirSignificant,"gallery_angles%02d%s.doc"%(i,subset)))
+                    moveFile(join(fnDirSignificant,"gallery%02d%s.doc"%(i,subset)), fnGalleryMd)
+                    fnAngles=join(fnGlobal,"anglesDisc%02d%s.xmd"%(i,subset))
+                    for j in range(1,numberGroups+1):
+                        fnAnglesGroup=join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset))
+                        if not exists(fnAnglesGroup):
+                            if ctfPresent:
+                                fnGroup="ctfGroup%06d@%s/ctf_groups.xmd"%(j,fnDirSignificant)                            
+                                fnGalleryGroup=fnGallery
+                                fnGalleryGroupMd=fnGalleryMd
+                            else:
+                                fnGroup=fnImgs
+                                fnGalleryGroupMd=fnGalleryMd
+                            if getSize(fnGroup)==0: # If the group is empty
+                                continue
+                            maxShift=round(self.angularMaxShift.get()*newXdim/100)
+                            R=self.particleRadius.get()
+                            if R<=0:
+                                R=self.inputParticles.get().getDimensions()[0]/2
+                            R=R*self.TsOrig/TsCurrent
+                            args='-i %s -o %s --ref %s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --append --pad 2.0'%\
+                                 (fnGroup,join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset)),fnGalleryGroup,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get())
+                            if ctfPresent:
+                                args+=" --ctf %d@%s"%(j,fnCTFs)
+                            if self.numberOfMpi>1:
+                                args+=" --mpi_job_size 2"
+                            self.runJob('xmipp_angular_projection_matching',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+                            if j==1:
+                                copyFile(fnAnglesGroup, fnAngles)
+                            else:
+                                self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
+                    self.runJob("xmipp_metadata_utilities","-i %s --set join %s image"%(fnAngles,fnImgs),numberOfMpi=1)
+                    if self.saveSpace and ctfPresent:
+                        self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
                 
     def adaptShifts(self, fnSource, TsSource, fnDest, TsDest):
         K=TsSource/TsDest
@@ -789,12 +777,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             (fnAngles,self._getExtraPath("ssnrWeights.xmd")),numberOfMpi=1)
             if self.weightJumper and iteration>1:
                 fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
-                if self.splitMethod == self.SPLIT_FIXED:
-                    fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
-                else:
-                    fnPreviousAngles=join(fnDirCurrent,"aux.xmd")
-                    self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
-                                (join(fnDirPrevious,"angles.xmd"),fnAngles,fnPreviousAngles),numberOfMpi=1)
+                fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s"%\
                             (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper"),numberOfMpi=1)
                 moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
@@ -802,12 +785,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     cleanPath(fnPreviousAngles)
                 if iteration>2:
                     fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-2))
-                    if self.splitMethod == self.SPLIT_FIXED:
-                        fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
-                    else:
-                        fnPreviousAngles=join(fnDirCurrent,"aux.xmd")
-                        self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
-                                    (join(fnDirPrevious,"angles.xmd"),fnAngles,fnPreviousAngles),numberOfMpi=1)
+                    fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
                     self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s --set 2"%\
                                 (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper"),numberOfMpi=1)
                     moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
