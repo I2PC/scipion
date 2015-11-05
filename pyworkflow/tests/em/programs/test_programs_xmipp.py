@@ -219,7 +219,8 @@ class ClassifyKerdensom(XmippProgramTest):
 
     def test_case1(self):
         self.runCase("-i input/clusterVectors.xmd --oroot %o/kerdensom --deterministic_annealing 1",
-                outputs=["kerdensom_vectors.vec","kerdensom_vectors.xmd"])
+                     postruns=["xmipp_image_vectorize -i %o/kerdensom_vectors.xmd -o %o/kerdensom_vectors.stk"],
+                     outputs=["kerdensom_vectors.stk", "kerdensom_vectors.xmd"])
 
 
 class CtfCorrectWiener3d(XmippProgramTest):
