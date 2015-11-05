@@ -299,6 +299,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             setXmippAttributes(particle, row, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y, xmipp.MDL_COST, xmipp.MDL_WEIGHT_CONTINUOUS2, xmipp.MDL_CONTINUOUS_SCALE_X, xmipp.MDL_CONTINUOUS_SCALE_Y, xmipp.MDL_COST_PERCENTILE)
         if row.containsLabel(xmipp.MDL_ANGLE_DIFF):
             setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF, xmipp.MDL_WEIGHT_JUMPER)
+        if row.containsLabel(xmipp.MDL_ANGLE_DIFF2):
+            setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF2, xmipp.MDL_WEIGHT_JUMPER2)
         if row.containsLabel(xmipp.MDL_WEIGHT_SSNR):
             setXmippAttributes(particle, row, xmipp.MDL_WEIGHT_SSNR)
     
