@@ -218,7 +218,7 @@ class ClassifyKerdensom(XmippProgramTest):
         return 'xmipp_classify_kerdensom'
 
     def test_case1(self):
-        self.runCase("-i input/clusterVectors.xmd --oroot %o/kerdensom --deterministic_annealing 1",
+        self.runCase("-i input/clusterVectors.xmd --oroot %o/kerdensom --deterministic_annealing 1",random=True,
                      postruns=["xmipp_image_vectorize -i %o/kerdensom_vectors.xmd -o %o/kerdensom_vectors.stk"],
                      outputs=["kerdensom_vectors.stk", "kerdensom_vectors.xmd"])
 
