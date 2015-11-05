@@ -697,10 +697,6 @@ class CtfCorrectIdrMpi(CtfCorrectIdr):
     def getProgram(cls):
         return 'xmipp_mpi_ctf_correct_idr'
 
-    def test_case2(self):
-        self.runCase("-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk",
-                outputs=["idr.stk"])
-
 
 class ImageSortMpi(XmippProgramTest):
     _owner = COSS
