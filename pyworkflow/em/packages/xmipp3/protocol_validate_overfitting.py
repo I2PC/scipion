@@ -161,6 +161,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             subset += 1
 
         validationMd.write(self._getExtraPath('results.xmd'))
+        fnResults = self._defineResultsName('results.xmd')
         #cleanPattern(self._getExtraPath("fraction*_freq.txt"))
         
     def _defineResultsName(self):
