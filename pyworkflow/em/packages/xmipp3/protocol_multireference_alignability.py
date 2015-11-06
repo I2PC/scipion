@@ -192,6 +192,20 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         self.runJob('xmipp_transform_mask', 
                     param, numberOfMpi=1,numberOfThreads=1)
                 
+ 
+    def projectionLibraryStep(self, volName, volDir):
+        
+        # Generate projections from this reconstruction        
+        nproc = self.numberOfMpi.get()
+        nT=self.numberOfThreads.get() 
+        
+        makePath(volDir)
+        fnGallery= (volDir+'/gallery.stk')
+        params = '-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance %f --experimental_images %s --max_tilt_angle 90'\
+                    %(volName,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(), -1, self._getPath('input_particles.xmd'))
+        
+        print params
+        self.runJob("xmipp_angular_project_library", params, numberOfMpi=nproc, numberOfThreads=nT)                    
         
     def significantStep(self, volName, volDir, anglesPath, params):
 
