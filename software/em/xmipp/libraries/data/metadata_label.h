@@ -390,6 +390,7 @@ enum MDLabel
     MDL_WEIGHT, ///< Weight assigned to the image (double)
     MDL_WEIGHT_P, ///< Weight assigned to the image accordint to its clusterability with a significance with respect noise (double)
     MDL_WEIGHT_CONTINUOUS2, ///< Weight due to angular continuous assignment
+    MDL_WEIGHT_JUMPER0, ///< Weight due to angular jumping
     MDL_WEIGHT_JUMPER, ///< Weight due to angular jumping
     MDL_WEIGHT_JUMPER2, ///< Weight due to angular jumping
     MDL_WEIGHT_SIGNIFICANT, ///< Weight due to Angular significance
@@ -1739,6 +1740,7 @@ private:
         MDL::addLabel(MDL_WEIGHT_P, LABEL_DOUBLE, "weight_clusterability");
         MDL::addLabelAlias(MDL_WEIGHT, "Weight");
         MDL::addLabel(MDL_WEIGHT_CONTINUOUS2, LABEL_DOUBLE, "weightContinuous2");
+        MDL::addLabel(MDL_WEIGHT_JUMPER0, LABEL_DOUBLE, "weightJumper0");
         MDL::addLabel(MDL_WEIGHT_JUMPER, LABEL_DOUBLE, "weightJumper");
         MDL::addLabel(MDL_WEIGHT_JUMPER2, LABEL_DOUBLE, "weightJumper2");
         MDL::addLabel(MDL_WEIGHT_SIGNIFICANT, LABEL_DOUBLE, "weightSignificant");
