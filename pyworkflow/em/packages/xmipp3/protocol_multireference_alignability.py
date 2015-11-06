@@ -211,8 +211,10 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
 
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get() 
-        makePath(volDir)  
-        params += '  --initvolumes %s' % volName  
+
+        fnGallery= (volDir+'/gallery.doc')          
+        params += ' --initgallery  %s' % fnGallery
+        params += ' --initvolumes %s' % volName  
         params += ' --odir %s' % volDir
         params += ' --iter %d' % 1
         self.runJob('xmipp_reconstruct_significant', 
