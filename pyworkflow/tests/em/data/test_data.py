@@ -242,7 +242,6 @@ class TestSetOfParticles(BaseTest):
             
         f.close()     
         
-
     def test_getFiles(self):
         #create setofImages
         dbFn = self.getOutputPath('multistack_set.sqlite')
@@ -387,6 +386,57 @@ class TestTransform(BaseTest):
         p2 = p.clone()
         m3 = p2.getTransform().getMatrix()
         self.assertTrue(np.allclose(m, m3, rtol=1e-2)) 
+        
+    
+class TestCopyItems(BaseTest):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('model')  
+        
+    def test_listAttribute(self):
+        """ 
+        Test the use of copyItems function where the items have
+        a property that is a list.
+        """
+        
+        inFn = self.dataset.getFile('particles/particles_nma.sqlite')
+        outFn = self.getOutputPath('particles.sqlite')
+
+        inputSet = SetOfParticles(filename=inFn)
+        inputSet.setSamplingRate(1.0)
+        
+        outputSet = SetOfParticles(filename=outFn)
+        outputSet.copyInfo(inputSet)
+        
+        outputSet.copyItems(inputSet, 
+                            updateItemCallback=self._updateItem)
+        
+        #print "writing particles to: ", outFn
+        outputSet.write()        
+        outputSet.close()
+        
+        # Read again the written set of particles
+        checkSet = SetOfParticles(filename=outFn)
+        
+        # check that the first item (as the rest)
+        # have the added _list attribute with the correct values
+        particle = checkSet.getFirstItem()        
+        self.assertTrue(particle.hasAttribute('_list'))
+        for v1, v2 in izip([1.0, 2.0], particle._list):
+            self.assertAlmostEqual(v1, float(v2))
+            
+        # check that copied items have exactly
+        # the same attribes than the input set
+        # except for the _list
+        for i1, i2 in izip(inputSet, checkSet):
+            self.assertTrue(i2.equalAttributes(i1, ignore=['_list']))
+        
+        
+    def _updateItem(self, item, row):
+        item._list = CsvList()
+        item._list.set([1.0, 2.0])
 
 
 if __name__ == '__main__':
