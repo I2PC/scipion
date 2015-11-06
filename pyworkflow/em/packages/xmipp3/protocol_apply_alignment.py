@@ -100,7 +100,7 @@ class XmippProtApplyAlignment(ProtAlign2D):
         inputMd = self._getPath('aligned_particles.xmd')
         alignedSet.copyItems(particles,
                              updateItemCallback=self._updateItem,
-                             itemDataIterator=iterMdRows(inputMd))
+                             itemDataIterator=iterMdRows(inputMd, sortByLabel=md.MDL_ITEM_ID))
         # Remove alignment 2D
         alignedSet.setAlignment(ALIGN_NONE)
 
