@@ -30,7 +30,6 @@ This sub-package contains classes to use in common processing operations of SetO
 from pyworkflow.em.constants import ALIGN_NONE
 from pyworkflow.em.protocol import ProtProcessParticles, ProtPreprocessVolumes
 from pyworkflow.em.data import Volume
-from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 from ..convert import writeSetOfParticles, xmippToLocation
 from ..convert import writeSetOfVolumes, getImageLocation
 import pyworkflow.em.metadata as md
@@ -102,7 +101,7 @@ class XmippProcessParticles(ProtProcessParticles):
         
         outputSet.copyItems(inputSet, 
                             updateItemCallback=self._updateItem,
-                            itemDataIterator=iterMdRows(self.outputMd, sortByLabel=md.MDL_ITEM_ID))
+                            itemDataIterator=md.iterRows(self.outputMd, sortByLabel=md.MDL_ITEM_ID))
         #readSetOfParticles(self.outputMd, outputSet)
         self._postprocessOutput(outputSet)
         
