@@ -225,9 +225,11 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         makePath(volDir)  
         aFile = self._getExtraPath('exp_particles.xmd')
         aFileRef =self._getExtraPath('ref_particles.xmd')
+        aFileGallery =self._getExtraPath('gallery.stk')
         params = '  --volume %s' % volName  
         params += '  --angles_file %s' % aFile
         params += '  --angles_file_ref %s' % aFileRef
+        params += '  --gallery %s' % aFileGallery
         params += ' --odir %s' % volDir
         params += ' --sym %s' % sym
         
@@ -316,7 +318,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
     
     #--------------------------- UTILS functions --------------------------------------------
     def _getVolDir(self, volIndex):
-        return self._getTmpPath('vol%03d' % volIndex)
+        return self._getExtraPath('vol%03d' % volIndex)
     
     def _iterInputVols(self):
         """ In this function we will encapsulate the logic
