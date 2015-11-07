@@ -653,6 +653,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnAngles=fnOut+".xmd"
                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
                 moveFile(fnOut+"_weights.xmd",fnOut+".xmd")
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleRot2'%(fnAnglesB),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleTilt2'%(fnAnglesB),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column anglePsi2'%(fnAnglesB),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column shiftX2'%(fnAnglesB),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column shiftY2'%(fnAnglesB),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate rename_column "angleRot angleRot2"'%(fnAnglesB),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate rename_column "angleTilt angleTilt2"'%(fnAnglesB),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate rename_column "anglePsi anglePsi2"'%(fnAnglesB),numberOfMpi=1)
