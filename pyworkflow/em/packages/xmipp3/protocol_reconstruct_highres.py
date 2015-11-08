@@ -837,8 +837,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s --set 2"%\
                                 (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper"),numberOfMpi=1)
                     moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
-                    if self.splitMethod == self.SPLIT_STOCHASTIC:
-                        cleanPath(fnPreviousAngles)
 
             #if self.weightResiduals and exists(fnAnglesCont):
             #    fnCovariance=join(fnDirLocal,"covariance%02d.stk"%i)
