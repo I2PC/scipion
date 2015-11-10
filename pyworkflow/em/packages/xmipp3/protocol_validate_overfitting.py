@@ -180,6 +180,15 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
     
     def _citations(self):
         return ['B.Heymann2015']
+    
+    def _validate(self):
+        errors=[]
+        maxNumberOfParticles=max(getFloatListFromValues(self.numberOfParticles.get()))
+        if maxNumberOfParticles>0.5*self.inputParticles.get().getSize():
+            errors.append("The number of tested particles should not be larger than 1/2 of the input set of particles")
+        return errors
+        
+    
     #--------------------------- UTILS functions --------------------------------------------
     def _defineResultsName(self):
         return self._getExtraPath('results.xmd')
