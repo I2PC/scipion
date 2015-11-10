@@ -232,6 +232,9 @@ class XmippProtNMABase(EMProtocol):
                 errors.append("Some NMA programs are missing in the NMA folder.")
                 errors.append("Check that Scipion was installed with NMA: 'scipion install nma'")
                 break
+        from pyworkflow.utils.which import which
+        if which("csh")=="":
+            errors.append("Cannot find csh in the PATH")
                 
         return errors
     
