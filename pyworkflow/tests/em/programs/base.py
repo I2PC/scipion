@@ -34,15 +34,6 @@ import pyworkflow.utils as pwutils
 import xmipp
 
 
-_countDict = {}
-
-def getCount(program):
-    global _countDict
-    count = _countDict.get(program, 0) + 1
-    _countDict[program] = count
-    
-    return count
-
 
 class Command(object):
     def __init__(self, cmd, env=None):
@@ -113,9 +104,14 @@ class ProgramTest(unittest.TestCase):
                 pipe = ">>"
                 
     def runCase(self, args, mpi=0, changeDir=False, preruns=None, postruns=None, outputs=None, random=False):
+        # Retrieve the correct case number from the test name id
+        # We asumme here that 'test_caseXXX' should be in the name
+        caseId = unittest.TestCase.id(self)
+        if not 'test_case' in caseId:
+            raise Exception("'test_case' string should be in the test function name followed by a number")
+        _counter = int(caseId.split('test_case')[1])
+
         self._testDir = self.dataset.getPath()
-        _counter = getCount(self.program)
-        #self.outputDir = os.path.join(self._testDir, 'output', '%s_%02d' % (self.program, self._counter))
         self.outputDir = os.path.join('tmpLink', '%s_%02d' % (self.program, _counter))
         self.outputDirAbs = os.path.join(self._testDir, self.outputDir)
         self.goldDir = os.path.join(self._testDir, 'gold', '%s_%02d' % (self.program, _counter))
