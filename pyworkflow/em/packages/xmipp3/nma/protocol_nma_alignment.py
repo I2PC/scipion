@@ -33,17 +33,16 @@ from os.path import basename
 
 from pyworkflow.utils import isPower2, getListFromRangeString
 from pyworkflow.utils.path import copyFile, cleanPath 
-from pyworkflow.protocol.params import (PointerParam, PathParam, IntParam, EnumParam,
-                                        FloatParam,
-                                        LEVEL_ADVANCED, LEVEL_ADVANCED)
+import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.packages.xmipp3 import XmippMdRow
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles,\
-    xmippToLocation, getImageLocation
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles,\
+     xmippToLocation, getImageLocation, setXmippAttributes
 from pyworkflow.protocol.params import NumericRangeParam
-import xmipp 
 
 from convert import modeToRow
+
+import pyworkflow.em.metadata as md
 
 
 NMA_ALIGNMENT_WAV = 0
@@ -57,10 +56,10 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputModes', PointerParam, pointerClass='SetOfNormalModes',
+        form.addParam('inputModes', params.PointerParam, pointerClass='SetOfNormalModes',
                       label="Normal modes",                        
                       help='Set of normal modes to explore.')
-        form.addParam('modeList', NumericRangeParam, expertLevel=LEVEL_ADVANCED,
+        form.addParam('modeList', NumericRangeParam, expertLevel=params.LEVEL_ADVANCED,
                       label="Modes selection",
                       help='Select which modes do you want to use from all of them.\n'
                            'If you leave the field empty, all modes will be used.\n'
@@ -69,31 +68,31 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
                            ' "7,8-10" -> [7,8,9,10]\n'
                            ' "8, 10, 12" -> [8,10,12]\n'
                            ' "8 9, 10-12" -> [8,9,10,11,12])\n')
-        form.addParam('inputParticles', PointerParam, label="Input particles", 
+        form.addParam('inputParticles', params.PointerParam, label="Input particles", 
                       pointerClass='SetOfParticles',
                       help='Select the set of particles that you want to use for flexible analysis.')  
 
-        form.addParam('copyDeformations', PathParam,
-                      expertLevel=LEVEL_ADVANCED,
+        form.addParam('copyDeformations', params.PathParam,
+                      expertLevel=params.LEVEL_ADVANCED,
                       label='Precomputed results (for development)',
                       help='Enter a metadata file with precomputed elastic  \n'
                            'and rigid-body alignment parameters and perform \n'
                            'all remaining steps using this file.')
         
         form.addSection(label='Angular assignment')
-        form.addParam('trustRegionScale', IntParam, default=1,
-                      expertLevel=LEVEL_ADVANCED,
+        form.addParam('trustRegionScale', params.IntParam, default=1,
+                      expertLevel=params.LEVEL_ADVANCED,
                       label='Trust region scale',
                       help='For elastic alignment, this parameter scales the initial \n'
                            'value of the trust region radius for optimization purposes.\n'
                            'Use larger values for larger expected deformation amplitudes.')    
-        form.addParam('alignmentMethod', EnumParam, default=NMA_ALIGNMENT_WAV,
+        form.addParam('alignmentMethod', params.EnumParam, default=NMA_ALIGNMENT_WAV,
                       choices=['wavelets & splines', 'projection matching'],
                       label='Alignment method',
                       help='For rigid-body alignment, use Projection Matching (faster) instead\n'
                            'of Wavelets and Splines (more accurate). In the case of Wavelets \n'
                            'and Splines, the size of images should be a power of 2.')
-        form.addParam('discreteAngularSampling', FloatParam, default=10,
+        form.addParam('discreteAngularSampling', params.FloatParam, default=10,
                       label="Discrete angular sampling (deg)", 
                       help='This parameter is used in Projection Matching and Wavelets methods\n'
                            'for a rough rigid-body alignment. It is the angular step (in degrees)\n'
@@ -127,7 +126,6 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
             
         self._insertFunctionStep('createOutputStep')
         
-        
     #--------------------------- STEPS functions --------------------------------------------   
     def convertInputStep(self, atomsFn):
         # Write the modes metadata taking into account the selection
@@ -151,7 +149,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         else:
             modeSelection = getListFromRangeString(self.modeList.get())
             
-        md = xmipp.MetaData()
+        mdModes = md.MetaData()
         
         inputModes = self.inputModes.get()
         for mode in inputModes:
@@ -160,23 +158,23 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
             if not modeSelection or mode.getObjId() in modeSelection:
                 row = XmippMdRow()
                 modeToRow(mode, row)
-                row.writeToMd(md, md.addObject())
-        md.write(self.modesFn)
+                row.writeToMd(mdModes, mdModes.addObject())
+        mdModes.write(self.modesFn)
             
     def copyDeformationsStep(self, deformationMd):
         copyFile(deformationMd, self.imgsFn)
         # We need to update the image name with the good ones
         # and the same with the ids.
         inputSet = self.inputParticles.get()
-        md = xmipp.MetaData(self.imgsFn)
-        for objId in md:
-            imgPath = md.getValue(xmipp.MDL_IMAGE, objId)
+        mdImgs = md.MetaData(self.imgsFn)
+        for objId in mdImgs:
+            imgPath = mdImgs.getValue(md.MDL_IMAGE, objId)
             index, fn = xmippToLocation(imgPath)
             # Conside the index is the id in the input set
             particle = inputSet[index]
-            md.setValue(xmipp.MDL_IMAGE, getImageLocation(particle), objId)
-            md.setValue(xmipp.MDL_ITEM_ID, long(particle.getObjId()), objId)
-        md.write(self.imgsFn)
+            mdImgs.setValue(md.MDL_IMAGE, getImageLocation(particle), objId)
+            mdImgs.setValue(md.MDL_ITEM_ID, long(particle.getObjId()), objId)
+        mdImgs.write(self.imgsFn)
         
     def performNmaStep(self, atomsFn, modesFn):
         sampling = self.inputParticles.get().getSamplingRate()
@@ -204,14 +202,15 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         partSet = self._createSetOfParticles()
         pdbPointer = self.inputModes.get()._pdbPointer
         
-        readSetOfParticles(self.imgsFn, partSet,
-                           extraLabels=[xmipp.MDL_NMA, xmipp.MDL_COST])
         partSet.copyInfo(inputSet)
+        partSet.copyItems(inputSet,
+                          updateItemCallback=self._updateParticle,
+                          itemDataIterator=md.iterRows(self.imgsFn, sortByLabel=md.MDL_ITEM_ID))
         
         self._defineOutputs(outputParticles=partSet)
         self._defineSourceRelation(pdbPointer, partSet)
         self._defineTransformRelation(self.inputParticles, partSet)
-
+    
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
@@ -243,3 +242,5 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         modesFn = self.inputModes.get().getFileName()
         return self._getBasePath(modesFn)
     
+    def _updateParticle(self, item, row):
+        setXmippAttributes(item, row, md.MDL_NMA, md.MDL_COST)
