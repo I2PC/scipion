@@ -37,8 +37,7 @@ from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.utils.path import moveFile, makePath
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
                                                    writeSetOfVolumes,
-                                                   getImageLocation,
-                                                   readSetOfParticles)
+                                                   getImageLocation)
 
 
 class XmippProtMultiRefAlignability(ProtAnalysis3D):
@@ -247,7 +246,6 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
             outImgSet = self._createSetOfParticles(volPrefix)
             
             outImgSet.copyInfo(imgSet)
-            #readSetOfParticles(String(clusterMd), outImgSet)
 
             outImgSet.copyItems(imgSet,
                                 updateItemCallback=self._setWeight,
@@ -293,8 +291,8 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
             for i, vol in enumerate(self._iterInputVols()):
                             
                 VolPrefix = 'vol%03d_' % (i+1)
-                md = xmipp.MetaData(self._getExtraPath(VolPrefix+'validation.xmd'))                
-                weight = md.getValue(xmipp.MDL_WEIGHT, md.firstObject())
+                mdVal = md.MetaData(self._getExtraPath(VolPrefix+'validation.xmd'))                
+                weight = mdVal.getValue(md.MDL_WEIGHT, mdVal.firstObject())
                 summary.append("Output volume(s)_%d : %s" % (i+1,self.outputVolumes.getNameId()))
                 summary.append("Quality parameter_%d : %f" % (i+1,weight))
                 summary.append("-----------------")        
