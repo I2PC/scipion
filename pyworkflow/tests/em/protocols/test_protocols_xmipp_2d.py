@@ -868,6 +868,31 @@ class TestXmippBreakSym(TestXmippBase):
         os.unlink(fileTmp.name)
 
 
+class TestXmippCorrectWiener2D(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData()
+    
+    def test_CorrectWiener(self):
+        prot1 = self.newProtocol(ProtImportParticles,
+                                 importFrom=ProtImportParticles.IMPORT_FROM_XMIPP3,
+                                 mdFile=self.dataset.getFile('particles/sphere_128.xmd'),
+                                 magnification=10000,
+                                 samplingRate=1,
+                                 haveDataBeenPhaseFlipped=False
+                                 )
+        self.launchProtocol(prot1)
+        print "Run CTFCorrectWiener2D particles"
+        protCorrect = self.newProtocol(XmippProtCTFCorrectWiener2D)
+        protCorrect.inputParticles.set(prot1.outputParticles)
+        self.launchProtocol(protCorrect)
+        self.assertIsNotNone(protCorrect.outputParticles, "There was a problem with Wiener Correction")
+
+        
+        
+        
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         className = sys.argv[1]
