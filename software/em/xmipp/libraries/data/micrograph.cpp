@@ -651,6 +651,11 @@ void TiltPairAligner::adjustPassingMatrix(int _muX, int _muY, int _mtX,
         int _mtY)
 {
     addCoordinatePair(_muX, _muY, _mtX, _mtY);
+    calculatePassingMatrix();
+}
+
+void TiltPairAligner::calculatePassingMatrix()
+{
     if (Nu > 3)
     {
         solve(Au, Bt, Put);
