@@ -38,7 +38,7 @@ from pyworkflow.object import Float
 from pyworkflow.em.data import Volume, SetOfClasses3D
 from pyworkflow.utils import getMemoryAvailable, replaceExt, removeExt, cleanPath, makePath, copyFile
 
-from pyworkflow.em.packages.xmipp3.convert import createClassesFromImages,  readSetOfParticles
+from pyworkflow.em.packages.xmipp3.convert import createClassesFromImages
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
 
 

@@ -24,13 +24,11 @@
 # *
 # **************************************************************************
 
-from pyworkflow.object import Float, String
-from pyworkflow.protocol.params import (PointerParam, IntParam, FloatParam, STEPS_PARALLEL,
-                                        StringParam, BooleanParam, LEVEL_ADVANCED)
+import pyworkflow.em.metadata as md
+import pyworkflow.protocol.params as params
+
 from pyworkflow.em.protocol import ProtProcessParticles
-from pyworkflow.utils.path import moveFile, makePath
-from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,getImageLocation, readSetOfParticles)
-import xmipp
+from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles, xmippToLocation)
 
 
 class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
@@ -47,32 +45,25 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles', 
+        form.addParam('inputParticles', params.PointerParam, pointerClass='SetOfParticles', 
                       label="Input particles",  
                       help='Select the input projection images .') 
-
-        form.addParam('isIsotropic', BooleanParam, default='True',
+        form.addParam('isIsotropic', params.BooleanParam, default='True',
                       label="Isotropic Correction", 
                       help='If true, Consider that there is not astigmatism and then it is performed an isotropic correction.') 
-        
-        form.addParam('padding_factor', IntParam, default=2,expertLevel=LEVEL_ADVANCED,
+        form.addParam('padding_factor', params.IntParam, default=2,expertLevel=params.LEVEL_ADVANCED,
                       label="Padding factor",  
                       help='Padding factor for Wiener correction ')
-
-        form.addParam('wiener_constant', FloatParam, default=-1,expertLevel=LEVEL_ADVANCED,
+        form.addParam('wiener_constant', params.FloatParam, default=-1,expertLevel=params.LEVEL_ADVANCED,
                       label="Wiener constant",  
                       help=' Wiener-filter constant (if < 0: use FREALIGN default)')
-        
-
-        form.addParam('correctEnvelope', BooleanParam, default='False',expertLevel=LEVEL_ADVANCED,
+        form.addParam('correctEnvelope', params.BooleanParam, default='False',expertLevel=params.LEVEL_ADVANCED,
                       label="Correct for CTF envelope",  
                       help=' Only in cases where the envelope is well estimated correct for it')                       
-                       
-        
         form.addParallelSection(threads=1, mpi=1)
 
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):        
+    def _insertAllSteps(self):
         self._insertFunctionStep('convertInputStep',self.inputParticles.get().getObjId())        
         self._insertFunctionStep('wienerStep')
         self._insertFunctionStep('createOutputStep')
@@ -84,10 +75,8 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
         """
         writeSetOfParticles(self.inputParticles.get(), 
                             self._getPath('input_particles.xmd'))
-                    
     
     def wienerStep(self):
-        
         params =  '  -i %s' % self._getPath('input_particles.xmd')
         params +=  '  -o %s' % self._getPath('corrected_ctf_particles.stk')
         params +=  '  --save_metadata_stack %s' % self._getPath('corrected_ctf_particles.xmd')
@@ -107,16 +96,22 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
 
         self.runJob('xmipp_ctf_correct_wiener2d', 
                     params, numberOfMpi=nproc,numberOfThreads=nT)
-                
+    
     def createOutputStep(self):
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputParticles.get())
-        readSetOfParticles(self._getPath('corrected_ctf_particles.xmd'), imgSet)
-        self._defineOutputs(outputParticles=imgSet)
+        imgSet = self.inputParticles.get()
+        partSet = self._createSetOfParticles()
+        imgFn = self._getPath('corrected_ctf_particles.xmd')
+        
+        partSet.copyInfo(imgSet)
+        partSet.copyItems(imgSet,
+                            updateItemCallback=self._updateLocation,
+                            itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
+        
+        self._defineOutputs(outputParticles=partSet)
+        self._defineSourceRelation(imgSet, partSet)
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         pass
-        
     
     def _summary(self):
         pass
@@ -128,5 +123,8 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
     def _citations(self):
         return ['Vargas2014a']
     
-
+    #--------------------------- UTILS functions -------------------------------------------- 
+    def _updateLocation(self, item, row):
+        index, filename = xmippToLocation(row.getValue(md.MDL_IMAGE))
+        item.setLocation(index, filename)
 
