@@ -102,7 +102,6 @@ class XmippProcessParticles(ProtProcessParticles):
         outputSet.copyItems(inputSet, 
                             updateItemCallback=self._updateItem,
                             itemDataIterator=md.iterRows(self.outputMd, sortByLabel=md.MDL_ITEM_ID))
-        #readSetOfParticles(self.outputMd, outputSet)
         self._postprocessOutput(outputSet)
         
         outputKey = className.replace('SetOf', 'output')
