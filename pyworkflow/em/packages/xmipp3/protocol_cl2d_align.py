@@ -29,7 +29,7 @@ This sub-package contains wrapper around align2d Xmipp program
 
 from pyworkflow.em import *  
 
-from convert import writeSetOfParticles, readSetOfParticles, getImageLocation, \
+from convert import writeSetOfParticles, getImageLocation, \
     locationToXmipp, xmippToLocation, matrixFromGeometry
 from pyworkflow.em.packages.xmipp3.convert import createItemMatrix
 import pyworkflow.em as em
