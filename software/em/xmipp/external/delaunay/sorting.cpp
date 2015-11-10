@@ -69,7 +69,7 @@ int		move_Pivot( struct Dcel_Vertex_T *origin, struct Dcel_Vertex_T *list, int i
     for (i=first_Index; i<=final_Index; i++)
 	{
 		// If turn is right then angle is lower in list[i] than in pivot element.
-		if ((check_Turn( &origin->vertex, &pivot_Point.vertex, &list[i].vertex) == RIGHT) ||
+		if ((check_Turn( &origin->vertex, &pivot_Point.vertex, &list[i].vertex) == RIGHT_TURN) ||
 			((check_Turn( &origin->vertex, &pivot_Point.vertex, &list[i].vertex) == COLINEAR) &&
 			(pivot_Point.vertex.x > list[i].vertex.x)))
 		{
