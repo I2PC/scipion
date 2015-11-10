@@ -273,3 +273,4 @@ TYPE signed_Area(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3)
 
 	return(area);
 }
+
