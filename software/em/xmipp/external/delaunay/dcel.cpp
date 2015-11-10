@@ -5,6 +5,7 @@
 #ifdef LOGGING
 #include "log.h"
 #endif
+#include <math.h>
 #include "point.h"
 #include "sorting.h"
 #include <stdlib.h>
@@ -1706,8 +1707,19 @@ int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
 	return(ret);
 }
 
-void	generate_Points_DCEL( int nPoints, struct DCEL_T *dcel,
-												TYPE maxX, double maxY)
+
+//#define DEBUG_GENERATE_RANDOM
+/***************************************************************************
+* Name: 	generate_Random_Points_DCEL
+* IN:		nPoints					# points to generate.
+* 			maxX					max X coordinate
+* 			maxY					max Y coordinate
+* OUT:		N/A
+* IN/OUT:	dcel					structure to store points set.
+* RETURN:	N/A
+* Description: generate a set of "nPoints" points and store it in "dcel".
+***************************************************************************/
+void	generate_Random_Points_DCEL( int nPoints, struct DCEL_T *dcel, TYPE maxX, TYPE maxY)
 {
 	int		i=0;						// Loop counter.
 	struct	Dcel_Vertex_T	point;		// Temporary point.
@@ -1715,7 +1727,7 @@ void	generate_Points_DCEL( int nPoints, struct DCEL_T *dcel,
 
 	// Initialize bottom most.
 	bottom_Most.vertex.x = maxX;
-	bottom_Most.vertex.y = MAX_Y_COORD;
+	bottom_Most.vertex.y = maxY;
 
 	// Generate random set of points.
 	// Create seed.
@@ -1753,6 +1765,136 @@ void	generate_Points_DCEL( int nPoints, struct DCEL_T *dcel,
             }
         }
     }
+}
+
+
+//#define DEBUG_GENERATE_CLUSTER
+/***************************************************************************
+* Name: 	generate_Cluster_Points_DCEL
+* IN:		nPoints					# points to generate
+* 			nClusters				# clusters to generate
+* 			radius					cluster radius.
+* 			maxX					max X coordinate
+* 			maxY					max Y coordinate
+* OUT:		N/A
+* IN/OUT:	dcel					structure to store points set.
+* RETURN:	N/A
+* Description: 	generate a set of "nPoints" points grouped in "nClusters"
+* 				clusters.
+***************************************************************************/
+void	generate_Cluster_Points_DCEL( int nPoints, struct DCEL_T *dcel,
+							int nClusters, int radius, TYPE maxX, TYPE maxY)
+{
+	int		i=0, j=0;				// Loop counters.
+	int		nElementsCluster=0;		// # points per cluster.
+	struct	Dcel_Vertex_T	seed;	// Cluster seed point.
+	struct	Dcel_Vertex_T	point;	// Temporary point.
+
+#ifdef DEBUG_GENERATE_CLUSTER
+	printf("Generating %d points in %d clusters with radius %d\n", nPoints, nClusters, radius);
+#endif
+
+	// Create seed.
+	srand48((int) time(NULL));
+
+	// Get # elements per cluster.
+	nElementsCluster = nPoints / nClusters;
+
+	// Generate clusters centers.
+	for (i=0; i<nClusters ;i++)
+	{
+		// Generate new point.
+		seed.vertex.x = (drand48() * maxX);
+		seed.vertex.y = (drand48() * maxY);
+
+        // Insert new point.
+		seed.origin_Edge = -1;
+        insertVertex( dcel, seed);
+
+#ifdef DEBUG_GENERATE_CLUSTER
+        printf("Generating %d cluster with seed (%f, %f)\n", i+1, seed.vertex.x, seed.vertex.y);
+#endif
+
+        // Add points center in current seed.
+        for (j=0; j<nElementsCluster-1 ;j++)
+        {
+    		// Generate new point.
+        	if (drand48() > 0.5)
+        	{
+        		point.vertex.x = seed.vertex.x + (drand48() * radius);
+        	}
+        	else
+        	{
+        		point.vertex.x = seed.vertex.x - (drand48() * radius);
+        	}
+        	if (drand48() > 0.5)
+        	{
+        		point.vertex.y = seed.vertex.y + (drand48() * radius);
+        	}
+        	else
+        	{
+        		point.vertex.y = seed.vertex.y - (drand48() * radius);
+        	}
+    		while (distance( &point.vertex, &seed.vertex) > (float) radius)
+    		{
+        		// Generate new point.
+            	if (drand48() > 0.5)
+            	{
+            		point.vertex.x = seed.vertex.x + (drand48() * radius);
+            	}
+            	else
+            	{
+            		point.vertex.x = seed.vertex.x - (drand48() * radius);
+            	}
+            	if (drand48() > 0.5)
+            	{
+            		point.vertex.y = seed.vertex.y + (drand48() * radius);
+            	}
+            	else
+            	{
+            		point.vertex.y = seed.vertex.y - (drand48() * radius);
+            	}
+    		}
+
+    		// Correct points out of bounds.
+    		if (point.vertex.x < 0.0)
+    		{
+    			point.vertex.x = -point.vertex.x;
+    		}
+    		else if (point.vertex.x > maxX)
+    		{
+    			point.vertex.x = point.vertex.x - radius;
+    		}
+    		if (point.vertex.y < 0.0)
+    		{
+    			point.vertex.y = -point.vertex.y;
+    		}
+    		else if (point.vertex.y > maxY)
+    		{
+    			point.vertex.y = point.vertex.y - radius;
+    		}
+
+            // Insert new point.
+            point.origin_Edge = -1;
+            insertVertex( dcel, point);
+
+#ifdef DEBUG_GENERATE_CLUSTER
+            printf("Generated %d point (%f, %f)\n", j+1, point.vertex.x, point.vertex.y);
+#endif
+        }
+	}
+
+	// Add elements randomly until nPoints reached.
+	for (i=dcel->nVertex; i<nPoints ;i++)
+	{
+		// Generate new point.
+		point.vertex.x = (drand48() * maxX);
+		point.vertex.y = (drand48() * maxY);
+
+        // Insert new point.
+        point.origin_Edge = -1;
+        insertVertex( dcel, point);
+	}
 }
 
 void	shake_Points_DCEL( struct DCEL_T *dcel)
