@@ -50,7 +50,7 @@ class XmippValidateOverfittingViewer(Viewer):
             return [self.errorMessage('The necessary metadata was not produced\n'
                                       'Execute again the protocol\n',
                                       title='Missing result file')]
-        plotter = self._createPlot("Validation 3D Reconstruction", "Number of Particles", "Resolution for FSC=0.5 (A)", fnOutput, 
+        plotter = self._createPlot("Validation 3D Reconstruction (Overfitting)", "Number of Particles", "Resolution for FSC=0.5 (A)", fnOutput, 
                                    xmipp.MDL_COUNT, xmipp.MDL_AVG)
         return [plotter] 
          
