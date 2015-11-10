@@ -122,8 +122,8 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
             fnUntilt = 'particles@'+self._getExtraPath("untilted/")+Unname+'.pos'
             fnTilt = 'particles@'+self._getExtraPath("tilted/")+Tname+'.pos'
             fnmicsize = tiltPair.getTilted().getFileName()
-            fnposUntilt = self._getExtraPath("")+Unname+'.pos'
-            fnposTilt = self._getExtraPath("")+Tname+'.pos'
+            fnposUntilt = 'particles@'+self._getExtraPath("")+Unname+'.pos'
+            fnposTilt = 'particles@'+self._getExtraPath("")+Tname+'.pos'
             stepId = self._insertFunctionStep('assignmentStep',fnUntilt, fnTilt, fnmicsize, self._getExtraPath(),
                                               fnposUntilt, fnposTilt, self._getExtraPath(Unname), prerequisites=[convertId])
              
