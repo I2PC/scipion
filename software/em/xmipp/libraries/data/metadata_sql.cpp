@@ -390,17 +390,18 @@ bool MDSql::setObjectValue(const int objId, const MDObject &value)
     return r;
 }
 
-bool MDSql::initializeSelect(std::vector<MDLabel> labels)
+bool MDSql::initializeSelect( bool addWhereObjId, std::vector<MDLabel> labels)
 {
 	int 	i=0;					// Loop counter.
 	bool	createdOK=true;		// Return value.
+	std::stringstream ss;		// Sentence string.
+
+	// Initialize SELECT sentence.
+	ss << "SELECT ";
 
 	// Add columns names.
 	if (labels.size() > 0)
 	{
-		std::stringstream ss;		// Sentence string.
-		ss << "SELECT ";
-
 		// Add columns names.
 		ss << MDL::label2StrSql(labels[0]);
 		for (i=1; i<labels.size() ;i++)
@@ -410,17 +411,27 @@ bool MDSql::initializeSelect(std::vector<MDLabel> labels)
 				ss << "," << MDL::label2StrSql(labels[i]);
 			}
 		}
-		ss << " FROM " << tableName(tableId) << " WHERE objID=?";
-		rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &this->preparedStmt, &zLeftover);
-		if (rc != SQLITE_OK)
-		{
-			createdOK = false;
-			printf( "could not prepare statement: %s\n", sqlite3_errmsg(db) );
-			this->preparedStmt = NULL;
-		}
 	}
+	// Select all columns.
 	else
 	{
+		ss << " * ";
+	}
+
+	// Add table.
+	ss << " FROM " << tableName(tableId);
+
+	// Check if add WHERE clause to select by id.
+	if (addWhereObjId)
+	{
+		ss << " WHERE objID=?";
+	}
+
+	rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &this->preparedStmt, &zLeftover);
+	if (rc != SQLITE_OK)
+	{
+		createdOK = false;
+		printf( "could not prepare statement: %s\n", sqlite3_errmsg(db) );
 		this->preparedStmt = NULL;
 	}
 
@@ -530,17 +541,14 @@ bool MDSql::initializeUpdate( std::vector<MDLabel> labels)
 }
 
 
-bool MDSql::getObjectsValues(const size_t objId, std::vector<MDLabel> labels, std::vector<MDObject> *values)
+bool MDSql::getObjectsValues( std::vector<MDLabel> labels, std::vector<MDObject> *values)
 {
 	bool ret=true;				// Return value.
 	int i=0;					// Loop counter.
 
-	// Bind object id.
-	rc = sqlite3_bind_int(this->preparedStmt, 1, objId);
-
 	// Execute statement.
 	rc = sqlite3_step(this->preparedStmt);
-	while (rc == SQLITE_ROW)
+	if (rc == SQLITE_ROW)
 	{
 		for (i=0; i<labels.size() ;i++)
 		{
@@ -551,22 +559,12 @@ bool MDSql::getObjectsValues(const size_t objId, std::vector<MDLabel> labels, st
 				(*values).push_back(value);
 			}
 		}
-
-		// Next row.
-		rc = sqlite3_step(this->preparedStmt);
 	}
-
-	// Check error in last sqlite3_step call.
-	if (rc != SQLITE_DONE)
+	// If no row retrieved then return false.
+	else
 	{
-		// Error executing SQL sentence.
 		ret = false;
-		std::cout << "sqlite3_step returned " << rc << std::endl;
 	}
-
-	// Reset statement and bindings.
-	sqlite3_clear_bindings(this->preparedStmt);
-	sqlite3_reset(this->preparedStmt);
 
 	return(ret);
 }
@@ -1499,6 +1497,24 @@ std::string MDSql::tableName(const int tableId) const
     return ss.str();
 }
 
+bool MDSql::bindStatement( size_t id)
+{
+	bool success=true;		// Return value.
+
+	// Clear current statement.
+	sqlite3_clear_bindings(this->preparedStmt);
+	sqlite3_reset(this->preparedStmt);
+
+	// Bind object id.
+	rc = sqlite3_bind_int(this->preparedStmt, 1, id);
+	if (rc != SQLITE_OK)
+	{
+		success = false;
+	}
+
+	return(success);
+}
+
 int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn)
 {
     //First reset the statement
@@ -1536,7 +1552,6 @@ int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &val
 
 void MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut)
 {
-    std::stringstream ss;
     switch (valueOut.type)
     {
     case LABEL_BOOL: //bools are int in sqlite3
@@ -1552,15 +1567,21 @@ void MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &value
         valueOut.data.doubleValue = sqlite3_column_double(stmt, position);
         break;
     case LABEL_STRING:
+    {
+        std::stringstream ss;
         ss << sqlite3_column_text(stmt, position);
         valueOut.data.stringValue->assign(ss.str());
 
         break;
+    }
     case LABEL_VECTOR_DOUBLE:
     case LABEL_VECTOR_SIZET:
+    {
+        std::stringstream ss;
         ss << sqlite3_column_text(stmt, position);
         valueOut.fromStream(ss);
         break;
+    }
     default:
         REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to extract a value from this type");
     }

@@ -246,13 +246,12 @@ void MetaData::setColumnValues(const std::vector<MDObject> &valuesIn)
     }
 }
 
-
-bool MetaData::initGetRow(void)
+bool MetaData::bindValue( size_t id) const
 {
 	bool success=true;
 
 	// Prepare statement.
-    if (!myMDSql->initializeSelect( activeLabels))
+    if (!myMDSql->bindStatement( id))
     {
     	success = false;
     }
@@ -260,7 +259,20 @@ bool MetaData::initGetRow(void)
     return(success);
 }
 
-bool MetaData::execGetRow(MDRow &row, size_t id)
+bool MetaData::initGetRow( bool addWhereClause) const
+{
+	bool success=true;
+
+	// Prepare statement.
+    if (!myMDSql->initializeSelect( addWhereClause, activeLabels))
+    {
+    	success = false;
+    }
+
+    return(success);
+}
+
+bool MetaData::execGetRow(MDRow &row)
 {
 	bool success=true;
 	std::vector<MDObject> mdValues;		// Vector to store values.
@@ -269,7 +281,7 @@ bool MetaData::execGetRow(MDRow &row, size_t id)
     row.clear();
 
 	// Execute statement.
-	if (!myMDSql->getObjectsValues( id, activeLabels, &mdValues))
+	if (!myMDSql->getObjectsValues( activeLabels, &mdValues))
 	{
 		success = false;
 	}
@@ -287,6 +299,10 @@ bool MetaData::execGetRow(MDRow &row, size_t id)
     return(success);
 }
 
+void 	MetaData::finalizeGetRow(void)
+{
+	myMDSql->finalizePreparedStmt();
+}
 
 bool MetaData::getRow(MDRow &row, size_t id) const
 {
@@ -304,17 +320,18 @@ bool MetaData::getRow(MDRow &row, size_t id) const
 bool MetaData::getRow2(MDRow &row, size_t id)
 {
 	bool success=true;
-	//std::vector<MDObject> mdValues;		// Vector to store values.
 
 	// Clear row.
     row.clear();
 
     // Initialize SELECT.
-	success = initGetRow();
+	success = this->initGetRow( true);
 	if (success)
 	{
+		bindValue( id);
+
 		// Execute SELECT.
-		success = execGetRow( row, id);
+		success = execGetRow( row);
 
 	    // Finalize SELECT.
 	    myMDSql->finalizePreparedStmt();
@@ -995,8 +1012,10 @@ void MetaData::_writeRows(std::ostream &os) const
 	size_t i=0;				// Loop counter.
 	size_t length=0;		// Loop upper bound.
 
+	bool success=true;
+
 	// Prepare statement.
-	myMDSql->initializeSelect( activeLabels);
+	this->initGetRow( true);
 
 	// Metadata objects loop.
     FOR_ALL_OBJECTS_IN_METADATA(*this)
@@ -1004,7 +1023,8 @@ void MetaData::_writeRows(std::ostream &os) const
         std::vector<MDObject> mdValues;
 
         // Get metadata values.
-    	myMDSql->getObjectsValues( __iter.objId, activeLabels, &mdValues);
+        this->bindValue( __iter.objId);
+    	myMDSql->getObjectsValues( activeLabels, &mdValues);
 
     	// Build metadata line.
     	length = activeLabels.size();
@@ -2426,6 +2446,50 @@ bool MDIterator::moveNext()
 bool MDIterator::hasNext()
 {
     return (objects != NULL && objIndex < size);
+}
+
+
+/** Constructor */
+MDRowIterator::MDRowIterator(MetaData &md)
+{
+	// Initialize SELECT statement.
+	md.initGetRow( false);
+
+	// Get first row.
+	this->rowReturned = md.execGetRow( this->currentRow);
+
+	// If not even one row returned then finalize SQL statement.
+	if (!this->hasNext())
+	{
+		// Finalize statement.
+		md.finalizeGetRow();
+	}
+}
+
+MDRow *MDRowIterator::getRow(void)
+{
+	return(&this->currentRow);
+}
+
+bool MDRowIterator::moveNext(MetaData &md)
+{
+	// Get first row.
+	this->rowReturned = md.execGetRow( this->currentRow);
+
+	// If no more rows then finalize SQL statement.
+	if (!this->hasNext())
+	{
+		// Finalize statement.
+		md.finalizeGetRow();
+	}
+
+	return this->rowReturned;
+}
+
+/** Function to check if a row has been retrieved */
+bool MDRowIterator::hasNext()
+{
+	return this->rowReturned;
 }
 
 //////////// Generators implementations

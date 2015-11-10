@@ -163,7 +163,7 @@ private:
 
     /** Get the values of several objects.
      */
-    bool getObjectsValues(const size_t objId, std::vector<MDLabel> labels, std::vector<MDObject> *values);
+    bool getObjectsValues( std::vector<MDLabel> labels, std::vector<MDObject> *values);
 
     /** Get the value of an object.
      */
@@ -272,7 +272,7 @@ private:
     bool dropTable();
     bool createTable(const std::vector<MDLabel> * labelsVector = NULL, bool withObjID=true);
     bool insertValues(double a, double b);
-    bool initializeSelect( std::vector<MDLabel> labels);
+    bool initializeSelect( bool addWhereObjId, std::vector<MDLabel> labels);
     bool initializeInsert(const std::vector<MDLabel> *labels, const std::vector<MDObject*> &values);
     bool initializeUpdate( std::vector<MDLabel> labels);
     void finalizePreparedStmt(void);
@@ -284,8 +284,9 @@ private:
 
     String tableName(const int tableId) const;
 
-    int bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn);
-    void extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut);
+    bool 	bindStatement( size_t id);
+    int 	bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn);
+    void 	extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut);
 
     static char *errmsg;
     static const char *zLeftover;
