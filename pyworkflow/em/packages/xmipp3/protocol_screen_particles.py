@@ -160,7 +160,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
     
     #--------------------------- UTILS functions -------------------------------------------- 
     def _updateParticle(self, item, row):
-        setXmippAttributes(item, row, md.MDL_ZSCORE, md.MDL_ZSCORE_SHAPE1, md.MDL_ZSCORE_SHAPE2, md.MDL_ZSCORE_SNR1, md.MDL_ZSCORE_SNR1)
+        setXmippAttributes(item, row, md.MDL_ZSCORE, md.MDL_ZSCORE_SHAPE1, md.MDL_ZSCORE_SHAPE2, md.MDL_ZSCORE_SNR1, md.MDL_ZSCORE_SNR2, md.MDL_CUMULATIVE_SSNR)
         if row.getValue(md.MDL_ENABLED) <= 0:
             item._appendItem = False
         else:
