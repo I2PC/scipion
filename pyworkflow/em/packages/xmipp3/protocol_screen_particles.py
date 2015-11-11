@@ -111,11 +111,13 @@ class XmippProtScreenParticles(ProtProcessParticles):
         self.runJob("xmipp_image_ssnr", args)
         
     def createOutputStep(self):
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputParticles.get())
-        readSetOfParticles(self.outputMd.get(), imgSet)
+        partSet = self._createSetOfParticles()
+        imgSet = self.inputParticles.get()
+        partSet.copyInfo(imgSet)
+        readSetOfParticles(self.outputMd.get(), partSet)
 
-        self._defineOutputs(outputParticles=imgSet)
+        self._defineOutputs(outputParticles=partSet)
+        self._defineSourceRelation(imgSet, partSet)
 
     #--------------------------- INFO functions --------------------------------------------                
     def _summary(self):
