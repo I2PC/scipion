@@ -56,6 +56,19 @@ void ProgAngularEstimateTiltAxis::run()
 	mdU.read(fnUntilted);
 	mdT.read(fnTilted);
 	TiltPairAligner aligner;
+	MetaData mdOut;
+	size_t id;
+	int count;
+	double alphaU, alphaT, gamma;
+	if (mdU.size()==0)
+	{
+		id=mdOut.addObject();
+		mdOut.setValue(MDL_ANGLE_Y,id);
+		mdOut.setValue(MDL_ANGLE_Y2,id);
+		mdOut.setValue(MDL_ANGLE_TILT,id);
+		mdOut.write(fnOut);
+		return;
+	}
 	FOR_ALL_OBJECTS_IN_METADATA2(mdU,mdT)
 	{
 		int xu, yu, xt, yt;
@@ -66,16 +79,12 @@ void ProgAngularEstimateTiltAxis::run()
 
         aligner.addCoordinatePair(xu,yu,xt,yt);
 	}
+
 	aligner.calculatePassingMatrix();
 	aligner.computeGamma();
-	double alphaU, alphaT, gamma;
+
 	gamma=aligner.gamma;
 	aligner.computeAngles(alphaU, alphaT, gamma);
-
-
-	MetaData mdOut;
-	String imname;
-	size_t id;
 
 	if (fnOut.exists())
 		mdOut.read(fnOut);
@@ -87,8 +96,8 @@ void ProgAngularEstimateTiltAxis::run()
 //
 //	mdU.getValue(MDL_IMAGE, imname,id);
 //	mdOut.setValue(MDL_IMAGE, imname,id);
-	mdOut.write(fnOut);
 
+	mdOut.write(fnOut);
 
 
 }
