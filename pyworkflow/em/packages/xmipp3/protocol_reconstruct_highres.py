@@ -660,7 +660,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnAnglesB=join(fnGlobal,"anglesDisc%02db.xmd"%i)
                 fnOut=join(fnGlobal,"anglesDisc%02d"%i)
                 fnAngles=fnOut+".xmd"
-                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
+                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights --check_mirrors"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
                 moveFile(fnOut+"_weights.xmd",fnOut+".xmd")
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleRot2'%(fnAnglesB),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleTilt2'%(fnAnglesB),numberOfMpi=1)
@@ -837,13 +837,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             if self.weightJumper and iteration>1:
                 fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
                 fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
-                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s"%\
+                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --check_mirrors --oroot %s"%\
                             (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper"),numberOfMpi=1)
                 moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
                 if iteration>2:
                     fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-2))
                     fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
-                    self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s --set 2"%\
+                    self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --check_mirrors --oroot %s --set 2"%\
                                 (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper"),numberOfMpi=1)
                     moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
 
