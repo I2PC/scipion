@@ -52,7 +52,7 @@ void ProgAngularAccuracyPCA::run()
     std::cout << "Blocks in " << fnParticles << ": " << std::endl;
     getBlocksInMetaDataFile(fnNeighbours, blocks);
     for (size_t i = 0; i < blocks.size(); ++i)
-    	md=read(blocks[i]+fnParticles);
+    	md=read(blocks[i]+'@'+fnParticles);
 
     std::cout << md << std::endl;
 
