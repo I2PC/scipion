@@ -983,7 +983,7 @@ class Set(OrderedObject):
         # we want to create a new object, so we need to delete it if
         # the file exists
         if filename:
-            self._mapperPath.set('%s, %s' % (filename, prefix)) 
+            self._mapperPath.set('%s, %s' % (filename, prefix))
             self.load()
             
     def _getMapper(self):

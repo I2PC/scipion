@@ -53,7 +53,6 @@ class Step(OrderedObject):
     It should defines its Input, Output
     and define a run method.
     """
-    
     def __init__(self, **kwargs):
         OrderedObject.__init__(self, **kwargs)
         self._prerequisites = CsvList() # which steps needs to be done first
@@ -67,6 +66,16 @@ class Step(OrderedObject):
 
     def getIndex(self):
         return self._index
+    
+    def setIndex(self, newIndex):
+        self._index = newIndex
+        
+    def getPrerequisites(self):
+        return self._prerequisites
+    
+    def addPrerequisites(self, *newPrerequisites):
+        for p in newPrerequisites:
+            self._prerequisites.append(p)
 
     def _preconditions(self):
         """ Check if the necessary conditions to
@@ -159,6 +168,9 @@ class Step(OrderedObject):
 
     def isInteractive(self):
         return self.interactive.get()
+    
+    def isWaiting(self):
+        return self.getStatus() == STATUS_WAITING
 
     def run(self):
         """ Do the job of this step"""
@@ -201,6 +213,8 @@ class FunctionStep(Step):
         self.funcName = String(funcName)
         self.argsStr = String(pickle.dumps(funcArgs))
         self.setInteractive(kwargs.get('interactive', False))
+        if kwargs.get('wait', False):
+            self.setStatus(STATUS_WAITING)
         
     def _runFunc(self):
         """ Return the possible result files after running the function. """
@@ -574,16 +588,15 @@ class Protocol(Step):
         
         if prerequisites is None:
             if len(self._steps):
-                step._prerequisites.append(len(self._steps)) # By default add the previous step as prerequisite
+                step.addPrerequisites(len(self._steps)) # By default add the previous step as prerequisite
         else:
-            for i in prerequisites:
-                step._prerequisites.append(i)
+            step.addPrerequisites(*prerequisites)
                 
         self._steps.append(step)
         # Setup and return step index
-        step._index = len(self._steps)
+        step.setIndex(len(self._steps))
                 
-        return step._index
+        return step.getIndex()
         
     def _getPath(self, *paths):
         """ Return a path inside the workingDir. """
@@ -743,7 +756,7 @@ class Protocol(Step):
             
         return n
     
-    def __storeSteps(self):
+    def _storeSteps(self):
         """ Store the new steps list that can be retrieved 
         in further execution of this protocol.
         """
@@ -802,6 +815,9 @@ class Protocol(Step):
             # all working threads, so we need to close
             self._endRun()
         return doContinue
+    
+    def _stepsCheck(self):
+        pass
 
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps. """
@@ -813,7 +829,10 @@ class Protocol(Step):
         self._store()
         
         self.lastStatus = self.status.get()
-        self._stepsExecutor.runSteps(self._steps, self._stepStarted, self._stepFinished)
+        self._stepsExecutor.runSteps(self._steps, 
+                                     self._stepStarted, 
+                                     self._stepFinished,
+                                     stepsCheckCallback=self._stepsCheck)
         self.setStatus(self.lastStatus)
         self._store(self.status)
         
@@ -911,7 +930,7 @@ class Protocol(Step):
         #self._makePathsAndClean() This is done now in project
         startIndex = self.__findStartingStep() # Find at which step we need to start
         self.info(" Starting at step: %d" % (startIndex + 1))
-        self.__storeSteps() 
+        self._storeSteps() 
         self.info(" Running steps ")
         self._runSteps(startIndex)
     
