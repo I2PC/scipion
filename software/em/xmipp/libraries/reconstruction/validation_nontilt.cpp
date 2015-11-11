@@ -53,7 +53,7 @@ void ProgValidationNonTilt::defineParams()
     addParamsLine("  [--volume <md_file=\"\">]    : Volume to validate");
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
-    addParamsLine("  [--significance_noise<float=0.95>] : Significane of the alignment with respect the noise");
+    addParamsLine("  [--significance_noise<float=0.95>] : Significance of the alignment with respect the noise");
     addParamsLine("  [--useSignificant]           : Use Significant as alignment method. If not use projection matching");
 }
 

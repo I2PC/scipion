@@ -100,7 +100,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
             volDir = self._getVolDir(i+1)
             
             pmStepId = self._insertFunctionStep('projectionLibraryStep',                                                    
-                                                volName, volDir,
+                                                volName, volDir,self.angularSampling.get(),
                                                 prerequisites=[convertId])
             
             sigStepId1 = self._insertFunctionStep('significantStep', 
@@ -126,7 +126,12 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                                                  sym,
                                                  prerequisites=[sigStepId2])
             
-            deps.append(volStepId)
+            
+            pmStepId2 = self._insertFunctionStep('projectionLibraryStep',                                                    
+                                                volName, volDir,10,
+                                                prerequisites=[volStepId])
+            
+            deps.append(pmStepId2)
             
         self._insertFunctionStep('createOutputStep', 
                                  prerequisites=deps)
@@ -193,7 +198,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
                     param, numberOfMpi=1,numberOfThreads=1)
                 
  
-    def projectionLibraryStep(self, volName, volDir):
+    def projectionLibraryStep(self, volName, volDir, angularSampling):
         
         # Generate projections from this reconstruction        
         nproc = self.numberOfMpi.get()
@@ -202,9 +207,8 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         makePath(volDir)
         fnGallery= (volDir+'/gallery.stk')
         params = '-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance %f --experimental_images %s --max_tilt_angle 90'\
-                    %(volName,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(), -1, self._getPath('input_particles.xmd'))
+                    %(volName,fnGallery, angularSampling, self.symmetryGroup.get(), -1, self._getPath('input_particles.xmd'))
         
-        print params
         self.runJob("xmipp_angular_project_library", params, numberOfMpi=nproc, numberOfThreads=nT)                    
         
     def significantStep(self, volName, volDir, anglesPath, params):
@@ -237,6 +241,19 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
             params += ' --dontUseWeights'
             
         self.runJob('xmipp_multireference_aligneability', params,numberOfMpi=1,numberOfThreads=1)
+
+
+    def neighbourhoodDirectionStep(self, volName,volDir,sym):
+          
+        aFile = self.inputParticles.get()
+        aFileGallery =self._getExtraPath('gallery.doc')
+        neighbours = (volDir+'/neighbours.xmd')
+        
+        params = '  --i1 %s' % aFile  
+        params += ' --i2 %s' % aFileGallery
+        params += ' -o %s' % neighbours
+                    
+        self.runJob('xmipp_angular_neighbourhood', params,numberOfMpi=1,numberOfThreads=1)
         
     def createOutputStep(self):
         outputVols = self._createSetOfVolumes()

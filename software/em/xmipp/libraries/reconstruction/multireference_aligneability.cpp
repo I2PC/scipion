@@ -73,7 +73,7 @@ void MultireferenceAligneability::run()
     MetaData mdOutCL, mdOutQ;
 	MetaData mdExp, mdExpSort, mdProj, mdGallery;
 	size_t maxNImg;
-	FileName fnOutCL,fnOutQ;
+	FileName fnOutCL, fnOutQ;
 	fnOutCL = fnDir+"/clusteringTendency.xmd";
 	fnOutQ = fnDir+"/validation.xmd";
 
