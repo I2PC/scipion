@@ -94,7 +94,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
         form.addSection(label='Input')
 
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
-                      label="Input particles",  
+                      label="Input particles", pointerCondition='hasAlignmentProj', 
                       help='Select the input images from the project.')
         form.addParam('numberOfIterations', IntParam, default=2,
                       label='Number of iterations:',
