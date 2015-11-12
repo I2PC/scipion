@@ -134,15 +134,16 @@ class XmippProtNMABase(EMProtocol):
 
         return rc    
     
-    def reformatOutputStep(self,fnPseudoatoms):
+    def reformatOutputStep(self,fnPseudoatoms, prefix=''):
         self._enterWorkingDir()
         n = self._countAtoms(fnPseudoatoms)
         self.runJob("nma_reformat_vector_foranimate.pl","%d fort.11" % n,env=getNMAEnviron())
         self.runJob("cat","vec.1* > vec_ani.txt")
         self.runJob("rm","-f vec.1*")
         self.runJob("nma_reformat_vector.pl","%d fort.11" % n,env=getNMAEnviron())
-        makePath("modes")
-        self.runJob("mv","-f vec.* modes")
+        fnModesDir="modes%s"%prefix
+        makePath(fnModesDir)
+        self.runJob("mv","-f vec.* %s"%fnModesDir)
         self.runJob("nma_prepare_for_animate.py","",env=getNMAEnviron())
         self.runJob("rm","-f vec_ani.txt fort.11 matrice.sdijf")
         moveFile('vec_ani.pkl','extra/vec_ani.pkl')
