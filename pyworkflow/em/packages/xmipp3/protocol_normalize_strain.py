@@ -76,7 +76,7 @@ class XmippProtNormalizeStrain(ProtAnalysis3D):
             scriptFile = self._getPath('%d_result_%s_chimera.cmd'%(protId,what))
             fhCmd = open(scriptFile, 'w')
             fhCmd.write("open %s\n" % (fnRoot+"_final.vol"))
-            fhCmd.write("open %s\n" % (fnRoot+"_localrot.vol"))
+            fhCmd.write("open %s\n" % (fnRoot+"_%s.vol"%what))
             fhCmd.write("vol #1 hide\n")
             fhCmd.write("scolor #0 volume #1 cmap rainbow cmapRange %f,%f reverseColors True\n"%(minAll,maxAll))
             fhCmd.close()
