@@ -122,8 +122,8 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
             fnUntilt = 'particles@'+self._getExtraPath("untilted/")+Unname+'.pos'
             fnTilt = 'particles@'+self._getExtraPath("tilted/")+Tname+'.pos'
             fnmicsize = tiltPair.getTilted().getFileName()
-            fnposUntilt = self._getExtraPath("")+Unname+'.pos'
-            fnposTilt = self._getExtraPath("")+Tname+'.pos'
+            fnposUntilt = 'particles@'+self._getExtraPath("")+Unname+'.pos'
+            fnposTilt = 'particles@'+self._getExtraPath("")+Tname+'.pos'
             stepId = self._insertFunctionStep('assignmentStep',fnUntilt, fnTilt, fnmicsize, self._getExtraPath(),
                                               fnposUntilt, fnposTilt, self._getExtraPath(Unname), prerequisites=[convertId])
              
@@ -201,10 +201,10 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         nT=self.numberOfThreads.get() 
         self.runJob('xmipp_image_assignment_tilt_pair', params, numberOfMpi=nproc,numberOfThreads=nT)
         
-#         anglesFile = self._getPath(Unname)
+
         
         self.estimateTiltAxis(fnposUntilt, fnposTilt)#, self.micsFn)
-#         readFromMd(self, md, objId)
+
         
         
     def estimateTiltAxis(self, fnposUntilt, fnposTilt):#, opath):
@@ -213,9 +213,6 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         params += ' --tilted %s' % fnposTilt
         params += ' -o %s' % self._getPath()+'/input_micrographs.xmd'
 
-#         nproc = self.numberOfMpi.get()
-#         nT=self.numberOfThreads.get() 
-#         self.runJob('xmipp_angular_estimate_tilt_axis', params, numberOfMpi=nproc,numberOfThreads=nT)
         self.runJob('xmipp_angular_estimate_tilt_axis', params)
         
           
@@ -255,7 +252,7 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         readSetOfCoordinates(extradir, tSet, tCoordSet)
         tCoordSet.write()
         
-        #micsFn = self._getPath('input_micrographs.xmd')
+
         setAngles = self._createSetOfAngles()
         pathangles = self.micsFn + '/input_micrographs.xmd'
         readAnglesFromMicrographs(pathangles, setAngles)
@@ -268,9 +265,9 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         outputset.setAngles(setAngles)
         outputset.setMicsPair(inputset)
         outputset.setObjComment(self.getSummary(outputset))
-        print '-----------------------------'
-        print setAngles
-        print '-----------------------------'
+#         print '-----------------------------'
+#         print setAngles
+#         print '-----------------------------'
         for coordU, coordT in izip(uCoordSet, tCoordSet):
             outputset.append(TiltPair(coordU, coordT))
 

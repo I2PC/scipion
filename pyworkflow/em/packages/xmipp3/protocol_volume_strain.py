@@ -58,6 +58,10 @@ class XmippProtVolumeStrain(ProtAnalysis3D):
         form.addParam('inputMask', PointerParam, label="Mask for the final state", important=True,
                       pointerClass='VolumeMask',
                       help='Binary mask that defines where the strains and rotations will be calculated')
+        form.addParam('symmetryGroup', StringParam, default="c1",
+                      label='Symmetry group', 
+                      help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
+                        'If no symmetry is present, give c1')
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -95,6 +99,9 @@ class XmippProtVolumeStrain(ProtAnalysis3D):
                     (fnRoot,volDim,volDim,volDim,fnRoot))
         self.runJob("xmipp_transform_mirror","-i %s_localrot.vol --flipX"%fnRoot)
         self.runJob("rm","-f "+self._getExtraPath('result_*.raw'))
+        if self.symmetryGroup!="c1":
+            self.runJob("xmipp_transform_symmetrize","-i %s --sym %s"%(fnRoot+"_strain.vol",self.symmetryGroup.get()))
+            self.runJob("xmipp_transform_symmetrize","-i %s --sym %s"%(fnRoot+"_localrot.vol",self.symmetryGroup.get()))
     
     def createChimeraScript(self):
         fnRoot = "extra/result"

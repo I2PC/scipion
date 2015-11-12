@@ -751,7 +751,7 @@ void ProgCtfGroup::simpleRun()
     	std::cerr << "Writing defocus groups ...\n";
     	init_progress_bar(simpleBins);
     }
-    for(int i=1;i<=simpleBins; i++)
+    for(int i=1;i<=simpleBins+1; i++)
     {
         auxMetaData.importObjects(ImagesMD,MDValueEQ(MDL_DEFGROUP,i));
         fnGroup.assign( formatString("ctfGroup%06d@%s_images.sel", i, fn_root.c_str()) );
