@@ -122,7 +122,7 @@ class XmippProcessVolumes(ProtPreprocessVolumes):
     """
     def __init__(self, **kwargs):
         ProtPreprocessVolumes.__init__(self, **kwargs)
-        self._args = "-i %(inputFn)s"
+        self._args = "-i %(inputFn)s "
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
