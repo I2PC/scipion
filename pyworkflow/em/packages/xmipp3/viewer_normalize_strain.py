@@ -1,9 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:  Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es), May 2013
-# *           Slavica Jonic                (jonic@impmc.upmc.fr)
-# * Ported to Scipion:
-# *           J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es), Nov 2014
+# * Authors:  Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -30,27 +27,44 @@
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.viewer import DataView, ChimeraView
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
+from pyworkflow.protocol.params import PointerParam, LabelParam
 
-from protocol_volume_strain import XmippProtVolumeStrain
+from protocol_normalize_strain import XmippProtNormalizeStrain
 
-class XmippVolumeStrainViewer(XmippViewer):
+class XmippNormalizeStrainViewer(ProtocolViewer):
     """ Visualize the output of protocol volume strain """
-    _label = 'viewer volume strain'
-    _targets = [XmippProtVolumeStrain]
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _label = 'viewer normalize strain'
+    _targets = [XmippProtNormalizeStrain]
+    _environments = [DESKTOP_TKINTER]
     
     def __init__(self, **args):
-        XmippViewer.__init__(self, **args)
+        ProtocolViewer.__init__(self, **args)
 
-    def _visualize(self, obj, **args):
+    def _defineParams(self, form):
+        form.addSection(label='Visualization')
+        # Select the level to show
+        form.addParam('show', LabelParam, 
+                      label="Strain calculation to visualize")     
+        form.addParam('protToShow', PointerParam, pointerClass='XmippProtVolumeStrain',
+                      label="Select protocol")     
+
+    def _getVisualizeDict(self):
+        return {'show': self._viewStrain}        
+
+    def _viewStrain(self, e=None):
         import os
-        fnCmd = self.protocol._getPath('result_strain_chimera.cmd')
+        protToShow =  self.protToShow.get()
+        protId = protToShow.getObjId()
+        
+        views=[]
+        fnCmd = self.protocol._getPath('%d_result_strain_chimera.cmd'%protId)
         if os.path.exists(fnCmd):
-            self._views.append(ChimeraView(fnCmd))
-        fnCmd = self.protocol._getPath('result_localrot_chimera.cmd')
+            views.append(ChimeraView(fnCmd))
+        fnCmd = self.protocol._getPath('%d_result_localrot_chimera.cmd'%protId)
         if os.path.exists(fnCmd):
-            self._views.append(ChimeraView(fnCmd))
-        fnCmd = self.protocol._getPath('result_morph_chimera.cmd')
+            views.append(ChimeraView(fnCmd))
+        fnCmd = protToShow._getPath('result_morph_chimera.cmd')
         if os.path.exists(fnCmd):
-            self._views.append(ChimeraView(fnCmd))
+            views.append(ChimeraView(fnCmd))
+        return views
 
