@@ -369,19 +369,29 @@ class Protocol(Step):
         
     def _defineInputs(self, **kwargs):
         """ This function should be used to define
-        those attributes considered as Input""" 
+        those attributes considered as Input.
+        """ 
         self._storeAttributes(self._inputs, kwargs)
         
     def _defineOutputs(self, **kwargs):
         """ This function should be used to specify
-        expected outputs""" 
-        
+        expected outputs.
+        """ 
         for k, v in kwargs.iteritems():
             if hasattr(self, k):
                 self._deleteChild(k, v)
             self._insertChild(k, v)
             
         self._storeAttributes(self._outputs, kwargs)
+        
+    def _updateOutputSet(self, outputName, outputSet, 
+                         state=Set.STREAM_OPEN):
+        """ Use this function when updating an Stream output set.
+        """
+        outputSet.setStreamState(state)
+        self._defineOutputs(**{outputName: outputSet})
+        self._store(outputSet)
+        outputSet.write()
         
     def getProject(self):
         return self.__project
