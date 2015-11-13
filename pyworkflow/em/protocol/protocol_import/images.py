@@ -180,7 +180,6 @@ class ProtImportImages(ProtImportFiles):
         n = 1
         copyOrLink = self.getCopyOrLink()
         outputName = self._getOutputName()
-        outputKwargs = {outputName: imgSet}
         
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
             dst = self._getExtraPath(basename(fileName))
@@ -190,10 +189,6 @@ class ProtImportImages(ProtImportFiles):
                 _, _, _, n = imgh.getDimensions(dst)
                 
             if i > 0:
-                img1 = imgSet.getFirstItem()
-                print "img is None: ", img is None
-                if img:
-                    img1.printAll()
                 imgSet.enableAppend()
             
             if n > 1:
@@ -212,19 +207,16 @@ class ProtImportImages(ProtImportFiles):
 
             #imgSet.close()
                         
-            time.sleep(5)
+            time.sleep(self.timeout.get(5))
             
-            imgSet.setStreamState(imgSet.STREAM_OPEN)
-            self._defineOutputs(**outputKwargs)
-            self._store(imgSet)
-            imgSet.write()
-            #imgSet.close()
+            self._updateOutputSet(outputName, imgSet,
+                                  state=imgSet.STREAM_OPEN)
             
             sys.stdout.write("\rImported %d/%d" % (i+1, self.numberOfFiles))
             sys.stdout.flush()
             
-        imgSet.setStreamState(imgSet.STREAM_CLOSED)
-        self._defineOutputs(**outputKwargs)
+        self._updateOutputSet(outputName, imgSet,
+                              state=imgSet.STREAM_CLOSED)
         
         print "\n"
         
