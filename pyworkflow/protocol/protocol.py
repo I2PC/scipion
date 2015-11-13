@@ -1189,8 +1189,9 @@ class Protocol(Step):
         launch the job to a queue system.
         """
         queueName, queueParams = self.getQueueParams()
+        hc = self.getHostConfig()
         
-        script = self._getLogsPath(self.strId() + '.job')
+        script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
              'JOB_NODEFILE': script.replace('.job', '.nodefile'),
              'JOB_NAME': self.strId(),
