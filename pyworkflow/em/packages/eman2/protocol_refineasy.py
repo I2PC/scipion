@@ -440,7 +440,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
         return data_sqlite
     
     def _getInputParticlesPointer(self):
-        if self.doContinue and self.inputParticles is None:
+        if self.doContinue:
             self.inputParticles.set(self.continueRun.get().inputParticles.get())
         return self.inputParticles
     
