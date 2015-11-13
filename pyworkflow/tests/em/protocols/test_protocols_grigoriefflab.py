@@ -167,7 +167,7 @@ class TestBrandeisCtffind(TestBrandeisBase):
         cls.protImport = cls.runImportMicrographBPV(cls.micFn)
     
     def testCtffind(self):
-        protCTF = ProtCTFFind()
+        protCTF = ProtCTFFind(useCftfind4=False)
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
         protCTF.numberOfThreads.set(4)
@@ -178,11 +178,11 @@ class TestBrandeisCtffind(TestBrandeisBase):
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
-            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=1)
+            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
 
     def testCtffind2(self):
-        protCTF = ProtCTFFind()
+        protCTF = ProtCTFFind(useCftfind4=False)
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.numberOfThreads.set(4)
         self.proj.launchProtocol(protCTF, wait=True)
@@ -192,7 +192,7 @@ class TestBrandeisCtffind(TestBrandeisBase):
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
-            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=1)
+            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
 
 
@@ -204,7 +204,7 @@ class TestBrandeisCtffind4(TestBrandeisBase):
         cls.protImport = cls.runImportMicrographBPV(cls.micFn)
     
     def testCtffind4V1(self):
-        protCTF = ProtCTFFind(useCftfind4=True)
+        protCTF = ProtCTFFind()
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
         protCTF.numberOfThreads.set(4)
@@ -215,11 +215,11 @@ class TestBrandeisCtffind4(TestBrandeisBase):
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
-            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=1)
+            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
 
     def testCtffind4V22(self):
-        protCTF = ProtCTFFind(useCftfind4=True)
+        protCTF = ProtCTFFind()
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.numberOfThreads.set(4)
         self.proj.launchProtocol(protCTF, wait=True)
@@ -229,7 +229,7 @@ class TestBrandeisCtffind4(TestBrandeisBase):
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
-            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=1)
+            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
 
 

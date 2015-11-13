@@ -49,6 +49,7 @@ from viewer_cltomo import XmippCLTomoViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
 from viewer_ml2d import XmippML2DViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
+from viewer_normalize_strain import XmippNormalizeStrainViewer
 from viewer_resolution3d import XmippResolution3DViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
 from viewer_validate_overfitting import XmippValidateOverfittingViewer
@@ -81,6 +82,7 @@ from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D
 from protocol_movie_alignment import ProtMovieAlignment, ProtMovieAlignment
 from protocol_multireference_alignability import XmippProtMultiRefAlignability
+from protocol_normalize_strain import XmippProtNormalizeStrain
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_particle_pick_consensus import XmippProtConsensusPicking
 from protocol_particle_pick import XmippProtParticlePicking 

@@ -42,7 +42,7 @@ class XmippProtReconstructFourier(ProtReconstruct3D):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',pointerCondition='hasAlignmentProj',
+        form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles', pointerCondition='hasAlignmentProj',
                       label="Input particles",  
                       help='Select the input images from the project.')     
         form.addParam('symmetryGroup', StringParam, default='c1',
