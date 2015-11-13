@@ -36,13 +36,9 @@ from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCE
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow.utils.path import createLink, removeBaseExt, makePath, cleanPath
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.convert import ImageHandler
 
 from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
-#from pyworkflow.em.packages.dosefgpu.protocol_dosefgpu import ProtDosefGpu
-#from pyworkflow.em.protocol import ProtProcessMovies
-#from pyworkflow.utils import startDebugger
 
 PLOT_CART = 0
 PLOT_POLAR = 1
