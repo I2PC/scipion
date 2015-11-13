@@ -31,6 +31,7 @@ In this module are protocol base classes related to EM Micrographs
 
 import sys
 from os.path import join
+import numpy as np
 
 from pyworkflow.object import String, Integer
 from pyworkflow.protocol.params import IntParam, FloatParam, StringParam, BooleanParam, LEVEL_ADVANCED, LEVEL_ADVANCED, EnumParam
@@ -38,9 +39,10 @@ from pyworkflow.utils.path import moveFile
 import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtProcessMovies
 from pyworkflow.gui.plotter import Plotter
-from PIL import Image
 import matplotlib.pyplot as plt
-import numpy as np
+
+import xmipp
+
 
 # Alignment methods enum
 AL_OPTICAL = 0
@@ -438,7 +440,6 @@ class ProtMovieAlignment(ProtProcessMovies):
         else:
             moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
 
-
     def _getProgram(self):
         alMethod = self.alignMethod.get()
         if alMethod == AL_AVERAGE:
@@ -519,8 +520,6 @@ def createPlots(plotType, protocol, movieId):
     return movieCreatePlot(plotType, movie, False)
 
 def movieCreatePlot(plotType, movie, saveFig):
-
-    import xmipp
     meanX = []
     meanY = []
     stdX = []
