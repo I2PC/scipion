@@ -90,15 +90,17 @@ class EmanProtInitModel(ProtInitialVolume):
         self._insertFunctionStep('createOutputStep')
 
     def _insertInitialModelStep(self):
-        args = '--input=%(relImgsFn)s iter=%(numberOfIterations)d --tries=%(numberOfModels)d --sym=%(symmetry)s'
+        args = ' --input=%(relImgsFn)s iter=%(numberOfIterations)d --sym=%(symmetry)s'
         if self.shrink > 1:
             args += ' --shrink=%(shrink)d'
-        if self.numberOfThreads > 1:
-            args += ' --parallel=thread:%(threads)d'
-        self._insertFunctionStep('createInitialModelStep', args % self._params)
+        if not self._isHighSym():
+            args +=  ' --tries=%(numberOfModels)d'
+            if self.numberOfThreads > 1:
+                args += ' --parallel=thread:%(threads)d'
 
-    #--------------------------- STEPS functions --------------------------------------------
+        self._insertFunctionStep('createInitialModelStep', args % self._params)
     
+    #--------------------------- STEPS functions --------------------------------------------
     def createStackImgsStep(self):
         
         imgsFn = self._params['imgsFn']
@@ -116,9 +118,13 @@ class EmanProtInitModel(ProtInitialVolume):
     def createInitialModelStep(self, args):
         """ Run the EMAN program to create the initial model. """
         cleanPattern(self._getExtraPath('initial_models'))
-        program = eman2.getEmanProgram('e2initialmodel.py')
+        if self._isHighSym():
+            program = eman2.getEmanProgram('e2initialmodel_hisym.py')
+        else:
+            program = eman2.getEmanProgram('e2initialmodel.py')
+        
         self.runJob(program, args, cwd=self._getExtraPath())        
-                     
+    
     def createOutputStep(self):
         from glob import glob
         classes2DSet = self.inputSet.get()
@@ -141,7 +147,15 @@ class EmanProtInitModel(ProtInitialVolume):
         self._defineSourceRelation(self.inputSet, volumes)
 
     #--------------------------- INFO functions -------------------------------------------- 
-        
+    def _validate(self):
+        errors = []
+        if not eman2.getVersion():
+            errors.append("We couldn't detect EMAN version. ")
+            errors.append("Please, check your configuration file and change EMAN2DIR.")
+            errors.append("The path should contains either '2.11' or '2.12' ")
+            errors.append("to properly detect the version.")
+        return errors
+    
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputVolumes'):
@@ -165,3 +179,5 @@ class EmanProtInitModel(ProtInitialVolume):
                         'threads':self.numberOfThreads.get()
                        }
     
+    def _isHighSym(self):
+        return eman2.getVersion() == '2.12' and self.symmetry.get() in ["cubic", "tet", "icos"]
