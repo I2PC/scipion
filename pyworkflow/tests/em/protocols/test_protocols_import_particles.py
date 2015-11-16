@@ -188,4 +188,24 @@ class TestImportParticles(TestImportBase):
         self.checkOutput(prot1, 'outputParticles', ['outputParticles.hasCTF()', 
                                                     'outputParticles.hasAlignmentProj()',
                                                     'outputParticles.isPhaseFlipped()'])
+        
+    def test_fromImagic(self):
+        """ Import particles from imagic stack.
+        """
+        args = {'importFrom': ProtImportParticles.IMPORT_FROM_FILES,
+                'filesPath': self.dsMda.getFile('particles/'),
+                'filesPattern': 'particles.hed',
+                'amplitudConstrast': 0.1,
+                'sphericalAberration': 2.,
+                'voltage': 100,
+                'samplingRate': 2.1,
+                }
 
+
+        # Id's should be set increasing from 1 if ### is not in the 
+        # pattern
+        protImport = self.newProtocol(ProtImportParticles, **args)
+        protImport.setObjLabel('from imagic')
+        self.launchProtocol(protImport)
+        
+        self.checkOutput(protImport, 'outputParticles', [])
