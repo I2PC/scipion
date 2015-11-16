@@ -38,23 +38,12 @@ from pyworkflow.em.packages.xmipp3 import XmippMdRow
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
 import xmipp
 from pyworkflow.em.packages.xmipp3.nma.protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
-#from convert import rowToMode, getNMAEnviron
-#from pyworkflow.utils import redStr
-
-ALIGN_MASK_CIRCULAR = 0
-ALIGN_MASK_BINARY_FILE = 1
-
-ALIGN_ALGORITHM_EXHAUSTIVE = 0
-ALIGN_ALGORITHM_LOCAL = 1
-ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL = 2
-ALIGN_ALGORITHM_FAST_FOURIER = 3
-
-NMA_CUTOFF_REL = 1
-NMA_CUTOFF_ABS = 0
+from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume, ALIGN_MASK_CIRCULAR, ALIGN_ALGORITHM_LOCAL, ALIGN_ALGORITHM_FAST_FOURIER
 
 
 
-class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABase):
+
+class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABase, XmippProtAlignVolume):
     """ 
     Multivariate distance analysis of elastically aligned electron microscopy density maps
     for exploring pathways of conformational changes    
@@ -72,6 +61,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                       label="Input volume(s)", important=True, 
                       help='Select one or more volumes (Volume or SetOfVolumes)\n'
                            'to be aligned againt the reference volume.')
+        #XmippProtAlignVolume._defineParams(self, form.addParam.applyMask)
         
         form.addSection(label='Pseudoatom')
         XmippProtConvertToPseudoAtomsBase._defineParams(self,form)
@@ -90,6 +80,10 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         else:
             cutoffStr = 'Absolute %f'%self.rc.get()
 
+        maskArgs = self._getMaskArgs()
+        alignArgs = self._getAlignArgs()
+        
+        
         volList = [vol.clone() for vol in self._iterInputVolumes()]
                     
         for voli in volList:
@@ -100,54 +94,29 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             fnPseudoAtoms = self._getPath("pseudoatoms_%d.pdb"%voli.getObjId())
             self._insertFunctionStep('computeModesStep', fnPseudoAtoms, self.numberOfModes, cutoffStr)
             self._insertFunctionStep('reformatOutputStep', os.path.basename(fnPseudoAtoms), prefix)
-#         
-#             #self._insertFunctionStep('qualifyModesStep', n, self.collectivityThreshold.get(), self.structureEM)
-#             for volj in volList:
-#                 if volj is not voli:
-#                     refFn = getImageLocation(voli)
-#                     volFn = getImageLocation(volj)
-#                     stepId = self._insertFunctionStep('alignVolumeStep', refFn, volFn, vol.outputName, 
-#                                               maskArgs, alignArgs, prerequisites=[])
-#                     alignSteps.append(stepId)
+            for volj in volList:
+                if volj is not voli:
+                    refFn = getImageLocation(voli)
+                    inVolFn = getImageLocation(volj)
+                    self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, vol.outputName, 
+                                                maskArgs, alignArgs)
+                    
             
         
+        
+                
                    
-    #    self._insertFunctionStep('createOutputStep', prerequisites=alignSteps)
+    #    self._insertFunctionStep('createOutputStep')
         
     #--------------------------- STEPS functions --------------------------------------------
     
    
-        
-        
     
     
     
+        #cleanPath("vec_ani.pkl")
     
-    
-    
-    
-    
-    
-    
-    
-    def alignVolumeStep(self, refFn, inVolFn, outVolFn, maskArgs, alignArgs):
-        
-        args = "--i1 %s --i2 %s --apply %s" % (refFn, inVolFn, outVolFn)
-        args += maskArgs
-        args += alignArgs
-        
-        self.runJob("xmipp_volume_align", args)
-        
-        if self.alignmentAlgorithm == ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL:
-            args = "--i1 %s --i2 %s --apply --local" % (refFn, outVolFn)
-            self.runJob("xmipp_volume_align", args)
-            
-            
-            
-            
-            
-            
-            
+          
             
          
             
@@ -222,37 +191,11 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
     
     #def _summary(self):
     #    summary = []
-    #    nVols = self._getNumberOfInputs()
-    #        
-    #    if nVols > 0:
-    #        summary.append("Volumes to align: *%d* " % nVols)
-    #    else:
-    #        summary.append("No volumes selected.")
-    #    summary.append("Alignment method: %s" % self.getEnumText('alignmentAlgorithm'))
     #            
     #    return summary
     
     #def _methods(self):
     #    nVols = self._getNumberOfInputs()
-    #    
-    #    if nVols > 0:
-    #        methods = 'We aligned %d volumes against a reference volume using ' % nVols
-            #TODO: Check a more descriptive way to add the reference and 
-            # all aligned volumes to the methods (such as obj.getNameId())
-            # also to show the number of volumes from each set in the input.
-            # This approach implies to consistently include also the outputs
-            # ids to be tracked in all the workflow's methods.
-    #       if self.alignmentAlgorithm == ALIGN_ALGORITHM_FAST_FOURIER:
-    #            methods += ' the Fast Fourier alignment described in [Chen2013].' 
-    #            
-    #        elif self.alignmentAlgorithm == ALIGN_ALGORITHM_LOCAL:
-    #            methods += ' a local search of the alignment parameters.'
-    #        elif self.alignmentAlgorithm == ALIGN_ALGORITHM_EXHAUSTIVE:
-    #            methods += ' an exhaustive search.'
-    #        elif self.alignmentAlgorithm == ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL:
-    #            methods += ' an exhaustive search followed by a local search.'
-    #    else:
-    #        methods = 'No methods available yet.'
     #        
     #    return [methods]
         
@@ -302,4 +245,12 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 self.minimumScale, self.maximumScale, self.stepScale)
         return alignArgs
      
+    def _getMaskArgs(self):
+        maskArgs = ''
+        if self.applyMask:
+            if self.maskType == ALIGN_MASK_CIRCULAR:
+                maskArgs+=" --mask circular -%d" % self.maskRadius
+            else:
+                maskArgs+=" --mask binary_file %s" % self.volMask
+        return maskArgs
   
