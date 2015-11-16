@@ -602,7 +602,7 @@ public class ScipionMetaData extends MetaData {
         if(type.equals("Boolean"))
             return MetaData.LABEL_INT;
         
-        if(type.equals("String") || type.equals("Matrix"))
+        if(type.equals("String") || type.equals("Matrix") || type.equals("CsvList"))
         	return MetaData.LABEL_STRING;
         return -1;
     }
