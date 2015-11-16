@@ -227,6 +227,3 @@ class ProtImportAverages(ProtImportParticles):
         group = ProtImportImages._defineAcquisitionParams(self, form)
         group.expertLevel.set(LEVEL_ADVANCED)
         
-        # Change some params properties
-        patternParam = form.getParam('filesPattern')
-        patternParam.condition.set('0')

@@ -27,10 +27,13 @@
 In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
 """
 
+from os.path import join, exists
+
 from pyworkflow.protocol.params import IntParam, PointerParam, FloatParam, BooleanParam
 from pyworkflow.utils.path import removeBaseExt
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
-
+import xmipp
+        
 from base import ProtImportFiles
 
 
@@ -175,16 +178,17 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         """ Given a coordinates file check if there is a micrograph
         that this files matches. 
         """
-	micSet = self.inputMicrographs.get()
-	if fileId is None:
+        micSet = self.inputMicrographs.get()
+        
+        if fileId is None:
             coordBase = removeBaseExt(coordFile)
             for mic in micSet:
                 micBase = removeBaseExt(mic.getFileName())
                 if coordBase in micBase or micBase in coordBase: #temporal use of in
                     return mic
-	    return None
-	else:
-	    return micSet[fileId]
+                return None
+        else:
+            return micSet[fileId]
         
     def correctCoordinatePosition(self, coord):
         mic = coord.getMicrograph()
@@ -215,7 +219,6 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         
         return boxSize
     
-        import xmipp
         boxSize = 100
         importFrom = self.getImportFrom()
         scale = self.scale.get()
