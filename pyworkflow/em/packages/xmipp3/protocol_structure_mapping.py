@@ -38,8 +38,7 @@ from pyworkflow.em.packages.xmipp3 import XmippMdRow
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
 import xmipp
 from pyworkflow.em.packages.xmipp3.nma.protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
-from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume, ALIGN_MASK_CIRCULAR, ALIGN_ALGORITHM_LOCAL, ALIGN_ALGORITHM_FAST_FOURIER
-
+from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume, ALIGN_MASK_CIRCULAR, ALIGN_ALGORITHM_EXHAUSTIVE, ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL,ALIGN_ALGORITHM_LOCAL, ALIGN_ALGORITHM_FAST_FOURIER, ALIGN_MASK_BINARY_FILE
 
 
 
@@ -61,7 +60,19 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                       label="Input volume(s)", important=True, 
                       help='Select one or more volumes (Volume or SetOfVolumes)\n'
                            'to be aligned againt the reference volume.')
-        #XmippProtAlignVolume._defineParams(self, form.addParam.applyMask)
+        #group1 = form.addGroup('Mask'), 
+        #group1.addParam('applyMask', params.BooleanParam, default=False,
+        #              label='Apply mask?',
+        #              help='Apply a 3D Binary mask to the volumes')
+        #group1.addParam('maskType', params.EnumParam, choices=['circular','binary file'], default=ALIGN_MASK_CIRCULAR, 
+        #              label='Mask type', display=params.EnumParam.DISPLAY_COMBO, condition='applyMask',
+        #              help='Select the type of mask you want to apply')
+        #group1.addParam('maskRadius', params.IntParam, default=-1, condition='applyMask and maskType==%d' % ALIGN_MASK_CIRCULAR,
+        #              label='Mask radius', 
+        #              help='Insert the radius for the mask')
+        #group1.addParam('maskFile', params.PointerParam, condition='applyMask and maskType==%d' % ALIGN_MASK_BINARY_FILE,
+        #              pointerClass='VolumeMask', label='Mask file', 
+        #              help='Select the volume mask object')
         
         form.addSection(label='Pseudoatom')
         XmippProtConvertToPseudoAtomsBase._defineParams(self,form)
@@ -70,6 +81,20 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         
         form.addSection(label='Normal Mode Analysis')
         XmippProtNMABase._defineParamsCommon(self,form)
+        
+        form.addSection(label='Align Volume')
+        form.addParam('alignmentAlgorithm', params.EnumParam, default=ALIGN_ALGORITHM_EXHAUSTIVE, 
+                      choices=['exhaustive',
+                               'local', 
+                               'exhaustive + local', 
+                               'fast fourier'], 
+                      label='Alignment algorithm', display=params.EnumParam.DISPLAY_COMBO,
+                      help='Exhaustive searches all possible combinations within a search space.'
+                            'Local searches around a given position.'
+                            'Be aware that the Fast Fourier algorithm requires a special compilation'
+                            'of Xmipp (--cltomo flag). It performs the same job as the  '
+                            'exhaustive method but much faster.')
+        
         form.addParallelSection(threads=8, mpi=1)
         
     #--------------------------- INSERT steps functions --------------------------------------------    
@@ -222,7 +247,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
     def _getAlignArgs(self):
         alignArgs = ''
         
-        if self.alignmentAlgorithm == ALIGN_ALGORITHM_FAST_FOURIER:
+        '''if self.alignmentAlgorithm == ALIGN_ALGORITHM_FAST_FOURIER:
             alignArgs += " --frm"
             
         elif self.alignmentAlgorithm == ALIGN_ALGORITHM_LOCAL:
@@ -242,12 +267,13 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 self.minimumShiftX, self.maximumShiftX, self.stepShiftX,
                 self.minimumShiftY, self.maximumShiftY, self.stepShiftY,
                 self.minimumShiftZ, self.maximumShiftZ, self.stepShiftZ,
-                self.minimumScale, self.maximumScale, self.stepScale)
+                self.minimumScale, self.maximumScale, self.stepScale)'''
         return alignArgs
      
     def _getMaskArgs(self):
         maskArgs = ''
-        if self.applyMask:
+        applyMask = False
+        if applyMask:
             if self.maskType == ALIGN_MASK_CIRCULAR:
                 maskArgs+=" --mask circular -%d" % self.maskRadius
             else:
