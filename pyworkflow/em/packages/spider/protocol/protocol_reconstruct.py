@@ -52,6 +52,7 @@ class SpiderProtReconstruct(ProtRefine3D, SpiderProtocol):
 
         form.addParam('inputParticles', params.PointerParam, 
                       pointerClass='SetOfParticles', 
+                      pointerCondition='hasAlignmentProj',
                       label="Input particles", important=True,
                       help='Select the input particles.\n')  
         

@@ -28,7 +28,7 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 """
 
 import sys
-from os.path import basename
+from os.path import basename, exists, isdir
 
 from pyworkflow.utils.path import commonPath
 from pyworkflow.utils.properties import Message
@@ -118,6 +118,8 @@ class ProtImportImages(ProtImportFiles):
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
             dst = self._getExtraPath(basename(fileName))
             copyOrLink(fileName, dst)
+            # Handle special case of Imagic images, copying also .img or .hed
+            self.handleImgHed(copyOrLink, fileName, dst)
             
             if self._checkStacks:
                 _, _, _, n = imgh.getDimensions(dst)
@@ -154,12 +156,17 @@ class ProtImportImages(ProtImportFiles):
         ih = ImageHandler()
         
         for imgFn, _ in self.iterFiles():
-            # try to read the header of the imported images
-            # except for the special case of compressed movies (bz2 extension)
-            if not (imgFn.endswith('bz2') or imgFn.endswith('tbz') or ih.isImageFile(imgFn)): 
-                if not errors: # if empty add the first line
-                    errors.append("Error reading the following images:")
+            
+            if isdir(imgFn):
+                errors.append("Folders can not be selected.")
                 errors.append('  %s' % imgFn)
+            else:
+                # try to read the header of the imported images
+                # except for the special case of compressed movies (bz2 extension)
+                if not (imgFn.endswith('bz2') or imgFn.endswith('tbz') or ih.isImageFile(imgFn)): 
+                    if not errors: # if empty add the first line
+                        errors.append("Error reading the following images:")
+                    errors.append('  %s' % imgFn)
         
         return errors
         
@@ -239,5 +246,24 @@ class ProtImportImages(ProtImportFiles):
             commPath = commonPath(filePaths)
             micName = filename.replace(commPath + "/", "").replace("/", "_")
             img.setMicName(micName)
+            
+    def handleImgHed(self, copyOrLink, src, dst):
+        """ Check the special case of Imagic files format
+        composed by two files: .hed and .img.
+        When copying or linking we need to take care
+        of the other one.
+        """
+        if src.endswith('.hed'):
+            src2 = src.replace('.hed', '.img')
+            dst2 = dst.replace('.hed', '.img')
+        elif src.endswith('.img'):
+            src2 = src.replace('.img', '.hed')
+            dst2 = dst.replace('.img', '.hed')
+        else:
+            src2 = None
+            dst2 = None
+        
+        if src2 is not None and exists(src2):
+            copyOrLink(src2, dst2)
     
     

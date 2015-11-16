@@ -372,8 +372,14 @@ env.addPackage('unblur',
                tar='unblur_1.0_150529.tgz',
                default=False)
 
-env.addPackage('eman',
+env.addPackage('eman2.11',
                tar='eman2.11.linux64.tgz',
+               commands=[('./eman2-installer', 
+                          'eman2.bashrc')],
+               default=False)
+
+env.addPackage('eman2.12',
+               tar='eman2.12.linux64.tgz',
                commands=[('./eman2-installer', 
                           'eman2.bashrc')],
                default=False)

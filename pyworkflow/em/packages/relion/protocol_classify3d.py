@@ -179,7 +179,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         dataStar = self._getFileName('data', iter=iteration)
         clsSet.classifyItems(updateItemCallback=self._updateParticle,
                              updateClassCallback=self._updateClass,
-                             itemDataIterator=md.iterRows(dataStar))
+                             itemDataIterator=md.iterRows(dataStar, sortByLabel=md.RLN_IMAGE_ID))
     
     def _updateParticle(self, item, row):
         item.setClassId(row.getValue(md.RLN_PARTICLE_CLASS))

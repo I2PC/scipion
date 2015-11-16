@@ -763,11 +763,16 @@ class PostprocessViewer(ProtocolViewer):
                       expertLevel=LEVEL_ADVANCED,
                       label='Threshold in resolution plots',
                       help='')
+        group.addParam('guinierPlots', params.LabelParam,
+              default=True, label='Display guinier plots',
+              help='')
+
     
     def _getVisualizeDict(self):
         self._load()
         return {'displayVol': self._showVolume,
                 'displayMaskedVol': self._showMaskedVolume,
+                'guinierPlots': self._showGuinier,
                 'resolutionPlotsFSC': self._showFSC
                 }
 #===============================================================================
@@ -839,6 +844,38 @@ class PostprocessViewer(ProtocolViewer):
         a.set_ylim([-0.1, 1.1])
     
 #===============================================================================
+# plotGuinier
+#===============================================================================
+    def _showGuinier(self, paramName=None):
+        gridsize = [1, 1]
+        md.activateMathExtensions()
+        
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Guinier Plot')
+        a = xplotter.createSubPlot("", 'Angstroms^-2', 'log(Amplitude)', yformat=False)
+        legends = []
+        modelStar = self.protocol._getExtraPath('postprocess.star')
+        for label in self._getGuinerLabels():
+            if exists(modelStar):
+                model = 'guinier@' + modelStar
+                self._plotGuinier(a, model, label)
+                legends.append(self._getGuinerLegend(label))
+            
+        xplotter.showLegend(legends)
+        a.grid(True)
+        
+        return [xplotter]
+    
+    def _plotGuinier(self, a, model, label):
+        mdStar = md.MetaData(model)
+        resolSqInv = [mdStar.getValue(md.RLN_POSTPROCESS_GUINIER_RESOL_SQUARED, id) for id in mdStar]
+        logAmp = [mdStar.getValue(label, id) for id in mdStar]
+        self.maxfsc = max(logAmp)
+        self.minInv = min(resolSqInv)
+        self.maxInv = max(resolSqInv)
+        a.plot(resolSqInv, logAmp)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+    
+#===============================================================================
 # Utils Functions
 #===============================================================================
     def _load(self):
@@ -875,6 +912,24 @@ class PostprocessViewer(ProtocolViewer):
             return 'Masked Maps'
         else:
             return 'Phase Randomized Masked Maps'
+    
+    def _getGuinerLabels(self):
+        return [md.RLN_POSTPROCESS_GUINIER_VALUE_IN,
+                md.RLN_POSTPROCESS_GUINIER_VALUE_WEIGHTED,
+                md.RLN_POSTPROCESS_GUINIER_VALUE_SHARPENED,
+                md.RLN_POSTPROCESS_GUINIER_VALUE_INTERCEPT,]
+    
+    def _getGuinerLegend(self, label):
+        if label == md.RLN_POSTPROCESS_GUINIER_VALUE_IN:
+            return 'log(Amplitudes) Original'
+        elif label == md.RLN_POSTPROCESS_GUINIER_VALUE_WEIGHTED:
+            return 'log(Amplitudes) Weighted'
+        elif label == md.RLN_POSTPROCESS_GUINIER_VALUE_SHARPENED:
+            return 'log(Amplitudes) Sharpened'
+        else:
+            return 'log(Amplitudes) Intercept'
+        
+
 
 
 class RelionAutopickViewerFOM(Viewer):

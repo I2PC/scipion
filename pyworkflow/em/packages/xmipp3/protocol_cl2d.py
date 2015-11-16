@@ -38,6 +38,7 @@ from pyworkflow.protocol.params import (PointerParam, IntParam, EnumParam,
     BooleanParam)
 from pyworkflow.em.protocol import ProtClassify2D, SetOfClasses2D
 from pyworkflow.utils.path import cleanPath, makePath
+import pyworkflow.em as em
 
 from convert import writeSetOfParticles, readSetOfClasses2D, writeSetOfClasses2D
 
@@ -201,7 +202,7 @@ class XmippProtCL2D(ProtClassify2D):
 
     #--------------------------- STEPS functions --------------------------------------------
     def convertInputStep(self):
-        writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
+        writeSetOfParticles(self.inputParticles.get(),self.imgsFn,alignType=em.ALIGN_NONE)
         if not self.randomInitialization:
             if isinstance(self.initialClasses.get(), SetOfClasses2D):
                 writeSetOfClasses2D(self.initialClasses.get(),self.initialClassesFn, writeParticles=False)

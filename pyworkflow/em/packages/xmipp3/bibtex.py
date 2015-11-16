@@ -497,6 +497,20 @@ author = "Marabini et al.",
 keywords = "Contrast transfer function"
 }
 
+@article{B.Heymann2015,
+title = {Validation of 3D... },
+journal = {AIMS Biophys},
+volume = {2},
+number = {1},
+pages = {21-35},
+year = {2015},
+note = "",
+issn = "",
+doi = {10.3934/biophy.2015.1.21},
+url = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4440490/},
+author = "B. Heymann",
+keywords = ""
+}
 
 """
 

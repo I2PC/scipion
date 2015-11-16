@@ -86,6 +86,9 @@ class HostConfig():
     def getSubmitCommand(self):
         return self.queueSystem.submitCommand.get()
     
+    def getSubmitPrefix(self):
+        return self.queueSystem.submitPrefix.get()
+    
     def getCancelCommand(self):
         return self.queueSystem.cancelCommand.get()
     
@@ -160,6 +163,10 @@ class QueueSystemConfig(OrderedObject):
         self.mandatory = Integer()
         self.queues = None # List for queue configurations
         self.submitCommand = String()
+        # Allow to change the prefix of submission scripts
+        # we used by default the ID.job, but in some clusters
+        # the job script should start by a letter
+        self.submitPrefix = String()
         self.checkCommand = String()
         self.cancelCommand = String()
         self.submitTemplate = String()
