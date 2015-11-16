@@ -174,8 +174,8 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     def executeCtfGroupsStep(self, **kwargs):
         runExecuteCtfGroupsStep(self, **kwargs)
     
-    def transformMaskStep(self, args, **kwargs):
-        runTransformMaskStep(self, args, **kwargs)
+    def transformMaskStep(self, program, args, **kwargs):
+        runTransformMaskStep(self, program, args, **kwargs)
     
     def angularProjectLibraryStep(self, iterN, refN, args, stepParams, **kwargs):
         runAngularProjectLibraryStep(self, iterN, refN, args, stepParams, **kwargs)
@@ -383,7 +383,7 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         partSet.setAlignmentProj()
         partSet.copyItems(imgSet,
                             updateItemCallback=self._createItemMatrix,
-                            itemDataIterator=md.iterRows(imgFn))
+                            itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
     
     def _createItemMatrix(self, item, row):
         from pyworkflow.em.packages.xmipp3.convert import createItemMatrix

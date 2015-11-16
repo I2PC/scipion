@@ -60,6 +60,7 @@ void ProgCtfGroup::readParams()
     memory           = getDoubleParam("--memory");
     do1Dctf          = checkParam("--do1Dctf");
     wiener_constant  = getDoubleParam("--wc");
+    simpleBins       = getIntParam("--simple");
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -106,6 +107,8 @@ void ProgCtfGroup::show()
     {
         std::cout << " -> compute CTF groups using 2D CTFs= "<<std::endl;
     }
+    if (simpleBins>0)
+    	std::cout << "Simple algorithm: " << simpleBins << std::endl;
     std::cout << "----------------------------------------------------------"<<std::endl;
 }
 
@@ -141,6 +144,7 @@ void ProgCtfGroup::defineParams()
     addParamsLine(" == MODE 1: AUTOMATED: == ");
     addParamsLine("   [--error <float=0.5> ]     : Maximum allowed error");
     addParamsLine("   [--resol <float=-1> ]      : Resol. (in Ang) for error calculation. Default (-1) = Nyquist");
+    addParamsLine("   [--simple <bins=-1>]       : Simple algorithm based on bins of size (max-min)/bins");
     addParamsLine(" == MODE 2: MANUAL: == ");
     addParamsLine("   [--split <docfile> ]       : 1-column docfile with defocus values where to split the data ");
 
@@ -151,22 +155,23 @@ void ProgCtfGroup::produceSideInfo()
 {
     FileName  fnt_ctf,aux;
     CTFDescription ctf;
-    //MetaData ctfdat,
-    MetaData SF;
     MultidimArray<double> Mctf;
     MultidimArray<std::complex<double> >  ctfmask;
     size_t ydim, zdim, ndim;
     double avgdef;
 
-    SF.read(fn_ctfdat);
-    getImageSize(SF,dim,ydim,zdim,ndim);
+    ImagesMD.read(fn_ctfdat);
+    getImageSize(ImagesMD,dim,ydim,zdim,ndim);
     //set output format
-    SF.getValue(MDL_IMAGE,aux,SF.firstObject());
+    ImagesMD.getValue(MDL_IMAGE,aux,ImagesMD.firstObject());
     if(format=="")
         format=aux.getFileFormat();
 
     if ( dim != ydim )
         REPORT_ERROR(ERR_MULTIDIM_SIZE,"Only squared images are allowed!");
+
+    if (simpleBins>0)
+    	return;
 
     paddim=xpaddim = ROUND(pad*dim);
     if(do1Dctf)
@@ -216,7 +221,7 @@ void ProgCtfGroup::produceSideInfo()
 
 
     MetaData ctfMD;
-    groupCTFMetaData(SF, ctfMD);
+    groupCTFMetaData(ImagesMD, ctfMD, groupbyLabels);
 
     int nCTFs = ctfMD.size();
     //how much memory do I need to store them
@@ -489,7 +494,6 @@ void ProgCtfGroup::autoRun()
     }
 
     progress_bar(ctfMdSize);
-
 }
 /////////////////////////////////////////////
 void ProgCtfGroup::manualRun()
@@ -598,21 +602,22 @@ void ProgCtfGroup::writeOutputToDisc()
 
 
     //(3) make block-sel per image group
-    MetaData ImagesMD;
     ImagesMD.read(fn_ctfdat);
-    //
+    if (ImagesMD.containsLabel(MDL_DEFGROUP))
+    	ImagesMD.removeLabel(MDL_DEFGROUP);
     if (ImagesMD.containsLabel(MDL_CTF_MODEL))
-    {
         ctfImagesGroup.join1(ImagesMD, sortedCtfMD, MDL_CTF_MODEL, INNER );
-    }
     else
     {
     	ctfImagesGroup.join1(ImagesMD,
     			             sortedCtfMD,
-    			             MDL_MICROGRAPH_ID,LEFT);
+    			             groupbyLabels,LEFT);
         //ctfImagesGroup.joinNatural(ImagesMD, sortedCtfMD);
 //#define DEBUG
 #ifdef DEBUG
+    ImagesMD.write("/tmp/ImagesMD.sqlite");
+    sortedCtfMD.write("/tmp/sortedCtfMD.sqlite");
+    ctfImagesGroup.write("/tmp/ctfImagesGroup.sqlite");
     ImagesMD.write("/tmp/ImagesMD.xmd");
     sortedCtfMD.write("/tmp/sortedCtfMD.xmd");
     ctfImagesGroup.write("/tmp/ctfImagesGroup.xmd");
@@ -621,7 +626,7 @@ void ProgCtfGroup::writeOutputToDisc()
     }
 
     //
-    unlink( (fn_root+"s_images.sel").c_str());
+    unlink( (fn_root+"_images.sel").c_str());
     FileName imagesInDefoculGroup;
     auxMetaData.clear();
     auxMetaData.setComment("images (particles) per defocus group, block name is defocusgroup No");
@@ -720,19 +725,54 @@ void ProgCtfGroup::writeOutputToDisc()
 
 }
 
+void ProgCtfGroup::simpleRun()
+{
+    // Maximum and minimum defocus
+    double minDefocus=ImagesMD.getColumnMin(MDL_CTF_DEFOCUSU);
+    double maxDefocus=ImagesMD.getColumnMax(MDL_CTF_DEFOCUSU);
+    double iStepDefocus=1.0/((maxDefocus-minDefocus)/simpleBins);
+
+    double defocus;
+    FOR_ALL_OBJECTS_IN_METADATA(ImagesMD)
+    {
+    	ImagesMD.getValue(MDL_CTF_DEFOCUSU,defocus,__iter.objId);
+    	int defGroup=floor((defocus-minDefocus)*iStepDefocus)+1;
+    	ImagesMD.setValue(MDL_DEFGROUP,defGroup,__iter.objId);
+    }
+
+    unlink( (fn_root+"_images.sel").c_str());
+    FileName imagesInDefoculGroup;
+    MetaData auxMetaData;
+    auxMetaData.clear();
+    auxMetaData.setComment("images (particles) per defocus group, block name is defocusgroup No");
+    FileName fnGroup;
+    if (verbose>0)
+    {
+    	std::cerr << "Writing defocus groups ...\n";
+    	init_progress_bar(simpleBins);
+    }
+    for(int i=1;i<=simpleBins+1; i++)
+    {
+        auxMetaData.importObjects(ImagesMD,MDValueEQ(MDL_DEFGROUP,i));
+        fnGroup.assign( formatString("ctfGroup%06d@%s_images.sel", i, fn_root.c_str()) );
+        auxMetaData.write( fnGroup, i > 1 ? MD_APPEND : MD_OVERWRITE);
+        if (verbose>0)
+        	progress_bar(i);
+    }
+    progress_bar(simpleBins);
+}
+
 void ProgCtfGroup::run()
 {
     produceSideInfo();
-
-    if (do_auto)
-    {
-        autoRun();
-    }
+    if (simpleBins>0)
+    	simpleRun();
     else
     {
-        manualRun();
+		if (do_auto)
+			autoRun();
+		else
+			manualRun();
+		writeOutputToDisc();
     }
-    writeOutputToDisc();
-
-    std::cout << " Done!" <<std::endl;
 }

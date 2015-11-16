@@ -51,7 +51,7 @@ protected:
         addUsageLine("If the -o option is not used the original metadata will be modified.");
         addUsageLine("+ Also you can use the --print option just to print out the result metadata to screen.");
         addUsageLine("+ The combination of -i and -o without other operations can serve to extract data blocks");
-        addUsageLine("+ inside a medata and write to an independent one.");
+        addUsageLine("+ inside a metadata and write to an independent one.");
         addSeeAlsoLine("metadata_import");
 
         addParamsLine(" -i <metadata>         : Input metadata file");
@@ -78,6 +78,8 @@ protected:
         addParamsLine("                                 : use label:col, e.g., NMADisplacements:0");
         addParamsLine("                                 : The first column is column number 0.");
         addParamsLine("                                 : order can be asc (ascending) or desc (descending)");
+        addParamsLine("    percentile <labelIn> <labelOut>     : Fill a column with the percentile (between 0 and 1) of another column");
+        addParamsLine("                                        :+The metadata is sorted by labelIn");
         addParamsLine("    random_subset <size>                : Extract a random subset without replacement of this metadata");
         addParamsLine("    bootstrap                           : Extract a bootstrap subset (with replacement) of this metadata");
         addParamsLine("    randomize                           : Randomize elements of metadata");
@@ -298,6 +300,15 @@ protected:
             {
                 String order=getParam("--operate",2);
                 mdIn.sort(md, getParam("--operate", 1),order=="asc");
+            }
+            else if (operation == "percentile")
+            {
+                mdIn.sort(md, getParam("--operate", 1),true);
+                double n=1;
+                double iN=1.0/md.size();
+                MDLabel labelOut=MDL::str2Label(getParam("--operate", 2));
+				FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+                	mdIn.setValue(labelOut,(n++)*iN,__iter.objId);
             }
             else if (operation == "randomize")
                 mdIn.randomize(md);

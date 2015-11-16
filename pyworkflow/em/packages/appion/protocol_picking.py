@@ -168,6 +168,9 @@ class DogPickerProtPicking(ProtParticlePicking):
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
 
+    def _citations(self):
+        return ['Voss2009']
+
     def _methods(self):
         methodsMsgs = []
         if self.getInputMicrographs() is None:

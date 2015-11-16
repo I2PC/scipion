@@ -261,10 +261,11 @@ protected:
      * ADD, SUBSTRACT of intersection part
      */
     void _setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation);
+    void _setOperates(const MetaData &mdIn, const std::vector<MDLabel> &labels, SetOperation operation);
     void _setOperates(const MetaData &mdInLeft,
                       const MetaData &mdInRight,
-                      const MDLabel labelLeft,
-                      const MDLabel labelRight,
+                      const std::vector<MDLabel> &labelsLeft,
+                      const std::vector<MDLabel> &labelsRight,
                       SetOperation operation);
     /** This function is for generalize the sets operations
      * in which the output has a single label
@@ -284,7 +285,7 @@ protected:
      * @param pEnd  pointer to the position of the next '_data' in memory
      * @param maxRows if this number if greater than 0, only this number of rows will be parsed.
      */
-    void _readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValues);
+    void _readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels);
     void _readRowFormat(std::istream& is);
 
     /** This two variables will be used to read the metadata infomation (labels and size)
@@ -403,6 +404,7 @@ public:
      */
     void writeText(const FileName fn,  const std::vector<MDLabel>* desiredLabels) const;
 
+    void _parseObjects(std::istream &is, std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels, bool firstTime);
 
     /* Helper function to parse an MDObject and set its value.
      * The parsing will be from an input stream(istream)
@@ -934,6 +936,17 @@ public:
      */
     void join2(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel labelLeft, const MDLabel labelRight , JoinType type=LEFT);
 
+    /** Join two Metadatas
+     * Result in "calling" metadata
+     */
+    void join1(const MetaData &mdInLeft, const MetaData &mdInRight, const std::vector<MDLabel> &labels, JoinType type=LEFT);
+
+    /** Join two Metadatas
+     * Result in "calling" metadata. join may be done using different labels in each metadata
+     */
+    void join2(const MetaData &mdInLeft, const MetaData &mdInRight, const std::vector<MDLabel> &labelsLeft, const std::vector<MDLabel> &labelsRight,
+    		JoinType type=LEFT);
+
     /** Join two Metadatas using all common labels (NATURAL_JOIN)
      */
     void joinNatural(const MetaData &mdInLeft, const MetaData &mdInRight);
@@ -977,6 +990,7 @@ public:
               bool asc=true,
               int limit=-1,
               int offset=0);
+
 
     /*
     * Sort a Metadata by a label.

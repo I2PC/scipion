@@ -42,7 +42,7 @@ public class TrainRunnable implements Runnable
             if(trainmic != micrograph)
             	trainmic.resetParticlesRectangle();
             this.picker = frame.getParticlePicker();
-            this.classifier = picker.getClassifier();
+            this.classifier = (PickingClassifier)picker.getClassifier();
 		}
 
 		public void run()

@@ -146,36 +146,41 @@ class XmippProtRCT(ProtInitialVolume):
                        
             uImg = uImages[imgId]
             tImg = tImages[imgId]
-            objId = classMd.addObject()
-            pairRow = XmippMdRow()
-            pairRow.setValue(xmipp.MDL_IMAGE, getImageLocation(uImg))
-            uCoord = uImg.getCoordinate()
-            micId = uCoord.getMicId()
-            uMic = uMics[micId]
-            angles = sangles[micId]
-            pairRow.setValue(xmipp.MDL_MICROGRAPH, uMic.getFileName())
-            pairRow.setValue(xmipp.MDL_XCOOR, uCoord.getX())
-            pairRow.setValue(xmipp.MDL_YCOOR, uCoord.getY())
-            pairRow.setValue(xmipp.MDL_ENABLED, 1)
-            pairRow.setValue(xmipp.MDL_ITEM_ID, long(imgId))
-            pairRow.setValue(xmipp.MDL_REF, 1)
-
-            alignment = img.getTransform()
-
-            # Scale alignment by scaleFactor
-            alignment.scale(scaleFactor)
-            alignmentToRow(alignment, pairRow, alignType=ALIGN_2D)
-                               
-            pairRow.setValue(xmipp.MDL_IMAGE_TILTED, getImageLocation(tImg))
-            tMic = tMics[micId]
-            pairRow.setValue(xmipp.MDL_MICROGRAPH_TILTED, tMic.getFileName())
-            (angleY, angleY2, angleTilt) = angles.getAngles()
-            pairRow.setValue(xmipp.MDL_ANGLE_Y, float(angleY))
-            pairRow.setValue(xmipp.MDL_ANGLE_Y2, float(angleY2))
-            pairRow.setValue(xmipp.MDL_ANGLE_TILT, float(angleTilt))
             
-            pairRow.writeToMd(classMd, objId)
-            classMd.write(blockMd, xmipp.MD_APPEND)
+            if uImg is None or tImg is None:
+                print ">>> Warning, for id %d, tilted or untilted particle was not found. Ignored." % imgId
+            else:
+                objId = classMd.addObject()
+                pairRow = XmippMdRow()
+                pairRow.setValue(xmipp.MDL_IMAGE, getImageLocation(uImg))
+                uCoord = uImg.getCoordinate()
+                micId = uCoord.getMicId()
+                uMic = uMics[micId]
+                angles = sangles[micId]
+                pairRow.setValue(xmipp.MDL_MICROGRAPH, uMic.getFileName())
+                pairRow.setValue(xmipp.MDL_XCOOR, uCoord.getX())
+                pairRow.setValue(xmipp.MDL_YCOOR, uCoord.getY())
+                pairRow.setValue(xmipp.MDL_ENABLED, 1)
+                pairRow.setValue(xmipp.MDL_ITEM_ID, long(imgId))
+                pairRow.setValue(xmipp.MDL_REF, 1)
+    
+                alignment = img.getTransform()
+    
+                # Scale alignment by scaleFactor
+                alignment.scale(scaleFactor)
+                alignmentToRow(alignment, pairRow, alignType=ALIGN_2D)
+                                   
+                pairRow.setValue(xmipp.MDL_IMAGE_TILTED, getImageLocation(tImg))
+                tMic = tMics[micId]
+                pairRow.setValue(xmipp.MDL_MICROGRAPH_TILTED, tMic.getFileName())
+                (angleY, angleY2, angleTilt) = angles.getAngles()
+                pairRow.setValue(xmipp.MDL_ANGLE_Y, float(angleY))
+                pairRow.setValue(xmipp.MDL_ANGLE_Y2, float(angleY2))
+                pairRow.setValue(xmipp.MDL_ANGLE_TILT, float(angleTilt))
+                
+                pairRow.writeToMd(classMd, objId)
+        
+        classMd.write(blockMd, xmipp.MD_APPEND)
             
     def _reconstructImages(self, particles, deps):
         """ Function to insert the step needed to reconstruct a class (or setOfParticles) """

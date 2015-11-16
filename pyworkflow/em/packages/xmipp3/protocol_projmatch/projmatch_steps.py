@@ -38,7 +38,7 @@ from pyworkflow.object import Float
 from pyworkflow.em.data import Volume, SetOfClasses3D
 from pyworkflow.utils import getMemoryAvailable, replaceExt, removeExt, cleanPath, makePath, copyFile
 
-from pyworkflow.em.packages.xmipp3.convert import createClassesFromImages,  readSetOfParticles
+from pyworkflow.em.packages.xmipp3.convert import createClassesFromImages
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
 
 
@@ -139,7 +139,6 @@ def insertMaskReferenceStep(self, iterN, refN, **kwargs):
     if maskRadius < 0:
         maskRadius, _, _ = self.input3DReferences.get().getDim()
         maskRadius = maskRadius / 2
-    print "executeMask", self.maskRadius.get()
     maskedFileName = self._getFileName('maskedFileNamesIters', iter=iterN, ref=refN)
     reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN-1][refN]
     
@@ -148,18 +147,20 @@ def insertMaskReferenceStep(self, iterN, refN, **kwargs):
         args = ' -i %(reconstructedFilteredVolume)s -o %(maskedFileName)s'
         if self.getEnumText('maskType') == 'circular':
             args += ' --mask circular -%(maskRadius)s'
+            maskProgram = "xmipp_transform_mask"
         else:
             maskFn = self.inputMask.get().getFileName()
-            args += ' --mask binary_file %(maskFn)s'
+            args += ' --mult %(maskFn)s'
+            maskProgram = "xmipp_image_operate"
         
         # Here is used _insertFunctionStep instead of _insertRunJobStep cause xmipp_transform_mask is not implemented with mpi
-        self._insertFunctionStep('transformMaskStep', args % locals(), **kwargs)
+        self._insertFunctionStep('transformMaskStep', maskProgram, args % locals(), **kwargs)
     else:
         self._insertFunctionStep('volumeConvertStep', reconstructedFilteredVolume, maskedFileName)
 
 
-def runTransformMaskStep(self, args, **kwargs):
-    self.runJob("xmipp_transform_mask", args, numberOfMpi=1, **kwargs)
+def runTransformMaskStep(self, program, args, **kwargs):
+    self.runJob(program, args, numberOfMpi=1, **kwargs)
 
 
 def runVolumeConvertStep(self, reconstructedFilteredVolume, maskedFileName):
@@ -581,7 +582,7 @@ def insertComputeResolutionStep(self, iterN, refN, **kwargs):
     outputVolumes = [vol1, vol2]
     for vol in outputVolumes:
         args = ' -i %(vol)s --mask  raised_cosine -%(innerRadius)s -%(outRadius)s'
-        self._insertFunctionStep('transformMaskStep', args % locals(), **kwargs)
+        self._insertFunctionStep('transformMaskStep', "xmipp_transform_mask", args % locals(), **kwargs)
     
     args = ' --ref %(vol1)s -i %(vol2)s --sampling_rate %(samplingRate)s -o %(resolutionXmdCurrIter)s' % locals()
     

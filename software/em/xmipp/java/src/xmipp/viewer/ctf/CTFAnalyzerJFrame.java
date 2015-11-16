@@ -69,26 +69,26 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 	private XmippFileChooser fc;
 	private JCheckBox differencechb;
 	private final static BasicStroke plotsStroke = new BasicStroke(1.5f);
-        private final static Color COLOR_PROFILE = Color.BLACK;
-        private final static Color COLOR_BACKGROUND_NOISE = Color.RED;
-        private final static Color COLOR_ENVELOPE = Color.GREEN;
-        private final static Color COLOR_PSD = Color.BLUE;
-        private final static Color COLOR_CTF = Color.MAGENTA;
-        private final static Color COLOR_DIFFERENCE = Color.orange;
-        private ImagePlus profileimp;
+    private final static Color COLOR_PROFILE = Color.BLACK;
+    private final static Color COLOR_BACKGROUND_NOISE = Color.RED;
+    private final static Color COLOR_ENVELOPE = Color.GREEN;
+    private final static Color COLOR_PSD = Color.BLUE;
+    private final static Color COLOR_CTF = Color.MAGENTA;
+    private final static Color COLOR_DIFFERENCE = Color.orange;
+    private ImagePlus profileimp;
 
         
 
 	public CTFAnalyzerJFrame(ImagePlus imp, String ctffile, String psdfile)
-        {
+    {
             try
 		{
 			
 			this.imp = imp;
 			this.psdfile = psdfile;
-                        this.profileimp = new ImagePlus(psdfile);
+            this.profileimp = new ImagePlus(psdfile);
 			ctfmodel = new CTFDescription(ctffile);
-                        double samplingRate = getSamplingRate(ctffile);
+            double samplingRate = getSamplingRate(ctffile);
 			samples = imp.getWidth() / 2;
 			xvalues = getXValues(samples, samplingRate);
 			initComponents();
@@ -98,7 +98,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 		{
 			throw new IllegalArgumentException(e);
 		}
-        }
+    }
 
 	public CTFAnalyzerJFrame(ImagePlus imp, CTFDescription ctfdescription, String psdfile, double samplingRate)
 	{
@@ -121,8 +121,8 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
         
         private void initComponents()
         {
-                        setTitle("CTF Analyzer");
-                        fc = new XmippFileChooser();
+            setTitle("CTF Analyzer");
+            fc = new XmippFileChooser();
 
 			constraints = new GridBagConstraints();
 			constraints.insets = new Insets(0, 5, 0, 5);

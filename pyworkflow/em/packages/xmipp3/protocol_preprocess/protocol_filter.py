@@ -135,7 +135,7 @@ class XmippFilterHelper():
                                                        cls.FM_BAND_PASS, cls.FM_LOW_PASS) + ') and freqInAngstrom',
                       label='Highest')
 
-        form.addParam('freqDecayA', FloatParam, default=2,
+        form.addParam('freqDecayA', FloatParam, default=100,
                       condition=fourierCondition + ' and freqInAngstrom',
                       label='Decay length',
                       help=('Amplitude decay in a [[https://en.wikipedia.org/'

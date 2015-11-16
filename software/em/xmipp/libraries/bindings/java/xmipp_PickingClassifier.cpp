@@ -7,21 +7,22 @@
 #include <data/metadata.h>
 
 JNIEXPORT void JNICALL
-Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jint particle_size, jstring output, jstring micsFn)
+Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jint particle_size, jstring output, jobjectArray jmics)
 {
     XMIPP_JAVA_TRY
     {
         int size = particle_size, filter_num = 6, corr_num = 2, NPCA = 4;
         jboolean aux=false;
         const FileName &model_name = env->GetStringUTFChars(output, &aux);
-        const FileName &mics = env->GetStringUTFChars(micsFn, &aux);
-        MetaData micList;
-        std::vector<MDRow> vMicList;
-
-        micList.read(mics);
-        micList.metadataToVec(vMicList);
-
-        AutoParticlePicking2 *picker = new AutoParticlePicking2(size, filter_num, corr_num, NPCA, model_name, vMicList);
+        int length = env->GetArrayLength(jmics);
+	    MDRow row;
+	    std::vector<MDRow> mics;
+	    for(int i = 0; i < length; i++)
+	    {
+			 row = *GET_INTERNAL_MDROW(env->GetObjectArrayElement(jmics, i));
+			 mics.push_back(row);
+	    }
+        AutoParticlePicking2 *picker = new AutoParticlePicking2(size, filter_num, corr_num, NPCA, model_name, mics);
 
         STORE_PEER_ID(jobj, (long)picker);
     }

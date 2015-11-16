@@ -25,9 +25,4 @@
 
 #include <reconstruction/volume_segment.h>
 
-int main(int argc, char **argv)
-{
-    ProgVolumeSegment prm;
-    prm.read(argc, argv);
-    prm.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgVolumeSegment)

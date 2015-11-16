@@ -39,14 +39,15 @@ class ProgValidationNonTilt: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnDir, fnSym, fnInit;
-
-    /** Sampling rate of the volume and projections */
-    double sampling_rate;
+    FileName fnDir, fnSym, fnInit, fnParticles;
 
     MetaData mdPartial;
 
     size_t rank, Nprocessors;
+
+    bool useSignificant;
+
+    double significance_noise;
 
 public:
 
@@ -61,6 +62,8 @@ public:
     ProgValidationNonTilt();
 
     void obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
+
+    void obtainSumU_2(const MetaData & mdGallery, const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
 
     void obtainSumW(const MetaData & tempMd, double & sum_W, std::vector<double> & sum_u, std::vector<double> & H, const double factor);
 

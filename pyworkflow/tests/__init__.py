@@ -248,3 +248,6 @@ DataSet(name='SymVirus', folder='SymVirus',
                'small_vol_half_th' : 'small_vol_half_th.vol'
               }
        )
+
+DataSet(name='xmipp_programs', folder='xmipp_programs', files={}
+       )

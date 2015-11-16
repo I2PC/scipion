@@ -78,7 +78,8 @@ class Manager(object):
             projList.sort(key=lambda k: k.mTime, reverse=True)
         return projList
     
-    def createProject(self, projectName, runsView=1, hostsConf=None, protocolsConf=None, location=None):
+    def createProject(self, projectName, runsView=1, 
+                      hostsConf=None, protocolsConf=None, location=None):
         """Create a new project.
         confs dict can contains customs .conf files 
         for: menus, protocols, or hosts
@@ -94,8 +95,11 @@ class Manager(object):
                        hostsConf=hostsConf, 
                        protocolsConf=protocolsConf)
         # If location is not the default one create a symlink on self.PROJECTS directory
-        if projectPath != self.getProjectPath(projectName) :
-            pwutils.path.createLink(projectPath, self.getProjectPath(projectName))
+        if projectPath != self.getProjectPath(projectName):
+            # JMRT: Let's create the link to the absolute path, since relative
+            # can be broken in systems with different mount points
+            pwutils.path.createAbsLink(os.path.abspath(projectPath), 
+                                       self.getProjectPath(projectName))
 
         return project
     

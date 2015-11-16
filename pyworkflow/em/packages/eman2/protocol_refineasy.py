@@ -33,7 +33,7 @@ import re
 from os.path import exists
 from glob import glob
 import pyworkflow.em as em
-from pyworkflow.em.packages.eman2.eman2 import getEmanProgram
+from pyworkflow.em.packages.eman2.eman2 import getEmanProgram, getVersion
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, EnumParam,
                                         StringParam, BooleanParam)
 from pyworkflow.utils.path import cleanPattern, makePath, createLink
@@ -301,6 +301,12 @@ at each refinement step. The resolution you specify is a target, not the filter 
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
+        if not getVersion():
+            errors.append("We couldn't detect EMAN version. ")
+            errors.append("Please, check your configuration file and change EMAN2DIR.")
+            errors.append("The path should contains either '2.11' or '2.12' ")
+            errors.append("to properly detect the version.")
+
         samplingRate = self._getInputParticles().getSamplingRate()
         if self.resol.get() < 2*samplingRate:
             errors.append("Target resolution is smaller than 2*samplingRate value. This is impossible.")
@@ -440,7 +446,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
         return data_sqlite
     
     def _getInputParticlesPointer(self):
-        if self.doContinue and self.inputParticles is None:
+        if self.doContinue:
             self.inputParticles.set(self.continueRun.get().inputParticles.get())
         return self.inputParticles
     

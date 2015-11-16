@@ -48,11 +48,11 @@ class ProgOpticalAligment: public XmippProgram
 {
 
 public:
-    FileName fname, foname;
-
+    FileName fname, foname, gianRefFilename, darkRefFilename;
+    MultidimArray<double> gainImage, darkImage;
     int winSize, gpuDevice, fstFrame, lstFrame;
-    int psdPieceSize;
-    bool doAverage, psd, saveCorrMovie;
+    bool doAverage, saveCorrMovie;
+    bool gainImageCorr, darkImageCorr;
 
     void defineParams()
     {
@@ -63,8 +63,9 @@ public:
         addParamsLine("     [--ned <int=0>]     : last frame used in alignment (0 = last frame in the movie ");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
         addParamsLine("     [--simpleAverage]: if we want to just compute the simple average");
-        addParamsLine("     [--psd]             : save raw PSD and corrected PSD");
         addParamsLine("     [--ssc]             : save corrected stack");
+        addParamsLine("     [--gain <gainReference>]             : gain reference");
+        addParamsLine("     [--dark <darkReference>]             : dark reference");
 #ifdef GPU
 
         addParamsLine("     [--gpu <int=0>]         : GPU device to be used");
@@ -75,11 +76,18 @@ public:
     {
         fname     = getParam("-i");
         foname    = getParam("-o");
+        if ((gainImageCorr = checkParam("--gain")))
+        {
+            gianRefFilename = getParam("--gain");
+        }
+        if ((darkImageCorr = checkParam("--dark")))
+        {
+            darkRefFilename = getParam("--dark");
+        }
         fstFrame  = getIntParam("--nst");
         lstFrame  = getIntParam("--ned");
         winSize   = getIntParam("--winSize");
         doAverage = checkParam("--simpleAverage");
-        psd = checkParam("--psd");
         saveCorrMovie = checkParam("--ssc");
 
 #ifdef GPU
@@ -216,10 +224,18 @@ public:
 
         movieStack.readMapped(movieFile,begin);
         movieStack().getImage(avgImg);
+        if (darkImageCorr)
+        	avgImg-=darkImage;
+        if (gainImageCorr)
+        	avgImg/=gainImage;
         for (int i=begin;i<end;i++)
         {
             movieStack.readMapped(movieFile,i+1);
             movieStack().getImage(imgNormal);
+            if (darkImageCorr)
+                imgNormal-=darkImage;
+            if (gainImageCorr)
+                imgNormal/=gainImage;
             avgImg+=imgNormal;
         }
         avgImg/=double(N);
@@ -248,9 +264,6 @@ public:
         meanStdDev(1)=sqrt(sqSumX/double(n)-meanStdDev(0)*meanStdDev(0));
         meanStdDev(2)=sumY/double(n);
         meanStdDev(3)=sqrt(sqSumY/double(n)-meanStdDev(2)*meanStdDev(2));
-        //double mean = sum / n;
-        //double variance = sq_sum / n - mean * mean;
-        //return sqrt(variance);
     }
 
     int main2()
@@ -262,7 +275,7 @@ public:
         ImageGeneric movieStack, movieStackNormalize;
         Image<double> II;
         MetaData MD; // To save plot information
-        FileName motionInfFile, correctedPSDFile, rawPSDFile;
+        FileName motionInfFile;
         ArrayDim aDim;
 
         // For measuring times (both for whole process and for each level of the pyramid)
@@ -294,6 +307,16 @@ public:
         imagenum = aDim.ndim;
         h = aDim.ydim;
         w = aDim.xdim;
+        if (darkImageCorr)
+        {
+            II.read(darkRefFilename);
+            darkImage=II();
+        }
+        if (gainImageCorr)
+        {
+            II.read(gianRefFilename);
+            gainImage=II();
+        }
         meanStdev.initZeros(4);
         //avgcurr=cv::Mat::zeros(h, w,CV_32FC1);
         avgCurr.initZeros(h, w);
@@ -323,32 +346,17 @@ public:
         // Compute the average of the whole stack
         fstFrame++; // Just to adapt to Li algorithm
         lstFrame++; // Just to adapt to Li algorithm
-        psdPieceSize = 400; // Currently we set it as a constant
         if (lstFrame>=imagenum || lstFrame==1)
             lstFrame=imagenum;
         imagenum=lstFrame-fstFrame+1;
         levelNum=sqrt(double(imagenum));
         computeAvg(fname, fstFrame, lstFrame, avgCurr);
         // if the user want to save the PSD
-        if (psd)
+        if (doAverage)
         {
             II() = avgCurr;
             II.write(foname);
-            if (doAverage)
-                rawPSDFile=foname.removeLastExtension()+"_corrected";
-            else
-                rawPSDFile=foname.removeLastExtension()+"_raw";
-            std::cerr<<"The file name is"<<rawPSDFile<<std::endl;
-            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
-                                     foname.c_str(), rawPSDFile.c_str(), psdPieceSize);
-            String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
-            std::cerr<<"Computing the raw FFT"<<std::endl;
-            if (system(cmd.c_str())==-1)
-                REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-            if (doAverage)
-                return 0;
-            else
-                foname.deleteFile();
+            return 0;
         }
         xmipp2Opencv(avgCurr, avgcurr);
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
@@ -374,6 +382,10 @@ public:
                 {
                     movieStack.readMapped(fname,i+1);
                     movieStack().getImage(preImg);
+                    if (darkImageCorr)
+                        preImg-=darkImage;
+                    if (gainImageCorr)
+                        preImg/=gainImage;
                     xmipp2Opencv(preImg, preimg);
                 }
                 else
@@ -443,7 +455,10 @@ public:
 #endif
 
                 if (div==1 && saveCorrMovie)
+                {
                     mappedImg.aliasImageInStack(outputMovie, i);
+                    opencv2Xmipp(dest, mappedImg);
+                }
                 avgstep+=dest;
             }
             avgcurr=avgstep/cnt;
@@ -460,30 +475,6 @@ public:
         {
             II()=outputMovie;
             II.write(foname.replaceExtension("mrcs"));
-        }
-
-        if (psd)
-        {
-            Image<double> psdCorr, psdRaw;
-            MultidimArray<double> psdCorrArr, psdRawArr;
-            correctedPSDFile=foname.removeLastExtension()+"_corrected";
-            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
-                                     foname.c_str(), correctedPSDFile.c_str(), psdPieceSize);
-            String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
-            std::cerr<<"Computing the corrected FFT"<<std::endl;
-            if (system(cmd.c_str())==-1)
-                REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-            psdRaw.read(rawPSDFile+".psd");
-            psdCorr.read(correctedPSDFile+".psd");
-            psdCorrArr=psdCorr();
-            psdRawArr=psdRaw();
-            for (size_t i=0;i<psdPieceSize;i++)
-                for (size_t j=0;j<size_t(psdPieceSize/2);j++)
-                    DIRECT_A2D_ELEM(psdCorrArr,i,j)=DIRECT_A2D_ELEM(psdRawArr,i,j);
-            psdCorr()=psdCorrArr;
-            psdCorr.write(correctedPSDFile+".psd");
-            FileName auxFile=rawPSDFile.addExtension("psd");
-            auxFile.deleteFile();
         }
 
         // Release the memory

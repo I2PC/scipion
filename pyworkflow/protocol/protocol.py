@@ -64,7 +64,10 @@ class Step(OrderedObject):
         self.interactive = Boolean(False)
         self._resultFiles = String()
         self._index = None
-        
+
+    def getIndex(self):
+        return self._index
+
     def _preconditions(self):
         """ Check if the necessary conditions to
         step execution are met""" 
@@ -156,7 +159,7 @@ class Step(OrderedObject):
 
     def isInteractive(self):
         return self.interactive.get()
-    
+
     def run(self):
         """ Do the job of this step"""
         self.setRunning() 
@@ -768,6 +771,8 @@ class Protocol(Step):
         """
         self.info(magentaStr("STARTED") + ": %s, step %d" %
                   (step.funcName.get(), step._index))
+        self.info("  %s" % dt.datetime.strptime(step.initTime.get(),
+                                                "%Y-%m-%d %H:%M:%S.%f"))
         self.__updateStep(step)
         
     def _stepFinished(self, step):
@@ -790,13 +795,14 @@ class Protocol(Step):
         
         self.info(magentaStr(step.getStatus().upper()) + ": %s, step %d" %
                   (step.funcName.get(), step._index))
-
+        self.info("  %s" % dt.datetime.strptime(step.endTime.get(),
+                                                "%Y-%m-%d %H:%M:%S.%f"))
         if step.isFailed() and self.stepsExecutionMode == STEPS_PARALLEL:
             # In parallel mode the executor will exit to close
             # all working threads, so we need to close
             self._endRun()
         return doContinue
-    
+
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps. """
         self._stepsDone.set(startIndex)
@@ -927,12 +933,12 @@ class Protocol(Step):
         if 'env' not in kwargs:
             #self._log.info("calling self._getEnviron...")
             kwargs['env'] = self._getEnviron()
-                       
+
         #self._log.info("runJob: cwd = %s" % kwargs.get('cwd', ''))
         #self._log.info("runJob: env = %s " % str(kwargs['env']))
 
         self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
-        
+
     def run(self):
         """ Before calling this method, the working dir for the protocol
         to run should exists. 
@@ -941,16 +947,17 @@ class Protocol(Step):
         
         self.info(greenStr('RUNNING PROTOCOL -----------------'))
         self._pid.set(os.getpid())
+        self.info('      Scipion: %s' % os.environ['SCIPION_VERSION'])
         self.info('   currentDir: %s' % os.getcwd())
-        self.info('   workingDir: ' + self.workingDir.get())
-        self.info('      runMode: %d' % self.runMode.get())
+        self.info('   workingDir: %s' % self.workingDir)
+        self.info('      runMode: %s' % MODE_CHOICES[self.runMode.get()])
         try:
-            self.info('          MPI: %d' % self.numberOfMpi.get())
-            self.info('      threads: %d' % self.numberOfThreads.get())
+            self.info('          MPI: %d' % self.numberOfMpi)
+            self.info('      threads: %d' % self.numberOfThreads)
         except Exception as e:
             self.info('  * Cannot get information about MPI/threads (%s)' % e)
 
-        Step.run(self)     
+        Step.run(self)
         self._endRun()
 
     def _endRun(self):
@@ -997,10 +1004,14 @@ class Protocol(Step):
     def getLogPaths(self):
         return map(self._getLogsPath, ['run.stdout', 'run.stderr', 'run.log'])
 
+    def getSteps(self):
+        """ Return the steps.sqlite file under logs directory. """
+        return self._steps
+    
     def getStepsFile(self):
         """ Return the steps.sqlite file under logs directory. """
         return self._getLogsPath('steps.sqlite')
-    
+
     def __openLogsFiles(self, mode):
         self.__fOut = open(self.getLogPaths()[0], mode)
         self.__fErr = open(self.getLogPaths()[1], mode)
@@ -1149,8 +1160,9 @@ class Protocol(Step):
         launch the job to a queue system.
         """
         queueName, queueParams = self.getQueueParams()
+        hc = self.getHostConfig()
         
-        script = self._getLogsPath(self.strId() + '.job')
+        script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
              'JOB_NODEFILE': script.replace('.job', '.nodefile'),
              'JOB_NAME': self.strId(),

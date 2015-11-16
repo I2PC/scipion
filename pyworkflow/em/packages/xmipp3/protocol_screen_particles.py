@@ -29,18 +29,13 @@
 This sub-package contains wrapper around Screen Particles Xmipp program
 """
 
+import pyworkflow.em.metadata as md
 from pyworkflow.object import String
 from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
                                         LEVEL_ADVANCED, FloatParam)
 from pyworkflow.em.protocol import ProtProcessParticles
-from pyworkflow.utils.path import copyFile, replaceBaseExt
+from convert import writeSetOfParticles, setXmippAttributes
 
-from convert import writeSetOfParticles, readSetOfParticles
-
-
-
-        
-        
 class XmippProtScreenParticles(ProtProcessParticles):
     """ Classify particles according their similarity to the others in order to detect outliers. """
     _label = 'screen particles'
@@ -116,11 +111,16 @@ class XmippProtScreenParticles(ProtProcessParticles):
         self.runJob("xmipp_image_ssnr", args)
         
     def createOutputStep(self):
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputParticles.get())
-        readSetOfParticles(self.outputMd.get(), imgSet)
-
-        self._defineOutputs(outputParticles=imgSet)
+        imgSet = self.inputParticles.get()
+        partSet = self._createSetOfParticles()
+        print "self.outputMd.get(): ", self.outputMd.get()
+        partSet.copyInfo(imgSet)
+        partSet.copyItems(imgSet,
+                            updateItemCallback=self._updateParticle,
+                            itemDataIterator=md.iterRows(self.outputMd.get(), sortByLabel=md.MDL_ITEM_ID))
+        
+        self._defineOutputs(outputParticles=partSet)
+        self._defineSourceRelation(imgSet, partSet)
 
     #--------------------------- INFO functions --------------------------------------------                
     def _summary(self):
@@ -158,3 +158,10 @@ class XmippProtScreenParticles(ProtProcessParticles):
             methods.append('Output set is %s.'%self.getObjectTag('outputParticles'))
         return methods
     
+    #--------------------------- UTILS functions -------------------------------------------- 
+    def _updateParticle(self, item, row):
+        setXmippAttributes(item, row, md.MDL_ZSCORE, md.MDL_ZSCORE_SHAPE1, md.MDL_ZSCORE_SHAPE2, md.MDL_ZSCORE_SNR1, md.MDL_ZSCORE_SNR2, md.MDL_CUMULATIVE_SSNR)
+        if row.getValue(md.MDL_ENABLED) <= 0:
+            item._appendItem = False
+        else:
+            item._appendItem = True

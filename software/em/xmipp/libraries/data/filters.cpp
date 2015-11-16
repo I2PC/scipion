@@ -1071,20 +1071,12 @@ void covarianceMatrix(const MultidimArray<double> &I, Matrix2D<double> &C)
 }
 
 /* Best shift -------------------------------------------------------------- */
-double bestShift(const MultidimArray<double> &I1, const MultidimArray< std::complex<double> > &FFTI1,
-		       const MultidimArray<double> &I2,
-               double &shiftX, double &shiftY, CorrelationAux &aux,
-               const MultidimArray<int> *mask, int maxShift)
+double bestShift(MultidimArray<double> &Mcorr,
+               double &shiftX, double &shiftY, const MultidimArray<int> *mask, int maxShift)
 {
-    I1.checkDimension(2);
-    I2.checkDimension(2);
-
     int imax, jmax, i_actual, j_actual;
     double xmax, ymax, avecorr, stdcorr, dummy;
     bool neighbourhood = true;
-    MultidimArray<double> Mcorr;
-
-    correlation_matrix(FFTI1, I2, Mcorr, aux);
 
     /*
      Warning: for masks with a small number of non-zero pixels, this routine is NOT reliable...
@@ -1199,12 +1191,40 @@ double bestShift(const MultidimArray<double> &I1, const MultidimArray< std::comp
     return max;
 }
 
+double bestShift(const MultidimArray<double> &I1, const MultidimArray< std::complex<double> > &FFTI1,
+		       const MultidimArray<double> &I2,
+               double &shiftX, double &shiftY, CorrelationAux &aux,
+               const MultidimArray<int> *mask, int maxShift)
+{
+    I1.checkDimension(2);
+    I2.checkDimension(2);
+
+    int imax, jmax, i_actual, j_actual;
+    double xmax, ymax, avecorr, stdcorr, dummy;
+    bool neighbourhood = true;
+    MultidimArray<double> Mcorr;
+
+    correlation_matrix(FFTI1, I2, Mcorr, aux);
+    return bestShift(Mcorr, shiftX, shiftY, mask, maxShift);
+}
+
 double bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
                double &shiftX, double &shiftY, CorrelationAux &aux,
                const MultidimArray<int> *mask, int maxShift)
 {
     aux.transformer1.FourierTransform((MultidimArray<double> &)I1, aux.FFT1, false);
     return bestShift(I1,aux.FFT1,I2,shiftX,shiftY,aux,mask,maxShift);
+}
+
+
+double bestShift(const MultidimArray< std::complex<double> > &FFTI1,
+				const MultidimArray< std::complex<double> > &FFTI2,
+				MultidimArray<double> &Mcorr,
+               double &shiftX, double &shiftY, CorrelationAux &aux,
+               const MultidimArray<int> *mask, int maxShift)
+{
+	correlation_matrix(FFTI1, FFTI2, Mcorr, aux);
+	return bestShift(Mcorr, shiftX, shiftY, mask, maxShift);
 }
 
 /* Best shift -------------------------------------------------------------- */

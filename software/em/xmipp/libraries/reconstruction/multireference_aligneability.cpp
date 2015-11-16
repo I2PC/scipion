@@ -133,8 +133,8 @@ void MultireferenceAligneability::run()
 
 		validation += (rank>0.5);
 		tempMdExp.getValue(MDL_IMAGE,imagePath,1);
-		//row.setValue(MDL_IMAGE,imagePath);
-		//row.setValue(MDL_IMAGE_IDX,i);
+		row.setValue(MDL_IMAGE,imagePath);
+		row.setValue(MDL_IMAGE_IDX,i);
 		row.setValue(MDL_VOLUME_SCORE1,rank);
 		row.setValue(MDL_VOLUME_SCORE2,sum_w_proj);
 		row.setValue(MDL_VOLUME_SCORE3,sum_w_exp);

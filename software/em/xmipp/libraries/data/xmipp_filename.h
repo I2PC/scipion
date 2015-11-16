@@ -553,6 +553,9 @@ public:
      * */
     FileName replaceSubstring(const String& subOld, const String& subNew) const;
 
+    /** Replace all occurrances of a character by another character */
+    FileName replaceCharacter(char oldChar, char newChar) const;
+
     /** Substitute last extension by a new one
      *
      * @code
