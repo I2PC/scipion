@@ -21,11 +21,9 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # ***************************************************************************/
 
-import os
-from itertools import izip
-
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportCoordinates, ProtImportMicrographs
+
 
 
 class TestImportBase(BaseTest):
@@ -33,8 +31,7 @@ class TestImportBase(BaseTest):
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
-        cls.dsMda = DataSet.getDataSet('mda')
-        cls.dsRelion = DataSet.getDataSet('relion_tutorial')
+        #cls.dsRelion = DataSet.getDataSet('relion_tutorial')
         cls.dsGroel = DataSet.getDataSet('groel')
         
     def checkOutput(self, prot, outputName, conditions=[]):
@@ -49,10 +46,6 @@ class TestImportBase(BaseTest):
         
     
 class TestImportCoordinates(TestImportBase):
-
-
-
-
 
     def testImportCoordinates(self):
         #First, import a set of micrographs
@@ -88,7 +81,7 @@ class TestImportCoordinates(TestImportBase):
         prot3 = self.newProtocol(ProtImportCoordinates,
                                  importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.dsXmipp.getFile('boxingDir'),
-                                 filesPattern='info/*_info.json', boxSize=550,
+                                 filesPattern='*_info.json', boxSize=550,
                                  scale=5.,
                                  invertX=False,
                                  invertY=False)
