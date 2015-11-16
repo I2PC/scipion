@@ -29,7 +29,7 @@ This sub-package contains wrapper around EMAN initialmodel program
 
 import os
 import pyworkflow.em as em
-from pyworkflow.em.packages.eman2.eman2 import getEmanProgram
+from pyworkflow.em.packages.eman2.eman2 import getEmanProgram, getVersion
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, EnumParam,
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.utils.path import cleanPattern, makePath
@@ -230,6 +230,11 @@ class EmanProtReconstruct(ProtReconstruct3D):
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
+        if not getVersion():
+            errors.append("We couldn't detect EMAN version. ")
+            errors.append("Please, check your configuration file and change EMAN2DIR.")
+            errors.append("The path should contains either '2.11' or '2.12' ")
+            errors.append("to properly detect the version.")
         if self.reconstructionMethod.get() > RECON_FOURIER:
             errors.append("Not implemented yet! Please, choise either back_prjection or fourier method.")
         return errors
