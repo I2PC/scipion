@@ -26,10 +26,10 @@
 
 import os
 
-from pyworkflow.protocol.params import IntParam, FloatParam, BooleanParam, StringParam, LEVEL_ADVANCED
+from pyworkflow.protocol.params import IntParam, FloatParam
 from pyworkflow.em.protocol import ProtParticlePicking
 
-
+import eman2
 from convert import readSetOfCoordinates
 
 
@@ -94,8 +94,17 @@ class SparxGaussianProtPicking(ProtParticlePicking):
         coordSet.setBoxSize(self.boxSize.get())
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.inputMicrographs, coordSet)
-
     
+    #--------------------------- INFO functions ---------------------------------------------------
+    def _validate(self):
+        errors = []
+        if not eman2.getVersion():
+            errors.append("We couldn't detect EMAN version. ")
+            errors.append("Please, check your configuration file and change EMAN2DIR.")
+            errors.append("The path should contains either '2.11' or '2.12' ")
+            errors.append("to properly detect the version.")
+        return errors
+
     #--------------------------- UTILS functions --------------------------------------------------
     def getFiles(self):
         filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
