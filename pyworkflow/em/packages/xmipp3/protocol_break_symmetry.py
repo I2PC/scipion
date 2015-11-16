@@ -30,12 +30,10 @@ This sub-package contains wrapper around angular_break_symmetry Xmipp program
 from pyworkflow.object import String
 from pyworkflow.protocol.params import StringParam
 from pyworkflow.em.protocol import ProtProcessParticles
-from convert import writeSetOfParticles, readSetOfParticles
+from convert import writeSetOfParticles
+import pyworkflow.em.metadata as md
 
-
-
-        
-        
+ 
 class XmippProtAngBreakSymmetry(ProtProcessParticles):
     """ Classify particles according their similarity to the others in order to detect outliers. """
     _label = 'break symmetry'
@@ -48,7 +46,7 @@ class XmippProtAngBreakSymmetry(ProtProcessParticles):
                       help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry"
                            " for a description of the symmetry groups format in Xmipp.\n"
                            "If no symmetry is present, use _c1_.")
-        
+    
     def _getDefaultParallel(self):
         """This protocol doesn't have mpi version"""
         return (0, 0)
@@ -79,11 +77,15 @@ class XmippProtAngBreakSymmetry(ProtProcessParticles):
         self.outputMd = String(outImagesMd)
 
     def createOutputStep(self):
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputParticles.get())
-        readSetOfParticles(self.outputMd.get(), imgSet)
-
-        self._defineOutputs(outputParticles=imgSet)
+        imgSet = self.inputParticles.get()
+        partSet = self._createSetOfParticles()
+        partSet.copyInfo(imgSet)
+        partSet.copyItems(imgSet,
+                          updateItemCallback=self._createItemMatrix,
+                          itemDataIterator=md.iterRows(self.outputMd.get(), sortByLabel=md.MDL_ITEM_ID))
+        
+        self._defineOutputs(outputParticles=partSet)
+        self._defineSourceRelation(imgSet, partSet)
 
     #--------------------------- INFO functions --------------------------------------------                
     def _summary(self):
@@ -117,4 +119,11 @@ class XmippProtAngBreakSymmetry(ProtProcessParticles):
 #                           ' program%s. ' % (self.getObjectTag('inputParticles'), len(self.inputParticles.get()), rejectionText[self.autoParRejection.get()]))
 #            methods.append('Output set is %s.'%self.getObjectTag('outputParticles'))
         return methods
-    
+
+    #--------------------------- Utils functions --------------------------------------------                
+    def _createItemMatrix(self, item, row):
+        from pyworkflow.em.packages.xmipp3.convert import createItemMatrix
+        import pyworkflow.em as em
+        
+        createItemMatrix(item, row, align=em.ALIGN_PROJ)
+

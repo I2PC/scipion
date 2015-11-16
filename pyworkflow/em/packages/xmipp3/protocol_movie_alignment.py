@@ -234,10 +234,9 @@ class ProtMovieAlignment(ProtProcessMovies):
                 mic.plotCart = em.Image()
                 mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
                 mic.plotCart.setFileName(self._getExtraPath(plotCartName))
-            if alMethod != AL_DOSEFGPU and alMethod != AL_CROSSCORRELATION:
-                mic.psdCorr = em.Image()
-                mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
-                print psdCorrName
+            #if alMethod != AL_DOSEFGPU and alMethod != AL_CROSSCORRELATION:
+            mic.psdCorr = em.Image()
+            mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
             micSet.append(mic)
 
 
@@ -300,7 +299,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         grayCorrected = False
         if alMethod == AL_AVERAGE:
             command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s' % locals()
-            command += ' --nst %d --ned %d --simpleAverage --psd' % (firstFrame, lastFrame)
+            command += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
             doSaveMovie = False
             if self.inputMovies.get().getDark() is not None:
                 command += " --dark "+self.inputMovies.get().getDark()
@@ -403,7 +402,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                     command += '--ssc '
 
             command += '-o %(micName)s --winSize %(winSize)d ' % locals()
-            command += '--nst %d --ned %d --psd ' % (firstFrame, lastFrame)
+            command += '--nst %d --ned %d' % (firstFrame, lastFrame)
             if self.doGPU:
                 command += '--gpu %d ' % gpuId
             if self.inputMovies.get().getDark() is not None and not grayCorrected:
@@ -420,7 +419,24 @@ class ProtMovieAlignment(ProtProcessMovies):
                     or alMethod == AL_DOSEFGPUOPTICAL or\
                     alMethod == AL_CROSSCORRELATIONOPTICAL:
                 moveFile(join(movieFolder, metadataName), self._getExtraPath())
-
+        # Compute half-half PSD
+        ih = em.ImageHandler()
+        avg = ih.computeAverage(join(movieFolder, movieName))
+        avg.write(join(movieFolder, 'uncorrectedmic.mrc'))
+        command = '--micrograph uncorrectedmic.mrc --oroot uncorrectedpsd --dont_estimate_ctf --pieceDim 400 --overlap 0.7'
+        program = 'xmipp_ctf_estimate_from_micrograph'
+        self.runJob(program, command, cwd=movieFolder)
+        command = '--micrograph %(micName)s --oroot correctedpsd --dont_estimate_ctf --pieceDim 400 --overlap 0.7' % locals()
+        self.runJob(program, command, cwd=movieFolder)
+        correctedPSD = em.ImageHandler().createImage()
+        unCorrectedPSD = em.ImageHandler().createImage()
+        correctedPSD.read(join(movieFolder, 'correctedpsd.psd'))
+        unCorrectedPSD.read(join(movieFolder, 'uncorrectedpsd.psd'))
+        x, y, z, n = correctedPSD.getDimensions()
+        for  i in range(1,y):
+            for j in range(1,x//2):
+                unCorrectedPSD.setPixel(i, j, correctedPSD.getPixel(i,j))
+        unCorrectedPSD.write(join(movieFolder, psdCorrName))
         # Move output micrograph and related information to 'extra' folder
         moveFile(join(movieFolder, micName), self._getExtraPath())
         if doSaveMovie:
@@ -435,8 +451,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             #TODO: create a proper scipion object
             moveFile(join(movieFolder, metadataNameInterMediate), self._getExtraPath())
             moveFile(join(movieFolder, corrMovieName), self._getExtraPath())
-        else:
-            moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
+        moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
 
 
     def _getProgram(self):

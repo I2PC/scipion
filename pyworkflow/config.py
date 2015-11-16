@@ -108,6 +108,7 @@ def loadHostsConf(hostsConf):
             # do no try to parse the rest of Queue parameters
             if host.queueSystem.hasName(): 
                 host.queueSystem.setMandatory(get('MANDATORY', 0))
+                host.queueSystem.submitPrefix.set(get('SUBMIT_PREFIX', ''))
                 host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
                 host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
                 host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
