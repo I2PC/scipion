@@ -394,7 +394,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                     command += '--ssc '
 
             command += '-o %(micName)s --winSize %(winSize)d ' % locals()
-            command += '--nst %d --ned %d' % (firstFrame, lastFrame)
+            command += '--nst %d --ned %d ' % (firstFrame, lastFrame)
             if self.doGPU:
                 command += '--gpu %d ' % gpuId
             if self.inputMovies.get().getDark() is not None and not grayCorrected:
