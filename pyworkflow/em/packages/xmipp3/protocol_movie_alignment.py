@@ -50,12 +50,6 @@ AL_AVERAGE = 3
 AL_CROSSCORRELATION = 4
 AL_CROSSCORRELATIONOPTICAL = 5
 
-PLOT_CART = 0
-PLOT_POLAR = 1
-PLOT_POLARCART = 2
-PLOT_CHOICES = ['cartesian', 'polar', 'both']
-
-
 class ProtMovieAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
@@ -201,7 +195,6 @@ class ProtMovieAlignment(ProtProcessMovies):
         for movie in self.inputMovies.get():
             micName = self._getNameExt(movie.getFileName(),'_aligned', 'mrc')
             metadataName = self._getNameExt(movie.getFileName(), '_aligned', 'xmd')
-            plotPolarName = self._getNameExt(movie.getFileName(), '_plot_polar', 'png')
             plotCartName = self._getNameExt(movie.getFileName(), '_plot_cart', 'png')
             psdCorrName = self._getNameExt(movie.getFileName(),'_aligned_corrected', 'psd')
             # Parse the alignment parameters and store the log files
@@ -210,14 +203,13 @@ class ProtMovieAlignment(ProtProcessMovies):
                 alignedMovie.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'_aligned', 'mrcs')))
             ####>>>This is wrong. Save an xmipp metadata
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
-            alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
+            #alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
             alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
             if alMethod == AL_OPTICAL or \
                alMethod == AL_DOSEFGPUOPTICAL or \
                alMethod == AL_CROSSCORRELATIONOPTICAL:
-                movieCreatePlot(PLOT_POLAR, alignedMovie, True)
-                movieCreatePlot(PLOT_CART, alignedMovie, True)
+               movieCreatePlot(alignedMovie, True)
             if self.doSaveMovie:
                 movieSet.append(alignedMovie)
 
@@ -230,9 +222,9 @@ class ProtMovieAlignment(ProtProcessMovies):
                alMethod == AL_DOSEFGPUOPTICAL or \
                alMethod == AL_CROSSCORRELATIONOPTICAL:
 
-                mic.plotPolar = em.Image()
+                #mic.plotPolar = em.Image()
                 mic.plotCart = em.Image()
-                mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
+                #mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
                 mic.plotCart.setFileName(self._getExtraPath(plotCartName))
             #if alMethod != AL_DOSEFGPU and alMethod != AL_CROSSCORRELATION:
             mic.psdCorr = em.Image()
@@ -402,7 +394,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                     command += '--ssc '
 
             command += '-o %(micName)s --winSize %(winSize)d ' % locals()
-            command += '--nst %d --ned %d' % (firstFrame, lastFrame)
+            command += '--nst %d --ned %d ' % (firstFrame, lastFrame)
             if self.doGPU:
                 command += '--gpu %d ' % gpuId
             if self.inputMovies.get().getDark() is not None and not grayCorrected:
@@ -531,86 +523,40 @@ class ProtMovieAlignment(ProtProcessMovies):
 def createPlots(plotType, protocol, movieId):
 
     movie = protocol.outputMovies[movieId]
-    return movieCreatePlot(plotType, movie, False)
+    return movieCreatePlot(movie, False)
 
-def movieCreatePlot(plotType, movie, saveFig):
+def movieCreatePlot(movie, saveFig):
 
     import xmipp
     meanX = []
     meanY = []
-    stdX = []
-    stdY = []
-    colors = []
-    gr = 255.0
-
-    # if movie is None:
-    #     return [self.errorMessage("Invalid movie id *%d*" % movieId,
-    #                               title="Invalid input")]
+    figureSize = (8, 6)
 
     alignedMovie = movie.alignMetaData
     md = xmipp.MetaData(alignedMovie)
-    colorDist = 255 / md.size()
-
-    cartPosition = None
-    polarPosition = None
-    colorBarPosition = 122
-    figureSize = (8, 6)
-
-    if plotType == PLOT_CART:
-        cartPosition = 121
-    elif plotType == PLOT_POLAR:
-        polarPosition = 121
-    elif plotType == PLOT_POLARCART:
-        cartPosition = 132
-        polarPosition = 131
-        colorBarPosition = 133
-
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
 
-    # Plot the color bar
-    ax = figure.add_subplot(colorBarPosition, aspect='equal', xlim=[0, 6])
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    colorBarX = np.array([1, 1])
-    colorBarY = np.array([2, 4])
-
-    # Read the shifts information from the Metadata
+    preX = 0.0
+    preY = 0.0
+    meanX.append(0.0)
+    meanY.append(0.0)
+    ax = figure.add_subplot(111)
+    ax.grid()
+    ax.set_title('Cartesian representation')
+    ax.set_xlabel('Drift x (pixels)')
+    ax.set_ylabel('Drift y (pixels)')
+    ax.plot(0, 0, 'yo-')
     for objId in md:
-        meanX.append(md.getValue(xmipp.MDL_OPTICALFLOW_MEANX, objId))
-        meanY.append(md.getValue(xmipp.MDL_OPTICALFLOW_MEANY, objId))
-        stdX.append(md.getValue(xmipp.MDL_OPTICALFLOW_STDX, objId))
-        stdY.append(md.getValue(xmipp.MDL_OPTICALFLOW_STDY, objId))
-        colors.append((1, gr / 255.0, 0))
-        ax.plot(colorBarX, colorBarY, c=(1, gr / 255.0, 0), linewidth=10)
-        ax.text(2, np.mean(colorBarY), str(objId)+'-'+str(objId+1))
-        colorBarY += 2
-        gr -= colorDist
-    area = (np.sqrt(np.power(np.asarray(stdX), 2) + np.power(np.asarray(stdY), 2)))*700
-    # Plot in polar if needed
-    if polarPosition:
-        r = np.sqrt(np.power(np.asarray(meanX), 2) + np.power(np.asarray(meanY), 2))
-        #theta = np.arctan2(meanY, meanX) * 180 / np.pi
-        theta = np.arctan2(meanY, meanX)
-        theta[theta < 0] += 2*np.pi
-        ax = figure.add_subplot(polarPosition, projection='polar')
-        ax.set_title('Polar representation')
-        c = ax.scatter(theta, r, c=colors, s=area, cmap=plt.cm.hsv)
-        c.set_alpha(0.75)
-        ax.plot(theta, r, '-^')
-        if saveFig:
-            plotter.savefig(movie.plotPolar)
-    # Plot in cartesian if needed
-    if cartPosition:
-        ax = figure.add_subplot(cartPosition)
-        ax.grid()
-        ax.grid()
-        ax.set_title('Cartesian representation')
-        c = ax.scatter(np.asarray(meanX), np.asarray(meanY), c=colors, s=area, cmap=plt.cm.hsv)
-        c.set_alpha(0.75)
-        ax.plot(np.asarray(meanX), np.asarray(meanY), '-^')
-        if saveFig:
-            plotter.savefig(movie.plotCart)
+        preX += md.getValue(xmipp.MDL_OPTICALFLOW_MEANX, objId)
+        preY += md.getValue(xmipp.MDL_OPTICALFLOW_MEANY, objId)
+        meanX.append(preX)
+        meanY.append(preY)
+        ax.plot(preX, preY, 'yo-')
+        ax.text(preX-0.02, preY+0.05, str(objId+1))
+    ax.plot(np.asarray(meanX), np.asarray(meanY))
+    if saveFig:
+        plotter.savefig(movie.plotCart)
     return plotter
 
 
