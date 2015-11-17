@@ -177,10 +177,22 @@ public class Filename {
 	}
 
 	private static boolean isFileType(String filename, String filetypes[]) {
-                if(filename == null)
-                    return false;
-                if(filename.contains(":"))
-                    filename = filename.substring(0, filename.lastIndexOf(":"));
+		if(filename == null)
+			return false;
+                
+        if(filename.contains(":")) {
+        	// If filename contains : it means that the user want
+        	// to force for specific image type, ignoring the filename
+        	// extension, for example:
+        	// output.ctf:mrc should be treat as a mrc image
+            String metaExt = filename.substring(filename.lastIndexOf(":")+1);
+            for (int i = 0; i < filetypes.length; i++) {
+    			if (filetypes[i].endsWith(metaExt)) 
+    				return true;
+    		}
+        }
+        // At this point use the filename extension to check
+        // if it is one of the recognized image types
 		for (int i = 0; i < filetypes.length; i++) {
 			if (filename.toLowerCase().endsWith(filetypes[i])) {
 				return true;

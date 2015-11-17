@@ -448,7 +448,7 @@ Arguments:
         runApp(protocolApp, args=sys.argv[3:])
         
     elif mode == MODE_PROTOCOLS:
-        runApp('pw_protocol_list.py')
+        runApp('pw_protocol_list.py', args=sys.argv[2:])
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.

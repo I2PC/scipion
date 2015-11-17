@@ -174,11 +174,12 @@ class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
             context = base_wiz(request, context)
             return render_to_response('wizards/wiz_volume_mask_radius.html', context)    
 
-class XmippVolumeRadiusWizardWeb(XmippVolumeRadiusWizard, XmippVolumeMaskRadiusWeb):
-    pass
-
-class XmippVolumeRadiusWizardPWeb(XmippVolumeMaskRadiusProjMWizard, XmippVolumeMaskRadiusWeb):
-    pass
+#This classes are not used in any place and cause error
+# class XmippVolumeRadiusWizardWeb(XmippVolumeRadiusWizard, XmippVolumeMaskRadiusWeb):
+#     pass
+# 
+# class XmippVolumeRadiusWizardPWeb(XmippVolumeMaskRadiusProjMWizard, XmippVolumeMaskRadiusWeb):
+#     pass
 
 class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
     _environments = [WEB_DJANGO]
