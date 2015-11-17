@@ -87,6 +87,10 @@ class ProtGemPicker(em.ProtParticlePicking):
                       label='Min distance between particles (pix)', expertLevel=LEVEL_ADVANCED,
                       help="Minimal distance between the centers of picked "
                            "particles (if 0, use reference image half-size)")
+        form.addParam('boxBorder', params.IntParam, default=0,
+                      label='Min distance from micrograph border (pix)', expertLevel=LEVEL_ADVANCED,
+                      help="Minimal distance between box edge and "
+                           "micrograph border")                           
         form.addParam('maskType', params.EnumParam, 
                       choices=['circular', 'object'], default=0, 
                       display=params.EnumParam.DISPLAY_HLIST,
@@ -136,6 +140,7 @@ class ProtGemPicker(em.ProtParticlePicking):
         args += ' --nPickMax=%d' % self.maxPeaks
         args += ' --boxSize=%d' % self.boxSize
         args += ' --boxDist=%d' % self.boxDist
+        args += ' --boxBorder=%d' % self.boxBorder
         
         if not self.useGPU:
             numberOfGPUs = 0
