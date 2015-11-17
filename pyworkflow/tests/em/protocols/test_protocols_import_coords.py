@@ -56,15 +56,18 @@ class TestImportCoordinates(TestImportBase):
 
         prot1 = self.newProtocol(ProtImportCoordinates,
                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
-                                 filesPath=self.dsXmipp.getFile('posSupervisedDir'),
+                                 filesPath=self.dsXmipp.getFile('pickingXmipp'),
                                  filesPattern='*.pos', boxSize=550,
-                                 scale=5.,
+                                 scale=3.,
                                  invertX=False,
                                  invertY=False
                                  )
         prot1.inputMicrographs.set(protImport.outputMicrographs)
         prot1.setObjLabel('import coords from xmipp ')
         self.launchProtocol(prot1)
+        
+        # Make sure that all 264 coordinates where correctly imported
+        self.assertTrue(prot1.outputCoordinates.getSize()==264)
 
         # prot2 = self.newProtocol(ProtImportCoordinates,
         #                          importFrom=ProtImportCoordinates.IMPORT_FROM_RELION,
