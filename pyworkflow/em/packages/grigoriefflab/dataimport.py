@@ -42,9 +42,12 @@ class GrigorieffLabImportCTF():
         ctf.setMicrograph(mic)
         readCtfModel(ctf, fileName, ctf4=ctffindOutputVersion(fileName)==4)
         
-        for suffix in ['_psd.mrc', '.mrc']:
-            if os.path.exists(pwutils.removeExt(fileName) + suffix):
-                ctf.setPsdFile(pwutils.removeExt(fileName) + suffix)
+        for suffix in ['_psd.mrc', '.mrc', '.ctf']:
+            psdFile = pwutils.removeExt(fileName) + suffix
+            if os.path.exists(psdFile):
+                if psdFile.endswith('.ctf'):
+                    psdFile += ':mrc'
+                ctf.setPsdFile(psdFile)
         return ctf
     
     
