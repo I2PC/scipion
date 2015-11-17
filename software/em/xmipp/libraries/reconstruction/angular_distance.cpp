@@ -320,7 +320,7 @@ void ProgAngularDistance::computeWeights()
 				if (mirror)
 				{
 					double rotp, tiltp, psip;
-					Euler_mirrorX(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
+					Euler_mirrorY(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
 					XX(rotTiltPsi)=rotp;
 					YY(rotTiltPsi)=tiltp;
 					ZZ(rotTiltPsi)=psip;
@@ -363,7 +363,7 @@ void ProgAngularDistance::computeWeights()
 					if (mirror)
 					{
 						double rotp, tiltp, psip;
-						Euler_mirrorX(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
+						Euler_mirrorY(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
 						XX(rotTiltPsi)=rotp;
 						YY(rotTiltPsi)=tiltp;
 						ZZ(rotTiltPsi)=psip;
