@@ -244,7 +244,8 @@ public:
     }
     void std_dev2(const cv::Mat planes[], const cv::Mat &flowx, const cv::Mat &flowy, Matrix1D<double> &meanStdDev)
     {
-        double sumX=0, sumY=0 ;
+        double sumX=0, sumY=0;
+        double absSumX=0, absSumY=0;
         double sqSumX=0, sqSumY=0;
         double valSubtract;
         int h=flowx.rows;
@@ -255,15 +256,19 @@ public:
             {
                 valSubtract=planes[0].at<float>(i,j)-flowx.at<float>(i,j);
                 sumX+=valSubtract;
+                absSumX+=abs(valSubtract);
                 sqSumX+=valSubtract*valSubtract;
                 valSubtract=planes[1].at<float>(i,j)-flowy.at<float>(i,j);
                 sumY+=valSubtract;
+                absSumY+=abs(valSubtract);
                 sqSumY+=valSubtract*valSubtract;
             }
-        meanStdDev(0)=sumX/double(n);
-        meanStdDev(1)=sqrt(sqSumX/double(n)-meanStdDev(0)*meanStdDev(0));
-        meanStdDev(2)=sumY/double(n);
-        meanStdDev(3)=sqrt(sqSumY/double(n)-meanStdDev(2)*meanStdDev(2));
+        double avgX=sumX/double(n);
+        double avgY=sumY/double(n);
+        meanStdDev(0)=absSumX/double(n);
+        meanStdDev(1)=sqrt(sqSumX/double(n)-avgX*avgX);
+        meanStdDev(2)=absSumY/double(n);
+        meanStdDev(3)=sqrt(sqSumY/double(n)-avgY*avgY);
     }
 
     int main2()
