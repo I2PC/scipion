@@ -446,6 +446,7 @@ void ProgAngularDistance::computeWeights()
     }
     sigma2/=N;
     sigma2=std::max(minSigma*minSigma,sigma2);
+    std::cout << "Sigma of angular distances=" << sqrt(sigma2) << std::endl;
 
     // Adjust the jumper weights according to a Gaussian
     double isigma2=-0.5/sigma2;
