@@ -894,6 +894,34 @@ int 	get_Number_Edges( struct DCEL_T *dcel)
     return(dcel->nEdges);
 }
 
+/***************************************************************************
+* Name: get_Number_Real_Edges
+* IN:		dcel		DCEL data
+* OUT:		N/A
+* IN/OUT:	N/A
+* RETURN:	# readl edges in DCEL
+* Description: Returns # real edges in DCEL. Real edges has no imaginary
+* 				vertex as origin nor destination.
+***************************************************************************/
+int 	get_Number_Real_Edges( struct DCEL_T *dcel)
+{
+	int		i=0;				// Loop counter.
+	int		nEdges=0;			// Return value.
+
+	// Check all edges.
+	for (i=0; i<get_Number_Edges(dcel) ;i++)
+	{
+		// Check origin and destination has no imaginary vertex.
+		if ((dcel->edges[i].origin_Vertex >= 0) &&
+			(dcel->edges[dcel->edges[i].twin_Edge-1].origin_Vertex >= 0))
+		{
+			nEdges++;
+		}
+	}
+
+	return(nEdges);
+}
+
 
 //#define DEBUG_INSERTEDGE
 /***************************************************************************
@@ -1896,6 +1924,35 @@ void	generate_Cluster_Points_DCEL( int nPoints, struct DCEL_T *dcel,
         insertVertex( dcel, point);
 	}
 }
+
+
+/***************************************************************************
+* Name: 	generate_Cluster_Points_DCEL
+* IN:		fileName				output file.
+* 			dcel					DCEL structure data.
+* OUT:		N/A
+* IN/OUT:	N/A
+* RETURN:	N/A
+* Description: writes DCEL statistics data to an output file.
+***************************************************************************/
+void 	print_Dcel_Statistics( char *fileName, struct DCEL_T *dcel)
+{
+	FILE 	*fd=NULL;		// File descriptor.
+
+	// Open input file.
+	if ((fd = fopen( fileName, "w")) == NULL)
+	{
+		printf("Error opening output file: %s\n", fileName);
+	}
+	else
+	{
+		fprintf( fd, "%d\n", dcel->nVertex);
+		fprintf( fd, "%d\n", dcel->nVertex);
+		fprintf( fd, "%d\n", get_Number_Real_Faces( dcel));
+	}
+}
+
+
 
 void	shake_Points_DCEL( struct DCEL_T *dcel)
 {

@@ -89,6 +89,7 @@ struct Point_T       *get_Vertex_Point( struct DCEL_T *dcel, int index);
 
 // Edges interface.
 int 	get_Number_Edges( struct DCEL_T *dcel);
+int 	get_Number_Real_Edges( struct DCEL_T *dcel);
 int 	insertEdge( struct DCEL_T *dcel, int origin, int twin, int prev, int next, int face);
 int	    update_Edge( struct DCEL_T *dcel, int origin, int twin, int prev, int next, int face, int index);
 int		are_Twins( struct DCEL_T *dcel, struct Dcel_Edge_T *edge1, struct Dcel_Edge_T *edge2);
@@ -124,5 +125,10 @@ int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel);
 void	generate_Random_Points_DCEL( int nPoints, struct DCEL_T *dcel, TYPE maxX, TYPE maxY);
 void	generate_Cluster_Points_DCEL( int nPoints, struct DCEL_T *dcel,
 							int nClusters, int radius, TYPE maxX, TYPE maxY);
+
+#define DCEL_STATISTICS
+#ifdef DCEL_STATISTICS
+void 	print_Dcel_Statistics( char *fileName, struct DCEL_T *dcel);
+#endif
 
 #endif
