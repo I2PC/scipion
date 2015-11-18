@@ -410,6 +410,7 @@ void ProgOperate::readParams()
         unaryOperator = log10;
     else
         REPORT_ERROR(ERR_VALUE_INCORRECT, "No valid operation specified");
+
     if (binaryOperator != NULL)
     {
         if (!file_or_value.exists())
@@ -423,9 +424,9 @@ void ProgOperate::readParams()
         {
             isValue = false;
             fn2 = file_or_value;
-            if (fn2.hasStackExtension() || fn2.isMetaData())
+            md2.read(fn2);
+            if (md2.size() > 1)
             {
-                md2.read(fn2);
                 if (mdInSize != md2.size())
                     REPORT_ERROR(ERR_MD, "Both metadatas operands should be of same size.");
                 md2Iterator.init(md2);
