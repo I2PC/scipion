@@ -60,20 +60,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                       label="Input volume(s)", important=True, 
                       help='Select one or more volumes (Volume or SetOfVolumes)\n'
                            'to be aligned againt the reference volume.')
-        #group1 = form.addGroup('Mask'), 
-        #group1.addParam('applyMask', params.BooleanParam, default=False,
-        #              label='Apply mask?',
-        #              help='Apply a 3D Binary mask to the volumes')
-        #group1.addParam('maskType', params.EnumParam, choices=['circular','binary file'], default=ALIGN_MASK_CIRCULAR, 
-        #              label='Mask type', display=params.EnumParam.DISPLAY_COMBO, condition='applyMask',
-        #              help='Select the type of mask you want to apply')
-        #group1.addParam('maskRadius', params.IntParam, default=-1, condition='applyMask and maskType==%d' % ALIGN_MASK_CIRCULAR,
-        #              label='Mask radius', 
-        #              help='Insert the radius for the mask')
-        #group1.addParam('maskFile', params.PointerParam, condition='applyMask and maskType==%d' % ALIGN_MASK_BINARY_FILE,
-        #              pointerClass='VolumeMask', label='Mask file', 
-        #              help='Select the volume mask object')
-        
+                
         form.addSection(label='Pseudoatom')
         XmippProtConvertToPseudoAtomsBase._defineParams(self,form)
         self.getParam("pseudoAtomRadius").setDefault(2)
@@ -81,20 +68,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         
         form.addSection(label='Normal Mode Analysis')
         XmippProtNMABase._defineParamsCommon(self,form)
-        
-        form.addSection(label='Align Volume')
-        form.addParam('alignmentAlgorithm', params.EnumParam, default=ALIGN_ALGORITHM_EXHAUSTIVE, 
-                      choices=['exhaustive',
-                               'local', 
-                               'exhaustive + local', 
-                               'fast fourier'], 
-                      label='Alignment algorithm', display=params.EnumParam.DISPLAY_COMBO,
-                      help='Exhaustive searches all possible combinations within a search space.'
-                            'Local searches around a given position.'
-                            'Be aware that the Fast Fourier algorithm requires a special compilation'
-                            'of Xmipp (--cltomo flag). It performs the same job as the  '
-                            'exhaustive method but much faster.')
-        
+                 
         form.addParallelSection(threads=8, mpi=1)
         
     #--------------------------- INSERT steps functions --------------------------------------------    
@@ -105,12 +79,15 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         else:
             cutoffStr = 'Absolute %f'%self.rc.get()
 
+
+        self.alignmentAlgorithm == ALIGN_ALGORITHM_LOCAL
         maskArgs = self._getMaskArgs()
         alignArgs = self._getAlignArgs()
         
         
+        
         volList = [vol.clone() for vol in self._iterInputVolumes()]
-                    
+                                    
         for voli in volList:
             fnIn = getImageLocation(voli)
             fnMask = self._insertMaskStep(fnIn)
@@ -118,20 +95,28 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             self._insertFunctionStep('convertToPseudoAtomsStep', fnIn, fnMask, voli.getSamplingRate(), prefix)
             fnPseudoAtoms = self._getPath("pseudoatoms_%d.pdb"%voli.getObjId())
             self._insertFunctionStep('computeModesStep', fnPseudoAtoms, self.numberOfModes, cutoffStr)
-            self._insertFunctionStep('reformatOutputStep', os.path.basename(fnPseudoAtoms), prefix)
-            for volj in volList:
-                if volj is not voli:
+            self._insertFunctionStep('reformatOutputStep', os.path.basename(fnPseudoAtoms))
+            
+                                
+            self._insertFunctionStep('qualifyModesStep', self.numberOfModes, self.collectivityThreshold.get(), self._getPath("pseudoatoms_%d.pdb"%voli.getObjId()))
+            
+            ###### in this step I have to make a copy of modes.xmd
+            
+            
+            '''for volj in volList:
+                if volj.getObjId() is not voli.getObjId():
                     refFn = getImageLocation(voli)
                     inVolFn = getImageLocation(volj)
-                    self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, vol.outputName, 
-                                                maskArgs, alignArgs)
+                    outVolFn = self._getExtraPath('output_vol_%03d_to_%03d.vol' % (volj.getObjId(), voli.getObjId()))
+                    self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, 
+                                                maskArgs, alignArgs)'''
                     
             
         
         
                 
                    
-    #    self._insertFunctionStep('createOutputStep')
+        #self._insertFunctionStep('createOutputStep')
         
     #--------------------------- STEPS functions --------------------------------------------
     
@@ -146,64 +131,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
          
             
       
-    #def createOutputStep(self):
-    
-    """ for pseudoatom"""
-    
-    #inputVol = self.inputStructure.get()
-    #pdb = PdbFile(self._getPath('pseudoatoms.pdb'), pseudoatoms=True)
-    #self.createChimeraScript(inputVol, pdb)
-    #self._defineOutputs(outputPdb=pdb)
-    #self._defineSourceRelation(self.inputStructure, pdb)
-    
-    
-    
-    """ for mode analysis""" 
-    
-    #fnSqlite = self._getPath('modes.sqlite')
-    #nmSet = SetOfNormalModes(filename=fnSqlite)
-
-    #md = xmipp.MetaData(self._getPath('modes.xmd'))
-    #row = XmippMdRow()
-        
-    #for objId in md:
-    #    row.readFromMd(md, objId)
-    #    nmSet.append(rowToMode(row))
-    #inputPdb = self.inputStructure.get()
-    #nmSet.setPdb(inputPdb)
-    #self._defineOutputs(outputModes=nmSet)
-    #self._defineSourceRelation(self.inputStructure, nmSet)
-    
-    
-    
-    
-    
-    
-    """ for align volume"""
-    
-    #    vols = []
-    #    for vol in self._iterInputVolumes():
-    #        outVol = em.Volume()
-    #        outVol.setLocation(vol.outputName)
-    #        outVol.setObjLabel(vol.getObjLabel())
-    #        outVol.setObjComment(vol.getObjComment())
-    #        vols.append(outVol) 
-    #        
-    #    if len(vols) > 1:
-    #        volSet = self._createSetOfVolumes()
-    #        volSet.setSamplingRate(self.inputReference.get().getSamplingRate())
-    #        for vol in vols:
-    #            volSet.append(vol)
-    #        outputArgs = {'outputVolumes': volSet}
-    #    else:
-    #        vols[0].setSamplingRate(self.inputReference.get().getSamplingRate())
-    #        outputArgs = {'outputVolume': vols[0]}
-    #        
-    #    self._defineOutputs(**outputArgs)
-    #    for pointer in self.inputVolumes:
-    #        self._defineSourceRelation(pointer, outputArgs.values()[0])
-
-    
+      
     #--------------------------- INFO functions --------------------------------------------
     
     def _validate(self):
@@ -219,22 +147,22 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
     #            
     #    return summary
     
-    #def _methods(self):
-    #    nVols = self._getNumberOfInputs()
-    #        
-    #    return [methods]
+    def _methods(self):
+        messages = []
+        messages.append('C.O.S. Sorzano et. al. "StructMap: Multivariate distance analysis of elastically aligned electron microscopy density maps\n'
+                        '                         for exploring pathways of conformational changes"')
+        return messages
         
-    #def _citations(self):
-    #    if self.alignmentAlgorithm == ALIGN_ALGORITHM_FAST_FOURIER:
-    #        return ['Chen2013']
+    def _citations(self):
+        return ['C.O.S.Sorzano2015']
         
     #--------------------------- UTILS functions --------------------------------------------
     def _iterInputVolumes(self):
         """ Iterate over all the input volumes. """
         for pointer in self.inputVolumes:
             item = pointer.get()
-            if item is None:
-                break
+            #if item is None:
+            #    break
             itemId = item.getObjId()
             if isinstance(item, em.Volume):
                 item.outputName = self._getExtraPath('output_vol%06d.vol' % itemId)
@@ -247,7 +175,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
     def _getAlignArgs(self):
         alignArgs = ''
         
-        '''if self.alignmentAlgorithm == ALIGN_ALGORITHM_FAST_FOURIER:
+        if self.alignmentAlgorithm == ALIGN_ALGORITHM_FAST_FOURIER:
             alignArgs += " --frm"
             
         elif self.alignmentAlgorithm == ALIGN_ALGORITHM_LOCAL:
@@ -259,7 +187,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 self.initialShiftY, self.initialShiftY,
                 self.initialShiftZ,self.initialShiftZ,
                 self.initialScale, self.initialScale)
-        else: # Exhaustive or Exhaustive+Local
+        '''else: # Exhaustive or Exhaustive+Local
             alignArgs += " --rot %f %f %f --tilt %f %f %f --psi %f %f %f -x %f %f %f -y %f %f %f -z %f %f %f --scale %f %f %f" %\
                (self.minRotationalAngle, self.maxRotationalAngle, self.stepRotationalAngle,
                 self.minTiltAngle, self.maxTiltAngle, self.stepTiltAngle,
@@ -268,6 +196,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 self.minimumShiftY, self.maximumShiftY, self.stepShiftY,
                 self.minimumShiftZ, self.maximumShiftZ, self.stepShiftZ,
                 self.minimumScale, self.maximumScale, self.stepScale)'''
+               
         return alignArgs
      
     def _getMaskArgs(self):

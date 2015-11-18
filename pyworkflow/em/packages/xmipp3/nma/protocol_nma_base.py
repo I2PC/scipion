@@ -29,9 +29,13 @@
 
 import math
 from glob import glob
+from os.path import exists, join
 
+from pyworkflow.utils import redStr
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
+from pyworkflow.utils.path import copyFile, createLink, makePath, cleanPath, moveFile
+from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, LEVEL_ADVANCED, EnumParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
 from convert import getNMAEnviron
 import xmipp
@@ -134,14 +138,14 @@ class XmippProtNMABase(EMProtocol):
 
         return rc    
     
-    def reformatOutputStep(self,fnPseudoatoms, prefix=''):
+    def reformatOutputStep(self,fnPseudoatoms):
         self._enterWorkingDir()
         n = self._countAtoms(fnPseudoatoms)
         self.runJob("nma_reformat_vector_foranimate.pl","%d fort.11" % n,env=getNMAEnviron())
         self.runJob("cat","vec.1* > vec_ani.txt")
         self.runJob("rm","-f vec.1*")
         self.runJob("nma_reformat_vector.pl","%d fort.11" % n,env=getNMAEnviron())
-        fnModesDir="modes%s"%prefix
+        fnModesDir="modes"
         makePath(fnModesDir)
         self.runJob("mv","-f vec.* %s"%fnModesDir)
         self.runJob("nma_prepare_for_animate.py","",env=getNMAEnviron())
@@ -205,13 +209,24 @@ class XmippProtNMABase(EMProtocol):
                 mdOut.setValue(xmipp.MDL_ENABLED,-1,objId)
         fh.close()
         idxSorted = [i[0] for i in sorted(enumerate(collectivityList), key=lambda x:x[1])]
-        score = [0]*numberOfModes
+        
+        score = []
+        for j in range(numberOfModes):
+            score.append(0)
+        
+        modeNum = []
+        l = 0
+        for k in range(numberOfModes):
+            modeNum.append(k)
+            l += 1
+        
+        #score = [0]*numberOfModes
         for i in range(numberOfModes):
             score[i] += i+1
-            score[idxSorted[i]] += numberOfModes - i
+            score[idxSorted[i]] += modeNum[i] - i
         i = 0
         for objId in mdOut:
-            score_i = float(score[i])/(2.0*numberOfModes)
+            score_i = float(score[i])/(2.0*l)
             mdOut.setValue(xmipp.MDL_NMA_SCORE, score_i, objId)
             i+=1
         mdOut.write("modes.xmd")

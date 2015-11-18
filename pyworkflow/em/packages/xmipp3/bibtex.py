@@ -512,6 +512,20 @@ author = "B. Heymann",
 keywords = ""
 }
 
+@article{C.O.S.Sorzano2015,
+title = "StructMap:... ",
+journal = "",
+volume = "",
+number = "",
+pages = "",
+year = "",
+note = "submitted",
+issn = "",
+doi = "",
+url = "",
+author = "C.O.S.Sorzano et al.",
+keywords = ""
+}
 """
 
 
