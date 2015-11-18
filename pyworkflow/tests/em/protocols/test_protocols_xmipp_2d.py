@@ -276,7 +276,7 @@ class TestXmippApplyMask2D(TestXmippBase):
         protMask01 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate=1.237, 
                                      size=500, 
-                                     geo=0, radius=450)
+                                     geo=0, radius=225)
         protMask01.setObjLabel('circular mask')
         self.launchProtocol(protMask01)
         self.assertIsNotNone(protMask01.outputMask, "There was a problem with apply user custom mask for particles")
