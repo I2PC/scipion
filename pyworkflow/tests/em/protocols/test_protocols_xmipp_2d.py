@@ -269,14 +269,14 @@ class TestXmippApplyMask2D(TestXmippBase):
                                 self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
         
         self.assertIsNotNone(protMask6.outputParticles, "There was a problem with apply raised crown mask for particles")
-        Mask
+
     def testApplyUserMask(self):
         print "Run apply user mask for particles"
         # Create MASK
         protMask01 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate=1.237, 
-                                     size=20, 
-                                     geo=0, radius=-1 )
+                                     size=500, 
+                                     geo=0, radius=450)
         protMask01.setObjLabel('circular mask')
         self.launchProtocol(protMask01)
         self.assertIsNotNone(protMask01.outputMask, "There was a problem with apply user custom mask for particles")
