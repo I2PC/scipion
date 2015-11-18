@@ -76,33 +76,28 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
             name should be the same of the micrographs.
         coordSet: the SetOfCoordinates that will be populated.
     """
-
     addBsoftLabelAliases()
-    boxSize = None
+    boxSize = 0
     for mic in micSet:
         outputFile = join(outputDir, replaceBaseExt(mic.getFileName(), 'star'))
         #scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
         if exists(outputFile):
             posMd = xmipp.MetaData(outputFile)
-        else:
-            posMd = xmipp.MetaData()
-        
-        for objId in posMd:
-            coord = rowToCoordinate(rowFromMd(posMd, objId))
-            boxSize = 2 * posMd.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, objId)
-            coord.setMicrograph(mic)
-            coord.setX(coord.getX())
-            coord.setY(coord.getY())
-            
-            coordSet.append(coord)      
-            # Add an unique ID that will be propagated to particles
-            posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
+            for objId in posMd:
+                coord = rowToCoordinate(rowFromMd(posMd, objId))
+                boxSize = 2 * posMd.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, objId)
+                coord.setMicrograph(mic)
+                coord.setX(coord.getX())
+                coord.setY(coord.getY())
+                
+                coordSet.append(coord)      
+                # Add an unique ID that will be propagated to particles
+                posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
 #         if not posMd.isEmpty():
 #             posMd.write("particles@%s"  % scipionPosFile)
             
-            
-             #reading origin.x value and converting to particle size, can change, we take last value
-            coordSet.setBoxSize(boxSize)
+    #reading origin.x value and converting to particle size, can change, we take last value
+    coordSet.setBoxSize(boxSize)
             
             
 class ParticleAdaptor():
@@ -142,7 +137,6 @@ def writeSetOfParticles(imgSet, starFile, stackFile):
         starFile: the filename where to write the metadata.
     """
     import pyworkflow.em.packages.xmipp3 as xmipp3
-    print "In writeSetOfParticles Bsoft"
     addBsoftLabelAliases()
 #     pa = ParticleAdaptor(imgSet, stackFile)
 #     xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow, writeAlignment=False)
