@@ -352,8 +352,12 @@ cythongsl = env.addModule(
 # 'commands' is a list of (command, [targets]) to run after installation.
 
 
-env.addPackage('bsoft',
+env.addPackage('bsoft-1.8.8',
                tar='bsoft1_8_8_Fedora_12.tgz',
+               default=False)
+
+env.addPackage('bsoft-1.9.0',
+               tar='bsoft1_9_0_Fedora_20.tgz',
                default=False)
 
 env.addPackage('ctffind',
