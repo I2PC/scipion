@@ -23,6 +23,17 @@ def getEnviron():
             }, position=Environ.BEGIN)
     return environ
 
+
+SUPPORTED_VERSIONS = ['1.8.8', '1.9.0']
+
+def getVersion():
+    path = os.environ['BSOFT_HOME']
+    for v in SUPPORTED_VERSIONS:
+        if v in path:
+            return v
+    return ''
+
+
 # Map from Xmipp labels to Relion labels names
 XMIPP_BSOFT_LABELS = {
                         MDL_MICROGRAPH:        'micrograph.file_name'
