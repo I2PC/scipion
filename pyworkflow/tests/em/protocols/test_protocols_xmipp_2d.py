@@ -269,14 +269,14 @@ class TestXmippApplyMask2D(TestXmippBase):
                                 self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
         
         self.assertIsNotNone(protMask6.outputParticles, "There was a problem with apply raised crown mask for particles")
-        Mask
+
     def testApplyUserMask(self):
         print "Run apply user mask for particles"
         # Create MASK
         protMask01 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate=1.237, 
-                                     size=20, 
-                                     geo=0, radius=-1 )
+                                     size=500, 
+                                     geo=0, radius=225)
         protMask01.setObjLabel('circular mask')
         self.launchProtocol(protMask01)
         self.assertIsNotNone(protMask01.outputMask, "There was a problem with apply user custom mask for particles")
@@ -867,6 +867,31 @@ class TestXmippBreakSym(TestXmippBase):
         self.assertEqual(count, 1, "There was a problem with break symmetry")
         os.unlink(fileTmp.name)
 
+
+class TestXmippCorrectWiener2D(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData()
+    
+    def test_CorrectWiener(self):
+        prot1 = self.newProtocol(ProtImportParticles,
+                                 importFrom=ProtImportParticles.IMPORT_FROM_XMIPP3,
+                                 mdFile=self.dataset.getFile('particles/sphere_128.xmd'),
+                                 magnification=10000,
+                                 samplingRate=1,
+                                 haveDataBeenPhaseFlipped=False
+                                 )
+        self.launchProtocol(prot1)
+        print "Run CTFCorrectWiener2D particles"
+        protCorrect = self.newProtocol(XmippProtCTFCorrectWiener2D)
+        protCorrect.inputParticles.set(prot1.outputParticles)
+        self.launchProtocol(protCorrect)
+        self.assertIsNotNone(protCorrect.outputParticles, "There was a problem with Wiener Correction")
+
+        
+        
+        
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

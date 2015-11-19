@@ -87,12 +87,12 @@ class TestNMA(TestWorkflow):
         #------------------------------------------------        
         # Case 2. Import Vol -> Pdb -> NMA
         #------------------------------------------------
-#         # Import the set of particles 
-#         # (in this order just to be in the middle in the tree)
-#         protImportParts = self.newProtocol(ProtImportParticles,
-#                                            filesPath=self.ds.getFile('particles'),
-#                                            samplingRate=1.0)
-#         self.launchProtocol(protImportParts) 
+        # Import the set of particles 
+        # (in this order just to be in the middle in the tree)
+        protImportParts = self.newProtocol(ProtImportParticles,
+                                           filesPath=self.ds.getFile('particles'),
+                                           samplingRate=1.0)
+        self.launchProtocol(protImportParts) 
         
         # Import a Volume
         protImportVol = self.newProtocol(ProtImportVolumes,
@@ -101,8 +101,12 @@ class TestNMA(TestWorkflow):
         self.launchProtocol(protImportVol)
         
         # Convert the Volume to Pdb
+        from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import NMA_MASK_THRE
         protConvertVol = self.newProtocol(XmippProtConvertToPseudoAtoms)
         protConvertVol.inputStructure.set(protImportVol.outputVolume)
+        protConvertVol.maskMode.set(NMA_MASK_THRE)
+        protConvertVol.maskThreshold.set(0.2)
+        protConvertVol.pseudoAtomRadius.set(2.5)
         self.launchProtocol(protConvertVol)
         
         # Launch NMA with Pseudoatoms

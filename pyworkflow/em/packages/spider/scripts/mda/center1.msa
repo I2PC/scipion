@@ -1,0 +1,46 @@
+(x21,x22)
+
+fr
+[input]?file to be centered?
+fr
+[output]?centered image?
+
+rt 90
+[input]
+_1      ; OUTPUT: rotated image
+        ; x-range
+        ; y-range
+        ; z-range
+z       ; rotation axis
+(180)   ; angle
+
+cc
+[input]
+_1   ; INPUT: rotated image
+_2   ; OUTPUT: ccf
+
+pk c x11,x12,x13,x14,x15,x16,x17
+_2   ; INPUT: ccf
+(1,0)   ; #peaks, origin override
+(5,5)   ; ellipse axes
+Y       ; enforce positivity?
+(5)     ; minimum-neigborhood distance
+(10,10)   ; edge-exclusion width
+
+;vm m
+;echo "x-shift: {%f6.2%x11}" ;
+;echo "y-shift: {%f6.2%x12}" ;
+;.
+
+; take half of the shifts
+x21=x11/2   ; x-shift
+x22=x12/2   ; y-shift
+
+sh
+[input]
+[output]
+-x21,-x22
+
+re
+
+; Modified 2015-03-24

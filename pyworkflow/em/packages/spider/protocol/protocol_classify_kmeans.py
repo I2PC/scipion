@@ -86,7 +86,13 @@ class SpiderProtClassifyKmeans(SpiderProtClassify):
             for values in doc.iterValues():
                 imgId = int(values[0])
                 img = particles[imgId]
-                class2D.append(img)
+                if img is None:
+                    print ">>> WARNING: Particle with id '%d' found in docfile, but not in input particles." % imgId
+                else: 
+                    class2D.append(img)
+                
+            # Update information about number of particles in the class
+            classes2D.update(class2D)
                 
         self._defineOutputs(outputClasses=classes2D)
         self._defineSourceRelation(self.inputParticles, classes2D)
