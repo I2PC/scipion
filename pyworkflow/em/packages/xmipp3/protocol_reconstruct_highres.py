@@ -295,7 +295,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         from pyworkflow.em.packages.xmipp3.convert import createItemMatrix
         
         createItemMatrix(particle, row, align=em.ALIGN_PROJ)
-        setXmippAttributes(particle, row, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_ANGLE_TILT, xmipp.MDL_SCALE, xmipp.MDL_MAXCC, xmipp.MDL_MAXCC_PERCENTILE, xmipp.MDL_WEIGHT, xmipp.MDL_WEIGHT_JUMPER0)
+        setXmippAttributes(particle, row, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_ANGLE_TILT, xmipp.MDL_SCALE, xmipp.MDL_MAXCC, xmipp.MDL_MAXCC_PERCENTILE, xmipp.MDL_WEIGHT, 
+                           xmipp.MDL_ANGLE_DIFF0, xmipp.MDL_WEIGHT_JUMPER0)
         if row.containsLabel(xmipp.MDL_CONTINUOUS_X):
             setXmippAttributes(particle, row, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y, xmipp.MDL_COST, xmipp.MDL_WEIGHT_CONTINUOUS2, xmipp.MDL_CONTINUOUS_SCALE_X, xmipp.MDL_CONTINUOUS_SCALE_Y, xmipp.MDL_COST_PERCENTILE)
         if row.containsLabel(xmipp.MDL_ANGLE_DIFF):
@@ -660,11 +661,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnAnglesB=join(fnGlobal,"anglesDisc%02db.xmd"%i)
                 fnOut=join(fnGlobal,"anglesDisc%02d"%i)
                 fnAngles=fnOut+".xmd"
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column weightJumper'%(fnAnglesA),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleDiff'%(fnAnglesA),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column weightJumper'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleDiff'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights --check_mirrors"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
+                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights --check_mirrors --set 0"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
                 moveFile(fnOut+"_weights.xmd",fnOut+".xmd")
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleRot2'%(fnAnglesB),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleTilt2'%(fnAnglesB),numberOfMpi=1)
@@ -676,19 +673,26 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate rename_column "anglePsi anglePsi2"'%(fnAnglesB),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate rename_column "shiftX shiftX2"'%(fnAnglesB),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate rename_column "shiftY shiftY2"'%(fnAnglesB),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleRot2'%(fnAngles),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleTilt2'%(fnAngles),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column anglePsi2'%(fnAngles),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column shiftX2'%(fnAngles),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column shiftY2'%(fnAngles),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --set join %s itemId'%(fnAngles,fnAnglesB),numberOfMpi=1)
                 md=xmipp.MetaData(fnAngles)
-                sigmaD=newXdim*0.005
+                sigmaD=newXdim*0.01
+                print "Sigma displacement=",sigmaD
                 K=-1.0/(4*sigmaD*sigmaD)
                 for objId in md:
                     shiftX=md.getValue(xmipp.MDL_SHIFT_X,objId)
                     shiftY=md.getValue(xmipp.MDL_SHIFT_Y,objId)
                     shiftX2=md.getValue(xmipp.MDL_SHIFT_X2,objId)
                     shiftY2=md.getValue(xmipp.MDL_SHIFT_Y2,objId)
-                    weight=md.getValue(xmipp.MDL_WEIGHT_JUMPER,objId)
-                    angleDiff=md.getValue(xmipp.MDL_ANGLE_DIFF,objId)
-                    d=abs(shiftX-shiftX2)+abs(shiftY-shiftY2)
-                    if angleDiff<angleStep and d<sigmaD:
+                    weight=md.getValue(xmipp.MDL_WEIGHT_JUMPER0,objId)
+                    angleDiff=md.getValue(xmipp.MDL_ANGLE_DIFF0,objId)
+                    d=0.5*(abs(shiftX-shiftX2)+abs(shiftY-shiftY2))
+                    d2=d*d
+                    if angleDiff<angleStep and d<sigmaD and False:
                         shiftX=0.5*(shiftX+shiftX2)
                         shiftY=0.5*(shiftY+shiftY2)
                         rot=md.getValue(xmipp.MDL_ANGLE_ROT,objId)
@@ -702,7 +706,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         md.setValue(xmipp.MDL_ANGLE_ROT,rot,objId)
                         md.setValue(xmipp.MDL_ANGLE_TILT,tilt,objId)
                         md.setValue(xmipp.MDL_ANGLE_PSI,psi,objId)
-                    weight*=math.exp(K*d)
+                    weight*=math.exp(K*d2)
                     md.setValue(xmipp.MDL_WEIGHT_JUMPER0,weight,objId)
                 md.write(fnAngles)
                 
