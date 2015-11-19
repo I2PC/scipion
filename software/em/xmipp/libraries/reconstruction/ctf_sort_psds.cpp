@@ -173,7 +173,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     if (rowIn.containsLabel(MDL_CTF_MODEL))
     {
       rowIn.getValue(MDL_CTF_MODEL, fnCTF);
-      if (!exists(fnCTF))
+      if (!fnCTF.exists())
       {
     	  rowOut.setValue(MDL_ENABLED,-1);
     	  return;
