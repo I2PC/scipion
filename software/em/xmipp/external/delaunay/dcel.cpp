@@ -67,7 +67,7 @@ int 	initialize_DCEL( struct DCEL_T *dcel, int nPoints, int nEdges, int nFaces)
 	return(ret);
 }
 
-#define DEBUG_READ_DCEL
+//#define DEBUG_READ_DCEL
 int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 {
     int     ret=SUCCESS;    // Return value.
@@ -1687,7 +1687,7 @@ void  get_Extreme_Point( struct DCEL_T *dcel, int (*f)(struct Point_T *, struct 
 	}
 }
 
-#define DEBUG_READ_POINTS_DCEL
+//#define DEBUG_READ_POINTS_DCEL
 int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
 {
     int     ret=SUCCESS;                // Return value.
