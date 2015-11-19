@@ -67,7 +67,7 @@ int 	initialize_DCEL( struct DCEL_T *dcel, int nPoints, int nEdges, int nFaces)
 	return(ret);
 }
 
-
+#define DEBUG_READ_DCEL
 int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 {
     int     ret=SUCCESS;    // Return value.
@@ -97,18 +97,29 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 		// Read number of vertex.
 		ret = fscanf( fd, "%d", &nVertex);
 
+#ifdef DEBUG_READ_DCEL
+		printf("# vertex %d\n", nVertex);
+#endif
 		// Read vertex.
 		for (i=0; i<nVertex; i++)
 		{
 			// Read x and y coordinates and edge id.
+#ifdef FLOAT_TYPE
+			ret = fscanf( fd, "%f", &vertex.vertex.x);
+			ret = fscanf( fd, "%f", &vertex.vertex.y);
+#else
 			ret = fscanf( fd, "%lf", &vertex.vertex.x);
 			ret = fscanf( fd, "%lf", &vertex.vertex.y);
+#endif
 			ret = fscanf( fd, "%d", &vertex.origin_Edge);
 		}
 
 		// Read number of edges.
 		ret = fscanf( fd, "%d", &nEdges);
 
+#ifdef DEBUG_READ_DCEL
+		printf("# edges %d\n", nEdges);
+#endif
 		// Read edges.
 		for (i=0; i<nEdges; i++)
 		{
@@ -123,8 +134,13 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 		// Read number of faces.
 		ret = fscanf( fd, "%d", &nFaces);
 
+#ifdef DEBUG_READ_DCEL
+		printf("# faces %d\n", nFaces);
+#endif
+
 		// Move to first position of the file.
-		fseek( fd, 0, SEEK_SET);
+		fclose( fd);
+		fd = fopen( fileName, "r");
 
 		initialize_DCEL( dcel, nVertex, nEdges, nFaces);
 
@@ -135,9 +151,18 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 		for (i=0; i<nVertex; i++)
 		{
 			// Read x and y coordinates and edge id.
+#ifdef FLOAT_TYPE
+			ret = fscanf( fd, "%f", &vertex.vertex.x);
+			ret = fscanf( fd, "%f", &vertex.vertex.y);
+#else
 			ret = fscanf( fd, "%lf", &vertex.vertex.x);
 			ret = fscanf( fd, "%lf", &vertex.vertex.y);
+#endif
 			ret = fscanf( fd, "%d", &vertex.origin_Edge);
+
+#ifdef DEBUG_READ_DCEL
+			printf("Vertex read (%f,%f) origin edge %d\n", vertex.vertex.x, vertex.vertex.y, vertex.origin_Edge);
+#endif
 
 			// Insert vertex.
 			insertVertex( dcel, vertex);
@@ -173,7 +198,7 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 			insertFace( dcel, face.edge);
 		}
 
-#ifdef DEBUG
+#ifdef DEBUG_READ_DCEL
 		printf("Read dcel with:\n%d vertex\n%d edges\n%d faces\n",
 												dcel->nVertex,
 												dcel->nEdges,
@@ -1662,7 +1687,7 @@ void  get_Extreme_Point( struct DCEL_T *dcel, int (*f)(struct Point_T *, struct 
 	}
 }
 
-//#define DEBUG_READ_POINTS_DCEL
+#define DEBUG_READ_POINTS_DCEL
 int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
 {
     int     ret=SUCCESS;                // Return value.
@@ -1923,6 +1948,9 @@ void	generate_Cluster_Points_DCEL( int nPoints, struct DCEL_T *dcel,
         point.origin_Edge = -1;
         insertVertex( dcel, point);
 	}
+
+	// Clutter set of points.
+	clutter( dcel);
 }
 
 
