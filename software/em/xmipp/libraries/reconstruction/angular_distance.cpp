@@ -90,7 +90,8 @@ void ProgAngularDistance::defineParams()
     addParamsLine("                             : Ang1 and ang2 are supposed to have a label called itemId");
     addParamsLine("                             : The output is written to oroot+_weights.xmd");
     addParamsLine("                             : Min sigma is the minimum angular standard deviation, by default, 1 degree");
-    addParamsLine("  [--set <set=1>]            : Set of distance to compute (angular_diff and jumper_weight, or angular_diff2 and jumper_weight2)");
+    addParamsLine("  [--set <set=1>]            : Set of distance to compute (angular_diff0 and jumper_weight0, angular_diff and jumper_weight,");
+    addParamsLine("                             : or angular_diff2 and jumper_weight2)");
 }
 
 // Produce side information ================================================
@@ -288,6 +289,22 @@ void ProgAngularDistance::computeWeights()
 	labels.push_back(MDL_FLIP);
     DF1sorted.keepLabels(labels);
     DF2sorted.keepLabels(labels);
+    MDLabel angleDiffLabel, weightLabel;
+	switch (set)
+	{
+	case 1:
+		angleDiffLabel=MDL_ANGLE_DIFF;
+		weightLabel=MDL_WEIGHT_JUMPER;
+		break;
+	case 2:
+		angleDiffLabel=MDL_ANGLE_DIFF2;
+		weightLabel=MDL_WEIGHT_JUMPER2;
+		break;
+	case 0:
+		angleDiffLabel=MDL_ANGLE_DIFF0;
+		weightLabel=MDL_WEIGHT_JUMPER0;
+		break;
+	}
 
     // for(MDIterator __iter(__md); __iter.hasNext(); __iter.moveNext())
     MDIterator iter1(DF1sorted), iter2(DF2sorted);
@@ -412,28 +429,18 @@ void ProgAngularDistance::computeWeights()
     	if (N>0)
     	{
 			double meanDistance=cumulatedDistance/ang2.size();
-			if (set==1)
-				DFweights.setValue(MDL_ANGLE_DIFF,meanDistance,newObjId);
-			else
-				DFweights.setValue(MDL_ANGLE_DIFF2,meanDistance,newObjId);
+			DFweights.setValue(angleDiffLabel,meanDistance,newObjId);
     	}
     	else
     		if (newObjId>0)
-    		{
-    			if (set==1)
-    				DFweights.setValue(MDL_ANGLE_DIFF,-1.0,newObjId);
-    			else
-    				DFweights.setValue(MDL_ANGLE_DIFF2,-1.0,newObjId);
-    		}
+				DFweights.setValue(angleDiffLabel,-1.0,newObjId);
         anotherImageIn2=iter2.hasNext();
     }
 
     // Calculate the deviation with respect to angleDiff=0 of the angular distances
     std::vector<double> angleDistances;
-    if (set==1)
-    	DFweights.getColumnValues(MDL_ANGLE_DIFF,angleDistances);
-    else
-    	DFweights.getColumnValues(MDL_ANGLE_DIFF2,angleDistances);
+	DFweights.getColumnValues(angleDiffLabel,angleDistances);
+
     double sigma2=0, d, N=0;
     for (size_t i=0; i<angleDistances.size(); ++i)
     {
@@ -452,55 +459,28 @@ void ProgAngularDistance::computeWeights()
     double isigma2=-0.5/sigma2;
     FOR_ALL_OBJECTS_IN_METADATA(DFweights)
     {
-    	if (set==1)
-    	{
-    		DFweights.getValue(MDL_ANGLE_DIFF,d,__iter.objId);
-			if (d>0)
-				DFweights.setValue(MDL_WEIGHT_JUMPER,exp(d*d*isigma2),__iter.objId);
-			else
-				DFweights.setValue(MDL_WEIGHT_JUMPER,0.5,__iter.objId);
-    	}
-    	else
-    	{
-    		DFweights.getValue(MDL_ANGLE_DIFF2,d,__iter.objId);
-			if (d>0)
-				DFweights.setValue(MDL_WEIGHT_JUMPER2,exp(d*d*isigma2),__iter.objId);
-			else
-				DFweights.setValue(MDL_WEIGHT_JUMPER2,0.5,__iter.objId);
-    	}
+		DFweights.getValue(angleDiffLabel,d,__iter.objId);
+		if (d>0)
+			DFweights.setValue(weightLabel,exp(d*d*isigma2),__iter.objId);
+		else
+			DFweights.setValue(weightLabel,0.5,__iter.objId);
     }
 
     // Transfer these weights to the DF2 metadata
     MetaData DF2weighted;
-    if (set==1)
-    {
-		if (DF2.containsLabel(MDL_ANGLE_DIFF))
-			DF2.removeLabel(MDL_ANGLE_DIFF);
-		if (DF2.containsLabel(MDL_WEIGHT_JUMPER))
-			DF2.removeLabel(MDL_WEIGHT_JUMPER);
-    }
-    else
-    {
-		if (DF2.containsLabel(MDL_ANGLE_DIFF2))
-			DF2.removeLabel(MDL_ANGLE_DIFF2);
-		if (DF2.containsLabel(MDL_WEIGHT_JUMPER2))
-			DF2.removeLabel(MDL_WEIGHT_JUMPER2);
-    }
+	if (DF2.containsLabel(angleDiffLabel))
+		DF2.removeLabel(angleDiffLabel);
+	if (DF2.containsLabel(weightLabel))
+		DF2.removeLabel(weightLabel);
     DF2weighted.join1(DF2,DFweights,label,INNER);
     FOR_ALL_OBJECTS_IN_METADATA(DF2weighted)
     {
     	double angleDiff;
-    	if (set==1)
-    		DF2weighted.getValue(MDL_ANGLE_DIFF,angleDiff,__iter.objId);
-    	else
-    		DF2weighted.getValue(MDL_ANGLE_DIFF2,angleDiff,__iter.objId);
+    	DF2weighted.getValue(angleDiffLabel,angleDiff,__iter.objId);
     	if (angleDiff<0)
     	{
     		// DF2weighted.setValue(MDL_ENABLED,-1,__iter.objId);
-    		if (set==1)
-    			DF2weighted.setValue(MDL_ANGLE_DIFF,0.0,__iter.objId);
-    		else
-    			DF2weighted.setValue(MDL_ANGLE_DIFF2,0.0,__iter.objId);
+    		DF2weighted.setValue(angleDiffLabel,0.0,__iter.objId);
     	}
     }
     DF2weighted.removeDisabled();
