@@ -2,10 +2,11 @@
 
 ; -------------- Parameters --------------
 x27 = 9     ; number of eigenfactors to use
+x30 = 0   ; number of threads to use, 0 = use all
 
 ; ---------------- Inputs ----------------
 fr l
-[cas_prefix]CA/cas                       ; correspondence-analysis output prefix
+[cas_file]CA/cas_IMC                      ; correspondence-analysis output file
 
 ; --------------- Outputs ---------------
 fr l
@@ -27,18 +28,18 @@ de
 
 md
 set mp
-0
+x30
 
 vm
 echo "Classifying"; date
 
 ; classification, hierarchical
 cl hc
-[cas_prefix]_IMC  ; INPUT
-(1-x27)  ; factors to use
-(0)      ; no factor weighting
-(5)      ; clustering criterion (5==Ward's method)
-Y        ; dendrogram PostScript file?
+[cas_file]  ; INPUT
+(1-x27)     ; factors to use
+(0)         ; no factor weighting
+(5)         ; clustering criterion (5==Ward's method)
+Y           ; dendrogram PostScript file?
 [ps_dendrogram]   ; OUTPUT
 Y        ; dendrogram document file?
 [dendrogram_doc]  ; OUTPUT
