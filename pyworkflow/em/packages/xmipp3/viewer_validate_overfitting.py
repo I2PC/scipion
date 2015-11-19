@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     C.O.S. Sorzano (coss@cnb.csic.es)
-# *              Mohsen Kazemi  (mkazemi@cnb.csic.es)
+# * Authors:     Mohsen Kazemi  (mkazemi@cnb.csic.es)
+# *              C.O.S. Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -52,7 +52,21 @@ class XmippValidateOverfittingViewer(Viewer):
                                       title='Missing result file')]
         plotter = self._createPlot("Validation 3D Reconstruction (Overfitting)", "Number of Particles", "Resolution for FSC=0.5 (A)", fnOutput, 
                                    xmipp.MDL_COUNT, xmipp.MDL_AVG)
-        return [plotter] 
+        
+        
+        #for noise
+        fnOutputN = self.protocol._defineResultsNoiseName()
+        if not os.path.exists(fnOutputN):
+            return [self.errorMessage('The necessary metadata was not produced\n'
+                                      'Execute again the protocol\n',
+                                      title='Missing noise result file')]
+        plotterN = self._createPlotN("Validation 3D Reconstruction (Overfitting)", "Number of Particles", "Resolution for FSC=0.5 (A)", fnOutputN, 
+                                   xmipp.MDL_COUNT, xmipp.MDL_AVG)
+        
+        
+                      
+        return [plotter , plotterN] 
+        #return [plotter]
          
                
     def _createPlot(self, title, xTitle, yTitle, fnOutput, mdLabelX, mdLabelY, color='g', figure=None):        
@@ -68,5 +82,29 @@ class XmippValidateOverfittingViewer(Viewer):
         xValue = md.getColumnValues(xmipp.MDL_COUNT)
         yValue = md.getColumnValues(xmipp.MDL_AVG)
         plt.errorbar(xValue, yValue, yErr, fmt='o')
+                
         return xplotter
+    
+    #for noise
+    def _createPlotN(self, title, xTitle, yTitle, fnOutput, mdLabelX, mdLabelY, color='r', figure=None):        
+        xplotterN = XmippPlotter(figure=figure)
+        xplotterN.plot_title_fontsize = 11
+        ax=xplotterN.createSubPlot(title, xTitle, yTitle, 1, 1)
+        xplotterN.plotMdFile(fnOutput, mdLabelX, mdLabelY, color)
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+        # putting error bar in the main plot
+        md = xmipp.MetaData(fnOutput)
+        yErr = md.getColumnValues(xmipp.MDL_STDDEV)
+        xValue = md.getColumnValues(xmipp.MDL_COUNT)
+        yValue = md.getColumnValues(xmipp.MDL_AVG)
+        plt.errorbar(xValue, yValue, yErr, fmt='o')
+                
+        return xplotterN
+    
+    
+    
+    
+    
+    
         

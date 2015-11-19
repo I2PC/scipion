@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     C.O.S. Sorzano (coss@cnb.csic.es)
-# *              Mohsen Kazemi  (mkazemi@cnb.csic.es)
+# * Authors:     Mohsen Kazemi  (mkazemi@cnb.csic.es)
+# *              C.O.S. Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -31,7 +31,7 @@ from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtReconstruct3D
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.utils import getFloatListFromValues
-from pyworkflow.utils.path import cleanPattern, cleanPath
+from pyworkflow.utils.path import cleanPattern, cleanPath, copyFile
 import os
 import xmipp
 import glob
@@ -84,6 +84,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
     def _insertAllSteps(self):
         self._createFilenameTemplates()
         self._insertFunctionStep('convertInputStep')
+               
         numberOfParticles=getFloatListFromValues(self.numberOfParticles.get())
         fractionCounter=0
         for number in numberOfParticles:
@@ -100,12 +101,16 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         particlesMd = self._getFileName('input_xmd')
         imgSet = self.inputParticles.get()
         writeSetOfParticles(imgSet, particlesMd)
-
+        
     def reconstructionStep(self, numberOfImages, fractionCounter, iteration):
         fnRoot = self._getExtraPath("fraction%02d"%fractionCounter)
         Ts = self.inputParticles.get().getSamplingRate()
+        
+        #for noise
+        fnRootN = self._getExtraPath("Nfraction%02d"%fractionCounter)
+        
         for i in range(0,2):
-            fnImgs=fnRoot+"_images_%02d.xmd"%i
+            fnImgs = fnRoot+"_images_%02d.xmd"%i
             self.runJob("xmipp_metadata_utilities","-i %s -o %s --operate random_subset %d"%\
                         (self._getFileName('input_xmd'),fnImgs,numberOfImages),numberOfMpi=1)
         
@@ -117,6 +122,30 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             params += ' --thr %d' % self.numberOfThreads.get()
             params += ' --sampling %f' % Ts
             self.runJob('xmipp_reconstruct_fourier', params)
+            
+            #for noise
+            noiseStk = fnRoot+"_noises_%02d.stk"%i
+            self.runJob ("xmipp_image_convert", "-i %s -o %s"% (fnImgs, noiseStk))
+            self.runJob("xmipp_image_operate", "-i %s --mult 0"% noiseStk)
+            self.runJob("xmipp_transform_add_noise", "-i %s --type gaussian 1 0"% noiseStk)
+            fnImgsNL = fnRoot+"_noisesL_%02d.xmd"%i
+            noiseStk2 = fnRoot+"_noises2_%02d.stk"%i
+            self.runJob ("xmipp_image_convert", "-i %s -o %s --save_metadata_stack %s"% (noiseStk, noiseStk2, fnImgsNL))
+            fnImgsNoiseOld = fnRoot+"_noisesOld_%02d.xmd"%i
+            fnImgsN = fnRoot+"_noises_%02d.xmd"%i
+            self.runJob("xmipp_metadata_utilities",'-i %s -o %s --operate drop_column "image"'% (fnImgs,fnImgsNoiseOld))
+            self.runJob("xmipp_metadata_utilities","-i %s  --set merge %s -o %s"% (fnImgsNL,fnImgsNoiseOld, fnImgsN))
+           
+            params =  '  -i %s' % fnImgsN
+            params += '  -o %s' % fnRootN+"_%02d.vol"%i
+            params += ' --sym %s' % self.symmetryGroup.get()
+            params += ' --max_resolution %0.3f' % self.maxRes.get()
+            params += ' --padding %0.3f' % self.pad.get()
+            params += ' --thr %d' % self.numberOfThreads.get()
+            params += ' --sampling %f' % Ts
+            self.runJob('xmipp_reconstruct_fourier', params)
+            
+            
 
         self.runJob('xmipp_resolution_fsc', "--ref %s -i %s -o %s --sampling_rate %f"%\
                     (fnRoot+"_00.vol",fnRoot+"_01.vol",fnRoot+"_fsc.xmd",Ts), numberOfMpi=1)
@@ -134,6 +163,29 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         fh.close()
         cleanPath(fnRoot+"_fsc.xmd")
         
+        #for noise
+        self.runJob('xmipp_resolution_fsc', "--ref %s -i %s -o %s --sampling_rate %f"%\
+                    (fnRootN+"_00.vol",fnRootN+"_01.vol",fnRootN+"_fsc.xmd",Ts), numberOfMpi=1)
+        cleanPattern(fnRootN+"_0?.vol")
+        cleanPattern(fnRoot+"_noises_0?.xmd")
+        cleanPattern(fnRoot+"_noisesOld_0?.xmd")
+        cleanPattern(fnRoot+"_noisesL_0?.xmd")
+        cleanPattern(fnRoot+"_noises2_0?.stk")
+        cleanPattern(fnRoot+"_noises_0?.stk")
+        
+        mdFSCN = xmipp.MetaData(fnRootN+"_fsc.xmd")
+        for id in mdFSCN:
+            fscValueN = mdFSCN.getValue(xmipp.MDL_RESOLUTION_FRC,id)
+            maxFreqN = mdFSCN.getValue(xmipp.MDL_RESOLUTION_FREQREAL,id)
+            if fscValueN<0.5:
+                break
+        fhN = open(fnRootN+"_freq.txt","a")
+        fhN.write("%f\n"%maxFreqN)
+        fhN.close()
+        cleanPath(fnRootN+"_fsc.xmd")
+        
+   
+    
     def gatherResultsStep(self):
         fnFreqs = sorted(glob.glob(self._getExtraPath("fraction*_freq.txt")))
         subset = 0
@@ -160,7 +212,36 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
 
             subset += 1
 
-        validationMd.write(self._getExtraPath('results.xmd'))
+        validationMd.write(self._defineResultsName())
+        
+        #for noise
+        fnFreqsN = sorted(glob.glob(self._getExtraPath("Nfraction*_freq.txt")))
+        subset = 0
+        
+        numberOfParticles=getFloatListFromValues(self.numberOfParticles.get())
+        validationMdN = xmipp.MetaData()
+
+        for fnFreq in fnFreqsN:
+            data = []
+            fnFreqOpen = open(fnFreq, "r")
+            for line in fnFreqOpen:
+                fields = line.split()
+                rowdata = map(float, fields)
+                data.extend(rowdata)
+            meanRes = (sum(data)/len(data))
+            data[:] = [(x-meanRes)**2 for x in data]
+            varRes = (sum(data)/(len(data)-1))
+            stdRes = sqrt(varRes)
+            
+            objId = validationMdN.addObject()
+            validationMdN.setValue(xmipp.MDL_COUNT,long(numberOfParticles[subset]),objId)
+            validationMdN.setValue(xmipp.MDL_AVG,meanRes, objId)  
+            validationMdN.setValue(xmipp.MDL_STDDEV,stdRes,objId)
+
+            subset += 1
+
+        validationMdN.write(self._defineResultsNoiseName())
+        
         #cleanPattern(self._getExtraPath("fraction*_freq.txt"))
         
     #--------------------------- INFO functions -------------------------------------------- 
@@ -192,3 +273,6 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
     #--------------------------- UTILS functions --------------------------------------------
     def _defineResultsName(self):
         return self._getExtraPath('results.xmd')
+    
+    def _defineResultsNoiseName(self):
+        return self._getExtraPath('resultsNoise.xmd')
