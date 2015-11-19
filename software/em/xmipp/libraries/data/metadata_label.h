@@ -60,6 +60,7 @@ enum MDLabel
     MDL_ANGLE_TILT, ///< Tilting angle of an image (double,degrees)
     MDL_ANGLE_TILT2, ///< Tilting angle of an image (double,degrees)
     MDL_ANGLE_TILT_DIFF, ///< difference between tilt angles (double,degrees)
+    MDL_ANGLE_DIFF0, ///< difference between two angles (double,degrees)
     MDL_ANGLE_DIFF, ///< difference between two angles (double,degrees)
     MDL_ANGLE_DIFF2, ///< difference between two angles (double,degrees)
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
@@ -1294,6 +1295,7 @@ private:
         MDL::addLabel(MDL_ANGLE_TILT2, LABEL_DOUBLE, "angleTilt2");
         MDL::addLabelAlias(MDL_ANGLE_TILT2, "tilt2");
         MDL::addLabel(MDL_ANGLE_TILT_DIFF, LABEL_DOUBLE, "angleTiltDiff");
+        MDL::addLabel(MDL_ANGLE_DIFF0, LABEL_DOUBLE, "angleDiff0");
         MDL::addLabel(MDL_ANGLE_DIFF, LABEL_DOUBLE, "angleDiff");
         MDL::addLabel(MDL_ANGLE_DIFF2, LABEL_DOUBLE, "angleDiff2");
         MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY");
