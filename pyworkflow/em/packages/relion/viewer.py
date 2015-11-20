@@ -176,9 +176,10 @@ Examples:
                               label='Classes list',
                               help='')
             else:
-                group.addParam('showHalves', params.EnumParam, choices=['half1', 'half2', 'both', 'final'], default=0,
-                              label='Volume to visualize',
-                              help='Select which half do you want to visualize.')
+                group.addParam('showHalves', params.EnumParam, default=0,
+                               choices=['half1', 'half2', 'both', 'final'], 
+                               label='Volume to visualize',
+                               help='Select which half do you want to visualize.')
             
             group.addParam('displayVol', params.EnumParam, choices=['slices', 'chimera'], 
                           default=VOLUME_SLICES, display=params.EnumParam.DISPLAY_HLIST, 
@@ -659,7 +660,9 @@ Examples:
             elif halves == 1:
                 prefixes = ['half2_']
             elif halves == 3:
-                prefixes = ['final']
+                prefixes = ['final',
+                            'final_half1_volume',
+                            'final_half2_volume']
         return prefixes
     
     def _iterAngles(self, mdOut):
