@@ -315,7 +315,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 						double angleRot=mdGallery[nVolume][nDir].rot;
 						double angleTilt=mdGallery[nVolume][nDir].tilt;
 			#ifdef DEBUG
-						std::cout << "   Getting Gallery: " << prm.mdGallery[nVolume][nDir].fnImg
+						std::cout << "   Getting Gallery: " << mdGallery[nVolume][nDir].fnImg
 								  << " corr=" << cc << " imed=" << imed << " weight=" << weight << " rot=" << angleRot
 								  << " tilt=" << angleTilt << std::endl
 						          << "Matrix=" << allM[nVolume*Ndirs+nDir] << std::endl
@@ -362,13 +362,13 @@ void ProgReconstructSignificant::run()
 		show();
     produceSideinfo();
 
-    currentAlpha=alpha0;
+    /*currentAlpha=alpha0;
     double deltaAlpha;
     if (Niter>1)
     	deltaAlpha=(alphaF-alpha0)/(Niter-1);
     else
     	deltaAlpha=0;
-
+*/
     MetaData mdAux;
 	size_t Nimgs=mdIn.size();
 	Image<double> save;
@@ -383,6 +383,15 @@ void ProgReconstructSignificant::run()
     		std::cout << "\nIteration " << iter << std::endl;
     	// Generate projections from the different volumes
     	generateProjections();
+    	if (useForValidation)
+    		numberOfProjections();
+
+	    currentAlpha=alpha0;
+	    double deltaAlpha;
+	    if (Niter>1)
+	    	deltaAlpha=(alphaF-alpha0)/(Niter-1);
+	    else
+	    	deltaAlpha=0;
 
     	size_t Nvols=mdGallery.size();
     	size_t Ndirs=mdGallery[0].size();
@@ -668,6 +677,8 @@ void ProgReconstructSignificant::generateProjections()
 void ProgReconstructSignificant::numberOfProjections()
 {
 
+	double number_of_projections = (double)mdGallery[0].size();
+/*
 	double angDist[] =        {0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
 	double numWithOutSymm[] = {165016, 41258, 18338, 10318, 6600, 4586, 3367, 2586, 2042, 1652, 1367, 1148, 977, 843, 732, 643, 569, 510, 460, 412, 340, 288, 245, 211, 184, 161, 146};
 	SymList SL;
@@ -684,15 +695,16 @@ void ProgReconstructSignificant::numberOfProjections()
 			tmp = std::abs(angularSampling-angDist[idx]);
 		}
 	}
-
 	angularSampling = angDist[minIndex];
-	alpha0 = numOrientationsPerParticle/numProjects;
+*/
+
+	alpha0 = numOrientationsPerParticle/number_of_projections;
 	alphaF = alpha0;
 
     if (rank==0)
     {
       std::cout << " Changing angular sampling to " << angularSampling << std::endl;
-      std::cout << " Number of projections taking into account angular sampling and symmetry " << numProjects << std::endl;
+      std::cout << " Number of projections taking into account angular sampling and symmetry " << number_of_projections << std::endl;
       std::cout << " changing alpha0 to " << alpha0 << std::endl;
     }
 
@@ -723,13 +735,7 @@ void ProgReconstructSignificant::produceSideinfo()
 		alphaF*=SL.true_symNo;
 		if (alpha0>1)
 			REPORT_ERROR(ERR_ARG_INCORRECT,"Alpha values are too large: reduce the error such that the error times the symmetry number is smaller than 1");
-	} else
-		if (useForValidation)
-		{
-			//Adjust alpha parameters
-			numberOfProjections();
-		}
-
+	}
 	// If there is not any input volume, create a random one
 	if (fnFirstGallery=="")
 	{

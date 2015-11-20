@@ -37,6 +37,7 @@ from protocol_refine3d import ProtRelionRefine3D
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_preprocess import ProtRelionPreprocessParticles
 from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
+from pyworkflow.utils.utils import readProperties
 
 #===============================================================================
 # MASKS
@@ -170,15 +171,61 @@ class RelionAutopickParams(EmWizard):
         autopickProt = form.protocol
         autopickFomProt = autopickProt.getInputAutopick()
         # Get current values of the properties
-        _, values = self._getInputProtocol(self._targets, autopickProt)
-        threshold, distance = values
-        autopickFomProt.setStepsExecutor() # allow to use runJob
-        autopickFomProt.autopickStep(threshold, distance, 
-                                     '--read_fom_maps')
-        print "Writing Xmipp coordinate files."
-        micFn, coordDir = autopickFomProt.writeXmippCoords()
-        print "Launching picking GUI..."
-        CoordinatesObjectView(autopickProt.getProject(), micFn, coordDir, autopickFomProt).show()
-                                     
-    
+#         _, values = self._getInputProtocol(self._targets, autopickProt)
+#         threshold, distance = values
+#         autopickFomProt.setStepsExecutor() # allow to use runJob
+#         autopickFomProt.autopickStep(threshold, distance, '--read_fom_maps')
+#         print "Writing Xmipp coordinate files."
+#         micFn, coordsDir = autopickFomProt.writeXmippCoords()
+        project = autopickProt.getProject()
+        micSet = autopickFomProt.getInputMicrographs()
+        micfn = micSet.getFileName()
+        coordsDir = project.getTmpPath(micSet.getName())
+        cleanPath(coordsDir)
+        makePath(coordsDir)
+        pickerProps = os.path.join(coordsDir, 'picker.conf')
+        f = open(pickerProps, "w")
+        
+        
+        
+        args = {
+          "picker" : os.path.join(os.environ['SCIPION_HOME'],  "scipion relion_autopick"),
+          "convert" : os.path.join(os.environ['SCIPION_HOME'], os.path.join('pyworkflow','apps', 'pw_convert.py')),
+          'coordsDir':coordsDir,
+          'micsSqlite': micSet.getFileName(),
+          "diameter": autopickFomProt.particleDiameter,
+          "threshold": autopickProt.pickingThreshold,
+          "apix": micSet.getSamplingRate(),
+          'ang': autopickFomProt.angularSampling,
+          'lowpass':autopickFomProt.lowpassFilterRefs,
+          'ref': 'input_references.star',
+          'min_distance': autopickProt.interParticleDistance,
+          'protDir': autopickFomProt.getWorkingDir()
+          }
+
+        autopickCommand = '%(picker)s --i extra/%%(micrographName).star --o autopick --particle_diameter %(diameter)s --angpix %(apix)s --ref %(ref)s --ang %(ang)s --lowpass %(lowpass)s --threshold %%(threshold) --min_distance %%(ipd) --read_fom_maps'%args
+        if autopickFomProt.refsHaveInvertedContrast:
+            autopickCommand += ' --invert'
+        
+        if autopickFomProt.refsCtfCorrected:
+            autopickCommand += ' --ctf'
+        args['autopickCommand'] = autopickCommand
+        f.write("""
+        parameters = ipd,threshold
+        ipd.value = %(min_distance)s
+        ipd.label = Minimum inter-particles distance
+        ipd.help = some help
+        threshold.value =  %(threshold)s
+        threshold.label = Threshold
+        threshold.help = some help
+        runDir = %(protDir)s
+        autopickCommand = %(autopickCommand)s 
+        convertCommand = %(convert)s --coordinates --from relion --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s --extra %(protDir)s/extra
+        """ % args)
+        f.close()
+        process = CoordinatesObjectView(autopickProt.getProject(), micfn, coordsDir, autopickFomProt, pickerProps=pickerProps).show()
+        process.wait()
+        myprops = readProperties(pickerProps)
+        form.setVar('pickingThreshold', myprops['threshold.value'])
+        form.setVar('interParticleDistance', myprops['ipd.value'])
     

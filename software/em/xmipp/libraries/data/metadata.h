@@ -81,6 +81,10 @@ typedef enum
 #define FOR_ALL_OBJECTS_IN_METADATA(__md) \
         for(MDIterator __iter(__md); __iter.hasNext(); __iter.moveNext())
 
+
+#define FOR_ALL_ROWS_IN_METADATA(__md) \
+        for(MDRowIterator __iter(__md); __iter.hasNext(); __iter.moveNext(__md))
+
 /** Iterate over all elements of two MetaData at same time.
  *
  * This macro is useful to iterate over two MetaData with the same
@@ -187,6 +191,37 @@ public:
 }
 ;//class MDIterator
 
+
+////////////////////////////// MetaData Row Iterator ////////////////////////////
+/** Iterates over metadata rows */
+class MDRowIterator
+{
+protected:
+
+	// Current row data.
+	MDRow	currentRow;
+
+	// Flag set to true if a new row has been retrieved.
+	bool 	rowReturned;
+
+public:
+
+    /** Empty constructor, creates an iterator from metadata */
+    MDRowIterator(MetaData &md);
+
+    // Get current row data.
+    MDRow *getRow(void);
+
+    /** Function to move to next element.
+     * return false if there aren't more elements to iterate.
+     */
+    bool moveNext(MetaData &md);
+
+    /** Function to check if exist next element */
+    bool hasNext();
+}
+;//class MDRowIterator
+
 /** Class to manage data files.
  *
  * The MetaData class manages all procedures related to
@@ -261,10 +296,11 @@ protected:
      * ADD, SUBSTRACT of intersection part
      */
     void _setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation);
+    void _setOperates(const MetaData &mdIn, const std::vector<MDLabel> &labels, SetOperation operation);
     void _setOperates(const MetaData &mdInLeft,
                       const MetaData &mdInRight,
-                      const MDLabel labelLeft,
-                      const MDLabel labelRight,
+                      const std::vector<MDLabel> &labelsLeft,
+                      const std::vector<MDLabel> &labelsRight,
                       SetOperation operation);
     /** This function is for generalize the sets operations
      * in which the output has a single label
@@ -284,7 +320,7 @@ protected:
      * @param pEnd  pointer to the position of the next '_data' in memory
      * @param maxRows if this number if greater than 0, only this number of rows will be parsed.
      */
-    void _readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValues);
+    void _readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels);
     void _readRowFormat(std::istream& is);
 
     /** This two variables will be used to read the metadata infomation (labels and size)
@@ -403,6 +439,7 @@ public:
      */
     void writeText(const FileName fn,  const std::vector<MDLabel>* desiredLabels) const;
 
+    void _parseObjects(std::istream &is, std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels, bool firstTime);
 
     /* Helper function to parse an MDObject and set its value.
      * The parsing will be from an input stream(istream)
@@ -604,13 +641,25 @@ public:
     void setColumnValues(const std::vector<MDObject> &valuesIn);
 
     /** Get all values of an MetaData row of an specified objId*/
-    bool getRow(MDRow &row, size_t id) const;
+    bool	bindValue( size_t id) const;
+
+    bool 	initGetRow(bool addWhereClause) const;
+    bool 	execGetRow(MDRow &row);
+    void 	finalizeGetRow(void);
+    bool 	getRow(MDRow &row, size_t id) const;
+    bool 	getRow2(MDRow &row, size_t id);
 
     /** Copy all the values in the input row in the current metadata*/
-    void setRow(const MDRow &row, size_t id);
+    bool 	initSetRow(const MDRow &row);
+    bool 	execSetRow(const MDRow &row, size_t id);
+    void 	setRow(const MDRow &row, size_t id);
+    bool 	setRow2(const MDRow &row, size_t id);
 
     /** Add a new Row and set values, return the objId of newly added object */
-    size_t addRow(const MDRow &row);
+    bool 	initAddRow(const MDRow &row);
+    bool 	execAddRow(const MDRow &row);
+    size_t 	addRow(const MDRow &row);
+    bool  	addRow2(const MDRow &row);
 
     /** Set label values from string representation.
      */
@@ -934,6 +983,17 @@ public:
      */
     void join2(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel labelLeft, const MDLabel labelRight , JoinType type=LEFT);
 
+    /** Join two Metadatas
+     * Result in "calling" metadata
+     */
+    void join1(const MetaData &mdInLeft, const MetaData &mdInRight, const std::vector<MDLabel> &labels, JoinType type=LEFT);
+
+    /** Join two Metadatas
+     * Result in "calling" metadata. join may be done using different labels in each metadata
+     */
+    void join2(const MetaData &mdInLeft, const MetaData &mdInRight, const std::vector<MDLabel> &labelsLeft, const std::vector<MDLabel> &labelsRight,
+    		JoinType type=LEFT);
+
     /** Join two Metadatas using all common labels (NATURAL_JOIN)
      */
     void joinNatural(const MetaData &mdInLeft, const MetaData &mdInRight);
@@ -977,6 +1037,7 @@ public:
               bool asc=true,
               int limit=-1,
               int offset=0);
+
 
     /*
     * Sort a Metadata by a label.

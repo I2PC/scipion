@@ -33,12 +33,11 @@ from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam
 from pyworkflow.em.protocol import ProtAnalysis2D
 from pyworkflow.em.data import Class2D, SetOfClasses2D
-from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
 import pyworkflow.em.metadata as md
 # import xmipp
 from xmipp3 import ProjMatcher
-
+from math import floor
         
 class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
     """Compares a set of classes or averages with the corresponding projections of a reference volume """
@@ -76,6 +75,7 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         imgsFn = self._getPath('input_imgs.xmd')
         outImgsFn = self._getExtraPath('output_imgs.xmd')
         anglesFn = self._getExtraPath('angles.xmd')
+        anglesContFn = self._getExtraPath('anglesCont.xmd')
         vol = self.inputVolume.get()
         
         angSampling = self.angularSampling.get()
@@ -84,12 +84,11 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         self._insertFunctionStep("convertStep", imgsFn)
         
         self._insertFunctionStep("projMatchStep", vol.getFileName(), angSampling, sym, imgsFn, anglesFn, self._getDimensions())
+        self._insertFunctionStep("projMatchContinuousStep", vol.getFileName(), anglesFn, vol.getSamplingRate())
         
         # Reorganize output and produce difference images
-        self._insertFunctionStep("joinStep", imgsFn, anglesFn)
-        self._insertFunctionStep("produceAlignedImagesStep", False, outImgsFn, imgsFn)
-#         self._insertFunctionStep("sortStep", outImgsFn)
-        self._insertFunctionStep("createOutputStep", outImgsFn)
+        self._insertFunctionStep("joinStep", imgsFn, anglesContFn)
+        self._insertFunctionStep("createOutputStep", imgsFn)
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self, imgsFn):
@@ -100,15 +99,24 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         else:
             writeSetOfParticles(imgSet, imgsFn)
     
-    def joinStep(self, imgsFn, anglesFn):
+    def projMatchContinuousStep(self, volumeFn, anglesFn, Ts):
+        if volumeFn.endswith(".mrc"):
+            volumeFn+=":mrc"
+        anglesOutFn=self._getExtraPath("anglesCont.stk")
+        residualsOutFn=self._getExtraPath("residuals.stk")
+        projectionsOutFn=self._getExtraPath("projections.stk")
+        xdim=self.inputVolume.get().getDim()[0]
+        self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
+                    (anglesFn,anglesOutFn,volumeFn,floor(xdim*0.1),residualsOutFn,projectionsOutFn,Ts))
+    
+    def joinStep(self, imgsFn, anglesContFn):
         imgSet = self.inputSet.get()
         if isinstance(imgSet, SetOfClasses2D):
-            self.runJob("xmipp_metadata_utilities", "-i classes@%s --set join %s --mode append" % (imgsFn, anglesFn), numberOfMpi=1)
+            sourceBlock="classes"
         else:
-            self.runJob("xmipp_metadata_utilities", "-i Particles@%s --set join %s --mode append" % (imgsFn, anglesFn), numberOfMpi=1)
-        
-    def sortStep(self, outImgsFn):
-        self.runJob("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (outImgsFn), numberOfMpi=1)
+            sourceBlock="Particles"
+        self.runJob("xmipp_metadata_utilities", "-i %s@%s --operate drop_column image --mode append" % (sourceBlock, imgsFn), numberOfMpi=1)
+        self.runJob("xmipp_metadata_utilities", "-i %s@%s --set join %s itemId --mode append" % (sourceBlock, imgsFn, anglesContFn), numberOfMpi=1)
     
     def createOutputStep(self, outImgsFn):
         inputSet = self.inputSet.get()
@@ -124,7 +132,7 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         outputSet.copyInfo(inputSet)
         outputSet.copyItems(inputSet, 
                             updateItemCallback=self.updateItemMaxCC,
-                            itemDataIterator=iterMdRows(mdOut))
+                            itemDataIterator=md.iterRows(mdOut, sortByLabel=md.MDL_ITEM_ID))
 
         self._defineOutputs(**{outputName: outputSet})
         self._defineTransformRelation(inputSet, outputSet)
@@ -175,16 +183,20 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         else:
             index, fn = item.getLocation()
             
-        objLoc = locationToXmipp(index, fn)
-        mdLoc = row.getValue(md.MDL_IMAGE)
-        if objLoc != mdLoc:
-            raise Exception("The the image isn't the same. Please, sort the metadata.")
+#         objLoc = locationToXmipp(index, fn)
+#         mdLoc = row.getValue(md.MDL_IMAGE)
+#         if objLoc != mdLoc:
+#             raise Exception("The image isn't the same. Please, sort the metadata.")
+        if item.getObjId()!=row.getValue(md.MDL_ITEM_ID):
+            raise Exception("The image isn't the same. Please, sort the metadata.")
         
         item._xmipp_imageRef = String(row.getValue(md.MDL_IMAGE_REF))
-        item._xmipp_image1 = String(row.getValue(md.MDL_IMAGE1))
+        item._xmipp_image = String(row.getValue(md.MDL_IMAGE))
+        item._xmipp_imageResidual = String(row.getValue(md.MDL_IMAGE_RESIDUAL))
         item._xmipp_maxCC = Float(row.getValue(md.MDL_MAXCC))
+        item._xmipp_cost = Float(row.getValue(md.MDL_COST))
         if isinstance(item, Class2D):
             particle = item.getRepresentative()
         else:
             particle = item
-        particle.setTransform(rowToAlignment(row, alignType=ALIGN_PROJ))
+        # particle.setTransform(rowToAlignment(row, alignType=ALIGN_PROJ))

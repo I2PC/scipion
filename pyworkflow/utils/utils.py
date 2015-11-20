@@ -592,3 +592,16 @@ def getFreePort(basePort=0,host=''):
             print e
             return 0
         return port
+    
+def readProperties(propsFile):
+    myprops = {}
+    with open(propsFile, 'r') as f:
+        for line in f:
+            line = line.rstrip() #removes trailing whitespace and '\n' chars
+    
+            if "=" not in line: continue #skips blanks and comments w/o =
+            if line.startswith("#"): continue #skips comments which contain =
+    
+            k, v = line.split("=", 1)
+            myprops[k] = v
+    return myprops

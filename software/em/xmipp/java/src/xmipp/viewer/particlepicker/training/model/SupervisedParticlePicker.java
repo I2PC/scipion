@@ -7,8 +7,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
+
 import javax.swing.JFrame;
 import javax.swing.SwingWorker;
+
+import xmipp.jni.Classifier;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -20,6 +23,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.JMetaDataIO;
+import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
@@ -29,6 +33,7 @@ import xmipp.viewer.particlepicker.training.CorrectAndAutopickRunnable;
 import xmipp.viewer.particlepicker.training.TrainRunnable;
 import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
+import xmipp.viewer.scipion.ScipionMetaData;
 
 /**
  * Business object for Single Particle Picker GUI. Inherits from ParticlePicker
@@ -54,7 +59,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	private ImageGeneric radialtemplates;
 	private String templatesfile;
 	private int templateindex;
-	private PickingClassifier classifier;
+	private Classifier classifier;
     private UpdateTemplatesTask uttask;
     private TemplatesJDialog dialog;
     private boolean isautopick;
@@ -86,10 +91,26 @@ public class SupervisedParticlePicker extends ParticlePicker
                 templateindex = (templates.getStatistics()[2] == 0)? 0: getTemplatesNumber();
 			}
             templates.getRadialAvg(radialtemplates);
-
+            MDRow[] micsmd = new MDRow[micrographs.size()];
+            MDRow row; int index = 0;
 			for (SupervisedPickerMicrograph m : micrographs)
+			{
 				loadMicrographData(m);
-			classifier = new PickingClassifier(getSize(), getOutputPath("model"), selfile);
+				row = new MDRow();
+                row.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile());
+                micsmd[index] = row;
+                index ++;
+			}
+			if(params.classifierProperties != null)
+			{
+				classifier = new GenericClassifier(params.classifierProperties);
+				setMode(Mode.Supervised);
+			}
+			else
+			{
+				
+				classifier = new PickingClassifier(getSize(), getOutputPath("model"), micsmd);
+			}
 		}
 		catch (Exception e)
 		{
@@ -348,7 +369,16 @@ public class SupervisedParticlePicker extends ParticlePicker
     @Override
 	public void loadEmptyMicrographs()
 	{
-		if (micrographs == null)
+    	String selfile = getMicrographsSelFile();
+		if(selfile.endsWith(".sqlite"))
+			loadEmptyMicrographsFromSqlite();
+		else
+			loadEmptyMicrographsFromMd();
+	}
+    
+    public void loadEmptyMicrographsFromMd()
+    {
+    	if (micrographs == null)
 			micrographs = new ArrayList<SupervisedPickerMicrograph>();
 		else
 			micrographs.clear();
@@ -392,8 +422,47 @@ public class SupervisedParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 
-	}
+    }
 	
+    public void loadEmptyMicrographsFromSqlite()
+    {
+    	if (micrographs == null)
+			micrographs = new ArrayList<SupervisedPickerMicrograph>();
+		else
+			micrographs.clear();
+		SupervisedPickerMicrograph micrograph;
+		String  filename;
+		try
+		{
+			String selfile = getMicrographsSelFile();
+			ScipionMetaData md = new ScipionMetaData(selfile);
+
+			ColumnInfo ci;
+			if(md.getSelf().equals("Micrograph"))
+			{
+				ci = md.getColumnInfo("_filename");
+				long[] ids = md.findObjects();
+				for (long id : ids)
+				{
+
+					filename = md.getValueString(ci.label, id);
+					micrograph = new SupervisedPickerMicrograph(filename, null, null);
+					micrographs.add(micrograph);
+				}
+			}
+			else
+				throw new IllegalArgumentException(String.format("Labels MDL_MICROGRAPH or MDL_IMAGE not found in metadata %s", selfile));
+			
+			if (micrographs.isEmpty())
+				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
+			md.destroy();
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+    }
 	
 	
 	@Override
@@ -615,8 +684,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	public void setMode(Mode mode)
 	{
-		if (mode == Mode.Supervised && getManualParticlesNumber() < classifier.getParticlesThreshold())
-			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", classifier.getParticlesThreshold(), Mode.Supervised));
+		if (mode == Mode.Supervised && getManualParticlesNumber() < classifier.getTrainingParticlesMinimum())
+			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", classifier.getTrainingParticlesMinimum(), Mode.Supervised));
 		this.mode = mode;
                 if(mode == Mode.Supervised)
                     isautopick = true;
@@ -1114,15 +1183,14 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
                 frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Autopicking...");
-		next.setState(MicrographState.Supervised);
-		saveData(next);
+		
 		new Thread(new AutopickRunnable(frame, next)).start();
 
 	}
 
-        public PickingClassifier getClassifier() {
-            return classifier;
-        }
+    public Classifier getClassifier() {
+        return classifier;
+    }
 
 	
 
@@ -1199,17 +1267,18 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	}
 
+	//This method will only be called from the interface if xmipp picker is used
 	public void correct()
 	{
 		micrograph.setState(MicrographState.Corrected);
 		saveData(micrograph);
 		MDRow[] manualRows = getAddedRows(micrograph);
 		MDRow[] autoRows = getAutomaticRows(micrograph);
-		classifier.correct(manualRows, autoRows);
+		((PickingClassifier)classifier).correct(manualRows, autoRows);
 	}
         
     public int getParticlesThreshold() {
-        return classifier.getParticlesThreshold();
+        return classifier.getTrainingParticlesMinimum();
     }
     
      

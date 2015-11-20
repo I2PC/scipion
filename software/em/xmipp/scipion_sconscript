@@ -128,6 +128,10 @@ addLib('XmippCondor',
        dirs=['external'],
        patterns=['condor/*.cpp'])
 
+addLib('XmippDelaunay',
+       dirs=['external'],
+       patterns=['delaunay/*.cpp'])
+
 addLib('XmippSqliteExt',
        dirs=['external/sqliteExt'],
        patterns=['extension-functions.c'],
@@ -141,8 +145,8 @@ addLib('XmippGtest',
        libs=['pthread']
        )
 
-EXT_LIBS = ['XmippAlglib', 'XmippBilib', 'XmippCondor']
-EXT_LIBS2 = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippSqliteExt']
+EXT_LIBS = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippDelaunay']
+EXT_LIBS2 = ['XmippAlglib', 'XmippBilib', 'XmippCondor', 'XmippDelaunay', 'XmippSqliteExt']
 env.Alias('XmippExternal', EXT_LIBS)
 
 
@@ -179,7 +183,7 @@ addLib('XmippRecons',
        incs=bilib_incs,
        libs=['hdf5', 'hdf5_cpp', 'pthread',
              'fftw3_threads',
-             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor'])
+             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor', 'XmippDelaunay'])
 
 # Interface
 python_incs = ['#software/include/python2.7',
@@ -471,6 +475,7 @@ for p in ['angular_break_symmetry',
           'angular_discrete_assign',
           'angular_distance',
           'angular_distribution_show',
+          'angular_estimate_tilt_axis',
           'angular_neighbourhood',
           'angular_projection_matching',
           'angular_project_library',
@@ -498,6 +503,7 @@ for p in ['angular_break_symmetry',
           'flexible_alignment',
           'image_align',
           'image_align_tilt_pairs',
+          'image_assignment_tilt_pair',
           'image_common_lines',
           'image_convert',
           'image_find_center',
@@ -581,6 +587,7 @@ for p in ['angular_break_symmetry',
           'tomo_remove_fluctuations',
           'tomo_extract_subvolume',
           'validation_nontilt',
+          'validation_tilt_pairs',
 
           'volume_center',
           'volume_correct_bfactor',
@@ -638,7 +645,7 @@ for p in ['angular_break_symmetry',
           'mpi_transform_normalize',
           'mpi_transform_threshold',
           'mpi_xray_project',
-	 	  'mpi_validation_nontilt',
+	  'mpi_validation_nontilt',
           'mpi_write_test',
 
           # Unittest for Xmipp libraries

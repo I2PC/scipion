@@ -25,159 +25,74 @@
 
 #include "ctf_correct_wiener2d.h"
 
-ProgCorrectWiener2D::ProgCorrectWiener2D()
-{
-	rank=0;
-	Nprocessors=1;
-}
-
-
-void ProgCorrectWiener2D::produceSideInfo()
-{
-	FileName fn_img;
-	Image<double> img;
-
-	try
-	{
-		md.read(fn_input);
-	}
-
-	catch (XmippError &xe)
-	{
-		std::cerr <<  xe.msg.c_str() << std::endl;
-	}
-
-	try
-	{
-		md.getValue(MDL_IMAGE, fn_img, md.firstObject());
-		img.read(fn_img, HEADER);
-		img.getDimensions(Xdim,Ydim,Zdim,Ndim);
-	}
-	catch (XmippError &xe)
-	{
-		std::cerr <<  xe.msg.c_str() << std::endl;
-	}
-
-}
-
 // Read arguments ==========================================================
 void ProgCorrectWiener2D::readParams()
 {
-
-    // Read command line
-    fn_out = getParam("-o");
-    fn_input = getParam("-i");
+    XmippMetadataProgram::readParams();
     phase_flipped = checkParam("--phase_flipped");
     pad = XMIPP_MAX(1.,getDoubleParam("--pad"));
     isIsotropic = checkParam("--isIsotropic");
     wiener_constant  = getDoubleParam("--wc");
     correct_envelope = checkParam("--correct_envelope");
+    sampling_rate = getDoubleParam("--sampling_rate");
 }
 
 // Define parameters ==========================================================
 void ProgCorrectWiener2D::defineParams()
 {
     addUsageLine("Perform CTF correction to 2D projection images with estimated ctfs using a Wiener filter.");
+    each_image_produces_an_output = true;
+    XmippMetadataProgram::defineParams();
     addKeywords("correct CTF by Wiener filtering");
-    addParamsLine("   -i <md_file>            : Metadata file with input projections with CTF information");
-    addParamsLine("   -o <md_file>            : Output metadata file with projections with corrected CTF");
     addParamsLine("   [--phase_flipped]       : Is the data already phase-flipped?");
     addParamsLine("   [--isIsotropic]         : Must be considered the defocus isotropic?");
+    addParamsLine("   [--sampling_rate <float=1.0>]     : Sampling rate of the input particles");
     addParamsLine("   [--wc <float=-1>]       : Wiener-filter constant (if < 0: use FREALIGN default)");
     addParamsLine("   [--pad <factor=2.> ]    : Padding factor for Wiener correction");
     addParamsLine("   [--correct_envelope]     : Correct the CTF envelope");
 }
 
 // Define parameters ==========================================================
-void ProgCorrectWiener2D::run()
+void ProgCorrectWiener2D::postProcess()
 {
 
-	produceSideInfo();
+	MetaData &ptrMdOut=*getOutputMd();
 
-	FileName fn_img;
-	Image<double> img;
-	MetaData mdOut;
+	ptrMdOut.removeLabel(MDL_CTF_DEFOCUSA);
+	ptrMdOut.removeLabel(MDL_CTF_DEFOCUSU);
+	ptrMdOut.removeLabel(MDL_CTF_DEFOCUS_ANGLE);
+	ptrMdOut.removeLabel(MDL_CTF_DEFOCUSV);
+	ptrMdOut.removeLabel(MDL_CTF_BG_BASELINE);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_CU);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_CV);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_K);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_SIGMAU);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_SIGMAV);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_ANGLE);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_CU);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_CV);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_K);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_SIGMAU);
+	ptrMdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_SIGMAV);
+	ptrMdOut.removeLabel(MDL_CTF_BG_SQRT_ANGLE);
+	ptrMdOut.removeLabel(MDL_CTF_BG_SQRT_K);
+	ptrMdOut.removeLabel(MDL_CTF_BG_SQRT_U);
+	ptrMdOut.removeLabel(MDL_CTF_BG_SQRT_V);
+	ptrMdOut.removeLabel(MDL_CTF_CA);
+	ptrMdOut.removeLabel(MDL_CTF_CONVERGENCE_CONE);
+	ptrMdOut.removeLabel(MDL_CTF_ENERGY_LOSS);
+	ptrMdOut.removeLabel(MDL_CTF_ENVELOPE);
+	ptrMdOut.removeLabel(MDL_CTF_LENS_STABILITY);
+	ptrMdOut.removeLabel(MDL_CTF_TRANSVERSAL_DISPLACEMENT);
+	ptrMdOut.removeLabel(MDL_CTF_LONGITUDINAL_DISPLACEMENT);
+	ptrMdOut.removeLabel(MDL_CTF_K);
 
-    if (md.size() == 0)
-        REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,
-                     "Program should never execute this line, something went wrong");
-
-    MultidimArray<double> Mwien;
-    size_t imgNum  = 0;
-	if (rank==0)
-		init_progress_bar(md.size());
-
-	MDRow row;
-	FOR_ALL_OBJECTS_IN_METADATA(md)
-	{
-		if ( (imgNum+1)%Nprocessors == rank )
-		{
-
-			md.getRow(row,__iter.objId);
-			md.getValue(MDL_IMAGE, fn_img, __iter.objId);
-
-			img.read(fn_img);
-			CTFDescription ctf;
-			ctf.readFromMetadataRow(md, __iter.objId);
-			generateWienerFilter(Mwien,ctf);
-			applyWienerFilter(Mwien,img());
-			//generate Output
-			FileName outFileName;
-			FileName rootName = (fn_out.removeAllExtensions()).addExtension("stk");
-			outFileName.compose(imgNum+1,rootName);
-			img.write(outFileName);
-
-			row.setValue(MDL_IMAGE, outFileName);
-			mdPartial.addRow(row);
-			//mdPartial.setValue(MDL_IMAGE, outFileName, mdPartial.lastObject());
-		}
-		imgNum++;
-		if (rank ==0)
-			progress_bar(imgNum);
-	}
-
-	synchronize();
-	gatherResults();
-
-	mdOut.unionAll(mdPartial);
-
-    mdOut.removeLabel(MDL_CTF_DEFOCUSA);
-    mdOut.removeLabel(MDL_CTF_DEFOCUSU);
-    mdOut.removeLabel(MDL_CTF_DEFOCUS_ANGLE);
-    mdOut.removeLabel(MDL_CTF_DEFOCUSV);
-    mdOut.removeLabel(MDL_CTF_BG_BASELINE);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_CU);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_CV);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_K);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_SIGMAU);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN2_SIGMAV);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_ANGLE);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_CU);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_CV);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_K);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_SIGMAU);
-    mdOut.removeLabel(MDL_CTF_BG_GAUSSIAN_SIGMAV);
-    mdOut.removeLabel(MDL_CTF_BG_SQRT_ANGLE);
-    mdOut.removeLabel(MDL_CTF_BG_SQRT_K);
-    mdOut.removeLabel(MDL_CTF_BG_SQRT_U);
-    mdOut.removeLabel(MDL_CTF_BG_SQRT_V);
-    mdOut.removeLabel(MDL_CTF_CA);
-    mdOut.removeLabel(MDL_CTF_CONVERGENCE_CONE);
-    mdOut.removeLabel(MDL_CTF_ENERGY_LOSS);
-    mdOut.removeLabel(MDL_CTF_ENVELOPE);
-    mdOut.removeLabel(MDL_CTF_LENS_STABILITY);
-    mdOut.removeLabel(MDL_CTF_TRANSVERSAL_DISPLACEMENT);
-    mdOut.removeLabel(MDL_CTF_LONGITUDINAL_DISPLACEMENT);
-    mdOut.removeLabel(MDL_CTF_K);
-
-
-
-    mdOut.write(fn_out);
+	ptrMdOut.write(fn_out.replaceExtension("xmd"));
 
 }
 
-void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien,CTFDescription & ctf)
+void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTFDescription & ctf)
 {
 	int paddim = Ydim*pad;
 	ctf.enable_CTF = true;
@@ -190,7 +105,8 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien,CTFD
 	Mwien.resize(paddim,paddim);
 
 	//NO entiendo esto:
-	ctf.Tm /= pad;
+	ctf.Tm = sampling_rate;
+	//ctf.Tm /= pad;
 
 	if (isIsotropic)
 	{
@@ -217,12 +133,12 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien,CTFD
 			dAij(ctfIm, i, j) = dAij(ctfComplex, i, j).real();
 	}
 
-
 #ifdef DEBUG
 	{
 		Image<double> save;
 		save()=ctfIm;
-		save.write("ctf.spi");
+		save.write("ctf2.spi");
+		exit(1);
 		//std::cout << "Press any key\n";
 		//char c;
 		//std::cin >> c;
@@ -281,12 +197,20 @@ else
 
 }
 
-void ProgCorrectWiener2D::applyWienerFilter(MultidimArray<double> &Mwien, MultidimArray<double> &img)
+void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
-	img.setXmippOrigin();
+
+	rowOut = rowIn;
+
+	img.read(fnImg);
+	ctf.readFromMdRow(rowIn);
+	img().setXmippOrigin();
+	Ydim = YSIZE(img());
+	Xdim = YSIZE(img());
 	int paddim = Ydim*pad;
 	MultidimArray<std::complex<double> > Faux;
 
+	 generateWienerFilter(Mwien,ctf);
 
 #ifdef DEBUG
 
@@ -303,23 +227,26 @@ void ProgCorrectWiener2D::applyWienerFilter(MultidimArray<double> &Mwien, Multid
         // pad real-space image
         int x0 = FIRST_XMIPP_INDEX(paddim);
         int xF = LAST_XMIPP_INDEX(paddim);
-        img.selfWindow(x0, x0, xF, xF);
+        img().selfWindow(x0, x0, xF, xF);
     }
 
-    FourierTransform(img, Faux);
+    FourierTransform(img(), Faux);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mwien)
     {
         dAij(Faux,i,j) *= dAij(Mwien,i,j);
     }
 
-    InverseFourierTransform(Faux, img);
+    InverseFourierTransform(Faux, img());
     if (paddim > Xdim)
     {
         // de-pad real-space image
         int x0 = FIRST_XMIPP_INDEX(Xdim);
         int xF = LAST_XMIPP_INDEX(Xdim);
-        img.selfWindow(x0, x0, xF, xF);
+        img().selfWindow(x0, x0, xF, xF);
     }
+
+    img.write(fnImgOut);
+    rowOut.setValue(MDL_IMAGE, fnImgOut);
 
 #ifdef DEBUG
 {

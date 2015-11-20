@@ -149,6 +149,10 @@ private:
     */
     bool renameColumn(const std::vector<MDLabel> oldLabel, const std::vector<MDLabel> newlabel);
 
+    /** Insert a new register inserting input columns.
+     */
+    bool setObjectValues( size_t id, const std::vector<MDObject*> columnValues, const std::vector<MDLabel> *desiredLabels=NULL);
+
     /**Set the value of an object in an specified column.
      */
     bool setObjectValue(const int objId, const MDObject &value);
@@ -157,9 +161,13 @@ private:
      */
     bool setObjectValue(const MDObject &value);
 
+    /** Get the values of several objects.
+     */
+    bool getObjectsValues( std::vector<MDLabel> labels, std::vector<MDObject> *values);
+
     /** Get the value of an object.
      */
-    bool getObjectValue(const int objId, MDObject &value);
+    bool getObjectValue(const int objId, MDObject  &value);
 
     /** This function will select some elements from table.
      * The 'limit' is the maximum number of object
@@ -230,8 +238,9 @@ private:
     int columnMaxLength(MDLabel column);
 
     /**Functions to implement set operations */
-    void setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operation);
-    void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel columnLeft, MDLabel columnRight,SetOperation operation);
+    void setOperate(MetaData *mdPtrOut, const std::vector<MDLabel> &columns, SetOperation operation);
+    void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, const std::vector<MDLabel> &columnsLeft,
+    		const std::vector<MDLabel> &columnsRight, SetOperation operation);
     /** Function to dump DB to file */
     bool operate(const String &expression);
 
@@ -263,6 +272,10 @@ private:
     bool dropTable();
     bool createTable(const std::vector<MDLabel> * labelsVector = NULL, bool withObjID=true);
     bool insertValues(double a, double b);
+    bool initializeSelect( bool addWhereObjId, std::vector<MDLabel> labels);
+    bool initializeInsert(const std::vector<MDLabel> *labels, const std::vector<MDObject*> &values);
+    bool initializeUpdate( std::vector<MDLabel> labels);
+    void finalizePreparedStmt(void);
     void prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt);
     bool execSingleStmt(const std::stringstream &ss);
     bool execSingleStmt(sqlite3_stmt *&stmt, const std::stringstream *ss = NULL);
@@ -271,13 +284,17 @@ private:
 
     String tableName(const int tableId) const;
 
-    int bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn);
-    void extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut);
+    bool 	bindStatement( size_t id);
+    int 	bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn);
+    void 	extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut);
 
     static char *errmsg;
     static const char *zLeftover;
     static int rc;
     static sqlite3_stmt *stmt;
+
+    static std::stringstream preparedStream;	// Stream.
+    static sqlite3_stmt * preparedStmt;	// SQL statement.
 
     ///Non-static attributes
     int tableId;

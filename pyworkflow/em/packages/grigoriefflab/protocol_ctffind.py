@@ -50,7 +50,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     
     
     def _defineProcessParams(self, form):
-        form.addParam('useCftfind4', params.BooleanParam, default=False,
+        form.addParam('useCftfind4', params.BooleanParam, default=True,
               label="Use ctffind4 to estimate the CTF?",
               help='If is true, the protocol will use ctffind4 instead of ctffind3')
         form.addParam('astigmatism', params.FloatParam, default=100.0,
@@ -61,7 +61,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
               expertLevel=params.LEVEL_ADVANCED,)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _estimateCTF(self, micFn, micDir):
+    def _estimateCTF(self, micFn, micDir, micName):
         """ Run ctffind, 3 or 4, with required parameters """
         # Create micrograph dir 
         pwutils.makePath(micDir)

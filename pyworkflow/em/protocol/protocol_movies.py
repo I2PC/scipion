@@ -29,7 +29,7 @@
 """
 In this module are protocol base classes related to EM Micrographs
 """
-
+import os
 from os.path import join, basename, exists
 
 from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
@@ -114,6 +114,11 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 toDelete.append(movieMrc)
                 if not exists(movieMrc):
                     self.runJob('bzip2', '-d -f %s' % movieName, cwd=movieFolder)
+            elif movieName.endswith('tbz'):
+                movieMrc = movieName.replace('.tbz', '.mrc') # we assume that if compressed the name ends with .tbz
+                toDelete.append(movieMrc)
+                if not exists(movieMrc):
+                    self.runJob('tar', 'jxf %s' % movieName, cwd=movieFolder)
             else:
                 movieMrc = movieName
             
@@ -125,7 +130,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             self._processMovie(movieId, movieMrc, movieFolder, *args)
             
             if self.cleanMovieData:
-                cleanPath(movieFolder)
+                print "erasing.....movieFolder: ", movieFolder
+                os.system('rm -rf %s' % movieFolder)
+#                 cleanPath(movieFolder)
             else:
                 self.info('Clean movie data DISABLED. Movie folder will remain in disk!!!')
         

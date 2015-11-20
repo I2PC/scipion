@@ -23,36 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef MPI_CTF_CORRECT_WIENER2D_H_
-#define MPI_CTF_CORRECT_WIENER2D_H_
 
-#include <reconstruction/ctf_correct_wiener2d.h>
-#include "parallel/xmipp_mpi.h"
-
-/**@defgroup MpiProgCorrectWiener2D performs CTF correction on 2D images by wiener filtering (MPI)
-   @ingroup ParallelLibrary */
-//@{
-
-class MpiProgCorrectWiener2D: public ProgCorrectWiener2D
-{
-public:
-	MpiNode *node;
-public:
-	// Empty constructor
-	MpiProgCorrectWiener2D();
-
-	// Destructor
-	~MpiProgCorrectWiener2D();
-
-	// Redefine how to read the command line
-	void read(int argc, char** argv);
-
-	// Redefine how to synchronize
-	void synchronize();
-
-	// Redefine how to gather the alignment
-    void gatherResults();
-};
-//@}
-
-#endif /* MPI_CTF_CORRECT_WIENER2D_H_ */
+#include <reconstruction/validation_tilt_pairs.h>
+RUN_XMIPP_PROGRAM(ProgValidationTiltPairs)

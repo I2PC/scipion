@@ -20,8 +20,10 @@ function [newim, strain, localrot] = xmipp_calculate_local_deformation ( fn1, fn
     optim.gamma = 1;         % initial optimization step size 
     optim.anneal=0.8;        % annealing rate on the optimization step    
 
-    im=(im-min(im(:)))/(max(im(:))-min(im(:)));
-    refim=(refim-min(refim(:)))/(max(refim(:))-min(refim(:)));
+    m=min([min(im(:)) min(refim(:))]);
+    M=max([max(im(:)) max(refim(:))]);
+    im=(im-m)/(M-m);
+    refim=(refim-m)/(M-m);
 
     [res, newim]=mirt3D_register(refim, im, main, optim);
 

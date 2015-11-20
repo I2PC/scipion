@@ -2862,8 +2862,11 @@ double interpolatedElement3DHelical(const MultidimArray<double> &Vin, double x, 
 }
 
 void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
-                      double rot0, MultidimArray<int> *mask, bool dihedral)
+                      double rot0, MultidimArray<int> *mask, bool dihedral, double heightFraction)
 {
+	int zFirst=FIRST_XMIPP_INDEX(round(heightFraction*ZSIZE(Vin)));
+	int zLast=LAST_XMIPP_INDEX(round(heightFraction*ZSIZE(Vin)));
+
     Vout.initZeros(Vin);
     double izHelical=1.0/zHelical;
     double sinRotHelical, cosRotHelical;
@@ -2882,17 +2885,20 @@ void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &
         for (double l=l0; l<=lF; ++l)
         {
             double kp=k+l*zHelical;
-            double rotp=rot+l*rotHelical;
-            double ip, jp;
-            sincos(rotp,&ip,&jp);
-            ip*=rho;
-            jp*=rho;
-            finalValue+=interpolatedElement3DHelical(Vin,jp,ip,kp,zHelical,sinRotHelical,cosRotHelical);
-            L+=1.0;
-            if (dihedral)
+            if (kp>=zFirst && kp<=zLast)
             {
-                finalValue+=interpolatedElement3DHelical(Vin,jp,-ip,-kp,zHelical,sinRotHelical,cosRotHelical);
-                L+=1.0;
+				double rotp=rot+l*rotHelical;
+				double ip, jp;
+				sincos(rotp,&ip,&jp);
+				ip*=rho;
+				jp*=rho;
+				finalValue+=interpolatedElement3DHelical(Vin,jp,ip,kp,zHelical,sinRotHelical,cosRotHelical);
+				L+=1.0;
+				if (dihedral)
+				{
+					finalValue+=interpolatedElement3DHelical(Vin,jp,-ip,-kp,zHelical,sinRotHelical,cosRotHelical);
+					L+=1.0;
+				}
             }
         }
         A3D_ELEM(Vout,k,i,j)=finalValue/L;
@@ -2900,7 +2906,7 @@ void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &
 }
 
 void symmetry_HelicalLowRes(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
-                      double rot0, MultidimArray<int> *mask)
+                      double rot0, MultidimArray<int> *mask, double heightFraction)
 {
 	MultidimArray<double> Vaux;
     Vout.initZeros(Vin);

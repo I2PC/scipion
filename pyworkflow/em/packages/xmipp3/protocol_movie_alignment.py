@@ -50,12 +50,6 @@ AL_AVERAGE = 3
 AL_CROSSCORRELATION = 4
 AL_CROSSCORRELATIONOPTICAL = 5
 
-PLOT_CART = 0
-PLOT_POLAR = 1
-PLOT_POLARCART = 2
-PLOT_CHOICES = ['cartesian', 'polar', 'both']
-
-
 class ProtMovieAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
@@ -110,7 +104,11 @@ class ProtMovieAlignment(ProtProcessMovies):
         group.addParam('winSize', IntParam, default=150,
                       label="Window size", expertLevel=LEVEL_ADVANCED,
                       help="Window size (shifts are assumed to be constant within this window).")
-        
+
+        group.addParam('groupSize', IntParam, default=1,
+                      label="Group Size", expertLevel=LEVEL_ADVANCED,
+                      help="In cases with low SNR, the average of a number of frames can be used in alignment")
+
         group.addParam('doSaveMovie', BooleanParam, default=False,
                       label="Save movie", expertLevel=LEVEL_ADVANCED,
                       help="Save Aligned movie")
@@ -187,20 +185,20 @@ class ProtMovieAlignment(ProtProcessMovies):
         micSet = self._createSetOfMicrographs()
         micSet.copyInfo(inputMovies)
         # Also create a Set of Movies with the alignment parameters
-        movieSet = self._createSetOfMovies()
-        movieSet.copyInfo(inputMovies)
-        movieSet.cropOffsetX = Integer(self.cropOffsetX)
-        movieSet.cropOffsetY = Integer(self.cropOffsetY)
-        movieSet.cropDimX = Integer(self.cropDimX)
-        movieSet.cropDimY = Integer(self.cropDimY)
-        movieSet.sumFrame0 = Integer(self.sumFrame0)
-        movieSet.sumFrameN = Integer(self.sumFrameN)
-
+        if self.doSaveMovie:
+            movieSet = self._createSetOfMovies()
+            movieSet.copyInfo(inputMovies)
+            movieSet.cropOffsetX = Integer(self.cropOffsetX)
+            movieSet.cropOffsetY = Integer(self.cropOffsetY)
+            movieSet.cropDimX = Integer(self.cropDimX)
+            movieSet.cropDimY = Integer(self.cropDimY)
+            movieSet.sumFrame0 = Integer(self.sumFrame0)
+            movieSet.sumFrameN = Integer(self.sumFrameN)
+            
         alMethod = self.alignMethod.get()
         for movie in self.inputMovies.get():
             micName = self._getNameExt(movie.getFileName(),'_aligned', 'mrc')
             metadataName = self._getNameExt(movie.getFileName(), '_aligned', 'xmd')
-            plotPolarName = self._getNameExt(movie.getFileName(), '_plot_polar', 'png')
             plotCartName = self._getNameExt(movie.getFileName(), '_plot_cart', 'png')
             psdCorrName = self._getNameExt(movie.getFileName(),'_aligned_corrected', 'psd')
             # Parse the alignment parameters and store the log files
@@ -209,15 +207,15 @@ class ProtMovieAlignment(ProtProcessMovies):
                 alignedMovie.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'_aligned', 'mrcs')))
             ####>>>This is wrong. Save an xmipp metadata
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
-            alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
+            #alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
             alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
             if alMethod == AL_OPTICAL or \
                alMethod == AL_DOSEFGPUOPTICAL or \
                alMethod == AL_CROSSCORRELATIONOPTICAL:
-                movieCreatePlot(PLOT_POLAR, alignedMovie, True)
-                movieCreatePlot(PLOT_CART, alignedMovie, True)
-            movieSet.append(alignedMovie)
+               movieCreatePlot(alignedMovie, True)
+            if self.doSaveMovie:
+                movieSet.append(alignedMovie)
 
             mic = em.Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
@@ -228,14 +226,13 @@ class ProtMovieAlignment(ProtProcessMovies):
                alMethod == AL_DOSEFGPUOPTICAL or \
                alMethod == AL_CROSSCORRELATIONOPTICAL:
 
-                mic.plotPolar = em.Image()
+                #mic.plotPolar = em.Image()
                 mic.plotCart = em.Image()
-                mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
+                #mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
                 mic.plotCart.setFileName(self._getExtraPath(plotCartName))
-            if alMethod != AL_DOSEFGPU and alMethod != AL_CROSSCORRELATION:
-                mic.psdCorr = em.Image()
-                mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
-                print psdCorrName
+            #if alMethod != AL_DOSEFGPU and alMethod != AL_CROSSCORRELATION:
+            mic.psdCorr = em.Image()
+            mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
             micSet.append(mic)
 
 
@@ -251,8 +248,9 @@ class ProtMovieAlignment(ProtProcessMovies):
                 movieSet.append(alignedMovie)
             """
         self._defineOutputs(outputMicrographs=micSet)
-        self._defineOutputs(outputMovies=movieSet)
         self._defineSourceRelation(self.inputMovies, micSet)
+        if self.doSaveMovie:
+            self._defineOutputs(outputMovies=movieSet)
         """
         if alMethod == AL_DOSEFGPU:
             self._defineTransformRelation(inputMovies, micSet)
@@ -285,6 +283,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
         alMethod = self.alignMethod.get()
+        doSaveMovie = self.doSaveMovie.get()
         
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
@@ -293,10 +292,17 @@ class ProtMovieAlignment(ProtProcessMovies):
             movieSuffix = ''
             
         # For simple average execution
+        grayCorrected = False
         if alMethod == AL_AVERAGE:
-            doSaveMovie = self.doSaveMovie.get()#used later
             command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s' % locals()
-            command += ' --nst %d --ned %d --simpleAverage --psd' % (firstFrame, lastFrame)
+            command += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
+            doSaveMovie = False
+            if self.inputMovies.get().getDark() is not None:
+                command += " --dark "+self.inputMovies.get().getDark()
+                grayCorrected=True
+            if self.inputMovies.get().getGain() is not None:
+                command += " --gain "+self.inputMovies.get().getGain()
+                grayCorrected=True
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
@@ -348,7 +354,14 @@ class ProtMovieAlignment(ProtProcessMovies):
             command += '--frameRange %d %d '%(firstFrame,_lastFrame)
             command += '--max_shift %d ' % 16#TODO expert param
             command += '--oavg %s ' % micName
-            command += '--oaligned %s ' % corrMovieName
+            command += ' --oaligned %s ' % corrMovieName
+            if self.inputMovies.get().getDark() is not None:
+                command += " --dark "+self.inputMovies.get().getDark()
+                grayCorrected=True
+            if self.inputMovies.get().getGain() is not None:
+                command += " --gain "+self.inputMovies.get().getGain()
+                grayCorrected=True
+            
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
@@ -360,6 +373,7 @@ class ProtMovieAlignment(ProtProcessMovies):
            alMethod == AL_CROSSCORRELATIONOPTICAL:
             winSize = self.winSize.get()
             doSaveMovie = self.doSaveMovie.get()
+            groupSize = self.groupSize.get()
             if alMethod == AL_DOSEFGPUOPTICAL:
                 program = 'xmipp_movie_optical_alignment_gpu'
                 corrMovieName = self._getCorrMovieName(movieId)
@@ -376,15 +390,24 @@ class ProtMovieAlignment(ProtProcessMovies):
                 if doSaveMovie:
                     command += '--ssc '
             else:
-                program = 'xmipp_movie_optical_alignment_cpu'
+ 		if self.doGPU:
+		   program = 'xmipp_movie_optical_alignment_gpu'
+            	else:
+                   program = 'xmipp_movie_optical_alignment_cpu'
                 command = '-i %(movieName)s%(movieSuffix)s ' % locals()
                 if doSaveMovie:
                     command += '--ssc '
 
-            command += '-o %(micName)s --winSize %(winSize)d ' % locals()
-            command += '--nst %d --ned %d --psd ' % (firstFrame, lastFrame)
+            command += '-o %(micName)s --winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
+            command += '--nst %d --ned %d ' % (firstFrame, lastFrame)
             if self.doGPU:
                 command += '--gpu %d ' % gpuId
+            if self.inputMovies.get().getDark() is not None and not grayCorrected:
+                command += " --dark "+self.inputMovies.get().getDark()
+                grayCorrected=True
+            if self.inputMovies.get().getGain() is not None and not grayCorrected:
+                command += " --gain "+self.inputMovies.get().getGain()
+                grayCorrected=True
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
@@ -393,7 +416,24 @@ class ProtMovieAlignment(ProtProcessMovies):
                     or alMethod == AL_DOSEFGPUOPTICAL or\
                     alMethod == AL_CROSSCORRELATIONOPTICAL:
                 moveFile(join(movieFolder, metadataName), self._getExtraPath())
-
+        # Compute half-half PSD
+        ih = em.ImageHandler()
+        avg = ih.computeAverage(join(movieFolder, movieName))
+        avg.write(join(movieFolder, 'uncorrectedmic.mrc'))
+        command = '--micrograph uncorrectedmic.mrc --oroot uncorrectedpsd --dont_estimate_ctf --pieceDim 400 --overlap 0.7'
+        program = 'xmipp_ctf_estimate_from_micrograph'
+        self.runJob(program, command, cwd=movieFolder)
+        command = '--micrograph %(micName)s --oroot correctedpsd --dont_estimate_ctf --pieceDim 400 --overlap 0.7' % locals()
+        self.runJob(program, command, cwd=movieFolder)
+        correctedPSD = em.ImageHandler().createImage()
+        unCorrectedPSD = em.ImageHandler().createImage()
+        correctedPSD.read(join(movieFolder, 'correctedpsd.psd'))
+        unCorrectedPSD.read(join(movieFolder, 'uncorrectedpsd.psd'))
+        x, y, z, n = correctedPSD.getDimensions()
+        for  i in range(1,y):
+            for j in range(1,x//2):
+                unCorrectedPSD.setPixel(i, j, correctedPSD.getPixel(i,j))
+        unCorrectedPSD.write(join(movieFolder, psdCorrName))
         # Move output micrograph and related information to 'extra' folder
         moveFile(join(movieFolder, micName), self._getExtraPath())
         if doSaveMovie:
@@ -408,8 +448,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             #TODO: create a proper scipion object
             moveFile(join(movieFolder, metadataNameInterMediate), self._getExtraPath())
             moveFile(join(movieFolder, corrMovieName), self._getExtraPath())
-        else:
-            moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
+        moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
 
 
     def _getProgram(self):
@@ -418,8 +457,10 @@ class ProtMovieAlignment(ProtProcessMovies):
             return 'xmipp_movie_optical_alignment_cpu'
         if alMethod == AL_OPTICAL:
             if self.doGPU:
+		print 'doGPU is set to 1'
                 return 'xmipp_movie_optical_alignment_gpu'
             else:
+		print 'doGPU is set to 0'
                 return 'xmipp_movie_optical_alignment_cpu'
         elif alMethod == AL_DOSEFGPU:
             return 'dosefgpu_driftcorr'
@@ -432,13 +473,16 @@ class ProtMovieAlignment(ProtProcessMovies):
         if numThreads>1:
             if self.doGPU:
                 errors.append("GPU and Parallelization can not be used together")
+
         if self.doGPU and (alMethod == AL_CROSSCORRELATION or \
                            alMethod == AL_CROSSCORRELATIONOPTICAL):
                 self.doGPU.set(False)
                 #errors.append("Crosscorrelation is not implemente in GPU")
-        alignMethod = self.alignMethod.get()
-        if alignMethod == 1 or alignMethod == 2:
-            errors.append("GPU methods are not available at the moment.")
+
+        # FIXME: JMRT: GPU should only be disable for web and temporarly
+        #alignMethod = self.alignMethod.get()
+        #if alignMethod == 1 or alignMethod == 2:
+        #    errors.append("GPU methods are not available at the moment.")
         return errors
 
     def _citations(self):
@@ -484,84 +528,40 @@ class ProtMovieAlignment(ProtProcessMovies):
 def createPlots(plotType, protocol, movieId):
 
     movie = protocol.outputMovies[movieId]
-    return movieCreatePlot(plotType, movie, False)
+    return movieCreatePlot(movie, False)
 
-def movieCreatePlot(plotType, movie, saveFig):
+def movieCreatePlot(movie, saveFig):
 
     import xmipp
     meanX = []
     meanY = []
-    stdX = []
-    stdY = []
-    colors = []
-    gr = 255.0
-
-    # if movie is None:
-    #     return [self.errorMessage("Invalid movie id *%d*" % movieId,
-    #                               title="Invalid input")]
+    figureSize = (8, 6)
 
     alignedMovie = movie.alignMetaData
     md = xmipp.MetaData(alignedMovie)
-    colorDist = 255 / md.size()
-
-    cartPosition = None
-    polarPosition = None
-    colorBarPosition = 122
-    figureSize = (8, 6)
-
-    if plotType == PLOT_CART:
-        cartPosition = 121
-    elif plotType == PLOT_POLAR:
-        polarPosition = 121
-    elif plotType == PLOT_POLARCART:
-        cartPosition = 132
-        polarPosition = 131
-        colorBarPosition = 133
-
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
 
-    # Plot the color bar
-    ax = figure.add_subplot(colorBarPosition, aspect='equal', xlim=[0, 6])
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    colorBarX = np.array([1, 1])
-    colorBarY = np.array([2, 4])
-
-    # Read the shifts information from the Metadata
+    preX = 0.0
+    preY = 0.0
+    meanX.append(0.0)
+    meanY.append(0.0)
+    ax = figure.add_subplot(111)
+    ax.grid()
+    ax.set_title('Cartesian representation')
+    ax.set_xlabel('Drift x (pixels)')
+    ax.set_ylabel('Drift y (pixels)')
+    ax.plot(0, 0, 'yo-')
     for objId in md:
-        meanX.append(md.getValue(xmipp.MDL_OPTICALFLOW_MEANX, objId))
-        meanY.append(md.getValue(xmipp.MDL_OPTICALFLOW_MEANY, objId))
-        stdX.append(md.getValue(xmipp.MDL_OPTICALFLOW_STDY, objId))
-        stdY.append(md.getValue(xmipp.MDL_OPTICALFLOW_STDY, objId))
-        colors.append((1, gr / 255.0, 0))
-        ax.plot(colorBarX, colorBarY, c=(1, gr / 255.0, 0), linewidth=10)
-        ax.text(2, np.mean(colorBarY), str(objId)+'-'+str(objId+1))
-        colorBarY += 2
-        gr -= colorDist
-    area = (np.sqrt(np.power(np.asarray(stdX), 2) + np.power(np.asarray(stdY), 2)))*700
-    # Plot in polar if needed
-    if polarPosition:
-        r = np.sqrt(np.power(np.asarray(meanX), 2) + np.power(np.asarray(meanY), 2))
-        theta = np.arctan2(meanY, meanX) * 180 / np.pi
-        ax = figure.add_subplot(polarPosition, projection='polar')
-        ax.set_title('Polar representation')
-        c = ax.scatter(theta, r, c=colors, s=area, cmap=plt.cm.hsv)
-        c.set_alpha(0.75)
-        ax.plot(theta, r, '-^')
-        if saveFig:
-            plotter.savefig(movie.plotPolar)
-    # Plot in cartesian if needed
-    if cartPosition:
-        ax = figure.add_subplot(cartPosition)
-        ax.grid()
-        ax.grid()
-        ax.set_title('Cartesian representation')
-        c = ax.scatter(np.asarray(meanX), np.asarray(meanY), c=colors, s=area, cmap=plt.cm.hsv)
-        c.set_alpha(0.75)
-        ax.plot(np.asarray(meanX), np.asarray(meanY), '-^')
-        if saveFig:
-            plotter.savefig(movie.plotCart)
+        preX += md.getValue(xmipp.MDL_OPTICALFLOW_MEANX, objId)
+        preY += md.getValue(xmipp.MDL_OPTICALFLOW_MEANY, objId)
+        meanX.append(preX)
+        meanY.append(preY)
+        ax.plot(preX, preY, 'yo-')
+        ax.text(preX-0.02, preY+0.01, str(objId+1))
+    ax.plot(np.asarray(meanX), np.asarray(meanY))
+    if saveFig:
+        plotter.savefig(movie.plotCart)
     return plotter
 
 

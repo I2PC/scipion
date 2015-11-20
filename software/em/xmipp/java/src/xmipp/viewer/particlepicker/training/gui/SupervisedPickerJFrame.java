@@ -8,12 +8,16 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.text.NumberFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -26,10 +30,16 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+import xmipp.jni.Classifier;
+import xmipp.jni.Classifier.Parameter;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -76,6 +86,9 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     protected JLabel checkpercentlb;
     protected JFormattedTextField autopickpercenttf;
     protected JLabel thresholdlb;
+    protected JPanel gpickerpn;
+	private JButton autopickbt;
+	private HashMap<JTextField, Parameter> paramtfs;
 
     @Override
     public SupervisedParticlePicker getParticlePicker() {
@@ -89,6 +102,8 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             this.ppicker = picker;
             initComponents();
             setChanged(false);
+            if(!ppicker.getClassifier().needsTraining())
+            	ppicker.autopick(this, getMicrograph());
         } catch (IllegalArgumentException ex) {
             //close();
             throw ex;
@@ -172,6 +187,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             
 
         } catch (Exception e) {
+        	e.printStackTrace();
             XmippDialog.showError(this, e.getMessage());
         }
     }
@@ -288,6 +304,14 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
             
             initSupervisedPickerPane();
+            if(!ppicker.getClassifier().needsTraining())
+            {
+            	sppickerpn.setVisible(false);
+            	initGenericPickerPane();
+            	add(gpickerpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 2, 1, GridBagConstraints.HORIZONTAL));
+            }
+            else
+            	add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
             add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 3, 1, 1, GridBagConstraints.HORIZONTAL));
             enableSupervised(ppicker.getMode() == Mode.Supervised);
             initMicrographsPane();
@@ -428,6 +452,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         thresholdsl.setEnabled(selected);
         thresholdlb.setEnabled(selected);
         thresholdtf.setEnabled(selected);
+        sizelb.setEnabled(!selected);
         sizesl.setEnabled(!selected);// not really, if there is some micrograph
         // in sup mode size cannot be changed
         sizetf.setEnabled(!selected);
@@ -726,7 +751,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     }
 
     public boolean isPickingAvailable(MouseEvent e) {
-        if (!super.isPickingAvailable()) {
+        if (!super.isPickingAvailable(e)) {
             return false;
         }
         return getMicrograph().getState() != MicrographState.Corrected;
@@ -824,5 +849,84 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     }
     
     
+    
+    protected void initGenericPickerPane()
+    {
+    	gpickerpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    	gpickerpn.setBorder(BorderFactory.createTitledBorder("Autopick"));
+    	List<Classifier.Parameter> parameters = ppicker.getClassifier().getParams();
+    	paramtfs = new HashMap<JTextField, Classifier.Parameter>();
+    	JTextField tf;
+    	for(Classifier.Parameter param: parameters)
+    	{
+    		gpickerpn.add(new JLabel(param.label));
+    		tf = new JTextField(3);
+    		tf.setToolTipText(param.help);
+    		tf.setText(param.value);
+    		tf.setActionCommand(param.name);
+    		tf.addFocusListener(new FocusListener()
+			{
+				
+				@Override
+				public void focusLost(FocusEvent e)
+				{
+					if(e.isTemporary())
+						return;
+					JTextField tf = (JTextField)e.getComponent();
+					updateParam(tf);
+				}
+				
+				@Override
+				public void focusGained(FocusEvent e)
+				{
+					// TODO Auto-generated method stub
+					
+				}
+			});
+    		tf.addActionListener(new ActionListener()
+			{
+				
+				@Override
+				public void actionPerformed(ActionEvent e)
+				{
+					JTextField tf = (JTextField)e.getSource();
+					updateParam(tf);
+					
+				}
+			});
+    		gpickerpn.add(tf);
+    		paramtfs.put(tf, param);
+    		if(param.name.equals("diameter") || param.name.equals("boxSize"))//classifier diameter and particle size are the same
+    			updateSize(Integer.parseInt(tf.getText()));
+    	}
+    	autopickbt = XmippWindowUtil.getTextButton("Run", new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				boolean autopick = XmippDialog.showYesNoQuestion(SupervisedPickerJFrame.this, "Previous picking will be discarded. Are you sure you want to continue?");
+				if(autopick)
+				{
+					for(SupervisedPickerMicrograph m: ppicker.getMicrographs())
+						ppicker.resetMicrograph(m);
+					ppicker.autopick(SupervisedPickerJFrame.this, getMicrograph());
+				}
+				
+				
+			}});
+    	autopickbt.setBackground(XmippWindowUtil.firebrick);
+    	autopickbt.setForeground(Color.WHITE);
+    	gpickerpn.add(autopickbt);
+    }
+    
+    protected void updateParam(JTextField tf)
+    {
+		Classifier.Parameter param = paramtfs.get(tf);
+		if(param.value.equals(tf.getText()))
+			return;
+		if(param.name.equals("diameter") || param.name.equals("boxSize"))//classifier diameter and particle size are the same
+			updateSize(Integer.parseInt(tf.getText()));
+		param.value = tf.getText();
+    }
 
 }

@@ -27,26 +27,28 @@
 This sub-package contains wrapper around align2d Xmipp program
 """
 
-from pyworkflow.em import *
-from pyworkflow.em.packages.xmipp3.utils import iterMdRows
-from convert import (xmippToLocation, writeSetOfParticles)
+import pyworkflow.em as em
+import pyworkflow.em.metadata as md
+
+import pyworkflow.protocol.params as params
+
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.utils.properties import Message
+from convert import (xmippToLocation, writeSetOfParticles)
 
-import xmipp
-
-       
         
-class XmippProtApplyAlignment(ProtAlign2D):
+class XmippProtApplyAlignment(em.ProtAlign2D):
     """ Apply alignment parameters and produce a new set of images. """
-    _label = 'apply alignment'
+    _label = 'apply alignment 2d'
 
     #--------------------------- DEFINE param functions --------------------------------------------
-    
-    def _defineAlignParams(self, form):
-#         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
-#                       label='Input particles', 
-#                       help='Select the particles that you want to apply the'
-#                       'alignment parameters.')
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputParticles', params.PointerParam, important=True,  
+                      pointerCondition='hasAlignment2D',
+                      label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles',
+                      help='Select the particles that you want to apply the'
+                           'alignment parameters.')
         form.addParallelSection(threads=0, mpi=4)
     
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -76,20 +78,7 @@ class XmippProtApplyAlignment(ProtAlign2D):
         self.runJob('xmipp_transform_geometry', args)
         
         return [outputStk]
-
-    def _updateItem(self, item, row):
-        """ Implement this function to do some
-        update actions over each single item
-        that will be stored in the output Set.
-        """
-        # By default update the item location (index, filename) with the new binary data location
-        newFn = row.getValue(xmipp.MDL_IMAGE)
-        newLoc = xmippToLocation(newFn)
-        item.setLocation(newLoc)
-        # Also remove alignment info
-        item.setTransform(None)
-
-            
+     
     def createOutputStep(self):
         particles = self.inputParticles.get()
 
@@ -100,9 +89,9 @@ class XmippProtApplyAlignment(ProtAlign2D):
         inputMd = self._getPath('aligned_particles.xmd')
         alignedSet.copyItems(particles,
                              updateItemCallback=self._updateItem,
-                             itemDataIterator=iterMdRows(inputMd))
+                             itemDataIterator=md.iterRows(inputMd, sortByLabel=md.MDL_ITEM_ID))
         # Remove alignment 2D
-        alignedSet.setAlignment(ALIGN_NONE)
+        alignedSet.setAlignment(em.ALIGN_NONE)
 
         # Define the output average
 
@@ -113,7 +102,7 @@ class XmippProtApplyAlignment(ProtAlign2D):
 
         avgImage.write(avgFile)
 
-        avg = Particle()
+        avg = em.Particle()
         avg.setLocation(1, avgFile)
         avg.copyInfo(alignedSet)
 
@@ -122,13 +111,10 @@ class XmippProtApplyAlignment(ProtAlign2D):
 
         self._defineOutputs(outputParticles=alignedSet)
         self._defineSourceRelation(self.inputParticles, alignedSet)
-                
-
+    
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
-        if not self.inputParticles.get().hasAlignment2D():
-            errors.append("Input particles should have alignment 2D.")
         return errors
         
     def _summary(self):
@@ -145,5 +131,17 @@ class XmippProtApplyAlignment(ProtAlign2D):
         else:
             return ["We applied alignment to %s particles from %s and produced %s."
                     % (self.inputParticles.get().getSize(), self.getObjectTag('inputParticles'), self.getObjectTag('outputParticles'))]
-
     
+    #--------------------------- UTILS functions --------------------------------------------
+    def _updateItem(self, item, row):
+        """ Implement this function to do some
+        update actions over each single item
+        that will be stored in the output Set.
+        """
+        # By default update the item location (index, filename) with the new binary data location
+        newFn = row.getValue(md.MDL_IMAGE)
+        newLoc = xmippToLocation(newFn)
+        item.setLocation(newLoc)
+        # Also remove alignment info
+        item.setTransform(None)
+

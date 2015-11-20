@@ -38,20 +38,11 @@
 /**@defgroup Correct CTF by Wiener filter in 2D
    @ingroup ReconsLibrary */
 //@{
-class ProgCorrectWiener2D: public XmippProgram
+class ProgCorrectWiener2D: public XmippMetadataProgram
 {
 
 
 public:
-
-    size_t rank, Nprocessors;
-
-    /** Input metadata file */
-    FileName fn_input;
-
-    /** Output metadata file */
-    FileName fn_out;
-
     bool phase_flipped;
 
     /** Padding factor */
@@ -61,15 +52,11 @@ public:
 
     bool correct_envelope;
 
-    MetaData mdPartial;
-
-    size_t Xdim, Ydim, Zdim, Ndim;
-
     /// Wiener filter constant
     double wiener_constant;
 
-    //Input metadata
-	MetaData md;
+    /// Sampling rate
+    double sampling_rate;
 
 
 public:
@@ -78,24 +65,21 @@ public:
 
     void defineParams();
 
-    void run();
-
 public:
 
-    ProgCorrectWiener2D();
-
-    void applyWienerFilter(MultidimArray<double> & Mwien, MultidimArray<double> & img);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
     void generateWienerFilter(MultidimArray<double> &Mwien, CTFDescription &ctf);
 
-    /// Gather alignment
-    virtual void gatherResults() {}
+	void postProcess();
+public:
+	Image<double> img;
 
-    /// Synchronize with other processors
-    virtual void synchronize() {}
+	CTFDescription ctf;
 
-	void produceSideInfo();
+	size_t Ydim, Xdim;
 
+	MultidimArray<double> Mwien;
 };
 
 

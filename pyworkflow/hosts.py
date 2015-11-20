@@ -86,6 +86,9 @@ class HostConfig():
     def getSubmitCommand(self):
         return self.queueSystem.submitCommand.get()
     
+    def getSubmitPrefix(self):
+        return self.queueSystem.submitPrefix.get()
+    
     def getCancelCommand(self):
         return self.queueSystem.cancelCommand.get()
     
@@ -94,6 +97,9 @@ class HostConfig():
     
     def getSubmitTemplate(self):
         return self.queueSystem.getSubmitTemplate()
+    
+    def getQueuesDefault(self):
+        return self.queueSystem.queuesDefault
     
     def getMpiCommand(self):
         return self.mpiCommand.get()
@@ -151,15 +157,25 @@ class QueueSystemConfig(OrderedObject):
     def __init__(self, **args):
         OrderedObject.__init__(self, **args) 
         self.name = String()
-        self.mandatory = Boolean()
+        # Number of cores from which the queue is mandatory
+        # 0 means no mandatory at all
+        # 1 will force to launch all jobs through the queue
+        self.mandatory = Integer()
         self.queues = None # List for queue configurations
         self.submitCommand = String()
+        # Allow to change the prefix of submission scripts
+        # we used by default the ID.job, but in some clusters
+        # the job script should start by a letter
+        self.submitPrefix = String()
         self.checkCommand = String()
         self.cancelCommand = String()
         self.submitTemplate = String()
         
+    def hasName(self):
+        return self.name.hasValue()
+    
     def hasValue(self):
-        return self.name.hasValue() and len(self.queues)
+        return self.hasName() and len(self.queues)
     
     def getName(self):
         return self.name.get()
@@ -186,6 +202,15 @@ class QueueSystemConfig(OrderedObject):
         self.name.set(name)
     
     def setMandatory(self, mandatory):
+        # This condition is to be backward compatible
+        # when mandatory was a boolean
+        # now it should use the number of CPU
+        # that should force to use the queue
+        if mandatory in ['False', 'false']:
+            mandatory = 0
+        elif mandatory in ['True', 'true']:
+            mandatory = 1
+            
         self.mandatory.set(mandatory)
     
     def setSubmitTemplate(self, submitTemplate):
