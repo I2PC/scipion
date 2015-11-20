@@ -51,6 +51,7 @@ public:
     FileName fname, foname, gianRefFilename, darkRefFilename;
     MultidimArray<double> gainImage, darkImage;
     int winSize, gpuDevice, fstFrame, lstFrame;
+    int groupSize;
     bool doAverage, saveCorrMovie;
     bool gainImageCorr, darkImageCorr;
 
@@ -62,7 +63,8 @@ public:
         addParamsLine("     [--nst <int=0>]     : first frame used in alignment (0 = first frame in the movie");
         addParamsLine("     [--ned <int=0>]     : last frame used in alignment (0 = last frame in the movie ");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
-        addParamsLine("     [--simpleAverage]: if we want to just compute the simple average");
+        addParamsLine("     [--simpleAverage]   : if we want to just compute the simple average");
+        addParamsLine("     [--groupSize <int=1>]        : the depth of pyramid for optical flow algorithm");
         addParamsLine("     [--ssc]             : save corrected stack");
         addParamsLine("     [--gain <gainReference>]             : gain reference");
         addParamsLine("     [--dark <darkReference>]             : dark reference");
@@ -84,6 +86,11 @@ public:
         {
             darkRefFilename = getParam("--dark");
         }
+        if ((darkImageCorr = checkParam("--dark")))
+        {
+            darkRefFilename = getParam("--dark");
+        }
+        groupSize = getIntParam("--groupSize");
         fstFrame  = getIntParam("--nst");
         lstFrame  = getIntParam("--ned");
         winSize   = getIntParam("--winSize");
@@ -225,9 +232,9 @@ public:
         movieStack.readMapped(movieFile,begin);
         movieStack().getImage(avgImg);
         if (darkImageCorr)
-        	avgImg-=darkImage;
+            avgImg-=darkImage;
         if (gainImageCorr)
-        	avgImg/=gainImage;
+            avgImg/=gainImage;
         for (int i=begin;i<end;i++)
         {
             movieStack.readMapped(movieFile,i+1);
@@ -365,7 +372,7 @@ public:
         }
         xmipp2Opencv(avgCurr, avgcurr);
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
-        while (div!=1)
+        while (div!=groupSize)
         {
             div = int(imagenum/cnt);
             // avgStep to hold the sum of aligned frames of each group at each step
@@ -421,7 +428,7 @@ public:
                 split(flow, planes);
 #endif
                 // Save the flows if we are in the last step
-                if (div==1)
+                if (div==groupSize)
                 {
                     if (i > 0)
                     {

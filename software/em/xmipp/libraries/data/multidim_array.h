@@ -615,6 +615,9 @@ extern String floatToString(float F, int _width, int _prec);
              (k) < STARTINGZ(*this) || (k) > FINISHINGZ(*this))
 //@}
 
+// Look up table lenght to be used in interpolation.
+#define		LOOKUP_TABLE_LEN		6
+
 // Forward declarations ====================================================
 template<typename T>
 class MultidimArray;
@@ -2870,6 +2873,83 @@ public:
                 break;
             }
         }
+        return (T) columns;
+    }
+
+    inline T interpolatedElementBSpline2D_Degree3(double x, double y) const
+    {
+    	bool	firstTime=true;			// Inner loop first time execution flag.
+    	double	*ref;
+
+       	// Logical to physical
+        y -= STARTINGY(*this);
+        x -= STARTINGX(*this);
+
+        int l1 = (int)ceil(x - 2);
+        int l2 = l1 + 3;
+        int m1 = (int)ceil(y - 2);
+        int m2 = m1 + 3;
+
+        double columns = 0.0;
+        double aux;
+        int Ydim=(int)YSIZE(*this);
+        int Xdim=(int)XSIZE(*this);
+
+        int		equivalent_l_Array[LOOKUP_TABLE_LEN]; // = new int [l2 - l1 + 1];
+        double 	aux_Array[LOOKUP_TABLE_LEN];// = new double [l2 - l1 + 1];
+
+        for (int m = m1; m <= m2; m++)
+        {
+            int equivalent_m=m;
+            if      (m<0)
+                equivalent_m=-m-1;
+            else if (m>=Ydim)
+                equivalent_m=2*Ydim-m-1;
+            double rows = 0.0;
+            int	index=0;
+            ref = &DIRECT_A2D_ELEM(*this, equivalent_m,0);
+            for (int l = l1; l <= l2; l++)
+            {
+            	int equivalent_l;
+            	// Check if it is first time executing inner loop.
+            	if (firstTime)
+            	{
+					double xminusl = x - (double) l;
+					equivalent_l=l;
+					if (l<0)
+					{
+						equivalent_l=-l-1;
+					}
+					else if (l>=Xdim)
+					{
+						equivalent_l=2*Xdim-l-1;
+					}
+
+					equivalent_l_Array[index] = equivalent_l;
+					BSPLINE03(aux,xminusl);
+					aux_Array[index] = aux;
+					index++;
+            	}
+            	else
+            	{
+            		equivalent_l = equivalent_l_Array[index];
+					aux = aux_Array[index];
+					index++;
+            	}
+
+            	//double Coeff = DIRECT_A2D_ELEM(*this, equivalent_m,equivalent_l);
+            	double Coeff = ref[equivalent_l];
+                rows += Coeff * aux;
+            }
+
+            // Set first time inner flag is executed to false.
+    		firstTime = false;
+
+            double yminusm = y - (double) m;
+            BSPLINE03(aux,yminusm);
+            columns += rows * aux;
+        }
+
         return (T) columns;
     }
 

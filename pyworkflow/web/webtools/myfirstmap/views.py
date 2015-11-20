@@ -178,17 +178,17 @@ def create_service_project(request):
 #         protJoin.inputVolumes.append(p4)
         project.saveProtocol(protJoin)
         
-        protValidate = project.newProtocol(XmippProtValidateNonTilt)
-        protValidate.setObjLabel('validate nontilt')
-        protValidate.inputVolumes.set(protJoin)
-        protValidate.inputVolumes.setExtended('outputVolumes')
-        protValidate.inputParticles.set(protImport)
-        protValidate.inputParticles.setExtended('outputAverages')
-        protValidate.numberOfThreads.set(8)
-        if testDataKey :
-            setProtocolParams(protValidate, testDataKey)
-#         protJoin.inputVolumes.append(p4)
-        project.saveProtocol(protValidate)
+#         protValidate = project.newProtocol(XmippProtValidateNonTilt)
+#         protValidate.setObjLabel('validate nontilt')
+#         protValidate.inputVolumes.set(protJoin)
+#         protValidate.inputVolumes.setExtended('outputVolumes')
+#         protValidate.inputParticles.set(protImport)
+#         protValidate.inputParticles.setExtended('outputAverages')
+#         protValidate.numberOfThreads.set(8)
+#         if testDataKey :
+#             setProtocolParams(protValidate, testDataKey)
+# #         protJoin.inputVolumes.append(p4)
+#         project.saveProtocol(protValidate)
         
         
     return HttpResponse(mimetype='application/javascript')

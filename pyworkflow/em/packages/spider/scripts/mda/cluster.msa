@@ -2,6 +2,7 @@
 
 ; ------------- Parameters -------------
 x27 = 9                                ; number of eigenfactors to use
+x30 = 0                                ; number of threads to use, 0 = use all
 
 ; --------------- Inputs ---------------
 fr l
@@ -32,7 +33,7 @@ echo "Classifying"; date
 
 md
 set mp
-0
+x30
 
 cl cla
 [cas_prefix]        ; INPUT
