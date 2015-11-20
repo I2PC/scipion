@@ -158,11 +158,18 @@ def getResourceIcon(icon):
 def getResourceLogo(logo):
     return os.path.join(django_settings.MEDIA_URL, logo)
 
-def getResourceCss(css):
-    return os.path.join(django_settings.STATIC_URL, "css/", cssDict[css])
+def getResourceCss(css=None):
 
-def getResourceJs(js):
-    return os.path.join(django_settings.STATIC_URL, "js/", jsDict[js])
+    if css:
+        return os.path.join(django_settings.STATIC_URL, "css/", cssDict[css])
+
+    return os.path.join(django_settings.STATIC_URL, "css/")
+
+def getResourceJs(js=None):
+    if js:
+        return os.path.join(django_settings.STATIC_URL, "js/", jsDict[js])
+
+    return os.path.join(django_settings.STATIC_URL, "js/")
 
 def loadProject(request):
 #     projectPath = Manager().getProjectPath(projectName)
