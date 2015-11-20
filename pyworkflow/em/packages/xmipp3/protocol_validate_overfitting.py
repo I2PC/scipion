@@ -149,8 +149,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
 
         self.runJob('xmipp_resolution_fsc', "--ref %s -i %s -o %s --sampling_rate %f"%\
                     (fnRoot+"_00.vol",fnRoot+"_01.vol",fnRoot+"_fsc.xmd",Ts), numberOfMpi=1)
-        cleanPattern(fnRoot+"_0?.vol")
-        cleanPattern(fnRoot+"_images_0?.xmd")
+        #cleanPattern(fnRoot+"_0?.vol")
+        #cleanPattern(fnRoot+"_images_0?.xmd")
         
         mdFSC = xmipp.MetaData(fnRoot+"_fsc.xmd")
         for id in mdFSC:
@@ -166,12 +166,12 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         #for noise
         self.runJob('xmipp_resolution_fsc', "--ref %s -i %s -o %s --sampling_rate %f"%\
                     (fnRootN+"_00.vol",fnRootN+"_01.vol",fnRootN+"_fsc.xmd",Ts), numberOfMpi=1)
-        cleanPattern(fnRootN+"_0?.vol")
+        #cleanPattern(fnRootN+"_0?.vol")
         cleanPattern(fnRoot+"_noises_0?.xmd")
         cleanPattern(fnRoot+"_noisesOld_0?.xmd")
         cleanPattern(fnRoot+"_noisesL_0?.xmd")
         cleanPattern(fnRoot+"_noises2_0?.stk")
-        cleanPattern(fnRoot+"_noises_0?.stk")
+        #cleanPattern(fnRoot+"_noises_0?.stk")
         
         mdFSCN = xmipp.MetaData(fnRootN+"_fsc.xmd")
         for id in mdFSCN:
