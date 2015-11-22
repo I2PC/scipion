@@ -643,7 +643,7 @@ class Float(Scalar):
         """Compare that all attributes are equal"""
         # If both float has some value distinct of None
         # then we should compare the absolute value of difference 
-        # agains the EQUAL_PRECISION to say equal or not
+        # against the EQUAL_PRECISION to say equal or not
         if self.hasValue() and other.hasValue():
             return abs(self._objValue - other._objValue) < self.EQUAL_PRECISION
         # If one has None as value, then both should have None
