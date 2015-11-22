@@ -821,12 +821,12 @@ class Protocol(Step):
         """ This function should only be used from RESTART.
         It will remove output attributes from mapper and object.
         """
-        for o in self._outputs:
-            if hasattr(self, o):
-                self.mapper.delete(getattr(self, o))
-                self.deleteAttribute(o)
-            else:
-                print "DEBUG: error, %s is not found in protocol" % o
+        attributes = [a[0] for a in self.iterOutputEM()]
+        
+        for attrName in attributes:
+            attr = getattr(self, attrName)
+            self.mapper.delete(attr)
+            self.deleteAttribute(attrName)
             
         self._outputs.clear()
         self.mapper.store(self._outputs)
