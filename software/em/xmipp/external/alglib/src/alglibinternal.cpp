@@ -6345,8 +6345,8 @@ void matrixvectormultiply(/* Real    */ ae_matrix* a,
         {
             return;
         }
-        ae_assert(j2-j1==ix2-ix1, "MatrixVectorMultiply: A and X don't match!", _state);
-        ae_assert(i2-i1==iy2-iy1, "MatrixVectorMultiply: A and Y don't match!", _state);
+        ae_assert(j2-j1==ix2-ix1, "MatrixVectorMultiply: A and X dont match!", _state);
+        ae_assert(i2-i1==iy2-iy1, "MatrixVectorMultiply: A and Y dont match!", _state);
         
         /*
          * beta*y
@@ -7081,7 +7081,7 @@ Output parameters:
     Tau -   scalar value Tau.
 
 This subroutine is the modification of CLARFG subroutines  from the LAPACK
-library. It has similar functionality except for the fact that it  doesn’t
+library. It has similar functionality except for the fact that it  doesnÂ’t
 handle errors when intermediate results cause an overflow.
 
   -- LAPACK auxiliary routine (version 3.0) --
@@ -7839,7 +7839,7 @@ Input parameters:
 
 
 Output parameters:
-    H   –   contains the matrix T.
+    H   Â–   contains the matrix T.
             Array whose indexes range within [1..N, 1..N].
             All elements below the blocks on the main diagonal are equal
             to 0.
