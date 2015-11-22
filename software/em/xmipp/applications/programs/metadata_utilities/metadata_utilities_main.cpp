@@ -159,7 +159,7 @@ protected:
         addExampleLine("Or for initialize metadata columns 'shiftX' and 'shiftY' with a constant value of 5", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -l \"shiftX shiftY\" constant 5 -o out.doc");
         addExampleLine("If you have columns that represent the filename of a metadata with other data (ex CTFParams)", false);
-        addExampleLine("you can't 'expand' the column with the values in that metadta", false);
+        addExampleLine("you cannot 'expand' the column with the values in that metadata", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --fill CTFParams expand -o outExpanded.doc");
         addExampleLine("For check all options availables for 'filling' mode, use: ", false);
         addExampleLine ("   xmipp_metadata_utilities --help fill");
