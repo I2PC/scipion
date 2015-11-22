@@ -303,7 +303,7 @@ class Project(object):
         os.chdir(self.path) #Before doing nothing go to project dir
         self._cleanData()
         print "Creating project at: ", os.path.abspath(self.dbPath)
-        # Create db throughout the mapper
+        # Create db through the mapper
         self.mapper = self.createMapper(self.dbPath)
         creation = pwobj.String(objName='CreationTime') # Store creation time
         creation.set(dt.datetime.now())
