@@ -863,7 +863,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             mdAngles=xmipp.MetaData(fnAngles)
             weightCCmin=float(self.weightCCmin.get())
             for objId in mdAngles:
-                weight=mdAngles.getValue(xmipp.MDL_WEIGHT_JUMPER0,objId)
+                weight=1
+                if self.weightJumper and self.alignmentMethod==self.GLOBAL_ALIGNMENT:
+                    aux=mdAngles.getValue(xmipp.MDL_WEIGHT_JUMPER0,objId)
+                    weight*=aux
                 if self.weightSSNR:
                     aux=mdAngles.getValue(xmipp.MDL_WEIGHT_SSNR,objId)
                     weight*=aux
