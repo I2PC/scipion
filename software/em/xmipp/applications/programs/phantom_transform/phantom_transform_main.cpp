@@ -57,7 +57,7 @@ public:
         addParamsLine("            rotate_euler <rot> <tilt> <psi> :Rotate with these Euler angles ");
         addParamsLine("            rotate_align_with_z <x> <y> <z> : Align (x,y,z) with Z");
         addParamsLine("            rotate_axis <x> <y> <z> <ang>: Rotate <ang> degrees around (x,y,z)");
-        addParamsLine(" [--center_pdb]  : Substract the center of mass from coordinates.");
+        addParamsLine(" [--center_pdb]  : Subtract the center of mass from coordinates.");
         addParamsLine("                 :+Only valid for PDB files");
         addExampleLine("xmipp_phantom_transform -i model.pdb -o shifted.pdb --operation shift 1 2 3");
     }

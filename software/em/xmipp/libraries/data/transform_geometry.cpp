@@ -82,7 +82,7 @@ void ProgTransformGeometry::defineParams()
     addExampleLine("xmipp_transform_geometry -i mD1.xmd --shift 2 3 4 --scale 1.2 --rotate 23 -o newGeo.xmd --apply_transform");
     addExampleLine("To simply apply the transformations in a metadata to the images:", false);
     addExampleLine("xmipp_transform_geometry -i mD1.xmd --apply_transform");
-    addExampleLine("Shift a volume by 10, 5 and -10 in x,y and z and dont wrapping", false);
+    addExampleLine("Shift a volume by 10, 5 and -10 in x,y and z and don't wrapping", false);
     addExampleLine("xmipp_transform_geometry -i a.vol --shift 10 5 -10 -o b.vol --dont_wrap");
     addExampleLine("Scale a group of images to half size, not modifying image dimensions neither original image files", false);
     addExampleLine("xmipp_transform_geometry -i images.xmd --scale 0.5 -o halvedOriginal.xmd");

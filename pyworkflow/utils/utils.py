@@ -489,7 +489,7 @@ def getListFromValues(valuesStr, length=None):
             raise Exception("More than one 'x' is not allowed in list string value.")
             
     # If length is passed, we fill the list with 
-    # the last element until lenght is reached
+    # the last element until length is reached
     if length is not None and length > len(result):
         item = result[-1]
         result += [item] * (length - len(result))

@@ -49,7 +49,7 @@
  * 
  * function evalElements()
  * 	->	Function to evaluate the elements in a form, depending the type of the
- * 		param, it is evaluated in a diferent way.
+ * 		param, it is evaluated in a different way.
  * 
  * function onChangeParam(value, paramId)
  * 	->	Update the parameter for an element.
@@ -76,7 +76,7 @@
  * 	->	Browse object in the database depending of a type_param. 
  * 		Params: 
  * 			objClass: the class to get instances from (also subclasses)
- * 			protClassName: class refered to a protocol
+ * 			protClassName: class referred to a protocol
  * 
  * function formProtSimple(param, projName)
  * 	->	Launch a custom protocol form with less options, thought for workflows
@@ -143,7 +143,7 @@ $(document).ready(function() {
 					// Show errors in the validation
 					errorPopup('Errors found', json.errors);
 				} else {
-					infoPopup('Success', "The protocol was launched successfuly",1);
+					infoPopup('Success', "The protocol was launched successfully",1);
 				}
 			}, "json");
 
@@ -159,7 +159,7 @@ $(document).ready(function() {
 				} else {
 					// No errors in the process to save
 					protId = json.success;
-					infoPopup('Success', "The protocol was saved successfuly", 1, 'window.opener.popup(\'/form/?protocolId='+protId+'\')');
+					infoPopup('Success', "The protocol was saved successfully", 1, 'window.opener.popup(\'/form/?protocolId='+protId+'\')');
 				}
 			},"json");
 
@@ -240,7 +240,7 @@ function fixInput(serialize_form){
 function evalElements() {
 	/*
 	 * Function to evaluate the elements in a form, depending the type of the
-	 * param, it is evaluated in a diferent way 
+	 * param, it is evaluated in a different way 
 	 */
 	
 	$("tr").each(function(index) {
@@ -549,7 +549,7 @@ function browseObjects(paramName, type_param, value_param, pointerCondition, max
 	/*
 	 * Browse object in the database.
 	 * Params: objClass: the class to get instances from (also subclasses)
-	 * protClassName: class refered to a protocol
+	 * protClassName: class referred to a protocol
 	 */
 	
 	 var url_param = ""

@@ -49,7 +49,7 @@
  *  
  * function popUpJSON(json)
  * 	->	This method recive a JSON, and depending of the key content, open a 
- * 		diferent popups with diferent settings.
+ * 		different popups with different settings.
  * 		This function in the analyze results of the protocols runs.
  * 
  * function showPlot(url)
@@ -229,7 +229,7 @@ function customPopUpFile(url){
 function popUpJSON(json){
 	/*
 	 * This method receive a JSON, and depending of the key content, open a 
-	 * diferent popups with diferent settings.
+	 * different popups with different settings.
 	 * This function in the analyze results of the protocols runs.
 	 */
 
@@ -625,7 +625,7 @@ function zoomImagePopUp(imagePath){
 			var width = res[0]
 			var height = res[1]
 			
-			// getSubDomainURL() not neccesary
+			// getSubDomainURL() not necessary
 			getImage = "/get_image/?image=" + imagePath + "&dim="+height
 			customPopup(getImage, width, height)
 		}

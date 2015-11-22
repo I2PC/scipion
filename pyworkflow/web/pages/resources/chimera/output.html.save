@@ -754,7 +754,7 @@ function webGLStart() {
 	  position: p.add(dir.scale(10))
 	});
 	break;
-      case 'eyepos': // eye postion (look at eye position)
+      case 'eyepos': // eye position (look at eye position)
 	camera.position = new Vec3(item[1], item[2], item[3]);
 	break;
       case 'up': // up vector (look at up direction)
