@@ -158,11 +158,18 @@ def getResourceIcon(icon):
 def getResourceLogo(logo):
     return os.path.join(django_settings.MEDIA_URL, logo)
 
-def getResourceCss(css):
-    return os.path.join(django_settings.STATIC_URL, "css/", cssDict[css])
+def getResourceCss(css=None):
 
-def getResourceJs(js):
-    return os.path.join(django_settings.STATIC_URL, "js/", jsDict[js])
+    if css:
+        return os.path.join(django_settings.STATIC_URL, "css/", cssDict[css])
+
+    return os.path.join(django_settings.STATIC_URL, "css/")
+
+def getResourceJs(js=None):
+    if js:
+        return os.path.join(django_settings.STATIC_URL, "js/", jsDict[js])
+
+    return os.path.join(django_settings.STATIC_URL, "js/")
 
 def loadProject(request):
 #     projectPath = Manager().getProjectPath(projectName)
@@ -208,9 +215,10 @@ def getServiceManager(serviceName):
     scipionUserData = os.path.join(os.environ['SCIPION_USER_DATA'], serviceName)
     manager = Manager(SCIPION_USER_DATA = scipionUserData)
     
-    manager.config = os.path.join(os.environ['HOME'], '.config', 'scipion', serviceName)
-    manager.protocols = os.path.join(manager.config, 'protocols.conf')
-    manager.hosts = os.path.join(manager.config, 'hosts.conf')
+    serviceConf = os.path.join(os.environ['HOME'], '.config', 'scipion', serviceName)
+    manager.config = os.path.join(serviceConf, 'scipion.conf')
+    manager.protocols = os.path.join(serviceConf, 'protocols.conf')
+    manager.hosts = os.path.join(serviceConf, 'hosts.conf')
     
     print "config: ", manager.config
     print "protocols: ", manager.protocols

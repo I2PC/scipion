@@ -104,7 +104,11 @@ class ProtMovieAlignment(ProtProcessMovies):
         group.addParam('winSize', IntParam, default=150,
                       label="Window size", expertLevel=LEVEL_ADVANCED,
                       help="Window size (shifts are assumed to be constant within this window).")
-        
+
+        group.addParam('groupSize', IntParam, default=1,
+                      label="Group Size", expertLevel=LEVEL_ADVANCED,
+                      help="In cases with low SNR, the average of a number of frames can be used in alignment")
+
         group.addParam('doSaveMovie', BooleanParam, default=False,
                       label="Save movie", expertLevel=LEVEL_ADVANCED,
                       help="Save Aligned movie")
@@ -369,6 +373,7 @@ class ProtMovieAlignment(ProtProcessMovies):
            alMethod == AL_CROSSCORRELATIONOPTICAL:
             winSize = self.winSize.get()
             doSaveMovie = self.doSaveMovie.get()
+            groupSize = self.groupSize.get()
             if alMethod == AL_DOSEFGPUOPTICAL:
                 program = 'xmipp_movie_optical_alignment_gpu'
                 corrMovieName = self._getCorrMovieName(movieId)
@@ -393,7 +398,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                 if doSaveMovie:
                     command += '--ssc '
 
-            command += '-o %(micName)s --winSize %(winSize)d ' % locals()
+            command += '-o %(micName)s --winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
             command += '--nst %d --ned %d ' % (firstFrame, lastFrame)
             if self.doGPU:
                 command += '--gpu %d ' % gpuId
@@ -553,7 +558,7 @@ def movieCreatePlot(movie, saveFig):
         meanX.append(preX)
         meanY.append(preY)
         ax.plot(preX, preY, 'yo-')
-        ax.text(preX-0.02, preY+0.05, str(objId+1))
+        ax.text(preX-0.02, preY+0.01, str(objId+1))
     ax.plot(np.asarray(meanX), np.asarray(meanY))
     if saveFig:
         plotter.savefig(movie.plotCart)

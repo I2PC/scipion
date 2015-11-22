@@ -806,8 +806,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     fnPreviousAngles=join(fnDirCurrent,"aux.xmd")
                     self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
                                 (join(fnDirPrevious,"angles.xmd"),fnAngles,fnPreviousAngles),numberOfMpi=1)
-                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s"%\
-                            (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper"),numberOfMpi=1)
+                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s --sym %s --check_mirrors"%\
+                            (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper",self.symmetryGroup),numberOfMpi=1)
                 moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
                 if self.splitMethod == self.SPLIT_STOCHASTIC:
                     cleanPath(fnPreviousAngles)
@@ -819,8 +819,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         fnPreviousAngles=join(fnDirCurrent,"aux.xmd")
                         self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
                                     (join(fnDirPrevious,"angles.xmd"),fnAngles,fnPreviousAngles),numberOfMpi=1)
-                    self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s --set 2"%\
-                                (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper"),numberOfMpi=1)
+                    self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --oroot %s --set 2 --sym %s --check_mirrors"%\
+                                (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper",self.symmetryGroup),numberOfMpi=1)
                     moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
                     if self.splitMethod == self.SPLIT_STOCHASTIC:
                         cleanPath(fnPreviousAngles)
