@@ -812,8 +812,13 @@ class Protocol(Step):
         self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
         self._store()
         
-        self.lastStatus = self.status.get()
-        self._stepsExecutor.runSteps(self._steps, self._stepStarted, self._stepFinished)
+        if startIndex == len(self._steps):
+            self.lastStatus = STATUS_FINISHED
+            self.info("All steps seems to be FINISHED, nothing to be done.")
+        else:
+            self.lastStatus = self.status.get()
+            self._stepsExecutor.runSteps(self._steps, self._stepStarted, self._stepFinished)
+        
         self.setStatus(self.lastStatus)
         self._store(self.status)
         
