@@ -112,7 +112,7 @@ env.EnsureSConsVersion(2,3,2)
 
 
 def appendUnique(elist, element):
-    'Add element to a list only if it doesnt previously exist'
+    'Add element to a list only if it doesn't previously exist'
     if element not in elist:
         if not isinstance(element, basestring):
             elist.extend(element)
