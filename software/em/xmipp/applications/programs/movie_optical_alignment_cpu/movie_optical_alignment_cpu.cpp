@@ -416,8 +416,8 @@ public:
                 d_avgcurr.upload(avgcurr8);
                 d_preimg.upload(preimg8);
                 d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
-                d_flowx.download(flowx);
-                d_flowy.download(flowy);
+                d_flowx.download(planes[0]);
+                d_flowy.download(planes[1]);
                 d_avgcurr.release();
                 d_preimg.release();
                 d_flowx.release();
@@ -449,23 +449,7 @@ public:
                         planes[0].at<float>(row,col) += (float)col;
                         planes[1].at<float>(row,col) += (float)row;
                     }
-#ifdef GPU
-
-                {
-                    d_mapx.upload(mapx);
-                    d_mapy.upload(mapy);
-                    d_preimg.upload(preimg);
-                    remap(d_preimg,d_dest,d_mapx,d_mapy,cv::INTER_CUBIC);
-                    d_dest.download(dest);
-                    d_dest.release();
-                    d_preimg.release();
-                    d_mapx.release();
-                    d_mapy.release();
-                }
-#else
                 cv::remap(preimg, dest, planes[0], planes[1], cv::INTER_CUBIC);
-#endif
-
                 if (div==1 && saveCorrMovie)
                 {
                     mappedImg.aliasImageInStack(outputMovie, i);
