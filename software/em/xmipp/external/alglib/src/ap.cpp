@@ -5984,11 +5984,11 @@ void alglib::ae_vector_wrapper::assign(const alglib::ae_vector_wrapper &rhs)
         // Assignment to proxy object
         //
         if( rhs.p_vec==NULL )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes don't match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes do not match)");
         if( rhs.p_vec->datatype!=p_vec->datatype )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (types don't match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (types do not match)");
         if( rhs.p_vec->cnt!=p_vec->cnt )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes don't match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes do not match)");
         memcpy(p_vec->ptr.p_ptr, rhs.p_vec->ptr.p_ptr, p_vec->cnt*alglib_impl::ae_sizeof(p_vec->datatype));
     }
 }
