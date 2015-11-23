@@ -35,7 +35,7 @@ It is composed by three panels:
 import os, sys
 import threading
 import shlex
-from pyworkflow.utils.utils import envVarOn
+from pyworkflow.utils import envVarOn, getLocalHostName, getLocalUserName
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project
@@ -57,6 +57,13 @@ class ProjectWindow(ProjectBaseWindow):
     def __init__(self, path, master=None):
         # Load global configuration
         self.projName = Message.LABEL_PROJECT + os.path.basename(path)
+        try:
+            projTitle = '%s (%s on %s)' % (self.projName, 
+                                           getLocalUserName(), 
+                                           getLocalHostName())
+        except Exception:
+            projTitle = self.projName 
+            
         self.projPath = path
         self.loadProject()
 
@@ -83,7 +90,7 @@ class ProjectWindow(ProjectBaseWindow):
         self.selectedProtocol = None
         self.showGraph = False
         Plotter.setBackend('TkAgg')
-        ProjectBaseWindow.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
+        ProjectBaseWindow.__init__(self, projTitle, master, icon=self.icon, minsize=(900,500))
         self.switchView(VIEW_PROTOCOLS)
 
         self.initProjectTCPServer()#Socket thread to communicate with clients
