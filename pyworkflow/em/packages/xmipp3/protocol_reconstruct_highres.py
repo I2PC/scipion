@@ -38,7 +38,7 @@ from pyworkflow.em.data import SetOfVolumes, Volume
 from pyworkflow.em.metadata.utils import getFirstRow, getSize
 from convert import writeSetOfParticles
 from os.path import join, exists, split
-from pyworkflow.em.packages.xmipp3.convert import readSetOfParticles, setXmippAttributes
+from pyworkflow.em.packages.xmipp3.convert import createItemMatrix, setXmippAttributes
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.em.metadata as md
 import pyworkflow.em as em
@@ -235,7 +235,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self.TsOrig=self.inputParticles.get().getSamplingRate()
         for self.iteration in range(firstIteration,firstIteration+self.numberOfIterations.get()):
             self.insertIteration(self.iteration)
-        self._insertFunctionStep("createOutput")
+        self._insertFunctionStep("createOutput", 1)
     
     def insertIteration(self,iteration):
         if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
@@ -259,7 +259,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         imgsFnId=self._getExtraPath('imagesId.xmd')
         self.runJob('xmipp_metadata_utilities','-i %s --operate keep_column particleId -o %s'%(self.imgsFn,imgsFnId),numberOfMpi=1)
 
-    def createOutput(self):
+    def createOutput(self, a):
         # get last iteration
         fnIterDir=glob(self._getExtraPath("Iter*"))
         lastIter=len(fnIterDir)-1
@@ -277,8 +277,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         fnLastAngles=join(fnLastDir,"angles.xmd")
         if exists(fnLastAngles):
             fnAngles=self._getPath("angles.xmd")
-            self.iterMd = md.iterRows(fnAngles, sortByLabel=md.MDL_ITEM_ID)
-            self.lastRow = next(self.iterMd)
             self.runJob('xmipp_metadata_utilities','-i %s -o %s --operate modify_values "image=image1"'%(fnLastAngles,fnAngles),numberOfMpi=1)
             self.runJob('xmipp_metadata_utilities','-i %s --operate sort particleId'%fnAngles,numberOfMpi=1)
             self.runJob('xmipp_metadata_utilities','-i %s --operate drop_column image1'%fnAngles,numberOfMpi=1)
@@ -287,41 +285,28 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             imgSetOut = self._createSetOfParticles()
             imgSetOut.copyInfo(imgSet)
             imgSetOut.setAlignmentProj()
+            iterSetMd = md.SetMdIterator(fnAngles, sortByLabel=md.MDL_ITEM_ID,
+                                         updateItemCallback=self._createItemMatrix)
             imgSetOut.copyItems(imgSet,
-                                updateItemCallback=self._createItemMatrix)#,
-                                #itemDataIterator=md.iterRows(fnAngles, sortByLabel=md.MDL_ITEM_ID))
+                                updateItemCallback=iterSetMd.updateItem)
             self._defineOutputs(outputParticles=imgSetOut)
             self._defineSourceRelation(self.inputParticles, imgSetOut)
 
-    
-
     def _createItemMatrix(self, particle, row):
-        # We are using here an special type of iteration over the metadata
-        # in this case the metadata may contains less elements than the 
-        # input set of particles, so row=None here
-        row = self.lastRow
-        if row is None or particle.getObjId() != row.getValue(xmipp.MDL_ITEM_ID):
-            particle._appendItem = False            
-        else:
-            from pyworkflow.em.packages.xmipp3.convert import createItemMatrix
-            
-            createItemMatrix(particle, row, align=em.ALIGN_PROJ)
-            setXmippAttributes(particle, row, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_ANGLE_TILT, xmipp.MDL_SCALE, xmipp.MDL_MAXCC, xmipp.MDL_MAXCC_PERCENTILE, xmipp.MDL_WEIGHT)
-            if row.containsLabel(xmipp.MDL_ANGLE_DIFF0):
-                setXmippAttributes(xmipp.MDL_ANGLE_DIFF0, xmipp.MDL_WEIGHT_JUMPER0)
-            if row.containsLabel(xmipp.MDL_CONTINUOUS_X):
-                setXmippAttributes(particle, row, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y, xmipp.MDL_COST, xmipp.MDL_WEIGHT_CONTINUOUS2, xmipp.MDL_CONTINUOUS_SCALE_X, xmipp.MDL_CONTINUOUS_SCALE_Y, xmipp.MDL_COST_PERCENTILE)
-            if row.containsLabel(xmipp.MDL_ANGLE_DIFF):
-                setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF, xmipp.MDL_WEIGHT_JUMPER)
-            if row.containsLabel(xmipp.MDL_ANGLE_DIFF2):
-                setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF2, xmipp.MDL_WEIGHT_JUMPER2)
-            if row.containsLabel(xmipp.MDL_WEIGHT_SSNR):
-                setXmippAttributes(particle, row, xmipp.MDL_WEIGHT_SSNR)
-                
-            try:
-                self.lastRow = next(self.iterMd)
-            except StopIteration:
-                self.lastRow = None
+        createItemMatrix(particle, row, align=em.ALIGN_PROJ)
+        setXmippAttributes(particle, row, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_ANGLE_TILT, xmipp.MDL_SCALE, xmipp.MDL_MAXCC, xmipp.MDL_MAXCC_PERCENTILE, xmipp.MDL_WEIGHT)
+        if row.containsLabel(xmipp.MDL_ANGLE_DIFF0):
+            setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF0, xmipp.MDL_WEIGHT_JUMPER0)
+        if row.containsLabel(xmipp.MDL_CONTINUOUS_X):
+            setXmippAttributes(particle, row, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y, xmipp.MDL_COST, xmipp.MDL_WEIGHT_CONTINUOUS2, 
+                               xmipp.MDL_CONTINUOUS_SCALE_X, xmipp.MDL_CONTINUOUS_SCALE_Y, xmipp.MDL_COST_PERCENTILE,
+                               xmipp.MDL_CONTINUOUS_GRAY_A, xmipp.MDL_CONTINUOUS_GRAY_B)
+        if row.containsLabel(xmipp.MDL_ANGLE_DIFF):
+            setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF, xmipp.MDL_WEIGHT_JUMPER)
+        if row.containsLabel(xmipp.MDL_ANGLE_DIFF2):
+            setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF2, xmipp.MDL_WEIGHT_JUMPER2)
+        if row.containsLabel(xmipp.MDL_WEIGHT_SSNR):
+            setXmippAttributes(particle, row, xmipp.MDL_WEIGHT_SSNR)
 
     def getLastFinishedIter(self):
         fnFscs=sorted(glob(self._getExtraPath("Iter???/fsc.xmd")))
