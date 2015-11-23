@@ -280,6 +280,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         fnLastAngles=join(fnLastDir,"angles.xmd")
         if exists(fnLastAngles):
             fnAngles=self._getPath("angles.xmd")
+            self.iterMd = md.iterRows(fnAngles, sortByLabel=md.MDL_ITEM_ID)
+            self.lastRow = next(self.iterMd)
             self.runJob('xmipp_metadata_utilities','-i %s -o %s --operate modify_values "image=image1"'%(fnLastAngles,fnAngles),numberOfMpi=1)
             self.runJob('xmipp_metadata_utilities','-i %s --operate sort particleId'%fnAngles,numberOfMpi=1)
             self.runJob('xmipp_metadata_utilities','-i %s --operate drop_column image1'%fnAngles,numberOfMpi=1)
@@ -289,24 +291,40 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             imgSetOut.copyInfo(imgSet)
             imgSetOut.setAlignmentProj()
             imgSetOut.copyItems(imgSet,
-                                updateItemCallback=self._createItemMatrix,
-                                itemDataIterator=md.iterRows(fnAngles, sortByLabel=md.MDL_ITEM_ID))
+                                updateItemCallback=self._createItemMatrix)#,
+                                #itemDataIterator=md.iterRows(fnAngles, sortByLabel=md.MDL_ITEM_ID))
             self._defineOutputs(outputParticles=imgSetOut)
             self._defineSourceRelation(self.inputParticles, imgSetOut)
 
+    
+
     def _createItemMatrix(self, particle, row):
-        from pyworkflow.em.packages.xmipp3.convert import createItemMatrix
-        
-        createItemMatrix(particle, row, align=em.ALIGN_PROJ)
-        setXmippAttributes(particle, row, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_ANGLE_TILT, xmipp.MDL_SCALE, xmipp.MDL_MAXCC, xmipp.MDL_MAXCC_PERCENTILE, xmipp.MDL_WEIGHT, xmipp.MDL_JUMPER0)
-        if row.containsLabel(xmipp.MDL_CONTINUOUS_X):
-            setXmippAttributes(particle, row, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y, xmipp.MDL_COST, xmipp.MDL_WEIGHT_CONTINUOUS2, xmipp.MDL_CONTINUOUS_SCALE_X, xmipp.MDL_CONTINUOUS_SCALE_Y, xmipp.MDL_COST_PERCENTILE)
-        if row.containsLabel(xmipp.MDL_ANGLE_DIFF):
-            setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF, xmipp.MDL_WEIGHT_JUMPER)
-        if row.containsLabel(xmipp.MDL_ANGLE_DIFF2):
-            setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF2, xmipp.MDL_WEIGHT_JUMPER2)
-        if row.containsLabel(xmipp.MDL_WEIGHT_SSNR):
-            setXmippAttributes(particle, row, xmipp.MDL_WEIGHT_SSNR)
+        # We are using here an special type of iteration over the metadata
+        # in this case the metadata may contains less elements than the 
+        # input set of particles, so row=None here
+        row = self.lastRow
+        if row is None or particle.getObjId() != row.getValue(xmipp.MDL_ITEM_ID):
+            particle._appendItem = False            
+        else:
+            from pyworkflow.em.packages.xmipp3.convert import createItemMatrix
+            
+            createItemMatrix(particle, row, align=em.ALIGN_PROJ)
+            setXmippAttributes(particle, row, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_ANGLE_TILT, xmipp.MDL_SCALE, xmipp.MDL_MAXCC, xmipp.MDL_MAXCC_PERCENTILE, xmipp.MDL_WEIGHT)
+            if row.containsLabel(xmipp.MDL_ANGLE_DIFF0):
+                setXmippAttributes(xmipp.MDL_ANGLE_DIFF0, xmipp.MDL_WEIGHT_JUMPER0)
+            if row.containsLabel(xmipp.MDL_CONTINUOUS_X):
+                setXmippAttributes(particle, row, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y, xmipp.MDL_COST, xmipp.MDL_WEIGHT_CONTINUOUS2, xmipp.MDL_CONTINUOUS_SCALE_X, xmipp.MDL_CONTINUOUS_SCALE_Y, xmipp.MDL_COST_PERCENTILE)
+            if row.containsLabel(xmipp.MDL_ANGLE_DIFF):
+                setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF, xmipp.MDL_WEIGHT_JUMPER)
+            if row.containsLabel(xmipp.MDL_ANGLE_DIFF2):
+                setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF2, xmipp.MDL_WEIGHT_JUMPER2)
+            if row.containsLabel(xmipp.MDL_WEIGHT_SSNR):
+                setXmippAttributes(particle, row, xmipp.MDL_WEIGHT_SSNR)
+                
+            try:
+                self.lastRow = next(self.iterMd)
+            except StopIteration:
+                self.lastRow = None
 
     def getLastFinishedIter(self):
         fnFscs=sorted(glob(self._getExtraPath("Iter???/fsc.xmd")))
