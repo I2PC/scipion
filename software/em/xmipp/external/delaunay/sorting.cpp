@@ -1,5 +1,7 @@
 #include "sorting.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 //#define DEBUG_SORTING
 
@@ -17,6 +19,34 @@ void	sort(struct DCEL_T *dcel)
 {
 	// Call quicksort with DCEL structure.
 	quicksort( &dcel->vertex[0], &dcel->vertex[1], 0, dcel->nVertex-2);
+}
+
+/***************************************************************************
+* Name: clutter
+* IN:		N/A
+* OUT:		N/A
+* IN/OUT:	dcel			dcel data
+* RETURN:	N/A
+* Description: clutters the set of point of the DCEL.
+***************************************************************************/
+void	clutter(struct DCEL_T *dcel)
+{
+	int	i=0;					// Loop counter.
+	int	index1=0, index2=0;		// Array indexes.
+
+	// Set seed.
+	srand(time(NULL));
+
+	// Loop set of points.
+	for (i=0; i<dcel->nVertex ;i++)
+	{
+		// Generate random indexes to swap.
+		index1 = rand() %  dcel->nVertex;
+		index2 = rand() %  dcel->nVertex;
+
+		// Swap elements.
+		swap_Vertex( dcel, index1, index2);
+	}
 }
 
 void    set_Highest_First(struct DCEL_T *dcel, int  (*f)(struct Point_T *, struct Point_T *))
@@ -69,7 +99,7 @@ int		move_Pivot( struct Dcel_Vertex_T *origin, struct Dcel_Vertex_T *list, int i
     for (i=first_Index; i<=final_Index; i++)
 	{
 		// If turn is right then angle is lower in list[i] than in pivot element.
-		if ((check_Turn( &origin->vertex, &pivot_Point.vertex, &list[i].vertex) == RIGHT) ||
+		if ((check_Turn( &origin->vertex, &pivot_Point.vertex, &list[i].vertex) == RIGHT_TURN) ||
 			((check_Turn( &origin->vertex, &pivot_Point.vertex, &list[i].vertex) == COLINEAR) &&
 			(pivot_Point.vertex.x > list[i].vertex.x)))
 		{

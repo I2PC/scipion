@@ -51,6 +51,7 @@ public:
     FileName fname, foname, gianRefFilename, darkRefFilename;
     MultidimArray<double> gainImage, darkImage;
     int winSize, gpuDevice, fstFrame, lstFrame;
+    int groupSize;
     bool doAverage, saveCorrMovie;
     bool gainImageCorr, darkImageCorr;
 
@@ -62,7 +63,8 @@ public:
         addParamsLine("     [--nst <int=0>]     : first frame used in alignment (0 = first frame in the movie");
         addParamsLine("     [--ned <int=0>]     : last frame used in alignment (0 = last frame in the movie ");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
-        addParamsLine("     [--simpleAverage]: if we want to just compute the simple average");
+        addParamsLine("     [--simpleAverage]   : if we want to just compute the simple average");
+        addParamsLine("     [--groupSize <int=1>]        : the depth of pyramid for optical flow algorithm");
         addParamsLine("     [--ssc]             : save corrected stack");
         addParamsLine("     [--gain <gainReference>]             : gain reference");
         addParamsLine("     [--dark <darkReference>]             : dark reference");
@@ -84,6 +86,11 @@ public:
         {
             darkRefFilename = getParam("--dark");
         }
+        if ((darkImageCorr = checkParam("--dark")))
+        {
+            darkRefFilename = getParam("--dark");
+        }
+        groupSize = getIntParam("--groupSize");
         fstFrame  = getIntParam("--nst");
         lstFrame  = getIntParam("--ned");
         winSize   = getIntParam("--winSize");
@@ -225,9 +232,9 @@ public:
         movieStack.readMapped(movieFile,begin);
         movieStack().getImage(avgImg);
         if (darkImageCorr)
-        	avgImg-=darkImage;
+            avgImg-=darkImage;
         if (gainImageCorr)
-        	avgImg/=gainImage;
+            avgImg/=gainImage;
         for (int i=begin;i<end;i++)
         {
             movieStack.readMapped(movieFile,i+1);
@@ -244,7 +251,8 @@ public:
     }
     void std_dev2(const cv::Mat planes[], const cv::Mat &flowx, const cv::Mat &flowy, Matrix1D<double> &meanStdDev)
     {
-        double sumX=0, sumY=0 ;
+        double sumX=0, sumY=0;
+        double absSumX=0, absSumY=0;
         double sqSumX=0, sqSumY=0;
         double valSubtract;
         int h=flowx.rows;
@@ -255,15 +263,19 @@ public:
             {
                 valSubtract=planes[0].at<float>(i,j)-flowx.at<float>(i,j);
                 sumX+=valSubtract;
+                absSumX+=abs(valSubtract);
                 sqSumX+=valSubtract*valSubtract;
                 valSubtract=planes[1].at<float>(i,j)-flowy.at<float>(i,j);
                 sumY+=valSubtract;
+                absSumY+=abs(valSubtract);
                 sqSumY+=valSubtract*valSubtract;
             }
-        meanStdDev(0)=sumX/double(n);
-        meanStdDev(1)=sqrt(sqSumX/double(n)-meanStdDev(0)*meanStdDev(0));
-        meanStdDev(2)=sumY/double(n);
-        meanStdDev(3)=sqrt(sqSumY/double(n)-meanStdDev(2)*meanStdDev(2));
+        double avgX=sumX/double(n);
+        double avgY=sumY/double(n);
+        meanStdDev(0)=absSumX/double(n);
+        meanStdDev(1)=sqrt(sqSumX/double(n)-avgX*avgX);
+        meanStdDev(2)=absSumY/double(n);
+        meanStdDev(3)=sqrt(sqSumY/double(n)-avgY*avgY);
     }
 
     int main2()
@@ -360,7 +372,7 @@ public:
         }
         xmipp2Opencv(avgCurr, avgcurr);
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
-        while (div!=1)
+        while (div!=groupSize)
         {
             div = int(imagenum/cnt);
             // avgStep to hold the sum of aligned frames of each group at each step
@@ -404,8 +416,8 @@ public:
                 d_avgcurr.upload(avgcurr8);
                 d_preimg.upload(preimg8);
                 d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
-                d_flowx.download(flowx);
-                d_flowy.download(flowy);
+                d_flowx.download(planes[0]);
+                d_flowy.download(planes[1]);
                 d_avgcurr.release();
                 d_preimg.release();
                 d_flowx.release();
@@ -416,7 +428,7 @@ public:
                 split(flow, planes);
 #endif
                 // Save the flows if we are in the last step
-                if (div==1)
+                if (div==groupSize)
                 {
                     if (i > 0)
                     {
@@ -437,23 +449,7 @@ public:
                         planes[0].at<float>(row,col) += (float)col;
                         planes[1].at<float>(row,col) += (float)row;
                     }
-#ifdef GPU
-
-                {
-                    d_mapx.upload(mapx);
-                    d_mapy.upload(mapy);
-                    d_preimg.upload(preimg);
-                    remap(d_preimg,d_dest,d_mapx,d_mapy,cv::INTER_CUBIC);
-                    d_dest.download(dest);
-                    d_dest.release();
-                    d_preimg.release();
-                    d_mapx.release();
-                    d_mapy.release();
-                }
-#else
                 cv::remap(preimg, dest, planes[0], planes[1], cv::INTER_CUBIC);
-#endif
-
                 if (div==1 && saveCorrMovie)
                 {
                     mappedImg.aliasImageInStack(outputMovie, i);

@@ -7,7 +7,7 @@
 * Data types definition
 **************************************************************************/
 // Type of turn of three points line.
-enum Turn_T {COLINEAR=1, LEFT_TURN=2, RIGHT=3};
+enum Turn_T {COLINEAR=1, LEFT_TURN=2, RIGHT_TURN=3};
 
 struct Point_T
 {

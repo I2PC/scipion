@@ -117,14 +117,14 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         else:
             msg = "%s  coordinates from micrographs %s were imported using %s format."%(self.outputCoordinates.getSize(), self.getObjectTag('inputMicrographs'), self._getImportChoices()[self.getImportFrom()])
             if self.scale.get() != 1.:
-                msg += " Scale factor %d was applied."%self.scale.get()
+                msg += " Scale factor %d was applied." % self.scale
             if self.invertX.get():
                 msg += " X coordinate was inverted."
             if self.invertY.get():
                 msg += " Y coordinate was inverted."
 
             summary.append(msg)
-            summary.append("Output coordinates: %s."%self.getObjectTag('outputCoordinates'))
+            summary.append("Output coordinates: %s." % self.getObjectTag('outputCoordinates'))
         return summary
 
     def _methods(self):
@@ -186,7 +186,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
                 micBase = removeBaseExt(mic.getFileName())
                 if coordBase in micBase or micBase in coordBase: #temporal use of in
                     return mic
-                return None
+            return None
         else:
             return micSet[fileId]
         
@@ -206,7 +206,6 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
             y = height - y
         coord.setX(x)
         coord.setY(y)
-        
         
     def getDefaultBoxSize(self):
         """ This function is used by the wizard to estimate the box size. """

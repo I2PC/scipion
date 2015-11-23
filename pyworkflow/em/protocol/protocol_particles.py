@@ -31,8 +31,6 @@ from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import EMObject
 from pyworkflow.utils.properties import Message
-from itertools import izip
-
 
 
 
