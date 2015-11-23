@@ -235,7 +235,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self.TsOrig=self.inputParticles.get().getSamplingRate()
         for self.iteration in range(firstIteration,firstIteration+self.numberOfIterations.get()):
             self.insertIteration(self.iteration)
-        self._insertFunctionStep("createOutput", 1)
+        self._insertFunctionStep("createOutput")
     
     def insertIteration(self,iteration):
         if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
@@ -259,7 +259,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         imgsFnId=self._getExtraPath('imagesId.xmd')
         self.runJob('xmipp_metadata_utilities','-i %s --operate keep_column particleId -o %s'%(self.imgsFn,imgsFnId),numberOfMpi=1)
 
-    def createOutput(self, a):
+    def createOutput(self):
         # get last iteration
         fnIterDir=glob(self._getExtraPath("Iter*"))
         lastIter=len(fnIterDir)-1
