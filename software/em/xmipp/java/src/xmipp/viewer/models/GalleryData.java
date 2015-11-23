@@ -1164,6 +1164,8 @@ public class GalleryData {
     public ColumnInfo getColumnInfo(int col) {
         return labels.get(col);
     }
+    
+    
 
     public String getValueFromCol(int index, int col) {
         if (!isColumnFormat()) {
@@ -1764,15 +1766,16 @@ public class GalleryData {
         }
     }
      
-    public Geometry getGeometry(long id)
+    public Geometry getGeometry(long id, ColumnInfo ci)
     {
-        return getGeometry(id, "2D");
+        return getGeometry(id, "2D", ci);
     }
 
     
-    public Geometry getGeometry(long id, String type)
+    public Geometry getGeometry(long id, String type, ColumnInfo ci)
     {
-        
+        if(ci.label != MDLabel.MDL_IMAGE)
+        	return null;
         double shiftx, shifty, psiangle, scaleFactor=1;
         boolean flip;
         
@@ -1863,7 +1866,7 @@ public class GalleryData {
                     imageid = imagesmd.addObject();
                     if (useGeo()) 
                     {
-                    	Geometry geo = getGeometry(id);
+                    	Geometry geo = getGeometry(id, ciFirstRender);
                         mdRow = new MDRow();
                         //md.getRow(mdRow, id);//copy geo info in mdRow
                         mdRow.setValueDouble(MDLabel.MDL_SHIFT_X, geo.shiftx);

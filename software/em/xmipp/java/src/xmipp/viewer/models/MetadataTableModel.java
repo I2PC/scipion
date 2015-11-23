@@ -100,14 +100,13 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			if (ci.render) {
 				
 				String key = getItemKey(row, ci.label);
-				
 				ImageItem item;
 				// If the element is on cache, just return it
 				if (cache.containsKey(key))
 					item = cache.get(key);
 				else {
 					// If not, create the item and store it for future
-					item = createImageItem(row, ci.label);
+					item = createImageItem(row, ci);
 					cache.put(key, item);
 				}
 				setupItem(item);
@@ -242,7 +241,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                     ImagesWindowFactory.openMetadata(file, params, Params.OPENING_MODE_GALLERY);
                 }
                 else
-                    openXmippImageWindow(index, ci.label);
+                    openXmippImageWindow(index, ci);
 				return true;
 			}
             if(data.isChimeraClient())//
