@@ -23,7 +23,7 @@ class TestXmippSetOfMicrographs(BaseTest):
 
     
     def testConvert(self):
-        """ Test the convertion of a SetOfMicrographs to Xmipp metadata"""
+        """ Test the conversion of a SetOfMicrographs to Xmipp metadata"""
         micSet = SetOfMicrographs(filename=self.dbGold)
         micSet.setAcquisition(self.acquisition)
         mdFn = self.getOutputPath('micrographs.xmd')

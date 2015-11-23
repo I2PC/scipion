@@ -385,7 +385,7 @@ class PostgresqlDb():
 
 
     def selectObjectsByAncestor(self, ancestor_namePrefix, asIterator=False):
-        """Select all objects in the hierachy of ancestor"""
+        """Select all objects in the hierarchy of ancestor"""
         self.executeSelect("name LIKE %s", ("%s.%%" % ancestor_namePrefix,) )
         return self._results(asIterator)          
 

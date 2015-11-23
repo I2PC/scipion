@@ -203,7 +203,7 @@ public:
     /** Loop over all images */
     void processSomeImages(const std::vector<size_t> &imagesToProcess);
 
-    /** Read current image into memory and translate accoring to
+    /** Read current image into memory and translate according to
       previous optimal Xoff and Yoff */
     void getCurrentImage(size_t imgid, Image<double> &img);
 

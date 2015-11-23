@@ -1321,7 +1321,7 @@ void MDSql::sqlEnd()
 {
     sqlCommitTrans();
     sqlite3_close(db);
-    //std::cerr << "Database sucessfully closed." <<std::endl;
+    //std::cerr << "Database successfully closed." <<std::endl;
 }
 
 bool MDSql::sqlBeginTrans()

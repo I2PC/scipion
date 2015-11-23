@@ -332,7 +332,7 @@ class SubclassesTreeProvider(TreeProvider):
         runs = project.getRuns()
         
         for prot in runs:
-            # Make sure we dont include previous output of the same 
+            # Make sure we don't include previous output of the same 
             # protocol, it will cause a recursive loop
             if prot.getObjId() != self.protocol.getObjId():
                 # Check if the protocol itself is one of the desired classes
@@ -402,7 +402,7 @@ class SubclassesTreeProvider(TreeProvider):
         parent = getattr(pobj, '_parentObject', None)
         if parent is None:
             label = getObjectLabel(pobj, self.mapper)
-        else: # This is an item comming from a set
+        else: # This is an item coming from a set
             label = 'item %s' % pobj.get().strId()
             
         obj = pobj.get()
@@ -1097,7 +1097,7 @@ class FormWindow(Window):
         Params:
          title: title string of the windows.
          protocol: protocol from which the form will be generated.
-         callback: callback function to call when Save or Excecute are press.
+         callback: callback function to call when Save or Execute are press.
         """
         Window.__init__(self, title, master, icon='scipion_bn.xbm', 
                         weight=False, minsize=(600, 450), **kwargs)
@@ -1351,7 +1351,7 @@ class FormWindow(Window):
         hostConfig = self._getHostConfig()
         queues = hostConfig.queueSystem.queues
         # If there is only one Queue and it has not parameters
-        # dont bother to showing the QueueDialog
+        # don't bother to showing the QueueDialog
         noQueueChoices = len(queues) == 1 and len(queues.values()[0]) == 0
         if noQueueChoices:
             result = queues.keys()[0], {}
@@ -1839,7 +1839,7 @@ class QueueDialog(Dialog):
             label = tk.Label(self.content, text=label, bg='white')
             label.grid(row=r, column=0, sticky='ne', padx=5, pady=(0,5))
             var = tk.StringVar()
-            # Set the value comming in the protocol 
+            # Set the value coming in the protocol 
             var.set(self.queueParams.get(name, value))
             
             entry = tk.Entry(self.content, textvariable=var, width=15)

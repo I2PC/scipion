@@ -135,7 +135,7 @@ TEST_F( MetadataTest, addLabelAlias)
 
 TEST_F( MetadataTest, Aggregate1)
 {
-    //simple agregation
+    //simple aggregation
     MetaData md,mdOut;
     size_t count;
 
@@ -659,7 +659,7 @@ TEST_F( MetadataTest, FillExpand)
     ctfMd2.setValue(MDL_CTF_DEFOCUSU,1500.,id2);
     ctfMd1.write(sfn1,MD_OVERWRITE);
     ctfMd2.write(sfn2,MD_OVERWRITE);
-    //create 1 md refering the ctf
+    //create 1 md referring the ctf
     size_t id =md.addObject();
     md.setValue(MDL_IMAGE,(String)"image1",id);
     md.setValue(MDL_CTF_MODEL,(String)sfn1,id);
@@ -1421,7 +1421,7 @@ TEST_F( MetadataTest, Comment)
     	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary file");
     String s1((String)"This is a very long comment that has more than 80 characters"+
               " Therefore should be split in several lines"+
-              " Let us see what happend");
+              " Let us see what happened");
     md1.setComment(s1);
     md1.write(sfn, MD_OVERWRITE);
     MetaData md2;

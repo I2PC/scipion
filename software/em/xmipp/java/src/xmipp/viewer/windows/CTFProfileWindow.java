@@ -250,7 +250,7 @@ public class CTFProfileWindow extends JFrame implements ItemListener, ActionList
                 }
 
                 if (export(file.getAbsolutePath(), chart)) {
-                    XmippDialog.showInfo(this, "File saved sucesfully.");
+                    XmippDialog.showInfo(this, "File saved successfully.");
                 }
             }
         }

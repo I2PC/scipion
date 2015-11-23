@@ -113,7 +113,7 @@ public:
     */
     void multMMDiagonal(const MultidimArray<double> &D, SparseMatrix2D &Y);
 
-    /// Shows the dense Matrix asociated
+    /// Shows the dense Matrix associated
     friend std::ostream & operator << (std::ostream &out, const SparseMatrix2D &X);
 
     /** Returns the value on position (row,col).

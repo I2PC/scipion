@@ -32,7 +32,7 @@
  * METHODS LIST:
  * 
  * function initRenderFunction(labelToRender)
- * -> Initialize render funtion on all images. 
+ * -> Initialize render function on all images. 
  * 	  Add renderFunction parameter and any other extra parameter to src attribute in image
  * 
  * function initializeGoToEvents()

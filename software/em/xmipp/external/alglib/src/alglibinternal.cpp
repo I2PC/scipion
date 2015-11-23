@@ -3624,7 +3624,7 @@ static void tsort_tagsortfastrrec(/* Real    */ ae_vector* a,
             /*
              * Search elements [I1..J-1] for place to insert Jth element.
              *
-             * This code stops immediatly if we can leave A[J] at J-th position
+             * This code stops immediately if we can leave A[J] at J-th position
              * (all elements have same value of A[J] larger than any of them)
              */
             tmpr = a->ptr.p_double[j];
@@ -3805,7 +3805,7 @@ static void tsort_tagsortfastrec(/* Real    */ ae_vector* a,
             /*
              * Search elements [I1..J-1] for place to insert Jth element.
              *
-             * This code stops immediatly if we can leave A[J] at J-th position
+             * This code stops immediately if we can leave A[J] at J-th position
              * (all elements have same value of A[J] larger than any of them)
              */
             tmpr = a->ptr.p_double[j];
@@ -6382,8 +6382,8 @@ void matrixvectormultiply(/* Real    */ ae_matrix* a,
         {
             return;
         }
-        ae_assert(i2-i1==ix2-ix1, "MatrixVectorMultiply: A and X dont match!", _state);
-        ae_assert(j2-j1==iy2-iy1, "MatrixVectorMultiply: A and Y dont match!", _state);
+        ae_assert(i2-i1==ix2-ix1, "MatrixVectorMultiply: A and X do not match!", _state);
+        ae_assert(j2-j1==iy2-iy1, "MatrixVectorMultiply: A and Y do not match!", _state);
         
         /*
          * beta*y
@@ -7081,7 +7081,7 @@ Output parameters:
     Tau -   scalar value Tau.
 
 This subroutine is the modification of CLARFG subroutines  from the LAPACK
-library. It has similar functionality except for the fact that it  doesn’t
+library. It has similar functionality except for the fact that it  doesnÂ’t
 handle errors when intermediate results cause an overflow.
 
   -- LAPACK auxiliary routine (version 3.0) --
@@ -7839,7 +7839,7 @@ Input parameters:
 
 
 Output parameters:
-    H   –   contains the matrix T.
+    H   Â–   contains the matrix T.
             Array whose indexes range within [1..N, 1..N].
             All elements below the blocks on the main diagonal are equal
             to 0.

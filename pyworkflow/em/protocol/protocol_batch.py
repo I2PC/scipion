@@ -25,7 +25,7 @@
 # **************************************************************************
 """
 This module contains protocols that are launched
-throught other GUI (such as showj) and that
+through other GUI (such as showj) and that
 are called "batch" protocols.
 """
 
@@ -43,7 +43,7 @@ from pyworkflow.utils import moveFile
 
 class BatchProtocol(EMProtocol):
     """ Base class to all protocols that are launched
-    throught other GUIs (such as showj) and that
+    through other GUIs (such as showj) and that
     are called "batch" protocols. They should not be
     executed from normal "form" of other protocols.
     """
