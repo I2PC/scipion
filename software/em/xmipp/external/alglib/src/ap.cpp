@@ -6394,13 +6394,13 @@ void alglib::ae_matrix_wrapper::assign(const alglib::ae_matrix_wrapper &rhs)
         //
         ae_int_t i;
         if( rhs.p_mat==NULL )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes don't match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes do not match)");
         if( rhs.p_mat->datatype!=p_mat->datatype )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (types don't match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (types do not match)");
         if( rhs.p_mat->rows!=p_mat->rows )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes don't match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes do not match)");
         if( rhs.p_mat->cols!=p_mat->cols )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes don't match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes do not match)");
         for(i=0; i<p_mat->rows; i++)
             memcpy(p_mat->ptr.pp_void[i], rhs.p_mat->ptr.pp_void[i], p_mat->cols*alglib_impl::ae_sizeof(p_mat->datatype));
     }
