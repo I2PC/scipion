@@ -174,7 +174,7 @@ class ComboBox(ttk.Combobox):
             parent: the parent widget (required by Tkinter)
             choices: a list with the options to be shown.
             values: if None, will enumerate from 0 to len(choices)-1
-                if a list is provided, should have the same length than choices.
+                if a list is provided, should have the same length as choices.
             initial: if None, take the first choice
             onChange: provide a callback function to be used when change the selected value
             **kwargs: extra arguments passed to ttk.Combobox contructor.
