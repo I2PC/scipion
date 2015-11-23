@@ -127,7 +127,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             noiseStk = fnRoot+"_noises_%02d.stk"%i
             self.runJob ("xmipp_image_convert", "-i %s -o %s"% (fnImgs, noiseStk))
             self.runJob("xmipp_image_operate", "-i %s --mult 0"% noiseStk)
-            self.runJob("xmipp_transform_add_noise", "-i %s --type gaussian 1 0"% noiseStk)
+            self.runJob("xmipp_transform_add_noise", "-i %s --type gaussian 4 1"% noiseStk)
             fnImgsNL = fnRoot+"_noisesL_%02d.xmd"%i
             noiseStk2 = fnRoot+"_noises2_%02d.stk"%i
             self.runJob ("xmipp_image_convert", "-i %s -o %s --save_metadata_stack %s"% (noiseStk, noiseStk2, fnImgsNL))
