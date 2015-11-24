@@ -282,6 +282,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self.runJob('xmipp_metadata_utilities','-i %s --operate drop_column image1'%fnAngles,numberOfMpi=1)
             self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "itemId=particleId"'%fnAngles,numberOfMpi=1)
             imgSet = self.inputParticles.get()
+            self.scaleFactor=Ts/imgSet.getSamplingRate()
+            print "Scale factor=",self.scaleFactor
             imgSetOut = self._createSetOfParticles()
             imgSetOut.copyInfo(imgSet)
             imgSetOut.setAlignmentProj()
@@ -293,12 +295,16 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self._defineSourceRelation(self.inputParticles, imgSetOut)
 
     def _createItemMatrix(self, particle, row):
-        createItemMatrix(particle, row, align=em.ALIGN_PROJ)
+        if row.containsLabel(xmipp.MDL_CONTINUOUS_X):
+            row.setValue(xmipp.MDL_SHIFT_X,row.getValue(xmipp.MDL_CONTINUOUS_X))
+            row.setValue(xmipp.MDL_SHIFT_Y,row.getValue(xmipp.MDL_CONTINUOUS_Y))
+        row.setValue(xmipp.MDL_SHIFT_X,row.getValue(xmipp.MDL_SHIFT_X)*self.scaleFactor)
+        row.setValue(xmipp.MDL_SHIFT_Y,row.getValue(xmipp.MDL_SHIFT_Y)*self.scaleFactor)
         setXmippAttributes(particle, row, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_ANGLE_TILT, xmipp.MDL_SCALE, xmipp.MDL_MAXCC, xmipp.MDL_MAXCC_PERCENTILE, xmipp.MDL_WEIGHT)
         if row.containsLabel(xmipp.MDL_ANGLE_DIFF0):
             setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF0, xmipp.MDL_WEIGHT_JUMPER0)
         if row.containsLabel(xmipp.MDL_CONTINUOUS_X):
-            setXmippAttributes(particle, row, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y, xmipp.MDL_COST, xmipp.MDL_WEIGHT_CONTINUOUS2, 
+            setXmippAttributes(particle, row, xmipp.MDL_COST, xmipp.MDL_WEIGHT_CONTINUOUS2, 
                                xmipp.MDL_CONTINUOUS_SCALE_X, xmipp.MDL_CONTINUOUS_SCALE_Y, xmipp.MDL_COST_PERCENTILE,
                                xmipp.MDL_CONTINUOUS_GRAY_A, xmipp.MDL_CONTINUOUS_GRAY_B)
         if row.containsLabel(xmipp.MDL_ANGLE_DIFF):
@@ -307,6 +313,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF2, xmipp.MDL_WEIGHT_JUMPER2)
         if row.containsLabel(xmipp.MDL_WEIGHT_SSNR):
             setXmippAttributes(particle, row, xmipp.MDL_WEIGHT_SSNR)
+        createItemMatrix(particle, row, align=em.ALIGN_PROJ)
 
     def getLastFinishedIter(self):
         fnFscs=sorted(glob(self._getExtraPath("Iter???/fsc.xmd")))
