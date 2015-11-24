@@ -456,7 +456,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             fh.write("Number of input    images: %d\n"%Nimages)
             fh.write("Number of used     images: %d\n"%Nunique)
             fh.write("Number of rejected images: %d\n"%Nrejected)
-            fh.write("Average number of directions per used image: %f\n"%(float(Nrepeated)/Nunique))
+            if Nunique>0:
+                fh.write("Average number of directions per used image: %f\n"%(float(Nrepeated)/Nunique))
             fh.close()
     
     def readInfoField(self,fnDir,block,label):
