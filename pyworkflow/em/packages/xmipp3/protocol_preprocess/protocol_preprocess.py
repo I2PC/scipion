@@ -91,12 +91,12 @@ class XmippPreprocessHelper():
     
     @classmethod
     def _argsCommonThreshold(cls, protocol):
-        args = " --select below %f" % protocol.threshold.get()
+        args = " --select %s %f" % (protocol.getEnumText('thresholdType'), protocol.threshold)
         fillStr = protocol.getEnumText('fillType')
         args += " --substitute %s " % fillStr
         
         if protocol.fillType == MASK_FILL_VALUE:
-            args += " %f" % protocol.fillValue.get()
+            args += " %f" % protocol.fillValue
         return args
     
 
