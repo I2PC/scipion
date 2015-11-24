@@ -28,9 +28,10 @@ This sub-package contains wrapper around Projection Outliers Xmipp program
 """
 
 from math import floor
+from os.path import exists
 
 from pyworkflow.protocol.params import PointerParam
-from pyworkflow.utils.path import cleanPath
+from pyworkflow.utils.path import cleanPath, moveFile
 from pyworkflow.em.protocol import ProtAnalysis2D
 from pyworkflow.em.data import SetOfClasses2D, Image
 from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLocation
@@ -71,7 +72,14 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self, imgsFn):
         from convert import writeSetOfParticles
+        XdimParticles=self._getDimensions()
+        XdimVolume=self.inputVolume.get().getDim()[0]
         writeSetOfParticles(self.inputSet.get(), self.imgsFn)
+        if XdimParticles!=XdimVolume:
+            fnNewParticles=self._getExtraPath("images.stk")
+            fnNewParticlesXmd=self._getExtraPath("images.xmd")
+            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d --save_metadata_stack %s"%(self.imgsFn,fnNewParticles,XdimVolume,fnNewParticlesXmd))
+            moveFile(fnNewParticlesXmd,self.imgsFn)
     
     def produceResiduals(self,volumeFn,anglesFn,Ts):
         if volumeFn.endswith(".mrc"):
@@ -82,6 +90,9 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         xdim=self.inputVolume.get().getDim()[0]
         self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
                     (anglesFn,anglesOutFn,volumeFn,floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
+        fnNewParticles=self._getExtraPath("images.stk")
+        if exists(fnNewParticles):
+            cleanPath(fnNewParticles)
     
     def evaluateResiduals(self):
         # Evaluate each image
@@ -127,16 +138,6 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         __setXmippImage(xmipp.MDL_IMAGE_COVARIANCE)
 
     #--------------------------- INFO functions --------------------------------------------
-    def _validate(self):
-        errors = []
-        vol = self.inputVolume.get()
-        xDim = self._getDimensions()
-        volDim = vol.getDim()[0]
-        
-        if volDim != xDim:
-            errors.append("Make sure that the volume and the images have the same size")
-        return errors    
-    
     def _summary(self):
         summary = []
         summary.append("Images evaluated: %i" % self.inputSet.get().getSize())
