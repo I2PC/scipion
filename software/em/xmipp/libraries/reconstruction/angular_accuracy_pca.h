@@ -28,6 +28,9 @@
 
 #include <data/xmipp_program.h>
 #include <math.h>
+#include <data/basic_pca.h>
+#include <data/projection.h>
+
 
 /**@defgroup Assign accuracy to angular assignment by pca
    @ingroup ReconsLibrary */
@@ -38,13 +41,20 @@ class ProgAngularAccuracyPCA: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnParticles, fnNeighbours;
+    FileName fnPhantom, fnNeighbours, fnResiduals, fnReconstructed;
+
+    Image<double> phantomVol;
 
     MetaData mdPartial;
 
     size_t rank, Nprocessors;
 
-    size_t numPCAs;
+    PCAMahalanobisAnalyzer pca;
+
+	size_t newXdim;
+
+	size_t newYdim;
+
 
 
 public:
@@ -54,6 +64,8 @@ public:
     void defineParams();
 
     void run();
+
+    void obtainPCAs(MetaData &SF, String fnTempResiduals, String fnTempReconstructed, size_t numPCAs);
 
 public:
 

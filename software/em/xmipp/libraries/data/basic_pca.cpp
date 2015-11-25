@@ -26,6 +26,13 @@
 #include "basic_pca.h"
 #include "matrix2d.h"
 
+/* Destructor ------------------------------------------------------------- */
+PCAMahalanobisAnalyzer::~PCAMahalanobisAnalyzer()
+{
+	for (size_t i=0; i<PCAbasis.size(); ++i)
+		delete &PCAbasis[i];
+}
+
 /* Subtract average ------------------------------------------------------- */
 void PCAMahalanobisAnalyzer::subtractAvg()
 {
@@ -46,8 +53,12 @@ void PCAMahalanobisAnalyzer::subtractAvg()
     // Subtract average and compute stddev
     MultidimArray<float> avgF;
     typeCast(avg,avgF);
+
     for (int n=0; n<N; n++)
+    {
         v[n]-=avgF;
+
+    }
 }
 
 /* Standardize variables -------------------------------------------------- */
@@ -142,21 +153,45 @@ void PCAMahalanobisAnalyzer::projectOnPCABasis(Matrix2D<double> &CtY)
     }
 }
 
+/* Add vector ------------------------------------------------------------- */
+void PCAMahalanobisAnalyzer::reconsFromPCA(const Matrix2D<double> &CtY, std::vector< MultidimArray<float> > &recons)
+{
+
+    int N=recons.size();
+    int NPCA=PCAbasis.size();
+
+    for (int ii=0; ii<N; ii++)
+    {
+        const MultidimArray<float> &Iii=v[ii];
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(recons[ii])
+        for (int jj=0; jj<NPCA; jj++)
+        {
+            const MultidimArray<double> &Ijj=PCAbasis[jj];
+            DIRECT_A1D_ELEM(recons[ii],i)= DIRECT_A1D_ELEM(Ijj,i)*MAT_ELEM(CtY,jj,ii)+(float)DIRECT_A1D_ELEM(avg,i);
+        }
+
+
+    }
+}
+
 void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
 {
     // Take the first vectors for the PCA basis
-    MultidimArray<double> vPCA;
+    MultidimArray<double> *vPCA =NULL;
     NPCA=XMIPP_MIN(NPCA,v.size());
     std::vector<size_t> used;
     for (size_t n=0; n<NPCA; n++)
     {
+    	vPCA = new MultidimArray<double>;
     	size_t nRandom;
     	do {
     		nRandom=(size_t)round((v.size()-1)*rnd_unif(0,1));
     	} while (std::find(used.begin(),used.end(),nRandom)!=used.end());
-        typeCast(v[nRandom],vPCA);
-        PCAbasis.push_back(vPCA);
+        typeCast(v[nRandom],*vPCA);
+        PCAbasis.push_back(*vPCA);
         used.push_back(nRandom);
+
     }
 
     size_t N=v.size();
@@ -178,6 +213,7 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
 
                 if (ii!=jj)
                     CtC(jj,ii)=CtC(ii,jj);
+
             }
         }
 
@@ -349,6 +385,7 @@ void PCAMahalanobisAnalyzer::computeStatistics(MultidimArray<double> & avg,
 //#define DEBUG
 void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
 {
+
     int N=v.size();
     if (N==0)
     {
@@ -363,6 +400,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
         return;
     }
 
+
 #ifdef DEBUG
     std::cout << "Input vectors\n";
     for (int n=0; n<N; n++)
@@ -373,6 +411,8 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
     }
 #endif
     subtractAvg();
+
+
 #ifdef DEBUG
 
     std::cout << "\n\nInput vectors after normalization\n";
@@ -384,7 +424,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
     }
 #endif
 
-    if (~trained)
+    if (!trained)
     	learnPCABasis(NPCA, Niter);
 
 #ifdef DEBUG
@@ -400,6 +440,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
 
     Matrix2D<double> proj;
     projectOnPCABasis(proj);
+
 
 #ifdef DEBUG
 
