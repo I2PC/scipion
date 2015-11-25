@@ -285,7 +285,7 @@ def main():
         else:
             option = 'django'
 
-        if option in ['django', 'collectstatic', 'gunicorn']:
+        if option in ['django', 'collectstatic', 'gunicorn', 'help', 'inspectdb']:
             manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
             if option == 'django':
                 args = 'runserver 0.0.0.0:8000'
@@ -293,6 +293,10 @@ def main():
                 args = 'run_gunicorn -b 0.0.0.0:%s' % sys.argv[3]
             elif option == MODE_COLLECTSTATIC:
                 args = 'collectstatic'
+            elif option == 'help':
+                args = 'help'
+            elif option == 'inspectdb':
+                args = 'inspectdb'
             runScript('%s %s' % (manage, args))
         else:
             sys.stdout.write("\nERROR: invalid option '%s' for mode %s.\n" % (option, MODE_WEBSERVER))
