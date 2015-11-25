@@ -23,56 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef MULTIREFERENCE_ALIGNEABILITY_H_
-#define MULTIREFERENCE_ALIGNEABILITY_H_
-#define PI 3.14159265
+#include <parallel/mpi_angular_accuracy_pca.h>
 
-#include <data/xmipp_program.h>
-#include "validation_nontilt.h"
-#include <math.h>
-#include <data/metadata.h>
-#include <string.h>
-#include <data/mask.h>
-
-
-class MultireferenceAligneability: public XmippProgram
-{
-
-
-public:
-    /** Filenames */
-    FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery;
-    bool donNotUseWeights;
-    double significance_noise;
-
-    //fsig, fnInit;
-
-private:
-    size_t Xdim,Ydim,Zdim,Ndim;
-
-    /** Sampling rate of the volume and projections */
-    //double sampling_rate   //COMMENTED
-
-
-public:
-
-    void readParams();
-
-    void defineParams();
-
-    void run();
-
-private:
-
-    void write_projection_file();
-
-    void calc_sumu(const MetaData & tempMd, double & sum_W);
-
-    void calc_sumw(const size_t num, double & sumw);
-
-    void calc_sumw2(const size_t num, double & sumw, const MetaData & mdGallery);
-
-};
-
-
-#endif /* MULTIREFERENCE_ALIGNEABILITY_H_ */
+RUN_XMIPP_PROGRAM(MpiProgAngularAccuracyPCA)

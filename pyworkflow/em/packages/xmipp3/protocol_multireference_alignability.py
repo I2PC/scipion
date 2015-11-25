@@ -56,8 +56,8 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         form.addSection(label='Input')
 
         form.addParam('inputVolumes', PointerParam, pointerClass='SetOfVolumes,Volume',
-                      label="Input volumes",  
-                      help='Select the input volumes.')     
+                      label="Input volume(s)",  
+                      help='Select the input volume(s).')     
                 
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles', pointerCondition='hasAlignment',
@@ -68,21 +68,16 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                       help='See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Xmipp') 
         
-        form.addParam('angularSampling', FloatParam, default=5,
+        form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label="Angular Sampling (degrees)",  
                       help='Angular distance (in degrees) between neighboring projection points ')
 
-        form.addParam('numOrientations', FloatParam, default=10,
+        form.addParam('numOrientations', FloatParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label="Number of Orientations for particle",  
                       help='Parameter to define the number of most similar volume \n' 
                       '    projected images for each projection image')
-        
-        form.addParam('phaseFlipped', BooleanParam, default=False,
-                      label="Is the data already phase flipped?",
-                      help='In case the data has been already phase flipped select True')
-        
-
-        form.addParam('doNotUseWeights', BooleanParam, default=False,
+           
+        form.addParam('doNotUseWeights', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Do not use the weights",
                       help='Do not use the weights in the clustering calculation')
         
@@ -103,18 +98,22 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
             volName = getImageLocation(vol)
             volDir = self._getVolDir(i+1)
             
-            sigStepId = self._insertFunctionStep('significantStep', 
+            pmStepId = self._insertFunctionStep('projectionLibraryStep',                                                    
+                                                volName, volDir,self.angularSampling.get(),
+                                                prerequisites=[convertId])
+            
+            sigStepId1 = self._insertFunctionStep('significantStep', 
                                                  volName, volDir,
                                                  'exp_particles.xmd',
                                                  commonParams, 
-                                                 prerequisites=[convertId])
+                                                 prerequisites=[pmStepId])
             
             phanProjStepId = self._insertFunctionStep('phantomProject', 
                                                  volName, 
-                                                 prerequisites=[convertId])
+                                                 prerequisites=[sigStepId1])
 
 
-            sigStepId = self._insertFunctionStep('significantStep', 
+            sigStepId2 = self._insertFunctionStep('significantStep', 
                                                  volName, volDir,
                                                  'ref_particles.xmd',
                                                  commonParamsRef, 
@@ -124,9 +123,14 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
             volStepId = self._insertFunctionStep('validationStep', 
                                                  volName, volDir,
                                                  sym,
-                                                 prerequisites=[sigStepId])
+                                                 prerequisites=[sigStepId2])
             
-            deps.append(volStepId)
+            
+            pmStepId2 = self._insertFunctionStep('projectionLibraryStep',                                                    
+                                                volName, volDir,10,
+                                                prerequisites=[volStepId])
+            
+            deps.append(pmStepId2)
             
         self._insertFunctionStep('createOutputStep', 
                                  prerequisites=deps)
@@ -144,19 +148,18 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
     def _getCommonParams(self):
         params =  '  -i %s' % self._getPath('input_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
-        params += ' --alpha0 0.05 --alphaF 0.05'
         params += ' --angularSampling %0.3f' % self.angularSampling.get()
         params += ' --dontReconstruct'
-        params += ' --useForValidation %d' % self.numOrientations.get()
+        params += ' --useForValidation %0.3f' % (self.numOrientations.get())        
         return params
+        
     
     def _getCommonParamsRef(self):
         params =  '  -i %s' % self._getPath('reference_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
-        params += ' --alpha0 0.05 --alphaF 0.05'
         params += ' --angularSampling %0.3f' % self.angularSampling.get()
         params += ' --dontReconstruct'
-        params += ' --useForValidation %d' % self.numOrientations.get()
+        params += ' --useForValidation %0.3f' % (self.numOrientations.get())       
         return params
     
     def phantomProject(self,volName):
@@ -167,12 +170,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         Nx,Ny,Nz = self.inputParticles.get().getDim()
         R = -int(Nx/2)
 
-        f = open(self._getExtraPath('params'),'w') 
-        if (self.phaseFlipped.get()):
-            doPhaseFlip = 1
-        else:
-            doPhaseFlip = 0  
-        print doPhaseFlip             
+        f = open(self._getExtraPath('params'),'w')          
         f.write("""# XMIPP_STAR_1 *
 #
 data_block1
@@ -180,7 +178,7 @@ _dimensions2D '%d %d'
 _projAngleFile %s
 _ctfPhaseFlipped %d
 _applyShift 0
-_noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
+_noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().isPhaseFlipped()))
         f.close()
         param =     ' -i %s' % volName
         param +=    ' --params %s' % self._getExtraPath('params')
@@ -198,17 +196,28 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
         self.runJob('xmipp_transform_mask', 
                     param, numberOfMpi=1,numberOfThreads=1)
                 
-    
-    def numberOfProjections(self,sym,angularSampling):
-        #http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/HowManyReferenceProjections
-        dict = {0.5: 165016, 1.0: 41258, 1.5: 18338, 2.0: 10318, 2.5: 6600, 3.0: 4586, 3.5: 3367,4.0: 2586, 4.5: 2042, 5.0: 1652, 5.5: 1367, 6.0: 1148, 6.5: 977, 7.0: 843, 7.5: 732, 8.0: 643, 8.5: 569, 9.0: 510, 9.5: 460, 10.0: 412, 11.0: 340, 12.0: 288, 13.0: 245, 14.0: 211, 15.0: 184};
-    
+ 
+    def projectionLibraryStep(self, volName, volDir, angularSampling):
+        
+        # Generate projections from this reconstruction        
+        nproc = self.numberOfMpi.get()
+        nT=self.numberOfThreads.get() 
+        
+        makePath(volDir)
+        fnGallery= (volDir+'/gallery.stk')
+        params = '-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance %f --experimental_images %s --max_tilt_angle 90'\
+                    %(volName,fnGallery, angularSampling, self.symmetryGroup.get(), -1, self._getPath('input_particles.xmd'))
+        
+        self.runJob("xmipp_angular_project_library", params, numberOfMpi=nproc, numberOfThreads=nT)                    
+        
     def significantStep(self, volName, volDir, anglesPath, params):
 
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get() 
-        makePath(volDir)  
-        params += '  --initvolumes %s' % volName  
+
+        fnGallery= (volDir+'/gallery.doc')          
+        params += ' --initgallery  %s' % fnGallery
+        params += ' --initvolumes %s' % volName  
         params += ' --odir %s' % volDir
         params += ' --iter %d' % 1
         self.runJob('xmipp_reconstruct_significant', 
@@ -219,9 +228,11 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
         makePath(volDir)  
         aFile = self._getExtraPath('exp_particles.xmd')
         aFileRef =self._getExtraPath('ref_particles.xmd')
+        aFileGallery =self._getExtraPath('gallery.stk')
         params = '  --volume %s' % volName  
         params += '  --angles_file %s' % aFile
         params += '  --angles_file_ref %s' % aFileRef
+        params += '  --gallery %s' % aFileGallery
         params += ' --odir %s' % volDir
         params += ' --sym %s' % sym
         
@@ -229,6 +240,19 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
             params += ' --dontUseWeights'
             
         self.runJob('xmipp_multireference_aligneability', params,numberOfMpi=1,numberOfThreads=1)
+
+
+    def neighbourhoodDirectionStep(self, volName,volDir,sym):
+          
+        aFile = self.inputParticles.get()
+        aFileGallery =self._getExtraPath('gallery.doc')
+        neighbours = (volDir+'/neighbours.xmd')
+        
+        params = '  --i1 %s' % aFile  
+        params += ' --i2 %s' % aFileGallery
+        params += ' -o %s' % neighbours
+                    
+        self.runJob('xmipp_angular_neighbourhood', params,numberOfMpi=1,numberOfThreads=1)
         
     def createOutputStep(self):
         outputVols = self._createSetOfVolumes()
@@ -309,7 +333,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
     
     #--------------------------- UTILS functions --------------------------------------------
     def _getVolDir(self, volIndex):
-        return self._getTmpPath('vol%03d' % volIndex)
+        return self._getExtraPath('vol%03d' % volIndex)
     
     def _iterInputVols(self):
         """ In this function we will encapsulate the logic

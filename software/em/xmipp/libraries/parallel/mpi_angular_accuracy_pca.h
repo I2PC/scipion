@@ -23,56 +23,36 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef MULTIREFERENCE_ALIGNEABILITY_H_
-#define MULTIREFERENCE_ALIGNEABILITY_H_
-#define PI 3.14159265
+#ifndef MPI_ANGULAR_ACCURACY_PCA_H__
+#define MPI_ANGULAR_ACCURACY_PCA_H_
 
-#include <data/xmipp_program.h>
-#include "validation_nontilt.h"
-#include <math.h>
-#include <data/metadata.h>
-#include <string.h>
-#include <data/mask.h>
+#include <reconstruction/angular_accuracy_pca.h>
+#include "parallel/xmipp_mpi.h"
+
+/**@defgroup MpiProgAngularAccuracyPCA Determine the angular determination accuracy of a set of particles and a 3D reconstruction (MPI)
+   @ingroup ParallelLibrary */
+//@{
 
 
-class MultireferenceAligneability: public XmippProgram
+class MpiProgAngularAccuracyPCA: public ProgAngularAccuracyPCA
 {
-
-
 public:
-    /** Filenames */
-    FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery;
-    bool donNotUseWeights;
-    double significance_noise;
-
-    //fsig, fnInit;
-
-private:
-    size_t Xdim,Ydim,Zdim,Ndim;
-
-    /** Sampling rate of the volume and projections */
-    //double sampling_rate   //COMMENTED
-
-
+	MpiNode *node;
 public:
+	// Empty constructor
+	MpiProgAngularAccuracyPCA();
 
-    void readParams();
+	// Destructor
+	~MpiProgAngularAccuracyPCA();
 
-    void defineParams();
+	// Redefine how to read the command line
+	void read(int argc, char** argv);
 
-    void run();
+	// Redefine how to synchronize
+	void synchronize();
 
-private:
-
-    void write_projection_file();
-
-    void calc_sumu(const MetaData & tempMd, double & sum_W);
-
-    void calc_sumw(const size_t num, double & sumw);
-
-    void calc_sumw2(const size_t num, double & sumw, const MetaData & mdGallery);
-
+	// Redefine how to gather the alignment
+    void gatherResults();
 };
-
-
-#endif /* MULTIREFERENCE_ALIGNEABILITY_H_ */
+//@}
+#endif /*ANGULAR_ACCURACY_PCA_H_ */
