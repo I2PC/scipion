@@ -66,18 +66,12 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                       label="Number of particles") 
         form.addParam('numberOfIterations', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label="Number of times the randomization is performed.") 
-        form.addParam('maxRes', FloatParam, default=-1, expertLevel=LEVEL_ADVANCED,
-                      label="Maximum resolution (A)",  
-                      help='Maximum resolution (in Angstrom) to consider \n'
-                           'in Fourier space (default Nyquist).\n'
-                           'Param *--maxres* in Xmipp.') 
-        form.addParam('pad', FloatParam, default=2, expertLevel=LEVEL_ADVANCED,
-                      label="Padding factor")
-        form.addParam("debugging", BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
-                      label="Want to debug",
-                      help='This option will help you to keep all files\n'
-                           'and metadata for debugging purpose.')
-
+        form.addParam('maxRes', FloatParam, default = 0.5, expertLevel=LEVEL_ADVANCED,
+                      label="Maximum resolution (dig.freq)",  
+                      help='Nyquist is 0.5') 
+        form.addParam('angSampRate', FloatParam, default = 5, expertLevel=LEVEL_ADVANCED,
+                      label="Angular sampling rate")  
+                      
         form.addParallelSection(threads=4, mpi=1)
 
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -96,13 +90,16 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         particlesMd = self._getFileName('input_xmd')
         imgSet = self.inputParticles.get()
         writeSetOfParticles(imgSet, particlesMd)
-         
-                        
+        pad = 2 
+        
+        #for debugging purpose
+        debugging = False      
+                 
         #projections from reference volume
         
         args="-i %s -o %s --sampling_rate %f --sym %s --min_tilt_angle %f --max_tilt_angle %f --compute_neighbors --angular_distance -1 --experimental_images %s"%\
             (self.input3DReference.get().getFileName(),self._getExtraPath("Ref_Projections.stk"),
-             self.input3DReference.get().getSamplingRate(),self.symmetryGroup.get(),0,90, self._getFileName('input_xmd'))
+             self.angSampRate.get(),self.symmetryGroup.get(),0,90, self._getFileName('input_xmd'))
         
         self.runJob("xmipp_angular_project_library",args)
         
@@ -134,7 +131,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             params += '  -o %s' % fnRoot+"_%02d_%02d.vol"% (i, iteration)
             params += ' --sym %s' % self.symmetryGroup.get()
             params += ' --max_resolution %0.3f' % self.maxRes.get()
-            params += ' --padding %0.3f' % self.pad.get()
+            params += ' --padding %0.3f' % self.pad
             params += ' --thr %d' % self.numberOfThreads.get()
             params += ' --sampling %f' % Ts
             self.runJob('xmipp_reconstruct_fourier', params)
@@ -143,7 +140,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             noiseStk = fnRoot+"_noises_%02d.stk"%i
             self.runJob ("xmipp_image_convert", "-i %s -o %s"% (fnImgs, noiseStk))
             self.runJob("xmipp_image_operate", "-i %s --mult 0"% noiseStk)
-            self.runJob("xmipp_transform_add_noise", "-i %s --type gaussian 4"% noiseStk)
+            self.runJob("xmipp_transform_add_noise", "-i %s --type gaussian 3"% noiseStk)
             fnImgsNL = fnRoot+"_noisesL_%02d.xmd"%i
             noiseStk2 = fnRoot+"_noises2_%02d.stk"%i
             self.runJob ("xmipp_image_convert", "-i %s -o %s --save_metadata_stack %s"% (noiseStk, noiseStk2, fnImgsNL))
@@ -155,7 +152,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             
             
             #alignment gaussian noise
-            fnImgsAlignN = self._getExtraPath("Nfraction_alignment%02d_%02d_%02d.xmd"%(fractionCounter, i, iteration))
+            fnImgsAlign = self._getExtraPath("Nfraction_alignment%02d"%fractionCounter)
+            fnImgsAlignN = fnImgsAlign + "_%02d_%02d.xmd"%(i, iteration)
                              
             args="-i %s -o %s -r %s --Ri 0 --Ro -1 --mem 2 --append "%\
                 (fnImgsN,fnImgsAlignN,self._getExtraPath("Ref_Projections.stk"))
@@ -168,7 +166,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             params += '  -o %s' % fnRootN+"_%02d_%02d.vol"%(i, iteration)
             params += ' --sym %s' % self.symmetryGroup.get()
             params += ' --max_resolution %0.3f' % self.maxRes.get()
-            params += ' --padding %0.3f' % self.pad.get()
+            params += ' --padding %0.3f' % self.pad
             params += ' --thr %d' % self.numberOfThreads.get()
             params += ' --sampling %f' % Ts
             self.runJob('xmipp_reconstruct_fourier', params)
@@ -217,10 +215,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             cleanPattern(fnRootN+"_0?_0?.vol")
             cleanPattern(fnRoot+"_noises_0?.stk")
             cleanPattern(fnRootN+"_fsc_0?.xmd")
-            cleanPattern("Ref_Projections.doc")
-            cleanPattern("Ref_Projections.stk")
-            cleanPattern("Ref_Projections_sampling.xmd")
-            cleanPattern("Nfraction_alignment0?_0?_0?.xmd")
+            cleanPattern(fnImgsAlign + "_0?_0?.xmd")
             
     def gatherResultsStep(self):
         fnFreqs = sorted(glob.glob(self._getExtraPath("fraction*_freq.txt")))
@@ -282,6 +277,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         if not self.debugging:
             cleanPattern(self._getExtraPath("fraction*_freq.txt"))
             cleanPattern(self._getExtraPath("Nfraction*_freq.txt"))
+            cleanPattern(self._getExtraPath('Ref_Projections*'))
         
     #--------------------------- INFO functions -------------------------------------------- 
     def _summary(self):

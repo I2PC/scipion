@@ -90,7 +90,7 @@ public abstract class ImagePlusReader {
                 if (geometry.hasMatrix())
                 	tempig.applyGeoMatrix(geometry.getMatrix(), wrap);
                 else
-                	tempig.applyGeo(geometry.shiftx, geometry.shifty, geometry.psiangle, geometry.flip, wrap);
+                	tempig.applyGeo(geometry.shiftx, geometry.shifty, geometry.psiangle, geometry.flip, wrap, geometry.scaleFactor);
                 imp = XmippImageConverter.convertToImagePlus(tempig);
             } catch (Exception ex) {
                 Logger.getLogger(ImagePlusReader.class.getName()).log(Level.SEVERE, null, ex);
