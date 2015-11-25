@@ -1687,16 +1687,18 @@ public class GalleryData {
         }
 
         ColumnInfo aux;
-        int j;
+        int j, k = 0;//k index added to avoid errors if some order columns are not present. This way order index is k not i
         for (int i = 0; i < orderLabels.length; i++) {
+        	j = 0;
             for (ColumnInfo ci : labels) {
                 if (ci.labelName.equals(orderLabels[i])) {
 
-                    aux = labels.get(i);
-                    j = labels.indexOf(ci);
-                    labels.set(i, ci);
+                    aux = labels.get(k);
+                    labels.set(k, ci);
                     labels.set(j, aux);
+                    k ++;
                 }
+                j ++;
             }
         }
     }
