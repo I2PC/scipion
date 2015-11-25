@@ -72,18 +72,19 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	public Class getColumnClass(int column) {
 		ColumnInfo ci = visibleLabels.get(column);
-		if (ci.render)
-			return ImageItem.class;
-		else if (ci.isEnable())
-			return Boolean.class;//This way a JCheckBox is rendered
+		Class c = null;
 		try {
-            Class c = MetaData.getClassForType(ci.type);
-			return c;
+			if (ci.render)
+				c = ImageItem.class;
+			else if (ci.isEnable())
+				c = Boolean.class;//This way a JCheckBox is rendered
+			else
+				c = MetaData.getClassForType(ci.type);
                         
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
+		return c;
 	}
 
 	
@@ -231,6 +232,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	public boolean handleDoubleClick(int row, int col) {
 		try {
+			
 			ColumnInfo ci = visibleLabels.get(col);
 			if (ci.allowRender && data.isImageFile(ci)) {
                 int index = getIndex(row, col);
@@ -405,7 +407,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 						rend = table.getCellRenderer(0, i);
 						if(rend != null)
 						{
-							Object value = getValueAt(0, i);
+							Object value = table.getValueAt(0, i);
+							//If columns are reordered Renderer may be related to column according to visual order but value is related to real order
 							comp = rend.getTableCellRendererComponent(table, value, false, false, 0, i);
 							width = comp.getPreferredSize().width + 10;
 						}
