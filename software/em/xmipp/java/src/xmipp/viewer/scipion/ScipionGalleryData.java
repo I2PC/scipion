@@ -209,7 +209,7 @@ public class ScipionGalleryData extends GalleryData {
      * This is only needed for metadata table galleries
      */
     public boolean isFile(ColumnInfo ci) {
-        return ci.labelName.contains("filename");
+        return ci.labelName.contains("filename") || ci.labelName.equals("_psdFile");
     }
 
     public boolean isImageFile(ColumnInfo ci) {
