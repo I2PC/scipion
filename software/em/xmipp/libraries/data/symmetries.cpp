@@ -2748,7 +2748,7 @@ double SymList::computeDistance(double rot1, double tilt1, double psi1,
 
         if (check_mirrors)
         {
-            Euler_up_down(rot2p, tilt2p, psi2p, rot2p, tilt2p, psi2p);
+        	Euler_mirrorY(rot2p, tilt2p, psi2p, rot2p, tilt2p, psi2p);
             double ang_dist_mirror = Euler_distanceBetweenAngleSets_fast(E1,
                                      rot2p, tilt2p, psi2p,projdir_mode, E2);
 

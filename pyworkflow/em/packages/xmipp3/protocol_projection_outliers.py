@@ -28,9 +28,10 @@ This sub-package contains wrapper around Projection Outliers Xmipp program
 """
 
 from math import floor
+from os.path import exists
 
 from pyworkflow.protocol.params import PointerParam
-from pyworkflow.utils.path import cleanPath
+from pyworkflow.utils.path import cleanPath, moveFile
 from pyworkflow.em.protocol import ProtAnalysis2D
 from pyworkflow.em.data import SetOfClasses2D, Image
 from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLocation
@@ -41,7 +42,13 @@ from xmipp3 import ProjMatcher
 
         
 class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
-    """Compares a set of classes or averages with the corresponding projections of a reference volume """
+    """Compares a set of classes or averages with the corresponding projections of a reference volume.
+    The set of images must have a 3D angular assignment and the protocol computes the residues
+    (the difference between the experimental images and the reprojections). The zscore of the mean
+    and variance of the residues are computed. Large values of these scores may indicate outliers.
+    The protocol also analyze the covariance matrix of the residual and computes the logarithm of
+    its determinant [Cherian2013]. The extremes of this score (called zScoreResCov), that is
+    values particularly low or high, may indicate outliers."""
     _label = 'projection outliers'
     
     def __init__(self, **args):
@@ -71,7 +78,14 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self, imgsFn):
         from convert import writeSetOfParticles
+        XdimParticles=self._getDimensions()
+        XdimVolume=self.inputVolume.get().getDim()[0]
         writeSetOfParticles(self.inputSet.get(), self.imgsFn)
+        if XdimParticles!=XdimVolume:
+            fnNewParticles=self._getExtraPath("images.stk")
+            fnNewParticlesXmd=self._getExtraPath("images.xmd")
+            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d --save_metadata_stack %s"%(self.imgsFn,fnNewParticles,XdimVolume,fnNewParticlesXmd))
+            moveFile(fnNewParticlesXmd,self.imgsFn)
     
     def produceResiduals(self,volumeFn,anglesFn,Ts):
         if volumeFn.endswith(".mrc"):
@@ -82,6 +96,9 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         xdim=self.inputVolume.get().getDim()[0]
         self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
                     (anglesFn,anglesOutFn,volumeFn,floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
+        fnNewParticles=self._getExtraPath("images.stk")
+        if exists(fnNewParticles):
+            cleanPath(fnNewParticles)
     
     def evaluateResiduals(self):
         # Evaluate each image
@@ -127,29 +144,18 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         __setXmippImage(xmipp.MDL_IMAGE_COVARIANCE)
 
     #--------------------------- INFO functions --------------------------------------------
-    def _validate(self):
-        errors = []
-        vol = self.inputVolume.get()
-        xDim = self._getDimensions()
-        volDim = vol.getDim()[0]
-        
-        if volDim != xDim:
-            errors.append("Make sure that the volume and the images have the same size")
-        return errors    
-    
     def _summary(self):
         summary = []
         summary.append("Images evaluated: %i" % self.inputSet.get().getSize())
         summary.append("Volume: %s" % self.inputVolume.getNameId())
-        summary.append("symmetry: %s" % self.symmetryGroup.get())
         return summary
     
     def _methods(self):
         methods = []
-        if hasattr(self, 'outputClasses') or hasattr(self, 'outputAverages'):
-            methods.append("We evaluated %i input images %s regarding to volume %s"
-                           " using %s symmetry" %(self.inputSet.get().getSize(), self.getObjectTag('inputSet'), \
-                                                  self.getObjectTag('inputVolume'), self.symmetryGroup.get()) )
+        if hasattr(self, 'outputParticles'):
+            methods.append("We evaluated %i input images %s regarding to volume %s."\
+                           %(self.inputSet.get().getSize(), self.getObjectTag('inputSet'), self.getObjectTag('inputVolume')) )
+            methods.append("The residuals were evaluated according to their mean, variance and covariance structure [Cherian2013].")
         return methods
     
     #--------------------------- UTILS functions --------------------------------------------
