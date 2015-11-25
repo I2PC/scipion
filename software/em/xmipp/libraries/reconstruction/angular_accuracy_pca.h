@@ -41,7 +41,7 @@ class ProgAngularAccuracyPCA: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnPhantom, fnNeighbours, fnResiduals, fnReconstructed;
+    FileName fnPhantom, fnNeighbours, fnResiduals, fnReconstructed, fnOut;
 
     Image<double> phantomVol;
 
@@ -72,7 +72,7 @@ public:
     ProgAngularAccuracyPCA();
 
     /// Gather alignment
-    virtual void gatherClusterability() {}
+    virtual void gatherResults() {}
 
     /// Synchronize with other processors
     virtual void synchronize() {}

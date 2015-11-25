@@ -25,7 +25,6 @@
 
 #include "angular_accuracy_pca.h"
 #include <math.h>
-#define targetXdim  100
 
 ProgAngularAccuracyPCA::ProgAngularAccuracyPCA()
 {
@@ -39,6 +38,7 @@ void ProgAngularAccuracyPCA::readParams()
 	fnNeighbours = getParam("--i2");
     fnResiduals = getParam("--oresiduals");
     fnReconstructed = getParam("--oreconstructed");
+    fnOut = getParam("-o");
 
     newXdim = 60;
     newYdim = 60;
@@ -50,6 +50,7 @@ void ProgAngularAccuracyPCA::defineParams()
     addUsageLine("Determine the angular determination accuracy of a set of particles and a 3D reconstruction ");
     addParamsLine("  [ -i <volume_file> ]      	: Voxel volume");
     addParamsLine("  [--i2 <md_file=\"\">]    	: Metadata file with neighbour projections");
+    addParamsLine("  [ -o <md_file=\"\">]    	: Metadata file with obtained weights");
     addParamsLine("  [--oresiduals <stack=\"\">]  : Suffix of the output stack for the residuals");
     addParamsLine("  [--oreconstructed <stack=\"\">]  : Suffix of output stack for the reconstructed projections");
 }
@@ -63,42 +64,60 @@ void ProgAngularAccuracyPCA::run()
     phantomVol.read(fnPhantom);
     phantomVol().setXmippOrigin();
 
-    md.read(fnNeighbours);
     String fnTempResiduals, fnTempReconstructed;
     fnTempResiduals = "";
     fnTempReconstructed = "";
     size_t numPCAs;
 
+	if (rank==0)
+		init_progress_bar(blocks.size());
+
     for (size_t i = 0; i < blocks.size(); ++i)
     {
-
-    	md.read((String) blocks[i].c_str()+'@'+fnNeighbours);
-
-    	std::cout << "Block : " << blocks[i].c_str() << " --- Number of projections : " <<  md.size() << std::endl;
-        std::cout << i << " of : " << blocks.size()  << std::endl;
-
-    	if (fnResiduals!="")
+    	if ((i+1)%Nprocessors==rank)
     	{
-    		fnTempResiduals =  blocks[i].c_str()+fnResiduals;
-    		createEmptyFile(fnTempResiduals, newXdim, newYdim, 1, md.size(), true, WRITE_OVERWRITE);
+    		md.read((String) blocks[i].c_str()+'@'+fnNeighbours);
+
+    		if (fnResiduals!="")
+    		{
+    			fnTempResiduals =  blocks[i].c_str()+fnResiduals;
+    			createEmptyFile(fnTempResiduals, newXdim, newYdim, 1, md.size(), true, WRITE_OVERWRITE);
+    		}
+
+    		if (fnReconstructed!="")
+    		{
+    			fnTempReconstructed =  blocks[i].c_str()+fnReconstructed;
+    			createEmptyFile(fnTempReconstructed, newXdim, newYdim, 1, md.size(), true, WRITE_OVERWRITE);
+    		}
+
+    		if (md.size() < 10)
+    			numPCAs = md.size()/2;
+    		else
+    			numPCAs = 2;
+
+    		obtainPCAs(md,fnTempResiduals,fnTempReconstructed,numPCAs);
+
+    		MDRow row;
+    		FOR_ALL_OBJECTS_IN_METADATA(md)
+    		{
+    			md.getRow(row,__iter.objId);
+    			mdPartial.addRow(row);
+    		}
+
+			if (rank==0)
+				progress_bar(i+1);
+
     	}
-
-    	if (fnReconstructed!="")
-    	{
-    		fnTempReconstructed =  blocks[i].c_str()+fnReconstructed;
-    		createEmptyFile(fnTempReconstructed, newXdim, newYdim, 1, md.size(), true, WRITE_OVERWRITE);
-    	}
-
-    	if (md.size() < 10)
-    		numPCAs = md.size()/2;
-    	else
-    		numPCAs = 2;
-
-    	obtainPCAs(md,fnTempResiduals,fnTempReconstructed,numPCAs);
-
-    	WriteModeMetaData mode = MD_APPEND;
-    	md.write((String) blocks[i].c_str()+'@'+fnNeighbours,mode);
     }
+
+	synchronize();
+	gatherResults();
+
+	if (rank == 0)
+	{
+		mdPartial.write(fnOut);
+		progress_bar(blocks.size());
+	}
 }
 
 void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, String fnTempReconstructed, size_t numPCAs)
