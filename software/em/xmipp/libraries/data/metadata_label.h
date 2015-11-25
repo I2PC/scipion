@@ -61,6 +61,7 @@ enum MDLabel
     MDL_ANGLE_TILT2, ///< Tilting angle of an image (double,degrees)
     MDL_ANGLE_TILT_DIFF, ///< difference between tilt angles (double,degrees)
     MDL_ANGLE_DIFF, ///< difference between two angles (double,degrees)
+    MDL_ANGLE_DIFF2, ///< difference between two angles (double,degrees)
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
     MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
     MDL_APPLY_SHIFT,///<Apply shift when project the volume ,
@@ -390,6 +391,7 @@ enum MDLabel
     MDL_WEIGHT_P, ///< Weight assigned to the image accordint to its clusterability with a significance with respect noise (double)
     MDL_WEIGHT_CONTINUOUS2, ///< Weight due to angular continuous assignment
     MDL_WEIGHT_JUMPER, ///< Weight due to angular jumping
+    MDL_WEIGHT_JUMPER2, ///< Weight due to angular jumping
     MDL_WEIGHT_SIGNIFICANT, ///< Weight due to Angular significance
     MDL_WEIGHT_SSNR, ///< Weight due to SSNR
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
@@ -1292,6 +1294,7 @@ private:
         MDL::addLabelAlias(MDL_ANGLE_TILT2, "tilt2");
         MDL::addLabel(MDL_ANGLE_TILT_DIFF, LABEL_DOUBLE, "angleTiltDiff");
         MDL::addLabel(MDL_ANGLE_DIFF, LABEL_DOUBLE, "angleDiff");
+        MDL::addLabel(MDL_ANGLE_DIFF2, LABEL_DOUBLE, "angleDiff2");
         MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY");
         MDL::addLabel(MDL_ANGLE_Y2, LABEL_DOUBLE, "angleY2");
 
@@ -1737,6 +1740,7 @@ private:
         MDL::addLabelAlias(MDL_WEIGHT, "Weight");
         MDL::addLabel(MDL_WEIGHT_CONTINUOUS2, LABEL_DOUBLE, "weightContinuous2");
         MDL::addLabel(MDL_WEIGHT_JUMPER, LABEL_DOUBLE, "weightJumper");
+        MDL::addLabel(MDL_WEIGHT_JUMPER2, LABEL_DOUBLE, "weightJumper2");
         MDL::addLabel(MDL_WEIGHT_SIGNIFICANT, LABEL_DOUBLE, "weightSignificant");
         MDL::addLabel(MDL_WEIGHT_SSNR, LABEL_DOUBLE, "weightSSNR");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");

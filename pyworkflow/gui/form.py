@@ -908,7 +908,7 @@ class ParamWidget():
         
         def validateSelected(selectedItems):
             for item in selectedItems:
-                if not getattr(item, '_allowSelection', True):
+                if not getattr(item, '_allowsSelection', True):
                     return "Please select object of types: %s" % self.param.pointerClass.get()
 
         title = "Select object of types: %s" % self.param.pointerClass.get()
@@ -1340,11 +1340,15 @@ class FormWindow(Window):
             if self.updateProtocolCallback:
                 self.updateProtocolCallback(self.protocol)
                 
+    def _getHostConfig(self):
+        """ Retrieve the hostConfig object for the select hostname"""
+        return self.protocol.getProject().getHostConfig(self.protocol.getHostName())
+        
     def _editQueueParams(self, e=None):
         """ Open the dialog to edit the queue parameters. """
         # Grab the host config from the project, since it 
         # have not been set in the protocol
-        hostConfig = self.protocol.getProject().getHostConfig(self.protocol.getHostName())
+        hostConfig = self._getHostConfig()
         queues = hostConfig.queueSystem.queues
         # If there is only one Queue and it has not parameters
         # dont bother to showing the QueueDialog
@@ -1498,8 +1502,20 @@ class FormWindow(Window):
         self._close(onlySave=True)
         
     def execute(self, e=None):
+        
         if self.protocol.useQueue():
             if not self._editQueueParams():
+                return
+        else: # use queue = No
+            hostConfig = self._getHostConfig()
+            cores = self.protocol.numberOfMpi.get(1) * self.protocol.numberOfThreads.get(1)
+            mandatory = hostConfig.queueSystem.getMandatory()
+
+            if mandatory and cores >= mandatory:
+                self.showWarning("You need to submit the job to queue since you \n"
+                                 "are requesting a total of *%d* cores (MPI * threads)\n\n"
+                                 "*Note*: Your system is configured with MANDATORY = %d.\n"  
+                                 "        This value can be changed in Scipion/config/hosts.conf" % (cores, mandatory))
                 return
         
         if (self.protocol.getRunMode() == params.MODE_RESTART and 
@@ -1773,6 +1789,10 @@ class QueueDialog(Dialog):
         self.queueDict = queueDict
         self.window = window
         self.queueName, self.queueParams = window.protocol.getQueueParams()
+        # If there is only one queue and not one selected, use the first one
+        if not self.queueName and len(queueDict.keys()) == 1:
+            self.queueName = queueDict.keys()[0]
+            
         Dialog.__init__(self, window.root, "Queue parameters")
         
     def body(self, bodyFrame):

@@ -40,7 +40,6 @@ from pyworkflow.em.packages.xmipp3 import XmippProtRansac
 from pyworkflow.em.packages.eman2.protocol_refineasy import EmanProtRefine
 from pyworkflow.em.packages.eman2.protocol_initialmodel import EmanProtInitModel
 from pyworkflow.em.packages.xmipp3.protocol_reconstruct_significant import XmippProtReconstructSignificant
-from pyworkflow.em.packages.xmipp3.protocol_validate_nontilt import XmippProtValidateNonTilt
 
 def service_projects(request):
    
@@ -75,8 +74,8 @@ Initial_Volume = [
         {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"},
         {"tag": "protocol", "value": "XmippProtReconstructSignificant", "text": "xmipp3 - significant"}]},
     {"tag": "section", "text": "3. Align volumes.", "children": [
-        {"tag": "protocol", "value": "XmippProtAlignVolumeForWeb", "text": "xmipp3 - align volumes"},
-        {"tag": "protocol", "value": "XmippProtValidateNonTilt", "text": "xmipp3 - validate nontilt"}]}]
+        {"tag": "protocol", "value": "XmippProtAlignVolumeForWeb", "text": "xmipp3 - align volumes"}
+        ]}]
         ''')
         f.close()
         
@@ -178,17 +177,17 @@ def create_service_project(request):
 #         protJoin.inputVolumes.append(p4)
         project.saveProtocol(protJoin)
         
-        protValidate = project.newProtocol(XmippProtValidateNonTilt)
-        protValidate.setObjLabel('validate nontilt')
-        protValidate.inputVolumes.set(protJoin)
-        protValidate.inputVolumes.setExtended('outputVolumes')
-        protValidate.inputParticles.set(protImport)
-        protValidate.inputParticles.setExtended('outputAverages')
-        protValidate.numberOfThreads.set(8)
-        if testDataKey :
-            setProtocolParams(protValidate, testDataKey)
-#         protJoin.inputVolumes.append(p4)
-        project.saveProtocol(protValidate)
+#         protValidate = project.newProtocol(XmippProtValidateNonTilt)
+#         protValidate.setObjLabel('validate nontilt')
+#         protValidate.inputVolumes.set(protJoin)
+#         protValidate.inputVolumes.setExtended('outputVolumes')
+#         protValidate.inputParticles.set(protImport)
+#         protValidate.inputParticles.setExtended('outputAverages')
+#         protValidate.numberOfThreads.set(8)
+#         if testDataKey :
+#             setProtocolParams(protValidate, testDataKey)
+# #         protJoin.inputVolumes.append(p4)
+#         project.saveProtocol(protValidate)
         
         
     return HttpResponse(mimetype='application/javascript')
@@ -276,13 +275,13 @@ def setProtocolParams(protocol, key):
             attrs = {"symmetryGroup" : "c1", 
                      "alpha0": 80, 
                      "alphaF": 99.5}
-    if issubclass(cls, XmippProtValidateNonTilt):
-        if(key == "bpv"):
-            attrs = {"symmetryGroup" : "i1"}
-        if(key == "groel"):
-            attrs = {"symmetryGroup" : "d7"}
-        if(key == "ribosome"):
-            attrs = {"symmetryGroup" : "c1"}
+    # if issubclass(cls, XmippProtValidateNonTilt):
+    #     if(key == "bpv"):
+    #         attrs = {"symmetryGroup" : "i1"}
+    #     if(key == "groel"):
+    #         attrs = {"symmetryGroup" : "d7"}
+    #     if(key == "ribosome"):
+    #         attrs = {"symmetryGroup" : "c1"}
     for key,value in attrs.iteritems():
         getattr(protocol, key).set(value)
     

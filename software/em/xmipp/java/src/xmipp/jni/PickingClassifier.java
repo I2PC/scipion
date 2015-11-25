@@ -1,7 +1,7 @@
 package xmipp.jni;
 
 
-public class PickingClassifier
+public class PickingClassifier extends Classifier
 {
 
     // pointer to AutoParticlePicking2 class in C++ space. Needed by native library.
@@ -13,11 +13,11 @@ public class PickingClassifier
 		System.loadLibrary("XmippJNI");
 	}
 	
-	public PickingClassifier(int particlesize, String output, String micsFn) throws Exception {
-        create(particlesize, output, micsFn);
+	public PickingClassifier(int particlesize, String output, MDRow[] mics) throws Exception {
+        create(particlesize, output, mics);
     }
 	
-	private native void create(int particle_size, String output, String micsFn);
+	private native void create(int particle_size, String output, MDRow[] mics);
 	
 	public native void destroy();
 
@@ -29,7 +29,7 @@ public class PickingClassifier
 	
 	public synchronized native void setSize(int psize);
         
-        public native int getParticlesThreshold();
+    public native int getParticlesThreshold();
 	
 	
 	
@@ -40,5 +40,18 @@ public class PickingClassifier
         super.finalize();
         destroy();
     }
+    
+    @Override
+	public boolean needsTraining()
+	{
+		return true;
+	}
+
+	@Override
+	public int getTrainingParticlesMinimum()
+	{
+		// TODO Auto-generated method stub
+		return 15;
+	}
 
 }

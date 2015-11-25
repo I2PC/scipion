@@ -174,8 +174,8 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     def executeCtfGroupsStep(self, **kwargs):
         runExecuteCtfGroupsStep(self, **kwargs)
     
-    def transformMaskStep(self, args, **kwargs):
-        runTransformMaskStep(self, args, **kwargs)
+    def transformMaskStep(self, program, args, **kwargs):
+        runTransformMaskStep(self, program, args, **kwargs)
     
     def angularProjectLibraryStep(self, iterN, refN, args, stepParams, **kwargs):
         runAngularProjectLibraryStep(self, iterN, refN, args, stepParams, **kwargs)
@@ -192,8 +192,8 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     def cleanVolumeStep(self, vol1, vol2):
         cleanPath(vol1, vol2)
     
-    def reconstructionStep(self, iterN, refN, program, method, args, suffix, mpi, threads, **kwargs):
-        runReconstructionStep(self, iterN, refN, program, method, args, suffix, mpi, threads, **kwargs)
+    def reconstructionStep(self, iterN, refN, program, method, args, suffix, **kwargs):
+        runReconstructionStep(self, iterN, refN, program, method, args, suffix, **kwargs)
     
     def storeResolutionStep(self, resolIterMd, resolIterMaxMd, sampling):
         runStoreResolutionStep(self, resolIterMd, resolIterMaxMd, sampling)

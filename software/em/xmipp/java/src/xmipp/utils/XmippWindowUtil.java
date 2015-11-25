@@ -36,6 +36,7 @@ import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -264,6 +265,17 @@ public class XmippWindowUtil
             }
             return null;
     }
+    
+    public static String executeCommand(String command, boolean wait, String dir) throws Exception {
+        //System.out.println(command);
+        Process p = Runtime.getRuntime().exec(command, null, new File(dir));
+        if(wait)
+        {
+            p.waitFor();
+            return readProcessOutput(p);
+        }
+        return null;
+}
     
     public static String executeCommand(String command, boolean wait) throws Exception {
             //System.out.println(command);

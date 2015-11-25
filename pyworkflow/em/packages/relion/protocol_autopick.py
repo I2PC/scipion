@@ -129,9 +129,10 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
         pwutils.cleanPath(coordPath)
         pwutils.makePath(coordPath)
         import pyworkflow.em.packages.xmipp3 as xmipp3
-        micPath = os.path.join(coordPath, 'micrographs.xmd')
-        xmipp3.writeSetOfMicrographs(micSet, micPath)
-        xmipp3.writeSetOfCoordinates(coordPath, coordSet)
+#         micPath = os.path.join(coordPath, 'micrographs.xmd')
+#         xmipp3.writeSetOfMicrographs(micSet, micPath)
+        micPath = micSet.getFileName()
+        xmipp3.writeSetOfCoordinates(coordPath, coordSet, ismanual=False)
         return micPath, coordPath
         
     def writeXmippOutputCoords(self):
@@ -263,10 +264,8 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
     #--------------------------- STEPS functions --------------------------------------------
 
     def createOutputStep(self):
-        self.summaryVar.set('This protocol does not generate any output.\n'
-                            'The FOM maps were written to be used later to optimize \n'
-                            'the _Threshold_ and _Inter-particle distance_ \n'
-                            'parameters.')
+        # Does nothing
+        pass
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
@@ -286,7 +285,10 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return [self.summaryVar.get('')]
+        summary = ['This protocol does not generate any output.',
+                   'The FOM maps were written to be used later to optimize ',
+                   'the _Threshold_ and _Inter-particle distance_ parameters.']
+        return summary
     
     #--------------------------- UTILS functions --------------------------------------------
     def getInputDimA(self):

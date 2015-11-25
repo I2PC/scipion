@@ -43,6 +43,7 @@ void ProgAngularDistance::readParams()
     	minSigma = getDoubleParam("--compute_weights");
     	idLabel = getParam("--compute_weights",1);
     }
+    set = getIntParam("--set");
 }
 
 // Show ====================================================================
@@ -57,6 +58,7 @@ void ProgAngularDistance::show()
     << "Object rotation  : " << object_rotation<<std::endl
     << "Compute weights  : " << compute_weights << std::endl
     << "IdLabel          : " << idLabel << std::endl
+    << "Set              : " << set << std::endl
     ;
 }
 
@@ -88,6 +90,7 @@ void ProgAngularDistance::defineParams()
     addParamsLine("                             : Ang1 and ang2 are supposed to have a label called itemId");
     addParamsLine("                             : The output is written to oroot+_weights.xmd");
     addParamsLine("                             : Min sigma is the minimum angular standard deviation, by default, 1 degree");
+    addParamsLine("  [--set <set=1>]            : Set of distance to compute (angular_diff and jumper_weight, or angular_diff2 and jumper_weight2)");
 }
 
 // Produce side information ================================================
@@ -214,7 +217,10 @@ void ProgAngularDistance::run()
             //output[8]=psi_diff(i);
             row.setValue(MDL_ANGLE_PSI_DIFF, psi_diff(i));
             //output[9]=distp;
-            row.setValue(MDL_ANGLE_DIFF, distp);
+            if (set==1)
+            	row.setValue(MDL_ANGLE_DIFF, distp);
+            else
+            	row.setValue(MDL_ANGLE_DIFF2, distp);
             //output[10]=X1;
             row.setValue(MDL_SHIFT_X,X1);
             //output[11]=X2;
@@ -314,7 +320,7 @@ void ProgAngularDistance::computeWeights()
 				if (mirror)
 				{
 					double rotp, tiltp, psip;
-					Euler_mirrorX(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
+					Euler_mirrorY(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
 					XX(rotTiltPsi)=rotp;
 					YY(rotTiltPsi)=tiltp;
 					ZZ(rotTiltPsi)=psip;
@@ -357,7 +363,7 @@ void ProgAngularDistance::computeWeights()
 					if (mirror)
 					{
 						double rotp, tiltp, psip;
-						Euler_mirrorX(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
+						Euler_mirrorY(XX(rotTiltPsi),YY(rotTiltPsi),ZZ(rotTiltPsi), rotp, tiltp, psip);
 						XX(rotTiltPsi)=rotp;
 						YY(rotTiltPsi)=tiltp;
 						ZZ(rotTiltPsi)=psip;
@@ -406,17 +412,28 @@ void ProgAngularDistance::computeWeights()
     	if (N>0)
     	{
 			double meanDistance=cumulatedDistance/ang2.size();
-			DFweights.setValue(MDL_ANGLE_DIFF,meanDistance,newObjId);
+			if (set==1)
+				DFweights.setValue(MDL_ANGLE_DIFF,meanDistance,newObjId);
+			else
+				DFweights.setValue(MDL_ANGLE_DIFF2,meanDistance,newObjId);
     	}
     	else
     		if (newObjId>0)
-    			DFweights.setValue(MDL_ANGLE_DIFF,-1.0,newObjId);
+    		{
+    			if (set==1)
+    				DFweights.setValue(MDL_ANGLE_DIFF,-1.0,newObjId);
+    			else
+    				DFweights.setValue(MDL_ANGLE_DIFF2,-1.0,newObjId);
+    		}
         anotherImageIn2=iter2.hasNext();
     }
 
     // Calculate the deviation with respect to angleDiff=0 of the angular distances
     std::vector<double> angleDistances;
-    DFweights.getColumnValues(MDL_ANGLE_DIFF,angleDistances);
+    if (set==1)
+    	DFweights.getColumnValues(MDL_ANGLE_DIFF,angleDistances);
+    else
+    	DFweights.getColumnValues(MDL_ANGLE_DIFF2,angleDistances);
     double sigma2=0, d, N=0;
     for (size_t i=0; i<angleDistances.size(); ++i)
     {
@@ -434,27 +451,56 @@ void ProgAngularDistance::computeWeights()
     double isigma2=-0.5/sigma2;
     FOR_ALL_OBJECTS_IN_METADATA(DFweights)
     {
-    	DFweights.getValue(MDL_ANGLE_DIFF,d,__iter.objId);
-    	if (d>0)
-    		DFweights.setValue(MDL_WEIGHT_JUMPER,exp(d*d*isigma2),__iter.objId);
+    	if (set==1)
+    	{
+    		DFweights.getValue(MDL_ANGLE_DIFF,d,__iter.objId);
+			if (d>0)
+				DFweights.setValue(MDL_WEIGHT_JUMPER,exp(d*d*isigma2),__iter.objId);
+			else
+				DFweights.setValue(MDL_WEIGHT_JUMPER,0.5,__iter.objId);
+    	}
     	else
-    		DFweights.setValue(MDL_WEIGHT_JUMPER,0.5,__iter.objId);
+    	{
+    		DFweights.getValue(MDL_ANGLE_DIFF2,d,__iter.objId);
+			if (d>0)
+				DFweights.setValue(MDL_WEIGHT_JUMPER2,exp(d*d*isigma2),__iter.objId);
+			else
+				DFweights.setValue(MDL_WEIGHT_JUMPER2,0.5,__iter.objId);
+    	}
     }
 
     // Transfer these weights to the DF2 metadata
     MetaData DF2weighted;
-    if (DF2.containsLabel(MDL_ANGLE_DIFF))
-    	DF2.removeLabel(MDL_ANGLE_DIFF);
-    if (DF2.containsLabel(MDL_WEIGHT_JUMPER))
-    	DF2.removeLabel(MDL_WEIGHT_JUMPER);
+    if (set==1)
+    {
+		if (DF2.containsLabel(MDL_ANGLE_DIFF))
+			DF2.removeLabel(MDL_ANGLE_DIFF);
+		if (DF2.containsLabel(MDL_WEIGHT_JUMPER))
+			DF2.removeLabel(MDL_WEIGHT_JUMPER);
+    }
+    else
+    {
+		if (DF2.containsLabel(MDL_ANGLE_DIFF2))
+			DF2.removeLabel(MDL_ANGLE_DIFF2);
+		if (DF2.containsLabel(MDL_WEIGHT_JUMPER2))
+			DF2.removeLabel(MDL_WEIGHT_JUMPER2);
+    }
     DF2weighted.join1(DF2,DFweights,label,INNER);
     FOR_ALL_OBJECTS_IN_METADATA(DF2weighted)
     {
     	double angleDiff;
-    	DF2weighted.getValue(MDL_ANGLE_DIFF,angleDiff,__iter.objId);
+    	if (set==1)
+    		DF2weighted.getValue(MDL_ANGLE_DIFF,angleDiff,__iter.objId);
+    	else
+    		DF2weighted.getValue(MDL_ANGLE_DIFF2,angleDiff,__iter.objId);
     	if (angleDiff<0)
+    	{
     		// DF2weighted.setValue(MDL_ENABLED,-1,__iter.objId);
-    		DF2weighted.setValue(MDL_ANGLE_DIFF,0.0,__iter.objId);
+    		if (set==1)
+    			DF2weighted.setValue(MDL_ANGLE_DIFF,0.0,__iter.objId);
+    		else
+    			DF2weighted.setValue(MDL_ANGLE_DIFF2,0.0,__iter.objId);
+    	}
     }
     DF2weighted.removeDisabled();
     DF2weighted.write(fn_out+"_weights.xmd");

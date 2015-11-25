@@ -34,7 +34,8 @@ from itertools import izip
 
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet, SetOfNormalModes, SetOfParticles
+from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet, SetOfNormalModes, SetOfParticles,\
+    SetOfMicrographs
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair, ParticlesTiltPair
 from pyworkflow.em.data import Mask
 from pyworkflow.utils import moveFile
@@ -319,7 +320,12 @@ class ProtUserSubSet(BatchProtocol):
         output = MicrographsTiltPair(filename=self._getPath('micrographs_pairs.sqlite'))
         print "self._dbName=%s" % self._dbName
         modifiedSet = MicrographsTiltPair(filename=self._dbName, prefix=self._dbPrefix)
-
+        inputU = micrographsTiltPair.getUntilted()
+        inputT = micrographsTiltPair.getTilted()
+        outputU = SetOfMicrographs(filename=self._getPath('mics_untilted.sqlite'))
+        outputT = SetOfParticles(filename=self._getPath('mics_tilted.sqlite'))
+        outputU.copyInfo(inputU)
+        outputT.copyInfo(inputT)
         for micPairI in modifiedSet:
             untilted = micPairI.getUntilted()
             tilted = micPairI.getTilted()
@@ -329,6 +335,10 @@ class ProtUserSubSet(BatchProtocol):
                 micPairO.setUntilted(untilted)
                 micPairO.setTilted(tilted)
                 output.append(micPairO)
+                outputU.append(untilted)
+                outputT.append(tilted)
+        output.setUntilted(outputU)
+        output.setTilted(outputT)
         # Register outputs
         outputDict = {'outputMicrographsTiltPair': output}
         self._defineOutputs(**outputDict)
@@ -344,6 +354,8 @@ class ProtUserSubSet(BatchProtocol):
         inputT = particlesTiltPair.getTilted()
         outputU = SetOfParticles(filename=self._getPath('particles_untilted.sqlite'))
         outputT = SetOfParticles(filename=self._getPath('particles_tilted.sqlite'))
+        outputU.copyInfo(inputU)
+        outputT.copyInfo(inputT)
         
         modifiedSet = ParticlesTiltPair(filename=self._dbName, prefix=self._dbPrefix)
 

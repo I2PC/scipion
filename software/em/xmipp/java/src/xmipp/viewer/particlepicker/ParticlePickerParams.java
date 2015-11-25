@@ -6,18 +6,12 @@
 
 package xmipp.viewer.particlepicker;
 
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
-import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 /**
@@ -35,6 +29,7 @@ public class ParticlePickerParams {
     public final static String THREADSOPT = "threads";
     public final static String FASTOPT = "fast";
     public final static String INCOREOPT = "incore";
+    public final static String CLASSIFIER = "classifier";
     private CommandLine cmdLine;
     
     
@@ -45,6 +40,7 @@ public class ParticlePickerParams {
     public Integer threads = 1;
     public boolean fast;
     public boolean incore;
+    public String classifierProperties;
     
     public ParticlePickerParams(Mode mode)
     {
@@ -70,6 +66,7 @@ public class ParticlePickerParams {
         options.addOption(FASTOPT, true, "");
         options.addOption(INCOREOPT, true, "");
         options.addOption(SCIPIONOPT, true, "");
+        options.addOption(CLASSIFIER, true, "");
     }
 
     public void processArgs(String args[]) throws ParseException {
@@ -99,6 +96,10 @@ public class ParticlePickerParams {
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
             if(cmdargs != null)
                 port = Integer.parseInt(cmdargs[0]);
+        }
+        if (cmdLine.hasOption(CLASSIFIER)) {
+            classifierProperties = cmdLine.getOptionValue(CLASSIFIER);
+           
         }
 
     }

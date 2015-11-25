@@ -28,8 +28,10 @@
 This sub-package contains protocol for particles filters operations
 """
 
+import pyworkflow.utils as pwutils
 from pyworkflow.em import IntParam
 
+from ..spider import getScript
 from protocol_align_base import SpiderProtAlign
 
 
@@ -85,6 +87,9 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
                              '[nummps]': self.numberOfThreads.get(),
                             })
         
+        copy1Script = getScript('mda/center1.msa')
+        newScript = pwutils.replaceBaseExt(copy1Script, self.getExt())
+        pwutils.copyFile(copy1Script, self._getPath(newScript))
         self.runTemplate(self.getScript(), self.getExt(), self._params)
                 
     def getAverage(self):

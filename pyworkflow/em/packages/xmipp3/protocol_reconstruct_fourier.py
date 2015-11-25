@@ -42,7 +42,7 @@ class XmippProtReconstructFourier(ProtReconstruct3D):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
+        form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles', pointerCondition='hasAlignmentProj',
                       label="Input particles",  
                       help='Select the input images from the project.')     
         form.addParam('symmetryGroup', StringParam, default='c1',
@@ -71,7 +71,7 @@ class XmippProtReconstructFourier(ProtReconstruct3D):
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
         myDict = {
-            'input_xmd': self._getTmpPath('input_particles.xmd'),
+            'input_xmd': self._getExtraPath('input_particles.xmd'),
             'output_volume': self._getPath('output_volume.vol')
             }
         self._updateFilenamesDict(myDict)
@@ -88,7 +88,12 @@ class XmippProtReconstructFourier(ProtReconstruct3D):
         params =  '  -i %s' % self._getFileName('input_xmd')
         params += '  -o %s' % self._getFileName('output_volume')
         params += ' --sym %s' % self.symmetryGroup.get()
-        params += ' --max_resolution %0.3f' % self.maxRes.get()
+        maxRes = self.maxRes.get()
+        if maxRes == -1:
+            digRes = 0.5
+        else:
+            digRes = self.inputParticles.get().getSamplingRate() / self.maxRes.get()
+        params += ' --max_resolution %0.3f' %digRes
         params += ' --padding %0.3f' % self.pad.get()
         params += ' --thr %d' % self.numberOfThreads.get()
         params += ' --sampling %f' % self.inputParticles.get().getSamplingRate()

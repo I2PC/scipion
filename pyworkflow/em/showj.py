@@ -62,6 +62,7 @@ VISIBLE = 'visible'
 ZOOM = 'zoom'
 SORT_BY = 'sortby'
 LABELS = 'labels'
+CLASSIFIER = 'classifier'
 
 SAMPLINGRATE = 'sampling_rate'
 CHIMERA_PORT = 'chimera_port'
@@ -250,12 +251,13 @@ def getJavaIJappArguments(memory, appName, appArgs):
         memory = "1g"
         print "No memory size provided. Using default: " + memory
     
+    jdkLib = join(os.environ['JAVA_HOME'], 'lib')
     imagej_home = join(os.environ['XMIPP_HOME'], "external", "imagej")
     lib = join(os.environ['XMIPP_HOME'], "lib")
     javaLib = join(os.environ['XMIPP_HOME'], 'java', 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
     arch = getArchitecture()
-    args = "-Xmx%(memory)s -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
+    args = "-Xmx%(memory)s -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
 
     return args
 
@@ -269,12 +271,16 @@ def runJavaIJapp(memory, appName, args, env={}):
     cmd = ['java'] + args.split()
     return subprocess.Popen(cmd, env=env)
 
-def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
-        port = initProtocolTCPServer(protocol)
+def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g', pickerProps=None):
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %s --output %s --scipion %s"%(micsFn, outputDir, port)
+        args = "--input %s --output %s"%(micsFn, outputDir)
         if mode:
             args += " --mode %s"%mode    
+        if pickerProps:
+            args += " --classifier " + pickerProps
+        else:
+            port = initProtocolTCPServer(protocol)
+            args += " --scipion %s"%port
         return runJavaIJapp("%s" % memory, app, args)
     
 

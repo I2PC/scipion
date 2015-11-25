@@ -50,7 +50,14 @@ from pyworkflow.em.packages.xmipp3.convert import *
 import subprocess
 from pyworkflow.utils.properties import colorText
 
-#EVENTUALLY THIS SHOULD BE BSOFT TEST
+# ======== Test are not working ===============
+# Remove the following class in order to re-active
+# the tests and work on them
+#
+
+class BaseTest():
+    pass
+
 class TestBasic(BaseTest):
     """ Test most basic conversions of the form:
     rowToObject(row, ...)

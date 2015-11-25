@@ -812,8 +812,13 @@ class Protocol(Step):
         self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
         self._store()
         
-        self.lastStatus = self.status.get()
-        self._stepsExecutor.runSteps(self._steps, self._stepStarted, self._stepFinished)
+        if startIndex == len(self._steps):
+            self.lastStatus = STATUS_FINISHED
+            self.info("All steps seems to be FINISHED, nothing to be done.")
+        else:
+            self.lastStatus = self.status.get()
+            self._stepsExecutor.runSteps(self._steps, self._stepStarted, self._stepFinished)
+        
         self.setStatus(self.lastStatus)
         self._store(self.status)
         
@@ -821,12 +826,12 @@ class Protocol(Step):
         """ This function should only be used from RESTART.
         It will remove output attributes from mapper and object.
         """
-        for o in self._outputs:
-            if hasattr(self, o):
-                self.mapper.delete(getattr(self, o))
-                self.deleteAttribute(o)
-            else:
-                print "DEBUG: error, %s is not found in protocol" % o
+        attributes = [a[0] for a in self.iterOutputEM()]
+        
+        for attrName in attributes:
+            attr = getattr(self, attrName)
+            self.mapper.delete(attr)
+            self.deleteAttribute(attrName)
             
         self._outputs.clear()
         self.mapper.store(self._outputs)
@@ -947,12 +952,13 @@ class Protocol(Step):
         
         self.info(greenStr('RUNNING PROTOCOL -----------------'))
         self._pid.set(os.getpid())
+        self.info('      Scipion: %s' % os.environ['SCIPION_VERSION'])
         self.info('   currentDir: %s' % os.getcwd())
-        self.info('   workingDir: ' + self.workingDir.get())
-        self.info('      runMode: %d' % self.runMode.get())
+        self.info('   workingDir: %s' % self.workingDir)
+        self.info('      runMode: %s' % MODE_CHOICES[self.runMode.get()])
         try:
-            self.info('          MPI: %d' % self.numberOfMpi.get())
-            self.info('      threads: %d' % self.numberOfThreads.get())
+            self.info('          MPI: %d' % self.numberOfMpi)
+            self.info('      threads: %d' % self.numberOfThreads)
         except Exception as e:
             self.info('  * Cannot get information about MPI/threads (%s)' % e)
 
@@ -1159,8 +1165,9 @@ class Protocol(Step):
         launch the job to a queue system.
         """
         queueName, queueParams = self.getQueueParams()
+        hc = self.getHostConfig()
         
-        script = self._getLogsPath(self.strId() + '.job')
+        script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
              'JOB_NODEFILE': script.replace('.job', '.nodefile'),
              'JOB_NAME': self.strId(),

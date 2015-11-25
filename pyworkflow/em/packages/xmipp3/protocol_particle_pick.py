@@ -65,12 +65,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get()
         
-        micFn = self._getExtraPath('input_micrographs.xmd')
-        
-        self._insertFunctionStep('convertInputStep', micFn, 
-                                self.inputMics.getObjId())
+        micFn = self.inputMics.getFileName()
         # Parameters needed 
-        
         
         # Convert input SetOfMicrographs to Xmipp if needed
 #        self._insertConvertStep('inputMics', XmippSetOfMicrographs, 
@@ -84,10 +80,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             self._insertFunctionStep('createOutputStep')
 
     
-    #--------------------------- STEPS functions --------------------------------------------
-    def convertInputStep(self, micFn, inputId):
-        writeSetOfMicrographs(self.inputMics, micFn)
-        
+  
     
     def launchParticlePickGUIStep(self, micFn):
         # Launch the particle picking GUI

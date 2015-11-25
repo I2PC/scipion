@@ -51,8 +51,8 @@ public:
     FileName fname, foname, gianRefFilename, darkRefFilename;
     MultidimArray<double> gainImage, darkImage;
     int winSize, gpuDevice, fstFrame, lstFrame;
-    int psdPieceSize;
-    bool doAverage, psd, saveCorrMovie;
+    int groupSize;
+    bool doAverage, saveCorrMovie;
     bool gainImageCorr, darkImageCorr;
 
     void defineParams()
@@ -63,8 +63,8 @@ public:
         addParamsLine("     [--nst <int=0>]     : first frame used in alignment (0 = first frame in the movie");
         addParamsLine("     [--ned <int=0>]     : last frame used in alignment (0 = last frame in the movie ");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
-        addParamsLine("     [--simpleAverage]: if we want to just compute the simple average");
-        addParamsLine("     [--psd]             : save raw PSD and corrected PSD");
+        addParamsLine("     [--simpleAverage]   : if we want to just compute the simple average");
+        addParamsLine("     [--groupSize <int=1>]        : the depth of pyramid for optical flow algorithm");
         addParamsLine("     [--ssc]             : save corrected stack");
         addParamsLine("     [--gain <gainReference>]             : gain reference");
         addParamsLine("     [--dark <darkReference>]             : dark reference");
@@ -86,11 +86,15 @@ public:
         {
             darkRefFilename = getParam("--dark");
         }
+        if ((darkImageCorr = checkParam("--dark")))
+        {
+            darkRefFilename = getParam("--dark");
+        }
+        groupSize = getIntParam("--groupSize");
         fstFrame  = getIntParam("--nst");
         lstFrame  = getIntParam("--ned");
         winSize   = getIntParam("--winSize");
         doAverage = checkParam("--simpleAverage");
-        psd = checkParam("--psd");
         saveCorrMovie = checkParam("--ssc");
 
 #ifdef GPU
@@ -228,9 +232,9 @@ public:
         movieStack.readMapped(movieFile,begin);
         movieStack().getImage(avgImg);
         if (darkImageCorr)
-        	avgImg-=darkImage;
+            avgImg-=darkImage;
         if (gainImageCorr)
-        	avgImg/=gainImage;
+            avgImg/=gainImage;
         for (int i=begin;i<end;i++)
         {
             movieStack.readMapped(movieFile,i+1);
@@ -247,7 +251,8 @@ public:
     }
     void std_dev2(const cv::Mat planes[], const cv::Mat &flowx, const cv::Mat &flowy, Matrix1D<double> &meanStdDev)
     {
-        double sumX=0, sumY=0 ;
+        double sumX=0, sumY=0;
+        double absSumX=0, absSumY=0;
         double sqSumX=0, sqSumY=0;
         double valSubtract;
         int h=flowx.rows;
@@ -258,27 +263,31 @@ public:
             {
                 valSubtract=planes[0].at<float>(i,j)-flowx.at<float>(i,j);
                 sumX+=valSubtract;
+                absSumX+=abs(valSubtract);
                 sqSumX+=valSubtract*valSubtract;
                 valSubtract=planes[1].at<float>(i,j)-flowy.at<float>(i,j);
                 sumY+=valSubtract;
+                absSumY+=abs(valSubtract);
                 sqSumY+=valSubtract*valSubtract;
             }
-        meanStdDev(0)=sumX/double(n);
-        meanStdDev(1)=sqrt(sqSumX/double(n)-meanStdDev(0)*meanStdDev(0));
-        meanStdDev(2)=sumY/double(n);
-        meanStdDev(3)=sqrt(sqSumY/double(n)-meanStdDev(2)*meanStdDev(2));
+        double avgX=sumX/double(n);
+        double avgY=sumY/double(n);
+        meanStdDev(0)=absSumX/double(n);
+        meanStdDev(1)=sqrt(sqSumX/double(n)-avgX*avgX);
+        meanStdDev(2)=absSumY/double(n);
+        meanStdDev(3)=sqrt(sqSumY/double(n)-avgY*avgY);
     }
 
     int main2()
     {
 
-        MultidimArray<double> preImg, avgCurr, avgStep, mappedImg;
+        MultidimArray<double> preImg, avgCurr, mappedImg;
         MultidimArray<double> outputMovie;
         Matrix1D<double> meanStdev;
-        ImageGeneric movieStack, movieStackNormalize;
+        ImageGeneric movieStack;
         Image<double> II;
         MetaData MD; // To save plot information
-        FileName motionInfFile, correctedPSDFile, rawPSDFile;
+        FileName motionInfFile, flowFileName, flowXFileName, flowYFileName;
         ArrayDim aDim;
 
         // For measuring times (both for whole process and for each level of the pyramid)
@@ -287,19 +296,17 @@ public:
 #ifdef GPU
         // Matrix that we required in GPU part
         GpuMat d_flowx, d_flowy, d_dest;
-        GpuMat d_avgcurr, d_preimg, d_mapx, d_mapy;
+        GpuMat d_avgcurr, d_preimg;
 #endif
 
         // Matrix required by Opencv
-        cv::Mat flowx, flowy, mapx, mapy, flow, dest;
-        cv::Mat flowxPre, flowyPre, flowxInBet, flowyInBet;// Using for computing the plot information
+        cv::Mat flow, dest, flowx, flowy;
+        cv::Mat flowxPre, flowyPre;
         cv::Mat avgcurr, avgstep, preimg, preimg8, avgcurr8;
-        cv::Mat planes[]={flowx, flowy};
-        cv::Scalar meanx, meany;
-        cv::Scalar stddevx, stddevy;
+        cv::Mat planes[]={flowxPre, flowyPre};
 
-        int imagenum, cnt = 2, div = 0;
-        int h, w, idx, levelNum, levelCounter = 1;
+        int imagenum, cnt=2, div=0, flowCounter;
+        int h, w, idx, levelNum, levelCounter=1;
 
         motionInfFile=foname.replaceExtension("xmd");
         std::string extension=fname.getExtension();
@@ -349,36 +356,21 @@ public:
         // Compute the average of the whole stack
         fstFrame++; // Just to adapt to Li algorithm
         lstFrame++; // Just to adapt to Li algorithm
-        psdPieceSize = 400; // Currently we set it as a constant
         if (lstFrame>=imagenum || lstFrame==1)
             lstFrame=imagenum;
         imagenum=lstFrame-fstFrame+1;
         levelNum=sqrt(double(imagenum));
         computeAvg(fname, fstFrame, lstFrame, avgCurr);
         // if the user want to save the PSD
-        if (psd)
+        if (doAverage)
         {
             II() = avgCurr;
             II.write(foname);
-            if (doAverage)
-                rawPSDFile=foname.removeLastExtension()+"_corrected";
-            else
-                rawPSDFile=foname.removeLastExtension()+"_raw";
-            std::cerr<<"The file name is"<<rawPSDFile<<std::endl;
-            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
-                                     foname.c_str(), rawPSDFile.c_str(), psdPieceSize);
-            String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
-            std::cerr<<"Computing the raw FFT"<<std::endl;
-            if (system(cmd.c_str())==-1)
-                REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-            if (doAverage)
-                return 0;
-            else
-                foname.deleteFile();
+            return 0;
         }
         xmipp2Opencv(avgCurr, avgcurr);
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
-        while (div!=1)
+        while (div!=groupSize)
         {
             div = int(imagenum/cnt);
             // avgStep to hold the sum of aligned frames of each group at each step
@@ -392,7 +384,7 @@ public:
             // Check if we are in the final step
             if (div==1)
                 cnt = imagenum;
-
+            flowCounter=1;
             for (int i=0;i<cnt;i++)
             {
                 //Just compute the average in the last step
@@ -421,20 +413,40 @@ public:
 
                 d_avgcurr.upload(avgcurr8);
                 d_preimg.upload(preimg8);
-                d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
-                d_flowx.download(flowx);
-                d_flowy.download(flowy);
+                if (cnt==2)
+                    d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
+                else
+                {
+                    flowXFileName=foname.removeLastExtension()+formatString("flowx%d%d.txt",div*2,flowCounter);
+                    flowYFileName=foname.removeLastExtension()+formatString("flowy%d%d.txt",div*2,flowCounter);
+                    readMat(flowXFileName.c_str(), flowx);
+                    readMat(flowYFileName.c_str(), flowy);
+                    d_flowx.upload(flowx);
+                    d_flowy.upload(flowy);
+                    d_calc.flags=cv::OPTFLOW_USE_INITIAL_FLOW;
+                    d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
+                }
+                d_flowx.download(planes[0]);
+                d_flowy.download(planes[1]);
                 d_avgcurr.release();
                 d_preimg.release();
                 d_flowx.release();
                 d_flowy.release();
 #else
 
-                calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, 0);
+                if (cnt==2)
+                    calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, 0);
+                else
+                {
+                    flowFileName=foname.removeLastExtension()+formatString("flow%d%d.txt",div*2,flowCounter);
+                    readMat(flowFileName.c_str(), flow);
+                    calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, cv::OPTFLOW_USE_INITIAL_FLOW);
+                }
                 split(flow, planes);
+
 #endif
                 // Save the flows if we are in the last step
-                if (div==1)
+                if (div==groupSize)
                 {
                     if (i > 0)
                     {
@@ -449,29 +461,29 @@ public:
                     planes[0].copyTo(flowxPre);
                     planes[1].copyTo(flowyPre);
                 }
+                else
+                {
+#ifdef GPU
+                    flowXFileName=foname.removeLastExtension()+formatString("flowx%d%d.txt",div,i+1);
+                    flowYFileName=foname.removeLastExtension()+formatString("flowy%d%d.txt",div,i+1);
+                    saveMat(flowXFileName.c_str(), planes[0]);
+                    saveMat(flowYFileName.c_str(), planes[1]);
+#else
+
+                    flowFileName=foname.removeLastExtension()+formatString("flow%d%d.txt",div,i+1);
+                    saveMat(flowFileName.c_str(), flow);
+#endif
+
+                    if ((i+1)%2==0)
+                        flowCounter++;
+                }
                 for( int row = 0; row < planes[0].rows; row++ )
                     for( int col = 0; col < planes[0].cols; col++ )
                     {
                         planes[0].at<float>(row,col) += (float)col;
                         planes[1].at<float>(row,col) += (float)row;
                     }
-#ifdef GPU
-
-                {
-                    d_mapx.upload(mapx);
-                    d_mapy.upload(mapy);
-                    d_preimg.upload(preimg);
-                    remap(d_preimg,d_dest,d_mapx,d_mapy,cv::INTER_CUBIC);
-                    d_dest.download(dest);
-                    d_dest.release();
-                    d_preimg.release();
-                    d_mapx.release();
-                    d_mapy.release();
-                }
-#else
                 cv::remap(preimg, dest, planes[0], planes[1], cv::INTER_CUBIC);
-#endif
-
                 if (div==1 && saveCorrMovie)
                 {
                     mappedImg.aliasImageInStack(outputMovie, i);
@@ -482,7 +494,7 @@ public:
             avgcurr=avgstep/cnt;
             cout<<"Processing level "<<levelCounter<<"/"<<levelNum<<" has been finished"<<std::endl;
             printf("Processing time: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
-            cnt=cnt*2;
+            cnt*=2;
             levelCounter++;
         }
         opencv2Xmipp(avgcurr, avgCurr);
@@ -493,30 +505,6 @@ public:
         {
             II()=outputMovie;
             II.write(foname.replaceExtension("mrcs"));
-        }
-
-        if (psd)
-        {
-            Image<double> psdCorr, psdRaw;
-            MultidimArray<double> psdCorrArr, psdRawArr;
-            correctedPSDFile=foname.removeLastExtension()+"_corrected";
-            String args=formatString("--micrograph %s --oroot %s --dont_estimate_ctf --pieceDim %d --overlap 0.7",
-                                     foname.c_str(), correctedPSDFile.c_str(), psdPieceSize);
-            String cmd=(String)" xmipp_ctf_estimate_from_micrograph "+args;
-            std::cerr<<"Computing the corrected FFT"<<std::endl;
-            if (system(cmd.c_str())==-1)
-                REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-            psdRaw.read(rawPSDFile+".psd");
-            psdCorr.read(correctedPSDFile+".psd");
-            psdCorrArr=psdCorr();
-            psdRawArr=psdRaw();
-            for (size_t i=0;i<psdPieceSize;i++)
-                for (size_t j=0;j<size_t(psdPieceSize/2);j++)
-                    DIRECT_A2D_ELEM(psdCorrArr,i,j)=DIRECT_A2D_ELEM(psdRawArr,i,j);
-            psdCorr()=psdCorrArr;
-            psdCorr.write(correctedPSDFile+".psd");
-            FileName auxFile=rawPSDFile.addExtension("psd");
-            auxFile.deleteFile();
         }
 
         // Release the memory

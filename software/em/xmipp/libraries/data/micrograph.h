@@ -617,6 +617,9 @@ public:
     /// Adjust passing matrix
     void adjustPassingMatrix(int _muX, int _muY, int _mtX, int _mtY);
 
+    /// Calculate passing matrix
+    void calculatePassingMatrix();
+
     /// Pass to tilted
     void passToTilted(int _muX, int _muY, int &_mtX, int &_mtY);
 

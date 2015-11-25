@@ -1773,7 +1773,7 @@ public class GalleryData {
     public Geometry getGeometry(long id, String type)
     {
         
-        double shiftx, shifty, psiangle;
+        double shiftx, shifty, psiangle, scaleFactor=1;
         boolean flip;
         
         if(md.containsLabel(MetaData.GEOMETRY_LABELS))
@@ -1782,6 +1782,9 @@ public class GalleryData {
 	        shifty = md.getValueDouble(MDLabel.MDL_SHIFT_Y, id);
 	        psiangle = md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
 	        flip = md.getValueBoolean(MDLabel.MDL_FLIP, id);
+	        
+	        if(md.containsLabel(MDLabel.MDL_SCALE))
+	        	scaleFactor = md.getValueDouble(MDLabel.MDL_SCALE, id);
         }
         else if(md.containsLabel(MetaData.GEOMETRY_RELION_LABELS))
         {
@@ -1793,7 +1796,7 @@ public class GalleryData {
         else
         	return null;
         
-        return new Geometry(shiftx, shifty, psiangle, flip);
+        return new Geometry(shiftx, shifty, psiangle, flip, scaleFactor);
     }
         
 	public void setRenderLabels(String[] renderLabels) {

@@ -315,7 +315,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 						double angleRot=mdGallery[nVolume][nDir].rot;
 						double angleTilt=mdGallery[nVolume][nDir].tilt;
 			#ifdef DEBUG
-						std::cout << "   Getting Gallery: " << prm.mdGallery[nVolume][nDir].fnImg
+						std::cout << "   Getting Gallery: " << mdGallery[nVolume][nDir].fnImg
 								  << " corr=" << cc << " imed=" << imed << " weight=" << weight << " rot=" << angleRot
 								  << " tilt=" << angleTilt << std::endl
 						          << "Matrix=" << allM[nVolume*Ndirs+nDir] << std::endl

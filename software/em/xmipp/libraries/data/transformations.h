@@ -481,6 +481,11 @@ void applyGeometry(int SplineDegree,
 					{
 						dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)trunc(yp),(int)trunc(xp));
 					}
+                    else if (SplineDegree==3)
+					{
+                        // B-spline interpolation
+                        dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D_Degree3(xp, yp);
+					}
                     else
                     {
                         // B-spline interpolation
