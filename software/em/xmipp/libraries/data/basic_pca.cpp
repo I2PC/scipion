@@ -181,6 +181,7 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
     MultidimArray<double> *vPCA =NULL;
     NPCA=XMIPP_MIN(NPCA,v.size());
     std::vector<size_t> used;
+    PCAbasis.clear();
     for (size_t n=0; n<NPCA; n++)
     {
     	vPCA = new MultidimArray<double>;

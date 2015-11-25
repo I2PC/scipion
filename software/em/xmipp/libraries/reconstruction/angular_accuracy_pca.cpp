@@ -229,6 +229,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 #endif
 
 		MultidimArray<float> *temp = new MultidimArray<float>;
+
 		typeCast(img(), *temp);
 		selfScaleToSize(LINEAR,*temp,newXdim,newYdim,1);
 		temp->resize(newXdim*newYdim);
@@ -237,12 +238,15 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 	}
 
 
-	//pca.subtractAvg();
-	pca.evaluateZScore(numPCAs,numIter, true);
+	pca.subtractAvg();
 	pca.projectOnPCABasis(proj);
-	pca.reconsFromPCA(proj,pca.v);
+	std::vector< MultidimArray<float> > v;
+	v.reserve(pca.v.size());
+	for (size_t i=0; i<pca.v.size(); i++)
+		v.push_back(pca.v[0]);
+	pca.reconsFromPCA(proj,v);
 
-
+	pca.evaluateZScore(numPCAs,numIter, false);
 
 	size_t idx = 0;
 	imgno=1;
@@ -285,7 +289,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		temp->resize(newXdim*newYdim);
 
 		Image<float> res;
-		res() = pca.v[idx]-*temp;
+		res() = v[idx]-*temp;
 		res().resize(newXdim,newYdim);
 		double stdRes=(res().computeStddev());
 		double stdTemp=(*temp).computeStddev();
@@ -295,7 +299,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 
 #ifdef DEBUG
 {
-	*temp = pca.v[idx];
+	*temp = v[idx];
 	temp->resize(newXdim,newYdim);
 	res()= (*temp);
 	std::cout << E << std::endl;
@@ -321,7 +325,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 
 		if (fnTempReconstructed !="")
 		{
-			res() = pca.v[idx];
+			res() = v[idx];
 			res().resize(newXdim,newYdim);
 			selfRotate(LINEAR, res(),(angle*180)/3.14159 , WRAP);
 			FileName fnReconstruted;
@@ -344,7 +348,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 	Image<double> tt2;
 	pca.v[0].resize(newXdim,newYdim);
 
-	tt() = pca.v[0];
+	tt() = v[0];
 	tt.write("kk_phan.tif");
 
 	tt2() = pca.PCAbasis[0];
@@ -358,6 +362,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 
 #endif
 
+	v.clear();
 	img.clear();
 	pca.clear();
 
