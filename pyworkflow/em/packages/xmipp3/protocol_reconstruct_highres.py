@@ -72,6 +72,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
        iteration to the next, those particles that worse fit the model."""
     _label = 'highres'
     
+    SPLIT_STOCHASTIC = 0
+    SPLIT_FIXED = 1
+    
     GLOBAL_ALIGNMENT = 0
     LOCAL_ALIGNMENT = 1
     
@@ -132,6 +135,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='Remove reference volumes once they are not needed any more.')
 
         form.addSection(label='Angular assignment')
+        form.addParam('splitMethod', EnumParam, label='Image split method', choices=['Stochastic','Fixed'], default=self.SPLIT_FIXED, expertLevel=LEVEL_ADVANCED)
         form.addParam('multiresolution', BooleanParam, label='Multiresolution approach', default=True, expertLevel=LEVEL_ADVANCED,
                       help="In the multiresolution approach the sampling rate of the images is adapted to the current resolution")
         form.addParam('angularMaxShift', FloatParam, label="Max. shift (%)", default=10,
@@ -353,9 +357,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         makePath(fnDirCurrent)
         
         # Split data
-        self.runJob("xmipp_metadata_split","-i %s --oroot %s/images -n 2"%(self.imgsFn,fnDirCurrent),numberOfMpi=1)
-        for i in range(1,3):
-            moveFile("%s/images%06d.xmd"%(fnDirCurrent,i),"%s/images%02d.xmd"%(fnDirCurrent,i))
+        if self.splitMethod == self.SPLIT_FIXED:
+            self.runJob("xmipp_metadata_split","-i %s --oroot %s/images -n 2"%(self.imgsFn,fnDirCurrent),numberOfMpi=1)
+            for i in range(1,3):
+                moveFile("%s/images%06d.xmd"%(fnDirCurrent,i),"%s/images%02d.xmd"%(fnDirCurrent,i))
         
         # Get volume sampling rate
         TsCurrent=self.inputVolumes.get().getSamplingRate()
@@ -430,7 +435,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             for i in range(1,3):
                 fnAnglesi = join(fnDirCurrent,"angles%02d.xmd"%i)
                 mdAngles = xmipp.MetaData(fnAnglesi)
-                mdUnique    = xmipp.MetaData()
+                mdUnique = xmipp.MetaData()
                 mdUnique.aggregateMdGroupBy(mdAngles, AGGR_MAX, [xmipp.MDL_PARTICLE_ID], xmipp.MDL_WEIGHT, xmipp.MDL_WEIGHT) 
                 mdUnique.sort(xmipp.MDL_PARTICLE_ID)
                 fnAnglesUnique = join(fnDirCurrent,"imagesUsed%02d.xmd"%i)
@@ -439,13 +444,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             fnUsed=join(fnDirCurrent,"imagesUsed.xmd")
             fnUsed1=join(fnDirCurrent,"imagesUsed01.xmd")
             fnUsed2=join(fnDirCurrent,"imagesUsed02.xmd")
-            self.runJob('xmipp_metadata_utilities',"-i %s --set union %s -o %s"%(fnUsed1,fnUsed2,fnUsed),numberOfMpi=1)
+            self.runJob('xmipp_metadata_utilities',"-i %s --set union_all %s -o %s"%(fnUsed1,fnUsed2,fnUsed),numberOfMpi=1)
             cleanPath(fnUsed1)
             cleanPath(fnUsed2)
             fnAngles=join(fnDirCurrent,"angles.xmd")
             fnUsedId=join(fnDirCurrent,"imagesUsedId.xmd")
             self.runJob('xmipp_metadata_utilities',"-i %s --operate keep_column particleId -o %s"%(fnUsed,fnUsedId),numberOfMpi=1)
-            self.runJob('xmipp_metadata_utilities',"-i %s --set natural_join %s"%(fnUsed,fnAngles),numberOfMpi=1)
+            self.runJob('xmipp_metadata_utilities',"-i %s --set natural_join %s"%(fnUsedId,fnAngles),numberOfMpi=1)
     
             fnImages=self._getExtraPath("images.xmd")
             fnImagesId=self._getExtraPath('imagesId.xmd')
@@ -501,10 +506,18 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         R=min(round(R*self.TsOrig/TsCurrent*(1+self.angularMaxShift.get()*0.01)),newXdim/2)
         self.runJob("xmipp_transform_mask","-i %s --mask circular -%d"%(fnNewParticles,R),numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
         fnSource=join(fnDir,"images.xmd")
-        for i in range(1,3):
-            fnImagesi=join(fnDir,"images%02d.xmd"%i)
-            self.runJob('xmipp_metadata_utilities','-i %s --set intersection %s/images%02d.xmd particleId particleId -o %s'%\
-                        (fnSource,fnDir0,i,fnImagesi),numberOfMpi=1)
+        if self.splitMethod==self.SPLIT_STOCHASTIC:
+            self.runJob('xmipp_metadata_utilities','-i %s --set intersection %s particleId particleId -o %s/all_images.xmd'%\
+                        (fnSource,self._getExtraPath('images.xmd'),fnDir),numberOfMpi=1)
+            self.runJob("xmipp_metadata_split","-i %s/all_images.xmd --oroot %s/images -n 2"%(fnDir,fnDir),numberOfMpi=1)
+            cleanPath("%s/all_images.xmd"%fnDir)
+            for i in range(1,3):
+                moveFile("%s/images%06d.xmd"%(fnDir,i),"%s/images%02d.xmd"%(fnDir,i))
+        else:
+            for i in range(1,3):
+                fnImagesi=join(fnDir,"images%02d.xmd"%i)
+                self.runJob('xmipp_metadata_utilities','-i %s --set intersection %s/images%02d.xmd particleId particleId -o %s'%\
+                            (fnSource,fnDir0,i,fnImagesi),numberOfMpi=1)
         cleanPath(fnSource)
         
         if getShiftsFrom!="":
@@ -854,16 +867,31 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             (fnAngles,self._getExtraPath("ssnrWeights.xmd")),numberOfMpi=1)
             if self.weightJumper and iteration>1:
                 fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
-                fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
+                if self.splitMethod == self.SPLIT_FIXED:
+                    fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
+                else:
+                    fnPreviousAngles=join(fnDirCurrent,"aux.xmd")
+                    self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
+                                (join(fnDirPrevious,"angles.xmd"),fnAngles,fnPreviousAngles),numberOfMpi=1)
                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --check_mirrors --oroot %s --sym %s"%\
                             (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper",self.symmetryGroup),numberOfMpi=1)
                 moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
+                if self.splitMethod == self.SPLIT_STOCHASTIC:
+                    cleanPath(fnPreviousAngles)
                 if iteration>2:
                     fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-2))
-                    fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
+                    if self.splitMethod == self.SPLIT_FIXED:
+                        fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
+                    else:
+                        fnPreviousAngles=join(fnDirCurrent,"aux.xmd")
+                        self.runJob("xmipp_metadata_utilities","-i %s --set intersection %s particleId particleId -o %s"%\
+                                    (join(fnDirPrevious,"angles.xmd"),fnAngles,fnPreviousAngles),numberOfMpi=1)
+
                     self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --compute_weights --check_mirrors --oroot %s --set 2 --sym %s"%\
                                 (fnPreviousAngles,fnAngles,fnDirCurrent+"/jumper",self.symmetryGroup),numberOfMpi=1)
                     moveFile(fnDirCurrent+"/jumper_weights.xmd", fnAngles)
+                    if self.splitMethod == self.SPLIT_STOCHASTIC:
+                        cleanPath(fnPreviousAngles)
 
             #if self.weightResiduals and exists(fnAnglesCont):
             #    fnCovariance=join(fnDirLocal,"covariance%02d.stk"%i)
