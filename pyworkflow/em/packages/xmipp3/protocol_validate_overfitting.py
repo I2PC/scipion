@@ -90,8 +90,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         particlesMd = self._getFileName('input_xmd')
         imgSet = self.inputParticles.get()
         writeSetOfParticles(imgSet, particlesMd)
-        pad = 2 
-        
+                
         #for debugging purpose
         debugging = False      
                  
@@ -109,12 +108,12 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         for number in numberOfParticles:
             if number<self.inputParticles.get().getSize():
                 for iteration in range(0,self.numberOfIterations.get()):
-                    self._insertFunctionStep('reconstructionStep',number,fractionCounter,iteration)
+                    self._insertFunctionStep('reconstructionStep',number,fractionCounter,iteration, debugging)
                 fractionCounter+=1     
-        self._insertFunctionStep('gatherResultsStep')
+        self._insertFunctionStep('gatherResultsStep', debugging)
         
     #--------------------------- STEPS functions --------------------------------------------
-    def reconstructionStep(self, numberOfImages, fractionCounter, iteration):
+    def reconstructionStep(self, numberOfImages, fractionCounter, iteration, debugging):
         fnRoot = self._getExtraPath("fraction%02d"%fractionCounter)
         Ts = self.inputParticles.get().getSamplingRate()
         
@@ -131,7 +130,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             params += '  -o %s' % fnRoot+"_%02d_%02d.vol"% (i, iteration)
             params += ' --sym %s' % self.symmetryGroup.get()
             params += ' --max_resolution %0.3f' % self.maxRes.get()
-            params += ' --padding %0.3f' % self.pad
+            params += ' --padding 2'
             params += ' --thr %d' % self.numberOfThreads.get()
             params += ' --sampling %f' % Ts
             self.runJob('xmipp_reconstruct_fourier', params)
@@ -166,7 +165,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             params += '  -o %s' % fnRootN+"_%02d_%02d.vol"%(i, iteration)
             params += ' --sym %s' % self.symmetryGroup.get()
             params += ' --max_resolution %0.3f' % self.maxRes.get()
-            params += ' --padding %0.3f' % self.pad
+            params += ' --padding 2'
             params += ' --thr %d' % self.numberOfThreads.get()
             params += ' --sampling %f' % Ts
             self.runJob('xmipp_reconstruct_fourier', params)
@@ -208,7 +207,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         fhN.write("%f\n"%maxFreqN)
         fhN.close()
        
-        if not self.debugging:
+        if not debugging:
             cleanPattern(fnRoot+"_0?_0?.vol")
             cleanPattern(fnRoot+"_images_0?_0?.xmd") 
             cleanPattern(fnRoot+"_fsc_0?.xmd")
@@ -217,7 +216,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             cleanPattern(fnRootN+"_fsc_0?.xmd")
             cleanPattern(fnImgsAlign + "_0?_0?.xmd")
             
-    def gatherResultsStep(self):
+    def gatherResultsStep(self, debugging):
         fnFreqs = sorted(glob.glob(self._getExtraPath("fraction*_freq.txt")))
         subset = 0
         
@@ -274,7 +273,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
 
         validationMdN.write(self._defineResultsNoiseName())
         
-        if not self.debugging:
+        if not debugging:
             cleanPattern(self._getExtraPath("fraction*_freq.txt"))
             cleanPattern(self._getExtraPath("Nfraction*_freq.txt"))
             cleanPattern(self._getExtraPath('Ref_Projections*'))
