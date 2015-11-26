@@ -23,56 +23,60 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef MULTIREFERENCE_ALIGNEABILITY_H_
-#define MULTIREFERENCE_ALIGNEABILITY_H_
-#define PI 3.14159265
+#include "mpi_angular_accuracy_pca.h"
 
-#include <data/xmipp_program.h>
-#include "validation_nontilt.h"
-#include <math.h>
-#include <data/metadata.h>
-#include <string.h>
-#include <data/mask.h>
-
-
-class MultireferenceAligneability: public XmippProgram
+MpiProgAngularAccuracyPCA::MpiProgAngularAccuracyPCA()
 {
+	node=NULL;
+}
 
+MpiProgAngularAccuracyPCA::~MpiProgAngularAccuracyPCA()
+{
+	delete node;
+}
 
-public:
-    /** Filenames */
-    FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery;
-    bool donNotUseWeights;
-    double significance_noise;
+void MpiProgAngularAccuracyPCA::read(int argc, char** argv)
+{
+    node = new MpiNode(argc, argv);
+   	rank = node->rank;
+   	Nprocessors = node->size;
+   	ProgAngularAccuracyPCA::read(argc, (const char **)argv);
+}
 
-    //fsig, fnInit;
+void MpiProgAngularAccuracyPCA::synchronize()
+{
+	node->barrierWait();
+}
 
-private:
-    size_t Xdim,Ydim,Zdim,Ndim;
+void MpiProgAngularAccuracyPCA::gatherResults()
+{
+	if (rank!=0)
+	{
+		FileName fnPartial=formatString("%s/partial_node%03d.xmd",fnOut.getDir().c_str(),(int)rank);
+		if (mdPartial.size()>0)
+			mdPartial.write(fnPartial);
+	}
 
-    /** Sampling rate of the volume and projections */
-    //double sampling_rate   //COMMENTED
+	synchronize();
 
+	// Now the master takes all of them
+	if (rank==0)
+	{
+		MetaData MDAux;
+		for (size_t otherRank=1; otherRank<Nprocessors; ++otherRank)
+		{
+				FileName fnP = formatString("%s/partial_node%03d.xmd",fnOut.getDir().c_str(),(int)otherRank);
 
-public:
+				if (fnP.exists())
+				{
+					MDAux.read(fnP);
+					mdPartial.unionAll(MDAux);
+					deleteFile(fnP);
+				}
+		}
+	}
 
-    void readParams();
+	synchronize();
 
-    void defineParams();
+}
 
-    void run();
-
-private:
-
-    void write_projection_file();
-
-    void calc_sumu(const MetaData & tempMd, double & sum_W);
-
-    void calc_sumw(const size_t num, double & sumw);
-
-    void calc_sumw2(const size_t num, double & sumw, const MetaData & mdGallery);
-
-};
-
-
-#endif /* MULTIREFERENCE_ALIGNEABILITY_H_ */

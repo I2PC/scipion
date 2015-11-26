@@ -229,7 +229,6 @@ def service_content(request):
                     'summary': path_files + 'summary.png',
                     'showj': path_files + 'showj.png',
                     'alignVol': path_files + 'alignVol.png',
-                    'validateVols': path_files + 'validateVols.png',
                     'download': path_files + 'download.png',
                     'formUrl': 'my_form',
                     'mode':'service',
