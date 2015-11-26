@@ -31,8 +31,6 @@ from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import EMObject
 from pyworkflow.utils.properties import Message
-from itertools import izip
-
 
 
 
@@ -140,6 +138,14 @@ class ProtParticlePicking(ProtParticles):
             return None
         suffix = str(count) if count > 1 else ''
         outputName = 'outputCoordinates' + suffix
+        return getattr(self, outputName)
+    
+    def getCoordsTiltPair(self):
+        count = self.getOutputsSize()
+        if count == 0:
+            return None
+        suffix = str(count) if count > 1 else ''
+        outputName = 'outputCoordinatesTiltPair' + suffix
         return getattr(self, outputName)
 
     def _createOutput(self, outputDir):

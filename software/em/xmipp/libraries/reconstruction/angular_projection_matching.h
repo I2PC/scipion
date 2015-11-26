@@ -58,10 +58,11 @@ typedef struct{
     ProgAngularProjectionMatching *prm;
     MultidimArray<double> *img;
     size_t this_image;
-    int opt_refno;
-    double opt_psi;
-    bool opt_flip;
-    double maxcorr;
+    int * opt_refno;
+    double * opt_psi;
+    bool * opt_flip;
+    double * maxcorr;
+    size_t numOrientations;
 } structThreadRotationallyAlignOneImage ;
 
 /**@defgroup angular_projection_matching new_projmatch (Discrete angular assignment using a new projection matching)
@@ -132,10 +133,14 @@ public:
     bool phase_flipped;
     /** Threads */
     int threads;
+    //Numbre of possible orientations
+    int number_orientations;
     /** Number of translations in 5D search */
     size_t nr_trans;
     /** Thread barrier */
     barrier_t thread_barrier;
+
+    int numOrientations;
 
     /** scale params */
     bool do_scale;

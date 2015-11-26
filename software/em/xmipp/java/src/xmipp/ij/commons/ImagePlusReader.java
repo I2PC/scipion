@@ -19,7 +19,6 @@ public abstract class ImagePlusReader {
 
     protected ImagePlus imp;
     protected ImageGeneric ig;
-    protected boolean allowsPoll;
     protected boolean useGeometry;
     protected boolean wrap;
     protected long modified;
@@ -52,17 +51,14 @@ public abstract class ImagePlusReader {
                 
                  if(!hasIndex() )
                     imp = XmippImageConverter.convertToImagePlus(ig);
-                else 
+                 else 
                  {
                     if(ig.isStack())
                         imp = XmippImageConverter.convertToImagePlus(ig, index);//read image or volume on index
                     else
                         imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read image slice on volume
-                    
                  }
-                 
             }
-            
             checkResizeAndGeo();
             checkInvertY();
 			if(normalize)
@@ -91,7 +87,7 @@ public abstract class ImagePlusReader {
                 if (geometry.hasMatrix())
                 	tempig.applyGeoMatrix(geometry.getMatrix(), wrap);
                 else
-                	tempig.applyGeo(geometry.shiftx, geometry.shifty, geometry.psiangle, geometry.flip, wrap);
+                	tempig.applyGeo(geometry.shiftx, geometry.shifty, geometry.psiangle, geometry.flip, wrap, geometry.scaleFactor);
                 imp = XmippImageConverter.convertToImagePlus(tempig);
             } catch (Exception ex) {
                 Logger.getLogger(ImagePlusReader.class.getName()).log(Level.SEVERE, null, ex);

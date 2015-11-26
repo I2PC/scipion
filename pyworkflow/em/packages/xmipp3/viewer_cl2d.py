@@ -83,7 +83,7 @@ class XmippCL2DViewer(ProtocolViewer):
                            "experimental images and the references as well as the number "
                            "experimental images changing class.")
         form.addParam('showClassHierarchy', LabelParam,  
-                      expertLevel=LEVEL_ADVANCED,
+                      expertLevel=LEVEL_ADVANCED, hidden=not self.protocol.computeHierarchy,
                       label="Visualize class hierarchy.")      
     
     def _getVisualizeDict(self):

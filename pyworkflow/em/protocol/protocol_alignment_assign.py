@@ -80,6 +80,7 @@ class ProtAlignmentAssign(ProtAlign2D):
         inputAlignment = self.inputAlignment.get()
         outputParticles = self._createSetOfParticles()
         outputParticles.copyInfo(inputParticles)
+        outputParticles.setAlignment(inputAlignment.getAlignment())
 
         outputParticles.copyItems(inputParticles,
                             updateItemCallback=self._updateItem)

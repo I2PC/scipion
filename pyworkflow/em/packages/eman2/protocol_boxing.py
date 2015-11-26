@@ -106,6 +106,28 @@ class EmanProtBoxing(ProtParticlePicking):
                 self._log.info('Launching: ' + program + ' ' + arguments % self._params)
                 self.runJob(program, arguments % self._params)
 
+    #--------------------------- INFO functions ---------------------------------------------------
+    def _validate(self):
+        errors = []
+        if not eman2.getVersion():
+            errors.append("We couldn't detect EMAN version. ")
+            errors.append("Please, check your configuration file and change EMAN2DIR.")
+            errors.append("The path should contains either '2.11' or '2.12' ")
+            errors.append("to properly detect the version.")
+        return errors
+
+    def _warnings(self):
+        warnings = []
+        firstMic = self.inputMicrographs.get().getFirstItem()
+        fnLower = firstMic.getFileName().lower()
+        
+        if '.tif' in fnLower:
+            warnings.append('Micrographs in .tif format are displayed upside down in EMAN2!!!')
+            warnings.append('The generated coordinates will not be valid in Scipion.')
+            warnings.append('TIP: a workaround could be importing the coordinates inverted')
+            warnings.append('     in Xmipp particle picking GUI.')
+        return warnings
+    
     #--------------------------- UTILS functions ---------------------------------------------------
     def _runSteps(self, startIndex):
         # Redefine run to change to workingDir path

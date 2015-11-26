@@ -1020,7 +1020,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getRadialAvg
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeo
-  (JNIEnv * env, jobject jobj, jdouble shiftx, jdouble shifty, jdouble anglepsi, jboolean flip, jboolean wrap)
+  (JNIEnv * env, jobject jobj, jdouble shiftx, jdouble shifty, jdouble anglepsi, jboolean flip, jboolean wrap, jdouble scaleFactor)
 {
 	XMIPP_JAVA_TRY
 	   {
@@ -1043,7 +1043,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeo
 			   dMij(transformM, 0, 1) *= -1.;
 
 		   }
-
+	       transformM *= scaleFactor;
 		   applyGeometry(LINEAR, Iaux, *I, transformM, IS_NOT_INV, wrap);
            *I=Iaux;
 	   }
@@ -1054,7 +1054,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeo
 
 
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeoMatrix
-  (JNIEnv * env, jobject jobj, jstring matrixString, jboolean wrap)
+  (JNIEnv * env, jobject jobj, jstring matrixString, jdouble scaleFactor, jboolean wrap)
 {
   XMIPP_JAVA_TRY
      {

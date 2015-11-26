@@ -30,6 +30,7 @@ basic classes.
 """
 
 from itertools import izip
+from collections import OrderedDict
 
 # Binary relations always involve two objects, we 
 # call them parent-child objects, the following
@@ -319,12 +320,42 @@ class Object(object):
         """ Return all attributes and values in a dictionary.
         Nested attributes will be separated with a dot in the dict key.
         """
-        from collections import OrderedDict
         d = OrderedDict()
         if includeClass:
             d['self'] = (self.getClassName(),)
         self.__getObjDict('', d, includeClass)
         return d
+            
+    def __getMappedDict(self, prefix, objDict):
+        if prefix:
+            prefix += '.'
+        for k, v in self.getAttributesToStore():
+            if not v.isPointer():
+                kPrefix = prefix + k
+                objDict[kPrefix] = v
+                if not isinstance(v, Scalar):
+                    v.__getMappedDict(kPrefix, objDict)
+                        
+    def getMappedDict(self):
+        d = OrderedDict()
+        self.__getMappedDict('', d)
+        return d        
+    
+    def getNestedValue(self, key):
+        """ Retrieve the value of nested attributes like: _ctfModel.defocusU. """
+        attr = self
+        for p in key.split('.'):
+            attr = getattr(attr, p)
+        return attr.get()
+    
+    def getValuesFromDict(self, objDict):
+        """ Retrieve the values of the attributes
+        for each of the keys that comes in the objDict.
+        """
+        return [self.getNestedValue(k) for k in objDict if k != 'self']
+    
+    def getValuesFromMappedDict(self, mappedDict):
+        return [v.getObjValue() for v in mappedDict.values()]
     
     def copy(self, other, copyId=True, ignoreAttrs=[]):
         """ Copy all attributes values from one object to the other.
@@ -450,13 +481,13 @@ class OrderedObject(Object):
         """
         for key in self._attributes:
             attr = getattr(self, key)
-            if attr.isPointer():
+            if attr is not None and attr.isPointer():
                 if attr.get() is value:
                     return True
         return False
     
     def __setattr__(self, name, value):
-        if (not name in self._attributes and
+        if (name not in self._attributes and
             issubclass(value.__class__, Object) and
             not self.__attrPointed(name, value) and value._objDoStore):
             self._attributes.append(name)

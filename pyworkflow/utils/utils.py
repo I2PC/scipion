@@ -574,6 +574,7 @@ def startDebugger(mode='SCIPION_DEBUG', password='a'):
     if mode != 'SCIPION_DEBUG' or envVarOn('SCIPION_DEBUG'):
         try:
             from rpdb2 import start_embedded_debugger
+            print "Starting debugger..."
             start_embedded_debugger(password)
         except Exception:
             print "Error importing rpdb2 debugging module, consider installing winpdb."
@@ -591,3 +592,16 @@ def getFreePort(basePort=0,host=''):
             print e
             return 0
         return port
+    
+def readProperties(propsFile):
+    myprops = {}
+    with open(propsFile, 'r') as f:
+        for line in f:
+            line = line.rstrip() #removes trailing whitespace and '\n' chars
+    
+            if "=" not in line: continue #skips blanks and comments w/o =
+            if line.startswith("#"): continue #skips comments which contain =
+    
+            k, v = line.split("=", 1)
+            myprops[k] = v
+    return myprops

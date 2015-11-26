@@ -49,6 +49,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
         this.params = params;
         XmippApplication.addInstance(true);
         initComponents();
+        XmippWindowUtil.setScipionImageIcon(this);
 	}
 
 
@@ -60,7 +61,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		this.params = params;
 		XmippApplication.addInstance(true);
 		initComponents();
-		
+		XmippWindowUtil.setScipionImageIcon(this);
 	}
         
     protected void initComponents()
@@ -88,6 +89,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
         pixelslb = new Label("                                                ");
         add(pixelslb);
         
+
     }
 
         @Override
@@ -100,6 +102,8 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	public void loadData()
 	{
 		getCanvas().loadData(this);
+		if(params != null)//otherwise is picker window
+			menu.applyFilters();
 	}
 
 	@Override
@@ -194,12 +198,12 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
             
         super.windowClosing(e);
         myClose();
+        imp.flush();
 	}
         
     public synchronized void myClose()
     {
     	closing = true;
-    	
     	XmippApplication.removeInstance(true);
     	if(maskfr != null)
     	{

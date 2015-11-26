@@ -42,7 +42,7 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
         files={
                'aligned_particles': 'gold/aligned_particles.sqlite',
                'allMics': 'micrographs/*.mrc',
-               'boxingDir': 'pickingEman',
+               'boxingDir': 'pickingEman/info',
                'boxingFile': 'pickingEman/info/BPV_1386_info.json',
                'coordsGoldSqlite': 'gold/coordinates_gold.sqlite',
                'ctfGold': 'gold/xmipp_ctf.ctfparam',
@@ -247,4 +247,7 @@ DataSet(name='SymVirus', folder='SymVirus',
                'large_vol_half_th' : 'large_vol_half_th.vol',
                'small_vol_half_th' : 'small_vol_half_th.vol'
               }
+       )
+
+DataSet(name='xmipp_programs', folder='xmipp_programs', files={}
        )

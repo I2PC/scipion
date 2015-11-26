@@ -56,7 +56,10 @@ if __name__ == '__main__':
             projName = projects[0].projName
             
         projPath = manager.getProjectPath(projName)
-        projWindow = ProjectWindow(projPath)
+        try:
+            projWindow = ProjectWindow(projPath)
+        except Exception as e:
+            sys.exit(e)
         projWindow.show()
     else:
         print "usage: pw_project.py PROJECT_NAME"

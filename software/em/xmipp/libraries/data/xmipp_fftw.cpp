@@ -772,9 +772,26 @@ void correlation_matrix(const MultidimArray<double> & m1,
                         CorrelationAux &aux,
                         bool center)
 {
-    // Compute the Fourier Transforms
     aux.transformer1.FourierTransform((MultidimArray<double> &)m1, aux.FFT1, false);
     correlation_matrix(aux.FFT1,m2,R,aux,center);
+}
+
+void correlationInFourier(const MultidimArray< std::complex< double > > & FF1, MultidimArray< std::complex< double > > & FF2, double dSize)
+{
+    // Multiply FFT1 * FFT2'
+    double mdSize=-dSize;
+    double a, b, c, d; // a+bi, c+di
+    double *ptrFFT2=(double*)MULTIDIM_ARRAY(FF2);
+    double *ptrFFT1=(double*)MULTIDIM_ARRAY(FF1);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FF1)
+    {
+        a=*ptrFFT1++;
+        b=*ptrFFT1++;
+        c=(*ptrFFT2)*dSize;
+        d=(*(ptrFFT2+1))*mdSize;
+        *ptrFFT2++ = a*c-b*d;
+        *ptrFFT2++ = b*c+a*d;
+    }
 }
 
 
@@ -786,31 +803,25 @@ void correlation_matrix(const MultidimArray< std::complex< double > > & FF1,
 {
     R=m2;
     aux.transformer2.FourierTransform(R, aux.FFT2, false);
-
-    // Multiply FFT1 * FFT2'
-    double dSize=MULTIDIM_SIZE(R);
-    double mdSize=-dSize;
-    double a, b, c, d; // a+bi, c+di
-    double *ptrFFT2=(double*)MULTIDIM_ARRAY(aux.FFT2);
-    double *ptrFFT1=(double*)MULTIDIM_ARRAY(FF1);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FF1)
-    {
-        a=*ptrFFT1++;
-        b=*ptrFFT1++;
-        c=(*ptrFFT2)*dSize;
-        d=(*(ptrFFT2+1))*mdSize;
-        *ptrFFT2++ = a*c-b*d;
-        *ptrFFT2++ = b*c+a*d;
-    }
-
-    // Invert the product, in order to obtain the correlation image
+    correlationInFourier(FF1,aux.FFT2,MULTIDIM_SIZE(R));
     aux.transformer2.inverseFourierTransform();
-
-    // Center the resulting image to obtain a centered autocorrelation
     if (center)
         CenterFFT(R, true);
 }
 
+void correlation_matrix(const MultidimArray< std::complex< double > > & FFT1,
+                        const MultidimArray< std::complex< double > > & FFT2,
+                        MultidimArray<double>& R,
+                        CorrelationAux &aux,
+                        bool center)
+{
+	aux.transformer2.setReal(R);
+	aux.transformer2.setFourier(FFT2);
+    correlationInFourier(FFT1,aux.transformer2.fFourier,MULTIDIM_SIZE(R));
+    aux.transformer2.inverseFourierTransform();
+    if (center)
+        CenterFFT(R, true);
+}
 
 void fast_correlation_vector(const MultidimArray< std::complex<double> > & FFT1,
                         const MultidimArray< std::complex<double> > & FFT2,

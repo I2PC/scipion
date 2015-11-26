@@ -71,7 +71,7 @@ class XmippGeometricalMask3D:
         geo = self.geo.get()
         
         # Create the mask
-        args = '--mask '
+        args = ' --mask '
         r = self.radius.get()
         if r == -1:
             r = size / 2
@@ -190,7 +190,7 @@ class XmippGeometricalMask2D:
         geo = self.geo.get()
         
         # Create the mask
-        args = '--mask '
+        args = ' --mask '
         r = self.radius.get()
         if r == -1:
             r = size / 2

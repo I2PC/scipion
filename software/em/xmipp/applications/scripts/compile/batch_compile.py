@@ -28,8 +28,6 @@
 
 import os
 from pyworkflow.em.packages.xmipp3 import XmippScript
-from protlib_utils import reportError 
-from protlib_filesystem import getXmippPath
 
 class ScriptCompile(XmippScript):
     def __init__(self):
@@ -47,17 +45,15 @@ class ScriptCompile(XmippScript):
 
     def run(self):        
         fn = self.getParam('-i')
-        from os.path import splitext
+        from os.path import splitext, join
         [fnBase,ext]=splitext(fn)
         if ext!=".cpp":
             reportError(fn+" is not a .cpp file")
         command='g++ ';
         if self.checkParam("--debug"):
             command +="-g -pg";
-        xmippDir=getXmippPath();
-        if xmippDir=="":
-           reportError("$XMIPP_HOME is not set in the environment")
-	scipionDir=os.environ['SCIPION_HOME']
+        scipionDir=os.environ['SCIPION_HOME']
+        xmippDir=join(scipionDir,"software","em","xmipp")
         command+=" -o "+fnBase+" "+fn+" -O -D_LINUX "+\
                  "-L"+xmippDir+"/lib "+\
                  "-I"+xmippDir+"/libraries "+\

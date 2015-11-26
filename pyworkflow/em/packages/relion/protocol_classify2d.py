@@ -82,10 +82,10 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
     def _fillClassesFromIter(self, clsSet, iteration):
         """ Create the SetOfClasses2D from a given iteration. """
         self._loadClassesInfo(iteration)
-        dataStar = self._getFileName('data', iter=self._lastIter())
+        dataStar = self._getFileName('data', iter=iteration)
         clsSet.classifyItems(updateItemCallback=self._updateParticle,
                              updateClassCallback=self._updateClass,
-                             itemDataIterator=md.iterRows(dataStar))
+                             itemDataIterator=md.iterRows(dataStar, sortByLabel=md.RLN_IMAGE_ID))
         
     def createOutputStep(self):
         partSet = self.inputParticles.get()       

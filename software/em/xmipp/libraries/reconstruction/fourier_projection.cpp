@@ -36,22 +36,23 @@ FourierProjector::FourierProjector(MultidimArray<double> &V, double paddFactor, 
     produceSideInfo();
 }
 
-void FourierProjector::project(double rot, double tilt, double psi)
+void FourierProjector::project(double rot, double tilt, double psi, const MultidimArray<double> *ctf)
 {
     double freqy, freqx;
     std::complex< double > f;
     Euler_angles2matrix(rot,tilt,psi,E);
 
     projectionFourier.initZeros();
-    double shift=-FIRST_XMIPP_INDEX(volumeSize);
-    double xxshift = -2 * PI * shift / volumeSize;
     double maxFreq2=maxFrequency*maxFrequency;
     double volumePaddedSize=XSIZE(VfourierRealCoefs);
+    int Xdim=(int)XSIZE(VfourierRealCoefs);
+    int Ydim=(int)YSIZE(VfourierRealCoefs);
+    int Zdim=(int)ZSIZE(VfourierRealCoefs);
+
     for (size_t i=0; i<YSIZE(projectionFourier); ++i)
     {
         FFT_IDX2DIGFREQ(i,volumeSize,freqy);
         double freqy2=freqy*freqy;
-        double phasey=(double)(i) * xxshift;
 
         double freqYvol_X=MAT_ELEM(E,1,0)*freqy;
         double freqYvol_Y=MAT_ELEM(E,1,1)*freqy;
@@ -96,14 +97,85 @@ void FourierProjector::project(double rot, double tilt, double psi)
                 double kVolume=freqvol_Z*volumePaddedSize;
                 double iVolume=freqvol_Y*volumePaddedSize;
                 double jVolume=freqvol_X*volumePaddedSize;
-                c=VfourierRealCoefs.interpolatedElementBSpline3D(jVolume,iVolume,kVolume);
-                d=VfourierImagCoefs.interpolatedElementBSpline3D(jVolume,iVolume,kVolume);
+
+                // Commented for speed-up, the corresponding code is below
+                // c=VfourierRealCoefs.interpolatedElementBSpline3D(jVolume,iVolume,kVolume);
+                // d=VfourierImagCoefs.interpolatedElementBSpline3D(jVolume,iVolume,kVolume);
+
+                // The code below is a replicate for speed reasons of interpolatedElementBSpline3D
+                double z=kVolume;
+                double y=iVolume;
+                double x=jVolume;
+
+                // Logical to physical
+                z -= STARTINGZ(VfourierRealCoefs);
+                y -= STARTINGY(VfourierRealCoefs);
+                x -= STARTINGX(VfourierRealCoefs);
+
+                int l1 = (int)ceil(x - 2);
+                int l2 = l1 + 3;
+
+                int m1 = (int)ceil(y - 2);
+                int m2 = m1 + 3;
+
+                int n1 = (int)ceil(z - 2);
+                int n2 = n1 + 3;
+
+                c = d = 0.0;
+                double aux;
+                for (int nn = n1; nn <= n2; nn++)
+                {
+                    int equivalent_nn=nn;
+                    if      (nn<0)
+                        equivalent_nn=-nn-1;
+                    else if (nn>=Zdim)
+                        equivalent_nn=2*Zdim-nn-1;
+                    double yxsumRe = 0.0, yxsumIm = 0.0;
+                    for (int m = m1; m <= m2; m++)
+                    {
+                        int equivalent_m=m;
+                        if      (m<0)
+                            equivalent_m=-m-1;
+                        else if (m>=Ydim)
+                            equivalent_m=2*Ydim-m-1;
+                        double xsumRe = 0.0, xsumIm = 0.0;
+                        for (int l = l1; l <= l2; l++)
+                        {
+                            double xminusl = x - (double) l;
+                            int equivalent_l=l;
+                            if      (l<0)
+                                equivalent_l=-l-1;
+                            else if (l>=Xdim)
+                                equivalent_l=2*Xdim-l-1;
+                            double CoeffRe = (double) DIRECT_A3D_ELEM(VfourierRealCoefs,equivalent_nn,equivalent_m,equivalent_l);
+                            double CoeffIm = (double) DIRECT_A3D_ELEM(VfourierImagCoefs,equivalent_nn,equivalent_m,equivalent_l);
+                            BSPLINE03(aux,xminusl);
+                            xsumRe += CoeffRe * aux;
+                            xsumIm += CoeffIm * aux;
+                        }
+
+                        double yminusm = y - (double) m;
+                        BSPLINE03(aux,yminusm);
+						yxsumRe += xsumRe * aux;
+						yxsumIm += xsumIm * aux;
+                    }
+
+                    double zminusn = z - (double) nn;
+                    BSPLINE03(aux,zminusn);
+					c += yxsumRe * aux;
+					d += yxsumIm * aux;
+                }
             }
 
             // Phase shift to move the origin of the image to the corner
-            double dotp = (double)(j) * xxshift + phasey;
-            double a,b;
-            sincos(dotp,&b,&a);
+            double a=DIRECT_A2D_ELEM(phaseShiftImgA,i,j);
+            double b=DIRECT_A2D_ELEM(phaseShiftImgB,i,j);
+            if (ctf!=NULL)
+            {
+            	double ctfij=DIRECT_A2D_ELEM(*ctf,i,j);
+            	a*=ctfij;
+            	b*=ctfij;
+            }
 
             // Multiply Fourier coefficient in volume times phase shift
             double ac = a * c;
@@ -116,8 +188,6 @@ void FourierProjector::project(double rot, double tilt, double psi)
             *(ptrI_ij+1) = ab_cd - ac - bd;
         }
     }
-    //VfourierRealCoefs.clear();
-    //VfourierImagCoefs.clear();
     transformer2D.inverseFourierTransform();
 }
 
@@ -159,11 +229,28 @@ void FourierProjector::produceSideInfo()
     projection().initZeros(volumeSize,volumeSize);
     projection().setXmippOrigin();
     transformer2D.FourierTransform(projection(),projectionFourier,false);
+
+    // Calculate phase shift terms
+    phaseShiftImgA.initZeros(projectionFourier);
+    phaseShiftImgB.initZeros(projectionFourier);
+    double shift=-FIRST_XMIPP_INDEX(volumeSize);
+    double xxshift = -2 * PI * shift / volumeSize;
+    for (size_t i=0; i<YSIZE(projectionFourier); ++i)
+    {
+        double phasey=(double)(i) * xxshift;
+        for (size_t j=0; j<XSIZE(projectionFourier); ++j)
+        {
+            // Phase shift to move the origin of the image to the corner
+            double dotp = (double)(j) * xxshift + phasey;
+            sincos(dotp,&DIRECT_A2D_ELEM(phaseShiftImgB,i,j),&DIRECT_A2D_ELEM(phaseShiftImgA,i,j));
+        }
+    }
 }
 
-void projectVolume(FourierProjector &projection, Projection &P, int Ydim, int Xdim,
-                   double rot, double tilt, double psi)
+void projectVolume(FourierProjector &projector, Projection &P, int Ydim, int Xdim,
+                   double rot, double tilt, double psi, const MultidimArray<double> *ctf)
 {
-    projection.project(rot,tilt,psi);
-    P() = projection.projection();
+	projector.project(rot,tilt,psi,ctf);
+    P() = projector.projection();
 }
+

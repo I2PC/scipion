@@ -131,6 +131,11 @@ public class GalleryData {
         return false;
     }
 
+    public boolean isVolumeMd()
+    {
+    	return isVolumeMd;
+    }
+    
     public Integer getModelRows()
     {
         return rows;
@@ -167,7 +172,9 @@ public class GalleryData {
     	if (vol.contains("@"))
     		file = file.substring(file.lastIndexOf("@") + 1);
     	if(new File(file).exists())
+    	{
     		selectedVolFn = vol;
+    	}
     	else
     		throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(file));
     }
@@ -178,6 +185,8 @@ public class GalleryData {
     }
 
     public void setModelDim(Integer rows, Integer cols) {
+    	if(cols != null && cols == 0)
+    		throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("columns", 0));
         this.rows = rows;
         this.columns = cols;
     }
@@ -384,6 +393,7 @@ public class GalleryData {
         
         if (!md.isColumnFormat() ) {
             mode = Mode.TABLE_MD;
+            renderImages = false;
         }
 
         if (isGalleryMode()) {
@@ -399,6 +409,8 @@ public class GalleryData {
 			// Try to find at least one image to render
             // and take dimensions from that
             for (int i = 0; i < ids.length && image == null; ++i) {
+            	if(i == 100)//after 100 items if there is no image available break 
+            		break;
                 imageFn = md.getValueString(renderLabel, ids[i]);
                 if(imageFn != null)
                     imageFn = Filename.findImagePath(imageFn , filename, true);
@@ -428,7 +440,6 @@ public class GalleryData {
                         mode = Mode.GALLERY_VOL;
                     
                     isVolumeMd = true;
-
                     if (selectedVolFn.isEmpty()) {
                         selectedVolFn = imageFn;
                     }
@@ -567,6 +578,8 @@ public class GalleryData {
         String imageFn, mddir = md.getBaseDir();
         for (int i = 0; i < ids.length; ++i)
         {
+        	if( i == 100)
+        		break;
             imageFn = getValueFromLabel(i, ci.label);
             if(imageFn != null)
             {
@@ -645,24 +658,26 @@ public class GalleryData {
      *
      * @return
      */
-    public ImageGalleryTableModel createModel() {
+    public ImageGalleryTableModel createModel(boolean[] selection) {
+    	
         try {
             switch (mode) {
                 case GALLERY_VOL:
                     return new VolumeGalleryTableModel(this);
                 case GALLERY_MD:
                     if (md.size() > 0 && hasRenderLabel()) {
-                        return new MetadataGalleryTableModel(this);
+                    	
+                        return new MetadataGalleryTableModel(this, selection);
                     }
                 // else fall in the next case
                 case TABLE_MD:
                     mode = Mode.TABLE_MD; // this is necessary when coming from
                     // previous case
                     if (!md.isColumnFormat()) {
-                        return new MetadataRowTableModel(this);
+                        return  new MetadataRowTableModel(this);
                     }
 
-                    return new MetadataTableModel(this);
+                    return new MetadataTableModel(this, selection);
                 
             }
         } catch (Exception e) {
@@ -1149,6 +1164,8 @@ public class GalleryData {
     public ColumnInfo getColumnInfo(int col) {
         return labels.get(col);
     }
+    
+    
 
     public String getValueFromCol(int index, int col) {
         if (!isColumnFormat()) {
@@ -1672,16 +1689,18 @@ public class GalleryData {
         }
 
         ColumnInfo aux;
-        int j;
+        int j, k = 0;//k index added to avoid errors if some order columns are not present. This way order index is k not i
         for (int i = 0; i < orderLabels.length; i++) {
+        	j = 0;
             for (ColumnInfo ci : labels) {
                 if (ci.labelName.equals(orderLabels[i])) {
 
-                    aux = labels.get(i);
-                    j = labels.indexOf(ci);
-                    labels.set(i, ci);
+                    aux = labels.get(k);
+                    labels.set(k, ci);
                     labels.set(j, aux);
+                    k ++;
                 }
+                j ++;
             }
         }
     }
@@ -1749,16 +1768,17 @@ public class GalleryData {
         }
     }
      
-    public Geometry getGeometry(long id)
+    public Geometry getGeometry(long id, ColumnInfo ci)
     {
-        return getGeometry(id, "2D");
+        return getGeometry(id, "2D", ci);
     }
 
     
-    public Geometry getGeometry(long id, String type)
+    public Geometry getGeometry(long id, String type, ColumnInfo ci)
     {
-        
-        double shiftx, shifty, psiangle;
+        if(ci.label != MDLabel.MDL_IMAGE)
+        	return null;
+        double shiftx, shifty, psiangle, scaleFactor=1;
         boolean flip;
         
         if(md.containsLabel(MetaData.GEOMETRY_LABELS))
@@ -1767,6 +1787,9 @@ public class GalleryData {
 	        shifty = md.getValueDouble(MDLabel.MDL_SHIFT_Y, id);
 	        psiangle = md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
 	        flip = md.getValueBoolean(MDLabel.MDL_FLIP, id);
+	        
+	        if(md.containsLabel(MDLabel.MDL_SCALE))
+	        	scaleFactor = md.getValueDouble(MDLabel.MDL_SCALE, id);
         }
         else if(md.containsLabel(MetaData.GEOMETRY_RELION_LABELS))
         {
@@ -1778,7 +1801,7 @@ public class GalleryData {
         else
         	return null;
         
-        return new Geometry(shiftx, shifty, psiangle, flip);
+        return new Geometry(shiftx, shifty, psiangle, flip, scaleFactor);
     }
         
 	public void setRenderLabels(String[] renderLabels) {
@@ -1827,6 +1850,10 @@ public class GalleryData {
        return null;
    }
    
+   public MetaData getImagesMd() {
+	   return getImagesMd(null, false);
+   }
+   
    public MetaData getImagesMd(boolean[] selection, boolean selected) {
         int idlabel = getRenderLabel();
         MDRow mdRow;
@@ -1841,7 +1868,7 @@ public class GalleryData {
                     imageid = imagesmd.addObject();
                     if (useGeo()) 
                     {
-                    	Geometry geo = getGeometry(id);
+                    	Geometry geo = getGeometry(id, ciFirstRender);
                         mdRow = new MDRow();
                         //md.getRow(mdRow, id);//copy geo info in mdRow
                         mdRow.setValueDouble(MDLabel.MDL_SHIFT_X, geo.shiftx);

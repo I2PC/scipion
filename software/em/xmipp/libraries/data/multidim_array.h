@@ -2553,21 +2553,47 @@ public:
         int iF=FINISHINGY(*this);
         int jF=FINISHINGX(*this);
 
-#define ASSIGNVAL(d,i,j) \
+#define ASSIGNVAL2D(d,i,j) \
      if ((j) < j0 || (j) > jF || (i) < i0 || (i) > iF) \
       d=outside_value;\
         else \
          d=A2D_ELEM(*this, i, j);
 
         double d00, d10, d11, d01;
-        ASSIGNVAL(d00,y0,x0);
-        ASSIGNVAL(d01,y0,x1);
-        ASSIGNVAL(d10,y1,x0);
-        ASSIGNVAL(d11,y1,x1);
+        ASSIGNVAL2D(d00,y0,x0);
+        ASSIGNVAL2D(d01,y0,x1);
+        ASSIGNVAL2D(d10,y1,x0);
+        ASSIGNVAL2D(d11,y1,x1);
 
         double d0 = LIN_INTERP(fx, d00, d01);
         double d1 = LIN_INTERP(fx, d10, d11);
         return (T) LIN_INTERP(fy, d0, d1);
+    }
+
+    /** Interpolates the value of the nth 1D matrix M at the point (x)
+     *
+     * Bilinear interpolation. (x) is in logical coordinates.
+     */
+    T interpolatedElement1D(double x, T outside_value = (T) 0) const
+    {
+        int x0 = floor(x);
+        double fx = x - x0;
+        int x1 = x0 + 1;
+
+        int j0=STARTINGX(*this);
+        int jF=FINISHINGX(*this);
+
+#define ASSIGNVAL1D(d,j) \
+     if ((j) < j0 || (j) > jF) \
+      d=outside_value;\
+        else \
+         d=A1D_ELEM(*this, j);
+
+        double d0, d1;
+        ASSIGNVAL1D(d0,x0);
+        ASSIGNVAL1D(d1,x1);
+
+        return (T) LIN_INTERP(fx, d0, d1);
     }
 
     /** Interpolates the value of the nth 3D matrix M at the point (x,y,z) knowing

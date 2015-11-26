@@ -25,9 +25,6 @@ if len(sys.argv) != 3:
 projName = sys.argv[1]
 searchDir = sys.argv[2]
 
-#!/usr/bin/env python
-
-
 # Create a new project
 manager = Manager()
 

@@ -175,7 +175,7 @@ class ProtFrmAlign(em.ProtAlignVolume):
             if self.inputReference.get() is None:
                 errors.append('Please select the input reference.')
         else:
-            errors.append('Not implemented!!!')
+            errors.append('Alignment without reference not implemented!!!')
             
             
         inputVols = self.inputVolumes.get()

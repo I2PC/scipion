@@ -136,7 +136,6 @@ class ProtImportParticles(ProtImportImages):
         if self.importFrom == self.IMPORT_FROM_EMX:
             from pyworkflow.em.packages.emxlib import EmxImport
             self.importFilePath = self.emxFile.get('').strip()
-            print "getImportClass", self.alignTypeList[self.alignType.get()]
             return EmxImport(self, self.importFilePath,
                                    self.alignTypeList[self.alignType.get()])
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
@@ -223,11 +222,8 @@ class ProtImportAverages(ProtImportParticles):
         return choices
             
     def _defineAcquisitionParams(self, form):
-        form.addParam('samplingRate', FloatParam, default=1.,
+        form.addParam('samplingRate', params.FloatParam, default=1.,
                    label=Message.LABEL_SAMP_RATE)
         group = ProtImportImages._defineAcquisitionParams(self, form)
         group.expertLevel.set(LEVEL_ADVANCED)
         
-        # Change some params properties
-        patternParam = form.getParam('filesPattern')
-        patternParam.condition.set('0')

@@ -459,6 +459,9 @@ public class MetaData {
 	/** Get the average and std images, result is left on input image */
 	public native void getStatsImages(ImageGeneric imageAvg,
 			ImageGeneric imageStd, boolean applyGeo, boolean wrap, int label);
+
+	public native void writeMdToStack(String filename, boolean applyGeo, boolean wrap, int label);
+
         
    	public native void getPCAbasis(ImageGeneric basis, int label);
 
@@ -557,37 +560,37 @@ public class MetaData {
 		return false;
 	}
         
-        public String getCTFFile(long id)
-        {
-            return getValueString(MDLabel.MDL_CTF_MODEL, id);
+    public String getCTFFile(long id)
+    {
+        return getValueString(MDLabel.MDL_CTF_MODEL, id);
+    }
+    
+    public EllipseCTF getEllipseCTF(long id) {
+        return getEllipseCTF(id, -1);
+    }
+    
+    public EllipseCTF getEllipseCTF(long id, int D) {
+        MetaData md = new MetaData(getCTFFile(id));
+        try {
+            double Q0, Cs, Ts, kV, downsampleFactor, defU, defV, defAngle;
+
+            Q0 = md.getValueDouble(MDLabel.MDL_CTF_Q0, id);
+            Cs = md.getValueDouble(MDLabel.MDL_CTF_CS, id);
+            downsampleFactor = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, id);
+            Ts = md.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, id) * downsampleFactor;
+            kV = md.getValueDouble(MDLabel.MDL_CTF_VOLTAGE, id);
+
+            defU = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSU, id);
+            defV = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, id);
+            defAngle = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUS_ANGLE, id);
+
+            return new EllipseCTF(id, Q0, Cs, downsampleFactor, Ts, kV, defU, defV, defAngle, D);
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+            throw new IllegalArgumentException(ex);
         }
         
-        public EllipseCTF getEllipseCTF(long id) {
-            return getEllipseCTF(id, -1);
-        }
-        
-        public EllipseCTF getEllipseCTF(long id, int D) {
-            MetaData md = new MetaData(getCTFFile(id));
-            try {
-                double Q0, Cs, Ts, kV, downsampleFactor, defU, defV, defAngle;
-
-                Q0 = md.getValueDouble(MDLabel.MDL_CTF_Q0, id);
-                Cs = md.getValueDouble(MDLabel.MDL_CTF_CS, id);
-                downsampleFactor = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, id);
-                Ts = md.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, id) * downsampleFactor;
-                kV = md.getValueDouble(MDLabel.MDL_CTF_VOLTAGE, id);
-
-                defU = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSU, id);
-                defV = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, id);
-                defAngle = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUS_ANGLE, id);
-
-                return new EllipseCTF(id, Q0, Cs, downsampleFactor, Ts, kV, defU, defV, defAngle, D);
-            } catch (Exception ex) {
-                IJ.error(ex.getMessage());
-                throw new IllegalArgumentException(ex);
-            }
-            
-        }
+    }
         
         
     public String getPSDFile(long id) {
