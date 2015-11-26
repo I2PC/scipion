@@ -126,7 +126,7 @@ function createServProject(elm) {
 	var projName = "map"+randomString(16, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
 	
-	var projectUrl = "http://" + document.domain + getSubDomainURL() + "/m_content/?p="+ projName
+	var projectUrl = "http://" + document.domain + getSubDomainURL() + "/content/?p="+ projName
 	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
 	if(selected != undefined){
 		URL += "&testData="+selected;
