@@ -80,6 +80,9 @@ public:
     // Matrix for the Eigen values
     Matrix1D<double> w;
 public:
+    /// Destructor
+    ~PCAMahalanobisAnalyzer();
+
     /// Clear
     inline void clear()
     {
@@ -125,6 +128,9 @@ public:
 
     /// Project on basis
     void projectOnPCABasis(Matrix2D<double> &CtY);
+
+    /// Reconstruct from PCA  basis
+    void reconsFromPCA(const Matrix2D<double> &CtY, std::vector< MultidimArray<float> > &recons);
 
     /** Evaluate Zscore of the vectors stored with Mahalanobis distance.
      * NPCA is the dimension of the dimensionally reduced vectors before Mahalanobis

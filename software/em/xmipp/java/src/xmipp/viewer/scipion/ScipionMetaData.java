@@ -781,9 +781,11 @@ public class ScipionMetaData extends MetaData {
         }
     }
     
-    public ColumnInfo getGeoMatrixColumn()
+    public ColumnInfo getGeoMatrixColumn(ColumnInfo ci)
     {
-        String column = isClassificationMd()? "_representative._transform._matrix" : "_transform._matrix";
+    	String column = "_transform._matrix";
+    	if(ci.labelName.contains("."))
+    		column = ci.labelName.substring(0, ci.labelName.lastIndexOf(".") + 1) + column;
         return getColumnInfo(column);
     }
     

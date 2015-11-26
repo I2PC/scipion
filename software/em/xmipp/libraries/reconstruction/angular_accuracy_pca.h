@@ -23,35 +23,38 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef MULTIREFERENCE_ALIGNEABILITY_H_
-#define MULTIREFERENCE_ALIGNEABILITY_H_
-#define PI 3.14159265
+#ifndef ANGULAR_ACCURACY_PCA_H_
+#define ANGULAR_ACCURACY_PCA_H_
 
 #include <data/xmipp_program.h>
-#include "validation_nontilt.h"
 #include <math.h>
-#include <data/metadata.h>
-#include <string.h>
-#include <data/mask.h>
+#include <data/basic_pca.h>
+#include <data/projection.h>
 
 
-class MultireferenceAligneability: public XmippProgram
+/**@defgroup Assign accuracy to angular assignment by pca
+   @ingroup ReconsLibrary */
+//@{
+class ProgAngularAccuracyPCA: public XmippProgram
 {
 
 
 public:
     /** Filenames */
-    FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery;
-    bool donNotUseWeights;
-    double significance_noise;
+    FileName fnPhantom, fnNeighbours, fnResiduals, fnReconstructed, fnOut;
 
-    //fsig, fnInit;
+    Image<double> phantomVol;
 
-private:
-    size_t Xdim,Ydim,Zdim,Ndim;
+    MetaData mdPartial;
 
-    /** Sampling rate of the volume and projections */
-    //double sampling_rate   //COMMENTED
+    size_t rank, Nprocessors;
+
+    PCAMahalanobisAnalyzer pca;
+
+	size_t newXdim;
+
+	size_t newYdim;
+
 
 
 public:
@@ -62,17 +65,18 @@ public:
 
     void run();
 
-private:
+    void obtainPCAs(MetaData &SF, String fnTempResiduals, String fnTempReconstructed, size_t numPCAs);
 
-    void write_projection_file();
+public:
 
-    void calc_sumu(const MetaData & tempMd, double & sum_W);
+    ProgAngularAccuracyPCA();
 
-    void calc_sumw(const size_t num, double & sumw);
+    /// Gather alignment
+    virtual void gatherResults() {}
 
-    void calc_sumw2(const size_t num, double & sumw, const MetaData & mdGallery);
+    /// Synchronize with other processors
+    virtual void synchronize() {}
 
 };
 
-
-#endif /* MULTIREFERENCE_ALIGNEABILITY_H_ */
+#endif /* ANGULAR_ACCURACY_PCA_H_ */
