@@ -42,12 +42,19 @@ class GrigorieffLabImportCTF():
         ctf.setMicrograph(mic)
         readCtfModel(ctf, fileName, ctf4=ctffindOutputVersion(fileName)==4)
         
+        # Try to find the given PSD file associated with the cttfind log file
+        # we handle special cases of .ctf extension and _ctffindX prefix for Relion runs
+        fnBase = pwutils.removeExt(fileName)
         for suffix in ['_psd.mrc', '.mrc', '.ctf']:
-            psdFile = pwutils.removeExt(fileName) + suffix
-            if os.path.exists(psdFile):
-                if psdFile.endswith('.ctf'):
-                    psdFile += ':mrc'
-                ctf.setPsdFile(psdFile)
+            psdPrefixes = [fnBase, 
+                           fnBase.replace('_ctffind3', ''),
+                           fnBase.replace('_ctffind4', '')]
+            for prefix in psdPrefixes:
+                psdFile =  prefix + suffix
+                if os.path.exists(psdFile):
+                    if psdFile.endswith('.ctf'):
+                        psdFile += ':mrc'
+                    ctf.setPsdFile(psdFile)
         return ctf
     
     
