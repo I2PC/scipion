@@ -3,10 +3,11 @@
 ; -------------- Parameters --------------
 x20 = 4   ; desired number of classes
 x27 = 9   ; number of eigenfactors to use
+x30 = 0   ; number of threads to use, 0 = use all
 
 ; ---------------- Inputs ----------------
 fr l
-[cas_prefix]CA/cas                        ; correspondence-analysis output prefix
+[cas_file]CA/cas_IMC                      ; correspondence-analysis output file
 fr l
 [particles]stkfiltered@*****              ; particle file-pattern
 
@@ -31,14 +32,14 @@ echo "if(! -d [class_dir]) mkdir [class_dir]"|csh
 
 md
 set mp
-0
+x30
 
 vm
 echo "Running k-means classification"; date
 
 ; run k-means classification
 cl km x21,x22,x23,x24,x25
-[cas_prefix]_IMC
+[cas_file]
 x20             ; number of classes
 (1-x27)         ; eigenfactors to use
 (0)             ; no factor weighting
@@ -85,6 +86,9 @@ echo; echo "Done"; date
 en d
 
 ; Modified 2014-04-11
+;    2015-11-19 (jmrt) -- Using cas_file instead of cas_prefix 
+;                         to allow _SEQ to be used, added x30
+;                      -- Used x30 to pass number of thread, all by default (0);
 ;    2014-04-11 (trs) -- Using stacks
 ;    2008-04-06 (trs) -- added doc file with class size
 ;    2005-08-24 (trs) -- adapted from classify.spi

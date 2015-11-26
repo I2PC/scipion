@@ -39,5 +39,5 @@ from protocol_bfilter import BsoftProtBfilter
 from wizard import BsoftFilterParticlesWizard
 
 
-from convert import getEnviron
+from convert import getEnviron, getVersion
 _environ = getEnviron()
