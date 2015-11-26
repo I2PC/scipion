@@ -33,7 +33,6 @@ from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam
 from pyworkflow.em.protocol import ProtAnalysis2D
 from pyworkflow.em.data import Class2D, SetOfClasses2D
-from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
 import pyworkflow.em.metadata as md
 # import xmipp
@@ -133,7 +132,7 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         outputSet.copyInfo(inputSet)
         outputSet.copyItems(inputSet, 
                             updateItemCallback=self.updateItemMaxCC,
-                            itemDataIterator=iterMdRows(mdOut, sortByLabel=md.MDL_ITEM_ID))
+                            itemDataIterator=md.iterRows(mdOut, sortByLabel=md.MDL_ITEM_ID))
 
         self._defineOutputs(**{outputName: outputSet})
         self._defineTransformRelation(inputSet, outputSet)

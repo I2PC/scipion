@@ -338,11 +338,11 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getRadialAvg
 (JNIEnv * env, jobject jimg, jobject jradialavg);
 
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeo
-  (JNIEnv * env, jobject jobj, jdouble shiftx, jdouble shifty, jdouble psiangle, jboolean flip, jboolean wrap);
+  (JNIEnv * env, jobject jobj, jdouble shiftx, jdouble shifty, jdouble psiangle, jboolean flip, jboolean wrap, jdouble scaleFactor);
 
 
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeoMatrix
-  (JNIEnv * env, jobject jobj, jstring matrixString, jboolean wrap);
+  (JNIEnv * env, jobject jobj, jstring matrixString, jdouble scaleFactor, jboolean wrap);
 
 
 

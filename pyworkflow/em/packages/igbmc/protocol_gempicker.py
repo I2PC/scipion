@@ -25,7 +25,7 @@
 # **************************************************************************
 
 import os
-from os.path import join
+from os.path import join, exists, basename
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -87,6 +87,10 @@ class ProtGemPicker(em.ProtParticlePicking):
                       label='Min distance between particles (pix)', expertLevel=LEVEL_ADVANCED,
                       help="Minimal distance between the centers of picked "
                            "particles (if 0, use reference image half-size)")
+        form.addParam('boxBorder', params.IntParam, default=0,
+                      label='Min distance from micrograph border (pix)', expertLevel=LEVEL_ADVANCED,
+                      help="Minimal distance between box edge and "
+                           "micrograph border")                           
         form.addParam('maskType', params.EnumParam, 
                       choices=['circular', 'object'], default=0, 
                       display=params.EnumParam.DISPLAY_HLIST,
@@ -136,10 +140,8 @@ class ProtGemPicker(em.ProtParticlePicking):
         args += ' --nPickMax=%d' % self.maxPeaks
         args += ' --boxSize=%d' % self.boxSize
         args += ' --boxDist=%d' % self.boxDist
+        args += ' --boxBorder=%d' % self.boxBorder
         
-        if not self.useGPU:
-            numberOfGPUs = 0
-
         for mode in [0, 1]:
             self._insertFunctionStep('runGemPickerStep', mode, args)
 
@@ -201,10 +203,18 @@ class ProtGemPicker(em.ProtParticlePicking):
                 
     def runGemPickerStep(self, mode, args):
         args += ' --mode=%d' % mode
-        args += ' --nGPU=%d' % self.numberOfGPUs
-        args += ' --nCPU=%d' % self.numberOfThreads
         
-        self.runJob('gEMpicker', args)
+        if self.useGPU:
+            nThreads = 0
+            nGPUs = self.numberOfGPUs.get()
+        else:
+            nThreads = self.numberOfThreads.get()
+            nGPUs = 0
+        
+        args += ' --nGPU=%d' % nGPUs
+        args += ' --nCPU=%d' % nThreads
+        
+        self.runJob(self._getProgram(), args)
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
@@ -237,6 +247,13 @@ class ProtGemPicker(em.ProtParticlePicking):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
+        # Check that the program exists
+        if not exists(self._getProgram()):
+            errors.append("Binary '%s' does not exits. \n"
+                          "Check configuration file: ~/.config/scipion/scipion.conf\n"
+                          "and set GEMPICKER variables properly." % self._getProgram())
+            print "os.environ['GEMPICKER_HOME']", os.environ['GEMPICKER_HOME']
+            print "os.environ['GEMPICKER']", os.environ['GEMPICKER']
         # Check that the number of input masks (in case of non-circular mask)
         # should be the same of the number of references, if greater than one
         if self.maskType == MASK_OBJECT:
@@ -289,3 +306,12 @@ class ProtGemPicker(em.ProtParticlePicking):
         return ['Hoang2013']
     
     #--------------------------- UTILS functions --------------------------------------------------
+    def _getProgram(self):
+        """ Return the program binary that will be used. """
+        if self.useGPU:
+            binary = os.environ['GEMPICKER_CUDA']
+        else:
+            binary = os.environ['GEMPICKER']
+        
+        program = join(os.environ['GEMPICKER_HOME'], basename(binary))
+        return program

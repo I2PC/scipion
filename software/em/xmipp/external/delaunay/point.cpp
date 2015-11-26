@@ -96,7 +96,7 @@ enum Turn_T		check_Turn(struct Point_T *p1, struct Point_T *p2, struct Point_T *
 #ifdef DEBUG_CHECK_TURN
 		printf("RIGHT\n");
 #endif
-		turn = RIGHT;
+		turn = RIGHT_TURN;
 	}
 	// If area is close to zero then points are collinear.
 	else
@@ -273,3 +273,4 @@ TYPE signed_Area(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3)
 
 	return(area);
 }
+

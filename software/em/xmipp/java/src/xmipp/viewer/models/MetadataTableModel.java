@@ -72,18 +72,19 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	public Class getColumnClass(int column) {
 		ColumnInfo ci = visibleLabels.get(column);
-		if (ci.render)
-			return ImageItem.class;
-		else if (ci.isEnable())
-			return Boolean.class;//This way a JCheckBox is rendered
+		Class c = null;
 		try {
-            Class c = MetaData.getClassForType(ci.type);
-			return c;
+			if (ci.render)
+				c = ImageItem.class;
+			else if (ci.isEnable())
+				c = Boolean.class;//This way a JCheckBox is rendered
+			else
+				c = MetaData.getClassForType(ci.type);
                         
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
+		return c;
 	}
 
 	
@@ -100,14 +101,13 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			if (ci.render) {
 				
 				String key = getItemKey(row, ci.label);
-				
 				ImageItem item;
 				// If the element is on cache, just return it
 				if (cache.containsKey(key))
 					item = cache.get(key);
 				else {
 					// If not, create the item and store it for future
-					item = createImageItem(row, ci.label);
+					item = createImageItem(row, ci);
 					cache.put(key, item);
 				}
 				setupItem(item);
@@ -232,6 +232,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	public boolean handleDoubleClick(int row, int col) {
 		try {
+			
 			ColumnInfo ci = visibleLabels.get(col);
 			if (ci.allowRender && data.isImageFile(ci)) {
                 int index = getIndex(row, col);
@@ -242,7 +243,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                     ImagesWindowFactory.openMetadata(file, params, Params.OPENING_MODE_GALLERY);
                 }
                 else
-                    openXmippImageWindow(index, ci.label);
+                    openXmippImageWindow(index, ci);
 				return true;
 			}
             if(data.isChimeraClient())//
@@ -406,7 +407,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 						rend = table.getCellRenderer(0, i);
 						if(rend != null)
 						{
-							Object value = getValueAt(0, i);
+							Object value = table.getValueAt(0, i);
+							//If columns are reordered Renderer may be related to column according to visual order but value is related to real order
 							comp = rend.getTableCellRendererComponent(table, value, false, false, 0, i);
 							width = comp.getPreferredSize().width + 10;
 						}

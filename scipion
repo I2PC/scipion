@@ -285,17 +285,19 @@ def main():
         else:
             option = 'django'
 
-        if option in ['django', 'collectstatic', 'gunicorn']:
-            manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
+        manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
+
+        if option in ['django', 'gunicorn']:
+
             if option == 'django':
                 args = 'runserver 0.0.0.0:8000'
             elif option == 'gunicorn':
                 args = 'run_gunicorn -b 0.0.0.0:%s' % sys.argv[3]
-            elif option == MODE_COLLECTSTATIC:
-                args = 'collectstatic'
-            runScript('%s %s' % (manage, args))
         else:
-            sys.stdout.write("\nERROR: invalid option '%s' for mode %s.\n" % (option, MODE_WEBSERVER))
+            args = option
+            sys.stdout.write("\nPassing %s straight to manage.py in %s mode.\n" % (args, MODE_WEBSERVER))
+
+        runScript('%s %s' % (manage, args))
 
     elif mode == MODE_TESTS or mode == MODE_TEST:
         runScript('scripts/run_tests.py %s' % ' '.join(sys.argv[2:]))
@@ -448,7 +450,7 @@ Arguments:
         runApp(protocolApp, args=sys.argv[3:])
         
     elif mode == MODE_PROTOCOLS:
-        runApp('pw_protocol_list.py')
+        runApp('pw_protocol_list.py', args=sys.argv[2:])
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.

@@ -159,6 +159,20 @@ class XmippProtMask():
             messages.append('filled with %s value' % self.getEnumText('fillType'))
 
         return messages
+    
+    def _validateDimensions(self, inputSetName, inputMaskName, errorMsg):
+        """ Validate that input set (either particles or volumens) have the same
+        dimension than the input mask.
+        """
+        errors = []
+        
+        if self.source == SOURCE_MASK:
+            px, py, _ = self.getAttributeValue(inputSetName).getDim()
+            mx, my, _ = self.getAttributeValue(inputMaskName).getDim()
+            if px != mx or py != my:
+                errors.append(errorMsg)
+                
+        return errors        
         
         
 class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProtMask, XmippGeometricalMask2D):
@@ -197,6 +211,12 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProt
         messages += XmippProtMask._methods(self, XmippGeometricalMask2D)
 
         return messages
+    
+    def _validate(self):
+        return XmippProtMask._validateDimensions(self, 
+                                                 'inputParticles', 'inputMask',
+                                                 'Input particles and mask should '
+                                                 'have same dimensions.')
     
     
 class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, XmippGeometricalMask3D):
@@ -243,3 +263,10 @@ class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, 
         messages += XmippProtMask._methods(self, XmippGeometricalMask3D)
 
         return messages
+    
+    def _validate(self):
+        return XmippProtMask._validateDimensions(self, 
+                                                 'inputVolumes', 'inputMask',
+                                                 'Input volumes and mask should '
+                                                 'have same dimensions.')
+        

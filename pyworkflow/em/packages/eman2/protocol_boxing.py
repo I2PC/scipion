@@ -107,6 +107,15 @@ class EmanProtBoxing(ProtParticlePicking):
                 self.runJob(program, arguments % self._params)
 
     #--------------------------- INFO functions ---------------------------------------------------
+    def _validate(self):
+        errors = []
+        if not eman2.getVersion():
+            errors.append("We couldn't detect EMAN version. ")
+            errors.append("Please, check your configuration file and change EMAN2DIR.")
+            errors.append("The path should contains either '2.11' or '2.12' ")
+            errors.append("to properly detect the version.")
+        return errors
+
     def _warnings(self):
         warnings = []
         firstMic = self.inputMicrographs.get().getFirstItem()

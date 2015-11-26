@@ -908,7 +908,7 @@ class ParamWidget():
         
         def validateSelected(selectedItems):
             for item in selectedItems:
-                if not getattr(item, '_allowSelection', True):
+                if not getattr(item, '_allowsSelection', True):
                     return "Please select object of types: %s" % self.param.pointerClass.get()
 
         title = "Select object of types: %s" % self.param.pointerClass.get()
