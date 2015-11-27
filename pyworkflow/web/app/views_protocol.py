@@ -345,17 +345,6 @@ def updateParam(request, project, protocol, paramName):
     attr = getattr(protocol, paramName)
 #     print "ParamName: %s , Attr: %s" % (paramName, attr)
 
-    # If the param exists
-    if protocol._definition._paramsDict.has_key(paramName):
-        # Get the param object to validate it
-        param = protocol._definition._paramsDict[paramName]
-
-        # Validate the value
-        errors = param.validate(attr)
-
-        if errors:
-            return
-
     if isinstance(attr, PointerList):
         attr.clear()
         valueList = request.POST.getlist(paramName)
@@ -365,6 +354,10 @@ def updateParam(request, project, protocol, paramName):
             attr.append(p)
     else:
         htmlValue = request.POST.get(paramName)
+
+        if not htmlValue:
+            htmlValue = None
+
         if isinstance(attr, Pointer):
             setPointerValue(project, attr, htmlValue, paramName, attr)
         else: 
