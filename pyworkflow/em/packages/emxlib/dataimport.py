@@ -231,13 +231,17 @@ class ProtEmxExport(EMProtocol):
         from convert import exportData
         emxDir = self._getPath('emxData')
         xmlFile = self.outputPrefix.get() + '.emx'
+        
         if self.outputStack == self.STACK_SINGLE:
             binaryFile = self.outputPrefix.get() + '.mrc'
         else:
             binaryFile = None # None for binary file means to output one stack per micrograph
             
-        exportData(emxDir, self.inputSet.get(), ctfSet=self.ctfEstimation.get(), 
-                   xmlFile=xmlFile, binaryFile=binaryFile)
+        exportData(emxDir, 
+                   self.inputSet.get(), 
+                   ctfSet=self.ctfEstimation.get(), 
+                   xmlFile=xmlFile, 
+                   binaryFile=binaryFile)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
