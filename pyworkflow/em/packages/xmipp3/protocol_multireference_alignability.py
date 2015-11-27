@@ -140,8 +140,14 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                                                 volName, volDir,sym,
                                                 prerequisites=[pmStepId2])
             
+
+            pmAngAccId = self._insertFunctionStep('angularAccuracyStep',                                                    
+                                                volName, volDir,i,
+                                                prerequisites=[pmNeigDirId])
             
-            deps.append(pmNeigDirId)
+           
+            
+            deps.append(pmAngAccId)
             
         self._insertFunctionStep('createOutputStep', 
                                  prerequisites=deps)
