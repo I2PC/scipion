@@ -76,6 +76,10 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                       label="Number of Orientations for particle",  
                       help='Parameter to define the number of most similar volume \n' 
                       '    projected images for each projection image')
+
+        form.addParam('angDist', FloatParam, default=10, expertLevel=LEVEL_ADVANCED,
+                      label="Maximum angular neighbourhood distance (degrees)",  
+                      help='Parameter to define the maximum angular neighbourhood distance to determine close particles ')
            
         form.addParam('doNotUseWeights', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Do not use the weights",
@@ -95,6 +99,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         
         sym = self.symmetryGroup.get()
         for i, vol in enumerate(self._iterInputVols()):
+            
             volName = getImageLocation(vol)
             volDir = self._getVolDir(i+1)
             
@@ -120,7 +125,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                                                  prerequisites=[phanProjStepId])
 
 
-            volStepId = self._insertFunctionStep('validationStep', 
+            volStepId = self._insertFunctionStep('angularPrecisionStep', 
                                                  volName, volDir,
                                                  sym,
                                                  prerequisites=[sigStepId2])
@@ -129,8 +134,14 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
             pmStepId2 = self._insertFunctionStep('projectionLibraryStep',                                                    
                                                 volName, volDir,10,
                                                 prerequisites=[volStepId])
+
             
-            deps.append(pmStepId2)
+            pmNeigDirId = self._insertFunctionStep('neighbourhoodDirectionStep',                                                    
+                                                volName, volDir,sym,
+                                                prerequisites=[pmStepId2])
+            
+            
+            deps.append(pmNeigDirId)
             
         self._insertFunctionStep('createOutputStep', 
                                  prerequisites=deps)
@@ -193,8 +204,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
 
         param =     ' -i %s' % self._getPath('reference_particles.stk')
         param +=    ' --mask circular %d' % R
-        self.runJob('xmipp_transform_mask', 
-                    param, numberOfMpi=1,numberOfThreads=1)
+        self.runJob('xmipp_transform_mask',param, numberOfMpi=nproc,numberOfThreads=nT)
                 
  
     def projectionLibraryStep(self, volName, volDir, angularSampling):
@@ -224,7 +234,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
                     params, numberOfMpi=nproc,numberOfThreads=nT)
         copyfile(volDir+'/angles_iter001_00.xmd', self._getExtraPath(anglesPath))
         
-    def validationStep(self, volName,volDir,sym):
+    def angularPrecisionStep(self, volName,volDir,sym):
         makePath(volDir)  
         aFile = self._getExtraPath('exp_particles.xmd')
         aFileRef =self._getExtraPath('ref_particles.xmd')
@@ -251,40 +261,60 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         params = '  --i1 %s' % aFile  
         params += ' --i2 %s' % aFileGallery
         params += ' -o %s' % neighbours
+        params += ' --dist %s' % self.angDist.get()
+        params += ' --sym %s' % sym        
                     
         self.runJob('xmipp_angular_neighbourhood', params,numberOfMpi=1,numberOfThreads=1)
         
+        
+    def angularAccuracyStep(self, volName,volDir,indx):
+         
+        nproc = self.numberOfMpi.get()
+        nT=self.numberOfThreads.get()
+        volPrefix = 'vol%03d_' % (indx+1)
+          
+        neighbours = (volDir+'/neighbours.xmd')
+        
+        params =  ' -i1 %s' %  volName
+        params += ' --i2 %s' % neighbours
+        params += ' -o %s' % self._getExtraPath(volPrefix + 'pruned_particles.xmd')
+                    
+        self.runJob('xmipp_angular_accuracy_pca', params,numberOfMpi=nproc,numberOfThreads=nT)
+        
     def createOutputStep(self):
+##                
         outputVols = self._createSetOfVolumes()
         imgSet = self.inputParticles.get()
-        for i, vol in enumerate(self._iterInputVols()):
-            volume = vol.clone()               
-            volDir = self._getVolDir(i+1)
-            volPrefix = 'vol%03d_' % (i+1)
-            validationMd = self._getExtraPath(volPrefix + 'validation.xmd')
-            moveFile(join(volDir, 'validation.xmd'), 
-                     validationMd)
-            clusterMd = self._getExtraPath(volPrefix + 'clusteringTendency.xmd')
-            moveFile(join(volDir, 'clusteringTendency.xmd'), clusterMd)
-            
-            outImgSet = self._createSetOfParticles(volPrefix)
-            
-            outImgSet.copyInfo(imgSet)
-
-            outImgSet.copyItems(imgSet,
-                                updateItemCallback=self._setWeight,
-                                itemDataIterator=md.iterRows(clusterMd, sortByLabel=md.MDL_ITEM_ID))
-                        
-            mdValidatoin = md.MetaData(validationMd)
-            weight = mdValidatoin.getValue(md.MDL_WEIGHT, mdValidatoin.firstObject())
-            volume.weight = Float(weight)
-            volume.clusterMd = String(clusterMd)
-            volume.cleanObjId() # clean objects id to assign new ones inside the set            
-            outputVols.append(volume)
-            self._defineOutputs(outputParticles=outImgSet)
-        
-        outputVols.setSamplingRate(volume.getSamplingRate())
-        self._defineOutputs(outputVolumes=outputVols)
+##        
+##        for i, vol in enumerate(self._iterInputVols()):
+##        
+##            volume = vol.clone()               
+##            volDir = self._getVolDir(i+1)
+##            volPrefix = 'vol%03d_' % (i+1)
+##            validationMd = self._getExtraPath(volPrefix + 'validation.xmd')
+##            moveFile(join(volDir, 'validation.xmd'), 
+##                     validationMd)
+##            clusterMd = self._getExtraPath(volPrefix + 'clusteringTendency.xmd')
+##            moveFile(join(volDir, 'clusteringTendency.xmd'), clusterMd)
+##            
+##            outImgSet = self._createSetOfParticles(volPrefix)
+##            
+##            outImgSet.copyInfo(imgSet)
+##
+##            outImgSet.copyItems(imgSet,
+##                                updateItemCallback=self._setWeight,
+##                                itemDataIterator=md.iterRows(clusterMd, sortByLabel=md.MDL_ITEM_ID))
+##                        
+##            mdValidatoin = md.MetaData(validationMd)
+##            weight = mdValidatoin.getValue(md.MDL_WEIGHT, mdValidatoin.firstObject())
+##            volume.weight = Float(weight)
+##           volume.clusterMd = String(clusterMd)
+##            volume.cleanObjId() # clean objects id to assign new ones inside the set            
+##            outputVols.append(volume)
+##            self._defineOutputs(outputParticles=outImgSet)
+##        
+##        outputVols.setSamplingRate(volume.getSamplingRate())
+##        self._defineOutputs(outputVolumes=outputVols)
         #self._defineTransformRelation(self.inputVolumes.get(), volume)
         
     #--------------------------- INFO functions -------------------------------------------- 
