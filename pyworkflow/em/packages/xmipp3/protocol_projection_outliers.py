@@ -30,12 +30,13 @@ This sub-package contains wrapper around Projection Outliers Xmipp program
 from math import floor
 from os.path import exists
 
-from pyworkflow.protocol.params import PointerParam
-from pyworkflow.utils.path import cleanPath, moveFile
+from pyworkflow.protocol.params import IntParam, PointerParam
+from pyworkflow.utils.path import cleanPath, createLink
 from pyworkflow.em.protocol import ProtAnalysis2D
 from pyworkflow.em.data import SetOfClasses2D, Image
 from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLocation
 import pyworkflow.em.metadata as md
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
 import xmipp
 from xmipp3 import ProjMatcher
@@ -62,40 +63,43 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         form.addParam('inputVolume', PointerParam, label="Volume to compare images to", important=True,
                       pointerClass='Volume',
                       help='Volume to be used for class comparison')
+        form.addParam('residualSize', IntParam, label="Size of the residuals to analyze", expertLevel=LEVEL_ADVANCED, default=64,
+                      help='The input volume and the input images will be resized to this size before analyzing the residuals.')
         form.addParallelSection(threads=0, mpi=1)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        # Convert input images if necessary
-        self.imgsFn = self._getExtraPath('input_imgs.xmd')
-        vol = self.inputVolume.get()
-        
-        self._insertFunctionStep("convertStep", self.imgsFn)
-        self._insertFunctionStep("produceResiduals", vol.getFileName(), self.imgsFn, vol.getSamplingRate())
+        self._insertFunctionStep("convertStep")
+        self._insertFunctionStep("produceResiduals")
         self._insertFunctionStep("evaluateResiduals")
         self._insertFunctionStep("createOutputStep")
 
     #--------------------------- STEPS functions ---------------------------------------------------
-    def convertStep(self, imgsFn):
+    def convertStep(self):
         from convert import writeSetOfParticles
-        XdimParticles=self._getDimensions()
-        XdimVolume=self.inputVolume.get().getDim()[0]
-        writeSetOfParticles(self.inputSet.get(), self.imgsFn)
-        if XdimParticles!=XdimVolume:
-            fnNewParticles=self._getExtraPath("images.stk")
-            fnNewParticlesXmd=self._getExtraPath("images.xmd")
-            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d --save_metadata_stack %s"%(self.imgsFn,fnNewParticles,XdimVolume,fnNewParticlesXmd))
-            moveFile(fnNewParticlesXmd,self.imgsFn)
+        fnImgs = self._getExtraPath('images.xmd')
+        writeSetOfParticles(self.inputSet.get(), fnImgs)
+        
+        if self._getDimensions()!=self.residualSize.get():
+            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d --save_metadata_stack %s"%(fnImgs,self._getExtraPath("images.stk"),self.residualSize.get(),fnImgs))
+        
+        fnVol=self.inputVolume.get().getFileName()
+        if self.inputVolume.get().getDim()[0]!=self.residualSize.get() or fnVol.endswith('.mrc'):
+            if fnVol.endswith(".mrc"):
+                fnVol+=":mrc"
+            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"%(fnVol,self._getExtraPath("volume.vol"),self.residualSize.get()))
+        else:
+            createLink(fnVol,self._getExtraPath("volume.vol"))
     
-    def produceResiduals(self,volumeFn,anglesFn,Ts):
-        if volumeFn.endswith(".mrc"):
-            volumeFn+=":mrc"
+    def produceResiduals(self):
         anglesOutFn=self._getExtraPath("anglesCont.stk")
         residualsOutFn=self._getExtraPath("residuals.stk")
         projectionsOutFn=self._getExtraPath("projections.stk")
         xdim=self.inputVolume.get().getDim()[0]
+        originalTs=self.inputVolume.get().getSamplingRate()
+        Ts=originalTs*xdim/float(self.residualSize.get())
         self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
-                    (anglesFn,anglesOutFn,volumeFn,floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
+                    (self._getExtraPath('images.xmd'),anglesOutFn,self._getExtraPath("volume.vol"),floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
         fnNewParticles=self._getExtraPath("images.stk")
         if exists(fnNewParticles):
             cleanPath(fnNewParticles)
@@ -112,6 +116,10 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         cleanPath(fnAutoCorrelations)
     
     def createOutputStep(self):
+        fnImgs = self._getExtraPath('images.stk')
+        if exists(fnImgs):
+            cleanPath(fnImgs)
+
         outputSet = self._createSetOfParticles()
         imgSet = self.inputSet.get()
         imgFn = self._getExtraPath("anglesCont.xmd")
@@ -120,7 +128,6 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         outputSet.copyItems(imgSet,
                             updateItemCallback=self._processRow,
                             itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
-
         self._defineOutputs(outputParticles=outputSet)
         self._defineSourceRelation(self.inputSet, outputSet)
 
