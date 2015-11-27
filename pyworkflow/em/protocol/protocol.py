@@ -102,14 +102,13 @@ class EMProtocol(Protocol):
     
     def _createSetOfCTF(self, suffix=''):
         return self.__createSet(SetOfCTF, 'ctfs%s.sqlite', suffix)
-
-
+    
     def _createSetOfNormalModes(self, suffix=''):
         return self.__createSet(SetOfNormalModes, 'modes%s.sqlite', suffix)
     
     def _createSetOfMovies(self, suffix=''):
         return self.__createSet(SetOfMovies, 'movies%s.sqlite', suffix)
-
+    
     def _createSetOfAngles(self, suffix=''):
         return self.__createSet(SetOfAngles, 'tiltpairs_angles%s.sqlite', suffix)
        
