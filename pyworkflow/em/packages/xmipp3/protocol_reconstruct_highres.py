@@ -401,13 +401,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         TsCurrent=self.readInfoField(fnDirCurrent,"sampling",xmipp.MDL_SAMPLINGRATE)
         
         # Align volumes
-        letter=self.symmetryGroup.get()[0]
         fnVolAvg=join(fnDirCurrent,"volumeAvg.mrc")
         self.runJob('xmipp_image_operate','-i %s --plus %s -o %s'%(fnVol1,fnVol2,fnVolAvg),numberOfMpi=1)
         self.runJob('xmipp_image_operate','-i %s --mult 0.5'%fnVolAvg,numberOfMpi=1)
-        if letter!='i' and letter!='d':
-            self.runJob('xmipp_volume_align','--i1 %s --i2 %s --local --apply'%(fnVolAvg,fnVol1),numberOfMpi=1)
-            self.runJob('xmipp_volume_align','--i1 %s --i2 %s --local --apply'%(fnVolAvg,fnVol2),numberOfMpi=1)
+        self.runJob('xmipp_volume_align','--i1 %s --i2 %s --local --apply'%(fnVolAvg,fnVol1),numberOfMpi=1)
+        self.runJob('xmipp_volume_align','--i1 %s --i2 %s --local --apply'%(fnVolAvg,fnVol2),numberOfMpi=1)
      
         # Estimate resolution
         fnFsc=join(fnDirCurrent,"fsc.xmd")
