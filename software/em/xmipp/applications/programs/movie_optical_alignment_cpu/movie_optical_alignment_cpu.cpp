@@ -281,13 +281,13 @@ public:
     int main2()
     {
 
-        MultidimArray<double> preImg, avgCurr, avgStep, mappedImg;
+        MultidimArray<double> preImg, avgCurr, mappedImg;
         MultidimArray<double> outputMovie;
         Matrix1D<double> meanStdev;
-        ImageGeneric movieStack, movieStackNormalize;
+        ImageGeneric movieStack;
         Image<double> II;
         MetaData MD; // To save plot information
-        FileName motionInfFile;
+        FileName motionInfFile, flowFileName, flowXFileName, flowYFileName;
         ArrayDim aDim;
 
         // For measuring times (both for whole process and for each level of the pyramid)
@@ -296,19 +296,17 @@ public:
 #ifdef GPU
         // Matrix that we required in GPU part
         GpuMat d_flowx, d_flowy, d_dest;
-        GpuMat d_avgcurr, d_preimg, d_mapx, d_mapy;
+        GpuMat d_avgcurr, d_preimg;
 #endif
 
         // Matrix required by Opencv
-        cv::Mat flowx, flowy, mapx, mapy, flow, dest;
-        cv::Mat flowxPre, flowyPre, flowxInBet, flowyInBet;// Using for computing the plot information
+        cv::Mat flow, dest, flowx, flowy;
+        cv::Mat flowxPre, flowyPre;
         cv::Mat avgcurr, avgstep, preimg, preimg8, avgcurr8;
-        cv::Mat planes[]={flowx, flowy};
-        cv::Scalar meanx, meany;
-        cv::Scalar stddevx, stddevy;
+        cv::Mat planes[]={flowxPre, flowyPre};
 
-        int imagenum, cnt = 2, div = 0;
-        int h, w, idx, levelNum, levelCounter = 1;
+        int imagenum, cnt=2, div=0, flowCounter;
+        int h, w, idx, levelNum, levelCounter=1;
 
         motionInfFile=foname.replaceExtension("xmd");
         std::string extension=fname.getExtension();
@@ -386,7 +384,7 @@ public:
             // Check if we are in the final step
             if (div==1)
                 cnt = imagenum;
-
+            flowCounter=1;
             for (int i=0;i<cnt;i++)
             {
                 //Just compute the average in the last step
@@ -415,7 +413,19 @@ public:
 
                 d_avgcurr.upload(avgcurr8);
                 d_preimg.upload(preimg8);
-                d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
+                if (cnt==2)
+                    d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
+                else
+                {
+                    flowXFileName=foname.removeLastExtension()+formatString("flowx%d%d.txt",div*2,flowCounter);
+                    flowYFileName=foname.removeLastExtension()+formatString("flowy%d%d.txt",div*2,flowCounter);
+                    readMat(flowXFileName.c_str(), flowx);
+                    readMat(flowYFileName.c_str(), flowy);
+                    d_flowx.upload(flowx);
+                    d_flowy.upload(flowy);
+                    d_calc.flags=cv::OPTFLOW_USE_INITIAL_FLOW;
+                    d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
+                }
                 d_flowx.download(planes[0]);
                 d_flowy.download(planes[1]);
                 d_avgcurr.release();
@@ -424,8 +434,16 @@ public:
                 d_flowy.release();
 #else
 
-                calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, 0);
+                if (cnt==2)
+                    calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, 0);
+                else
+                {
+                    flowFileName=foname.removeLastExtension()+formatString("flow%d%d.txt",div*2,flowCounter);
+                    readMat(flowFileName.c_str(), flow);
+                    calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, cv::OPTFLOW_USE_INITIAL_FLOW);
+                }
                 split(flow, planes);
+
 #endif
                 // Save the flows if we are in the last step
                 if (div==groupSize)
@@ -442,6 +460,22 @@ public:
                     }
                     planes[0].copyTo(flowxPre);
                     planes[1].copyTo(flowyPre);
+                }
+                else
+                {
+#ifdef GPU
+                    flowXFileName=foname.removeLastExtension()+formatString("flowx%d%d.txt",div,i+1);
+                    flowYFileName=foname.removeLastExtension()+formatString("flowy%d%d.txt",div,i+1);
+                    saveMat(flowXFileName.c_str(), planes[0]);
+                    saveMat(flowYFileName.c_str(), planes[1]);
+#else
+
+                    flowFileName=foname.removeLastExtension()+formatString("flow%d%d.txt",div,i+1);
+                    saveMat(flowFileName.c_str(), flow);
+#endif
+
+                    if ((i+1)%2==0)
+                        flowCounter++;
                 }
                 for( int row = 0; row < planes[0].rows; row++ )
                     for( int col = 0; col < planes[0].cols; col++ )
@@ -460,7 +494,7 @@ public:
             avgcurr=avgstep/cnt;
             cout<<"Processing level "<<levelCounter<<"/"<<levelNum<<" has been finished"<<std::endl;
             printf("Processing time: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
-            cnt=cnt*2;
+            cnt*=2;
             levelCounter++;
         }
         opencv2Xmipp(avgcurr, avgCurr);

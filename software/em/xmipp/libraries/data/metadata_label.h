@@ -356,6 +356,8 @@ enum MDLabel
     MDL_SAMPLINGRATE_Z, ///< sampling rate in A/pixel (double)
 
     MDL_SCALE, ///< scaling factor for an image or volume (double)
+    MDL_SCORE_BY_PCA_RESIDUAL,
+    MDL_SCORE_BY_ZSCORE,
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
     MDL_SHIFT_X, ///< Shift for the image in the X axis (double)
@@ -365,7 +367,9 @@ enum MDLabel
     MDL_SHIFT_Y2, ///< Shift for the image in the Y axis (double)
     MDL_SHIFT_Y_DIFF, ///< difference in Shift along  Y axis (double)
     MDL_SHIFT_Z, ///< Shift for the image in the Z axis (double)
+    MDL_SHIFT_DIFF0, ///< shift difference (double)
     MDL_SHIFT_DIFF, ///< shift difference (double)
+    MDL_SHIFT_DIFF2, ///< shift difference (double)
     MDL_SIGMANOISE, ///< Standard deviation of the noise in ML model
     MDL_SIGMAOFFSET, ///< Standard deviation of the offsets in ML model
     MDL_SIGNALCHANGE, ///< Signal change for an image
@@ -1699,6 +1703,9 @@ private:
         MDL::addLabelAlias(MDL_SAMPLINGRATE_Z, "sampling_rateZ"); //3.0
 
         MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale");
+        MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL, LABEL_DOUBLE, "scoreByPcaResidual");
+        MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
+
         MDL::addLabelAlias(MDL_SCALE, "Scale");
         MDL::addLabel(MDL_SELFILE, LABEL_STRING, "selfile", TAGLABEL_METADATA);
         MDL::addLabel(MDL_SERIE, LABEL_STRING, "serie");
@@ -1713,7 +1720,9 @@ private:
         MDL::addLabel(MDL_SHIFT_Y_DIFF, LABEL_DOUBLE, "shiftYDiff");
         MDL::addLabel(MDL_SHIFT_Z, LABEL_DOUBLE, "shiftZ");
         MDL::addLabelAlias(MDL_SHIFT_Z, "Zoff");
+        MDL::addLabel(MDL_SHIFT_DIFF0, LABEL_DOUBLE, "shiftDiff0");
         MDL::addLabel(MDL_SHIFT_DIFF, LABEL_DOUBLE, "shiftDiff");
+        MDL::addLabel(MDL_SHIFT_DIFF2, LABEL_DOUBLE, "shiftDiff2");
         MDL::addLabel(MDL_SIGMANOISE, LABEL_DOUBLE, "sigmaNoise");
         MDL::addLabel(MDL_SIGMAOFFSET, LABEL_DOUBLE, "sigmaOffset");
         MDL::addLabel(MDL_SIGNALCHANGE, LABEL_DOUBLE, "signalChange");

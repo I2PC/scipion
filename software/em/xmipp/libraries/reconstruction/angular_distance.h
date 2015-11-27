@@ -53,6 +53,8 @@ public:
     bool compute_weights;
     /** Minimum angular sigma */
     double minSigma;
+    /** Minimum displacement sigma */
+    double minSigmaD;
     // Identification label
     String idLabel;
     /// Set of angular difference

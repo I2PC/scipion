@@ -209,7 +209,7 @@ public class ScipionGalleryData extends GalleryData {
      * This is only needed for metadata table galleries
      */
     public boolean isFile(ColumnInfo ci) {
-        return ci.labelName.contains("filename");
+        return ci.labelName.contains("filename") || ci.labelName.equals("_psdFile");
     }
 
     public boolean isImageFile(ColumnInfo ci) {
@@ -261,22 +261,22 @@ public class ScipionGalleryData extends GalleryData {
         
     }
     
-    public ColumnInfo getGeoMatrixColumn()
+    public ColumnInfo getGeoMatrixColumn(ColumnInfo ci)
     {
-        return ((ScipionMetaData)md).getGeoMatrixColumn();
+        return ((ScipionMetaData)md).getGeoMatrixColumn(ci);
     }
     
-    public Geometry getGeometry(long id)
+    public Geometry getGeometry(long id, ColumnInfo ci)
     {
-        return getGeometry(id, "2D");
+        return getGeometry(id, "2D", ci);
     }
             
-    public Geometry getGeometry(long id, String type)
+    public Geometry getGeometry(long id, String type, ColumnInfo ci)
     {
         if (!containsGeometryInfo(type)) 
             return null;
         ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
-        ColumnInfo column = getGeoMatrixColumn();
+        ColumnInfo column = getGeoMatrixColumn(ci);
         
         String matrix = (String)emo.getValue(column);
         return new Geometry(matrix);
@@ -380,7 +380,7 @@ public class ScipionGalleryData extends GalleryData {
     
     
     public MetaData getImagesMd(boolean[] selection, boolean selected) {
-                    
+    		
             MetaData imagesmd = new MetaData();
             int index = 0;
             String imagepath;
@@ -398,7 +398,7 @@ public class ScipionGalleryData extends GalleryData {
                         if (useGeo()) 
                         {
                             emo = ((ScipionMetaData)md).getEMObject(id);
-                            matrix = String.format("'%s'", emo.getValueString(getGeoMatrixColumn()));
+                            matrix = String.format("'%s'", emo.getValueString(getGeoMatrixColumn(ciFirstRender)));
                             imagesmd.setValueString(MDLabel.MDL_TRANSFORM_MATRIX, matrix, imageid);//copy geo info in mdRow
                         }
                         
@@ -410,9 +410,11 @@ public class ScipionGalleryData extends GalleryData {
     }
     
     public String getChimeraProjectionCmd(int row) {
-        Geometry geo = getGeometry(ids[row], "3D");
+    	int label = getRenderLabel();
+		ColumnInfo ci = getColumnInfo(label);
+        Geometry geo = getGeometry(ids[row], "3D", ci);
         if(geo == null)
-            geo = getGeometry(ids[row], "Projection");
+            geo = getGeometry(ids[row], "Projection", ci);
         String command = String.format("rotate_matrix '%s'", geo.getMatrix());
         return command;
     }

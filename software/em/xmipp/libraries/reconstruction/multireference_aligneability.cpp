@@ -41,9 +41,11 @@ void MultireferenceAligneability::readParams()
     fnInit = getParam("--volume");
     fin = getParam("--angles_file");
     finRef = getParam("--angles_file_ref");
+    fnGallery = getParam("--gallery");
     fnSym = getParam("--sym");
     fnDir = getParam("--odir");
     donNotUseWeights= checkParam("--dontUseWeights");
+    significance_noise = getDoubleParam("--significance_noise");
 
 }
 
@@ -54,9 +56,11 @@ void MultireferenceAligneability::defineParams()
     		"the reference projections. Thus, using the projections and references, the calculus of H0k, Hk and Pk is carried out");
     addParamsLine("  [--volume <md_file=\"\">]    : Input volume to be validated");
     addParamsLine("  [--angles_file <file=\".\">]     : Input metadata with projections and orientations");
-    addParamsLine("  [--angles_file_ref <file=\".\">] : Input reference metadata with projections and orientations obtained from the projection orientations and the volume ");
+    addParamsLine("  [--angles_file_ref <file=\".\">] : Input reference metadata with projections and orientations obtained projecting the volume at the projection orientations ");
+    addParamsLine("  [--gallery <file=\".\">]		  : Reference Gallery of projections ");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections"); //TODO the input will be two doc files one from the exp and the other from refs
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
+    addParamsLine("  [--significance_noise<float=0.95>] : Significane of the alignment with respect the noise");
     addParamsLine("  [--dontUseWeights]           : Do not use the particle weigths in the clusterability calculation ");
 
 }
@@ -67,22 +71,23 @@ void MultireferenceAligneability::run()
     randomize_random_generator();
 
     MetaData mdOutCL, mdOutQ;
-	MetaData mdExp, mdExpSort, mdProj;
+	MetaData mdExp, mdExpSort, mdProj, mdGallery;
 	size_t maxNImg;
-	FileName fnOutCL,fnOutQ;
+	FileName fnOutCL, fnOutQ;
 	fnOutCL = fnDir+"/clusteringTendency.xmd";
 	fnOutQ = fnDir+"/validation.xmd";
 
-    SymList SL;
-    int symmetry, sym_order;
-    SL.readSymmetryFile(fnSym.c_str());
-    SL.isSymmetryGroup(fnSym.c_str(), symmetry, sym_order);
-    double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
-    double area_of_sphere_no_symmetry = 4.*PI;
-    double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
+    //SymList SL;
+    //int symmetry, sym_order;
+    //SL.readSymmetryFile(fnSym.c_str());
+    //SL.isSymmetryGroup(fnSym.c_str(), symmetry, sym_order);
+    //double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
+    //double area_of_sphere_no_symmetry = 4.*PI;
+    //double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
 
 	mdProj.read(finRef);
 	mdExp.read(fin);
+	mdGallery.read(fnGallery);
 
 	mdExpSort.sort(mdExp,MDL_IMAGE_IDX,true,-1,0);
 	size_t sz = mdExp.size();
@@ -105,8 +110,8 @@ void MultireferenceAligneability::run()
 	tempMdExp.clear();
 
 	//Noise
-	calc_sumw(numProjs, sum_noise);
-	sum_noise *= correction;
+	//calc_sumw(numProjs, sum_noise);
+	calc_sumw2(numProjs, sum_noise, mdGallery);
 
 	double rank = 0.;
 	char hold;
@@ -189,43 +194,39 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
     double W;
     double sumW;
 
+    W = 0;
     sumW = 0;
-    size_t idx = 0;
+
     FOR_ALL_OBJECTS_IN_METADATA(tempMd)
     {
         tempMd.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
-        //tempMd.getValue(MDL_WEIGHT,w,__iter.objId);
         tempMd.getValue(MDL_MAXCC,w,__iter.objId);
 
-        idx++;
         x = sin(tilt*PI/180.)*cos(rot*PI/180.);
         y = sin(tilt*PI/180.)*sin(rot*PI/180.);
         z = std::abs(cos(tilt*PI/180.));
 
-        tempW = 1e3;
         _FOR_ALL_OBJECTS_IN_METADATA2(tempMd)
         {
-            tempMd.getValue(MDL_ANGLE_ROT,rot,__iter2.objId);
-            tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter2.objId);
-            //tempMd.getValue(MDL_WEIGHT,w2,__iter2.objId);
-            tempMd.getValue(MDL_MAXCC,w2,__iter2.objId);
-            xx = sin(tilt*PI/180.)*cos(rot*PI/180.);
-            yy = sin(tilt*PI/180.)*sin(rot*PI/180.);
-            zz = std::abs(cos(tilt*PI/180.));
-            a = std::abs(std::acos(x*xx+y*yy+z*zz));
+        	tempMd.getValue(MDL_ANGLE_ROT,rot,__iter2.objId);
+        	tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter2.objId);
+        	//tempMd.getValue(MDL_WEIGHT,w2,__iter2.objId);
+        	tempMd.getValue(MDL_MAXCC,w2,__iter2.objId);
+        	xx = sin(tilt*PI/180.)*cos(rot*PI/180.);
+        	yy = sin(tilt*PI/180.)*sin(rot*PI/180.);
+        	zz = std::abs(cos(tilt*PI/180.));
+        	a = std::abs(std::acos(x*xx+y*yy+z*zz));
+        	if ( isnan(a) )
+        		a = 0;
 
-            if ( (a<tempW) && (a != 0))
-            {
-            	if (donNotUseWeights)
-            		W = a;
-            	else
-            		//W = a*std::exp(-2*(w+w2));
-            		W = a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
+        	if (donNotUseWeights)
+        		W += a;
+        	else
+        		W += a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
 
-                tempW = a;
-                //std::cout << x << " " << y << " " << z << " " << xx << " " << yy << " " << zz << " " <<  w << " " << w2 << " " << a << " " << W << " " << std::exp(std::abs(w-w2)) << " " << std::exp(-(w+w2)) << std::endl;
-            }
+        	//std::cout << x << " " << y << " " << z << " " << xx << " " << yy << " " << zz << " " <<  w << " " << w2 << " " << a << " " << W << " " << std::exp(std::abs(w-w2)) << " " << std::exp(-(w+w2)) << std::endl;
+
         }
         sumW +=  W;
     }
@@ -247,12 +248,11 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
     //sum_W = std::exp(-stdDev)*sumW;
  */
     sum_W = sumW;
-    //std::cout << " sumW : " << sumW << std::endl;
 }
 
 void MultireferenceAligneability::calc_sumw(const size_t num, double & sumw)
 {
-	size_t trials=200;
+	size_t trials=500;
     double xRan,yRan,zRan;
     double x,y;
     double sumWRan;
@@ -261,6 +261,7 @@ void MultireferenceAligneability::calc_sumw(const size_t num, double & sumw)
     double * zRanArray  = new double[num];
     double a;
     sumw=0;
+    a = 0;
 
     for (size_t n=0; n < trials; n++)
     {
@@ -292,27 +293,92 @@ void MultireferenceAligneability::calc_sumw(const size_t num, double & sumw)
             zRanArray[nS] = zRan;
         }
 
-        sumWRan = 0;
         double WRan, tempWRan, tempW1, tempW2;
+        WRan = 0;
         for (size_t nS1=0; nS1<num; nS1++)
         {
-            tempWRan = 1e3;
             for (size_t nS2=0; nS2<num; nS2++)
             {
                 a = std::abs(std::acos(xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2]));
-                if ( (a<tempWRan) && (a != 0))
-                {
-                    tempWRan = a;
-                    WRan = a;
-                }
+                if ( (a != 0))
+                    WRan += a;
             }
-            sumWRan += WRan;
         }
 
-        sumw += sumWRan;
+        sumw += WRan;
     }
 
     sumw /= trials;
 }
+
+
+
+void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, const MetaData & mdGallery)
+{
+	const size_t numGallery= mdGallery.size();
+	const double trials = 500;
+    double xRan,yRan,zRan;
+    size_t indx;
+    double sumWRan;
+    double * xRanArray = new double[num];
+    double * yRanArray = new double[num];
+    double * zRanArray  = new double[num];
+    std::vector<double> weightV;
+    double a;
+
+    double rot,tilt,w;
+    bool mirror;
+    sumWRan = 0;
+
+    for (size_t n=0; n<trials; n++)
+    {
+        for (size_t nS=0; nS<num; nS++)
+        {
+			indx = (size_t) (double( std::rand())*numGallery)/RAND_MAX;
+
+			while ( (indx ==0) || (indx > numGallery) )
+				indx = (size_t) (double( std::rand())*numGallery )/RAND_MAX;
+
+        	mdGallery.getValue(MDL_ANGLE_ROT,rot,indx);
+        	mdGallery.getValue(MDL_ANGLE_TILT,tilt,indx);
+        	mdGallery.getValue(MDL_FLIP,mirror,indx);
+
+            if (mirror == 1)
+            	tilt = tilt + 180;
+
+            xRan = sin(tilt*PI/180.)*cos(rot*PI/180.);
+            yRan = sin(tilt*PI/180.)*sin(rot*PI/180.);
+            zRan = std::abs(cos(tilt*PI/180.));
+
+            xRanArray[nS] = xRan;
+            yRanArray[nS] = yRan;
+            zRanArray[nS] = zRan;
+        }
+
+        double tempW1, tempW2, temp;
+        a = 0;
+        for (size_t nS1=0; nS1<num; nS1++)
+        {
+            for (size_t nS2=0; nS2<num; nS2++)
+            {
+            	temp = std::abs(std::acos(xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2]));
+                if ( not isnan(temp))
+                	a += temp;
+            }
+
+            sumWRan += a;
+            std::cout << sumWRan << std::endl;
+        }
+    }
+
+    sumw=sumWRan/trials;
+
+
+    delete xRanArray;
+    delete yRanArray;
+    delete zRanArray;
+
+}
+
 
 

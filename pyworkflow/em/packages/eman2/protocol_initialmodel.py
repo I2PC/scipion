@@ -28,6 +28,7 @@ This sub-package contains wrapper around EMAN initialmodel program
 """
 
 import os
+from glob import glob
 
 from pyworkflow.utils.path import cleanPattern
 from pyworkflow.protocol.params import (PointerParam, TextParam, IntParam,
@@ -126,17 +127,14 @@ class EmanProtInitModel(ProtInitialVolume):
         self.runJob(program, args, cwd=self._getExtraPath())        
     
     def createOutputStep(self):
-        from glob import glob
         classes2DSet = self.inputSet.get()
         #volumes = EmanSetOfVolumes(self._getPath('scipion_volumes.json'))
         volumes = self._createSetOfVolumes()
         if isinstance(self.inputSet.get(), SetOfClasses2D):
-            volumes.setSamplingRate(classes2DSet.getImages().getSamplingRate())
+            volumes.setSamplingRate(classes2DSet.getImages().getSamplingRate() * self.shrink.get())
         else:
-            volumes.setSamplingRate(self.inputSet.get().getSamplingRate())
-        
-        outputVols = glob(self._getExtraPath('initial_models/model_??_??.hdf'))
-        outputVols.sort()
+            volumes.setSamplingRate(self.inputSet.get().getSamplingRate() * self.shrink.get())
+        outputVols = self._getVolumes()
         for k, volFn in enumerate(outputVols):
             vol = Volume()
             vol.setFileName(volFn)
@@ -181,3 +179,11 @@ class EmanProtInitModel(ProtInitialVolume):
     
     def _isHighSym(self):
         return eman2.getVersion() == '2.12' and self.symmetry.get() in ["cubic", "tet", "icos"]
+    
+    def _getVolumes(self):
+        if self._isHighSym():
+            outputVols = [self._getExtraPath('final.hdf')]
+        else:
+            outputVols = glob(self._getExtraPath('initial_models/model_??_??.hdf'))
+            outputVols.sort()
+        return outputVols
