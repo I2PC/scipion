@@ -738,7 +738,7 @@ class Pointer(Object):
         return value
     
     def set(self, other):
-        """ Set the pointer value but cleanning the extendend property. """
+        """ Set the pointer value but cleaning the extended property. """
         Object.set(self, other)
         # This check is needed because set is call from the Object constructor
         # when this attribute is not setup yet (a dirty patch, I know)
