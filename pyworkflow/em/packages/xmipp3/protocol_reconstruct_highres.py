@@ -241,7 +241,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self.TsOrig=self.inputParticles.get().getSamplingRate()
         for self.iteration in range(firstIteration,firstIteration+self.numberOfIterations.get()):
             self.insertIteration(self.iteration)
-        self._insertFunctionStep("createOutput")
+#         self._insertFunctionStep("createOutput")
     
     def insertIteration(self,iteration):
         if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
@@ -253,7 +253,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self._insertFunctionStep('reconstruct',iteration)
         self._insertFunctionStep('postProcessing',iteration)
         self._insertFunctionStep('evaluateReconstructions',iteration)
-        self._insertFunctionStep('cleanDirectory',iteration)
+        #self._insertFunctionStep('cleanDirectory',iteration)
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertInputStep(self, inputParticlesId):
@@ -667,13 +667,15 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                 R=self.inputParticles.get().getDimensions()[0]/2
                             R=R*self.TsOrig/TsCurrent
                             if self.GLOBAL_METHOD == 'significant':
-                                args='-i %s --initgallery %s --maxShift %d --odir %s --dontReconstruct'%\
+                                args='-i %s --initgallery %s --maxShift %d --odir %s --dontReconstruct --useForValidation 1'%\
                                      (fnGroup,fnGalleryGroupMd,maxShift,fnDirSignificant)
                                 # Falta Wiener y filtrar
                                 self.runJob('xmipp_reconstruct_significant',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-                                moveFile(join(fnDirSignificant,"images_significant_iter001_00.xmd"),join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset)))
+                                # moveFile(join(fnDirSignificant,"images_significant_iter001_00.xmd"),join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset)))
+                                moveFile(join(fnDirSignificant,"angles_iter001_00.xmd"),join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset)))
                                 cleanPath(join(fnDirSignificant,"images_iter001_00.xmd"))
-                                cleanPath(join(fnDirSignificant,"angles_iter001_00.xmd"))
+                                #cleanPath(join(fnDirSignificant,"angles_iter001_00.xmd"))
+                                cleanPath(join(fnDirSignificant,"images_significant_iter001_00.xmd"))
                             else:
                                 args='-i %s -o %s --ref %s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --append --pad 2.0'%\
                                      (fnGroup,join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset)),fnGalleryGroup,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get())
@@ -685,7 +687,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             if j==1:
                                 copyFile(fnAnglesGroup, fnAngles)
                             else:
-                                self.runJob("xmipp_metadata_utilities","-i %s --set union %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
+                                self.runJob("xmipp_metadata_utilities","-i %s --set union_all %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
                     self.runJob("xmipp_metadata_utilities","-i %s --set join %s image"%(fnAngles,fnImgs),numberOfMpi=1)
                     if self.saveSpace and ctfPresent:
                         self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
@@ -695,55 +697,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnAnglesB=join(fnGlobal,"anglesDisc%02db.xmd"%i)
                 fnOut=join(fnGlobal,"anglesDisc%02d"%i)
                 fnAngles=fnOut+".xmd"
-                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights --check_mirrors --set 0"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
-                moveFile(fnOut+"_weights.xmd",fnOut+".xmd")
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleRot2'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleTilt2'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column anglePsi2'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column shiftX2'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column shiftY2'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate rename_column "angleRot angleRot2"'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate rename_column "angleTilt angleTilt2"'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate rename_column "anglePsi anglePsi2"'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate rename_column "shiftX shiftX2"'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate rename_column "shiftY shiftY2"'%(fnAnglesB),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleRot2'%(fnAngles),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column angleTilt2'%(fnAngles),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column anglePsi2'%(fnAngles),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column shiftX2'%(fnAngles),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column shiftY2'%(fnAngles),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --set join %s itemId'%(fnAngles,fnAnglesB),numberOfMpi=1)
-                md=xmipp.MetaData(fnAngles)
-                sigmaD=newXdim*0.01
-                print "Sigma displacement=",sigmaD
-                K=-1.0/(4*sigmaD*sigmaD)
-                for objId in md:
-                    shiftX=md.getValue(xmipp.MDL_SHIFT_X,objId)
-                    shiftY=md.getValue(xmipp.MDL_SHIFT_Y,objId)
-                    shiftX2=md.getValue(xmipp.MDL_SHIFT_X2,objId)
-                    shiftY2=md.getValue(xmipp.MDL_SHIFT_Y2,objId)
-                    weight=md.getValue(xmipp.MDL_WEIGHT_JUMPER0,objId)
-                    angleDiff=md.getValue(xmipp.MDL_ANGLE_DIFF0,objId)
-                    d=0.5*(abs(shiftX-shiftX2)+abs(shiftY-shiftY2))
-                    d2=d*d
-                    if angleDiff<angleStep and d<sigmaD and False:
-                        shiftX=0.5*(shiftX+shiftX2)
-                        shiftY=0.5*(shiftY+shiftY2)
-                        rot=md.getValue(xmipp.MDL_ANGLE_ROT,objId)
-                        rot2=md.getValue(xmipp.MDL_ANGLE_ROT2,objId)
-                        tilt=md.getValue(xmipp.MDL_ANGLE_TILT,objId)
-                        tilt2=md.getValue(xmipp.MDL_ANGLE_TILT2,objId)
-                        psi=md.getValue(xmipp.MDL_ANGLE_PSI,objId)
-                        psi2=md.getValue(xmipp.MDL_ANGLE_PSI2,objId)
-                        md.setValue(xmipp.MDL_SHIFT_X,shiftX,objId)
-                        md.setValue(xmipp.MDL_SHIFT_Y,shiftY,objId)
-                        md.setValue(xmipp.MDL_ANGLE_ROT,rot,objId)
-                        md.setValue(xmipp.MDL_ANGLE_TILT,tilt,objId)
-                        md.setValue(xmipp.MDL_ANGLE_PSI,psi,objId)
-                    weight*=math.exp(K*d2)
-                    md.setValue(xmipp.MDL_WEIGHT_JUMPER0,weight,objId)
-                md.write(fnAngles)
-                
+                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights 1 particleId 0.5 --check_mirrors --set 0"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut+"_weights.xmd"),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s -o %s'%(fnAnglesA,fnOut+"_weights.xmd",fnOut+".xmd"),numberOfMpi=1)
+                cleanPath(fnOut+"_weights.xmd")
                 
     def adaptShifts(self, fnSource, TsSource, fnDest, TsDest):
         K=TsSource/TsDest
@@ -987,7 +944,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         if ctfPresent:
             cleanPath("%s/ctf_groups.xmd"%fnDirCurrent)
         moveFile(fnAnglesQualified, fnAngles)
-
+ 
         if self.weightCC:
             mdAngles=xmipp.MetaData(fnAngles)
             weightCCmin=float(self.weightCCmin.get())

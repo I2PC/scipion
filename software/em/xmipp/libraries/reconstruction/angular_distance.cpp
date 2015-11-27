@@ -42,6 +42,7 @@ void ProgAngularDistance::readParams()
     {
     	minSigma = getDoubleParam("--compute_weights");
     	idLabel = getParam("--compute_weights",1);
+    	minSigmaD = getDoubleParam("--compute_weights",2);
     }
     set = getIntParam("--set");
 }
@@ -57,6 +58,8 @@ void ProgAngularDistance::show()
     << "Check mirrors    : " << check_mirrors << std::endl
     << "Object rotation  : " << object_rotation<<std::endl
     << "Compute weights  : " << compute_weights << std::endl
+    << "Min sigma        : " << minSigma << std::endl
+    << "Min sigmaD       : " << minSigmaD << std::endl
     << "IdLabel          : " << idLabel << std::endl
     << "Set              : " << set << std::endl
     ;
@@ -85,11 +88,12 @@ void ProgAngularDistance::defineParams()
     addParamsLine("  [--check_mirrors]          : Check if mirrored projections give better results");
     addParamsLine("  [--object_rotation]        : Use object rotations rather than projection directions");
     addParamsLine("                             : fit (Spider, APMQ)");
-    addParamsLine("  [--compute_weights <minSigma=1> <idLabel=particleId>] : If this flag is given, images in ang2 are given a weight according to their ");
+    addParamsLine("  [--compute_weights <minSigma=1> <idLabel=particleId> <minSigmaD=-1>] : If this flag is given, images in ang2 are given a weight according to their ");
     addParamsLine("                             : distance to the same image in ang1. The ang2 file is rewritten.");
     addParamsLine("                             : Ang1 and ang2 are supposed to have a label called itemId");
     addParamsLine("                             : The output is written to oroot+_weights.xmd");
     addParamsLine("                             : Min sigma is the minimum angular standard deviation, by default, 1 degree");
+    addParamsLine("                             : Min sigmaD is the minimum shift standard deviation, set to -1 for not using shifts for weighting");
     addParamsLine("  [--set <set=1>]            : Set of distance to compute (angular_diff0 and jumper_weight0, angular_diff and jumper_weight,");
     addParamsLine("                             : or angular_diff2 and jumper_weight2)");
 }
@@ -286,22 +290,27 @@ void ProgAngularDistance::computeWeights()
 	labels.push_back(MDL_ANGLE_ROT);
 	labels.push_back(MDL_ANGLE_TILT);
 	labels.push_back(MDL_ANGLE_PSI);
+	labels.push_back(MDL_SHIFT_X);
+	labels.push_back(MDL_SHIFT_Y);
 	labels.push_back(MDL_FLIP);
     DF1sorted.keepLabels(labels);
     DF2sorted.keepLabels(labels);
-    MDLabel angleDiffLabel, weightLabel;
+    MDLabel angleDiffLabel, shiftDiffLabel, weightLabel;
 	switch (set)
 	{
 	case 1:
 		angleDiffLabel=MDL_ANGLE_DIFF;
+		shiftDiffLabel=MDL_SHIFT_DIFF;
 		weightLabel=MDL_WEIGHT_JUMPER;
 		break;
 	case 2:
 		angleDiffLabel=MDL_ANGLE_DIFF2;
+		shiftDiffLabel=MDL_SHIFT_DIFF2;
 		weightLabel=MDL_WEIGHT_JUMPER2;
 		break;
 	case 0:
 		angleDiffLabel=MDL_ANGLE_DIFF0;
+		shiftDiffLabel=MDL_SHIFT_DIFF0;
 		weightLabel=MDL_WEIGHT_JUMPER0;
 		break;
 	}
@@ -309,7 +318,7 @@ void ProgAngularDistance::computeWeights()
     // for(MDIterator __iter(__md); __iter.hasNext(); __iter.moveNext())
     MDIterator iter1(DF1sorted), iter2(DF2sorted);
     std::vector< Matrix1D<double> > ang1, ang2;
-    Matrix1D<double> rotTiltPsi(3);
+    Matrix1D<double> rotTiltPsi(5);
 	size_t currentId;
 	bool anotherImageIn2=iter2.hasNext();
 	size_t id1, id2;
@@ -333,6 +342,8 @@ void ProgAngularDistance::computeWeights()
 				DF2sorted.getValue(MDL_ANGLE_ROT,XX(rotTiltPsi),iter2.objId);
 				DF2sorted.getValue(MDL_ANGLE_TILT,YY(rotTiltPsi),iter2.objId);
 				DF2sorted.getValue(MDL_ANGLE_PSI,ZZ(rotTiltPsi),iter2.objId);
+				DF2sorted.getValue(MDL_SHIFT_X,VEC_ELEM(rotTiltPsi,3),iter2.objId);
+				DF2sorted.getValue(MDL_SHIFT_Y,VEC_ELEM(rotTiltPsi,4),iter2.objId);
 				DF2sorted.getValue(MDL_FLIP,mirror,iter2.objId);
 				if (mirror)
 				{
@@ -350,7 +361,7 @@ void ProgAngularDistance::computeWeights()
     	} while (anotherIteration);
 
     	// Advance Iter 1 to catch Iter 2
-    	double N=0, cumulatedDistance=0;
+    	double N=0, cumulatedDistance=0, cumulatedDistanceShift=0;
     	size_t newObjId=0;
     	if (iter1.objId>0)
     	{
@@ -376,6 +387,8 @@ void ProgAngularDistance::computeWeights()
 					DF1sorted.getValue(MDL_ANGLE_ROT,XX(rotTiltPsi),iter1.objId);
 					DF1sorted.getValue(MDL_ANGLE_TILT,YY(rotTiltPsi),iter1.objId);
 					DF1sorted.getValue(MDL_ANGLE_PSI,ZZ(rotTiltPsi),iter1.objId);
+					DF1sorted.getValue(MDL_SHIFT_X,VEC_ELEM(rotTiltPsi,3),iter1.objId);
+					DF1sorted.getValue(MDL_SHIFT_Y,VEC_ELEM(rotTiltPsi,4),iter1.objId);
 					DF1sorted.getValue(MDL_FLIP,mirror,iter1.objId);
 					if (mirror)
 					{
@@ -401,7 +414,7 @@ void ProgAngularDistance::computeWeights()
 				double rot2=XX(anglesi);
 				double tilt2=YY(anglesi);
 				double psi2=ZZ(anglesi);
-				double bestDistance=1e38;
+				double bestDistance=1e38, bestShiftDistance=1e38;
 				for (size_t j=0; j<ang1.size(); ++j)
 				{
 					const Matrix1D<double> &anglesj=ang1[j];
@@ -411,11 +424,16 @@ void ProgAngularDistance::computeWeights()
 					double dist = SL.computeDistance(rot1, tilt1, psi1, rot2, tilt2, psi2, false,
 													 check_mirrors, object_rotation);
 					if (dist<bestDistance)
+					{
 						bestDistance=dist;
+						bestShiftDistance=fabs(VEC_ELEM(anglesi,3)-VEC_ELEM(anglesj,3))+fabs(VEC_ELEM(anglesi,4)-VEC_ELEM(anglesj,4));
+					}
 				}
+				bestShiftDistance*=0.5;
 				if (bestDistance<360)
 				{
 					cumulatedDistance+=bestDistance;
+					cumulatedDistanceShift+=bestShiftDistance;
 					N++;
 				}
 			}
@@ -430,44 +448,70 @@ void ProgAngularDistance::computeWeights()
     	{
 			double meanDistance=cumulatedDistance/ang2.size();
 			DFweights.setValue(angleDiffLabel,meanDistance,newObjId);
+			double meanDistanceShift=cumulatedDistanceShift/ang2.size();
+			DFweights.setValue(shiftDiffLabel,meanDistanceShift,newObjId);
     	}
     	else
     		if (newObjId>0)
+    		{
 				DFweights.setValue(angleDiffLabel,-1.0,newObjId);
+				DFweights.setValue(shiftDiffLabel,-1.0,newObjId);
+    		}
         anotherImageIn2=iter2.hasNext();
     }
 
     // Calculate the deviation with respect to angleDiff=0 of the angular distances
-    std::vector<double> angleDistances;
+    std::vector<double> angleDistances, shiftDistances;
 	DFweights.getColumnValues(angleDiffLabel,angleDistances);
+	DFweights.getColumnValues(shiftDiffLabel,shiftDistances);
 
-    double sigma2=0, d, N=0;
+    double sigma2=0, sigma2D=0, N=0;
     for (size_t i=0; i<angleDistances.size(); ++i)
     {
-    	d=angleDistances[i];
+    	double d=angleDistances[i];
     	if (d>0)
 		{
     		sigma2+=d*d;
+        	d=shiftDistances[i];
+        	sigma2D+=d*d;
     		++N;
 		}
     }
     sigma2/=N;
     sigma2=std::max(minSigma*minSigma,sigma2);
     std::cout << "Sigma of angular distances=" << sqrt(sigma2) << std::endl;
+    sigma2D/=N;
+    sigma2D=std::max(minSigmaD*minSigmaD,sigma2D);
+    std::cout << "Sigma of shift distances=" << sqrt(sigma2D) << std::endl;
 
     // Adjust the jumper weights according to a Gaussian
     double isigma2=-0.5/sigma2;
+    double isigma2D=-0.5/sigma2D;
     FOR_ALL_OBJECTS_IN_METADATA(DFweights)
     {
+    	double d;
+    	double weight=1.0;
 		DFweights.getValue(angleDiffLabel,d,__iter.objId);
 		if (d>0)
-			DFweights.setValue(weightLabel,exp(d*d*isigma2),__iter.objId);
+			weight=exp(d*d*isigma2);
 		else
-			DFweights.setValue(weightLabel,0.5,__iter.objId);
+			weight=0.5;
+
+		if (minSigmaD>0)
+		{
+			DFweights.getValue(shiftDiffLabel,d,__iter.objId);
+			if (d>0)
+				weight*=exp(d*d*isigma2D);
+			else
+				weight*=0.5;
+		}
+		DFweights.setValue(weightLabel,weight,__iter.objId);
     }
 
     // Transfer these weights to the DF2 metadata
     MetaData DF2weighted;
+	if (DF2.containsLabel(angleDiffLabel))
+		DF2.removeLabel(angleDiffLabel);
 	if (DF2.containsLabel(angleDiffLabel))
 		DF2.removeLabel(angleDiffLabel);
 	if (DF2.containsLabel(weightLabel))
@@ -475,12 +519,18 @@ void ProgAngularDistance::computeWeights()
     DF2weighted.join1(DF2,DFweights,label,INNER);
     FOR_ALL_OBJECTS_IN_METADATA(DF2weighted)
     {
-    	double angleDiff;
-    	DF2weighted.getValue(angleDiffLabel,angleDiff,__iter.objId);
-    	if (angleDiff<0)
+    	double d;
+    	DF2weighted.getValue(angleDiffLabel,d,__iter.objId);
+    	if (d<0)
     	{
     		// DF2weighted.setValue(MDL_ENABLED,-1,__iter.objId);
     		DF2weighted.setValue(angleDiffLabel,0.0,__iter.objId);
+    	}
+    	DF2weighted.getValue(shiftDiffLabel,d,__iter.objId);
+    	if (d<0)
+    	{
+    		// DF2weighted.setValue(MDL_ENABLED,-1,__iter.objId);
+    		DF2weighted.setValue(shiftDiffLabel,0.0,__iter.objId);
     	}
     }
     DF2weighted.removeDisabled();
