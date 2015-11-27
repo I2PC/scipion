@@ -24,6 +24,7 @@
 
 from itertools import izip
 import urllib
+import os
 
 import pyworkflow.tests as tests
 import pyworkflow.em as em
@@ -32,6 +33,7 @@ from pyworkflow.em.packages.xmipp3 import XmippProtExtractParticles
 from pyworkflow.em.packages.emxlib import ProtEmxExport
 from pyworkflow.em.packages.xmipp3 import XmippProtFilterParticles, XmippProtApplyAlignment, XmippProtReconstructFourier
 from pyworkflow.em.protocol.protocol_sets import ProtSplitSet,ProtUnionSet
+from pyworkflow.em.convert import ImageHandler
 
 class TestEmxWeb(tests.BaseTest):
     """test emx web page
@@ -61,6 +63,7 @@ class TestEmxWeb(tests.BaseTest):
         self.url = "Coordinates/Test1/"
         micFn = self.downloadFile("micrograph.mrc")
         emxFn = self.downloadFile("coordinates.emx")
+        particle_even = self.downloadFile("particle_even.mrcs")
 
         protEmxImport = self.newProtocol(ProtImportParticles,
                                            objLabel='from emx (coordinatesTest1)',
@@ -85,6 +88,8 @@ class TestEmxWeb(tests.BaseTest):
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=128,
                                        downsampleType=0,
+                                       doRemoveDust=False,
+                                       doNormalize = False,
                                        doFlip=False,
                                        downFactor=1)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
@@ -95,7 +100,9 @@ class TestEmxWeb(tests.BaseTest):
         protEmxExport = self.newProtocol(ProtEmxExport)
         protEmxExport.inputSet.set(protExtract.outputParticles)
         self.launchProtocol(protEmxExport)
-        #TODO: upload result to emx web site. Now it is down
+        stackFn = protExtract.outputParticles.getFirstItem().getFileName()
+        #print("FILENAME", particle_even, stackFn, os.getcwd() )
+        self.assertTrue(ImageHandler().compareData(particle_even, stackFn, tolerance=0.01))
 
     def test_coordinate2(self):
         """
@@ -105,6 +112,7 @@ class TestEmxWeb(tests.BaseTest):
         self.url = "Coordinates/Test2/"
         micFn = self.downloadFile("micrograph.mrc")
         emxFn = self.downloadFile("coordinates.emx")
+        particle_odd = self.downloadFile("particle_odd.mrcs")
 
         protEmxImport = self.newProtocol(ProtImportParticles,
                                            objLabel='from emx (coordinatesTest2)',
@@ -129,7 +137,10 @@ class TestEmxWeb(tests.BaseTest):
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=129,
                                        downsampleType=0,
+                                       doRemoveDust=False,
+                                       doNormalize = False,
                                        doFlip=False,
+                                       doSort=False,
                                        downFactor=1)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
@@ -139,13 +150,17 @@ class TestEmxWeb(tests.BaseTest):
         protEmxExport = self.newProtocol(ProtEmxExport)
         protEmxExport.inputSet.set(protExtract.outputParticles)
         self.launchProtocol(protEmxExport)
-        #TODO: upload result to emx web site. Now it is down
+        stackFn = protExtract.outputParticles.getFirstItem().getFileName()
+        # this assert does not work is a compare the stack as a block
+        for num in range (1,8):
+            self.assertTrue(ImageHandler().compareData("%d@"%num+particle_odd, "%d@"%num+stackFn, tolerance=0.01))
 
     def test_coordinate3(self):
         #download data and create set of particles
         self.url = "Coordinates/Test1/"# the 1 is OK
         micFn = self.downloadFile("micrograph.mrc")
         emxFn = self.downloadFile("coordinates.emx")
+        particle_even = self.downloadFile("particle_even.mrcs")
 
         protEmxImport = self.newProtocol(ProtImportParticles,
                                            objLabel='from emx (coordinatesTest3)',
@@ -161,7 +176,7 @@ class TestEmxWeb(tests.BaseTest):
         outputCoords = getattr(protEmxImport, 'outputCoordinates', None)
 
         protExtract = self.newProtocol(XmippProtExtractParticles,
-                                       boxSize=129,
+                                       boxSize=128,
                                        downsampleType=0,
                                        doFlip=False,
                                        downFactor=1)
@@ -175,7 +190,9 @@ class TestEmxWeb(tests.BaseTest):
         self.launchProtocol(protEmxExport)
 
         #create output file
-        #TODO: upload result to emx web site. Now it is down
+        stackFn = protExtract.outputParticles.getFirstItem().getFileName()
+        #print("FILENAME", particle_even, stackFn, os.getcwd() )
+        self.assertTrue(ImageHandler().compareData(particle_even, stackFn, tolerance=0.01))
 
     def test_ctf1(self):
         """
