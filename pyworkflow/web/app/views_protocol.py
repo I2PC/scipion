@@ -275,7 +275,7 @@ def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualiz
 # Method to launch a protocol #
 def protocol(request):
     project, protocol = loadProtocolProject(request)
-    updateProtocolParams(request, protocol, project)    
+    updateProtocolParams(request, protocol, project)
     errors = protocol.validate()
 
     if len(errors) == 0:
@@ -294,8 +294,9 @@ def updateProtocolParams(request, protocol, project):
     """ Update the protocol values from the Web-form.
     This function will be used from save_protocol and execute_protocol.
     """
+
     # PARAMS
-    for paramName, _ in protocol.iterDefinitionAttributes():
+    for paramName, param in protocol.iterDefinitionAttributes():
         updateParam(request, project, protocol, paramName)
     
     # SPECIAL_PARAMS
@@ -340,9 +341,21 @@ def updateParam(request, project, protocol, paramName):
         paramName: name of the attribute to be set in the protocol
             from the web form
     """
+
     attr = getattr(protocol, paramName)
 #     print "ParamName: %s , Attr: %s" % (paramName, attr)
-        
+
+    # If the param exists
+    if protocol._definition._paramsDict.has_key(paramName):
+        # Get the param object to validate it
+        param = protocol._definition._paramsDict[paramName]
+
+        # Validate the value
+        errors = param.validate(attr)
+
+        if errors:
+            return
+
     if isinstance(attr, PointerList):
         attr.clear()
         valueList = request.POST.getlist(paramName)
@@ -355,8 +368,7 @@ def updateParam(request, project, protocol, paramName):
         if isinstance(attr, Pointer):
             setPointerValue(project, attr, htmlValue, paramName, attr)
         else: 
-            attr.set(htmlValue) # set the value for normal attribues
-
+            attr.set(htmlValue) # set the value for normal attributes
         
 def save_protocol(request):
     project, protocol = loadProtocolProject(request)
