@@ -382,7 +382,7 @@ class LabelParam(StringParam):
 class IntParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Integer, **args)
-        self.addValidator(Format(int, error="should be an integer",
+        self.addValidator(Format(int, error="should be an integer number",
                                  allowsNull=args.get('allowsNull', False)))
         
         
@@ -402,7 +402,7 @@ class EnumParam(IntParam):
 class FloatParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Float, **args)
-        self.addValidator(Format(float, error="should be a float",
+        self.addValidator(Format(float, error="should be a floating point number",
                                  allowsNull=args.get('allowsNull', False)))
 
         

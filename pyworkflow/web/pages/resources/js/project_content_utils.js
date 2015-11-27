@@ -1017,6 +1017,10 @@ function refreshRuns(mode) {
 	 * Method to update the run list/graph
 	 */
 
+	if (typeof dontrefresh === 'boolean'){
+		return;
+	}
+
 	var URL = getSubDomainURL() + '/run_table_graph/'
 
 	$(function() {

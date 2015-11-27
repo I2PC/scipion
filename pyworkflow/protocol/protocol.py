@@ -956,11 +956,11 @@ class Protocol(Step):
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: %s' % self.workingDir)
         self.info('      runMode: %s' % MODE_CHOICES[self.runMode.get()])
-        try:
-            self.info('          MPI: %d' % self.numberOfMpi)
-            self.info('      threads: %d' % self.numberOfThreads)
-        except Exception as e:
-            self.info('  * Cannot get information about MPI/threads (%s)' % e)
+
+        numberOfMpi = self.numberOfMpi if self.allowMpi else 1
+        numberOfThreads = self.numberOfThreads if self.allowThreads else 1
+        self.info('          MPI: %d' % numberOfMpi)
+        self.info('      threads: %d' % numberOfThreads)
 
         Step.run(self)
         self._endRun()
