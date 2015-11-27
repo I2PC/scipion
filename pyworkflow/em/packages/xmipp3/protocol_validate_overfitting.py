@@ -100,7 +100,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             (self.input3DReference.get().getFileName(),self._getExtraPath("Ref_Projections.stk"),
              self.angSampRate.get(),self.symmetryGroup.get(),0,90, self._getFileName('input_xmd'))
         
-        self.runJob("xmipp_angular_project_library",args)
+        self.runJob("xmipp_angular_project_library",args, numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
         
         
         numberOfParticles=getFloatListFromValues(self.numberOfParticles.get())
@@ -157,7 +157,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             args="-i %s -o %s -r %s --Ri 0 --Ro -1 --mem 2 --append "%\
                 (fnImgsN,fnImgsAlignN,self._getExtraPath("Ref_Projections.stk"))
             
-            self.runJob('xmipp_angular_projection_matching',args)
+            self.runJob('xmipp_angular_projection_matching',args, numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
            
            
            
