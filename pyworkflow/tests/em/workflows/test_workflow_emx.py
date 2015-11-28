@@ -420,6 +420,7 @@ class TestEmxWeb(tests.BaseTest):
         self.url = "Orientation/Test3/"
         imgFn = self.downloadFile("stack2D.mrc")
         emxFn = self.downloadFile("stack2D.emx")
+        reconstruct  = self.downloadFile("1GR5_reference.mrc")
 
         protEmxImport = self.newProtocol(ProtImportParticles,
                                          objLabel='from emx (orientation3)',
@@ -446,3 +447,5 @@ class TestEmxWeb(tests.BaseTest):
         self.launchProtocol(protEmxExport)
 
         #TODO: upload result to emx web site. Now it is down
+        stackFn = os.path.join(protEmxExport._getPath('emxData'),"data.mrc")
+        self.assertTrue(ImageHandler().compareData(reconstruct, stackFn, tolerance=0.01))
