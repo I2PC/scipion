@@ -1006,7 +1006,7 @@ void projectAtom(const Atom &atom, Projection &P,
             std::cout.flush();
 #endif
 
-            // Add at the correspondant pixel the found intersection ,,,,,,,,,,
+            // Add at the correspondent pixel the found intersection ,,,,,,,,,,
             IMGPIXEL(P, v, u) += length;
         }
 }

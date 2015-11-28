@@ -342,7 +342,7 @@ void NaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 {
     size_t iK=(size_t) K;
     if (MAT_XSIZE(cost)!=iK || MAT_YSIZE(cost)!=iK)
-        REPORT_ERROR(ERR_MULTIDIM_SIZE,"Cost matrix does not have the apropriate size");
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,"Cost matrix does not have the appropriate size");
     __cost=cost;
 }
 

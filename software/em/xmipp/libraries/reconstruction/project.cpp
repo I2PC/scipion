@@ -117,7 +117,7 @@ void ProgProject::defineParams()
     addParamsLine("== Generating a set of projections == ");
     addParamsLine("  [--params <parameters_file>]           : File containing projection parameters");
     addParamsLine("                                         : Check the manual for a description of the parameters");
-    addParamsLine("  [--sym <sym_file>]                     : It is used for computing the assymetric unit");
+    addParamsLine("  [--sym <sym_file>]                     : It is used for computing the asymmetric unit");
     addParamsLine("  [--only_create_angles]                 : Do not create projections");
     addParamsLine("== Generating a single projection == ");
     addParamsLine("  [--angles <rot> <tilt> <psi> <x=0.> <y=0.>]: Angles and shifts for a single projection");

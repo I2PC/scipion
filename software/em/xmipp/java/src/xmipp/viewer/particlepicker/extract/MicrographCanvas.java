@@ -38,7 +38,7 @@ public class MicrographCanvas extends XmippImageCanvas
 			iw.updateImage(getImage());
 		}
 		else
-			this.iw = new ImageWindow(getImage(), this);// if you dont provide
+			this.iw = new ImageWindow(getImage(), this);// if you don't provide
 														// iw, I init mine
 		// iw.maximize();
 		iw.pack();

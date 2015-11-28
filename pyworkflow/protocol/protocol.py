@@ -504,7 +504,7 @@ class Protocol(Step):
         """
         if hasattr(self, '_definition'):
             for paramName, param in self._definition.iterParams():
-                # Create the var with value comming from kwargs or from 
+                # Create the var with value coming from kwargs or from 
                 # the default param definition
                 var = param.paramClass(value=kwargs.get(paramName, param.default.get()))
                 setattr(self, paramName, var)
@@ -714,7 +714,7 @@ class Protocol(Step):
         
     def __findStartingStep(self):
         """ From a previous run, compare self._steps and self._prevSteps
-        to find which steps we need to start at, skipping sucessful done 
+        to find which steps we need to start at, skipping successful done 
         and not changed steps. Steps that needs to be done, will be deleted
         from the previous run storage.
         """
@@ -1181,7 +1181,7 @@ class Protocol(Step):
         return d
     
     def useQueue(self):
-        """ Return True if the protocol should be launched throught a queue. """
+        """ Return True if the protocol should be launched through a queue. """
         return self._useQueue.get()
     
     def getQueueParams(self):

@@ -48,7 +48,7 @@ protected:
 
         XmippMetadataProgram::defineParams();
         addUsageLine("Operate with image files headers. By default in Xmipp, geometrical transformations");
-        addUsageLine("comming in images files headers are ignored. Instead this information is read from");
+        addUsageLine("coming in images files headers are ignored. Instead this information is read from");
         addUsageLine("the images metadata if exist. With this program geometrical transformations can be");
         addUsageLine("extracted to a metadata or assigned to header, also allows print or reset image file headers.");
         addParamsLine("[   --print <decompose=0>]    : Print the geometrical transformations in image file headers.");

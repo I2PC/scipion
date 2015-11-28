@@ -75,7 +75,7 @@ public:
     /** number of samples */
     size_t number_of_samples;
 
-    /** number of samples in the assymetric unit*/
+    /** number of samples in the asymmetric unit*/
     size_t numberSamplesAsymmetricUnit;
 
     /** neighborhood  in radians */
@@ -194,16 +194,16 @@ public:
         see  SymList class */
     void createSymFile(FileName simFp,int  symmetry, int sym_order);
 
-    /** save assymetric unit sampling in a doc file */
+    /** save asymmetric unit sampling in a doc file */
     void createAsymUnitFile(const FileName& docfilename);
 
-    /** for each point i in the assymetric sampling unit cell
-    compute the neighbors inside the assymetric unit cell,
+    /** for each point i in the asymmetric sampling unit cell
+    compute the neighbors inside the asymmetric unit cell,
     save not only the neighbors but the angle psi
     */
     void computeNeighbors(bool only_winner=false);
 
-    /** Save neighbors as threee metadtada blocks
+    /** Save neighbors as three metadtada blocks
      * 1) header with sampling rate and angular distance
      * 2) one row for ach experimentald data with neighbours
      * 3) sampling points
