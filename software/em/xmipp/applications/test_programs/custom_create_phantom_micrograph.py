@@ -252,7 +252,7 @@ def createPhantomMicrograph(log, WorkingDir, ORoot, micNo):
         copyFile(log, InputMotif, tmpDescr)
         # Rotate the phantom
         runProgram(" -i %(tmpDescr)s --operation rotate_axis 0 0 1 %(rot)d" % locals())
-        # Flip particles if neccesary
+        # Flip particles if necessary
         flip = DoFlip and random.rand() <= FlipRate
         if flip:            
             runProgram(" -i %(tmpDescr)s --operation rotate_axis 0 1 0 180" % locals())

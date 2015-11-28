@@ -142,7 +142,7 @@ class XmippProtDimredNMA(ProtAnalysis3D):
     #--------------------------- STEPS functions --------------------------------------------   
     
     def convertInputStep(self, deformationFile, inputId):
-        """ Iterate throught the images and write the 
+        """ Iterate through the images and write the 
         plain deformation.txt file that will serve as 
         input for dimensionality reduction.
         """

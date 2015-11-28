@@ -39,15 +39,15 @@
 /// @defgroup Filters Filters
 /// @ingroup DataLibrary
 
-/** Substract background
+/** Subtract background
  * @ingroup Filters
  *
  * The background is computed as the plane which best fits all density values,
- * then this plane is substracted from the image.
+ * then this plane is subtracted from the image.
  */
 void substractBackgroundPlane(MultidimArray<double> &I);
 
-/** Substract background
+/** Subtract background
  * @ingroup Filters
  *
  * The background is computed as a rolling ball operation with a ball
@@ -715,7 +715,7 @@ double euclidianDistance(const MultidimArray< T >& x,
  * in the common positions.
  * P(x), P(y) are 1D-histograms of the values of matrix x and y.
  * P(x,y)     is the 2D-histogram, i.e. the count of times that a certain
- *            combination of values in matrices x and y has ocurred.
+ *            combination of values in matrices x and y has occurred.
  * The sum runs over all histogram bins.
  *
  * The histograms are calculated using the number of bins nx and ny. If no

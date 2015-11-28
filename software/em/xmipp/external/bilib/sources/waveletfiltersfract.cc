@@ -327,7 +327,7 @@ void main()
 
   Note: Mathematically, the sum is divided into two sums. Each sum is
   		estimated using a correcting factor to speed up convergence.
-        The two correcting factors have been choosen so that the error
+        The two correcting factors have been chosen so that the error
         is minimal for f=[0,0.5]
 
 */

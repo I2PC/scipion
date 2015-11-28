@@ -237,7 +237,7 @@ void ProgOperate::defineParams()
     XmippMetadataProgram::defineParams();
     addParamsLine("== Binary operations: ==");
     addParamsLine("   --plus <file_or_value>    :Sums two images, volumes or adds a numerical value to an image");
-    addParamsLine("or --minus <file_or_value>   :Substracts two images, volumes or substracts a numerical value to an image");
+    addParamsLine("or --minus <file_or_value>   :Subtracts two images, volumes or subtracts a numerical value to an image");
     addParamsLine("or --mult <file_or_value>    :Multiplies two images, volumes, or multiplies per a given number");
     addParamsLine("or --divide <file_or_value>  :Divides two images, volumes, or divides per a given number");
     addParamsLine("or --min <file_or_value>     :Minimum of two images, volumes, or number (pixel-wise)");
@@ -274,7 +274,7 @@ void ProgOperate::defineParams()
     addExampleLine("xmipp_image_operate -i volumes.sel --slice 10 -o images.sel");
     addExampleLine("Sum 5 to every image in images.sel and rewrite the input images", false);
     addExampleLine("xmipp_image_operate -i images.sel --plus 5");
-    addExampleLine("Substract two volumes:", false);
+    addExampleLine("Subtract two volumes:", false);
     addExampleLine("xmipp_image_operate -i volume1.vol --minus volume2.vol -o volume3.vol");
     addExampleLine("Multiply an image by 2 in every pixel:", false);
     addExampleLine("xmipp_image_operate -i image.xmp --mult 2 -o image2.xmp");

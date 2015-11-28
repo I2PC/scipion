@@ -64,7 +64,7 @@ class ChimeraServer:
                         for command in commandList:
                             runCommand(command)
 
-                    elif msg == 'end':#if you dont break cicle volume is never shown
+                    elif msg == 'end':#if you don't break cicle volume is never shown
                         break
 
                 else:
