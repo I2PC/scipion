@@ -2089,7 +2089,7 @@ public:
 
     /** 2D Slice access for reading.
      *
-     * This function returns a slice (a 2D matrix) corresponding to the choosen
+     * This function returns a slice (a 2D matrix) corresponding to the chosen
      * slice inside the nth 3D matrix, the numbering of the slices is also logical not
      * physical. This function differs from the previous one in that this one
      * cuts and assign in a single step instead of in two steps, as in
@@ -2302,7 +2302,7 @@ public:
     /** Get Column
      *
      * This function returns a column vector corresponding to the
-     * choosen column.
+     * chosen column.
      *
      * @code
      * std::vector< double > v;
@@ -2327,7 +2327,7 @@ public:
 
     /** Set Column
      *
-     * This function sets a column vector corresponding to the choosen column
+     * This function sets a column vector corresponding to the chosen column
      * inside matrix.
      *
      * @code
@@ -2352,7 +2352,7 @@ public:
 
     /** Get row
      *
-     * This function returns a row vector corresponding to the choosen
+     * This function returns a row vector corresponding to the chosen
      * row inside the nth 2D matrix, the numbering of the rows is also
      * logical not physical.
      *
@@ -2379,7 +2379,7 @@ public:
 
     /** Set Row
      *
-     * This function sets a row vector corresponding to the choosen row in the 2D Matrix
+     * This function sets a row vector corresponding to the chosen row in the 2D Matrix
      *
      * @code
      * m.setRow(-2, m.row(1)); // Copies row 1 in row -2
@@ -3476,7 +3476,7 @@ public:
      * // The array is now ranging from 0 to 1
      * @endcode
      */
-    // This function must be explictly implemented outside
+    // This function must be explicitly implemented outside
     void rangeAdjust(T minF, T maxF, MultidimArray<int> &mask)
     {
         if (MULTIDIM_SIZE(*this) <= 0)
@@ -3570,7 +3570,7 @@ public:
      * // The array has got now 0 mean and stddev=1
      * @endcode
      */
-    // This function must be explictly implemented outside.
+    // This function must be explicitly implemented outside.
     void statisticsAdjust(double avgF, double stddevF)
     {
         double avg0=0.0, stddev0=0.0;

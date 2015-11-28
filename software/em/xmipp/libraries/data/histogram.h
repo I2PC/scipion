@@ -529,7 +529,7 @@ void compute_hist(const MultidimArray< T >
  * which we know to belong to the protein area, while the second histogram is
  * for the grey-level of voxels which we know to belong to the background. Then
  * the intersection area between the both associated pdf's represents the
- * probability of comitting an error when classifying a voxel, ie, the
+ * probability of committing an error when classifying a voxel, ie, the
  * probability of saying that a voxel is protein when it really is background
  * and viceversa. This function allows you to compute this probability error
  * when the two histograms are provided. Be careful that this probability
@@ -666,7 +666,7 @@ void histogram_equalization(MultidimArray<T>
  * The histogram with 2 parameters can be regarded as an approximation to the
  * joint probability density function of two variables (just dividing the
  * histogram by its total mass). Ie, the 2D histogram is the count of times that
- * a certain combination of values in two variables has ocurred. For example,
+ * a certain combination of values in two variables has occurred. For example,
  * this 2D histograms can be used to plot the projection distribution over the
  * topological sphere, in such situation only the first two Euler angles are
  * interesting and we could plot how many projections are there with first angle

@@ -508,7 +508,7 @@ void printEnd(FILE * output,  const ProgramDef &program, int v, bool programGui)
 
     fprintf(output,
             "\n# {hidden} Program name\n"
-            "\"\"\"This is the name of the program to be executed, dont change this!!!\"\"\"\n"
+            "\"\"\"This is the name of the program to be executed, do not change this!!!\"\"\"\n"
             "ProgramName = \"%s\"\n", program.name.c_str());
     size_t numberOfComments = program.usageComments.size();
     if (numberOfComments > 0)

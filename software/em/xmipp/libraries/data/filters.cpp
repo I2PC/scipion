@@ -28,7 +28,7 @@
 #include "morphology.h"
 #include "wavelet.h"
 
-/* Substract background ---------------------------------------------------- */
+/* Subtract background ---------------------------------------------------- */
 void substractBackgroundPlane(MultidimArray<double> &I)
 {
 
@@ -57,12 +57,12 @@ void substractBackgroundPlane(MultidimArray<double> &I)
     A(2, 1) = A(1, 2);
     solve(A, b, x);
 
-    // Now substract the plane
+    // Now subtract the plane
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     A2D_ELEM(I, i, j) -= x(0) * i + x(1) * j + x(2);
 }
 
-/* Substract background ---------------------------------------------------- */
+/* Subtract background ---------------------------------------------------- */
 void substractBackgroundRollingBall(MultidimArray<double> &I, int radius)
 {
 
@@ -2605,7 +2605,7 @@ void localThresholding(MultidimArray<double> &img, double C, double dimLocal,
             convolved(i, j) /= N;
     }
 
-    // Substract the original from the convolved image and threshold
+    // Subtract the original from the convolved image and threshold
     result.initZeros(img);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(convolved)
     {

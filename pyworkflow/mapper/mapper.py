@@ -123,7 +123,7 @@ class Mapper():
         return None
     
     def selectBy(self, **args):
-        """Select object meetings some criterias"""
+        """Select object meetings some criteria"""
         pass 
     
     def selectByClass(self, className, includeSubclasses=True):

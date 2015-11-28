@@ -190,7 +190,7 @@ int ImageBase::readHDF5(size_t select_img)
     switch(H5Tget_order(h5datatype))
     {
     case H5T_ORDER_ERROR:
-        REPORT_ERROR(ERR_IO, "readHDF5: error reading endianess.");
+        REPORT_ERROR(ERR_IO, "readHDF5: error reading endianness.");
         break;
     case H5T_ORDER_LE:
         swap = IsBigEndian();
@@ -199,7 +199,7 @@ int ImageBase::readHDF5(size_t select_img)
         swap = IsLittleEndian();
         break;
     default:
-        REPORT_ERROR(ERR_IO, "readHDF5: unkonwn endianess type, maybe mixed types.");
+        REPORT_ERROR(ERR_IO, "readHDF5: unknown endianness type, maybe mixed types.");
         break;
     }
 

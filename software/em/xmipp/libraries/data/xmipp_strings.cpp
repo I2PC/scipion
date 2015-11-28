@@ -105,7 +105,7 @@ String simplify( const String& str )
     return temp;
 }
 
-/* Trim all spaces from the begining and the end */
+/* Trim all spaces from the beginning and the end */
 void trim(String& str)
 {
     String::size_type pos = str.find_last_not_of(' ');

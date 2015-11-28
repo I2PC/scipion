@@ -396,7 +396,7 @@ void voxels2blobs(const MultidimArray<double> *vol_voxels,
     corresponding to the 1 positions within the mask must be adjusted.
     An exception is thrown if the mask and voxels volume are both NULL.
 
-    Then mean and maximum error commited for each blob are returned.
+    Then mean and maximum error committed for each blob are returned.
 
     Valid eq_modes are
      \\VARTK:     ART by blocks for volumes.

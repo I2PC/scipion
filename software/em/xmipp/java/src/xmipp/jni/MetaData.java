@@ -408,7 +408,7 @@ public class MetaData {
 
 	public native double[] getColumnValues(int label);
 
-	// set functions conection with MetaData class in C++
+	// set functions connection with MetaData class in C++
 	public boolean setEnabled(boolean value, long objId) {
 		return setValueInt(MDLabel.MDL_ENABLED, value ? 1 : -1, objId);
 	}
@@ -469,7 +469,7 @@ public class MetaData {
 
 	/**
 	 * Union of all elements in two Metadata, duplicating common elements.
-	 * Result in calling metadata object, repetion are allowed
+	 * Result in calling metadata object, repetition are allowed
 	 */
 	public native void unionAll(MetaData mdIn);
 

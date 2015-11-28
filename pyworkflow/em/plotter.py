@@ -153,7 +153,7 @@ class PlotData():
             self._table = self._loadSet(fileName, tableName)
             self.getColumnValues = self._getValuesFromSet
             self.getSize = self._table.getSize
-        else: # asume a metadata file
+        else: # assume a metadata file
             self._table = self._loadMd(fileName, tableName)
             self.getColumnValues = self._getValuesFromMd
             self.getSize = self._table.size

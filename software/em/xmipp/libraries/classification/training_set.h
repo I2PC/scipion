@@ -145,9 +145,9 @@ public:
 
 
 
-    /** Returns an iterator to the begining of the subset
+    /** Returns an iterator to the beginning of the subset
         Parameter: _um is the mode: training, testing or validation
-        @return an iterator to the begining of the subset;
+        @return an iterator to the beginning of the subset;
     */
     splitIt beginSubset(unsigned _um)
     {

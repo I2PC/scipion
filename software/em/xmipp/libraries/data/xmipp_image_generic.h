@@ -230,7 +230,7 @@ public:
     int readApplyGeo(const MetaData &md, size_t objId,
                      const ApplyGeoParams &params = DefaultApplyGeoParams);
 
-    /** Apply geometry in refering metadata to the image */
+    /** Apply geometry in referring metadata to the image */
     void applyGeo(const MetaData &md, size_t objId,
                   const ApplyGeoParams &params = DefaultApplyGeoParams);
     /* Euler mirror Y ---------------------------------------------------------- */
@@ -459,7 +459,7 @@ public:
     * An image file, which name and format are given by filename,
     * is created. Only the header info is written, and if image number is given, then disk space
     * is reserved until select_img .
-    * Swap the endianess of the image header is also possible.
+    * Swap the endianness of the image header is also possible.
     */
 void createEmptyFile(const FileName &_filename, int Xdim, int Ydim, int Zdim = 1,
                      size_t select_img = APPEND_IMAGE, bool isStack = false,

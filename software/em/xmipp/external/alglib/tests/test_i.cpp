@@ -3393,7 +3393,7 @@ int main()
                 // approach (Markov Chains for Proportional/Population Data), i.e.
                 // to restore hidden transition matrix P using actual portfolio data.
                 // We have:
-                // * poportional data, i.e. proportion of loans in the normal and past 
+                // * proportional data, i.e. proportion of loans in the normal and past 
                 //   due states (not portfolio size measured in some currency, although 
                 //   it is possible to work with population data too)
                 // * two tracks, i.e. two sequences which describe portfolio
@@ -3486,7 +3486,7 @@ int main()
                 // approach (Markov Chains for Proportional/Population Data), i.e.
                 // to restore hidden transition matrix P using actual portfolio data.
                 // We have:
-                // * poportional data, i.e. proportion of loans in the current and past 
+                // * proportional data, i.e. proportion of loans in the current and past 
                 //   due states (not portfolio size measured in some currency, although 
                 //   it is possible to work with population data too)
                 // * two tracks, i.e. two sequences which describe portfolio
@@ -5955,7 +5955,7 @@ int main()
             try
             {
                 //
-                // Spline built witn spline1dbuildcubic() can be non-monotone even when
+                // Spline built with spline1dbuildcubic() can be non-monotone even when
                 // Y-values form monotone sequence. Say, for x=[0,1,2] and y=[0,1,1]
                 // cubic spline will monotonically grow until x=1.5 and then start
                 // decreasing.
