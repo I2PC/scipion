@@ -66,13 +66,13 @@ class TestEmxWeb(tests.BaseTest):
         particle_even = self.downloadFile("particle_even.mrcs")
 
         protEmxImport = self.newProtocol(ProtImportParticles,
-                                           objLabel='from emx (coordinatesTest1)',
-                                           importFrom=ProtImportParticles.IMPORT_FROM_EMX,
-                                           emxFile=emxFn,
-                                           alignType=3,
-                                           voltage=100,
-                                           magnification=10000,
-                                           samplingRate=2.46)
+                                         objLabel='from emx (coordinatesTest1)',
+                                         importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                         emxFile=emxFn,
+                                         alignType=3,
+                                         voltage=100,
+                                         magnification=10000,
+                                         samplingRate=2.0)
         self.launchProtocol(protEmxImport)
 
         outputMics = getattr(protEmxImport, 'outputMicrographs', None)
@@ -100,9 +100,11 @@ class TestEmxWeb(tests.BaseTest):
         protEmxExport = self.newProtocol(ProtEmxExport)
         protEmxExport.inputSet.set(protExtract.outputParticles)
         self.launchProtocol(protEmxExport)
-        stackFn = protExtract.outputParticles.getFirstItem().getFileName()
-        #print("FILENAME", particle_even, stackFn, os.getcwd() )
+        stackFn = os.path.join(protEmxExport._getPath('emxData'),"data.mrc")
         self.assertTrue(ImageHandler().compareData(particle_even, stackFn, tolerance=0.01))
+        #There is no way to compare emx fiels, they should bw different
+        #stackEMX = os.path.join(protEmxExport._getPath('emxData'),"data.emx")
+        #self.assertTrue(ImageHandler().compareData(particle_even, stackFn, tolerance=0.01))
 
     def test_coordinate2(self):
         """
@@ -115,13 +117,13 @@ class TestEmxWeb(tests.BaseTest):
         particle_odd = self.downloadFile("particle_odd.mrcs")
 
         protEmxImport = self.newProtocol(ProtImportParticles,
-                                           objLabel='from emx (coordinatesTest2)',
-                                           importFrom=ProtImportParticles.IMPORT_FROM_EMX,
-                                           emxFile=emxFn,
-                                           alignType=3,
-                                           voltage=100,
-                                           magnification=10000,
-                                           samplingRate=2.46)
+                                         objLabel='from emx (coordinatesTest2)',
+                                         importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                         emxFile=emxFn,
+                                         alignType=3,
+                                         voltage=100,
+                                         magnification=10000,
+                                         samplingRate=2.0)
         self.launchProtocol(protEmxImport)
 
         outputMics = getattr(protEmxImport, 'outputMicrographs', None)
@@ -150,7 +152,7 @@ class TestEmxWeb(tests.BaseTest):
         protEmxExport = self.newProtocol(ProtEmxExport)
         protEmxExport.inputSet.set(protExtract.outputParticles)
         self.launchProtocol(protEmxExport)
-        stackFn = protExtract.outputParticles.getFirstItem().getFileName()
+        stackFn = os.path.join(protEmxExport._getPath('emxData'),"data.mrc")
         # this assert does not work is a compare the stack as a block
         for num in range (1,8):
             self.assertTrue(ImageHandler().compareData("%d@"%num+particle_odd, "%d@"%num+stackFn, tolerance=0.01))
@@ -163,13 +165,13 @@ class TestEmxWeb(tests.BaseTest):
         particle_even = self.downloadFile("particle_even.mrcs")
 
         protEmxImport = self.newProtocol(ProtImportParticles,
-                                           objLabel='from emx (coordinatesTest3)',
-                                           importFrom=ProtImportParticles.IMPORT_FROM_EMX,
-                                           emxFile=emxFn,
-                                           alignType=3,
-                                           voltage=100,
-                                           magnification=10000,
-                                           samplingRate=2.46)
+                                         objLabel='from emx (coordinatesTest3)',
+                                         importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                         emxFile=emxFn,
+                                         alignType=3,
+                                         voltage=100,
+                                         magnification=10000,
+                                         samplingRate=2.0)
         self.launchProtocol(protEmxImport)
 
         outputMics = getattr(protEmxImport, 'outputMicrographs', None)
@@ -178,7 +180,10 @@ class TestEmxWeb(tests.BaseTest):
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=128,
                                        downsampleType=0,
+                                       doRemoveDust=False,
+                                       doNormalize = False,
                                        doFlip=False,
+                                       doSort=False,
                                        downFactor=1)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
@@ -189,9 +194,8 @@ class TestEmxWeb(tests.BaseTest):
         protEmxExport.inputSet.set(protExtract.outputParticles)
         self.launchProtocol(protEmxExport)
 
-        #create output file
-        stackFn = protExtract.outputParticles.getFirstItem().getFileName()
-        #print("FILENAME", particle_even, stackFn, os.getcwd() )
+        #create output file  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        stackFn = os.path.join(protEmxExport._getPath('emxData'),"data.mrc")
         self.assertTrue(ImageHandler().compareData(particle_even, stackFn, tolerance=0.01))
 
     def test_ctf1(self):
@@ -221,13 +225,13 @@ class TestEmxWeb(tests.BaseTest):
         emxFn = self.downloadFile("ctf.emx")
         #import ctf
         protEmxImport = self.newProtocol(ProtImportParticles,
-                                           objLabel='from emx (ctfTest1)',
-                                           importFrom=ProtImportParticles.IMPORT_FROM_EMX,
-                                           emxFile=emxFn,
-                                           alignType=3,#none?
-                                           voltage=100,
-                                           magnification=10000,
-                                           samplingRate=2.46)
+                                         objLabel='from emx (ctfTest1)',
+                                         importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                         emxFile=emxFn,
+                                         alignType=3,#none?
+                                         voltage=100,
+                                         magnification=10000,
+                                         samplingRate=2.)
         self.launchProtocol(protEmxImport)
 
         outputMics = getattr(protEmxImport, 'outputMicrographs', None)
@@ -296,13 +300,13 @@ class TestEmxWeb(tests.BaseTest):
         emxFn = self.downloadFile("ctf2.emx")
         #import ctf
         protEmxImport = self.newProtocol(ProtImportParticles,
-                                           objLabel='from emx (ctfTest2)',
-                                           importFrom=ProtImportParticles.IMPORT_FROM_EMX,
-                                           emxFile=emxFn,
-                                           alignType=3,#none?
-                                           voltage=100,
-                                           magnification=10000,
-                                           samplingRate=2.46)
+                                         objLabel='from emx (ctfTest2)',
+                                         importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                         emxFile=emxFn,
+                                         alignType=3,#none?
+                                         voltage=100,
+                                         magnification=10000,
+                                         samplingRate=2.)
         self.launchProtocol(protEmxImport)
 
         outputMics = getattr(protEmxImport, 'outputMicrographs', None)
@@ -367,13 +371,13 @@ class TestEmxWeb(tests.BaseTest):
         emxFn = self.downloadFile("images.emx")
 
         protEmxImport = self.newProtocol(ProtImportParticles,
-                                           objLabel='from emx (orientation1)',
-                                           importFrom=ProtImportParticles.IMPORT_FROM_EMX,
-                                           emxFile=emxFn,
-                                           alignType=0,#2D align
-                                           voltage=100,
-                                           magnification=10000,
-                                           samplingRate=2.46)
+                                         objLabel='from emx (orientation1)',
+                                         importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                         emxFile=emxFn,
+                                         alignType=0,#2D align
+                                         voltage=100,
+                                         magnification=10000,
+                                         samplingRate=2.46)
         self.launchProtocol(protEmxImport)
         outputParticles = getattr(protEmxImport, 'outputParticles', None)
         #apply alignment
@@ -410,13 +414,13 @@ class TestEmxWeb(tests.BaseTest):
         emxFn = self.downloadFile("stack2D.emx")
 
         protEmxImport = self.newProtocol(ProtImportParticles,
-                                           objLabel='from emx (orientation3)',
-                                           importFrom=ProtImportParticles.IMPORT_FROM_EMX,
-                                           emxFile=emxFn,
-                                           alignType=2,#3D proj
-                                           voltage=100,
-                                           magnification=10000,
-                                           samplingRate=2.46)
+                                         objLabel='from emx (orientation3)',
+                                         importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                         emxFile=emxFn,
+                                         alignType=2,#3D proj
+                                         voltage=100,
+                                         magnification=10000,
+                                         samplingRate=2.46)
         self.launchProtocol(protEmxImport)
         outputParticles = getattr(protEmxImport, 'outputParticles', None)
         #reconstruct outputVolume
