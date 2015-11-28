@@ -221,8 +221,9 @@ class TestEmxWeb(tests.BaseTest):
         """
         #download data
         self.url = "CTF/Test1/"
-        micFn = self.downloadFile("delta.mrc")
+        deltaParticle = self.downloadFile("delta.mrc")
         emxFn = self.downloadFile("ctf.emx")
+        deltaParticleCTF = self.downloadFile("ctf.mrcs")
         #import ctf
         protEmxImport = self.newProtocol(ProtImportParticles,
                                          objLabel='from emx (ctfTest1)',
@@ -277,6 +278,8 @@ class TestEmxWeb(tests.BaseTest):
         protEmxExport.inputSet.set(protUnion.outputSet)
         self.launchProtocol(protEmxExport)
         #TODO: upload result to emx web site. Now it is down
+        stackFn = os.path.join(protEmxExport._getPath('emxData'),"data.mrc")
+        self.assertTrue(ImageHandler().compareData(deltaParticleCTF, stackFn, tolerance=0.01))
 
     def test_ctf2(self):
         """
@@ -296,8 +299,9 @@ class TestEmxWeb(tests.BaseTest):
         """
         #download data
         self.url = "CTF/Test2/"
-        micFn = self.downloadFile("data.mrc")
+        deltaPArticle = self.downloadFile("data.mrc")
         emxFn = self.downloadFile("ctf2.emx")
+        deltaParticleCTF = self.downloadFile("ctf.mrcs")
         #import ctf
         protEmxImport = self.newProtocol(ProtImportParticles,
                                          objLabel='from emx (ctfTest2)',
@@ -351,8 +355,9 @@ class TestEmxWeb(tests.BaseTest):
         protEmxExport = self.newProtocol(ProtEmxExport)
         protEmxExport.inputSet.set(protUnion.outputSet)
         self.launchProtocol(protEmxExport)
-
         #TODO: upload result to emx web site. Now it is down
+        stackFn = os.path.join(protEmxExport._getPath('emxData'),"data.mrc")
+        self.assertTrue(ImageHandler().compareData(deltaParticleCTF, stackFn, tolerance=0.01))
 
     def test_orientation1(self):
         """
