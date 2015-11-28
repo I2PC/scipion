@@ -372,8 +372,9 @@ class TestEmxWeb(tests.BaseTest):
         """
         #download data
         self.url = "Orientation/Test1/"
-        imgFn = self.downloadFile("images.mrc")
-        emxFn = self.downloadFile("images.emx")
+        imgFn    = self.downloadFile("images.mrc")
+        emxFn    = self.downloadFile("images.emx")
+        average  = self.downloadFile("average.mrc")
 
         protEmxImport = self.newProtocol(ProtImportParticles,
                                          objLabel='from emx (orientation1)',
@@ -402,6 +403,8 @@ class TestEmxWeb(tests.BaseTest):
         protEmxExport.inputSet.set(protApply.outputAverage)
         self.launchProtocol(protEmxExport)
         #TODO: upload result to emx web site. Now it is down
+        stackFn = os.path.join(protEmxExport._getPath('emxData'),"data.mrc")
+        self.assertTrue(ImageHandler().compareData(average, stackFn, tolerance=0.01))
 
     def test_orientation2(self):#really this is test 3
         """
