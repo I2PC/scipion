@@ -67,7 +67,7 @@ class TutorialIntro(Tutorial):
     def loadWorkflow(self):            
         # Create a new project
         self.ds = tests.DataSet.getDataSet('xmipp_tutorial')
-        self.project.loadProtocols(self.ds.getFile('workflow.json'))
+        self.project.loadProtocols(getWorkflow('workflow_tutorial_intro.json'))
         
         # Update the path of imports
         protImportMics = self.project.getProtocolsByClass('ProtImportMicrographs')[0]

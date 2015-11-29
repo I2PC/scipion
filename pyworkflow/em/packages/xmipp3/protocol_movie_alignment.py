@@ -297,10 +297,11 @@ class ProtMovieAlignment(ProtProcessMovies):
             command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s' % locals()
             command += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
             doSaveMovie = False
-            if self.inputMovies.get().getDark() is not None:
+
+            if self.inputMovies.get().getDark():
                 command += " --dark "+self.inputMovies.get().getDark()
                 grayCorrected=True
-            if self.inputMovies.get().getGain() is not None:
+            if self.inputMovies.get().getGain():
                 command += " --gain "+self.inputMovies.get().getGain()
                 grayCorrected=True
             try:
@@ -355,10 +356,10 @@ class ProtMovieAlignment(ProtProcessMovies):
             command += '--max_shift %d ' % 16#TODO expert param
             command += '--oavg %s ' % micName
             command += ' --oaligned %s ' % corrMovieName
-            if self.inputMovies.get().getDark() is not None:
+            if self.inputMovies.get().getDark():
                 command += " --dark "+self.inputMovies.get().getDark()
                 grayCorrected=True
-            if self.inputMovies.get().getGain() is not None:
+            if self.inputMovies.get().getGain():
                 command += " --gain "+self.inputMovies.get().getGain()
                 grayCorrected=True
             
@@ -402,10 +403,10 @@ class ProtMovieAlignment(ProtProcessMovies):
             command += '--nst %d --ned %d ' % (firstFrame, lastFrame)
             if self.doGPU:
                 command += '--gpu %d ' % gpuId
-            if self.inputMovies.get().getDark() is not None and not grayCorrected:
+            if self.inputMovies.get().getDark() and not grayCorrected:
                 command += " --dark "+self.inputMovies.get().getDark()
                 grayCorrected=True
-            if self.inputMovies.get().getGain() is not None and not grayCorrected:
+            if self.inputMovies.get().getGain() and not grayCorrected:
                 command += " --gain "+self.inputMovies.get().getGain()
                 grayCorrected=True
             try:
