@@ -261,7 +261,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
     def neighbourhoodDirectionStep(self, volName,volDir,sym):
           
         aFile = self.inputParticles.get()
-        aFileGallery =self._getExtraPath('gallery.doc')
+        aFileGallery =(volDir+'/gallery.doc')
         neighbours = (volDir+'/neighbours.xmd')
         
         params = '  --i1 %s' % aFile  
