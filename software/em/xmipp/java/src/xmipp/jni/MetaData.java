@@ -410,13 +410,15 @@ public class MetaData {
 
 	// set functions connection with MetaData class in C++
 	public boolean setEnabled(boolean value, long objId) {
+		
 		return setValueInt(MDLabel.MDL_ENABLED, value ? 1 : -1, objId);
+		
 	}
 
 	public boolean getEnabled(long objId) {
             if(!containsLabel(MDLabel.MDL_ENABLED))
                 return true;
-            return getValueInt(MDLabel.MDL_ENABLED, objId) > 0;
+            return getValueInt(MDLabel.MDL_ENABLED, objId) > -1;
 	}
 
 	public native boolean setValueInt(int label, int value, long objId);
