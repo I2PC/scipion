@@ -47,7 +47,7 @@ class Tester():
             help='only show/run tests containing the provided words')
         add('--skip', default=None, nargs='+',
             help='skip tests that contains these words')
-        add('--logs', default=False, action='store_true',
+        add('--log', default=None, nargs='?',
             help="Generate logs files with the output of each test.")
         add('--mode', default='modules', choices=['modules', 'classes', 'all'],
             help='how much detail to give in show mode')
@@ -79,7 +79,7 @@ class Tester():
         self.grep = args.grep
         self.skip = args.skip
         self.mode = args.mode
-        self.logs = args.logs
+        self.log = args.log
         
         if args.show:
             self.printTests(tests)
@@ -166,15 +166,18 @@ class Tester():
             f.seek(0)
             for l in lines:
                 if '<!-- LAST_ROW -->' in l:
-                    rowStr = "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>"
+                    rowStr = "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>"
                     if result: # != 0 means failed in os.system
                         resultStr = '<font color="red">[FAILED]</font>'
                     else:
                         resultStr = '<font color="green">[SUCCEED]</font>'
                     logStr = '<a href="file://%s">%s</a>' % (logFile, basename(logFile))
 
-                    print >> f, rowStr % (cmd, runTime, resultStr, logStr)
-                f.write(l)                
+                    print >> f, rowStr % (self.testCount, cmd, runTime, resultStr, logStr)
+                if self.headerPrefix  in l:
+                    f.write(self.headerPrefix + self.testTimer.getToc() + '</h3>\n')
+                else:
+                    f.write(l)                
             f.close()
         
     def _runNewItem(self, itemType, itemName):
@@ -186,7 +189,7 @@ class Tester():
                    (itemType == CLASS and self.mode == 'classes') or
                    (itemType == TEST and self.mode == 'all'))
             if run:
-                if self.logs:
+                if self.log:
                     logFile = join(self.testsDir, '%s.txt' % itemName)
                     cmdFull = cmd + " > %s 2>&1" % logFile
                 else:
@@ -196,37 +199,44 @@ class Tester():
                 print pwutils.green(cmdFull)
                 t = pwutils.Timer()
                 t.tic()
+                self.testCount += 1
                 result = os.system(cmdFull)
-                self._logTest(cmd.replace(scipion, 'scipion'), 
-                              t.getToc(), result, logFile)
+                if self.log:
+                    self._logTest(cmd.replace(scipion, 'scipion'), 
+                                  t.getToc(), result, logFile)
 
     def runTests(self, tests):
-        self.testsDir = join(os.environ['SCIPION_USER_DATA'], 'Tests', 'All')
-        pwutils.cleanPath(self.testsDir)
-        pwutils.makePath(self.testsDir)
-        self.testLog = join(self.testsDir, 'tests.html')
-        f = open(self.testLog, 'w')
-        print pwutils.prettyTime()
-        f.write("""<!DOCTYPE html>
-<html>
-<body>
-
-<h3>Test results </h3>
-
- <table style="width:100%" border="1">
-  <tr>
-    <th>Command</th>
-    <th>Time</th>
-    <th>Result</th>
-    <th>Log file</th>
-  </tr>
-<!-- LAST_ROW -->
-</table> 
-
-</body>
-</html>""")
-        
-        f.close()        
+        if self.log:
+            self.testsDir = join(os.environ['SCIPION_USER_DATA'], 'Tests', self.log)
+            pwutils.cleanPath(self.testsDir)
+            pwutils.makePath(self.testsDir)
+            self.testCount = 0
+            self.testLog = join(self.testsDir, 'tests.html')
+            self.testTimer = pwutils.Timer()
+            self.testTimer.tic()
+            self.headerPrefix = '<h3>Test results (%s) Duration: ' % pwutils.prettyTime()
+            f = open(self.testLog, 'w')
+            f.write("""<!DOCTYPE html>
+    <html>
+    <body>
+    """)
+            f.write(self.headerPrefix + '</h3>')
+            f.write("""    
+     <table style="width:100%" border="1">
+      <tr>
+        <th>#</th>
+        <th>Command</th>
+        <th>Time</th>
+        <th>Result</th>
+        <th>Log file</th>
+      </tr>
+    <!-- LAST_ROW -->
+    </table> 
+    
+    </body>
+    </html>""")
+            
+            f.close()        
         self._visitTests(tests, self._runNewItem)
         
         print "\n\nOpen results in your browser: \nfile:///%s" % self.testLog
