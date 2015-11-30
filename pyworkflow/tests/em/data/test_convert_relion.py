@@ -67,20 +67,16 @@ class TestConversions(BaseTest):
         
         print ">>> Reading star file: ", fnStar
         mdAll = md.MetaData(fnStar)
-        print "labels: ", [md.label2Str(l) for l in mdAll.getActiveLabels()]
-        print "size: ", mdAll.size()
-        
-        
-    def test_particlesToStar(self):
-        fnSqlite = self.getFile('particles')
-        partSet = SetOfParticles(filename=fnSqlite)
-        
-        for i, img in enumerate(partSet):
-            img.printAll()
-            if i > 10: 
-                break
-        partSet.printAll()
-        #print mdAll
+        goldLabels = ['rlnVoltage', 'rlnDefocusU', 'rlnDefocusV', 
+                      'rlnDefocusAngle', 'rlnSphericalAberration', 
+                      'rlnAmplitudeContrast', 'rlnImageName', 'rlnImageId', 
+                      'rlnCoordinateX', 'rlnCoordinateY', 'rlnMagnificationCorrection',
+                      'rlnNormCorrection', 'rlnMicrographName', 'rlnGroupNumber', 
+                      'rlnOriginX', 'rlnOriginY', 'rlnAngleRot', 'rlnAngleTilt', 
+                      'rlnAnglePsi', 'rlnClassNumber', 'rlnLogLikeliContribution', 
+                      'rlnNrOfSignificantSamples', 'rlnMaxValueProbDistribution']
+        self.assertEqual(goldLabels, [md.label2Str(l) for l in mdAll.getActiveLabels()])
+        self.assertEqual(4700, mdAll.size())
         
 
 class TestConvertBinaryFiles(BaseTest):
