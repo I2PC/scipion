@@ -100,14 +100,14 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                                 
             self._insertFunctionStep('qualifyModesStep', self.numberOfModes, self.collectivityThreshold.get(), self._getPath("pseudoatoms_%d.pdb"%voli.getObjId()))
             
-            ###### in this step I have to make a copy of modes.xmd
+            ###### in this step I have to make a copy of modes.xmd if it is necessary that it is
             
             
             '''for volj in volList:
                 if volj.getObjId() is not voli.getObjId():
                     refFn = getImageLocation(voli)
                     inVolFn = getImageLocation(volj)
-                    outVolFn = self._getExtraPath('output_vol_%03d_to_%03d.vol' % (volj.getObjId(), voli.getObjId()))
+                    outVolFn = self._getExtraPath('outputRigidAlignment_vol_%03d_to_%03d.vol' % (volj.getObjId(), voli.getObjId()))
                     self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, 
                                                 maskArgs, alignArgs)'''
                     
