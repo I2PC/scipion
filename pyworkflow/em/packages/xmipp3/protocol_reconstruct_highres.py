@@ -241,7 +241,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self.TsOrig=self.inputParticles.get().getSamplingRate()
         for self.iteration in range(firstIteration,firstIteration+self.numberOfIterations.get()):
             self.insertIteration(self.iteration)
-#         self._insertFunctionStep("createOutput")
+        self._insertFunctionStep("createOutput")
     
     def insertIteration(self,iteration):
         if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
@@ -253,7 +253,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self._insertFunctionStep('reconstruct',iteration)
         self._insertFunctionStep('postProcessing',iteration)
         self._insertFunctionStep('evaluateReconstructions',iteration)
-        #self._insertFunctionStep('cleanDirectory',iteration)
+        self._insertFunctionStep('cleanDirectory',iteration)
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertInputStep(self, inputParticlesId):
@@ -289,17 +289,30 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self.runJob('xmipp_metadata_utilities','-i %s --operate modify_values "itemId=particleId"'%fnAngles,numberOfMpi=1)
             imgSet = self.inputParticles.get()
             self.scaleFactor=Ts/imgSet.getSamplingRate()
-            print "Scale factor=",self.scaleFactor
             imgSetOut = self._createSetOfParticles()
             imgSetOut.copyInfo(imgSet)
             imgSetOut.setAlignmentProj()
-            iterSetMd = md.SetMdIterator(fnAngles, sortByLabel=md.MDL_ITEM_ID,
-                                         updateItemCallback=self._createItemMatrix)
+            self.iterMd = md.iterRows(fnAngles, md.MDL_PARTICLE_ID)
+            self.lastRow = next(self.iterMd) 
             imgSetOut.copyItems(imgSet,
-                                updateItemCallback=iterSetMd.updateItem)
+                                updateItemCallback=self._updateItem)
             self._defineOutputs(outputParticles=imgSetOut)
             self._defineSourceRelation(self.inputParticles, imgSetOut)
 
+    def _updateItem(self, particle, row):
+        count = 0
+        
+        while self.lastRow and particle.getObjId() == self.lastRow.getValue(md.MDL_PARTICLE_ID):
+            count += 1
+            if count:
+                self._createItemMatrix(particle, self.lastRow)
+            try:
+                self.lastRow = next(self.iterMd)
+            except StopIteration:
+                self.lastRow = None
+                    
+        particle._appendItem = count > 0
+        
     def _createItemMatrix(self, particle, row):
         if row.containsLabel(xmipp.MDL_CONTINUOUS_X):
             row.setValue(xmipp.MDL_SHIFT_X,row.getValue(xmipp.MDL_CONTINUOUS_X))
