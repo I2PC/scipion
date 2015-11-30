@@ -92,7 +92,7 @@ class XmippProtNMABase(EMProtocol):
         for l in lines:
             print >> fWarn, l
         fWarn.close()
-        
+                
     def computeModesStep(self, fnPseudoatoms, numberOfModes, cutoffStr):
         (baseDir,fnBase)=os.path.split(fnPseudoatoms)
         fnBase=fnBase.replace(".pdb","")
@@ -162,7 +162,7 @@ class XmippProtNMABase(EMProtocol):
         fh.close()
         return n
     
-    def qualifyModesStep(self, numberOfModes, collectivityThreshold, structureEM):
+    def qualifyModesStep(self, numberOfModes, collectivityThreshold, structureEM, suffix=''):
         self._enterWorkingDir()
         
         fnVec = glob("modes/vec.*")
@@ -175,11 +175,17 @@ class XmippProtNMABase(EMProtocol):
             msg += "However, the protocol allows only up to 200 modes as 20-100 modes are usually enough. If the number of"
             msg += "modes is below the minimum between these two numbers, consider increasing cut-off distance." 
             self._printWarnings(redStr(msg % (len(fnVec), numberOfModes)))
-    
+            print redStr('Warning: There are only %d modes instead of %d.'% (len(fnVec), numberOfModes))
+            print redStr("Check the number of modes you asked to compute and/or consider increasing cut-off distance.")
+            print redStr("The maximum number of modes allowed by the method for atomic normal mode analysis is 6 times")
+            print redStr("the number of RTB blocks and for pseudoatomic normal mode analysis 3 times the number of pseudoatoms.")
+            print redStr("However, the protocol allows only up to 200 modes as 20-100 modes are usually enough. If the number of")
+            print redStr("modes is below the minimum between these two numbers, consider increasing cut-off distance.")
+           
         fnDiag = "diagrtb.eigenfacs"
         
         if structureEM:
-            self.runJob("nma_reformatForElNemo.sh", "%d" % numberOfModes,env=getNMAEnviron())
+            self.runJob("nma_reformatForElNemo.sh", "%d" % len(fnVec),env=getNMAEnviron())
             fnDiag = "diag_arpack.eigenfacs"
             
         self.runJob("echo", "%s | nma_check_modes" % fnDiag,env=getNMAEnviron())
@@ -189,7 +195,7 @@ class XmippProtNMABase(EMProtocol):
         mdOut = xmipp.MetaData()
         collectivityList = []
         
-        for n in range(numberOfModes):
+        for n in range(len(fnVec)):
             line = fh.readline()
             collectivity = float(line.split()[1])
             collectivityList.append(collectivity)
@@ -211,17 +217,17 @@ class XmippProtNMABase(EMProtocol):
         idxSorted = [i[0] for i in sorted(enumerate(collectivityList), key=lambda x:x[1])]
         
         score = []
-        for j in range(numberOfModes):
+        for j in range(len(fnVec)):
             score.append(0)
         
         modeNum = []
         l = 0
-        for k in range(numberOfModes):
+        for k in range(len(fnVec)):
             modeNum.append(k)
             l += 1
         
         #score = [0]*numberOfModes
-        for i in range(numberOfModes):
+        for i in range(len(fnVec)):
             score[i] += i+1
             score[idxSorted[i]] += modeNum[i] - i
         i = 0
@@ -229,7 +235,7 @@ class XmippProtNMABase(EMProtocol):
             score_i = float(score[i])/(2.0*l)
             mdOut.setValue(xmipp.MDL_NMA_SCORE, score_i, objId)
             i+=1
-        mdOut.write("modes.xmd")
+        mdOut.write("modes%s.xmd"%suffix)
         cleanPath("Chkmod.res")
         
         self._leaveWorkingDir()

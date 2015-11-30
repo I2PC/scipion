@@ -25,20 +25,24 @@
 # *
 # **************************************************************************
 
+import os
+from glob import glob
+
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPattern, createLink, moveFile, copyFile, makePath, cleanPath
-from os.path import basename, exists
+#from os.path import basename, exists
 from pyworkflow.object import String
-import os
 from pyworkflow.em.data import SetOfNormalModes
 from pyworkflow.em.packages.xmipp3 import XmippMdRow
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
 import xmipp
 from pyworkflow.em.packages.xmipp3.nma.protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
-from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume, ALIGN_MASK_CIRCULAR, ALIGN_ALGORITHM_EXHAUSTIVE, ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL,ALIGN_ALGORITHM_LOCAL, ALIGN_ALGORITHM_FAST_FOURIER, ALIGN_MASK_BINARY_FILE
+from pyworkflow.em.packages.xmipp3.protocol_align_volume import (XmippProtAlignVolume, ALIGN_MASK_CIRCULAR, ALIGN_ALGORITHM_EXHAUSTIVE, 
+                                                                ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL,ALIGN_ALGORITHM_LOCAL, ALIGN_ALGORITHM_FAST_FOURIER, 
+                                                                ALIGN_MASK_BINARY_FILE)
 
 
 
@@ -55,6 +59,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
+        
         form.addSection(label='Input')
         form.addParam('inputVolumes', params.MultiPointerParam, pointerClass='SetOfVolumes,Volume',  
                       label="Input volume(s)", important=True, 
@@ -73,63 +78,73 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         
     #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
+        
         cutoffStr=''
         if self.cutoffMode == NMA_CUTOFF_REL:
             cutoffStr = 'Relative %f'%self.rcPercentage.get()
         else:
             cutoffStr = 'Absolute %f'%self.rc.get()
 
-
         self.alignmentAlgorithm == ALIGN_ALGORITHM_LOCAL
         maskArgs = self._getMaskArgs()
         alignArgs = self._getAlignArgs()
-        
-        
-        
+                                
         volList = [vol.clone() for vol in self._iterInputVolumes()]
                                     
         for voli in volList:
             fnIn = getImageLocation(voli)
             fnMask = self._insertMaskStep(fnIn)
-            prefix="_%d"%voli.getObjId()        
-            self._insertFunctionStep('convertToPseudoAtomsStep', fnIn, fnMask, voli.getSamplingRate(), prefix)
+            suffix = "_%d"%voli.getObjId()        
+            
+            self._insertFunctionStep('convertToPseudoAtomsStep', fnIn, fnMask, voli.getSamplingRate(), suffix)
             fnPseudoAtoms = self._getPath("pseudoatoms_%d.pdb"%voli.getObjId())
+            
             self._insertFunctionStep('computeModesStep', fnPseudoAtoms, self.numberOfModes, cutoffStr)
             self._insertFunctionStep('reformatOutputStep', os.path.basename(fnPseudoAtoms))
-            
-                                
-            self._insertFunctionStep('qualifyModesStep', self.numberOfModes, self.collectivityThreshold.get(), self._getPath("pseudoatoms_%d.pdb"%voli.getObjId()))
-            
-            ###### in this step I have to make a copy of modes.xmd if it is necessary that it is
-            
-            
-            '''for volj in volList:
+                                            
+            self._insertFunctionStep('qualifyModesStep', self.numberOfModes, self.collectivityThreshold.get(), 
+                                        self._getPath("pseudoatoms_%d.pdb"%voli.getObjId()), suffix)
+                        
+            for volj in volList:
                 if volj.getObjId() is not voli.getObjId():
                     refFn = getImageLocation(voli)
                     inVolFn = getImageLocation(volj)
-                    outVolFn = self._getExtraPath('outputRigidAlignment_vol_%03d_to_%03d.vol' % (volj.getObjId(), voli.getObjId()))
-                    self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, 
-                                                maskArgs, alignArgs)'''
+                    outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (volj.getObjId(), voli.getObjId()))
+                    self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, maskArgs, alignArgs)
                     
-            
-        
-        
-                
-                   
-        #self._insertFunctionStep('createOutputStep')
-        
+        self._insertFunctionStep('gatherResultsStep')   
+                        
     #--------------------------- STEPS functions --------------------------------------------
     
-   
+    def gatherResultsStep(self):
+        
+        volList = [vol.clone() for vol in self._iterInputVolumes()]
+        
+        for voli in volList:
+            mdVols = xmipp.MetaData()
+            files = glob(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%voli.getObjId())
+            fnOutMeta = self._getPath('RigidAlignToVol_%d.xmd')%voli.getObjId()
+            for f in files:
+                mdVols.setValue(xmipp.MDL_IMAGE, f, mdVols.addObject())      
+            mdVols.write(fnOutMeta)
+            cleanPattern(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%voli.getObjId())       
+        
+        for voli in volList:
+            fnPseudo = self._getPath("pseudoatoms_%d.pdb"%voli.getObjId())
+            fnModes = self._getPath("modes_%d.xmd"%voli.getObjId())
+            Ts = self.voli.get().getSamplingRate()
+            fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%voli.getObjId())
+            self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s"%\
+                        (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform)     
     
-    
-    
-        #cleanPath("vec_ani.pkl")
-    
-          
-            
-         
-            
+        
+        
+        
+        
+        
+        cleanPattern(self._getExtraPath('pseudoatoms*'))
+        cleanPattern(self._getExtraPath('vec_ani.pkl'))
+       
       
       
     #--------------------------- INFO functions --------------------------------------------
@@ -155,7 +170,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         
     def _citations(self):
         return ['C.O.S.Sorzano2015']
-        
+    
     #--------------------------- UTILS functions --------------------------------------------
     def _iterInputVolumes(self):
         """ Iterate over all the input volumes. """
