@@ -39,7 +39,7 @@ class Matrix1D;
  * parameters from a string. The single value readings don't modify the value of
  * the input string, while the multiple value readings do. In general, the
  * reading is oriented to be done with a chain of strtok (a general C function),
- * for this reason the string itself is modified by the succesive calls to
+ * for this reason the string itself is modified by the successive calls to
  * strtok.
  *
  * The second group (list reading) uses tokens internally, while in the single
@@ -374,7 +374,7 @@ void generateCommandLine(const std::string& command_line,
 *
 * The copy variable must be destroyed outside by "delete copy". This function
 * takes "input_file=<input_file>" and turns it into "-input_file <input_file>"
-* The appropiate argc, argv are also returned.
+* The appropriate argc, argv are also returned.
 *
 * Returns TRUE if the parameter is found in the file, and FALSE if it is not
 */

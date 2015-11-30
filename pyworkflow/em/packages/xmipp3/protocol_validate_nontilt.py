@@ -256,7 +256,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
     
     def _iterInputVols(self):
         """ In this function we will encapsulate the logic
-        to iterate throught the input volumes.
+        to iterate through the input volumes.
         This give the flexibility of having Volumes, SetOfVolumes or 
         a combination of them as input and the protocol code
         remain the same.

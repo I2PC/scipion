@@ -1043,7 +1043,7 @@ void SinPartARTRecons::postProcess(GridVolume & vol_basis)
 
         // Destroy barrier and mutex, as they are no longer needed.
         // Sjors, 27march2009
-        // NO, dont do this, because running a second threaded-ART
+        // NO, don't do this, because running a second threaded-ART
         // in a single program will not have mutexes anymore...
         //pthread_mutex_destroy( &project_mutex );
         //barrier_destroy( &project_barrier );

@@ -899,7 +899,7 @@ ColReorder.prototype = {
 			this._fnCreateDragNode();
 		}
 
-		/* Position the element - we respect where in the element the click occured */
+		/* Position the element - we respect where in the element the click occurred */
 		this.dom.drag.css( {
 			left: e.pageX - this.s.mouse.offsetX,
 			top: e.pageY - this.s.mouse.offsetY

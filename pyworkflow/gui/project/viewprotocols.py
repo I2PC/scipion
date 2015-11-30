@@ -1217,7 +1217,7 @@ class ProtocolsView(tk.Frame):
                                     browser.getEntryValue())
             try:
                 self.project.exportProtocols(protocols, filename)
-                self.windows.showInfo("Workflow sucessfully saved to '%s' " % filename)
+                self.windows.showInfo("Workflow successfully saved to '%s' " % filename)
             except Exception, ex:
                 self.windows.showError(str(ex))
             

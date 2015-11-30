@@ -201,7 +201,7 @@ INPUT PARAMETERS:
                   from Y[] that are close to zero.
     H       -   initial  step  lenth,  it  will  be adjusted automatically
                 after the first  step.  If  H=0,  step  will  be  selected
-                automatically  (usualy  it  will  be  equal  to  0.001  of
+                automatically  (usually  it  will  be  equal  to  0.001  of
                 min(x[i]-x[j])).
 
 OUTPUT PARAMETERS
@@ -264,7 +264,7 @@ INPUT PARAMETERS:
                   from Y[] that are close to zero.
     H       -   initial  step  lenth,  it  will  be adjusted automatically
                 after the first  step.  If  H=0,  step  will  be  selected
-                automatically  (usualy  it  will  be  equal  to  0.001  of
+                automatically  (usually  it  will  be  equal  to  0.001  of
                 min(x[i]-x[j])).
 
 OUTPUT PARAMETERS
@@ -365,7 +365,7 @@ OUTPUT PARAMETERS:
     XTbl    -   array[0..M-1], values of X
     YTbl    -   array[0..M-1,0..N-1], values of Y in X[i]
     Rep     -   solver report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     * -2    X is not ordered  by  ascending/descending  or
                             there are non-distinct X[],  i.e.  X[i]=X[i+1]
                     * -1    incorrect parameters were specified
@@ -446,7 +446,7 @@ INPUT PARAMETERS:
                   from Y[] that are close to zero.
     H       -   initial  step  lenth,  it  will  be adjusted automatically
                 after the first  step.  If  H=0,  step  will  be  selected
-                automatically  (usualy  it  will  be  equal  to  0.001  of
+                automatically  (usually  it  will  be  equal  to  0.001  of
                 min(x[i]-x[j])).
 
 OUTPUT PARAMETERS
@@ -861,7 +861,7 @@ OUTPUT PARAMETERS:
     XTbl    -   array[0..M-1], values of X
     YTbl    -   array[0..M-1,0..N-1], values of Y in X[i]
     Rep     -   solver report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     * -2    X is not ordered  by  ascending/descending  or
                             there are non-distinct X[],  i.e.  X[i]=X[i+1]
                     * -1    incorrect parameters were specified

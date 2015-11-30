@@ -2118,7 +2118,7 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
 {
     char G1,G2,G3='\0',G4;
     char auxChar[3];
-    //each case check lenght, check first letter, second, is number
+    //each case check length, check first letter, second, is number
     //Non a point group
 
     //remove path
