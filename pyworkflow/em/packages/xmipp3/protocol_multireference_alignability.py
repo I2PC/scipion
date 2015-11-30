@@ -244,7 +244,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         makePath(volDir)  
         aFile = self._getExtraPath('exp_particles.xmd')
         aFileRef =self._getExtraPath('ref_particles.xmd')
-        aFileGallery =self._getExtraPath('gallery.stk')
+        aFileGallery =(volDir+'/gallery.doc')
         params = '  --volume %s' % volName  
         params += '  --angles_file %s' % aFile
         params += '  --angles_file_ref %s' % aFileRef
