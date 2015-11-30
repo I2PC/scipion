@@ -281,7 +281,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
           
         neighbours = (volDir+'/neighbours.xmd')
         
-        params =  ' -i1 %s' %  volName
+        params =  ' -i %s' %  volName
         params += ' --i2 %s' % neighbours
         params += ' -o %s' % self._getExtraPath(volPrefix + 'pruned_particles.xmd')
                     
