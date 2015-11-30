@@ -238,7 +238,7 @@ class ProtRelionBase(EMProtocol):
                       label='defocus range for group creation (in Angstroms)', condition='doCtfManualGroups and not doContinue',
                       help='Particles will be grouped by defocus.'
                       'This parameter is the bin for an histogram.'
-                      'All particles asigned to a bin form a group')
+                      'All particles assigned to a bin form a group')
         form.addParam('numParticles', FloatParam, default=1,
                       label='minimum size for defocus group', condition='doCtfManualGroups and not doContinue',
                       help='If defocus group is smaller than this value, '
@@ -408,7 +408,7 @@ class ProtRelionBase(EMProtocol):
         form.addSection('Additional')
         form.addParam('memoryPreThreads', IntParam, default=2,
                       label='Memory per Threads',
-                      help='Computer memory in Gigabytes that is avaliable for each thread. This will only '
+                      help='Computer memory in Gigabytes that is available for each thread. This will only '
                            'affect some of the warnings about required computer memory.')
         
         joinHalves = "--low_resol_join_halves 40 (only not continue mode)" if not self.IS_CLASSIFY else ""

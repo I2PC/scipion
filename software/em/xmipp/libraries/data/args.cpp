@@ -190,7 +190,7 @@ Matrix1D<double> getVectorParameter(int argc, const char **argv, const char *par
         dim++;
     }
 
-    // Read diferent vector elements
+    // Read different vector elements
     int i = 0;
     start_copy = 0;
     aux.resize(dim);

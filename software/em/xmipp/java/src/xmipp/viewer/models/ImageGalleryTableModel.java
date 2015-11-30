@@ -607,7 +607,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		protected int index;
 
 		/**
-		 * First argument is the gallery to wich this item belongs Constructor
+		 * First argument is the gallery to which this item belongs Constructor
 		 * of ImageItem */
 		public ImageItem(int row, int col) {
 			index = ImageGalleryTableModel.this.getIndex(row, col);

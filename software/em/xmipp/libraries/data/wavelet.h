@@ -268,7 +268,7 @@ void clean_quadrant3D(MultidimArray< double >& I,
 
 /** Soft thresholding .
  *
- * Substract a value from all coefficients, if the the value is greater than
+ * Subtract a value from all coefficients, if the the value is greater than
  * the absolute value of the coefficient, that coefficient is set to 0.
  */
 void soft_thresholding(MultidimArray< double >& I, double th);

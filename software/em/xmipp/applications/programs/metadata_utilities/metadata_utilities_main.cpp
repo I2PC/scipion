@@ -159,7 +159,7 @@ protected:
         addExampleLine("Or for initialize metadata columns 'shiftX' and 'shiftY' with a constant value of 5", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -l \"shiftX shiftY\" constant 5 -o out.doc");
         addExampleLine("If you have columns that represent the filename of a metadata with other data (ex CTFParams)", false);
-        addExampleLine("you cant 'expand' the column with the values in that metadta", false);
+        addExampleLine("you cannot 'expand' the column with the values in that metadata", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --fill CTFParams expand -o outExpanded.doc");
         addExampleLine("For check all options availables for 'filling' mode, use: ", false);
         addExampleLine ("   xmipp_metadata_utilities --help fill");
@@ -182,7 +182,7 @@ protected:
         addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"image='new_prefix_dir/'||image\" -o b.doc");
         addExampleLine(" Count number of images per CTF", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -q count CTFModel -o out.doc");
-        addExampleLine(" images asigned a ctfgroup", false);
+        addExampleLine(" images assigned a ctfgroup", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -q sum defocusGroup count -o out.doc");
         addExampleLine(" Print the metadata Size", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --query size");
@@ -353,7 +353,7 @@ protected:
         operation = getParam("--fill", 1);
         MDValueGenerator * generator=NULL;
 
-        // Select wich generator to use
+        // Select which generator to use
         if (operation == "expand")
         {
             mdIn.fillExpand(labels[0]);

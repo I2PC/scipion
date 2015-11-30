@@ -1,5 +1,5 @@
 # XMIPP_STAR_1 * 
-# CAREFULL if re3d is last label this does not work
+# CAREFUL if re3d is last label this does not work
 data_b1
 loop_
  _image
