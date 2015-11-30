@@ -80,8 +80,12 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         fnImgs = self._getExtraPath('images.xmd')
         writeSetOfParticles(self.inputSet.get(), fnImgs)
         
-        if self._getDimensions()!=self.residualSize.get():
+        currentDim=self._getDimensions()
+        if currentDim!=self.residualSize.get():
             self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d --save_metadata_stack %s"%(fnImgs,self._getExtraPath("images.stk"),self.residualSize.get(),fnImgs))
+            scaleFactor=float(self.residualSize.get())/currentDim
+            self.runJob("xmipp_metadata_utilities",'-i %s --operate modify_values "shiftX=shiftX*%f"'%(fnImgs,scaleFactor),numberOfMpi=1)
+            self.runJob("xmipp_metadata_utilities",'-i %s --operate modify_values "shiftY=shiftY*%f"'%(fnImgs,scaleFactor),numberOfMpi=1)
         
         fnVol=self.inputVolume.get().getFileName()
         if self.inputVolume.get().getDim()[0]!=self.residualSize.get() or fnVol.endswith('.mrc'):
