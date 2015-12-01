@@ -671,16 +671,23 @@ class TestXmippRansacMda(TestXmippBase):
     def test_ransac(self):
         #Import a set of averages
         print "Import Set of averages"
-        protImportAvg = self.newProtocol(ProtImportAverages, filesPath=self.averages, checkStack=True,
+        protImportAvg = self.newProtocol(ProtImportAverages, 
+                                         filesPath=self.averages, 
+                                         checkStack=True,
                                          samplingRate=self.samplingRate)
         self.launchProtocol(protImportAvg)
         self.assertIsNotNone(protImportAvg.getFiles(), "There was a problem with the import")
         
         print "Run Ransac"
         protRansac = self.newProtocol(XmippProtRansac,
-                                      symmetryGroup=self.symmetryGroup, angularSampling=self.angularSampling,
-                                      nRansac=self.nRansac, numSamples=self.numSamples, dimRed=self.dimRed,
-                                      numVolumes=self.numVolumes, maxFreq=self.maxFreq, useAll=True, numberOfThreads=4)
+                                      symmetryGroup=self.symmetryGroup, 
+                                      angularSampling=self.angularSampling,
+                                      nRansac=self.nRansac, 
+                                      numSamples=self.numSamples, 
+                                      dimRed=self.dimRed,
+                                      numVolumes=self.numVolumes, 
+                                      maxFreq=self.maxFreq, useAll=True, 
+                                      numberOfThreads=4)
         protRansac.inputSet.set(protImportAvg.outputAverages)
         self.launchProtocol(protRansac)
         self.assertIsNotNone(protRansac.outputVolumes, "There was a problem with ransac protocol")
@@ -695,10 +702,10 @@ class TestXmippRansacGroel(TestXmippRansacMda):
         cls.samplingRate = 2.1
         cls.symmetryGroup = 'd7'
         cls.angularSampling = 7
-        cls.nRansac = 400
-        cls.numSamples = 10
+        cls.nRansac = 25
+        cls.numSamples = 5
         cls.dimRed = True
-        cls.numVolumes = 10
+        cls.numVolumes = 2
         cls.maxFreq = 12
 
 
