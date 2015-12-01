@@ -149,16 +149,50 @@ public class MetaData {
 	public native boolean removeLabel(int label);
 
 	public boolean containsGeometryInfo(String type) {
+		
+		
+		if (type.equals("2D")) {
+			return containsGeometryInfo2D();
+		
+		} else {
+		
+			return containsGeometryInfo3D();
+		}
+		
+	}
+	
+	
+	private boolean containsGeometryInfo2D(){
+
 		try {
-			boolean contains = containsLabel(GEOMETRY_LABELS);
+			boolean contains = containsLabel(GEOMETRY_LABELS) && !containsLabel(MDLabel.MDL_ANGLE_ROT);
 			if(!contains)
-				contains = containsLabel(GEOMETRY_RELION_LABELS);
+				contains = containsLabel(GEOMETRY_RELION_LABELS) &&
+				((!containsLabel(MDLabel.RLN_ORIENT_ROT)) || ( getColumnMax(MDLabel.RLN_ORIENT_ROT) == 0 )) ;
 			return contains;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return false;
+		return false;	
+		
 	}
+	
+	private boolean containsGeometryInfo3D(){
+
+		try {
+			boolean contains = containsLabel(GEOMETRY_LABELS) && containsLabel(MDLabel.MDL_ANGLE_ROT);
+			if(!contains)
+				contains = containsLabel(GEOMETRY_RELION_LABELS) &&
+				((containsLabel(MDLabel.RLN_ORIENT_ROT)) && ( getColumnMax(MDLabel.RLN_ORIENT_ROT) != 0 )) ;
+			return contains;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;	
+		
+	}
+
+	
 	
 	public boolean containsLabel(int[] labels) {
 		try {
@@ -410,13 +444,15 @@ public class MetaData {
 
 	// set functions connection with MetaData class in C++
 	public boolean setEnabled(boolean value, long objId) {
+		
 		return setValueInt(MDLabel.MDL_ENABLED, value ? 1 : -1, objId);
+		
 	}
 
 	public boolean getEnabled(long objId) {
             if(!containsLabel(MDLabel.MDL_ENABLED))
                 return true;
-            return getValueInt(MDLabel.MDL_ENABLED, objId) > 0;
+            return getValueInt(MDLabel.MDL_ENABLED, objId) > -1;
 	}
 
 	public native boolean setValueInt(int label, int value, long objId);
