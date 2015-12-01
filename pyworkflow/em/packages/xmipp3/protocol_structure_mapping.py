@@ -28,6 +28,7 @@
 import os
 from glob import glob
 
+import pyworkflow.em.metadata as md
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
@@ -40,9 +41,7 @@ from pyworkflow.em.packages.xmipp3 import XmippMdRow
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
 import xmipp
 from pyworkflow.em.packages.xmipp3.nma.protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
-from pyworkflow.em.packages.xmipp3.protocol_align_volume import (XmippProtAlignVolume, ALIGN_MASK_CIRCULAR, ALIGN_ALGORITHM_EXHAUSTIVE, 
-                                                                ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL,ALIGN_ALGORITHM_LOCAL, ALIGN_ALGORITHM_FAST_FOURIER, 
-                                                                ALIGN_MASK_BINARY_FILE)
+from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume
 
 
 
@@ -70,7 +69,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         form.addSection(label='Normal Mode Analysis')
         XmippProtNMABase._defineParamsCommon(self,form)
                  
-        form.addParallelSection(threads=8, mpi=1)
+        form.addParallelSection(threads=4, mpi=1)
         
     #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
@@ -81,9 +80,9 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         else:
             cutoffStr = 'Absolute %f'%self.rc.get()
 
-        #self.alignmentAlgorithm == ALIGN_ALGORITHM_LOCAL
-        maskArgs = self._getMaskArgs()
+        maskArgs = ''
         alignArgs = self._getAlignArgs()
+        
                                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
                                     
@@ -113,36 +112,38 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
     #--------------------------- STEPS functions --------------------------------------------
     
     def gatherResultsStep(self):
-        #self._enterWorkingDir()
-        
+                
         volList = [vol.clone() for vol in self._iterInputVolumes()]
-        
+                
         for voli in volList:
             mdVols = xmipp.MetaData()
             files = glob(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%voli.getObjId())
-            fnOutMeta = self._getPath('RigidAlignToVol_%d.xmd')%voli.getObjId()
+            fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%voli.getObjId()
             for f in files:
                 mdVols.setValue(xmipp.MDL_IMAGE, f, mdVols.addObject())      
             mdVols.write(fnOutMeta)
-            cleanPattern(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%voli.getObjId())       
-                
+                       
+            #fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%voli.getObjId()
+            #self.runjob('xmipp_metadata_selfile_create', '-p "%s" -o %s'%(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%voli.getObjId(), fnOutMeta))
+                        
             fnPseudo = self._getPath("pseudoatoms_%d.pdb"%voli.getObjId())
             fnModes = self._getPath("modes_%d.xmd"%voli.getObjId())
-            Ts = self.voli.get().getSamplingRate()
+            Ts = voli.getSamplingRate()
             fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%voli.getObjId())
-            self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s"%\
-                        (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform)    
-    
-        
+            sigma = Ts * self.pseudoAtomRadius.get() 
+            self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s"%\
+                       (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))    
+            
         
         
        
+        
         
         cleanPattern(self._getExtraPath('pseudoatoms*'))
         cleanPattern(self._getExtraPath('vec_ani.pkl'))
-       
+        
       
-        #self._leaveWorkingDir() 
+        
     #--------------------------- INFO functions --------------------------------------------
     
     def _validate(self):
@@ -185,38 +186,9 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                     
     def _getAlignArgs(self):
         alignArgs = ''
-        
-        if self.alignmentAlgorithm == ALIGN_ALGORITHM_FAST_FOURIER:
-            alignArgs += " --frm"
-            
-        elif self.alignmentAlgorithm == ALIGN_ALGORITHM_LOCAL:
-            alignArgs += " --local --rot %f %f 1 --tilt %f %f 1 --psi %f %f 1 -x %f %f 1 -y %f %f 1 -z %f %f 1 --scale %f %f 0.005" %\
-               (self.initialRotAngle, self.initialRotAngle,
-                self.initialTiltAngle, self.initialTiltAngle,
-                self.initialInplaneAngle, self.initialInplaneAngle,
-                self.initialShiftX, self.initialShiftX,
-                self.initialShiftY, self.initialShiftY,
-                self.initialShiftZ,self.initialShiftZ,
-                self.initialScale, self.initialScale)
-        '''else: # Exhaustive or Exhaustive+Local
-            alignArgs += " --rot %f %f %f --tilt %f %f %f --psi %f %f %f -x %f %f %f -y %f %f %f -z %f %f %f --scale %f %f %f" %\
-               (self.minRotationalAngle, self.maxRotationalAngle, self.stepRotationalAngle,
-                self.minTiltAngle, self.maxTiltAngle, self.stepTiltAngle,
-                self.minInplaneAngle, self.maxInplaneAngle, self.stepInplaneAngle,
-                self.minimumShiftX, self.maximumShiftX, self.stepShiftX,
-                self.minimumShiftY, self.maximumShiftY, self.stepShiftY,
-                self.minimumShiftZ, self.maximumShiftZ, self.stepShiftZ,
-                self.minimumScale, self.maximumScale, self.stepScale)'''
-               
+        alignArgs += " --local --rot %f %f 1 --tilt %f %f 1 --psi %f %f 1 -x %f %f 1 -y %f %f 1 -z %f %f 1 --scale %f %f 0.005" %\
+                (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1)
+                       
         return alignArgs
      
-    def _getMaskArgs(self):
-        maskArgs = ''
-        applyMask = False
-        if applyMask:
-            if self.maskType == ALIGN_MASK_CIRCULAR:
-                maskArgs+=" --mask circular -%d" % self.maskRadius
-            else:
-                maskArgs+=" --mask binary_file %s" % self.volMask
-        return maskArgs
-  
+    
