@@ -49,7 +49,7 @@ class Tester():
             help='skip tests that contains these words')
         add('--log', default=None, nargs='?',
             help="Generate logs files with the output of each test.")
-        add('--mode', default='modules', choices=['modules', 'classes', 'all'],
+        add('--mode', default='classes', choices=['modules', 'classes', 'all'],
             help='how much detail to give in show mode')
         add('tests', metavar='TEST', nargs='*',
             help='test case from string identifier (module, class or callable)')
