@@ -52,11 +52,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
     for exploring pathways of conformational changes    
      """
     _label = 'structure mapping'
-    
-    #def __init__(self, **args):
-    #    em.ProtAlignVolume.__init__(self, **args)
-    #    self.stepsExecutionMode = em.STEPS_PARALLEL
-    
+           
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         
@@ -85,7 +81,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         else:
             cutoffStr = 'Absolute %f'%self.rc.get()
 
-        self.alignmentAlgorithm == ALIGN_ALGORITHM_LOCAL
+        #self.alignmentAlgorithm == ALIGN_ALGORITHM_LOCAL
         maskArgs = self._getMaskArgs()
         alignArgs = self._getAlignArgs()
                                 
@@ -111,12 +107,13 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                     inVolFn = getImageLocation(volj)
                     outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (volj.getObjId(), voli.getObjId()))
                     self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, maskArgs, alignArgs)
-                    
+                 
         self._insertFunctionStep('gatherResultsStep')   
                         
     #--------------------------- STEPS functions --------------------------------------------
     
     def gatherResultsStep(self):
+        #self._enterWorkingDir()
         
         volList = [vol.clone() for vol in self._iterInputVolumes()]
         
@@ -128,25 +125,24 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 mdVols.setValue(xmipp.MDL_IMAGE, f, mdVols.addObject())      
             mdVols.write(fnOutMeta)
             cleanPattern(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%voli.getObjId())       
-        
-        for voli in volList:
+                
             fnPseudo = self._getPath("pseudoatoms_%d.pdb"%voli.getObjId())
             fnModes = self._getPath("modes_%d.xmd"%voli.getObjId())
             Ts = self.voli.get().getSamplingRate()
             fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%voli.getObjId())
             self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s"%\
-                        (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform)     
+                        (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform)    
     
         
         
         
-        
+       
         
         cleanPattern(self._getExtraPath('pseudoatoms*'))
         cleanPattern(self._getExtraPath('vec_ani.pkl'))
        
       
-      
+        #self._leaveWorkingDir() 
     #--------------------------- INFO functions --------------------------------------------
     
     def _validate(self):
