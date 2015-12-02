@@ -26,7 +26,7 @@ class HighThroughputTest(TestWorkflow):
         self.assertIsNotNone(protImport.outputMovies, "There was a problem importing movies")
         
         print "Aligning the movies..."
-        protAlignMov = ProtOpticalAlignment()
+        protAlignMov = ProtMovieAlignment()
         protAlignMov.inputMovies.set(protImport.outputMovies)
         protAlignMov.setObjLabel('align movies - Day1')
         self.proj.launchProtocol(protAlignMov, wait=True)
