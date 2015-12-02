@@ -1253,15 +1253,15 @@ class VolumeToWeb(XmippProgramTest):
                 outputs=["imgOut.jpg"])
 
 
-class XrayImport(XmippProgramTest):
-    _owner = JOTON
-    @classmethod
-    def getProgram(cls):
-        return 'xmipp_xray_import'
-
-    def test_case1(self):
-        self.runCase("--input input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30",
-                outputs=["stack_darkfield.xmp","stack_flatfield_avg.xmp","stack_Flatfields_darkfield.xmp"])
+# class XrayImport(XmippProgramTest):
+#     _owner = JOTON
+#     @classmethod
+#     def getProgram(cls):
+#         return 'xmipp_xray_import'
+# 
+#     def test_case1(self):
+#         self.runCase("--input input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30",
+#                 outputs=["stack_darkfield.xmp","stack_flatfield_avg.xmp","stack_Flatfields_darkfield.xmp"])
 
 
 class XrayProject(XmippProgramTest):
