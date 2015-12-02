@@ -260,11 +260,10 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
 
     def neighbourhoodDirectionStep(self, volName,volDir,sym):
           
-        aFile = self._getExtraPath('exp_particles.xmd')
         aFileGallery =(volDir+'/gallery.doc')
         neighbours = (volDir+'/neighbours.xmd')
         
-        params = '  --i1 %s' % aFile  
+        params = '  --i1 %s' % self._getPath('input_particles.xmd')   
         params += ' --i2 %s' % aFileGallery
         params += ' -o %s' % neighbours
         params += ' --dist %s' % self.angDist.get()
@@ -277,13 +276,12 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
          
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get()
-        volPrefix = 'vol%03d_' % (indx+1)
           
         neighbours = (volDir+'/neighbours.xmd')
         
         params =  ' -i %s' %  volName
         params += ' --i2 %s' % neighbours
-        params += ' -o %s' % self._getExtraPath(volPrefix + 'pruned_particles.xmd')
+        params += ' -o %s' %  (volDir+'/pruned_particles_alignability_accuracy.xmd')
                     
         self.runJob('xmipp_angular_accuracy_pca', params,numberOfMpi=nproc,numberOfThreads=nT)
         
