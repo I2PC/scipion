@@ -95,7 +95,8 @@ void ProgAngularAccuracyPCA::run()
     		else
     			numPCAs = 2;
 
-    		obtainPCAs(md,fnTempResiduals,fnTempReconstructed,numPCAs);
+    		std::cout << "Entrooo en obtainPCAs " << std::endl;
+		obtainPCAs(md,fnTempResiduals,fnTempReconstructed,numPCAs);
 
     		MDRow row;
     		FOR_ALL_OBJECTS_IN_METADATA(md)
@@ -192,6 +193,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		#endif
 	}
 
+	std::cout << "Paso el primer bucle" << std::endl;
 	pca.subtractAvg();
 	pca.learnPCABasis(numPCAs,numIter);
 	pca.projectOnPCABasis(projRef);
@@ -256,7 +258,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		imgno++;
 	}
 
-
+	std::cout << "Paso el segundo bucle" << std::endl;
 	pca.subtractAvg();
 	pca.projectOnPCABasis(proj);
 	std::vector< MultidimArray<float> > v;
@@ -305,6 +307,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		selfRotate(LINEAR, img(),-(angle*180)/3.14159 , WRAP);
 		MultidimArray<float> *temp = new MultidimArray<float>;
 		typeCast(img(), *temp);
+		selfScaleToSize(LINEAR,*temp,newXdim,newYdim,1);
 		temp->resize(newXdim*newYdim);
 
 		Image<float> res;
@@ -358,6 +361,10 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		idx++;
 		imgno++;
 	}
+	
+
+		std::cout << "Paso el tercer bucle" << std::endl;
+
 
 #ifdef DEBUG
 
