@@ -122,10 +122,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             for f in files:
                 mdVols.setValue(xmipp.MDL_IMAGE, f, mdVols.addObject())      
             mdVols.write(fnOutMeta)
-                       
-            #fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%voli.getObjId()
-            #self.runjob('xmipp_metadata_selfile_create', '-p "%s" -o %s'%(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%voli.getObjId(), fnOutMeta))
-                        
+                                              
             fnPseudo = self._getPath("pseudoatoms_%d.pdb"%voli.getObjId())
             fnModes = self._getPath("modes_%d.xmd"%voli.getObjId())
             Ts = voli.getSamplingRate()
@@ -135,6 +132,23 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                        (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))    
             
         
+        score = [[0 for i in range(volList)] for i in range(volList)]
+        for voli in volList:
+            elastAlign = xmipp.MetaData(self._getExtraPath("compDeformVol_%d.xmd"%voli.getObjId()))
+            for id in elastAlign:
+                maxCc = elastAlign.getValue(xmipp.MDL_MAXCC,id)
+                if id == voli.getObjId():
+                    score[voli.getObjId()][id] = 0
+                score[voli.getObjId()][id] = 1 - maxCc
+                
+        print score
+            
+        distance = [[0 for i in range(volList)] for i in range(volList)]
+        for i in range(volList):
+            for j in range(volList):
+                distance[i][j] = (score[i][j] + score[j][i])/2
+                
+        print distance                    
         
        
         
