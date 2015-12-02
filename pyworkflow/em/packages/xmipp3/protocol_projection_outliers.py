@@ -38,7 +38,6 @@ from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLoc
 import pyworkflow.em.metadata as md
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
-import xmipp
 from xmipp3 import ProjMatcher
 
         
@@ -134,13 +133,13 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
                             itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
         self._defineOutputs(outputParticles=outputSet)
         self._defineSourceRelation(self.inputSet, outputSet)
-
+    
     def _processRow(self, particle, row):
         setXmippAttributes(particle, row,
-                           xmipp.MDL_ZSCORE_RESVAR, xmipp.MDL_ZSCORE_RESMEAN, xmipp.MDL_ZSCORE_RESCOV, xmipp.MDL_IMAGE_ORIGINAL,
-                           xmipp.MDL_COST, xmipp.MDL_CONTINUOUS_GRAY_A, xmipp.MDL_CONTINUOUS_GRAY_B, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y)
+                           md.MDL_ZSCORE_RESVAR, md.MDL_ZSCORE_RESMEAN, md.MDL_ZSCORE_RESCOV, md.MDL_IMAGE_ORIGINAL,
+                           md.MDL_COST, md.MDL_CONTINUOUS_GRAY_A, md.MDL_CONTINUOUS_GRAY_B, md.MDL_CONTINUOUS_X, md.MDL_CONTINUOUS_Y)
         def __setXmippImage(label):
-            attr = '_xmipp_' + xmipp.label2Str(label)
+            attr = '_xmipp_' + md.label2Str(label)
             if not hasattr(particle, attr):
                 img = Image()
                 setattr(particle, attr, img)
@@ -149,10 +148,10 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
                 img = getattr(particle, attr)
             img.setLocation(xmippToLocation(row.getValue(label)))
         
-        __setXmippImage(xmipp.MDL_IMAGE)
-        __setXmippImage(xmipp.MDL_IMAGE_REF)
-        __setXmippImage(xmipp.MDL_IMAGE_RESIDUAL)
-        __setXmippImage(xmipp.MDL_IMAGE_COVARIANCE)
+        __setXmippImage(md.MDL_IMAGE)
+        __setXmippImage(md.MDL_IMAGE_REF)
+        __setXmippImage(md.MDL_IMAGE_RESIDUAL)
+        __setXmippImage(md.MDL_IMAGE_COVARIANCE)
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
