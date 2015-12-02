@@ -2,7 +2,7 @@
 
 $errmsg       = ''; // error message
 $sname        = ''; // sender's name
-$email        = ''; // sender's email addres
+$email        = ''; // sender's email address
 $organization = ''; //
 $platform     = ''; // binaries compiled for... platform
 $architecture = ''; // architecture of the destination OS

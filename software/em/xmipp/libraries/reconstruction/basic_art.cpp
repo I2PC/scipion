@@ -138,7 +138,7 @@ void BasicARTParameters::defineParams(XmippProgram * program, bool mpiMode)
     program->addParamsLine("  [--known_volume <value=-1>]  : The volume is cut down to this mass, ie, the highest [value] voxels are kept while ");
     program->addParamsLine("                               : the rest are set to 0");
     program->addParamsLine("  [--POCS_positivity]          : Force the resulting volume to be positive");
-    program->addParamsLine("  [--goldmask <value=1.e+6>]   : Pixels below this value are considered to come frome gold beads and are not used for reconstruction");
+    program->addParamsLine("  [--goldmask <value=1.e+6>]   : Pixels below this value are considered to come from gold beads and are not used for reconstruction");
     program->addParamsLine("  [--shiftedTomograms]         : Remove external zero-valued border pixels created by alignment of tomograms");
     program->addParamsLine("  [--dont_apply_shifts]        : Do not apply shifts as stored in the 2D-image headers");
     program->addParamsLine("  [--variability]              : Perform variability analysis");

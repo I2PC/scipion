@@ -303,7 +303,7 @@ class Project(object):
         os.chdir(self.path) #Before doing nothing go to project dir
         self._cleanData()
         print "Creating project at: ", os.path.abspath(self.dbPath)
-        # Create db throught the mapper
+        # Create db through the mapper
         self.mapper = self.createMapper(self.dbPath)
         creation = pwobj.String(objName='CreationTime') # Store creation time
         creation.set(dt.datetime.now())
@@ -394,7 +394,7 @@ class Project(object):
                 print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
                 if tries == 3: # 3 tries have been failed
                     traceback.print_exc()
-                    # If any problem happens, the protocol will be marked wih a status fail
+                    # If any problem happens, the protocol will be marked with a status fail
                     protocol.setFailed(str(ex))
                     self.mapper.store(protocol)
                 else:
@@ -732,7 +732,7 @@ class Project(object):
         return self.mapper.selectById(objId)
         
     def _setHostConfig(self, protocol):
-        """ Set the appropiate host config to the protocol
+        """ Set the appropriate host config to the protocol
         give its value of 'hostname'
         """
         hostName = protocol.getHostName()

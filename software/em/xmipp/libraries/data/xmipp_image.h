@@ -732,7 +732,7 @@ template<typename T>
       //                ptrDest = reinterpret_cast<T*> (iTemp);
     }
 
-    /** flip image arround X axis
+    /** flip image around X axis
      *
      */
     void
@@ -1115,7 +1115,7 @@ template<typename T>
     //#include "rwTIFF.h"
   protected:
 
-    /** Apply geometry in refering metadata to the image */
+    /** Apply geometry in referring metadata to the image */
     void
     applyGeo(const MDRow &row, bool only_apply_shifts = false, bool wrap = WRAP)
     {
@@ -1228,7 +1228,7 @@ template<typename T>
       {
         String warnMessage;
         if (swap > 0)
-          reportWarning("Image::readData: File endianess is swapped and not "
+          reportWarning("Image::readData: File endianness is swapped and not "
               "compatible with mmap. Loading into memory.");
         else
           reportWarning(

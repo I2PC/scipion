@@ -121,8 +121,8 @@
     {
         "object.className": "SparxGaussianProtPicking",
         "object.id": "356",
-        "object.label": "eman2 - sparx gaussian picker",
-        "object.comment": "",
+        "object.label": "4a. sparx gaussian picker",
+        "object.comment": "\n",
         "runName": null,
         "runMode": 0,
         "boxSize": 110,
@@ -134,8 +134,8 @@
     {
         "object.className": "XmippProtProjMatch",
         "object.id": "423",
-        "object.label": "xmipp3 - projection matching",
-        "object.comment": "",
+        "object.label": "7. projection matching",
+        "object.comment": "\n",
         "runName": null,
         "runMode": 0,
         "useInitialAngles": false,
@@ -203,8 +203,8 @@
     {
         "object.className": "EmanProtBoxing",
         "object.id": "534",
-        "object.label": "eman2 - boxer",
-        "object.comment": "",
+        "object.label": "4c boxer",
+        "object.comment": "\n",
         "runName": null,
         "runMode": 0,
         "inputMicrographs": "43.outputMicrographs"

@@ -435,7 +435,7 @@ public class GalleryData {
                     
                 }
                 if (image.isVolume()) { // We are assuming all are volumes
-                    // or images, dont mix it
+                    // or images, don't mix it
                     if (isGalleryMode()) 
                         mode = Mode.GALLERY_VOL;
                     
@@ -1776,10 +1776,13 @@ public class GalleryData {
     
     public Geometry getGeometry(long id, String type, ColumnInfo ci)
     {
-
-        if(ci.label != MDLabel.MDL_IMAGE)
+        if(md.containsLabel(MDLabel.MDL_IMAGE) && ci.label != MDLabel.MDL_IMAGE)
         	return null;
-
+        
+        if(md.containsLabel(MDLabel.RLN_IMAGE_NAME) && ci.label != MDLabel.RLN_IMAGE_NAME)
+        	return null;
+        
+        
         double shiftx, shifty, psiangle, scaleFactor=1;
         boolean flip;
         

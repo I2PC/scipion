@@ -109,7 +109,7 @@ class ProtUnionSet(ProtSets):
                       'whill cause ids overlapping, but we really want to insert as '
                       'new items in the output. If, for example, the items belonged '
                       'to the same set in a previous step, you should set this option '
-                      'to *Yes* to keep only one copy of the item. (the first ocurrence)')
+                      'to *Yes* to keep only one copy of the item. (the first occurrence)')
         
         # TODO: See what kind of restrictions we add (like "All sets should have the same sampling rate.")
 
@@ -127,7 +127,7 @@ class ProtUnionSet(ProtSets):
         # Copy info from input sets (sampling rate, etc).
         outputSet.copyInfo(set1)  # all sets must have the same info as set1!
 
-        # Renumber from the begining if either the renumber option is selected
+        # Renumber from the beginning if either the renumber option is selected
         # or we find duplicated ids in the sets
         cleanIds = self.renumber.get() or self.duplicatedIds()
 

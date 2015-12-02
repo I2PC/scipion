@@ -14,7 +14,7 @@ Purpose			:
 	3D signal merging using a symmetrical filter 
 
 	The wavelet filters should be symmetrical are loaded before running. 
-	The boundary conditions can be choosen: Mirror or Peridic.
+	The boundary conditions can be chosen: Mirror or Peridic.
 	
 	There are two external functions:
 		WaveletSplit_3D()   x[nx] -> y1[nx/2] & y2[nx/2]   
