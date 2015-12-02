@@ -192,7 +192,7 @@ Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
         } else choleskyFactorAlreadyComputed=false;
 
 
-        // cholesky factorization successfull : solve Hlambda * s = -G
+        // cholesky factorization successful : solve Hlambda * s = -G
         s.copyFrom(minusG);
         L.solveInPlace(s);
         L.solveTransposInPlace(s);

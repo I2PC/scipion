@@ -284,7 +284,7 @@ void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> &bg_mask)
     least_squares_plane_fit(allpoints, Npoints, pA, pB, pC);
     delete [] allpoints;
 
-    // Substract the plane from the image and compute stddev within mask
+    // Subtract the plane from the image and compute stddev within mask
     double sum1 = 0;
     double sum2 = 0;
     for (int i=STARTINGY(I); i<=FINISHINGY(I); i++)
@@ -348,7 +348,7 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
     least_squares_plane_fit(allpoints, Npoints, pA, pB, pC);
     delete []allpoints;
 
-    // Substract the plane from the image
+    // Subtract the plane from the image
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
         A2D_ELEM(I, i, j) -= pA * j + pB * i + pC;

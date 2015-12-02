@@ -295,7 +295,7 @@ function initializeColumnHeader() {
 			// var elm = $('th:eq(' + cellIndex + ')', headerRow).find("div");
 			var elm = $('th:eq(' + cellIndex + ')', headerRow);
 			
-			// To render is neccesary the Name, not the Label
+			// To render is necessary the Name, not the Label
 			// var textLabel = cols[x].sTitle
 			var textName = cols[x].sSubTitle
 			elm.attr("id", textName + "___column_header")

@@ -26,7 +26,7 @@
 
 /****************************************************************************
  * This program is a simple example of using the MPI parallel library
- * in wich some needed MPI calls are encapsulated in the MpiNode class.
+ * in which some needed MPI calls are encapsulated in the MpiNode class.
  * In the constructor the MPI initialization are done and the finalize
  * in destructor.
  *
@@ -36,7 +36,7 @@
  *
  * Also the points to be process(parallel tasks) are dynamically distrubuted
  * between the MPI nodes. Two distributors are available, one base on
- * filesystem locking and another in wich one of the MPI nodes will be
+ * filesystem locking and another in which one of the MPI nodes will be
  * distributing the work.
  ***************************************************************************/
 

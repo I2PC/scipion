@@ -755,7 +755,7 @@ An attempt to address them may cause the program failure.
 You can use copy and assignment constructors that copy one array into another.
 If, during the copy operation, the source array has no memory allocated for the array elements, destination array will contain no elements either.
 If the source array has memory allocated for its elements, destination array will allocate the same amount of memory and copy the elements there.
-That is, the copy operation yields into two independent arrays with indentical contents.
+That is, the copy operation yields into two independent arrays with identical contents.
 </p>
 
 <p>
@@ -2487,12 +2487,12 @@ Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
 <pre class=source>
 <div style='color: navy; margin-top: 0; margin-bottom: 0;'>/*************************************************************************
 Integration report:
-* TerminationType = completetion code:
+* TerminationType = completion code:
     * -5    non-convergence of Gauss-Kronrod nodes
             calculation subroutine.
     * -1    incorrect parameters were specified
     *  1    OK
-* Rep.NFEV countains number of function calculations
+* Rep.NFEV contains number of function calculations
 * Rep.NIntervals contains number of intervals [a,b]
   was partitioned into.
 *************************************************************************/
@@ -3644,7 +3644,7 @@ INPUT PARAMETERS:
     N       -   array size
 
 OUTPUT PARAMETERS:
-    Info    -   completetion code:
+    Info    -   completion code:
                 * -3, all values of A[] are same (partition is impossible)
                 * -2, one of C[] is incorrect (&lt;0, &gt;1)
                 * -1, incorrect pararemets were passed (N&lt;=0).
@@ -5866,7 +5866,7 @@ INPUT PARAMETERS
                 signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - complex function to be transformed,
-                pattern to search withing signal
+                pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS
@@ -5910,7 +5910,7 @@ INPUT PARAMETERS
                 periodic signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - complex function to be transformed,
-                non-periodic pattern to search withing signal
+                non-periodic pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS
@@ -5949,7 +5949,7 @@ INPUT PARAMETERS
                 signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - real function to be transformed,
-                pattern to search withing signal
+                pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS
@@ -5993,7 +5993,7 @@ INPUT PARAMETERS
                 periodic signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - real function to be transformed,
-                non-periodic pattern to search withing signal
+                non-periodic pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS
@@ -8549,7 +8549,7 @@ OUTPUT PARAMETERS
 
 NOTE:
     F[] satisfies symmetry property F[k] = conj(F[N-k]),  so just one half
-of  array  is  usually needed. But for convinience subroutine returns full
+of  array  is  usually needed. But for convenience subroutine returns full
 complex array (with frequencies above N/2), so its result may be  used  by
 other FFT-related subroutines.
 
@@ -9988,7 +9988,7 @@ Copyright 1984, 1995, 2000 by Stephen L. Moshier
 <a name='sub_invincompletebeta'></a><h3 class=pageheader><code>invincompletebeta</code> function</h3>
 <pre class=source>
 <div style='color: navy; margin-top: 0; margin-bottom: 0;'>/*************************************************************************
-Inverse of imcomplete beta integral
+Inverse of incomplete beta integral
 
 Given y, the function finds x such that
 
@@ -10322,7 +10322,7 @@ Copyright 1985, 1987, 2000 by Stephen L. Moshier
 <a name='sub_invincompletegammac'></a><h3 class=pageheader><code>invincompletegammac</code> function</h3>
 <pre class=source>
 <div style='color: navy; margin-top: 0; margin-bottom: 0;'>/*************************************************************************
-Inverse of complemented imcomplete gamma integral
+Inverse of complemented incomplete gamma integral
 
 Given p, the function finds x such that
 
@@ -10899,7 +10899,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     X       -   array[N], solution
     Rep     -   optimization report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     * -5    input matrix is either not positive definite,
                             too large or too small
                     * -4    overflow/underflow during solution
@@ -10909,7 +10909,7 @@ OUTPUT PARAMETERS:
                     *  7    rounding errors prevent further progress,
                             best point found is returned
                 * Rep.IterationsCount contains iterations count
-                * NMV countains number of matrix-vector calculations
+                * NMV contains number of matrix-vector calculations
 
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
@@ -11271,7 +11271,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     X       -   array[N], solution
     Rep     -   optimization report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     *  1    ||Rk||&lt;=EpsB*||B||
                     *  4    ||A^T*Rk||/(||A||*||Rk||)&lt;=EpsA
                     *  5    MaxIts steps was taken
@@ -11279,7 +11279,7 @@ OUTPUT PARAMETERS:
                             X contains best point found so far.
                             (sometimes returned on singular systems)
                 * Rep.IterationsCount contains iterations count
-                * NMV countains number of matrix-vector calculations
+                * NMV contains number of matrix-vector calculations
 
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
@@ -12320,7 +12320,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info&gt;0    task is solved
-            * Info&lt;=0   an error occured:
+            * Info&lt;=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     B   -   barycentric interpolant.
@@ -12386,7 +12386,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info&gt;0    task is solved
-            * Info&lt;=0   an error occured:
+            * Info&lt;=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
                         -1 means another errors in parameters passed
@@ -12961,7 +12961,7 @@ NOTE:       covariance matrix is estimated using  correction  for  degrees
 Constained linear least squares fitting.
 
 This  is  variation  of LSFitLinear(),  which searchs for min|A*x=b| given
-that  K  additional  constaints  C*x=bc are satisfied. It reduces original
+that  K  additional  constraints  C*x=bc are satisfied. It reduces original
 task to modified one: min|B*y-d| WITHOUT constraints,  then  LSFitLinear()
 is called.
 
@@ -12975,7 +12975,7 @@ INPUT PARAMETERS:
     Y       -   array[0..N-1] Function values in  N  points.
     FMatrix -   a table of basis functions values, array[0..N-1, 0..M-1].
                 FMatrix[I,J] - value of J-th basis function in I-th point.
-    CMatrix -   a table of constaints, array[0..K-1,0..M].
+    CMatrix -   a table of constraints, array[0..K-1,0..M].
                 I-th row of CMatrix corresponds to I-th linear constraint:
                 CMatrix[I,0]*C[0] + ... + CMatrix[I,M-1]*C[M-1] = CMatrix[I,M]
     N       -   number of points used. N&gt;=1.
@@ -13176,7 +13176,7 @@ NOTE:       covariance matrix is estimated using  correction  for  degrees
 Weighted constained linear least squares fitting.
 
 This  is  variation  of LSFitLinearW(), which searchs for min|A*x=b| given
-that  K  additional  constaints  C*x=bc are satisfied. It reduces original
+that  K  additional  constraints  C*x=bc are satisfied. It reduces original
 task to modified one: min|B*y-d| WITHOUT constraints,  then LSFitLinearW()
 is called.
 
@@ -13194,7 +13194,7 @@ INPUT PARAMETERS:
                 corresponding weight.
     FMatrix -   a table of basis functions values, array[0..N-1, 0..M-1].
                 FMatrix[I,J] - value of J-th basis function in I-th point.
-    CMatrix -   a table of constaints, array[0..K-1,0..M].
+    CMatrix -   a table of constraints, array[0..K-1,0..M].
                 I-th row of CMatrix corresponds to I-th linear constraint:
                 CMatrix[I,0]*C[0] + ... + CMatrix[I,M-1]*C[M-1] = CMatrix[I,M]
     N       -   number of points used. N&gt;=1.
@@ -13607,7 +13607,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info&gt;0    task is solved
-            * Info&lt;=0   an error occured:
+            * Info&lt;=0   an error occurred:
                         -4 means inconvergence of internal SVD
     P   -   interpolant in barycentric form.
     Rep -   report, same format as in LSFitLinearW() subroutine.
@@ -13684,7 +13684,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info&gt;0    task is solved
-            * Info&lt;=0   an error occured:
+            * Info&lt;=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     P   -   interpolant in barycentric form.
@@ -13831,7 +13831,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info&gt;0    task is solved
-            * Info&lt;=0   an error occured:
+            * Info&lt;=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     S   -   spline interpolant.
@@ -13988,7 +13988,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info&gt;0    task is solved
-            * Info&lt;=0   an error occured:
+            * Info&lt;=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
                         -2 means odd M was passed (which is not supported)
@@ -14091,7 +14091,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info&gt;0    task is solved
-            * Info&lt;=0   an error occured:
+            * Info&lt;=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     B   -   barycentric interpolant.
@@ -14169,7 +14169,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info&gt;0    task is solved
-            * Info&lt;=0   an error occured:
+            * Info&lt;=0   an error occurred:
                         -4 means inconvergence of internal SVD or
                            Cholesky decomposition; problem may be
                            too ill-conditioned (very rare)
@@ -16292,8 +16292,8 @@ You  may  add  one  or several tracks to the MCPD solver. In case you have
 several tracks, they won't overwrite each other. For example,  if you pass
 two tracks, A1-A2-A3 (system at t=A+1, t=A+2 and t=A+3) and B1-B2-B3, then
 solver will try to model transitions from t=A+1 to t=A+2, t=A+2 to  t=A+3,
-t=B+1 to t=B+2, t=B+2 to t=B+3. But it WONT mix these two tracks - i.e. it
-wont try to model transition from t=A+3 to t=B+1.
+t=B+1 to t=B+2, t=B+2 to t=B+3. But it WON'T mix these two tracks - i.e. it
+won't try to model transition from t=A+3 to t=B+1.
 
 INPUT PARAMETERS:
     S       -   solver
@@ -16881,7 +16881,7 @@ using namespace alglib;
     <font color=navy>// approach (Markov Chains <b>for</b> Proportional/Population Data), i.e.</font>
     <font color=navy>// to restore hidden transition matrix P using actual portfolio data.</font>
     <font color=navy>// We have:</font>
-    <font color=navy>// * poportional data, i.e. proportion of loans in the normal and past </font>
+    <font color=navy>// * proportional data, i.e. proportion of loans in the normal and past </font>
     <font color=navy>//   due states (not portfolio size measured in some currency, although </font>
     <font color=navy>//   it is possible to work with population data too)</font>
     <font color=navy>// * two tracks, i.e. two sequences which describe portfolio</font>
@@ -16957,7 +16957,7 @@ using namespace alglib;
     <font color=navy>// approach (Markov Chains <b>for</b> Proportional/Population Data), i.e.</font>
     <font color=navy>// to restore hidden transition matrix P using actual portfolio data.</font>
     <font color=navy>// We have:</font>
-    <font color=navy>// * poportional data, i.e. proportion of loans in the current and past </font>
+    <font color=navy>// * proportional data, i.e. proportion of loans in the current and past </font>
     <font color=navy>//   due states (not portfolio size measured in some currency, although </font>
     <font color=navy>//   it is possible to work with population data too)</font>
     <font color=navy>// * two tracks, i.e. two sequences which describe portfolio</font>
@@ -18183,7 +18183,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     X       -   array[0..N-1], solution
     Rep     -   optimization report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     * -7    gradient verification failed.
                             See MinCGSetGradientCheck() for more information.
                     *  1    relative function improvement is no more than
@@ -18196,7 +18196,7 @@ OUTPUT PARAMETERS:
                             we return best X found so far
                     *  8    terminated by user
                 * Rep.IterationsCount contains iterations count
-                * NFEV countains number of function calculations
+                * NFEV contains number of function calculations
 
   -- ALGLIB --
      Copyright 20.04.2009 by Bochkanov Sergey
@@ -19241,7 +19241,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     X       -   array[0..N-1], solution
     Rep     -   optimization report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     * -7    gradient verification failed.
                             See MinLBFGSSetGradientCheck() for more information.
                     * -2    rounding errors prevent further improvement.
@@ -19255,7 +19255,7 @@ OUTPUT PARAMETERS:
                     *  7    stopping conditions are too stringent,
                             further improvement is impossible
                 * Rep.IterationsCount contains iterations count
-                * NFEV countains number of function calculations
+                * NFEV contains number of function calculations
 
   -- ALGLIB --
      Copyright 02.04.2010 by Bochkanov Sergey
@@ -19800,7 +19800,7 @@ using namespace alglib;
 Optimization report, filled by MinLMResults() function
 
 FIELDS:
-* TerminationType, completetion code:
+* TerminationType, completion code:
     * -7    derivative correctness check failed;
             see Rep.WrongNum, Rep.WrongI, Rep.WrongJ for
             more information.
@@ -27312,7 +27312,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     X       -   array[0..N-1], solution
     Rep     -   optimization report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     * -4    ERROR:  algorithm   has   converged   to   the
                             stationary point Xf which is local minimum  of
                             f=F[0]^2+...+F[m-1]^2, but is not solution  of
@@ -27322,7 +27322,7 @@ OUTPUT PARAMETERS:
                     *  7    stopping conditions are too stringent,
                             further improvement is impossible
                 * Rep.IterationsCount contains iterations count
-                * NFEV countains number of function calculations
+                * NFEV contains number of function calculations
                 * ActiveConstraints contains number of active constraints
 
   -- ALGLIB --
@@ -27771,7 +27771,7 @@ OUTPUT PARAMETERS:
     XTbl    -   array[0..M-1], values of X
     YTbl    -   array[0..M-1,0..N-1], values of Y in X[i]
     Rep     -   solver report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     * -2    X is not ordered  by  ascending/descending  or
                             there are non-distinct X[],  i.e.  X[i]=X[i+1]
                     * -1    incorrect parameters were specified
@@ -27823,7 +27823,7 @@ INPUT PARAMETERS:
                   from Y[] that are close to zero.
     H       -   initial  step  lenth,  it  will  be adjusted automatically
                 after the first  step.  If  H=0,  step  will  be  selected
-                automatically  (usualy  it  will  be  equal  to  0.001  of
+                automatically  (usually  it  will  be  equal  to  0.001  of
                 min(x[i]-x[j])).
 
 OUTPUT PARAMETERS
@@ -34498,7 +34498,7 @@ using namespace alglib;
 <b>int</b> main(<b>int</b> argc, char **argv)
 {
     <font color=navy>//</font>
-    <font color=navy>// Spline built witn spline1dbuildcubic() can be non-monotone even when</font>
+    <font color=navy>// Spline built with spline1dbuildcubic() can be non-monotone even when</font>
     <font color=navy>// Y-values form monotone sequence. Say, <b>for</b> x=[0,1,2] and y=[0,1,1]</font>
     <font color=navy>// cubic spline will monotonically grow until x=1.5 and then start</font>
     <font color=navy>// decreasing.</font>
