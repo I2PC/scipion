@@ -93,7 +93,7 @@ class HighThroughputTest(TestWorkflow):
         
         print "Running Spider Ward Classification"
         protWard = SpiderProtClassifyWard()
-        protWard.pcaFilePointer.set(protCAPCA.imcFile)
+        protWard.pcaFile.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protOnlyAlign.outputParticles)
         protWard.setObjLabel('spi ward')
         self.proj.launchProtocol(protWard, wait=True)
