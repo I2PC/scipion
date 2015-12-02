@@ -211,7 +211,7 @@ def movies_form(request):
     context.update({'path_mode':'select',
                     'formUrl': 'mov_form',
                     'showHost': False,
-                    'showParallel': False,
+                    'showParallel': True,
                     'hostSelected': 'localhost'})
     return render_to_response('form/form.html', context)
 
