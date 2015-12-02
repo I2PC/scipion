@@ -124,7 +124,7 @@ class Project(object):
         lifeTime = self.settings.getLifeTime()
         
         if lifeTime:
-            td = dt.timedelta(days=lifeTime)
+            td = dt.timedelta(hours=lifeTime)
             return td - self.getElapsedTime()
         else:
             return None
