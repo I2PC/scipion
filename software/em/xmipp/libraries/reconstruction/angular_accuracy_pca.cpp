@@ -316,6 +316,10 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		double stdRes=(res().computeStddev());
 		double stdTemp=(*temp).computeStddev();
 		double R2 = 1-(stdRes/stdTemp)*((stdRes/stdTemp));
+
+		if (R2 < 0)
+			R2 = 0;
+
 		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL,R2,__iter.objId);
 		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,idx)/3.),__iter.objId);
 

@@ -356,6 +356,10 @@ enum MDLabel
 
     MDL_SCALE, ///< scaling factor for an image or volume (double)
     MDL_SCORE_BY_PCA_RESIDUAL,
+    MDL_SCORE_BY_ALIGNABILITY, ///< score by alignability (double)
+    MDL_SCORE_BY_ALIGNABILITY_EXP, ///< score by alignability experimental particles (double)
+    MDL_SCORE_BY_ALIGNABILITY_REF, ///< score by alignability references (double)
+    MDL_SCORE_BY_ALIGNABILITY_NOISE, ///< score by alignability noise (double)
     MDL_SCORE_BY_ZSCORE,
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
@@ -1699,6 +1703,10 @@ private:
 
         MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale");
         MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL, LABEL_DOUBLE, "scoreByPcaResidual");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY, LABEL_DOUBLE, "scoreByAlignability");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_EXP, LABEL_DOUBLE, "scoreByAlignabilityExp");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_REF, LABEL_DOUBLE, "scoreByAlignabilityRef");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_NOISE, LABEL_DOUBLE, "scoreByAlignabilityNoise");
         MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
 
         MDL::addLabelAlias(MDL_SCALE, "Scale");

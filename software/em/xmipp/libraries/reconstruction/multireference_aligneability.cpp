@@ -74,8 +74,8 @@ void MultireferenceAligneability::run()
 	MetaData mdExp, mdExpSort, mdProj, mdGallery;
 	size_t maxNImg;
 	FileName fnOutCL, fnOutQ;
-	fnOutCL = fnDir+"/clusteringTendency.xmd";
-	fnOutQ = fnDir+"/validation.xmd";
+	fnOutCL = fnDir+"/pruned_particles_alignability_precision.xmd";
+	fnOutQ = fnDir+"/validationPrecision.xmd";
 
     //SymList SL;
     //int symmetry, sym_order;
@@ -140,10 +140,10 @@ void MultireferenceAligneability::run()
 		tempMdExp.getValue(MDL_IMAGE,imagePath,1);
 		row.setValue(MDL_IMAGE,imagePath);
 		row.setValue(MDL_IMAGE_IDX,i);
-		row.setValue(MDL_VOLUME_SCORE1,rank);
-		row.setValue(MDL_VOLUME_SCORE2,sum_w_proj);
-		row.setValue(MDL_VOLUME_SCORE3,sum_w_exp);
-		row.setValue(MDL_VOLUME_SCORE4,sum_noise);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY,rank);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY_EXP,sum_w_exp);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY_REF,sum_w_proj);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY_NOISE,sum_noise);
 
 		mdOutCL.addRow(row);
 
