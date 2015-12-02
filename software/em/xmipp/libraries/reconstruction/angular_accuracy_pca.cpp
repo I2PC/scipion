@@ -40,8 +40,8 @@ void ProgAngularAccuracyPCA::readParams()
     fnReconstructed = getParam("--oreconstructed");
     fnOut = getParam("-o");
 
-    newXdim = 60;
-    newYdim = 60;
+    newXdim = getIntParam("--dim");
+    newYdim = newXdim;
 
 }
 
@@ -51,7 +51,9 @@ void ProgAngularAccuracyPCA::defineParams()
     addParamsLine("  [ -i <volume_file> ]      	: Voxel volume");
     addParamsLine("  [--i2 <md_file=\"\">]    	: Metadata file with neighbour projections");
     addParamsLine("  [ -o <md_file=\"\">]    	: Metadata file with obtained weights");
-    addParamsLine("  [--oresiduals <stack=\"\">]  : Suffix of the output stack for the residuals");
+    addParamsLine("  [--dim <d=64>]             : Scale images to this size if they are larger.");
+    addParamsLine("                             : Set to -1 for no rescaling");
+    addParamsLine("  [--oresiduals <stack=\"\">]: Suffix of the output stack for the residuals");
     addParamsLine("  [--oreconstructed <stack=\"\">]  : Suffix of output stack for the reconstructed projections");
 }
 
@@ -95,8 +97,7 @@ void ProgAngularAccuracyPCA::run()
     		else
     			numPCAs = 2;
 
-    		std::cout << "Entrooo en obtainPCAs " << std::endl;
-		obtainPCAs(md,fnTempResiduals,fnTempReconstructed,numPCAs);
+    		obtainPCAs(md,fnTempResiduals,fnTempReconstructed,numPCAs);
 
     		MDRow row;
     		FOR_ALL_OBJECTS_IN_METADATA(md)
@@ -116,6 +117,13 @@ void ProgAngularAccuracyPCA::run()
 
 	if (rank == 0)
 	{
+		std::vector <double> pcaColumn;
+		mdPartial.getColumnValues(MDL_SCORE_BY_PCA_RESIDUAL,pcaColumn);
+
+		for (size_t i; i< pcaColumn.size(); i++)
+			pcaColumn[i] = pcaColumn[i]/(mdPartial.getColumnMax(MDL_SCORE_BY_PCA_RESIDUAL));
+
+		mdPartial.setColumnValues(MDL_SCORE_BY_PCA_RESIDUAL,pcaColumn);
 		mdPartial.write(fnOut);
 		progress_bar(blocks.size());
 	}
@@ -132,6 +140,13 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 	bool mirror;
 	size_t  Xdim, Ydim, Zdim, Ndim;
 	phantomVol().getDimensions(Xdim,Ydim,Zdim,Ndim);
+
+	if (  (newXdim == -1) )
+	{
+		newXdim = Xdim;
+		newXdim = Ydim;
+	}
+
 	Matrix2D<double> proj, projRef;
 	imgno = 1;
 	Projection P;
@@ -193,7 +208,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		#endif
 	}
 
-	std::cout << "Paso el primer bucle" << std::endl;
 	pca.subtractAvg();
 	pca.learnPCABasis(numPCAs,numIter);
 	pca.projectOnPCABasis(projRef);
@@ -258,7 +272,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		imgno++;
 	}
 
-	std::cout << "Paso el segundo bucle" << std::endl;
 	pca.subtractAvg();
 	pca.projectOnPCABasis(proj);
 	std::vector< MultidimArray<float> > v;
@@ -366,9 +379,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		imgno++;
 	}
 	
-
-		std::cout << "Paso el tercer bucle" << std::endl;
-
 
 #ifdef DEBUG
 
