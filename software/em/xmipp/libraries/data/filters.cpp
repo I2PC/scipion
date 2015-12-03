@@ -904,18 +904,19 @@ double fastCorrentropy(const MultidimArray<double> &x,
 double imedDistance(const MultidimArray<double>& I1, const MultidimArray<double>& I2)
 {
 	// [x,y]=meshgrid([-3:1:3],[-3:1:3])
-	// format long
-	// w=1/sqrt(2*pi)*exp(-0.5*(x.*x+y.*y))
-	const double w[7][7]={
-			{0.000049233388666,   0.000599785460091,   0.002688051941039,   0.004431848411938,   0.002688051941039,   0.000599785460091,   0.000049233388666},
-			{0.000599785460091,   0.007306882745281,   0.032747176537767,   0.053990966513188,   0.032747176537767,   0.007306882745281,   0.000599785460091},
-			{0.002688051941039,   0.032747176537767,   0.146762663173740,   0.241970724519143,   0.146762663173740,   0.032747176537767,   0.002688051941039},
-			{0.004431848411938,   0.053990966513188,   0.241970724519143,   0.398942280401433,   0.241970724519143,   0.053990966513188,   0.004431848411938},
-			{0.002688051941039,   0.032747176537767,   0.146762663173740,   0.241970724519143,   0.146762663173740,   0.032747176537767,   0.002688051941039},
-			{0.000599785460091,   0.007306882745281,   0.032747176537767,   0.053990966513188,   0.032747176537767,   0.007306882745281,   0.000599785460091},
-			{0.000049233388666,   0.000599785460091,   0.002688051941039,   0.004431848411938,   0.002688051941039,   0.000599785460091,   0.000049233388666}
-	};
-    double imed = 0;
+	// format long	// w=1/sqrt(2*pi)*exp(-0.5*(x.*x+y.*y))
+	double *refW;
+	double w[49]={
+			0.000049233388666,   0.000599785460091,   0.002688051941039,   0.004431848411938,   0.002688051941039,   0.000599785460091,   0.000049233388666,
+			0.000599785460091,   0.007306882745281,   0.032747176537767,   0.053990966513188,   0.032747176537767,   0.007306882745281,   0.000599785460091,
+			0.002688051941039,   0.032747176537767,   0.146762663173740,   0.241970724519143,   0.146762663173740,   0.032747176537767,   0.002688051941039,
+			0.004431848411938,   0.053990966513188,   0.241970724519143,   0.398942280401433,   0.241970724519143,   0.053990966513188,   0.004431848411938,
+			0.002688051941039,   0.032747176537767,   0.146762663173740,   0.241970724519143,   0.146762663173740,   0.032747176537767,   0.002688051941039,
+			0.000599785460091,   0.007306882745281,   0.032747176537767,   0.053990966513188,   0.032747176537767,   0.007306882745281,   0.000599785460091,
+			0.000049233388666,   0.000599785460091,   0.002688051941039,   0.004431848411938,   0.002688051941039,   0.000599785460091,   0.000049233388666};
+
+	MultidimArray<double> diffImage = I1 - I2;
+    double 	imed = 0;
     int imiddle=YSIZE(I1)/2;
     int jmiddle=XSIZE(I1)/2;
     int R2max=imiddle*imiddle;
@@ -929,17 +930,22 @@ double imedDistance(const MultidimArray<double>& I1, const MultidimArray<double>
         	int j2=(j-jmiddle)*(j-jmiddle);
         	if (i2+j2>R2max) // Measure only within the maximum circle
         		continue;
-        	double diffi=DIRECT_A2D_ELEM(I1,i,j)-DIRECT_A2D_ELEM(I2,i,j);
+        	double diffi=DIRECT_A2D_ELEM(diffImage,i,j);
+        	int	index=0;
         	for (int ii=-3; ii<=3; ++ii)
         	{
-        		int i_ii=i+ii;
-            	for (int jj=-3; jj<=3; ++jj)
-            	{
-            		int j_jj=j+jj;
-                	double diffj=DIRECT_A2D_ELEM(I1,i_ii,j_jj)-DIRECT_A2D_ELEM(I2,i_ii,j_jj);
-                	double wiijj=w[ii+3][jj+3];
-            		imed+=wiijj*diffi*diffj;
-            	}
+        		refW = &w[index];
+        		index = index + 7;
+        	    double *diffj=&DIRECT_A2D_ELEM(diffImage,i+ii,j-3);
+        	    double	imedAux=(*refW++)*(*diffj++);
+            	imedAux+=(*refW++)*(*diffj++);
+            	imedAux+=(*refW++)*(*diffj++);
+            	imedAux+=(*refW++)*(*diffj++);
+            	imedAux+=(*refW++)*(*diffj++);
+            	imedAux+=(*refW++)*(*diffj++);
+            	imedAux+=(*refW++)*(*diffj++);
+
+            	imed+=imedAux*diffi;
         	}
         }
     }
@@ -1501,6 +1507,12 @@ void computeAlignmentTransforms(const MultidimArray<double>& I, AlignmentTransfo
     normalizedPolarFourierTransform(I, ITransforms.polarFourierI, false, XSIZE(I) / 5, XSIZE(I) / 2, aux.plans, 1);
 }
 
+#define SHIFT_THRESHOLD 	0.95		// Shift threshold in pixels.
+#define ROTATE_THRESHOLD 	1.0			// Rotate threshold in degrees.
+
+#define INITIAL_SHIFT_THRESHOLD 	SHIFT_THRESHOLD + 1.0		// Shift threshold in pixels.
+#define INITIAL_ROTATE_THRESHOLD 	ROTATE_THRESHOLD + 1.0		// Rotate threshold in degrees.
+
 double alignImages(const MultidimArray<double>& Iref, const AlignmentTransforms& IrefTransforms, MultidimArray<double>& I,
                    Matrix2D<double>&M, bool wrap, AlignmentAux &aux, CorrelationAux &aux2,
                    RotationalCorrelationAux &aux3)
@@ -1515,37 +1527,52 @@ double alignImages(const MultidimArray<double>& Iref, const AlignmentTransforms&
     aux.rotationalCorr.resize(2 * IrefTransforms.polarFourierI.getSampleNoOuterRing() - 1);
     aux3.local_transformer.setReal(aux.rotationalCorr);
 
+	double shiftXSR=INITIAL_SHIFT_THRESHOLD, shiftYSR=INITIAL_SHIFT_THRESHOLD, bestRotSR=INITIAL_ROTATE_THRESHOLD;
+	double shiftXRS=INITIAL_SHIFT_THRESHOLD, shiftYRS=INITIAL_SHIFT_THRESHOLD, bestRotRS=INITIAL_ROTATE_THRESHOLD;
+
     // Align the image with the reference
     for (int i = 0; i < 3; i++)
     {
-        double shiftX, shiftY;
-
         // Shift then rotate
-        bestNonwrappingShift(Iref, IrefTransforms.FFTI, aux.IauxSR, shiftX, shiftY, aux2);
-        MAT_ELEM(aux.ASR,0,2) += shiftX;
-        MAT_ELEM(aux.ASR,1,2) += shiftY;
-        applyGeometry(LINEAR, aux.IauxSR, I, aux.ASR, IS_NOT_INV, wrap);
+		if (((shiftXSR > SHIFT_THRESHOLD) || (shiftXSR < (-SHIFT_THRESHOLD))) ||
+			((shiftYSR > SHIFT_THRESHOLD) || (shiftYSR < (-SHIFT_THRESHOLD))))
+		{
+			bestNonwrappingShift(Iref, IrefTransforms.FFTI, aux.IauxSR, shiftXSR, shiftYSR, aux2);
+			MAT_ELEM(aux.ASR,0,2) += shiftXSR;
+			MAT_ELEM(aux.ASR,1,2) += shiftYSR;
+			applyGeometry(LINEAR, aux.IauxSR, I, aux.ASR, IS_NOT_INV, wrap);
+		}
 
-        normalizedPolarFourierTransform(aux.IauxSR, aux.polarFourierI, true,
-                                        XSIZE(Iref) / 5, XSIZE(Iref) / 2, aux.plans, 1);
+		if (bestRotSR > ROTATE_THRESHOLD)
+		{
+			normalizedPolarFourierTransform(aux.IauxSR, aux.polarFourierI, true,
+											XSIZE(Iref) / 5, XSIZE(Iref) / 2, aux.plans, 1);
 
-        double bestRot = best_rotation(IrefTransforms.polarFourierI, aux.polarFourierI, aux3);
-        rotation2DMatrix(bestRot, aux.R);
-        aux.ASR = aux.R * aux.ASR;
-        applyGeometry(LINEAR, aux.IauxSR, I, aux.ASR, IS_NOT_INV, wrap);
+			bestRotSR = best_rotation(IrefTransforms.polarFourierI, aux.polarFourierI, aux3);
+			rotation2DMatrix(bestRotSR, aux.R);
+			aux.ASR = aux.R * aux.ASR;
+			applyGeometry(LINEAR, aux.IauxSR, I, aux.ASR, IS_NOT_INV, wrap);
+		}
 
         // Rotate then shift
-        normalizedPolarFourierTransform(aux.IauxRS, aux.polarFourierI, true,
-                                        XSIZE(Iref) / 5, XSIZE(Iref) / 2, aux.plans, 1);
-        bestRot = best_rotation(IrefTransforms.polarFourierI, aux.polarFourierI, aux3);
-        rotation2DMatrix(bestRot, aux.R);
-        aux.ARS = aux.R * aux.ARS;
-        applyGeometry(LINEAR, aux.IauxRS, I, aux.ARS, IS_NOT_INV, wrap);
+		if (bestRotRS > ROTATE_THRESHOLD)
+		{
+			normalizedPolarFourierTransform(aux.IauxRS, aux.polarFourierI, true,
+											XSIZE(Iref) / 5, XSIZE(Iref) / 2, aux.plans, 1);
+			bestRotRS = best_rotation(IrefTransforms.polarFourierI, aux.polarFourierI, aux3);
+			rotation2DMatrix(bestRotRS, aux.R);
+			aux.ARS = aux.R * aux.ARS;
+			applyGeometry(LINEAR, aux.IauxRS, I, aux.ARS, IS_NOT_INV, wrap);
+		}
 
-        bestNonwrappingShift(Iref, IrefTransforms.FFTI, aux.IauxRS, shiftX, shiftY, aux2);
-        MAT_ELEM(aux.ARS,0,2) += shiftX;
-        MAT_ELEM(aux.ARS,1,2) += shiftY;
-        applyGeometry(LINEAR, aux.IauxRS, I, aux.ARS, IS_NOT_INV, wrap);
+		if (((shiftXRS > SHIFT_THRESHOLD) || (shiftXRS < (-SHIFT_THRESHOLD))) ||
+			((shiftYRS > SHIFT_THRESHOLD) || (shiftYRS < (-SHIFT_THRESHOLD))))
+		{
+			bestNonwrappingShift(Iref, IrefTransforms.FFTI, aux.IauxRS, shiftXRS, shiftYRS, aux2);
+			MAT_ELEM(aux.ARS,0,2) += shiftXRS;
+			MAT_ELEM(aux.ARS,1,2) += shiftYRS;
+			applyGeometry(LINEAR, aux.IauxRS, I, aux.ARS, IS_NOT_INV, wrap);
+		}
     }
 
     double corrRS = correlationIndex(aux.IauxRS, Iref);

@@ -513,11 +513,88 @@ double MultidimArray<double>::interpolatedElement2D(double x, double y, double o
     int iF=FINISHINGY(*this);
     int jF=FINISHINGX(*this);
 
-    double d00, d10, d11, d01;
-    ASSIGNVAL2D(d00,y0,x0);
-    ASSIGNVAL2D(d01,y0,x1);
-    ASSIGNVAL2D(d10,y1,x0);
-    ASSIGNVAL2D(d11,y1,x1);
+    /* Next code avoids checking two times some variables that are doubles.
+     * The code before was:
+        ASSIGNVAL2D(d00,y0,x0);
+        ASSIGNVAL2D(d01,y0,x1);
+        ASSIGNVAL2D(d10,y1,x0);
+        ASSIGNVAL2D(d11,y1,x1);
+    */
+    double d00, d10, d11, d01, *ref;
+    if ((x0 >= j0) && (x1 <= jF) && (y0 >= i0) && (y1 <= iF))
+    {
+    	ref = &A2D_ELEM(*this, y0, x0);
+		d00 = (*ref++);
+    	d01 = (*ref);
+    	ref = &A2D_ELEM(*this, y1, x0);
+		d10 = (*ref++);
+		d11 = (*ref);
+    }
+    else
+    {
+		bool outX0,outX1,outY0,outY1;
+		outX0 = (x0 < j0) || (x0 > jF);
+		outX1 = (x1 < j0) || (x1 > jF);
+		outY0 = (y0 < i0) || (y0 > iF);
+		outY1 = (y1 < i0) || (y1 > iF);
+
+		if (outY0)
+		{
+			d00 = outside_value;
+			d01 = outside_value;
+			d10 = outside_value;
+			d11 = outside_value;
+		}
+		else if(outY1)
+		{
+			d10 = outside_value;
+			d11 = outside_value;
+
+			if (outX0)
+			{
+				d00 = outside_value;
+				d01 = outside_value;
+			}
+			else
+			{
+				d00 = A2D_ELEM(*this, y0, x0);
+				if (outX1)
+				{
+					d01 = outside_value;
+				}
+				else
+				{
+					d01 = A2D_ELEM(*this, y0, x1);
+				}
+			}
+		}
+		else
+		{
+			if (outX0)
+			{
+				d00 = outside_value;
+				d10 = outside_value;
+				d01 = outside_value;
+				d11 = outside_value;
+			}
+			else
+			{
+				if (outX1)
+				{
+					d01 = outside_value;
+					d11 = outside_value;
+				}
+				else
+				{
+					d01 = A2D_ELEM(*this, y0, x1);
+					d11 = A2D_ELEM(*this, y1, x1);
+				}
+
+				d00 = A2D_ELEM(*this, y0, x0);
+				d10 = A2D_ELEM(*this, y1, x0);
+			}
+		}
+    }
 
     double d0 = LIN_INTERP(fx, d00, d01);
     double d1 = LIN_INTERP(fx, d10, d11);
