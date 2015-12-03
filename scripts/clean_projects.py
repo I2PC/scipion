@@ -54,10 +54,13 @@ print "Loading projects from:\n", customUserData or os.environ['SCIPION_USER_DAT
 manager = Manager(SCIPION_USER_DATA=customUserData)
 
 for projInfo in manager.listProjects():
-    proj = manager.loadProject(projInfo.getName())
+    projName = projInfo.getName()
+    proj = manager.loadProject(projName)
     settings = proj.getSettings()
     
-    print "  Left: ", proj.getLeftTime()
+    if proj.getLeftTime().days < 0:
+        print "Should delete: ", projName
+        #manager.deleteProject(projName) 
     
     
 
