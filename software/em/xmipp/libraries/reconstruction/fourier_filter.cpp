@@ -39,7 +39,6 @@ void FourierFilter::init()
     raised_w = 0;
     ctf.clear();
     ctf.enable_CTFnoise = false;
-    do_correct_phase = false;
     do_generate_3dmask = false;
     sampling_rate = -1.;
 }
@@ -188,7 +187,7 @@ void FourierFilter::readParams(XmippProgram *program)
         ctf.read( program->getParam("--fourier", "ctf") );
         if (sampling_rate > 0.)
         {
-            std::cerr << "CTF was optaned at sampling rate: " << ctf.Tm << std::endl;
+            std::cerr << "CTF was obtained at sampling rate: " << ctf.Tm << std::endl;
             std::cerr << "Image sampling rate is: " << sampling_rate << std::endl;
             ctf.Tm=sampling_rate;
         }
@@ -199,8 +198,13 @@ void FourierFilter::readParams(XmippProgram *program)
         FilterShape = FilterBand = CTFPOS;
         ctf.enable_CTFnoise = false;
         ctf.read( program->getParam("--fourier", "ctfpos") );
+        if (sampling_rate > 0.)
+        {
+            std::cerr << "CTF was obtained at sampling rate: " << ctf.Tm << std::endl;
+            std::cerr << "Image sampling rate is: " << sampling_rate << std::endl;
+            ctf.Tm=sampling_rate;
+        }
         ctf.produceSideInfo();
-        do_correct_phase = true;
     }
     else if (filter_type == "bfactor")
     {
@@ -455,7 +459,7 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
         break;
     case CTFPOS:
         ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
-        return ABS(ctf.getValueAt());
+        return fabs(ctf.getValueAt());
         break;
     case BFACTOR:
         {
