@@ -283,7 +283,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
         alMethod = self.alignMethod.get()
-        doSaveMovie = self.doSaveMovie.get()
+        doSaveMovie = False
         
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
@@ -296,7 +296,6 @@ class ProtMovieAlignment(ProtProcessMovies):
         if alMethod == AL_AVERAGE:
             command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s' % locals()
             command += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
-            doSaveMovie = False
 
             if self.inputMovies.get().getDark():
                 command += " --dark "+self.inputMovies.get().getDark()
@@ -448,7 +447,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             # Copy metadatafile otherwise it will be deleted
             #TODO: create a proper scipion object
             moveFile(join(movieFolder, metadataNameInterMediate), self._getExtraPath())
-            moveFile(join(movieFolder, corrMovieName), self._getExtraPath())
+            #moveFile(join(movieFolder, corrMovieName), self._getExtraPath())
         moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
 
 

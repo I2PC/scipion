@@ -321,8 +321,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         
         if(setType.equals("SetOfVolumes") || setType.equals("SetOfClasses3D"))
         {
-            cmdbutton.setVisible(data.isTableMode());
-            createvolbt.setVisible(!data.isTableMode());
+
+        	if (cmdbutton != null){
+        		cmdbutton.setVisible(data.isTableMode());
+        		createvolbt.setVisible(!data.isTableMode());
+        	}
         }
     }
   
