@@ -366,6 +366,16 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
         """Open the Edit GUI Form given an instance"""
         pwgui.dialog.EditObjectDialog(self.parent, Message.TITLE_EDIT_OBJECT, obj, self.mapper)
         
+    def _deleteObject(self, obj):
+        """ Remove unnecesary output, specially for Coordinates. """
+        prot = self.protocol
+        try:
+            prot.getProject().deleteProtocolOutput(prot, obj)
+            self.parent._fillSummary()
+            self.parent.windows.showInfo("Object %s successfuly deleted.")
+        except Exception, ex:
+            self.parent.windows.showError(str(ex))
+        
     def getObjectPreview(self, obj):
         desc = "<name>: " + obj.getName()
         
@@ -374,6 +384,9 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
     def getObjectActions(self, obj):
         if isinstance(obj, pwobj.Pointer):
             obj = obj.get()
+            isPointer = True
+        else:
+            isPointer = False
         actions = []    
         
         viewers = em.findViewers(obj.getClassName(), DESKTOP_TKINTER)
@@ -388,6 +401,16 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
         actions.append((Message.LABEL_EDIT, 
                         lambda : self._editObject(obj),
                         Icon.ACTION_EDIT))
+        
+        # DELETE
+        # Special case to allow delete outputCoordinates
+        # since we can end up with several outputs and
+        # we may want to clean up
+        if self.protocol.allowsDelete(obj) and not isPointer:
+            actions.append((Message.LABEL_DELETE_ACTION,
+                           lambda: self._deleteObject(obj),
+                           Icon.ACTION_DELETE))
+        
         return actions
     
     def getObjectLabel(self, obj, parent):
@@ -1303,8 +1326,9 @@ class ProtocolsView(tk.Frame):
                         
             except Exception, ex:
                 self.windows.showError(str(ex))
-                import traceback
-                traceback.print_exc()
+                if pwutils.envVarOn('SCIPION_DEBUG'):
+                    import traceback
+                    traceback.print_exc()
  
         # Following actions do not need a select run
         if action == ACTION_TREE:
