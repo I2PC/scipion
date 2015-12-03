@@ -836,6 +836,21 @@ class Protocol(Step):
         self._outputs.clear()
         self.mapper.store(self._outputs)
         
+    def findAttributeName(self, attr):
+        for attrName, attr in self.iterOutputEM():
+            if attr.getObjId() == attr.getObjId():
+                return attrName
+        return None            
+        
+    def deleteOutput(self, output):
+        attrName = self.findAttributeName(output)
+        self.mapper.delete(output)
+        self.deleteAttribute(attrName)
+        if attrName in self._outputs:
+            self._outputs.remove(attrName)
+        self.mapper.store(self._outputs)
+        self.mapper.commit()
+        
     def __copyRelations(self, other):
         """ This will copy relations from protocol other to self """
         pass
@@ -1449,6 +1464,9 @@ class Protocol(Step):
         """ Open mapper connections from previous closed outputs. """
         for _, attr in self.iterOutputAttributes(Set):
             attr.load()
+
+    def allowsDelete(self, obj):
+        return False
 
                 
 #---------- Helper functions related to Protocols --------------------
