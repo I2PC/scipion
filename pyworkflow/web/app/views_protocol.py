@@ -33,7 +33,7 @@ from django.shortcuts import render_to_response
 import em_wizard
 from pyworkflow.wizard import WEB_DJANGO
 from pyworkflow.em import findWizardsFromDict, getSubclassesFromModules, Wizard
-from pyworkflow.em import Pointer, PointerList, Boolean, PointerParam
+from pyworkflow.em import Pointer, PointerList, Boolean, PointerParam, String
 from pyworkflow.protocol.params import MultiPointerParam, RelationParam, Line
 
 SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
@@ -359,7 +359,7 @@ def updateParam(request, project, protocol, paramName):
             setPointerValue(project, attr, htmlValue, paramName, attr)
         else:
 
-            if not htmlValue:
+            if ( not isinstance(attr, String) and not htmlValue) :
                 htmlValue = None
 
             attr.set(htmlValue) # set the value for normal attributes
