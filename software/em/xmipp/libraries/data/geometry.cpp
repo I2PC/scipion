@@ -495,7 +495,7 @@ YY(intersection_point)=y;
 ZZ(intersection_point)=z;
 
 return 0 if sucessful
-return -1 if line paralell to plane
+return -1 if line parallel to plane
 return +1 if line in the plane
 
 TEST data (1)
@@ -1090,7 +1090,7 @@ double intersection_unit_cylinder(
     if (A == 0)
     {
         if (C > 0)
-            return 0;       // Paralell ray outside the cylinder
+            return 0;       // Parallel ray outside the cylinder
         else
             return 1 / ZZ(u); // return height
     }

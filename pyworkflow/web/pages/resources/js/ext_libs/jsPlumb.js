@@ -581,7 +581,7 @@
 		
 	};
         
-    // for those browsers that dont have it.  they still don't have it! but at least they won't crash.
+    // for those browsers that don't have it.  they still don't have it! but at least they won't crash.
 	if (!window.console)
 		window.console = { time:function(){}, timeEnd:function(){}, group:function(){}, groupEnd:function(){}, log:function(){} };
             
@@ -1554,7 +1554,7 @@
 				_p.type = _p.sourceEndpoint.connectionType;
 			
 			// copy in any connectorOverlays that were specified on the source endpoint.
-			// it doesnt copy target endpoint overlays.  i'm not sure if we want it to or not.
+			// it doesn't copy target endpoint overlays.  i'm not sure if we want it to or not.
 			if (_p.sourceEndpoint && _p.sourceEndpoint.connectorOverlays) {
 				_p.overlays = _p.overlays || [];
 				for (var i = 0, j = _p.sourceEndpoint.connectorOverlays.length; i < j; i++) {
@@ -2151,7 +2151,7 @@
 		};
 		
 		
-		// delete every endpoint and their connections. distinct from reset because we dont clear listeners here.
+		// delete every endpoint and their connections. distinct from reset because we don't clear listeners here.
 		this.deleteEveryEndpoint = function() {
 			_currentInstance.doWhileSuspended(function() {
 				for ( var id in endpointsByElement) {
@@ -2270,7 +2270,7 @@
 				}
 			} 
 			else if (el._nodes) { 	// TODO this is YUI specific; really the logic should be forced
-				// into the library adapters (for jquery and mootools aswell)
+				// into the library adapters (for jquery and mootools as well)
 				for ( var i = 0, j = el._nodes.length; i < j; i++) {
 					var ele = _gel(el._nodes[i]);
 					if (ele) _initDraggableIfNecessary(ele, true, options);
@@ -2751,7 +2751,7 @@
 					// clear the source endpoint from the list to detach. we will detach this connection at this
 					// point, but we want to keep the source endpoint.  the target is a floating endpoint and should
 					// be removed.  TODO need to figure out whether this code can result in endpoints kicking around
-					// when they shouldnt be.  like is this a full detach of a connection?  can it be?
+					// when they shouldn't be.  like is this a full detach of a connection?  can it be?
 					if (jpc.endpointsToDeleteOnDetach) {
 						if (source === jpc.endpointsToDeleteOnDetach[0])
 							jpc.endpointsToDeleteOnDetach[0] = null;
@@ -2760,7 +2760,7 @@
 					}
 					// reinstate any suspended endpoint; this just puts the connection back into
 					// a state in which it will report sensible values if someone asks it about
-					// its target.  we're going to throw this connection away shortly so it doesnt matter
+					// its target.  we're going to throw this connection away shortly so it doesn't matter
 					// if we manipulate it a bit.
 					if (jpc.suspendedEndpoint) {
 						jpc.targetId = jpc.suspendedEndpoint.elementId;
@@ -3372,7 +3372,7 @@
 		};
 
 		// called to notify us that an id WAS changed, and we should do our changes, but we
-		// dont need to change the element's DOM attribute.
+		// don't need to change the element's DOM attribute.
 		this.setIdChanged = function(oldId, newId) {
 			_currentInstance.setId(oldId, newId, true);
 		};
@@ -3795,7 +3795,7 @@
                 doRegisterTarget = true,
 			    registerConnection = function(otherIndex, otherEndpoint, otherAnchor, elId, c) {
 					if ((sourceId == targetId) && otherAnchor.isContinuous){
-                       // remove the target endpoint's canvas.  we dont need it.
+                       // remove the target endpoint's canvas.  we don't need it.
                         jpcl.removeElement(ep[1].canvas);
                         doRegisterTarget = false;
                     }
@@ -3808,7 +3808,7 @@
 		};
         var removeEndpointFromAnchorLists = function(endpoint) {
             (function(list, eId) {
-                if (list) {  // transient anchors dont get entries in this list.
+                if (list) {  // transient anchors don't get entries in this list.
                     var f = function(e) { return e[4] == eId; };
                     jsPlumbUtil.removeWithFunction(list["top"], f);
                     jsPlumbUtil.removeWithFunction(list["left"], f);
@@ -4256,7 +4256,7 @@
                 var o = ref.getOrientation(_endpoint);
                 // here we take into account the orientation of the other
                 // anchor: if it declares zero for some direction, we declare zero too. this might not be the most awesome. perhaps we can come
-                // up with a better way. it's just so that the line we draw looks like it makes sense. maybe this wont make sense.
+                // up with a better way. it's just so that the line we draw looks like it makes sense. maybe this won't make sense.
                 return [ Math.abs(o[0]) * xDir * -1,
                         Math.abs(o[1]) * yDir * -1 ];
             }
@@ -4746,7 +4746,7 @@
         self.setAnchor(anchorParamsToUse, true);
             
         // ANCHOR MANAGER
-        if (!params._transient) // in place copies, for example, are transient.  they will never need to be retrieved during a paint cycle, because they dont move, and then they are deleted.
+        if (!params._transient) // in place copies, for example, are transient.  they will never need to be retrieved during a paint cycle, because they don't move, and then they are deleted.
             _jsPlumb.anchorManager.add(self, _elementId);
 
         var _endpoint = null, originalEndpoint = null;
@@ -8192,7 +8192,7 @@
 
 		// in this page it is also mentioned that IE requires the extra arg to the namespace
 		// http://www.louisremi.com/2009/03/30/changes-in-vml-for-ie8-or-what-feature-can-the-ie-dev-team-break-for-you-today/
-		// but someone commented saying they didn't need it, and it seems jsPlumb doesnt need it either.
+		// but someone commented saying they didn't need it, and it seems jsPlumb doesn't need it either.
 		// var iev = document.documentMode;
 		//if (!iev || iev < 8)
 			document.namespaces.add("jsplumb", "urn:schemas-microsoft-com:vml");

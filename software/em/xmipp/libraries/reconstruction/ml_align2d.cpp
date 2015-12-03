@@ -43,7 +43,7 @@ ProgML2D::ProgML2D()
 void ProgML2D::defineParams()
 {
     addUsageLine("Perform (multi-reference) 2D-alignment using a maximum-likelihood (ML) target function.");
-    addUsageLine("+Our recommended way of performing ML alignment is to introduce as little bias in the intial reference(s) as possible.");
+    addUsageLine("+Our recommended way of performing ML alignment is to introduce as little bias in the initial reference(s) as possible.");
     addUsageLine("+This can be done by calculting average images of random subsets of the (unaligned!) input experimental images, using the --nref option.");
     addUsageLine("+Note that the estimates for the standard deviation in the noise and in the origin offsets are re-estimated every iteration,");
     addUsageLine("+so that the initial values should not matter too much, as long as they are \"reasonable\". For Xmipp-normalized images,");
@@ -1107,7 +1107,7 @@ void ProgML2D::doThreadRotateReferenceRefno()
             fref[refnoipsi] = Faux;
         }
 
-        // If we dont use save_mem1 Iref[refno] is useless from here on
+        // If we don't use save_mem1 Iref[refno] is useless from here on
         //FIXME: Segmentation fault with blocks
         //if (!save_mem1)
         //    model.Iref[refno]().resize(0, 0);

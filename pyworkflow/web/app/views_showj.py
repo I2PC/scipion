@@ -245,7 +245,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
             _dataType = xmipp.DT_FLOAT if isVol and inputParams[sj.MODE]==sj.MODE_VOL_CHIMERA else xmipp.DT_UCHAR
             #Setting the _imageVolName and _stats     
             
-            # CONVERTION TO .mrc DONE HERE!
+            # CONVERSION TO .mrc DONE HERE!
             _imageVolNameOld = _imageVolName
             _imageVolNameNew, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParams[sj.VOL_VIEW]), _getStats)
             
@@ -300,7 +300,7 @@ def showj(request):
     Columns can be customized to be rendered, visible or more...
     This method can be called in two modes:
     GET: the first time the parameters will be parsed from GET request.
-    POST: next call to the method will be done through POST, some paramters will
+    POST: next call to the method will be done through POST, some parameters will
          be store also in SESSION
     """
     firstTime = request.method == 'GET'

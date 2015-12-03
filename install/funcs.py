@@ -390,7 +390,7 @@ class Environment:
                 # relative to SCIPION_HOME.
             return t
 
-        # If we didnt' specify the commands, we can either compile
+        # If we didn't specify the commands, we can either compile
         # with autotools (so we have to run "configure") or cmake.
 
         environ = os.environ.copy()

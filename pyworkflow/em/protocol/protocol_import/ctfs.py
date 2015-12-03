@@ -149,7 +149,8 @@ class ProtImportCTF(ProtImportFiles):
                                "This will make another copy of your data and may take \n"
                                "more time to import. ")
         else:
-            summary.append("Import of *%d* %s from %s" % (self.ctfSet.getSize(), self._outputClassName, self.getPattern()))
+            summary.append("Imported *%d* CTFs " % self.outputCTF.getSize())
+            summary.append("from %s" % self.getPattern())
 
         return summary
     

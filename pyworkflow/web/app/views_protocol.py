@@ -310,9 +310,9 @@ def updateProtocolParams(request, protocol, project):
 
 def setPointerValue(project, attr, htmlValue, paramName, pointer):
     """ Get the html stored value of the pointer in the form of  objId:extended
-    and set the attributes of poiter
+    and set the attributes of pointer
     """
-    
+
     if len(htmlValue.strip()) > 0:
         if '::' in htmlValue:
             value, extended = htmlValue.split('::')
@@ -355,12 +355,13 @@ def updateParam(request, project, protocol, paramName):
     else:
         htmlValue = request.POST.get(paramName)
 
-        if not htmlValue:
-            htmlValue = None
-
         if isinstance(attr, Pointer):
             setPointerValue(project, attr, htmlValue, paramName, attr)
-        else: 
+        else:
+
+            if not htmlValue:
+                htmlValue = None
+
             attr.set(htmlValue) # set the value for normal attributes
         
 def save_protocol(request):

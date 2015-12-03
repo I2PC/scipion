@@ -435,7 +435,7 @@ public class GalleryData {
                     
                 }
                 if (image.isVolume()) { // We are assuming all are volumes
-                    // or images, dont mix it
+                    // or images, don't mix it
                     if (isGalleryMode()) 
                         mode = Mode.GALLERY_VOL;
                     

@@ -206,7 +206,7 @@ def myfirstmap_form(request):
     context.update({'path_mode':'upload',
                     'formUrl': 'my_form',
                     'showHost': False,
-                    'showParallel': False})
+                    'showParallel': True})
     return render_to_response('form/form.html', context)
 
  

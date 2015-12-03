@@ -1,5 +1,17 @@
 function getSubDomainURL(){return ""}
 
+function getPort(){
+	if (document.location.port != "") {
+		return ":" + document.location.port;
+	} else {
+		return "";
+	}
+}
+function getBaseURL() {
+
+	return "http://" + document.domain + getPort() + getSubDomainURL();
+}
+
 function getAbsoluteURL(url){
 	var domain = getSubDomainURL()
 	if (url.indexOf(domain + "/") != 0) {

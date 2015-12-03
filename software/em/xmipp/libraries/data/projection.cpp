@@ -555,7 +555,7 @@ void projectVolume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
                 double alpha_y = (yy_idxd - YY(p1_shifted))* iYYP_direction;
                 double alpha_z = (zz_idxd - ZZ(p1_shifted))* iZZP_direction;
 
-                // Which dimension will ray move next step into?, it isn't neccesary to be only
+                // Which dimension will ray move next step into?, it isn't necessary to be only
                 // one.
                 double diffx = fabs(alpha-alpha_x);
                 double diffy = fabs(alpha-alpha_y);
@@ -727,7 +727,7 @@ void singleWBP(MultidimArray<double> &V, Projection &P)
             double alpha_y = (YY(idx) + half_y_sign - YY(p1)) / YY(P.direction);
             double alpha_z = (ZZ(idx) + half_z_sign - ZZ(p1)) / ZZ(P.direction);
 
-            // Which dimension will ray move next step into?, it isn't neccesary to be only
+            // Which dimension will ray move next step into?, it isn't necessary to be only
             // one.
             double diffx = ABS(alpha - alpha_x);
             double diffy = ABS(alpha - alpha_y);

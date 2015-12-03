@@ -123,7 +123,11 @@
 								{% elif param.getClassName == "LabelParam" %}
                                     <!-- Nada -->
                                 {% else %}
-									<input type="text" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" style="min-width: 230px;">	
+									<input type="text" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" style="min-width: 230px;"
+									{% if param.getClassName == "PointerParam" %}
+										disabled
+									{% endif %}
+									>
 								{% endif %}	
 							{% endif %}
 							</td>

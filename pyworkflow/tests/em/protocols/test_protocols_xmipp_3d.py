@@ -788,7 +788,7 @@ class TestXmippPdbConvert(TestXmippBase):
         print "Run convert a pdb from database"
         protConvert = self.newProtocol(XmippProtConvertPdb, pdbId="3j3i", sampling=4, setSize=True, size=100)
         self.launchProtocol(protConvert)
-        self.assertIsNotNone(protConvert.outputVolume.getFileName(), "There was a problem with the convertion")
+        self.assertIsNotNone(protConvert.outputVolume.getFileName(), "There was a problem with the conversion")
         self.assertAlmostEqual(protConvert.outputVolume.getSamplingRate(), protConvert.sampling.get(), places=1, msg="wrong sampling rate")
         self.assertAlmostEqual(protConvert.outputVolume.getDim()[0], protConvert.size.get(), places=1, msg="wrong size")
         
@@ -805,7 +805,7 @@ class TestXmippPdbConvert(TestXmippBase):
                                        sampling=3, setSize=True, size=20)
         protConvert.pdbObj.set(protImport.outputPdb)
         self.launchProtocol(protConvert)
-        self.assertIsNotNone(protConvert.outputVolume.getFileName(), "There was a problem with the convertion")
+        self.assertIsNotNone(protConvert.outputVolume.getFileName(), "There was a problem with the conversion")
         self.assertAlmostEqual(protConvert.outputVolume.getSamplingRate(), protConvert.sampling.get(), places=1, msg="wrong sampling rate")
         self.assertAlmostEqual(protConvert.outputVolume.getDim()[0], protConvert.size.get(), places=1, msg="wrong size")
 
@@ -813,7 +813,7 @@ class TestXmippPdbConvert(TestXmippBase):
         print "Run convert a pdb from file"
         protConvert = self.newProtocol(XmippProtConvertPdb,inputPdbData=2, pdbFile=self.pdb, sampling=2, setSize=True)
         self.launchProtocol(protConvert)
-        self.assertIsNotNone(protConvert.outputVolume.getFileName(), "There was a problem with the convertion")
+        self.assertIsNotNone(protConvert.outputVolume.getFileName(), "There was a problem with the conversion")
         self.assertAlmostEqual(protConvert.outputVolume.getSamplingRate(), protConvert.sampling.get(), places=1, msg="wrong sampling rate")
         self.assertAlmostEqual(protConvert.outputVolume.getDim()[0], 48, places=1, msg="wrong size")
 
