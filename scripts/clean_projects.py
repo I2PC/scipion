@@ -47,6 +47,8 @@ if n > 2:
     usage("Incorrect number of input parameters")
 
 customUserData = sys.argv[1] if n > 1 else None
+
+print "Loading projects from:\n", customUserData or os.environ['SCIPION_USER_DATA']
  
 # Create a new project
 manager = Manager(SCIPION_USER_DATA=customUserData)
