@@ -29,32 +29,46 @@ This sub-package contains wrapper around Projection Outliers Xmipp program
 
 from math import floor
 
-from pyworkflow.protocol.params import PointerParam
+from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.em.protocol import ProtAnalysis2D
-from pyworkflow.em.data import SetOfClasses2D, Image
+from pyworkflow.em.protocol import ProtAnalysis3D
+from pyworkflow.em.data import SetOfClasses2D, Image, SetOfAverages,\
+    SetOfParticles
 from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLocation
 import pyworkflow.em.metadata as md
 
+import xmipp
 from xmipp3 import ProjMatcher
 
         
-class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
+class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
     """Compares a set of classes or averages with the corresponding projections of a reference volume """
-    _label = 'projection outliers'
+    _label = 'compare reprojections'
     
     def __init__(self, **args):
-        ProtAnalysis2D.__init__(self, **args)
+        ProtAnalysis3D.__init__(self, **args)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputSet', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfParticles', pointerCondition='hasAlignmentProj')
+                      pointerClass='SetOfClasses2D, SetOfAverages, SetOfParticles')
         form.addParam('inputVolume', PointerParam, label="Volume to compare images to", important=True,
                       pointerClass='Volume',
                       help='Volume to be used for class comparison')
-        form.addParallelSection(threads=0, mpi=1)
+        
+        form.addParam('useAssignment', BooleanParam, default=True,
+                      label='Use input angular assignment (if available)')
+        form.addParam('symmetryGroup', StringParam, default="c1",
+                      label='Symmetry group', 
+                      help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
+                        'If no symmetry is present, give c1')
+        form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
+                      label='Angular sampling rate',
+                      help='In degrees.'
+                      ' This sampling defines how fine the projection gallery from the volume is explored.')
+        form.addParallelSection(threads=0, mpi=8)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -63,14 +77,25 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         vol = self.inputVolume.get()
         
         self._insertFunctionStep("convertStep", self.imgsFn)
-        self._insertFunctionStep("produceResiduals", vol.getFileName(), self.imgsFn, vol.getSamplingRate())
+        imgSet = self.inputSet.get()
+        if not self.useAssignment or isinstance(imgSet, SetOfClasses2D) or isinstance(imgSet, SetOfAverages) or (isinstance(imgSet, SetOfParticles) and not imgSet.hasAlignmentProj()):
+            anglesFn = self._getExtraPath('angles.xmd')
+            self._insertFunctionStep("projMatchStep", self.inputVolume.get().getFileName(), self.angularSampling.get(), self.symmetryGroup.get(), self.imgsFn,
+                                     anglesFn, self.inputVolume.get().getDim()[0])
+        else:
+            anglesFn=self.imgsFn
+        self._insertFunctionStep("produceResiduals", vol.getFileName(), anglesFn, vol.getSamplingRate())
         self._insertFunctionStep("evaluateResiduals")
         self._insertFunctionStep("createOutputStep")
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self, imgsFn):
-        from convert import writeSetOfParticles
-        writeSetOfParticles(self.inputSet.get(), self.imgsFn)
+        from convert import writeSetOfClasses2D, writeSetOfParticles
+        imgSet = self.inputSet.get()
+        if isinstance(imgSet, SetOfClasses2D):
+            writeSetOfClasses2D(imgSet, self.imgsFn, writeParticles=False)
+        else:
+            writeSetOfParticles(imgSet, self.imgsFn)
     
     def produceResiduals(self,volumeFn,anglesFn,Ts):
         if volumeFn.endswith(".mrc"):
@@ -97,7 +122,8 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         outputSet = self._createSetOfParticles()
         imgSet = self.inputSet.get()
         imgFn = self._getExtraPath("anglesCont.xmd")
-        outputSet.copyInfo(imgSet)
+        if not isinstance(imgSet, SetOfClasses2D):
+            outputSet.copyInfo(imgSet)
         outputSet.setAlignmentProj()
         outputSet.copyItems(imgSet,
                             updateItemCallback=self._processRow,
@@ -105,13 +131,13 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
 
         self._defineOutputs(outputParticles=outputSet)
         self._defineSourceRelation(self.inputSet, outputSet)
-    
+
     def _processRow(self, particle, row):
         setXmippAttributes(particle, row,
-                           md.MDL_ZSCORE_RESVAR, md.MDL_ZSCORE_RESMEAN, md.MDL_ZSCORE_RESCOV, md.MDL_IMAGE_ORIGINAL,
-                           md.MDL_COST, md.MDL_CONTINUOUS_GRAY_A, md.MDL_CONTINUOUS_GRAY_B, md.MDL_CONTINUOUS_X, md.MDL_CONTINUOUS_Y)
+                           xmipp.MDL_ZSCORE_RESVAR, xmipp.MDL_ZSCORE_RESMEAN, xmipp.MDL_ZSCORE_RESCOV, xmipp.MDL_IMAGE_ORIGINAL,
+                           xmipp.MDL_COST, xmipp.MDL_CONTINUOUS_GRAY_A, xmipp.MDL_CONTINUOUS_GRAY_B, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y)
         def __setXmippImage(label):
-            attr = '_xmipp_' + md.label2Str(label)
+            attr = '_xmipp_' + xmipp.label2Str(label)
             if not hasattr(particle, attr):
                 img = Image()
                 setattr(particle, attr, img)
@@ -120,10 +146,10 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
                 img = getattr(particle, attr)
             img.setLocation(xmippToLocation(row.getValue(label)))
         
-        __setXmippImage(md.MDL_IMAGE)
-        __setXmippImage(md.MDL_IMAGE_REF)
-        __setXmippImage(md.MDL_IMAGE_RESIDUAL)
-        __setXmippImage(md.MDL_IMAGE_COVARIANCE)
+        __setXmippImage(xmipp.MDL_IMAGE)
+        __setXmippImage(xmipp.MDL_IMAGE_REF)
+        __setXmippImage(xmipp.MDL_IMAGE_RESIDUAL)
+        __setXmippImage(xmipp.MDL_IMAGE_COVARIANCE)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
