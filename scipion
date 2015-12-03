@@ -147,6 +147,7 @@ try:
     LD_LIBRARY_PATH = os.pathsep.join(
         [join(SCIPION_SOFTWARE, 'lib'),
          BUILD['MPI_LIBDIR'],
+         BUILD['CUDA'],
          os.environ.get('LD_LIBRARY_PATH', '')]
     )
     PYTHONPATH = os.pathsep.join(
