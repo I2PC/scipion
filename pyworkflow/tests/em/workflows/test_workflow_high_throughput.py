@@ -1,10 +1,11 @@
 import unittest, sys
-from pyworkflow.em import *
-from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3 import *
-from pyworkflow.em.packages.xmipp3.constants import OTHER 
-from pyworkflow.em.packages.grigoriefflab import *
-from pyworkflow.em.packages.eman2 import *
+from pyworkflow.em import ProtImportMovies, ProtImportCoordinates
+from pyworkflow.tests import DataSet, setupTestProject
+from pyworkflow.em.packages.xmipp3 import (ProtMovieAlignment, XmippProtPreprocessMicrographs,
+                                           XmippProtCTFMicrographs, XmippProtExtractParticles,
+                                           XmippProtCL2DAlign)
+from pyworkflow.em.packages.xmipp3.constants import OTHER
+from pyworkflow.em.packages.spider import SpiderProtFilter, SpiderProtCAPCA, SpiderProtClassifyWard
 from test_workflow import TestWorkflow
 
 
@@ -26,7 +27,7 @@ class HighThroughputTest(TestWorkflow):
         self.assertIsNotNone(protImport.outputMovies, "There was a problem importing movies")
         
         print "Aligning the movies..."
-        protAlignMov = ProtOpticalAlignment()
+        protAlignMov = ProtMovieAlignment()
         protAlignMov.inputMovies.set(protImport.outputMovies)
         protAlignMov.setObjLabel('align movies - Day1')
         self.proj.launchProtocol(protAlignMov, wait=True)
@@ -59,7 +60,7 @@ class HighThroughputTest(TestWorkflow):
 
 
         print "Run extract particles with <Other> option"
-        protExtract = XmippProtExtractParticles(boxSize=60, downsampleType=OTHER, doInvert=True,
+        protExtract = XmippProtExtractParticles(boxSize=60, downsampleType=OTHER, doInvert=True, doFlip=True,
                                                 downFactor=4, backRadius=28, runMode=1, numberOfThreads=3)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
@@ -92,11 +93,10 @@ class HighThroughputTest(TestWorkflow):
         
         print "Running Spider Ward Classification"
         protWard = SpiderProtClassifyWard()
-        protWard.pcaFilePointer.set(protCAPCA.imcFile)
+        protWard.pcaFile.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protOnlyAlign.outputParticles)
         protWard.setObjLabel('spi ward')
         self.proj.launchProtocol(protWard, wait=True)
-        self.assertIsNotNone(protWard.outputClasses, "There was a problem with Spider Ward Classification")
 
 
 if __name__ == "__main__":
