@@ -42,8 +42,10 @@ from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import XmippPro
 import xmipp
 from pyworkflow.em.packages.xmipp3.nma.protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
 from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume
-
-
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+import numpy as np
+from sklearn import manifold
 
 class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABase, XmippProtAlignVolume):
     """ 
@@ -100,22 +102,23 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             self._insertFunctionStep('qualifyModesStep', self.numberOfModes, self.collectivityThreshold.get(), 
                                         self._getPath("pseudoatoms_%d.pdb"%voli.getObjId()), suffix)
                         
-            for volj in volList:
+            '''for volj in volList:
                 if volj.getObjId() is not voli.getObjId():
                     refFn = getImageLocation(voli)
                     inVolFn = getImageLocation(volj)
                     outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (volj.getObjId(), voli.getObjId()))
-                    self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, maskArgs, alignArgs)
+                    self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, maskArgs, alignArgs)'''
                  
-        self._insertFunctionStep('gatherResultsStep')   
-                        
+        self._insertFunctionStep('gatherResultsStep')
+        self._insertFunctionStep('plotResult')
+                                
     #--------------------------- STEPS functions --------------------------------------------
     
     def gatherResultsStep(self):
                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
                 
-        for voli in volList:
+        '''for voli in volList:
             mdVols = xmipp.MetaData()
             files = glob(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%voli.getObjId())
             fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%voli.getObjId()
@@ -129,34 +132,87 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%voli.getObjId())
             sigma = Ts * self.pseudoAtomRadius.get() 
             self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s"%\
-                       (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))    
+                       (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))''' 
             
-        
-        score = [[0 for i in range(volList)] for i in range(volList)]
+                 
+        score = [[0 for i in volList] for i in volList]
         for voli in volList:
             elastAlign = xmipp.MetaData(self._getExtraPath("compDeformVol_%d.xmd"%voli.getObjId()))
-            for id in elastAlign:
-                maxCc = elastAlign.getValue(xmipp.MDL_MAXCC,id)
-                if id == voli.getObjId():
-                    score[voli.getObjId()][id] = 0
-                score[voli.getObjId()][id] = 1 - maxCc
-                
+            mdIter = md.iterRows(elastAlign)
+            for volj in volList:
+                if volj.getObjId() is voli.getObjId():
+                    score[(voli.getObjId()-1)][(volj.getObjId()-1)] = 0
+                    
+                else:
+                    elasticRow = next(mdIter)
+                    maxCc = elasticRow.getValue(md.MDL_MAXCC)
+                    score[(voli.getObjId()-1)][(volj.getObjId()-1)] = (1 - maxCc)
+                                            
+        print "score matrix is: "
         print score
-            
-        distance = [[0 for i in range(volList)] for i in range(volList)]
-        for i in range(volList):
-            for j in range(volList):
-                distance[i][j] = (score[i][j] + score[j][i])/2
-                
-        print distance                    
         
-       
+        #fnRootC = self._getExtraPath ("DistanceMatrixColumn.txt") 
+        fnRootN = self._getExtraPath ("DistanceMatrixNormal.txt")   
+        distance = [[0 for i in volList] for i in volList]
+        for i in volList:
+            for j in volList:
+                distance[(i.getObjId()-1)][(j.getObjId()-1)] = (score[(i.getObjId()-1)][(j.getObjId()-1)] + score[(j.getObjId()-1)][(i.getObjId()-1)])/2
+                fhN = open(self._defineResultsName(),"a")
+                fhN.write("%f\n"%distance[(i.getObjId()-1)][(j.getObjId()-1)])
+                fhN.close()
+                fhN = open(fnRootN,"a")
+                fhN.write("%f\t"%distance[(i.getObjId()-1)][(j.getObjId()-1)])
+                fhN.close()  
+            fhN = open(fnRootN,"a")
+            fhN.write("\n")
+            fhN.close()                     
         
-        
+        print "distance matrix is: "
+        print distance
+                       
+          
+                     
         cleanPattern(self._getExtraPath('pseudoatoms*'))
         cleanPattern(self._getExtraPath('vec_ani.pkl'))
         
-      
+        
+        
+    def plotResult(self):
+        
+        fnDistance = self._getExtraPath("DistanceMatrixColumn.txt")
+        volList = [vol.clone() for vol in self._iterInputVolumes()]
+        
+        data = []
+        fnFreqOpen = open(fnDistance, "r")
+        for line in fnFreqOpen:
+            fields = line.split()
+            rowdata = map(float, fields)
+            data.extend(rowdata)
+        
+        print "data is:"
+        print data
+        
+        count = 0
+        newDistance = [[0 for i in volList] for i in volList]
+        for i in volList:
+            for j in volList:
+                newDistance[(i.getObjId()-1)][(j.getObjId()-1)] = data[count]
+                count += 1
+                        
+            
+        print "new distance matrix is: "
+        print newDistance  
+        
+        
+        
+        
+        mds = manifold.MDS(n_components=2, metric=True, max_iter=3000, eps=1e-9, dissimilarity="precomputed", n_jobs=1)
+        embed3d = mds.fit(newDistance).embedding_ 
+        
+        print "embed3d = "
+        print embed3d
+        
+                                   
         
     #--------------------------- INFO functions --------------------------------------------
     
@@ -204,5 +260,8 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1)
                        
         return alignArgs
+    
+    def _defineResultsName(self):
+        return self._getExtraPath('DistanceMatrixColumn.txt')
      
     
