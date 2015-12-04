@@ -34,25 +34,77 @@ import sys
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
+from pyworkflow.utils.properties import Message
 from convert import (readCtfModel, parseGctfOutput)
 
 
 class ProtGctf(em.ProtCTFMicrographs):
     """
     Estimates CTF on a set of micrographs
-    using Gctf program.
+    using GPU-accelerated Gctf program.
     
     To find more information about Gctf go to:
     http://www.mrc-lmb.cam.ac.uk/kzhang
     """
     _label = 'CTF estimation on GPU'
-    
-    
-    def _defineProcessParams(self, form):
+
+
+    def _defineParams(self, form):
+        form.addSection(label=Message.LABEL_CTF_ESTI)
+        form.addParam('recalculate', params.BooleanParam, default=False, condition='recalculate',
+              label="Do recalculate ctf?")
+        
+        form.addParam('continueRun', params.PointerParam, allowsNull=True,
+              condition='recalculate', label="Input previous run",
+              pointerClass=self.getClassName())
+        form.addHidden('sqliteFile', params.FileParam, condition='recalculate',
+              allowsNull=True)
+        
+        form.addParam('inputMicrographs', params.PointerParam, important=True,
+              condition='not recalculate', label=Message.LABEL_INPUT_MIC,
+              pointerClass='SetOfMicrographs')
+        form.addParam('ctfDownFactor', params.FloatParam, default=1.,
+              label='CTF Downsampling factor',
+              condition='not recalculate',
+              help='Set to 1 for no downsampling. Non-integer downsample factors are possible. '
+              'This downsampling is only used for estimating the CTF and it does not affect '
+              'any further calculation. Ideally the estimation of the CTF is optimal when '
+              'the Thon rings are not too concentrated at the origin (too small to be seen) '
+              'and not occupying the whole power spectrum (since this downsampling might '
+              'entail aliasing).')
+        
+        line = form.addLine('Resolution', condition='not recalculate',
+              help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
+              'These cut-offs prevent the typical peak at the center of the PSD and high-resolution'
+              'terms where only noise exists, to interfere with CTF estimation. The default lowest '
+              'value is 0.05 but for micrographs with a very fine sampling this may be lowered towards 0.'
+              'The default highest value is 0.35, but it should '+'be increased for micrographs with '
+              'signals extending beyond this value. However, if your micrographs extend further than '
+              '0.35, you should consider sampling them at a finer rate.')
+        line.addParam('lowRes', params.FloatParam, default=0.05,
+                      label='Lowest' )
+        line.addParam('highRes', params.FloatParam, default=0.35,
+                      label='Highest')
+        # Switched (microns) by 'in microns' by fail in the identifier with jquery
+        line = form.addLine('Defocus search range (microns)', expertLevel=params.LEVEL_ADVANCED,
+              condition='not recalculate',
+              help='Select _minimum_ and _maximum_ values for defocus search range (in microns).'
+              'Underfocus is represented by a positive number.')
+        line.addParam('minDefocus', params.FloatParam, default=0.25, 
+              label='Min')
+        line.addParam('maxDefocus', params.FloatParam, default=4.,
+              label='Max')
+        
         form.addParam('astigmatism', params.FloatParam, default=100.0,
               label='Expected (tolerated) astigmatism',
               help='Estimated astigmatism in Angstroms',
               expertLevel=params.LEVEL_ADVANCED)
+        form.addParam('windowSize', params.IntParam, default=512, expertLevel=params.LEVEL_ADVANCED,
+              label='Window size', condition='not recalculate',
+              help='The PSD is estimated from small patches of this size. Bigger patches '
+              'allow identifying more details. However, since there are fewer windows, '
+              'estimations are noisier.')
+    
         form.addParam('plotResRing', params.BooleanParam, default=True,
               label='Plot a resolution ring on a PSD file',
               help='Whether to plot an estimated resolution ring on the power spectrum',
@@ -60,8 +112,67 @@ class ProtGctf(em.ProtCTFMicrographs):
         form.addParam('GPUCore', params.IntParam, default=0,
               expertLevel=params.LEVEL_ADVANCED,
               label="Choose GPU core",
-              help="GPU may have several cores. Set it to zero if you do not know what we are talking about. First core index is 0, second 1 and so on.")
-    
+              help='GPU may have several cores. Set it to zero if you do not know '
+              'what we are talking about. First core index is 0, second 1 and so on.')
+
+        form.addSection(label='Advanced')
+        form.addParam('bfactor', params.IntParam, default=150,
+              expertLevel=params.LEVEL_ADVANCED,
+              label="B-factor",
+              help='B-factors used to decrease high resolution amplitude, A^2; '
+              'suggested range 50~300 except using REBS method')
+        form.addParam('doBasicRotave', params.BooleanParam, default=False,
+              expertLevel=params.LEVEL_ADVANCED,
+              label="Do rotational average",
+              help='Do rotational average used for output CTF file. '
+              'Only for nice output, will NOT be used for CTF determination.')
+        form.addParam('doEPA', params.BooleanParam, default=True,
+              expertLevel=params.LEVEL_ADVANCED,
+              label="Do EPA",
+              help='Do Equiphase average used for output CTF file. '
+              'Only for nice output, will NOT be used for CTF determination.')
+        form.addParam('overlap', params.FloatParam, default=0.5,
+              expertLevel=params.LEVEL_ADVANCED,
+              label="Overlap factor",
+              help='Overlapping factor for grid boxes sampling, '
+              'for windowsize=512, 0.5 means 256 pixels overlapping.')
+        form.addParam('convsize', params.IntParam, default=85,
+              expertLevel=params.LEVEL_ADVANCED,
+              label="Boxsize for smoothing",
+              help='Boxsize to be used for smoothing, suggested 1/5 ~ 1/20 of boxsize in pixel, '
+              'e.g. 99 for 512 boxsize')
+
+        group = form.addGroup('High-res refinement')
+        group.addParam('doHighRes', params.BooleanParam, default=False,
+              expertLevel=params.LEVEL_ADVANCED,
+              label="Do high-resolution refinement",
+              help='Whether to do High-resolution refinement or not, '
+              'very useful for selecting high quality micrographs. '
+              'Especially useful when your data has strong low-resolution bias')
+        group.addParam('HighResL', params.FloatParam, default=15.0,
+              expertLevel=params.LEVEL_ADVANCED,
+              condition='doHighRes',
+              label="Lowest resolution",
+              help='Lowest resolution  to be used for High-resolution refinement, in Angstroms')
+        group.addParam('HighResH', params.FloatParam, default=4.0,
+              expertLevel=params.LEVEL_ADVANCED,
+              condition='doHighRes',
+              label="Highest resolution",
+              help='Highest resolution  to be used for High-resolution refinement, in Angstroms')
+        group.addParam('HighResBf', params.IntParam, default=50,
+              expertLevel=params.LEVEL_ADVANCED,
+              condition='doHighRes',
+              label="B-factor",
+              help='B-factor to be used for High-resolution refinement, in Angstroms')
+
+        form.addParam('doValidate', params.BooleanParam, default=False,
+              expertLevel=params.LEVEL_ADVANCED,
+              label="Do validation",
+              help='Whether to validate the CTF determination.')
+
+#        form.addParallelSection(threads=1, mpi=1)
+
+
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run Gctf with required parameters """
@@ -230,10 +341,22 @@ class ProtGctf(em.ProtCTFMicrographs):
         self._args += "--astm %f " % self.astigmatism.get()
         self._args += "--resL %f " % self._params['lowRes']
         self._args += "--resH %f " % self._params['highRes']
-        self._args += "--do_EPA 1 "
+        self._args += "--do_EPA %d " % (1 if self.doEPA else 0)
         self._args += "--boxsize %d " % self._params['windowSize']
         self._args += "--plot_res_ring %d " % (1 if self.plotResRing else 0)
         self._args += "--gid %d " % self.GPUCore.get()
+        self._args += "--bfac %d " % self.bfactor.get()
+        self._args += "--do_basic_rotave %d " % ( 1 if self.doBasicRotave else 0)
+        self._args += "--overlap %f " % self.overlap.get()
+        self._args += "--convsize %d " % self.convsize.get()
+        self._args += "--do_Hres_ref %d " % (1 if self.doHighRes else 0)
+
+        if self.doHighRes:
+            self._args += "--Href_resL %d " % self.HighResL.get()
+            self._args += "--Href_resH %d " % self.HighResH.get()
+            self._args += "--Href_bfac %d " % self.HighResBf.get()
+
+        self._args += "--do_validation %d " % (1 if self.doValidate else 0)
         self._args += "%(micFn)s "
         self._args += "> %(gctfOut)s"
  
