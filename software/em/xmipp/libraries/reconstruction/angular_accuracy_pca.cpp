@@ -92,7 +92,10 @@ void ProgAngularAccuracyPCA::run()
     			createEmptyFile(fnTempReconstructed, newXdim, newYdim, 1, md.size(), true, WRITE_OVERWRITE);
     		}
 
-    		if (md.size() < 10)
+    		if (md.size() <= 1)
+    			continue;
+
+    		else if (md.size() < 10)
     			numPCAs = md.size()/2;
     		else
     			numPCAs = 2;
