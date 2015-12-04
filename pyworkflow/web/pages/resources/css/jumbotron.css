@@ -119,3 +119,16 @@ header #headerRightContainer{
 	color:#6e6e6e;
 }
 
+
+
+/* Customize Bootstrap style here, better to move it oustide jumbotron?:
+ following https://bootstrapbay.com/blog/customize-bootstrap/ approach
+*/
+
+a {
+	color: inherit;
+}
+a:hover {
+	color: firebrick;
+	/*text-decoration: underline;*/
+}

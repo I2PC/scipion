@@ -364,7 +364,8 @@ function setParamValue(paramId, value) {
 	 * Put the new value in an attribute of the parent node.
 	 */
 	// Get the row affected
-	var row = $("tr#" + paramId);
+	//var row = $("tr#" + paramId);
+	var row = $(getSelector("tr", paramId));
 
 	// Update the value for the row
 	row.val(value);
@@ -437,9 +438,10 @@ function evalDependencies(row, newLevel) {
 
 		for (var cont = 0; cont < arrayDepends.length; cont++) {
 			// Get params affected with the dependencies
-			
-			var row_tr = $("tr#" + arrayDepends[cont]);
-			
+
+			// TO fix dependencies with special characters in the name like the / in DosefGPU/Croscorrelation_parameters
+			var row_tr = $(getSelector("tr", arrayDepends[cont]));
+
 //			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
 
 			// Evaluate the new parameter affected
@@ -503,10 +505,10 @@ function evalCondition(row) {
 					value = $("input[name=expertLevel]:checked").val();
 				else
 				{
-					value = $("tr#" + param).val();
+					value = $(getSelector("tr" , param)).val();
 					
 					if (!value){
-						value = $("tr#" + param).attr("value");
+						value = $(getSelector("tr", param)).attr("value");
 						if (!value){
 							value="''";
 						}
@@ -518,7 +520,7 @@ function evalCondition(row) {
 			
 //			console.log("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
 			
-			cond_eval = normalizeConditions(cond_eval)
+			cond_eval = normalizeConditions(cond_eval);
 			
 			//	To check a good eval
 //			console.log(cond_eval + "/" + eval(cond_eval))
@@ -828,4 +830,9 @@ function selTableMessi(elm) {
 	elm.css('background-color', '#F3CBCB')
 	elm.css('font-weight', 'bold')
 }
+
+ function getSelector(element, id){
+
+	 return element + "[id='" + id + "']";
+ }
 
