@@ -26,9 +26,7 @@
 # **************************************************************************
 
 import sys, os
-
 from pyworkflow.manager import Manager
-import pyworkflow.utils as pwutils
 
 
 def usage(error):
@@ -47,15 +45,23 @@ if n > 2:
     usage("Incorrect number of input parameters")
 
 customUserData = sys.argv[1] if n > 1 else None
+
+print "Loading projects from:\n", customUserData or os.environ['SCIPION_USER_DATA']
  
 # Create a new project
 manager = Manager(SCIPION_USER_DATA=customUserData)
 
 for projInfo in manager.listProjects():
-    proj = manager.loadProject(projInfo.getName())
+    projName = projInfo.getName()
+    proj = manager.loadProject(projName)
     settings = proj.getSettings()
     
-    print "  Left: ", proj.getLeftTime()
+    leftTime = proj.getLeftTime()
+    if (leftTime is not None and 
+        leftTime.days < 0):
+#    if proj.getLeftTime().days < 0:
+        print "Should delete: %s (%s)" % (projName, leftTime)
+        #manager.deleteProject(projName) 
     
     
 

@@ -81,20 +81,33 @@ void writeMdToStack(const MetaData &md, const FileName &fnStack, bool apply_geo,
     FileName fnImg;
     ApplyGeoParams params;
     params.wrap = wrap;
+    int enabled;
+    bool containsEnabled = md.containsLabel(MDL_ENABLED);
 
     int mode = WRITE_OVERWRITE;
 
     FOR_ALL_OBJECTS_IN_METADATA(md)
     {
-        i++;
-        md.getValue(image_label, fnImg, __iter.objId);
 
-        if (apply_geo)
-            image.readApplyGeo(fnImg, md, __iter.objId, params);
-        else
-            image.read(fnImg);
-        image.write(fnStack, i, false, mode);
-        mode = WRITE_APPEND;
+    	if (containsEnabled)
+    		md.getValue(MDL_ENABLED, enabled, __iter.objId);
+    	else
+    		enabled = 1;
+
+        
+        if (enabled == 1)
+        {
+        	i++;
+
+        	md.getValue(image_label, fnImg, __iter.objId);
+
+        	if (apply_geo)
+            	image.readApplyGeo(fnImg, md, __iter.objId, params);
+        	else
+            	image.read(fnImg);
+        	image.write(fnStack, i, false, mode);
+        	mode = WRITE_APPEND;
+        }
     }
 } /* function writeMdToStack */
 
