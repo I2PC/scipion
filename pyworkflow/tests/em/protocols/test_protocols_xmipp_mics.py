@@ -418,4 +418,4 @@ class TestXmippExtractParticles(TestXmippBase):
         self.assertAlmostEquals(partCrdX2, crdX2, delta=0.001)
         self.assertAlmostEquals(partCrdY2, crdY2, delta=0.001)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
-        self.assertTrue(protExtract.outputParticles.getSize() == 249, "Output particles were not correctly sorted.")
+        self.assertAlmostEquals(protExtract.outputParticles.getSize(), 249, delta=10)
