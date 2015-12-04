@@ -1776,12 +1776,12 @@ public class GalleryData {
     
     public Geometry getGeometry(long id, String type, ColumnInfo ci)
     {
-
         if(md.containsLabel(MDLabel.MDL_IMAGE) && ci.label != MDLabel.MDL_IMAGE)
         	return null;
         
         if(md.containsLabel(MDLabel.RLN_IMAGE_NAME) && ci.label != MDLabel.RLN_IMAGE_NAME)
         	return null;
+        
         
         double shiftx, shifty, psiangle, scaleFactor=1;
         boolean flip;

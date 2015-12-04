@@ -151,6 +151,53 @@ SymList_computeDistanceAngles(PyObject * obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* computeDistance */
+PyObject *
+SymList_symmetricAngles(PyObject * obj, PyObject *args, PyObject *kwargs)
+{
+	double rot, tilt, psi;
+    if (PyArg_ParseTuple(args, "ddd", &rot, &tilt, &psi))
+    {
+        try
+        {
+            SymListObject *self = (SymListObject*) obj;
+            SymList symlist=*(self->symlist);
+
+            PyObject * retval = PyList_New(symlist.symsNo()+1);
+            PyObject * angles = PyTuple_New(3);
+            PyTuple_SetItem(angles, 0, PyFloat_FromDouble(rot));
+            PyTuple_SetItem(angles, 1, PyFloat_FromDouble(tilt));
+            PyTuple_SetItem(angles, 2, PyFloat_FromDouble(psi));
+            PyList_SetItem(retval,0,angles);
+
+            Matrix2D<double>  L(4, 4), R(4, 4), E, Ep;
+            Euler_angles2matrix(rot,tilt,psi,E,false);
+            for (int isym = 0; isym < symlist.symsNo(); isym++)
+            {
+                symlist.getMatrices(isym, L, R);
+                R.resize(3, 3);
+                L.resize(3, 3);
+
+                Ep=L*E*R;
+                Euler_matrix2angles(Ep,rot,tilt,psi);
+
+                angles = PyTuple_New(3);
+                PyTuple_SetItem(angles, 0, PyFloat_FromDouble(rot));
+                PyTuple_SetItem(angles, 1, PyFloat_FromDouble(tilt));
+                PyTuple_SetItem(angles, 2, PyFloat_FromDouble(psi));
+                PyList_SetItem(retval,isym+1,angles);
+            }
+
+            return retval;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* SymList methods */
 PyMethodDef SymList_methods[] =
 {
@@ -160,6 +207,8 @@ PyMethodDef SymList_methods[] =
        METH_VARARGS, "compute angular distance in a metadata" },
    { "computeDistanceAngles", (PyCFunction) SymList_computeDistanceAngles,
 	   METH_VARARGS, "compute angular distance between two sets of angles" },
+   { "symmetricAngles", (PyCFunction) SymList_symmetricAngles,
+	   METH_VARARGS, "Returns the list of equivalent angles" },
    { NULL } /* Sentinel */
 };//SymList_methods
 

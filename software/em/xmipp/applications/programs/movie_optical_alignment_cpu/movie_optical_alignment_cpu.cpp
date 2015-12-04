@@ -49,15 +49,18 @@ class ProgOpticalAligment: public XmippProgram
 
 public:
     FileName fname, foname, gianRefFilename, darkRefFilename;
+    FileName globalShiftFilename;
     MultidimArray<double> gainImage, darkImage;
+    std::vector< Matrix1D<double> > shiftVector;
+    MetaData shiftMD;
     int winSize, gpuDevice, fstFrame, lstFrame;
     int groupSize;
     bool doAverage, saveCorrMovie;
-    bool gainImageCorr, darkImageCorr;
+    bool gainImageCorr, darkImageCorr, globalShiftCorr;
 
     void defineParams()
     {
-        addUsageLine ("Align moviews using optical flow");
+        addUsageLine ("Align movies using optical flow");
         addParamsLine("     -i <inMoviewFnName>          : input movie File Name");
         addParamsLine("     -o <outAverageMoviewFnName>  : output aligned micrograhp File Name");
         addParamsLine("     [--nst <int=0>]     : first frame used in alignment (0 = first frame in the movie");
@@ -65,6 +68,7 @@ public:
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
         addParamsLine("     [--simpleAverage]   : if we want to just compute the simple average");
         addParamsLine("     [--groupSize <int=1>]        : the depth of pyramid for optical flow algorithm");
+        addParamsLine("     [--globalShifts <shiftreference>]        : global shifts from cross-correlation based methods");
         addParamsLine("     [--ssc]             : save corrected stack");
         addParamsLine("     [--gain <gainReference>]             : gain reference");
         addParamsLine("     [--dark <darkReference>]             : dark reference");
@@ -86,9 +90,9 @@ public:
         {
             darkRefFilename = getParam("--dark");
         }
-        if ((darkImageCorr = checkParam("--dark")))
+        if ((globalShiftCorr = checkParam("--globalShifts")))
         {
-            darkRefFilename = getParam("--dark");
+            globalShiftFilename = getParam("--globalShifts");
         }
         groupSize = getIntParam("--groupSize");
         fstFrame  = getIntParam("--nst");
@@ -226,27 +230,32 @@ public:
     void computeAvg(const FileName &movieFile, int begin, int end, MultidimArray<double> &avgImg)
     {
         ImageGeneric movieStack;
-        MultidimArray<double> imgNormal;
+        MultidimArray<double> frameImage, shiftedFrame;
+        Matrix1D<double> shiftMatrix(2);
         int N=end-begin+1;
 
-        movieStack.readMapped(movieFile,begin);
-        movieStack().getImage(avgImg);
-        if (darkImageCorr)
-            avgImg-=darkImage;
-        if (gainImageCorr)
-            avgImg/=gainImage;
-        for (int i=begin;i<end;i++)
+        for (size_t i=begin;i<=end;i++)
         {
-            movieStack.readMapped(movieFile,i+1);
-            movieStack().getImage(imgNormal);
+            movieStack.readMapped(movieFile,i);
+            movieStack().getImage(frameImage);
+            if (i==begin)
+                avgImg.initZeros(XSIZE(frameImage), YSIZE(frameImage));
             if (darkImageCorr)
-                imgNormal-=darkImage;
+                frameImage-=darkImage;
             if (gainImageCorr)
-                imgNormal/=gainImage;
-            avgImg+=imgNormal;
+                frameImage/=gainImage;
+            if (globalShiftCorr)
+            {
+                XX(shiftMatrix)=XX(shiftVector[i-1]);
+                YY(shiftMatrix)=YY(shiftVector[i-1]);
+                translate(LINEAR, shiftedFrame, frameImage, shiftMatrix, WRAP);
+                avgImg+=shiftedFrame;
+            }
+            else
+                avgImg+=frameImage;
         }
         avgImg/=double(N);
-        imgNormal.clear();
+        frameImage.clear();
         movieStack.clear();
     }
     void std_dev2(const cv::Mat planes[], const cv::Mat &flowx, const cv::Mat &flowy, Matrix1D<double> &meanStdDev)
@@ -306,7 +315,7 @@ public:
         cv::Mat planes[]={flowxPre, flowyPre};
 
         int imagenum, cnt=2, div=0, flowCounter;
-        int h, w, idx, levelNum, levelCounter=1;
+        int h, w, levelNum, levelCounter=1;
 
         motionInfFile=foname.replaceExtension("xmd");
         std::string extension=fname.getExtension();
@@ -348,10 +357,22 @@ public:
         d_calc.polySigma=1.1;
         d_calc.flags=0;
 #endif
-        // Initialize variables with zero
         // Initialize the stack for the output movie
         if (saveCorrMovie)
             outputMovie.initZeros(imagenum, 1, h, w);
+        // Correct for global motion from a cross-correlation based algorithms
+        if (globalShiftCorr)
+        {
+            Matrix1D<double> shiftMatrix(2);
+            shiftVector.reserve(imagenum);
+            shiftMD.read(globalShiftFilename);
+            FOR_ALL_OBJECTS_IN_METADATA(shiftMD)
+            {
+                shiftMD.getValue(MDL_SHIFT_X, XX(shiftMatrix), __iter.objId);
+                shiftMD.getValue(MDL_SHIFT_Y, YY(shiftMatrix), __iter.objId);
+                shiftVector.push_back(shiftMatrix);
+            }
+        }
         tStart2=clock();
         // Compute the average of the whole stack
         fstFrame++; // Just to adapt to Li algorithm
@@ -364,7 +385,7 @@ public:
         // if the user want to save the PSD
         if (doAverage)
         {
-            II() = avgCurr;
+            II()=avgCurr;
             II.write(foname);
             return 0;
         }
@@ -372,30 +393,46 @@ public:
         cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
         while (div!=groupSize)
         {
-            div = int(imagenum/cnt);
+            div=int(imagenum/cnt);
             // avgStep to hold the sum of aligned frames of each group at each step
             avgstep=cv::Mat::zeros(h, w,CV_32FC1);
 
             cout<<"Level "<<levelCounter<<"/"<<levelNum<<" of the pyramid is under processing"<<std::endl;
             // Compute time for each level
             tStart = clock();
-            idx = 0;
 
             // Check if we are in the final step
             if (div==1)
-                cnt = imagenum;
+                cnt=imagenum;
             flowCounter=1;
             for (int i=0;i<cnt;i++)
             {
                 //Just compute the average in the last step
                 if (div==1)
                 {
-                    movieStack.readMapped(fname,i+1);
-                    movieStack().getImage(preImg);
-                    if (darkImageCorr)
-                        preImg-=darkImage;
-                    if (gainImageCorr)
-                        preImg/=gainImage;
+                    if (globalShiftCorr)
+                    {
+                        Matrix1D<double> shiftMatrix(2);
+                        MultidimArray<double> frameImage;
+                        movieStack.readMapped(fname,i+1);
+                        movieStack().getImage(frameImage);
+                        if (darkImageCorr)
+                        	frameImage-=darkImage;
+                        if (gainImageCorr)
+                        	frameImage/=gainImage;
+                        XX(shiftMatrix)=XX(shiftVector[i]);
+                        YY(shiftMatrix)=YY(shiftVector[i]);
+                        translate(BSPLINE3, preImg, frameImage, shiftMatrix, WRAP);
+                    }
+                    else
+                    {
+                        movieStack.readMapped(fname,fstFrame+i);
+                        movieStack().getImage(preImg);
+                        if (darkImageCorr)
+                            preImg-=darkImage;
+                        if (gainImageCorr)
+                            preImg/=gainImage;
+                    }
                     xmipp2Opencv(preImg, preimg);
                 }
                 else

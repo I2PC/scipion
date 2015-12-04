@@ -29,6 +29,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
+import xmipp.utils.ScipionParams;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.scipion.ScipionGalleryData;
@@ -50,7 +51,14 @@ public class ImagesWindowFactory {
 	}
 
 	public static void openFileAsDefault(String filename) {
-		openFileAsDefault(filename, new Params());
+		
+		Params params = new Params();
+		
+		if (ScipionMetaData.isScipionMetaData(filename)) {
+			params = new ScipionParams();
+		}
+		
+		openFileAsDefault(filename, params);
 	}
 
 	public static void openFileAsDefault(String filename, Params parameters) {

@@ -129,9 +129,6 @@ public:
     /** Binary file with the filter */
     FileName fnFilter;
 
-    /** Correct phase before applying CTF */
-    bool do_correct_phase;
-
     /** Flag to generate 3D mask */
     bool do_generate_3dmask;
 
