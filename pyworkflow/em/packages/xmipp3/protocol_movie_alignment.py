@@ -228,9 +228,9 @@ class ProtMovieAlignment(ProtProcessMovies):
 #             mic.setMicName(micName)
             mic.setMicName(movie.getMicName())
             
-            if alMethod == AL_OPTICAL or \
-               alMethod == AL_DOSEFGPUOPTICAL or \
-               alMethod == AL_CROSSCORRELATIONOPTICAL:
+            if (alMethod == AL_OPTICAL or 
+                alMethod == AL_DOSEFGPUOPTICAL or 
+                alMethod == AL_CROSSCORRELATIONOPTICAL):
 
                 #mic.plotPolar = em.Image()
                 mic.plotCart = em.Image()
