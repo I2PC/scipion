@@ -43,7 +43,7 @@ class ResMapViewer(ProtocolViewer):
     """
     Visualization tools for ResMap results.
     
-    ResMap is software tool for computing the local resolution of 3D
+    ResMap is a software tool for computing the local resolution of 3D
     density maps studied in structural biology, primarily by cryo-electron
     microscopy (cryo-EM).
      

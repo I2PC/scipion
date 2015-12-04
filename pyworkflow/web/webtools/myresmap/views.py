@@ -63,7 +63,8 @@ def writeCustomMenu(customMenu):
 
 Local_Resolution = [
     {"tag": "section", "text": "2. Import your data", "children": [
-        {"tag": "protocol", "value": "ProtImportVolumes", "text": "Import Volumes", "icon": "bookmark.png"}]},
+        {"tag": "protocol", "value": "ProtImportVolumes", "text": "import volumes", "icon": "bookmark.png"},
+        {"tag": "protocol", "value": "ProtImportMask", "text": "import mask", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Analysis with ResMap", "children": [
         {"tag": "protocol", "value": "ProtResMap", "text": "resmap - local resolution"}]}]
         ''')
