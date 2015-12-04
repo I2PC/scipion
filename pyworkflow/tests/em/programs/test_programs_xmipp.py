@@ -22,12 +22,13 @@
 # ***************************************************************************/
 
 
+import math
 import os
-from base import ProgramTest
 
 import pyworkflow.utils as pwutils
 import pyworkflow.em.packages.xmipp3 as xmipp3
 from pyworkflow.tests import DataSet
+from base import ProgramTest
 
 VAHID = "vahid"
 RM = 'rmarabini'
@@ -889,8 +890,21 @@ class TomoDetectMissingWedge(XmippProgramTest):
 
     def test_case1(self):
         self.runCase("-i input/smallTomogram.vol",
+                validate=self.validate_case1, random=True,
                 outputs=["stdout.txt"])
-
+    
+    def validate_case1(self):
+        stdout = os.path.join(self.outputDir,"stdout.txt")
+        f = open(stdout)
+        plane1 = None
+        plane2 = None
+        for line in f:
+            if 'Plane1: ' in line:
+                plane1 = map(float, line.split()[1:])
+            if 'Plane2: ' in line:
+                plane2 = map(float, line.split()[1:])
+        self.assertAlmostEqual(abs(plane1[1]), 67.0539, delta=1)
+        self.assertAlmostEqual(abs(plane2[1]), 56.7034, delta=1)
 
 class TomoExtractSubvolume(XmippProgramTest):
     _owner = RM
@@ -1239,15 +1253,15 @@ class VolumeToWeb(XmippProgramTest):
                 outputs=["imgOut.jpg"])
 
 
-class XrayImport(XmippProgramTest):
-    _owner = JOTON
-    @classmethod
-    def getProgram(cls):
-        return 'xmipp_xray_import'
-
-    def test_case1(self):
-        self.runCase("--input input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30",
-                outputs=["stack_darkfield.xmp","stack_flatfield_avg.xmp","stack_Flatfields_darkfield.xmp"])
+# class XrayImport(XmippProgramTest):
+#     _owner = JOTON
+#     @classmethod
+#     def getProgram(cls):
+#         return 'xmipp_xray_import'
+# 
+#     def test_case1(self):
+#         self.runCase("--input input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30",
+#                 outputs=["stack_darkfield.xmp","stack_flatfield_avg.xmp","stack_Flatfields_darkfield.xmp"])
 
 
 class XrayProject(XmippProgramTest):
