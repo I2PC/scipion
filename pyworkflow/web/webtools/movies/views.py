@@ -64,9 +64,9 @@ def writeCustomMenu(customMenu):
 
 Movies_Alignment = [
     {"tag": "section", "text": "1. Upload data", "children": [
-        {"tag": "url", "value": "/upload_movies/", "text":"Upload Data", "icon": "fa-upload.png"}]},
+        {"tag": "url", "value": "/upload_movies/", "text":"upload data", "icon": "fa-upload.png"}]},
     {"tag": "section", "text": "2. Import your data", "children": [
-        {"tag": "protocol", "value": "ProtImportMovies", "text": "Import Movies", "icon": "bookmark.png"}]},
+        {"tag": "protocol", "value": "ProtImportMovies", "text": "import Movies", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Align your Movies", "children": [
         {"tag": "protocol", "value": "ProtMovieAlignment", "text": "xmipp3 - movie alignment"}]}]
         ''')
