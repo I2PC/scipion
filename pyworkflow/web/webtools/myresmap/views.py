@@ -66,7 +66,9 @@ Local_Resolution = [
         {"tag": "protocol", "value": "ProtImportVolumes", "text": "import volumes", "icon": "bookmark.png"},
         {"tag": "protocol", "value": "ProtImportMask", "text": "import mask", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "3. Analysis with ResMap", "children": [
-        {"tag": "protocol", "value": "ProtResMap", "text": "resmap - local resolution"}]}]
+        {"tag": "protocol", "value": "XmippProtCreateMask3D", "text": "xmipp3 - create 3D mask"},
+        {"tag": "protocol", "value": "ProtResMap", "text": "resmap - local resolution"}
+        ]}]
         ''')
         f.close()
         
