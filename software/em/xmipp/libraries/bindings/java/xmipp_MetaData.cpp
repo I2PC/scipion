@@ -823,8 +823,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeMdToStack
         MetaData * md = GET_INTERNAL_METADATA(jmetadata);
         jboolean aux=false;
         const char * fnChars = env->GetStringUTFChars(jfilename, &aux);
-        FileName fn = fnChars;
-        writeMdToStack(*md, fn, applyGeo, wrap, (MDLabel)label);
+        // FileName fn = fnChars;
+        writeMdToStack(*md, fnChars, applyGeo, wrap, (MDLabel)label);
     }
     XMIPP_JAVA_CATCH;
 }

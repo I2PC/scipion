@@ -203,6 +203,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             psdCorrName = self._getNameExt(movie.getFileName(),'_aligned_corrected', 'psd')
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
+            
             if self.run:
                 alignedMovie.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'_aligned', 'mrcs')))
             ####>>>This is wrong. Save an xmipp metadata
@@ -210,10 +211,12 @@ class ProtMovieAlignment(ProtProcessMovies):
             #alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
             alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
-            if alMethod == AL_OPTICAL or \
-               alMethod == AL_DOSEFGPUOPTICAL or \
-               alMethod == AL_CROSSCORRELATIONOPTICAL:
-               movieCreatePlot(alignedMovie, True)
+            
+            if (alMethod == AL_OPTICAL or 
+                alMethod == AL_DOSEFGPUOPTICAL or 
+                alMethod == AL_CROSSCORRELATIONOPTICAL):
+                movieCreatePlot(alignedMovie, True)
+            
             if self.doSaveMovie:
                 movieSet.append(alignedMovie)
 
@@ -221,10 +224,13 @@ class ProtMovieAlignment(ProtProcessMovies):
             # All micrograph are copied to the 'extra' folder after each step
             mic.setFileName(self._getExtraPath(micName))
 
-            mic.setMicName(micName)
-            if alMethod == AL_OPTICAL or \
-               alMethod == AL_DOSEFGPUOPTICAL or \
-               alMethod == AL_CROSSCORRELATIONOPTICAL:
+# The micName of a micrograph MUST be the same as the original movie
+#             mic.setMicName(micName)
+            mic.setMicName(movie.getMicName())
+            
+            if (alMethod == AL_OPTICAL or 
+                alMethod == AL_DOSEFGPUOPTICAL or 
+                alMethod == AL_CROSSCORRELATIONOPTICAL):
 
                 #mic.plotPolar = em.Image()
                 mic.plotCart = em.Image()
@@ -283,7 +289,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
         alMethod = self.alignMethod.get()
-        doSaveMovie = self.doSaveMovie.get()
+        doSaveMovie = False
         
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
@@ -296,7 +302,6 @@ class ProtMovieAlignment(ProtProcessMovies):
         if alMethod == AL_AVERAGE:
             command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s' % locals()
             command += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
-            doSaveMovie = False
 
             if self.inputMovies.get().getDark():
                 command += " --dark "+self.inputMovies.get().getDark()
@@ -448,7 +453,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             # Copy metadatafile otherwise it will be deleted
             #TODO: create a proper scipion object
             moveFile(join(movieFolder, metadataNameInterMediate), self._getExtraPath())
-            moveFile(join(movieFolder, corrMovieName), self._getExtraPath())
+            #moveFile(join(movieFolder, corrMovieName), self._getExtraPath())
         moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
 
 
