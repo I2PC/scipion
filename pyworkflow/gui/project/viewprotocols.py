@@ -305,7 +305,7 @@ class SearchProtocolWindow(pwgui.Window):
         keyword = self._searchVar.get().lower()
         emProtocolsDict = em.getProtocols()
         for key, prot in emProtocolsDict.iteritems():
-            if not issubclass(prot, ProtocolViewer):
+            if not issubclass(prot, ProtocolViewer) and not prot.isBase():
                 label = prot.getClassLabel().lower()
                 if keyword in label:
                     self._resultsTree.insert('', 'end', key, text=label, tags=('protocol'))
