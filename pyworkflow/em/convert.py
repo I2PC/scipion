@@ -89,7 +89,11 @@ class ImageHandler(object):
         else:
             raise Exception('Can not match object %s to (index, location)' % type(location))
 
-        return os.path.exists(fn.replace(':mrc', '').replace(':mrcs', ''))
+        # Remove filename format specification such as :mrc, :mrcs or :ems
+        if ':' in fn:
+            fn = fn.split(':')[0]
+
+        return fn
         
     def convert(self, inputObj, outputObj, dataType=None):
         """ Convert from one image to another.
