@@ -65,7 +65,7 @@ if __name__ == '__main__':
         if packageName not in protDict:
             protDict[packageName] = []
         
-        if not issubclass(v, Viewer):
+        if not issubclass(v, Viewer) and not v.isBase():
             protDict[packageName].append((k, v))
             
             for c in emCategories:
