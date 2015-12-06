@@ -26,9 +26,7 @@
 # **************************************************************************
 
 import sys, os
-
 from pyworkflow.manager import Manager
-import pyworkflow.utils as pwutils
 
 
 def usage(error):
@@ -58,8 +56,11 @@ for projInfo in manager.listProjects():
     proj = manager.loadProject(projName)
     settings = proj.getSettings()
     
-    if proj.getLeftTime().days < 0:
-        print "Should delete: ", projName
+    leftTime = proj.getLeftTime()
+    if (leftTime is not None and 
+        leftTime.days < 0):
+#    if proj.getLeftTime().days < 0:
+        print "Should delete: %s (%s)" % (projName, leftTime)
         #manager.deleteProject(projName) 
     
     
