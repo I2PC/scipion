@@ -262,8 +262,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     if exists(micPosCoord):
                         micBase = removeBaseExt(mic.getFileName())
                         micPos = self._getExtraPath(micBase + ".pos")
-                        self.info('Moving %s -> %s' % (micPosCoord, micPos))
-                        moveFile(micPosCoord, micPos)
+                        if micPos != micPosCoord:
+                            self.info('Moving %s -> %s' % (micPosCoord, micPos))
+                            moveFile(micPosCoord, micPos)
                         
     def downsamplingStep(self):
         pass
