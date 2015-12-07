@@ -43,7 +43,7 @@ from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, Int
 from pyworkflow.em.protocol import  ProtExtractParticles
 from pyworkflow.em.data import SetOfParticles
 from pyworkflow.em.constants import RELATION_CTF
-from pyworkflow.utils.path import removeBaseExt, replaceBaseExt
+from pyworkflow.utils.path import removeBaseExt, replaceBaseExt, moveFile
 
 from convert import writeSetOfCoordinates, readSetOfParticles, micrographToCTFParam
 from xmipp3 import XmippProtocol
@@ -164,7 +164,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it
         """
-        self._defineBasicParams()
+        self._setupBasicProperties()
         # Write pos files for each micrograph
         firstStepId = self._insertFunctionStep('writePosFilesStep')
         
@@ -178,11 +178,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             baseMicName = removeBaseExt(mic.getFileName())
 
             if self.ctfRelations.hasValue():
-                micName = mic.getMicName()
-                mic.setCTF(self.ctfDict[micName])
+                micKey = self.micKey(mic)
+                mic.setCTF(self.ctfDict[micKey])
             
             # If downsample type is 'other' perform a downsample
             downFactor = self.downFactor.get()
+            
             if self.downsampleType == OTHER and abs(downFactor - 1.) > 0.0001:
                 fnDownsampled = self._getTmpPath(baseMicName+"_downsampled.xmp")
                 args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
@@ -199,7 +200,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             #self._insertFunctionStep('getCTF', micId, baseMicName, micrographToExtract)
             #FIXME: Check only if mic has CTF when implemented ok
             #if self.doFlip or mic.hasCTF():
-            fnCTF=None
+            fnCTF = None
             if self.ctfRelations.hasValue():
                 # If the micrograph doesn't come from Xmipp, we need to write
                 # a Xmipp ctfparam file to perform the phase flip on the micrograph                     
@@ -212,11 +213,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     micrographToExtract = self._getTmpPath(baseMicName +"_flipped.xmp")
             else:
                 fnCTF = None
-                # Actually extract
+            
+            # Actually extract
             deps.append(self._insertFunctionStep('extractParticlesStep', mic.getObjId(), baseMicName,
                                                  fnCTF, micrographToExtract, prerequisites=localDeps))
         # Insert step to create output objects
         metaDeps = self._insertFunctionStep('createMetadataImageStep', prerequisites=deps)
+        
         if self.doSort:
             screenDep = self._insertFunctionStep('screenParticlesStep', prerequisites=[metaDeps])
             finalDeps = [screenDep]
@@ -230,7 +233,39 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         """ Write the pos file for each micrograph on metadata format. """
         #self.posFiles = writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
         writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
-    
+        # We need to find the mapping (either by micName or micId)
+        # between the micrographs in the SetOfCoordinates and
+        # the micrographs (if we are in a different case than 'same as picking'
+        if self.downsampleType != SAME_AS_PICKING:
+            micDict = {}
+            coordMics = self.inputCoords.getMicrographs()
+            for mic in coordMics:
+                micBase = removeBaseExt(mic.getFileName())
+                micPos = self._getExtraPath(micBase + ".pos")
+                micDict[mic.getMicName()] = micPos
+                micDict[mic.getObjId()] = micPos
+                
+            if any(mic.getMicName() in micDict for mic in self.inputMics):
+                micKey = lambda mic: mic.getMicName()
+            elif any(mic.getObjId() in micDict for mic in self.inputMics):
+                self.warning('Could not match input micrographs and coordinates '
+                             'micrographs by micName, using micId.')
+                micKey = lambda mic: mic.getObjId()
+            else:
+                raise Exception('Could not match input micrographs and coordinates '
+                                'neither by micName or micId.')
+            
+            for mic in self.inputMics: # micrograph from input (other)
+                mk = micKey(mic)
+                if mk in micDict:
+                    micPosCoord = micDict[mk]
+                    if exists(micPosCoord):
+                        micBase = removeBaseExt(mic.getFileName())
+                        micPos = self._getExtraPath(micBase + ".pos")
+                        if micPos != micPosCoord:
+                            self.info('Moving %s -> %s' % (micPosCoord, micPos))
+                            moveFile(micPosCoord, micPos)
+                        
     def downsamplingStep(self):
         pass
     
@@ -380,10 +415,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
+        self._setupBasicProperties() # setup self.micKey among others
         validateMsgs = []
         # doFlip can only be True if CTF information is available on picked micrographs
         if self.doFlip and not self.ctfRelations.hasValue():
             validateMsgs.append('Phase flipping cannot be performed unless CTF information is provided.')
+            
+        if self.ctfRelations.hasValue() and self.micKey is None:
+            validateMsgs.append('Some problem occurs matching micrographs and CTF.\n'
+                                'There were micrographs for which CTF was not found\n'
+                                'either using micName or micId.\n')
         return validateMsgs
     
     def _citations(self):
@@ -438,7 +479,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         return methodsMsgs
 
     #--------------------------- UTILS functions --------------------------------------------
-    def _defineBasicParams(self):
+    def _setupBasicProperties(self):
         # Set sampling rate and inputMics according to downsample type
         self.inputCoords = self.inputCoordinates.get() 
         self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
@@ -458,10 +499,22 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 self.samplingFinal = self.samplingOriginal*self.downFactor.get()
         
         if self.ctfRelations.hasValue():
+            # Load CTF dictionary for all micrographs, all CTF should be present
             self.ctfDict = {}
+            
             for ctf in self.ctfRelations.get():
-                ctfName = ctf.getMicrograph().getMicName()
-                self.ctfDict[ctfName] = ctf.clone()
+                ctfMic = ctf.getMicrograph()
+                newCTF = ctf.clone()
+                self.ctfDict[ctfMic.getMicName()] = newCTF
+                self.ctfDict[ctfMic.getObjId()] = newCTF
+            
+            if all(mic.getMicName() in self.ctfDict for mic in self.inputMics):
+                self.micKey = lambda mic: mic.getMicName()
+            elif all(mic.getObjId() in self.ctfDict for mic in self.inputMics):
+                self.micKey = lambda mic: mic.getObjId()
+            else:
+                self.micKey = None # some problem matching CTF
+            
 
     
     def getInputMicrographs(self):

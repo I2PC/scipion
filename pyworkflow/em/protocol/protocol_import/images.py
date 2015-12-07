@@ -42,8 +42,6 @@ from base import ProtImportFiles
 
 class ProtImportImages(ProtImportFiles):
     """Common protocol to import a set of images into the project"""
-    # This label should be set in subclasses
-    _label = 'None'
     # The following class property should be set in each import subclass
     # for example, if set to SetOfParticles, this will the output classes
     # It is also assumed that a function with the name _createSetOfParticles
