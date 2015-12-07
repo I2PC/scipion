@@ -66,25 +66,39 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         
-        form.addParam('inputCoordinates', PointerParam, label="Coordinates", important=True,
-                      pointerClass='SetOfCoordinates',
+        form.addParam('inputCoordinates', PointerParam, pointerClass='SetOfCoordinates', 
+                      important=True,
+                      label="Input coordinates",
                       help='Select the SetOfCoordinates ')
         
-        form.addParam('downsampleType', EnumParam, choices=['same as picking', 'other', 'original'], 
-                      default=0, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
-                      help='Select the downsampling type.')
-        form.addParam('downFactor', FloatParam, default=2, condition='downsampleType==1',
-                      label='Downsampling factor',
-                      help='This factor is always referred to the original sampling rate. '
-                      'You may use independent downsampling factors for extracting the '
-                      'particles, picking them and estimating the CTF. All downsampling '
-                      'factors are always referred to the original sampling rate, and '
-                      'the differences are correctly handled by Xmipp.')        
+        # Note: even if you have changed the label to 'Micrograph source' we will keep
+        # the param name as 'downsampleType' for compatibility with previous executions
+        form.addParam('downsampleType', EnumParam, choices=['same as picking', 'other'], default=0,
+                      important=True, 
+                      label='Micrographs source', display=EnumParam.DISPLAY_HLIST, 
+                      help='By default the particles will be extracted \n'
+                           'from the micrographs used in the picking \n'
+                           'step ( _same as picking_ option ). \n'
+                           'If select option _other_, you must provide \n'
+                           'a different set of micrographs to extract from.\n'
+                           '*Note*: In the _other_ case, ensure that provided \n'
+                           'micrographs and coordinates micrographs are related \n'
+                           'by micName or by micId.')
 
-        form.addParam('inputMicrographs', PointerParam, label="Micrographs", 
-                      condition='downsampleType != 0',
+        form.addParam('inputMicrographs', PointerParam, 
                       pointerClass='SetOfMicrographs',
-                      help='Select the original SetOfMicrographs')
+                      condition='downsampleType != 0',
+                      important=True, 
+                      label="Input micrographs", 
+                      help='Select the SetOfMicrographs from which to extract.')
+        
+        form.addParam('downFactor', FloatParam, default=1, condition='downsampleType==1',
+                      label='Downsampling factor',
+                      help='This factor is always referred to the SetOfMicrographs '
+                      'from which we will extract the particles. '
+                      'The pixel size (also know as sampling rate) between micrographs '
+                      'used to pick may differs from the micrographs used to extract. '
+                      'Proper scale between the pixel size will be handled by Scipion.')        
 
         form.addParam('ctfRelations', RelationParam, allowsNull=True,
                       relationName=RELATION_CTF, attributeName='getInputMicrographs',
@@ -415,12 +429,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
-        self._setupBasicProperties() # setup self.micKey among others
         validateMsgs = []
+        
         # doFlip can only be True if CTF information is available on picked micrographs
         if self.doFlip and not self.ctfRelations.hasValue():
             validateMsgs.append('Phase flipping cannot be performed unless CTF information is provided.')
             
+        self._setupCtfProperties() # setup self.micKey among others
         if self.ctfRelations.hasValue() and self.micKey is None:
             validateMsgs.append('Some problem occurs matching micrographs and CTF.\n'
                                 'There were micrographs for which CTF was not found\n'
@@ -437,6 +452,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                               OTHER: 'Other downsampling factor'}
         summary = []
         summary.append("Downsample type: %s" % downsampleTypeText.get(self.downsampleType.get()))
+        
         if self.downsampleType == OTHER:
             summary.append("Downsampling factor: %.2f" % self.downFactor)
         summary.append("Particle box size: %d" % self.boxSize)
@@ -477,6 +493,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 methodsMsgs.append("Removed dust over a threshold of %s." % (self.thresholdDust))
 
         return methodsMsgs
+    
+    def legacyCheck(self):
+        # Since we changed the options of downsampleType, 
+        # now the 'original' is not longer valid
+        if self.downsampleType == ORIGINAL:
+            self.downsampleType.set(OTHER)
+            self.downFactor.set(1)
 
     #--------------------------- UTILS functions --------------------------------------------
     def _setupBasicProperties(self):
@@ -484,20 +507,24 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self.inputCoords = self.inputCoordinates.get() 
         self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
         
-        if self.downsampleType.get() == SAME_AS_PICKING:
+        if self.downsampleType == SAME_AS_PICKING:
             # If 'same as picking' get samplingRate from input micrographs
             self.inputMics = self.inputCoords.getMicrographs()
             self.samplingFinal = self.samplingInput
         else:
             self.inputMics = self.inputMicrographs.get()
             self.samplingOriginal = self.inputMics.getSamplingRate()
-            if self.downsampleType.get() == ORIGINAL:
+            
+            if self.downsampleType == ORIGINAL:
                 # If 'original' get sampling rate from original micrographs
                 self.samplingFinal = self.samplingOriginal
             else:
                 # IF 'other' multiply the original sampling rate by the factor provided
                 self.samplingFinal = self.samplingOriginal*self.downFactor.get()
+
+        self._setupCtfProperties()
         
+    def _setupCtfProperties(self):        
         if self.ctfRelations.hasValue():
             # Load CTF dictionary for all micrographs, all CTF should be present
             self.ctfDict = {}
@@ -515,8 +542,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             else:
                 self.micKey = None # some problem matching CTF
             
-
-    
     def getInputMicrographs(self):
         """ Return the micrographs associated to the SetOfCoordinates or to the 
         Selected micrographs if Same as Picking not chosen. """
