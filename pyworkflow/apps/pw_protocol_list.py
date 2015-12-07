@@ -81,9 +81,12 @@ if __name__ == '__main__':
             yield g, protDict[g]
             
     def printProtocols(prots):
-        for k, v in sorted(prots, key=lambda x: x[0]):
+        protList = [(k, v, v.getClassLabel()) for k, v in prots]
+        protList.sort(key=lambda x: x[2])
+        
+        for k, v, l in protList:
             doc = getFirstLine(v.__doc__) if withDoc else ''
-            print "* link:%s[%s]: %s" % (k, v.getClassLabel(), doc)
+            print "* link:%s[%s]: %s" % (k, l, doc)
         
         
     if asciidoc:
