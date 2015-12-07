@@ -26,10 +26,12 @@
 # **************************************************************************
 
 import unittest, sys
+from os.path import join, basename
+
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
-
+import pyworkflow.utils as pwutils
 
 # Some utility functions to import micrographs that are used
 # in several tests.
@@ -45,15 +47,27 @@ class TestXmippBase(BaseTest):
     @classmethod
     def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
         """ Run an Import micrograph protocol. """
-        # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
+        
+        # We have two options: pass the SamplingRate or the ScannedPixelSize + microscope magnification
         if not samplingRate is None:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=0, filesPath=pattern, samplingRate=samplingRate, magnification=magnification, 
-                                                   voltage=voltage, sphericalAberration=sphericalAberration)
+            cls.protImport = cls.newProtocol(ProtImportMicrographs, 
+                                             samplingRateMode=0, 
+                                             filesPath=pattern, 
+                                             samplingRate=samplingRate, 
+                                             magnification=magnification, 
+                                             voltage=voltage, 
+                                             sphericalAberration=sphericalAberration)
         else:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=1, filesPath=pattern, scannedPixelSize=scannedPixelSize, 
-                                                   voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
+            cls.protImport = cls.newProtocol(ProtImportMicrographs, 
+                                             samplingRateMode=1, 
+                                             filesPath=pattern, 
+                                             scannedPixelSize=scannedPixelSize, 
+                                             voltage=voltage, 
+                                             magnification=magnification, 
+                                             sphericalAberration=sphericalAberration)
             
-        cls.proj.launchProtocol(cls.protImport, wait=True)
+        cls.protImport.setObjLabel('import mics')
+        cls.launchProtocol(cls.protImport)
         if cls.protImport.isFailed():
             raise Exception("Protocol has failed. Error: ", cls.protImport.getErrorMessage())
         # check that input micrographs have been imported (a better way to do this?)
@@ -64,12 +78,16 @@ class TestXmippBase(BaseTest):
     @classmethod
     def runImportMicrographBPV(cls, pattern):
         """ Run an Import micrograph protocol. """
-        return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)
+        return cls.runImportMicrograph(pattern, samplingRate=1.237, 
+                                       voltage=300, sphericalAberration=2, 
+                                       scannedPixelSize=None, magnification=56000)
     
     @classmethod
     def runDownsamplingMicrographs(cls, mics, downFactorValue, threads=1):
         # test downsampling a set of micrographs
-        cls.protDown = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=downFactorValue, numberOfThreads=threads)
+        cls.protDown = XmippProtPreprocessMicrographs(doDownsample=True, 
+                                                      downFactor=downFactorValue, 
+                                                      numberOfThreads=threads)
         cls.protDown.inputMicrographs.set(mics)
         cls.proj.launchProtocol(cls.protDown, wait=True)
         return cls.protDown
@@ -247,7 +265,8 @@ class TestXmippAutomaticPicking(TestXmippBase):
         protAutomaticPP = XmippParticlePickingAutomatic()
         protAutomaticPP.xmippParticlePicking.set(self.protPP)
         self.proj.launchProtocol(protAutomaticPP, wait=True)
-        self.assertIsNotNone(protAutomaticPP.outputCoordinates, "There was a problem with the automatic particle picking")
+        self.assertIsNotNone(protAutomaticPP.outputCoordinates, 
+                             "There was a problem with the automatic particle picking")
     
     def testAutomaticPickingOther(self):
         print "Run automatic particle picking"
@@ -256,7 +275,8 @@ class TestXmippAutomaticPicking(TestXmippBase):
         protAutomaticPP.inputMicrographs.set(self.protDown2.outputMicrographs)
         protAutomaticPP.micsToPick.set(1)
         self.proj.launchProtocol(protAutomaticPP, wait=True)
-        self.assertIsNotNone(protAutomaticPP.outputCoordinates, "There was a problem with the automatic particle picking")
+        self.assertIsNotNone(protAutomaticPP.outputCoordinates, 
+                             "There was a problem with the automatic particle picking")
 
 
 class TestXmippExtractParticles(TestXmippBase):
@@ -268,12 +288,13 @@ class TestXmippExtractParticles(TestXmippBase):
         TestXmippBase.setData()
         cls.DOWNSAMPLING = 5.0
         cls.protImport = cls.runImportMicrographBPV(cls.micsFn)
-        cls.protDown = cls.runDownsamplingMicrographs(cls.protImport.outputMicrographs, cls.DOWNSAMPLING)
+        cls.protDown = cls.runDownsamplingMicrographs(cls.protImport.outputMicrographs, 
+                                                      cls.DOWNSAMPLING)
         
         cls.protCTF = cls.newProtocol(ProtImportCTF,
-                                 importFrom=ProtImportCTF.IMPORT_FROM_XMIPP3,
-                                 filesPath=cls.dataset.getFile('ctfsDir'),
-                                 filesPattern='*.ctfparam')
+                                      importFrom=ProtImportCTF.IMPORT_FROM_XMIPP3,
+                                      filesPath=cls.dataset.getFile('ctfsDir'),
+                                      filesPattern='*.ctfparam')
         cls.protCTF.inputMicrographs.set(cls.protImport.outputMicrographs)
         cls.proj.launchProtocol(cls.protCTF, wait=True)
          
@@ -281,59 +302,71 @@ class TestXmippExtractParticles(TestXmippBase):
     
     def testExtractSameAsPicking(self):
         print "Run extract particles with downsampling factor equal to the one at picking"
-        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=SAME_AS_PICKING, doFlip=False)
+        protExtract = self.newProtocol(XmippProtExtractParticles,
+                                       boxSize=110, 
+                                       downsampleType=SAME_AS_PICKING, 
+                                       doFlip=False)
+        protExtract.setObjLabel("extract-same as picking")
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
-        protExtract.setObjLabel("extract-same as picking")
-        self.proj.launchProtocol(protExtract, wait=True)
-        partCrdX1 = protExtract.outputParticles[228].getCoordinate().getX()
-        crdX1 = protExtract.inputCoordinates.get()[228].getX()
-        partCrdY1 = protExtract.outputParticles[228].getCoordinate().getY()
-        crdY1 = protExtract.inputCoordinates.get()[228].getY()
-        partCrdX2 = protExtract.outputParticles[83].getCoordinate().getX()
-        crdX2 = protExtract.inputCoordinates.get()[83].getX()
-        partCrdY2 = protExtract.outputParticles[83].getCoordinate().getY()
-        crdY2 = protExtract.inputCoordinates.get()[83].getY()
-        self.assertAlmostEquals(partCrdX1, crdX1, delta=0.001)
-        self.assertAlmostEquals(partCrdY1, crdY1, delta=0.001)
-        self.assertAlmostEquals(partCrdX2, crdX2, delta=0.001)
-        self.assertAlmostEquals(partCrdY2, crdY2, delta=0.001)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
-        self.assertAlmostEqual(protExtract.outputParticles.getSamplingRate()/protExtract.inputMicrographs.get().getSamplingRate(), self.DOWNSAMPLING, 1, "There was a problem generating the output.")
+        self.launchProtocol(protExtract)
         
+        
+        inputCoords = protExtract.inputCoordinates.get()
+        outputParts = protExtract.outputParticles
+        micSampling = protExtract.inputMicrographs.get().getSamplingRate()
+        self.assertIsNotNone(outputParts, 
+                             "There was a problem generating the output.")
+        self.assertAlmostEqual(outputParts.getSamplingRate()/micSampling, 
+                               self.DOWNSAMPLING, 1, 
+                               "There was a problem generating the output.")
+        def compare(objId, delta=0.001):
+            cx, cy = inputCoords[objId].getPosition()
+            px, py = outputParts[objId].getCoordinate().getPosition()
+            self.assertAlmostEquals(cx, px, delta=delta)
+            self.assertAlmostEquals(cy, py, delta=delta)
+
+        compare(228)
+        compare(83)
     
     def testExtractOriginal(self):
         print "Run extract particles with downsampling factor equal to the original micrographs"
-        protExtract = XmippProtExtractParticles(boxSize=550, downsampleType=ORIGINAL, doFlip=False)
+        protExtract = self.newProtocol(XmippProtExtractParticles, 
+                                       boxSize=550, 
+                                       downsampleType=ORIGINAL, 
+                                       doFlip=False)
+        protExtract.setObjLabel("extract-original")
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
-        protExtract.setObjLabel("extract-original")
-        self.proj.launchProtocol(protExtract, wait=True)
+        self.launchProtocol(protExtract)
         
+        inputCoords = protExtract.inputCoordinates.get()
+        outputParts = protExtract.outputParticles        
         samplingCoords = self.protPP.outputCoordinates.getMicrographs().getSamplingRate()
         samplingFinal = self.protImport.outputMicrographs.getSamplingRate()
+        samplingMics = protExtract.inputMicrographs.get().getSamplingRate()
         factor = samplingFinal / samplingCoords
+ 
+        def compare(objId, delta=1.0):
+            cx, cy = inputCoords[objId].getPosition()
+            px, py = outputParts[objId].getCoordinate().getPosition()
+            self.assertAlmostEquals(cx/factor, px, delta=delta)
+            self.assertAlmostEquals(cy/factor, py, delta=delta)
+             
+        compare(111)
+        compare(7)        
         
-        partCrdX1 = protExtract.outputParticles[111].getCoordinate().getX()
-        crdX1 = int(protExtract.inputCoordinates.get()[111].getX() / factor)
-        partCrdY1 = protExtract.outputParticles[111].getCoordinate().getY()
-        crdY1 = int(protExtract.inputCoordinates.get()[111].getY() / factor)
-        partCrdX2 = protExtract.outputParticles[7].getCoordinate().getX()
-        crdX2 = int(protExtract.inputCoordinates.get()[7].getX() / factor)
-        partCrdY2 = protExtract.outputParticles[7].getCoordinate().getY()
-        crdY2 = int(protExtract.inputCoordinates.get()[7].getY() / factor)
-        self.assertAlmostEquals(partCrdX1, crdX1, delta=0.001)
-        self.assertAlmostEquals(partCrdY1, crdY1, delta=0.001)
-        self.assertAlmostEquals(partCrdX2, crdX2, delta=0.001)
-        self.assertAlmostEquals(partCrdY2, crdY2, delta=0.001)
+        self.assertIsNotNone(outputParts, "There was a problem generating the output.")
+        self.assertEqual(outputParts.getSamplingRate(), samplingMics, 
+                         "Output sampling rate should be equal to input sampling rate.")
 
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
-        self.assertEqual(protExtract.outputParticles.getSamplingRate(), protExtract.inputMicrographs.get().getSamplingRate(), "Output sampling rate should be equal to input sampling rate.")
 
     def testExtractOther(self):
         print "Run extract particles with downsampling factor equal to other"
-        downFactor=3.0
-        protExtract = XmippProtExtractParticles(boxSize=183, downsampleType=OTHER, downFactor=downFactor,doFlip=False)
+        downFactor = 3.0
+        protExtract = self.newProtocol(XmippProtExtractParticles, 
+                                       boxSize=183, downsampleType=OTHER, 
+                                       downFactor=downFactor,doFlip=False)
         # Get all the micrographs ids to validate that all particles
         # has the micId properly set
         micsId = [mic.getObjId() for mic in self.protPP.outputCoordinates.getMicrographs()]
@@ -341,81 +374,131 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-other")
-        self.proj.launchProtocol(protExtract, wait=True)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
-        
+        self.launchProtocol(protExtract)
+
+        inputCoords = protExtract.inputCoordinates.get()
+        outputParts = protExtract.outputParticles         
         samplingCoords = self.protPP.outputCoordinates.getMicrographs().getSamplingRate()
         samplingFinal = self.protImport.outputMicrographs.getSamplingRate() * downFactor
+        samplingMics = protExtract.inputMicrographs.get().getSamplingRate()
         factor = samplingFinal / samplingCoords
-        partCrdX1 = protExtract.outputParticles[45].getCoordinate().getX()
-        crdX1 = int(protExtract.inputCoordinates.get()[45].getX() / factor)
-        partCrdY1 = protExtract.outputParticles[45].getCoordinate().getY()
-        crdY1 = int(protExtract.inputCoordinates.get()[45].getY() / factor)
-        partCrdX2 = protExtract.outputParticles[229].getCoordinate().getX()
-        crdX2 = int(protExtract.inputCoordinates.get()[229].getX() / factor)
-        partCrdY2 = protExtract.outputParticles[229].getCoordinate().getY()
-        crdY2 = int(protExtract.inputCoordinates.get()[229].getY() / factor)
-        self.assertAlmostEquals(partCrdX1, crdX1, delta=0.001)
-        self.assertAlmostEquals(partCrdY1, crdY1, delta=0.001)
-        self.assertAlmostEquals(partCrdX2, crdX2, delta=0.001)
-        self.assertAlmostEquals(partCrdY2, crdY2, delta=0.001)
+        self.assertIsNotNone(outputParts, "There was a problem generating the output.")
+        
+        def compare(objId, delta=1.0):
+            cx, cy = inputCoords[objId].getPosition()
+            px, py = outputParts[objId].getCoordinate().getPosition()
+            self.assertAlmostEquals(cx/factor, px, delta=delta)
+            self.assertAlmostEquals(cy/factor, py, delta=delta)
+            
+        compare(45)
+        compare(229)  
 
-        self.assertAlmostEqual(protExtract.outputParticles.getSamplingRate()/ protExtract.inputMicrographs.get().getSamplingRate(), downFactor, 1, "There was a problem generating the output.")
-        for particle in protExtract.outputParticles:
+        self.assertAlmostEqual(outputParts.getSamplingRate()/samplingMics, 
+                               downFactor, 1, "There was a problem generating the output.")
+        for particle in outputParts:
             self.assertTrue(particle.getCoordinate().getMicId() in micsId)
     
     def testExtractCTF(self):
         print "Run extract particles with CTF"#        
-        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=SAME_AS_PICKING,doFlip=True)
+        protExtract = self.newProtocol(XmippProtExtractParticles, 
+                                       boxSize=110, 
+                                       downsampleType=SAME_AS_PICKING,
+                                       doFlip=True)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protCTF.inputMicrographs.get())
         protExtract.ctfRelations.set(self.protCTF.outputCTF)
         protExtract.setObjLabel("extract-ctf")
-        self.proj.launchProtocol(protExtract, wait=True)
-        partDef1 = protExtract.outputParticles[1].getCTF().getDefocusU()
-        defU1 = protExtract.ctfRelations.get()[1].getDefocusU()
-        partDef2 = protExtract.outputParticles[150].getCTF().getDefocusU()
-        defU2 = protExtract.ctfRelations.get()[2].getDefocusU()
-        partDef3 = protExtract.outputParticles[300].getCTF().getDefocusU()
-        defU3 = protExtract.ctfRelations.get()[3].getDefocusU()
-        partCrdX1 = protExtract.outputParticles[228].getCoordinate().getX()
-        crdX1 = protExtract.inputCoordinates.get()[228].getX()
-        partCrdY1 = protExtract.outputParticles[228].getCoordinate().getY()
-        crdY1 = protExtract.inputCoordinates.get()[228].getY()
-        partCrdX2 = protExtract.outputParticles[83].getCoordinate().getX()
-        crdX2 = protExtract.inputCoordinates.get()[83].getX()
-        partCrdY2 = protExtract.outputParticles[83].getCoordinate().getY()
-        crdY2 = protExtract.inputCoordinates.get()[83].getY()
-        self.assertAlmostEquals(partDef1, defU1, delta=1)
-        self.assertAlmostEquals(partDef2, defU2, delta=1)
-        self.assertAlmostEquals(partDef3, defU3, delta=1)
-        self.assertAlmostEquals(partCrdX1, crdX1, delta=0.001)
-        self.assertAlmostEquals(partCrdY1, crdY1, delta=0.001)
-        self.assertAlmostEquals(partCrdX2, crdX2, delta=0.001)
-        self.assertAlmostEquals(partCrdY2, crdY2, delta=0.001)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
-        self.assertTrue(protExtract.outputParticles.hasCTF(), "Output does not have CTF.")
+        self.launchProtocol(protExtract)
+
+        inputCoords = protExtract.inputCoordinates.get()
+        outputParts = protExtract.outputParticles 
+        
+        def compare(objId, delta=0.001):
+            cx, cy = inputCoords[objId].getPosition()
+            px, py = outputParts[objId].getCoordinate().getPosition()
+            self.assertAlmostEquals(cx, px, delta=delta)
+            self.assertAlmostEquals(cy, py, delta=delta)
+            
+        compare(228)
+        compare(83) 
+                        
+        def compareCTF(partId, ctfId):
+            partDefU = outputParts[partId].getCTF().getDefocusU()
+            defU = protExtract.ctfRelations.get()[ctfId].getDefocusU()
+            self.assertAlmostEquals(partDefU, defU, delta=1)
+            
+        compareCTF(1, 1)
+        compareCTF(150, 2)
+        compareCTF(300, 3)
+        
+        self.assertIsNotNone(outputParts, "There was a problem generating the output.")
+        self.assertTrue(outputParts.hasCTF(), "Output does not have CTF.")
     
     def testExtractSort(self):
         print "Run extract particles with sort by statistics"#
-        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=SAME_AS_PICKING,doFlip=True,
-                                                doSort=True,rejectionMethod=1, maxZscore=2)
+        protExtract = self.newProtocol(XmippProtExtractParticles, 
+                                       boxSize=110, 
+                                       downsampleType=SAME_AS_PICKING,
+                                       doFlip=True, doSort=True,
+                                       rejectionMethod=1, maxZscore=2)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protCTF.inputMicrographs.get())
         protExtract.ctfRelations.set(self.protCTF.outputCTF)
         protExtract.setObjLabel("extract-sort")
-        self.proj.launchProtocol(protExtract, wait=True)
-        partCrdX1 = protExtract.outputParticles[228].getCoordinate().getX()
-        crdX1 = protExtract.inputCoordinates.get()[228].getX()
-        partCrdY1 = protExtract.outputParticles[228].getCoordinate().getY()
-        crdY1 = protExtract.inputCoordinates.get()[228].getY()
-        partCrdX2 = protExtract.outputParticles[83].getCoordinate().getX()
-        crdX2 = protExtract.inputCoordinates.get()[83].getX()
-        partCrdY2 = protExtract.outputParticles[83].getCoordinate().getY()
-        crdY2 = protExtract.inputCoordinates.get()[83].getY()
-        self.assertAlmostEquals(partCrdX1, crdX1, delta=0.001)
-        self.assertAlmostEquals(partCrdY1, crdY1, delta=0.001)
-        self.assertAlmostEquals(partCrdX2, crdX2, delta=0.001)
-        self.assertAlmostEquals(partCrdY2, crdY2, delta=0.001)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
-        self.assertAlmostEquals(protExtract.outputParticles.getSize(), 249, delta=10)
+        self.launchProtocol(protExtract)
+ 
+        inputCoords = protExtract.inputCoordinates.get()
+        outputParts = protExtract.outputParticles 
+        
+        def compare(objId, delta=0.001):
+            cx, cy = inputCoords[objId].getPosition()
+            px, py = outputParts[objId].getCoordinate().getPosition()
+            self.assertAlmostEquals(cx, px, delta=delta)
+            self.assertAlmostEquals(cy, py, delta=delta)
+            
+        compare(228)
+        compare(83) 
+               
+        self.assertIsNotNone(outputParts, "There was a problem generating the output.")
+        self.assertAlmostEquals(outputParts.getSize(), 249, delta=10)
+        
+    def testAssignCTF(self):
+        """ Test the particle extraction after importing another
+        SetOfMicraphs with a different micName but same ids.
+        We will use assign-ctf protocol and extract from the 
+        newly imported mics with the assigned CTF.
+        For the other mics, we will just create symbolic links.
+        """
+        # Create the links with a different micrograph name
+        micsPath = self.proj.getPath('otherMicrographs')
+        pwutils.makePath(micsPath)
+        for i in [6, 7, 8]:
+            micPath = self.dataset.getFile('micrographs/BPV_138%d.mrc' % i)
+            micLink = join(micsPath, basename(micPath).replace('.mrc', '_DW.mrc'))
+            pwutils.createAbsLink(micPath, micLink)
+            
+        protImportDW = self.proj.copyProtocol(self.protImport)
+        protImportDW.setObjLabel('import -mics DW')
+        protImportDW.filesPath.set(micsPath)
+        protImportDW.filesPattern.set('*_DW.mrc')
+        self.launchProtocol(protImportDW)
+        
+        protAssignCTF = self.newProtocol(ProtCTFAssign)
+        protAssignCTF.inputSet.set(protImportDW.outputMicrographs)
+        protAssignCTF.inputCTF.set(self.protCTF.outputCTF)
+        self.launchProtocol(protAssignCTF)
+        
+        protExtract = self.newProtocol(XmippProtExtractParticles, 
+                                       boxSize=183, downsampleType=OTHER, 
+                                       downFactor=3.0,doFlip=False)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.inputMicrographs.set(protAssignCTF.outputMicrographs)
+        protExtract.ctfRelations.set(self.protCTF.outputCTF)
+        protExtract.setObjLabel("extract-other (DW mics)")
+        self.launchProtocol(protExtract)
+
+        inputCoords = protExtract.inputCoordinates.get()
+        outputParts = protExtract.outputParticles         
+     
+        
+        
