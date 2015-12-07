@@ -124,7 +124,10 @@ class ShowjForm(forms.Form):
                 
             if dataset.getNumberSlices() > 1:
                 labelColumn = dataset.getTable().getColumnValues(self.data[sj.LABEL_SELECTED])
-                volumesToRenderComboBoxValues = tuple(zip(labelColumn, labelColumn))
+
+
+                valueColumn = [i.replace(dataset.projectPath,"") for i in dataset.getTable().getColumnValues(self.data[sj.LABEL_SELECTED])]
+                volumesToRenderComboBoxValues = tuple(zip(labelColumn, valueColumn))
                 
                 self.fields[sj.VOL_SELECTED] = forms.ChoiceField(label=messagesForm.LABEL_VOLUME_SELECTION,
                                                                 required=False,
