@@ -878,8 +878,12 @@ class ParamWidget():
             from pyworkflow.em import findViewers
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
-                v = viewers[0] # Use the first viewer registered
-                v(project=self._protocol.getProject()).visualize(obj) # Instanciate the viewer and visualize object
+                ViewerClass = viewers[0] # Use the first viewer registered
+                # Instanciate the viewer and visualize object
+                viewer = ViewerClass(project=self._protocol.getProject(),
+                                     protocol=self._protocol,
+                                     parent=self.window)
+                viewer.visualize(obj)
             else:
                 self._showInfo("There is not viewer registered for *%s* object class." % obj.getClassName())
     
@@ -1574,8 +1578,10 @@ class FormWindow(Window):
             obj = protVar.get() # Get the reference to the object
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
-                v = viewers[0] # Use the first viewer registered
-                v(project=self.protocol.getProject()).visualize(obj) # Instanciate the viewer and visualize object
+                ViewerClass = viewers[0] # Use the first viewer registered
+                v = ViewerClass(project=self.protocol.getProject(),
+                                protocol=self.protocol, parent=self)
+                v.visualize(obj) # Instanciate the viewer and visualize object
             else:
                 self.showInfo("There is not viewer registered for this object")
         else:
