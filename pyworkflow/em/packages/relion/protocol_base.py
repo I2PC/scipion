@@ -53,7 +53,6 @@ class ProtRelionBase(EMProtocol):
     some of the function have a template pattern approach to define the behaivour
     depending on the case.
     """
-    _label = '2d classify'
     IS_CLASSIFY = True
     IS_2D = False
     OUTPUT_TYPE = SetOfClasses3D

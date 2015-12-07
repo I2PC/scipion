@@ -276,7 +276,7 @@ class Protocol(Step):
     """ The Protocol is a higher type of Step.
     It also have the inputs, outputs and other Steps properties,
     but contains a list of steps that are executed
-    """    
+    """
     def __init__(self, **kwargs):
         Step.__init__(self, **kwargs)        
         self._steps = [] # List of steps that will be executed
@@ -1171,9 +1171,16 @@ class Protocol(Step):
     @classmethod
     def getClassLabel(cls):
         """ Return a more readable string representing the protocol class """
-        label = getattr(cls, '_label', cls.__name__)
+        label = cls.__dict__.get('_label', cls.__name__)
         label = "%s - %s" % (cls.getClassPackageName(), label)
         return label
+    
+    @classmethod
+    def isBase(cls):
+        """ Return True if this Protocol is a base class.
+        Base classes should be marked with _label = None.
+        """
+        return cls.__dict__.get('_label', None) is None
         
     def getSubmitDict(self):
         """ Return a dictionary with the necessary keys to
@@ -1467,6 +1474,12 @@ class Protocol(Step):
 
     def allowsDelete(self, obj):
         return False
+    
+    def legacyCheck(self):
+        """ Hook defined to run some compatibility checks
+        before display the protocol.
+        """
+        pass
 
                 
 #---------- Helper functions related to Protocols --------------------
