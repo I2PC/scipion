@@ -1474,6 +1474,12 @@ class Protocol(Step):
 
     def allowsDelete(self, obj):
         return False
+    
+    def legacyCheck(self):
+        """ Hook defined to run some compatibility checks
+        before display the protocol.
+        """
+        pass
 
                 
 #---------- Helper functions related to Protocols --------------------
