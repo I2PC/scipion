@@ -170,7 +170,9 @@ class ProtImportCTF(ProtImportFiles):
     #--------------------------- UTILS functions ---------------------------------------------------
     def getFormat(self):
         for fileName, _ in self.iterFiles():
-            if fileName.endswith('.log') or fileName.endswith('.txt'):
+            if (fileName.endswith('.log') or 
+                fileName.endswith('.txt') or
+                fileName.endswith('.out')):
                 return self.IMPORT_FROM_GRIGORIEFF
             if fileName.endswith('.ctfparam'):
                 return self.IMPORT_FROM_XMIPP3
