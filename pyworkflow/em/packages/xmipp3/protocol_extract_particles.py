@@ -535,9 +535,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 self.ctfDict[ctfMic.getMicName()] = newCTF
                 self.ctfDict[ctfMic.getObjId()] = newCTF
             
-            if all(mic.getMicName() in self.ctfDict for mic in self.inputMics):
+            inputMics = self.getInputMicrographs()
+            
+            if all(mic.getMicName() in self.ctfDict for mic in inputMics):
                 self.micKey = lambda mic: mic.getMicName()
-            elif all(mic.getObjId() in self.ctfDict for mic in self.inputMics):
+            elif all(mic.getObjId() in self.ctfDict for mic in inputMics):
                 self.micKey = lambda mic: mic.getObjId()
             else:
                 self.micKey = None # some problem matching CTF
