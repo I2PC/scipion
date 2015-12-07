@@ -5,9 +5,12 @@
 import os
 from os.path import dirname, realpath, join
 import pyworkflow as pw
+import pyworkflow.config as pwconfig
 
 DIRECTORY_PROJECT = dirname(realpath(__file__))
 DB_PATH = join(pw.HOME, 'web', 'scipion_web.db')
+
+WEB_CONF = pwconfig.loadWebConf()
 
 DEBUG = True
 # DEBUG = False
@@ -37,9 +40,9 @@ DATABASES = {
 ALLOWED_HOSTS = []
 # ALLOWED_HOSTS = ['localhost']
 
-SITE_URL = 'scipion.cnb.csic.es'
+SITE_URL = WEB_CONF['SITE_URL']
 # Subdomain where Scipion is hosted or working
-ABSOLUTE_URL = ''
+ABSOLUTE_URL = WEB_CONF['ABSOLUTE_URL']
 # ABSOLUTE_URL = '/examples'
 
 # URL_REDIRECTS = (
