@@ -33,20 +33,28 @@ def usage(error):
     print """
     ERROR: %s
     
-    Usage: scipion python scripts/clean_projects.py [SCIPION_USER_DATA]
+    Usage: scipion python scripts/clean_projects.py [SCIPION_USER_DATA] [--delete]
         Clean projects that has expired (now - creation time > life time)
         Optional to pass SCIPION_USER_DATA folder from which to read 'projects'.
+        If --delete is not passed, only a message with the projects to be deleted
+        will be shown. If used --delete, the projects will be deleted from filesystem.
     """ % error
     sys.exit(1)    
 
 n = len(sys.argv)
 
-if n > 2:
+if n > 3:
     usage("Incorrect number of input parameters")
+    
+delete = '--delete' in sys.argv
 
-customUserData = sys.argv[1] if n > 1 else None
+arg1 = sys.argv[1]
+if n > 1 and arg1 != '--delete':
+    customUserData = arg1
+else:
+    customUserData = os.environ['SCIPION_USER_DATA']
 
-print "Loading projects from:\n", customUserData or os.environ['SCIPION_USER_DATA']
+print "Loading projects from:\n", customUserData 
  
 # Create a new project
 manager = Manager(SCIPION_USER_DATA=customUserData)
@@ -59,9 +67,11 @@ for projInfo in manager.listProjects():
     leftTime = proj.getLeftTime()
     if (leftTime is not None and 
         leftTime.days < 0):
-#    if proj.getLeftTime().days < 0:
-        print "Should delete: %s (%s)" % (projName, leftTime)
-        #manager.deleteProject(projName) 
+        if delete:
+            print "Deleting: %s (%s) " % (projName, leftTime)
+            manager.deleteProject(projName)
+        else: 
+            print "Should delete: %s (%s)" % (projName, leftTime)
     
     
 
