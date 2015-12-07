@@ -1118,6 +1118,8 @@ class FormWindow(Window):
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol, DESKTOP_TKINTER)
         
+        # Call legacy for compatibility on protocol
+        protocol.legacyCheck()
         self._createGUI()
         
     def _createGUI(self):
