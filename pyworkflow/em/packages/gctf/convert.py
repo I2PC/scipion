@@ -1,10 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
 # *
-# *
-# *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * L'Institut de génétique et de biologie moléculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -22,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'sharov@igbmc.fr'
 # *
 # **************************************************************************
 """
@@ -36,7 +34,6 @@ import re
 from pyworkflow.object import Float
 
 
-#-------------- Old fuctions (before using EMX matrix for alignment) ------
 def parseGctfOutput(filename):
     """ Retrieve defocus U, V, angle, crossCorrelation
     and ctfResolution from the output file of the Gctf execution.

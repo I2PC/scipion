@@ -93,8 +93,8 @@ class ProtImportCTF(ProtImportFiles):
             from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportCTF
             return GrigorieffLabImportCTF(self)
         elif importFrom == self.IMPORT_FROM_GCTF:
-            from pyworkflow.em.packages.gctf.dataimport import ZhangLabImportCTF
-            return ZhangLabImportCTF(self)
+            from pyworkflow.em.packages.gctf.dataimport import ZhangImportCTF
+            return ZhangImportCTF(self)
         else:
             return None
         
