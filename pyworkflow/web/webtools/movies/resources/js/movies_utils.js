@@ -142,10 +142,10 @@ function getRefTestData(id){
 	var ref = ""
 	switch(id){
 		case "ribosome":
-			ref = "<strong>S.cereviseae 80S ribosome</strong>, 5 movies, 1.77A, <a href='http://dx.doi.org/10.7554/eLife.00461' style='color:firebrick;' target='_blank'>from Bai XC, Fernandez IS, McMullan G, Scheres SH</a>)"
+			ref = "<strong>S.cereviseae 80S ribosome</strong> (5 movies, 1.77A, <a href='http://dx.doi.org/10.7554/eLife.00461' style='color:firebrick;' target='_blank'>from Bai XC, Fernandez IS, McMullan G, Scheres SH. eLIFE, 2013</a>)"
 			break;
 		case "falcon":
-			ref = "<strong>Influenza A ribonucleoproteins</strong>, 5 movies, 2.26A"
+			ref = "<strong>Influenza A ribonucleoproteins</strong> (5 movies, 2.26A)"
 			break;
 	}
 	return ref;

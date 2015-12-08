@@ -20,5 +20,5 @@ output_aligned: Name of the aligned micrograph
 win_size: Window size for optical flow algorithm
 GPU: GPU device to be use 0/1. 0 by default.
 
-IMPORTANT: xmipp enviroment need to be available
+IMPORTANT: xmipp environment needs to be available
 (in clark ./usr/local/xmipp_master/.xmipp.bashrc)

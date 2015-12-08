@@ -29,13 +29,32 @@ List all existing protocols within Scipion
 """
 
 import sys
-from pyworkflow.em import getProtocols
+from pyworkflow.viewer import Viewer
+import pyworkflow.em as em
+
+
+def getFirstLine(doc):
+    """ Get the first non empty line from doc. """
+    if doc:
+        for lines in doc.split('\n'):
+            l = lines.strip()
+            if l:
+                return l
+    return ''
 
 
 if __name__ == '__main__':
     count = 0
     withDoc = '--with-doc' in sys.argv
-    emProtocolsDict = getProtocols()
+    asciidoc = '--asciidoc' in sys.argv
+    
+    emProtocolsDict = em.getProtocols()
+    
+    emCategories = [('Imports', em.ProtImport, []),
+                    ('Micrographs', em.ProtMicrographs, []),
+                    ('Particles', em.ProtParticles, []),
+                    ('2D', em.Prot2D, []),
+                    ('3D', em.Prot3D, [])]
     
     protDict = {}
     
@@ -46,15 +65,52 @@ if __name__ == '__main__':
         if packageName not in protDict:
             protDict[packageName] = []
         
-        protDict[packageName].append((k, v))
+        if not issubclass(v, Viewer) and not v.isBase():
+            protDict[packageName].append((k, v))
+            
+            for c in emCategories:
+                if issubclass(v, c[1]):
+                    c[2].append((k, v))
            
-         
-    for group, prots in protDict.iteritems():
-        print "-" * 100
-        print "Package: ", group, "(%d protocols)" % len(prots)
-        for k, v in prots:
-            print "   %s ( %s )" % (k, v.getClassLabel())
-            if withDoc:
-                print "      doc: ", v.__doc__
-            #count += 1
+    
+    def iterGroups(protDict):
+        groups = protDict.keys()
+        groups.sort(key=lambda x: 1000-len(protDict[x]))
+        
+        for g in groups:
+            yield g, protDict[g]
+            
+    def printProtocols(prots):
+        protList = [(k, v, v.getClassLabel()) for k, v in prots]
+        protList.sort(key=lambda x: x[2])
+        
+        for k, v, l in protList:
+            doc = getFirstLine(v.__doc__) if withDoc else ''
+            print "* link:%s[%s]: %s" % (k, l, doc)
+        
+        
+    if asciidoc:
+        print ":toc:\n:toc-placement!:\n\ntoc::[]\n"
+        
+        print "\n== By Categories\n"
+        for c in emCategories:
+            print "\n=== %s\n" % c[0]
+            printProtocols(c[2])
+        
+        print "\n== By Packages\n"
+        for group, prots in iterGroups(protDict):
+            print "\n=== ", group, "(%d protocols)\n" % len(prots)
+            printProtocols(prots)
+        
+    else:
+        for group, prots in iterGroups(protDict):
+            print "-" * 100
+            print "Package: ", group, "(%d protocols)" % len(prots)
+            for k, v in prots:
+                print "   %s ( %s )" % (k, v.getClassLabel())
+                if withDoc:
+                    print "      doc: ", v.__doc__
+                #count += 1
+    
+    
             

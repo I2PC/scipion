@@ -27,10 +27,13 @@
 In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
 """
 
+from os.path import join, exists
+
 from pyworkflow.protocol.params import IntParam, PointerParam, FloatParam, BooleanParam
 from pyworkflow.utils.path import removeBaseExt
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
-
+import xmipp
+        
 from base import ProtImportFiles
 
 
@@ -114,14 +117,14 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         else:
             msg = "%s  coordinates from micrographs %s were imported using %s format."%(self.outputCoordinates.getSize(), self.getObjectTag('inputMicrographs'), self._getImportChoices()[self.getImportFrom()])
             if self.scale.get() != 1.:
-                msg += " Scale factor %d was applied."%self.scale.get()
+                msg += " Scale factor %d was applied." % self.scale
             if self.invertX.get():
                 msg += " X coordinate was inverted."
             if self.invertY.get():
                 msg += " Y coordinate was inverted."
 
             summary.append(msg)
-            summary.append("Output coordinates: %s."%self.getObjectTag('outputCoordinates'))
+            summary.append("Output coordinates: %s." % self.getObjectTag('outputCoordinates'))
         return summary
 
     def _methods(self):
@@ -175,16 +178,17 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         """ Given a coordinates file check if there is a micrograph
         that this files matches. 
         """
-	micSet = self.inputMicrographs.get()
-	if fileId is None:
+        micSet = self.inputMicrographs.get()
+        
+        if fileId is None:
             coordBase = removeBaseExt(coordFile)
             for mic in micSet:
                 micBase = removeBaseExt(mic.getFileName())
                 if coordBase in micBase or micBase in coordBase: #temporal use of in
                     return mic
-	    return None
-	else:
-	    return micSet[fileId]
+            return None
+        else:
+            return micSet[fileId]
         
     def correctCoordinatePosition(self, coord):
         mic = coord.getMicrograph()
@@ -203,7 +207,6 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         coord.setX(x)
         coord.setY(y)
         
-        
     def getDefaultBoxSize(self):
         """ This function is used by the wizard to estimate the box size. """
         boxSize = None
@@ -215,7 +218,6 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         
         return boxSize
     
-        import xmipp
         boxSize = 100
         importFrom = self.getImportFrom()
         scale = self.scale.get()
@@ -235,4 +237,3 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
             boxSize = int(jsonBoxDict["box_size"])
         boxSize = (int)(boxSize * scale)
         return boxSize
-

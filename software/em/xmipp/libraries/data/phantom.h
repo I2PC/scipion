@@ -66,7 +66,7 @@
  *  means that those voxels will be set to the value of the density of this
  *  feature (if two features overlap the density of the last one is kept
  *  in the overlapping voxels). The density is the grey level of voxels
- *  affected by that feature. In the preceeding example the final volume
+ *  affected by that feature. In the preceding example the final volume
  *  is 64x64x64 and has got a background density of 0. The center of the
  *  features might be negative, and they represent mathematical positions
  *  in R3. The phantom dimension, instead, define the phantom in this case
@@ -370,7 +370,7 @@ public:
         in xmippGeometry or xmippMatrix2D. The matrix must be the desired
         transformation (i.e., new coordinate=A*old_coordinate.
         Don't worry because the selfApplyGeometry of Phantom take
-        cares of passing to this function the apropriate matrix. No check is done
+        cares of passing to this function the appropriate matrix. No check is done
         about the size of A.
 
         Only the center is transformed, the feature will keep the same size.*/
@@ -468,7 +468,7 @@ public:
     V3_BY_CT(rp, rp, 1/radius);
     @endcode
     Directions (free vectors) are transformed in the same fashio except
-    that for the first vector substraction (referring to the origin).
+    that for the first vector subtraction (referring to the origin).
 */
 class Sphere: public Feature
 {
@@ -566,14 +566,14 @@ public:
     V3_BY_CT(rp, rp, 1/radius);
     @endcode
     Directions (free vectors) are transformed in the same fashion except
-    that for the first vector substraction (referring to the origin).
+    that for the first vector subtraction (referring to the origin).
 */
 
 class Blob: public Feature
 {
 public:
 
-    /* I do not use the structure "blobtype" because common code with sphere becames
+    /* I do not use the structure "blobtype" because common code with sphere becomes
     more difficult*/
     /// Blob radius
     double             radius;
@@ -670,7 +670,7 @@ public:
     V3_BY_CT(rp, rp, 1/sigma);
     @endcode
     Directions (free vectors) are transformed in the same fashion except
-    that for the first vector substraction (referring to the origin).
+    that for the first vector subtraction (referring to the origin).
 */
 
 class Gaussian: public Feature
@@ -775,7 +775,7 @@ public:
     ZZ(rp) /= cyl.height;
     @endcode
     Directions (free vectors) are transformed in the same fashion except
-    that for the first vector substraction (referring the origin).
+    that for the first vector subtraction (referring the origin).
 */
 class Cylinder: public Oriented_Feature
 {
@@ -906,7 +906,7 @@ public:
     YY(rp) /= dcy.radius;
     @endcode
     Directions (free vectors) are transformed in the same fashion except
-    that for the first two vector substraction (referring the origin).
+    that for the first two vector subtraction (referring the origin).
 */
 class DCylinder: public Oriented_Feature
 {
@@ -1029,7 +1029,7 @@ public:
     ZZ(rp) /= cub.zdim;
     @endcode
     Directions (free vectors) are transformed in the same fashion except
-    that for the first vector substraction (referring the origin).
+    that for the first vector subtraction (referring the origin).
 */
 class Cube: public Oriented_Feature
 {
@@ -1149,7 +1149,7 @@ public:
     ZZ(rp) /= ell.zradius;
     @endcode
     Directions (free vectors) are transformed in the same fashion except
-    that for the first vector substraction (referring the origin).
+    that for the first vector subtraction (referring the origin).
 */
 class Ellipsoid: public Oriented_Feature
 {
@@ -1269,7 +1269,7 @@ public:
     ZZ(rp) /= con.height;
     @endcode
     Directions (free vectors) are transformed in the same fashion except
-    that for the first vector substraction (referring the origin).
+    that for the first vector subtraction (referring the origin).
 */
 class Cone: public Oriented_Feature
 {

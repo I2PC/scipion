@@ -354,12 +354,13 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
         I = IauxRS;
         result.copyAlignment(candidateRS);
     }
-    else if (corrSR > corrRS)
+    else if (candidateSR.corr > candidateRS.corr)
     {
         I = IauxSR;
         result.copyAlignment(candidateSR);
     }
     else
+    	// This is for NaNs, Infs, ...
         result.corr = 0;
 
 #ifdef DEBUG

@@ -269,14 +269,14 @@ class TestXmippApplyMask2D(TestXmippBase):
                                 self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
         
         self.assertIsNotNone(protMask6.outputParticles, "There was a problem with apply raised crown mask for particles")
-        Mask
+
     def testApplyUserMask(self):
         print "Run apply user mask for particles"
         # Create MASK
         protMask01 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate=1.237, 
-                                     size=20, 
-                                     geo=0, radius=-1 )
+                                     size=500, 
+                                     geo=0, radius=225)
         protMask01.setObjLabel('circular mask')
         self.launchProtocol(protMask01)
         self.assertIsNotNone(protMask01.outputMask, "There was a problem with apply user custom mask for particles")
@@ -337,7 +337,7 @@ class TestXmippScreenParticles(TestXmippBase):
         print '\t --> Output set size is correct (%s)' % len(protScreenZScore.outputParticles)
         
         for x in protScreenZScore.outputParticles:
-            self.assertLess(x._xmipp_zScore.get(), 2.6, "Particle with id (%s) has a ZScore of %s, upper than suposed threshold %s" % (x.getObjId(), x._xmipp_zScore.get(), 2.6))
+            self.assertLess(x._xmipp_zScore.get(), 2.6, "Particle with id (%s) has a ZScore of %s, upper than supposed threshold %s" % (x.getObjId(), x._xmipp_zScore.get(), 2.6))
         print '\t --> Output particles are below the ZScore threshold'
         
         # Finally, we check for errors in method with particle rejection by percentage
@@ -778,17 +778,17 @@ class TestXmippProjectionOutliers(TestXmippBase):
                                    symmetryGroup="c6", numberOfMpi=5)
         protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
         protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
-        self.launchProtocol(protProjOutl)      
+        self.launchProtocol(protProjOutl)
         self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Projection Outliers")
     
-    def test_ProjectionOutliersClasses2D(self):
-        print "Run ProjOutliers for classes2D"
-        protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
-                                   symmetryGroup="c6", numberOfMpi=5)
-        protProjOutl.inputSet.set(self.runClassify.outputClasses)
-        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
-        self.launchProtocol(protProjOutl)      
-        self.assertIsNotNone(protProjOutl.outputClasses, "There was a problem with Projection Outliers")
+#     def test_ProjectionOutliersClasses2D(self):
+#         print "Run ProjOutliers for classes2D"
+#         protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
+#                                    symmetryGroup="c6", numberOfMpi=5)
+#         protProjOutl.inputSet.set(self.runClassify.outputClasses)
+#         protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
+#         self.launchProtocol(protProjOutl)      
+#         self.assertIsNotNone(protProjOutl.outputClasses, "There was a problem with Projection Outliers")
 
 
 class TestXmippScreenClasses(TestXmippBase):

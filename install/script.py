@@ -352,8 +352,12 @@ cythongsl = env.addModule(
 # 'commands' is a list of (command, [targets]) to run after installation.
 
 
-env.addPackage('bsoft',
+env.addPackage('bsoft-1.8.8',
                tar='bsoft1_8_8_Fedora_12.tgz',
+               default=False)
+
+env.addPackage('bsoft-1.9.0',
+               tar='bsoft1_9_0_Fedora_20.tgz',
                default=False)
 
 env.addPackage('ctffind',
@@ -372,8 +376,14 @@ env.addPackage('unblur',
                tar='unblur_1.0_150529.tgz',
                default=False)
 
-env.addPackage('eman',
+env.addPackage('eman2.11',
                tar='eman2.11.linux64.tgz',
+               commands=[('./eman2-installer', 
+                          'eman2.bashrc')],
+               default=False)
+
+env.addPackage('eman2.12',
+               tar='eman2.12.linux64.tgz',
                commands=[('./eman2-installer', 
                           'eman2.bashrc')],
                default=False)
@@ -458,6 +468,10 @@ cryoem = env.addPackage(
                 default=False,
                 pythonMod=True,
                 deps=[numpy, scipy, matplotlib, cythongsl])
+
+env.addPackage('gEMpicker_v1.1',
+               tar='gEMpicker_v1.1.tgz',
+               default=False)
 
 
 env.execute()

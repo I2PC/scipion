@@ -36,7 +36,7 @@ from process import buildRunCommand, runCommand
 from pyworkflow.utils.utils import envVarOn
 
 
-TIMEOUT = 60  # seconds trying to send/receive data thru a socket
+TIMEOUT = 60  # seconds trying to send/receive data through a socket
 
 TAG_RUN_JOB = 1000
 

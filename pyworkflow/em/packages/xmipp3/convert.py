@@ -765,7 +765,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
     if kwargs.get('removeDisabled', True):
         imgMd.removeDisabled()
         
-    # If the type of alignment is not sent throught the kwargs
+    # If the type of alignment is not sent through the kwargs
     # try to deduced from the metadata labels
     if 'alignType' not in kwargs:
         imgRow = rowFromMd(imgMd, imgMd.firstObject())
@@ -1407,7 +1407,7 @@ def createClassesFromImages(inputImages, inputMd,
         classFnTemplate: the template to get the classes averages filenames
         iter: the iteration number, just used in Class template
     """
-    # We asume here that the volumes (classes3d) are in the same folder than imgsFn
+    # We assume here that the volumes (classes3d) are in the same folder than imgsFn
     # rootDir here is defined to be used expanding locals()
     if "@" in inputMd:
         inputFn = inputMd.split('@')[1]

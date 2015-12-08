@@ -481,13 +481,13 @@ class OrderedObject(Object):
         """
         for key in self._attributes:
             attr = getattr(self, key)
-            if attr.isPointer():
+            if attr is not None and attr.isPointer():
                 if attr.get() is value:
                     return True
         return False
     
     def __setattr__(self, name, value):
-        if (not name in self._attributes and
+        if (name not in self._attributes and
             issubclass(value.__class__, Object) and
             not self.__attrPointed(name, value) and value._objDoStore):
             self._attributes.append(name)
@@ -643,7 +643,7 @@ class Float(Scalar):
         """Compare that all attributes are equal"""
         # If both float has some value distinct of None
         # then we should compare the absolute value of difference 
-        # agains the EQUAL_PRECISION to say equal or not
+        # against the EQUAL_PRECISION to say equal or not
         if self.hasValue() and other.hasValue():
             return abs(self._objValue - other._objValue) < self.EQUAL_PRECISION
         # If one has None as value, then both should have None

@@ -101,7 +101,7 @@ class Data():
     """ Store data points. """
     def __init__(self, **kwargs):
         # Indexes of data
-        self._dim = kwargs.get('dim') # The points dimentions
+        self._dim = kwargs.get('dim') # The points dimensions
         self.clear()
         
     def addPoint(self, point, position=None):

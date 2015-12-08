@@ -207,7 +207,7 @@ class ProtImportFiles(ProtImport):
             return createLink
         
     def iterFiles(self):
-        """ Iterate throught the files matched with the pattern.
+        """ Iterate through the files matched with the pattern.
         Provide the fileName and fileId.
         """
         filePaths = self.getMatchFiles()

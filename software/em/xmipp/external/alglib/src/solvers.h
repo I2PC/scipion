@@ -1246,7 +1246,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     X       -   array[N], solution
     Rep     -   optimization report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     *  1    ||Rk||<=EpsB*||B||
                     *  4    ||A^T*Rk||/(||A||*||Rk||)<=EpsA
                     *  5    MaxIts steps was taken
@@ -1254,7 +1254,7 @@ OUTPUT PARAMETERS:
                             X contains best point found so far.
                             (sometimes returned on singular systems)
                 * Rep.IterationsCount contains iterations count
-                * NMV countains number of matrix-vector calculations
+                * NMV contains number of matrix-vector calculations
 
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
@@ -1414,7 +1414,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     X       -   array[N], solution
     Rep     -   optimization report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     * -5    input matrix is either not positive definite,
                             too large or too small
                     * -4    overflow/underflow during solution
@@ -1424,7 +1424,7 @@ OUTPUT PARAMETERS:
                     *  7    rounding errors prevent further progress,
                             best point found is returned
                 * Rep.IterationsCount contains iterations count
-                * NMV countains number of matrix-vector calculations
+                * NMV contains number of matrix-vector calculations
 
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
@@ -1653,7 +1653,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     X       -   array[0..N-1], solution
     Rep     -   optimization report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     * -4    ERROR:  algorithm   has   converged   to   the
                             stationary point Xf which is local minimum  of
                             f=F[0]^2+...+F[m-1]^2, but is not solution  of
@@ -1663,7 +1663,7 @@ OUTPUT PARAMETERS:
                     *  7    stopping conditions are too stringent,
                             further improvement is impossible
                 * Rep.IterationsCount contains iterations count
-                * NFEV countains number of function calculations
+                * NFEV contains number of function calculations
                 * ActiveConstraints contains number of active constraints
 
   -- ALGLIB --

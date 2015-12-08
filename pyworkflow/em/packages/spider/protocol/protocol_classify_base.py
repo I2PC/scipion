@@ -54,7 +54,8 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
                         'particlesSel': 'input_particles_sel',
                         'dendroPs': 'dendrogram',
                         'dendroDoc': '%s/docdendro' % self._classDir,
-                        'averages': 'averages',                        
+                        'averages': 'averages',   
+                        'x30': self.numberOfThreads.get()                     
                         }  
         
     def getClassDir(self):
@@ -79,6 +80,8 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
                       label='Number of factors',
                       help='After running, examine the eigenimages and decide which ones to use.\n'
                            'Typically all but the first few are noisy.')
+        
+        form.addParallelSection(threads=4, mpi=0)
     
     #--------------------------- INSERT steps functions --------------------------------------------  
     
@@ -108,10 +111,15 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
         copyFile(imcFile, self._getPath(imcLocalFile))
         self.info("Copied file '%s' to '%s' " % (imcFile, imcLocalFile))
         # Spider automatically add _IMC to the ca-pca result file
-        imcBase = removeExt(imcLocalFile).replace('_IMC', '')
+        # JMRT: I have modify the kmeans.msa script to not add _IMC
+        # automatically, it can be also used with _SEQ suffix,
+        # so we will pass the whole cas_file
+        imcBase = removeExt(imcLocalFile)#.replace('_IMC', '')
+        imcPrefix = imcBase.replace('_IMC', '').replace('_SEQ', '')
         
         self._params.update({'x27': numberOfFactors,
-                             '[cas_prefix]': imcBase,
+                             '[cas_prefix]': imcPrefix,
+                             '[cas_file]': imcBase,
                              })
         self._updateParams()
 
