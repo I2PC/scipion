@@ -209,8 +209,6 @@ class ProtRelionBase(EMProtocol):
         form.addSection(label='CTF')
         form.addParam('contuinueMsg', LabelParam, default=True,
                       label='CTF parameters are not available in continue mode', condition='doContinue',)
-        form.addParam('haveDataBeenPhaseFlipped', LabelParam, condition='not doContinue',
-                      label='The phase flip comes as a property of the input particles!')
         form.addParam('doCTF', BooleanParam, default=True,
                       label='Do CTF-correction?', condition='not doContinue',
                       help='If set to Yes, CTFs will be corrected inside the MAP refinement. '
@@ -223,6 +221,15 @@ class ProtRelionBase(EMProtocol):
                            'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
                            'then in the first iteration, the Fourier transforms of the reference projections ' 
                            'are not multiplied by the CTFs.')
+        form.addParam('haveDataBeenPhaseFlipped', LabelParam, condition='not doContinue',
+                      label='Have data been phase-flipped?      (Don\'t answer, see help)', 
+                      help='The phase-flip status is recorded and managed by Scipion. \n'
+                           'In other words, when you import or extract particles, \n'
+                           'Scipion will record whether or not phase flipping has been done.\n\n'
+                           'Note that CTF-phase flipping is NOT a necessary pre-processing step \n'
+                           'for MAP-refinement in RELION, as this can be done inside the internal\n'
+                           'CTF-correction. However, if the phases have been flipped, the program\n'
+                           'will handle it.')
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Ignore CTFs until first peak?', condition='not doContinue',
@@ -641,10 +648,12 @@ class ProtRelionBase(EMProtocol):
         if self.hasAttribute('numberOfIterations'):
             iterMsg += '/%d' % self._getnumberOfIters()
         summary = [iterMsg]
+        
         if self._getInputParticles().isPhaseFlipped():
             msg = "Your images have been ctf-phase corrected"
         else:
-            msg = "Your images not have been ctf-phase corrected"
+            msg = "Your images have not been ctf-phase corrected"
+        
         summary += [msg]
         
         if self.doContinue:
