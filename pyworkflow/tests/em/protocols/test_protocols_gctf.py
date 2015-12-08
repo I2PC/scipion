@@ -79,7 +79,7 @@ class TestGctf(TestGctfBase):
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
         
-        valuesList = [[23861, 23664, 56], [22383, 22153, 52.6], [22716, 22526, 59.1]]
+        valuesList = [[23956, 23537, 52], [22319, 21973, 52], [22657, 22362, 56]]
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
@@ -92,7 +92,7 @@ class TestGctf(TestGctfBase):
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
         
-        valuesList = [[23863, 23640, 64], [22159, 21983, 50.6], [22394, 22269, 45]]
+        valuesList = [[23885, 23552, 56], [22250, 21892, 52], [22482, 22268, 39]]
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
