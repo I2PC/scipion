@@ -2,7 +2,7 @@
 # *
 # * Authors:     Grigory Sharov (sharov@igbmc.fr)
 # *
-# * L'Institut de génétique et de biologie moléculaire et cellulaire (IGBMC)
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by

@@ -2,7 +2,7 @@
 # *
 # * Authors:    Grigory Sharov (sharov@igbmc.fr)
 # *
-# * L'Institut de génétique et de biologie moléculaire et cellulaire (IGBMC)
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -38,8 +38,6 @@ class TestGctfBase(BaseTest):
     def setData(cls, dataProject='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(dataProject)
         cls.micFn = cls.dataset.getFile('allMics')
-#        cls.volFn = cls.dataset.getFile('vol2')
-        #cls.parFn = cls.dataset.getFile('aligned_particles')
 
     @classmethod
     def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
@@ -170,7 +168,6 @@ class TestGctf(TestGctfBase):
         protCTF = ProtGctf()
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
-#        protCTF.numberOfThreads.set(4)
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
         
@@ -184,7 +181,6 @@ class TestGctf(TestGctfBase):
     def testRunGctf2(self):
         protCTF = ProtGctf()
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
-#        protCTF.numberOfThreads.set(4)
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
         
