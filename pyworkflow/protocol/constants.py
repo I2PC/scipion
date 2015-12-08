@@ -48,12 +48,13 @@ ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_INTERACTIVE]
 
 MODE_RESUME = 0    # Try to starting at the first changed step, skipping unchanged ones
 MODE_RESTART = 1   # Restart the protocol from the beginning, deleting all previous results
-MODE_CONTINUE = 2  # Continue from specific step, not widely used.
-MODE_CHOICES = ('Resume', 'Restart')#, 'Continue')
+MODE_CONTINUE = 2  # Continue from specific step, not widely used //DEPRECATED.
+# JMRT: We now use 'Continue' label instead of 'Resume' which is more intuitive for users.
+MODE_CHOICES = ('Continue', 'Restart')#, 'Continue')
 
 # Steps execution mode
 STEPS_SERIAL = 0      # Execute steps serially, some of the steps can be mpi programs
-STEPS_PARALLEL = 1    # Execute steps in parallel, throught threads or mpi
+STEPS_PARALLEL = 1    # Execute steps in parallel, through threads or mpi
 
 
 # Level of expertise for the input parameters, mainly used in the protocol form

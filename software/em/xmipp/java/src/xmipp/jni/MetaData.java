@@ -149,16 +149,50 @@ public class MetaData {
 	public native boolean removeLabel(int label);
 
 	public boolean containsGeometryInfo(String type) {
+		
+		
+		if (type.equals("2D")) {
+			return containsGeometryInfo2D();
+		
+		} else {
+		
+			return containsGeometryInfo3D();
+		}
+		
+	}
+	
+	
+	private boolean containsGeometryInfo2D(){
+
 		try {
-			boolean contains = containsLabel(GEOMETRY_LABELS);
+			boolean contains = containsLabel(GEOMETRY_LABELS) && !containsLabel(MDLabel.MDL_ANGLE_ROT);
 			if(!contains)
-				contains = containsLabel(GEOMETRY_RELION_LABELS);
+				contains = containsLabel(GEOMETRY_RELION_LABELS) &&
+				((!containsLabel(MDLabel.RLN_ORIENT_ROT)) || ( getColumnMax(MDLabel.RLN_ORIENT_ROT) == 0 )) ;
 			return contains;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return false;
+		return false;	
+		
 	}
+	
+	private boolean containsGeometryInfo3D(){
+
+		try {
+			boolean contains = containsLabel(GEOMETRY_LABELS) && containsLabel(MDLabel.MDL_ANGLE_ROT);
+			if(!contains)
+				contains = containsLabel(GEOMETRY_RELION_LABELS) &&
+				((containsLabel(MDLabel.RLN_ORIENT_ROT)) && ( getColumnMax(MDLabel.RLN_ORIENT_ROT) != 0 )) ;
+			return contains;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;	
+		
+	}
+
+	
 	
 	public boolean containsLabel(int[] labels) {
 		try {
@@ -408,15 +442,17 @@ public class MetaData {
 
 	public native double[] getColumnValues(int label);
 
-	// set functions conection with MetaData class in C++
+	// set functions connection with MetaData class in C++
 	public boolean setEnabled(boolean value, long objId) {
+		
 		return setValueInt(MDLabel.MDL_ENABLED, value ? 1 : -1, objId);
+		
 	}
 
 	public boolean getEnabled(long objId) {
             if(!containsLabel(MDLabel.MDL_ENABLED))
                 return true;
-            return getValueInt(MDLabel.MDL_ENABLED, objId) > 0;
+            return getValueInt(MDLabel.MDL_ENABLED, objId) > -1;
 	}
 
 	public native boolean setValueInt(int label, int value, long objId);
@@ -469,7 +505,7 @@ public class MetaData {
 
 	/**
 	 * Union of all elements in two Metadata, duplicating common elements.
-	 * Result in calling metadata object, repetion are allowed
+	 * Result in calling metadata object, repetition are allowed
 	 */
 	public native void unionAll(MetaData mdIn);
 
@@ -560,37 +596,37 @@ public class MetaData {
 		return false;
 	}
         
-        public String getCTFFile(long id)
-        {
-            return getValueString(MDLabel.MDL_CTF_MODEL, id);
+    public String getCTFFile(long id)
+    {
+        return getValueString(MDLabel.MDL_CTF_MODEL, id);
+    }
+    
+    public EllipseCTF getEllipseCTF(long id) {
+        return getEllipseCTF(id, -1);
+    }
+    
+    public EllipseCTF getEllipseCTF(long id, int D) {
+        MetaData md = new MetaData(getCTFFile(id));
+        try {
+            double Q0, Cs, Ts, kV, downsampleFactor, defU, defV, defAngle;
+
+            Q0 = md.getValueDouble(MDLabel.MDL_CTF_Q0, id);
+            Cs = md.getValueDouble(MDLabel.MDL_CTF_CS, id);
+            downsampleFactor = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, id);
+            Ts = md.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, id) * downsampleFactor;
+            kV = md.getValueDouble(MDLabel.MDL_CTF_VOLTAGE, id);
+
+            defU = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSU, id);
+            defV = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, id);
+            defAngle = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUS_ANGLE, id);
+
+            return new EllipseCTF(id, Q0, Cs, downsampleFactor, Ts, kV, defU, defV, defAngle, D);
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+            throw new IllegalArgumentException(ex);
         }
         
-        public EllipseCTF getEllipseCTF(long id) {
-            return getEllipseCTF(id, -1);
-        }
-        
-        public EllipseCTF getEllipseCTF(long id, int D) {
-            MetaData md = new MetaData(getCTFFile(id));
-            try {
-                double Q0, Cs, Ts, kV, downsampleFactor, defU, defV, defAngle;
-
-                Q0 = md.getValueDouble(MDLabel.MDL_CTF_Q0, id);
-                Cs = md.getValueDouble(MDLabel.MDL_CTF_CS, id);
-                downsampleFactor = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, id);
-                Ts = md.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, id) * downsampleFactor;
-                kV = md.getValueDouble(MDLabel.MDL_CTF_VOLTAGE, id);
-
-                defU = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSU, id);
-                defV = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, id);
-                defAngle = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUS_ANGLE, id);
-
-                return new EllipseCTF(id, Q0, Cs, downsampleFactor, Ts, kV, defU, defV, defAngle, D);
-            } catch (Exception ex) {
-                IJ.error(ex.getMessage());
-                throw new IllegalArgumentException(ex);
-            }
-            
-        }
+    }
         
         
     public String getPSDFile(long id) {

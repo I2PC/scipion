@@ -101,7 +101,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		}
 	}
 	
-	public ImagePlus getImage(long id, String imagepath)
+	public ImagePlus getImage(long id, String imagepath, ColumnInfo renderLabel)
 	{
 		ImagePlus imp = null;
 		if (imagepath != null && Filename.exists(imagepath))
@@ -113,7 +113,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                     loader = new ImagePlusLoader(imagepath, null, null, data.useGeo, data.wrap, data.inverty, ImageGeneric.MID_SLICE);
                 else  
                     loader = new ImagePlusLoader(imagepath, data.useGeo, data.wrap, data.inverty);
-                loader.setGeometry(data.getGeometry(id));
+                loader.setGeometry(data.getGeometry(id, renderLabel));
                 loader.setInvertY(data.inverty);
                 loader.setDimension(thumb_width, thumb_height);
                 return loader.getImagePlus();
@@ -127,14 +127,14 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	}
         
         
-    protected void openXmippImageWindow(int index, int label)
+    protected void openXmippImageWindow(int index, ColumnInfo ci)
     {
-        String file = getImageFilename(index, label);
+        String file = getImageFilename(index, ci.label);
         if(file == null)
-            throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(data.getValueFromLabel(index, label)));
+            throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(data.getValueFromLabel(index, ci.label)));
         ImagePlusLoader loader = new ImagePlusLoader(file, data.useGeo, data.wrap, data.inverty);
         if(data.containsGeometryInfo())
-            loader.setGeometry(data.getGeometry(data.ids[index]));
+            loader.setGeometry(data.getGeometry(data.ids[index], ci));
         if (data.getNormalized())
             loader.setNormalize(normalize_min, normalize_max);
         ImagesWindowFactory.openXmippImageWindow(loader, data.parameters);
@@ -158,46 +158,43 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		}
 		ImageDimension dim = null;
         int width = 50, height = 50;
-		if (data.hasRenderLabel()) 
+		if (data.hasRenderLabel() && data.renderImages) 
 		{
 			renderLabel = data.ciFirstRender;
 			// if (renderLabels) {
 			String imageFn = data.getSampleImage(renderLabel);
             if(imageFn != null)
             {
-                try
-                {
                 	ImagePlusLoader loader;
                 	if(Filename.isStackOrVolume(imageFn))
                         loader = new ImagePlusLoader(imageFn, null, null, false, false, false, ImageGeneric.MID_SLICE);
                     else  
                         loader = new ImagePlusLoader(imageFn);
                     ImagePlus image = loader.getImagePlus();
-                    
-                    width = image.getWidth(); 
-                    height = image.getHeight();
-                    
-                    dim = new ImageDimension(width, height);
-                }
-                catch (Exception e)
-                {
-                        dim = null;
-                        e.printStackTrace();
-                }
+                    if(image != null && image.getWidth() > 0)
+                    {
+	                    width = image.getWidth(); 
+	                    height = image.getHeight();
+	                    dim = new ImageDimension(width, height);
+                    }
             }
             
 		}
 		
 		if (dim == null)
 			dim = new ImageDimension(width);
+		// Zdim will always be used as number of elements to display
 		dim.setZDim(data.ids.length);
+		n = dim.getZDim();
+		image_width = dim.getXDim();
+		image_height = dim.getYDim();
 		return dim;
 	}
 
 	@Override
-	protected ImageItem createItem(int index, String key) throws Exception
+	protected ImageItem createItem(int index, String key, ColumnInfo ci) throws Exception
 	{
-		return createImageItem(index, renderLabel.label);
+		return createImageItem(index, ci);
 	}
 	
 	
@@ -221,11 +218,11 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	/**
 	 * Function to create an image item
 	 */
-	protected ImageItem createImageItem(int index, int renderLabel) throws Exception
+	protected ImageItem createImageItem(int index, ColumnInfo renderLabel) throws Exception
 	{
-		String imageFn = getImageFilename(index, renderLabel);
+		String imageFn = getImageFilename(index, renderLabel.label);
 		long objId = data.ids[index];
-		ImagePlus imp = getImage(objId, imageFn);
+		ImagePlus imp = getImage(objId, imageFn, renderLabel);
 		ImageItem item = new ImageItem(index, imp);
 		return item;
 	}
@@ -279,7 +276,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			if (data.isImageFile(renderLabel))
 			{
                 int index = getIndex(row, col);
-                openXmippImageWindow(index, renderLabel.label);
+                openXmippImageWindow(index, getColumn(row, col));
                 return true;
 			}
 		}

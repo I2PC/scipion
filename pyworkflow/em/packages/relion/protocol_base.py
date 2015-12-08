@@ -33,7 +33,7 @@ from os.path import exists
 
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
                                         IntParam, EnumParam, StringParam, LabelParam)
-from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPath
 
 import pyworkflow.em.metadata as md
@@ -41,7 +41,7 @@ from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import convertBinaryVol, writeSqliteIterData, writeSetOfParticles
+from convert import convertBinaryVol, writeSqliteIterData, writeSetOfParticles, getVersion
 
 
 class ProtRelionBase(EMProtocol):
@@ -53,7 +53,6 @@ class ProtRelionBase(EMProtocol):
     some of the function have a template pattern approach to define the behaivour
     depending on the case.
     """
-    _label = '2d classify'
     IS_CLASSIFY = True
     IS_2D = False
     OUTPUT_TYPE = SetOfClasses3D
@@ -104,8 +103,9 @@ class ProtRelionBase(EMProtocol):
                   'bfactors': self.extraIter + 'data_shiny_bfactors.star',
                   'dataFinal' : self._getExtraPath("relion_data.star"),
                   'modelFinal' : self._getExtraPath("relion_model.star"),
-                  'finalvolume' : self._getExtraPath("relion_class%(ref3d)03d.mrc:mrc")
-                  
+                  'finalvolume' : self._getExtraPath("relion_class%(ref3d)03d.mrc:mrc"),
+                  'final_half1_volume': self._getExtraPath("relion_half1_class%(ref3d)03d_unfil.mrc:mrc"),
+                  'final_half2_volume': self._getExtraPath("relion_half2_class%(ref3d)03d_unfil.mrc:mrc")
                   }
         # add to keys, data.star, optimiser.star and sampling.star
         for key in self.FILE_KEYS:
@@ -209,8 +209,6 @@ class ProtRelionBase(EMProtocol):
         form.addSection(label='CTF')
         form.addParam('contuinueMsg', LabelParam, default=True,
                       label='CTF parameters are not available in continue mode', condition='doContinue',)
-        form.addParam('haveDataBeenPhaseFlipped', LabelParam, condition='not doContinue',
-                      label='The phase flip comes as a property of the input particles!')
         form.addParam('doCTF', BooleanParam, default=True,
                       label='Do CTF-correction?', condition='not doContinue',
                       help='If set to Yes, CTFs will be corrected inside the MAP refinement. '
@@ -223,6 +221,15 @@ class ProtRelionBase(EMProtocol):
                            'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
                            'then in the first iteration, the Fourier transforms of the reference projections ' 
                            'are not multiplied by the CTFs.')
+        form.addParam('haveDataBeenPhaseFlipped', LabelParam, condition='not doContinue',
+                      label='Have data been phase-flipped?      (Don\'t answer, see help)', 
+                      help='The phase-flip status is recorded and managed by Scipion. \n'
+                           'In other words, when you import or extract particles, \n'
+                           'Scipion will record whether or not phase flipping has been done.\n\n'
+                           'Note that CTF-phase flipping is NOT a necessary pre-processing step \n'
+                           'for MAP-refinement in RELION, as this can be done inside the internal\n'
+                           'CTF-correction. However, if the phases have been flipped, the program\n'
+                           'will handle it.')
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Ignore CTFs until first peak?', condition='not doContinue',
@@ -237,7 +244,7 @@ class ProtRelionBase(EMProtocol):
                       label='defocus range for group creation (in Angstroms)', condition='doCtfManualGroups and not doContinue',
                       help='Particles will be grouped by defocus.'
                       'This parameter is the bin for an histogram.'
-                      'All particles asigned to a bin form a group')
+                      'All particles assigned to a bin form a group')
         form.addParam('numParticles', FloatParam, default=1,
                       label='minimum size for defocus group', condition='doCtfManualGroups and not doContinue',
                       help='If defocus group is smaller than this value, '
@@ -407,7 +414,7 @@ class ProtRelionBase(EMProtocol):
         form.addSection('Additional')
         form.addParam('memoryPreThreads', IntParam, default=2,
                       label='Memory per Threads',
-                      help='Computer memory in Gigabytes that is avaliable for each thread. This will only '
+                      help='Computer memory in Gigabytes that is available for each thread. This will only '
                            'affect some of the warnings about required computer memory.')
         
         joinHalves = "--low_resol_join_halves 40 (only not continue mode)" if not self.IS_CLASSIFY else ""
@@ -433,7 +440,7 @@ class ProtRelionBase(EMProtocol):
                          'The command *relion_refine --sym D2 --print_symmetry_ops* prints a list of all symmetry operators for symmetry group D2. RELION uses XMIPP\'s libraries for symmetry operations. Therefore, look at the XMIPP Wiki for more details:  http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome?topic=Symmetry')
 
     #--------------------------- INSERT steps functions --------------------------------------------  
-    def _insertAllSteps(self): 
+    def _insertAllSteps(self):
         self._initialize()
         self._insertFunctionStep('convertInputStep', self._getInputParticles().getObjId())
         self._insertRelionStep()
@@ -512,8 +519,7 @@ class ProtRelionBase(EMProtocol):
             args['--iter'] = self._getnumberOfIters()
             
         self._setSamplingArgs(args)
-        
-                        
+    
     def _setCTFArgs(self, args):        
         # CTF stuff
         if self.doCTF:
@@ -568,13 +574,15 @@ class ProtRelionBase(EMProtocol):
                     particle = imgSet[movieParticle.getParticleId()]
                     if particle is not None:
                         auxMovieParticles.append(movieParticle)
-                            
                 writeSetOfParticles(auxMovieParticles,
                                     self._getFileName('movie_particles'), None, originalSet=imgSet,
                                     postprocessImageRow=self._postprocessImageRow)
                 mdMovies = md.MetaData(self._getFileName('movie_particles'))
                 mdParts = md.MetaData(self._getFileName('input_star'))
-                mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
+                if getVersion() == "1.4":
+                    mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
+                else:
+                    mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
                 mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
                 
                 detectorPxSize = movieParticleSet.getAcquisition().getMagnification() * movieParticleSet.getSamplingRate() / 10000
@@ -597,6 +605,11 @@ class ProtRelionBase(EMProtocol):
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
+        if not getVersion():
+            errors.append("We couldn't detect Relion version. ")
+            errors.append("Please, check your configuration file and change RELION_HOME.")
+            errors.append("The path should contains either '1.3' or '1.4' ")
+            errors.append("to properly detect the version.")
         if self.doContinue:
             continueProtocol = self.continueRun.get()
             if (continueProtocol is not None and
@@ -609,7 +622,7 @@ class ProtRelionBase(EMProtocol):
         else:
             if self._getInputParticles().isOddX():
                 errors.append("Relion only works with even values for the image dimensions!")
-                
+        
             errors += self._validateNormal()
         return errors
     
@@ -635,10 +648,12 @@ class ProtRelionBase(EMProtocol):
         if self.hasAttribute('numberOfIterations'):
             iterMsg += '/%d' % self._getnumberOfIters()
         summary = [iterMsg]
+        
         if self._getInputParticles().isPhaseFlipped():
             msg = "Your images have been ctf-phase corrected"
         else:
-            msg = "Your images not have been ctf-phase corrected"
+            msg = "Your images have not been ctf-phase corrected"
+        
         summary += [msg]
         
         if self.doContinue:

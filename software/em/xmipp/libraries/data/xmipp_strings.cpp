@@ -105,7 +105,7 @@ String simplify( const String& str )
     return temp;
 }
 
-/* Trim all spaces from the begining and the end */
+/* Trim all spaces from the beginning and the end */
 void trim(String& str)
 {
     String::size_type pos = str.find_last_not_of(' ');
@@ -560,9 +560,6 @@ char   *memtok(char **src,  char **_end, const char *sep)
 /* Return the first occurrence of NEEDLE in HAYSTACK. Taken from GNU C Library */
 void * _memmem ( const void *haystack, size_t haystack_len, const void *needle, size_t needle_len)
 {
-    const char *begin;
-    const char *const last_possible = (const char *) haystack + haystack_len - needle_len;
-
     if (needle_len == 0)
         /* The first occurrence of the empty string is deemed to occur at
            the beginning of the string.  */
@@ -573,12 +570,36 @@ void * _memmem ( const void *haystack, size_t haystack_len, const void *needle, 
     if (haystack_len < needle_len)
         return NULL;
 
-    for (begin = (const char *) haystack; begin <= last_possible; ++begin)
-        if (begin[0] == ((const char *) needle)[0] &&
-            !memcmp ((const void *) &begin[1],
-                     (const void *) ((const char *) needle + 1),
-                     needle_len - 1))
+    // memchr
+    const char *pNeedle=(const char *) needle;
+#ifdef NEVERDEFINED
+    const char *const last_possible = (const char *) haystack + haystack_len - needle_len;
+    for (const char *begin = (const char *) haystack; begin <= last_possible; ++begin)
+        if (begin[0] == pNeedle[0] &&
+            !memcmp (begin+1, pNeedle + 1, needle_len - 1))
             return (void *) begin;
+#else
+    const char *begin=(const char *) haystack;
+    const char *current=begin;
+    size_t remaining=haystack_len-needle_len+1;
+    int firstChar=(int)pNeedle[0];
+    while (remaining>0)
+    {
+    	const char *found=(const char *) memchr(current, firstChar, remaining);
+    	if (found==NULL)
+    		break;
+    	else
+    	{
+    		if (memcmp(found+1, pNeedle + 1, needle_len - 1)==0)
+    			return (void *)found;
+    		else
+    		{
+    			remaining-=found-current+1;
+    			current=found+1;
+    		}
+    	}
+    }
+#endif
 
     return NULL;
 }

@@ -28,7 +28,6 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam,
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume 
 from pyworkflow.em.protocol import ProtReconstruct3D
-from pyworkflow.em.packages.relion.convert import convertBinaryFiles
 from pyworkflow.em.constants import ALIGN_PROJ
 
 class ProtRelionReconstruct(ProtReconstruct3D):
@@ -45,7 +44,7 @@ class ProtRelionReconstruct(ProtReconstruct3D):
         form.addSection(label='Input')
 
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
-                      label="Input particles",  
+                      pointerCondition='hasAlignmentProj', label="Input particles",
                       help='Select the input images from the project.')     
 #         form.addParam('doNormalize', BooleanParam, default=False,
 #                       label='Normalize',
@@ -89,7 +88,7 @@ class ProtRelionReconstruct(ProtReconstruct3D):
                       help='Param *--ctf_intact_first_peak* in Relion.')
         form.addParam('onlyFlipPhases', BooleanParam, default=False,
                       condition='doCTF',
-                      label='Do not correct CTF-amplitudes? (only flip phases)',
+                      label='Only flip phases? (Do not correct CTF-amplitudes)',
                       help='Param *--only_flip_phases* in Relion.')
         line = form.addLine('Beam tilt in direction: ',
                             condition='doCTF',
@@ -136,7 +135,13 @@ class ProtRelionReconstruct(ProtReconstruct3D):
                 params += ' --only_flip_phases' 
             params += ' --beamtilt_x %0.3f' % self.beamTiltX.get()
             params += ' --beamtilt_y %0.3f' % self.beamTiltY.get()
-        
+            #are the images phase flipped?
+            if imgSet.isPhaseFlipped():
+                params += ' --ctf_phase_flipped'
+
+        if self.extraParams.hasValue():
+            params += " " + self.extraParams.get()
+
         self._insertFunctionStep('reconstructStep', params)
 
     #--------------------------- STEPS functions --------------------------------------------

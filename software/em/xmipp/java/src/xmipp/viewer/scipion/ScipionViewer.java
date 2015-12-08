@@ -66,7 +66,8 @@ public class ScipionViewer extends Viewer {
         try {
             
             MetaData md;
-            if(filename.endsWith(".sqlite") || filename.endsWith(".db"))
+            boolean isscipion = ScipionMetaData.isScipionMetaData(filename);
+            if(isscipion)
                 ImagesWindowFactory.openScipionMetadata(filename, parameters);
             else if (Filename.isMetadata(filename)) {
                 if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_IMAGE)) {

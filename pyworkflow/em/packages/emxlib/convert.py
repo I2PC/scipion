@@ -44,34 +44,39 @@ import emxlib
 #from software.em.xmipp.protocols.protocol_preprocess_particles import createAcquisition
 
 
-def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=None):
+def exportData(emxDir, inputSet, ctfSet=None,
+               xmlFile='data.emx', binaryFile=None,
+               doConvert=True):
     """ Export micrographs, coordinates or particles to  EMX format. """
     pwutils.cleanPath(emxDir)
     pwutils.makePath(emxDir) 
     emxData = emxlib.EmxData()
     micSet=None
     
-
     if isinstance(inputSet, SetOfMicrographs):
-        _micrographsToEmx(emxData, inputSet, emxDir, ctfSet)
+        _micrographsToEmx(emxData, inputSet, emxDir, ctfSet, writeData=True)
         
     elif isinstance(inputSet, SetOfCoordinates):
         micSet = inputSet.getMicrographs()
         _micrographsToEmx(emxData, micSet, emxDir, ctfSet)
+
         _particlesToEmx(emxData, inputSet, micSet, writeImages=False)
+#        _particlesToEmx(emxData, inputSet, None, micSet, doConvert=doConvert)
         
     elif isinstance(inputSet, SetOfParticles):
         if inputSet.hasCoordinates():
             micSet = inputSet.getCoordinates().getMicrographs()
             _micrographsToEmx(emxData, micSet, emxDir, writeData=False)
-        
+
         kwargs = {'writeImages': True}
+        
         if binaryFile is None:
             kwargs['imagesPrefix'] = emxDir
         else:
             kwargs['imagesStack'] = join(emxDir, binaryFile)
+            
         _particlesToEmx(emxData, inputSet, micSet, **kwargs)
-        
+
     fnXml = join(emxDir, xmlFile)
     emxData.write(fnXml)
     
@@ -220,6 +225,7 @@ def _micrographsToEmx(emxData, micSet, emxDir, ctfSet=None, writeData=True):
         emxData.addObject(emxMic)
     
     
+#def _particlesToEmx(emxData, partSet, stackFn=None, micSet=None, doConvert=True):
 def _particlesToEmx(emxData, partSet, micSet=None, **kwargs):
     """ Write a SetOfMicrograph as expected in EMX format 
     Params:
@@ -266,6 +272,7 @@ def _particlesToEmx(emxData, partSet, micSet=None, **kwargs):
                 
     ih = ImageHandler()
     partAlign = partSet.getAlignment()
+
     for particle in partSet:
         if writeImages:
             newLoc = _getLocation(particle)
@@ -372,8 +379,9 @@ def _transformFromEmx(emxParticle, part, transform,alignType):
     if alignType == ALIGN_PROJ:
         m = inv(m)
     else:#I know this is stupid but emx has changed so many times that I want to keep
-         #this conditional just in case we need it
+        #this conditional just in case we need it
         m = inv(m)
+        
     transform.setMatrix(m)
     print ("m",m,"transform",transform)
     transform.setObjId(part.getObjId())

@@ -28,12 +28,11 @@ This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
 
-from collections import OrderedDict
+import os
 import json
 
-from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
 from pyworkflow.object import *
-from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt, exists
+import pyworkflow.utils as pwutils
 
 from constants import *
 from convert import ImageHandler
@@ -374,7 +373,7 @@ class Image(EMObject):
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
         fn = self.getFileName()
-        if fn is not None and exists(fn.replace(':mrc', '')):
+        if fn is not None and os.path.exists(fn.replace(':mrc', '')):
             x, y, z, n = ImageHandler().getDimensions(self)
             return x, y, z
         return None
@@ -567,7 +566,7 @@ class Volume(Image):
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
         fn = self.getFileName()
-        if fn is not None and exists(fn.replace(':mrc', '')):
+        if fn is not None and os.path.exists(fn.replace(':mrc', '')):
             x, y, z, n = ImageHandler().getDimensions(self)
 
             # Some volumes in mrc format can have the z dimension
@@ -818,7 +817,7 @@ class SetOfImages(EMSet):
         return x, y, z
     
     def getXDim(self):
-        return self.getDim()[0]
+        return self.getDim()[0] if self.getDim() is not None else 0
     
     def isOddX(self):
         """ Return True if the first item x dimension is odd. """
@@ -841,9 +840,10 @@ class SetOfImages(EMSet):
                 if firstItem is not None:
                     self._firstDim.set(firstItem.getDim())
             except Exception, ex:
-                print "Error reading dimension: ", ex
-                import traceback
-                traceback.print_exc()
+                if pwutils.envVarOn('SCIPION_DEBUG'):
+                    print "Error reading dimension: ", ex
+                    import traceback
+                    traceback.print_exc()
         dimStr = str(self._firstDim)
         s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), dimStr, sampling)
         return s
@@ -951,7 +951,7 @@ class SetOfParticles(SetOfImages):
         from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
-        self.setHasCTF(other.hasCTF())    
+        self.setHasCTF(other.hasCTF())
 
 
 class SetOfAverages(SetOfParticles):
@@ -1331,7 +1331,7 @@ class SetOfClasses(EMSet):
     
     def _setItemMapperPath(self, classItem):
         """ Set the mapper path of this class according to the mapper
-        path of the SetOfClasses and also the prefix acording to class id
+        path of the SetOfClasses and also the prefix according to class id
         """
         classPrefix = 'Class%03d' % classItem.getObjId()
         classItem._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
@@ -1543,14 +1543,14 @@ class Movie(Micrograph):
         self._alignment = None
 
     def isCompressed(self):
-        return self.getFileName().endswith('bz2') 
+        return self.getFileName().endswith('bz2') or self.getFileName().endswith('tbz')
         
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
         Consider compressed Movie files"""
         if not self.isCompressed():
             fn = self.getFileName()
-            if fn is not None and exists(fn.replace(':mrc', '')):
+            if fn is not None and os.path.exists(fn.replace(':mrc', '')):
                 return ImageHandler().getDimensions(self)
         return None
     
@@ -1600,6 +1600,7 @@ class SetOfMovies(SetOfMicrographsBase):
     def __init__(self, **kwargs):
         SetOfMicrographsBase.__init__(self, **kwargs)
         self._gainFile = String()
+        self._darkFile = String()
         self._firstFrameNum = Integer(0)
         
     def setGain(self, gain):
@@ -1607,6 +1608,12 @@ class SetOfMovies(SetOfMicrographsBase):
         
     def getGain(self):
         return self._gainFile.get()
+
+    def setDark(self, dark):
+        self._darkFile.set(dark)
+        
+    def getDark(self):
+        return self._darkFile.get()
 
     def __str__(self):
         """ String representation of a set of movies. """
@@ -1621,9 +1628,10 @@ class SetOfMovies(SetOfMicrographsBase):
                 self._firstDim.set(self.getFirstItem().getDim())
                 self._firstFrameNum.set(self.getDimensions()[3])
             except Exception, ex:
-                print "Error reading dimension: ", ex
-                import traceback
-                traceback.print_exc()
+                if pwutils.envVarOn('SCIPION_DEBUG'):
+                    print "Error reading dimension: ", ex
+                    import traceback
+                    traceback.print_exc()
         dimStr = str(self._firstDim)
         s = "%s (%d items, %d frames, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), self._firstFrameNum, dimStr, sampling)
         return s

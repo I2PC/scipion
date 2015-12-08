@@ -55,6 +55,8 @@ public:
     double minSigma;
     // Identification label
     String idLabel;
+    /// Set of angular difference
+    int set;
 public:
     // DocFile 1
     MetaData DF1;

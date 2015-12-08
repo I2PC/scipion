@@ -109,6 +109,7 @@ function createResMapProject(elm) {
 	var projName = "res"+randomString(16, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
 
+	var projectUrl = "http://" + document.domain + getSubDomainURL() + "/m_content/?p="+ projName
 	var URL = getSubDomainURL() + "/create_resmap_project/?projectName=" + projName
 	if(selected != undefined){
 		URL += "&testData="+selected;
@@ -123,8 +124,8 @@ function createResMapProject(elm) {
 			
 			var msg = "<p>Your <strong>url to access </strong> this <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
-			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/r_content/?p="+ projName+ "'>" +
-			"http://scipion.cnb.csic.es/m/r_content/?p="+ projName + "</a>"+
+			"<a style='color:firebrick;' href='"+ projectUrl + "'>" +
+			projectUrl + "</a>"+
 			"</h3></p><br />" +
 			"<p>The access to this project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
@@ -149,11 +150,11 @@ function getRefTestData(id){
 	var ref = ""
 	switch(id){
 		case "t20s_proteasome":
-			ref = "<strong>T20S Proteasome</strong> (Resolution 2.8 Å , <a href='http://emsearch.rutgers.edu/atlas/6287_summary.html' style='color:firebrick;' target='_blank'>Authors: Campbell MG, Veesler D, Cheng A, Potter CS, Carragher B</a>)"
+			ref = "<strong>T20S Proteasome</strong> (Resolution 2.8 Å , <a href='http://emsearch.rutgers.edu/atlas/6287_summary.html' style='color:firebrick;' target='_blank'>from Campbell MG et al. eLIFE, 2015</a>)"
 			break;
 		
 		case "mito_ribosome":
-			ref = "<strong>Human mitochondrial ribosome</strong> (Resolution 3.4 Å , <a href='http://emsearch.rutgers.edu/atlas/2762_summary.html' style='color:firebrick;' target='_blank'>Authors: Brown A, Amunts A, Bai XC, Sugimoto Y, Edwards PC, Murshudov G, Scheres SHW, Ramakrishnan V</a>)"
+			ref = "<strong>Human mitochondrial ribosome</strong> (Resolution 3.4 Å , <a href='http://emsearch.rutgers.edu/atlas/2762_summary.html' style='color:firebrick;' target='_blank'>from Brown A et al. Science, 2014</a>)"
 			break;
 			
 //		case "cpv":
@@ -161,7 +162,7 @@ function getRefTestData(id){
 //			break;
 			
 		case "fcv":
-			ref = "<strong>Feline calicivirus virus-like particles</strong> (Resolution 14 Å , <a href='http://emsearch.rutgers.edu/atlas/2823_summary.html' style='color:firebrick;' target='_blank'>Authors: Burmeister WP, Buisson M, Estrozi LF, Schoehn G, Billet O, Hannas Z, Sigoillot-Claude C, Poulet H</a>)"
+			ref = "<strong>Feline calicivirus virus-like particles</strong> (Resolution 14 Å , <a href='http://emsearch.rutgers.edu/atlas/2823_summary.html' style='color:firebrick;' target='_blank'>from Burmeister WP et al. PLoS One, 2015</a>)"
 			break;
 	}
 	return ref;

@@ -46,6 +46,8 @@ public:
     FileName fnVol;
     /** Filename of residuals */
     FileName fnResiduals;
+    /** Filename of projections */
+    FileName fnProjections;
     /** Maximum shift allowed */
     double maxShift;
     /** Maximum scale allowed */

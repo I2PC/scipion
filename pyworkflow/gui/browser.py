@@ -31,19 +31,17 @@ A concrete use of ObjectBrowser is FileBrowser, where the
 elements to inspect and preview are files.
 """
 
-import os
 import os.path
 import stat
 
 import Tkinter as tk
-import ttk
 
 import xmipp
 from pyworkflow.utils.properties import Icon
 import gui
 from pyworkflow.utils import dirname, getHomePath, prettySize, getExt, dateStr
 from tree import BoundTree, TreeProvider
-from text import TaggedText, showTextFileViewer, openTextFileEditor
+from text import TaggedText, openTextFileEditor
 from widgets import Button, HotButton
 
 
@@ -221,7 +219,6 @@ class ImageFileHandler(FileHandler):
     def _getImageString(self, filename):
         if isStandardImage(filename):
             return "Image file."
-        import xmipp
         x, y, z, n = xmipp.getImageSize(filename)
         objType = 'Image'
         dimMsg = "*%(objType)s file*\n  dimensions: %(x)d x %(y)d" 
@@ -271,6 +268,17 @@ class StackHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
         return 'file_stack.gif'
     
+
+class ChimeraHandler(FileHandler):
+    
+    def getFileActions(self, objFile):
+        from pyworkflow.em.viewer import ChimeraView
+        fn = objFile.getPath()
+        return [('Open with Chimera', lambda : ChimeraView(fn).show(), Icon.ACTION_VISUALIZE)]    
+    
+    def getFileIcon(self, objFile):
+        return 'file_text.gif' 
+    
     
 class MdFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
@@ -279,8 +287,7 @@ class MdFileHandler(ImageFileHandler):
     def _getImgPath(self, mdFn, imgFn):
         """ Get ups and ups until finding the relative location to images. """
         path = dirname(mdFn)
-        from xmipp import FileName
-        index, fn = FileName(imgFn).decompose()
+        index, fn = xmipp.FileName(imgFn).decompose()
         
         while path and path != '/':
             newFn = os.path.join(path, fn)
@@ -293,19 +300,18 @@ class MdFileHandler(ImageFileHandler):
         return None
             
     def _getMdString(self, filename, block=None):
-        from xmipp import MetaData, MDL_IMAGE, label2Str, labelIsImage
-        md = MetaData()
+        md = xmipp.MetaData()
         if block:
             md.read(block + '@' + filename)
         else:
             md.read(filename, 1)
         labels = md.getActiveLabels()
         msg =  "Metadata items: *%d*\n" % md.getParsedLines()
-        msg += "Metadata labels: " + ''.join(["\n   - %s" % label2Str(l) for l in labels])
+        msg += "Metadata labels: " + ''.join(["\n   - %s" % xmipp.label2Str(l) for l in labels])
         
         imgPath = None
         for label in labels:
-            if labelIsImage(label):
+            if xmipp.labelIsImage(label):
                 imgPath = self._getImgPath(filename, md.getValue(label, md.firstObject()))
                 break
         if imgPath:
@@ -320,7 +326,6 @@ class MdFileHandler(ImageFileHandler):
         ext = getExt(filename)
         
         if ext == '.xmd' or ext == '.ctfparam' or ext == '.pos' or ext == '.doc':
-            import xmipp
             msg = "*Metadata File* "
             blocks = xmipp.getBlocksInMetaDataFile(filename)
             nblocks = len(blocks)
@@ -352,7 +357,7 @@ class FileTreeProvider(TreeProvider):
     
     @classmethod
     def registerFileHandler(cls, fileHandler, *extensions):
-        """ Register a FileHandler for a given file extention. 
+        """ Register a FileHandler for a given file extension. 
         Params:
             fileHandler: the FileHandler that will take care of extensions.
             *extensions: the extensions list that will be associated to this FileHandler.
@@ -389,7 +394,7 @@ class FileTreeProvider(TreeProvider):
         fileHandler = self.getFileHandler(obj)
         actions = fileHandler.getFileActions(obj)
         # Always allow the option to open as text
-        # specially usefull for unknown formats
+        # specially useful for unknown formats
         fn = obj.getPath()
         actions.append(("Open external Editor", 
                         lambda: openTextFileEditor(fn), Icon.ACTION_REFERENCES))
@@ -601,4 +606,5 @@ class FileBrowserWindow(BrowserWindow):
                                              *STANDARD_IMAGE_EXTENSIONS)
         FileTreeProvider.registerFileHandler(VolFileHandler(), '.vol')
         FileTreeProvider.registerFileHandler(StackHandler(), '.stk', '.mrcs', '.st', '.pif')
+        FileTreeProvider.registerFileHandler(ChimeraHandler(), '.bild')
     

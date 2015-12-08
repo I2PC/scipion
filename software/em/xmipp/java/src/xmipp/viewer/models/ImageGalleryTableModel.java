@@ -96,10 +96,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		cols = 0;
 		dimension = loadDimension();
 		columnModel = createColumnModel();
-		// Zdim will always be used as number of elements to display
-		n = dimension.getZDim();
-		image_width = dimension.getXDim();
-		image_height = dimension.getYDim();
+		
 		int zoom = 100;
 		if(data.getZoom() != null)
 			zoom = data.getZoom();
@@ -179,7 +176,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 					item = cache.get(key);
 				else {
 //					// If not, create the item and store it for future
-					item = createItem(index, key);
+					item = createItem(index, key, getColumn(row, col));
 					cache.put(key, item);
 				}
 				setupItem(item);
@@ -551,14 +548,14 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	public String getItemKey(int index, int label) throws Exception {
 		Object value = data.getValueFromLabel(index, label);
 		
-		String format = value + "_i_(%d,%d)";
+		String format = value + "_%d_%d(%d,%d)";
 		if (data.useGeo)
 			format += "_geo";
 		if (data.wrap)
 			format += "_wrap";
 		// String key = String.format(format, thumb_width, thumb_height);
 		// DEBUG.printMessage(String.format("key: %s", key));
-                String key = String.format(format, index, thumb_width, thumb_height);
+        String key = String.format(format, index, label, thumb_width, thumb_height);
 		return key;
 	}
 
@@ -582,7 +579,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 *            The index of the item to create
 	 * @return The item created
 	 */
-	protected abstract ImageItem createItem(int index, String key)
+	protected abstract ImageItem createItem(int index, String key, ColumnInfo ci)
 			throws Exception;
 
         public boolean isSelected(int row, int col) {
@@ -610,7 +607,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		protected int index;
 
 		/**
-		 * First argument is the gallery to wich this item belongs Constructor
+		 * First argument is the gallery to which this item belongs Constructor
 		 * of ImageItem */
 		public ImageItem(int row, int col) {
 			index = ImageGalleryTableModel.this.getIndex(row, col);

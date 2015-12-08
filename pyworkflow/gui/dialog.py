@@ -113,7 +113,7 @@ class Dialog(tk.Toplevel):
             self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
                                       parent.winfo_rooty()+50))
 
-        self.deiconify() # become visibile now
+        self.deiconify() # become visible now
 
         self.initial_focus.focus_set()
 
@@ -288,11 +288,18 @@ class MessageDialog(Dialog):
         self.image = gui.getImage(self.iconPath)
         createMessageBody(bodyFrame, self.msg, self.image)
 
+
 class YesNoDialog(MessageDialog):
     """Ask a question with YES/NO answer"""
-    def __init__(self, master, title, msg):
-        MessageDialog.__init__(self, master, title, msg, 'fa-exclamation-triangle_alert.png', default='No',
-                               buttons=[('Yes', RESULT_YES), ('No', RESULT_NO)])        
+    def __init__(self, master, title, msg, **kwargs):
+        buttonList =  [('Yes', RESULT_YES), ('No', RESULT_NO)]
+        
+        if kwargs.get('showCancel', False):
+            buttonList.append(('Cancel', RESULT_CANCEL))
+            
+        MessageDialog.__init__(self, master, title, msg, 
+                               'fa-exclamation-triangle_alert.png', default='No',
+                               buttons=buttonList)        
 
 
 class EntryDialog(Dialog):
@@ -389,7 +396,6 @@ class EditObjectDialog(Dialog):
             self.mapper.store(self.obj)
             self.mapper.commit()
         
-        
     def buttonbox(self, btnFrame):
         # Cancel the binding of <Return> key
         Dialog.buttonbox(self, btnFrame)
@@ -404,6 +410,10 @@ class EditObjectDialog(Dialog):
 def askYesNo(title, msg, parent):
     d = YesNoDialog(parent, title, msg)
     return d.resultYes()
+
+def askYesNoCancel(title, msg, parent):
+    d = YesNoDialog(parent, title, msg, showCancel=True)
+    return d.result
 
 def showInfo(title, msg, parent):
     MessageDialog(parent, title, msg, 'fa-info-circle_alert.png')

@@ -140,11 +140,29 @@ class RelionImport():
         return errors
 
     def summaryParticles(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
         return []
 
+    def _getModelFile(self, dataStar):
+        """ Retrieve the model star file from a given
+        _data.star file.
+        """
+        modelStarFile = dataStar.replace('_data.star', '_model.star')
+
+        if exists(modelStarFile):
+            result = modelStarFile
+        else:
+            modelHalfStarFile = self._starFile.replace('_data.star', '_half1_model.star')
+            if exists(modelHalfStarFile):
+                result = modelHalfStarFile
+            else:
+                result = None
+                
+        return result
+
+        
     def _findImagesPath(self, label, warnings=True):
 
         row = md.getFirstRow(self._starFile)
@@ -163,20 +181,9 @@ class RelionImport():
             self.protocol.warning("Binary data was not found from metadata: %s" % self._starFile)
 
 
-        if self._starFile.endswith('_data.star'):
-
-            modelStarFile = self._starFile.replace('_data.star', '_model.star')
-
-            if exists(modelStarFile):
-                self._modelStarFile = modelStarFile
-            else:
-                modelHalfStarFile = self._starFile.replace('_data.star', '_half1_model.star')
-                if exists(modelHalfStarFile):
-                    self._modelStarFile = modelHalfStarFile
-                else:
-                    raise Exception("Missing required model star file, search for\n%s\nor\n%s" % (modelStarFile,
-                                                                                                  modelHalfStarFile))
-
+        if (self._starFile.endswith('_data.star') and 
+            self._getModelFile(self._starFile)):
+            self._modelStarFile = self._getModelFile(self._starFile)
             modelRow = md.getFirstRow(self._modelStarFile)
             classDimensionality = modelRow.getValue('rlnReferenceDimensionality')
 
@@ -185,7 +192,6 @@ class RelionImport():
                 raise Exception("Missing required optimiser star file: %s" % self._optimiserFile)
             optimiserRow = md.getFirstRow(self._optimiserFile)
             autoRefine = optimiserRow.containsLabel('rlnModelStarFile2')
-
 
             self.alignType = ALIGN_PROJ
 
@@ -249,6 +255,14 @@ class RelionImport():
         if self.ignoreIds:
             img.setObjId(None) # Force to generate a new id in Set
 
+        if self._micIdOrName:
+            micId = imgRow.getValue('rlnMicrographId', None)
+            micName = imgRow.getValue('rlnMicrographName', None)
+            if img.hasCoordinate():
+                coord = img.getCoordinate()
+                coord.setMicId(micId)
+                coord.setMicName(micName)
+    
     def loadAcquisitionInfo(self):
         """ Return a dictionary with acquisition values and 
         the sampling rate information.

@@ -31,7 +31,7 @@ This sub-package contains the XmippParticlePicking protocol
 from pyworkflow.em import ProtParticlePicking, PointerParam, FloatParam, String, CoordinatesTiltPair, TiltPair
 from pyworkflow.utils.path import pw, getFiles, copyFile, join, exists
 from xmipp3 import XmippProtocol
-from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
+from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs, XmippProtocol
 from convert import writeSetOfMicrographsPairs
 from itertools import izip
 from pyworkflow.em.showj import launchTiltPairPickerGUI
@@ -39,12 +39,12 @@ import xmipp
 import os
 
 
+
 class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
 
     """Xmipp protocol to pick particles in a set of micrographs 
     either manually or using supervised picking support  """
     _label = 'tilt pairs particle picking'
-
     
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
@@ -64,7 +64,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
               
     #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
-        """The Particle Picking proccess is realized for a pair of set of micrographs"""
+        """The Particle Picking process is realized for a pair of set of micrographs"""
         
         self.micsFn = self._getPath('input_micrographs.xmd')
         # Convert input into xmipp Metadata format
@@ -75,7 +75,6 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             self._insertFunctionStep('launchParticlePickGUIStep', interactive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolderStep')     
-        
     
     #--------------------------- STEPS functions ----------------------------------------------------
     def convertInputStep(self):
@@ -137,7 +136,6 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
     def _citations(self):
         return []
 
-
     #--------------------------- UTILS functions -------------------------------------------
     def __str__(self):
         """ String representation of a Particle Picking Tilt run """
@@ -147,9 +145,6 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             picked = self.outputCoordinatesTiltPair.getTilted().getSize()
             msg = "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographsTiltedPair.get().getTilted().getSize())
         return msg
-
-    
-
 
     def getMethods(self, output):#output is not used but to overwrite getMethods it is used
         msg = ""
@@ -199,7 +194,6 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             summary.append("Last micrograph: " + activemic)
         return "\n".join(summary)
     
-
     def registerCoords(self, coordsDir):
         from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
 
@@ -239,6 +233,4 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         self._defineOutputs(**outputs)
         self._defineSourceRelation(self.inputMicrographsTiltedPair, outputset)
         self._store()
-
-
 

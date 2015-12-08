@@ -37,8 +37,10 @@ from pyworkflow.utils.path import expandPattern, createLink, copyFile
 from pyworkflow.em.protocol import EMProtocol
 
 
+
 class ProtImport(EMProtocol):
     """ Base class for other all Import protocols. """
+
 
 class ProtImportFiles(ProtImport):
     """ Base class for other Import protocols. 
@@ -177,7 +179,7 @@ class ProtImportFiles(ProtImport):
             return createLink
         
     def iterFiles(self):
-        """ Iterate throught the files matched with the pattern.
+        """ Iterate through the files matched with the pattern.
         Provide the fileName and fileId.
         """
         filePaths = self.getMatchFiles()

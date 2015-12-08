@@ -33,6 +33,7 @@
 
 #include <data/phantom.h>
 #include "project_crystal.h"
+#include <data/ctf.h>
 
 /**@defgroup ProjectionProgram project (Generate projections from a volume)
    @ingroup ReconsLibrary */
@@ -170,6 +171,11 @@ public:
     Angle_range tilt_range;
     /// Psi angle range
     Angle_range psi_range;
+
+    //Do phase flip
+    bool doPhaseFlip;
+    //Apply shift
+    bool applyShift;
 
     /// Document filename
     FileName fn_angle;

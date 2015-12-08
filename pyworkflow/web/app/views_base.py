@@ -39,6 +39,9 @@ def VARS_base(request, context):
                     #ABSOLUTE PATH URL CONFIG
                     'abs_url': django_settings.ABSOLUTE_URL, 
                     'config': getResourceJs('config'),
+                    'js_root': getResourceJs(),
+                    'css_root': getResourceCss(),
+
                     #OTHER
                     'msg': messages,
                     'color': colors,

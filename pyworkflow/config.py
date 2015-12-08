@@ -85,6 +85,15 @@ def loadHostsConf(hostsConf):
                     return cp.get(hostName, var).replace('%_(', '%(')
                 else:
                     return default
+                
+            def getDict(var):
+                od = OrderedDict()
+
+                if cp.has_option(hostName, var):
+                    for key, value in json.loads(get(var)).iteritems():
+                        od[key] = value                
+                
+                return od
 
             host.setScipionHome(get('SCIPION_HOME', os.environ['SCIPION_HOME']))
             host.setScipionConfig(get('SCIPION_CONFIG'))
@@ -94,15 +103,19 @@ def loadHostsConf(hostsConf):
             host.mpiCommand.set(get('PARALLEL_COMMAND'))
             host.queueSystem = pwhosts.QueueSystemConfig()
             host.queueSystem.name.set(get('NAME'))
-            host.queueSystem.mandatory.set(get('MANDATORY'))
-            host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
-            host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
-            host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
-            host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
-
-            host.queueSystem.queues = OrderedDict()
-            for qName, qValues in json.loads(get('QUEUES')).iteritems():
-                host.queueSystem.queues[qName] = qValues
+            
+            # If the NAME is not provided or empty
+            # do no try to parse the rest of Queue parameters
+            if host.queueSystem.hasName(): 
+                host.queueSystem.setMandatory(get('MANDATORY', 0))
+                host.queueSystem.submitPrefix.set(get('SUBMIT_PREFIX', ''))
+                host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
+                host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
+                host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
+                host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
+    
+                host.queueSystem.queues = getDict('QUEUES')
+                host.queueSystem.queuesDefault = getDict('QUEUES_DEFAULT')
                 
             hosts[hostName] = host
 
@@ -149,7 +162,41 @@ def loadProtocolsConf(protocolsConf):
         traceback.print_exc()
         sys.exit('Failed to read settings. The reported error was:\n  %s\n'
                  'To solve it, delete %s and run again.' % (e, protocolsConf))
+        
 
+def loadWebConf():
+    """ Load configuration parameters to be used in web.
+    By default read from: scipion.conf
+    """
+    # Read menus from users' config file.
+    cp = ConfigParser()
+    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    webConf = OrderedDict()
+
+    confFile = os.environ['SCIPION_CONFIG']
+    
+    assert cp.read(confFile) != [], 'Missing file %s' % confFile
+
+    # Set options from WEB main section
+    def setw(option, default):
+        if cp.has_option('WEB', option):
+            webConf[option] = cp.get('WEB', option)
+        else: 
+            webConf[option] = default
+            
+    setw('SITE_URL', 'scipion.cnb.csic.es')
+    setw('ABSOLUTE_URL', '')
+    
+    # Load some parameters per protocol
+    protocols = OrderedDict()
+    webConf['PROTOCOLS'] = protocols
+    
+    if cp.has_section('WEB_PROTOCOLS'):
+        for protName in cp.options('WEB_PROTOCOLS'):
+            protocols[protName] = json.loads(cp.get('WEB_PROTOCOLS', protName)) 
+    
+    return webConf
+    
 
 class ProjectSettings(pwobj.OrderedObject):
     """ Store settings related to a project. """

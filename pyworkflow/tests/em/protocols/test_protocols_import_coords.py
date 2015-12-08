@@ -21,11 +21,9 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # ***************************************************************************/
 
-import os
-from itertools import izip
-
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportCoordinates, ProtImportMicrographs
+
 
 
 class TestImportBase(BaseTest):
@@ -33,8 +31,7 @@ class TestImportBase(BaseTest):
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
-        cls.dsMda = DataSet.getDataSet('mda')
-        cls.dsRelion = DataSet.getDataSet('relion_tutorial')
+        #cls.dsRelion = DataSet.getDataSet('relion_tutorial')
         cls.dsGroel = DataSet.getDataSet('groel')
         
     def checkOutput(self, prot, outputName, conditions=[]):
@@ -50,10 +47,6 @@ class TestImportBase(BaseTest):
     
 class TestImportCoordinates(TestImportBase):
 
-
-
-
-
     def testImportCoordinates(self):
         #First, import a set of micrographs
         protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.dsXmipp.getFile('allMics'), samplingRate=1.237, voltage=300)
@@ -63,15 +56,18 @@ class TestImportCoordinates(TestImportBase):
 
         prot1 = self.newProtocol(ProtImportCoordinates,
                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
-                                 filesPath=self.dsXmipp.getFile('posSupervisedDir'),
+                                 filesPath=self.dsXmipp.getFile('pickingXmipp'),
                                  filesPattern='*.pos', boxSize=550,
-                                 scale=5.,
+                                 scale=3.,
                                  invertX=False,
                                  invertY=False
                                  )
         prot1.inputMicrographs.set(protImport.outputMicrographs)
         prot1.setObjLabel('import coords from xmipp ')
         self.launchProtocol(prot1)
+        
+        # Make sure that all 264 coordinates where correctly imported
+        self.assertTrue(prot1.outputCoordinates.getSize()==264)
 
         # prot2 = self.newProtocol(ProtImportCoordinates,
         #                          importFrom=ProtImportCoordinates.IMPORT_FROM_RELION,
@@ -88,7 +84,7 @@ class TestImportCoordinates(TestImportBase):
         prot3 = self.newProtocol(ProtImportCoordinates,
                                  importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.dsXmipp.getFile('boxingDir'),
-                                 filesPattern='info/*_info.json', boxSize=550,
+                                 filesPattern='*_info.json', boxSize=550,
                                  scale=5.,
                                  invertX=False,
                                  invertY=False)

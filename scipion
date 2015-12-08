@@ -30,15 +30,17 @@ Main entry point to scipion. It launches the gui, tests, etc.
 """
 import sys
 import os
-from os.path import join, exists, dirname, basename
-import time
+from os.path import join, exists, dirname
+
 try:
     from ConfigParser import ConfigParser, ParsingError
 except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-__version__ = 'v.0.1.5 Phosphorus'
+__version__ = 'v1.0.0'
+__nickname__ = 'Augusto'
+__releasedate__ = '15 Jan 2016'
 
 
 # This script tries to run ok with any python version. So we cannot
@@ -106,6 +108,7 @@ for confFile in [SCIPION_CONFIG, SCIPION_LOCAL_CONFIG,
 # directories and packages.
 VARS = {
     'SCIPION_HOME': SCIPION_HOME,
+    'SCIPION_VERSION': __version__,
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
     'SCIPION_PYTHON': 'python',
     'SCIPION_CONFIG': SCIPION_CONFIG,
@@ -144,6 +147,7 @@ try:
     LD_LIBRARY_PATH = os.pathsep.join(
         [join(SCIPION_SOFTWARE, 'lib'),
          BUILD['MPI_LIBDIR'],
+         BUILD['CUDA'],
          os.environ.get('LD_LIBRARY_PATH', '')]
     )
     PYTHONPATH = os.pathsep.join(
@@ -209,6 +213,12 @@ def runApp(app, args='', chdir=True):
     runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args), chdir)
 
 
+def printVersion():
+    """ Print Scipion version """
+    # Print the version and some more info
+    sys.stdout.write('\nScipion %s (%s)\n\n' % (__version__, __releasedate__))
+    
+
 
 #
 # Modes (first argument given to scipion).
@@ -234,11 +244,13 @@ MODE_PROTOCOLS = 'protocols'
 MODE_STATS = 'stats'
 MODE_ENV = 'printenv'
 MODE_RUN = 'run'
+MODE_PYTHON = 'python'
 MODE_TUTORIAL = 'tutorial'
 MODE_DEPENDENCIES = 'deps'
 
 
 def main():
+    printVersion()
     # See in which "mode" the script is called. By default, it's MODE_MANAGER.
     n = len(sys.argv)
     if n > 1:
@@ -274,17 +286,19 @@ def main():
         else:
             option = 'django'
 
-        if option in ['django', 'collectstatic', 'gunicorn']:
-            manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
+        manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
+
+        if option in ['django', 'gunicorn']:
+
             if option == 'django':
                 args = 'runserver 0.0.0.0:8000'
             elif option == 'gunicorn':
                 args = 'run_gunicorn -b 0.0.0.0:%s' % sys.argv[3]
-            elif option == MODE_COLLECTSTATIC:
-                args = 'collectstatic'
-            runScript('%s %s' % (manage, args))
         else:
-            sys.stdout.write("\nERROR: invalid option '%s' for mode %s.\n" % (option, MODE_WEBSERVER))
+            args = option
+            sys.stdout.write("\nPassing %s straight to manage.py in %s mode.\n" % (args, MODE_WEBSERVER))
+
+        runScript('%s %s' % (manage, args))
 
     elif mode == MODE_TESTS or mode == MODE_TEST:
         runScript('scripts/run_tests.py %s' % ' '.join(sys.argv[2:]))
@@ -330,16 +344,20 @@ def main():
         args = sys.argv[2:]
 
         if '--help' in args:
-            print("""usage: %s [<target>] [--no-scipy] [--no-opencv] [--show]
+            print("""Usage: %s [<target>] [--no-scipy] [--no-opencv] [--show]
 
 Installs Scipion. Also used to install only part of it, as specified
 in the <target>, or to add extra em packages to Scipion.
 
 Arguments:
   <target>      a library, a python module, an em package or a xmipp file
+   -j N         where N is the number of processors to use during installation
+  --help        show this help message
   --show        just show what would be done, without actually installing
   --no-opencv   do not install opencv (big) or anything that depends on it
   --no-scipy    do not install scipy or anything that depends on it
+  --no-xmipp    use this option only after a successful compilation of Xmipp
+                to save some time when installing other packages 
 """ % ' '.join(sys.argv[:2]))
         else:
             # Create folders if needed.
@@ -422,7 +440,7 @@ Arguments:
         runApp('gitstats/gitstats', args=[SCIPION_HOME, statsDir])
 
     elif mode == MODE_VERSION:
-        sys.stdout.write('%s\n' % __version__)
+        # Just exit, Scipion version will be printed anyway
         sys.exit(0)
 
     elif mode == MODE_RUNPROTOCOL:
@@ -433,7 +451,7 @@ Arguments:
         runApp(protocolApp, args=sys.argv[3:])
         
     elif mode == MODE_PROTOCOLS:
-        runApp('pw_protocol_list.py')
+        runApp('pw_protocol_list.py', args=sys.argv[2:])
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
@@ -445,6 +463,10 @@ Arguments:
     elif mode == MODE_RUN:
         # Run any command with the environment of scipion loaded.
         runCmd(' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
+        
+    elif mode == MODE_PYTHON:
+        runScript(' '.join(['"%s"' % arg for arg in sys.argv[2:]]), 
+                  chdir=False)
 
     elif mode == MODE_TUTORIAL:
         runApp('pw_tutorial.py', sys.argv[2:])
@@ -485,6 +507,8 @@ MODE can be:
     last                   Same as 'project last'
 
     run COMMAND [ARG ...]  Run command in the Scipion environment.
+    
+    python [ARG ...]       Shortcut to 'scipion run python ...'
 
     stats                  Write git statistics to the data/stats folder.
 

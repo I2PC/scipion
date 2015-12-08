@@ -764,7 +764,7 @@ public:
     MultidimArray<std::complex<double> > Fsum;
 };
 
-/** Fourier-space rotational Cross-Correlation Funtion
+/** Fourier-space rotational Cross-Correlation Function
  *
  *  This function returns the rotational cross-correlation
  *  function of two complex Polars M1 and M2 using the

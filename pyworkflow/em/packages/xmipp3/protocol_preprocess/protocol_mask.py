@@ -70,12 +70,13 @@ class XmippProtMask():
         
         form.addParam('fillType', EnumParam, 
                       choices=['value', 'min', 'max', 'avg'], 
+                      condition='source==%d' % SOURCE_GEOMETRY,
                       default=MASK_FILL_VALUE,
                       label="Fill with ", display=EnumParam.DISPLAY_COMBO,
                       help='Select how are you going to fill the pixel values outside the mask. ')
         
         form.addParam('fillValue', IntParam, default=0, 
-                      condition='fillType == %d' % MASK_FILL_VALUE,
+                      condition='fillType == %d and source==%d' % (MASK_FILL_VALUE,SOURCE_GEOMETRY),
                       label='Fill value',
                       help='Value to fill the pixel values outside the mask. ')
     
@@ -93,12 +94,13 @@ class XmippProtMask():
         else:
             fillValue = self.getEnumText('fillType')
         
-        self._args += " --substitute %(fillValue)s "
-        
         if self.source == SOURCE_GEOMETRY:
+            self._program = "xmipp_transform_mask"
             self._args += self._getGeometryCommand()
+            self._args += " --substitute %(fillValue)s "
         elif self.source == SOURCE_MASK:
-            self._args += ("--mask binary_file %s" % outputMaskFile)
+            self._program = "xmipp_image_operate"
+            self._args += (" --mult %s" % outputMaskFile)
         else:
             raise Exception("Unrecognized mask type: %d" % self.source)
         
@@ -114,7 +116,7 @@ class XmippProtMask():
     
     def maskStep(self, args):
         args += self._getExtraMaskArgs()
-        self.runJob('xmipp_transform_mask', args)            
+        self.runJob(self._program, args)            
         
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getExtraMaskArgs(self):
@@ -157,6 +159,20 @@ class XmippProtMask():
             messages.append('filled with %s value' % self.getEnumText('fillType'))
 
         return messages
+    
+    def _validateDimensions(self, inputSetName, inputMaskName, errorMsg):
+        """ Validate that input set (either particles or volumens) have the same
+        dimension than the input mask.
+        """
+        errors = []
+        
+        if self.source == SOURCE_MASK:
+            px, py, _ = self.getAttributeValue(inputSetName).getDim()
+            mx, my, _ = self.getAttributeValue(inputMaskName).getDim()
+            if px != mx or py != my:
+                errors.append(errorMsg)
+                
+        return errors        
         
         
 class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProtMask, XmippGeometricalMask2D):
@@ -195,6 +211,12 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProt
         messages += XmippProtMask._methods(self, XmippGeometricalMask2D)
 
         return messages
+    
+    def _validate(self):
+        return XmippProtMask._validateDimensions(self, 
+                                                 'inputParticles', 'inputMask',
+                                                 'Input particles and mask should '
+                                                 'have same dimensions.')
     
     
 class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, XmippGeometricalMask3D):
@@ -241,3 +263,10 @@ class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, 
         messages += XmippProtMask._methods(self, XmippGeometricalMask3D)
 
         return messages
+    
+    def _validate(self):
+        return XmippProtMask._validateDimensions(self, 
+                                                 'inputVolumes', 'inputMask',
+                                                 'Input volumes and mask should '
+                                                 'have same dimensions.')
+        

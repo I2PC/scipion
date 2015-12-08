@@ -498,7 +498,7 @@ void Running_PCA::new_sample(const Matrix1D<double> &sample)
         else
         {
             // If there are enough samples
-            // Substract the sample mean to have a zero-mean vector
+            // Subtract the sample mean to have a zero-mean vector
             if (j == 0)
                 un -= current_sample_mean;
 

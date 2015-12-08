@@ -125,7 +125,8 @@ function downloadTestdata(elm){
 function createServProject(elm) {
 	var projName = "map"+randomString(16, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
-
+	
+	var projectUrl = "http://" + document.domain + getSubDomainURL() + "/m_content/?p="+ projName
 	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
 	if(selected != undefined){
 		URL += "&testData="+selected;
@@ -140,8 +141,8 @@ function createServProject(elm) {
 			
 			var msg = "<p>Your <strong>url to access </strong> this <strong>project</strong> is:</p>" +
 			"<br /><p><h3>" + 
-			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/m/content/?p="+ projName+ "'>" +
-			"http://scipion.cnb.csic.es/m/content/?p="+ projName+ "</a>"+
+			"<a style='color:firebrick;' href='"+ projectUrl + "'>" +
+			projectUrl + "</a>"+
 			"</h3></p><br />" +
 			"<p>The project will be <strong>DELETED TWO WEEKS</strong> after its creation.</p><br />"+
             "<p>Please <strong>SAVE or BOOKMARK this url securely</strong> " +
@@ -190,13 +191,13 @@ function getRefTestData(id){
 	var ref = ""
 	switch(id){
 		case "bpv":
-			ref = "<strong>Bovine Papillomavirus</strong> (8 averages, 100x100 pixels, <a href='http://dx.doi.org/10.1073/pnas.0914604107' style='color:firebrick;' target='_blank'>from Wolf,M. et al, 2010.</a>)"
+			ref = "<strong>Bovine Papillomavirus</strong> (8 averages, 100x100 pixels, <a href='http://dx.doi.org/10.1073/pnas.0914604107' style='color:firebrick;' target='_blank'>from Wolf,M. et al. PNAS, 2010.</a>)"
 			break;
 		case "groel":
-			ref = "<strong>GroEL</strong> (44 averages, 64x64 pixels, <a href='http://dx.doi.org/10.1016/j.str.2004.05.006' style='color:firebrick;' target='_blank'>from Ludtke, S.J. et al, 2004</a>)"
+			ref = "<strong>GroEL</strong> (44 averages, 64x64 pixels, <a href='http://dx.doi.org/10.1016/j.str.2004.05.006' style='color:firebrick;' target='_blank'>from Ludtke, S.J. et al. Structure, 2004</a>)"
 			break;
 		case "ribosome":
-			ref = "<strong>Eukaryotic Ribosome</strong> (32 averages, 64x64 pixels, <a href='ftp://ftp.ebi.ac.uk/pub/databases/emtest/SPIDER_FRANK_data/' style='color:firebrick;' target='_blank'>from J.Frank lab</a>)"
+			ref = "<strong>Eukaryotic Ribosome</strong> (32 averages, 64x64 pixels, <a href='ftp://ftp.ebi.ac.uk/pub/databases/emtest/SPIDER_FRANK_data/' style='color:firebrick;' target='_blank'>from J.Frank lab, data at EBI.</a>)"
 			break;
 	}
 	return ref;

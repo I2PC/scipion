@@ -35,8 +35,8 @@ This will depend on the 'localhost' configuration
 
 B. Remote execution:
 1- Establish a connection with remote host for protocol execution
-2- Copy necesary files to remote host.
-3- Run a local proccess (for local execution, see case A) in the remote host
+2- Copy necessary files to remote host.
+3- Run a local process (for local execution, see case A) in the remote host
 4- Get the result back after launching remotely
 """
 import os
@@ -56,7 +56,7 @@ LOCALHOST = 'localhost'
 
 def launch(protocol, wait=False, stdin=None, stdout=None, stderr=None):
     """ This function should be used to launch a protocol
-    This function will decide wich case, A or B will be used.
+    This function will decide which case, A or B will be used.
     """
     if _isLocal(protocol):
         jobId = _launchLocal(protocol, wait, stdin, stdout, stderr)
@@ -113,10 +113,11 @@ def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
                                                                      protocol.getDbPath(), 
                                                                      protStrId)
     hostConfig = protocol.getHostConfig()
-    useQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
+    useQueue = protocol.useQueue()
     # Check if need to submit to queue    
     if useQueue:        
-        submitDict = protocol.getSubmitDict()
+        submitDict = hostConfig.getQueuesDefault()
+        submitDict.update(protocol.getSubmitDict())
         submitDict['JOB_COMMAND'] = command
         jobId = _submit(hostConfig, submitDict)
     else:

@@ -381,7 +381,10 @@ size_t gotoTagDM3(MetaData &MD, int &nodeId, const std::string &tagsList)
         queryParentId.setValue(nodeId);
         queryTagname.setValue(tag);
         id = MD.firstObject(queries);
-        MD.getValue(MDL_DM3_NODEID, nodeId, id);
+        if (id != BAD_OBJID)
+        {
+        	MD.getValue(MDL_DM3_NODEID, nodeId, id);
+        }
     }
     return id;
 }
@@ -442,7 +445,7 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
     DM3head * header = new DM3head;
     int dummy;
 
-    // Check Machine endianess
+    // Check Machine endianness
     bool isLE = IsLittleEndian();
 
     xmippFREAD(&header->fileVersion, sizeof(int), 1, fimg, isLE);
@@ -538,9 +541,12 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
             nodeID = parentID;
             id = gotoTagDM3(header->tags, nodeID, "ImageTags,Acquisition,Frame,CCD,Pixel Size (um)");
             //            header->tags.nextObject();
-            header->tags.getValue(MDL_DM3_VALUE, vValue, id);
-            dataHeaders[header->nIm].pixelHeight = vValue[0]*1e4;
-            dataHeaders[header->nIm].pixelWidth  = vValue[1]*1e4;
+            if (id != BAD_OBJID)
+            {
+				header->tags.getValue(MDL_DM3_VALUE, vValue, id);
+				dataHeaders[header->nIm].pixelHeight = vValue[0]*1e4;
+				dataHeaders[header->nIm].pixelWidth  = vValue[1]*1e4;
+            }
 
             //TODO: Do I have to include FLIP?!?!? which? vertical or horizontal?
             header->nIm++;

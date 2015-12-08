@@ -83,8 +83,11 @@ public:
     /// New ctf sampling rate
     double samplingRate;
 
+    /// Simple algorithm
+    int simpleBins;
+
     /// Compute 1D CTF using avg(defocusU + defocusV)/2 as defocus.
-    /// This approach speed up the computation and is recommended for very larg data sets
+    /// This approach speed up the computation and is recommended for very large data sets
     bool do1Dctf;
 
     /// Available memory, set mmap to on if more memory is needed
@@ -107,6 +110,9 @@ public:
     // Vector with average defocus value per micrograph and per group
     std::vector<double> mics_defocus;
 
+    // Input set of images
+    MetaData ImagesMD;
+
     //Metadata with ctfs sorted by average defocus
     MetaData sortedCtfMD;
 
@@ -119,6 +125,8 @@ public:
     // Pointers
     std::vector< std::vector <int> > pointer_group2mic;
 
+    // Set of labels by which the input CTFs have been aggregated
+    std::vector<MDLabel> groupbyLabels;
 public:
 
     /** Read parameters from command line. */
@@ -144,6 +152,9 @@ public:
 
     /** Split based onto defocus values  given in a docfile */
     void manualRun();
+
+    /** Split based on bins */
+    void simpleRun();
 
     /** Write output */
     void writeOutputToDisc();

@@ -327,7 +327,7 @@ public:
         Dmax and Dmin are used to invert the image and or compute the
         trnasmitance
 
-        Returns 0 if an error ocurred and 1 if everything is all right*/
+        Returns 0 if an error occurred and 1 if everything is all right*/
     int scissor(const Particle_coords &P, MultidimArray<double> &result,
                 double Dmin, double Dmax,
                 double scaleX = 1, double scaleY = 1, bool only_check = false);
@@ -616,6 +616,9 @@ public:
 
     /// Adjust passing matrix
     void adjustPassingMatrix(int _muX, int _muY, int _mtX, int _mtY);
+
+    /// Calculate passing matrix
+    void calculatePassingMatrix();
 
     /// Pass to tilted
     void passToTilted(int _muX, int _muY, int &_mtX, int &_mtY);

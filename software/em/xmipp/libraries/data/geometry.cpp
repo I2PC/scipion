@@ -362,6 +362,88 @@ bool point_inside_polygon(const std::vector< Matrix1D<double> > &polygon,
     return retval;
 }
 
+/* Affine transformation ---------------------------------------------------*/
+/*
+ * Given a point u = (ux, uy), its affine point, t = (tx,ty) is defined as t = Au + T, where, A is a 2x2 matrix, and T a translation vector
+ * An affinity is completely determined though three pairs of pois u-t {u1-t1, u2-t2, u3,t3}.
+ * This function makes uses of these three pairs and return the matrix A and the translation T
+ */
+void def_affinity(double u1x, double u1y, double u2x, double u2y, double u3x, double u3y, double t1x,
+		double t1y, double t2x, double t2y, double t3x, double t3y, Matrix2D<double> &A, Matrix1D<double> &T, Matrix2D<double> &invW)
+{
+	double den = (u1x*u2y - u1y*u2x - u1x*u3y + u1y*u3x + u2x*u3y - u2y*u3x);
+
+	//std::cout << "den" <<k << std::endl;
+
+	invW.initZeros(6,6);
+	MAT_ELEM(invW,0,0) = MAT_ELEM(invW,2,3) = (u2y - u3y)/den;
+	MAT_ELEM(invW,0,1) = MAT_ELEM(invW,2,4) = -(u1y - u3y)/den;
+	MAT_ELEM(invW,0,2) = MAT_ELEM(invW,2,5) = (u1y - u2y)/den;
+
+	MAT_ELEM(invW,1,0) = MAT_ELEM(invW,3,3) = -(u2x - u3x)/den;
+	MAT_ELEM(invW,1,1) = MAT_ELEM(invW,3,4) = (u1x - u3x)/den;
+	MAT_ELEM(invW,1,2) = MAT_ELEM(invW,3,5) = -(u1x - u2x)/den;
+
+	MAT_ELEM(invW,4,0) = MAT_ELEM(invW,5,3) = (u2x*u3y - u2y*u3x)/den;
+	MAT_ELEM(invW,4,1) = MAT_ELEM(invW,5,4) = -(u1x*u3y - u1y*u3x)/den;
+	MAT_ELEM(invW,4,2) = MAT_ELEM(invW,5,5) = (u1x*u2y - u1y*u2x)/den;
+
+
+
+	Matrix1D<double> t_vec;
+	t_vec.initZeros(6);
+	VEC_ELEM(t_vec,0) = t1x;
+	VEC_ELEM(t_vec,1) = t2x;
+	VEC_ELEM(t_vec,2) = t3x;
+	VEC_ELEM(t_vec,3) = t1y;
+	VEC_ELEM(t_vec,4) = t2y;
+	VEC_ELEM(t_vec,5) = t3y;
+
+	double dettt = invW.det();
+	//std::cout << "determinant" << dettt << std::endl;
+
+	//Matrix1D<double> sol = invW*t_vec;
+	//std::cout << "sol = " << sol << std::endl;
+
+	if (fabs(dettt) <  DBL_EPSILON )
+	{
+		//std::cout << "I'm in if" << std::endl;
+		A.initZeros(2,2);
+	    T.initZeros(2);
+	    VEC_ELEM(T,0) = DBL_MAX ;
+	    VEC_ELEM(T,1) = DBL_MAX ;
+	}
+	else
+	{
+		//std::cout << "I'm in else" << std::endl;
+		Matrix1D<double> sol = invW*t_vec;
+		//std::cout << "sol = " << sol << std::endl;
+
+		A.initZeros(2,2);
+		T.initZeros(2);
+		//std::cout << A << std::endl;
+		MAT_ELEM(A,0,0) = VEC_ELEM(sol,0);
+		MAT_ELEM(A,0,1) = VEC_ELEM(sol,1);
+		MAT_ELEM(A,1,0) = VEC_ELEM(sol,2);
+		MAT_ELEM(A,1,1) = VEC_ELEM(sol,3);
+		VEC_ELEM(T,0) = VEC_ELEM(sol,4);
+		VEC_ELEM(T,1) = VEC_ELEM(sol,5);
+
+		//std::cout << "A ==" << sol << std::endl;
+	}
+}
+
+
+
+
+/* Area of a triangle ------------------------------------------------------ */
+/*Given the coordinates (x1,y1), (x2,y2), (x3,y3), of three points, this function calculates the area of the triangle*/
+double triangle_area(double x1, double y1, double x2, double y2, double x3, double y3)
+{
+    double trigarea = ((x2 - x1)*(y3 - y1) - (x3 - x1)*(y2 - y1))/2;
+    return (trigarea > 0) ? trigarea : -trigarea;
+}
+
 /* Line Plane Intersection ------------------------------------------------- */
 /*Let ax+by+cz+D=0 the equation of your plane
 (if your plane is defined by a normal vector N + one point M, then
@@ -413,7 +495,7 @@ YY(intersection_point)=y;
 ZZ(intersection_point)=z;
 
 return 0 if sucessful
-return -1 if line paralell to plane
+return -1 if line parallel to plane
 return +1 if line in the plane
 
 TEST data (1)
@@ -1008,7 +1090,7 @@ double intersection_unit_cylinder(
     if (A == 0)
     {
         if (C > 0)
-            return 0;       // Paralell ray outside the cylinder
+            return 0;       // Parallel ray outside the cylinder
         else
             return 1 / ZZ(u); // return height
     }

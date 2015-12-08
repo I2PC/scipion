@@ -68,7 +68,7 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
                       label='add soft-edge width (px)', condition='doAutoMask',
                       help='The extended binary mask is further extended with a raised-cosine soft'
                            'edge of the specified width.')
-        form.addParam('mask', PointerParam, pointerClass='Mask',
+        form.addParam('mask', PointerParam, pointerClass='VolumeMask',
                       label='Provide a mask', allowsNull=True,
                       condition='not doAutoMask',
                       help='Use this to skip auto-masking by providing your own mask') 
@@ -174,7 +174,6 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
         
     #--------------------------- STEPS functions --------------------------------------------
     def postProcessStep(self, params):
-        
         self.runJob('relion_postprocess', params)
         
     def createOutputStep(self):

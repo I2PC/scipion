@@ -9,6 +9,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Stroke;
@@ -17,6 +18,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Particle;
@@ -29,8 +31,8 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
 	public final static BasicStroke dashedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	public final static BasicStroke continuousst = new BasicStroke(2.0f);
-	public final static BasicStroke activedst = new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	public final static BasicStroke activecst = new BasicStroke(3.0f);
+	public final static BasicStroke activest = new BasicStroke(3.0f);
+	//public final static BasicStroke activedst = new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
         
 	protected ParticlePickerJFrame frame;
 	protected Micrograph micrograph;
@@ -80,41 +82,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			@Override
 			public void keyPressed(KeyEvent e)
 			{
-
-				PickerParticle active = getActive();
-				if (active == null)
-					return;
-				int step = 1;
-				int code = e.getKeyCode();
-				if (code == KeyEvent.VK_UP)
-				{
-					setActiveMoved(true);
-					manageActive(active.getX(), active.getY() - step);
-				}
-				else if (code == KeyEvent.VK_DOWN)
-				{
-					setActiveMoved(true);
-					manageActive(active.getX(), active.getY() + step);
-				}
-				else if (code == KeyEvent.VK_LEFT)
-				{
-					setActiveMoved(true);
-					manageActive(active.getX() - step, active.getY());
-				}
-				else if (code == KeyEvent.VK_RIGHT)
-				{
-					setActiveMoved(true);
-					manageActive(active.getX() + step, active.getY());
-				}
-				else if (code == KeyEvent.VK_SPACE)
-				{
-					getFrame().circlechb.setSelected(tongleSetSelected);
-					getFrame().rectanglechb.setSelected(tongleSetSelected);
-					tongleSetSelected = !tongleSetSelected;
-				}
-				else
-					return;// do not repaint if not needed
-				repaint();
+				ParticlePickerCanvas.this.keyPressed(e);
 
 			}
 		});
@@ -127,7 +95,60 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	}
 	
-
+	public void keyPressed(KeyEvent e)
+	{
+		PickerParticle active = getActive();
+		int step = 1;
+		int code = e.getKeyCode();
+		int x = screenX(imp.getWidth()/2);
+		int y = screenY(imp.getHeight()/2);
+		if(active != null)
+		{
+			if (code == KeyEvent.VK_UP)
+			{
+				setActiveMoved(true);
+				manageActive(active.getX(), active.getY() - step);
+			}
+			else if (code == KeyEvent.VK_DOWN)
+			{
+				setActiveMoved(true);
+				manageActive(active.getX(), active.getY() + step);
+			}
+			else if (code == KeyEvent.VK_LEFT)
+			{
+				setActiveMoved(true);
+				manageActive(active.getX() - step, active.getY());
+			}
+			else if (code == KeyEvent.VK_RIGHT)
+			{
+				setActiveMoved(true);
+				manageActive(active.getX() + step, active.getY());
+			}
+		}
+		if (code == KeyEvent.VK_SPACE)
+		{
+			getFrame().circlechb.setSelected(tongleSetSelected);
+			getFrame().rectanglechb.setSelected(tongleSetSelected);
+			tongleSetSelected = !tongleSetSelected;
+		}
+		
+		
+		else
+			return;// do not repaint if not needed
+		repaint();
+	}
+	
+	public void zoomIn(int sx, int sy)
+	{
+		super.zoomIn(sx, sy);
+		getFrame().displayZoom(getMagnification());
+	}
+	
+	public void zoomOut(int sx, int sy)
+	{
+		super.zoomOut(sx, sy);
+		getFrame().displayZoom(getMagnification());
+	}
 
 	protected abstract Particle getLastParticle();
 
@@ -151,13 +172,10 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	}
 
 	
-	@Override
-	public void mouseWheelMoved(MouseWheelEvent e)
-	{
-		super.mouseWheelMoved(e);
-		if (e.isShiftDown())// zoom change detected
-			getFrame().displayZoom(getMagnification());
-	}
+
+	
+	
+
 
 	public void moveTo(PickerParticle p)
 	{
@@ -201,10 +219,10 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	{
 		if (getFrame().isPickingAvailable(e))
 		{
-				if (!getFrame().isEraserMode())
-					setCursor(crosshairCursor);
-				else 
-					setCursor(eraserCursor);
+			if (!getFrame().isEraserMode())
+				setCursor(crosshairCursor);
+			else 
+				setCursor(eraserCursor);
 		}
 	}
 
@@ -245,7 +263,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		int radius = (int) (size / 2. * magnification);
 		x = getXOnImage(x);
 		y = getYOnImage(y);
-		int distance = Math.min(15, (int) (radius/3. * magnification));
+		int distance = Math.min(10, (int) (radius/4. * magnification));
 
 		if (getFrame().isShapeSelected(Shape.Rectangle) || all)
 			g2.drawRect(x - radius, y - radius, length, length);
@@ -253,10 +271,10 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			g2.drawOval(x - radius, y - radius, length, length);
 		if (getFrame().isShapeSelected(Shape.Center) || all)
 		{
+			g2.setStroke(activest);
 			g2.drawLine(x, y - distance, x, y + distance);
 			g2.drawLine(x + distance, y, x - distance, y);
 		}
-
 	}
 
 

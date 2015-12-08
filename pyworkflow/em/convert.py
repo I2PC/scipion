@@ -89,7 +89,11 @@ class ImageHandler(object):
         else:
             raise Exception('Can not match object %s to (index, location)' % type(location))
 
-        return os.path.exists(fn.replace(':mrc', ''))
+        # Remove filename format specification such as :mrc, :mrcs or :ems
+        if ':' in fn:
+            fn = fn.split(':')[0]
+
+        return fn
         
     def convert(self, inputObj, outputObj, dataType=None):
         """ Convert from one image to another.
@@ -172,20 +176,38 @@ class ImageHandler(object):
         return xmipp.compareTwoImageTolerance(loc1, loc2, tolerance)
 
     def computeAverage(self, inputSet):
-        n = inputSet.getSize()
-        if n > 0:
-            imageIter = iter(inputSet)
-            img = imageIter.next()
-            avgImage = self.read(img)
-
-            for img in imageIter:
-                self._img.read(self._convertToLocation(img))
-                avgImage.inplaceAdd(self._img)
-
-            avgImage.inplaceDivide(n)
-            return avgImage
+        """ Compute the average image either from filename or set.
+        If inputSet is a filename, we will read the whole stack
+        and compute the average from all images.
+        If inputSet is a SetOfImages subclass, we will iterate
+        and compute the average from all images.
+        """
+        if isinstance(inputSet, basestring):
+            _, _, _, n = self.getDimensions(inputSet)
+            if n:
+                avgImage = self.read((1, inputSet))
+                
+                for i in range(2, n+1):
+                    self._img.read((i, inputSet))
+                    avgImage.inplaceAdd(self._img)
+                
+                avgImage.inplaceDivide(n)
+                return avgImage
         else:
-            return None
+            n = inputSet.getSize()
+            if n:
+                imageIter = iter(inputSet)
+                img = imageIter.next()
+                avgImage = self.read(img)
+    
+                for img in imageIter:
+                    self._img.read(self._convertToLocation(img))
+                    avgImage.inplaceAdd(self._img)
+    
+                avgImage.inplaceDivide(n)
+                return avgImage
+
+        return None
         
     def invertStack(self, inputFn, outputFn):
         #get input dim

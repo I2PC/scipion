@@ -149,6 +149,10 @@ private:
     */
     bool renameColumn(const std::vector<MDLabel> oldLabel, const std::vector<MDLabel> newlabel);
 
+    /** Insert a new register inserting input columns.
+     */
+    bool setObjectValues(const std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels, bool firstTime);
+
     /**Set the value of an object in an specified column.
      */
     bool setObjectValue(const int objId, const MDObject &value);
@@ -157,9 +161,13 @@ private:
      */
     bool setObjectValue(const MDObject &value);
 
+    /** Get the values of several objects.
+     */
+    bool getObjectsValues(const size_t objId, std::vector<MDLabel> labels, std::vector<MDObject> *values);
+
     /** Get the value of an object.
      */
-    bool getObjectValue(const int objId, MDObject &value);
+    bool getObjectValue(const int objId, MDObject  &value);
 
     /** This function will select some elements from table.
      * The 'limit' is the maximum number of object
@@ -168,6 +176,8 @@ private:
      * if no query is provided by default all are returned
      */
     void selectObjects(std::vector<size_t> &objectsOut, const MDQuery *queryPtr = NULL);
+
+    void finalizePreparedStmt(void);
 
     /** return metadata size
      *
@@ -230,8 +240,9 @@ private:
     int columnMaxLength(MDLabel column);
 
     /**Functions to implement set operations */
-    void setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operation);
-    void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel columnLeft, MDLabel columnRight,SetOperation operation);
+    void setOperate(MetaData *mdPtrOut, const std::vector<MDLabel> &columns, SetOperation operation);
+    void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, const std::vector<MDLabel> &columnsLeft,
+    		const std::vector<MDLabel> &columnsRight, SetOperation operation);
     /** Function to dump DB to file */
     bool operate(const String &expression);
 
@@ -263,6 +274,7 @@ private:
     bool dropTable();
     bool createTable(const std::vector<MDLabel> * labelsVector = NULL, bool withObjID=true);
     bool insertValues(double a, double b);
+    bool initializeGetObjectsValuesStatement(std::vector<MDLabel> labels);
     void prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt);
     bool execSingleStmt(const std::stringstream &ss);
     bool execSingleStmt(sqlite3_stmt *&stmt, const std::stringstream *ss = NULL);
@@ -278,6 +290,9 @@ private:
     static const char *zLeftover;
     static int rc;
     static sqlite3_stmt *stmt;
+
+    static std::stringstream preparedStream;	// Stream.
+    static sqlite3_stmt * preparedStmt;	// SQL statement.
 
     ///Non-static attributes
     int tableId;
@@ -304,7 +319,7 @@ class MDQuery
 public:
     int limit; ///< If distint of -1 the results will be limited to this value
     int offset; ///< If distint of 0, offset elements will be discarded
-    MDLabel orderLabel; ///< Label to wich apply sort of the results
+    MDLabel orderLabel; ///< Label to which apply sort of the results
     bool asc;
 
     /** Constructor. */
@@ -434,7 +449,7 @@ public:
  *  ///Remove all images that are disabled
  *  MetaData md1, md2;
  *  md1.removeObjects(MDValueEQ(MDL_ENABLED, -1));
- *  ///Import objects from md2 to md1 wich rot angle is 0.
+ *  ///Import objects from md2 to md1 which rot angle is 0.
  *  md1.importObjects(md2, MDValueEQ(MDL_ANGLE_ROT, 0.));
  *  @endcode
  */
@@ -592,7 +607,7 @@ public:
 ;//end of class MDExpression
 
 /** Query several conditions using AND and OR.
- * This kind of query if usefull if you want to check
+ * This kind of query if useful if you want to check
  * two conditions at the same time, for example, import
  * all images that are enabled and have rotational angle greater than 100.
  * @code

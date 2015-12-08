@@ -31,8 +31,6 @@ from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import EMObject
 from pyworkflow.utils.properties import Message
-from itertools import izip
-
 
 
 
@@ -90,7 +88,8 @@ class ProtExtractParticles(ProtParticles):
 
 
 class ProtParticlePicking(ProtParticles):
-
+    OUTPUT_PREFIX = 'outputCoordinates'
+    
     def _defineParams(self, form):
 
         form.addSection(label='Input')
@@ -141,6 +140,14 @@ class ProtParticlePicking(ProtParticles):
         suffix = str(count) if count > 1 else ''
         outputName = 'outputCoordinates' + suffix
         return getattr(self, outputName)
+    
+    def getCoordsTiltPair(self):
+        count = self.getOutputsSize()
+        if count == 0:
+            return None
+        suffix = str(count) if count > 1 else ''
+        outputName = 'outputCoordinatesTiltPair' + suffix
+        return getattr(self, outputName)
 
     def _createOutput(self, outputDir):
         micSet = self.getInputMicrographs()
@@ -175,10 +182,31 @@ class ProtParticlePicking(ProtParticles):
     def getCoordsDir(self):
         pass
 
+    def __getOutputSuffix(self):
+        """ Get the name to be used for a new output.
+        For example: outputCoordiantes7.
+        It should take into account previous outputs
+        and number with a higher value.
+        """
+        maxCounter = -1
+        for attrName, _ in self.iterOutputEM():
+            suffix = attrName.replace(self.OUTPUT_PREFIX, '')
+            try:
+                counter = int(suffix)
+            except:
+                counter = 1 # when there is not number assume 1
+            maxCounter = max(counter, maxCounter)
+            
+        return str(maxCounter+1) if maxCounter > 0 else '' # empty if not outputs
+        
     def registerCoords(self, coordsDir):
-        count = self.getOutputsSize()
-        suffix = str(count + 1) if count > 0 else ''
-        outputName = 'outputCoordinates' + suffix
+        """ This methods is usually inherited from all Pickers
+        and it is used from the Java picking GUI to register
+        a new SetOfCoordinates when the user click on +Particles button. 
+        """
+        suffix = self.__getOutputSuffix()
+        outputName = self.OUTPUT_PREFIX + suffix
+        
         from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
         inputset = self.getInputMicrographs()
         outputset = self._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
@@ -189,8 +217,3 @@ class ProtParticlePicking(ProtParticles):
         self._defineOutputs(**outputs)
         self._defineSourceRelation(self.inputMicrographs, outputset)
         self._store()
-
-
-
-
-

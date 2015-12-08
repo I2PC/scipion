@@ -138,6 +138,12 @@ class EmxImport():
                 
                 if objectClassName not in self.objDict:
                     errors.append("EMX object *%s* not found in EMX file:\n*%s*" % emxFile)
+        
+        if self.alignType != ALIGN_NONE:
+            f = open(emxFile)
+            if not 'transformationMatrix' in f.read():
+                errors.append("Align type different from None, but no transformation matrix found in file %s*" % emxFile)
+            f.close()
         return errors
     
     def validateMicrographs(self):
@@ -225,13 +231,17 @@ class ProtEmxExport(EMProtocol):
         from convert import exportData
         emxDir = self._getPath('emxData')
         xmlFile = self.outputPrefix.get() + '.emx'
+        
         if self.outputStack == self.STACK_SINGLE:
             binaryFile = self.outputPrefix.get() + '.mrc'
         else:
             binaryFile = None # None for binary file means to output one stack per micrograph
             
-        exportData(emxDir, self.inputSet.get(), ctfSet=self.ctfEstimation.get(), 
-                   xmlFile=xmlFile, binaryFile=binaryFile)
+        exportData(emxDir, 
+                   self.inputSet.get(), 
+                   ctfSet=self.ctfEstimation.get(), 
+                   xmlFile=xmlFile, 
+                   binaryFile=binaryFile)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

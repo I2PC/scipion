@@ -32,6 +32,7 @@
 #include <data/xmipp_threads.h>
 #include <data/xmipp_program.h>
 #include <vector>
+#include "fourier_filter.h"
 
 /**@defgroup ConvertVol2Pseudo ConvertVol2Pseudo
    @ingroup ReconsLibrary */
@@ -236,6 +237,9 @@ public:
     
     // Pointer to threads
     pthread_t *threadIds;
+
+    // Filter for the difference volume
+    FourierFilter Filter;
 };
 //@}
 #endif

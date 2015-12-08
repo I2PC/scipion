@@ -102,21 +102,27 @@ public class ScipionMetaData extends MetaData {
         Statement stmt = null;
         try {
         	String query;
-        	 c = getConnection();
+        	 c = getConnection(filename);
              stmt = c.createStatement();
              ResultSet rs;
         	if (preffix == null || preffix.equals(""))
             {
-                properties = new HashMap<String, String>();
-                String key, value;
-                query = "SELECT * FROM Properties;";
+        		query = "SELECT name FROM sqlite_master WHERE type='table' AND name='Properties';";
                 rs = stmt.executeQuery(query);
-
-                while (rs.next()) {
-                    key = rs.getString("key");
-                    value = rs.getString("value");
-                    properties.put(key, value);
-                }
+        		boolean exists = rs.next();
+        		if(exists)
+        		{
+	                properties = new HashMap<String, String>();
+	                String key, value;
+	                query = "SELECT * FROM Properties;";
+	                rs = stmt.executeQuery(query);
+	
+	                while (rs.next()) {
+	                    key = rs.getString("key");
+	                    value = rs.getString("value");
+	                    properties.put(key, value);
+	                }
+        		}
             }
             String name, alias, clsname;
             int type;
@@ -161,7 +167,8 @@ public class ScipionMetaData extends MetaData {
                 }
                 
                 type = getTypeMapping(clsname);
-
+                if(type == -1)
+                	continue;//complex object is empty, unless is matrix
                 labelscount++;
                 allowRender = isImage(name);
                 ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
@@ -594,8 +601,10 @@ public class ScipionMetaData extends MetaData {
         }
         if(type.equals("Boolean"))
             return MetaData.LABEL_INT;
-
-        return MetaData.LABEL_STRING;
+        
+        if(type.equals("String") || type.equals("Matrix") || type.equals("CsvList"))
+        	return MetaData.LABEL_STRING;
+        return -1;
     }
 
     public String getPreffix() {
@@ -728,7 +737,7 @@ public class ScipionMetaData extends MetaData {
             if(downsampleFactor == null)
                 downsampleFactor = 1.;
                 //read params from sqlite
-
+            
             return new EllipseCTF(id, Q0, Cs, downsampleFactor, Ts, kV, defU, defV, defAngle, D);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
@@ -772,9 +781,11 @@ public class ScipionMetaData extends MetaData {
         }
     }
     
-    public ColumnInfo getGeoMatrixColumn()
+    public ColumnInfo getGeoMatrixColumn(ColumnInfo ci)
     {
-        String column = isClassificationMd()? "_representative._transform._matrix" : "_transform._matrix";
+    	String column = "_transform._matrix";
+    	if(ci.labelName.contains("."))
+    		column = ci.labelName.substring(0, ci.labelName.lastIndexOf(".") + 1) + column;
         return getColumnInfo(column);
     }
     
@@ -822,7 +833,7 @@ public class ScipionMetaData extends MetaData {
             try {
                 String name, alias;
                 Object value;
-                c = getConnection();
+                c = getConnection(filename);
                 String columns = column.comment;
                 ColumnInfo indexci = null;
                 if(column.labelName.endsWith("_filename"))
@@ -1044,7 +1055,7 @@ public class ScipionMetaData extends MetaData {
     
         
 
-    protected Connection getConnection() throws ClassNotFoundException, SQLException
+    public static Connection getConnection(String filename) throws ClassNotFoundException, SQLException
     {
         Class.forName("org.sqlite.JDBC");
         
@@ -1179,5 +1190,56 @@ public class ScipionMetaData extends MetaData {
         
         return minMax;
     }
+    
+    public boolean containsMicrographsInfo() 
+    {
+    	return self.equals("Micrograph") || self.equals("Movie");
+    }
+
+	public String getSelf()
+	{
+		// TODO Auto-generated method stub
+		return self;
+	}
+	
+	public static boolean isScipionMetaData(String filename)
+	{
+		if (!filename.endsWith(".sqlite") && !filename.endsWith(".db"))
+				return false; 
+		//Now it will check if contains the required tables to be read as scipion metadata, otherwise will be read as xmipp metadata
+		Connection c;
+		Statement stmt;
+		ResultSet rs;
+		boolean result = true;
+		try
+		{
+			c = getConnection(filename);
+			stmt = c.createStatement();
+			String query = "SELECT name FROM sqlite_master WHERE type='table' AND name='Classes';";
+            rs = stmt.executeQuery(query);
+    		boolean exists = rs.next();
+    		if (!exists)
+    			result = false;
+    		else
+    		{
+	    		query = "SELECT name FROM sqlite_master WHERE type='table' AND name='Objects';";
+	            rs = stmt.executeQuery(query);
+	    		exists = rs.next();
+	    		if (!exists)
+	    			result = false;
+    		}
+            rs.close();
+            stmt.close();
+            c.close();
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		
+        return result;
+	}
    
 }

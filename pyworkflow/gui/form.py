@@ -332,7 +332,7 @@ class SubclassesTreeProvider(TreeProvider):
         runs = project.getRuns()
         
         for prot in runs:
-            # Make sure we dont include previous output of the same 
+            # Make sure we don't include previous output of the same 
             # protocol, it will cause a recursive loop
             if prot.getObjId() != self.protocol.getObjId():
                 # Check if the protocol itself is one of the desired classes
@@ -402,7 +402,7 @@ class SubclassesTreeProvider(TreeProvider):
         parent = getattr(pobj, '_parentObject', None)
         if parent is None:
             label = getObjectLabel(pobj, self.mapper)
-        else: # This is an item comming from a set
+        else: # This is an item coming from a set
             label = 'item %s' % pobj.get().strId()
             
         obj = pobj.get()
@@ -878,8 +878,12 @@ class ParamWidget():
             from pyworkflow.em import findViewers
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
-                v = viewers[0] # Use the first viewer registered
-                v(project=self._protocol.getProject()).visualize(obj) # Instanciate the viewer and visualize object
+                ViewerClass = viewers[0] # Use the first viewer registered
+                # Instanciate the viewer and visualize object
+                viewer = ViewerClass(project=self._protocol.getProject(),
+                                     protocol=self._protocol,
+                                     parent=self.window)
+                viewer.visualize(obj)
             else:
                 self._showInfo("There is not viewer registered for *%s* object class." % obj.getClassName())
     
@@ -908,7 +912,7 @@ class ParamWidget():
         
         def validateSelected(selectedItems):
             for item in selectedItems:
-                if not getattr(item, '_allowSelection', True):
+                if not getattr(item, '_allowsSelection', True):
                     return "Please select object of types: %s" % self.param.pointerClass.get()
 
         title = "Select object of types: %s" % self.param.pointerClass.get()
@@ -1097,7 +1101,7 @@ class FormWindow(Window):
         Params:
          title: title string of the windows.
          protocol: protocol from which the form will be generated.
-         callback: callback function to call when Save or Excecute are press.
+         callback: callback function to call when Save or Execute are press.
         """
         Window.__init__(self, title, master, icon='scipion_bn.xbm', 
                         weight=False, minsize=(600, 450), **kwargs)
@@ -1118,6 +1122,8 @@ class FormWindow(Window):
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol, DESKTOP_TKINTER)
         
+        # Call legacy for compatibility on protocol
+        protocol.legacyCheck()
         self._createGUI()
         
     def _createGUI(self):
@@ -1224,7 +1230,7 @@ class FormWindow(Window):
         modeFrame.columnconfigure(0, weight=1)
         modeFrame.grid(row=r, column=1, sticky='new', columnspan=2)
         
-        # Host
+        # ---- Host---- 
         self._createHeaderLabel(runFrame, Message.LABEL_HOST, row=r, column=c, pady=0, padx=(15,5), sticky='ne')
         # Keep track of hostname selection
         self.hostVar = tk.StringVar()
@@ -1238,7 +1244,7 @@ class FormWindow(Window):
         self.hostCombo.grid(row=r, column=c+1, pady=5, sticky='nw')
         r = 2
 
-        # Parallel
+        # ---- Parallel---- 
         # some short notation
         allowThreads = self.protocol.allowThreads # short notation
         allowMpi = self.protocol.allowMpi # short notation
@@ -1276,7 +1282,7 @@ class FormWindow(Window):
                     procEntry.grid(row=0, column=1, padx=(0, 5), sticky='nw')
                     
             else:
-                # THREADS
+                # ---- THREADS---- 
                 if allowThreads:
                     self._createHeaderLabel(procFrame, Message.LABEL_THREADS, 
                                             sticky=sticky, row=r2, column=c2, pady=0)
@@ -1285,7 +1291,7 @@ class FormWindow(Window):
                     # Modify values to be used in MPI entry
                     c2 += 2
                     sticky = 'nw'
-                # MPI
+                # ---- MPI ---- 
                 if allowMpi:
                     self._createHeaderLabel(procFrame, Message.LABEL_MPI, 
                                             sticky=sticky, row=r2, column=c2, pady=0)
@@ -1298,7 +1304,7 @@ class FormWindow(Window):
             procFrame.columnconfigure(0, minsize=60)
             procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
         
-        # Queue
+        # ---- QUEUE ----
         self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', 
                                 column=c, padx=(15,5), pady=0)
         var, frame = ParamWidget.createBoolWidget(runFrame, bg='white', 
@@ -1311,7 +1317,7 @@ class FormWindow(Window):
         #                          command=self._editQueueParams)
         #btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
-                             command=self._createHelpCommand(Message.HELP_RUNMODE))
+                             command=self._createHelpCommand(Message.HELP_USEQUEUE))
         btnHelp.grid(row=2, column=c+3, padx=(5, 0), pady=2, sticky='ne')
         
         # Run Name not editable
@@ -1340,14 +1346,18 @@ class FormWindow(Window):
             if self.updateProtocolCallback:
                 self.updateProtocolCallback(self.protocol)
                 
+    def _getHostConfig(self):
+        """ Retrieve the hostConfig object for the select hostname"""
+        return self.protocol.getProject().getHostConfig(self.protocol.getHostName())
+        
     def _editQueueParams(self, e=None):
         """ Open the dialog to edit the queue parameters. """
         # Grab the host config from the project, since it 
         # have not been set in the protocol
-        hostConfig = self.protocol.getProject().getHostConfig(self.protocol.getHostName())
+        hostConfig = self._getHostConfig()
         queues = hostConfig.queueSystem.queues
         # If there is only one Queue and it has not parameters
-        # dont bother to showing the QueueDialog
+        # don't bother to showing the QueueDialog
         noQueueChoices = len(queues) == 1 and len(queues.values()[0]) == 0
         if noQueueChoices:
             result = queues.keys()[0], {}
@@ -1498,8 +1508,20 @@ class FormWindow(Window):
         self._close(onlySave=True)
         
     def execute(self, e=None):
+        
         if self.protocol.useQueue():
             if not self._editQueueParams():
+                return
+        else: # use queue = No
+            hostConfig = self._getHostConfig()
+            cores = self.protocol.numberOfMpi.get(1) * self.protocol.numberOfThreads.get(1)
+            mandatory = hostConfig.queueSystem.getMandatory()
+
+            if mandatory and cores >= mandatory:
+                self.showWarning("You need to submit the job to queue since you \n"
+                                 "are requesting a total of *%d* cores (MPI * threads)\n\n"
+                                 "*Note*: Your system is configured with MANDATORY = %d.\n"  
+                                 "        This value can be changed in Scipion/config/hosts.conf" % (cores, mandatory))
                 return
         
         if (self.protocol.getRunMode() == params.MODE_RESTART and 
@@ -1556,8 +1578,10 @@ class FormWindow(Window):
             obj = protVar.get() # Get the reference to the object
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
-                v = viewers[0] # Use the first viewer registered
-                v(project=self.protocol.getProject()).visualize(obj) # Instanciate the viewer and visualize object
+                ViewerClass = viewers[0] # Use the first viewer registered
+                v = ViewerClass(project=self.protocol.getProject(),
+                                protocol=self.protocol, parent=self)
+                v.visualize(obj) # Instanciate the viewer and visualize object
             else:
                 self.showInfo("There is not viewer registered for this object")
         else:
@@ -1772,7 +1796,16 @@ class QueueDialog(Dialog):
         self.vars = []
         self.queueDict = queueDict
         self.window = window
-        self.queueName, self.queueParams = window.protocol.getQueueParams()
+        self.queueName, queueParams = window.protocol.getQueueParams()
+        # If there is only one queue and not one selected, use the first one
+        if not self.queueName and len(queueDict.keys()) == 1:
+            self.queueName = queueDict.keys()[0]
+            queueParams = {}
+        # Store all selected queue parameters to 
+        # preserve values when temporarly changed
+        # from one queue to another    
+        self.allQueueParams = {self.queueName: queueParams}
+        
         Dialog.__init__(self, window.root, "Queue parameters")
         
     def body(self, bodyFrame):
@@ -1790,11 +1823,7 @@ class QueueDialog(Dialog):
         combo.grid(row=0, column=1, sticky='nw', padx=5, pady=5)
         queueKeys = self.queueDict.keys()
         combo['values'] = queueKeys
-        
-        
-        selected = self.queueName #TODO: replace this with real selected queue
-        self.queueVar.set(selected) # This will trigger queue params setup
-
+        self.queueVar.set(self.queueName) # This will trigger queue params setup
         self.initial_focus = combo
         
     def _onQueueChanged(self, *args):
@@ -1802,7 +1831,17 @@ class QueueDialog(Dialog):
             w.destroy()
             
         selected = self.queueVar.get()
+        
+        if selected != self.queueName:
+            # Store previous selection 
+            _, previousParams = self._getSelectedParams(self.queueName)
+            self.allQueueParams[self.queueName] = previousParams
+            self.queueName = selected
+            
+        # Load default params from the queues
         params = self.queueDict.get(selected, {})
+        # Load previous selected params
+        selectedParams = self.allQueueParams.get(selected, {})
         
         self.widgets = [] # clear the widget list
         self.vars = []
@@ -1819,8 +1858,8 @@ class QueueDialog(Dialog):
             label = tk.Label(self.content, text=label, bg='white')
             label.grid(row=r, column=0, sticky='ne', padx=5, pady=(0,5))
             var = tk.StringVar()
-            # Set the value comming in the protocol 
-            var.set(self.queueParams.get(name, value))
+            # Set the value coming in the protocol 
+            var.set(selectedParams.get(name, value))
             
             entry = tk.Entry(self.content, textvariable=var, width=15)
             entry.grid(row=r, column=1, sticky='nw', padx=5, pady=(0, 5))
@@ -1842,12 +1881,9 @@ class QueueDialog(Dialog):
             self.widgets.append(entry)
             r += 1
         
-    def apply(self):
-        # Set as value the queue selected and a dictionary 
-        # with the values of each parameter
-        selected = self.queueVar.get()
-        paramsDict = {}
+    def _getSelectedParams(self, selected):
         if selected in self.queueDict:
+            paramsDict = {}
             params = self.queueDict[selected]
             for p, v in izip(params, self.vars):
                 if len(p) == 3:
@@ -1855,9 +1891,14 @@ class QueueDialog(Dialog):
                 else: 
                     name, value, label, _ = p 
                 paramsDict[name] = v.get() # get the value from the corresponding tk var
-            self.value = selected, paramsDict
-        else:
-            self.value = '', {}
+            return selected, paramsDict
+        return '', {}
+            
+    def apply(self):
+        # Set as value the queue selected and a dictionary 
+        # with the values of each parameter
+        selected = self.queueVar.get()
+        self.value = self._getSelectedParams(selected)
         
     def validate(self):
         return True

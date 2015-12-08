@@ -79,9 +79,13 @@ def prettyDate(time=False):
     return str(day_diff/365) + " years ago"
 
 
-def dateStr(dt, time=True, secs=False):
-    """ Get a normal string representation of datetime. """
-    if isinstance(dt, float) or isinstance(dt, int):
+def dateStr(dt=None, time=True, secs=False):
+    """ Get a normal string representation of datetime. 
+    If dt is None, use NOW.
+    """
+    if dt is None:
+        dt = datetime.now()
+    elif isinstance(dt, float) or isinstance(dt, int):
         dt = datetime.fromtimestamp(dt)
     dateFormat = '%d-%m-%Y'
     if time:
@@ -123,8 +127,11 @@ class Timer(object):
     def tic(self):
         self._dt = datetime.now()
         
+    def getToc(self):
+        return prettyDelta(datetime.now()-self._dt)
+        
     def toc(self, message='Elapsed:'):
-        print message, prettyDelta(datetime.now()-self._dt) 
+        print message, self.getToc()
         
 
 def timeit(func):
@@ -418,6 +425,7 @@ def parseBibTex(bibtexStr):
     
     return parser.get_entry_dict()
 
+
 def isPower2(num):
     """ Return True if 'num' is a power of 2. """
     return num != 0 and ((num & (num - 1)) == 0)
@@ -442,6 +450,7 @@ def getListFromRangeString(rangeStr):
             # If values are separated by comma also splitted 
             values += map(int, e.split())
     return values
+
 
 def getRangeStringFromList(list):
     left = None
@@ -489,7 +498,7 @@ def getListFromValues(valuesStr, length=None):
             raise Exception("More than one 'x' is not allowed in list string value.")
             
     # If length is passed, we fill the list with 
-    # the last element until lenght is reached
+    # the last element until length is reached
     if length is not None and length > len(result):
         item = result[-1]
         result += [item] * (length - len(result))
@@ -526,7 +535,7 @@ class Environ(dict):
             varName: for example LD_LIBRARY_PATH
             varValue: the value to add or replace.
             position: controls how the value will be changed.
-                If REPLACE, it will overrithe the value of
+                If REPLACE, it will overwrite the value of
                 the var.
                 BEGIN or END will preserve the current value
                 and add (at begin or end) the new value.
@@ -592,3 +601,17 @@ def getFreePort(basePort=0,host=''):
             print e
             return 0
         return port
+    
+    
+def readProperties(propsFile):
+    myprops = {}
+    with open(propsFile, 'r') as f:
+        for line in f:
+            line = line.rstrip() #removes trailing whitespace and '\n' chars
+    
+            if "=" not in line: continue #skips blanks and comments w/o =
+            if line.startswith("#"): continue #skips comments which contain =
+    
+            k, v = line.split("=", 1)
+            myprops[k] = v
+    return myprops

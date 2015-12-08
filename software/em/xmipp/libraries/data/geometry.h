@@ -222,7 +222,7 @@ struct fit_point2D
 {
     /// x coordinate
     double x;
-    /// y coordinate (assumed to be a fucntion of x)
+    /// y coordinate (assumed to be a function of x)
     double y;
     /// Weight of the point in the Least-Squares problem
     double w;
@@ -405,7 +405,7 @@ void Bspline_model_fitting(const std::vector< FitPoint >& IN_points,
  *
  * Given a rectangle characterized by the top-left corner and the right-bottom
  * corner, and given a matrix after which the rectangle is deformed. Which is
- * the minimum rectangle which encloses the preceeding one? This function is
+ * the minimum rectangle which encloses the preceding one? This function is
  * useful for stablishing for loops which will cover for sure the deformed
  * rectangle. All vectors are supposed to be 2x1 and the deformation matrix is
  * 2x2. The corner (x0,y0) goes to V*(x0,y0)' and (xF,yF) to V*(xf,yF)'. After
@@ -423,7 +423,7 @@ void rectangle_enclosing(const Matrix1D< double >& v0,
  *
  * Given a box characterized by the top-left corner (most negative) and the
  * right-bottom (most positive) corner, and given a matrix after which the box
- * is deformed. Which is the minimum box which encloses the preceeding one? This
+ * is deformed. Which is the minimum box which encloses the preceding one? This
  * function is useful for stablishing for loops which will cover for sure the
  * deformed box. All vectors are supposed to be 3x1 and the deformation matrix
  * is 3x3. The corner (x0,y0,z0) goes to V*(x0,y0,z0)' and (xF,yF,zF) to
@@ -445,6 +445,19 @@ void box_enclosing(const Matrix1D< double >& v0,
  */
 bool point_inside_polygon(const std::vector< Matrix1D< double > > & polygon,
                           const Matrix1D< double >& point);
+
+/** Affine transformation
+ *
+ */
+void def_affinity(double u1x, double u1y, double u2x, double u2y, double u3x, double u3y, double t1x,
+		double t1y, double t2x, double t2y, double t3x, double t3y, Matrix2D<double> &A, Matrix1D<double> &T, Matrix2D<double> &invW);
+
+
+
+/** Area of a triangle
+ * Given the coordinates of three points this function calculates the area of the triangle
+ */
+double triangle_area(double x1, double y1, double x2, double y2, double x3, double y3);
 
 /** Line Plane Intersection
  *
@@ -500,8 +513,8 @@ bool point_inside_polygon(const std::vector< Matrix1D< double > > & polygon,
  * YY(intersection_point) = y;
  * ZZ(intersection_point) = z;
  *
- * return 0 if sucessful
- * return -1 if line paralell to plane
+ * return 0 if successful
+ * return -1 if line parallel to plane
  * return +1 if line in the plane
  */
 int line_plane_intersection(const Matrix1D< double > normal_plane,

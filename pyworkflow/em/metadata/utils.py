@@ -29,7 +29,7 @@ This module contains utils functions to operate over xmipp metadata files.
 """
 
 from classes import MetaData, Row
-from constants import LABEL_TYPES
+from constants import LABEL_TYPES, MDL_ITEM_ID
 from functions import labelType
 
 
@@ -40,13 +40,18 @@ def label2Python(label):
     return LABEL_TYPES.get(labelType(label), str)
 
 
-def getFirstRow(filename):
-    """ Create a MetaData but only read the first row.
-    This method should be used for validations of labels
-    or metadata size, but the full metadata is not needed.
+def getFirstRow(mdOrFn):
+    """ Return the first object of a metadata.
+    Params:
+        mdOrFn: you can pass a metadata or a filename as argument.
     """
-    md = MetaData()
-    md.read(filename, 1)
+
+    if isinstance(mdOrFn, basestring):
+        md = MetaData()
+        md.read(mdOrFn, 1)
+    else: # mdOrFn is MetaData
+        md = mdOrFn
+        
     if md.getParsedLines():
         row = Row()
         row.readFromMd(md, md.firstObject())
@@ -68,14 +73,66 @@ def isEmpty(filename):
     return getSize(filename) == 0
 
 
-def iterRows(md):
-    """ Iterate over the rows of the given metadata. """
+def iterRows(md, sortByLabel=None):
+    """ Iterate over the rows of the given metadata.
+    Params:
+        md: a MetaData object or a filename (MetaData will be read)
+        sortByLabel: a label to sort the metadata before iterate.
+    """
     # If md is string, take as filename and create the metadata
+
     if isinstance(md, basestring):
         md = MetaData(md)
-        
+
+    if sortByLabel is not None:
+        md.sort(sortByLabel)
+
     row = Row()
     
     for objId in md:
         row.readFromMd(md, objId)
         yield row
+        
+
+class SetMdIterator():
+    """ Class to iterate over an input set and skip
+    elements not present in metadata.
+    This class can be used in copyItems when the number
+    of elements in the set is higher that in metadata.
+    """
+    def __init__(self, md, sortByLabel=None, 
+                 keyLabel=MDL_ITEM_ID,
+                 updateItemCallback=None):
+        
+        if updateItemCallback is None:
+            raise Exception('Set an updateItemCallback')
+        
+        self.iterMd = iterRows(md, sortByLabel) 
+        self.keyLabel = keyLabel
+        self.updateItemCallback = updateItemCallback   
+        self.__nextRow()
+        
+    def __nextRow(self):
+        try:
+            self.lastRow = next(self.iterMd)
+        except StopIteration:
+            self.lastRow = None
+            
+    def updateItem(self, item, row):
+        """ This function should be passed to copyItems
+        as callback and it will filter the items
+        not present in the metadata.
+        """
+        row = self.lastRow
+        
+        if (row is None or 
+            item.getObjId() != row.getValue(self.keyLabel)):
+            item._appendItem = False
+        
+        else:
+            item._appendItem = True
+            self.updateItemCallback(item, row)
+            self.__nextRow()
+                
+             
+    

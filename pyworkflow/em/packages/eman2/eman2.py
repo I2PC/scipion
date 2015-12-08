@@ -47,6 +47,16 @@ def getEnviron():
     return environ
 
 
+def getVersion():
+    path = os.environ['EMAN2DIR']
+    if '2.11' in path:
+        return '2.11'
+    elif '2.12' in path:
+        return '2.12'
+    else:
+        return ''
+
+
 def getEmanProgram(program):
     if not 'EMAN_PYTHON' in os.environ:
         os.environ['EMAN_PYTHON'] = os.path.join(os.environ['EMAN2DIR'], 'Python/bin/python')

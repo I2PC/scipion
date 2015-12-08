@@ -102,8 +102,8 @@ leads to objective and high-quality results.
             outImgSet.setAlignmentProj()
             outImgSet.copyItems(imgSet,
                                 updateItemCallback=self._createItemMatrix,
-                                itemDataIterator=md.iterRows(outImgsFn))
-            
+                                itemDataIterator=md.iterRows(outImgsFn, sortByLabel=md.RLN_IMAGE_ID))
+
             self._defineOutputs(outputVolume=vol)
             self._defineSourceRelation(self.inputParticles, vol)
             self._defineOutputs(outputParticles=outImgSet)

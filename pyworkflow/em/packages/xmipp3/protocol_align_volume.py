@@ -153,7 +153,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         
     #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
-        # Iterate throught all input volumes and align them 
+        # Iterate through all input volumes and align them 
         # againt the reference volume
         refFn = getImageLocation(self.inputReference.get())
         maskArgs = self._getMaskArgs()
@@ -182,20 +182,28 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
             self.runJob("xmipp_volume_align", args)
       
     def createOutputStep(self):
-        volSet = self._createSetOfVolumes()
-        volSet.setSamplingRate(self.inputReference.get().getSamplingRate())
-        
+        vols = []
         for vol in self._iterInputVolumes():
             outVol = em.Volume()
             outVol.setLocation(vol.outputName)
             outVol.setObjLabel(vol.getObjLabel())
             outVol.setObjComment(vol.getObjComment())
-            volSet.append(outVol) 
-        
-        self._defineOutputs(outputVolumes=volSet)
-        # Define all the inputs as SOURCE to the output volumes set
+            vols.append(outVol) 
+            
+        if len(vols) > 1:
+            volSet = self._createSetOfVolumes()
+            volSet.setSamplingRate(self.inputReference.get().getSamplingRate())
+            for vol in vols:
+                volSet.append(vol)
+            outputArgs = {'outputVolumes': volSet}
+        else:
+            vols[0].setSamplingRate(self.inputReference.get().getSamplingRate())
+            outputArgs = {'outputVolume': vols[0]}
+            
+        self._defineOutputs(**outputArgs)
         for pointer in self.inputVolumes:
-            self._defineSourceRelation(pointer, volSet)
+            self._defineSourceRelation(pointer, outputArgs.values()[0])
+
     
     #--------------------------- INFO functions --------------------------------------------
     

@@ -91,8 +91,8 @@ class TestBasic(BaseTest):
 
 
 SHOW_IMAGES  = False # Launch xmipp_showj to open intermediate results
-CLEAN_IMAGES = False # Remove the output temporary files
-PRINT_MATRIX = False
+CLEAN_IMAGES = True # Remove the output temporary files
+PRINT_MATRIX = True
 PRINT_FILES  = True
 
 
@@ -194,9 +194,10 @@ class TestConvertBase(BaseTest):
                 m2 = img.getTransform().getMatrix()
                 print "-"*5
                 print img.getFileName(), img.getIndex()
-                print 'm1:\n', m1
-                print 'm2:\n', m2
-                self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
+                print 'm1:\n', m1, geometryFromMatrix(m1, False)
+
+                print 'm2:\n', m2, geometryFromMatrix(m2, False)
+                #self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
 
         # Launch apply transformation and check result images
         runXmippProgram(self.CMD % locals())
@@ -587,7 +588,84 @@ class TestAlignment(TestConvertBase):
 class TestReconstruct(TestConvertBase):
     IS_ALIGNMENT = False
     CMD = "xmipp_reconstruct_art -i %(mdFn)s -o %(outputFn)s"
-    
+
+    def test_forward_backwards(self):
+        """convert transformation matrixt to xmipp and back"""
+
+        mList = [[[0.71461016, 0.63371837, -0.29619813,  1.],#a1
+                  [-0.61309201, 0.77128059, 0.17101008,  2.],
+                  [0.33682409, 0.059391174, 0.93969262,  3.],
+                  [0,          0,          0,            1.]],
+                 [[0., 0., -1., 0.],#a2
+                  [0., 1., 0., 0.],
+                  [1., 0., 0., 0.],
+                  [0., 0., 0., 1.]],
+                 [[0., 1., 0., 0.],#a3
+                  [0., 0., 1., 0.],
+                  [1., 0., 0., 0.],
+                  [0., 0., 0., 1.]],
+                 [[ 0.22612257, 0.82379508, -0.51983678, 0.],#a4
+                  [-0.88564873, 0.39606407, 0.24240388,  0.],
+                  [ 0.40557978, 0.40557978, 0.81915206,  0.],
+                  [ 0.,          0.,          0.,           1.]],
+                 [[-0.78850311, -0.24329656,-0.56486255,   0.],#a5
+                  [ 0.22753462, -0.96866286, 0.099600501,  0.],
+                  [-0.57139379, -0.049990479, 0.81915206,  0.],
+                  [0.,            0.,           0.,           1.]],
+                 [[ 1.0, 0.0, 0.0, 0.0],#a6
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[0., 0., -1., 0.],#a7
+                  [-1., 0., 0.,  0.],
+                  [0., 1., 0.,  0.],
+                  [0., 0., 0., 1.]]
+                ]
+
+        aList = [np.array(m) for m in mList]
+        rowa = XmippMdRow()
+        rowb = XmippMdRow()
+        rowb1 = XmippMdRow()
+        rowb2 = XmippMdRow()
+        rowb3 = XmippMdRow()
+        labelList=[xmipp.MDL_ANGLE_ROT
+                  ,xmipp.MDL_ANGLE_TILT
+                  ,xmipp.MDL_ANGLE_PSI
+                  ,xmipp.MDL_SHIFT_X
+                  ,xmipp.MDL_SHIFT_Y
+                  ,xmipp.MDL_SHIFT_Z
+                  ]
+        for i, a in enumerate(aList):
+            a = Transform(aList[i])
+            alignmentToRow(a, rowa, ALIGN_PROJ)
+            b=rowToAlignment(rowa, ALIGN_PROJ)
+            alignmentToRow(b, rowb, ALIGN_PROJ)
+            #same two matrices
+            self.assertTrue(np.allclose(a.getMatrix(), b.getMatrix(), rtol=1e-2))
+            for label in labelList:
+                auxBtilt = rowb.getValue(label)
+                auxAtilt = rowa.getValue(label)
+                #same two rows
+                self.assertAlmostEqual(auxBtilt, auxAtilt, places=3, msg=None, delta=None)
+
+            rowa.setValue(MDL_FLIP,True)
+            b=rowToAlignment(rowa, ALIGN_PROJ)
+            alignmentToRow(b, rowb, ALIGN_PROJ)
+            aMatrix = a.getMatrix()
+            aMatrix[:,1] *= -1;aMatrix[:,2] *= -1;aMatrix[:,3] *= -1;
+            aMatrix[3,3]=1.
+            #same two matrices with flip
+            self.assertTrue(np.allclose(aMatrix, b.getMatrix(), rtol=1e-2))
+
+ #* newrot = rot;
+ #* newtilt = tilt + 180;
+ #* newpsi = -(180 + psi);
+
+ #* newrot = rot + 180;
+ #* newtilt = -tilt;
+ #* newpsi = -180 + psi;
+
+
     def test_reconstRotOnly(self):
         """ Check that for a given alignment object,
         the corresponding Xmipp metadata row is generated properly.
@@ -694,7 +772,7 @@ class TestReconstruct(TestConvertBase):
                   [0., 1., 0., 0.],
                   [0., 0., 1., 0.],
                   [0., 0., 0., 1.]],
-                 [[  0.04341204, -0.82959837,  0.5566704,   7.42774284],#a2
+                 [[  0.04341204, -0.82959837,  0.5566704,   7.42774284],#-50, -40,-30
                   [  0.90961589,  0.26325835,  0.3213938, -20.82490128],
                   [ -0.41317591,  0.49240388,  0.76604444,  3.33947946],
                   [  0.,          0.,          0.,          1.        ]],
@@ -702,10 +780,10 @@ class TestReconstruct(TestConvertBase):
                   [  0.90961589,  -0.26325835,   0.3213938,   20.82490128],
                   [  0.41317591,   0.49240388,  -0.76604444,   3.33947946],
                   [  0.,           0.,           0.,           1.        ]],
-                 [[  -0.04341204, 0.82959837,  -0.5566704,   -7.42774284],#a4
-                  [  0.90961589,  0.26325835,  0.3213938, -20.82490128],
-                  [ -0.41317591,  0.49240388,  0.76604444,  3.33947946],
-                  [  0.,          0.,          0.,           1.        ]],
+  #               [[  -0.04341204, 0.82959837,  -0.5566704,   -7.42774284],#a4
+  #                [  0.90961589,  0.26325835,  0.3213938, -20.82490128],
+  #                [ -0.41317591,  0.49240388,  0.76604444,  3.33947946],
+  #                [  0.,          0.,          0.,           1.        ]],
                 ]
 
         self.launchTest('reconstRotandShiftFlip', mList, alignType=ALIGN_PROJ)
@@ -750,7 +828,7 @@ class TestSetConvert(BaseTest):
         #self.assertEqual(mdIn, mdOut)
         
     def test_micrographsToMd(self):
-        """ Test the convertion of a SetOfMicrographs to Xmipp metadata. """
+        """ Test the conversion of a SetOfMicrographs to Xmipp metadata. """
         micSet = SetOfMicrographs(filename=self.getOutputPath("micrographs.sqlite"))
         n = 3
         ctfs = [CTFModel(defocusU=10000, defocusV=15000, defocusAngle=15),
@@ -825,7 +903,7 @@ class TestSetConvert(BaseTest):
         
         
     def test_alignedParticlesToMd(self):
-        """ Test the convertion of a SetOfParticles to Xmipp metadata. """
+        """ Test the conversion of a SetOfParticles to Xmipp metadata. """
         fn = self.dataset.getFile('aligned_particles')
         print "Input sqlite: %s" % fn
         partSet = SetOfParticles(filename=fn) 
@@ -845,7 +923,7 @@ class TestSetConvert(BaseTest):
         #self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
         
     def test_particlesToMd(self):
-        """ Test the convertion of a SetOfParticles to Xmipp metadata. """
+        """ Test the conversion of a SetOfParticles to Xmipp metadata. """
         imgSet = SetOfParticles(filename=self.getOutputPath("particles.sqlite"))
         n = 10
         fn = self.particles
@@ -883,7 +961,7 @@ class TestSetConvert(BaseTest):
         
                 
     def test_CTF(self):
-        """ Test the convertion of a SetOfParticles to Xmipp metadata. """
+        """ Test the conversion of a SetOfParticles to Xmipp metadata. """
         mdCtf = xmipp.MetaData(self.dataset.getFile('ctfGold'))
         objId = mdCtf.firstObject()
         rowCtf = rowFromMd(mdCtf, objId)

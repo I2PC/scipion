@@ -253,7 +253,7 @@ public class ImageGeneric {
     //Check if two images have same values to some accuracy
     public native boolean equal(ImageGeneric img, double accuracy) throws Exception;
 
-    //substract two imageGeneric. calling image minuend
+    //subtract two imageGeneric. calling image minuend
     public native void subtract(ImageGeneric imgSubtrahend, ImageGeneric imgResult) throws Exception;
 
     //Smooth image generic by color dithering
@@ -311,16 +311,27 @@ public class ImageGeneric {
 			return false;
 		}
 	}
+	
+	public native void applyGeo(double shiftX, double shiftY, double anglepsi, boolean flip, boolean wrap, double scaleFactor);
         
-        public native void applyGeo(double shiftX, double shiftY, double anglepsi, boolean flip, boolean wrap);
-        
-        /**
-         * Same as previous function, but reading the geometry information
-         * from the transformation matrix. The matrix will be passed to the 
-         * binding in its string representation read from the sqlite file.
-         */
-        public native void applyGeoMatrix(String matrixString, boolean wrap);
-        
+    public void applyGeo(double shiftX, double shiftY, double anglepsi, boolean flip, boolean wrap)
+    {
+    	applyGeo(shiftX, shiftY, anglepsi, flip, wrap, 1.);
+    }    
+    /**
+     * Same as previous function, but reading the geometry information
+     * from the transformation matrix. The matrix will be passed to the 
+     * binding in its string representation read from the sqlite file.
+     */
+    
+    public void applyGeoMatrix(String matrixString, boolean wrap)
+    {
+    	applyGeoMatrix(matrixString, 1, wrap);
+    }
+    
+    
+    public native void applyGeoMatrix(String matrixString, double scaleFactor, boolean wrap);
+    
 
     
 }

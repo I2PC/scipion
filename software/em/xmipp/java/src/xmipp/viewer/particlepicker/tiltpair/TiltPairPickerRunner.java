@@ -4,18 +4,13 @@ package xmipp.viewer.particlepicker.tiltpair;
 import java.util.logging.Level;
 
 import javax.swing.SwingUtilities;
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+
 import xmipp.ij.commons.XmippApplication;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.ParticlePickerParams;
 import xmipp.viewer.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
-import xmipp.viewer.particlepicker.training.model.Mode;
 
 public class TiltPairPickerRunner implements Runnable {
 
@@ -41,7 +36,7 @@ public class TiltPairPickerRunner implements Runnable {
     	try {
         
             TiltPairPicker ppicker = null;
-            ppicker = new TiltPairPicker(params.inputfile, params.outputdir, params.mode, params);
+            ppicker = new TiltPairPicker(params.inputfile, params.outputdir, params);
             
             if(params.isScipion())
                 XmippApplication.setIsScipion(true);

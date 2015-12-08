@@ -21,7 +21,7 @@ Output_images = mirt3D_mexinterp(Input_images, XI,YI,ZI). Input_images can be a 
   Output_images(:,:,:,3) = interp3(Input_image3,XI,YI,ZI,'linear',NaN);
   Output_images(:,:,:,4) = interp3(Input_image4,XI,YI,ZI,'linear',NaN);
 
- This is especially usefull to vector valued 3D images, RGB images, or to interpolate the whole 3D video at the same coordinates
+ This is especially useful to vector valued 3D images, RGB images, or to interpolate the whole 3D video at the same coordinates
  or to interpolate image and its gradients at the same time (in image registration).
  The speed gain is from the precomputation of nearest points for interpolation, which are the same for all images in a stack.
 

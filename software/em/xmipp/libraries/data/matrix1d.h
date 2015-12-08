@@ -136,7 +136,7 @@ class Matrix2D;
         XX(a) = XX(b) + XX(c); \
         YY(a) = YY(b) + YY(c); }
 
-/** Substracting two R2 vectors (a=b-c)
+/** Subtracting two R2 vectors (a=b-c)
  * @code
  * MultidimArray< double > a(2), b(2), c(2);
  * ...;
@@ -147,7 +147,7 @@ class Matrix2D;
         XX(a) = XX(b) - XX(c); \
         YY(a) = YY(b) - YY(c); }
 
-/** Adding/substracting a constant to a R2 vector (a=b-k).
+/** Adding/subtracting a constant to a R2 vector (a=b-k).
  * @code
  * MultidimArray< double > a(2), b(2);
  * double k;
@@ -193,7 +193,7 @@ class Matrix2D;
         YY(a) = YY(b) + YY(c); \
         ZZ(a) = ZZ(b) + ZZ(c); }
 
-/** Substracting two R3 vectors (a=b-c)
+/** Subtracting two R3 vectors (a=b-c)
  * @code
  * MultidimArray< double > a(3), b(3), c(3);
  * ...;
@@ -205,7 +205,7 @@ class Matrix2D;
         YY(a) = YY(b) - YY(c); \
         ZZ(a) = ZZ(b) - ZZ(c); }
 
-/** Adding/substracting a constant to a R3 vector (a=b-k)
+/** Adding/subtracting a constant to a R3 vector (a=b-k)
  * @code
  * MultidimArray< double > a(3), b(3);
  * double k;
@@ -623,6 +623,7 @@ public:
         initConstant(val);
     }
 
+
     /** Enumerate starting from 0 to size
      */
     void enumerate()
@@ -870,7 +871,7 @@ public:
             (*ptr1++) += (*ptr2++);
     }
 
-    /** Vector substraction
+    /** Vector subtraction
      *
      * @code
      * A -= B;
@@ -1680,7 +1681,7 @@ public:
      *
      * This function is not ported to Python.
      */
-    // This function must be explictly implemented outside
+    // This function must be explicitly implemented outside
     friend std::istream& operator>>(std::istream& in, Matrix1D<T>& v)
     {
         for (int i = 0; i < VEC_XSIZE(v); i++)

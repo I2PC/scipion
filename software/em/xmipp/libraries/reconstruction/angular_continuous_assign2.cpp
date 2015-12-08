@@ -67,6 +67,7 @@ void ProgAngularContinuousAssign2::readParams()
     phaseFlipped = checkParam("--phaseFlipped");
     penalization = getDoubleParam("--penalization");
     fnResiduals = getParam("--oresiduals");
+    fnProjections = getParam("--oprojections");
 }
 
 // Show ====================================================================
@@ -96,6 +97,7 @@ void ProgAngularContinuousAssign2::show()
     << "Phase flipped:       " << phaseFlipped       << std::endl
     << "Penalization:        " << penalization       << std::endl
     << "Output residuals:    " << fnResiduals        << std::endl
+    << "Output projections:  " << fnProjections      << std::endl
     ;
 }
 
@@ -106,7 +108,7 @@ void ProgAngularContinuousAssign2::defineParams()
 	defaultComments["-i"].clear();
 	defaultComments["-i"].addComment("Metadata with initial alignment");
 	defaultComments["-o"].clear();
-	defaultComments["-o"].addComment("Metadata with output alignment");
+	defaultComments["-o"].addComment("Stack of images prepared for 3D reconstruction");
     XmippMetadataProgram::defineParams();
     addParamsLine("   --ref <volume>              : Reference volume");
     addParamsLine("  [--max_shift <s=-1>]         : Maximum shift allowed in pixels");
@@ -128,8 +130,9 @@ void ProgAngularContinuousAssign2::defineParams()
     addParamsLine("  [--phaseFlipped]             : Input images have been phase flipped");
     addParamsLine("  [--penalization <l=100>]     : Penalization for the average term");
     addParamsLine("  [--oresiduals <stack=\"\">]  : Output stack for the residuals");
+    addParamsLine("  [--oprojections <stack=\"\">] : Output stack for the projections");
     addExampleLine("A typical use is:",false);
-    addExampleLine("xmipp_angular_continuous_assign2 -i anglesFromDiscreteAssignment.xmd --ref reference.vol -o assigned_angles.xmd");
+    addExampleLine("xmipp_angular_continuous_assign2 -i anglesFromDiscreteAssignment.xmd --ref reference.vol -o assigned_angles.stk");
 }
 
 void ProgAngularContinuousAssign2::startProcessing()
@@ -137,6 +140,8 @@ void ProgAngularContinuousAssign2::startProcessing()
 	XmippMetadataProgram::startProcessing();
 	if (fnResiduals!="")
 		createEmptyFile(fnResiduals, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE);
+	if (fnProjections!="")
+		createEmptyFile(fnProjections, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE);
 }
 
 // Produce side information ================================================
@@ -247,8 +252,8 @@ double tranformImage(ProgAngularContinuousAssign2 *prm, double rot, double tilt,
 		{
 			if (DIRECT_MULTIDIM_ELEM(mMask2D,n))
 			{
-				DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=a*DIRECT_MULTIDIM_ELEM(mIfilteredp,n)+b;
-				double val=DIRECT_MULTIDIM_ELEM(mP,n)-DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
+				DIRECT_MULTIDIM_ELEM(mIfilteredp,n)=DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
+				double val=(a*DIRECT_MULTIDIM_ELEM(mP,n)+b)-DIRECT_MULTIDIM_ELEM(mIfilteredp,n);
 				DIRECT_MULTIDIM_ELEM(mE,n)=val;
 				cost+=fabs(val);
 			}
@@ -436,6 +441,13 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 					E.write(fnResidual);
 					rowOut.setValue(MDL_IMAGE_RESIDUAL,fnResidual);
 				}
+				if (fnProjections!="")
+				{
+					FileName fnProjection;
+					fnProjection.compose(fnImgOut.getPrefixNumber(),fnProjections);
+					P.write(fnProjection);
+					rowOut.setValue(MDL_IMAGE_REF,fnProjection);
+				}
 			}
 			if (contCost==CONTCOST_CORR)
 				cost=-cost;
@@ -465,12 +477,12 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			}
 			applyGeometry(BSPLINE3,Ip(),I(),A,IS_NOT_INV,DONT_WRAP);
 			MultidimArray<double> &mIp=Ip();
-			double a=p(0);
+			double ia=1.0/p(0);
 			double b=p(1);
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mIp)
 			{
 				if (DIRECT_MULTIDIM_ELEM(mask2D,n))
-					DIRECT_MULTIDIM_ELEM(mIp,n)=a*DIRECT_MULTIDIM_ELEM(mIp,n)+b;
+					DIRECT_MULTIDIM_ELEM(mIp,n)=ia*(DIRECT_MULTIDIM_ELEM(mIp,n)-b);
 				else
 					DIRECT_MULTIDIM_ELEM(mIp,n)=0.0;
 			}

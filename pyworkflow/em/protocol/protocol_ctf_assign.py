@@ -86,19 +86,28 @@ class ProtCTFAssign(ProtCTFMicrographs):
     def _particlesOutputStep(self, inputSet, inputCTF):
         outputParts = self._createSetOfParticles()
         outputParts.copyInfo(inputSet)
-        
         ctfDict = {}
+        
+        firstCoord = inputSet.getFirstItem().getCoordinate()
+        hasMicName = firstCoord.getMicName() is not None
+        
         for ctf in inputCTF:
-            ctfName = ctf.getMicrograph().getMicName()
-            ctfDict[ctfName] = ctf
+            if hasMicName:
+                ctfName = ctf.getMicrograph().getMicName()
+            else:
+                ctfName = ctf.getMicrograph().getMicId()
+#             print "ctf: ", ctf.printAll(), ctfName
+            ctfDict[ctfName] = ctf.clone()
         
         missingSet = set() # Report missing micrographs only once
         
         for particle in inputSet:
-            coord = particle.getCoordinate()
-            mic = coord.getMicrograph()
-            micKey = mic.getMicName()
-            
+            if particle.hasCoordinate():
+                coord = particle.getCoordinate()
+                micKey = coord.getMicName() if hasMicName else particle.getMicId()
+            else:
+                micKey = particle.getMicId()
+           
             if micKey not in missingSet:
                 ctf = ctfDict.get(micKey, None)
                 
@@ -114,24 +123,34 @@ class ProtCTFAssign(ProtCTFMicrographs):
         self._defineSourceRelation(self.inputSet, outputParts)
         self._defineSourceRelation(self.inputCTF, outputParts)
     
+    
+    def __findCTF(self, inputSet, outputSet, ctfDict, keyFunc):
+        for mic in inputSet:
+            micKey = keyFunc(mic)
+            ctf = ctfDict.get(micKey, None)
+            if ctf is None:
+                self.warning("Discarding micrographs with micName: %s, CTF not found. " % micKey)
+            else:
+                newMic = mic.clone()
+                outputSet.append(newMic)
+        
     def _microgrpahsOutputStep(self, inputSet, inputCTF):           
         outputMics = self._createSetOfMicrographs()
         outputMics.copyInfo(inputSet)
         ctfDict = {}
         
         for ctf in inputCTF:
-            ctfName = ctf.getMicrograph().getMicName()
-            ctfDict[ctfName] = ctf
+            mic = ctf.getMicrograph()
+            ctfDict[mic.getMicName()] = ctf
+            ctfDict[mic.getObjId()] = ctf
         
-        for mic in inputSet:
-            micKey = mic.getMicName()
-            ctf = ctfDict.get(micKey, None)
-            if ctf is None:
-                self.warning("Discarding micrographs with micName: %s, CTF not found. " % micKey)
-            else:
-#                 ctf.setObjId(mic.getObjId())
-                newMic = mic.clone()
-                outputMics.append(newMic)
+        # Try first to find the ctf by the micrograph micName
+        self.__findCTF(inputSet, outputMics, ctfDict, lambda mic: mic.getMicName())
+        
+        # Now, if no ctf was found, try using the micId
+        if outputMics.getSize() == 0:
+            self.warning("No CTF found using micName, now trying with micId")
+            self.__findCTF(inputSet, outputMics, ctfDict, lambda mic: mic.getObjId())            
         
         self._defineOutputs(outputMicrographs=outputMics)
         self._defineSourceRelation(self.inputSet, outputMics)
@@ -150,7 +169,13 @@ class ProtCTFAssign(ProtCTFMicrographs):
         is launched to be executed. It should return a list of errors. If the list is
         empty the protocol can be executed.
         """
-        #same micrographs in both CTF??
-        errors = [ ] 
+        errors = []
         # Add some errors if input is not valid
+        inputSet = self.inputSet.get()
+        if isinstance(inputSet, SetOfParticles):
+            part = inputSet.getFirstItem()
+            if not part.hasMicId():
+                errors.append("The input particles doesn't have any micrograph assigned.")
+        #same micrographs in both CTF??
         return errors
+    

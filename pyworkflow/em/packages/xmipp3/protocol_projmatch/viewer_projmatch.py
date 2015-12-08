@@ -105,7 +105,7 @@ Examples:
         group.addParam('showExperimentalImages', LabelParam, default=False,
                       label='Display particles',
                       help="""Display particles with alignment and classification information
-                           WARNING: the angles and shifts are the adecuate for reconstruction
+                           WARNING: the angles and shifts are the adequate for reconstruction
                            but not for 2D aligment.
                            """)
         group.addParam('showDiscardedImages', LabelParam, default=False,
@@ -118,7 +118,7 @@ Examples:
                       label='3D Class to visualize',
                       help='All: Display all 3D classes for each iteration'
                            'that you selected.\n'
-                           'Selection: You may specify wich 3D class (or classes)'
+                           'Selection: You may specify which 3D class (or classes)'
                            ' to visualize')
         group.addParam('ref3DSelection', NumericRangeParam, default='1',
                       condition='showRef3DNo == %d' % REF_SEL,
@@ -559,18 +559,13 @@ Examples:
                 return []
     
     def _showExperimentalImages(self, paramName=None):
-        md = xmipp.MetaData()
+        views = []
         for ref3d in self._refsList:
             for it in self._iterations:
-
-                file_name = self.protocol._getFileName('docfileInputAnglesIters', iter=it)
-                file_name_ctf = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@" + file_name
-                if exists(file_name):
-                    md.read(file_name_ctf)
-                    return [self.createDataView(file_name_ctf)]
-                else:
-                    print "File %s does not exist" % file_name
-                    return []
+                partSet = self.protocol._getIterParticles(it)
+                v = self.createScipionPartView(partSet)
+                views.append(v)
+        return views
     
 #===============================================================================
 # Convergence
@@ -764,3 +759,22 @@ Examples:
                 value.append(val)
         f1.close()
         return value
+
+#===============================================================================
+# Utils Functions
+#===============================================================================
+    def createScipionPartView(self, partSet, viewParams={}):
+        from pyworkflow.em import ObjectView
+        inputParticlesId = self.protocol.inputParticles.get().strId()
+        filename = partSet.getFileName()
+        
+        labels =  'enabled id _size _filename _transform._matrix'
+        viewParams = {showj.ORDER:labels,
+                      showj.VISIBLE: labels, showj.RENDER:'_filename',
+                      'labels': 'id',
+                      }
+        
+        return ObjectView(self._project, 
+                          self.protocol.strId(), filename, other=inputParticlesId,
+#                           env=self._env,
+                          viewParams=viewParams)

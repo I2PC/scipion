@@ -409,14 +409,24 @@ public class XmippMenuBar extends MenuBar
 		ImagePlus imp = iploader.getImagePlus();
 		if(xw.getParams() != null && imp.getWidth() > 1024 && imp.getStackSize() == 1)
 		{
-			gbmi.setState(true);
-			IJCommand ijcmd = new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma =2");
-			IJ.run(imp, ijcmd.getCommand(), ijcmd.getOptions());
-			filters.add(ijcmd);
-			ecmi.setState(true);
-			ijcmd = new IJCommand(XmippImageJ.enhanceContrastFilter, "saturated=0.4");
-			IJ.run(imp, ijcmd.getCommand(), ijcmd.getOptions());
-			filters.add(ijcmd);
+            String value = System.getenv("SCIPION_MIC_NOGAUSS");
+                        
+            if (value == null || !value.equals("1"))
+            {
+                gbmi.setState(true);
+                IJCommand ijcmd = new IJCommand(XmippImageJ.gaussianBlurFilter, "sigma =2");
+                IJ.run(imp, ijcmd.getCommand(), ijcmd.getOptions());
+                filters.add(ijcmd);
+            }
+            
+            value = System.getenv("SCIPION_MIC_NOENHANCE");            
+            if (value == null || !value.equals("1"))
+            {
+                ecmi.setState(true);
+                IJCommand ijcmd = new IJCommand(XmippImageJ.enhanceContrastFilter, "saturated=0.4");
+                IJ.run(imp, ijcmd.getCommand(), ijcmd.getOptions());
+                filters.add(ijcmd);
+            }
 		}
 			
 	}
@@ -656,9 +666,9 @@ public class XmippMenuBar extends MenuBar
 	public Map<Object, Object> getKeyAssist()
 	{
 		Map<Object, Object> map = Collections.synchronizedMap(new LinkedHashMap<Object, Object>());
-		map.put("Shift + Scroll Up", "Zoom in");
-		map.put("Shift + Scroll Down", "Zoom out");
-		map.put("Right click + Mouse move", "Moves image previously expanded");
+		map.put("Shift + scroll up", "Zoom in");
+		map.put("Shift + scroll down", "Zoom out");
+		map.put("Right click + mouse move", "Moves image previously expanded");
 		return map;
 	}
         
