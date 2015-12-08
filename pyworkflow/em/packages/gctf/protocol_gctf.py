@@ -126,7 +126,7 @@ class ProtGctf(em.ProtCTFMicrographs):
               label="Do rotational average",
               help='Do rotational average used for output CTF file. '
               'Only for nice output, will NOT be used for CTF determination.')
-        form.addParam('doEPA', params.BooleanParam, default=True,
+        form.addParam('doEPA', params.BooleanParam, default=False,
               expertLevel=params.LEVEL_ADVANCED,
               label="Do EPA",
               help='Do Equiphase average used for output CTF file. '
