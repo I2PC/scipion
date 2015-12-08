@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'sharov@igbmc.fr'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -31,7 +31,7 @@ from pyworkflow.em.data import CTFModel
 from convert import readCtfModel
 
 
-class ZhangImportCTF():
+class GctfImportCTF():
     """ Import CTF estimated with GCTF. """
     def __init__(self, protocol):
         self.protocol = protocol

@@ -1,8 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Grigory Sharov (sharov@igbmc.fr)
-# *
-# * L'Institut de génétique et de biologie moléculaire et cellulaire (IGBMC)
+# * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -20,7 +19,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'sharov@igbmc.fr'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -43,7 +42,7 @@ from pyworkflow import findResource
 # CTFs
 #===============================================================================
 
-class ZhangCTFWizard(CtfWizard):
+class GctfCTFWizard(CtfWizard):
     _targets = [(ProtGctf, ['ctfDownFactor', 'lowRes', 'highRes'])]
     
     def _getParameters(self, protocol):

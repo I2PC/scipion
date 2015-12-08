@@ -20,12 +20,12 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'sharov@igbmc.fr'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 """
 This sub-package contains data and protocol classes
-wrapping Kai Zhang's programs at MRC
+wrapping Kai Zhang's GCTF program
 """
 from bibtex import _bibtex # Load bibtex dict with references
 
@@ -34,4 +34,4 @@ _logo = "gctf_logo.png"
 from protocol_gctf import ProtGctf
 from viewer import ProtGctfViewer
 # Wizards
-from wizard import ZhangCTFWizard
+from wizard import GctfCTFWizard
