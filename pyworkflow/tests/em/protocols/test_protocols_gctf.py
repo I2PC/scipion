@@ -25,12 +25,10 @@
 # **************************************************************************
 
 import unittest, sys
-#import numpy as np
 
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.gctf import *
-#from pyworkflow.em.protocol import ProtImportParticles, ProtImportVolumes
 
 
 class TestGctfBase(BaseTest):
@@ -56,45 +54,6 @@ class TestGctfBase(BaseTest):
             raise Exception('Import of micrograph: %s, failed. outputMicrographs is None.' % pattern)
         return cls.protImport
 
-#    @classmethod
-#    def runImportVolumes(cls, pattern, samplingRate,
-#                         importFrom = ProtImportParticles.IMPORT_FROM_FILES):
-#        """ Run an Import particles protocol. """
-#        cls.protImport = cls.newProtocol(ProtImportVolumes,
-#                                         filesPath=pattern,
-#                                         samplingRate=samplingRate
-#                                        )
-#                                         #not yet implemented
-#                                         #importFrom=importFrom
-#                                         #)
-#        cls.launchProtocol(cls.protImport)
-#        return cls.protImport
-
-#    @classmethod
-#    def runImportParticles(cls, pattern, samplingRate, checkStack=False,
-#                           importFrom = ProtImportParticles.IMPORT_FROM_FILES):
-#        """ Run an Import particles protocol. """
-#        if importFrom == ProtImportParticles.IMPORT_FROM_SCIPION:
-#            objLabel = 'from scipion (particles)'
-#        elif importFrom == ProtImportParticles.IMPORT_FROM_FILES:
-#            objLabel = 'from file (particles)'
-#
-#
-#        cls.protImport = cls.newProtocol(ProtImportParticles,
-#                                         objLabel=objLabel,
-#                                         filesPath=pattern,
-#                                         sqliteFile=pattern,
-#                                         samplingRate=samplingRate,
-#                                         checkStack=checkStack,
-#                                         importFrom=importFrom)
-#
-#        cls.launchProtocol(cls.protImport)
-#        # check that input images have been imported (a better way to do this?)
-#        if cls.protImport.outputParticles is None:
-#            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
-#        return cls.protImport
-
-
     @classmethod
     def runImportMicrographBPV(cls, pattern):
         """ Run an Import micrograph protocol. """
@@ -105,58 +64,7 @@ class TestGctfBase(BaseTest):
                                        scannedPixelSize=None,
                                        magnification=56000)
 
-#    @classmethod
-#    def runImportParticleGrigorieff(cls, pattern):
-#        """ Run an Import micrograph protocol. """
-#        return cls.runImportParticles(pattern,
-#                                      samplingRate=4.,
-#                                      checkStack=True,
-#                            importFrom=ProtImportParticles.IMPORT_FROM_SCIPION)
-#    @classmethod
-#    def runImportVolumesGrigorieff(cls, pattern):
-#        """ Run an Import micrograph protocol. """
-#        return cls.runImportVolumes(pattern,
-#                                    samplingRate=4.,
-#                                    importFrom=ProtImportParticles.IMPORT_FROM_FILES)
-
-
-#class TestImportParticles(BaseTest):
-#    @classmethod
-#    def setUpClass(cls):
-#        setupTestProject(cls)
-#        cls.dataset = DataSet.getDataSet('grigorieff')
-#
-#    def test_import(self):
-#        parFile = self.dataset.getFile('particles/particles_iter_002.par')
-#        stackFile = self.dataset.getFile('particles/particles.mrc')
-#        
-#        protImport = self.newProtocol(ProtImportParticles,
-#                                         objLabel='import parfile & stk',
-#                                         parFile=parFile,
-#                                         stackFile=stackFile,
-#                                         samplingRate=9.90,
-#                                         importFrom=ProtImportParticles.IMPORT_FROM_FREALIGN)
-#
-#        self.launchProtocol(protImport)      
-#        # check that input images have been imported (a better way to do this?)
-#        if protImport.outputParticles is None:
-#            raise Exception('Import failed. Par file: %s' % parFile)
-#        
-#        self.assertTrue(protImport.outputParticles.getSize() == 180)
-#        
-#        goldFile = self.dataset.getFile('particles/particles.sqlite')
-#        goldSet = SetOfParticles(filename=goldFile)
-#        
-#        for p1, p2 in izip(goldSet, protImport.outputParticles.iterItems(orderBy=['_micId', 'id'],
-#                                                                     direction='ASC')):
-#            m1 = p1.getTransform().getMatrix()
-#            m2 = p2.getTransform().getMatrix()
-#            self.assertTrue(np.allclose(m1, m2, atol=0.01))
-#            
-#        self.assertTrue(protImport.outputParticles.hasCTF())
-#        self.assertTrue(protImport.outputParticles.hasAlignmentProj())
-
-    
+   
 class TestGctf(TestGctfBase):
     @classmethod
     def setUpClass(cls):
@@ -191,119 +99,6 @@ class TestGctf(TestGctfBase):
             self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
 
-
-#class TestGctf4(TestGctfBase):
-#    @classmethod
-#    def setUpClass(cls):
-#        setupTestProject(cls)
-#        TestGctfBase.setData()
-#        cls.protImport = cls.runImportMicrographBPV(cls.micFn)
-#    
-#    def testRunGctf4V1(self):
-#        protCTF = ProtGctf()
-#        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
-#        protCTF.ctfDownFactor.set(2)
-#        protCTF.numberOfThreads.set(4)
-#        self.proj.launchProtocol(protCTF, wait=True)
-#        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
-#        
-#        valuesList = [[23861, 23664, 53], [22383, 22153, 48.5], [22716, 22526, 54.3]]
-#        for ctfModel, values in izip(protCTF.outputCTF, valuesList):
-#            self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
-#            self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
-#            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
-#            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
-#
-#    def testRunGctf4V22(self):
-#        protCTF = ProtGctf()
-#        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
-#        protCTF.numberOfThreads.set(4)
-#        self.proj.launchProtocol(protCTF, wait=True)
-#        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
-#        
-#        valuesList = [[23863, 23640, 54], [22159, 21983, 45.8], [22394, 22269, 171]]
-#        for ctfModel, values in izip(protCTF.outputCTF, valuesList):
-#            self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
-#            self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
-#            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
-#            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
-
-
-#class TestFrealignRefine(TestGctfBase):
-#    @classmethod
-#    def setUpClass(cls):
-#        setupTestProject(cls)
-#        dataProject='grigorieff'
-#        dataset = DataSet.getDataSet(dataProject)
-#        TestGctfBase.setData()
-#        particlesPattern   = dataset.getFile('particles.sqlite')
-#        volFn              = dataset.getFile('ref_volume.vol')
-#        cls.protImportPart = cls.runImportParticleGrigorieff(particlesPattern)
-#        cls.protImportVol  = cls.runImportVolumesGrigorieff(volFn)
-#
-#    def testFrealign(self):
-#        frealign = self.newProtocol(ProtFrealign,
-#                                    inputParticles = self.protImportPart.outputParticles,
-#                                    doInvert=False,
-#                                    input3DReference = self.protImportVol.outputVolume,
-#                                    useInitialAngles=True,
-#                                    mode=MOD_REFINEMENT,
-#                                    innerRadius=0.,
-#                                    outerRadius=241.,
-#                                    symmetry='C1',
-#                                    numberOfThreads=4,
-#                                    numberOfIterations=2,
-#                                    doWienerFilter=False,
-#                                    resolution=2.,
-#                                    highResolRefine=2.,
-#                                    resolClass=2.,
-#                                    writeMatchProjections=False,
-#                                    score=0,
-#                                    )
-#        frealign.inputParticles.set(self.protImportPart.outputParticles)
-#        frealign.input3DReference.set(self.protImportVol.outputVolume)
-#        self.launchProtocol(frealign)
-#        print "Assert is missing: testFrealign"
-#
-#
-#class TestFrealignClassify(TestGctfBase):
-#    @classmethod
-#    def setUpClass(cls):
-#        setupTestProject(cls)
-#        dataProject='grigorieff'
-#        dataset = DataSet.getDataSet(dataProject)
-#        TestGctfBase.setData()
-#        particlesPattern   = dataset.getFile('particles.sqlite')
-#        volFn              = dataset.getFile('ref_volume.vol')
-#        cls.protImportPart = cls.runImportParticleGrigorieff(particlesPattern)
-#        cls.protImportVol  = cls.runImportVolumesGrigorieff(volFn)
-#
-#    def testFrealignClassify(self):
-#        frealign = self.newProtocol(ProtFrealignClassify,
-#                                    inputParticles = self.protImportPart.outputParticles,
-#                                    doInvert=False,
-#                                    input3DReference = self.protImportVol.outputVolume,
-#                                    numberOfIterations=3,
-#                                    itRefineAngles = 2,
-#                                    itRefineShifts = 3,
-#                                    numberOfClasses = 2,
-#                                    useInitialAngles=True,
-#                                    mode=MOD_REFINEMENT,
-#                                    innerRadius=0.,
-#                                    outerRadius=241.,
-#                                    symmetry='C1',
-#                                    numberOfThreads=4,
-#                                    doWienerFilter=False,
-#                                    resolution=2.,
-#                                    highResolRefine=2.,
-#                                    resolClass=2.,
-#                                    writeMatchProjections=False,
-#                                    score=0,
-#                                    )
-#        frealign.inputParticles.set(self.protImportPart.outputParticles)
-#        frealign.input3DReference.set(self.protImportVol.outputVolume)
-#        self.launchProtocol(frealign)
-#        print "Assert is missing: testFrealign"
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestGctf)
