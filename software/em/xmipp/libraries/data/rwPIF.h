@@ -124,7 +124,7 @@ typedef struct
     float mean; //> floatInt*4 Mean density value
     float stdDev; //> floatInt*4 StdDev of GrayLevels
     int ispg; //> int*4 Space group number
-    int nsymbt; //> int*4 Number of bytes for symetry ops
+    int nsymbt; //> int*4 Number of bytes for symmetry ops
     float xorigin; //> floatInt*4 x origin
     float yorigin; //> floatInt*4 y origin
     char titleDescription[80]; //> User defined description

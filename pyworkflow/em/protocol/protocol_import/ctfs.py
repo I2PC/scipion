@@ -149,7 +149,8 @@ class ProtImportCTF(ProtImportFiles):
                                "This will make another copy of your data and may take \n"
                                "more time to import. ")
         else:
-            summary.append("Import of *%d* %s from %s" % (self.ctfSet.getSize(), self._outputClassName, self.getPattern()))
+            summary.append("Imported *%d* CTFs " % self.outputCTF.getSize())
+            summary.append("from %s" % self.getPattern())
 
         return summary
     
@@ -169,7 +170,9 @@ class ProtImportCTF(ProtImportFiles):
     #--------------------------- UTILS functions ---------------------------------------------------
     def getFormat(self):
         for fileName, _ in self.iterFiles():
-            if fileName.endswith('.out') or fileName.endswith('.txt'):
+            if (fileName.endswith('.log') or 
+                fileName.endswith('.txt') or
+                fileName.endswith('.out')):
                 return self.IMPORT_FROM_GRIGORIEFF
             if fileName.endswith('.ctfparam'):
                 return self.IMPORT_FROM_XMIPP3

@@ -45,7 +45,7 @@ void ProgTomoExtractSubvolume::defineParams()
     addParamsLine("[-o <filename=\"\">]    : Name of output metadata (\"oroot\".xmd by default)");
     addParamsLine("--sym  <sym=\"c1\">     : Symmetry group");
     addParamsLine("--size     <dim>        : size output subvolumes");
-    addParamsLine("[--mindist  <distance=-1>] : Minimum distance between subvolume centers, usefull to avoid repetition of subvolumes place at simmetry axis");
+    addParamsLine("[--mindist  <distance=-1>] : Minimum distance between subvolume centers, useful to avoid repetition of subvolumes place at simmetry axis");
     addParamsLine("                           : If set to -1 minsdist will be size/4");
     addParamsLine("--center  <x> <y> <z>   :  position of center of subvolume to be extracted");
     addExampleLine("Extract 12 vertices (subvolumes) in boxes of size 21x21x21 pixels from each subtomogram in the data set: ", false);

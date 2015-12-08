@@ -123,24 +123,34 @@ class ProtCTFAssign(ProtCTFMicrographs):
         self._defineSourceRelation(self.inputSet, outputParts)
         self._defineSourceRelation(self.inputCTF, outputParts)
     
+    
+    def __findCTF(self, inputSet, outputSet, ctfDict, keyFunc):
+        for mic in inputSet:
+            micKey = keyFunc(mic)
+            ctf = ctfDict.get(micKey, None)
+            if ctf is None:
+                self.warning("Discarding micrographs with micName: %s, CTF not found. " % micKey)
+            else:
+                newMic = mic.clone()
+                outputSet.append(newMic)
+        
     def _microgrpahsOutputStep(self, inputSet, inputCTF):           
         outputMics = self._createSetOfMicrographs()
         outputMics.copyInfo(inputSet)
         ctfDict = {}
         
         for ctf in inputCTF:
-            ctfName = ctf.getMicrograph().getMicName()
-            ctfDict[ctfName] = ctf
+            mic = ctf.getMicrograph()
+            ctfDict[mic.getMicName()] = ctf
+            ctfDict[mic.getObjId()] = ctf
         
-        for mic in inputSet:
-            micKey = mic.getMicName()
-            ctf = ctfDict.get(micKey, None)
-            if ctf is None:
-                self.warning("Discarding micrographs with micName: %s, CTF not found. " % micKey)
-            else:
-#                 ctf.setObjId(mic.getObjId())
-                newMic = mic.clone()
-                outputMics.append(newMic)
+        # Try first to find the ctf by the micrograph micName
+        self.__findCTF(inputSet, outputMics, ctfDict, lambda mic: mic.getMicName())
+        
+        # Now, if no ctf was found, try using the micId
+        if outputMics.getSize() == 0:
+            self.warning("No CTF found using micName, now trying with micId")
+            self.__findCTF(inputSet, outputMics, ctfDict, lambda mic: mic.getObjId())            
         
         self._defineOutputs(outputMicrographs=outputMics)
         self._defineSourceRelation(self.inputSet, outputMics)

@@ -321,7 +321,7 @@ class MDQuery
 public:
     int limit; ///< If distint of -1 the results will be limited to this value
     int offset; ///< If distint of 0, offset elements will be discarded
-    MDLabel orderLabel; ///< Label to wich apply sort of the results
+    MDLabel orderLabel; ///< Label to which apply sort of the results
     bool asc;
 
     /** Constructor. */
@@ -451,7 +451,7 @@ public:
  *  ///Remove all images that are disabled
  *  MetaData md1, md2;
  *  md1.removeObjects(MDValueEQ(MDL_ENABLED, -1));
- *  ///Import objects from md2 to md1 wich rot angle is 0.
+ *  ///Import objects from md2 to md1 which rot angle is 0.
  *  md1.importObjects(md2, MDValueEQ(MDL_ANGLE_ROT, 0.));
  *  @endcode
  */
@@ -609,7 +609,7 @@ public:
 ;//end of class MDExpression
 
 /** Query several conditions using AND and OR.
- * This kind of query if usefull if you want to check
+ * This kind of query if useful if you want to check
  * two conditions at the same time, for example, import
  * all images that are enabled and have rotational angle greater than 100.
  * @code

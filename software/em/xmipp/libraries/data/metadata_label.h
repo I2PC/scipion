@@ -266,7 +266,7 @@ enum MDLabel
     MDL_MODELFRAC, ///< Model fraction (alpha_k) for a Maximum Likelihood model
     MDL_NEIGHBORS, ///< Vector of indexes to points some "neighbors"
     MDL_NEIGHBOR, ///< Particular neighbor (pointed myNEIGHBORS)
-    MDL_NEIGHBORHOOD_RADIUS, ///< Radius of the neigborhood (radians)
+    MDL_NEIGHBORHOOD_RADIUS, ///< Radius of the neighborhood (radians)
     MDL_NMA, ///< Normal mode displacements (vector double)
     MDL_NMA_COLLECTIVITY, ///< NMA Collectivity of a given mode
     MDL_NMA_ATOMSHIFT, ///< NMA Atom shift in Angstroms
@@ -355,6 +355,8 @@ enum MDLabel
     MDL_SAMPLINGRATE_Z, ///< sampling rate in A/pixel (double)
 
     MDL_SCALE, ///< scaling factor for an image or volume (double)
+    MDL_SCORE_BY_PCA_RESIDUAL,
+    MDL_SCORE_BY_ZSCORE,
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
     MDL_SHIFT_X, ///< Shift for the image in the X axis (double)
@@ -1012,7 +1014,7 @@ public:
     /** Assign operator */
     MDObject & operator = (const MDObject &obj);
     //Just a simple constructor with the label
-    //dont do any type checking as have not value yet
+    //don't do any type checking as have not value yet
     MDObject(MDLabel label);
     ///Constructors for each Label supported type
     ///these constructor will do the labels type checking
@@ -1696,6 +1698,9 @@ private:
         MDL::addLabelAlias(MDL_SAMPLINGRATE_Z, "sampling_rateZ"); //3.0
 
         MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale");
+        MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL, LABEL_DOUBLE, "scoreByPcaResidual");
+        MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
+
         MDL::addLabelAlias(MDL_SCALE, "Scale");
         MDL::addLabel(MDL_SELFILE, LABEL_STRING, "selfile", TAGLABEL_METADATA);
         MDL::addLabel(MDL_SERIE, LABEL_STRING, "serie");

@@ -272,9 +272,7 @@ def getProjectionMatchingArgs(self, iterN):
     
     args = ' --Ri %(innerRadius)s'
     args += ' --Ro %(outerRadius)s --max_shift %(maxShift)s --search5d_shift %(search5dShift)s'
-    args += ' --search5d_step %(search5dStep)s --mem %(mem)s --thr %(thr)s --append'
-    
-    memory = self.availableMemory.get() * self.numberOfThreads.get()
+    args += ' --search5d_step %(search5dStep)s --append'
     
     params = {
               'innerRadius' : self._innerRadius[iterN],
@@ -282,8 +280,6 @@ def getProjectionMatchingArgs(self, iterN):
               'maxShift' : self._maxChangeOffset[iterN],
               'search5dShift' : self._search5DShift[iterN],
               'search5dStep' : self._search5DStep[iterN],
-              'mem' : memory,
-              'thr' : self.numberOfThreads.get(),
               }
     
     if self.doScale:
@@ -326,10 +322,18 @@ def runProjectionMatching(self, iterN, refN, args, **kwargs):
         neighbFileb = baseTxtFile + '_group' + str(ctfN).zfill(self.FILENAMENUMBERLENGTH) + '_sampling.xmd'
         copyFile(neighbFileb, neighbFile)
         print "copied file ", neighbFileb, "to", neighbFile
+        
+        threads = self.numberOfThreads.get()
+        trhArgs = ' --mem %(mem)s --thr %(thr)s'
+        thrParams = {
+                  'mem' : self.availableMemory.get() * threads,
+                  'thr' : threads,
+                  }
+        
         if self.doCTFCorrection and self._referenceIsCtfCorrected[iterN]:
             ctfArgs += ' --ctf %s' % self._getBlockFileName('', ctfN, self._getFileName('stackCTFs'))
-    
-        progArgs = ctfArgs % locals() + args
+        
+        progArgs = ctfArgs % locals() + args + trhArgs % thrParams
         self.runJob('xmipp_angular_projection_matching', progArgs, **kwargs)
 
 
@@ -490,8 +494,6 @@ def insertAngularClassAverageStep(self, iterN, refN, **kwargs):
 
 def insertReconstructionStep(self, iterN, refN, suffix='', **kwargs):
     
-    mpi = self.numberOfMpi.get()
-    threads = self.numberOfThreads.get()
     method = self.getEnumText('reconstructionMethod')
     reconsXmd = 'reconstructionXmd' + suffix
     reconsVol = 'reconstructedFileNamesIters' + suffix
@@ -508,32 +510,34 @@ def insertReconstructionStep(self, iterN, refN, suffix='', **kwargs):
         
     elif method == 'art':
         program = 'xmipp_reconstruct_art'
-        args += ' --thr %(threads)s --WLS'
-        params['threads'] = self.numberOfTrheads.get()
+        args += ' --WLS'
         
-        if len(ARTLambda) > 1:
+        if len(self._artLambda) >= 1:
             args += ' -l %(artLambda)s ' + self.artReconstructionExtraCommand.get()
             params['artLambda'] = self._artLambda[iterN]
-        
-        mpi = 1
-        threads = 1
-                
+    
     elif method == 'fourier':
         program = 'xmipp_reconstruct_fourier'
-        args += ' --thr %(threads)s --weight --padding %(pad)s %(pad)s'
-        params['threads'] = self.numberOfThreads.get()
+        args += ' --weight --padding %(pad)s %(pad)s'
         params['pad'] = self.paddingFactor.get()
         
-    self._insertFunctionStep('reconstructionStep', iterN, refN, program, method, args % params, suffix, mpi, threads, **kwargs)
+    self._insertFunctionStep('reconstructionStep', iterN, refN, program, method, args % params, suffix, **kwargs)
 
 
-def runReconstructionStep(self, iterN, refN, program, method, args, suffix, mpi, threads, **kwargs):
+def runReconstructionStep(self, iterN, refN, program, method, args, suffix, **kwargs):
     #if input metadata is empty create a Blanck image
     reconsXmd = 'reconstructionXmd' + suffix
     reconsVol = 'reconstructedFileNamesIters' + suffix
     mdFn = self._getFileName(reconsXmd, iter=iterN, ref=refN)
     volFn = self._getFileName(reconsVol, iter=iterN, ref=refN)
     maskFn = self._getFileName('maskedFileNamesIters', iter=iterN, ref=refN)
+    if method=="art":
+        mpi = 1
+        threads = 1
+    else:
+        mpi = self.numberOfMpi.get()
+        threads = self.numberOfThreads.get()
+        args += ' --thr %d' % threads
     
     if isMdEmpty(mdFn):
         img = xmipp.Image()

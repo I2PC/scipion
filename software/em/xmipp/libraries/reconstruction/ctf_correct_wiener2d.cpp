@@ -208,7 +208,6 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
 	Ydim = YSIZE(img());
 	Xdim = YSIZE(img());
 	int paddim = Ydim*pad;
-	MultidimArray<std::complex<double> > Faux;
 
 	 generateWienerFilter(Mwien,ctf);
 
@@ -230,13 +229,13 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
         img().selfWindow(x0, x0, xF, xF);
     }
 
-    FourierTransform(img(), Faux);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mwien)
+    transformer.FourierTransform(img(), Faux);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
     {
         dAij(Faux,i,j) *= dAij(Mwien,i,j);
     }
 
-    InverseFourierTransform(Faux, img());
+    transformer.inverseFourierTransform(Faux, img());
     if (paddim > Xdim)
     {
         // de-pad real-space image
