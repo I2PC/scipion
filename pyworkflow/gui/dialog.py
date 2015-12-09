@@ -113,7 +113,7 @@ class Dialog(tk.Toplevel):
             self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
                                       parent.winfo_rooty()+50))
 
-        self.deiconify() # become visibile now
+        self.deiconify() # become visible now
 
         self.initial_focus.focus_set()
 

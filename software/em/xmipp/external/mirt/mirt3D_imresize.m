@@ -34,7 +34,7 @@ if sum(M<1)==0,
     im(coef)=nan;
 end
 
-% prepair the coordinates of the smaller image
+% prepare the coordinates of the smaller image
 x=linspace(1,siz(2),newsiz(2));
 y=linspace(1,siz(1),newsiz(1));
 z=linspace(1,siz(3),newsiz(3));

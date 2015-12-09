@@ -122,7 +122,7 @@ class ProtResMap(ProtAnalysis3D):
             
 
     def estimateResolutionStep(self, pValue, minRes, maxRes, stepRes, ang, rampWeight):
-        """ Call ResMap.py with the appropiate parameters. """
+        """ Call ResMap.py with the appropriate parameters. """
         results = self.runResmap(self._getPath())
         
         from cPickle import dumps

@@ -265,7 +265,7 @@ class SqliteMapper(Mapper):
         self.updatePendingPointers = [] 
          
     def selectBy(self, iterate=False, objectFilter=None, **args):
-        """Select object meetings some criterias"""
+        """Select object meetings some criteria"""
         self.__initObjDict()
         objRows = self.db.selectObjectsBy(**args)
         return self.__objectsFromRows(objRows, iterate, objectFilter)
@@ -358,7 +358,7 @@ class SqliteObjectsDb(SqliteDb):
     It will create connection, execute queries and commands"""
     # Maintain the current version of the DB schema
     # useful for future updates and backward compatibility
-    # version should be an interger number
+    # version should be an integer number
     VERSION = 1
     
     SELECT = "SELECT id, parent_id, name, classname, value, label, comment, datetime(creation, 'localtime') as creation FROM Objects WHERE "
@@ -480,7 +480,7 @@ class SqliteObjectsDb(SqliteDb):
         return self._results(iterate)  
     
     def selectObjectsByAncestor(self, ancestor_namePrefix, iterate=False):
-        """Select all objects in the hierachy of ancestor_id"""
+        """Select all objects in the hierarchy of ancestor_id"""
         self.executeCommand(self.selectCmd("name LIKE '%s.%%'" % ancestor_namePrefix))
         return self._results(iterate)          
     
@@ -691,7 +691,7 @@ class SqliteFlatMapper(Mapper):
             return self.__iterObjectsFromRows(objRows, objectFilter)
          
     def selectBy(self, iterate=False, objectFilter=None, **args):
-        """Select object meetings some criterias"""
+        """Select object meetings some criteria"""
         objRows = self.db.selectObjectsBy(**args)
         return self.__objectsFromRows(objRows, iterate, objectFilter)
     
@@ -760,7 +760,7 @@ class SqliteFlatDb(SqliteDb):
     It will create connection, execute queries and commands"""
     # Maintain the current version of the DB schema
     # useful for future updates and backward compatibility
-    # version should be an interger number
+    # version should be an integer number
     VERSION = 1
     
     CLASS_MAP = {'Integer': 'INTEGER',

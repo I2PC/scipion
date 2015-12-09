@@ -65,7 +65,7 @@ void closing2D(const MultidimArray<double> &in, MultidimArray<double> &out, int 
 void opening2D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                int count, int size);
 /** Border of a binary image.
-    The border is computed as the substraction of an image and its dilation. */
+    The border is computed as the subtraction of an image and its dilation. */
 void border(const MultidimArray<double> &img, MultidimArray<double> &border);
 /** Simplify border.
     The border is simplified by removing all points having more than 2

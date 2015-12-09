@@ -51,7 +51,7 @@ function doInitFunction(){
 					errorPopup('Error', "Problem found with the file selected", 0);
 				}
 				else{
-					infoPopup('Success', "The file was uploaded successfuly", 0);
+					infoPopup('Success', "The file was uploaded successfully", 0);
 				}
 			}
 		});

@@ -6,7 +6,7 @@ import os
 
 #init project
 project = XmippProject()
-#load project: read config file and open conection database
+#load project: read config file and open connection database
 project.load()
 # Clear project
 project.clean()

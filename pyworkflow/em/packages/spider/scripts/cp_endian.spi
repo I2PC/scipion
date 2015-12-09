@@ -9,7 +9,7 @@
 
 [numberOfParticles] = 0             ; Pass the number of images instead of the selfile
 fr g
-[particles]particles@******         ; input particles to change the endianess
+[particles]particles@******         ; input particles to change the endianness
 fr g
 [particles_big]particles_big@****** ; output big endian particles
 

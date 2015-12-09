@@ -237,4 +237,3 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
             boxSize = int(jsonBoxDict["box_size"])
         boxSize = (int)(boxSize * scale)
         return boxSize
-

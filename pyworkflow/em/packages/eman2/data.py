@@ -101,7 +101,7 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         return self.get()
     
     def getList(self, param):
-        """ Return the list asociated to a param """
+        """ Return the list associated to a param """
         self.loadIfEmpty()
         
         list =  self._jsonDict[param]
@@ -319,6 +319,6 @@ class EmanSetOfVolumes(EmanSetOfImages, SetOfVolumes):
 #            if (paramName in line):
 #                auxValue = line.split(" : ")[1]
 #        if auxValue is None:
-#            raise Exception("Error getting the stored paramter with command: " + command) 
+#            raise Exception("Error getting the stored parameter with command: " + command) 
 #        return auxValue
 #    

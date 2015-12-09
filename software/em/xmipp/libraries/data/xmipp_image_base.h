@@ -78,7 +78,7 @@ typedef enum
 typedef enum
 {
     _NONE = -2,  // Nothing to do. Used by ImageGeneric to check the right datatype to be used
-    HEADER = -1, //Dont read image data, only info from main header(datatype and dimensions)
+    HEADER = -1, //Don't read image data, only info from main header(datatype and dimensions)
     _HEADER_ALL = 0, //Read complete header(main and geo), useful for header_extract and header_assign
     DATA = 1, //Read image data and main header, geometrical transformations will be ignored
     _DATA_ALL = 2  //Read data with complete header(the use of this option is not recommended, all Xmipp
@@ -364,7 +364,7 @@ public:
     int readApplyGeo(const MetaData &md, size_t objId,
                      const ApplyGeoParams &params = DefaultApplyGeoParams);
 
-    /** Apply geometry in refering metadata to the image */
+    /** Apply geometry in referring metadata to the image */
     void applyGeo(const MetaData &md, size_t objId,
                   const ApplyGeoParams &params = DefaultApplyGeoParams);
 
@@ -454,7 +454,7 @@ public:
       */
     void swapPage(char * page, size_t pageNrElements, DataType datatype, int swap = 1);
 
-    /* Force the swapping of the endianess of the file when writing, except for the case
+    /* Force the swapping of the endianness of the file when writing, except for the case
      * when appending or modifying the file.
      */
     void swapOnWrite()

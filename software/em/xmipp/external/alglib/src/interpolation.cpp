@@ -3710,7 +3710,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
     P   -   interpolant in barycentric form.
     Rep -   report, same format as in LSFitLinearW() subroutine.
@@ -3767,7 +3767,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
     P   -   interpolant in barycentric form.
     Rep -   report, same format as in LSFitLinearW() subroutine.
@@ -3845,7 +3845,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     P   -   interpolant in barycentric form.
@@ -3940,7 +3940,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     P   -   interpolant in barycentric form.
@@ -4044,7 +4044,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
                         -1 means another errors in parameters passed
@@ -4125,7 +4125,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     B   -   barycentric interpolant.
@@ -4176,7 +4176,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     B   -   barycentric interpolant.
@@ -4227,7 +4227,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     B   -   barycentric interpolant.
@@ -4304,7 +4304,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD or
                            Cholesky decomposition; problem may be
                            too ill-conditioned (very rare)
@@ -4386,7 +4386,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD or
                            Cholesky decomposition; problem may be
                            too ill-conditioned (very rare)
@@ -4481,7 +4481,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     S   -   spline interpolant.
@@ -4596,7 +4596,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     S   -   spline interpolant.
@@ -4720,7 +4720,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
                         -2 means odd M was passed (which is not supported)
@@ -4840,7 +4840,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
                         -2 means odd M was passed (which is not supported)
@@ -5240,7 +5240,7 @@ void lsfitlinearw(const real_1d_array &y, const real_1d_array &w, const real_2d_
 Weighted constained linear least squares fitting.
 
 This  is  variation  of LSFitLinearW(), which searchs for min|A*x=b| given
-that  K  additional  constaints  C*x=bc are satisfied. It reduces original
+that  K  additional  constraints  C*x=bc are satisfied. It reduces original
 task to modified one: min|B*y-d| WITHOUT constraints,  then LSFitLinearW()
 is called.
 
@@ -5258,7 +5258,7 @@ INPUT PARAMETERS:
                 corresponding weight.
     FMatrix -   a table of basis functions values, array[0..N-1, 0..M-1].
                 FMatrix[I,J] - value of J-th basis function in I-th point.
-    CMatrix -   a table of constaints, array[0..K-1,0..M].
+    CMatrix -   a table of constraints, array[0..K-1,0..M].
                 I-th row of CMatrix corresponds to I-th linear constraint:
                 CMatrix[I,0]*C[0] + ... + CMatrix[I,M-1]*C[M-1] = CMatrix[I,M]
     N       -   number of points used. N>=1.
@@ -5352,7 +5352,7 @@ void lsfitlinearwc(const real_1d_array &y, const real_1d_array &w, const real_2d
 Weighted constained linear least squares fitting.
 
 This  is  variation  of LSFitLinearW(), which searchs for min|A*x=b| given
-that  K  additional  constaints  C*x=bc are satisfied. It reduces original
+that  K  additional  constraints  C*x=bc are satisfied. It reduces original
 task to modified one: min|B*y-d| WITHOUT constraints,  then LSFitLinearW()
 is called.
 
@@ -5370,7 +5370,7 @@ INPUT PARAMETERS:
                 corresponding weight.
     FMatrix -   a table of basis functions values, array[0..N-1, 0..M-1].
                 FMatrix[I,J] - value of J-th basis function in I-th point.
-    CMatrix -   a table of constaints, array[0..K-1,0..M].
+    CMatrix -   a table of constraints, array[0..K-1,0..M].
                 I-th row of CMatrix corresponds to I-th linear constraint:
                 CMatrix[I,0]*C[0] + ... + CMatrix[I,M-1]*C[M-1] = CMatrix[I,M]
     N       -   number of points used. N>=1.
@@ -5664,7 +5664,7 @@ void lsfitlinear(const real_1d_array &y, const real_2d_array &fmatrix, ae_int_t 
 Constained linear least squares fitting.
 
 This  is  variation  of LSFitLinear(),  which searchs for min|A*x=b| given
-that  K  additional  constaints  C*x=bc are satisfied. It reduces original
+that  K  additional  constraints  C*x=bc are satisfied. It reduces original
 task to modified one: min|B*y-d| WITHOUT constraints,  then  LSFitLinear()
 is called.
 
@@ -5678,7 +5678,7 @@ INPUT PARAMETERS:
     Y       -   array[0..N-1] Function values in  N  points.
     FMatrix -   a table of basis functions values, array[0..N-1, 0..M-1].
                 FMatrix[I,J] - value of J-th basis function in I-th point.
-    CMatrix -   a table of constaints, array[0..K-1,0..M].
+    CMatrix -   a table of constraints, array[0..K-1,0..M].
                 I-th row of CMatrix corresponds to I-th linear constraint:
                 CMatrix[I,0]*C[0] + ... + CMatrix[I,M-1]*C[M-1] = CMatrix[I,M]
     N       -   number of points used. N>=1.
@@ -5772,7 +5772,7 @@ void lsfitlinearc(const real_1d_array &y, const real_2d_array &fmatrix, const re
 Constained linear least squares fitting.
 
 This  is  variation  of LSFitLinear(),  which searchs for min|A*x=b| given
-that  K  additional  constaints  C*x=bc are satisfied. It reduces original
+that  K  additional  constraints  C*x=bc are satisfied. It reduces original
 task to modified one: min|B*y-d| WITHOUT constraints,  then  LSFitLinear()
 is called.
 
@@ -5786,7 +5786,7 @@ INPUT PARAMETERS:
     Y       -   array[0..N-1] Function values in  N  points.
     FMatrix -   a table of basis functions values, array[0..N-1, 0..M-1].
                 FMatrix[I,J] - value of J-th basis function in I-th point.
-    CMatrix -   a table of constaints, array[0..K-1,0..M].
+    CMatrix -   a table of constraints, array[0..K-1,0..M].
                 I-th row of CMatrix corresponds to I-th linear constraint:
                 CMatrix[I,0]*C[0] + ... + CMatrix[I,M-1]*C[M-1] = CMatrix[I,M]
     N       -   number of points used. N>=1.
@@ -11134,7 +11134,7 @@ static void idwint_idwinit1(ae_int_t n,
 Linear least squares solver for small tasks.
 
 Works faster than standard ALGLIB solver in non-degenerate cases  (due  to
-absense of internal allocations and optimized row/colums).  In  degenerate
+absence of internal allocations and optimized row/colums).  In  degenerate
 cases it calls standard solver, which results in small performance penalty
 associated with preliminary steps.
 
@@ -16138,7 +16138,7 @@ void spline1drootsandextrema(spline1dinterpolant* c,
                 {
                     
                     /*
-                     *decrement 'NR' if at previous step was writen a root
+                     *decrement 'NR' if at previous step was written a root
                      *(previous segment identical zero)
                      */
                     if( *nr>0&&nstep )
@@ -17084,7 +17084,7 @@ REMARK:
 
 Assume, that exist one root only at [A;B], else 
 function may be work incorrectly.
-The function dont check value A0,B0!
+The function don't check value A0,B0!
 
  -- ALGLIB PROJECT --
      Copyright 26.09.2011 by Bochkanov Sergey
@@ -17486,7 +17486,7 @@ static void spline1d_spline1dgriddiffcubicinternal(/* Real    */ ae_vector* x,
         {
             
             /*
-             * Altough last point is [N-2], we use X[N-1] and Y[N-1]
+             * Although last point is [N-2], we use X[N-1] and Y[N-1]
              * (because of periodicity)
              */
             a1->ptr.p_double[i] = x->ptr.p_double[i+1]-x->ptr.p_double[i];
@@ -17845,7 +17845,7 @@ Result:
          
 REMARK:
 
-The function dont check value A0,B0 and A1,B1!
+The function don't check value A0,B0 and A1,B1!
 
  -- ALGLIB PROJECT --
      Copyright 26.09.2011 by Bochkanov Sergey
@@ -17957,7 +17957,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
     P   -   interpolant in barycentric form.
     Rep -   report, same format as in LSFitLinearW() subroutine.
@@ -18055,7 +18055,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     P   -   interpolant in barycentric form.
@@ -18199,7 +18199,7 @@ void polynomialfitwc(/* Real    */ ae_vector* x,
      * * BX, BY store barycentric model nodes
      * * FMatrix is reused (remember - it is at least MxM, what we need)
      *
-     * Model intialization is done in O(M^2). In principle, it can be
+     * Model initialization is done in O(M^2). In principle, it can be
      * done in O(M*log(M)), but before it we solved task with O(N*M^2)
      * complexity, so it is only a small amount of total time spent.
      */
@@ -18316,7 +18316,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
                         -1 means another errors in parameters passed
@@ -18482,7 +18482,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     B   -   barycentric interpolant.
@@ -18558,7 +18558,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     B   -   barycentric interpolant.
@@ -18657,7 +18657,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD or
                            Cholesky decomposition; problem may be
                            too ill-conditioned (very rare)
@@ -19049,7 +19049,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearWC() subroutine.
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     S   -   spline interpolant.
@@ -19191,7 +19191,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
                         -2 means odd M was passed (which is not supported)
@@ -19507,7 +19507,7 @@ void lsfitlinearw(/* Real    */ ae_vector* y,
 Weighted constained linear least squares fitting.
 
 This  is  variation  of LSFitLinearW(), which searchs for min|A*x=b| given
-that  K  additional  constaints  C*x=bc are satisfied. It reduces original
+that  K  additional  constraints  C*x=bc are satisfied. It reduces original
 task to modified one: min|B*y-d| WITHOUT constraints,  then LSFitLinearW()
 is called.
 
@@ -19525,7 +19525,7 @@ INPUT PARAMETERS:
                 corresponding weight.
     FMatrix -   a table of basis functions values, array[0..N-1, 0..M-1].
                 FMatrix[I,J] - value of J-th basis function in I-th point.
-    CMatrix -   a table of constaints, array[0..K-1,0..M].
+    CMatrix -   a table of constraints, array[0..K-1,0..M].
                 I-th row of CMatrix corresponds to I-th linear constraint:
                 CMatrix[I,0]*C[0] + ... + CMatrix[I,M-1]*C[M-1] = CMatrix[I,M]
     N       -   number of points used. N>=1.
@@ -19859,7 +19859,7 @@ void lsfitlinear(/* Real    */ ae_vector* y,
 Constained linear least squares fitting.
 
 This  is  variation  of LSFitLinear(),  which searchs for min|A*x=b| given
-that  K  additional  constaints  C*x=bc are satisfied. It reduces original
+that  K  additional  constraints  C*x=bc are satisfied. It reduces original
 task to modified one: min|B*y-d| WITHOUT constraints,  then  LSFitLinear()
 is called.
 
@@ -19873,7 +19873,7 @@ INPUT PARAMETERS:
     Y       -   array[0..N-1] Function values in  N  points.
     FMatrix -   a table of basis functions values, array[0..N-1, 0..M-1].
                 FMatrix[I,J] - value of J-th basis function in I-th point.
-    CMatrix -   a table of constaints, array[0..K-1,0..M].
+    CMatrix -   a table of constraints, array[0..K-1,0..M].
                 I-th row of CMatrix corresponds to I-th linear constraint:
                 CMatrix[I,0]*C[0] + ... + CMatrix[I,M-1]*C[M-1] = CMatrix[I,M]
     N       -   number of points used. N>=1.
@@ -22653,7 +22653,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     Info-   same format as in LSFitLinearW() subroutine:
             * Info>0    task is solved
-            * Info<=0   an error occured:
+            * Info<=0   an error occurred:
                         -4 means inconvergence of internal SVD
                         -3 means inconsistent constraints
     C   -   interpolant in Chebyshev form; [-1,+1] is used as base interval

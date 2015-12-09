@@ -302,7 +302,7 @@ void ProgAngularProjectLibrary::run()
     //=========================
     //======================
     //recompute symmetry with neigh symmetry
-    // If uncomment neighbour are not OK. BE CAREFULL
+    // If uncomment neighbour are not OK. BE CAREFUL
 #define BREAKSIMMETRY
 #ifdef BREAKSIMMETRY
     if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))

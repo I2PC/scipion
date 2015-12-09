@@ -219,7 +219,10 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
                                mdQuality.getValue(xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO,mdQuality.firstObject()),
                                mdCTF.firstObject())
             else:
-                mdCTF = md.MetaData(self._getFileName('ctfErrorParam', micDir=micDir))
+                fnError=self._getFileName('ctfErrorParam', micDir=micDir)
+                if not exists(fnError):
+                    self._createErrorCtfParam(micDir)
+                mdCTF = md.MetaData(fnError)
             mdAux.importObjects( mdFn, md.MDValueEQ(md.MDL_MICROGRAPH_ID, long(mic.getObjId())))
             mdAux.merge(mdCTF)
             

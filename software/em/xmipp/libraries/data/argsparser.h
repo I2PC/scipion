@@ -289,7 +289,7 @@ public:
     /// Read and validate commmand line
     void read(int argc, const char ** argv, bool reportErrors = true);
     /// Add a section to the program definition
-    /// and return a pointer to it, usefull for manually
+    /// and return a pointer to it, useful for manually
     SectionDef * addSection(String sectionName, int visibility = 0);
 
 };

@@ -576,7 +576,7 @@ class GitDataCollector(DataCollector):
 
 		# Per-author statistics
 
-		# defined for stamp, author only if author commited at this timestamp.
+		# defined for stamp, author only if author committed at this timestamp.
 		self.changes_by_date_by_author = {} # stamp -> author -> lines_added
 
 		# Similar to the above, but never use --first-parent

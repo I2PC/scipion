@@ -1452,6 +1452,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		final Point p = evt.getPoint();
 		int row = table.rowAtPoint(p);
 		int col = table.columnAtPoint(p);
+		col = table.convertColumnIndexToModel(col);
         int index = gallery.getIndex(row, col);
         if (!gallery.isValidIndex(index))
         	return;
@@ -1955,7 +1956,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(OPEN_ASTEXT, "Open as text");
 			addItem(CTF_PROFILE, "Show CTF profile");
 			addItem(CTF_RECALCULATE, "Recalculate CTF");
-                        setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
+            setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
 			addSeparator();
 			addItem(OPEN_IMAGES, "Open images");
 			addItem(SAVE_IMAGES, "Save images", "save.gif");
@@ -1975,12 +1976,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
             row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
+			col = table.convertColumnIndexToModel(col);
             boolean isscipion = data.isScipionInstance();
 			setItemVisible(SET_CLASS, data.isClassificationMd() && !isscipion);
 			// This item visibility depends on current selection
 			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0 && !isscipion);
 			setItemVisible(OPEN_IMAGES, data.hasClasses() && gallery.getSelectionCount() == 1);
-                        setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
+            setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
 			// Update menu items status depending on item.
 			getPopupMenu().show(cmpnt, location.x, location.y);
 
@@ -2047,6 +2049,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			else if (cmd.equals(OPEN))
 			{
+				
                 ColumnInfo ci = gallery.getColumn(row, col);
                 if (ci.allowRender)
                     gallery.handleDoubleClick(row, col);
@@ -2069,17 +2072,17 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			else if (cmd.equals(CTF_RECALCULATE))
 			{
-                                boolean isrecalculate = getItemSelected(CTF_RECALCULATE);
-                                int index = gallery.getIndex(row, col);
-                                if(isrecalculate && !data.isEnabled(index))
-                                    XmippDialog.showInfo(GalleryJFrame.this, "You must enable micrograph to recalculate its CTF");
-                                else
-                                {
-                                    if(isrecalculate)
-                                        data.showCTF(false, index, gallery.getSelection(), ctfTasks);
-                                    else
-                                        data.removeCTF(row);
-                                }
+                boolean isrecalculate = getItemSelected(CTF_RECALCULATE);
+                int index = gallery.getIndex(row, col);
+                if(isrecalculate && !data.isEnabled(index))
+                    XmippDialog.showInfo(GalleryJFrame.this, "You must enable micrograph to recalculate its CTF");
+                else
+                {
+                    if(isrecalculate)
+                        data.showCTF(false, index, gallery.getSelection(), ctfTasks);
+                    else
+                        data.removeCTF(row);
+                }
                                 
 			}
 			else if (cmd.equals(SET_CLASS))
@@ -2111,15 +2114,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                             }
 			}
                         
-                        else 
-                        {
-                            String objectCommand = cmd.replace("_mi", "");
-                            if (data.isObjectCmd(objectCommand))
-                            {
-                                int index = gallery.getIndex(row, col);
-                                data.runObjectCommand(index, objectCommand);
-                            }
-                        }
+            else 
+            {
+                String objectCommand = cmd.replace("_mi", "");
+                if (data.isObjectCmd(objectCommand))
+                {
+                    int index = gallery.getIndex(row, col);
+                    data.runObjectCommand(index, objectCommand);
+                }
+            }
 			initItems();
 
 		}

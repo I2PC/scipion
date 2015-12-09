@@ -410,7 +410,7 @@ double incompletegammac(const double a, const double x)
 }
 
 /*************************************************************************
-Inverse of complemented imcomplete gamma integral
+Inverse of complemented incomplete gamma integral
 
 Given p, the function finds x such that
 
@@ -1033,7 +1033,7 @@ double incompletebeta(const double a, const double b, const double x)
 }
 
 /*************************************************************************
-Inverse of imcomplete beta integral
+Inverse of incomplete beta integral
 
 Given y, the function finds x such that
 
@@ -3658,7 +3658,7 @@ double incompletegammac(double a, double x, ae_state *_state)
 
 
 /*************************************************************************
-Inverse of complemented imcomplete gamma integral
+Inverse of complemented incomplete gamma integral
 
 Given p, the function finds x such that
 
@@ -5638,7 +5638,7 @@ double incompletebeta(double a, double b, double x, ae_state *_state)
 
 
 /*************************************************************************
-Inverse of imcomplete beta integral
+Inverse of incomplete beta integral
 
 Given y, the function finds x such that
 
