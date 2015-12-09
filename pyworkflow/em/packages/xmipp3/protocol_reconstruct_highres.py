@@ -612,8 +612,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             else:
                 TsCurrent=self.TsOrig
             getShiftsFrom=''
-            if iteration>1:
-                getShiftsFrom=fnDirPrevious
+            # if iteration>1: # This causes images to be replicated
+            #    getShiftsFrom=fnDirPrevious
             self.prepareImages(fnDirPrevious,fnGlobal,TsCurrent,getShiftsFrom)
             self.prepareReferences(fnDirPrevious,fnGlobal,TsCurrent,targetResolution)
 
@@ -768,6 +768,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnLocalXmd=join(fnDirLocal,"anglesCont%02d.xmd"%i)
                 if not exists(fnLocalXmd):
                     fnLocalImages=join(fnDirLocal,"images%02d.xmd"%i)
+                    fnLocalImagesIdx=join(fnDirLocal,"images%02d_idx.xmd"%i)
     
                     # Starting angles
                     fnLocalAssignment=join(fnDirLocal,"anglesDisc%02d.xmd"%i)
@@ -786,7 +787,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         self.adaptShifts(fnAux,TsPrevious,fnLocalAssignment,TsCurrent)
                         cleanPath(fnAux)
                     self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column image"%fnLocalAssignment,numberOfMpi=1)
-                    self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%(fnLocalAssignment,fnLocalImages),numberOfMpi=1)
+                    self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "particleId image" -o %s'%(fnLocalImages,fnLocalImagesIdx),numberOfMpi=1)
+                    self.runJob("xmipp_metadata_utilities",'-i %s --operate remove_duplicates particleId'%(fnLocalImagesIdx),numberOfMpi=1)
+                    self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%(fnLocalAssignment,fnLocalImagesIdx),numberOfMpi=1)
+                    cleanPath(fnLocalImagesIdx)
     
                     fnVol=join(fnDirLocal,"volumeRef%02d.vol"%i)
                     fnLocalStk=join(fnDirLocal,"anglesCont%02d.stk"%i)
