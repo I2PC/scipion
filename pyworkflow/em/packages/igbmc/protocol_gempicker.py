@@ -51,6 +51,11 @@ class ProtGemPicker(em.ProtParticlePicking):
     """
     _label = 'auto-picking'
         
+    def __init__(self, **args):     
+        em.ProtParticlePicking.__init__(self, **args)
+        # The following attribute is only for testing
+        self.importFolder = String(args.get('importFolder', None))
+
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         
