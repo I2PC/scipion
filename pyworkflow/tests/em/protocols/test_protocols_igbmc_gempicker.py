@@ -30,8 +30,8 @@ from os.path import join, basename
 
 from pyworkflow.em import *
 from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3 import *
-from pyworkflow.em.packages.igbmc import *
+from pyworkflow.em.packages.igbmc.protocol_gempicker import *
+
 import pyworkflow.utils as pwutils
 
 
@@ -87,23 +87,15 @@ class TestIgbmcBase(BaseTest):
                                        magnification=66000)
     
     @classmethod
-    def runPicking(cls, mics, mask, refs):
+    def runPicking(cls):
         """ Run a particle picking. """
-        mics = cls.protDown1.outputMicrographs
-        mask = cls.protImportMsk.outputMask
-        refs = cls.protImportAvg.outputAverages
-        print mics, mask, refs
-        cls.protPP = ProtGemPicker(importFolder=mics,
-                                   inputReferences=refs,
-                                   refsHaveInvertedContrast=True,
-                                   maskType='object',
-                                   inputMasks=mask)                
-        cls.protPP.inputMicrographs.set(mics)               
-        cls.proj.launchProtocol(cls.protPP, wait=True)
-        # check that picking has run ok
-        if cls.protPP.outputCoordinates is None:
-            raise Exception('Particle picking failed. outputCoordinates is None.')
-        return cls.protPP
+        protGP = ProtGemPicker(refsHaveInvertedContrast=True,
+                               maskType=MASK_CIRCULAR,
+                               useGPU=False)                
+        protGP.inputMicrographs.set(cls.protImportMics.outputMicrographs)
+        protGP.inputReferences.set(cls.protImportAvgs.outputAverages)
+        cls.launchProtocol(protGP)
+        return protGP
 
 
 class TestGempickerAutomaticPicking(TestIgbmcBase):
@@ -116,6 +108,6 @@ class TestGempickerAutomaticPicking(TestIgbmcBase):
         cls.protImportMask = cls.runImportMask()
         cls.protImportAvgs = cls.runImportAverages()
     
-    def testAutomaticPicking(cls):
+    def testAutomaticPicking(self):
         print "Run automatic particle picking"
-
+        self.runPicking()
