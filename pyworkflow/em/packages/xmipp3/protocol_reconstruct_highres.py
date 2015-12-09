@@ -78,7 +78,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     GLOBAL_ALIGNMENT = 0
     LOCAL_ALIGNMENT = 1
     
-    GLOBAL_METHOD = 'significant'
+    GLOBAL_SIGNIFICANT = 0
+    GLOBAL_PROJMATCH = 1
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -147,11 +148,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90, expertLevel=LEVEL_ADVANCED)
         form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Global','Local'], default=self.GLOBAL_ALIGNMENT)
 
-        form.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition='alignmentMethod==0',
+        form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Projection Matching'], default=self.GLOBAL_SIGNIFICANT, condition='alignmentMethod==0',
+                  expertLevel=LEVEL_ADVANCED, help="Significant is more accurate but slower.")
+        form.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition='alignmentMethod==0 and globalMethod==1',
                   expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
-        form.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition='alignmentMethod==0', 
+        form.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition='alignmentMethod==0 and globalMethod==1', 
 	              expertLevel=LEVEL_ADVANCED, help="In pixels")
-        form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=2, condition='alignmentMethod==0',
+        form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=2, condition='alignmentMethod==0 and globalMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="Significant alignment is allowed to replicate each image up to this number of times")
 
         form.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True, condition='alignmentMethod==1',
@@ -679,7 +682,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             if R<=0:
                                 R=self.inputParticles.get().getDimensions()[0]/2
                             R=R*self.TsOrig/TsCurrent
-                            if self.GLOBAL_METHOD == 'significant':
+                            if self.globalMethod.get() == self.GLOBAL_SIGNIFICANT:
                                 args='-i %s --initgallery %s --maxShift %d --odir %s --dontReconstruct --useForValidation %d'%\
                                      (fnGroup,fnGalleryGroupMd,maxShift,fnDirSignificant,self.numberOfReplicates.get()-1)
                                 # Falta Wiener y filtrar
