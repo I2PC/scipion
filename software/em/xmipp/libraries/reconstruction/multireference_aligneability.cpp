@@ -193,6 +193,7 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
     double tempW;
     double W;
     double sumW;
+    bool mirror;
 
     W = 0;
     sumW = 0;
@@ -202,6 +203,10 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         tempMd.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
         tempMd.getValue(MDL_MAXCC,w,__iter.objId);
+        tempMd.getValue(MDL_FLIP,mirror,__iter.objId);
+
+        if (mirror == 1)
+        	tilt = tilt + 180;
 
         x = sin(tilt*PI/180.)*cos(rot*PI/180.);
         y = sin(tilt*PI/180.)*sin(rot*PI/180.);
@@ -224,14 +229,11 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         		W += a;
         	else
         		W += a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
-
-        	//std::cout << x << " " << y << " " << z << " " << xx << " " << yy << " " << zz << " " <<  w << " " << w2 << " " << a << " " << W << " " << std::exp(std::abs(w-w2)) << " " << std::exp(-(w+w2)) << std::endl;
-
         }
         sumW +=  W;
     }
 
-    //calculate the std of weightsDistribution and use it as a weight
+//calculate the std of weightsDistribution and use it as a weight
 /*    double sum=0;
     double mean=0;
     double stdDev=0;
@@ -361,18 +363,16 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
         {
             for (size_t nS2=0; nS2<num; nS2++)
             {
-            	temp = std::abs(std::acos(xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2]));
+            	temp = std::abs(std::acos( (xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2])));
                 if ( not isnan(temp))
                 	a += temp;
             }
-
-            sumWRan += a;
-            std::cout << sumWRan << std::endl;
         }
+
+        sumWRan += a;
     }
 
     sumw=sumWRan/trials;
-
 
     delete xRanArray;
     delete yRanArray;
