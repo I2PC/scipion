@@ -108,8 +108,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
                         'If no symmetry is present, give c1')
-        form.addParam('numberOfIterations', IntParam, default=6, label='Number of iterations')
-        form.addParam("saveSpace", BooleanParam, default=False, label="Remove intermediary files")
+        form.addParam('numberOfIterations', IntParam, default=3, label='Number of iterations')
+        form.addParam("saveSpace", BooleanParam, default=True, label="Remove intermediary files")
         
         form.addSection(label='Next Reference')
         form.addParam('nextResolutionCriterion',FloatParam, label="FSC criterion", default=0.143, 
