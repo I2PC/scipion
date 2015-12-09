@@ -47,6 +47,8 @@ class EMProtocol(Protocol):
     """ Base class to all EM protocols.
     It will contains some common functionalities. 
     """
+    _base = True
+    
     def __init__(self, **args):
         Protocol.__init__(self, **args)
         
@@ -147,4 +149,10 @@ class EMProtocol(Protocol):
             
     def __str__(self):
         return self.getObjLabel()
+    
+    def allowsDelete(self, obj):
+        if isinstance(obj, SetOfCoordinates):
+            return True
+        return False
+        
     

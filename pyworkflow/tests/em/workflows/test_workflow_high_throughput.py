@@ -97,7 +97,6 @@ class HighThroughputTest(TestWorkflow):
         protWard.inputParticles.set(protOnlyAlign.outputParticles)
         protWard.setObjLabel('spi ward')
         self.proj.launchProtocol(protWard, wait=True)
-        self.assertIsNotNone(protWard.outputClasses, "There was a problem with Spider Ward Classification")
 
 
 if __name__ == "__main__":

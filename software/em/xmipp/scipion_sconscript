@@ -798,6 +798,7 @@ if matlab:
 
                 'mirt3D_mexinterp',
 
+                'xmipp_ctf_generate_filter',
                 'xmipp_nma_read_alignment',
                 'xmipp_nma_save_cluster',
                 'xmipp_read',
