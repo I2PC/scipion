@@ -130,18 +130,16 @@ class TestIgbmcBase(BaseTest):
         return cls.protDown
     
     @classmethod
-    def runPicking(cls, mics, mask, refs):
+    def runPicking(cls, micsdown, mask, refs):
         """ Run a particle picking. """
-        mics = cls.protDown1.outputMicrographs
+        micsdown = cls.protDown.outputMicrographs
         mask = cls.protImportMsk.outputMask
         refs = cls.protImportAvg.outputAverages
-        print mics, mask, refs
-        cls.protPP = ProtGemPicker(importFolder=mics,
-                                   inputReferences=refs,
+        cls.protPP = ProtGemPicker(inputReferences=refs,
                                    refsHaveInvertedContrast=True,
-                                   maskType='object',
+                                   maskType=1,
                                    inputMasks=mask)                
-        cls.protPP.inputMicrographs.set(mics)               
+        cls.protPP.inputMicrographs.set(micsdown)               
         cls.proj.launchProtocol(cls.protPP, wait=True)
         # check that picking has run ok
         if cls.protPP.outputCoordinates is None:
@@ -161,7 +159,6 @@ class TestGempickerAutomaticPicking(TestIgbmcBase):
 #        cls.protImport2 = cls.runImportMicrographKLH(cls.micFn)
         cls.protDown1 = cls.runDownsamplingMicrographs(cls.protImport1.outputMicrographs, 2)
 #        cls.protDown2 = cls.runDownsamplingMicrographs(cls.protImport2.outputMicrographs, 2)
-# not working
         cls.protPP = cls.runPicking(cls.protDown1.outputMicrographs, cls.protImport2.outputMask, cls.protImport3.outputAverages)
     
     def testAutomaticPicking(cls):
