@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:    Laura del Cano (ldelcano@cnb.csic.es)
-# *             Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:    Grigory Sharov (sharov@igbmc.fr)
+# *             J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -34,100 +34,57 @@ from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.igbmc import *
 import pyworkflow.utils as pwutils
 
-# Some utility functions to import micrographs that are used
-# in several tests.
 
 
 class TestIgbmcBase(BaseTest):
     @classmethod
     def setData(cls):
-        cls.dataset = DataSet.getDataSet('igbmc_gempicker')
-        cls.micFn = cls.dataset.getFile('mic1')
-        cls.micsFn = cls.dataset.getFile('allMics')
-        cls.maskDir = cls.dataset.getFile('mask')
-        cls.templateDir = cls.dataset.getFile('templates')
+        cls.ds = DataSet.getDataSet('igbmc_gempicker')
     
     @classmethod
-    def runImportAverages(cls, templateDir):
+    def runImportAverages(cls):
         """ Run an Import averages protocol. """
         cls.protImportAvg = cls.newProtocol(ProtImportAverages, 
-                                      objLabel='import averages (klh)',
-                                      filesPath=templateDir, 
-                                      samplingRate=4.4)
+                                            objLabel='import averages (klh)',
+                                            filesPath=cls.ds.getFile('templates/*.mrc'), 
+                                            samplingRate=4.4)
 
         cls.launchProtocol(cls.protImportAvg)
-        if cls.protImportAvg.isFailed():
-            raise Exception("Protocol has failed. Error: ", cls.protImportAvg.getErrorMessage())
-        # check that input averages have been imported (a better way to do this?)
-        if cls.protImportAvg.outputAverages is None:
-            raise Exception('Import of averages: %s, failed. outputAverages is None.' % templateDir)
         return cls.protImportAvg
  
     @classmethod
-    def runImportMask(cls, maskDir):
+    def runImportMask(cls):
         """ Run an Import mask protocol. """
         cls.protImportMsk = cls.newProtocol(ProtImportMask, 
-                                      objLabel='import mask (klh)',
-                                      maskPath=maskDir, 
-                                      samplingRate=4.4)
+                                          objLabel='import mask (klh)',
+                                          maskPath=cls.ds.getFile('masks/mask.tif'), 
+                                          samplingRate=4.4)
 
         cls.launchProtocol(cls.protImportMsk)
-        if cls.protImportMsk.isFailed():
-            raise Exception("Protocol has failed. Error: ", cls.protImportMsk.getErrorMessage())
-        # check that input masks have been imported (a better way to do this?)
-        if cls.protImportMsk.outputMask is None:
-            raise Exception('Import of mask: %s, failed. outputMask is None.' % maskDir)
         return cls.protImportMsk
 
     @classmethod
-    def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
+    def runImportMicrograph(cls, pattern, samplingRate, voltage, magnification, sphericalAberration):
         """ Run an Import micrograph protocol. """
-        
-        # We have two options: pass the SamplingRate or the ScannedPixelSize + microscope magnification
-        if not samplingRate is None:
-            cls.protImport = cls.newProtocol(ProtImportMicrographs, 
-                                             samplingRateMode=0, 
-                                             filesPath=pattern, 
-                                             samplingRate=samplingRate, 
-                                             magnification=magnification, 
-                                             voltage=voltage, 
-                                             sphericalAberration=sphericalAberration)
-        else:
-            cls.protImport = cls.newProtocol(ProtImportMicrographs, 
-                                             samplingRateMode=1, 
-                                             filesPath=pattern, 
-                                             scannedPixelSize=scannedPixelSize, 
-                                             voltage=voltage, 
-                                             magnification=magnification, 
-                                             sphericalAberration=sphericalAberration)
+        cls.protImport = cls.newProtocol(ProtImportMicrographs,
+                                         objLabel='import mics (klh)', 
+                                         samplingRateMode=0, 
+                                         filesPath=pattern, 
+                                         samplingRate=samplingRate, 
+                                         magnification=magnification, 
+                                         voltage=voltage, 
+                                         sphericalAberration=sphericalAberration)
             
-        cls.protImport.setObjLabel('import mics (klh)')
         cls.launchProtocol(cls.protImport)
-        if cls.protImport.isFailed():
-            raise Exception("Protocol has failed. Error: ", cls.protImport.getErrorMessage())
-        # check that input micrographs have been imported (a better way to do this?)
-        if cls.protImport.outputMicrographs is None:
-            raise Exception('Import of micrograph: %s, failed. outputMicrographs is None.' % pattern)
         return cls.protImport
     
     @classmethod
-    def runImportMicrographKLH(cls, pattern):
+    def runImportMicrographKLH(cls):
         """ Run an Import micrograph protocol. """
-        pattern = cls.micsFn
-        return cls.runImportMicrograph(pattern, samplingRate=2.2, 
-                                       voltage=120, sphericalAberration=2, 
-                                       scannedPixelSize=None, magnification=66000)
-    
-    @classmethod
-    def runDownsamplingMicrographs(cls, mics, downFactorValue, threads=1):
-        # test downsampling a set of micrographs
-        mics = cls.protImport.outputMicrographs
-        cls.protDown = XmippProtPreprocessMicrographs(doDownsample=True, 
-                                                      downFactor=downFactorValue, 
-                                                      numberOfThreads=threads)
-        cls.protDown.inputMicrographs.set(mics)
-        cls.proj.launchProtocol(cls.protDown, wait=True)
-        return cls.protDown
+        return cls.runImportMicrograph(cls.ds.getFile('micrographs/*.mrc'), 
+                                       samplingRate=2.2, 
+                                       voltage=120, sphericalAberration=2,
+                                       magnification=66000)
     
     @classmethod
     def runPicking(cls, mics, mask, refs):
@@ -155,30 +112,10 @@ class TestGempickerAutomaticPicking(TestIgbmcBase):
     def setUpClass(cls):
         setupTestProject(cls)
         TestIgbmcBase.setData()
-        cls.protImport1 = cls.runImportMicrographKLH(cls.micsFn)
-        cls.protImport2 = cls.runImportMask(cls.maskDir)
-        cls.protImport3 = cls.runImportAverages(cls.templateDir)
-#        cls.protImport2 = cls.runImportMicrographKLH(cls.micFn)
-        cls.protDown1 = cls.runDownsamplingMicrographs(cls.protImport1.outputMicrographs, 2)
-#        cls.protDown2 = cls.runDownsamplingMicrographs(cls.protImport2.outputMicrographs, 2)
-# not working
-        cls.protPP = cls.runPicking(cls.protDown1.outputMicrographs, cls.protImport2.outputMask, cls.protImport3.outputAverages)
+        cls.protImportMics = cls.runImportMicrographKLH()
+        cls.protImportMask = cls.runImportMask()
+        cls.protImportAvgs = cls.runImportAverages()
     
     def testAutomaticPicking(cls):
         print "Run automatic particle picking"
-        protAutomaticPP = ProtGemPicker()
-        protAutomaticPP.set(cls.protPP)
-        cls.proj.launchProtocol(protAutomaticPP, wait=True)
-        if cls.protAutomaticPP.outputCoordinates is None: 
-            raise Exception('There was a problem with the automatic particle picking.')
-    
-#    def testAutomaticPickingOther(self):
-#        print "Run automatic particle picking"
-#        protAutomaticPP = ProtGemPicker()
-#        protAutomaticPP.set(self.protPP)
-#        protAutomaticPP.inputMicrographs.set(self.protDown2.outputMicrographs)
-#        protAutomaticPP.micsToPick.set(1)
-#        self.proj.launchProtocol(protAutomaticPP, wait=True)
-#        self.assertIsNotNone(protAutomaticPP.outputCoordinates, 
-#                             "There was a problem with the automatic particle picking")
 
