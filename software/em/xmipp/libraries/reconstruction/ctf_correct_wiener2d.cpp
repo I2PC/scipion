@@ -104,7 +104,6 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 
 	Mwien.resize(paddim,paddim);
 
-	//NO entiendo esto:
 	ctf.Tm = sampling_rate;
 	//ctf.Tm /= pad;
 
@@ -121,7 +120,6 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 
 	if (correct_envelope)
 		ctf.generateCTF(paddim, paddim, ctfComplex);
-
 	else
 		ctf.generateCTFWithoutDamping(paddim, paddim, ctfComplex);
 
@@ -133,12 +131,13 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 			dAij(ctfIm, i, j) = dAij(ctfComplex, i, j).real();
 	}
 
+//#define DEBUG
 #ifdef DEBUG
 	{
 		Image<double> save;
 		save()=ctfIm;
-		save.write("ctf2.spi");
-		exit(1);
+		save.write("PPPctf2.spi");
+		//exit(1);
 		//std::cout << "Press any key\n";
 		//char c;
 		//std::cin >> c;
@@ -197,6 +196,7 @@ else
 
 }
 
+//#define DEBUG
 void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 
@@ -209,14 +209,18 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
 	Xdim = YSIZE(img());
 	int paddim = Ydim*pad;
 
-	 generateWienerFilter(Mwien,ctf);
+	generateWienerFilter(Mwien,ctf);
 
 #ifdef DEBUG
 
 {
+	std::cout << ctf << std::endl;
+
 	Image<double> save;
-	save()=img;
-	save.write("img.spi");
+	save()=Mwien;
+	save.write("PPPMwien.spi");
+	std::cout << "Press any key"<< std::endl;
+	char c; std::cin >> c;
 }
 #endif
 #undef DEBUG
@@ -258,9 +262,3 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
 #undef DEBUG
 
 }
-
-
-
-
-
-
