@@ -878,8 +878,12 @@ class ParamWidget():
             from pyworkflow.em import findViewers
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
-                v = viewers[0] # Use the first viewer registered
-                v(project=self._protocol.getProject()).visualize(obj) # Instanciate the viewer and visualize object
+                ViewerClass = viewers[0] # Use the first viewer registered
+                # Instanciate the viewer and visualize object
+                viewer = ViewerClass(project=self._protocol.getProject(),
+                                     protocol=self._protocol,
+                                     parent=self.window)
+                viewer.visualize(obj)
             else:
                 self._showInfo("There is not viewer registered for *%s* object class." % obj.getClassName())
     
@@ -1118,6 +1122,8 @@ class FormWindow(Window):
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol, DESKTOP_TKINTER)
         
+        # Call legacy for compatibility on protocol
+        protocol.legacyCheck()
         self._createGUI()
         
     def _createGUI(self):
@@ -1572,8 +1578,10 @@ class FormWindow(Window):
             obj = protVar.get() # Get the reference to the object
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
-                v = viewers[0] # Use the first viewer registered
-                v(project=self.protocol.getProject()).visualize(obj) # Instanciate the viewer and visualize object
+                ViewerClass = viewers[0] # Use the first viewer registered
+                v = ViewerClass(project=self.protocol.getProject(),
+                                protocol=self.protocol, parent=self)
+                v.visualize(obj) # Instanciate the viewer and visualize object
             else:
                 self.showInfo("There is not viewer registered for this object")
         else:
@@ -1788,11 +1796,16 @@ class QueueDialog(Dialog):
         self.vars = []
         self.queueDict = queueDict
         self.window = window
-        self.queueName, self.queueParams = window.protocol.getQueueParams()
+        self.queueName, queueParams = window.protocol.getQueueParams()
         # If there is only one queue and not one selected, use the first one
         if not self.queueName and len(queueDict.keys()) == 1:
             self.queueName = queueDict.keys()[0]
-            
+            queueParams = {}
+        # Store all selected queue parameters to 
+        # preserve values when temporarly changed
+        # from one queue to another    
+        self.allQueueParams = {self.queueName: queueParams}
+        
         Dialog.__init__(self, window.root, "Queue parameters")
         
     def body(self, bodyFrame):
@@ -1810,11 +1823,7 @@ class QueueDialog(Dialog):
         combo.grid(row=0, column=1, sticky='nw', padx=5, pady=5)
         queueKeys = self.queueDict.keys()
         combo['values'] = queueKeys
-        
-        
-        selected = self.queueName #TODO: replace this with real selected queue
-        self.queueVar.set(selected) # This will trigger queue params setup
-
+        self.queueVar.set(self.queueName) # This will trigger queue params setup
         self.initial_focus = combo
         
     def _onQueueChanged(self, *args):
@@ -1822,7 +1831,17 @@ class QueueDialog(Dialog):
             w.destroy()
             
         selected = self.queueVar.get()
+        
+        if selected != self.queueName:
+            # Store previous selection 
+            _, previousParams = self._getSelectedParams(self.queueName)
+            self.allQueueParams[self.queueName] = previousParams
+            self.queueName = selected
+            
+        # Load default params from the queues
         params = self.queueDict.get(selected, {})
+        # Load previous selected params
+        selectedParams = self.allQueueParams.get(selected, {})
         
         self.widgets = [] # clear the widget list
         self.vars = []
@@ -1840,7 +1859,7 @@ class QueueDialog(Dialog):
             label.grid(row=r, column=0, sticky='ne', padx=5, pady=(0,5))
             var = tk.StringVar()
             # Set the value coming in the protocol 
-            var.set(self.queueParams.get(name, value))
+            var.set(selectedParams.get(name, value))
             
             entry = tk.Entry(self.content, textvariable=var, width=15)
             entry.grid(row=r, column=1, sticky='nw', padx=5, pady=(0, 5))
@@ -1862,12 +1881,9 @@ class QueueDialog(Dialog):
             self.widgets.append(entry)
             r += 1
         
-    def apply(self):
-        # Set as value the queue selected and a dictionary 
-        # with the values of each parameter
-        selected = self.queueVar.get()
-        paramsDict = {}
+    def _getSelectedParams(self, selected):
         if selected in self.queueDict:
+            paramsDict = {}
             params = self.queueDict[selected]
             for p, v in izip(params, self.vars):
                 if len(p) == 3:
@@ -1875,9 +1891,14 @@ class QueueDialog(Dialog):
                 else: 
                     name, value, label, _ = p 
                 paramsDict[name] = v.get() # get the value from the corresponding tk var
-            self.value = selected, paramsDict
-        else:
-            self.value = '', {}
+            return selected, paramsDict
+        return '', {}
+            
+    def apply(self):
+        # Set as value the queue selected and a dictionary 
+        # with the values of each parameter
+        selected = self.queueVar.get()
+        self.value = self._getSelectedParams(selected)
         
     def validate(self):
         return True
