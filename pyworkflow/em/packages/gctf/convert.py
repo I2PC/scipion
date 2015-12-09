@@ -73,6 +73,6 @@ def readCtfModel(ctfModel, filename, ctf4=False):
     else:
         defocusU, defocusV, defocusAngle, ctfFit, ctfResolution = result
         ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
-    ctfModel._ctffind4_crossCorrelation = Float(ctfFit)
-    ctfModel._ctffind4_ctfResolution = Float(ctfResolution)
+    ctfModel._gctf_crossCorrelation = Float(ctfFit)
+    ctfModel._gctf_ctfResolution = Float(ctfResolution)
 
