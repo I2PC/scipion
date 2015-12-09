@@ -97,7 +97,6 @@ class TestIgbmcBase(BaseTest):
         cls.launchProtocol(protGP)
         return protGP
 
-
 class TestGempickerAutomaticPicking(TestIgbmcBase):
     """This class check if the protocol to pick the micrographs automatically by gempicker works properly."""
     @classmethod
