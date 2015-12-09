@@ -761,8 +761,8 @@ class TestXmippKerdensom(TestXmippBase):
         self.launchProtocol(xmippProtKerdensom)
         self.assertIsNotNone(xmippProtKerdensom.outputClasses, "There was a problem with Kerdensom")
 
-class TestXmippProjectionOutliers(TestXmippBase):
-    """This class check if the protocol projection outliers in Xmipp works properly."""
+class TestXmippCompareReprojections(TestXmippBase):
+    """This class check if the protocol compare reprojections in Xmipp works properly."""
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -772,14 +772,14 @@ class TestXmippProjectionOutliers(TestXmippBase):
         cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
         cls.runClassify = cls.runClassify(cls.protImportPart.outputParticles)
     
-    def test_ProjectionOutliersAverages(self):
-        print "Run ProjOutliers particles"
-        protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
-                                   symmetryGroup="c6", numberOfMpi=5)
+    def test_CompareReprojectionsAverages(self):
+        print "Run CompareReprojections particles"
+        protProjOutl = self.newProtocol(XmippProtCompareReprojections, 
+                                   symmetryGroup="d6", numberOfMpi=5)
         protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
         protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
         self.launchProtocol(protProjOutl)
-        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Projection Outliers")
+        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Compare Reprojections")
     
 #     def test_ProjectionOutliersClasses2D(self):
 #         print "Run ProjOutliers for classes2D"

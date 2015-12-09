@@ -47,6 +47,8 @@ class EMProtocol(Protocol):
     """ Base class to all EM protocols.
     It will contains some common functionalities. 
     """
+    _base = True
+    
     def __init__(self, **args):
         Protocol.__init__(self, **args)
         
