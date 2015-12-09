@@ -56,6 +56,8 @@
 void geo2TransformationMatrix(const MDRow &imageHeader, Matrix2D<double> &A,
                               bool only_apply_shifts = false);
 
+bool getLoopRange( double value, double min, double max, double delta, int loopLimit, int &minIter, int &maxIter);
+
 /** Retrieve the matrix from an string representation
  * Valid formats are:
  * [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
@@ -369,13 +371,11 @@ void applyGeometry(int SplineDegree,
         << "(min_xp,min_yp)=(" << minxp  << "," << minyp  << ")\n"
         << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n";
 #endif
-
+        // Calculate position of the beginning of the row in the output image
+        double x = -cen_x;
+        double y = -cen_y;
         for (size_t i = 0; i < YSIZE(V2); i++)
         {
-            // Calculate position of the beginning of the row in the output image
-            double x = -cen_x;
-            double y = i - cen_y;
-
             // Calculate this position in the input image according to the
             // geometrical transformation
             // they are related by
@@ -383,7 +383,50 @@ void applyGeometry(int SplineDegree,
             double xp = x * MAT_ELEM(Aref, 0, 0) + y * MAT_ELEM(Aref, 0, 1) + MAT_ELEM(Aref, 0, 2);
             double yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + MAT_ELEM(Aref, 1, 2);
 
-            for (size_t j = 0; j < XSIZE(V2); j++)
+            // Inner loop boundaries.
+            int globalMin=0, globalMax=XSIZE(V2);
+
+        	if (!wrap)
+        	{
+        		// First and last iteration with valid values for x and y coordinates.
+                int	minX, maxX, minY, maxY;
+
+                // Compute valid iterations in x and y coordinates. If one of them is always out
+                // of boundaries then the inner loop is not executed this iteration.
+        		if (!getLoopRange( xp, minxpp, maxxpp, Aref00, XSIZE(V2), minX, maxX) ||
+        			!getLoopRange( yp, minypp, maxypp, Aref10, XSIZE(V2), minY, maxY))
+        		{
+        			continue;
+        		}
+        		else
+        		{
+        			// Compute initial iteration.
+        			globalMin = minX;
+        			if (minX < minY)
+        			{
+        				globalMin = minY;
+        			}
+
+        			// Compute last iteration.
+        			globalMax = maxX;
+        			if (maxX > maxY)
+        			{
+        				globalMax = maxY;
+        			}
+        			globalMax++;
+
+        			// Check max iteration is not higher than image.
+        			if (globalMax > XSIZE(V2))
+        			{
+        				globalMax = XSIZE(V2);
+        			}
+
+                    xp += globalMin*Aref00;
+                    yp += globalMin*Aref10;
+        		}
+        	}
+
+        	for (size_t j=globalMin; j<globalMax ;j++)
             {
 #ifdef DEBUG_APPLYGEO
 
@@ -394,21 +437,21 @@ void applyGeometry(int SplineDegree,
 #endif
                 // If the point is outside the image, apply a periodic extension
                 // of the image, what exits by one side enters by the other
-                bool interp = true;
-                bool x_isOut = XMIPP_RANGE_OUTSIDE_FAST(xp, minxpp, maxxpp);
-                bool y_isOut = XMIPP_RANGE_OUTSIDE_FAST(yp, minypp, maxypp);
-
                 if (wrap)
                 {
+                    bool x_isOut = XMIPP_RANGE_OUTSIDE_FAST(xp, minxpp, maxxpp);
+                    bool y_isOut = XMIPP_RANGE_OUTSIDE_FAST(yp, minypp, maxypp);
+
                     if (x_isOut)
+                    {
                         xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
+                    }
 
                     if (y_isOut)
+                    {
                         yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
-
+                    }
                 }
-                else if (x_isOut || y_isOut)
-                    interp = false;
 
 #ifdef DEBUG_APPLYGEO
 
@@ -419,89 +462,86 @@ void applyGeometry(int SplineDegree,
                 //x++;
 #endif
 
-                if (interp)
+                if (SplineDegree==1)
                 {
-                    if (SplineDegree==1)
-                    {
-                        // Linear interpolation
+                	// Linear interpolation
 
-                        // Calculate the integer position in input image, be careful
-                        // that it is not the nearest but the one at the top left corner
-                        // of the interpolation square. Ie, (0.7,0.7) would give (0,0)
-                        // Calculate also weights for point m1+1,n1+1
-                        double wx = xp + cen_xp;
-                        size_t m1 = (int) wx;
-                        wx = wx - m1;
-                        size_t m2 = m1 + 1;
-                        double wy = yp + cen_yp;
-                        size_t n1 = (int) wy;
-                        wy = wy - n1;
-                        size_t n2 = n1 + 1;
+                	// Calculate the integer position in input image, be careful
+                	// that it is not the nearest but the one at the top left corner
+                	// of the interpolation square. Ie, (0.7,0.7) would give (0,0)
+                	// Calculate also weights for point m1+1,n1+1
+                	double wx = xp + cen_xp;
+                	size_t m1 = (int) wx;
+                	wx = wx - m1;
+                	size_t m2 = m1 + 1;
+                	double wy = yp + cen_yp;
+                	size_t n1 = (int) wy;
+                	wy = wy - n1;
+                	size_t n2 = n1 + 1;
 
-                        // m2 and n2 can be out by 1 so wrap must be check here
-                        if (wrap)
-                        {
-                            if (m2 >= Xdim)
-                                m2 = 0;
-                            if (n2 >= Ydim)
-                                n2 = 0;
-                        }
+                	// m2 and n2 can be out by 1 so wrap must be check here
+                	if (wrap)
+                	{
+                		if (m2 >= Xdim)
+                			m2 = 0;
+                		if (n2 >= Ydim)
+                			n2 = 0;
+                	}
 
 #ifdef DEBUG_APPLYGEO
-                        std::cout << "   From (" << n1 << "," << m1 << ") and ("
-                        << n2 << "," << m2 << ")\n";
-                        std::cout << "   wx= " << wx << " wy= " << wy << std::endl;
+                	std::cout << "   From (" << n1 << "," << m1 << ") and ("
+                			<< n2 << "," << m2 << ")\n";
+                	std::cout << "   wx= " << wx << " wy= " << wy << std::endl;
 #endif
 
-                        // Perform interpolation
-                        // if wx == 0 means that the rightest point is useless for this
-                        // interpolation, and even it might not be defined if m1=xdim-1
-                        // The same can be said for wy.
-                        double wx_1 = (1-wx);
-                        double wy_1 = (1-wy);
-                        double aux1=wy_1;
-                        double aux2=aux1* wx_1 ;
-                        double tmp  = aux2 * DIRECT_A2D_ELEM(V1, n1, m1);
+                	// Perform interpolation
+                	// if wx == 0 means that the rightest point is useless for this
+                	// interpolation, and even it might not be defined if m1=xdim-1
+                	// The same can be said for wy.
+                	double wx_1 = (1-wx);
+                	double wy_1 = (1-wy);
+                	double aux2=wy_1* wx_1 ;
+                	double tmp  = aux2 * DIRECT_A2D_ELEM(V1, n1, m1);
 
-                        if (wx != 0 && m2 < V1.xdim)
-                            tmp += (aux1-aux2) * DIRECT_A2D_ELEM(V1, n1, m2);
+                	if (wx != 0 && m2 < V1.xdim)
+                		tmp += (wy_1-aux2) * DIRECT_A2D_ELEM(V1, n1, m2);
 
-                        if (wy != 0 && n2 < V1.ydim)
-                        {
-                            aux2=wy * wx_1;
-                            tmp += aux2 * DIRECT_A2D_ELEM(V1, n2, m1);
+                	if (wy != 0 && n2 < V1.ydim)
+                	{
+                		aux2=wy * wx_1;
+                		tmp += aux2 * DIRECT_A2D_ELEM(V1, n2, m1);
 
-                            if (wx != 0 && m2 < V1.xdim)
-                                tmp += (wy-aux2) * DIRECT_A2D_ELEM(V1, n2, m2);
-                        }
+                		if (wx != 0 && m2 < V1.xdim)
+                			tmp += (wy-aux2) * DIRECT_A2D_ELEM(V1, n2, m2);
+                	}
 
-                        dAij(V2, i, j) = (T) tmp;
-                    }
-                    else if (SplineDegree==0)
-					{
-						dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)trunc(yp),(int)trunc(xp));
-					}
-                    else if (SplineDegree==3)
-					{
-                        // B-spline interpolation
-                        dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D_Degree3(xp, yp);
-					}
-                    else
-                    {
-                        // B-spline interpolation
-                        dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D(
-                                             xp, yp, SplineDegree);
-                    }
+                	dAij(V2, i, j) = (T) tmp;
+                }
+                else if (SplineDegree==0)
+                {
+                	dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)trunc(yp),(int)trunc(xp));
+                }
+                else if (SplineDegree==3)
+                {
+                	// B-spline interpolation
+                	dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D_Degree3(xp, yp);
+                }
+                else
+                {
+                	// B-spline interpolation
+                	dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D(
+                			xp, yp, SplineDegree);
+                }
 #ifdef DEBUG_APPYGEO
                     std::cout << "   val= " << dAij(V2, i, j) << std::endl;
 #endif
-
-                }
 
                 // Compute new point inside input image
                 xp += Aref00;
                 yp += Aref10;
             }
+
+        	y++;
         }
     }
     else
