@@ -36,13 +36,13 @@ from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, Int
                                         BooleanParam, RelationParam, Positive)
 from pyworkflow.em.data import SetOfMicrographs
 from pyworkflow.em.constants import RELATION_CTF
-from pyworkflow.utils.path import removeBaseExt, replaceBaseExt
+from pyworkflow.utils.path import removeBaseExt, replaceBaseExt, removeExt
 from pyworkflow.em.protocol import ProtMicrographs 
 from convert import micrographToCTFParam
 from xmipp3 import XmippProtocol
 from pyworkflow.em import metadata
-from xmipp import MetaData
-from pyworkflow.em.metadata.constants import MDL_MICROGRAPH, MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, \
+from xmipp import MetaData, MD_APPEND, MD_OVERWRITE
+from pyworkflow.em.metadata.constants import MDL_MICROGRAPH, MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, MDL_IMAGE, \
     MDL_CTF_DEFOCUS_ANGLE
 
 class XmippProtHilbertPhasePlate(ProtMicrographs):
@@ -72,37 +72,77 @@ class XmippProtHilbertPhasePlate(ProtMicrographs):
     def _insertAllSteps(self):
         """for each micrograph do CTF Wiener Filtering and then Obtain the Spiral Hilbert Transform
         """
-        self._createTempCTFFile()
+        self._createTempCTFFile()        
+        self._insertFunctionStep('wienerStep')
+       
         
-        # For each micrograph insert the steps
-        #run in parallel
-        
-        for mic in self.getInputMicrographs():
-                print mic.getMicName()
-
                
+    def wienerStep(self):
+        
+        # Generate projections from this reconstruction        
+        nproc = self.numberOfMpi.get()
+        nT=self.numberOfThreads.get() 
+        
+        mdCTF = MetaData()
+        #self._getTmpPath('ctf_file.xmd')
+        
+        self.ctfDict = {}
+        for mic in self.getInputMicrographs():            
+            self.ctfDict[removeBaseExt(mic.getFileName())] = mic.getFileName()
+
+        objIdCorr = mdCTF.addObject()
+        
+        prefix=1
                 
+        for ctf in self.ctfRelations.get():
+
+            mdCTF.setValue(MDL_IMAGE,  self.ctfDict[self._getMicrographNameFromCTF(ctf)],objIdCorr)
+            mdCTF.setValue(MDL_CTF_DEFOCUSU, ctf.getDefocusU(),objIdCorr)
+            mdCTF.setValue(MDL_CTF_DEFOCUSV, ctf.getDefocusV(),objIdCorr)
+            mdCTF.setValue(MDL_CTF_DEFOCUS_ANGLE, ctf.getDefocusAngle(),objIdCorr)
+            
+            mdCTF.write(self._getExtraPath('ctf_file.xmd'), MD_OVERWRITE)
+                       
+            params =  '  -i %s' % self._getExtraPath('ctf_file.xmd')
+            params +=  '  -o %s' % self._getExtraPath(('vol_%03d_' % prefix)+'wiener_corrected.tif')
+#            params +=  '  --sampling_rate %s' % self.getInputMicrographs().getSamplingRate()
+            params +=  '  --isIsotropic'
+            params +=  '  --pad 1'
+            
+            self.runJob("xmipp_ctf_correct_wiener2d", params, numberOfMpi=nproc, numberOfThreads=nT)
+            prefix = prefix+1         
+                        
         #--------------------------- UTILS functions --------------------------------------------
     def _createTempCTFFile(self):
 
         mdCTF = MetaData()
         #self._getTmpPath('ctf_file.xmd')
         
+        self.ctfDict = {}
+        for mic in self.getInputMicrographs():            
+            self.ctfDict[removeBaseExt(mic.getFileName())] = mic.getFileName()
+        
         for ctf in self.ctfRelations.get():
             objIdCorr = mdCTF.addObject()
-            mdCTF.setValue(MDL_MICROGRAPH, ctf.getMicrograph().getMicName(),objIdCorr)
+            mdCTF.setValue(MDL_IMAGE,  self.ctfDict[self._getMicrographNameFromCTF(ctf)],objIdCorr)
             mdCTF.setValue(MDL_CTF_DEFOCUSU, ctf.getDefocusU(),objIdCorr)
             mdCTF.setValue(MDL_CTF_DEFOCUSV, ctf.getDefocusV(),objIdCorr)
             mdCTF.setValue(MDL_CTF_DEFOCUS_ANGLE, ctf.getDefocusAngle(),objIdCorr)
             
         mdCTF.write(self._getExtraPath('ctf_file.xmd'))
                 
-
                 
     def getInputMicrographs(self):
         """ Return the micrographs """
         return self.inputMicrographs.get()
-            
+    
+    def _getMicrographDir(self, mic):
+        """ Return an unique dir name for results of the micrograph. """
+        return self._getExtraPath(removeBaseExt(mic.getFileName()))  
+    
+    def _getMicrographNameFromCTF(self, ctf):
+        """ Return an unique  name for results of the micrograph. """
+        return removeExt(ctf.getMicrograph().getMicName())
         
 
     
