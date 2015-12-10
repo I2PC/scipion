@@ -65,7 +65,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         form.addParam('numberOfParticles', NumericListParam, default="100 200 500 1000 2000 5000", expertLevel=LEVEL_ADVANCED,
                       label="Number of particles") 
         form.addParam('numberOfIterations', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
-                      label="Number of times the randomization is performed.") 
+                      label="Number of times the randomization is performed") 
         form.addParam('maxRes', FloatParam, default = 0.5, expertLevel=LEVEL_ADVANCED,
                       label="Maximum resolution (dig.freq)",  
                       help='Nyquist is 0.5') 

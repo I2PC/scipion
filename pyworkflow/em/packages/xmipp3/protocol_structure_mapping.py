@@ -70,7 +70,11 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         
         form.addSection(label='Normal Mode Analysis')
         XmippProtNMABase._defineParamsCommon(self,form)
-                 
+        
+        form.addSection(label='Multidimensional Scaling') 
+        form.addParam('numberOfDimensions', params.IntParam, default=2,
+                      label="Number of dimensions",
+                      help='In normal practice, it should be 1, 2 or, at most, 3.')        
         form.addParallelSection(threads=4, mpi=1)
         
     #--------------------------- INSERT steps functions --------------------------------------------    
@@ -84,7 +88,8 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
 
         maskArgs = ''
         alignArgs = self._getAlignArgs()
-        
+        ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL = 1
+        self.alignmentAlgorithm = ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL       
                                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
                                     
@@ -101,24 +106,27 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                                             
             self._insertFunctionStep('qualifyModesStep', self.numberOfModes, self.collectivityThreshold.get(), 
                                         self._getPath("pseudoatoms_%d.pdb"%voli.getObjId()), suffix)
-                        
-            '''for volj in volList:
+            #rigid alignment            
+            for volj in volList:
                 if volj.getObjId() is not voli.getObjId():
                     refFn = getImageLocation(voli)
                     inVolFn = getImageLocation(volj)
                     outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (volj.getObjId(), voli.getObjId()))
-                    self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, maskArgs, alignArgs)'''
+                    self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, maskArgs, alignArgs)
+                    
+        
                  
         self._insertFunctionStep('gatherResultsStep')
-        self._insertFunctionStep('plotResult')
-                                
+                                        
     #--------------------------- STEPS functions --------------------------------------------
     
     def gatherResultsStep(self):
                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
-                
-        '''for voli in volList:
+         
+         
+        #elastic alignment        
+        for voli in volList:
             mdVols = xmipp.MetaData()
             files = glob(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%voli.getObjId())
             fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%voli.getObjId()
@@ -132,9 +140,9 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%voli.getObjId())
             sigma = Ts * self.pseudoAtomRadius.get() 
             self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s"%\
-                       (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))''' 
+                       (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))
             
-                 
+        #score and distance matrix calculation         
         score = [[0 for i in volList] for i in volList]
         for voli in volList:
             elastAlign = xmipp.MetaData(self._getExtraPath("compDeformVol_%d.xmd"%voli.getObjId()))
@@ -151,68 +159,46 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         print "score matrix is: "
         print score
         
-        #fnRootC = self._getExtraPath ("DistanceMatrixColumn.txt") 
-        fnRootN = self._getExtraPath ("DistanceMatrixNormal.txt")   
+        
+        fnRoot = self._getExtraPath ("DistanceMatrixNormal.txt")   
         distance = [[0 for i in volList] for i in volList]
         for i in volList:
             for j in volList:
                 distance[(i.getObjId()-1)][(j.getObjId()-1)] = (score[(i.getObjId()-1)][(j.getObjId()-1)] + score[(j.getObjId()-1)][(i.getObjId()-1)])/2
-                fhN = open(self._defineResultsName(),"a")
-                fhN.write("%f\n"%distance[(i.getObjId()-1)][(j.getObjId()-1)])
-                fhN.close()
-                fhN = open(fnRootN,"a")
-                fhN.write("%f\t"%distance[(i.getObjId()-1)][(j.getObjId()-1)])
-                fhN.close()  
-            fhN = open(fnRootN,"a")
-            fhN.write("\n")
-            fhN.close()                     
+                fh = open(self._defineResultsName(),"a")
+                fh.write("%f\n"%distance[(i.getObjId()-1)][(j.getObjId()-1)])
+                fh.close()
+                fh = open(fnRoot,"a")
+                fh.write("%f\t"%distance[(i.getObjId()-1)][(j.getObjId()-1)])
+                fh.close()  
+            fh = open(fnRoot,"a")
+            fh.write("\n")
+            fh.close()                     
         
         print "distance matrix is: "
         print distance
                        
-          
-                     
-        cleanPattern(self._getExtraPath('pseudoatoms*'))
-        cleanPattern(self._getExtraPath('vec_ani.pkl'))
-        
-        
-        
-    def plotResult(self):
-        
-        fnDistance = self._getExtraPath("DistanceMatrixColumn.txt")
-        volList = [vol.clone() for vol in self._iterInputVolumes()]
-        
-        data = []
-        fnFreqOpen = open(fnDistance, "r")
-        for line in fnFreqOpen:
-            fields = line.split()
-            rowdata = map(float, fields)
-            data.extend(rowdata)
-        
-        print "data is:"
-        print data
-        
-        count = 0
-        newDistance = [[0 for i in volList] for i in volList]
-        for i in volList:
-            for j in volList:
-                newDistance[(i.getObjId()-1)][(j.getObjId()-1)] = data[count]
-                count += 1
-                        
-            
-        print "new distance matrix is: "
-        print newDistance  
-        
-        
-        
-        
-        mds = manifold.MDS(n_components=2, metric=True, max_iter=3000, eps=1e-9, dissimilarity="precomputed", n_jobs=1)
-        embed3d = mds.fit(newDistance).embedding_ 
-        
+        #coordinate matrix calculation        
+        mds = manifold.MDS(n_components=self.numberOfDimensions.get(), metric=True, max_iter=3000, eps=1e-9, dissimilarity="precomputed", n_jobs=1)
+        embed3d = mds.fit(distance).embedding_    
+                
+                  
         print "embed3d = "
-        print embed3d
+        print embed3d 
         
-                                   
+        
+        for x in volList:
+            for y in range(self.numberOfDimensions.get()):
+                fh = open(self._getExtraPath ("CoordinateMatrix.txt"),"a")
+                fh.write("%f\t"%embed3d[(x.getObjId()-1)][(y)])
+                fh.close()  
+            fh = open(self._getExtraPath ("CoordinateMatrix.txt"),"a")
+            fh.write("\n")
+            fh.close() 
+        
+                
+        cleanPattern(self._getExtraPath('pseudoatoms*'))
+        cleanPattern(self._getExtraPath('vec_ani.pkl'))                        
         
     #--------------------------- INFO functions --------------------------------------------
     
@@ -222,8 +208,12 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             if pointer.pointsNone():
                 errors.append('Invalid input, pointer: %s' % pointer.getObjValue())
                 errors.append('              extended: %s' % pointer.getExtended())
-        return errors    
-    
+        numberOfDimensions=self.numberOfDimensions.get()
+        if numberOfDimensions > 3 or numberOfDimensions < 1:
+            errors.append("The number of dimensions should be 1, 2 or, at most, 3.")
+        
+        return errors 
+       
     #def _summary(self):
     #    summary = []
     #            
@@ -243,8 +233,8 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         """ Iterate over all the input volumes. """
         for pointer in self.inputVolumes:
             item = pointer.get()
-            #if item is None:
-            #    break
+            if item is None:
+                break
             itemId = item.getObjId()
             if isinstance(item, em.Volume):
                 item.outputName = self._getExtraPath('output_vol%06d.vol' % itemId)
