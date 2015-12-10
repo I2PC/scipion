@@ -135,6 +135,8 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 	imgno = 1;
 	Projection P;
 	FileName image;
+	MultidimArray<float> temp;
+	Matrix2D<double> E;
 
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
@@ -164,16 +166,14 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 
 		projectVolume(phantomVol(), P, Ydim, Xdim, rot, tilt, psi);
 
-		Matrix2D<double> E;
 		Euler_angles2matrix(rot, tilt, psi, E, false);
 		double angle = atan2(MAT_ELEM(E,0,1),MAT_ELEM(E,0,0));
 		selfRotate(LINEAR, P(),-(angle*180)/3.14159 , WRAP);
-		MultidimArray<float> *temp = new MultidimArray<float>;
-		typeCast(P(), *temp);
-		selfScaleToSize(LINEAR,*temp,newXdim,newYdim,1);
-		temp->resize(newXdim*newYdim);
+		typeCast(P(), temp);
+		selfScaleToSize(LINEAR,temp,newXdim,newYdim,1);
+		temp.resize(newXdim*newYdim);
 
-		pca.addVector(*temp);
+		pca.addVector(temp);
 		imgno++;
 
 		#ifdef DEBUG
@@ -247,12 +247,10 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		}
 #endif
 
-		MultidimArray<float> *temp = new MultidimArray<float>;
-
-		typeCast(img(), *temp);
-		selfScaleToSize(LINEAR,*temp,newXdim,newYdim,1);
-		temp->resize(newXdim*newYdim);
-		pca.addVector(*temp);
+		typeCast(img(), temp);
+		selfScaleToSize(LINEAR,temp,newXdim,newYdim,1);
+		temp.resize(newXdim*newYdim);
+		pca.addVector(temp);
 		imgno++;
 	}
 
@@ -269,6 +267,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 
 	size_t idx = 0;
 	imgno=1;
+	Image<float> res;
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
 		int enabled;
@@ -283,7 +282,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		ApplyGeoParams params;
 		params.only_apply_shifts = true;
 		img.readApplyGeo(SF,__iter.objId,params);
-		Matrix2D<double> E;
 		SF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
 		SF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
 		SF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
@@ -303,15 +301,13 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		Euler_angles2matrix(rot, tilt, psi, E, false);
 		double angle = atan2(MAT_ELEM(E,0,1),MAT_ELEM(E,0,0));
 		selfRotate(LINEAR, img(),-(angle*180)/3.14159 , WRAP);
-		MultidimArray<float> *temp = new MultidimArray<float>;
-		typeCast(img(), *temp);
-		temp->resize(newXdim*newYdim);
+		typeCast(img(), temp);
+		temp.resize(newXdim*newYdim);
 
-		Image<float> res;
-		res() = v[idx]-*temp;
+		res() = v[idx]-temp;
 		res().resize(newXdim,newYdim);
 		double stdRes=(res().computeStddev());
-		double stdTemp=(*temp).computeStddev();
+		double stdTemp=temp.computeStddev();
 		double R2 = 1-(stdRes/stdTemp)*((stdRes/stdTemp));
 		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL,R2,__iter.objId);
 		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,idx)/3.),__iter.objId);
@@ -354,7 +350,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		}
 
 		res.clear();
-		temp->clear();
+		temp.clear();
 		idx++;
 		imgno++;
 	}
