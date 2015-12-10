@@ -29,13 +29,10 @@
 This sub-package contains the XmippCtfMicrographs protocol
 """
 
-import pyworkflow.em as em
-import pyworkflow.em.metadata as md
-from pyworkflow.utils.path import makePath, moveFile, removeBaseExt, replaceBaseExt
 from convert import *
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
 from pyworkflow.protocol.params import RelationParam
-from pyworkflow.em.constants import RELATION_CTF
+
 
 
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
@@ -88,11 +85,17 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
     def getInputMicrographs(self):
         return self.inputMicrographs.get()
 
-   #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertFinalSteps(self, deps):
-        stepId = self._insertFunctionStep('sortPSDStep', prerequisites=deps)
+        stepId = self._insertFunctionStep('sortPSDStep', prerequisites=deps, wait=True)
         return [stepId]
     
+    def _getFirstJoinStepName(self):
+        # This function will be used for streamming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overriden in subclasses (ej in Xmipp 'sortPSDStep') 
+        return 'sortPSDStep'
+        
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run the estimate CTF program """
@@ -150,9 +153,9 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         if deleteTmp != "":
             cleanPath(deleteTmp)
     
-    def _restimateCTF(self, id):
-        ctfModel = self.recalculateSet[id]
+    def _restimateCTF(self, micId):
         """ Run the estimate CTF program """
+        ctfModel = self.recalculateSet[micId]
         self._prepareRecalCommand(ctfModel)
         # CTF estimation with Xmipp                
         self.runJob(self._program, self._args % self._params)
@@ -270,15 +273,18 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         return summary
     
     def _methods(self):
-        str="We calculated the CTF of micrographs %s using Xmipp [Sorzano2007a]"%self.getObjectTag('inputMicrographs')
+        strMsg = "We calculated the CTF of micrographs %s using Xmipp [Sorzano2007a]" % self.getObjectTag('inputMicrographs')
         if self.doFastDefocus and not self.doInitialCTF:
-            str+=" with a fast defocus estimate [Vargas2013a]"
-        str+="."
+            str += " with a fast defocus estimate [Vargas2013a]"
+        str += "."
+
         if self.methodsVar.hasValue():
-            str+=" " + self.methodsVar.get()
+            strMsg += " " + self.methodsVar.get()
+        
         if self.hasAttribute('outputCTF'):
-            str += '\nOutput set is %s.'%self.getObjectTag('outputCTF')
-        return [str]
+            strMsg += '\nOutput set is %s.'%self.getObjectTag('outputCTF')
+        
+        return [strMsg]
     
     def _citations(self):
         papers = ['Sorzano2007a']
@@ -375,21 +381,21 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         ctfDownFactor=mdCTFparam.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,mdCTFparam.firstObject())
         
         mdEval = md.MetaData()
-        id = mdEval.addObject()
+        objId = mdEval.addObject()
 
 # Check what happen with movies        
 #             if md.MDL_TYPE == md.MDL_MICROGRAPH_MOVIE:
-#                 mdEval.setValue(md.MDL_MICROGRAPH_MOVIE, micFn, id)
-#                 mdEval.setValue(md.MDL_MICROGRAPH,('%05d@%s'%(1, micFn)), id)
+#                 mdEval.setValue(md.MDL_MICROGRAPH_MOVIE, micFn, objId)
+#                 mdEval.setValue(md.MDL_MICROGRAPH,('%05d@%s'%(1, micFn)), objId)
 #             else:
-        mdEval.setValue(md.MDL_MICROGRAPH, micFn, id)
+        mdEval.setValue(md.MDL_MICROGRAPH, micFn, objId)
         
-        mdEval.setValue(md.MDL_PSD, str(self._getFileName('psd', micDir=micDir)), id)
-        mdEval.setValue(md.MDL_PSD_ENHANCED, str(self._getFileName('enhanced_psd', micDir=micDir)), id)
-        mdEval.setValue(md.MDL_CTF_MODEL, str(self._getFileName('ctfparam', micDir=micDir)), id)
-        mdEval.setValue(md.MDL_IMAGE1, str(self._getFileName('ctfmodel_quadrant', micDir=micDir)), id)
-        mdEval.setValue(md.MDL_IMAGE2, str(self._getFileName('ctfmodel_halfplane', micDir=micDir)), id)
-        mdEval.setValue(md.MDL_CTF_DOWNSAMPLE_PERFORMED,float(ctfDownFactor), id)
+        mdEval.setValue(md.MDL_PSD, str(self._getFileName('psd', micDir=micDir)), objId)
+        mdEval.setValue(md.MDL_PSD_ENHANCED, str(self._getFileName('enhanced_psd', micDir=micDir)), objId)
+        mdEval.setValue(md.MDL_CTF_MODEL, str(self._getFileName('ctfparam', micDir=micDir)), objId)
+        mdEval.setValue(md.MDL_IMAGE1, str(self._getFileName('ctfmodel_quadrant', micDir=micDir)), objId)
+        mdEval.setValue(md.MDL_IMAGE2, str(self._getFileName('ctfmodel_halfplane', micDir=micDir)), objId)
+        mdEval.setValue(md.MDL_CTF_DOWNSAMPLE_PERFORMED,float(ctfDownFactor), objId)
         fnEval = self._getFileName('ctf', micDir=micDir)
         mdEval.write(fnEval)
         
@@ -407,6 +413,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self.runJob("xmipp_metadata_utilities",'-i %s --query select "%s" -o %s' % (fnEval, self._criterion, fnRejected))
         
         retval=True
+        
         if not isMdEmpty(fnRejected):
             mdCTF = md.MetaData(fnEval)
             mdCTF.setValue(md.MDL_ENABLED, -1, mdCTF.firstObject())

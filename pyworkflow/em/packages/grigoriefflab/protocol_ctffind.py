@@ -144,12 +144,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
             out = self._getCtfOutPath(micDir)
             
             ctfModel = em.CTFModel()
-        
-            if not self.useCftfind4:
-                readCtfModel(ctfModel, out)
-            else:
-                readCtfModel(ctfModel, out, True)
-            
+            readCtfModel(ctfModel, out, ctf4=self.useCftfind4.get())
             ctfModel.setPsdFile(psdFile)
             ctfModel.setMicrograph(mic)
             

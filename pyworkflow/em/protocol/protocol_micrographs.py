@@ -28,17 +28,15 @@
 In this module are protocol base classes related to EM Micrographs
 """
 
-import os
-from os.path import join, basename, exists, dirname, relpath
-from itertools import izip
+from os.path import exists, dirname
 
-from pyworkflow.object import String, Boolean
-from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
-from pyworkflow.protocol.params import PointerParam, FloatParam, IntParam, TextParam, BooleanParam, FileParam
-from pyworkflow.utils.path import copyTree, copyFile, removeBaseExt, makePath, moveFile
+from pyworkflow.object import Boolean
+from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, STATUS_NEW
+from pyworkflow.protocol.params import PointerParam, FloatParam, IntParam, BooleanParam, FileParam
+from pyworkflow.utils.path import copyTree, removeBaseExt, makePath
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import Micrograph, SetOfImages, SetOfCTF
+from pyworkflow.em.data import SetOfMicrographs, SetOfCTF
 
 
 
@@ -122,9 +120,11 @@ class ProtCTFMicrographs(ProtMicrographs):
         """
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         fDeps = []
+        self.insertedDict = {}
         
         if not self.recalculate:
-            deps = self._insertEstimationSteps()
+            deps = self._insertEstimationSteps(self.insertedDict, 
+                                               self.inputMicrographs.get())
             # Insert step to create output objects
             fDeps = self._insertFinalSteps(deps)
         else:
@@ -133,23 +133,66 @@ class ProtCTFMicrographs(ProtMicrographs):
                 self.isFirstTime.set(False)
             fDeps = self._insertRecalculateSteps()
         
-        self._insertFunctionStep('createOutputStep', prerequisites=fDeps)
-    
+        self._insertFunctionStep('createOutputStep', prerequisites=fDeps, 
+                                 wait=(self._getFirstJoinStepName()=='createOutputStep'))
+        
     def _insertFinalSteps(self, deps):
         """ This should be implemented in subclasses"""
         return deps
     
-    def _insertEstimationSteps(self):
+    def _getFirstJoinStepName(self):
+        # This function will be used for streamming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overriden in subclasses (ej in Xmipp 'sortPSDStep') 
+        return 'createOutputStep'
+    
+    def _getFirstJoinStep(self):
+        for s in self._steps:
+            if s.funcName == self._getFirstJoinStepName():
+                return s
+        return None
+    
+    def _stepsCheck(self):
+        # Check if there are new micrographs to process
+        newMics = []
+        
+        micSet = SetOfMicrographs(filename=self.inputMicrographs.get().getFileName())
+        micSet.loadAllProperties()
+        streamClosed = micSet.isStreamClosed()
+        
+        for micFn, _, mic in self._iterMicrographs(micSet):
+            if mic.getMicName() not in self.insertedDict:
+                newMics.append(micFn)
+        
+        outputStep = self._getFirstJoinStep()
+
+        if newMics:
+            fDeps = self._insertEstimationSteps(self.insertedDict, micSet)
+            self._storeSteps()
+            self._numberOfSteps.set(len(self._steps))
+            self._store(self._numberOfSteps)
+            if outputStep:
+                outputStep.addPrerequisites(*fDeps)
+        else:
+            if outputStep and streamClosed and outputStep.isWaiting():
+                outputStep.setStatus(STATUS_NEW)
+
+        micSet.close()
+            
+    def _insertEstimationSteps(self, insertedDict, inputMics):
         estimDeps = []
         self._defineValues()
         self._prepareCommand()
         # For each micrograph insert the steps to process it
-        for micFn, micDir, mic in self._iterMicrographs():
-            # CTF estimation
-            # Make estimation steps independent between them
-            stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir, mic.getMicName(),
+        for micFn, micDir, mic in self._iterMicrographs(inputMics):
+            if mic.getMicName() not in insertedDict:
+                # CTF estimation
+                # Make estimation steps independent between them
+                stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir, 
+                                                  mic.getMicName(),
                                                   prerequisites=[]) # Make estimation steps independent between them
-            estimDeps.append(stepId)
+                estimDeps.append(stepId)
+                insertedDict[mic.getMicName()] = stepId
         return estimDeps
     
     def _insertRecalculateSteps(self):
@@ -176,7 +219,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         """
         raise Exception(Message.ERROR_NO_EST_CTF)
     
-    def _restimateCTF(self, id):
+    def _restimateCTF(self, micId):
         """ Do the CTF estimation with the specific program
         and the parameters required.
         Params:
@@ -185,9 +228,9 @@ class ProtCTFMicrographs(ProtMicrographs):
         """
         raise Exception(Message.ERROR_NO_EST_CTF)
     
-    def copyMicDirectoryStep(self, id):
+    def copyMicDirectoryStep(self, micId):
         """ Copy micrograph's directory tree for recalculation"""
-        ctfModel = self.recalculateSet[id]
+        ctfModel = self.recalculateSet[micId]
         mic = ctfModel.getMicrograph()
         
         prevDir = self._getPrevMicDir(ctfModel)
@@ -330,11 +373,14 @@ class ProtCTFMicrographs(ProtMicrographs):
         """ Return an unique dir name for results of the micrograph. """
         return self._getExtraPath(removeBaseExt(mic.getFileName()))        
     
-    def _iterMicrographs(self):
+    def _iterMicrographs(self, inputMics=None):
         """ Iterate over micrographs and yield
         micrograph name and a directory to process.
         """
-        for mic in self.inputMics:
+        if inputMics is None:
+            inputMics = self.inputMics
+            
+        for mic in inputMics:
             micFn = mic.getFileName()
             micDir = self._getMicrographDir(mic)
             yield (micFn, micDir, mic)  
