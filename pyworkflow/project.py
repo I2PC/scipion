@@ -95,7 +95,7 @@ class Project(object):
     
     def __addPath(self, *paths):
         """Store a path needed for the project"""
-        p = self.getPath(*paths)
+        p = self.getAbsPath(*paths)
         self.pathList.append(p)
         return p
         
@@ -103,6 +103,15 @@ class Project(object):
         """Return path from the project root"""
         if paths:
             return os.path.join(*paths)
+        else:
+            return self.path
+        
+    def getAbsPath(self, *paths):
+        """ Return a joined path prepending the absolute path
+        of the project.
+        """
+        if paths:
+            return os.path.join(self.path, *paths)
         else:
             return self.path
     
@@ -199,7 +208,7 @@ class Project(object):
             # It is possible that settings does not exists if 
             # we are loading a project after a Project.setDbName,
             # used when running protocols
-            settingsPath = os.path.join(self.path, self.settingsPath) 
+            settingsPath = self.getAbsPath(self.settingsPath) 
             if os.path.exists(settingsPath):
                 self.settings = pwconfig.loadSettings(settingsPath)
             else:
@@ -211,7 +220,7 @@ class Project(object):
         if dbPath is not None:
             self.setDbPath(dbPath)
         
-        absDbPath = os.path.join(self.path, self.dbPath)
+        absDbPath = self.getAbsPath(self.dbPath)
         if not os.path.exists(absDbPath):
             raise Exception("Project database not found in '%s'" % absDbPath)
         self.mapper = self.createMapper(absDbPath)
@@ -224,7 +233,7 @@ class Project(object):
     def _loadHosts(self, hosts):
         """ Loads hosts configuration from hosts file. """
         # If the host file is not passed as argument...
-        projHosts = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)        
+        projHosts = self.getAbsPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)        
         
         if hosts is None:
             # Try first to read it from the project file .config./hosts.conf
@@ -243,7 +252,7 @@ class Project(object):
     def _loadProtocols(self, protocolsConf):
         """ Load protocol configuration from a .conf file. """
         # If the host file is not passed as argument...
-        projProtConf = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
+        projProtConf = self.getAbsPath(PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
         
         if protocolsConf is None:
             # Try first to read it from the project file .config/hosts.conf
@@ -258,7 +267,6 @@ class Project(object):
             protConf = protocolsConf
           
         self._protocolViews = pwconfig.loadProtocolsConf(protConf)
-        
         
     def getHostNames(self):
         """ Return the list of host name in the project. """
