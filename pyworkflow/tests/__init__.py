@@ -43,7 +43,8 @@ DataSet(name='igbmc_gempicker', folder='igbmc_gempicker',
                'allMics': 'micrographs/*.mrc',
                'mic1': 'micrographs/KLH_Dataset_I_Test_0001.mrc',
                'mic2': 'micrographs/KLH_Dataset_I_Test_0002.mrc',
-               'mask': 'masks/mask.tif',
+               'mask1': 'masks/mask_sideview.tif',
+               'mask2': 'masks/mask_topview.tif',
                'templates': 'templates/*.mrc'
                })
 

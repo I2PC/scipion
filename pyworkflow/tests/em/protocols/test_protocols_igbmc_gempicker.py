@@ -53,15 +53,26 @@ class TestIgbmcBase(BaseTest):
         return cls.protImportAvg
  
     @classmethod
-    def runImportMask(cls):
+    def runImportMaskTop(cls):
         """ Run an Import mask protocol. """
-        cls.protImportMsk = cls.newProtocol(ProtImportMask, 
-                                          objLabel='import mask (klh)',
-                                          maskPath=cls.ds.getFile('masks/mask.tif'), 
-                                          samplingRate=4.4)
+        cls.protImportMskTop = cls.newProtocol(ProtImportMask, 
+                                               objLabel='import mask top view (klh)',
+                                               maskPath=cls.ds.getFile('masks/mask_topview.tif'), 
+                                               samplingRate=4.4)
 
-        cls.launchProtocol(cls.protImportMsk)
-        return cls.protImportMsk
+        cls.launchProtocol(cls.protImportMskTop)
+        return cls.protImportMskTop
+
+    @classmethod
+    def runImportMaskSide(cls):
+        """ Run an Import mask protocol. """
+        cls.protImportMskSide = cls.newProtocol(ProtImportMask, 
+                                               objLabel='import mask side view (klh)',
+                                               maskPath=cls.ds.getFile('masks/mask_sideview.tif'), 
+                                               samplingRate=4.4)
+
+        cls.launchProtocol(cls.protImportMskSide)
+        return cls.protImportMskSide
 
     @classmethod
     def runImportMicrograph(cls, pattern, samplingRate, voltage, magnification, sphericalAberration):
@@ -82,15 +93,34 @@ class TestIgbmcBase(BaseTest):
     def runImportMicrographKLH(cls):
         """ Run an Import micrograph protocol. """
         return cls.runImportMicrograph(cls.ds.getFile('micrographs/*.mrc'), 
-                                       samplingRate=2.2, 
+                                       samplingRate=4.4, 
                                        voltage=120, sphericalAberration=2,
                                        magnification=66000)
     
     @classmethod
-    def runPicking(cls):
+    def runPickingMask1(cls):
         """ Run a particle picking. """
-        protGP = ProtGemPicker(refsHaveInvertedContrast=True,
+        protGP = ProtGemPicker(objLabel='Gempicker with a single circular mask (klh)',
+                               refsHaveInvertedContrast=True,
+                               thresholdLow=0.2,
                                maskType=MASK_CIRCULAR,
+                               useGPU=False)                
+        protGP.inputMicrographs.set(cls.protImportMics.outputMicrographs)
+        protGP.inputReferences.set(cls.protImportAvgs.outputAverages)
+        cls.launchProtocol(protGP)
+        return protGP
+
+    @classmethod
+    def runPickingMask2(cls):
+        """ Run a particle picking. """
+        masks = PointerList()
+        masks.append(cls.protImportMskSide.outputMask)
+        masks.append(cls.protImportMskTop.outputMask)
+        protGP = ProtGemPicker(objLabel='Gempicker with a individual masks (klh)',
+                               refsHaveInvertedContrast=True,
+                               thresholdLow=0.2,
+                               maskType=MASK_OBJECT,
+                               inputMasks=masks,
                                useGPU=False)                
         protGP.inputMicrographs.set(cls.protImportMics.outputMicrographs)
         protGP.inputReferences.set(cls.protImportAvgs.outputAverages)
@@ -104,9 +134,12 @@ class TestGempickerAutomaticPicking(TestIgbmcBase):
         setupTestProject(cls)
         TestIgbmcBase.setData()
         cls.protImportMics = cls.runImportMicrographKLH()
-        cls.protImportMask = cls.runImportMask()
+        cls.protImportMaskSide = cls.runImportMaskSide()
+        cls.protImportMaskTop = cls.runImportMaskTop()
         cls.protImportAvgs = cls.runImportAverages()
     
     def testAutomaticPicking(self):
         print "Run automatic particle picking"
-        self.runPicking()
+        self.runPickingMask1()
+        self.runPickingMask2()
+
