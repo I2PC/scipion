@@ -105,7 +105,7 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 	}
 
 	@Override
-	protected ImageItem createItem(int index, String key) throws Exception {
+	protected ImageItem createItem(int index, String key, ColumnInfo ci) throws Exception {
 		ImageGeneric preview = new ImageGeneric();
 		volume.getPreview(preview, thumb_width, thumb_height, index + 1,
 				ImageGeneric.FIRST_IMAGE);

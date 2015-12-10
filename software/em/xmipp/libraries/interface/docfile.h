@@ -886,7 +886,7 @@ public:
      * After the insertion the file keys are renumerated. It doesn't matter if
      * the vector initially is a row or a column, it will always be inserted as
      * a row vector, ie, as a line in the document file. Notice that several
-     * succesive insertions are "queued" one after another, even if the document
+     * successive insertions are "queued" one after another, even if the document
      * file is empty at the beginning.
      *
      * @code

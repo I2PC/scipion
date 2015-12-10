@@ -47,7 +47,7 @@ void FuzzySOM::nSteps(const unsigned long& _nSteps)
 
 //-----------------------------------------------------------------------------
 /**
- * Sets the Intial Fuzzy membership
+ * Sets the Initial Fuzzy membership
  * Parameter: _m0
  */
 void FuzzySOM::initialFuzzyMembership(const double& _m0)

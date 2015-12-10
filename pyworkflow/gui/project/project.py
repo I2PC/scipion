@@ -265,8 +265,15 @@ class ProjectManagerWindow(ProjectBaseWindow):
 
         self.menuCfg = menu
         self.generalCfg = settings.getConfig()
+
+        try:
+            title = '%s (%s on %s)' % (Message.LABEL_PROJECTS, 
+                                       getLocalUserName(), 
+                                       getLocalHostName())
+        except Exception:
+            title = Message.LABEL_PROJECTS
         
-        ProjectBaseWindow.__init__(self, Message.LABEL_PROJECTS, minsize=(750, 500), **args)
+        ProjectBaseWindow.__init__(self, title, minsize=(750, 500), **args)
         self.manager = Manager()
         
         self.switchView(VIEW_PROJECTS)

@@ -104,7 +104,7 @@ def create_service_project(request):
                                         protocolsConf=manager.protocols
                                         ) 
         
-        project.getSettings().setLifeTime(14)
+        project.getSettings().setLifeTime(336) # 14 days * 24 hours
         project.saveSettings()
         #copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         
@@ -229,7 +229,6 @@ def service_content(request):
                     'summary': path_files + 'summary.png',
                     'showj': path_files + 'showj.png',
                     'alignVol': path_files + 'alignVol.png',
-                    'validateVols': path_files + 'validateVols.png',
                     'download': path_files + 'download.png',
                     'formUrl': 'my_form',
                     'mode':'service',

@@ -2739,7 +2739,7 @@ threadMLTomoExpectationSingleImage(void * data)
 
     //try
     {
-        //Aproximate number of images
+        //Approximate number of images
         size_t myNum = MDimg->size() / prm->threads;
         //First and last image to process in each block
         size_t firstIndex, lastIndex;

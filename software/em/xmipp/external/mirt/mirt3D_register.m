@@ -185,7 +185,7 @@ for level=1:main.subdivide
     % a single level 3D non-rigid image registration
     [main.X, result]=mirt3D_registration(main.X, main, optim);
     
-    % if the sublevel is not last prepair for the next level
+    % if the sublevel is not last prepare for the next level
     if level<main.subdivide,
         main.X=mirt3D_subdivide(main.X, 1);
         main.Xgrid=mirt3D_subdivide(main.Xgrid,  1);
@@ -193,7 +193,7 @@ for level=1:main.subdivide
     
 end
 
-% Prepair the output
+% Prepare the output
 res.X=main.X;
 res.Xgrid=main.Xgrid;
 res.okno=main.okno;
@@ -205,7 +205,7 @@ im_int=zeros(dimen); [M,N,K]=size(result);
 im_int(1:min(dimen(1),M),1:min(dimen(2),N),1:min(dimen(3),K))=result(1:min(dimen(1),M),1:min(dimen(2),N),1:min(dimen(3),K));
 
 
-disp('MIRT: 3D non-rigid registration is succesfully completed.')
+disp('MIRT: 3D non-rigid registration is successfully completed.')
 disptime(toc);
 
 

@@ -191,7 +191,7 @@
                 if (settings.style) {
                     if ('inherit' == settings.style) {
                         form.attr('style', $(self).attr('style'));
-                        /* IE needs the second line or display wont be inherited */
+                        /* IE needs the second line or display won't be inherited */
                         form.css('display', $(self).css('display'));                
                     } else {
                         form.attr('style', settings.style);
