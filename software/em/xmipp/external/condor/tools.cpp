@@ -24,7 +24,7 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
 //
-//	Various tools and auxilary functions
+//	Various tools and auxiliary functions
 //
 #include <stdlib.h>
 #include <stdio.h>

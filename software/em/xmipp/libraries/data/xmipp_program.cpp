@@ -886,7 +886,7 @@ void XmippProgramGeneric::read(int argc, const char ** argv, bool reportErrors)
         endDefinition();
     XmippProgram::read(argc, argv, reportErrors);
 }
-//All the following are necesary to override the base class implementation
+//All the following are necessary to override the base class implementation
 void XmippProgramGeneric::readParams()
 {}
 void XmippProgramGeneric::defineParams()

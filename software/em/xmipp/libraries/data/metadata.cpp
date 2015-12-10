@@ -1054,7 +1054,7 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
 {
     if(mode==MD_OVERWRITE)
         os << FileNameVersion << " * "// << (isColumnFormat ? "column" : "row")
-        << std::endl //write wich type of format (column or row) and the path;
+        << std::endl //write which type of format (column or row) and the path;
         << WordWrap(comment, line_max);     //write md comment in the 2nd comment line of header
     //write data block
     String _szBlockName("data_");
@@ -1126,8 +1126,8 @@ void MetaData::_readColumns(std::istream& is, std::vector<MDObject*> & columnVal
     while (is >> token)
         if (token.find('(') == String::npos)
         {
-            //label is not reconized, the MDValue will be created
-            //with MDL_UNDEFINED, wich will be ignored while reading data
+            //label is not recognized, the MDValue will be created
+            //with MDL_UNDEFINED, which will be ignored while reading data
             label = MDL::str2Label(token);
             if (desiredLabels != NULL && !vectorContainsLabel(*desiredLabels, label))
                 label = MDL_UNDEFINED; //ignore if not present in desiredLabels
@@ -1262,7 +1262,7 @@ void MetaData::_readColumnsStar(mdBlock &block,
                 newline = end;
             String s(iter, newline - iter);//get current line
             ss.str(s);//set the string of the stream
-            //Take the first token wich is the label
+            //Take the first token which is the label
             //if the label contain spaces will fail
             ss >> s; //get the first token, the label
             label = MDL::str2Label(s);
@@ -1293,7 +1293,7 @@ void MetaData::_readColumnsStar(mdBlock &block,
 }
 
 /* This function will be used to parse the rows data
- * having read the columns labels before and setting wich are desired
+ * having read the columns labels before and setting which are desired
  * the useCommentAsImage is for compatibility with old DocFile format
  * where the image were in comments
  */
@@ -1560,7 +1560,7 @@ void MetaData::readStar(const FileName &filename,
     if (!(isMetadataFile = inFile.isMetaData()))//if not a metadata, try to read as image or stack
     {
         Image<char> image;
-        if (decomposeStack) // If not decomposeStack it is no neccesary to read the image header
+        if (decomposeStack) // If not decomposeStack it is no necessary to read the image header
             image.read(filename, HEADER);
         if ( !decomposeStack || image().ndim == 1 ) //single image // !decomposeStack must be first
         {
@@ -1883,7 +1883,7 @@ bool MetaData::nextBlock(mdBuffer &buffer, mdBlock &block)
         BUFFER_MOVE(buffer, n);
         //Search for the end of line
         char *newLine = BUFFER_FIND(buffer, "\n", 1);
-        //Calculate lenght of block name, counting after data_
+        //Calculate length of block name, counting after data_
         block.nameSize = newLine - buffer.begin;
         //Search for next block if exists one
         //use assign and check if not NULL at same time
@@ -2591,7 +2591,7 @@ void MDExpandGenerator::fillValue(MetaData &md, size_t objId)
     {
         expMd.read(fn);
         if (expMd.isColumnFormat() || expMd.isEmpty())
-            REPORT_ERROR(ERR_VALUE_INCORRECT, "Only can expand non empty and row formated metadatas");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "Only can expand non empty and row formatted metadatas");
         expMd.getRow(row, expMd.firstObject());
         md.setRow(row, objId);
     }

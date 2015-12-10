@@ -958,7 +958,7 @@ int 	get_Number_Real_Edges( struct DCEL_T *dcel)
 * 			face		edge face
 * OUT:		N/A
 * IN/OUT:	dcel		dcel DATA
-* RETURN:	SUCESS if edge inserted. FAILURE i.o.c.
+* RETURN:	SUCCESS if edge inserted. FAILURE i.o.c.
 * Description: Inserts an edge in the next position of the edge array.
 ***************************************************************************/
 int insertEdge( struct DCEL_T *dcel, int origin, int twin, int prev, int next, int face)
@@ -1019,7 +1019,7 @@ int insertEdge( struct DCEL_T *dcel, int origin, int twin, int prev, int next, i
 * 			index		edge position
 * OUT:		N/A
 * IN/OUT:	dcel		dcel DATA
-* RETURN:	SUCESS if edge updated. FAILURE i.o.c.
+* RETURN:	SUCCESS if edge updated. FAILURE i.o.c.
 * Description: Updates the edge at "index" position. Fields with INVALID
 * 				value are not updated.
 ***************************************************************************/

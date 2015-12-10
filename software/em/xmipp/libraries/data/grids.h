@@ -134,7 +134,7 @@ class Basis;
     @endcode
 
     It should be convenient that you modify these parameters at your
-    convinience. And after setting them PREPARE!! the grid to be used
+    convenience. And after setting them PREPARE!! the grid to be used
     with the function \ref SimpleGrid::prepare_grid . There are several public
     variables which you might directly modify, namely, \ref origin ,
     \ref relative_size , \ref lowest , and \ref highest .
@@ -394,7 +394,7 @@ public:
     }
 
     /** Project a grid vector onto a plane (Euler matrix).
-        This function does the same as the preceeding one, but it accepts
+        This function does the same as the preceding one, but it accepts
         an Euler matrix, this might help you to save time when making
         the projection of a whole volume.
         See \ref Uproject_to_plane for more
@@ -412,7 +412,7 @@ public:
     }
 
     /** Project a grid direction onto a plane (Euler angles).
-        More or less this function goes in the fashion of the preceeding
+        More or less this function goes in the fashion of the preceding
         ones of projecting a vector. The difference between them is while
         in the first one the grid vector is translated directly to the
         universal coordinate system (it is like a point translation, this
@@ -446,7 +446,7 @@ public:
     }
 
     /** Project a grid direction onto a plane (Euler angles).
-        This function does the same as the preceeding one, but it accepts
+        This function does the same as the preceding one, but it accepts
         an Euler matrix, this might help you to save time when making
         the projection of a whole volume.
         See \ref Uproject_to_plane for more
@@ -1034,8 +1034,8 @@ public:
         GRIDVOLUME_BY_SCALAR('+');
     }
 
-    /** Substract a constant.
-        The constant is substracted from all simple volumes.
+    /** Subtract a constant.
+        The constant is subtracted from all simple volumes.
         \\Ex: V2=V1-6; */
     GridVolumeT<T> operator - (T f) const
     {
@@ -1108,7 +1108,7 @@ public:
         GRIDVOL_BY_GRIDVOL('+');
     }
 
-    /** Substract another volume.
+    /** Subtract another volume.
         The two volumes must be equally the same in shape (size,
         origin, number of simple volumes, ...) if they aren't an
         exception is thrown.
@@ -1158,7 +1158,7 @@ public:
         GRIDVOL_BY_GRIDVOLASSIG('+');
     }
 
-    /** Substract another volume.*/
+    /** Subtract another volume.*/
     void operator -= (const GridVolumeT<T> &GV)
     {
         GRIDVOL_BY_GRIDVOLASSIG('-');

@@ -265,7 +265,7 @@ void projectVolume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
 /** From voxel volumes, off-centered tilt axis.
     This routine projects a volume that is rotating (angle) degrees
     around the axis defined by the two angles (axisRot,axisTilt) and
-    that passes through the point raxis. The projection can be futher
+    that passes through the point raxis. The projection can be further
     inplane rotated and shifted through the parameters
     (inplaneRot) and (rinplane).
 

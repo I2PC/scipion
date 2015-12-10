@@ -435,7 +435,7 @@ public class GalleryData {
                     
                 }
                 if (image.isVolume()) { // We are assuming all are volumes
-                    // or images, dont mix it
+                    // or images, don't mix it
                     if (isGalleryMode()) 
                         mode = Mode.GALLERY_VOL;
                     
@@ -1164,6 +1164,8 @@ public class GalleryData {
     public ColumnInfo getColumnInfo(int col) {
         return labels.get(col);
     }
+    
+    
 
     public String getValueFromCol(int index, int col) {
         if (!isColumnFormat()) {
@@ -1687,16 +1689,18 @@ public class GalleryData {
         }
 
         ColumnInfo aux;
-        int j;
+        int j, k = 0;//k index added to avoid errors if some order columns are not present. This way order index is k not i
         for (int i = 0; i < orderLabels.length; i++) {
+        	j = 0;
             for (ColumnInfo ci : labels) {
                 if (ci.labelName.equals(orderLabels[i])) {
 
-                    aux = labels.get(i);
-                    j = labels.indexOf(ci);
-                    labels.set(i, ci);
+                    aux = labels.get(k);
+                    labels.set(k, ci);
                     labels.set(j, aux);
+                    k ++;
                 }
+                j ++;
             }
         }
     }
@@ -1764,14 +1768,20 @@ public class GalleryData {
         }
     }
      
-    public Geometry getGeometry(long id)
+    public Geometry getGeometry(long id, ColumnInfo ci)
     {
-        return getGeometry(id, "2D");
+        return getGeometry(id, "2D", ci);
     }
 
     
-    public Geometry getGeometry(long id, String type)
+    public Geometry getGeometry(long id, String type, ColumnInfo ci)
     {
+        if(md.containsLabel(MDLabel.MDL_IMAGE) && ci.label != MDLabel.MDL_IMAGE)
+        	return null;
+        
+        if(md.containsLabel(MDLabel.RLN_IMAGE_NAME) && ci.label != MDLabel.RLN_IMAGE_NAME)
+        	return null;
+        
         
         double shiftx, shifty, psiangle, scaleFactor=1;
         boolean flip;
@@ -1863,7 +1873,7 @@ public class GalleryData {
                     imageid = imagesmd.addObject();
                     if (useGeo()) 
                     {
-                    	Geometry geo = getGeometry(id);
+                    	Geometry geo = getGeometry(id, ciFirstRender);
                         mdRow = new MDRow();
                         //md.getRow(mdRow, id);//copy geo info in mdRow
                         mdRow.setValueDouble(MDLabel.MDL_SHIFT_X, geo.shiftx);
