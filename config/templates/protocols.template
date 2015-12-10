@@ -24,6 +24,7 @@ Protocols SPA = [
         {"tag": "protocol", "value": "XmippProtPreprocessMicrographs", "text": "default"},
         {"tag": "protocol_group", "text": "CTF estimation", "openItem": "False", "children": [
             {"tag": "protocol", "value": "ProtCTFFind",   "text": "default"},
+            {"tag": "protocol", "value": "ProtGctf",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtCTFMicrographs",   "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "ProtCTFAssign",           "text": "default"},

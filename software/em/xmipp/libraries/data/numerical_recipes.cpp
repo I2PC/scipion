@@ -820,12 +820,14 @@ void mnbrak(double *ax, double *bx, double *cx,
                 *bx = u;
                 *fa = (*fb);
                 *fb = fu;
+                free_Tvector(xt, 1, ncom);
                 return;
             }
             else if (fu > *fb)
             {
                 *cx = u;
                 *fc = fu;
+                free_Tvector(xt, 1, ncom);
                 return;
             }
             u = (*cx) + GOLD * (*cx - *bx);
