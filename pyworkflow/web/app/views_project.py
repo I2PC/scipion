@@ -62,7 +62,7 @@ def create_project(request):
     
     if request.is_ajax():
         projectName = request.GET.get('projectName')
-        manager.createProject(projectName)       
+        manager.createProject(projectName, chdir=Fale)
         
     return HttpResponse(mimetype='application/javascript')
 
@@ -218,7 +218,7 @@ def project_content(request):
     projectName = request.GET.get('projectName', None)
     if projectName is None:
         projectName = request.POST.get('projectName', None)
-    project = Manager().loadProject(projectName)
+    project = Manager().loadProject(projectName, chdir=False)
     context = contentContext(request, project)
     context.update({'mode': None,
                    'formUrl':'form'})
@@ -340,7 +340,7 @@ def protocol_info(request):
             status = protocol.status.get()
             
             # LOGS (ERROR & OUTPUT)
-            fOutString, fErrString, fScpnString = protocol.getLogsAsStrings()
+            fOutString, fErrString, fScpnString = protocol.getLogsAsStrings(project.path)
     
             ioDict = {'inputs': input_obj,
                       'outputs': output_obj,
@@ -370,8 +370,9 @@ def check_project_id(request):
             manager = getServiceManager(serviceName)
             project = manager.loadProject(projectName, 
                               protocolsConf=manager.protocols,
-                              hostsConf=manager.hosts)
-        result = 1
+                              hostsConf=manager.hosts, chdir=False)
+        if project is not None:
+            result = 1
     except Exception:
         pass
     

@@ -281,8 +281,9 @@ def protocol(request):
     if len(errors) == 0:
         # No errors, launch the protocol
         try:
-            project.launchProtocol(protocol)
-            
+
+            project.launchProtocol(protocol, chdir=False)
+
         except Exception, ex:
             errors = [parseText(str(ex))]
             

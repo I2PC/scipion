@@ -92,10 +92,10 @@ def create_movies_project(request):
         writeCustomMenu(manager.protocols)
         project = manager.createProject(projectName, runsView=1, 
                                         hostsConf=manager.hosts,
-                                        protocolsConf=manager.protocols
-                                        )   
+                                        protocolsConf=manager.protocols,
+                                        chdir=False)
         
-        project.getSettings().setLifeTime(336) # 14 days * 24 hours
+        project.getSettings().setLifeTime(336)  # 14 days * 24 hours
         project.saveSettings()
         
         
@@ -132,7 +132,7 @@ def create_movies_project(request):
             protImport.magnification.set(attr['magnification'])
             protImport.samplingRate.set(attr['samplingRate'])
             
-            project.launchProtocol(protImport, wait=True)
+            project.launchProtocol(protImport, wait=True, chdir=False)
         else:
             protImport = project.newProtocol(ProtImportMovies, objLabel='import movies')
             project.saveProtocol(protImport)
@@ -183,7 +183,8 @@ def movies_content(request):
     manager = getServiceManager('movies')
     project = manager.loadProject(projectName, 
                                   protocolsConf=manager.protocols,
-                                  hostsConf=manager.hosts)
+                                  hostsConf=manager.hosts,
+                                  chdir=False)
     daysLeft = prettyDelta(project.getLeftTime())
     
     context = contentContext(request, project)

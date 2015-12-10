@@ -178,7 +178,7 @@ def loadProject(request):
 
 def loadProjectFromPath(projectPath):
     project = Project(projectPath)
-    project.load()
+    project.load(chdir=False)
     return project
 
 def loadProtocolProject(request, requestType='POST'):
@@ -444,12 +444,22 @@ def download_output(request):
             
         files = protocol.getOutputFiles()
             
-        if files is not None:
+        if (files is not None) and (len(files) > 0):
             for f in files:
                 z.write(f, arcname=os.path.basename(f))
         else:
-            print "Problem getting files for the protocol: ", protocol.getRunName()
-                
+            print "No output defined for the protocol, returning the whole folder of the protocol instead: ", protocol.getRunName()
+
+            f = project.getPath(protocol.getWorkingDir())
+
+            if os.path.exists(f):
+
+                z.write(f, arcname=os.path.basename(f))
+            else:
+
+                return HttpResponseNotFound('Output not found or ready.')
+
+
         z.close()
         
         pathFile = os.path.join(request.session['projectPath'], "output.zip")
@@ -499,7 +509,7 @@ def get_image(request):
     imageNo = None
     
     # TO DO: Change the way to obtain the separate string of the imagePath
-    imagePath = request.GET.get('image')
+    imagePath = getImageFullPathFromRequest(request, request.GET.get('image'))
     imageDim = request.GET.get('dim', 150)
 
     # This prefix can be passed to avoid that image is not refresh when cached by browser (name does not change)
@@ -569,6 +579,8 @@ def get_image(request):
 def get_slice(request):
     sliceNo = None
     imagePath = request.GET.get('image')
+
+
     imageDim = request.GET.get('dim', 150)
     mirrorY = 'mirrorY' in request.GET
 #    applyTransformMatrix = 'applyTransformMatrix' in request.GET
@@ -587,6 +599,7 @@ def get_slice(request):
 #             parts = imagePath.split('@')
 #             imageNo = parts[0]
 #             imagePath = parts[1]
+
     imagePath = convertVolume(request, imagePath)
     imgXmipp = xmipp.Image()
     if sliceNo is None:
@@ -634,12 +647,31 @@ def get_image_dim(request):
 
 
 def getImageDim(request, imagePath):
-    projectPath = request.session['projectPath']
-#     imgFn = os.path.join(projectPath, imagePath)
+
+    imagePath = getImageFullPathFromRequest(request, imagePath)
     from pyworkflow.em.packages.xmipp3.convert import xmippToLocation
     location = xmippToLocation(imagePath)
     x, y, z, n = ImageHandler().getDimensions(location)
     return x, y, z, n
+
+
+def getImageFullPathFromRequest(request, imagePath):
+
+    projectPath = request.session['projectPath']
+
+    return getImageFullPath(projectPath,imagePath)
+
+def getImageFullPathFromProject(project, imagePath):
+
+    return getImageFullPath(project.getPath(), imagePath)
+
+def getImageFullPath(projectPath, imagePath):
+
+
+    if not os.path.isabs(imagePath):
+        return os.path.join(projectPath, imagePath)
+
+    return imagePath
 
 
 def getImageXdim(request, imagePath):
@@ -664,7 +696,8 @@ def getTmpVolumePath(fileName):
     
     #This convert is only used in table mode
 def convertVolume(request, path):
-    imgFn = os.path.join(request.session['projectPath'], path)
+
+    imgFn = getImageFullPathFromRequest(request, path)
     imgConvertedFn = getTmpVolumePath(imgFn.replace(':mrc', ''))
     # For rendering volume slices over the web, PIL need that
     # the volume is stored with a specific datatype

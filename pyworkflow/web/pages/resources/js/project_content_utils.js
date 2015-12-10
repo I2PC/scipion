@@ -881,6 +881,9 @@ function downloadOutput(objId) {
 			var URL = getSubDomainURL() + '/get_file/?path=' + text
 					+ '&filename=output.zip'
 			window.location.href = URL;
+		},
+		error : function(response) {
+			errorPopup("Output missing", response.responseText)
 		}
 	});
 }

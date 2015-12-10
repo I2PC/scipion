@@ -26,6 +26,7 @@
 
 from views_util import getResourceCss, getResourceIcon, getResourceJs
 from pyworkflow.web.pages import settings as django_settings
+import os
 
 def VARS_base(request, context):
     from pyworkflow.web.app.properties import MessageWeb, ColorWeb, IconWeb
@@ -46,6 +47,7 @@ def VARS_base(request, context):
                     'msg': messages,
                     'color': colors,
                     'icon': icons,
+                    'cwd': os.getcwd()
                     }
     
     context.update(context_base)
@@ -107,7 +109,7 @@ def base_flex(request, context):
                     'jsplumb': getResourceJs('jsplumb'),
                     'jquery_sizes': getResourceJs('jquery_sizes'),
                     'jlayout_border': getResourceJs('jlayout_border'),
-                    'jquery_layout': getResourceJs('jquery_layout'),
+                    'jquery_layout': getResourceJs('jquery_layout')
                     }
     
     context = base(request, context)

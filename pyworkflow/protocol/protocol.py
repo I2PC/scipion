@@ -1021,7 +1021,7 @@ class Protocol(Step):
             # TODO: maybe do not show separate "run.stdout" and "run.stderr"
             # in the "Output Log" section if we put them together.
 
-    def getLogPaths(self):
+    def getLogPaths(self, projectPath=None):
         return map(self._getLogsPath, ['run.stdout', 'run.stderr', 'run.log'])
 
     def getSteps(self):
@@ -1070,13 +1070,21 @@ class Protocol(Step):
         else:
             self._buffer += '<font color="%s">%s</font>' % (fmt, txt)
 
-    def getLogsAsStrings(self):
+    def getLogsAsStrings(self, projectPath=None):
 
         outputs = []
         for fname in self.getLogPaths():
-            if exists(fname):
+
+            if projectPath:
+                fullFName = os.path.join(projectPath,fname)
+
+            else:
+
+                fullFName = fname
+
+            if exists(fullFName):
                 self._buffer = ''
-                renderTextFile(fname, self._addChunk)
+                renderTextFile(fullFName, self._addChunk)
                 outputs.append(self._buffer)
             else:
                 outputs.append('File "%s" does not exist' % fname)

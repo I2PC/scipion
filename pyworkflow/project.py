@@ -57,7 +57,7 @@ PROJECT_CONFIG_PROTOCOLS = 'protocols.conf'
 REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
 
 
-        
+
 class Project(object):
     """This class will handle all information 
     related with a Project"""
@@ -88,6 +88,7 @@ class Project(object):
         # Host configuration
         self._hosts = None
         self._protocolViews = None
+        self._previousWorkingDir = None
 
     def getObjId(self):
         """ Return the unique id assigned to this project. """
@@ -224,7 +225,7 @@ class Project(object):
     def _loadHosts(self, hosts):
         """ Loads hosts configuration from hosts file. """
         # If the host file is not passed as argument...
-        projHosts = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)        
+        projHosts = self.getPath(self.path, PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)
         
         if hosts is None:
             # Try first to read it from the project file .config./hosts.conf
@@ -243,7 +244,7 @@ class Project(object):
     def _loadProtocols(self, protocolsConf):
         """ Load protocol configuration from a .conf file. """
         # If the host file is not passed as argument...
-        projProtConf = self.getPath(PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
+        projProtConf = self.getPath(self.path,PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
         
         if protocolsConf is None:
             # Try first to read it from the project file .config/hosts.conf
@@ -293,14 +294,18 @@ class Project(object):
         
         return self._protocolViews[viewKey]          
         
-    def create(self, runsView=1, readOnly=False, hostsConf=None, protocolsConf=None):
+    def create(self, runsView=1, readOnly=False, hostsConf=None, protocolsConf=None, chdir=True):
         """Prepare all required paths and files to create a new project.
         Params:
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
         """
         # Create project path if not exists
         pwutils.path.makePath(self.path)
+
+        self.captureWorkingDir(chdir)
+
         os.chdir(self.path) #Before doing nothing go to project dir
+
         self._cleanData()
         print "Creating project at: ", os.path.abspath(self.dbPath)
         # Create db through the mapper
@@ -321,18 +326,25 @@ class Project(object):
         self._loadHosts(hostsConf)
         
         self._loadProtocols(protocolsConf)
+
+        self.restoreWorkingDir()
         
     def _cleanData(self):
         """Clean all project data"""
         pwutils.path.cleanPath(*self.pathList)      
                 
-    def launchProtocol(self, protocol, wait=False):
+    def launchProtocol(self, protocol, wait=False, chdir=True):
         """ In this function the action of launching a protocol
         will be initiated. Actions done here are:
         1. Store the protocol and assign name and working dir
         2. Create the working dir and also the protocol independent db
-        3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
+        3. Call the launch method in protocol.job to handle submission: mpi, thread, queue,
         and also take care if the execution is remotely."""
+
+        # Capture the working dir if necessary
+        self.captureWorkingDir(chdir)
+
+        os.chdir(self.path)
 
         isRestart = protocol.getRunMode() == MODE_RESTART
         
@@ -362,6 +374,8 @@ class Project(object):
         else:
             self.mapper.store(protocol)
         self.mapper.commit()
+
+        self.restoreWorkingDir()
         
     def _updateProtocol(self, protocol, tries=0):
         if not self.isReadOnly():
@@ -1013,4 +1027,11 @@ class Project(object):
     def setReadOnly(self, value):
         self.settings.setReadOnly(value)
 
-        
+    def captureWorkingDir(self, chdir):
+        if not chdir:
+            self._previousWorkingDir = os.getcwd()
+
+    def restoreWorkingDir(self):
+        if self._previousWorkingDir is not None:
+            os.chdir(self._previousWorkingDir)
+            self._previousWorkingDir = None

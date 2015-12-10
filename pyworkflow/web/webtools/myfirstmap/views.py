@@ -101,8 +101,8 @@ def create_service_project(request):
         writeCustomMenu(manager.protocols)
         project = manager.createProject(projectName, runsView=1, 
                                         hostsConf=manager.hosts,
-                                        protocolsConf=manager.protocols
-                                        ) 
+                                        protocolsConf=manager.protocols,
+                                        chdir=False)
         
         project.getSettings().setLifeTime(336) # 14 days * 24 hours
         project.saveSettings()
@@ -123,7 +123,7 @@ def create_service_project(request):
             protImport = project.newProtocol(ProtImportAverages, objLabel=label_import)
             protImport.filesPath.set(newFn)
             protImport.samplingRate.set(1.)
-            project.launchProtocol(protImport, wait=True)
+            project.launchProtocol(protImport, wait=True, chdir=False)
         else:
             protImport = project.newProtocol(ProtImportAverages, objLabel='import averages')
             project.saveProtocol(protImport)
@@ -218,7 +218,8 @@ def service_content(request):
     manager = getServiceManager('myfirstmap')
     project = manager.loadProject(projectName, 
                                   protocolsConf=manager.protocols,
-                                  hostsConf=manager.hosts)
+                                  hostsConf=manager.hosts,
+                                  chdir=False)
     
     daysLeft = prettyDelta(project.getLeftTime())
     

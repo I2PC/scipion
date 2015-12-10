@@ -89,7 +89,8 @@ def create_resmap_project(request):
         writeCustomMenu(manager.protocols)
         project = manager.createProject(projectName, runsView=1, 
                                         hostsConf=manager.hosts,
-                                        protocolsConf=manager.protocols
+                                        protocolsConf=manager.protocols,
+                                        chdir=False
                                         ) 
          
         project.getSettings().setLifeTime(336) # 14 days * 24 hours
@@ -110,7 +111,7 @@ def create_resmap_project(request):
             protImport.filesPath.set(dest)
             protImport.samplingRate.set(attr['samplingRate'])
             
-            project.launchProtocol(protImport, wait=True)
+            project.launchProtocol(protImport, wait=True, chdir=False)
         else:
             protImport = project.newProtocol(ProtImportVolumes, objLabel='import volumes')
             project.saveProtocol(protImport)
@@ -171,7 +172,8 @@ def resmap_content(request):
     manager = getServiceManager('myresmap')
     project = manager.loadProject(projectName, 
                                   protocolsConf=manager.protocols,
-                                  hostsConf=manager.hosts)
+                                  hostsConf=manager.hosts,
+                                  chdir=False)
     
     project.getSettings().setLifeTime(336) # 14 days * 24 hours
     project.saveSettings()
