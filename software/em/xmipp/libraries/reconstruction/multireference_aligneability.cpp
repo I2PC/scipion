@@ -102,7 +102,11 @@ void MultireferenceAligneability::run()
 	MetaData tempMdExp, tempMdProj;
 	double sum_w_exp;
 	double sum_w_proj;
-	double sum_noise = 0;
+	double sum_noise;
+
+	sum_w_exp = 0;
+	sum_w_proj = 0;
+	sum_noise = 0;
 
 	expression = formatString("imageIndex == %lu",maxNImg);
 	tempMdExp.importObjects(mdExp, MDExpression(expression));
@@ -130,6 +134,8 @@ void MultireferenceAligneability::run()
 		calc_sumu(tempMdProj, sum_w_proj);
 
 		rank = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
+
+		std::cout << " sum_noise : " <<  sum_noise <<   " sum_w_exp  : " <<  sum_w_exp  <<   " sum_w_proj  : " <<  sum_w_proj  << std::endl;
 
 		if (rank>1)
 			rank=1;
@@ -186,7 +192,7 @@ void MultireferenceAligneability::write_projection_file()
 void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & sum_W)
 {
     double a;
-    double rot,tilt,w;
+    double rot,tilt,psi, w;
     double x,y,z;
     double xx,yy,zz;
     double w2;
@@ -197,11 +203,13 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
 
     W = 0;
     sumW = 0;
+    sum_W = 0;
 
     FOR_ALL_OBJECTS_IN_METADATA(tempMd)
     {
         tempMd.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+        tempMd.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
         tempMd.getValue(MDL_MAXCC,w,__iter.objId);
         tempMd.getValue(MDL_FLIP,mirror,__iter.objId);
 
@@ -210,17 +218,23 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
 
         x = sin(tilt*PI/180.)*cos(rot*PI/180.);
         y = sin(tilt*PI/180.)*sin(rot*PI/180.);
-        z = std::abs(cos(tilt*PI/180.));
+        z = (cos(tilt*PI/180.));
+        //z = (cos(tilt*PI/180.));
 
         _FOR_ALL_OBJECTS_IN_METADATA2(tempMd)
         {
         	tempMd.getValue(MDL_ANGLE_ROT,rot,__iter2.objId);
         	tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter2.objId);
-        	//tempMd.getValue(MDL_WEIGHT,w2,__iter2.objId);
+            tempMd.getValue(MDL_ANGLE_PSI,psi,__iter2.objId);
+            tempMd.getValue(MDL_FLIP,mirror,__iter2.objId);
         	tempMd.getValue(MDL_MAXCC,w2,__iter2.objId);
+
+            if (mirror == 1)
+            	tilt = tilt + 180;
+
         	xx = sin(tilt*PI/180.)*cos(rot*PI/180.);
         	yy = sin(tilt*PI/180.)*sin(rot*PI/180.);
-        	zz = std::abs(cos(tilt*PI/180.));
+        	zz = (cos(tilt*PI/180.));
         	a = std::abs(std::acos(x*xx+y*yy+z*zz));
         	if ( isnan(a) )
         		a = 0;
@@ -363,7 +377,9 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
         {
             for (size_t nS2=0; nS2<num; nS2++)
             {
-            	temp = std::abs(std::acos( (xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2])));
+            	double mod1 = std::sqrt(xRanArray[nS1]*xRanArray[nS1]+yRanArray[nS1]*yRanArray[nS1]+zRanArray[nS1]*zRanArray[nS1]);
+            	double mod2 = std::sqrt(xRanArray[nS2]*xRanArray[nS2]+yRanArray[nS2]*yRanArray[nS2]+zRanArray[nS2]*zRanArray[nS2]);
+            	temp = std::abs(std::acos( (xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2])/(mod1*mod2)));
                 if ( not isnan(temp))
                 	a += temp;
             }
