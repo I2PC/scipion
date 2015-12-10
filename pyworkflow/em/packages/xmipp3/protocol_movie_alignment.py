@@ -389,7 +389,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                 lastFrame = 0
             elif alMethod == AL_CROSSCORRELATIONOPTICAL:
                 program = 'xmipp_movie_optical_alignment_cpu'
-                command = '-i %(movieName)s --globalShifts %(metadataNameInterMediate)s ' % locals()
+                command = '-i %(corrMovieName)s ' % locals()
             else:
                 command = '-i %(movieName)s%(movieSuffix)s ' % locals()
                 if self.doGPU:
@@ -530,9 +530,9 @@ class ProtMovieAlignment(ProtProcessMovies):
         return summary
 
 def createPlots(plotType, protocol, movieId):
-
+    print "output Movies to create Plot %s" % protocol.outputMovies
     movie = protocol.outputMovies[movieId]
-    return movieCreatePlot(movie, False)
+    return movieCreatePlot(movie, False).show()
 
 def movieCreatePlot(movie, saveFig):
 
