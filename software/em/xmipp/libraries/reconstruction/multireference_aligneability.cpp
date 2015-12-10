@@ -213,8 +213,16 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         tempMd.getValue(MDL_MAXCC,w,__iter.objId);
         tempMd.getValue(MDL_FLIP,mirror,__iter.objId);
 
-        if (mirror == 1)
-        	tilt = tilt + 180;
+		if (mirror)
+		{
+			double newrot;
+			double newtilt;
+			double newpsi;
+			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
+			rot = newrot;
+			tilt = newtilt;
+			psi = newpsi;
+		}
 
         x = sin(tilt*PI/180.)*cos(rot*PI/180.);
         y = sin(tilt*PI/180.)*sin(rot*PI/180.);
@@ -229,13 +237,23 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
             tempMd.getValue(MDL_FLIP,mirror,__iter2.objId);
         	tempMd.getValue(MDL_MAXCC,w2,__iter2.objId);
 
-            if (mirror == 1)
-            	tilt = tilt + 180;
+    		if (mirror)
+    		{
+    			double newrot;
+    			double newtilt;
+    			double newpsi;
+    			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
+    			rot = newrot;
+    			tilt = newtilt;
+    			psi = newpsi;
+    		}
 
         	xx = sin(tilt*PI/180.)*cos(rot*PI/180.);
         	yy = sin(tilt*PI/180.)*sin(rot*PI/180.);
         	zz = (cos(tilt*PI/180.));
-        	a = std::abs(std::acos(x*xx+y*yy+z*zz));
+        	double norm1 = sqrt(x*x+y*y+z*z);
+        	double norm2 = sqrt(xx*xx+yy*yy+zz*zz);
+        	a = std::abs((std::acos( (x*xx+y*yy+z*zz)/(norm1*norm2))));
         	if ( isnan(a) )
         		a = 0;
 
@@ -342,7 +360,7 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
     std::vector<double> weightV;
     double a;
 
-    double rot,tilt,w;
+    double rot,tilt,psi,w;
     bool mirror;
     sumWRan = 0;
 
@@ -357,10 +375,20 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
 
         	mdGallery.getValue(MDL_ANGLE_ROT,rot,indx);
         	mdGallery.getValue(MDL_ANGLE_TILT,tilt,indx);
+        	mdGallery.getValue(MDL_ANGLE_PSI,psi,indx);
         	mdGallery.getValue(MDL_FLIP,mirror,indx);
 
-            if (mirror == 1)
-            	tilt = tilt + 180;
+    		if (mirror)
+    		{
+    			double newrot;
+    			double newtilt;
+    			double newpsi;
+    			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
+    			rot = newrot;
+    			tilt = newtilt;
+    			psi = newpsi;
+    		}
+
 
             xRan = sin(tilt*PI/180.)*cos(rot*PI/180.);
             yRan = sin(tilt*PI/180.)*sin(rot*PI/180.);

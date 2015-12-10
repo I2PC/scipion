@@ -320,7 +320,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		double angle = atan2(MAT_ELEM(E,0,1),MAT_ELEM(E,0,0));
 		selfRotate(LINEAR, img(),-(angle*180)/3.14159 , WRAP);
 		typeCast(img(), temp);
-		selfScaleToSize(LINEAR,*temp,newXdim,newYdim,1);
+		selfScaleToSize(LINEAR,temp,newXdim,newYdim,1);
 		temp.resize(newXdim*newYdim);
 
 		res() = v[idx]-temp;
