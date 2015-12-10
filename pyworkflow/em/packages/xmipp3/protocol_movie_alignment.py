@@ -389,7 +389,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                 lastFrame = 0
             elif alMethod == AL_CROSSCORRELATIONOPTICAL:
                 program = 'xmipp_movie_optical_alignment_cpu'
-                command = '-i %(movieName)s --globalShifts %(metadataNameInterMediate)s ' % locals()
+                command = '-i %(corrMovieName)s ' % locals()
             else:
                 command = '-i %(movieName)s%(movieSuffix)s ' % locals()
                 if self.doGPU:
