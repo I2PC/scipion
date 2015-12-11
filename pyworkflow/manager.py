@@ -92,15 +92,10 @@ class Manager(object):
 
         project = Project(projectPath)
 
-        currentPath = os.getcwd()
-
         project.create(runsView=runsView, 
                        hostsConf=hostsConf, 
                        protocolsConf=protocolsConf,
                        chdir=chdir)
-
-        if not chdir:
-            os.chdir(currentPath)
 
         # If location is not the default one create a symlink on self.PROJECTS directory
         if projectPath != self.getProjectPath(projectName):
