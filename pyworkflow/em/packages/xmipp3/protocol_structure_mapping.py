@@ -92,29 +92,31 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         self.alignmentAlgorithm = ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL       
                                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
+        nVoli = 1
                                     
         for voli in volList:
             fnIn = getImageLocation(voli)
             fnMask = self._insertMaskStep(fnIn)
-            suffix = "_%d"%voli.getObjId()        
+            suffix = "_%d"%nVoli        
             
             self._insertFunctionStep('convertToPseudoAtomsStep', fnIn, fnMask, voli.getSamplingRate(), suffix)
-            fnPseudoAtoms = self._getPath("pseudoatoms_%d.pdb"%voli.getObjId())
+            fnPseudoAtoms = self._getPath("pseudoatoms_%d.pdb"%nVoli)
             
             self._insertFunctionStep('computeModesStep', fnPseudoAtoms, self.numberOfModes, cutoffStr)
             self._insertFunctionStep('reformatOutputStep', os.path.basename(fnPseudoAtoms))
                                             
             self._insertFunctionStep('qualifyModesStep', self.numberOfModes, self.collectivityThreshold.get(), 
-                                        self._getPath("pseudoatoms_%d.pdb"%voli.getObjId()), suffix)
+                                        self._getPath("pseudoatoms_%d.pdb"%nVoli), suffix)
             #rigid alignment            
+            nVolj = 1
             for volj in volList:
-                if volj.getObjId() is not voli.getObjId():
+                if nVolj != nVoli:
                     refFn = getImageLocation(voli)
                     inVolFn = getImageLocation(volj)
-                    outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (volj.getObjId(), voli.getObjId()))
+                    outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (nVolj, nVoli))
                     self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, maskArgs, alignArgs)
-                    
-        
+                nVolj += 1   
+            nVoli += 1    
                  
         self._insertFunctionStep('gatherResultsStep')
                                         
@@ -124,56 +126,66 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
          
-         
+        nVoli = 1 
         #elastic alignment        
         for voli in volList:
             mdVols = xmipp.MetaData()
-            files = glob(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%voli.getObjId())
-            fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%voli.getObjId()
+            files = glob(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%nVoli)
+            fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%nVoli
             for f in files:
                 mdVols.setValue(xmipp.MDL_IMAGE, f, mdVols.addObject())      
             mdVols.write(fnOutMeta)
                                               
-            fnPseudo = self._getPath("pseudoatoms_%d.pdb"%voli.getObjId())
-            fnModes = self._getPath("modes_%d.xmd"%voli.getObjId())
+            fnPseudo = self._getPath("pseudoatoms_%d.pdb"%nVoli)
+            fnModes = self._getPath("modes_%d.xmd"%nVoli)
             Ts = voli.getSamplingRate()
-            fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%voli.getObjId())
+            fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%nVoli)
             sigma = Ts * self.pseudoAtomRadius.get() 
             self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s"%\
                        (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))
+            nVoli += 1
             
         #score and distance matrix calculation         
         score = [[0 for i in volList] for i in volList]
+        nVoli = 1
+        
         for voli in volList:
-            elastAlign = xmipp.MetaData(self._getExtraPath("compDeformVol_%d.xmd"%voli.getObjId()))
+            elastAlign = xmipp.MetaData(self._getExtraPath("compDeformVol_%d.xmd"%nVoli))
             mdIter = md.iterRows(elastAlign)
+            nVolj = 1
             for volj in volList:
-                if volj.getObjId() is voli.getObjId():
-                    score[(voli.getObjId()-1)][(volj.getObjId()-1)] = 0
+                if nVolj == nVoli:
+                    score[(nVoli-1)][(nVolj-1)] = 0
                     
                 else:
                     elasticRow = next(mdIter)
                     maxCc = elasticRow.getValue(md.MDL_MAXCC)
-                    score[(voli.getObjId()-1)][(volj.getObjId()-1)] = (1 - maxCc)
-                                            
+                    score[(nVoli-1)][(nVolj-1)] = (1 - maxCc)
+                nVolj += 1
+            nVoli += 1 
+                                           
         print "score matrix is: "
         print score
         
         
         fnRoot = self._getExtraPath ("DistanceMatrixNormal.txt")   
         distance = [[0 for i in volList] for i in volList]
+        nVoli = 1
         for i in volList:
+            nVolj = 1
             for j in volList:
-                distance[(i.getObjId()-1)][(j.getObjId()-1)] = (score[(i.getObjId()-1)][(j.getObjId()-1)] + score[(j.getObjId()-1)][(i.getObjId()-1)])/2
+                distance[(nVoli-1)][(nVolj-1)] = (score[(nVoli-1)][(nVolj-1)] + score[(nVolj-1)][(nVoli-1)])/2
                 fh = open(self._defineResultsName(),"a")
-                fh.write("%f\n"%distance[(i.getObjId()-1)][(j.getObjId()-1)])
+                fh.write("%f\n"%distance[(nVoli-1)][(nVolj-1)])
                 fh.close()
                 fh = open(fnRoot,"a")
-                fh.write("%f\t"%distance[(i.getObjId()-1)][(j.getObjId()-1)])
-                fh.close()  
+                fh.write("%f\t"%distance[(nVoli-1)][(nVolj-1)])
+                fh.close()
+                nVolj += 1  
             fh = open(fnRoot,"a")
             fh.write("\n")
-            fh.close()                     
+            fh.close()
+            nVoli += 1                     
         
         print "distance matrix is: "
         print distance
@@ -186,15 +198,16 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         print "embed3d = "
         print embed3d 
         
-        
+        nVoli = 1
         for x in volList:
             for y in range(self.numberOfDimensions.get()):
                 fh = open(self._getExtraPath ("CoordinateMatrix.txt"),"a")
-                fh.write("%f\t"%embed3d[(x.getObjId()-1)][(y)])
+                fh.write("%f\t"%embed3d[(nVoli - 1)][(y)])
                 fh.close()  
             fh = open(self._getExtraPath ("CoordinateMatrix.txt"),"a")
             fh.write("\n")
-            fh.close() 
+            fh.close()
+            nVoli += 1 
         
                 
         cleanPattern(self._getExtraPath('pseudoatoms*'))
@@ -214,10 +227,16 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         
         return errors 
        
-    #def _summary(self):
-    #    summary = []
-    #            
-    #    return summary
+    def _summary(self):
+        summary = []
+        nVols = self._getNumberOfInputs()
+            
+        if nVols > 0:
+            summary.append("Volumes to calculate StructMap: *%d* " % nVols)
+        else:
+            summary.append("No volumes selected.")
+                        
+        return summary
     
     def _methods(self):
         messages = []
@@ -243,6 +262,14 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 for vol in item:
                     vol.outputName = self._getExtraPath('output_vol%06d_%03d.vol' % (itemId, vol.getObjId()))
                     yield vol
+    
+    def _getNumberOfInputs(self):
+        """ Return the total number of input volumes. """
+        nVols = 0
+        for _ in self._iterInputVolumes():
+            nVols += 1    
+            
+        return nVols
                     
     def _getAlignArgs(self):
         alignArgs = ''
