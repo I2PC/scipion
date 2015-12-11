@@ -212,7 +212,7 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 }
 
 //#define DEBUG_READ_FLAT_FILE
-int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName)
+int     read_Points_Flat_File( struct DCEL_T *dcel, const char *fileName)
 {
     int     ret=SUCCESS;        // Return value.
     int     number_Points=0;    // Number of points of set.
@@ -274,7 +274,7 @@ int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName)
 }
 
 
-int		write_DCEL( struct DCEL_T *dcel, int	type, char *fileName)
+int		write_DCEL( struct DCEL_T *dcel, int	type, const char *fileName)
 {
 	int		i=0;			// Loop counter.
 	int		ret=SUCCESS;	// Return value.
