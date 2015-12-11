@@ -897,12 +897,15 @@ class Protocol(Step):
         self.mapper.insertRelation(relName, self, parentObj, childObj,
                                    parentExt, childExt)
         
-    def makePathsAndClean(self):
-        """ Create the necessary path or clean
-        if in RESTART mode. 
+    def makePathsAndClean(self, projectDir='.'):
+        """ Create necessary folders before executing.
+        In the case of RESTART mode, clean up all directories.
+        Usually projectDir is '.' since the project moves
+        to the projectDir.
         """
         # Clean working path if in RESTART mode
-        paths = [self._getPath(), self._getExtraPath(), self._getTmpPath(), self._getLogsPath()]
+        paths = [os.path.join(projectDir, p) 
+                 for p in [self._getPath(), self._getExtraPath(), self._getTmpPath(), self._getLogsPath()]]
         
         if self.runMode == MODE_RESTART:
             cleanPath(*paths)

@@ -301,16 +301,17 @@ class Project(object):
         
         return self._protocolViews[viewKey]          
         
-    def create(self, runsView=1, readOnly=False, hostsConf=None, protocolsConf=None):
+    def create(self, runsView=1, readOnly=False, hostsConf=None, protocolsConf=None, chdir=True):
         """Prepare all required paths and files to create a new project.
         Params:
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
         """
         # Create project path if not exists
         pwutils.path.makePath(self.path)
-        os.chdir(self.path) #Before doing nothing go to project dir
+        if chdir:
+            os.chdir(self.path) #Before doing nothing go to project dir
         self._cleanData()
-        print "Creating project at: ", os.path.abspath(self.dbPath)
+        print "Creating project at: ", self.dbPath
         # Create db through the mapper
         self.mapper = self.createMapper(self.dbPath)
         creation = pwobj.String(objName='CreationTime') # Store creation time
@@ -350,7 +351,7 @@ class Project(object):
         protocol.setStatus(pwprot.STATUS_LAUNCHED)
         self._setupProtocol(protocol)
         #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
-        protocol.makePathsAndClean() # Create working dir if necessary
+        protocol.makePathsAndClean(self.path) # Create working dir if necessary
         # Delete the relations created by this protocol
         if isRestart:
             self.mapper.deleteRelations(self)
@@ -359,7 +360,7 @@ class Project(object):
         # Prepare a separate db for this run
         # NOTE: now we are simply copying the entire project db, this can be changed later
         # to only create a subset of the db need for the run
-        pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
+        pwutils.path.copyFile(self.dbPath, self.getAbsPath(protocol.getDbPath()))
         
         # Launch the protocol, the jobId should be set after this call
         pwprot.launch(protocol, wait)

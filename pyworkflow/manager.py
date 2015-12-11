@@ -79,7 +79,8 @@ class Manager(object):
         return projList
     
     def createProject(self, projectName, runsView=1, 
-                      hostsConf=None, protocolsConf=None, location=None):
+                      hostsConf=None, protocolsConf=None, location=None,
+                      chdir=True):
         """Create a new project.
         confs dict can contains customs .conf files 
         for: menus, protocols, or hosts
@@ -93,7 +94,8 @@ class Manager(object):
         project = Project(projectPath)
         project.create(runsView=runsView, 
                        hostsConf=hostsConf, 
-                       protocolsConf=protocolsConf)
+                       protocolsConf=protocolsConf,
+                       chdir=chdir)
         # If location is not the default one create a symlink on self.PROJECTS directory
         if projectPath != self.getProjectPath(projectName):
             # JMRT: Let's create the link to the absolute path, since relative
