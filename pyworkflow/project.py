@@ -96,7 +96,7 @@ class Project(object):
     
     def __addPath(self, *paths):
         """Store a path needed for the project"""
-        p = self.getPath(*paths)
+        p = self.getAbsPath(*paths)
         self.pathList.append(p)
         return p
         
@@ -104,6 +104,15 @@ class Project(object):
         """Return path from the project root"""
         if paths:
             return os.path.join(*paths)
+        else:
+            return self.path
+        
+    def getAbsPath(self, *paths):
+        """ Return a joined path prepending the absolute path
+        of the project.
+        """
+        if paths:
+            return os.path.join(self.path, *paths)
         else:
             return self.path
     
@@ -200,7 +209,7 @@ class Project(object):
             # It is possible that settings does not exists if 
             # we are loading a project after a Project.setDbName,
             # used when running protocols
-            settingsPath = os.path.join(self.path, self.settingsPath) 
+            settingsPath = self.getAbsPath(self.settingsPath) 
             if os.path.exists(settingsPath):
                 self.settings = pwconfig.loadSettings(settingsPath)
             else:
@@ -212,7 +221,7 @@ class Project(object):
         if dbPath is not None:
             self.setDbPath(dbPath)
         
-        absDbPath = os.path.join(self.path, self.dbPath)
+        absDbPath = self.getAbsPath(self.dbPath)
         if not os.path.exists(absDbPath):
             raise Exception("Project database not found in '%s'" % absDbPath)
         self.mapper = self.createMapper(absDbPath)
@@ -225,7 +234,7 @@ class Project(object):
     def _loadHosts(self, hosts):
         """ Loads hosts configuration from hosts file. """
         # If the host file is not passed as argument...
-        projHosts = self.getPath(self.path, PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)
+        projHosts = self.getAbsPath(PROJECT_CONFIG, PROJECT_CONFIG_HOSTS)        
         
         if hosts is None:
             # Try first to read it from the project file .config./hosts.conf
@@ -244,7 +253,7 @@ class Project(object):
     def _loadProtocols(self, protocolsConf):
         """ Load protocol configuration from a .conf file. """
         # If the host file is not passed as argument...
-        projProtConf = self.getPath(self.path,PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
+        projProtConf = self.getAbsPath(PROJECT_CONFIG, PROJECT_CONFIG_PROTOCOLS)
         
         if protocolsConf is None:
             # Try first to read it from the project file .config/hosts.conf
@@ -259,7 +268,6 @@ class Project(object):
             protConf = protocolsConf
           
         self._protocolViews = pwconfig.loadProtocolsConf(protConf)
-        
         
     def getHostNames(self):
         """ Return the list of host name in the project. """
@@ -302,12 +310,11 @@ class Project(object):
         # Create project path if not exists
         pwutils.path.makePath(self.path)
 
-        self.captureWorkingDir(chdir)
-
-        os.chdir(self.path) #Before doing nothing go to project dir
+        if chdir:
+            os.chdir(self.path) #Before doing nothing go to project dir
 
         self._cleanData()
-        print "Creating project at: ", os.path.abspath(self.dbPath)
+        print "Creating project at: ", self.dbPath
         # Create db through the mapper
         self.mapper = self.createMapper(self.dbPath)
         creation = pwobj.String(objName='CreationTime') # Store creation time
@@ -327,8 +334,6 @@ class Project(object):
         
         self._loadProtocols(protocolsConf)
 
-        self.restoreWorkingDir()
-        
     def _cleanData(self):
         """Clean all project data"""
         pwutils.path.cleanPath(*self.pathList)      
@@ -341,11 +346,6 @@ class Project(object):
         3. Call the launch method in protocol.job to handle submission: mpi, thread, queue,
         and also take care if the execution is remotely."""
 
-        # Capture the working dir if necessary
-        self.captureWorkingDir(chdir)
-
-        os.chdir(self.path)
-
         isRestart = protocol.getRunMode() == MODE_RESTART
         
         if not protocol.isInteractive() or isRestart:
@@ -354,7 +354,7 @@ class Project(object):
         protocol.setStatus(pwprot.STATUS_LAUNCHED)
         self._setupProtocol(protocol)
         #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
-        protocol.makePathsAndClean() # Create working dir if necessary
+        protocol.makePathsAndClean(self.path) # Create working dir if necessary
         # Delete the relations created by this protocol
         if isRestart:
             self.mapper.deleteRelations(self)
@@ -363,7 +363,7 @@ class Project(object):
         # Prepare a separate db for this run
         # NOTE: now we are simply copying the entire project db, this can be changed later
         # to only create a subset of the db need for the run
-        pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
+        pwutils.path.copyFile(self.dbPath, self.getAbsPath(protocol.getDbPath()))
         
         # Launch the protocol, the jobId should be set after this call
         pwprot.launch(protocol, wait)
@@ -375,8 +375,6 @@ class Project(object):
             self.mapper.store(protocol)
         self.mapper.commit()
 
-        self.restoreWorkingDir()
-        
     def _updateProtocol(self, protocol, tries=0):
         if not self.isReadOnly():
             try:
@@ -1026,12 +1024,3 @@ class Project(object):
     
     def setReadOnly(self, value):
         self.settings.setReadOnly(value)
-
-    def captureWorkingDir(self, chdir):
-        if not chdir:
-            self._previousWorkingDir = os.getcwd()
-
-    def restoreWorkingDir(self):
-        if self._previousWorkingDir is not None:
-            os.chdir(self._previousWorkingDir)
-            self._previousWorkingDir = None

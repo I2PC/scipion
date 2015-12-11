@@ -98,11 +98,11 @@ def create_resmap_project(request):
          
         projectPath = manager.getProjectPath(projectName)
         
-        # 1. Import movies
+        # 1. Import maps
         if testDataKey :
             attr = getAttrTestFile(testDataKey)
-            source = attr['path'] + attr['file']
-            dest = os.path.join(projectPath,'Uploads', attr['file'])
+            source = attr['file']
+            dest = os.path.join(projectPath,'Uploads', basename(source))
             pwutils.createLink(source, dest)        
         
             label_import = "import volumes ("+ testDataKey +")" 
@@ -127,28 +127,22 @@ def create_resmap_project(request):
     return HttpResponse(mimetype='application/javascript')
 
 def getAttrTestFile(key):
-#     if(key == "cpv"):
-#         attr = {"path" : "/mnt/big1/scipionweb/maps_testdata/", 
-#                 "file":"cpv.map",
-#                 "samplingRate": 1.1, 
-#                 }
-#         
+
+    resmap = DataSet.getDataSet('resmap')
+
     if(key == "fcv"):
-        attr = {"path" : "/services/scipion/data/scipionweb/maps_testdata/", 
-                "file":"fcv.map",
+        attr = {"file": resmap.getFile("fcv"),
                 "samplingRate": 2.33, 
                 }
     
     if(key == "mito_ribosome"):
-        attr = {"path" : "/services/scipion/data/scipionweb/maps_testdata/",
-                "file": "mito_ribosome.map",
-                "samplingRate": 1.34, 
+        attr = {"file": resmap.getFile("mito_ribo"),
+                "samplingRate": 1.34,
                 }
         
     if(key == "t20s_proteasome"):
-        attr = {"path" : "/services/scipion/data/scipionweb/maps_testdata/",
-                "file": "t20s_proteasome.map",
-                "samplingRate": 0.98, 
+        attr = {"file": resmap.getFile("t20s"),
+                "samplingRate": 0.98,
                 }
         
     return attr

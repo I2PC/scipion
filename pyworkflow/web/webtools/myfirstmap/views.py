@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager
+from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager, getImageFullPath
 from pyworkflow.web.app.views_base import base_grid, base_flex
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
@@ -116,7 +116,7 @@ def create_service_project(request):
         
         if testDataKey :
             fn = dsMDA.getFile(testDataKey)
-            newFn = join(project.uploadPath, basename(fn))
+            newFn = getImageFullPath(project.path, join(project.uploadPath, basename(fn)))
             copyFile(fn, newFn)
             
             label_import = 'import averages ('+ testDataKey +')'

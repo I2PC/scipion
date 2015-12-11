@@ -251,3 +251,10 @@ DataSet(name='SymVirus', folder='SymVirus',
 
 DataSet(name='xmipp_programs', folder='xmipp_programs', files={}
        )
+
+DataSet(name='resmap', folder='resmap',
+        files={'fcv' : 'fcv.map',
+               'mito_ribo' : 'mito_ribosome.map',
+               't20s' : 't20s_proteasome.map'
+              }
+       )
