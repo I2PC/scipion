@@ -511,7 +511,7 @@ def get_image(request):
     imageNo = None
     
     # TO DO: Change the way to obtain the separate string of the imagePath
-    imagePath = getImageFullPathFromRequest(request, request.GET.get('image'))
+    imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
 
     # This prefix can be passed to avoid that image is not refresh when cached by browser (name does not change)
@@ -528,7 +528,7 @@ def get_image(request):
     try:
         # PAJM: Como vamos a gestionar lsa imagen    
         if imagePath.endswith('png') or imagePath.endswith('gif'):
-            imagePathTmp = os.path.join(request.session['projectPath'], prefix + imagePath)
+            imagePathTmp = getImageFullPathFromRequest(request, prefix + imagePath)
             img = getImage(imagePathTmp, tkImage=False)
         else:
             if '@' in imagePath:
@@ -536,12 +536,14 @@ def get_image(request):
                 imageNo = parts[0]
                 imagePath = parts[1]
     
-            if 'projectPath' in request.session:
-                imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
-                if not os.path.isfile(imagePathTmp):
-                    raise Exception('should not use getInputPath')
-                    #imagePath = getInputPath('showj', imagePath)      
-    
+            # if 'projectPath' in request.session:
+            #     imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+            #     if not os.path.isfile(imagePathTmp):
+            #         raise Exception('should not use getInputPath')
+            #         #imagePath = getInputPath('showj', imagePath)
+
+            imagePath = getImageFullPathFromRequest(request,imagePath)
+
             if imageNo:
                 imagePath = '%s@%s' % (imageNo, imagePath) 
                 
@@ -669,12 +671,10 @@ def getImageFullPathFromProject(project, imagePath):
 
 def getImageFullPath(projectPath, imagePath):
 
-
-    if not os.path.isabs(imagePath):
+    if not (projectPath in imagePath):
         return os.path.join(projectPath, imagePath)
 
     return imagePath
-
 
 def getImageXdim(request, imagePath):
     xdim = getImageDim(request, imagePath)[0]
