@@ -38,8 +38,13 @@ from convert import writeSetOfParticles, writeSetOfClasses2D, xmippToLocation
 
         
 class XmippProtDenoiseParticles(ProtProcessParticles):
-    """ Remove particles noise by filtering them. This filtering process is based on a projection over a basis created from some averages (extracted from classes). This filtering is not intended for processing particles. The huge filtering they will be passed through is known to remove part of the signal 
-    with the noise. However this is a good method for clearly see which particle are we going to process before it's done. """
+    """ Remove particles noise by filtering them. 
+    This filtering process is based on a projection over a basis created
+    from some averages (extracted from classes). This filtering is not 
+    intended for processing particles. The huge filtering they will be 
+    passed through is known to remove part of the signal with the noise. 
+    However this is a good method for clearly see which particle are we 
+    going to process before it's done. """
     _label = 'denoise particles'
 
     #--------------------------- DEFINE param functions --------------------------------------------

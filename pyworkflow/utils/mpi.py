@@ -33,7 +33,7 @@ from time import time, sleep
 from cPickle import dumps, loads
 from process import buildRunCommand, runCommand
 
-from pyworkflow.utils.utils import envVarOn
+from pyworkflow.utils.utils import envVarOn, getLocalHostName
 
 
 TIMEOUT = 60  # seconds trying to send/receive data through a socket
@@ -93,6 +93,7 @@ def runJobMPISlave(mpiComm):
     until 'None' is received. 
     """
     rank = mpiComm.Get_rank()
+    hostname = getLocalHostName()
     print "Running runJobMPISlave: ", rank
 
     # Listen for commands until we get 'None'
@@ -108,7 +109,7 @@ def runJobMPISlave(mpiComm):
                 break
             sleep(1)
 
-        print "Slave %d received command." % rank
+        print "Slave %s(rank %d) received command." % (hostname, rank)
         if command == 'None':
             print "  Stopping..."
             return
