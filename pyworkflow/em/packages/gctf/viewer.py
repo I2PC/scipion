@@ -39,7 +39,7 @@ from convert import readCtfModel
 class ProtGctfViewer(Viewer):
     """ Visualization of Gctf."""
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _label = 'viewer CtfFind'
+    _label = 'viewer Gctf'
     _targets = [ProtGctf]
      
      
@@ -117,33 +117,24 @@ class ProtGctfViewer(Viewer):
                                                          showj.VISIBLE: labels,
                                                          showj.ZOOM: 50,
                                                          showj.RENDER: psdLabels,
-                                                         showj.OBJCMDS: "'%s'" % showj.OBJCMD_CTFFIND4}))
-        
+                                                         showj.OBJCMDS: "'%s'" % showj.OBJCMD_GCTF}))
+
         return self._views
-    
+
 def createCtfPlot(ctfSet, ctfId):
     from pyworkflow.utils.path import removeExt
     ctfModel = ctfSet[ctfId]
     psdFn = ctfModel.getPsdFile()
-    fn = removeExt(psdFn) + "_avrot.txt"
+    fn = removeExt(psdFn) + "_EPA.txt"
     gridsize = [1, 1]
     xplotter = EmPlotter(x=gridsize[0], y=gridsize[1], windowTitle='CTF Fitting')
     plot_title = "CTF Fitting"
-    a = xplotter.createSubPlot(plot_title, 'pixels^-1', 'CTF', yformat=False)
-    legendName = []
-    for i in range(1, 5):
-        _plotCurve(a, i, fn)
-        if i == 1:
-            legendName.append('rotational avg. No Astg')
-        elif i == 2:
-            legendName.append('rotational avg.')
-        elif i == 3:
-            legendName.append('CTF Fit')
-        elif i == 4:
-            legendName.append('Cross Correlation')
-        elif i == 5:
-            legendName.append('2sigma cross correlation of noise')
-            
+    a = xplotter.createSubPlot(plot_title, 'Resolution (Angstroms)', 'CTF', yformat=False)
+    a.invert_xaxis()
+    legendName = ['simulated CTF',
+                  'equiphase avg.',
+                  'cross correlation']
+    for i in range(1, 4):
     xplotter.showLegend(legendName)
     a.grid(True)
     xplotter.show()
@@ -153,15 +144,14 @@ def _plotCurve(a, i, fn):
     curv = _getValues(fn, i)
     a.plot(freqs, curv)
 
-def _getValues(fn, row):
+def _getValues(fn, col):
     f = open(fn)
     values = []
-    i = 0
     for line in f:
-        if not line.startswith("#"):
-            if i == row:
-                values = line.split()
-                break
-            i += 1
+        if not line.startswith('Resolution', 2, 12):
+             column = line.split()
+             value = float(column[col])
+             values.append(value)
     f.close()
     return values
+
