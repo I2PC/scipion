@@ -665,7 +665,7 @@ def createCtfPlot(ctfSet, ctfId):
     plot_title = "CTF Fitting"
     a = xplotter.createSubPlot(plot_title, 'pixels^-1', 'CTF', yformat=False)
     legendName = []
-    for i in range(1, 5):
+    for i in range(1, 6):
         _plotCurve(a, i, fn)
         if i == 1:
             legendName.append('rotational avg. No Astg')
