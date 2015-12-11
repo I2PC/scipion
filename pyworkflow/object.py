@@ -29,6 +29,7 @@ The Object class is the root in the hierarchy and some other
 basic classes.
 """
 
+import os
 from itertools import izip
 from collections import OrderedDict
 
@@ -1064,7 +1065,9 @@ class Set(OrderedObject):
         if self._mapperPath.isEmpty():
             raise Exception("Set.load:  mapper path and prefix not set.")
         fn, prefix = self._mapperPath
-        self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)            
+        projectPath = getattr(self, 'projectPath', '')
+        self._mapper = self._MapperClass(os.path.join(projectPath, fn),
+                                         self._loadClassesDict(), prefix)
         self._size.set(self._mapper.count())
            
     def __del__(self):
