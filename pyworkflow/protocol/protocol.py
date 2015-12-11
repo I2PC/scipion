@@ -617,6 +617,12 @@ class Protocol(Step):
         relative to working dir of the protocol. 
         """
         return self._getPath(os.path.basename(path))
+    
+    def getAbsPath(self, *paths):
+        """ Return path of this protocol run, but
+        with the prefix of project path.
+        """
+        return self.getProject().getAbsPath(self._getPath(*paths))
         
     def _insertFunctionStep(self, funcName, *funcArgs, **kwargs):
         """ 

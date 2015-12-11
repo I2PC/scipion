@@ -670,10 +670,15 @@ def getImageFullPathFromProject(project, imagePath):
     return getImageFullPath(project.getPath(), imagePath)
 
 def getImageFullPath(projectPath, imagePath):
-
-    if not (projectPath in imagePath):
-        return os.path.join(projectPath, imagePath)
-
+    imageNo = None
+    if '@' in imagePath:
+        parts = imagePath.split('@')
+        imageNo = parts[0]
+        imagePath = parts[1]
+    if not os.path.isabs(imagePath):
+        imagePath = os.path.join(projectPath, imagePath)
+    if imageNo:
+        imagePath = '%s@%s' % (imageNo, imagePath) 
     return imagePath
 
 def getImageXdim(request, imagePath):
