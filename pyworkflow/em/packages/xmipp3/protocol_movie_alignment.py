@@ -152,13 +152,16 @@ class ProtMovieAlignment(ProtProcessMovies):
                        label='Binning factor',
                        help='1x or 2x. Bin stack before processing.')
 
-        group.addParam('filterFactor', FloatParam, default=4,condition="alignMethod==%d "
+        group.addParam('maxFreq', FloatParam, default=4,condition="alignMethod==%d "
                                                               "or alignMethod==%d" %
                                                                   (AL_CROSSCORRELATION,\
                                                                    AL_CROSSCORRELATIONOPTICAL\
                        ),
                        label='Filter at (A)',
-                       help='1x or 2x. Bin stack before processing.')
+                       help="For the calculation of the shifts with Xmipp, micrographs are "
+                            "filtered (and downsized accordingly) to this resolution. "
+                            "Then shifts are calculated, and they are applied to the "
+                            "original frames without any filtering and downsampling.")
 
 
         group.addParam('extraParams', StringParam, default='',
@@ -250,7 +253,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                 # Parse the alignment parameters and store the log files
                 alignedMovie = movie.clone()
                 logFile = self._getExtraPath(self._getLogFile(movie.getObjId()))
-                import pyworkflow.em.packages.dosefgpu as dosefgpu
+                import pyworkflow.em.packages.motioncorr as dosefgpu
                 alignment = dosefgpu.parseMovieAlignment(logFile)
                 alignedMovie.setAlignment(alignment)
                 movieSet.append(alignedMovie)
@@ -339,7 +342,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                 corrMovieName = self._getCorrMovieName(movieId)
                 command += ' ' + '-fct %(corrMovieName)s -ssc 1 ' % locals()
             command += ' ' + self.extraParams.get()
-            import pyworkflow.em.packages.dosefgpu as dosefgpu
+            import pyworkflow.em.packages.motioncorr as dosefgpu
             try:
                 self.runJob(program, command, cwd=movieFolder,
                             env=dosefgpu.getEnviron())
@@ -352,7 +355,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             command  = '-i %s%s ' % (movieName, movieSuffix)
             command += '-o %s '% metadataNameInterMediate
             command += '--sampling %f ' % self.samplingRate
-            command += '--max_freq %f ' % self.filterFactor
+            command += '--max_freq %f ' % self.maxFreq
             command += '--cropULCorner %d %d '%(self.cropOffsetX.get(),self.cropOffsetY.get())
             command += '--cropDRCorner %d %d '%(self.cropOffsetX.get() + self.cropDimX.get() -1
                                                ,self.cropOffsetY.get() + self.cropDimY.get() -1)
