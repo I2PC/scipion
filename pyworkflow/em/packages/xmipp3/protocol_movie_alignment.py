@@ -80,8 +80,9 @@ class ProtMovieAlignment(ProtProcessMovies):
         group.addParam('winSize', IntParam, default=150,
                       label="Window size", help="Window size (shifts are assumed to be constant within this window).")
         group.addParam('groupSize', IntParam, default=1,
-                      label="Group Size", help="In cases with low SNR, the average of a number of frames can be used in alignment")
+                      label="Group Size", help="The number of frames in each group at the last step")
         group.addParam('doSaveMovie', BooleanParam, default=False,
+                      label="Save movies", help="Save aligned movies")
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def createOutputStep(self):
