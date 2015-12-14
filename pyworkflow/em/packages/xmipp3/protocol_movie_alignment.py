@@ -82,7 +82,6 @@ class ProtMovieAlignment(ProtProcessMovies):
         group.addParam('groupSize', IntParam, default=1,
                       label="Group Size", help="In cases with low SNR, the average of a number of frames can be used in alignment")
         group.addParam('doSaveMovie', BooleanParam, default=False,
-                      label="Save movie", help="Save Aligned movie")
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def createOutputStep(self):
@@ -124,6 +123,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             mic.psdCorr = em.Image()
             mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
             micSet.append(mic)
+
         self._defineOutputs(outputMicrographs=micSet)
         self._defineSourceRelation(self.inputMovies, micSet)
         if self.doSaveMovie:
@@ -166,7 +166,6 @@ class ProtMovieAlignment(ProtProcessMovies):
         # For simple average execution
         if alMethod == AL_AVERAGE:
             command += '--simpleAverage'
-
         # For optical flow execution
         else:
             winSize = self.winSize.get()
