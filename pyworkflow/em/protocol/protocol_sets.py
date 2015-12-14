@@ -359,11 +359,14 @@ class ProtSubSet(ProtSets):
                 if checkElem(otherElem):
                     outputSet.append(origElem)
             
-        key = 'output' + inputClassName.replace('SetOf', '') 
-        self._defineOutputs(**{key: outputSet})
-        self._defineTransformRelation(inputFullSet, outputSet)
-        if not self.chooseAtRandom.get():
-            self._defineSourceRelation(self.inputSubSet, outputSet)
+        if outputSet.getSize():
+            key = 'output' + inputClassName.replace('SetOf', '') 
+            self._defineOutputs(**{key: outputSet})
+            self._defineTransformRelation(inputFullSet, outputSet)
+            if not self.chooseAtRandom.get():
+                self._defineSourceRelation(self.inputSubSet, outputSet)
+        else:
+            self.summaryVar.set('Output was not generated. Resulting set was EMPTY!!!')
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -412,7 +415,11 @@ class ProtSubSet(ProtSets):
         return []  # no errors
 
     def _summary(self):
+        if self.summaryVar.hasValue():
+            return [self.summaryVar.get()]
+
         key = 'output' + self.inputFullSet.get().getClassName().replace('SetOf', '')
+        
         if not hasattr(self, key):
             return ["Protocol has not finished yet."]
         else:
