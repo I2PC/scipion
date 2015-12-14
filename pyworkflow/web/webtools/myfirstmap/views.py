@@ -25,21 +25,24 @@
 # **************************************************************************
 
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager, getImageFullPath
-from pyworkflow.web.app.views_base import base_grid, base_flex
+from pyworkflow.web.app.views_util import (getResourceCss, getResourceJs, getResourceIcon, 
+                                           getServiceManager, getImageFullPath, loadProtocolConf)
+from pyworkflow.web.app.views_base import base_grid
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
 from django.shortcuts import render_to_response
 from pyworkflow.web.pages import settings as django_settings
-from pyworkflow.manager import Manager
 from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils import copyFile
 from pyworkflow.utils.utils import prettyDelta
 from pyworkflow.em.packages.xmipp3 import XmippProtRansac
-from pyworkflow.em.packages.eman2.protocol_refineasy import EmanProtRefine
 from pyworkflow.em.packages.eman2.protocol_initialmodel import EmanProtInitModel
 from pyworkflow.em.packages.xmipp3.protocol_reconstruct_significant import XmippProtReconstructSignificant
+from pyworkflow.object import Pointer
+from pyworkflow.em.protocol import ProtImportAverages
+from pyworkflow.em.packages.xmipp3 import XmippProtAlignVolumeForWeb
+
 
 def service_projects(request):
    
@@ -82,20 +85,12 @@ Initial_Volume = [
 
 def create_service_project(request):
     if request.is_ajax():
-        import os
-        from pyworkflow.object import Pointer
-        from pyworkflow.em.protocol import ProtUnionSet, ProtImportAverages
-        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant, XmippProtAlignVolumeForWeb
-        from pyworkflow.em.packages.eman2 import EmanProtInitModel
-        from pyworkflow.em.packages.simple import ProtPrime
         
         # Create a new project
         projectName = request.GET.get('projectName')
         
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
-        
-        #customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_PROTOCOLS']), 'menu_initvolume.conf')
         
         manager = getServiceManager('myfirstmap')
         writeCustomMenu(manager.protocols)
@@ -127,15 +122,13 @@ def create_service_project(request):
         else:
             protImport = project.newProtocol(ProtImportAverages, objLabel='import averages')
             project.saveProtocol(protImport)
-            
         
         # 2a. Ransac 
         protRansac = project.newProtocol(XmippProtRansac)
         protRansac.setObjLabel('xmipp - ransac')
         protRansac.inputSet.set(protImport)
         protRansac.inputSet.setExtended('outputAverages')
-        if testDataKey :
-            setProtocolParams(protRansac, testDataKey)
+        setProtocolParams(protRansac, testDataKey)
         project.saveProtocol(protRansac)
         
         # 2b. Eman 
@@ -143,8 +136,7 @@ def create_service_project(request):
         protEmanInitVol.setObjLabel('eman - initial vol')
         protEmanInitVol.inputSet.set(protImport)
         protEmanInitVol.inputSet.setExtended('outputAverages')
-        if testDataKey :
-            setProtocolParams(protEmanInitVol, testDataKey)
+        setProtocolParams(protEmanInitVol, testDataKey)
         project.saveProtocol(protEmanInitVol)
         
         # 2c. Significant 
@@ -152,8 +144,7 @@ def create_service_project(request):
         protSignificant.setObjLabel('xmipp - significant')
         protSignificant.inputSet.set(protImport)
         protSignificant.inputSet.setExtended('outputAverages')
-        if testDataKey :
-            setProtocolParams(protSignificant, testDataKey)
+        setProtocolParams(protSignificant, testDataKey)
         project.saveProtocol(protSignificant)
         
         # 3. Join result volumes
@@ -240,48 +231,53 @@ def service_content(request):
 
 def setProtocolParams(protocol, key):
     #Here we set protocol parameters for each test data
-    cls = type(protocol)
-    print "protocol class %s key %s"%(cls, key)
-    if issubclass(cls, XmippProtRansac):
-        if(key == "bpv"):
-            attrs = {"symmetryGroup" : "i1",
-                    "dimRed": True,
-                    "numGrids": 2}
-        if(key == "groel"):
-            attrs = {"symmetryGroup" : "d7",
-                    "dimRed": True, 
-                    "numGrids": 3}
-        if(key == "ribosome"):
-            attrs = {"symmetryGroup" : "c1",
-                    "dimRed": True,
-                    "numGrids": 3}
-    if issubclass(cls, EmanProtInitModel):
-        if(key == "bpv"):
-            attrs = {"symmetry" : "icos"}
-        if(key == "groel"):
-            attrs = {"symmetry" : "d7"}
-        if(key == "ribosome"):
-            attrs = {"symmetry" : "c1"}
-    if issubclass(cls, XmippProtReconstructSignificant):
-        if(key == "bpv"):
-            attrs = {"symmetryGroup" : "i1",
-                     "alpha0": 99.5, 
-                     "alphaF": 99.5}
-        if(key == "groel"):
-            attrs = {"symmetryGroup" : "d7",
-                     "alpha0": 98, 
-                     "alphaF": 99.9}
-        if(key == "ribosome"):
-            attrs = {"symmetryGroup" : "c1", 
-                     "alpha0": 80, 
-                     "alphaF": 99.5}
-    # if issubclass(cls, XmippProtValidateNonTilt):
-    #     if(key == "bpv"):
-    #         attrs = {"symmetryGroup" : "i1"}
-    #     if(key == "groel"):
-    #         attrs = {"symmetryGroup" : "d7"}
-    #     if(key == "ribosome"):
-    #         attrs = {"symmetryGroup" : "c1"}
-    for key,value in attrs.iteritems():
-        getattr(protocol, key).set(value)
+    if key:
+        cls = type(protocol)
+        
+        if issubclass(cls, XmippProtRansac):
+            if(key == "bpv"):
+                attrs = {"symmetryGroup" : "i1",
+                        "dimRed": True,
+                        "numGrids": 2}
+            if(key == "groel"):
+                attrs = {"symmetryGroup" : "d7",
+                        "dimRed": True, 
+                        "numGrids": 3}
+            if(key == "ribosome"):
+                attrs = {"symmetryGroup" : "c1",
+                        "dimRed": True,
+                        "numGrids": 3}
+        
+        elif issubclass(cls, EmanProtInitModel):
+            if(key == "bpv"):
+                attrs = {"symmetry" : "icos"}
+            if(key == "groel"):
+                attrs = {"symmetry" : "d7"}
+            if(key == "ribosome"):
+                attrs = {"symmetry" : "c1"}
+        
+        elif issubclass(cls, XmippProtReconstructSignificant):
+            if(key == "bpv"):
+                attrs = {"symmetryGroup" : "i1",
+                         "alpha0": 99.5, 
+                         "alphaF": 99.5}
+            if(key == "groel"):
+                attrs = {"symmetryGroup" : "d7",
+                         "alpha0": 98, 
+                         "alphaF": 99.9}
+            if(key == "ribosome"):
+                attrs = {"symmetryGroup" : "c1", 
+                         "alpha0": 80, 
+                         "alphaF": 99.5}
+        # if issubclass(cls, XmippProtValidateNonTilt):
+        #     if(key == "bpv"):
+        #         attrs = {"symmetryGroup" : "i1"}
+        #     if(key == "groel"):
+        #         attrs = {"symmetryGroup" : "d7"}
+        #     if(key == "ribosome"):
+        #         attrs = {"symmetryGroup" : "c1"}
+        for key,value in attrs.iteritems():
+            getattr(protocol, key).set(value)
+    
+    loadProtocolConf(protocol)
     

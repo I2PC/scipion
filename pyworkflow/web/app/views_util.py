@@ -830,3 +830,30 @@ def error(request):
     context = base_grid(request, context)
     return render_to_response('error.html', context)
 
+
+def loadProtocolConf(protocol):
+    """ Load some properties of the protocol object if defined in WEB_PROTOCOLS.
+    Properties to be read:
+        - NumberOfMpi
+        - NumberOfThreads
+        - submitToQueue
+        - queueName
+    """
+    from pyworkflow.web.pages.settings import WEB_CONF
+    protDict = WEB_CONF['PROTOCOLS'].get(protocol.getClassName(), None)
+
+    if protDict:
+        if 'numberOfMpi' in protDict:
+            protocol.numberOfMpi.set(protDict.get('numberOfMpi'))
+        
+        if 'numberOfThreads' in protDict:
+            protocol.numberOfThreads.set(protDict.get('numberOfThreads'))            
+        
+        if 'hostName' in protDict:
+            protocol.hostName.set(protDict.get('hostName'))
+        
+        if 'useQueue' in protDict:
+            protocol._useQueue.set(protDict.get('useQueue'))            
+        
+        if 'queueParams' in protDict:
+            protocol.setQueueParams(protDict.get('queueParams'))
