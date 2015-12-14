@@ -291,7 +291,7 @@ class XmippViewer(Viewer):
             particles = obj.outputParticles
             self._visualize(particles)
             
-            fn = obj._getPath('images.xmd')
+            fn = self.getProject().getAbsPath(obj._getPath('images.xmd'))
             md = xmipp.MetaData(fn) 
             # If Zscore on output images plot Zscore particle sorting
             if md.containsLabel(xmipp.MDL_ZSCORE):

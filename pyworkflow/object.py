@@ -56,6 +56,7 @@ class Object(object):
         self._objCreation = None
         self._objParent = None # Reference to parent object
         self._objEnabled = True
+        self._objWorkingDir = None
         self.set(value)
 
     def getClassName(self):
@@ -439,6 +440,14 @@ class Object(object):
             if self.hasAttribute(t):
                 condStr = condStr.replace(t, str(self.getAttributeValue(t)))
         return eval(condStr)
+
+    # Working dir is now mainly used in Web, where we don't want
+    # the project to move to its working dir    
+    def setObjWorkingDir(self, newDir):
+        self._objWorkingDir = newDir
+        
+    def getObjWorkingDir(self):
+        return self._objWorkingDir
     
     def printAll(self, name=None, level=0):
         """Print object and all its attributes.
@@ -1065,8 +1074,8 @@ class Set(OrderedObject):
         if self._mapperPath.isEmpty():
             raise Exception("Set.load:  mapper path and prefix not set.")
         fn, prefix = self._mapperPath
-        projectPath = getattr(self, 'projectPath', '')
-        self._mapper = self._MapperClass(os.path.join(projectPath, fn),
+        workingDir = self.getObjWorkingDir() or ''
+        self._mapper = self._MapperClass(os.path.join(workingDir, fn),
                                          self._loadClassesDict(), prefix)
         self._size.set(self._mapper.count())
            

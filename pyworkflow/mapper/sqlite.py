@@ -37,6 +37,10 @@ class SqliteMapper(Mapper):
         Mapper.__init__(self, dictClasses)
         self.__initObjDict()
         self.__initUpdateDict()
+        # from which directory we are working with this mapper
+        # and related objects stored/retrieved
+        self._workingDir = None 
+        
         try:
             self.db = SqliteObjectsDb(dbName)
         except Exception, ex:
@@ -47,6 +51,12 @@ class SqliteMapper(Mapper):
         
     def commit(self):
         self.db.commit()
+        
+    def getWorkingDir(self):
+        return self._workingDir
+    
+    def setWorkingDir(self, newDir):
+        self._workingDir = newDir
         
     def __getObjectValue(self, obj):
         """ Get the value of the object to be stored.
@@ -172,9 +182,7 @@ class SqliteMapper(Mapper):
             if objRow is None:
                 obj = None
             else:
-                obj = self._buildObject(objRow['classname'])
-                if obj is not None:
-                    self.fillObject(obj, objRow)
+                obj = self.__objFromRow(objRow)
         return obj
     
     def getParent(self, obj):
@@ -189,9 +197,10 @@ class SqliteMapper(Mapper):
         obj._objLabel = self._getStrValue(objRow['label'])
         obj._objComment = self._getStrValue(objRow['comment'])
         obj._objCreation = self._getStrValue(objRow['creation'])
+        obj.setObjWorkingDir(self._workingDir)
         objValue = objRow['value']
         obj._objParentId = objRow['parent_id']
-        
+
         if obj.isPointer():
             if objValue is not None:
                 objValue = self.selectById(int(objValue))
