@@ -25,7 +25,8 @@
 # **************************************************************************
 
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager
+from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager, \
+    loadProtocolConf
 from pyworkflow.web.app.views_base import base_grid, base_flex
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
@@ -122,6 +123,7 @@ def create_resmap_project(request):
         protResMap.setObjLabel('resmap - local resolution')
         protResMap.inputVolume.set(protImport)
         protResMap.inputVolume.setExtended('outputVolume')
+        loadProtocolConf(protResMap)
         project.saveProtocol(protResMap)
         
     return HttpResponse(mimetype='application/javascript')

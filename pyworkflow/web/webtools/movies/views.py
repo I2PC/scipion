@@ -25,7 +25,8 @@
 # **************************************************************************
 
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager
+from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager, \
+    loadProtocolConf
 from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
@@ -142,6 +143,7 @@ def create_movies_project(request):
         protMovAlign.setObjLabel('xmipp - movie alignment')
         protMovAlign.inputMovies.set(protImport)
         protMovAlign.inputMovies.setExtended('outputMovies')
+        loadProtocolConf(protMovAlign)
         project.saveProtocol(protMovAlign)
         
     return HttpResponse(mimetype='application/javascript')

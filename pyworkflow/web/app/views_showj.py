@@ -366,6 +366,7 @@ def showj(request):
     else:
         inputParams[sj.COLS_CONFIG] = None
         volPath = inputParams[sj.PATH]
+
     labelsToRender = getRenderableColumnsFromParams(extraParams, table)
     context, return_page = createContextShowj(request, inputParams, dataset, table, _stats, volPath, labelsToRender)
 
