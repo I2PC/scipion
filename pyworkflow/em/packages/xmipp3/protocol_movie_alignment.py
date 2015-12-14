@@ -530,9 +530,9 @@ class ProtMovieAlignment(ProtProcessMovies):
         return summary
 
 def createPlots(plotType, protocol, movieId):
-
+    print "output Movies to create Plot %s" % protocol.outputMovies
     movie = protocol.outputMovies[movieId]
-    return movieCreatePlot(movie, False)
+    return movieCreatePlot(movie, False).show()
 
 def movieCreatePlot(movie, saveFig):
 
