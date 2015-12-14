@@ -88,7 +88,7 @@ class Project(object):
         # Host configuration
         self._hosts = None
         self._protocolViews = None
-        self._previousWorkingDir = None
+        self.chdir = False
 
     def getObjId(self):
         """ Return the unique id assigned to this project. """
@@ -172,11 +172,13 @@ class Project(object):
         """ Create a new SqliteMapper object and pass as classes dict
         all globas and update with data and protocols from em.
         """
-        #TODO: REMOVE THE USE OF globals() here
         classesDict = dict(pwobj.__dict__)
         classesDict.update(em.getProtocols())
         classesDict.update(em.getObjects())
-        return SqliteMapper(sqliteFn, classesDict)
+        mapper = SqliteMapper(sqliteFn, classesDict)
+        if not self.chdir:
+            mapper.setWorkingDir(self.path)
+        return mapper
     
     def load(self, dbPath=None, hostsConf=None, protocolsConf=None, chdir=True, 
              loadAllConfig=True):
@@ -194,6 +196,7 @@ class Project(object):
         if not os.path.exists(self.path):
             raise Exception("Cannot load project, path doesn't exist: %s" % self.path)
         
+        self.chdir = chdir
         if chdir:
             os.chdir(self.path) #Before doing nothing go to project dir
         
@@ -310,6 +313,7 @@ class Project(object):
         # Create project path if not exists
         pwutils.path.makePath(self.path)
 
+        self.chdir = chdir
         if chdir:
             os.chdir(self.path) #Before doing nothing go to project dir
 

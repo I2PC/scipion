@@ -37,6 +37,10 @@ class SqliteMapper(Mapper):
         Mapper.__init__(self, dictClasses)
         self.__initObjDict()
         self.__initUpdateDict()
+        # from which directory we are working with this mapper
+        # and related objects stored/retrieved
+        self._workingDir = None 
+        
         try:
             self.db = SqliteObjectsDb(dbName)
         except Exception, ex:
@@ -47,6 +51,12 @@ class SqliteMapper(Mapper):
         
     def commit(self):
         self.db.commit()
+        
+    def getWorkingDir(self):
+        return self._workingDir
+    
+    def setWorkingDir(self, newDir):
+        self._workingDir = newDir
         
     def __getObjectValue(self, obj):
         """ Get the value of the object to be stored.
@@ -231,6 +241,7 @@ class SqliteMapper(Mapper):
         obj = self._buildObject(objClassName)
         if obj is not None:
             self.fillObject(obj, objRow)
+            obj.setObjWorkingDir(self._workingDir)
         
         return obj
         

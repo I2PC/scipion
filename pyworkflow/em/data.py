@@ -386,7 +386,8 @@ class Image(EMObject):
 
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
-        return self._filename.get()
+        workingDir = self.getObjWorkingDir() or ''
+        return os.path.join(workingDir, self._filename.get())
     
     def setFileName(self, filename):
         """ Use the _objValue attribute to store filename. """
