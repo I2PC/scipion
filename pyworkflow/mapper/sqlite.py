@@ -182,9 +182,7 @@ class SqliteMapper(Mapper):
             if objRow is None:
                 obj = None
             else:
-                obj = self._buildObject(objRow['classname'])
-                if obj is not None:
-                    self.fillObject(obj, objRow)
+                obj = self.__objFromRow(objRow)
         return obj
     
     def getParent(self, obj):
@@ -199,9 +197,10 @@ class SqliteMapper(Mapper):
         obj._objLabel = self._getStrValue(objRow['label'])
         obj._objComment = self._getStrValue(objRow['comment'])
         obj._objCreation = self._getStrValue(objRow['creation'])
+        obj.setObjWorkingDir(self._workingDir)
         objValue = objRow['value']
         obj._objParentId = objRow['parent_id']
-        
+
         if obj.isPointer():
             if objValue is not None:
                 objValue = self.selectById(int(objValue))
@@ -241,7 +240,6 @@ class SqliteMapper(Mapper):
         obj = self._buildObject(objClassName)
         if obj is not None:
             self.fillObject(obj, objRow)
-            obj.setObjWorkingDir(self._workingDir)
         
         return obj
         
