@@ -35,7 +35,7 @@ It is composed by three panels:
 import os, sys
 import threading
 import shlex
-from pyworkflow.utils.utils import envVarOn
+from pyworkflow.utils import envVarOn, getLocalHostName, getLocalUserName
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project
@@ -47,7 +47,7 @@ from pyworkflow.gui.text import _open_cmd
 import SocketServer
 
 # Import possible Object commands to be handled
-from pyworkflow.em.showj import OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN, OBJCMD_CTFFIND4
+from pyworkflow.em.showj import OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_CTFFIND4
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
 
 
@@ -57,6 +57,13 @@ class ProjectWindow(ProjectBaseWindow):
     def __init__(self, path, master=None):
         # Load global configuration
         self.projName = Message.LABEL_PROJECT + os.path.basename(path)
+        try:
+            projTitle = '%s (%s on %s)' % (self.projName, 
+                                           getLocalUserName(), 
+                                           getLocalHostName())
+        except Exception:
+            projTitle = self.projName 
+            
         self.projPath = path
         self.loadProject()
 
@@ -83,7 +90,7 @@ class ProjectWindow(ProjectBaseWindow):
         self.selectedProtocol = None
         self.showGraph = False
         Plotter.setBackend('TkAgg')
-        ProjectBaseWindow.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
+        ProjectBaseWindow.__init__(self, projTitle, master, icon=self.icon, minsize=(900,500))
         self.switchView(VIEW_PROTOCOLS)
 
         self.initProjectTCPServer()#Socket thread to communicate with clients
@@ -177,39 +184,48 @@ class ProjectWindow(ProjectBaseWindow):
         self.enqueue(lambda: plotFile(path, *args).show())    
 
     def runObjectCommand(self, cmd, inputStrId, objStrId):
-        from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
-        from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots, PLOT_POLAR, PLOT_CART, PLOT_POLARCART
-        from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createVmdView
-        objId = int(objStrId)
-        project = self.project
-        if os.path.isfile(inputStrId) and os.path.exists(inputStrId):
-            from pyworkflow.em import loadSetFromDb
-            inputObj = loadSetFromDb(inputStrId)
-        else:
-            inputId = int(inputStrId)
-            inputObj = project.mapper.selectById(inputId)
-
-        #Plotter.setBackend('TkAgg')
-        if cmd == OBJCMD_NMA_PLOTDIST:
-            self.enqueue(lambda: createDistanceProfilePlot(inputObj, modeNumber=objId).show())
-
-        elif cmd == OBJCMD_NMA_VMD:
-            vmd = createVmdView(inputObj, modeNumber=objId)
-            vmd.show()
-
-        elif cmd == OBJCMD_MOVIE_ALIGNPOLAR:
-            self.enqueue(lambda: createPlots(PLOT_POLAR, inputObj, objId))
-
-        elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
-            self.enqueue(lambda: createPlots(PLOT_CART, inputObj, objId))
-
-        elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
-            self.enqueue(lambda: createPlots(PLOT_POLARCART, inputObj, objId))
-        
-        elif cmd == OBJCMD_CTFFIND4:
-            from pyworkflow.em.packages.grigoriefflab.viewer import createCtfPlot
-            self.enqueue(lambda: createCtfPlot(inputObj, objId))
+        try:
+            
+            from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
+            from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots 
+            from pyworkflow.em.protocol.protocol_movies import PLOT_CART
+            from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createVmdView
+            objId = int(objStrId)
+            project = self.project
+            if os.path.isfile(inputStrId) and os.path.exists(inputStrId):
+                from pyworkflow.em import loadSetFromDb
+                inputObj = loadSetFromDb(inputStrId)
+            else:
+                inputId = int(inputStrId)
+                inputObj = project.mapper.selectById(inputId)
+            #Plotter.setBackend('TkAgg')
+            if cmd == OBJCMD_NMA_PLOTDIST:
+                self.enqueue(lambda: createDistanceProfilePlot(inputObj, modeNumber=objId).show())
     
+            elif cmd == OBJCMD_NMA_VMD:
+                vmd = createVmdView(inputObj, modeNumber=objId)
+                vmd.show()
+    
+    #         elif cmd == OBJCMD_MOVIE_ALIGNPOLAR:
+    #             self.enqueue(lambda: createPlots(PLOT_POLAR, inputObj, objId))
+    
+            elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
+                self.enqueue(lambda: createPlots(PLOT_CART, inputObj, objId))
+    
+            #elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
+            #    self.enqueue(lambda: createPlots(PLOT_POLARCART, inputObj, objId))
+            
+            elif cmd == OBJCMD_CTFFIND4:
+                from pyworkflow.em.packages.grigoriefflab.viewer import createCtfPlot
+                self.enqueue(lambda: createCtfPlot(inputObj, objId))
+        except Exception, ex:
+            print "There was an error executing object command !!!:"
+            print  ex
+    
+        elif cmd == OBJCMD_GCTF:
+            from pyworkflow.em.packages.gctf.viewer import createCtfPlot
+            self.enqueue(lambda: createCtfPlot(inputObj, objId))
+
     def recalculateCTF(self, inputObjId, sqliteFile):
         """ Load the project and launch the protocol to
         create the subset.
@@ -258,8 +274,15 @@ class ProjectManagerWindow(ProjectBaseWindow):
 
         self.menuCfg = menu
         self.generalCfg = settings.getConfig()
+
+        try:
+            title = '%s (%s on %s)' % (Message.LABEL_PROJECTS, 
+                                       getLocalUserName(), 
+                                       getLocalHostName())
+        except Exception:
+            title = Message.LABEL_PROJECTS
         
-        ProjectBaseWindow.__init__(self, Message.LABEL_PROJECTS, minsize=(750, 500), **args)
+        ProjectBaseWindow.__init__(self, title, minsize=(750, 500), **args)
         self.manager = Manager()
         
         self.switchView(VIEW_PROJECTS)

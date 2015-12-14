@@ -664,20 +664,14 @@ def createCtfPlot(ctfSet, ctfId):
     xplotter = EmPlotter(x=gridsize[0], y=gridsize[1], windowTitle='CTF Fitting')
     plot_title = "CTF Fitting"
     a = xplotter.createSubPlot(plot_title, 'pixels^-1', 'CTF', yformat=False)
-    legendName = []
-    for i in range(1, 5):
+    
+    legendName = ['rotational avg. No Astg',
+                  'rotational avg.',
+                  'CTF Fit',
+                  'Cross Correlation',
+                  '2sigma cross correlation of noise']
+    for i in range(1, 6):
         _plotCurve(a, i, fn)
-        if i == 1:
-            legendName.append('rotational avg. No Astg')
-        elif i == 2:
-            legendName.append('rotational avg.')
-        elif i == 3:
-            legendName.append('CTF Fit')
-        elif i == 4:
-            legendName.append('Cross Correlation')
-        elif i == 5:
-            legendName.append('2sigma cross correlation of noise')
-            
     xplotter.showLegend(legendName)
     a.grid(True)
     xplotter.show()

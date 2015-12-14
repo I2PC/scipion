@@ -77,7 +77,7 @@ class ProtDosefGpu(ProtProcessMovies):
                       help="""
 -bft       150               BFactor in pix^2.
 -pbx       96                Box dimension for searching CC peak.
--fod       2                 Number of frame offset for frame comparision.
+-fod       2                 Number of frame offset for frame comparison.
 -nps       0                 Radius of noise peak.
 -sub       0                 1: Save as sub-area corrected sum. 0: Not. 
 -srs       0                 1: Save uncorrected sum. 0: Not.

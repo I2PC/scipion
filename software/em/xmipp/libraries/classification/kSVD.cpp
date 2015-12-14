@@ -314,7 +314,7 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
         init_progress_bar(K);
         for (size_t k=firstKtoUpdate; k<K; k++)
         {
-            // Compute the error that would be commited if the
+            // Compute the error that would be committed if the
             // atom k were not used
         	size_t Nk=listUsers[k].size();
             // std::cout << "Atom k=" << k << " is used by " << Nk << " vectors\n";

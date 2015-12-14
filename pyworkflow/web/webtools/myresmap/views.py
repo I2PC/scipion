@@ -89,7 +89,7 @@ def create_resmap_project(request):
                                         protocolsConf=manager.protocols
                                         ) 
          
-        project.getSettings().setLifeTime(14)
+        project.getSettings().setLifeTime(336) # 14 days * 24 hours
         project.saveSettings()
          
         projectPath = manager.getProjectPath(projectName)
@@ -170,7 +170,7 @@ def resmap_content(request):
                                   protocolsConf=manager.protocols,
                                   hostsConf=manager.hosts)
     
-    project.getSettings().setLifeTime(14)
+    project.getSettings().setLifeTime(336) # 14 days * 24 hours
     project.saveSettings()
    
     daysLeft = prettyDelta(project.getLeftTime())

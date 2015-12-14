@@ -366,7 +366,7 @@ javaExtraFileTypes = env2.Java(epath('java/build/HandleExtraFileTypes.class'),
 env2.Depends(javaExtraFileTypes, epath('java/lib/XmippViewer.jar'))
 env2.Default(javaExtraFileTypes)
 
-# FIXME: For any yet unkown issue, java is being compiled putting in
+# FIXME: For any yet unknown issue, java is being compiled putting in
 # -d flag the class name, producing a folder with the same name as the
 # class and putting the class file inside
 fileTypesInstallation = env.Install(
@@ -472,6 +472,7 @@ for p in ['angular_break_symmetry',
           'angular_commonline',
           'angular_continuous_assign',
           'angular_continuous_assign2',
+          'angular_accuracy_pca',
           'angular_discrete_assign',
           'angular_distance',
           'angular_distribution_show',
@@ -611,6 +612,7 @@ for p in ['angular_break_symmetry',
           'mpi_angular_class_average',
           'mpi_angular_continuous_assign',
           'mpi_angular_continuous_assign2',
+          'mpi_angular_accuracy_pca',
           'mpi_angular_discrete_assign',
           'mpi_angular_projection_matching',
           'mpi_angular_project_library',
@@ -796,6 +798,7 @@ if matlab:
 
                 'mirt3D_mexinterp',
 
+                'xmipp_ctf_generate_filter',
                 'xmipp_nma_read_alignment',
                 'xmipp_nma_save_cluster',
                 'xmipp_read',

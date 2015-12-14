@@ -14,17 +14,20 @@ package xmipp.ij.commons;
         {
             public double shiftx, shifty, psiangle;
             public boolean flip;
+            public double scaleFactor = 1;
             
             private String matrixString;
             
-            public Geometry(double shiftx, double shifty, double psiangle, boolean flip)
+            public Geometry(double shiftx, double shifty, double psiangle, boolean flip, double scaleFactor)
             {
                 this.shiftx = shiftx;
                 this.shifty = shifty;
                 this.psiangle = psiangle;
                 this.flip = flip;
                 this.matrixString = null;
+                this.scaleFactor = scaleFactor;
             }
+            
             
             public Geometry(String matrixString)
             {
@@ -40,6 +43,8 @@ package xmipp.ij.commons;
             {
             	return this.matrixString != null;
             }
+            
+            
         }
 
         

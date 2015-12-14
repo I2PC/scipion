@@ -93,7 +93,7 @@ PyNumberMethods Image_NumberMethods =
 PyMethodDef Image_methods[] =
     {
         { "applyGeo", (PyCFunction) Image_applyGeo, METH_VARARGS,
-          "Apply geometry in refering metadata to an image" },
+          "Apply geometry in referring metadata to an image" },
         { "read", (PyCFunction) Image_read, METH_VARARGS,
           "Read image from disk" },
         { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
@@ -105,7 +105,7 @@ PyMethodDef Image_methods[] =
         { "convertPSD", (PyCFunction) Image_convertPSD, METH_VARARGS,
           "Convert to PSD: center FFT and use logarithm" },
         { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,
-          "Read image from disk applying geometry in refering metadata" },
+          "Read image from disk applying geometry in referring metadata" },
         { "applyCTF", (PyCFunction) Image_applyCTF, METH_VARARGS,
 		  "Apply CTF to this image. Ts is the sampling rate of the image." },
         { "write", (PyCFunction) Image_write, METH_VARARGS,
@@ -1295,7 +1295,7 @@ Image_isubtract(PyObject *obj1, PyObject *obj2)
     return (PyObject *)result;
 }//operator -=
 
-/** Image inplace substract, equivalent to *= operator
+/** Image inplace subtract, equivalent to *= operator
  * but this not return a new instance of image, mainly
  * for efficiency reasons.
  * */

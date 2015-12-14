@@ -45,6 +45,7 @@ class ProtImportCTF(ProtImportFiles):
     IMPORT_FROM_AUTO = 0
     IMPORT_FROM_XMIPP3 = 1
     IMPORT_FROM_GRIGORIEFF = 2
+    IMPORT_FROM_GCTF = 3
 
     #--------------------------- DEFINE param functions --------------------------------------------
 
@@ -60,7 +61,7 @@ class ProtImportCTF(ProtImportFiles):
         from which the import can be done.
         (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
-        return ['auto', 'xmipp','grigorieff']
+        return ['auto', 'xmipp', 'grigorieff', 'gctf']
 
     def _getDefaultChoice(self):
         return  self.IMPORT_FROM_AUTO
@@ -91,6 +92,9 @@ class ProtImportCTF(ProtImportFiles):
         elif importFrom == self.IMPORT_FROM_GRIGORIEFF:
             from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportCTF
             return GrigorieffLabImportCTF(self)
+        elif importFrom == self.IMPORT_FROM_GCTF:
+            from pyworkflow.em.packages.gctf.dataimport import GctfImportCTF
+            return GctfImportCTF(self)
         else:
             return None
         
@@ -149,7 +153,8 @@ class ProtImportCTF(ProtImportFiles):
                                "This will make another copy of your data and may take \n"
                                "more time to import. ")
         else:
-            summary.append("Import of *%d* %s from %s" % (self.ctfSet.getSize(), self._outputClassName, self.getPattern()))
+            summary.append("Imported *%d* CTFs " % self.outputCTF.getSize())
+            summary.append("from %s" % self.getPattern())
 
         return summary
     
@@ -169,7 +174,9 @@ class ProtImportCTF(ProtImportFiles):
     #--------------------------- UTILS functions ---------------------------------------------------
     def getFormat(self):
         for fileName, _ in self.iterFiles():
-            if fileName.endswith('.out') or fileName.endswith('.txt'):
+            if (fileName.endswith('.log') or 
+                fileName.endswith('.txt') or
+                fileName.endswith('.out')):
                 return self.IMPORT_FROM_GRIGORIEFF
             if fileName.endswith('.ctfparam'):
                 return self.IMPORT_FROM_XMIPP3

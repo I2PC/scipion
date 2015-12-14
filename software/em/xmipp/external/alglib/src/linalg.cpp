@@ -15407,7 +15407,7 @@ ae_bool rmatrixsvd(/* Real    */ ae_matrix* a,
     {
         
         /*
-         * We cant use additional memory or there is no need in such operations
+         * We can't use additional memory or there is no need in such operations
          */
         result = rmatrixbdsvd(w, &e, minmn, isupper, ae_false, u, nru, a, 0, vt, ncvt, _state);
     }
@@ -29295,7 +29295,7 @@ void sparsecopy(sparsematrix* s0, sparsematrix* s1, ae_state *_state)
     }
     
     /*
-     * Initalization for CRS-parameters
+     * Initialization for CRS-parameters
      */
     l = s0->uidx.cnt;
     ae_vector_set_length(&s1->uidx, l, _state);

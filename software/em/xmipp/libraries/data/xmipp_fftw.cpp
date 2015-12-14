@@ -466,7 +466,7 @@ void frc_dpr(MultidimArray< double > & m1,
 
     //dpr calculation takes for ever in large volumes
     //since atan2 is called many times
-    //untill atan2 is changed by a table let us make dpr an option
+    //until atan2 is changed by a table let us make dpr an option
     if (dodpr)
     {
         dpr.initZeros(radial_count);

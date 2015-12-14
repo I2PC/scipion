@@ -925,6 +925,7 @@ void MDSql::setOperate(MetaData *mdPtrOut, const std::vector<MDLabel> &columns, 
     bool execStmt = true;
     int size;
     std::string sep = " ";
+    std::vector<MDLabel> * labelVector;
 
     switch (operation)
     {
@@ -957,19 +958,10 @@ void MDSql::setOperate(MetaData *mdPtrOut, const std::vector<MDLabel> &columns, 
         ss << ";";
         break;
     case DISTINCT:
-    case REMOVE_DUPLICATE:
         //Create string with columns list
         size = mdPtrOut->activeLabels.size();
         sep = ' ';
-        std::vector<MDLabel> * labelVector;
-        if (operation == REMOVE_DUPLICATE)
-        {
-            labelVector = &(myMd->activeLabels);
-        }
-        else if (operation == DISTINCT)
-        {
-            labelVector = &(mdPtrOut->activeLabels);
-        }
+        labelVector = &(mdPtrOut->activeLabels);
         for (int i = 0; i < size; i++)
         {
             ss2 << sep << MDL::label2StrSql( labelVector->at(i));
@@ -980,6 +972,22 @@ void MDSql::setOperate(MetaData *mdPtrOut, const std::vector<MDLabel> &columns, 
         << " SELECT DISTINCT " << ss2.str()
         << " FROM " << tableName(tableId)
         << ";";
+        break;
+    case REMOVE_DUPLICATE:
+        //Create string with columns list
+        size = mdPtrOut->activeLabels.size();
+        sep = ' ';
+        labelVector = &(mdPtrOut->activeLabels);
+        for (int i = 0; i < size; i++)
+        {
+            ss2 << sep << MDL::label2StrSql( labelVector->at(i));
+            sep = ", ";
+        }
+        ss << "INSERT INTO " << tableName(mdPtrOut->myMDSql->tableId)
+        << " (ObjId," << ss2.str() << ")"
+        << " SELECT M.* FROM (SELECT " << MDL::label2StrSql(columns[0]) << ", MIN(ObjId) AS first "
+        << " FROM " << tableName(tableId) << " GROUP BY " << MDL::label2StrSql(columns[0])
+        << " ) foo JOIN " << tableName(tableId) << " M ON foo.first = M.ObjId;";
         break;
     case INTERSECTION:
     case SUBSTRACTION:

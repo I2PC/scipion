@@ -13,7 +13,7 @@
 [docombine] = 1             ; If >0 combine alignment parameters also 
 
 [ccthresh]  = 0.0           ; CCC threshold. Use 0 to include all particles.
-                            ;   Describes relative similiarity of
+                            ;   Describes relative similarity of
                             ;   the particle to the reference projection. 
 
 [numrefs]   = 83            ; Number of reference views (projections)

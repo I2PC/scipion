@@ -30,7 +30,7 @@ form definition, we have separated in this sub-module.
 """
 
 
-from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, IntParam, 
                                         FloatParam, StringParam, Positive, GE,
                                         EnumParam, NumericListParam, TextParam,
@@ -54,12 +54,9 @@ def _defineProjectionMatchingParams(self, form):
                  'associated with the input particles (hasProjectionAssigment=True)')
     # ReferenceFileNames      
     form.addParam('input3DReferences', PointerParam,
-                 pointerClass='Volume,SetOfVolumes',
-                 label='Initial 3D reference volumes', 
-                 help='Input 3D reference reconstruction. You can select \n '
-                      'more than one 3D input reference. \n'
-                      '_For example_: reference1.vol reference2.vol \n '
-                      'specifies two references.')
+                 pointerClass='Volume',
+                 label='Initial 3D reference volume', 
+                 help='Input 3D reference reconstruction.')
     form.addParam('cleanUpFiles', BooleanParam, default=False,
                  label="Clean up intermediate files?",  expertLevel=LEVEL_ADVANCED,
                  help='Save disc space by cleaning up intermediate files. \n '
@@ -380,7 +377,7 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addParam('scaleStep', NumericListParam, default=1, condition='doScale',
                  label='Step scale factors size',
-                 help='''Scale step factor size (1 means 0.01 in/de-crements arround 1).
+                 help='''Scale step factor size (1 means 0.01 in/de-crements around 1).
     Provide a sequence of numbers (for instance, "1 1 .5 .5" specifies 4 iterations,
     the first two set the value to 1%, then two with .5%
     An alternative compact notation would be ("2x1 2x0.5").
@@ -425,7 +422,7 @@ def _defineProjectionMatchingParams(self, form):
     You may specify this option for each iteration. 
     This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
     specifies 4 iterations, the first two applied alig2d while the last 2
-    dont. an alternative compact notation is 
+    dont. An alternative compact notation is 
     is ("2x1 2x0", i.e.,
     2 iterations with value 1, and 2 with value 0).
     *Note:*if there are less values than iterations the last value is reused
@@ -551,7 +548,7 @@ def _defineProjectionMatchingParams(self, form):
     subvolumes used to compute the resolution. A much faster
     but less accurate approach is to split the 
     proyection directions in two but not the averages. We
-    recomend the first approach for small volumes and the second for
+    recommend the first approach for small volumes and the second for
     large volumes (especially when using small angular
     sampling rates.
     *IMPORTANT:* the second option has ONLY been implemented for FOURIER

@@ -105,7 +105,7 @@ Examples:
         group.addParam('showExperimentalImages', LabelParam, default=False,
                       label='Display particles',
                       help="""Display particles with alignment and classification information
-                           WARNING: the angles and shifts are the adecuate for reconstruction
+                           WARNING: the angles and shifts are the adequate for reconstruction
                            but not for 2D aligment.
                            """)
         group.addParam('showDiscardedImages', LabelParam, default=False,
@@ -118,7 +118,7 @@ Examples:
                       label='3D Class to visualize',
                       help='All: Display all 3D classes for each iteration'
                            'that you selected.\n'
-                           'Selection: You may specify wich 3D class (or classes)'
+                           'Selection: You may specify which 3D class (or classes)'
                            ' to visualize')
         group.addParam('ref3DSelection', NumericRangeParam, default='1',
                       condition='showRef3DNo == %d' % REF_SEL,

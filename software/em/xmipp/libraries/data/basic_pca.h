@@ -126,6 +126,9 @@ public:
     /// Project on basis
     void projectOnPCABasis(Matrix2D<double> &CtY);
 
+    /// Reconstruct from PCA  basis
+    void reconsFromPCA(const Matrix2D<double> &CtY, std::vector< MultidimArray<float> > &recons);
+
     /** Evaluate Zscore of the vectors stored with Mahalanobis distance.
      * NPCA is the dimension of the dimensionally reduced vectors before Mahalanobis
      * Niter is used to learn the PCA basis (typically, Niter=10).

@@ -124,7 +124,7 @@ class Project(object):
         lifeTime = self.settings.getLifeTime()
         
         if lifeTime:
-            td = dt.timedelta(days=lifeTime)
+            td = dt.timedelta(hours=lifeTime)
             return td - self.getElapsedTime()
         else:
             return None
@@ -303,7 +303,7 @@ class Project(object):
         os.chdir(self.path) #Before doing nothing go to project dir
         self._cleanData()
         print "Creating project at: ", os.path.abspath(self.dbPath)
-        # Create db throught the mapper
+        # Create db through the mapper
         self.mapper = self.createMapper(self.dbPath)
         creation = pwobj.String(objName='CreationTime') # Store creation time
         creation.set(dt.datetime.now())
@@ -334,14 +334,17 @@ class Project(object):
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
 
-        if not protocol.isInteractive():
+        isRestart = protocol.getRunMode() == MODE_RESTART
+        
+        if not protocol.isInteractive() or isRestart:
             self._checkModificationAllowed([protocol], 'Cannot RE-LAUNCH protocol')
+            
         protocol.setStatus(pwprot.STATUS_LAUNCHED)
         self._setupProtocol(protocol)
         #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean() # Create working dir if necessary
         # Delete the relations created by this protocol
-        if protocol.getRunMode() == MODE_RESTART:
+        if isRestart:
             self.mapper.deleteRelations(self)
         self.mapper.commit()
         
@@ -394,7 +397,7 @@ class Project(object):
                 print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
                 if tries == 3: # 3 tries have been failed
                     traceback.print_exc()
-                    # If any problem happens, the protocol will be marked wih a status fail
+                    # If any problem happens, the protocol will be marked with a status fail
                     protocol.setFailed(str(ex))
                     self.mapper.store(protocol)
                 else:
@@ -482,7 +485,31 @@ class Project(object):
             else:
                 print "Error path: ", wd 
       
-        self.mapper.commit()     
+        self.mapper.commit()
+        
+    def deleteProtocolOutput(self, protocol, output):
+        """ Delete a given object from the project.
+        Usually to clean up some outputs.
+        """
+        node = self.getRunsGraph().getNode(protocol.strId())
+        deps = []
+        
+        for node in node.getChilds():
+            for _, inputObj in node.run.iterInputAttributes():
+                value = inputObj.get()
+                if (value is not None and 
+                    value.getObjId() == output.getObjId() and
+                    not node.run.isSaved()):
+                    deps.append(node.run)
+
+        if deps:
+            error = 'Cannot DELETE Object, it is referenced from:'
+            for d in deps:
+                error += '\n - %s' % d.getRunName()
+            raise Exception(error)
+        else:
+            protocol.deleteOutput(output)
+            pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
         
     def __setProtocolLabel(self, newProt):
         """ Set a readable label to a newly created protocol.
@@ -732,7 +759,7 @@ class Project(object):
         return self.mapper.selectById(objId)
         
     def _setHostConfig(self, protocol):
-        """ Set the appropiate host config to the protocol
+        """ Set the appropriate host config to the protocol
         give its value of 'hostname'
         """
         hostName = protocol.getHostName()

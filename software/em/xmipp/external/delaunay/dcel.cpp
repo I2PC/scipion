@@ -212,7 +212,7 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 }
 
 //#define DEBUG_READ_FLAT_FILE
-int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName)
+int     read_Points_Flat_File( struct DCEL_T *dcel, const char *fileName)
 {
     int     ret=SUCCESS;        // Return value.
     int     number_Points=0;    // Number of points of set.
@@ -274,7 +274,7 @@ int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName)
 }
 
 
-int		write_DCEL( struct DCEL_T *dcel, int	type, char *fileName)
+int		write_DCEL( struct DCEL_T *dcel, int	type, const char *fileName)
 {
 	int		i=0;			// Loop counter.
 	int		ret=SUCCESS;	// Return value.
@@ -958,7 +958,7 @@ int 	get_Number_Real_Edges( struct DCEL_T *dcel)
 * 			face		edge face
 * OUT:		N/A
 * IN/OUT:	dcel		dcel DATA
-* RETURN:	SUCESS if edge inserted. FAILURE i.o.c.
+* RETURN:	SUCCESS if edge inserted. FAILURE i.o.c.
 * Description: Inserts an edge in the next position of the edge array.
 ***************************************************************************/
 int insertEdge( struct DCEL_T *dcel, int origin, int twin, int prev, int next, int face)
@@ -1019,7 +1019,7 @@ int insertEdge( struct DCEL_T *dcel, int origin, int twin, int prev, int next, i
 * 			index		edge position
 * OUT:		N/A
 * IN/OUT:	dcel		dcel DATA
-* RETURN:	SUCESS if edge updated. FAILURE i.o.c.
+* RETURN:	SUCCESS if edge updated. FAILURE i.o.c.
 * Description: Updates the edge at "index" position. Fields with INVALID
 * 				value are not updated.
 ***************************************************************************/
