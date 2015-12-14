@@ -196,16 +196,16 @@ class ProtSplitSet(ProtSets):
 
         form.addParam('inputSet', pwprot.params.PointerParam, pointerClass='EMSet',
                       label="Input set", important=True,
-                      help='Select the set of elements (images, etc) that you want to split.'
-        )
+                      help='Select the set of elements (images, etc) that you want to split.')
+        
         form.addParam('numberOfSets', pwprot.params.IntParam, default=2,
                       label="Number of subsets",
-                      help='Select how many subsets do you want to create.'
-        )
+                      help='Select how many subsets do you want to create.')
+        
         form.addParam('randomize', pwprot.params.BooleanParam, default=False,
                       label="Randomize elements",
-                      help='Put the elements at random in the different subsets.'
-        )
+                      help='Put the elements at random in the different subsets.')
+    
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
@@ -276,6 +276,8 @@ class ProtSubSet(ProtSets):
     or related (micrographs and CTFs for example).
     """
     _label = 'subset'
+    SET_INTERSECTION = 0
+    SET_DIFFERENCE = 1
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):    
@@ -292,15 +294,31 @@ class ProtSubSet(ProtSets):
         add('chooseAtRandom', pwprot.params.BooleanParam, default=False, 
             label="Make random subset",
             help='Choose elements randomly form the full set.')
-        add('inputSubSet', pwprot.params.PointerParam, 
-            pointerClass='EMSet', condition='not chooseAtRandom',
-            label="Subset of items",
-            help='The elements that are in this (normally smaller) set and\n'
-                 'in the full set will be included in the resulting set.')
         add('nElements', pwprot.params.IntParam, default=2, 
             condition='chooseAtRandom',
             label="Number of elements",
             help='How many elements will be taken from the full set.')
+        
+        add('inputSubSet', pwprot.params.PointerParam, 
+            pointerClass='EMSet', condition='not chooseAtRandom',
+            label="Other set",
+            help='The elements present in this set will be used to pick \n'
+                 'elements from the input full set.     \n'
+                 'This means that the output set will contain elements with \n'
+                 'exact the same information of input full set.\n\n'
+                 'Set operation: if _intersection_ is used,\n'
+                 'elements that are both in input and other set\n'
+                 'will be included. If _difference_, elements that\n'
+                 'are in input but not in other will picked.')
+        add('setOperation', pwprot.params.EnumParam, 
+            default=self.SET_INTERSECTION,
+            choices=['intersection', 'difference'],
+            display=pwprot.params.EnumParam.DISPLAY_HLIST,
+            label='Set operation',
+            help='Set operation: if _intersection_ is used,\n'
+                 'elements that are both in input and other set\n'
+                 'will be included. If _difference_, elements that\n'
+                 'are in input but not in other will picked.')
 
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
@@ -316,7 +334,7 @@ class ProtSubSet(ProtSets):
         outputSet = outputSetFunction()
         outputSet.copyInfo(inputFullSet)
 
-        if self.chooseAtRandom.get():
+        if self.chooseAtRandom:
             chosen = random.sample(xrange(len(inputFullSet)), self.nElements.get())
             for i, elem in enumerate(inputFullSet):
                 if i in chosen:
@@ -325,11 +343,20 @@ class ProtSubSet(ProtSets):
             # Iterate over the elements in the smaller set
             # and take the info from the full set
             inputSubSet = self.inputSubSet.get()
-            for elem in inputSubSet:
+            # The function to include an element or not
+            # depends on the set operation
+            # if it is 'intersection' we want that item is not None (found)
+            # if it is 'difference' we want that item is None (not found, different)
+            if self.setOperation == self.SET_INTERSECTION:
+                checkElem = lambda e: e is not None
+            else:
+                checkElem = lambda e: e is None 
+            
+            for origElem in inputFullSet:
                 # TODO: this can be improved if we perform
                 # intersection directly in sqlite
-                origElem = inputFullSet[elem.getObjId()]
-                if origElem is not None:
+                otherElem = inputSubSet[origElem.getObjId()]
+                if checkElem(otherElem):
                     outputSet.append(origElem)
             
         key = 'output' + inputClassName.replace('SetOf', '') 
@@ -343,8 +370,8 @@ class ProtSubSet(ProtSets):
         """Make sure the input data make sense."""
 
         # First dispatch the easy case, where we choose elements at random.
-        if self.chooseAtRandom.get():
-            if self.nElements.get() <= len(self.inputFullSet.get()):
+        if self.chooseAtRandom:
+            if self.nElements <= self.inputFullSet.get().getSize():
                 return []
             else:
                 return ["Number of elements to choose cannot be bigger than",
