@@ -31,7 +31,7 @@ This sub-package contains the XmippPreprocessMicrographs protocol
 from os.path import basename
 from pyworkflow.utils import getExt, replaceExt
 from pyworkflow.protocol.constants import STEPS_PARALLEL
-from pyworkflow.protocol.params import PointerParam, BooleanParam, IntParam, FloatParam
+from pyworkflow.protocol.params import PointerParam, BooleanParam, IntParam, FloatParam, LabelParam
 from pyworkflow.em.protocol import ProtPreprocessMicrographs
 
 
@@ -54,6 +54,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                       label="Input micrographs", important=True,
                       help='Select the SetOfMicrograph to be preprocessed.')
         
+        form.addParam('orderComment', LabelParam, label="Operations are performed in the order shown below", important=True)
         form.addParam('doCrop', BooleanParam, default=False,
                       label='Crop borders?', 
                       help='Crop a given amount of pixels from each border.')
@@ -81,12 +82,18 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         form.addParam('mulStddev', IntParam, default=5, condition='doRemoveBadPix',
                       label='Multiple of Stddev',
                       help='Multiple of standard deviation.')    
+        form.addParam('doInvert', BooleanParam, default=False,
+                      label='Invert contrast?',
+                      help='Multiply by -1')
         form.addParam('doDownsample', BooleanParam, default=False,
                       label='Downsample micrographs?',
                       help='Downsample micrographs by a given factor.')
         form.addParam('downFactor', FloatParam, default=2., condition='doDownsample',
                       label='Downsampling factor',
                       help='Non-integer downsample factors are possible. Must be larger than 1.')
+        form.addParam('doNormalize', BooleanParam, default=False,
+                      label='Normalize micrograph?',
+                      help='Normalize micrographs to be zero mean and standard deviation one')
     
         form.addParallelSection(threads=2, mpi=1)
 
@@ -133,9 +140,16 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # Remove bad pixels
         self.__insertOneStep(self.doRemoveBadPix, "xmipp_transform_filter",
                             " -i %(inputMic)s --bad_pixels outliers %(stddev)f -v 0")
+        # Invert
+        self.__insertOneStep(self.doInvert, "xmipp_image_operate",
+                            "-i %(inputMic)s --mult -1")
         # Downsample
         self.__insertOneStep(self.doDownsample, "xmipp_transform_downsample",
                             "-i %(inputMic)s --step %(downFactor)f --method fourier")
+
+        # Normalize
+        self.__insertOneStep(self.doNormalize, "xmipp_transform_normalize",
+                            "-i %(inputMic)s --method OldXmipp")
         return self.lastStepId
     
     def __insertOneStep(self, condition, program, arguments):
@@ -175,7 +189,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     def _validate(self):
         validateMsgs = []
         # Some prepocessing option need to be marked
-        if not(self.doCrop or self.doDownsample or self.doLog or self.doRemoveBadPix):
+        if not(self.doCrop or self.doDownsample or self.doLog or self.doRemoveBadPix or self.doInvert or self.doNormalize):
             validateMsgs.append('Some preprocessing option need to be selected.')
         return validateMsgs
     
@@ -198,8 +212,12 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             summary.append("Formula applied: %f - %f ln(x + %f)" % (self.logA, self.logB, self.logC,))
         if self.doRemoveBadPix:
             summary.append("Multiple of standard deviation to remove pixels: %d" % self.mulStddev)
+        if self.doInvert:
+            summary.append("Contrast inverted")
         if self.doDownsample:
             summary.append("Downsampling factor: %0.2f" % self.downFactor)
+        if self.doNormalize:
+            summary.append("Normalized to mean 0 and variance 1")
         return summary
     
     def _methods(self):
@@ -215,8 +233,12 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                     "%f - %f * ln(x + %f) " % (self.logA, self.logB, self.logC))
         if self.doRemoveBadPix:
             txt += "had pixels removed, the ones with standard deviation beyond %d " % self.mulStddev
+        if self.doRemoveBadPix:
+            txt += "contrast inverted "
         if self.doDownsample:
             txt += "been downsampled with a factor of %0.2f " % self.downFactor
+        if self.doNormalize:
+            txt += "been normalized to mean 0 and variance 1"
 
         return [txt, "The resulting set of micrographs is %s" %
                 self.getObjectTag('outputMicrographs')]
