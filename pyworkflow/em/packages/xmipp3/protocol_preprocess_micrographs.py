@@ -91,6 +91,12 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         form.addParam('downFactor', FloatParam, default=2., condition='doDownsample',
                       label='Downsampling factor',
                       help='Non-integer downsample factors are possible. Must be larger than 1.')
+        form.addParam('doSmooth', BooleanParam, default=False,
+                      label='Gaussian filter',
+                      help="Apply a Gaussian filter in real space")
+        form.addParam('sigmaConvolution', FloatParam, default=2, condition="doSmooth",
+                      label='Gaussian sigma (px)',
+                      help="The larger this value, the more the effect will be noticed")
         form.addParam('doNormalize', BooleanParam, default=False,
                       label='Normalize micrograph?',
                       help='Normalize micrographs to be zero mean and standard deviation one')
@@ -110,7 +116,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                        'logA': self.logA.get(),
                        'logB': self.logB.get(),
                        'logC': self.logC.get(),
-                       'stddev': self.mulStddev.get()}
+                       'stddev': self.mulStddev.get(),
+                       'sigmaConvolution': self.sigmaConvolution.get()}
     
     #--------------------------- INSERT steps functions --------------------------------------------
     
@@ -146,7 +153,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # Downsample
         self.__insertOneStep(self.doDownsample, "xmipp_transform_downsample",
                             "-i %(inputMic)s --step %(downFactor)f --method fourier")
-
+        # Smooth
+        self.__insertOneStep(self.doSmooth, "xmipp_transform_filter",
+                            "-i %(inputMic)s --fourier real_gaussian %(sigmaConvolution)f")
         # Normalize
         self.__insertOneStep(self.doNormalize, "xmipp_transform_normalize",
                             "-i %(inputMic)s --method OldXmipp")
@@ -189,7 +198,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     def _validate(self):
         validateMsgs = []
         # Some prepocessing option need to be marked
-        if not(self.doCrop or self.doDownsample or self.doLog or self.doRemoveBadPix or self.doInvert or self.doNormalize):
+        if not(self.doCrop or self.doDownsample or self.doLog or self.doRemoveBadPix or self.doInvert or self.doNormalize or self.doSmooth):
             validateMsgs.append('Some preprocessing option need to be selected.')
         return validateMsgs
     
@@ -216,6 +225,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             summary.append("Contrast inverted")
         if self.doDownsample:
             summary.append("Downsampling factor: %0.2f" % self.downFactor)
+        if self.doSmooth:
+            summary.append("Gaussian filtered with sigma=%f (px)"%self.sigmaConvolution.get())
         if self.doNormalize:
             summary.append("Normalized to mean 0 and variance 1")
         return summary
@@ -232,11 +243,13 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             txt += ("changed from transmisivity to density with the formula: "
                     "%f - %f * ln(x + %f) " % (self.logA, self.logB, self.logC))
         if self.doRemoveBadPix:
-            txt += "had pixels removed, the ones with standard deviation beyond %d " % self.mulStddev
+            txt += "had pixels removed, the ones with standard deviation beyond %d " % self.mulStddev.get()
         if self.doRemoveBadPix:
             txt += "contrast inverted "
         if self.doDownsample:
-            txt += "been downsampled with a factor of %0.2f " % self.downFactor
+            txt += "been downsampled with a factor of %0.2f " % self.downFactor.get()
+        if self.doSmooth:
+            txt += "been Gaussian filtered with a sigma of %0.2f pixels "%self.sigmaConvolution.get()
         if self.doNormalize:
             txt += "been normalized to mean 0 and variance 1"
 
