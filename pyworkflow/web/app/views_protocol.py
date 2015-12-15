@@ -342,6 +342,8 @@ def updateParam(request, project, protocol, paramName):
         paramName: name of the attribute to be set in the protocol
             from the web form
     """
+    if paramName not in request.POST:
+        return
 
     attr = getattr(protocol, paramName)
 #     print "ParamName: %s , Attr: %s" % (paramName, attr)

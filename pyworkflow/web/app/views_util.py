@@ -196,15 +196,18 @@ def loadProtocolProject(request, requestType='POST'):
     project = loadProject(request)
     
     # Create the protocol object
-    if protId and protId != 'None':  # Case of new protocol
+    if protId and protId != 'None':  # Case of existing protocol
         protId = requestDict.get('protocolId', None)
         protocol = project.getProtocol(int(protId))
         
         # Remove this and create loadProtocol method in project class
         protocol.setProject(project) 
+
+    # Create a new protocol (added from the menu)
     else:
         protocolClass = em.getProtocols().get(protClass, None)
         protocol = project.newProtocol(protocolClass)
+        loadProtocolConf(protocol)
         
     return (project, protocol)
 
