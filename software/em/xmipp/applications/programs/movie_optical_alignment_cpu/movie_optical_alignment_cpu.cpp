@@ -55,8 +55,8 @@ public:
     MetaData shiftMD;
     int winSize, gpuDevice, cutFrameFront, cutFrameEnd;
     int groupSize;
-    bool doAverage, saveCorrMovie;
-    bool gainImageCorr, darkImageCorr, globalShiftCorr;
+    bool saveCorrMovie, globalShiftCorr;
+    bool gainImageCorr, darkImageCorr;
 
     void defineParams()
     {
@@ -66,7 +66,6 @@ public:
         addParamsLine("     [--cutf <int=0>]     : number of the frames to cut from the front (0 = no cut");
         addParamsLine("     [--cute <int=0>]     : number of the frames to cut from the end (0 = no cut");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
-        addParamsLine("     [--simpleAverage]   : if we want to just compute the simple average");
         addParamsLine("     [--groupSize <int=1>]        : the depth of pyramid for optical flow algorithm");
         addParamsLine("     [--globalShifts <shiftreference>]        : global shifts from cross-correlation based methods");
         addParamsLine("     [--ssc]             : save corrected stack");
@@ -98,7 +97,6 @@ public:
         cutFrameFront  = getIntParam("--cutf");
         cutFrameEnd  = getIntParam("--cute");
         winSize   = getIntParam("--winSize");
-        doAverage = checkParam("--simpleAverage");
         saveCorrMovie = checkParam("--ssc");
 
 #ifdef GPU
@@ -380,13 +378,6 @@ public:
         imagenum=cutFrameEnd-cutFrameFront+1;
         levelNum=sqrt(double(imagenum));
         computeAvg(fname, cutFrameFront, cutFrameEnd, avgCurr);
-        // if the user want to save the PSD
-        if (doAverage)
-        {
-            II()=avgCurr;
-            II.write(foname);
-            return 0;
-        }
         xmipp2Opencv(avgCurr, avgcurr);
         cout<<"Frames "<<cutFrameFront<<" to "<<cutFrameEnd<<" under processing ..."<<std::endl;
         while (div!=groupSize)

@@ -55,6 +55,8 @@ public:
     FileName fnOut;
     /** First and last frame*/
     int nfirst, nlast;
+    /** Do not calculate and use the input shifts */
+    bool useInputShifts;
     /*****************************/
     /** crop corner **/
     /*****************************/
