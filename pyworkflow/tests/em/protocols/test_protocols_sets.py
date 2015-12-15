@@ -118,10 +118,8 @@ class TestSets(BaseTest):
 
     def outputs(self, p):
         """Iterator over all the elements in the outputs of protocol p."""
-
         for key, output in p.iterOutputEM():
             yield output
-
     #
     # The tests themselves.
     #
@@ -163,17 +161,50 @@ class TestSets(BaseTest):
 
             setFull = random.choice(list(self.outputs(p_split1)))
             setSub = random.choice(list(self.outputs(p_split2)))
-            p_subset = self.proj.newProtocol(ProtSubSet)
+            
+            label = '%s - %s,%s ' % (set0.getClassName(), n1, n2)
+            # Launch intersection subset
+            p_subset = self.newProtocol(ProtSubSet)
+            p_subset.setObjLabel(label + 'intersection')
             p_subset.inputFullSet.set(setFull)
             p_subset.inputSubSet.set(setSub)
-            self.proj.launchProtocol(p_subset, wait=True)
+            self.launchProtocol(p_subset)
+            
+            # Launch difference subset
+            p_subset_diff = self.proj.copyProtocol(p_subset)
+            p_subset_diff.setOperation.set(p_subset_diff.SET_DIFFERENCE)
+            p_subset_diff.setObjLabel(label + 'difference')
+            self.launchProtocol(p_subset_diff)
 
-            setFullIds = [x.strId() for x in setFull]
-            output = self.outputs(p_subset).next()  # first (and only!) output
-            for elem in output:
-                self.assertTrue(elem.strId() in setFullIds)
-
-            self.assertTrue(len(setFull) >= len(output))
+            setFullIds = setFull.getIdSet()
+            setSubIds = setSub.getIdSet()
+            n = len(setFull)
+            
+            # Check intersection
+            outputs = [o for o in self.outputs(p_subset)]
+            n1 = 0
+            if outputs:
+                output = outputs[0]
+                n1 = len(output)
+                for elem in output:
+                    self.assertTrue(elem.getObjId() in setFullIds)
+                    self.assertTrue(elem.getObjId() in setSubIds,
+                                    'object id %s not in set: %s' % (elem.getObjId(), setSubIds))
+                
+            # Check difference
+            outputs = [o for o in self.outputs(p_subset_diff)]
+            n2 = 0
+            if outputs:
+                output_diff = outputs[0]
+                n2 = len(output_diff)
+                for elem in output_diff:
+                    self.assertTrue(elem.getObjId() in setFullIds)
+                    self.assertTrue(elem.getObjId() not in setSubIds)
+                
+                
+            self.assertTrue(n >= n1)
+            self.assertTrue(n >= n2)            
+            self.assertEqual(n, n1+n2)
 
         # We won't do these first two, there are too few elements.
         #   check(self.micros)
