@@ -1206,7 +1206,8 @@ class Protocol(Step):
         queueName, queueParams = self.getQueueParams()
         hc = self.getHostConfig()
         
-        script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
+        scriptFile = hc.getSubmitPrefix() + self.strId() + '.job'
+        script = self.getAbsPath("logs", scriptFile)
         d = {'JOB_SCRIPT': script,
              'JOB_NODEFILE': script.replace('.job', '.nodefile'),
              'JOB_NAME': self.strId(),
