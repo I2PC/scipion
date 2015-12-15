@@ -218,13 +218,16 @@ class ProjectWindow(ProjectBaseWindow):
             elif cmd == OBJCMD_CTFFIND4:
                 from pyworkflow.em.packages.grigoriefflab.viewer import createCtfPlot
                 self.enqueue(lambda: createCtfPlot(inputObj, objId))
+                
+            elif cmd == OBJCMD_GCTF:
+                from pyworkflow.em.packages.gctf.viewer import createCtfPlot
+                
+                self.enqueue(lambda: createCtfPlot(inputObj, objId))
         except Exception, ex:
             print "There was an error executing object command !!!:"
             print  ex
     
-        elif cmd == OBJCMD_GCTF:
-            from pyworkflow.em.packages.gctf.viewer import createCtfPlot
-            self.enqueue(lambda: createCtfPlot(inputObj, objId))
+        
 
     def recalculateCTF(self, inputObjId, sqliteFile):
         """ Load the project and launch the protocol to
