@@ -1216,6 +1216,7 @@ class Protocol(Step):
              'JOB_THREADS': self.numberOfThreads.get(),
              'JOB_CORES': self.numberOfMpi.get() * self.numberOfThreads.get(),
              'JOB_HOURS': 72,
+             'JOB_PROJECT_DIR': self.getProject().getAbsPath()
              }
         d.update(queueParams)
         return d

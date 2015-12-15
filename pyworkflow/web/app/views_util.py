@@ -848,8 +848,6 @@ def loadProtocolConf(protocol):
     if protDict:
         if 'numberOfMpi' in protDict:
             protocol.numberOfMpi.set(protDict.get('numberOfMpi'))
-
-            protocol.allowMpi = (protocol.numberOfMpi.get() != 0)
         
         if 'numberOfThreads' in protDict:
             protocol.numberOfThreads.set(protDict.get('numberOfThreads'))            
