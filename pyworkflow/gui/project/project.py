@@ -223,21 +223,13 @@ class ProjectWindow(ProjectBaseWindow):
                 
             elif cmd == OBJCMD_GCTF:
                 from pyworkflow.em.packages.gctf.viewer import createCtfPlot
-<<<<<<< HEAD
-                
-                self.enqueue(lambda: createCtfPlot(inputObj, objId))
-=======
-                self.enqueue(lambda: createCtfPlot(inputObj, objId))
-                
->>>>>>> master
+
         except Exception, ex:
             print "There was an error executing object command !!!:"
             print  ex
     
-<<<<<<< HEAD
-        
-=======
->>>>>>> master
+
+
 
     def recalculateCTF(self, inputObjId, sqliteFile):
         """ Load the project and launch the protocol to

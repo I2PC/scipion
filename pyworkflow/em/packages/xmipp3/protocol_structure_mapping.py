@@ -71,10 +71,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         form.addSection(label='Normal Mode Analysis')
         XmippProtNMABase._defineParamsCommon(self,form)
         
-        form.addSection(label='Multidimensional Scaling') 
-        form.addParam('numberOfDimensions', params.IntParam, default=2,
-                      label="Number of dimensions",
-                      help='In normal practice, it should be 1, 2 or, at most, 3.')        
+               
         form.addParallelSection(threads=4, mpi=1)
         
     #--------------------------- INSERT steps functions --------------------------------------------    
@@ -116,7 +113,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                     outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (nVolj, nVoli))
                     self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, maskArgs, alignArgs)
                 nVolj += 1   
-            nVoli += 1    
+            nVoli += 1  
                  
         self._insertFunctionStep('gatherResultsStep')
                                         
@@ -164,10 +161,9 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 nVolj += 1
             nVoli += 1 
                                            
-        print "score matrix is: "
-        print score
-        
-        
+        #print "score matrix is: "
+        #print score
+                
         fnRoot = self._getExtraPath ("DistanceMatrixNormal.txt")   
         distance = [[0 for i in volList] for i in volList]
         nVoli = 1
@@ -187,27 +183,26 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             fh.close()
             nVoli += 1                     
         
-        print "distance matrix is: "
-        print distance
+        #print "distance matrix is: "
+        #print distance
                        
-        #coordinate matrix calculation        
-        mds = manifold.MDS(n_components=self.numberOfDimensions.get(), metric=True, max_iter=3000, eps=1e-9, dissimilarity="precomputed", n_jobs=1)
-        embed3d = mds.fit(distance).embedding_    
-                
-                  
-        print "embed3d = "
-        print embed3d 
+        #coordinate matrix calculation 
         
-        nVoli = 1
-        for x in volList:
-            for y in range(self.numberOfDimensions.get()):
-                fh = open(self._getExtraPath ("CoordinateMatrix.txt"),"a")
-                fh.write("%f\t"%embed3d[(nVoli - 1)][(y)])
-                fh.close()  
-            fh = open(self._getExtraPath ("CoordinateMatrix.txt"),"a")
-            fh.write("\n")
-            fh.close()
-            nVoli += 1 
+        for i in range(1, 4):
+               
+            mds = manifold.MDS(n_components=i, metric=True, max_iter=3000, eps=1e-9, dissimilarity="precomputed", n_jobs=1)
+            embed3d = mds.fit(distance).embedding_    
+               
+            nVoli = 1
+            for x in volList:
+                for y in range(i):
+                    fh = open(self._getExtraPath ("CoordinateMatrix_%d_Dimension.txt"%i),"a")
+                    fh.write("%f\t"%embed3d[(nVoli - 1)][(y)])
+                    fh.close()  
+                fh = open(self._getExtraPath ("CoordinateMatrix_%d_Dimension.txt"%i),"a")
+                fh.write("\n")
+                fh.close()
+                nVoli += 1 
         
                 
         cleanPattern(self._getExtraPath('pseudoatoms*'))
