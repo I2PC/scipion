@@ -29,7 +29,7 @@ This sub-package contains wrapper around reconstruct_significant Xmipp program
 
 from pyworkflow.utils import Timer
 from pyworkflow.em import *  
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfVolumes, volumeToRow
+from pyworkflow.em.packages.xmipp3.convert import volumeToRow
 from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
 from convert import writeSetOfClasses2D, writeSetOfParticles
 import pyworkflow.em.metadata as metadata
@@ -65,9 +65,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                             'will tend to break the symmetry finding a suitable volume. The reference volume can also be useful, '
                             'for instance, when reconstructing a fiber. Provide in this case a cylinder of a suitable size.')
         form.addParam('refVolume', PointerParam, label='Initial 3D reference volumes',
-                      pointerClass='SetOfVolumes, Volume', condition="thereisRefVolume")
-        form.addParam('Nvolumes', IntParam, label='Number of volumes', help="Number of volumes to reconstruct",
-                      default=1,condition="not thereisRefVolume")
+                      pointerClass='Volume', condition="thereisRefVolume")
         form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label='Angular sampling',
                       help='Angular sampling in degrees for generating the projection gallery.')
@@ -171,7 +169,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             if self.thereisRefVolume:
                 args += " --initvolumes " + self._getExtraPath('input_volumes.xmd')
             else:
-                args += " --numberOfVolumes %d" % self.Nvolumes
+                args += " --numberOfVolumes 1"
         else:
             args += " --initvolumes %s" % prevVolFn
         
@@ -210,39 +208,20 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         if self.thereisRefVolume:
             inputVolume= self.refVolume.get()
             fnVolumes = self._getExtraPath('input_volumes.xmd')
-            if isinstance(inputVolume, SetOfVolumes):
-                writeSetOfVolumes(inputVolume, fnVolumes)
-            else:
-                row = XmippMdRow()
-                volumeToRow(inputVolume, row, alignType = ALIGN_NONE)
-                md = xmipp.MetaData()
-                row.writeToMd(md, md.addObject())
-                md.write(fnVolumes)
+            row = XmippMdRow()
+            volumeToRow(inputVolume, row, alignType = ALIGN_NONE)
+            md = xmipp.MetaData()
+            row.writeToMd(md, md.addObject())
+            md.write(fnVolumes)
         
     def createOutputStep(self):
-        Nvolumes = self.getNumberOfVolumes()
-        lastIter = self.getLastIteration(Nvolumes)
-        if Nvolumes==1:
-            vol = Volume()
-            vol.setObjComment('significant volume 1')
-            vol.setLocation(self.getIterVolume(lastIter))
-            vol.setSamplingRate(self.inputSet.get().getSamplingRate())
-            self._defineOutputs(outputVolume=vol)
-            output = vol
-        else:
-            volSet = self._createSetOfVolumes()
-            volSet.setSamplingRate(self.inputSet.get().getSamplingRate())
-            fnVolumes = glob(self._getExtraPath('volume_iter%03d_*.vol')%lastIter)
-            fnVolumes.sort()
-            for i, fnVolume in enumerate(fnVolumes):
-                vol = Volume()
-                vol.setObjComment('significant volume %02d' % (i+1))
-                vol.setLocation(fnVolume)
-                volSet.append(vol)
-            self._defineOutputs(outputVolumes=volSet)
-            output = volSet
-
-        self._defineSourceRelation(self.inputSet, output)
+        lastIter = self.getLastIteration(1)
+        vol = Volume()
+        vol.setObjComment('significant volume 1')
+        vol.setLocation(self.getIterVolume(lastIter))
+        vol.setSamplingRate(self.inputSet.get().getSamplingRate())
+        self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(self.inputSet, vol)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -256,6 +235,11 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                     errors.append('The input images and the reference volume have different sizes') 
             else:
                 errors.append("Please, enter a reference image")
+        
+        SL = xmipp.SymList()
+        SL.readSymmetryFile(self.symmetryGroup.get())
+        if (100-self.alpha0.get())/100.0*(SL.getTrueSymsNo()+1)>1:
+            errors.append("Increase the initial significance it is too low for this symmetry")
         return errors
         
     def _summary(self):
@@ -264,7 +248,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         if self.thereisRefVolume:
             summary.append("Starting from: %s" % self.getObjectTag('refVolume'))
         else:
-            summary.append("Starting from: %d random volumes" % self.Nvolumes)
+            summary.append("Starting from: 1 random volume")
         summary.append("Significance from %f%% to %f%% in %d iterations" % (self.alpha0, self.alphaF, self.iter))
         if self.useImed:
             summary.append("IMED used")
@@ -284,7 +268,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                 retval += " We used %s volume " % self.getObjectTag('refVolume')
                 retval += "as a starting point of the reconstruction iterations."
             else:
-                retval += " We started the iterations with %d random volumes." % self.Nvolumes
+                retval += " We started the iterations with 1 random volume."
             retval += " %d iterations were run going from a " % self.iter
             retval += "starting significance of %f%% to a final one of %f%%." % (self.alpha0, self.alphaF)
             if self.useImed:
@@ -320,14 +304,3 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             else:
                 break
         return lastIter
-    
-    def getNumberOfVolumes(self):
-        if self.thereisRefVolume:
-            inputVolume= self.refVolume.get()
-            if isinstance(inputVolume, SetOfVolumes):
-                Nvolumes=inputVolume.getSize()
-            else:
-                Nvolumes=1
-        else:
-            Nvolumes=self.Nvolumes.get()
-        return Nvolumes

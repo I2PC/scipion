@@ -70,6 +70,15 @@ SymList_readSymmetryFile(PyObject * obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+
+/* getTrueSymsNo */
+PyObject *
+SymList_getTrueSymsNo(PyObject * obj, PyObject *args, PyObject *kwargs)
+{
+    SymListObject *self = (SymListObject*) obj;
+    return PyInt_FromLong(self->symlist->true_symNo);
+}
+
 /* computeDistance */
 PyObject *
 SymList_computeDistance(PyObject * obj, PyObject *args, PyObject *kwargs)
@@ -209,6 +218,8 @@ PyMethodDef SymList_methods[] =
 	   METH_VARARGS, "compute angular distance between two sets of angles" },
    { "symmetricAngles", (PyCFunction) SymList_symmetricAngles,
 	   METH_VARARGS, "Returns the list of equivalent angles" },
+   { "getTrueSymsNo", (PyCFunction) SymList_getTrueSymsNo,
+	   METH_VARARGS, "Get the number os symmetries" },
    { NULL } /* Sentinel */
 };//SymList_methods
 

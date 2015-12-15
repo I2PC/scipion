@@ -47,7 +47,9 @@ from pyworkflow.gui.text import _open_cmd
 import SocketServer
 
 # Import possible Object commands to be handled
-from pyworkflow.em.showj import OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN, OBJCMD_CTFFIND4
+from pyworkflow.em.showj import (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, 
+                                 OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_CTFFIND4,
+                                 OBJCMD_GCTF)
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
 
 
@@ -184,39 +186,50 @@ class ProjectWindow(ProjectBaseWindow):
         self.enqueue(lambda: plotFile(path, *args).show())    
 
     def runObjectCommand(self, cmd, inputStrId, objStrId):
-        from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
-        from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots, PLOT_POLAR, PLOT_CART, PLOT_POLARCART
-        from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createVmdView
-        objId = int(objStrId)
-        project = self.project
-        if os.path.isfile(inputStrId) and os.path.exists(inputStrId):
-            from pyworkflow.em import loadSetFromDb
-            inputObj = loadSetFromDb(inputStrId)
-        else:
-            inputId = int(inputStrId)
-            inputObj = project.mapper.selectById(inputId)
-
-        #Plotter.setBackend('TkAgg')
-        if cmd == OBJCMD_NMA_PLOTDIST:
-            self.enqueue(lambda: createDistanceProfilePlot(inputObj, modeNumber=objId).show())
-
-        elif cmd == OBJCMD_NMA_VMD:
-            vmd = createVmdView(inputObj, modeNumber=objId)
-            vmd.show()
-
-        elif cmd == OBJCMD_MOVIE_ALIGNPOLAR:
-            self.enqueue(lambda: createPlots(PLOT_POLAR, inputObj, objId))
-
-        elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
-            self.enqueue(lambda: createPlots(PLOT_CART, inputObj, objId))
-
-        elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
-            self.enqueue(lambda: createPlots(PLOT_POLARCART, inputObj, objId))
-        
-        elif cmd == OBJCMD_CTFFIND4:
-            from pyworkflow.em.packages.grigoriefflab.viewer import createCtfPlot
-            self.enqueue(lambda: createCtfPlot(inputObj, objId))
+        try:
+            
+            from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
+            from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots 
+            from pyworkflow.em.protocol.protocol_movies import PLOT_CART
+            from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createVmdView
+            objId = int(objStrId)
+            project = self.project
+            if os.path.isfile(inputStrId) and os.path.exists(inputStrId):
+                from pyworkflow.em import loadSetFromDb
+                inputObj = loadSetFromDb(inputStrId)
+            else:
+                inputId = int(inputStrId)
+                inputObj = project.mapper.selectById(inputId)
+            #Plotter.setBackend('TkAgg')
+            if cmd == OBJCMD_NMA_PLOTDIST:
+                self.enqueue(lambda: createDistanceProfilePlot(inputObj, modeNumber=objId).show())
     
+            elif cmd == OBJCMD_NMA_VMD:
+                vmd = createVmdView(inputObj, modeNumber=objId)
+                vmd.show()
+    
+    #         elif cmd == OBJCMD_MOVIE_ALIGNPOLAR:
+    #             self.enqueue(lambda: createPlots(PLOT_POLAR, inputObj, objId))
+    
+            elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
+                self.enqueue(lambda: createPlots(PLOT_CART, inputObj, objId))
+    
+            #elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
+            #    self.enqueue(lambda: createPlots(PLOT_POLARCART, inputObj, objId))
+            
+            elif cmd == OBJCMD_CTFFIND4:
+                from pyworkflow.em.packages.grigoriefflab.viewer import createCtfPlot
+                self.enqueue(lambda: createCtfPlot(inputObj, objId))
+                
+            elif cmd == OBJCMD_GCTF:
+                from pyworkflow.em.packages.gctf.viewer import createCtfPlot
+                self.enqueue(lambda: createCtfPlot(inputObj, objId))
+                
+        except Exception, ex:
+            print "There was an error executing object command !!!:"
+            print  ex
+    
+
     def recalculateCTF(self, inputObjId, sqliteFile):
         """ Load the project and launch the protocol to
         create the subset.

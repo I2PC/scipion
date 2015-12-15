@@ -34,7 +34,7 @@ from pyworkflow.protocol.params import BooleanParam, IntParam, EnumParam
 from protocol_movie_alignment import ProtMovieAlignment
 
 from pyworkflow.em.viewer import ObjectView
-from pyworkflow.em.showj import OBJCMDS, OBJCMD_MOVIE_ALIGNPOLAR
+from pyworkflow.em.showj import OBJCMDS
 from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots
 
 class XmippMovieAlignViewer(ProtocolViewer):
@@ -70,8 +70,8 @@ class XmippMovieAlignViewer(ProtocolViewer):
     def _showMics(self, paramName):
         #return XmippViewer(project=self._project)._visualize(self.protocol.outputMicrographs)
         outputMics = self.protocol.outputMicrographs
-        objCommands = '%s' % (OBJCMD_MOVIE_ALIGNPOLAR)
-        return [ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), self.protocol.strId(), viewParams={OBJCMDS: objCommands})]
+        #objCommands = '%s' % (OBJCMD_MOVIE_ALIGNPOLAR)
+        return [ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), self.protocol.strId())]
 
     def showPlots(self, paramName):
         createPlots(self.plotToShow.get(), self.protocol, self.movieId.get())
