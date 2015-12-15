@@ -47,10 +47,9 @@ for f in inputFiles:
 	outputPath = os.path.join(outputDir, f)
 	print "Linking %s -> %s" % (outputPath, inputPath)
 	
-	for i in range(n):
-		pwutils.cleanPath(outputPath)
+	for i in range(n):		
 		time.sleep(t)		
-		pwutils.createAbsLink(inputPath, outputPath)
+		pwutils.copyFile(inputPath, outputPath)
 		
 	
 	
