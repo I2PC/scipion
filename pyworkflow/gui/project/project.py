@@ -47,7 +47,9 @@ from pyworkflow.gui.text import _open_cmd
 import SocketServer
 
 # Import possible Object commands to be handled
-from pyworkflow.em.showj import OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_CTFFIND4
+from pyworkflow.em.showj import (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, 
+                                 OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_CTFFIND4,
+                                 OBJCMD_GCTF)
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
 
 
@@ -221,13 +223,21 @@ class ProjectWindow(ProjectBaseWindow):
                 
             elif cmd == OBJCMD_GCTF:
                 from pyworkflow.em.packages.gctf.viewer import createCtfPlot
+<<<<<<< HEAD
                 
                 self.enqueue(lambda: createCtfPlot(inputObj, objId))
+=======
+                self.enqueue(lambda: createCtfPlot(inputObj, objId))
+                
+>>>>>>> master
         except Exception, ex:
             print "There was an error executing object command !!!:"
             print  ex
     
+<<<<<<< HEAD
         
+=======
+>>>>>>> master
 
     def recalculateCTF(self, inputObjId, sqliteFile):
         """ Load the project and launch the protocol to
