@@ -380,13 +380,6 @@ public:
         imagenum=cutFrameEnd-cutFrameFront+1;
         levelNum=sqrt(double(imagenum));
         computeAvg(fname, cutFrameFront, cutFrameEnd, avgCurr);
-        // if the user want to save the PSD
-        if (doAverage)
-        {
-            II()=avgCurr;
-            II.write(foname);
-            return 0;
-        }
         xmipp2Opencv(avgCurr, avgcurr);
         cout<<"Frames "<<cutFrameFront<<" to "<<cutFrameEnd<<" under processing ..."<<std::endl;
         while (div!=groupSize)

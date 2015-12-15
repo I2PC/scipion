@@ -42,10 +42,6 @@ from pyworkflow.gui.plotter import Plotter
 import matplotlib.pyplot as plt
 import xmipp
 
-#Alignment methods enum
-AL_OPTICAL = 0
-AL_AVERAGE = 1
-
 class ProtMovieAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
@@ -55,10 +51,6 @@ class ProtMovieAlignment(ProtProcessMovies):
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
 
-        form.addParam('alignMethod', EnumParam, choices=['optical flow', 'average'],
-                      label="Alignment method", default=AL_OPTICAL,
-                      display=EnumParam.DISPLAY_COMBO,
-                      help='Method to use for movie alignment. ')
         line = form.addLine('Skip frames for alignment',
                             help='Skip frames for alignment.\n'
                                   'The first frame in the stack is *0*.' )
@@ -67,7 +59,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                       help='The number of frames to cut from the front and end')
 
         # GROUP GPU PARAMETERS
-        group = form.addGroup('GPU', condition="alignMethod==%d" % AL_OPTICAL)
+        group = form.addGroup('GPU')
         group.addParam('doGPU', BooleanParam, default=False,
                       label="Use GPU (vs CPU)",
                       help="Set to true if you want the GPU implementation of Optical Flow")
@@ -76,7 +68,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                       help="GPU may have several cores. Set it to zero if you do not know what we are talking about. First core index is 0, second 1 and so on.")
         
         # GROUP OPTICAL FLOW PARAMETERS
-        group = form.addGroup('Parameters', expertLevel=LEVEL_ADVANCED, condition="alignMethod==%d" % AL_OPTICAL)
+        group = form.addGroup('Additional Parameters', expertLevel=LEVEL_ADVANCED)
         group.addParam('winSize', IntParam, default=150,
                       label="Window size", help="Window size (shifts are assumed to be constant within this window).")
         group.addParam('groupSize', IntParam, default=1,
@@ -94,7 +86,6 @@ class ProtMovieAlignment(ProtProcessMovies):
         if self.doSaveMovie:
             movieSet = self._createSetOfMovies()
             movieSet.copyInfo(inputMovies)
-        alMethod = self.alignMethod.get()
         for movie in self.inputMovies.get():
             micName = self._getNameExt(movie.getFileName(),'_aligned', 'mrc')
             metadataName = self._getNameExt(movie.getFileName(), '_aligned', 'xmd')
@@ -108,8 +99,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
             alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
-            if alMethod == AL_OPTICAL:
-                movieCreatePlot(alignedMovie, True)
+            movieCreatePlot(alignedMovie, True)
             if self.doSaveMovie:
                 movieSet.append(alignedMovie)
             mic = em.Micrograph()
@@ -118,9 +108,8 @@ class ProtMovieAlignment(ProtProcessMovies):
             # The micName of a micrograph MUST be the same as the original movie
             #mic.setMicName(micName)
             mic.setMicName(movie.getMicName())
-            if alMethod == AL_OPTICAL:
-                mic.plotCart = em.Image()
-                mic.plotCart.setFileName(self._getExtraPath(plotCartName))
+            mic.plotCart = em.Image()
+            mic.plotCart.setFileName(self._getExtraPath(plotCartName))
             mic.psdCorr = em.Image()
             mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
             micSet.append(mic)
@@ -163,30 +152,23 @@ class ProtMovieAlignment(ProtProcessMovies):
             command += '--dark '+self.inputMovies.get().getDark()
         if self.inputMovies.get().getGain():
             command += '--gain '+self.inputMovies.get().getGain()
-
-        # For simple average execution
-        if alMethod == AL_AVERAGE:
-            command += '--simpleAverage'
-        # For optical flow execution
-        else:
-            winSize = self.winSize.get()
-            doSaveMovie = self.doSaveMovie.get()
-            groupSize = self.groupSize.get()
-            command += '--winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
-            if self.doGPU:
-                program = 'xmipp_movie_optical_alignment_gpu'
-                command += '--gpu %d ' % gpuId
-            if doSaveMovie:
-                command += '--ssc'
+        winSize = self.winSize.get()
+        doSaveMovie = self.doSaveMovie.get()
+        groupSize = self.groupSize.get()
+        command += '--winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
+        if self.doGPU:
+            program = 'xmipp_movie_optical_alignment_gpu'
+            command += '--gpu %d ' % gpuId
+        if doSaveMovie:
+            command += '--ssc'
         try:
             self.runJob(program, command, cwd=movieFolder)
         except:
             print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
-        if alMethod == AL_OPTICAL:
-            moveFile(join(movieFolder, metadataName), self._getExtraPath())
-            if doSaveMovie:
-                outMovieName = self._getNameExt(movieName,'_aligned', 'mrcs')
-                moveFile(join(movieFolder, outMovieName), self._getExtraPath())
+        moveFile(join(movieFolder, metadataName), self._getExtraPath())
+        if doSaveMovie:
+            outMovieName = self._getNameExt(movieName,'_aligned', 'mrcs')
+            moveFile(join(movieFolder, outMovieName), self._getExtraPath())
 
         # Compute half-half PSD
         ih = em.ImageHandler()
@@ -216,7 +198,6 @@ class ProtMovieAlignment(ProtProcessMovies):
     def _validate(self):
         errors = []
         numThreads = self.numberOfThreads;
-        alMethod = self.alignMethod.get()
         if numThreads>1:
             if self.doGPU:
                 errors.append("GPU and Parallelization can not be used together")
@@ -227,16 +208,13 @@ class ProtMovieAlignment(ProtProcessMovies):
 
     def _methods(self):
         methods = []
-        alMethod = self.alignMethod.get()
-        gpuId = self.GPUCore.get()
-        if alMethod == AL_AVERAGE:
-            methods.append('Aligning method: Simple average')
-        else:
-            methods.append('Aligning method: Optical Flow')
-            methods.append('- Used a window size of: *%d*' % self.winSize.get())
-            methods.append('- Used a pyramid size of: *6*')
-            if self.doGPU:
-                methods.append('- Used GPU *%d* for processing' % gpuId)
+        if self.doGPU:
+            gpuId = self.GPUCore.get()
+        methods.append('Aligning method: Optical Flow')
+        methods.append('- Used a window size of: *%d*' % self.winSize.get())
+        methods.append('- Used a pyramid size of: *6*')
+        if self.doGPU:
+            methods.append('- Used GPU *%d* for processing' % gpuId)
 
         return methods
 
