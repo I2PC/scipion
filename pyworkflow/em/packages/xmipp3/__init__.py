@@ -99,7 +99,7 @@ from protocol_split_volume import XmippProtSplitvolume
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_validate_tilt import XmippProtValidateTilt
 from protocol_volume_strain import XmippProtVolumeStrain
-
+from protocol_write_test import XmippProtWriteTest
 # Wizards
 from wizard import *
 
