@@ -858,4 +858,4 @@ def loadProtocolConf(protocol):
             protocol._useQueue.set(protDict.get('useQueue'))            
         
         if 'queueParams' in protDict:
-            protocol.setQueueParams(json.loads(protDict.get('queueParams')))
+            protocol.setQueueParams(protDict.get('queueParams'))
