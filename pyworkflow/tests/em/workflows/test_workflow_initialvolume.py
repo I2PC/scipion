@@ -90,7 +90,8 @@ class TestGroel(tests.BaseTest):
                                       symmetryGroup=sym,
                                       numberOfMpi=cpus,
                                       numberOfThreads=1,
-                                      iter=15
+                                      iter=15,
+                                      alpha0=95
                                       )
         protSignificant.inputSet.set(protImport.outputAverages)
         self.launchProtocol(protSignificant)

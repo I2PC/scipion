@@ -27,13 +27,14 @@ import urllib
 import os
 
 import pyworkflow.tests as tests
-import pyworkflow.em as em
-from pyworkflow.em.protocol import ProtImportMicrographs, ProtImportParticles
+from pyworkflow.em.protocol import ProtImportParticles
 from pyworkflow.em.packages.xmipp3 import XmippProtExtractParticles
 from pyworkflow.em.packages.emxlib import ProtEmxExport
 from pyworkflow.em.packages.xmipp3 import XmippProtFilterParticles, XmippProtApplyAlignment, XmippProtReconstructFourier
 from pyworkflow.em.protocol.protocol_sets import ProtSplitSet,ProtUnionSet
 from pyworkflow.em.convert import ImageHandler
+
+
 
 class TestEmxWeb(tests.BaseTest):
     """test emx web page
@@ -391,20 +392,24 @@ class TestEmxWeb(tests.BaseTest):
         protApply.inputParticles.set(protEmxImport.outputParticles)
         self.launchProtocol(protApply)
         # We check that protocol generates output
-        self.assertIsNotNone(protApply.outputParticles, "There was a problem generating output particles")
+        self.assertIsNotNone(protApply.outputParticles, 
+                             "There was a problem generating output particles")
         # Check that output particles do not have alignment information
-        self.assertFalse(protApply.outputParticles.hasAlignment(), "Output particles should not have alignment information")
+        self.assertFalse(protApply.outputParticles.hasAlignment(), 
+                         "Output particles should not have alignment information")
 
         average = getattr(protApply, 'outputAverage', None)
         outputParticles = getattr(protApply, 'outputParticles', None)
 
         #export as emx
         protEmxExport = self.newProtocol(ProtEmxExport)
-        protEmxExport.inputSet.set(protApply.outputAverage)
+        protEmxExport.inputSet.set(outputParticles)
         self.launchProtocol(protEmxExport)
         #TODO: upload result to emx web site. Now it is down
         stackFn = os.path.join(protEmxExport._getPath('emxData'),"data.mrc")
-        self.assertTrue(ImageHandler().compareData(average, stackFn, tolerance=0.01))
+        firstImg = outputParticles.getFirstItem()
+        self.assertTrue(ImageHandler().compareData(firstImg.getFileName(), 
+                                                   stackFn, tolerance=0.01))
 
     def test_orientation2(self):#really this is test 3
         """
@@ -420,7 +425,6 @@ class TestEmxWeb(tests.BaseTest):
         self.url = "Orientation/Test3/"
         imgFn = self.downloadFile("stack2D.mrc")
         emxFn = self.downloadFile("stack2D.emx")
-        reconstruct  = self.downloadFile("1GR5_reference.mrc")
 
         protEmxImport = self.newProtocol(ProtImportParticles,
                                          objLabel='from emx (orientation3)',
@@ -440,12 +444,3 @@ class TestEmxWeb(tests.BaseTest):
         self.assertIsNotNone(protReconstruct.outputVolume, "There was a problem generating the volume")
 
         outputVolume = getattr(protReconstruct, 'outputVolume', None)
-
-        #export as emx
-        protEmxExport = self.newProtocol(ProtEmxExport)
-        protEmxExport.inputSet.set(protReconstruct.outputVolume)
-        self.launchProtocol(protEmxExport)
-
-        #TODO: upload result to emx web site. Now it is down
-        stackFn = os.path.join(protEmxExport._getPath('emxData'),"data.mrc")
-        self.assertTrue(ImageHandler().compareData(reconstruct, stackFn, tolerance=0.01))

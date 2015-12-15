@@ -27,6 +27,10 @@ public class ScipionParams extends Params {
         super(args);
     }
     
+    public ScipionParams() {
+        super();
+    }
+    
     public ScipionParams(int port, String inputid, String other) {
         this.port = port;
         this.inputid = inputid;

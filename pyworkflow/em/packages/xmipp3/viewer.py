@@ -45,6 +45,7 @@ import pyworkflow.gui.dialog as dialog
 
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
+from protocol_compare_reprojections import XmippProtCompareReprojections
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
@@ -55,7 +56,6 @@ from protocol_particle_pick import XmippProtParticlePicking
 from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
 from protocol_preprocess import XmippProtPreprocessVolumes
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
-from protocol_projection_outliers import XmippProtProjectionOutliers
 from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
@@ -83,12 +83,12 @@ class XmippViewer(Viewer):
                 SetOfImages, 
                 SetOfMovies, 
                 SetOfNormalModes, 
+                XmippProtCompareReprojections, 
                 XmippParticlePickingAutomatic, 
                 XmippProtExtractParticlesPairs, 
                 XmippProtKerdensom, 
                 ProtParticlePicking, 
                 XmippProtParticlePickingPairs,
-                XmippProtProjectionOutliers, 
                 XmippProtRotSpectra, 
                 XmippProtScreenClasses, 
                 XmippProtScreenParticles, 
@@ -334,7 +334,7 @@ class XmippViewer(Viewer):
                                                       SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender,
                                                       MODE: MODE_MD}))
         
-        elif issubclass(cls, XmippProtProjectionOutliers):
+        elif issubclass(cls, XmippProtCompareReprojections):
                 fn = obj.outputParticles.getFileName()
                 labels = 'id enabled _index _xmipp_image._filename _xmipp_imageRef._filename _xmipp_imageResidual._filename _xmipp_imageCovariance._filename _xmipp_cost _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar _xmipp_continuousA _xmipp_continuousB _xmipp_continuousX _xmipp_continuousY'
                 labelRender = "_xmipp_image._filename _xmipp_imageRef._filename _xmipp_imageResidual._filename _xmipp_imageCovariance._filename"
@@ -372,9 +372,9 @@ class XmippViewer(Viewer):
             outputMics = obj.outputMicrographs
             plotLabels = 'psdCorr._filename plotPolar._filename plotCart._filename'
             labels = plotLabels + ' _filename '
-            objCommands = "'%s' '%s' '%s'" % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
+            objCommands = "'%s'" % (OBJCMD_MOVIE_ALIGNCARTESIAN)
             
-            self._views.append(ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
+            self._views.append(ObjectView(self._project, self.protocol.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
                                                       ORDER: labels, VISIBLE: labels, RENDER: plotLabels, 'zoom': 50,
                                                       OBJCMDS: objCommands}))
         

@@ -343,6 +343,13 @@ class Window():
         
     def close(self, e=None):
         self.root.destroy()
+        # JMRT: For some reason when Tkinter has an exception
+        # it does not exit the application as expected and
+        # remains in the mainloop, so here we are forcing
+        # to exit the whole system (only applies for the main window)
+        if self.master is None:
+            import sys 
+            sys.exit()
         
     def _onClosing(self):
         """Do some cleaning before closing."""

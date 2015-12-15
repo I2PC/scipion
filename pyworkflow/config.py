@@ -162,7 +162,41 @@ def loadProtocolsConf(protocolsConf):
         traceback.print_exc()
         sys.exit('Failed to read settings. The reported error was:\n  %s\n'
                  'To solve it, delete %s and run again.' % (e, protocolsConf))
+        
 
+def loadWebConf():
+    """ Load configuration parameters to be used in web.
+    By default read from: scipion.conf
+    """
+    # Read menus from users' config file.
+    cp = ConfigParser()
+    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    webConf = OrderedDict()
+
+    confFile = os.environ['SCIPION_CONFIG']
+    
+    assert cp.read(confFile) != [], 'Missing file %s' % confFile
+
+    # Set options from WEB main section
+    def setw(option, default):
+        if cp.has_option('WEB', option):
+            webConf[option] = cp.get('WEB', option)
+        else: 
+            webConf[option] = default
+            
+    setw('SITE_URL', 'scipion.cnb.csic.es')
+    setw('ABSOLUTE_URL', '')
+    
+    # Load some parameters per protocol
+    protocols = OrderedDict()
+    webConf['PROTOCOLS'] = protocols
+    
+    if cp.has_section('WEB_PROTOCOLS'):
+        for protName in cp.options('WEB_PROTOCOLS'):
+            protocols[protName] = json.loads(cp.get('WEB_PROTOCOLS', protName)) 
+    
+    return webConf
+    
 
 class ProjectSettings(pwobj.OrderedObject):
     """ Store settings related to a project. """

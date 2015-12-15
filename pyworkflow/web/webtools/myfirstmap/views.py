@@ -104,7 +104,7 @@ def create_service_project(request):
                                         protocolsConf=manager.protocols
                                         ) 
         
-        project.getSettings().setLifeTime(14)
+        project.getSettings().setLifeTime(336) # 14 days * 24 hours
         project.saveSettings()
         #copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
         

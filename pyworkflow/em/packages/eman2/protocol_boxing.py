@@ -57,8 +57,8 @@ class EmanProtBoxing(ProtParticlePicking):
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def launchBoxingGUIStep(self):
-        # First we go to runs directory (we create if it does not exist)
-        #path.makePath("runs")
+        # Print the eman version, useful to report bugs
+        self.runJob(eman2.getEmanProgram('e2version.py'), '')
         # Program to execute and it arguments
         program = eman2.getEmanProgram("e2boxer.py")
         arguments = "%(inputMics)s"

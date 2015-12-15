@@ -162,7 +162,7 @@ public class ExportImagesJDialog extends JDialog{
                     	}
                     	else
                     		md = frame.data.getMd();
-
+                    	
                     	md.writeMdToStack(path, applygeochb.isSelected(), frame.data.isWrap(), label);
                         XmippWindowUtil.releaseGUI(frame.getRootPane());
 

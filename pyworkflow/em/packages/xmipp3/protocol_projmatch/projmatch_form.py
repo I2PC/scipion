@@ -30,7 +30,7 @@ form definition, we have separated in this sub-module.
 """
 
 
-from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, IntParam, 
                                         FloatParam, StringParam, Positive, GE,
                                         EnumParam, NumericListParam, TextParam,
@@ -54,12 +54,9 @@ def _defineProjectionMatchingParams(self, form):
                  'associated with the input particles (hasProjectionAssigment=True)')
     # ReferenceFileNames      
     form.addParam('input3DReferences', PointerParam,
-                 pointerClass='Volume,SetOfVolumes',
-                 label='Initial 3D reference volumes', 
-                 help='Input 3D reference reconstruction. You can select \n '
-                      'more than one 3D input reference. \n'
-                      '_For example_: reference1.vol reference2.vol \n '
-                      'specifies two references.')
+                 pointerClass='Volume',
+                 label='Initial 3D reference volume', 
+                 help='Input 3D reference reconstruction.')
     form.addParam('cleanUpFiles', BooleanParam, default=False,
                  label="Clean up intermediate files?",  expertLevel=LEVEL_ADVANCED,
                  help='Save disc space by cleaning up intermediate files. \n '
