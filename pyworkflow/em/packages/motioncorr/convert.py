@@ -31,7 +31,6 @@ from pyworkflow.utils import Environ
 from pyworkflow.em.data import MovieAlignment
 
 
-
 def getEnviron():
     """ Return the envirion settings to run dosefgpu programs. """
     """ Setup the environment variables needed to launch Relion. """
