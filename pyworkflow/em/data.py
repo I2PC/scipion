@@ -1573,12 +1573,12 @@ class MovieAlignment(EMObject):
     """ Store the alignment between the different Movie frames.
     Also store the first and last frames used for alignment.
     """
-    def __init__(self, first, last, shifts, **kwargs):
+    def __init__(self, first=-1, last=-1, shifts=None, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._first = Integer(first)
         self._last = Integer(last)
         self._shifts = CsvList(pType=float)
-        self._shifts.set(shifts)
+        self._shifts.set(shifts or [])
         # This list contain the coordinate where you begin the crop (x, y), the whidth and height of the frames.
         # The order is: x,y, whidth and height. For whidth and height, 0 means the entire frame.
         self._roi = CsvList(pType=int) 
