@@ -83,18 +83,44 @@ class TestMotioncorrAlingMovies(TestMotioncorrBase):
         protMotCorr1.inputMovies.set(self.protImport1.outputMovies)
         self.proj.launchProtocol(protMotCorr1, wait=True)
         self.assertIsNotNone(protMotCorr1.outputMicrographs, "SetOfMicrographs has not been created.")
-    
+        alignment = protMotCorr1.outputMovies[1].getAlignment()
+        fstFrame, lastFrame = alignment.getRange()
+        roi = alignment.getRoi()
+        self.assertEqual(fstFrame, 1, "The first frame must be 1")
+        self.assertEqual(lastFrame, 1, "The last frame must be 7")
+        self.assertEqual(roi, [0, 0, 0, 0], "the region of interest must be [0, 0, 0, 0]")
+            
     def testMotioncorr2(self):
-        # test downsampling a set of micrographs
         protMotioncorr2 = ProtMotionCorr(doSaveMovie=True)
         protMotioncorr2.inputMovies.set(self.protImport2.outputMovies)
         self.proj.launchProtocol(protMotioncorr2, wait=True)
         self.assertIsNotNone(protMotioncorr2.outputMicrographs, "SetOfMicrographs has not been created.")
+        alignment = protMotioncorr2.outputMovies[1].getAlignment()
+        fstFrame, lastFrame = alignment.getRange()
+        roi = alignment.getRoi()
+        
+        self.assertEqual(fstFrame, 1, "The first frame must be 1")
+        self.assertEqual(lastFrame, 1, "The last frame must be 7")
+        self.assertEqual(roi, [0, 0, 0, 0], "the region of interest must be [0, 0, 0, 0]")
 
     def testMotioncorr3(self):
-        # test downsampling a set of micrographs
         protMotioncorr3 = ProtMotionCorr(alignFrame0=2, alignFrameN=2, 
                                          cropOffsetX=10, cropOffsetY=10)
         protMotioncorr3.inputMovies.set(self.protImport1.outputMovies)
         self.proj.launchProtocol(protMotioncorr3, wait=True)
         self.assertIsNotNone(protMotioncorr3.outputMicrographs, "SetOfMicrographs has not been created.")
+        alignment = protMotioncorr3.outputMovies[1].getAlignment()
+        fstFrame, lastFrame = alignment.getRange()
+        roi = alignment.getRoi()
+        self.assertEqual(fstFrame, 3, "The first frame must be 3")
+        self.assertEqual(lastFrame, 5, "The last frame must be 5")
+        self.assertEqual(roi, [10, 10, 0, 0], "the region of interest must be [10, 10, 0, 0]")
+
+
+
+
+
+
+
+
+
