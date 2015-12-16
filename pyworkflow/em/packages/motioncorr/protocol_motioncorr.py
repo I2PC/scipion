@@ -53,15 +53,23 @@ class ProtMotionCorr(ProtProcessMovies):
         ProtProcessMovies._defineParams(self, form)
         
         form.addParam('gpuMsg', params.LabelParam, default=True,
-                      label='*Warning*! You need to have installed CUDA'
+                      label='WARNING! You need to have installed CUDA'
                             ' libraries and a nvidia GPU')
         
-        group = form.addGroup('General parameters')
-        line = group.addLine('How many frames remove to align',
+        group = form.addGroup('Alignment')
+        line = group.addLine('Remove frames to ALIGN from',
                             help='How many frames remove'
                                  ' from movie alignment.')
-        line.addParam('alignFrame0', params.IntParam, default=0, label='from first')
-        line.addParam('alignFrameN', params.IntParam, default=0, label='to final')
+        line.addParam('alignFrame0', params.IntParam, default=0, label='beginning')
+        line.addParam('alignFrameN', params.IntParam, default=0, label='end')
+        line = group.addLine('Remove frames to SUM from',
+                             help='How many frames you want remove to sum\n'
+                                  'from beginning and/or from the end of each movie.')
+        line.addParam('sumFrame0', params.IntParam, default=0, label='beginning')
+        line.addParam('sumFrameN', params.IntParam, default=0, label='end')
+        group.addParam('binFactor', params.IntParam, default=1,
+                       label='Binning factor',
+                       help='1x or 2x. Bin stack before processing.')
         
         line = group.addLine('Crop offsets (px)')
         line.addParam('cropOffsetX', params.IntParam, default=0, label='X')
@@ -80,23 +88,14 @@ class ProtMotionCorr(ProtProcessMovies):
                       label="Save movie", expertLevel=cons.LEVEL_ADVANCED,
                       help="Save Aligned movie")
         
-        group = form.addGroup('GPU parameters')
-        line = group.addLine('How many frames remove to sum',
-                             help='How many frames you want remove to sum\n'
-                                  'from beginning and/or to the end of each movie.')
-        line.addParam('sumFrame0', params.IntParam, default=0, label='from first')
-        line.addParam('sumFrameN', params.IntParam, default=0, label='to final')
+        group = form.addGroup('GPU', expertLevel=cons.LEVEL_ADVANCED)
         
         group.addParam('GPUCore', params.IntParam, default=0,
-                      label="Choose GPU core",  expertLevel=cons.LEVEL_ADVANCED,
+                      label="Choose GPU core",
                       help="GPU may have several cores. Set it to zero"
                            " if you do not know what we are talking about."
                            " First core index is 0, second 1 and so on.")
-        group.addParam('binFactor', params.IntParam, default=1,
-                       abel='Binning factor',
-                       help='1x or 2x. Bin stack before processing.')
         group.addParam('extraParams', params.StringParam, default='',
-                       expertLevel=cons.LEVEL_ADVANCED,
                        label='Additional parameters',
                        help="""
 -bft       150               BFactor in pix^2.
@@ -117,7 +116,7 @@ class ProtMotionCorr(ProtProcessMovies):
     #--------------------------- STEPS functions ---------------------------------------------------
     def _processMovie(self, movieId, movieName, movieFolder):
         movieSet = self.inputMovies.get()
-        self._getFinalFrame(movieName)
+        self._getFinalFrame(movieSet, movieId)
         
         if not (movieName.endswith("mrc") or movieName.endswith("mrcs")):
             movieEm = self._getTmpPath(movieFolder, movieName)
@@ -228,8 +227,11 @@ class ProtMotionCorr(ProtProcessMovies):
     def _getLogFile(self, movieId):
         return 'micrograph_%06d_Log.txt' % movieId
     
-    def _getFinalFrame(self, movieName):
-        if getattr(self, 'frameN', None):
+    def _getFinalFrame(self, movieSet, movieId):
+        if getattr(self, 'frameN', None) is None:
+            movie = movieSet[movieId]
+            movieName = movie.getFileName()
+
             ih = em.ImageHandler()
             _, _, z, n = ih.getDimensions(movieName)
             totalFrames = max(z, n) - 1
