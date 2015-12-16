@@ -173,16 +173,20 @@ class ProtMotionCorr(ProtProcessMovies):
             suffix = "_original"
         movieSet = self._createSetOfMovies(suffix)
         movieSet.copyInfo(inputMovies)
+        if self.binFactor != 1:
+            movieSet.setSamplingRate(inputMovies.getSamplingRate()*self.binFactor)
         
         if self.doSaveAveMic:
             micSet = self._createSetOfMicrographs()
             micSet.copyInfo(inputMovies)
+        if self.binFactor != 1:
+            micSet.setSamplingRate(inputMovies.getSamplingRate()*self.binFactor)
         else:
             micSet = None
-            
+        
         for movie in inputMovies:
             self._createOutputMovie(movie, movieSet, micSet)
-                
+        
         self._defineOutputs(outputMovies=movieSet)
         self._defineTransformRelation(inputMovies, movieSet)
         
@@ -199,6 +203,8 @@ class ProtMotionCorr(ProtProcessMovies):
         errors = []
         if max(self.numberOfThreads, self.numberOfMpi) > 1:
             errors.append("GPU and Parallelization can not be used together")
+        if not (self.binFactor == 1 or self.binFactor == 2):
+            errors.append("Binning factor can only be 1 or 2")
             
         return errors
     
@@ -258,6 +264,7 @@ class ProtMotionCorr(ProtProcessMovies):
                                                          self._getLogFile(movieId)))
         alignment.setRoi([self.cropOffsetX, self.cropOffsetY, 
                           self.cropDimX, self.cropDimY])
+        alignment.setScale(self.binFactor)
         
         alignedMovie.setAlignment(alignment)
         movieSet.append(alignedMovie)
