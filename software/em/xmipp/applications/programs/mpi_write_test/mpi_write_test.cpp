@@ -41,6 +41,8 @@
  ***************************************************************************/
 
 #include "parallel/xmipp_mpi.h"
+#include <data/args.h>
+#include <data/xmipp_program.h>
 
 //Some useful macros
 #define CREATE_LOG() FILE * _logML = fopen(formatString("nodo%02d.log", node->rank).c_str(), "w+")
@@ -52,13 +54,43 @@
 ParallelTaskDistributor * distributor;
 MpiNode * node;
 //#define stackSize 1024
-#define stackSize 65536
-#define Xdim 51
-#define Ydim 77
+//#define stackSize 65536
+//#define Xdim 51
+//#define Ydim 77
+//#define Xdim 256
+//#define Ydim 128
 
 int main(int argc, char **argv)
 {
-	FileName fnIN="test_delete_me.mrcs";
+    FileName fnIN="test_delete_me.mrcs";
+    int xDim = 64;
+    int yDim = 64;
+    int nDim = 1024;
+    for (int i = 1; i < argc; i++)  /* Skip argv[0] (program name). */
+    {
+        if (strcmp(argv[i], "-i") == 0)  /* Process optional arguments. */
+        {
+            i++;
+            fnIN =argv[i];
+        }
+        else if (strcmp(argv[i], "--xdim") == 0)  /* Process optional arguments. */
+        {
+            i++;
+            xDim = atoi(argv[i]);
+        }
+        else if (strcmp(argv[i], "--ydim") == 0)  /* Process optional arguments. */
+        {
+            i++;
+            yDim = atoi(argv[i]);
+        }
+        else if (strcmp(argv[i], "--ndim") == 0)  /* Process optional arguments. */
+        {
+            i++;
+            nDim = atoi(argv[i]);
+        }
+
+    }
+
     //First argument should be the md filename
     //FileName fn(argv[1]);
     MetaData md;
@@ -71,15 +103,15 @@ int main(int argc, char **argv)
     if(rank==0)
     {
         unlink(fnIN.c_str());
-        createEmptyFile(fnIN, Xdim, Ydim, 1, stackSize);
+        createEmptyFile(fnIN, xDim, yDim, 1, nDim);
     }
-    Image<double> Iaux(Xdim,Ydim);
+    Image<double> Iaux(xDim,yDim);
     //Be sure all sync here
     ////LOG("waiting on barrier...");
     node->barrierWait();
 
     //    if (IS_MASTER)
-    for (int var = 1; var <= stackSize; var++)
+    for (int var = 1; var <= nDim; var++)
     {
         if(var%size==rank)
         {
@@ -95,7 +127,7 @@ int main(int argc, char **argv)
     if(rank==0)
     {
     	int errors=0;
-        for (int var = 1; var <= stackSize; var++)
+        for (int var = 1; var <= nDim; var++)
         {
             double value = (double) (var%size);
             String ss = formatString("%03d@%s", var,fnIN.c_str());
