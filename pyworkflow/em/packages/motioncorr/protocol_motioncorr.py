@@ -172,48 +172,16 @@ class ProtMotionCorr(ProtProcessMovies):
         else:
             suffix = "_original"
         movieSet = self._createSetOfMovies(suffix)
+        movieSet.copyInfo(inputMovies)
         
         if self.doSaveAveMic:
             micSet = self._createSetOfMicrographs()
             micSet.copyInfo(inputMovies)
+        else:
+            micSet = None
             
-        for movie in self.inputMovies.get():
-            movieId = movie.getObjId()
-            
-            movieFolder = self._getExtraMovieFolder(movieId)
-            movieName = os.path.join(movieFolder, self._getCorrMovieName(movieId))
-            micFn = os.path.join(movieFolder, self._getNameExt(movie.getFileName(),'_aligned', 'mrc'))
-            
-            # Parse the alignment parameters and store the log files
-            alignedMovie = movie.clone()
-            movieSet.copyInfo(inputMovies)
-            
-            if self.doSaveMovie:
-                alignedMovie.setFileName(movieName)
-                if self.frameN == 0:
-                    totFrames = self.totalFrames
-                else:
-                    totFrames = self.frameN
-                
-                diff = totFrames - self.alignFrame0.get() + 1
-                
-                alignment = em.MovieAlignment(first=self.alignFrame0.get()+1, 
-                                              last=totFrames+1,
-                                              shifts=[0, 0]*diff)
-            else:
-                alignment = parseMovieAlignment(os.path.join(movieFolder, 
-                                                             self._getLogFile(movieId)))
-            alignment.setRoi([self.cropOffsetX, self.cropOffsetY, 
-                              self.cropDimX, self.cropDimY])
-            
-            alignedMovie.setAlignment(alignment)
-            movieSet.append(alignedMovie)
-                
-            if self.doSaveAveMic:
-                mic = micSet.ITEM_TYPE()
-                mic.setObjId(movieId)
-                mic.setFileName(micFn)
-                micSet.append(mic)
+        for movie in inputMovies:
+            self._createOutputMovie(movie, movieSet, micSet)
                 
         self._defineOutputs(outputMovies=movieSet)
         self._defineTransformRelation(inputMovies, movieSet)
@@ -263,3 +231,43 @@ class ProtMotionCorr(ProtProcessMovies):
         """ Create a Movie folder where to work with it. """
         return self._getExtraPath('movie_%06d' % movieId)
     
+    def _createOutputMovie(self, movie, movieSet, micSet=None):
+        movieId = movie.getObjId()
+        
+        movieFolder = self._getExtraMovieFolder(movieId)
+        movieName = os.path.join(movieFolder, self._getCorrMovieName(movieId))
+        micFn = os.path.join(movieFolder, self._getNameExt(movie.getFileName(),'_aligned', 'mrc'))
+        
+        # Parse the alignment parameters and store the log files
+        alignedMovie = movie.clone()
+        
+        if self.doSaveMovie:
+            alignedMovie.setFileName(movieName)
+            if self.frameN == 0:
+                totFrames = self.totalFrames
+            else:
+                totFrames = self.frameN
+            
+            diff = totFrames - self.alignFrame0.get() + 1
+            
+            alignment = em.MovieAlignment(first=self.alignFrame0.get()+1, 
+                                          last=totFrames+1,
+                                          shifts=[0, 0]*diff)
+        else:
+            alignment = parseMovieAlignment(os.path.join(movieFolder, 
+                                                         self._getLogFile(movieId)))
+        alignment.setRoi([self.cropOffsetX, self.cropOffsetY, 
+                          self.cropDimX, self.cropDimY])
+        
+        alignedMovie.setAlignment(alignment)
+        movieSet.append(alignedMovie)
+        
+        if self.doSaveAveMic:
+            mic = micSet.ITEM_TYPE()
+            mic.setObjId(movieId)
+            mic.setFileName(micFn)
+            micSet.append(mic)
+
+
+
+
