@@ -229,7 +229,7 @@ class ProtMotionCorr(ProtProcessMovies):
         return 'micrograph_%06d_Log.txt' % movieId
     
     def _getFinalFrame(self, movieName):
-        if self.frameN is None:
+        if getattr(self, 'frameN', None):
             ih = em.ImageHandler()
             _, _, z, n = ih.getDimensions(movieName)
             totalFrames = max(z, n) - 1
