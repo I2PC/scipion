@@ -28,19 +28,11 @@
 import os
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 from protocol_structure_mapping import XmippProtStructureMapping
-import xmipp
-import matplotlib as mpl
-
-
-
-
-
-
+import pylab
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
 import numpy as np
 from sklearn import manifold
-from mpl_toolkits.mplot3d import Axes3D, proj3d
+from mpl_toolkits.mplot3d import proj3d
 import pyworkflow.protocol.params as params
 
 
@@ -86,7 +78,6 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
             fields = line.split()
             rowdata = map(float, fields)
             data.extend(rowdata)
-        
                 
         count = 0
         distance = [[0 for i in volList] for i in volList]
@@ -99,21 +90,13 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
                 nVolj += 1
             nVoli += 1    
         
-        
-        
         count = 0
         labels = []
         for voli in volList:
             labels.append("%s"%voli.getObjLabel())
             count += 1
-            
-             
         
-                               
-       
         nComponent = self.numberOfDimensions.get()
-        
-           
         
         if nComponent == 1:
             mds = manifold.MDS(n_components=1, metric=True, max_iter=3000, eps=1e-9, dissimilarity="precomputed", n_jobs=1)
@@ -130,7 +113,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
                 plt.annotate(
                              label, 
                              xy = (x, y), xytext = (-8, 8),
-                             textcoords = 'offset points', ha = 'right', va = 'bottom',
+                             textcoords = 'offset points', ha = 'right', va = 'bottom',fontsize=9,
                              bbox = dict(boxstyle = 'round,pad=0.3', fc = 'yellow', alpha = 0.3))
             plt.show()
                    
@@ -146,7 +129,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
                 plt.annotate(
                             label, 
                             xy = (x, y), xytext = (-8, 8),
-                            textcoords = 'offset points', ha = 'right', va = 'bottom',
+                            textcoords = 'offset points', ha = 'right', va = 'bottom',fontsize=9,
                             bbox = dict(boxstyle = 'round,pad=0.3', fc = 'yellow', alpha = 0.3))
                             #arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
             
@@ -154,53 +137,42 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
             plt.show()
                
         else: 
-            
-            #plt.close()
-            fig = plt.figure()
-            ax = fig.gca(projection='3d')
-            
-            
-            
-            
+                        
+            fig = pylab.figure()
+            ax = fig.add_subplot(111, projection = '3d')
             #ax = plt.subplot(111, projection = '3d')
-            
             mds = manifold.MDS(n_components=3, metric=True, max_iter=3000, eps=1e-9, dissimilarity="precomputed", n_jobs=1)
             embed3d = mds.fit(distance).embedding_ 
             #plot = ax.plot(embed3d[:, 0], embed3d[:, 1], embed3d[:, 2], 'o', c='g')
-            
             ax.scatter(embed3d[:, 0], embed3d[:, 1], embed3d[:, 2], marker = 'o', c='g')
-            
-            
             ax.set_xlabel('Dimension 1', fontsize=11)
             ax.set_ylabel('Dimension 2', fontsize=11)
             ax.set_zlabel('Dimension 3', fontsize=11)
             ax.text2D(0.05, 0.95, "StructMap", transform=ax.transAxes)
-            
-            '''for label, x, y, z in zip(labels,embed3d[:, 0], embed3d[:, 1], embed3d[:, 1]):
-                ax.text(x, y, z, label)'''
-            
-            
+                        
             tX, tY, _ = proj3d.proj_transform(embed3d[:, 0], embed3d[:, 1], embed3d[:, 2], ax.get_proj())
-           
-            
             Labels = []
             for i in range(len(embed3d[:, 0])):
                 text = labels[i]
                 label = ax.annotate(text,
                                     xycoords='data',
                                     xy = (tX[i], tY[i]), xytext = (-8, 8),
-                                    textcoords = 'offset points', ha = 'right', va = 'top', fontsize=6,
-                                    bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
-                                    arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+                                    textcoords = 'offset points', ha = 'right', va = 'bottom', fontsize=9,
+                                    bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5))
+                                    
                 Labels.append(label)
-                                                        
-            #plt.grid(True)
-            fig.canvas.mpl_connect('button_release_event', self.update_position(distance, fig, embed3d, ax, Labels))
-            fig.show()
+            def update_position(e):
+                x2, y2, _ = proj3d.proj_transform(embed3d[:, 0], embed3d[:, 1], embed3d[:, 2], ax.get_proj())
+                for i in range(len(embed3d[:, 0])):
+                    label = Labels[i]
+                    label.xy = x2[i],y2[i]
+                    label.update_positions(fig.canvas.renderer)
+                fig.canvas.draw()
+            fig.canvas.mpl_connect('button_release_event', update_position)
+            pylab.show()
         
-           
-               
         return plot
+        
     def _validate(self):
         errors = []
         
@@ -209,17 +181,4 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
             errors.append("The number of dimensions should be 1, 2 or, at most, 3.")
         
         return errors
-    
-    def update_position(self, distance, fig, embed3d, ax, Labels):
-        print "From update position"
-        #Transform co-ordinates to get new 2D projection
-        tX, tY, _ = proj3d.proj_transform(embed3d[:, 0], embed3d[:, 1], embed3d[:, 2], ax.get_proj())
-        for i in range(len(embed3d[:, 0])):
-            label = Labels[i]
-            label.xy = tX[i],tY[i]
-            label.update_positions(fig.canvas.renderer)
-        fig.canvas.draw()
-        return
-    
-                   
     

@@ -34,7 +34,6 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPattern, createLink, moveFile, copyFile, makePath, cleanPath
-#from os.path import basename, exists
 from pyworkflow.object import String
 from pyworkflow.em.data import SetOfNormalModes
 from pyworkflow.em.packages.xmipp3 import XmippMdRow
@@ -42,9 +41,6 @@ from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import XmippPro
 import xmipp
 from pyworkflow.em.packages.xmipp3.nma.protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
 from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume
-import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
-import numpy as np
 from sklearn import manifold
 
 class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABase, XmippProtAlignVolume):
