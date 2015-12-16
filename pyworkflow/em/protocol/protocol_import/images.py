@@ -28,8 +28,10 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 """
 
 import sys
+import os
 from os.path import basename, exists, isdir
 import time
+from datetime import timedelta, datetime
 
 from pyworkflow.utils.path import commonPath
 from pyworkflow.utils.properties import Message
@@ -180,45 +182,64 @@ class ProtImportImages(ProtImportFiles):
         n = 1
         copyOrLink = self.getCopyOrLink()
         outputName = self._getOutputName()
-        
-        for i, (fileName, fileId) in enumerate(self.iterFiles()):
-            dst = self._getExtraPath(basename(fileName))
-            copyOrLink(fileName, dst)
-            
-            if self._checkStacks:
-                _, _, _, n = imgh.getDimensions(dst)
-                
-            if i > 0:
-                imgSet.enableAppend()
-            
-            if n > 1:
-                for index in range(1, n+1):
-                    img.cleanObjId()
-                    img.setMicId(fileId)
-                    img.setFileName(dst)
-                    img.setIndex(index)
-                    imgSet.append(img)
-            else:
-                img.setObjId(fileId)
-                img.setFileName(dst)
-                self._fillMicName(img, fileName) # fill the micName if img is a Micrograph.
-                imgSet.append(img)
-            outFiles.append(dst)
 
-            #imgSet.close()
-                        
-            time.sleep(self.timeout.get(5))
-            
+        finished = False
+        importedFiles = set()
+        i = 0
+        startTime = datetime.now()
+        timeout = timedelta(seconds=self.timeout.get())
+        fileTimeout = timedelta(seconds=self.fileTimeout.get())
+
+        while not finished:
+            time.sleep(3) # wait 3 seconds before check for new files
+            someNew = False
+
+            for fileName, fileId in self.iterFiles():
+
+                if fileName in importedFiles: # If file already imported, skip it
+                    continue
+
+                someNew = True
+
+                mTime = datetime.fromtimestamp(os.path.getmtime(fileName))
+                delta = datetime.now() - mTime
+
+                if delta < fileTimeout: # Skip if the file is still changing
+                    continue
+
+                self.info('Importing file: %s' % fileName)
+                importedFiles.add(fileName)
+                dst = self._getExtraPath(basename(fileName))
+                copyOrLink(fileName, dst)
+
+                if self._checkStacks:
+                    _, _, _, n = imgh.getDimensions(dst)
+
+                if i > 0:
+                    imgSet.enableAppend()
+
+                if n > 1:
+                    for index in range(1, n+1):
+                        img.cleanObjId()
+                        img.setMicId(fileId)
+                        img.setFileName(dst)
+                        img.setIndex(index)
+                        imgSet.append(img)
+                else:
+                    img.setObjId(fileId)
+                    img.setFileName(dst)
+                    self._fillMicName(img, fileName) # fill the micName if img is a Micrograph.
+                    imgSet.append(img)
+
+                outFiles.append(dst)
+
             self._updateOutputSet(outputName, imgSet,
                                   state=imgSet.STREAM_OPEN)
-            
-            sys.stdout.write("\rImported %d/%d" % (i+1, self.numberOfFiles))
-            sys.stdout.flush()
-            
+
+            finished = not someNew and datetime.now() - startTime > timeout
+
         self._updateOutputSet(outputName, imgSet,
                               state=imgSet.STREAM_CLOSED)
-        
-        print "\n"
         
         return outFiles
     
@@ -338,4 +359,9 @@ class ProtImportImages(ProtImportFiles):
         if src2 is not None and exists(src2):
             copyOrLink(src2, dst2)
     
-    
+    def _onNewFile(self, newFile):
+        """ This method will be called we a new files is found in streaming mode. """
+        pass
+
+    def _createOutputSet(self):
+        """ Create the output set that will be populated as more data is imported. """
