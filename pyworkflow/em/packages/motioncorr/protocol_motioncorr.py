@@ -162,7 +162,7 @@ class ProtMotionCorr(ProtProcessMovies):
         except:
             print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
         
-        putils.moveTree(movieFolder, self._getExtraPath())
+        putils.moveTree(self._getTmpPath(), self._getExtraPath())
     
     def createOutputStep(self):
         inputMovies = self.inputMovies.get()
@@ -181,7 +181,7 @@ class ProtMotionCorr(ProtProcessMovies):
             
             movieFolder = self._getExtraMovieFolder(movieId)
             movieName = self._getExtraPath(movieFolder, self._getNameExt(movie.getFileName(),'_aligned', 'mrc'))
-            micFn = self._getNameExt(movie.getFileName(),'_aligned', 'mrc')
+            micFn = os.path.join(movieFolder, self._getNameExt(movie.getFileName(),'_aligned', 'mrc'))
             
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
@@ -189,11 +189,16 @@ class ProtMotionCorr(ProtProcessMovies):
             
             if self.doSaveMovie:
                 alignedMovie.setFileName(movieName)
-                alignment = em.MovieAlignment(first=self.alignFrame0, last=self.frameN, shifts=[0, 0])
-                alignment.setRoi([self.cropOffsetX, self.cropOffsetY, self.cropDimX, self.cropDimY])
+                alignment = em.MovieAlignment(first=self.alignFrame0.get()+1, 
+                                              last=self.frameN.get()+1, 
+                                              shifts=[0, 0])
+                alignment.setRoi([self.cropOffsetX, self.cropOffsetY, 
+                                  self.cropDimX, self.cropDimY])
             else:
-                alignment = parseMovieAlignment(self._getExtraPath(movieFolder, self._getLogFile(movieId)))
-                alignment.setRoi([self.cropOffsetX, self.cropOffsetY, self.cropDimX, self.cropDimY])
+                alignment = parseMovieAlignment(os.path.join(movieFolder, 
+                                                             self._getLogFile(movieId)))
+                alignment.setRoi([self.cropOffsetX, self.cropOffsetY, 
+                                  self.cropDimX, self.cropDimY])
             
             alignedMovie.setAlignment(alignment)
             movieSet.append(alignedMovie)
@@ -231,7 +236,7 @@ class ProtMotionCorr(ProtProcessMovies):
         if getattr(self, 'frameN', None) is None:
             movie = movieSet[movieId]
             movieName = movie.getFileName()
-
+            
             ih = em.ImageHandler()
             _, _, z, n = ih.getDimensions(movieName)
             totalFrames = max(z, n) - 1
