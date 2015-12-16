@@ -154,7 +154,7 @@ class ProtMotionCorr(ProtProcessMovies):
             grayCorrected=True
         
         if self.doSaveMovie:
-            command += " -fct %s -ssc 1" (alignedMovieFn)
+            command += " -fct %s -ssc 1" % alignedMovieFn
         command += ' ' + self.extraParams.get()
         program = 'dosefgpu_driftcorr'
         try:
