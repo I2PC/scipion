@@ -53,20 +53,19 @@ public:
     MultidimArray<double> gainImage, darkImage;
     std::vector< Matrix1D<double> > shiftVector;
     MetaData shiftMD;
-    int winSize, gpuDevice, fstFrame, lstFrame;
+    int winSize, gpuDevice, cutFrameFront, cutFrameEnd;
     int groupSize;
-    bool doAverage, saveCorrMovie;
-    bool gainImageCorr, darkImageCorr, globalShiftCorr;
+    bool saveCorrMovie, globalShiftCorr;
+    bool gainImageCorr, darkImageCorr;
 
     void defineParams()
     {
         addUsageLine ("Align movies using optical flow");
         addParamsLine("     -i <inMoviewFnName>          : input movie File Name");
         addParamsLine("     -o <outAverageMoviewFnName>  : output aligned micrograhp File Name");
-        addParamsLine("     [--nst <int=0>]     : first frame used in alignment (0 = first frame in the movie");
-        addParamsLine("     [--ned <int=0>]     : last frame used in alignment (0 = last frame in the movie ");
+        addParamsLine("     [--cutf <int=0>]     : number of the frames to cut from the front (0 = no cut");
+        addParamsLine("     [--cute <int=0>]     : number of the frames to cut from the end (0 = no cut");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
-        addParamsLine("     [--simpleAverage]   : if we want to just compute the simple average");
         addParamsLine("     [--groupSize <int=1>]        : the depth of pyramid for optical flow algorithm");
         addParamsLine("     [--globalShifts <shiftreference>]        : global shifts from cross-correlation based methods");
         addParamsLine("     [--ssc]             : save corrected stack");
@@ -95,10 +94,9 @@ public:
             globalShiftFilename = getParam("--globalShifts");
         }
         groupSize = getIntParam("--groupSize");
-        fstFrame  = getIntParam("--nst");
-        lstFrame  = getIntParam("--ned");
+        cutFrameFront  = getIntParam("--cutf");
+        cutFrameEnd  = getIntParam("--cute");
         winSize   = getIntParam("--winSize");
-        doAverage = checkParam("--simpleAverage");
         saveCorrMovie = checkParam("--ssc");
 
 #ifdef GPU
@@ -239,7 +237,7 @@ public:
             movieStack.readMapped(movieFile,i);
             movieStack().getImage(frameImage);
             if (i==begin)
-                avgImg.initZeros(XSIZE(frameImage), YSIZE(frameImage));
+                avgImg.initZeros(YSIZE(frameImage), XSIZE(frameImage));
             if (darkImageCorr)
                 frameImage-=darkImage;
             if (gainImageCorr)
@@ -374,23 +372,14 @@ public:
             }
         }
         tStart2=clock();
-        // Compute the average of the whole stack
-        fstFrame++; // Just to adapt to Li algorithm
-        lstFrame++; // Just to adapt to Li algorithm
-        if (lstFrame>=imagenum || lstFrame==1)
-            lstFrame=imagenum;
-        imagenum=lstFrame-fstFrame+1;
+        // put the right valuse for first and last frame in cut variables
+        cutFrameFront++;
+        cutFrameEnd=imagenum-cutFrameEnd; // Just to adapt to Li algorithm
+        imagenum=cutFrameEnd-cutFrameFront+1;
         levelNum=sqrt(double(imagenum));
-        computeAvg(fname, fstFrame, lstFrame, avgCurr);
-        // if the user want to save the PSD
-        if (doAverage)
-        {
-            II()=avgCurr;
-            II.write(foname);
-            return 0;
-        }
+        computeAvg(fname, cutFrameFront, cutFrameEnd, avgCurr);
         xmipp2Opencv(avgCurr, avgcurr);
-        cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
+        cout<<"Frames "<<cutFrameFront<<" to "<<cutFrameEnd<<" under processing ..."<<std::endl;
         while (div!=groupSize)
         {
             div=int(imagenum/cnt);
@@ -426,7 +415,7 @@ public:
                     }
                     else
                     {
-                        movieStack.readMapped(fname,fstFrame+i);
+                        movieStack.readMapped(fname,cutFrameFront+i);
                         movieStack().getImage(preImg);
                         if (darkImageCorr)
                             preImg-=darkImage;
@@ -438,9 +427,9 @@ public:
                 else
                 {
                     if (i==cnt-1)
-                        computeAvg(fname, i*div+fstFrame, lstFrame, preImg);
+                        computeAvg(fname, i*div+cutFrameFront, cutFrameEnd, preImg);
                     else
-                        computeAvg(fname, i*div+fstFrame, (i+1)*div+fstFrame-1, preImg);
+                        computeAvg(fname, i*div+cutFrameFront, (i+1)*div+cutFrameFront-1, preImg);
                 }
                 xmipp2Opencv(preImg, preimg);
                 // Note: we should use the OpenCV conversion to use it in optical flow
