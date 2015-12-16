@@ -162,6 +162,7 @@ class ProtMotionCorr(ProtProcessMovies):
         except:
             print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
         
+        putils.cleanPattern(os.path.join(movieFolder, movieName))
         putils.moveTree(self._getTmpPath(), self._getExtraPath())
     
     def createOutputStep(self):
@@ -180,7 +181,7 @@ class ProtMotionCorr(ProtProcessMovies):
             movieId = movie.getObjId()
             
             movieFolder = self._getExtraMovieFolder(movieId)
-            movieName = self._getExtraPath(movieFolder, self._getNameExt(movie.getFileName(),'_aligned', 'mrc'))
+            movieName = os.path.join(movieFolder, self._getCorrMovieName(movieId))
             micFn = os.path.join(movieFolder, self._getNameExt(movie.getFileName(),'_aligned', 'mrc'))
             
             # Parse the alignment parameters and store the log files
