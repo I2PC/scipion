@@ -1579,6 +1579,9 @@ class MovieAlignment(EMObject):
         self._last = Integer(last)
         self._shifts = CsvList(pType=float)
         self._shifts.set(shifts)
+        # This list contain the coordinate where you begin the crop (x, y), the whidth and height of the frames.
+        # The order is: x,y, whidth and height. For whidth and height, 0 means the entire frame.
+        self._roi = CsvList(pType=int) 
         
     def getRange(self):
         """ Return the first and last frames used for alignment.
@@ -1591,6 +1594,14 @@ class MovieAlignment(EMObject):
         to another, from first to last frame used.
         """
         return self._shifts
+    
+    def setRoi(self, roiList):
+        self._roi.set(roiList)
+    
+    def getRoi(self):
+        """ Return the size used to align the movie
+        """
+        return self._roi
 
 
 class SetOfMovies(SetOfMicrographsBase):
