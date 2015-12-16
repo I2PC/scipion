@@ -9,6 +9,8 @@ acquired by the microscope.
 
 import sys, os
 import time
+from glob import glob
+
 import pyworkflow.utils as pwutils
 
 
@@ -16,8 +18,8 @@ def usage(error):
     print """
     ERROR: %s
     
-    Usage: simulate_acquisition.py INPUT_FOLDER OUTPUT_FOLDER
-        INPUT_FOLDER: input folder from where to read input files
+    Usage: simulate_acquisition.py INPUT_PATTERN OUTPUT_FOLDER
+        INPUT_PATTERN: input pattern matching input files.
         OUTPUT_FOLDER: where to create the output links.
         time: the time that the last link will be touched.        
     """ % error
@@ -27,10 +29,10 @@ def usage(error):
 if len(sys.argv) < 3:
     usage("Incorrect number of input parameters")
 
-inputDir = sys.argv[1]
+inputPattern = sys.argv[1]
 outputDir = sys.argv[2]
 
-inputFiles = os.listdir(inputDir)
+inputFiles = glob(inputPattern)
 inputFiles.sort() 
 
 print "Cleaning output directory: ", outputDir
@@ -43,13 +45,9 @@ t = aTime / n
 print "t=%s" % t
 
 for f in inputFiles:
-	inputPath = os.path.join(inputDir, f)
-	outputPath = os.path.join(outputDir, f)
-	print "Linking %s -> %s" % (outputPath, inputPath)
-	
-	for i in range(n):		
-		time.sleep(t)		
-		pwutils.copyFile(inputPath, outputPath)
-		
-	
-	
+    outputPath = os.path.join(outputDir, os.path.basename(f))
+    print "Linking %s -> %s" % (outputPath, f)
+
+    for i in range(n):
+        time.sleep(t)
+        pwutils.copyFile(f, outputPath)
