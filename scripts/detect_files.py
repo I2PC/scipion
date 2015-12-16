@@ -61,8 +61,8 @@ class FilesWatcher(object):
                 mTime = datetime.fromtimestamp(os.path.getmtime(f))
                 delta = datetime.now() - mTime
                 if pwutils.envVarOn('SCIPION_DEBUG'):
-                    print "Checking file: '%s' (%s) wait (%s), delta > self.fileWait: %s" % (f, delta.seconds, self.fileWait.seconds, delta > self.fileWait)
-                if  delta > self.fileWait:
+                    print "Checking file: '%s' (%s) wait (%s)" % (f, delta.seconds, self.fileWait.seconds)
+                if delta > self.fileWait:
                     newFiles.append(f)
                     self.foundFiles[f] = True         
 
