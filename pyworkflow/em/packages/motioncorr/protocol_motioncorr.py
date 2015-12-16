@@ -190,7 +190,7 @@ class ProtMotionCorr(ProtProcessMovies):
             if self.doSaveMovie:
                 alignedMovie.setFileName(movieName)
                 alignment = em.MovieAlignment(first=self.alignFrame0.get()+1, 
-                                              last=self.frameN.get()+1, 
+                                              last=self.frameN+1,
                                               shifts=[0, 0])
                 alignment.setRoi([self.cropOffsetX, self.cropOffsetY, 
                                   self.cropDimX, self.cropDimY])
