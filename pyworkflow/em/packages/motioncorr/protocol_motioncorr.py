@@ -119,8 +119,8 @@ class ProtMotionCorr(ProtProcessMovies):
         self._getFinalFrame(movieSet, movieId)
         
         if not (movieName.endswith("mrc") or movieName.endswith("mrcs")):
-            movieEm = self._getTmpPath(movieFolder, movieName)
-            movieMrc = self._getTmpPath(movieFolder, self._getNameExt(movieName, '', 'mrc'))
+            movieEm = os.path.join(movieFolder, movieName)
+            movieMrc = os.path.join(movieFolder, self._getNameExt(movieName, '', 'mrc'))
             ih = em.ImageHandler()
             ih.convertStack(movieEm, movieMrc)
             movieName = os.path.basename(movieMrc)
