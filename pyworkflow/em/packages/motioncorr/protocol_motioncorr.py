@@ -179,8 +179,8 @@ class ProtMotionCorr(ProtProcessMovies):
         if self.doSaveAveMic:
             micSet = self._createSetOfMicrographs()
             micSet.copyInfo(inputMovies)
-        if self.binFactor != 1:
-            micSet.setSamplingRate(inputMovies.getSamplingRate()*self.binFactor)
+            if self.binFactor != 1:
+                micSet.setSamplingRate(inputMovies.getSamplingRate()*self.binFactor)
         else:
             micSet = None
         
@@ -264,7 +264,7 @@ class ProtMotionCorr(ProtProcessMovies):
                                                          self._getLogFile(movieId)))
         alignment.setRoi([self.cropOffsetX, self.cropOffsetY, 
                           self.cropDimX, self.cropDimY])
-        alignment.setScale(self.binFactor)
+        alignment.setScale(self.binFactor.get())
         
         alignedMovie.setAlignment(alignment)
         movieSet.append(alignedMovie)
