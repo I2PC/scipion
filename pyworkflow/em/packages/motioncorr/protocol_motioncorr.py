@@ -189,8 +189,13 @@ class ProtMotionCorr(ProtProcessMovies):
             
             if self.doSaveMovie:
                 alignedMovie.setFileName(movieName)
+                if self.frameN == 0:
+                    totFrames = self.totalFrames + 1
+                else:
+                    totFrames = self.frameN + 1
+                    
                 alignment = em.MovieAlignment(first=self.alignFrame0.get()+1, 
-                                              last=self.frameN+1,
+                                              last=totFrames,
                                               shifts=[0, 0])
                 alignment.setRoi([self.cropOffsetX, self.cropOffsetY, 
                                   self.cropDimX, self.cropDimY])
@@ -239,19 +244,19 @@ class ProtMotionCorr(ProtProcessMovies):
             
             ih = em.ImageHandler()
             _, _, z, n = ih.getDimensions(movieName)
-            totalFrames = max(z, n) - 1
+            self.totalFrames = max(z, n) - 1
             frameN = self.alignFrameN.get()
             
             if frameN == 0:
                 self.frameN = 0
             else:
-                self.frameN = totalFrames - frameN
+                self.frameN = self.totalFrames - frameN
     
             frameNSum = self.sumFrameN.get()
             if frameNSum == 0:
                 self.frameNSum = 0
             else:
-                self.frameNSum = totalFrames - frameNSum
+                self.frameNSum = self.totalFrames - frameNSum
     
     def _getExtraMovieFolder(self, movieId):
         """ Create a Movie folder where to work with it. """
