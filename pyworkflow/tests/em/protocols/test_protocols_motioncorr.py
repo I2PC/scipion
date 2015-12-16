@@ -26,7 +26,7 @@
 # **************************************************************************
 
 import unittest, sys
-import pyworkflow.em as em
+from pyworkflow.em import ProtImportMovies
 from pyworkflow.tests import *
 from pyworkflow.em.packages.motioncorr import ProtMotionCorr
 
@@ -45,10 +45,10 @@ class TestMotioncorrBase(BaseTest):
         """ Run an Import micrograph protocol. """
         # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
         if not samplingRate is None:
-            cls.protImport = em.ProtImportMovies(samplingRateMode=0, filesPath=pattern, samplingRate=samplingRate, magnification=magnification, 
+            cls.protImport = ProtImportMovies(samplingRateMode=0, filesPath=pattern, samplingRate=samplingRate, magnification=magnification, 
                                                    voltage=voltage, sphericalAberration=sphericalAberration)
         else:
-            cls.protImport = em.ProtImportMovies(samplingRateMode=1, filesPath=pattern, scannedPixelSize=scannedPixelSize, 
+            cls.protImport = ProtImportMovies(samplingRateMode=1, filesPath=pattern, scannedPixelSize=scannedPixelSize, 
                                                    voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
         
         cls.proj.launchProtocol(cls.protImport, wait=True)
@@ -70,7 +70,7 @@ class TestMotioncorrBase(BaseTest):
         return cls.runImportMovie(pattern, samplingRate=1.4, voltage=300, sphericalAberration=2.7, scannedPixelSize=None, magnification=61000)
 
 
-class TestXmippAlingMovies(TestMotioncorrBase):
+class TestMotioncorrAlingMovies(TestMotioncorrBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
