@@ -216,6 +216,10 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 	pca.projectOnPCABasis(projRef);
 	pca.v.clear();
 
+	std::cout << projRef << std::endl;
+	std::cout << "      " << std::endl;
+	std::cout << "      " << std::endl;
+
 	imgno = 0;
 	FileName f;
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
@@ -280,6 +284,11 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 	for (size_t i=0; i<pca.v.size(); i++)
 		v.push_back(pca.v[0]);
 	pca.reconsFromPCA(proj,v);
+
+	std::cout << proj << std::endl;
+	std::cout << "      " << std::endl;
+	std::cout << "      " << std::endl;
+
 
 	pca.evaluateZScore(numPCAs,numIter, false);
 

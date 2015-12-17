@@ -165,7 +165,6 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
     def _getCommonParams(self):
         params =  '  -i %s' % self._getPath('input_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
-        params += ' --angularSampling %0.3f' % self.angularSampling.get()
         params += ' --dontReconstruct'
         params += ' --useForValidation %0.3f' % (self.numOrientations.get())        
         return params
@@ -174,7 +173,6 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
     def _getCommonParamsRef(self):
         params =  '  -i %s' % self._getPath('reference_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
-        params += ' --angularSampling %0.3f' % self.angularSampling.get()
         params += ' --dontReconstruct'
         params += ' --useForValidation %0.3f' % (self.numOrientations.get())       
         return params
@@ -233,7 +231,6 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
 
         fnGallery= (volDir+'/gallery.doc')          
         params += ' --initgallery  %s' % fnGallery
-        params += ' --initvolumes %s' % volName  
         params += ' --odir %s' % volDir
         params += ' --iter %d' % 1
         self.runJob('xmipp_reconstruct_significant', 

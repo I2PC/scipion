@@ -227,8 +227,8 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         x = sin(tilt*PI/180.)*cos(rot*PI/180.);
         y = sin(tilt*PI/180.)*sin(rot*PI/180.);
         z = (cos(tilt*PI/180.));
-        //z = (cos(tilt*PI/180.));
 
+        W = 0;
         _FOR_ALL_OBJECTS_IN_METADATA2(tempMd)
         {
         	tempMd.getValue(MDL_ANGLE_ROT,rot,__iter2.objId);
@@ -251,9 +251,20 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         	xx = sin(tilt*PI/180.)*cos(rot*PI/180.);
         	yy = sin(tilt*PI/180.)*sin(rot*PI/180.);
         	zz = (cos(tilt*PI/180.));
+
+#ifdef DEBUG
+{
+
+        std::cout << xx << " " << yy << " " << zz << " " << mirror <<  std::endl;
+
+}
+#endif
+#undef DEBUG
+
         	double norm1 = sqrt(x*x+y*y+z*z);
         	double norm2 = sqrt(xx*xx+yy*yy+zz*zz);
         	a = std::abs((std::acos( (x*xx+y*yy+z*zz)/(norm1*norm2))));
+
         	if ( isnan(a) )
         		a = 0;
 
@@ -262,26 +273,21 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         	else
         		W += a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
         }
+
         sumW +=  W;
+
+#ifdef DEBUG
+{
+        std::cout << W << std::endl;
+		char c;
+		std::getchar();
+}
+#endif
+#undef DEBUG
+
     }
 
-//calculate the std of weightsDistribution and use it as a weight
-/*    double sum=0;
-    double mean=0;
-    double stdDev=0;
-    double tmp=0;
-    for (idx = 0; idx < tempMd.size(); idx++)
-    	sum += weightsDistribution[idx];
-
-    mean =sum/ tempMd.size();
-
-    for (idx = 0; idx < tempMd.size(); idx++)
-    	tmp += (weightsDistribution[idx]-mean)*(weightsDistribution[idx]-mean);
-
-    stdDev = std::sqrt(tmp/(tempMd.size()+1));
-    //sum_W = std::exp(-stdDev)*sumW;
- */
-    sum_W = sumW;
+    sum_W = (sumW / ((tempMd.size()-1)*(tempMd.size()-1)))*(180./PI);
 }
 
 void MultireferenceAligneability::calc_sumw(const size_t num, double & sumw)
@@ -349,7 +355,8 @@ void MultireferenceAligneability::calc_sumw(const size_t num, double & sumw)
 
 void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, const MetaData & mdGallery)
 {
-	const size_t numGallery= mdGallery.size();
+	//In the distance calculation the distance of a point with itself gives no distance.
+	const size_t numGallery= mdGallery.size()+1;
 	const double trials = 500;
     double xRan,yRan,zRan;
     size_t indx;
@@ -359,21 +366,23 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
     double * zRanArray  = new double[num];
     std::vector<double> weightV;
     double a;
-
     double rot,tilt,psi,w;
     bool mirror;
     sumWRan = 0;
 
+    if (numGallery < num)
+        REPORT_ERROR(ERR_ARG_INCORRECT, "The gallery size is smaller than the number of oientations per particle. Increase the angular sampling of the gallery");
+
     for (size_t n=0; n<trials; n++)
     {
-        for (size_t nS=0; nS<num; nS++)
-        {
-			indx = (size_t) (double( std::rand())*numGallery)/RAND_MAX;
+    	size_t currentIndx = 0;
+    	while ( currentIndx < num )
+    	{
+			indx = (size_t) (double( std::rand())*(numGallery+1))/RAND_MAX;
+			while ( (indx == 0)  )
+				indx = (size_t) (double( std::rand())*(numGallery+1) )/RAND_MAX;
 
-			while ( (indx ==0) || (indx > numGallery) )
-				indx = (size_t) (double( std::rand())*numGallery )/RAND_MAX;
-
-        	mdGallery.getValue(MDL_ANGLE_ROT,rot,indx);
+			mdGallery.getValue(MDL_ANGLE_ROT,rot,indx);
         	mdGallery.getValue(MDL_ANGLE_TILT,tilt,indx);
         	mdGallery.getValue(MDL_ANGLE_PSI,psi,indx);
         	mdGallery.getValue(MDL_FLIP,mirror,indx);
@@ -389,15 +398,28 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
     			psi = newpsi;
     		}
 
-
             xRan = sin(tilt*PI/180.)*cos(rot*PI/180.);
             yRan = sin(tilt*PI/180.)*sin(rot*PI/180.);
-            zRan = std::abs(cos(tilt*PI/180.));
+            zRan = (cos(tilt*PI/180.));
 
-            xRanArray[nS] = xRan;
-            yRanArray[nS] = yRan;
-            zRanArray[nS] = zRan;
-        }
+            xRanArray[currentIndx] = xRan;
+            yRanArray[currentIndx] = yRan;
+            zRanArray[currentIndx] = zRan;
+            currentIndx++;
+    	}
+
+
+#ifdef DEBUG
+{
+		for (int var = 0; var < num; var++)
+		{
+	        std::cout << xRanArray[var] << " " << yRanArray[var] << " " << zRanArray[var] << std::endl;
+		}
+
+		char c;
+		std::getchar();
+}
+#endif
 
         double tempW1, tempW2, temp;
         a = 0;
@@ -410,13 +432,25 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
             	temp = std::abs(std::acos( (xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2])/(mod1*mod2)));
                 if ( not isnan(temp))
                 	a += temp;
+
+                //std::cout << xRanArray[nS1] << " " << yRanArray[nS1] <<  " " <<  zRanArray[nS1] << std::endl;
+               	//std::cout << xRanArray[nS2] << " " << yRanArray[nS2] <<  " " <<  zRanArray[nS2] << std::endl;
             }
+
         }
 
         sumWRan += a;
+
+#ifdef DEBUG
+        std::cout << "   " << std::endl;
+        std::cout << " a  : " << a << std::endl;
+        std::cout << "   " << std::endl;
+		std::getchar();
+#endif
+
     }
 
-    sumw=sumWRan/trials;
+    sumw=((sumWRan/trials)/((num-1)*(num-1)))*(180./PI);
 
     delete xRanArray;
     delete yRanArray;
