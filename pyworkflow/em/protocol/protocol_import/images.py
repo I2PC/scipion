@@ -233,10 +233,13 @@ class ProtImportImages(ProtImportFiles):
 
                 outFiles.append(dst)
 
-            self._updateOutputSet(outputName, imgSet,
-                                  state=imgSet.STREAM_OPEN)
 
-            finished = not someNew and datetime.now() - startTime > timeout
+            if someNew:
+                self._updateOutputSet(outputName, imgSet,
+                                      state=imgSet.STREAM_OPEN)
+            else:
+                finished = datetime.now() - startTime > timeout
+
 
         self._updateOutputSet(outputName, imgSet,
                               state=imgSet.STREAM_CLOSED)
