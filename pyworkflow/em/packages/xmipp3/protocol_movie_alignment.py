@@ -51,12 +51,24 @@ class ProtMovieAlignment(ProtProcessMovies):
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
 
-        line = form.addLine('Skip frames for alignment',
+        # Alignment parameters
+        group = form.addGroup('Alignment parameters')
+        line = group.addLine('Skip frames for alignment',
                             help='Skip frames for alignment.\n'
                                   'The first frame in the stack is *0*.' )
         line.addParam('alignFrame0', IntParam, default=0, label='Begin')
         line.addParam('alignFrameN', IntParam, default=0, label='End',
                       help='The number of frames to cut from the front and end')
+
+        line = group.addLine('Crop offsets (px)')
+        line.addParam('cropOffsetX', IntParam, default=0, label='X')
+        line.addParam('cropOffsetY', IntParam, default=0, label='Y')
+
+        line = group.addLine('Crop dimensions (px)',
+                             help='How many pixels to crop from offset\n'
+                                  'If equal to 0, use maximum size.')
+        line.addParam('cropDimX', IntParam, default=0, label='X')
+        line.addParam('cropDimY', IntParam, default=0, label='Y')
 
         # GROUP GPU PARAMETERS
         group = form.addGroup('GPU')
@@ -91,11 +103,9 @@ class ProtMovieAlignment(ProtProcessMovies):
             metadataName = self._getNameExt(movie.getFileName(), '_aligned', 'xmd')
             plotCartName = self._getNameExt(movie.getFileName(), '_plot_cart', 'png')
             psdCorrName = self._getNameExt(movie.getFileName(),'_aligned_corrected', 'psd')
-            # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
             #if self.run:
                 #alignedMovie.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'_aligned', 'mrcs')))
-            ####>>>This is wrong. Save an xmipp metadata
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
             alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
@@ -147,7 +157,6 @@ class ProtMovieAlignment(ProtProcessMovies):
             movieSuffix = ''
         command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s ' % locals()
         command += '--cutf %d --cute %d ' % (firstFrame, lastFrame)
-        program = 'xmipp_movie_optical_alignment_cpu'
         if self.inputMovies.get().getDark():
             command += '--dark '+self.inputMovies.get().getDark()
         if self.inputMovies.get().getGain():
@@ -159,8 +168,11 @@ class ProtMovieAlignment(ProtProcessMovies):
         if self.doGPU:
             program = 'xmipp_movie_optical_alignment_gpu'
             command += '--gpu %d ' % gpuId
+        else:
+            program = 'xmipp_movie_optical_alignment_cpu'
         if doSaveMovie:
-            command += '--ssc'
+            command += '--ssc '
+        command += '--crx %d --cry %d --cdx %d --cdy %d' % (self.cropOffsetX.get(), self.cropOffsetY.get(), self.cropDimX.get(),                                                             self.cropDimY.get())
         try:
             self.runJob(program, command, cwd=movieFolder)
         except:
