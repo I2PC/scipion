@@ -53,15 +53,23 @@ class ProtMotionCorr(ProtProcessMovies):
         ProtProcessMovies._defineParams(self, form)
         
         form.addParam('gpuMsg', params.LabelParam, default=True,
-                      label='*Warning*! You need to have installed CUDA'
+                      label='WARNING! You need to have installed CUDA'
                             ' libraries and a nvidia GPU')
         
-        group = form.addGroup('General parameters')
-        line = group.addLine('How many frames remove to align',
+        group = form.addGroup('Alignment')
+        line = group.addLine('Remove frames to ALIGN from',
                             help='How many frames remove'
                                  ' from movie alignment.')
-        line.addParam('alignFrame0', params.IntParam, default=0, label='from first')
-        line.addParam('alignFrameN', params.IntParam, default=0, label='to final')
+        line.addParam('alignFrame0', params.IntParam, default=0, label='beginning')
+        line.addParam('alignFrameN', params.IntParam, default=0, label='end')
+        line = group.addLine('Remove frames to SUM from',
+                             help='How many frames you want remove to sum\n'
+                                  'from beginning and/or from the end of each movie.')
+        line.addParam('sumFrame0', params.IntParam, default=0, label='beginning')
+        line.addParam('sumFrameN', params.IntParam, default=0, label='end')
+        group.addParam('binFactor', params.IntParam, default=1,
+                       label='Binning factor',
+                       help='1x or 2x. Bin stack before processing.')
         
         line = group.addLine('Crop offsets (px)')
         line.addParam('cropOffsetX', params.IntParam, default=0, label='X')
@@ -80,23 +88,14 @@ class ProtMotionCorr(ProtProcessMovies):
                       label="Save movie", expertLevel=cons.LEVEL_ADVANCED,
                       help="Save Aligned movie")
         
-        group = form.addGroup('GPU parameters')
-        line = group.addLine('How many frames remove to sum',
-                             help='How many frames you want remove to sum\n'
-                                  'from beginning and/or to the end of each movie.')
-        line.addParam('sumFrame0', params.IntParam, default=0, label='from first')
-        line.addParam('sumFrameN', params.IntParam, default=0, label='to final')
+        group = form.addGroup('GPU', expertLevel=cons.LEVEL_ADVANCED)
         
         group.addParam('GPUCore', params.IntParam, default=0,
-                      label="Choose GPU core",  expertLevel=cons.LEVEL_ADVANCED,
+                      label="Choose GPU core",
                       help="GPU may have several cores. Set it to zero"
                            " if you do not know what we are talking about."
                            " First core index is 0, second 1 and so on.")
-        group.addParam('binFactor', params.IntParam, default=1,
-                       abel='Binning factor',
-                       help='1x or 2x. Bin stack before processing.')
         group.addParam('extraParams', params.StringParam, default='',
-                       expertLevel=cons.LEVEL_ADVANCED,
                        label='Additional parameters',
                        help="""
 -bft       150               BFactor in pix^2.
@@ -117,11 +116,11 @@ class ProtMotionCorr(ProtProcessMovies):
     #--------------------------- STEPS functions ---------------------------------------------------
     def _processMovie(self, movieId, movieName, movieFolder):
         movieSet = self.inputMovies.get()
-        self._getFinalFrame(movieName)
+        self._getFinalFrame(movieSet, movieId)
         
         if not (movieName.endswith("mrc") or movieName.endswith("mrcs")):
-            movieEm = self._getTmpPath(movieFolder, movieName)
-            movieMrc = self._getTmpPath(movieFolder, self._getNameExt(movieName, '', 'mrc'))
+            movieEm = os.path.join(movieFolder, movieName)
+            movieMrc = os.path.join(movieFolder, self._getNameExt(movieName, '', 'mrc'))
             ih = em.ImageHandler()
             ih.convertStack(movieEm, movieMrc)
             movieName = os.path.basename(movieMrc)
@@ -155,7 +154,7 @@ class ProtMotionCorr(ProtProcessMovies):
             grayCorrected=True
         
         if self.doSaveMovie:
-            command += " -fct %s -ssc 1" (alignedMovieFn)
+            command += " -fct %s -ssc 1" % alignedMovieFn
         command += ' ' + self.extraParams.get()
         program = 'dosefgpu_driftcorr'
         try:
@@ -163,7 +162,8 @@ class ProtMotionCorr(ProtProcessMovies):
         except:
             print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
         
-        putils.moveTree(movieFolder, self._getExtraPath())
+        putils.cleanPattern(os.path.join(movieFolder, movieName))
+        putils.moveTree(self._getTmpPath(), self._getExtraPath())
     
     def createOutputStep(self):
         inputMovies = self.inputMovies.get()
@@ -172,39 +172,21 @@ class ProtMotionCorr(ProtProcessMovies):
         else:
             suffix = "_original"
         movieSet = self._createSetOfMovies(suffix)
+        movieSet.copyInfo(inputMovies)
+        if self.binFactor != 1:
+            movieSet.setSamplingRate(inputMovies.getSamplingRate()*self.binFactor)
         
         if self.doSaveAveMic:
             micSet = self._createSetOfMicrographs()
             micSet.copyInfo(inputMovies)
-            
-        for movie in self.inputMovies.get():
-            movieId = movie.getObjId()
-            
-            movieFolder = self._getExtraMovieFolder(movieId)
-            movieName = self._getExtraPath(movieFolder, self._getNameExt(movie.getFileName(),'_aligned', 'mrc'))
-            micFn = self._getNameExt(movie.getFileName(),'_aligned', 'mrc')
-            
-            # Parse the alignment parameters and store the log files
-            alignedMovie = movie.clone()
-            movieSet.copyInfo(inputMovies)
-            
-            if self.doSaveMovie:
-                alignedMovie.setFileName(movieName)
-                alignment = em.MovieAlignment(first=self.alignFrame0, last=self.frameN, shifts=[0, 0])
-                alignment.setRoi([self.cropOffsetX, self.cropOffsetY, self.cropDimX, self.cropDimY])
-            else:
-                alignment = parseMovieAlignment(self._getExtraPath(movieFolder, self._getLogFile(movieId)))
-                alignment.setRoi([self.cropOffsetX, self.cropOffsetY, self.cropDimX, self.cropDimY])
-            
-            alignedMovie.setAlignment(alignment)
-            movieSet.append(alignedMovie)
-                
-            if self.doSaveAveMic:
-                mic = micSet.ITEM_TYPE()
-                mic.setObjId(movieId)
-                mic.setFileName(micFn)
-                micSet.append(mic)
-                
+            if self.binFactor != 1:
+                micSet.setSamplingRate(inputMovies.getSamplingRate()*self.binFactor)
+        else:
+            micSet = None
+        
+        for movie in inputMovies:
+            self._createOutputMovie(movie, movieSet, micSet)
+        
         self._defineOutputs(outputMovies=movieSet)
         self._defineTransformRelation(inputMovies, movieSet)
         
@@ -221,6 +203,8 @@ class ProtMotionCorr(ProtProcessMovies):
         errors = []
         if max(self.numberOfThreads, self.numberOfMpi) > 1:
             errors.append("GPU and Parallelization can not be used together")
+        if not (self.binFactor == 1 or self.binFactor == 2):
+            errors.append("Binning factor can only be 1 or 2")
             
         return errors
     
@@ -228,25 +212,69 @@ class ProtMotionCorr(ProtProcessMovies):
     def _getLogFile(self, movieId):
         return 'micrograph_%06d_Log.txt' % movieId
     
-    def _getFinalFrame(self, movieName):
-        if getattr(self, 'frameN', None):
+    def _getFinalFrame(self, movieSet, movieId):
+        if getattr(self, 'frameN', None) is None:
+            movie = movieSet[movieId]
+            movieName = movie.getFileName()
+            
             ih = em.ImageHandler()
             _, _, z, n = ih.getDimensions(movieName)
-            totalFrames = max(z, n) - 1
+            self.totalFrames = max(z, n) - 1
             frameN = self.alignFrameN.get()
             
             if frameN == 0:
                 self.frameN = 0
             else:
-                self.frameN = totalFrames - frameN
+                self.frameN = self.totalFrames - frameN
     
             frameNSum = self.sumFrameN.get()
             if frameNSum == 0:
                 self.frameNSum = 0
             else:
-                self.frameNSum = totalFrames - frameNSum
+                self.frameNSum = self.totalFrames - frameNSum
     
     def _getExtraMovieFolder(self, movieId):
         """ Create a Movie folder where to work with it. """
         return self._getExtraPath('movie_%06d' % movieId)
     
+    def _createOutputMovie(self, movie, movieSet, micSet=None):
+        movieId = movie.getObjId()
+        
+        movieFolder = self._getExtraMovieFolder(movieId)
+        movieName = os.path.join(movieFolder, self._getCorrMovieName(movieId))
+        micFn = os.path.join(movieFolder, self._getNameExt(movie.getFileName(),'_aligned', 'mrc'))
+        
+        # Parse the alignment parameters and store the log files
+        alignedMovie = movie.clone()
+        
+        if self.doSaveMovie:
+            alignedMovie.setFileName(movieName)
+            if self.frameN == 0:
+                totFrames = self.totalFrames
+            else:
+                totFrames = self.frameN
+            
+            diff = totFrames - self.alignFrame0.get() + 1
+            
+            alignment = em.MovieAlignment(first=self.alignFrame0.get()+1, 
+                                          last=totFrames+1,
+                                          shifts=[0, 0]*diff)
+        else:
+            alignment = parseMovieAlignment(os.path.join(movieFolder, 
+                                                         self._getLogFile(movieId)))
+        alignment.setRoi([self.cropOffsetX, self.cropOffsetY, 
+                          self.cropDimX, self.cropDimY])
+        alignment.setScale(self.binFactor.get())
+        
+        alignedMovie.setAlignment(alignment)
+        movieSet.append(alignedMovie)
+        
+        if self.doSaveAveMic:
+            mic = micSet.ITEM_TYPE()
+            mic.setObjId(movieId)
+            mic.setFileName(micFn)
+            micSet.append(mic)
+
+
+
+
