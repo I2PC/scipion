@@ -1252,6 +1252,14 @@ class Protocol(Step):
         """ Return the number of steps executed. """
         return self._stepsDone.get(0)
 
+    def updateSteps(self):
+        """ After the steps list is modified, this methods will update steps information.
+        It will save the steps list and also the number of steps.
+        """
+        self._storeSteps()
+        self._numberOfSteps.set(len(self._steps))
+        self._store(self._numberOfSteps)
+
     def getStatusMessage(self):
         """ Return the status string and if running the steps done. 
         """
