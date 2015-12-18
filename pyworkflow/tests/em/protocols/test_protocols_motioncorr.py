@@ -79,11 +79,11 @@ class TestMotioncorrAlingMovies(TestMotioncorrBase):
     def _checkAlignment(self, movie, goldRange, goldRoi):
         alignment = movie.getAlignment()
         range = alignment.getRange()
-        msgRange = "Alignment range must be %s (and it is %s)"
-        self.assertEqual(goldRange, range, msgRange % (goldRange, range))
+        msgRange = "Alignment range must be %s (%s) and it is %s (%s)"
+        self.assertEqual(goldRange, range, msgRange % (goldRange, range, type(goldRange), type(range)))
         roi = alignment.getRoi()
-        msgRoi = "Alignment ROI must be %s (and it is %s)"
-        self.assertEqual(goldRoi, roi, msgRoi % (goldRoi, roi))
+        msgRoi = "Alignment ROI must be %s (%s) and it is %s (%s)"
+        self.assertEqual(goldRoi, roi, msgRoi % (goldRoi, roi, type(goldRoi), type(roi)))
 
     def test_qbeta(self):
         prot = self.newProtocol(ProtMotionCorr)
