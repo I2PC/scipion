@@ -148,7 +148,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
-        alMethod = self.alignMethod.get()
+        #alMethod = self.alignMethod.get()
 
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
