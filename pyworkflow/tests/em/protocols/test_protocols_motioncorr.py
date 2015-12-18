@@ -46,7 +46,8 @@ class TestMotioncorrBase(BaseTest):
                   'voltage': 300,
                   'sphericalAberration': 2.7,
                   'magnification': 50000,
-                  'scannedPixelSize': None
+                  'scannedPixelSize': None,
+                  'filesPattern': pattern
                   }
         if 'samplingRate' not in kwargs:
             del params['samplingRate']
