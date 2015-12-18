@@ -104,12 +104,12 @@ class ResMapViewerWeb(ResMapViewer):
     _environments = [WEB_DJANGO]
     
     def _showVolumeSlices(self, param=None):
-        return [ImageView(self.protocol._getExtraPath('volume1.map.png'))]
+        return [ImageView(self.protocol._getExtraPath('volume1.map.png', abs=True))]
         
     def _showResMapSlices(self, param=None):
-        return [ImageView(self.protocol._getExtraPath('volume1_resmap.map.png'))]
+        return [ImageView(self.protocol._getExtraPath('volume1_resmap.map.png', abs=True))]
     
     def _plotHistogram(self, param=None):
-        return [ImageView(self.protocol._getExtraPath('histogram.png'))]
+        return [ImageView(self.protocol._getExtraPath('histogram.png', abs=True))]
     
         

@@ -493,7 +493,7 @@ def render_column(request):
       
 def get_image_plot(request):
     from PIL import Image
-    imagePath = os.path.join(request.GET.get('image'))
+    imagePath = getImageFullPathFromRequest(request, request.GET.get('image'))
     img = Image.open(imagePath)
     response = HttpResponse(mimetype="image/png")
     # Create and save the image
@@ -504,7 +504,7 @@ def get_image_plot(request):
 
 def get_image_path(request):
     from PIL import Image
-    imagePath = os.path.join(request.GET.get('image'))
+    imagePath = getImageFullPathFromRequest(request, request.GET.get('image'))
     img = Image.open(imagePath)
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
