@@ -27,20 +27,25 @@
 import pyworkflow.protocol.params as params
 
 from pyworkflow.em.protocol import ProtProcessParticles
+from pyworkflow.protocol.params import IntParam
 
-
-class XmippProtWriteTest(ProtProcessParticles):
+class XmippProtWriteTestC(ProtProcessParticles):
     """    
-    Perform CTF correction by Wiener filtering.
+    using mpi write data to a large file (C++ level)
     """
-    _label = 'write_test'
+    _label = 'write_test_C'
     
     def __init__(self, *args, **kwargs):
         ProtProcessParticles.__init__(self, *args, **kwargs)
 
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
+        form.addSection(label='Size is important')
+        form.addParam('xDim', IntParam, default=128,label='X dimension')
+        form.addParam('yDim', IntParam, default=128,label='Y dimension')
+        form.addParam('nDim', IntParam, default=1024,label='Number of frames')
         form.addParallelSection(threads=1, mpi=4)
+
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -48,7 +53,11 @@ class XmippProtWriteTest(ProtProcessParticles):
 
 
     def testWriteStep(self):
-        params =  ' '
+        params =  ' -i kk.mrcs '
+        params += ' --xdim %d '%self.xDim.get()
+        params += ' --ydim %d '%self.yDim.get()
+        params += ' --ndim %d '%self.nDim.get()
+
         #change to directory
         nproc = self.numberOfMpi.get()
         #nT=self.numberOfThreads.get()

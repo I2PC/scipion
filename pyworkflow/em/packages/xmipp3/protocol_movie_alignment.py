@@ -39,8 +39,8 @@ from pyworkflow.utils.path import moveFile
 import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtProcessMovies
 from pyworkflow.gui.plotter import Plotter
-import matplotlib.pyplot as plt
-import xmipp
+
+
 
 class ProtMovieAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
@@ -110,6 +110,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
             alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
             movieCreatePlot(alignedMovie, True)
+
             if self.doSaveMovie:
                 movieSet.append(alignedMovie)
             mic = em.Micrograph()
@@ -120,6 +121,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             mic.setMicName(movie.getMicName())
             mic.plotCart = em.Image()
             mic.plotCart.setFileName(self._getExtraPath(plotCartName))
+
             mic.psdCorr = em.Image()
             mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
             micSet.append(mic)
@@ -148,7 +150,6 @@ class ProtMovieAlignment(ProtProcessMovies):
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
-        #alMethod = self.alignMethod.get()
 
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
@@ -172,7 +173,8 @@ class ProtMovieAlignment(ProtProcessMovies):
             program = 'xmipp_movie_optical_alignment_cpu'
         if doSaveMovie:
             command += '--ssc '
-        command += '--crx %d --cry %d --cdx %d --cdy %d' % (self.cropOffsetX.get(), self.cropOffsetY.get(), self.cropDimX.get(),                                                             self.cropDimY.get())
+        command += '--crx %d --cry %d --cdx %d --cdy %d' % (self.cropOffsetX, self.cropOffsetY,
+                                                            self.cropDimX, self.cropDimY)
         try:
             self.runJob(program, command, cwd=movieFolder)
         except:
@@ -240,18 +242,21 @@ class ProtMovieAlignment(ProtProcessMovies):
 
         return summary
 
-def createPlots(plotType, protocol, movieId):
-    print "output Movies to create Plot %s" % protocol.outputMovies
-    movie = protocol.outputMovies[movieId]
-    return movieCreatePlot(movie, False).show()
 
-def movieCreatePlot(movie, saveFig):
+def createPlots(plotType, protocol, micId):
+    print "output Micrographs to create Plot %s" % protocol.outputMicrographs
+    mic = protocol.outputMicrographs[micId]
+    return movieCreatePlot(mic, False).show()
+
+
+def movieCreatePlot(mic, saveFig):
+    import xmipp
     meanX = []
     meanY = []
     figureSize = (8, 6)
 
-    alignedMovie = movie.alignMetaData
-    md = xmipp.MetaData(alignedMovie)
+    #alignedMovie = mic.alignMetaData
+    md = xmipp.MetaData(mic.alignMetaData)
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
 
@@ -274,5 +279,24 @@ def movieCreatePlot(movie, saveFig):
         ax.text(preX-0.02, preY+0.01, str(objId+1))
     ax.plot(np.asarray(meanX), np.asarray(meanY))
     if saveFig:
-        plotter.savefig(movie.plotCart)
+        plotter.savefig(mic.plotCart)
     return plotter
+
+
+
+#class ProtMovieAlignmentWeb(ProtMovieAlignment):
+#    """ Aligns a set of volumes using cross correlation.
+#    Based on Xmipp protocol for aligning volumes, but
+#    the parameters are restricted for ease of use.
+#    """
+#    _label = 'movie alignment web'
+#    
+#    def _defineParams(self, form):
+#        ProtMovieAlignment._defineParams(self, form)
+#        
+#        gpuParamsGroup = form.getParam('GPU')
+#        gpuParamsGroup.config(condition='False')
+#        
+#    def getOutputFiles(self):
+#        # Redefine the default method to avoid download of movie files
+#        return self.outputMicrographs.getFiles()
