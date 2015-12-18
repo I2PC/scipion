@@ -904,14 +904,9 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				boolean autopick = XmippDialog.showYesNoQuestion(SupervisedPickerJFrame.this, "Previous picking will be discarded. Are you sure you want to continue?");
-				if(autopick)
-				{
-					for(SupervisedPickerMicrograph m: ppicker.getMicrographs())
-						ppicker.resetMicrograph(m);
-					ppicker.autopick(SupervisedPickerJFrame.this, getMicrograph());
-				}
-				
+				for(SupervisedPickerMicrograph m: ppicker.getMicrographs())
+					ppicker.resetMicrograph(m);
+				ppicker.autopick(SupervisedPickerJFrame.this, getMicrograph());
 				
 			}});
     	autopickbt.setBackground(XmippWindowUtil.firebrick);
