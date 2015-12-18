@@ -36,91 +36,81 @@ from pyworkflow.em.packages.motioncorr import ProtMotionCorr
 class TestMotioncorrBase(BaseTest):
     @classmethod
     def setData(cls):
-        cls.dataset = DataSet.getDataSet('movies')
-        cls.movie1 = cls.dataset.getFile('qbeta/qbeta.mrc')
-        cls.movie2 = cls.dataset.getFile('cct/cct_1.em')
-    
+        cls.ds = DataSet.getDataSet('movies')
+
     @classmethod
-    def runImportMovie(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
+    def runImportMovies(cls, pattern, **kwargs):
         """ Run an Import micrograph protocol. """
         # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
-        if not samplingRate is None:
-            cls.protImport = ProtImportMovies(samplingRateMode=0, filesPath=pattern, samplingRate=samplingRate, magnification=magnification, 
-                                                   voltage=voltage, sphericalAberration=sphericalAberration)
+        params = {'samplingRate': 1.14,
+                  'voltage': 300,
+                  'sphericalAberration': 2.7,
+                  'magnification': 50000,
+                  'scannedPixelSize': None
+                  }
+        if 'samplingRate' not in kwargs:
+            del params['samplingRate']
+            params['samplingRateMode'] = 0
         else:
-            cls.protImport = ProtImportMovies(samplingRateMode=1, filesPath=pattern, scannedPixelSize=scannedPixelSize, 
-                                                   voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
-        
-        cls.proj.launchProtocol(cls.protImport, wait=True)
-        if cls.protImport.isFailed():
-            raise Exception("Protocol has failed. Error: ", cls.protImport.getErrorMessage())
-        # check that input movies have been imported (a better way to do this?)
-        if cls.protImport.outputMovies is None:
-            raise Exception('Import of movies: %s, failed. outputMovies is None.' % pattern)
-        return cls.protImport
-    
-    @classmethod
-    def runImportMovie1(cls, pattern):
-        """ Run an Import movie protocol. """
-        return cls.runImportMovie(pattern, samplingRate=1.14, voltage=300, sphericalAberration=2.26, scannedPixelSize=None, magnification=50000)
-    
-    @classmethod
-    def runImportMovie2(cls, pattern):
-        """ Run an Import movie protocol. """
-        return cls.runImportMovie(pattern, samplingRate=1.4, voltage=300, sphericalAberration=2.7, scannedPixelSize=None, magnification=61000)
+            params['samplingRateMode'] = 1
 
+        params.update(kwargs)
+
+        protImport = cls.newProtocol(ProtImportMovies, **params)
+        cls.launchProtocol(protImport)
+        return protImport
+    
 
 class TestMotioncorrAlingMovies(TestMotioncorrBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         TestMotioncorrBase.setData()
-        cls.protImport1 = cls.runImportMovie1(cls.movie1)
-        cls.protImport2 = cls.runImportMovie2(cls.movie2)
-    
-    def testMotioncorr1(self):
-        protMotCorr1 = ProtMotionCorr()
-        protMotCorr1.inputMovies.set(self.protImport1.outputMovies)
-        self.proj.launchProtocol(protMotCorr1, wait=True)
-        self.assertIsNotNone(protMotCorr1.outputMicrographs, "SetOfMicrographs has not been created.")
-        alignment = protMotCorr1.outputMovies[1].getAlignment()
-        fstFrame, lastFrame = alignment.getRange()
+        cls.protImport1 = cls.runImportMovies(cls.ds.getFile('qbeta/qbeta.mrc'),
+                                              magnification=50000)
+        cls.protImport2 = cls.runImportMovies(cls.ds.getFile('cct/cct_1.em'),
+                                              magnification=61000)
+
+    def _checkMicrographs(self, protocol):
+        self.assertIsNotNone(getattr(protocol, 'outputMicrographs', None),
+                             "Output SetOfMicrographs were not created.")
+
+    def _checkAlignment(self, movie, goldRange, goldRoi):
+        alignment = movie.getAlignment()
+        range = alignment.getRange()
+        msgRange = "Alignment range must be %s (and it is %s)"
+        self.assertEqual(goldRange, range, msgRange % (goldRange, range))
         roi = alignment.getRoi()
-        self.assertEqual(fstFrame, 1, "The first frame must be 1")
-        self.assertEqual(lastFrame, 1, "The last frame must be 7")
-        self.assertEqual(roi, [0, 0, 0, 0], "the region of interest must be [0, 0, 0, 0]")
-            
-    def testMotioncorr2(self):
-        protMotioncorr2 = ProtMotionCorr(doSaveMovie=True)
-        protMotioncorr2.inputMovies.set(self.protImport2.outputMovies)
-        self.proj.launchProtocol(protMotioncorr2, wait=True)
-        self.assertIsNotNone(protMotioncorr2.outputMicrographs, "SetOfMicrographs has not been created.")
-        alignment = protMotioncorr2.outputMovies[1].getAlignment()
-        fstFrame, lastFrame = alignment.getRange()
-        roi = alignment.getRoi()
-        
-        self.assertEqual(fstFrame, 1, "The first frame must be 1")
-        self.assertEqual(lastFrame, 1, "The last frame must be 7")
-        self.assertEqual(roi, [0, 0, 0, 0], "the region of interest must be [0, 0, 0, 0]")
+        msgRoi = "Alignment ROI must be %s (and it is %s)"
+        self.assertEqual(goldRoi, roi, msgRoi % (goldRoi, roi))
 
-    def testMotioncorr3(self):
-        protMotioncorr3 = ProtMotionCorr(alignFrame0=2, alignFrameN=2, 
-                                         cropOffsetX=10, cropOffsetY=10)
-        protMotioncorr3.inputMovies.set(self.protImport1.outputMovies)
-        self.proj.launchProtocol(protMotioncorr3, wait=True)
-        self.assertIsNotNone(protMotioncorr3.outputMicrographs, "SetOfMicrographs has not been created.")
-        alignment = protMotioncorr3.outputMovies[1].getAlignment()
-        fstFrame, lastFrame = alignment.getRange()
-        roi = alignment.getRoi()
-        self.assertEqual(fstFrame, 3, "The first frame must be 3")
-        self.assertEqual(lastFrame, 5, "The last frame must be 5")
-        self.assertEqual(roi, [10, 10, 0, 0], "the region of interest must be [10, 10, 0, 0]")
+    def test_qbeta(self):
+        prot = self.newProtocol(ProtMotionCorr)
+        prot.inputMovies.set(self.protImport1.outputMovies)
+        self.launchProtocol(prot)
 
+        self._checkMicrographs(prot)
+        self._checkAlignment(prot.outputMovies[1],
+                             (1,7), [0, 0, 0, 0])
 
+    def test_cct(self):
+        prot = self.newProtocol(ProtMotionCorr,
+                                           doSaveMovie=True)
+        prot.inputMovies.set(self.protImport2.outputMovies)
+        self.launchProtocol(prot)
 
+        self._checkMicrographs(prot)
+        self._checkAlignment(prot.outputMovies[1],
+                             (1,7), [0, 0, 0, 0])
 
+    def test_qbeta_SkipCrop(self):
+        prot = self.newProtocol(ProtMotionCorr,
+                                alignFrame0=2, alignFrameN=2,
+                                cropOffsetX=10, cropOffsetY=10)
+        prot.inputMovies.set(self.protImport1.outputMovies)
+        self.launchProtocol(prot)
 
-
-
-
+        self._checkMicrographs(prot)
+        self._checkAlignment(prot.outputMovies[1],
+                             (3,5), [10, 10, 0, 0])
 
