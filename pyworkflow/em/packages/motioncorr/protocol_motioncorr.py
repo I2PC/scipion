@@ -262,8 +262,8 @@ class ProtMotionCorr(ProtProcessMovies):
         else:
             alignment = parseMovieAlignment(os.path.join(movieFolder, 
                                                          self._getLogFile(movieId)))
-        alignment.setRoi([self.cropOffsetX, self.cropOffsetY, 
-                          self.cropDimX, self.cropDimY])
+        alignment.setRoi([self.cropOffsetX.get(), self.cropOffsetY.get(),
+                          self.cropDimX.get(), self.cropDimY.get()])
         alignment.setScale(self.binFactor.get())
         
         alignedMovie.setAlignment(alignment)
