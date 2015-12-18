@@ -374,7 +374,7 @@ class XmippViewer(Viewer):
             labels = plotLabels + ' _filename '
             objCommands = "'%s'" % (OBJCMD_MOVIE_ALIGNCARTESIAN)
             
-            self._views.append(ObjectView(self._project, self.protocol.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
+            self._views.append(ObjectView(self._project, obj.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
                                                       ORDER: labels, VISIBLE: labels, RENDER: plotLabels, 'zoom': 50,
                                                       OBJCMDS: objCommands}))
         
