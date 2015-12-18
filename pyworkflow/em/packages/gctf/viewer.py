@@ -131,11 +131,9 @@ def createCtfPlot(ctfSet, ctfId):
     plot_title = "CTF Fitting"
     a = xplotter.createSubPlot(plot_title, 'Resolution (Angstroms)', 'CTF', yformat=False)
     a.invert_xaxis()
-    legendName = ['simulated CTF',
-                  'equiphase avg.',
-                  'cross correlation']
-    for i in range(1, 4):
-    xplotter.showLegend(legendName)
+    xplotter.showLegend(['simulated CTF',
+                         'equiphase avg.',
+                         'cross correlation'])
     a.grid(True)
     xplotter.show()
 
@@ -149,9 +147,9 @@ def _getValues(fn, col):
     values = []
     for line in f:
         if not line.startswith('Resolution', 2, 12):
-             column = line.split()
-             value = float(column[col])
-             values.append(value)
+            column = line.split()
+            value = float(column[col])
+            values.append(value)
     f.close()
     return values
 

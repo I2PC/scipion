@@ -258,7 +258,7 @@ void ProgOperate::defineParams()
     addParamsLine("or --sqrt                    :Computes the square root of an image");
     addParamsLine("or --abs                     :Computes the absolute value of an image");
     addParamsLine("or --pow <value=2>           :Computes the power of an image");
-    addParamsLine("or --slice  <value>          :Extracts a given slice from a volume");
+    addParamsLine("or --slice  <value>          :Extracts a given slice from a volume (first slice=0)");
     addParamsLine("or --column <value>          :Extracts a given column from a image or volume");
     addParamsLine("or --row    <value>          :Extracts a given row from a image or volume");
     addParamsLine("or --radial_avg              :Compute the radial average of an image");

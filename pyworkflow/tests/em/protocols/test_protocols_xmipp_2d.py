@@ -671,6 +671,7 @@ class TestXmippApplyAlignment(TestXmippBase):
         # Check that output particles do not have alignment information
         self.assertFalse(protApply.outputParticles.hasAlignment(), "Output particles should not have alignment information")
 
+
 #TODO: Check with JM if this test should go in here since it is not a Xmipp protocol.
 class TestAlignmentAssign(TestXmippBase):
     """This class checks if the protocol Alignment Assign works properly"""
@@ -709,6 +710,7 @@ class TestAlignmentAssign(TestXmippBase):
         self.assertIsNotNone(protAssign.outputParticles, "There was a problem generating output particles")
         #TODO: Add an assert to check that sampling rate and alignment matrix is ok
 
+
 class TestXmippRotSpectra(TestXmippBase):
     """This class check if the protocol to calculate the rotational spectra from particles in Xmipp works properly."""
     @classmethod
@@ -734,6 +736,7 @@ class TestXmippRotSpectra(TestXmippBase):
         xmippProtRotSpectra.Mask.set(protMask.outputMask)
         self.launchProtocol(xmippProtRotSpectra)
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
+
 
 class TestXmippKerdensom(TestXmippBase):
     """This class check if the protocol to calculate the kerdensom from particles in Xmipp works properly."""
@@ -789,6 +792,38 @@ class TestXmippCompareReprojections(TestXmippBase):
 #         protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
 #         self.launchProtocol(protProjOutl)      
 #         self.assertIsNotNone(protProjOutl.outputClasses, "There was a problem with Projection Outliers")
+
+
+class TestXmippCompareReprojections(TestXmippBase):
+    """This class check if the protocol compare reprojections in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImportPart = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.protImportAvgs = cls.runImportAverages(cls.particlesFn, 3.5)
+        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
+        cls.runClassify = cls.runClassify(cls.protImportPart.outputParticles)
+        cls.protProjMatch = cls.newProtocol(XmippProtProjMatch,
+                                            doCTFCorrection=False,
+                                            numberOfIterations=1,
+                                            outerRadius=50,
+                                            angSamplingRateDeg=5,
+                                            symmetry="d6",
+                                            numberOfMpi=4)
+        cls.protProjMatch.inputParticles.set(cls.protImportAvgs.outputAverages)
+        cls.protProjMatch.input3DReferences.set(cls.protImportVol.outputVolume)
+        cls.launchProtocol(cls.protProjMatch)
+    
+    def test_particles(self):
+        return
+        print "Run ProjOutliers particles"
+        protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
+                                   symmetryGroup="c6", numberOfMpi=5)
+        protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
+        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(protProjOutl)
+        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Projection Outliers")
 
 
 class TestXmippScreenClasses(TestXmippBase):
