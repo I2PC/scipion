@@ -167,20 +167,20 @@ class ProtMotionCorr(ProtProcessMovies):
     
     def createOutputStep(self):
         inputMovies = self.inputMovies.get()
+
         if self.doSaveMovie:
             suffix = "_aligned"
         else:
             suffix = "_original"
         movieSet = self._createSetOfMovies(suffix)
         movieSet.copyInfo(inputMovies)
-        if self.binFactor != 1:
-            movieSet.setSamplingRate(inputMovies.getSamplingRate()*self.binFactor)
+        newSampling = inputMovies.getSamplingRate()*self.binFactor.get()
+        movieSet.setSamplingRate(newSampling)
         
         if self.doSaveAveMic:
             micSet = self._createSetOfMicrographs()
             micSet.copyInfo(inputMovies)
-            if self.binFactor != 1:
-                micSet.setSamplingRate(inputMovies.getSamplingRate()*self.binFactor)
+            micSet.setSamplingRate(newSampling)
         else:
             micSet = None
         
@@ -188,11 +188,11 @@ class ProtMotionCorr(ProtProcessMovies):
             self._createOutputMovie(movie, movieSet, micSet)
         
         self._defineOutputs(outputMovies=movieSet)
-        self._defineTransformRelation(inputMovies, movieSet)
+        self._defineTransformRelation(self.inputMovies, movieSet)
         
         if self.doSaveAveMic:
             self._defineOutputs(outputMicrographs=micSet)
-            self._defineSourceRelation(inputMovies, micSet)
+            self._defineSourceRelation(self.inputMovies, micSet)
     
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
@@ -201,8 +201,10 @@ class ProtMotionCorr(ProtProcessMovies):
     
     def _validate(self):
         errors = []
+
         if max(self.numberOfThreads, self.numberOfMpi) > 1:
             errors.append("GPU and Parallelization can not be used together")
+
         if not (self.binFactor == 1 or self.binFactor == 2):
             errors.append("Binning factor can only be 1 or 2")
             
