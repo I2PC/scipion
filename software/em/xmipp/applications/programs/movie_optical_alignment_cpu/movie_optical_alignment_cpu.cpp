@@ -54,7 +54,8 @@ public:
     std::vector< Matrix1D<double> > shiftVector;
     MetaData shiftMD;
     int winSize, gpuDevice, cutFrameFront, cutFrameEnd;
-    int groupSize;
+    int groupSize, cropOffsetX, cropOffsetY;
+    int cropDimX, cropDimY;
     bool saveCorrMovie, globalShiftCorr;
     bool gainImageCorr, darkImageCorr;
 
@@ -63,8 +64,13 @@ public:
         addUsageLine ("Align movies using optical flow");
         addParamsLine("     -i <inMoviewFnName>          : input movie File Name");
         addParamsLine("     -o <outAverageMoviewFnName>  : output aligned micrograhp File Name");
-        addParamsLine("     [--cutf <int=0>]     : number of the frames to cut from the front (0 = no cut");
-        addParamsLine("     [--cute <int=0>]     : number of the frames to cut from the end (0 = no cut");
+        addParamsLine("     [--cutf <int=0>]     : number of the frames to cut from the front (0 = no cut)");
+        addParamsLine("     [--cute <int=0>]     : number of the frames to cut from the end (0 = no cut)");
+        addParamsLine("     [--crx <int=0>]     : crop offset X (pixel(s))");
+        addParamsLine("     [--cry <int=0>]     : crop offset Y (pixel(s))");
+        addParamsLine("     [--cdx <int=0>]     : number of pixels to cut along X from offset");
+        addParamsLine("     [--cdy <int=0>]     : number of pixels to cut along Y from offset");
+        addParamsLine("     [--bin <int=1>]     : bin stack before processing");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
         addParamsLine("     [--groupSize <int=1>]        : the depth of pyramid for optical flow algorithm");
         addParamsLine("     [--globalShifts <shiftreference>]        : global shifts from cross-correlation based methods");
@@ -96,6 +102,10 @@ public:
         groupSize = getIntParam("--groupSize");
         cutFrameFront  = getIntParam("--cutf");
         cutFrameEnd  = getIntParam("--cute");
+        cropOffsetX = getIntParam("--crx");
+        cropOffsetY = getIntParam("--cry");
+        cropDimX = getIntParam("--cdx");
+        cropDimY = getIntParam("--cdy");
         winSize   = getIntParam("--winSize");
         saveCorrMovie = checkParam("--ssc");
 
@@ -224,6 +234,15 @@ public:
         opencvDoubleMat.convertTo(opencvUintMat, CV_8U, 255.0/(max - min), -min * 255.0/(max - min));
     }
 
+    // correct for dark and gain reference if available
+    void correctDarkGainImage(MultidimArray<double> & uncorrectedImage)
+    {
+        if (darkImageCorr)
+            uncorrectedImage-=darkImage;
+        if (gainImageCorr)
+            uncorrectedImage/=gainImage;
+    }
+
     // Computes the average of a number of frames in movies
     void computeAvg(const FileName &movieFile, int begin, int end, MultidimArray<double> &avgImg)
     {
@@ -236,12 +255,11 @@ public:
         {
             movieStack.readMapped(movieFile,i);
             movieStack().getImage(frameImage);
+            correctDarkGainImage(frameImage);
+            if (cropDimX!=0 && cropDimY!=0)
+                frameImage.selfWindow(cropOffsetY, cropOffsetX, cropOffsetY+cropDimY-1, cropOffsetX+cropDimX-1);
             if (i==begin)
                 avgImg.initZeros(YSIZE(frameImage), XSIZE(frameImage));
-            if (darkImageCorr)
-                frameImage-=darkImage;
-            if (gainImageCorr)
-                frameImage/=gainImage;
             if (globalShiftCorr)
             {
                 XX(shiftMatrix)=XX(shiftVector[i-1]);
@@ -322,8 +340,17 @@ public:
         movieStack.read(fname,HEADER);
         movieStack.getDimensions(aDim);
         imagenum = aDim.ndim;
-        h = aDim.ydim;
-        w = aDim.xdim;
+        // if crop, then change the variables for width and height
+        if (cropDimX==0 || cropDimY==0)
+        {
+            h = aDim.ydim;
+            w = aDim.xdim;
+        }
+        else
+        {
+            h = cropDimY;
+            w = cropDimX;
+        }
         if (darkImageCorr)
         {
             II.read(darkRefFilename);
@@ -372,7 +399,7 @@ public:
             }
         }
         tStart2=clock();
-        // put the right valuse for first and last frame in cut variables
+        // put the right values for first and last frame in cut variables
         cutFrameFront++;
         cutFrameEnd=imagenum-cutFrameEnd; // Just to adapt to Li algorithm
         imagenum=cutFrameEnd-cutFrameFront+1;
@@ -405,10 +432,9 @@ public:
                         MultidimArray<double> frameImage;
                         movieStack.readMapped(fname,i+1);
                         movieStack().getImage(frameImage);
-                        if (darkImageCorr)
-                        	frameImage-=darkImage;
-                        if (gainImageCorr)
-                        	frameImage/=gainImage;
+                        correctDarkGainImage(frameImage);
+                        if (cropDimX!=0 && cropDimY!=0)
+                            frameImage.selfWindow(cropOffsetY, cropOffsetX, cropOffsetY+cropDimY-1, cropOffsetX+cropDimX-1);
                         XX(shiftMatrix)=XX(shiftVector[i]);
                         YY(shiftMatrix)=YY(shiftVector[i]);
                         translate(BSPLINE3, preImg, frameImage, shiftMatrix, WRAP);
@@ -417,10 +443,9 @@ public:
                     {
                         movieStack.readMapped(fname,cutFrameFront+i);
                         movieStack().getImage(preImg);
-                        if (darkImageCorr)
-                            preImg-=darkImage;
-                        if (gainImageCorr)
-                            preImg/=gainImage;
+                        correctDarkGainImage(preImg);
+                        if (cropDimX!=0 && cropDimY!=0)
+                            preImg.selfWindow(cropOffsetY, cropOffsetX, cropOffsetY+cropDimY-1, cropOffsetX+cropDimX-1);
                     }
                     xmipp2Opencv(preImg, preimg);
                 }
