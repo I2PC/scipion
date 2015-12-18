@@ -33,9 +33,10 @@ import os
 from os.path import join, basename, exists
 
 from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
-from pyworkflow.protocol.constants import STEPS_PARALLEL
+from pyworkflow.protocol.constants import STEPS_PARALLEL, STATUS_NEW
 from pyworkflow.utils.path import createLink, removeBaseExt, makePath, cleanPath
 from pyworkflow.utils.properties import Message
+from pyworkflow.em.data import SetOfMovies
 
 from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
@@ -77,10 +78,64 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def _insertAllSteps(self):
         # Build the list of all processMovieStep ids by 
         # inserting each of the steps for each movie
+        self.insertedDict = {}
         self.samplingRate = self.inputMovies.get().getSamplingRate()
-        allMovies = [self._insertMovieStep(movie) for movie in self.inputMovies.get()]
-        self._insertFunctionStep('createOutputStep', prerequisites=allMovies)
+        movieSteps = self._insertNewMoviesSteps(self.insertedDict, self.inputMovies.get())
+        finalSteps = self._insertFinalSteps(movieSteps)
+        self._insertFunctionStep('createOutputStep', prerequisites=finalSteps, wait=True)
 
+    def _insertFinalSteps(self, deps):
+        """ This should be implemented in subclasses"""
+        return deps
+
+    def _getFirstJoinStepName(self):
+        # This function will be used for streamming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overriden in subclasses (ej in Xmipp 'sortPSDStep')
+        return 'createOutputStep'
+
+    def _getFirstJoinStep(self):
+        for s in self._steps:
+            if s.funcName == self._getFirstJoinStepName():
+                return s
+        return None
+
+    def _stepsCheck(self):
+        # Check if there are new micrographs to process
+        movieSet = SetOfMovies(filename=self.inputMovies.get().getFileName())
+        movieSet.loadAllProperties()
+        streamClosed = movieSet.isStreamClosed()
+
+        newMovies = [m.getObjId() for m in movieSet if m.getObjId() not in self.insertedDict]
+
+        outputStep = self._getFirstJoinStep()
+
+        if newMovies:
+            fDeps = self._insertNewMoviesSteps(self.insertedDict, movieSet)
+            self.updateSteps()
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+        else:
+            if outputStep is not None and streamClosed and outputStep.isWaiting():
+                outputStep.setStatus(STATUS_NEW)
+
+        movieSet.close()
+
+    def _insertNewMoviesSteps(self, insertedDict, inputMovies):
+        """ Insert steps to process new movies (from streaming)
+        Params:
+            insertedDict: contains already processed movies
+            inputMovies: input movies set to be check
+        """
+        deps = []
+        # For each movie insert the step to process it
+        for movie in inputMovies:
+            if movie.getObjId() not in insertedDict:
+                stepId = self._insertMovieStep(movie)
+                deps.append(stepId)
+                insertedDict[movie.getObjId()] = stepId
+        return deps
+        
     def _insertMovieStep(self, movie):
         """ Insert the processMovieStep for a given movie. """
         # Note that at this point is safe to pass the movie, since this
@@ -88,11 +143,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         # to pass to the actual step that is gone to be executed later on
         movieStepId = self._insertFunctionStep('processMovieStep',
                                                movie.getObjId(), movie.getFileName(),
-                                               prerequisites=[])  
-        
-        return movieStepId      
-        
-        
+                                               prerequisites=[])
+        return movieStepId
+
     #--------------------------- STEPS functions ---------------------------------------------------
     def processMovieStep(self, movieId, movieFn, *args):
         movieFolder = self._getMovieFolder(movieId)
