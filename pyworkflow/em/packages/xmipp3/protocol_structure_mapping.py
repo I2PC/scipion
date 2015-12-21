@@ -27,7 +27,6 @@
 
 import os
 from glob import glob
-
 import pyworkflow.em.metadata as md
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
@@ -96,7 +95,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             fnPseudoAtoms = self._getPath("pseudoatoms_%d.pdb"%nVoli)
             
             self._insertFunctionStep('computeModesStep', fnPseudoAtoms, self.numberOfModes, cutoffStr)
-            self._insertFunctionStep('reformatOutputStep', os.path.basename(fnPseudoAtoms))
+            self._insertFunctionStep('reformatOutputStep', os.path.basename(fnPseudoAtoms), suffix)
                                             
             self._insertFunctionStep('qualifyModesStep', self.numberOfModes, self.collectivityThreshold.get(), 
                                         self._getPath("pseudoatoms_%d.pdb"%nVoli), suffix)
@@ -111,6 +110,25 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 nVolj += 1   
             nVoli += 1  
                  
+            #elastic alignment
+            nVoli = 1
+            for voli in volList:
+                mdVols = xmipp.MetaData()
+                files = glob(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%nVoli)
+                fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%nVoli
+                for f in files:
+                    mdVols.setValue(xmipp.MDL_IMAGE, f, mdVols.addObject())      
+                mdVols.write(fnOutMeta)
+                                              
+                fnPseudo = self._getPath("pseudoatoms_%d.pdb"%nVoli)
+                fnModes = self._getPath("modes_%d.xmd"%nVoli)
+                Ts = voli.getSamplingRate()
+                fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%nVoli)
+                sigma = Ts * self.pseudoAtomRadius.get() 
+                self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s"%\
+                        (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))
+                nVoli += 1
+                
         self._insertFunctionStep('gatherResultsStep')
                                         
     #--------------------------- STEPS functions --------------------------------------------
@@ -118,25 +136,6 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
     def gatherResultsStep(self):
                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
-         
-        nVoli = 1 
-        #elastic alignment        
-        for voli in volList:
-            mdVols = xmipp.MetaData()
-            files = glob(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%nVoli)
-            fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%nVoli
-            for f in files:
-                mdVols.setValue(xmipp.MDL_IMAGE, f, mdVols.addObject())      
-            mdVols.write(fnOutMeta)
-                                              
-            fnPseudo = self._getPath("pseudoatoms_%d.pdb"%nVoli)
-            fnModes = self._getPath("modes_%d.xmd"%nVoli)
-            Ts = voli.getSamplingRate()
-            fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%nVoli)
-            sigma = Ts * self.pseudoAtomRadius.get() 
-            self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s"%\
-                       (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))
-            nVoli += 1
             
         #score and distance matrix calculation         
         score = [[0 for i in volList] for i in volList]
@@ -160,16 +159,13 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         #print "score matrix is: "
         #print score
                 
-        fnRoot = self._getExtraPath ("DistanceMatrixNormal.txt")   
+        fnRoot = self._getExtraPath ("DistanceMatrix.txt")   
         distance = [[0 for i in volList] for i in volList]
         nVoli = 1
         for i in volList:
             nVolj = 1
             for j in volList:
                 distance[(nVoli-1)][(nVolj-1)] = (score[(nVoli-1)][(nVolj-1)] + score[(nVolj-1)][(nVoli-1)])/2
-                fh = open(self._defineResultsName(),"a")
-                fh.write("%f\n"%distance[(nVoli-1)][(nVolj-1)])
-                fh.close()
                 fh = open(fnRoot,"a")
                 fh.write("%f\t"%distance[(nVoli-1)][(nVolj-1)])
                 fh.close()
@@ -178,31 +174,37 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             fh.write("\n")
             fh.close()
             nVoli += 1                     
-        
-        #print "distance matrix is: "
-        #print distance
-                       
-        #coordinate matrix calculation 
-        
+               
         for i in range(1, 4):
                
-            mds = manifold.MDS(n_components=i, metric=True, max_iter=3000, eps=1e-9, dissimilarity="precomputed", n_jobs=1)
-            embed3d = mds.fit(distance).embedding_    
+            mds = manifold.MDS(n_components=i, metric=True, max_iter=3000, eps=1e-9, random_state=0, dissimilarity="precomputed", n_jobs=1)
+            embed3d = mds.fit(distance).embedding_ 
+            
+            print i
+            print mds
+            print embed3d  
                
             nVoli = 1
             for x in volList:
                 for y in range(i):
-                    fh = open(self._getExtraPath ("CoordinateMatrix_%d_Dimension.txt"%i),"a")
+                    fh = open(self._getExtraPath ("CoordinateMatrix%d.txt"%i),"a")
                     fh.write("%f\t"%embed3d[(nVoli - 1)][(y)])
-                    fh.close()  
-                fh = open(self._getExtraPath ("CoordinateMatrix_%d_Dimension.txt"%i),"a")
+                    fh.close()
+                    fh = open(self._getExtraPath ("CoordinateMatrixColumnF%d.txt"%i),"a")
+                    fh.write("%f\n"%embed3d[(nVoli - 1)][(y)])
+                    fh.close()
+                fh = open(self._getExtraPath ("CoordinateMatrix%d.txt"%i),"a")
                 fh.write("\n")
                 fh.close()
                 nVoli += 1 
         
-                
+        copyFile (self._getExtraPath ("CoordinateMatrixColumnF1.txt"), self._defineResultsName1())
+        copyFile (self._getExtraPath ("CoordinateMatrixColumnF2.txt"), self._defineResultsName2())
+        copyFile (self._getExtraPath ("CoordinateMatrixColumnF3.txt"), self._defineResultsName3())
+                       
         cleanPattern(self._getExtraPath('pseudoatoms*'))
-        cleanPattern(self._getExtraPath('vec_ani.pkl'))                        
+        cleanPattern(self._getExtraPath('vec_ani.pkl'))  
+        cleanPattern(self._getExtraPath('CoordinateMatrixColumnF*'))                      
         
     #--------------------------- INFO functions --------------------------------------------
     
@@ -268,8 +270,14 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1)
                        
         return alignArgs
+        
+    def _defineResultsName1(self):
+        return self._getExtraPath('CoordinateMatrixColumn1.txt')
     
-    def _defineResultsName(self):
-        return self._getExtraPath('DistanceMatrixColumn.txt')
+    def _defineResultsName2(self):
+        return self._getExtraPath('CoordinateMatrixColumn2.txt')
+    
+    def _defineResultsName3(self):
+        return self._getExtraPath('CoordinateMatrixColumn3.txt')
      
     
