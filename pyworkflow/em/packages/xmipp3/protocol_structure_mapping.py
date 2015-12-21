@@ -85,7 +85,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
         nVoli = 1
-                                    
+                                   
         for voli in volList:
             fnIn = getImageLocation(voli)
             fnMask = self._insertMaskStep(fnIn)
@@ -108,30 +108,36 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                     outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (nVolj, nVoli))
                     self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, maskArgs, alignArgs)
                 nVolj += 1   
-            nVoli += 1  
+            
                  
             #elastic alignment
-            nVoli = 1
-            for voli in volList:
-                mdVols = xmipp.MetaData()
-                files = glob(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%nVoli)
-                fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%nVoli
-                for f in files:
-                    mdVols.setValue(xmipp.MDL_IMAGE, f, mdVols.addObject())      
-                mdVols.write(fnOutMeta)
-                                              
-                fnPseudo = self._getPath("pseudoatoms_%d.pdb"%nVoli)
-                fnModes = self._getPath("modes_%d.xmd"%nVoli)
-                Ts = voli.getSamplingRate()
-                fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%nVoli)
-                sigma = Ts * self.pseudoAtomRadius.get() 
-                self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s"%\
-                        (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))
-                nVoli += 1
-                
+            self._insertFunctionStep('elasticAlignmentStep',nVoli, voli )
+            nVoli += 1
+               
         self._insertFunctionStep('gatherResultsStep')
                                         
     #--------------------------- STEPS functions --------------------------------------------
+    
+    def elasticAlignmentStep(self, nVoli, voli):
+    
+        
+                
+        mdVols = xmipp.MetaData()
+        files = glob(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%nVoli)
+        fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%nVoli
+        for f in files:
+            mdVols.setValue(xmipp.MDL_IMAGE, f, mdVols.addObject())      
+        mdVols.write(fnOutMeta)
+                                              
+        fnPseudo = self._getPath("pseudoatoms_%d.pdb"%nVoli)
+        fnModes = self._getPath("modes_%d.xmd"%nVoli)
+        Ts = voli.getSamplingRate()
+        fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%nVoli)
+        sigma = Ts * self.pseudoAtomRadius.get() 
+        self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s"%\
+                (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))
+        
+    
     
     def gatherResultsStep(self):
                 
