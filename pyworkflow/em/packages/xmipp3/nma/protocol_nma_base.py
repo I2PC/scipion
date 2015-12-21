@@ -138,14 +138,14 @@ class XmippProtNMABase(EMProtocol):
 
         return rc    
     
-    def reformatOutputStep(self,fnPseudoatoms, suffix=''):
+    def reformatOutputStep(self,fnPseudoatoms):
         self._enterWorkingDir()
         n = self._countAtoms(fnPseudoatoms)
         self.runJob("nma_reformat_vector_foranimate.pl","%d fort.11" % n,env=getNMAEnviron())
         self.runJob("cat","vec.1* > vec_ani.txt")
         self.runJob("rm","-f vec.1*")
         self.runJob("nma_reformat_vector.pl","%d fort.11" % n,env=getNMAEnviron())
-        fnModesDir="modes%s"%suffix
+        fnModesDir="modes"
         makePath(fnModesDir)
         self.runJob("mv","-f vec.* %s"%fnModesDir)
         self.runJob("nma_prepare_for_animate.py","",env=getNMAEnviron())
@@ -165,7 +165,7 @@ class XmippProtNMABase(EMProtocol):
     def qualifyModesStep(self, numberOfModes, collectivityThreshold, structureEM, suffix=''):
         self._enterWorkingDir()
         
-        fnVec = glob("modes*/vec.*")
+        fnVec = glob("modes/vec.*")
         
         if len(fnVec) < numberOfModes:
             msg = "There are only %d modes instead of %d. "
@@ -201,7 +201,7 @@ class XmippProtNMABase(EMProtocol):
             collectivityList.append(collectivity)
     
             objId = mdOut.addObject()
-            modefile = self._getPath("modes%s"%suffix, "vec.%d" % (n+1))
+            modefile = self._getPath("modes", "vec.%d" % (n+1))
             mdOut.setValue(xmipp.MDL_NMA_MODEFILE, modefile, objId)
             mdOut.setValue(xmipp.MDL_ORDER, long(n+1), objId)
             
