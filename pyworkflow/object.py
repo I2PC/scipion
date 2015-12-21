@@ -926,7 +926,13 @@ class CsvList(Scalar, list):
     
     def clear(self):
         del self[:]
-        
+
+    def __eq__(self, other):
+        """ Comparison for scalars should be by value
+        and for other objects by reference.
+        """
+        return all(a == b for a, b in izip(self, other))
+
         
 class Array(Object):
     """Class for holding fixed len array"""
