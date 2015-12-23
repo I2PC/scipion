@@ -381,11 +381,13 @@ class Object(object):
                 ptr.set(copyDict[pointedId])
         
     def _copy(self, other, copyDict, copyId, level=1, ignoreAttrs=[]):
-        """ This method will recursively clone all attributes from one object to the other.
-        NOTE: Currently, we are not deleting attributes missing in the 'other' object.
-        copyDict: this dict is used to store the ids map between 'other' and 'self' attributes
-            This copyDict is used for update pointers and relations later on.
-            This will only work if the ids of 'other' attributes has been properly set.
+        """ Recursively clone all attributes from one object to the other.
+        (Currently, we are not deleting attributes missing in the 'other' object.)
+        Params:
+        copyDict: this dict is used to store the ids map between 'other' and
+            'self' attributes. It is used for update pointers and relations
+            later on. This will only work if the ids of 'other' attributes
+            has been properly set.
         """
         # Copy basic object data
         #self._objName = other._objName
@@ -406,7 +408,7 @@ class Object(object):
                 myAttr._copy(attr, copyDict, copyId, level+2)
                 # Store the attr in the copyDict
                 if attr.hasObjId():
-                    #" storing in copyDict with id=", attr.getObjId()
+                    # storing in copyDict with id=", attr.getObjId()
                     copyDict[attr.getObjId()] = myAttr
                 # Use the copyDict to fix the reference in the copying object
                 # if the pointed one is inside the same object
@@ -686,8 +688,8 @@ class Pointer(Object):
     
     def __init__(self, value=None, **kwargs):
         Object.__init__(self, value, objIsPointer=True, **kwargs)
-        # The _extended attribute will be used to point to attributes of a pointed object
-        # or the id of an item inside a set
+        # The _extended attribute will be used to point to attributes of a
+        # pointed object or the id of an item inside a set
         self._extended = String()
         
         if 'extended' in kwargs:
@@ -972,10 +974,8 @@ class Set(OrderedObject):
         self._mapper = None
         self._idCount = 0
         self._size = Integer(0) # cached value of the number of images  
-        #self._idMap = {}#FIXME, remove this after id is the one in mapper
         self.setMapperClass(mapperClass)
         self._mapperPath = CsvList() # sqlite filename
-        #self._mapperPath.trace(self.load) # Load the mapper whenever the filename is changed
         self._representative = None
         self._classesDict = classesDict 
         # If filename is passed in the constructor, it means that
@@ -1076,7 +1076,6 @@ class Set(OrderedObject):
     def __del__(self):
         # Close connections to db when destroy this object
         if self._mapper is not None:
-            #print "Closing DB: %s" % self.getFileName()
             self.close()
         
     def close(self):
@@ -1109,8 +1108,7 @@ class Set(OrderedObject):
             self._idCount = max(self._idCount, item.getObjId()) + 1
         self._insertItem(item)
         self._size.increment()
-#        self._idMap[item.getObjId()] = item
-        
+
     def _insertItem(self, item):
         self._getMapper().insert(item)
         
@@ -1198,7 +1196,7 @@ def ObjectWrap(value):
         return o
     if t is None:
         return None
-    #If it is str, unicode or unknown type, convert to string
+    # If it is str, unicode or unknown type, convert to string
     return String(value)
          
            
