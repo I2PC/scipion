@@ -81,7 +81,9 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         maskArgs = ''
         alignArgs = self._getAlignArgs()
         ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL = 1
-        self.alignmentAlgorithm = ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL       
+        self.alignmentAlgorithm = ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL 
+        
+        keepingOutputFiles = True      
                                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
         nVoli = 1
@@ -115,6 +117,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             nVoli += 1
                
         self._insertFunctionStep('gatherResultsStep')
+        self._insertFunctionStep('managingOutputFilesStep', keepingOutputFiles)
                                         
     #--------------------------- STEPS functions --------------------------------------------
     def elasticAlignmentStep(self, nVoli, voli):
@@ -137,12 +140,11 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         fnModes = self._getPath("modes_%d.xmd"%nVoli)
         Ts = voli.getSamplingRate()
         fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%nVoli)
-        sigma = Ts * self.pseudoAtomRadius.get() 
-        self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s"%\
-                (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))
-        
-    
-    
+        sigma = Ts * self.pseudoAtomRadius.get()
+        fnPseudoOut = self._getExtraPath("PseudoatomsDeformedPDB_%d.pdb"%nVoli)
+        self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s --opdb %s"%\
+                (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma, fnPseudoOut))
+        #sakhte volume ba tavajo h be esme pdb ha
     def gatherResultsStep(self):
                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
@@ -165,10 +167,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                     score[(nVoli-1)][(nVolj-1)] = (1 - maxCc)
                 nVolj += 1
             nVoli += 1 
-                                           
-        #print "score matrix is: "
-        #print score
-                
+               
         fnRoot = self._getExtraPath ("DistanceMatrix.txt")   
         distance = [[0 for i in volList] for i in volList]
         nVoli = 1
@@ -207,6 +206,8 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 fh.write("\n")
                 fh.close()
                 nVoli += 1 
+                        
+    def managingOutputFilesStep(self, keepingOutputFiles): 
         
         copyFile (self._getExtraPath ("CoordinateMatrixColumnF1.txt"), self._defineResultsName1())
         copyFile (self._getExtraPath ("CoordinateMatrixColumnF2.txt"), self._defineResultsName2())
@@ -214,7 +215,17 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                        
         cleanPattern(self._getExtraPath('pseudoatoms*'))
         cleanPattern(self._getExtraPath('vec_ani.pkl'))  
-        cleanPattern(self._getExtraPath('CoordinateMatrixColumnF*'))                      
+        cleanPattern(self._getExtraPath('CoordinateMatrixColumnF*'))  
+        
+        if not keepingOutputFiles:
+            cleanPattern(self._getPath('modes/vec*'))  
+            cleanPattern(self._getPath('warnings*'))
+            cleanPattern(self._getPath('outputRigid*'))
+            cleanPattern(self._getExtraPath('modes*/vec*'))  
+            cleanPattern(self._getExtraPath('RigidAlign*'))
+            cleanPattern(self._getExtraPath('Pseudoatoms*'))
+            #cleanPattern(self._getExtraPath('filehaye jadide sakhte shode....')) 
+                             
         
     #--------------------------- INFO functions --------------------------------------------
     
