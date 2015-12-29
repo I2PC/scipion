@@ -235,10 +235,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             if pointer.pointsNone():
                 errors.append('Invalid input, pointer: %s' % pointer.getObjValue())
                 errors.append('              extended: %s' % pointer.getExtended())
-        numberOfDimensions=self.numberOfDimensions.get()
-        if numberOfDimensions > 3 or numberOfDimensions < 1:
-            errors.append("The number of dimensions should be 1, 2 or, at most, 3.")
-        
+                
         return errors 
        
     def _summary(self):
