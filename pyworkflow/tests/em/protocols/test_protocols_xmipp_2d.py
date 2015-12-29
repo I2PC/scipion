@@ -773,37 +773,7 @@ class TestXmippCompareReprojections(TestXmippBase):
         cls.protImportPart = cls.runImportParticles(cls.particlesFn, 3.5)
         cls.protImportAvgs = cls.runImportAverages(cls.particlesFn, 3.5)
         cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
-        cls.runClassify = cls.runClassify(cls.protImportPart.outputParticles)
-    
-    def test_CompareReprojectionsAverages(self):
-        print "Run CompareReprojections particles"
-        protProjOutl = self.newProtocol(XmippProtCompareReprojections, 
-                                   symmetryGroup="d6", numberOfMpi=5)
-        protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
-        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
-        self.launchProtocol(protProjOutl)
-        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Compare Reprojections")
-    
-#     def test_ProjectionOutliersClasses2D(self):
-#         print "Run ProjOutliers for classes2D"
-#         protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
-#                                    symmetryGroup="c6", numberOfMpi=5)
-#         protProjOutl.inputSet.set(self.runClassify.outputClasses)
-#         protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
-#         self.launchProtocol(protProjOutl)      
-#         self.assertIsNotNone(protProjOutl.outputClasses, "There was a problem with Projection Outliers")
-
-
-class TestXmippCompareReprojections(TestXmippBase):
-    """This class check if the protocol compare reprojections in Xmipp works properly."""
-    @classmethod
-    def setUpClass(cls):
-        setupTestProject(cls)
-        TestXmippBase.setData('mda')
-        cls.protImportPart = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.protImportAvgs = cls.runImportAverages(cls.particlesFn, 3.5)
-        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
-        cls.runClassify = cls.runClassify(cls.protImportPart.outputParticles)
+        cls.protClassify = cls.runClassify(cls.protImportPart.outputParticles)
         cls.protProjMatch = cls.newProtocol(XmippProtProjMatch,
                                             doCTFCorrection=False,
                                             numberOfIterations=1,
@@ -815,45 +785,32 @@ class TestXmippCompareReprojections(TestXmippBase):
         cls.protProjMatch.input3DReferences.set(cls.protImportVol.outputVolume)
         cls.launchProtocol(cls.protProjMatch)
     
-    def test_particles(self):
-        return
-        print "Run ProjOutliers particles"
-        protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
-                                   symmetryGroup="c6", numberOfMpi=5)
-        protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
-        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
-        self.launchProtocol(protProjOutl)
-        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Projection Outliers")
+    def test_particles1(self):
+        print "Run Compare Reprojections from classes"
+        prot = self.newProtocol(XmippProtCompareReprojections, 
+                                        symmetryGroup="d6", numberOfMpi=5)
+        prot.inputSet.set(self.protClassify.outputClasses)
+        prot.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(prot)
+        self.assertIsNotNone(prot.outputParticles, "There was a problem with Compare Reprojections from classes")
 
+    def test_particles2(self):
+        print "Run Compare Reprojections from averages"
+        prot = self.newProtocol(XmippProtCompareReprojections, 
+                                        symmetryGroup="d6", numberOfMpi=5)
+        prot.inputSet.set(self.protImportAvgs.outputAverages)
+        prot.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(prot)
+        self.assertIsNotNone(prot.outputParticles, "There was a problem with Compare Reprojections from averages")
 
-class TestXmippScreenClasses(TestXmippBase):
-    """This class check if the protocol screen classes in Xmipp works properly."""
-    @classmethod
-    def setUpClass(cls):
-        setupTestProject(cls)
-        TestXmippBase.setData('mda')
-        cls.protImportPart = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.protImportAvgs = cls.runImportAverages(cls.particlesFn, 3.5)
-        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
-        cls.runClassify = cls.runClassify(cls.protImportPart.outputParticles)
-    
-    def test_ScreenClassesAverages(self):
-        print "Run ScreenClasses particles"
-        protProjOutl = self.newProtocol(XmippProtScreenClasses, 
-                                   symmetryGroup="c6", numberOfMpi=5)
-        protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
-        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
-        self.launchProtocol(protProjOutl)      
-        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Screen Classes")
-    
-    def test_ScreenClasses2D(self):
-        print "Run ScreenClasses for classes2D"
-        protProjOutl = self.newProtocol(XmippProtScreenClasses, 
-                                   symmetryGroup="c6", numberOfMpi=5)
-        protProjOutl.inputSet.set(self.runClassify.outputClasses)
-        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
-        self.launchProtocol(protProjOutl)      
-        self.assertIsNotNone(protProjOutl.outputClasses, "There was a problem with Screen Classes")
+    def test_particles3(self):
+        print "Run Compare Reprojections from projections with angles"
+        prot = self.newProtocol(XmippProtCompareReprojections, 
+                                        symmetryGroup="d6", numberOfMpi=5)
+        prot.inputSet.set(self.protProjMatch.outputParticles)
+        prot.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(prot)
+        self.assertIsNotNone(prot.outputParticles, "There was a problem with Compare Reprojections from projections with angles")
 
 
 class TestXmippBreakSym(TestXmippBase):
