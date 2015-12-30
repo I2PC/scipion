@@ -150,9 +150,9 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma, fnPseudoOut))
         
         fnVolOut = self._getExtraPath('DeformedVolume_Vol_%d_To_Vol_%d.vol' % (nVolj, nVoli))
-        self.runJob('xmipp_volume_from_pdb', "-i %s -o %s --sampling %s" % (fnPseudoOut, fnVolOut, Ts))
+        self.runJob('xmipp_volume_from_pdb', "-i %s -o %s --sampling %s --fixed_Gaussian %s" % (fnPseudoOut, fnVolOut, Ts, sigma))
                 
-    def gatherResultsStepTest(self):
+    def gatherResultsStepTest(self): 
                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
             
