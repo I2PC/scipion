@@ -102,17 +102,6 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             self._insertFunctionStep('qualifyModesStep', self.numberOfModes, self.collectivityThreshold.get(), 
                                         self._getPath("pseudoatoms_%d.pdb"%nVoli), suffix)
             
-            
-            ### for test from here
-            makePath(self._getExtraPath("modes%d"%nVoli))
-        
-            for i in range(self.numberOfModes.get() + 1):
-                if i == 0 :
-                    i += 1 
-                copyFile (self._getPath("modes/vec.%d"%i), self._getExtraPath("modes%d/vec.%d"%(nVoli, i)))
-            
-            ### to here
-            
             #rigid alignment            
             nVolj = 1
             for volj in volList:
@@ -139,7 +128,12 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
     ### for test from here
     def elasticAlignmentStepTest(self, nVoli, voli, nVolj):
         
+        makePath(self._getExtraPath("modes%d"%nVoli))
         
+        for i in range(self.numberOfModes.get() + 1):
+            if i == 0 :
+                i += 1 
+            copyFile (self._getPath("modes/vec.%d"%i), self._getExtraPath("modes%d/vec.%d"%(nVoli, i)))
             
         mdVol = xmipp.MetaData()
         fnOutMeta = self._getExtraPath('RigidAlignVol_%d_To_Vol_%d.xmd' % (nVolj, nVoli))
