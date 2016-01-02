@@ -49,8 +49,8 @@ class EMProtocol(Protocol):
     """
     _base = True
     
-    def __init__(self, **args):
-        Protocol.__init__(self, **args)
+    def __init__(self, **kwargs):
+        Protocol.__init__(self, **kwargs)
         
     def __createSet(self, SetClass, template, suffix):
         """ Create a set and set the filename using the suffix. 
