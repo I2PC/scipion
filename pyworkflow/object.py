@@ -506,40 +506,6 @@ class OrderedObject(Object):
         if attrName in self._attributes:
             self._attributes.remove(attrName)
             delattr(self, attrName)
-            
-            
-class FakedObject(Object):
-    """This is based on Object, but will hide the set and get
-    access to the attributes, they need to be defined with addAttribute"""
-    def __init__(self, value=None, **kwargs):
-        object.__setattr__(self, '_attributes', {})
-        Object.__init__(self, value, **kwargs)
-        
-    def addAttribute(self, name, attrClass, **kwargs):
-        self._attributes[name] = attrClass(**kwargs)
-           
-    def __setattr__(self, name, value):
-        if name in self._attributes:
-            if issubclass(type(value), Object):
-                self._attributes[name] = value
-            else:
-                self._attributes[name].set(value)
-        else:
-            object.__setattr__(self, name, value)
-    
-    def __getattr__(self, name):
-        if name in self._attributes:
-            attr = self._attributes[name]
-            if issubclass(type(attr), Scalar):
-                return attr.get()
-            else:
-                return attr
-        return None
-
-    def getAttributes(self):
-        """Return the list of attributes than are
-        subclasses of Object and will be stored"""
-        return self._attributes.iteritems()
 
                 
 class Scalar(Object):
@@ -935,31 +901,7 @@ class CsvList(Scalar, list):
         """
         return all(a == b for a, b in izip(self, other))
 
-        
-class Array(Object):
-    """Class for holding fixed len array"""
-    def __init__(self, size=10, **kwargs):
-        Object.__init__(self, size, **kwargs)
-        
-    def set(self, size):
-        """Set the array size"""
-        self._objValue = int(size)  
-        for i in range(int(size)):
-            self.__setitem__(i, None)                 
-        
-    def strIndex(self, i):
-        return 'item_%04d' % i
-    
-    def __setitem__(self, index, value):
-        self.__dict__[self.strIndex(index)] = value
-        
-    def __getitem__(self, index):
-        return self.__dict__[self.strIndex(index)]
-    
-    def __len__(self):
-        return self._objValue
-    
-    
+
 class Set(OrderedObject):
     """ This class will be a container implementation for elements.
     It will use an extra sqlite file to store the elements.
