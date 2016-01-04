@@ -57,7 +57,10 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                       label="Input volume(s)", important=True, 
                       help='Select one or more volumes (Volume or SetOfVolumes)\n'
                            'to be aligned againt the reference volume.')
-                
+        form.addParam('keepingOutputFiles', params.BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
+                      label="Keeping intermediate output files",
+                      help="Set to true if you want to keep all intermediate produced files during rigid and elastic alignment")        
+        
         form.addSection(label='Pseudoatom')
         XmippProtConvertToPseudoAtomsBase._defineParams(self,form)
         self.getParam("pseudoAtomRadius").setDefault(2)
@@ -82,9 +85,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         alignArgs = self._getAlignArgs()
         ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL = 1
         self.alignmentAlgorithm = ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL 
-        
-        keepingOutputFiles = True      
-                                
+                                                
         volList = [vol.clone() for vol in self._iterInputVolumes()]
         nVoli = 1
                                    
@@ -110,23 +111,15 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                     inVolFn = getImageLocation(volj)
                     outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (nVolj, nVoli))
                     self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn, maskArgs, alignArgs)
-                    ### for test from here
-                    self._insertFunctionStep('elasticAlignmentStepTest',nVoli, voli, nVolj)
-                    ### to here
+                    self._insertFunctionStep('elasticAlignmentStep',nVoli, voli, nVolj)
                 nVolj += 1   
-            
-                 
-            #elastic alignment
-            #self._insertFunctionStep('elasticAlignmentStep',nVoli, voli )
             nVoli += 1
                
-        #self._insertFunctionStep('gatherResultsStep')
-        self._insertFunctionStep('gatherResultsStepTest')
-        self._insertFunctionStep('managingOutputFilesStep', keepingOutputFiles)
+        self._insertFunctionStep('gatherResultsStep')
+        self._insertFunctionStep('managingOutputFilesStep')
                                         
     #--------------------------- STEPS functions --------------------------------------------
-    ### for test from here
-    def elasticAlignmentStepTest(self, nVoli, voli, nVolj):
+    def elasticAlignmentStep(self, nVoli, voli, nVolj):
         
         makePath(self._getExtraPath("modes%d"%nVoli))
         
@@ -149,10 +142,10 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s --opdb %s"%\
                 (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma, fnPseudoOut))
         
-        fnVolOut = self._getExtraPath('DeformedVolume_Vol_%d_To_Vol_%d.vol' % (nVolj, nVoli))
+        fnVolOut = self._getExtraPath('DeformedVolume_Vol_%d_To_Vol_%d' % (nVolj, nVoli))
         self.runJob('xmipp_volume_from_pdb', "-i %s -o %s --sampling %s --fixed_Gaussian %s" % (fnPseudoOut, fnVolOut, Ts, sigma))
                 
-    def gatherResultsStepTest(self): 
+    def gatherResultsStep(self): 
                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
             
@@ -168,7 +161,6 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 else:
                     elasticRow = xmipp.MetaData(self._getExtraPath('compDeformVol_%d_To_Vol_%d.xmd' % (nVolj, nVoli)))
                     maxCc = elasticRow.getValue(md.MDL_MAXCC,1)
-                    print maxCc
                     score[(nVoli-1)][(nVolj-1)] = (1 - maxCc)
                 nVolj += 1
             nVoli += 1     
@@ -213,98 +205,8 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 fh.write("\n")
                 fh.close()
                 nVoli += 1 
-    
-    ### to here
-    
-    ''' def elasticAlignmentStep(self, nVoli, voli):
-            
-        makePath(self._getExtraPath("modes%d"%nVoli))
-        
-        for i in range(self.numberOfModes.get() + 1):
-            if i == 0 :
-                i += 1 
-            copyFile (self._getPath("modes/vec.%d"%i), self._getExtraPath("modes%d/vec.%d"%(nVoli, i)))
-            
-        mdVols = xmipp.MetaData()
-        files = glob(self._getPath('outputRigidAlignment_vol_*_to_%d.vol')%nVoli)
-        fnOutMeta = self._getExtraPath('RigidAlignToVol_%d.xmd')%nVoli
-        for f in files:
-            mdVols.setValue(xmipp.MDL_IMAGE, f, mdVols.addObject())      
-        mdVols.write(fnOutMeta)
-                                              
-        fnPseudo = self._getPath("pseudoatoms_%d.pdb"%nVoli)
-        fnModes = self._getPath("modes_%d.xmd"%nVoli)
-        Ts = voli.getSamplingRate()
-        fnDeform = self._getExtraPath("compDeformVol_%d.xmd"%nVoli)
-        sigma = Ts * self.pseudoAtomRadius.get()
-        #fnPseudoOut = self._getExtraPath("PseudoatomsDeformedPDB_%d.pdb"%nVoli)
-        self.runJob('xmipp_nma_alignment_vol', "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s"%\
-                (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma))
-        
-    
-    def gatherResultsStep(self):
-                
-        volList = [vol.clone() for vol in self._iterInputVolumes()]
-            
-        #score and distance matrix calculation         
-        score = [[0 for i in volList] for i in volList]
-        nVoli = 1
-        
-        for voli in volList:
-            elastAlign = xmipp.MetaData(self._getExtraPath("compDeformVol_%d.xmd"%nVoli))
-            mdIter = md.iterRows(elastAlign)
-            nVolj = 1
-            for volj in volList:
-                if nVolj == nVoli:
-                    score[(nVoli-1)][(nVolj-1)] = 0
-                    
-                else:
-                    elasticRow = next(mdIter)
-                    maxCc = elasticRow.getValue(md.MDL_MAXCC)
-                    score[(nVoli-1)][(nVolj-1)] = (1 - maxCc)
-                nVolj += 1
-            nVoli += 1 
-               
-        fnRoot = self._getExtraPath ("DistanceMatrix.txt")   
-        distance = [[0 for i in volList] for i in volList]
-        nVoli = 1
-        for i in volList:
-            nVolj = 1
-            for j in volList:
-                distance[(nVoli-1)][(nVolj-1)] = (score[(nVoli-1)][(nVolj-1)] + score[(nVolj-1)][(nVoli-1)])/2
-                fh = open(fnRoot,"a")
-                fh.write("%f\t"%distance[(nVoli-1)][(nVolj-1)])
-                fh.close()
-                nVolj += 1  
-            fh = open(fnRoot,"a")
-            fh.write("\n")
-            fh.close()
-            nVoli += 1                     
-               
-        for i in range(1, 4):
-               
-            mds = manifold.MDS(n_components=i, metric=True, max_iter=3000, eps=1e-9, random_state=0, dissimilarity="precomputed", n_jobs=1)
-            embed3d = mds.fit(distance).embedding_ 
-            
-            print i
-            print mds
-            print embed3d  
-               
-            nVoli = 1
-            for x in volList:
-                for y in range(i):
-                    fh = open(self._getExtraPath ("CoordinateMatrix%d.txt"%i),"a")
-                    fh.write("%f\t"%embed3d[(nVoli - 1)][(y)])
-                    fh.close()
-                    fh = open(self._getExtraPath ("CoordinateMatrixColumnF%d.txt"%i),"a")
-                    fh.write("%f\n"%embed3d[(nVoli - 1)][(y)])
-                    fh.close()
-                fh = open(self._getExtraPath ("CoordinateMatrix%d.txt"%i),"a")
-                fh.write("\n")
-                fh.close()
-                nVoli += 1 
-        '''                
-    def managingOutputFilesStep(self, keepingOutputFiles): 
+       
+    def managingOutputFilesStep(self): 
         
         copyFile (self._getExtraPath ("CoordinateMatrixColumnF1.txt"), self._defineResultsName1())
         copyFile (self._getExtraPath ("CoordinateMatrixColumnF2.txt"), self._defineResultsName2())
@@ -314,7 +216,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
         cleanPattern(self._getExtraPath('vec_ani.pkl'))  
         cleanPattern(self._getExtraPath('CoordinateMatrixColumnF*'))  
         
-        if not keepingOutputFiles:
+        if not self.keepingOutputFiles.get():
             cleanPattern(self._getPath('modes/vec*'))  
             cleanPattern(self._getPath('warnings*'))
             cleanPattern(self._getPath('outputRigid*'))
