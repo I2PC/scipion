@@ -336,4 +336,4 @@ class XmippProtRCT(ProtInitialVolume):
         return methods
             
     def _citations(self):
-        return ['Radermacher1987']
+        return ['Sorzano2015b']
