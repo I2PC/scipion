@@ -381,11 +381,13 @@ class Object(object):
                 ptr.set(copyDict[pointedId])
         
     def _copy(self, other, copyDict, copyId, level=1, ignoreAttrs=[]):
-        """ This method will recursively clone all attributes from one object to the other.
-        NOTE: Currently, we are not deleting attributes missing in the 'other' object.
-        copyDict: this dict is used to store the ids map between 'other' and 'self' attributes
-            This copyDict is used for update pointers and relations later on.
-            This will only work if the ids of 'other' attributes has been properly set.
+        """ Recursively clone all attributes from one object to the other.
+        (Currently, we are not deleting attributes missing in the 'other' object.)
+        Params:
+        copyDict: this dict is used to store the ids map between 'other' and
+            'self' attributes. It is used for update pointers and relations
+            later on. This will only work if the ids of 'other' attributes
+            has been properly set.
         """
         # Copy basic object data
         #self._objName = other._objName
@@ -406,7 +408,7 @@ class Object(object):
                 myAttr._copy(attr, copyDict, copyId, level+2)
                 # Store the attr in the copyDict
                 if attr.hasObjId():
-                    #" storing in copyDict with id=", attr.getObjId()
+                    # storing in copyDict with id=", attr.getObjId()
                     copyDict[attr.getObjId()] = myAttr
                 # Use the copyDict to fix the reference in the copying object
                 # if the pointed one is inside the same object
@@ -504,40 +506,6 @@ class OrderedObject(Object):
         if attrName in self._attributes:
             self._attributes.remove(attrName)
             delattr(self, attrName)
-            
-            
-class FakedObject(Object):
-    """This is based on Object, but will hide the set and get
-    access to the attributes, they need to be defined with addAttribute"""
-    def __init__(self, value=None, **kwargs):
-        object.__setattr__(self, '_attributes', {})
-        Object.__init__(self, value, **kwargs)
-        
-    def addAttribute(self, name, attrClass, **kwargs):
-        self._attributes[name] = attrClass(**kwargs)
-           
-    def __setattr__(self, name, value):
-        if name in self._attributes:
-            if issubclass(type(value), Object):
-                self._attributes[name] = value
-            else:
-                self._attributes[name].set(value)
-        else:
-            object.__setattr__(self, name, value)
-    
-    def __getattr__(self, name):
-        if name in self._attributes:
-            attr = self._attributes[name]
-            if issubclass(type(attr), Scalar):
-                return attr.get()
-            else:
-                return attr
-        return None
-
-    def getAttributes(self):
-        """Return the list of attributes than are
-        subclasses of Object and will be stored"""
-        return self._attributes.iteritems()
 
                 
 class Scalar(Object):
@@ -686,8 +654,8 @@ class Pointer(Object):
     
     def __init__(self, value=None, **kwargs):
         Object.__init__(self, value, objIsPointer=True, **kwargs)
-        # The _extended attribute will be used to point to attributes of a pointed object
-        # or the id of an item inside a set
+        # The _extended attribute will be used to point to attributes of a
+        # pointed object or the id of an item inside a set
         self._extended = String()
         
         if 'extended' in kwargs:
@@ -926,32 +894,14 @@ class CsvList(Scalar, list):
     
     def clear(self):
         del self[:]
-        
-        
-class Array(Object):
-    """Class for holding fixed len array"""
-    def __init__(self, size=10, **kwargs):
-        Object.__init__(self, size, **kwargs)
-        
-    def set(self, size):
-        """Set the array size"""
-        self._objValue = int(size)  
-        for i in range(int(size)):
-            self.__setitem__(i, None)                 
-        
-    def strIndex(self, i):
-        return 'item_%04d' % i
-    
-    def __setitem__(self, index, value):
-        self.__dict__[self.strIndex(index)] = value
-        
-    def __getitem__(self, index):
-        return self.__dict__[self.strIndex(index)]
-    
-    def __len__(self):
-        return self._objValue
-    
-    
+
+    def __eq__(self, other):
+        """ Comparison for scalars should be by value
+        and for other objects by reference.
+        """
+        return all(a == b for a, b in izip(self, other))
+
+
 class Set(OrderedObject):
     """ This class will be a container implementation for elements.
     It will use an extra sqlite file to store the elements.
@@ -966,10 +916,8 @@ class Set(OrderedObject):
         self._mapper = None
         self._idCount = 0
         self._size = Integer(0) # cached value of the number of images  
-        #self._idMap = {}#FIXME, remove this after id is the one in mapper
         self.setMapperClass(mapperClass)
         self._mapperPath = CsvList() # sqlite filename
-        #self._mapperPath.trace(self.load) # Load the mapper whenever the filename is changed
         self._representative = None
         self._classesDict = classesDict 
         # If filename is passed in the constructor, it means that
@@ -1070,7 +1018,6 @@ class Set(OrderedObject):
     def __del__(self):
         # Close connections to db when destroy this object
         if self._mapper is not None:
-            #print "Closing DB: %s" % self.getFileName()
             self.close()
         
     def close(self):
@@ -1103,8 +1050,7 @@ class Set(OrderedObject):
             self._idCount = max(self._idCount, item.getObjId()) + 1
         self._insertItem(item)
         self._size.increment()
-#        self._idMap[item.getObjId()] = item
-        
+
     def _insertItem(self, item):
         self._getMapper().insert(item)
         
@@ -1192,7 +1138,7 @@ def ObjectWrap(value):
         return o
     if t is None:
         return None
-    #If it is str, unicode or unknown type, convert to string
+    # If it is str, unicode or unknown type, convert to string
     return String(value)
          
            
