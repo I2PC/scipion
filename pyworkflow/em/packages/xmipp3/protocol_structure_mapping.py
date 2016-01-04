@@ -167,7 +167,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                     score[(nVoli-1)][(nVolj-1)] = 0
                 else:
                     elasticRow = xmipp.MetaData(self._getExtraPath('compDeformVol_%d_To_Vol_%d.xmd' % (nVolj, nVoli)))
-                    maxCc = elasticRow.getValue(md.MDL_MAXCC)
+                    maxCc = elasticRow.getValue(md.MDL_MAXCC,2)
                     score[(nVoli-1)][(nVolj-1)] = (1 - maxCc)
                 nVolj += 1
             nVoli += 1     
