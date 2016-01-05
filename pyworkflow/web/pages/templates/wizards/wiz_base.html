@@ -14,8 +14,12 @@
 <script type="text/javascript" src="{{jquery_ui_touch}}"></script>
 <script type="text/javascript" src="{{wizard_utils}}"></script>
 <script type="text/javascript" src={{config}}></script>
+<script type="text/javascript" src="{{utils}}"></script>
 <script type="text/javascript" src="{{raphael}}"></script>
 <script>
+
+	{% include "project_context.html" %}
+
 	var firstElm;
 	
 	function putSelection(input_ori, input_des){

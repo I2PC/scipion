@@ -33,12 +33,13 @@ from pyworkflow.web.pages import settings as django_settings
 from models import Document
 from forms import DocumentForm
 from views_base import base_form
-from views_util import getResourceIcon, getResourceJs
+from views_util import getResourceIcon, getResourceJs, getProjectPathFromRequest, CTX_PROJECT_PATH
 
-def upload(request, form=None):
+
+def upload(request):
     # Load documents for the list page
     mode = request.GET.get('mode', None)
-    path = os.path.join(request.session['projectPath'],'Uploads')
+    path = os.path.join(getProjectPathFromRequest(request), 'Uploads')
     split_path = path.split("/ScipionUserData/")
     relative_path = "ScipionUserData/" + split_path[1]
 
@@ -50,47 +51,49 @@ def upload(request, form=None):
                }
 
     context = base_form(request, context)
-    
+
     # Render list page with the documents and the form
-    return render_to_response('upload/upload.html', context, 
+    return render_to_response('upload/upload.html', context,
                               context_instance=RequestContext(request))
+
 
 def executeUpload(request):
     # Save the files
     form = DocumentForm(request.POST, request.FILES)
-    
+
     file_new = request.FILES['docfile']
-    
+
     if form.is_valid():
-        #Save temporary file
-        newdoc = Document(docfile = file_new)
+        # Save temporary file
+        newdoc = Document(docfile=file_new)
         newdoc.save()
-    
+
         fn = file_new.name
-        fn = fn.replace (" ", "_")
-    
-        #Move the file to the new folder
+        fn = fn.replace(" ", "_")
+
+        # Move the file to the new folder
         src = os.path.join(django_settings.FILE_UPLOAD_TEMP_DIR, 'uploads', fn)
-        file_upload = src
-        path = os.path.join(request.session['projectPath'],'Uploads')
+        path = os.path.join(request.session[CTX_PROJECT_PATH], 'Uploads')
         target = os.path.join(path, fn)
         if os.path.exists(target):
             os.remove(target)
         shutil.move(src, path)
-        
-        #Delete the temporary file
+
+        # Delete the temporary file
         newdoc.delete()
-        
+
+
 def doUpload(request):
     form = DocumentForm(request.POST, request.FILES)
-    
+
     try:
         executeUpload(request)
     except Exception, ex:
         print "Error: %s" % ex
         return HttpResponse("error", mimetype='application/javascript')
 
-    return upload(request, form)
+    return upload(request)
+
 
 # """ File Browser Utils """
 def getPath(request):
@@ -98,19 +101,19 @@ def getPath(request):
     # time = request.GET.get('time')
     path = request.GET.get('path')
     ioDict = []
-    
-    for f in os.listdir(path): 
+
+    for f in os.listdir(path):
         file_path = os.path.join(path, f)
         folder = os.path.isdir(file_path)
-        ext = f.split('.').pop();
-        
+        ext = f.split('.').pop()
+
         ob = {'name': f,
               'isFolder': folder,
               'isError': False,
               'icon': getExtIconPath(ext)}
-        
+
         ioDict.append(ob)
-            
+
     jsonStr = json.dumps(ioDict, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
@@ -120,29 +123,29 @@ def getExtIcon(request):
     res = getExtIconPath(ext)
     return HttpResponse(res, mimetype='application/javascript')
 
-def getExtIconPath(ext):
 
+def getExtIconPath(ext):
     txt = {'txt', 'log', 'out', 'err', 'stdout', 'stderr', 'emx'}
     img = {'png', 'gif', 'jpg', 'jpeg'}
-    py = {'py', 'pyc'} 
+    py = {'py', 'pyc'}
     java = {'java'}
     md = {'xmd', 'star', 'pos'}
     sqlite = {'sqlite', 'db'}
-    particle = {'xmp', 'tif', 'tiff', 'spi', 'mrc', 'map', 'raw', 
-                'inf', 'dm3', '.em', 'pif', 'psd', 'spe', 
+    particle = {'xmp', 'tif', 'tiff', 'spi', 'mrc', 'map', 'raw',
+                'inf', 'dm3', '.em', 'pif', 'psd', 'spe',
                 'ser', 'img', 'hed'}
     vol = {'vol'}
     stk = {'stk', 'mrcs', 'st', 'pif'}
-    
+
     if ext == 'folder':
         res = getResourceIcon('folder')
-#     elif ext == 'unknown':
-#         res = getResourceIcon('file_normal')
+    #     elif ext == 'unknown':
+    #         res = getResourceIcon('file_normal')
     else:
         if ext in txt:
             res = getResourceIcon('file_text')
         elif ext in img or ext in particle:
-            res =  getResourceIcon('file_image')
+            res = getResourceIcon('file_image')
         elif ext in py:
             res = getResourceIcon('file_python')
         elif ext in java:
@@ -157,6 +160,5 @@ def getExtIconPath(ext):
             res = getResourceIcon('file_stack')
         else:
             res = getResourceIcon('file_normal')
-    
-    return res
 
+    return res

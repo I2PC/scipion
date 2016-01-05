@@ -183,7 +183,7 @@ function colRenderCheckbox(aData){
 
 function colRenderable(aData, renderFunc){
 			
-			src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc;
+			src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=' + renderFunc + projectToGETParams();
 			src += '&image=' + aData + '\"';
 			
 			var content_html = '<span style="display:none">' 
@@ -207,7 +207,7 @@ function colRenderSlice(aData){
 	//volName = volName[0] + "_tmp.mrc"
 	var volName = aData
 	
-	src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=get_slice' ;
+	src = '\"' + getSubDomainURL() + '/render_column/?renderFunc=get_slice' + projectToGETParams() ;
 	src += '&image=' + volName + '\"';
 	
 	var content_html = '<span style="display:none">' 

@@ -15,9 +15,13 @@
 	<script type="text/javascript" src="{{jquery_ui_touch}}"></script>
 	<script type="text/javascript" src="{{wizard_utils}}"></script>
 	<script type="text/javascript" src={{config}}></script>
+	<script type="text/javascript" src="{{utils}}"></script>
 	<script type="text/javascript" src="{{raphael}}"></script>
 	<script type="text/javascript" src="{{messi_js}}"></script>
 	<script>
+
+		{% include "project_context.html" %}
+
 		// Fix to move UI elements in touch displays
 		$('#widget').draggable();
 
@@ -51,7 +55,7 @@
 					"&pValue="+pValue +
 					"&minRes="+minRes +
 					"&maxRes="+maxRes +
-					"&inputId="+inputId
+					"&inputId="+inputId + projectToGETParams()
 					
 
 			if (useSplit == 1){

@@ -91,7 +91,21 @@
  * 
  ******************************************************************************/
 
+/** OBJECTS ***************************************************************** */
+// This should be populated in any project dependent window
+// an to be used in any request to the server (like a context coming from the browser)
+// to decouple code from the session.
+var project = {
+    projectName:"",
+    serviceName:""
+    }
+
+
 /** METHODS *******************************************************************/
+
+function projectToGETParams(){
+    return "&p=" + project.projectName + "&s=" + project.serviceName
+}
 
 function startsWith(str, pattern){
 	return str.lastIndexOf(pattern, 0) === 0
@@ -546,7 +560,8 @@ function updateLabelComment(){
 		var url_param = "/set_attributes/?" +
 			"id=" + id + 
 			"&label=" + value_label + 
-			"&comment=" + value_comment 
+			"&comment=" + value_comment +
+			 projectToGETParams()
 		var URL = getSubDomainURL() + url_param
 		$.ajax({
 			type : "GET",
@@ -576,7 +591,7 @@ function launchViewer(id){
 	/*
 	 * Launch the viewers to analyze the results of the protocol run
 	 */
-	var URL = getSubDomainURL() + "/launch_viewer/?objectId=" + id
+	var URL = getSubDomainURL() + "/launch_viewer/?objectId=" + id + projectToGETParams()
 	$.ajax({
 		type : "GET",
 		// Execute the viewer 
@@ -612,7 +627,7 @@ function randomString(length, chars) {
 }
 
 function zoomImagePopUp(imagePath){
-	URL = getSubDomainURL() + "/get_image_dim/?path=" + imagePath
+	URL = getSubDomainURL() + "/get_image_dim/?path=" + imagePath + projectToGETParams()
 	$.ajax({
 		type : "GET",
 		url : encodeURI(URL),
@@ -626,7 +641,7 @@ function zoomImagePopUp(imagePath){
 			var height = res[1]
 			
 			// getSubDomainURL() not necessary
-			getImage = "/get_image/?image=" + imagePath + "&dim="+height
+			getImage = "/get_image/?image=" + imagePath + "&dim="+height + projectToGETParams()
 			customPopup(getImage, width, height)
 		}
 	});

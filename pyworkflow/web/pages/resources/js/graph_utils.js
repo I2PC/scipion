@@ -155,7 +155,7 @@ function callPaintGraph(nodeSource, type) {
 		aux.push(id + "-" + width + "-" + height);
 	});	
 	
-	var URL = getSubDomainURL() + '/project_graph/?list=' + aux
+	var URL = getSubDomainURL() + '/project_graph/?list=' + aux + projectToGETParams()
 	// Move and connect the graph nodes
 	$.ajax({
 		type : "GET",
@@ -175,7 +175,7 @@ function callPaintObjGraph(){
 	 * This function paint the object graph in the template data_content.html
 	 */ 
 	var nodeSource = $("div#graphActiv");
-	var URL = getSubDomainURL() + '/elements_graph/'
+	var URL = getSubDomainURL() + '/elements_graph/?' + projectToGETParams()
 	// Get the objects information for be painted
 	$.ajax({
 		type : "GET",
@@ -201,7 +201,7 @@ function callPaintObjGraph(){
 			});
 			
 			// Move and connect the graph nodes
-			var URL = getSubDomainURL() + '/object_graph/?list=' + aux
+			var URL = getSubDomainURL() + '/object_graph/?list=' + aux + projectToGETParams()
 			$.ajax({
 				type : "GET",
 				url : URL,
@@ -232,7 +232,7 @@ function paintBox(nodeSource, nameId, id, msg, mode) {
 		
 		switch(mode){
 			case "runs":
-				var href = "javascript:customPopup('/form/?protocolId=" + objId + "',620,591)";
+				var href = "javascript:customPopup('/form/?protocolId=" + objId + projectToGETParams() + "',620,591)";
 				var onclick = "launchToolbarTree('" + objId	+ "', $(this), isCtrlPress(event))";
 				break;
 			case "objects":

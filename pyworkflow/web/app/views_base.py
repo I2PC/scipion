@@ -24,9 +24,11 @@
 # *
 # **************************************************************************
 
-from views_util import getResourceCss, getResourceIcon, getResourceJs
+from views_util import getResourceCss, getResourceIcon, getResourceJs, getProjectPathFromRequest, PROJECT_NAME, \
+    getVarFromRequest, SERVICE_NAME, CTX_PROJECT_NAME
 from pyworkflow.web.pages import settings as django_settings
 import os
+
 
 def VARS_base(request, context):
     from pyworkflow.web.app.properties import MessageWeb, ColorWeb, IconWeb
@@ -35,62 +37,68 @@ def VARS_base(request, context):
     messages = MessageWeb()
     colors = ColorWeb()
     icons = IconWeb()
-    
-    context_base = {
-                    #ABSOLUTE PATH URL CONFIG
-                    'abs_url': django_settings.ABSOLUTE_URL, 
-                    'config': getResourceJs('config'),
-                    'js_root': getResourceJs(),
-                    'css_root': getResourceCss(),
 
-                    #OTHER
-                    'msg': messages,
-                    'color': colors,
-                    'icon': icons,
-                    'cwd': os.getcwd()
-                    }
-    
+    context_base = {
+        # ABSOLUTE PATH URL CONFIG
+        'abs_url': django_settings.ABSOLUTE_URL,
+        'config': getResourceJs('config'),
+        'js_root': getResourceJs(),
+        'css_root': getResourceCss(),
+
+        # OTHER
+        'msg': messages,
+        'color': colors,
+        'icon': icons,
+        'cwd': os.getcwd()
+    }
+
     context.update(context_base)
     return context
-    
+
 
 def base(request, context):
-    
+    # Keep existing service name previously set by any of the webtools
+    serviceName = getVarFromRequest(request, SERVICE_NAME)
+
+    if serviceName is None and SERVICE_NAME in context:
+        serviceName = context[SERVICE_NAME]
+
     context_base = {
-                    #ICON
-                    'favicon': getResourceIcon('favicon'),
-                    'logo_scipion': getResourceIcon('logo_scipion'),
-                    'logo_scipion_transparent' : getResourceIcon('logo_scipion_transparent'),
-                    #CSS
-                    'general_css': getResourceCss('general'),
-                    'messi_css': getResourceCss('messi'),
-                    'font_awesome': getResourceCss('font_awesome'),
-                    #JS
-                    'jquery': getResourceJs('jquery'),
-                    'messi_js': getResourceJs('messi'),
-                    #JS
-                    'utils': getResourceJs('utils'),
-                    }
-    
+        # ICON
+        'favicon': getResourceIcon('favicon'),
+        'logo_scipion': getResourceIcon('logo_scipion'),
+        'logo_scipion_transparent': getResourceIcon('logo_scipion_transparent'),
+        # CSS
+        'general_css': getResourceCss('general'),
+        'messi_css': getResourceCss('messi'),
+        'font_awesome': getResourceCss('font_awesome'),
+        # JS
+        'jquery': getResourceJs('jquery'),
+        'messi_js': getResourceJs('messi'),
+        # JS
+        'utils': getResourceJs('utils'),
+        "projectName": getVarFromRequest(request, PROJECT_NAME),
+        SERVICE_NAME: serviceName
+    }
+
     context = VARS_base(request, context)
     context.update(context_base)
     return context
 
 
 def base_form(request, context):
-    
     context_base = {
-                    #Folder
-                    'project_folder': request.session['projectPath'],
-                    #CSS
-                    'form_css': getResourceCss('form'),
-                    'jquery_ui_css': getResourceCss('jquery_ui'),
-                    #JS
-                    'jquery_ui': getResourceJs('jquery_ui'),
-                    'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
-                    'jquery_browser': getResourceJs('jquery_browser'),
-                    "upload_utils": getResourceJs('upload_utils'),
-                    }
+        # Folder
+        'project_folder': getProjectPathFromRequest(request),
+        # CSS
+        'form_css': getResourceCss('form'),
+        'jquery_ui_css': getResourceCss('jquery_ui'),
+        # JS
+        'jquery_ui': getResourceJs('jquery_ui'),
+        'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
+        'jquery_browser': getResourceJs('jquery_browser'),
+        "upload_utils": getResourceJs('upload_utils'),
+    }
 
     context = base(request, context)
     context.update(context_base)
@@ -98,68 +106,63 @@ def base_form(request, context):
 
 
 def base_flex(request, context):
-    
     context_base = {
-                    #CSS
-                    'general_flex': getResourceCss('general_flex'),
-                    'jquery_ui_css': getResourceCss('jquery_ui'),
-                    #JS
-                    'jquery_ui': getResourceJs('jquery_ui'),
-                    'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
-                    'jsplumb': getResourceJs('jsplumb'),
-                    'jquery_sizes': getResourceJs('jquery_sizes'),
-                    'jlayout_border': getResourceJs('jlayout_border'),
-                    'jquery_layout': getResourceJs('jquery_layout')
-                    }
-    
+        # CSS
+        'general_flex': getResourceCss('general_flex'),
+        'jquery_ui_css': getResourceCss('jquery_ui'),
+        # JS
+        'jquery_ui': getResourceJs('jquery_ui'),
+        'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
+        'jsplumb': getResourceJs('jsplumb'),
+        'jquery_sizes': getResourceJs('jquery_sizes'),
+        'jlayout_border': getResourceJs('jlayout_border'),
+        'jquery_layout': getResourceJs('jquery_layout')
+    }
+
     context = base(request, context)
     context.update(context_base)
     return context
 
 
 def base_grid(request, context):
-    
     context_base = {
-                    #CSS
-                    'general_grid': getResourceCss('general_grid'),
-                    #JS
-                    'jquery_sizes': getResourceJs('jquery_sizes'),
-                    'jlayout_border': getResourceJs('jlayout_border'),
-                    'jquery_layout': getResourceJs('jquery_layout')
-                    }
-    
+        # CSS
+        'general_grid': getResourceCss('general_grid'),
+        # JS
+        'jquery_sizes': getResourceJs('jquery_sizes'),
+        'jlayout_border': getResourceJs('jlayout_border'),
+        'jquery_layout': getResourceJs('jquery_layout')
+    }
+
     context = base(request, context)
     context.update(context_base)
     return context
 
 
 def base_showj(request, context):
-    
     context_base = {
-                    #CSS
-                    'showj_css': getResourceCss('showj'),
-                    'smoothness': getResourceCss('ui_smoothness'),
-                    'demo_table_jui': getResourceCss('showj_demo_table_jui'),
-                    #JS
-                    'jquery_datatable': getResourceJs('jquery_datatables'),
-                    'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
-                    'jeditable': getResourceJs('jquery_editable'),
-                    'jquery_waypoints':getResourceJs('jquery_waypoints'),
-                    'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
-                    'showj_js':getResourceJs('showj_utils'),
-                    'jquery_ui':getResourceJs('jquery_ui'),
-                    'transpose_lib':getResourceJs('transpose'),
-                    'showj_menu_utils': getResourceJs('showj_menu_utils'),
-                    }
-    
+        # CSS
+        'showj_css': getResourceCss('showj'),
+        'smoothness': getResourceCss('ui_smoothness'),
+        'demo_table_jui': getResourceCss('showj_demo_table_jui'),
+        # JS
+        'jquery_datatable': getResourceJs('jquery_datatables'),
+        'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
+        'jeditable': getResourceJs('jquery_editable'),
+        'jquery_waypoints': getResourceJs('jquery_waypoints'),
+        'jquery_hover_intent': getResourceJs('jquery_hover_intent'),
+        'showj_js': getResourceJs('showj_utils'),
+        'jquery_ui': getResourceJs('jquery_ui'),
+        'transpose_lib': getResourceJs('transpose'),
+        'showj_menu_utils': getResourceJs('showj_menu_utils'),
+    }
+
     context = base_grid(request, context)
     context.update(context_base)
     return context
 
 
-
 def base_wiz(request, context):
-    
     context_base = {'general_style': getResourceCss('general'),
                     'wizard_style': getResourceCss('wizard'),
                     'jquery_ui_style': getResourceCss('jquery_ui'),
@@ -168,11 +171,13 @@ def base_wiz(request, context):
                     'jquery_ui': getResourceJs('jquery_ui'),
                     'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
                     'wizard_utils': getResourceJs('wizard_utils'),
-                    'raphael':getResourceJs('raphael'),
-                    'projectName': request.session['projectName'],
-                    'loading' : getResourceIcon('loading'),
+                    'raphael': getResourceJs('raphael'),
+                    'utils': getResourceJs('utils'),
+                    CTX_PROJECT_NAME: getVarFromRequest(request, PROJECT_NAME),
+                    SERVICE_NAME: getVarFromRequest(request,SERVICE_NAME),
+                    'loading': getResourceIcon('loading'),
                     }
-    
+
     context = VARS_base(request, context)
     context.update(context_base)
     return context

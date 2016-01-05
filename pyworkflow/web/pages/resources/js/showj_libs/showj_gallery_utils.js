@@ -101,12 +101,14 @@ function updateSelection(){
 	$(".img_container").each(function(){
 		$(this).removeClass('image_selected')
 	});
-	selectedElement=$("#img_container___"+$('#id_goto').val())
+	selectedElement=$("#img_container___"+ (parseInt($('#id_goto').val())-1))
 	selectedElement.addClass("image_selected")
-	
-	$('html, body').animate({
-        scrollTop: selectedElement.offset().top
-    }, 2000);
+
+    var container = $('#grid_section')
+
+	var top = $(selectedElement).position().top - $(container).padding().top - $(container).position().top + $(container).scrollTop();
+
+	$(container).scrollTop(top)
 }
 
 function initializeImageEvents(hasEnabledColumn){

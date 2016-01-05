@@ -25,8 +25,9 @@
 # **************************************************************************
 
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import (getResourceCss, getResourceJs, getResourceIcon, 
-                                           getServiceManager, getImageFullPath, loadProtocolConf)
+from pyworkflow.web.app.views_util import (getResourceCss, getResourceJs, getResourceIcon,
+                                           getServiceManager, getImageFullPath, loadProtocolConf, SERVICE_NAME,
+                                           CTX_PROJECT_PATH, CTX_PROJECT_NAME, PROJECT_NAME, getVarFromRequest)
 from pyworkflow.web.app.views_base import base_grid
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
@@ -43,11 +44,13 @@ from pyworkflow.object import Pointer
 from pyworkflow.em.protocol import ProtImportAverages
 from pyworkflow.em.packages.xmipp3 import XmippProtAlignVolumeForWeb
 
+MYFIRSTMAP_SERVICE = 'myfirstmap'
+
 
 def service_projects(request):
    
-    if 'projectName' in request.session: request.session['projectName'] = ""
-    if 'projectPath' in request.session: request.session['projectPath'] = ""
+    if CTX_PROJECT_NAME in request.session: request.session[CTX_PROJECT_NAME] = ""
+    if CTX_PROJECT_PATH in request.session: request.session[CTX_PROJECT_PATH] = ""
 
     myfirstmap_utils = join(django_settings.STATIC_URL, "js/", "myfirstmap_utils.js")
 
@@ -56,6 +59,7 @@ def service_projects(request):
                'scipion_mail': getResourceIcon('scipion_mail'),
                'myfirstmap_utils': myfirstmap_utils,
                'hiddenTreeProt': True,
+               SERVICE_NAME: MYFIRSTMAP_SERVICE
                }
     
     context = base_grid(request, context)
@@ -87,12 +91,12 @@ def create_service_project(request):
     if request.is_ajax():
         
         # Create a new project
-        projectName = request.GET.get('projectName')
+        projectName = getVarFromRequest(request, PROJECT_NAME)
         
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
         
-        manager = getServiceManager('myfirstmap')
+        manager = getServiceManager(MYFIRSTMAP_SERVICE)
         writeCustomMenu(manager.protocols)
         project = manager.createProject(projectName, runsView=1, 
                                         hostsConf=manager.hosts,
@@ -202,11 +206,12 @@ def myfirstmap_form(request):
 
  
 def service_content(request):
+
     projectName = request.GET.get('p', None)
     path_files = django_settings.ABSOLUTE_URL + '/resources_myfirstmap/img/'
     
     # Get info about when the project was created
-    manager = getServiceManager('myfirstmap')
+    manager = getServiceManager(MYFIRSTMAP_SERVICE)
     project = manager.loadProject(projectName, 
                                   protocolsConf=manager.protocols,
                                   hostsConf=manager.hosts,
@@ -214,7 +219,7 @@ def service_content(request):
     
     daysLeft = prettyDelta(project.getLeftTime())
     
-    context = contentContext(request, project)
+    context = contentContext(request, project, serviceName=MYFIRSTMAP_SERVICE)
     context.update({'importAverages': path_files + 'importAverages.png',
                     'useProtocols': path_files + 'useProtocols.png',
                     'protForm': path_files + 'protForm.png',
@@ -224,7 +229,7 @@ def service_content(request):
                     'download': path_files + 'download.png',
                     'formUrl': 'my_form',
                     'mode':'service',
-                    'daysLeft': daysLeft,
+                    'daysLeft': daysLeft
                     })
     
     return render_to_response('service_content.html', context)

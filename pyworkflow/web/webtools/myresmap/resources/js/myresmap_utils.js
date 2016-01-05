@@ -110,7 +110,7 @@ function createResMapProject(elm) {
 	var selected = $("#testData input[type='radio']:checked").val();
 
 	var projectUrl = getBaseURL() + "/r_content/?p="+ projName
-	var URL = getSubDomainURL() + "/create_resmap_project/?projectName=" + projName
+	var URL = getSubDomainURL() + "/create_resmap_project/?p=" + projName
 	if(selected != undefined){
 		URL += "&testData="+selected;
 	}

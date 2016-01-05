@@ -36,7 +36,7 @@
 function doInitFunction(){
 	var project_folder = $("#project_folder").val()
 	updateListFiles(project_folder)
-	var URL = getSubDomainURL() + '/doUpload/'
+	var URL = getSubDomainURL() + '/doUpload/?' + projectToGETParams()
 	$("#uploadForm").submit(function(e) {
 		$.ajax({
 			url: URL,
@@ -62,7 +62,7 @@ function doInitFunction(){
 }
 
 function browseUpload(paramName){
-	url_param = "/upload/?mode=service"
+	url_param = "/upload/?mode=service" + projectToGETParams()
 	var URL = getSubDomainURL() + url_param
 	
 	$.ajax({

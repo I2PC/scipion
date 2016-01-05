@@ -29,7 +29,7 @@ mainUrls = ['',
     url(r'^projects/', 'app.views_project.projects'),
     url(r'^create_project/$', 'app.views_project.create_project'),
     
-    url(r'^check_project_id/$', 'app.views_project.check_project_id'),
+    # url(r'^check_project_id/$', 'app.views_project.check_project_id'),
     url(r'^delete_project/$', 'app.views_project.delete_project'),
     url(r'^project_content/$', 'app.views_project.project_content'),
     url(r'^get_protocols/$', 'app.views_project.get_protocols'),

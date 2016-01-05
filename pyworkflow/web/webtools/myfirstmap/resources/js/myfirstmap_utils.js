@@ -127,7 +127,7 @@ function createServProject(elm) {
 	var selected = $("#testData input[type='radio']:checked").val();
 	
 	var projectUrl = getBaseURL() + "/content/?p="+ projName
-	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
+	var URL = getSubDomainURL() + "/create_service_project/?p=" + projName
 	if(selected != undefined){
 		URL += "&testData="+selected;
 	}
@@ -162,29 +162,7 @@ function goToProject(elm) {
 	
 	var URL2 = getSubDomainURL() + "/content/?p="+code;
 	window.location.href = URL2;
-	
-	/*
-	
-	// remove the blank spaces
-	code = code.replace(/\s+/g, '');
-	
-	var URL = getSubDomainURL() + "/check_project_id/?code=" + code+"&service=myfirstmap";
-	$.ajax({
-		type : "GET",
-		url : URL,
-		success : function(result) {
-			if (result == 1) {
-				var URL2 = getSubDomainURL() + "/content/?p="+code;
-				window.location.href = URL2;
-			} else {
-				var title = "Bad Access";
-				var msg = "<p>Wrong <strong>access code</strong>!</p>" +
-					"<p>If you forgot the code, please contact the <a style='color:firebrick;' href='#'>Scipion group</a>.</p>";
-				errorPopup(title, msg);
-			}
-		}
-	});
-	*/
+
 }
 
 function getRefTestData(id){

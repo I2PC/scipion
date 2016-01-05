@@ -26,69 +26,69 @@
 
 import json
 from views_base import getResourceCss, getResourceIcon, getResourceJs, base_flex
-from views_util import loadProject
+from views_util import loadProject, CTX_PROJECT_PATH, CTX_PROJECT_NAME, getVarFromRequest, PROJECT_NAME
 from pyworkflow.manager import Manager
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 
 
-def data_content(request):        
-    projectName = request.GET.get('projectName', None)
-    
+def data_content(request):
+    projectName = getVarFromRequest(request, PROJECT_NAME)
+
     manager = Manager()
-    request.session['projectPath'] = manager.getProjectPath(projectName)
-    project = loadProject(request)
-    
-    context = {'projectName': projectName,
+    request.session[CTX_PROJECT_PATH] = manager.getProjectPath(projectName)
+    # project = loadProject(request)
+
+    context = {CTX_PROJECT_NAME: projectName,
                'editTool': getResourceIcon('edit_toolbar'),
                'graph_utils': getResourceJs('graph_utils'),
                'project_content_utils': getResourceJs('project_content_utils'),
                'data_content_utils': getResourceJs('data_content_utils'),
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
-               'project_content_css':getResourceCss('project_content'),
-               'view':'data'
+               'project_content_css': getResourceCss('project_content'),
+               'view': 'data'
                }
-    
+
     context = base_flex(request, context)
-    
+
     return render_to_response('data_content/data_content.html', context)
 
 
 def object_info(request):
+
+    jsonStr = ''
+
     if request.is_ajax():
-        projectName = request.session['projectName']
         objId = request.GET.get('objectId', None)
         project = loadProject(request)
         obj = project.mapper.selectById(objId)
-        
+
         ioDict = {'info': str(obj),
                   'created': obj.getObjCreation(),
                   'comment': obj.getObjComment()
                   }
-        
+
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
-        
+
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
 def object_tree(request):
     from views_tree import getGraphClassesNode, TreeItem, populateObjTree
     from views_tree import convertObjTree
-    
-    #Get Project
-    projectName = request.session['projectName'] 
-    project = loadProject(request) 
-    
-    #Obtain the classes graph
+
+    # Get Project
+    project = loadProject(request)
+
+    # Obtain the classes graph
     classesGraph = getGraphClassesNode(project)
-    
-    #Organize the graph with childs
+
+    # Organize the graph with childs
     root = TreeItem('root', 'root', '', '')
     populateObjTree(root, classesGraph.getRootNodes())
-    
-    #Convert tree object to html 
-    html = convertObjTree(root)
-    
-    return HttpResponse(html, mimetype='application/javascript')
 
+    # Convert tree object to html
+    html = convertObjTree(root)
+
+    return HttpResponse(html, mimetype='application/javascript')

@@ -23,10 +23,10 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-
+import urlparse
 from os.path import exists, join, basename
 from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager, \
-    loadProtocolConf
+    loadProtocolConf, SERVICE_NAME, getVarFromRequest, PROJECT_NAME, CTX_PROJECT_PATH, CTX_PROJECT_NAME
 from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
@@ -40,10 +40,12 @@ import pyworkflow.utils as pwutils
 from pyworkflow.utils.utils import prettyDelta
 from django.contrib.sites.models import Site
 
-def service_movies(request):
+MOVIES_SERVICE = 'movies'
 
-    if 'projectName' in request.session: request.session['projectName'] = ""
-    if 'projectPath' in request.session: request.session['projectPath'] = ""
+
+def service_movies(request):
+    if CTX_PROJECT_NAME in request.session: request.session[CTX_PROJECT_NAME] = ""
+    if CTX_PROJECT_PATH in request.session: request.session[CTX_PROJECT_PATH] = ""
 
     movies_utils = join(django_settings.STATIC_URL, "js/", "movies_utils.js")
 
@@ -52,7 +54,7 @@ def service_movies(request):
                'scipion_mail': getResourceIcon('scipion_mail'),
                'movies_utils': movies_utils,
                }
-    
+
     context = base_grid(request, context)
     return render_to_response('movies_projects.html', context)
 
@@ -75,55 +77,51 @@ Movies_Alignment = [
 
 
 def create_movies_project(request):
-    
     if request.is_ajax():
-        
+
         import os
-        from pyworkflow.object import Pointer
         from pyworkflow.em.protocol import ProtImportMovies
         from pyworkflow.em.packages.xmipp3 import ProtMovieAlignment
-        
+
         # Create a new project
-        projectName = request.GET.get('projectName')
-        
+        projectName = getVarFromRequest(request, PROJECT_NAME)
+
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
-        
-        manager = getServiceManager('movies')
+
+        manager = getServiceManager(MOVIES_SERVICE)
         writeCustomMenu(manager.protocols)
-        project = manager.createProject(projectName, runsView=1, 
+        project = manager.createProject(projectName, runsView=1,
                                         hostsConf=manager.hosts,
                                         protocolsConf=manager.protocols,
                                         chdir=False)
-        
+
         project.getSettings().setLifeTime(336)  # 14 days * 24 hours
         project.saveSettings()
-        
-        
-#         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
-        
+
+        #         copyFile(customMenu, project.getPath('.config', 'protocols.conf'))
+
         # Create symbolic link for uploads
         projectPath = manager.getProjectPath(projectName)
-        dest = os.path.join(projectPath,'Uploads')
-        os.rmdir(dest)#in movies uploads is created as a link
+        dest = os.path.join(projectPath, 'Uploads')
+        os.rmdir(dest)  # in movies uploads is created as a link
         # @todo: this path to uploads dir should be configurable outside the code...
-        source = "/services/scipion/data/uploads/"+ projectName
+        source = "/services/scipion/data/uploads/" + projectName
         pwutils.path.makePath(source)
         pwutils.createLink(source, dest)
-        
+
         # 1. Import movies
-        if testDataKey :
+        if testDataKey:
             attr = getAttrTestFile(testDataKey)
             path_test = attr['path']
 
-            
-            for f in os.listdir(path_test):           
+            for f in os.listdir(path_test):
                 # Create a symbolic link for each file
                 file_path = os.path.join(path_test, f)
                 source_file = os.path.join(source, f)
                 pwutils.createAbsLink(file_path, source_file)
-            
-            label_import = "import movies ("+ testDataKey +")" 
+
+            label_import = "import movies (" + testDataKey + ")"
             protImport = project.newProtocol(ProtImportMovies, objLabel=label_import)
 
             protImport.filesPath.set(attr["filesPath"])
@@ -132,12 +130,12 @@ def create_movies_project(request):
             protImport.amplitudeContrast.set(attr['amplitudeContrast'])
             protImport.magnification.set(attr['magnification'])
             protImport.samplingRate.set(attr['samplingRate'])
-            
+
             project.launchProtocol(protImport, wait=True, chdir=False)
         else:
             protImport = project.newProtocol(ProtImportMovies, objLabel='import movies')
             project.saveProtocol(protImport)
-        
+
         # 2. Movie Alignment 
         protMovAlign = project.newProtocol(ProtMovieAlignment)
         protMovAlign.setObjLabel('xmipp - movie alignment')
@@ -145,73 +143,70 @@ def create_movies_project(request):
         protMovAlign.inputMovies.setExtended('outputMovies')
         loadProtocolConf(protMovAlign)
         project.saveProtocol(protMovAlign)
-        
+
     return HttpResponse(mimetype='application/javascript')
 
+
 def getAttrTestFile(key):
-    if(key == "ribosome"):
+    if key == "ribosome":
         riboDataset = DataSet.getDataSet('riboMovies')
         riboFiles = riboDataset.getFile("allMovies")
-        attr = {#"filesPath" : "/services/scipion/data/scipionweb/movies_testdata/80S_ribosome/",
-                "path": riboDataset.getPath(),
-                "filesPath" : riboFiles,
-                "voltage" : 300.0,
-                "sphericalAberration" : 2.7,
-                "amplitudeContrast" : 0.1,
-                "magnification" : 59000,
+        attr = {"path": riboDataset.getPath(),
+                "filesPath": riboFiles,
+                "voltage": 300.0,
+                "sphericalAberration": 2.7,
+                "amplitudeContrast": 0.1,
+                "magnification": 59000,
                 "samplingRate": 1.77}
-    if(key == "falcon"):
+    if key == "falcon":
         jmbFalconDataset = DataSet.getDataSet('jmbFalconMovies')
         jmbFalconFiles = jmbFalconDataset.getFile("allMovies")
-        attr = {#"path" : "/services/scipion/data/scipionweb/movies_testdata/JMB_2015/",
-                "path": jmbFalconDataset.getPath(),
-                "filesPath" : jmbFalconFiles,
-                "voltage" : 300.0,
-                "sphericalAberration" : 2.7,
-                "amplitudeContrast" : 0.1,
-                "magnification" : 59000,
+        attr = {"path": jmbFalconDataset.getPath(),
+                "filesPath": jmbFalconFiles,
+                "voltage": 300.0,
+                "sphericalAberration": 2.7,
+                "amplitudeContrast": 0.1,
+                "magnification": 59000,
                 "samplingRate": 1.34}
-        
+
     return attr
 
- 
+
 def movies_content(request):
-    
-    domain = django_settings.SITE_URL
     projectName = request.GET.get('p', None)
     path_files = django_settings.ABSOLUTE_URL + '/resources_movies/img/'
-    command = "rsync -av --port 3333 USER_FOLDER/ %s::mws/%s"%(domain, projectName)
-    
-    manager = getServiceManager('movies')
-    project = manager.loadProject(projectName, 
+    command = getSyncCommand(request)
+
+    manager = getServiceManager(MOVIES_SERVICE)
+    project = manager.loadProject(projectName,
                                   protocolsConf=manager.protocols,
                                   hostsConf=manager.hosts,
                                   chdir=False)
     daysLeft = prettyDelta(project.getLeftTime())
-    
-    context = contentContext(request, project)
+
+    context = contentContext(request, project, serviceName=MOVIES_SERVICE)
     context.update({
-                    # MODE
-                    'formUrl': 'mov_form',
-                    'mode':'service',
-                    # IMAGES
-                    'importMovies': path_files + 'importMovies.png',
-                    'movieAlignment': path_files + 'movieAlignment.png',
-                    'protMovieAlign': path_files + 'protMovieAlign.png',
-                    'summary': path_files + 'summary.png',
-                    'showj': path_files + 'showj.png',
-                    'download': path_files + 'download.png',
-                    'command' : command,
-                    'daysLeft': daysLeft,
-                    })
-    
+        # MODE
+        'formUrl': 'mov_form',
+        'mode': 'service',
+        # IMAGES
+        'importMovies': path_files + 'importMovies.png',
+        'movieAlignment': path_files + 'movieAlignment.png',
+        'protMovieAlign': path_files + 'protMovieAlign.png',
+        'summary': path_files + 'summary.png',
+        'showj': path_files + 'showj.png',
+        'download': path_files + 'download.png',
+        'command': command,
+        'daysLeft': daysLeft
+    })
+
     return render_to_response('movies_content.html', context)
 
 
 def movies_form(request):
     from django.shortcuts import render_to_response
     context = contextForm(request)
-    context.update({'path_mode':'select',
+    context.update({'path_mode': 'select',
                     'formUrl': 'mov_form',
                     'showHost': False,
                     'showParallel': True,
@@ -220,16 +215,19 @@ def movies_form(request):
 
 
 def upload_movies(request):
-    domain = django_settings.SITE_URL
-    projectName = request.session['projectName']
-    
-    command = "rsync -av --port 3333 USER_FOLDER/ %s::mws/%s"%(domain, projectName)
-
+    command = getSyncCommand(request)
     context = {'command': command,
                'logo_scipion_small': getResourceIcon('logo_scipion_small'),
                }
 
     context = base_form(request, context)
-    
+
     return render_to_response('upload_movies.html', context)
 
+
+def getSyncCommand(request):
+    domain = django_settings.SITE_URL
+    domain = domain.split(":")[0]
+    projectName = getVarFromRequest(request, PROJECT_NAME)
+    command = "rsync -av --port 3333 USER_FOLDER/ %s::mws/%s" % (domain, projectName)
+    return command

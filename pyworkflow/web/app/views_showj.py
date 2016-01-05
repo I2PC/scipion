@@ -31,7 +31,8 @@ from django.http import HttpResponse
 from pyworkflow.web.pages import settings as django_settings
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from pyworkflow.web.app.views_util import readDimensions, readImageVolume, getResourceJs, getResourceCss
+from pyworkflow.web.app.views_util import readDimensions, readImageVolume, getResourceJs, getResourceCss, \
+    getProjectPathFromRequest, GET
 from forms import ShowjForm
 from pyworkflow.em import *
 from layout_configuration import ColumnPropertiesEncoder
@@ -60,7 +61,7 @@ def loadTable(request, dataset, inputParams):
     if inputParams[sj.TABLE_NAME] is not None:
         updateTable(inputParams, dataset)
     
-    dataset.projectPath = request.session['projectPath']
+    dataset.projectPath = getProjectPathFromRequest(request)
     table = dataset.getTable(inputParams[sj.TABLE_NAME])
         
     # Update inputParams to make sure have a valid table name (if using first table)
@@ -118,9 +119,9 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
      
 def addProjectPrefix(request, fn):
     """ Split path in block and filename and add the project path to filename. """
-    if sj.PROJECT_PATH in request.session:
-        projectPath = request.session[sj.PROJECT_PATH]
-    else:         
+    projectPath = getProjectPathFromRequest(request)
+
+    if projectPath is None:
         raise Exception('Showj Web visualizer: No project loaded')
     
     if '@' in fn:
@@ -256,7 +257,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
                 if inputParams[sj.MODE] != sj.MODE_TABLE:
                     inputParams[sj.MODE] = sj.MODE_GALLERY
                
-        volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
+        volPath = os.path.join(getProjectPathFromRequest(request), _imageVolName)
     
     return volPath, _stats, _imageDimensions, _imageVolNameOld
 
@@ -303,7 +304,7 @@ def showj(request):
     POST: next call to the method will be done through POST, some parameters will
          be store also in SESSION
     """
-    firstTime = request.method == 'GET'
+    firstTime = request.method == GET
     
     #=TIME CONTROL==============================================================
 #    from datetime import datetime
@@ -429,7 +430,7 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
     
     context = {sj.IMG_DIMS: request.session[inputParams[sj.PATH]].get(sj.IMG_DIMS, 0),
                sj.IMG_ZOOM_DEFAULT: request.session.get(sj.IMG_ZOOM_DEFAULT, 0),
-               sj.PROJECT_NAME: request.session[sj.PROJECT_NAME],
+               # NOt used?: 23-12-2015. sj.PROJECT_NAME: request.session[sj.PROJECT_NAME],
                'form': showjForm}
     
     if dataset is not None:
@@ -535,7 +536,7 @@ def create_context_volume(request, inputParams, volPath, param_stats):
     if inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA:
         # Using the .vol file
         volPath = inputParams['volOld']
-        volPath = os.path.join(request.session['projectPath'], volPath)
+        volPath = os.path.join(getProjectPathFromRequest(request), volPath)
            
         context.update(create_context_chimera(volPath, threshold))
         

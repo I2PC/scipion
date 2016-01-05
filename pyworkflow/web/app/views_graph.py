@@ -68,9 +68,7 @@ def project_graph(request):
     if request.is_ajax():
         boxList = request.GET.get('list')
         # Project Id(or Name) should be stored in SESSION
-        projectName = request.session['projectName']
-        # projectName = request.GET.get('projectName')
-        project = loadProject(request)  
+        project = loadProject(request)
         
         provider = ProjectRunsTreeProvider(project)
         
@@ -128,7 +126,6 @@ def project_graph(request):
     
 def elements_graph(request):
     if request.is_ajax():
-        projectName = request.session['projectName']
         project = loadProject(request)
         g = project.getSourceGraph()
         
@@ -143,7 +140,6 @@ def elements_graph(request):
 def object_graph(request):
     if request.is_ajax():
         boxList = request.GET.get('list')
-        projectName = request.session['projectName']
         project = loadProject(request)
         g = project.getSourceGraph()
         

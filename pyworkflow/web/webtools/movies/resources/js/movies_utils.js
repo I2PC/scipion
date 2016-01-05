@@ -102,7 +102,7 @@ function createMovProject(elm) {
 	
 	var selected = $("#testData input[type='radio']:checked").val();
 	var projectUrl = getBaseURL() + "/m_content/?p="+ projName
-	var URL = getSubDomainURL() + "/create_movies_project/?projectName=" + projName
+	var URL = getSubDomainURL() + "/create_movies_project/?p=" + projName
 	if(selected != undefined){
 		URL += "&testData="+selected;
 	}

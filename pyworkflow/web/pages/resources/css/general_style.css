@@ -93,7 +93,7 @@ header #headerLogoContainer{
 	float:left;
 }
 
-header #projectName{
+header .projectHeader{
 	font-size:1.6em;
 	float:left;
 	padding-top:10px;
