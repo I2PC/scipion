@@ -232,7 +232,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             nVoli = 1
             for voli in volList:
                 cleanPath(self._getExtraPath('modes%d'%nVoli))
-                cleanPath(self._getPath('modes%d'%nVoli))
+                cleanPath(self._getPath('modes'))
                 nVoli += 1
                     
     #--------------------------- INFO functions --------------------------------------------
