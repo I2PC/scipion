@@ -208,6 +208,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
        
     def managingOutputFilesStep(self): 
         
+        volList = [vol.clone() for vol in self._iterInputVolumes()]
         copyFile (self._getExtraPath ("CoordinateMatrixColumnF1.txt"), self._defineResultsName1())
         copyFile (self._getExtraPath ("CoordinateMatrixColumnF2.txt"), self._defineResultsName2())
         copyFile (self._getExtraPath ("CoordinateMatrixColumnF3.txt"), self._defineResultsName3())
@@ -228,8 +229,11 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             cleanPattern(self._getExtraPath('CoordinateMatrix1.txt'))
             cleanPattern(self._getExtraPath('CoordinateMatrix2.txt'))
             cleanPattern(self._getExtraPath('CoordinateMatrix3.txt'))
-            cleanPath(self._getExtraPath('modes*'))
-            cleanPath(self._getPath('modes*'))
+            nVoli = 1
+            for voli in volList:
+                cleanPath(self._getExtraPath('modes%d'%nVoli))
+                cleanPath(self._getPath('modes%d'%nVoli))
+                nVoli += 1
                     
     #--------------------------- INFO functions --------------------------------------------
     
