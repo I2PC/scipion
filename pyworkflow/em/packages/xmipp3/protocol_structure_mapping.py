@@ -164,9 +164,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                     score[(nVoli-1)][(nVolj-1)] = (1 - maxCc)
                 nVolj += 1
             nVoli += 1     
-        print 'score is:'
-        print score
-                      
+                              
         fnRoot = self._getExtraPath ("DistanceMatrix.txt")   
         distance = [[0 for i in volList] for i in volList]
         nVoli = 1
@@ -187,11 +185,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                
             mds = manifold.MDS(n_components=i, metric=True, max_iter=3000, eps=1e-9, random_state=0, dissimilarity="precomputed", n_jobs=1)
             embed3d = mds.fit(distance).embedding_ 
-            
-            print i
-            print mds
-            print embed3d  
-               
+                                      
             nVoli = 1
             for x in volList:
                 for y in range(i):
@@ -221,7 +215,6 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             cleanPattern(self._getPath('modes/vec*'))  
             cleanPattern(self._getPath('warnings*'))
             cleanPattern(self._getPath('outputRigid*'))
-            cleanPattern(self._getExtraPath('modes*/vec*'))  
             cleanPattern(self._getExtraPath('RigidAlign*'))
             cleanPattern(self._getExtraPath('Pseudoatoms*'))
             cleanPattern(self._getExtraPath('comp*'))
@@ -230,11 +223,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             cleanPattern(self._getExtraPath('CoordinateMatrix2.txt'))
             cleanPattern(self._getExtraPath('CoordinateMatrix3.txt'))
             cleanPath(self._getPath('modes'))
-            nVoli = 1
-            for voli in volList:
-                cleanPath(self._getExtraPath('modes%d'%nVoli))
-                nVoli += 1
-                    
+                                
     #--------------------------- INFO functions --------------------------------------------
     
     def _validate(self):
