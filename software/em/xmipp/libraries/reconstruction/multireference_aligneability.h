@@ -49,7 +49,6 @@ public:
 
 private:
     size_t Xdim,Ydim,Zdim,Ndim;
-
     /** Sampling rate of the volume and projections */
     //double sampling_rate   //COMMENTED
 
@@ -66,7 +65,7 @@ private:
 
     void write_projection_file();
 
-    void calc_sumu(const MetaData & tempMd, double & sum_W);
+    void calc_sumu(const MetaData & tempMd, double & sum_W, double & mirrorProb);
 
     void calc_sumw(const size_t num, double & sumw);
 

@@ -73,9 +73,11 @@ void MultireferenceAligneability::run()
     MetaData mdOutCL, mdOutQ;
 	MetaData mdExp, mdExpSort, mdProj, mdGallery;
 	size_t maxNImg;
-	FileName fnOutCL, fnOutQ;
+	FileName fnOutCL, fnOutQ, fnOutM;
 	fnOutCL = fnDir+"/pruned_particles_alignability_precision.xmd";
-	fnOutQ = fnDir+"/validationPrecision.xmd";
+	fnOutM = fnDir+"/validationMirrorPrecision.xmd";
+	fnOutQ = fnDir+"/validationAlignabilityPrecision.xmd";
+
 
     //SymList SL;
     //int symmetry, sym_order;
@@ -96,17 +98,23 @@ void MultireferenceAligneability::run()
 	String expression;
 	MDRow row;
 
-	double validation = 0;
+	double validationAlignability, validationMirror;
+	validationAlignability = 0;
+	validationMirror = 0;
 	init_progress_bar(maxNImg);
 
 	MetaData tempMdExp, tempMdProj;
 	double sum_w_exp;
 	double sum_w_proj;
 	double sum_noise;
+	double error_mirror_exp;
+	double error_mirror_proj;
 
 	sum_w_exp = 0;
 	sum_w_proj = 0;
 	sum_noise = 0;
+	error_mirror_exp = 0;
+	error_mirror_proj = 0;
 
 	expression = formatString("imageIndex == %lu",maxNImg);
 	tempMdExp.importObjects(mdExp, MDExpression(expression));
@@ -130,23 +138,25 @@ void MultireferenceAligneability::run()
 			continue;
 
 		tempMdExp.getRow(row,1);
-		calc_sumu(tempMdExp, sum_w_exp);
-		calc_sumu(tempMdProj, sum_w_proj);
+		calc_sumu(tempMdExp, sum_w_exp, error_mirror_exp);
+		calc_sumu(tempMdProj, sum_w_proj, error_mirror_proj);
 
 		rank = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
 
-		std::cout << " sum_noise : " <<  sum_noise <<   " sum_w_exp  : " <<  sum_w_exp  <<   " sum_w_proj  : " <<  sum_w_proj  << std::endl;
+		std::cout << " sum_noise : " <<  sum_noise <<   " sum_w_exp  : " <<  sum_w_exp  <<   " sum_w_proj  : " <<  sum_w_proj  << " error_mirror_exp  : " <<  error_mirror_exp << std::endl;
 
 		if (rank>1)
 			rank=1;
 		else if (rank < 0)
 			rank = 0;
 
-		validation += (rank>0.5);
+		validationAlignability += (rank>0.5);
+		validationMirror += (error_mirror_exp);
 		tempMdExp.getValue(MDL_IMAGE,imagePath,1);
 		row.setValue(MDL_IMAGE,imagePath);
 		row.setValue(MDL_IMAGE_IDX,i);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY,rank);
+		row.setValue(MDL_SCORE_BY_MIRROR, error_mirror_exp);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_EXP,sum_w_exp);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_REF,sum_w_proj);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_NOISE,sum_noise);
@@ -160,10 +170,13 @@ void MultireferenceAligneability::run()
 	}
 
 	mdOutCL.write(fnOutCL);
-	validation /= (maxNImg+1);
+	validationAlignability /= (maxNImg+1);
+	validationMirror /= (maxNImg+1);
+
 	row.clear();
     row.setValue(MDL_IMAGE,fnInit);
-    row.setValue(MDL_WEIGHT,validation);
+    row.setValue(MDL_WEIGHT_PRECISION_ALIGNABILITY,validationAlignability);
+    row.setValue(MDL_WEIGHT_PRECISION_MIRROR,validationMirror);
     mdOutQ.addRow(row);
     mdOutQ.write(fnOutQ);
 }
@@ -189,7 +202,7 @@ void MultireferenceAligneability::write_projection_file()
 #define _FOR_ALL_OBJECTS_IN_METADATA2(__md) \
         for(MDIterator __iter2(__md); __iter2.hasNext(); __iter2.moveNext())
 
-void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & sum_W)
+void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & sum_W, double & mirrorProb)
 {
     double a;
     double rot,tilt,psi, w;
@@ -204,6 +217,8 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
     W = 0;
     sumW = 0;
     sum_W = 0;
+
+    mirrorProb = 0;
 
     FOR_ALL_OBJECTS_IN_METADATA(tempMd)
     {
@@ -264,7 +279,14 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         	double norm1 = sqrt(x*x+y*y+z*z);
         	double norm2 = sqrt(xx*xx+yy*yy+zz*zz);
         	a = std::abs((std::acos( (x*xx+y*yy+z*zz)/(norm1*norm2))));
+        	if (a > 3*PI/4)
+        	{
+        		a = std::abs(a-PI);
+        		if (__iter2.objId == 1)
+        			mirrorProb += 1;
+        	}
 
+        	//std::cout << " a : " << a << std::endl;
         	if ( isnan(a) )
         		a = 0;
 
@@ -272,8 +294,10 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         		W += a;
         	else
         		W += a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
+
         }
 
+    	//std::cout << " -----------"  << std::endl;
         sumW +=  W;
 
 #ifdef DEBUG
@@ -288,6 +312,17 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
     }
 
     sum_W = (sumW / ((tempMd.size()-1)*(tempMd.size()-1)))*(180./PI);
+    mirrorProb /= (tempMd.size()-1);
+
+    if (mirrorProb > 0.5)
+    	mirrorProb = 1-2*(1-mirrorProb);
+    else
+    	mirrorProb = 1-2*(mirrorProb);
+
+	//std::cout << " sum_W : " << sum_W << std::endl;
+	//std::cout << " mirrorProb : " << mirrorProb << std::endl;
+	//std::cout << " -----------"  << std::endl;
+	//std::cout << " -----------"  << std::endl;
 }
 
 void MultireferenceAligneability::calc_sumw(const size_t num, double & sumw)
@@ -385,7 +420,9 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
 			mdGallery.getValue(MDL_ANGLE_ROT,rot,indx);
         	mdGallery.getValue(MDL_ANGLE_TILT,tilt,indx);
         	mdGallery.getValue(MDL_ANGLE_PSI,psi,indx);
-        	mdGallery.getValue(MDL_FLIP,mirror,indx);
+
+        	//mirror =  ((std::rand())/RAND_MAX >= 0.5);
+        	mirror = 0; //the mirror is estimated as a different quality curve.
 
     		if (mirror)
     		{

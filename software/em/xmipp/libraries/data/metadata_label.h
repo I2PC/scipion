@@ -360,6 +360,7 @@ enum MDLabel
     MDL_SCORE_BY_ALIGNABILITY_EXP, ///< score by alignability experimental particles (double)
     MDL_SCORE_BY_ALIGNABILITY_REF, ///< score by alignability references (double)
     MDL_SCORE_BY_ALIGNABILITY_NOISE, ///< score by alignability noise (double)
+    MDL_SCORE_BY_MIRROR, ///< score by mirror (double)
     MDL_SCORE_BY_ZSCORE,
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
@@ -400,6 +401,8 @@ enum MDLabel
     MDL_WEIGHT_JUMPER2, ///< Weight due to angular jumping
     MDL_WEIGHT_SIGNIFICANT, ///< Weight due to Angular significance
     MDL_WEIGHT_SSNR, ///< Weight due to SSNR
+    MDL_WEIGHT_PRECISION_ALIGNABILITY, ///< Weight due to Alignability Precision
+    MDL_WEIGHT_PRECISION_MIRROR, ///< Weight due to Mirror Precision
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
     MDL_X, ///< X component (double)
     MDL_XCOOR, ///< X component (int)
@@ -1707,6 +1710,7 @@ private:
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_EXP, LABEL_DOUBLE, "scoreByAlignabilityExp");
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_REF, LABEL_DOUBLE, "scoreByAlignabilityRef");
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_NOISE, LABEL_DOUBLE, "scoreByAlignabilityNoise");
+        MDL::addLabel(MDL_SCORE_BY_MIRROR, LABEL_DOUBLE, "scoreByMirror");
         MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
 
         MDL::addLabelAlias(MDL_SCALE, "Scale");
@@ -1756,6 +1760,10 @@ private:
         MDL::addLabel(MDL_WEIGHT_JUMPER2, LABEL_DOUBLE, "weightJumper2");
         MDL::addLabel(MDL_WEIGHT_SIGNIFICANT, LABEL_DOUBLE, "weightSignificant");
         MDL::addLabel(MDL_WEIGHT_SSNR, LABEL_DOUBLE, "weightSSNR");
+
+        MDL::addLabel(MDL_WEIGHT_PRECISION_ALIGNABILITY, LABEL_DOUBLE, "weightPrecisionAlignability");
+        MDL::addLabel(MDL_WEIGHT_PRECISION_MIRROR, LABEL_DOUBLE, "weightPrecisionMirror");
+
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
         MDL::addLabel(MDL_XCOOR, LABEL_INT, "xcoor");
         MDL::addLabel(MDL_XCOOR_TILT, LABEL_INT, "xcoorTilt");
