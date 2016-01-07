@@ -80,7 +80,7 @@ function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
 		case "pval":
-			var url = "/p_content/?p=pvalTestData";
+			var url = "/p_content/?p=beta-galactosidase";
 			break;
 	}
 	goWithSubDomainURL(url);
@@ -132,7 +132,7 @@ function getRefTestData(id){
 	var ref = ""
 	switch(id){
 		case "pval":
-			ref = "<strong>Reference for pval? TO-DO</strong> (Resolution 2.8 Å , <a href='http://emsearch.rutgers.edu/atlas/6287_summary.html' style='color:firebrick;' target='_blank'>from Campbell MG et al. eLIFE, 2015</a>)"
+			ref = "<strong>β-galactosidase</strong> (Resolution 2.8 Å , <a href='http://dx.doi.org/10.1016%2Fj.str.2014.01.011' style='color:firebrick;' target='_blank'>from Vinothkumar et al. Cell PRESS, 2014</a>)"
 			break;
 	}
 	return ref;
