@@ -54,6 +54,7 @@ from viewer_validate_nontilt import XmippValidateNonTiltViewer
 from viewer_split_volume import XmippViewerSplitVolume
 from viewer_volume_strain import XmippVolumeStrainViewer
 from viewer_reconstruct_highres import XmippReconstructHighResViewer
+from viewer_validate_overfitting import XmippValidateOverfittingViewer
 
 #from viewer_reconstruct_significant import XmippReconstructSignificantViewer
 # TODO(coss): add viewer_reconstruct_significant.py pretty please

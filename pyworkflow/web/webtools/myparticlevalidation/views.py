@@ -159,6 +159,7 @@ def create_particlevalidation_project(request):
 
         # Input particles
         protValidation.inputParticles.set(protImportParticles)
+        protValidation.inputParticles.setExtended('outputParticles')
 
         # Load additional configuration
         loadProtocolConf(protValidation)

@@ -55,11 +55,12 @@ def launch_viewer(request):
             pointer.setExtendedParts(idParts[1:])
             obj = pointer.get()
         else:
+            #
             obj = project.getObject(int(idParts[0]))
     else:
         obj = project.getObject(int(objectId))
 
-    if obj != None:
+    if obj is not None:
         if obj.isPointer():
             obj = obj.get()
 

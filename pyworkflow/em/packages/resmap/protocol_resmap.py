@@ -216,7 +216,7 @@ class ProtResMap(ProtAnalysis3D):
     def _getVolumeMatrix(self, volName):
         from ResMap_fileIO import MRC_Data
         
-        volPath = self._getPath(volName)
+        volPath = self._getPath(volName, abs=True)
         return MRC_Data(volPath, 'ccp4').matrix
     
     def _plotVolumeSlices(self):
