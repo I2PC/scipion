@@ -36,13 +36,9 @@ void ProgAngularAccuracyPCA::readParams()
 {
 	fnPhantom = getParam("-i");
 	fnNeighbours = getParam("--i2");
-    fnResiduals = getParam("--oresiduals");
-    fnReconstructed = getParam("--oreconstructed");
     fnOut = getParam("-o");
-
     newXdim = getIntParam("--dim");
     newYdim = newXdim;
-
 }
 
 void ProgAngularAccuracyPCA::defineParams()
@@ -53,8 +49,6 @@ void ProgAngularAccuracyPCA::defineParams()
     addParamsLine("  [ -o <md_file=\"\">]    	: Metadata file with obtained weights");
     addParamsLine("  [--dim <d=64>]             : Scale images to this size if they are larger.");
     addParamsLine("                             : Set to -1 for no rescaling");
-    addParamsLine("  [--oresiduals <stack=\"\">]: Suffix of the output stack for the residuals");
-    addParamsLine("  [--oreconstructed <stack=\"\">]  : Suffix of output stack for the reconstructed projections");
 }
 
 void ProgAngularAccuracyPCA::run()
@@ -66,9 +60,6 @@ void ProgAngularAccuracyPCA::run()
     phantomVol.read(fnPhantom);
     phantomVol().setXmippOrigin();
 
-    String fnTempResiduals, fnTempReconstructed;
-    fnTempResiduals = "";
-    fnTempReconstructed = "";
     size_t numPCAs;
 
 	if (rank==0)
@@ -80,27 +71,17 @@ void ProgAngularAccuracyPCA::run()
     	{
     		md.read((String) blocks[i].c_str()+'@'+fnNeighbours);
 
-    		if (fnResiduals!="")
-    		{
-    			fnTempResiduals =  blocks[i].c_str()+fnResiduals;
-    			createEmptyFile(fnTempResiduals, newXdim, newYdim, 1, md.size(), true, WRITE_OVERWRITE);
-    		}
-
-    		if (fnReconstructed!="")
-    		{
-    			fnTempReconstructed =  blocks[i].c_str()+fnReconstructed;
-    			createEmptyFile(fnTempReconstructed, newXdim, newYdim, 1, md.size(), true, WRITE_OVERWRITE);
-    		}
-
     		if (md.size() <= 1)
     			continue;
 
-    		else if (md.size() < 10)
-    			numPCAs = md.size()/2;
-    		else
+    		else if ( (md.size() > 20) )
+    			numPCAs = 3;
+    		else if ( (md.size() >= 5) & (md.size() < 20) )
     			numPCAs = 2;
+    		else
+    			numPCAs = 1;
 
-    		obtainPCAs(md,fnTempResiduals,fnTempReconstructed,numPCAs);
+    		obtainPCAs(md,numPCAs);
 
     		MDRow row;
     		FOR_ALL_OBJECTS_IN_METADATA(md)
@@ -111,7 +92,6 @@ void ProgAngularAccuracyPCA::run()
 
 			if (rank==0)
 				progress_bar(i+1);
-
     	}
     }
 
@@ -120,19 +100,13 @@ void ProgAngularAccuracyPCA::run()
 
 	if (rank == 0)
 	{
-		std::vector <double> pcaColumn;
-		mdPartial.getColumnValues(MDL_SCORE_BY_PCA_RESIDUAL,pcaColumn);
-
-		for (size_t i; i< pcaColumn.size(); i++)
-			pcaColumn[i] = pcaColumn[i]/(mdPartial.getColumnMax(MDL_SCORE_BY_PCA_RESIDUAL));
-
-		mdPartial.setColumnValues(MDL_SCORE_BY_PCA_RESIDUAL,pcaColumn);
 		mdPartial.write(fnOut);
 		progress_bar(blocks.size());
 	}
+
 }
 
-void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, String fnTempReconstructed, size_t numPCAs)
+void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 {
 	size_t numIter = 200;
 
@@ -151,7 +125,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 	}
 
 	Matrix2D<double> proj, projRef;
-	imgno = 1;
+	imgno = 0;
 	Projection P;
 	FileName image;
 	MultidimArray<float> temp;
@@ -191,21 +165,26 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 		typeCast(P(), temp);
 		selfScaleToSize(LINEAR,temp,newXdim,newYdim,1);
 		temp.resize(newXdim*newYdim);
-
+		temp.statisticsAdjust(0,1);
 		pca.addVector(temp);
 		imgno++;
 
+#define DEBUG
 		#ifdef DEBUG
 		{
 			{
-				std::cout << E << std::endl;
-				std::cout << (angle*180)/3.14159 << std::endl;
-				P.write("kk_proj.tif");
-				SF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
-				std::cout << rot << " " << tilt << " " << psi << std::endl;
-				char c;
-				std::getchar();
-
+				size_t val;
+				SF.getValue(MDL_ITEM_ID,val,__iter.objId);
+				if (val==41)
+				{
+					std::cout << E << std::endl;
+					std::cout << (angle*180)/3.14159 << std::endl;
+					P.write("kk_proj.tif");
+					SF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+					std::cout << rot << " " << tilt << " " << psi << std::endl;
+					char c;
+					std::getchar();
+				}
 			}
 		}
 		#endif
@@ -216,12 +195,9 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 	pca.projectOnPCABasis(projRef);
 	pca.v.clear();
 
-	std::cout << projRef << std::endl;
-	std::cout << "      " << std::endl;
-	std::cout << "      " << std::endl;
-
 	imgno = 0;
 	FileName f;
+
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
 
@@ -259,39 +235,69 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 
 #ifdef DEBUG
 		{
-			std::cout << E << std::endl;
-			std::cout << (angle*180)/3.14159 << std::endl;
-			std::cout << rot << " " << tilt << " " << psi << std::endl;
-			char c;
-			std::getchar();
-			SF.getValue(MDL_IMAGE,f,__iter.objId);
-			std::cout << f << std::endl;
-			img.write("kk_exp.tif");
+			size_t val;
+			SF.getValue(MDL_ITEM_ID,val,__iter.objId);
+			if (val==41)
+			{
+				std::cout << E << std::endl;
+				std::cout << (angle*180)/3.14159 << std::endl;
+				std::cout << rot << " " << tilt << " " << psi << std::endl;
+				char c;
+				std::getchar();
+				SF.getValue(MDL_IMAGE,f,__iter.objId);
+				std::cout << f << std::endl;
+				img.write("kk_exp.tif");
+			}
 		}
 #endif
 
 		typeCast(img(), temp);
 		selfScaleToSize(LINEAR,temp,newXdim,newYdim,1);
 		temp.resize(newXdim*newYdim);
+		temp.statisticsAdjust(0,1);
 		pca.addVector(temp);
 		imgno++;
 	}
 
 	pca.subtractAvg();
 	pca.projectOnPCABasis(proj);
-	std::vector< MultidimArray<float> > v;
-	v.reserve(pca.v.size());
-	for (size_t i=0; i<pca.v.size(); i++)
-		v.push_back(pca.v[0]);
-	pca.reconsFromPCA(proj,v);
-
-	std::cout << proj << std::endl;
-	std::cout << "      " << std::endl;
-	std::cout << "      " << std::endl;
-
-
 	pca.evaluateZScore(numPCAs,numIter, false);
 
+	double varReconstructed, varReconstructedProj, ratioSignalRepresented;
+	imgno = 0;
+
+	FOR_ALL_OBJECTS_IN_METADATA(SF)
+	{
+		int enabled;
+		SF.getValue(MDL_ENABLED,enabled,__iter.objId);
+		if ( (enabled==-1)  )
+		{
+			imgno++;
+			continue;
+		}
+
+		varReconstructed = 0;
+		varReconstructedProj = 0;
+		for(int i=0; i<numPCAs;i++)
+		{
+			varReconstructed += (MAT_ELEM(proj,i,imgno)-MAT_ELEM(projRef,i,imgno))*(MAT_ELEM(proj,i,imgno)-MAT_ELEM(projRef,i,imgno));
+			varReconstructedProj += MAT_ELEM(projRef,i,imgno)*MAT_ELEM(projRef,i,imgno);
+		}
+
+		ratioSignalRepresented = 1-varReconstructed/varReconstructedProj;
+		if (ratioSignalRepresented < 0)
+			ratioSignalRepresented = 0;
+
+		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL,ratioSignalRepresented,__iter.objId);
+		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,imgno)/3.),__iter.objId);
+		imgno++;
+
+
+	}
+
+	//varImg.clear();
+
+/*
 	size_t idx = 0;
 	imgno=1;
 	Image<float> res;
@@ -343,6 +349,8 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 
 		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL,R2,__iter.objId);
 		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,idx)/3.),__iter.objId);
+
+
 
 #ifdef DEBUG
 {
@@ -410,7 +418,11 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, String fnTempResiduals, St
 
 #endif
 
+
+
 	v.clear();
+
+	*/
 	img.clear();
 	pca.clear();
 

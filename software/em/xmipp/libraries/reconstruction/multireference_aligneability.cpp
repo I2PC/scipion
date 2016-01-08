@@ -46,7 +46,6 @@ void MultireferenceAligneability::readParams()
     fnDir = getParam("--odir");
     donNotUseWeights= checkParam("--dontUseWeights");
     significance_noise = getDoubleParam("--significance_noise");
-
 }
 
 void MultireferenceAligneability::defineParams()
