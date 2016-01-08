@@ -134,6 +134,14 @@ def create_particlevalidation_project(request):
             protImportParticles = project.newProtocol(ProtImportParticles, objLabel=label_import)
 
             protImportParticles.filesPath.set(dest)
+
+            # Set import particle attributes
+            protImportParticles.voltage.set(attr["microscopeVoltage"])
+            protImportParticles.sphericalAberration.set(attr["sphericalAberration"])
+            protImportParticles.amplitudeContrast.set(attr["amplitudeContrast"])
+            protImportParticles.magnification.set(attr["magnificationRate"])
+            protImportParticles.samplingRate.set(attr["particlesSamplingRate"])
+
             project.launchProtocol(protImportParticles, wait=True, chdir=False)
 
         else:
@@ -174,7 +182,12 @@ def getAttrTestFile(key):
     if key == "pval":
         attr = {"volume": pval.getFile("pval_vol"),
                 "samplingRate": 3.54,
-                "particles": pval.getFile("pval_part")
+                "particles": pval.getFile("pval_part"),
+                "microscopeVoltage": 300,
+                "sphericalAberration": 2,
+                "amplitudeContrast": 0.1,
+                "magnificationRate": 50000,
+                "particlesSamplingRate": 3.54
                 }
 
     return attr
