@@ -151,7 +151,7 @@ private:
 
     /** Insert a new register inserting input columns.
      */
-    bool setObjectValues( size_t id, const std::vector<MDObject*> columnValues, const std::vector<MDLabel> *desiredLabels=NULL);
+    bool setObjectValues(const std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels, bool firstTime);
 
     /**Set the value of an object in an specified column.
      */
@@ -163,7 +163,7 @@ private:
 
     /** Get the values of several objects.
      */
-    bool getObjectsValues( std::vector<MDLabel> labels, std::vector<MDObject> *values);
+    bool getObjectsValues(const size_t objId, std::vector<MDLabel> labels, std::vector<MDObject> *values);
 
     /** Get the value of an object.
      */
@@ -176,6 +176,8 @@ private:
      * if no query is provided by default all are returned
      */
     void selectObjects(std::vector<size_t> &objectsOut, const MDQuery *queryPtr = NULL);
+
+    void finalizePreparedStmt(void);
 
     /** return metadata size
      *
@@ -272,10 +274,7 @@ private:
     bool dropTable();
     bool createTable(const std::vector<MDLabel> * labelsVector = NULL, bool withObjID=true);
     bool insertValues(double a, double b);
-    bool initializeSelect( bool addWhereObjId, std::vector<MDLabel> labels);
-    bool initializeInsert(const std::vector<MDLabel> *labels, const std::vector<MDObject*> &values);
-    bool initializeUpdate( std::vector<MDLabel> labels);
-    void finalizePreparedStmt(void);
+    bool initializeGetObjectsValuesStatement(std::vector<MDLabel> labels);
     void prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt);
     bool execSingleStmt(const std::stringstream &ss);
     bool execSingleStmt(sqlite3_stmt *&stmt, const std::stringstream *ss = NULL);
@@ -284,9 +283,8 @@ private:
 
     String tableName(const int tableId) const;
 
-    bool 	bindStatement( size_t id);
-    int 	bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn);
-    void 	extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut);
+    int bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn);
+    void extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut);
 
     static char *errmsg;
     static const char *zLeftover;

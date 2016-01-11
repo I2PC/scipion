@@ -109,12 +109,6 @@ class Param(FormElement):
             errors += val(value)
         return errors
     
-    def getDefault(self):
-        return self.default.get()
-    
-    def setDefault(self, newDefault):
-        self.default.set(newDefault)
-    
     
 class ElementGroup(FormElement):
     """ Class to group some params in the form.

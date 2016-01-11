@@ -355,8 +355,6 @@ enum MDLabel
     MDL_SAMPLINGRATE_Z, ///< sampling rate in A/pixel (double)
 
     MDL_SCALE, ///< scaling factor for an image or volume (double)
-    MDL_SCORE_BY_PCA_RESIDUAL,
-    MDL_SCORE_BY_ZSCORE,
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
     MDL_SHIFT_X, ///< Shift for the image in the X axis (double)
@@ -1698,9 +1696,6 @@ private:
         MDL::addLabelAlias(MDL_SAMPLINGRATE_Z, "sampling_rateZ"); //3.0
 
         MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale");
-        MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL, LABEL_DOUBLE, "scoreByPcaResidual");
-        MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
-
         MDL::addLabelAlias(MDL_SCALE, "Scale");
         MDL::addLabel(MDL_SELFILE, LABEL_STRING, "selfile", TAGLABEL_METADATA);
         MDL::addLabel(MDL_SERIE, LABEL_STRING, "serie");

@@ -270,10 +270,7 @@ void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName 
     last_ctf = fn_ctf;
     img.read(fnImg);
 
-    rowOut=rowIn;
-
     rowIn.getValue(MDL_CTF_MODEL, fn_ctf);
-    rowOut.setValue(MDL_IMAGE, fnImgOut);
     rowOut.setValue(MDL_CTF_MODEL, fn_ctf);
     if (fn_ctf != last_ctf || firstImage)
     {

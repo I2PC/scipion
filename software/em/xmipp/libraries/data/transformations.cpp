@@ -418,69 +418,6 @@ void scale3DMatrix(const Matrix1D<double> &sc, Matrix2D<double>& result,
     dMij(result,2, 2) = ZZ(sc);
 }
 
-#define DELTA_THRESHOLD	10e-7
-bool	getLoopRange( double value, double min, double max, double delta, int loopLimit, int &minIter, int &maxIter)
-{
-	bool validRange=true;		// Return value. TRUE if input value is into range boundaries.
-
-	// Value is under lower boundary.
-	if (value < min)
-	{
-		// If delta is negative -> moving to lower values and never into valid range.
-		if (delta <= DELTA_THRESHOLD)
-		{
-			validRange = false;
-		}
-		// Compute first and last iterations into valid values.
-		else
-		{
-			minIter = (int) (fabs(min - value) / delta);
-			minIter++;
-			maxIter = (int) (fabs(max - value) / delta);
-		}
-	}
-	// Value is over upper boundary.
-	else if (value >= max)
-	{
-		// If delta is negative -> moving to lower values and never into valid range.
-		if (delta >= -DELTA_THRESHOLD)
-		{
-			validRange = false;
-		}
-		// Compute first and last iterations into valid values.
-		else
-		{
-			minIter = (int) (fabs(value - max) / -delta);
-			minIter++;
-			maxIter = (int) (fabs(value - min) / -delta);
-		}
-	}
-	// First value into valid range.
-	else
-	{
-		// Compute first and last iterations into valid values.
-		if (delta > DELTA_THRESHOLD)
-		{
-			minIter = 0;
-			maxIter = (int) (fabs(max - value) / delta);
-		}
-		// Compute first and last iterations into valid values.
-		else if (delta < -DELTA_THRESHOLD)
-		{
-			minIter = 0;
-			maxIter = (int) (fabs(value - min) / -delta);
-		}
-		// If delta is zero then always in valid range.
-		else
-		{
-			minIter = 0;
-			maxIter = loopLimit;
-		}
-	}
-
-	return(validRange);
-}
-
 // Special case for complex numbers
 template<>
 void applyGeometry(int SplineDegree,
