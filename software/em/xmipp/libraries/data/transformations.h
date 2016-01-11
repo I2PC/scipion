@@ -396,6 +396,7 @@ void applyGeometry(int SplineDegree,
         		if (!getLoopRange( xp, minxpp, maxxpp, Aref00, XSIZE(V2), minX, maxX) ||
         			!getLoopRange( yp, minypp, maxypp, Aref10, XSIZE(V2), minY, maxY))
         		{
+        			y++;
         			continue;
         		}
         		else
