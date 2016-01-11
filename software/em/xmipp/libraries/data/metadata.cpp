@@ -246,64 +246,6 @@ void MetaData::setColumnValues(const std::vector<MDObject> &valuesIn)
     }
 }
 
-bool MetaData::bindValue( size_t id) const
-{
-	bool success=true;
-
-	// Prepare statement.
-    if (!myMDSql->bindStatement( id))
-    {
-    	success = false;
-    }
-
-    return(success);
-}
-
-bool MetaData::initGetRow( bool addWhereClause) const
-{
-	bool success=true;
-
-	// Prepare statement.
-    if (!myMDSql->initializeSelect( addWhereClause, activeLabels))
-    {
-    	success = false;
-    }
-
-    return(success);
-}
-
-bool MetaData::execGetRow(MDRow &row)
-{
-	bool success=true;
-	std::vector<MDObject> mdValues;		// Vector to store values.
-
-	// Clear row.
-    row.clear();
-
-	// Execute statement.
-	if (!myMDSql->getObjectsValues( activeLabels, &mdValues))
-	{
-		success = false;
-	}
-	else
-	{
-		// Set values in row.
-		int i=0;
-	    for (std::vector<MDLabel>::const_iterator it = activeLabels.begin(); it != activeLabels.end(); ++it)
-	    {
-	    	row.setValue(mdValues[i]);
-	        i++;
-	    }
-	}
-
-    return(success);
-}
-
-void 	MetaData::finalizeGetRow(void)
-{
-	myMDSql->finalizePreparedStmt();
-}
-
 bool MetaData::getRow(MDRow &row, size_t id) const
 {
     row.clear();
@@ -317,196 +259,16 @@ bool MetaData::getRow(MDRow &row, size_t id) const
     return true;
 }
 
-bool MetaData::getRow2(MDRow &row, size_t id)
-{
-	bool success=true;
-
-	// Clear row.
-    row.clear();
-
-    // Initialize SELECT.
-	success = this->initGetRow( true);
-	if (success)
-	{
-		bindValue( id);
-
-		// Execute SELECT.
-		success = execGetRow( row);
-
-	    // Finalize SELECT.
-	    myMDSql->finalizePreparedStmt();
-	}
-
-	return(success);
-}
-
 //TODO: could be improve in a query for update the entire row
 #define SET_ROW_VALUES(row) \
     for (int i = 0; i < row._size; ++i){\
         const MDLabel &label = row.order[i];\
         if (row.containsLabel(label))\
-            setValue(*(row.getObject(label)), id);}\
-
-bool MetaData::initSetRow(const MDRow &row)
-{
-    int 	i=0,j=0;					// Loop counter.
-    bool	success=true;				// Return value.
-    std::vector<MDLabel>   labels;		// Columns labels.
-
-    // Set label vector size.
-    labels.resize(row._size);
-
-    // Build labels vector:
-    j=0;
-    for (i=0; i<row._size; ++i)
-    {
-        const MDLabel &label = row.order[i];
-
-        if (row.containsLabel(label))
-        {
-        	addLabel( label);
-        	labels[j] = label;
-        	j++;
-        }
-    }
-    labels.resize(j);
-
-    // Prepare statement.
-    if (!myMDSql->initializeUpdate( labels))
-    {
-    	success = false;
-    }
-
-    return(success);
-}
-
-
-bool MetaData::execSetRow(const MDRow &row, size_t id)
-{
-	int		i=0, j=0;					// Loop counters.
-	bool	success=true;				// Return value.
-    std::vector<MDObject*> mdValues;	// Vector to store values.
-
-    // Set values vector size.
-    mdValues.resize(row._size);
-
-    // Build values vector.
-    j=0;
-    for (i=0; i<row._size; ++i)
-    {
-        const MDLabel &label = row.order[i];
-
-        if (row.containsLabel(label))
-        {
-        	addLabel( label);
-        	mdValues[i] = row.getObject( label);
-        	j++;
-        }
-    }
-    mdValues.resize(j);
-
-	// Execute statement.
-	if (!myMDSql->setObjectValues( id, mdValues))
-	{
-		success = false;
-	}
-
-	return(success);
-}
-
+            setValue(*(row.getObject(label)), id);}
 
 void MetaData::setRow(const MDRow &row, size_t id)
 {
     SET_ROW_VALUES(row);
-}
-
-bool MetaData::setRow2(const MDRow &row, size_t id)
-{
-	bool	success=true;				// Return value.
-
-	// Initialize UPDATE.
-	success = initSetRow( row);
-	if (success)
-	{
-		// Execute UPDATE.
-		success = execSetRow( row, id);
-
-		// Finalize UPDATE.
-		myMDSql->finalizePreparedStmt();
-	}
-
-	return(success);
-}
-
-
-bool MetaData::initAddRow(const MDRow &row)
-{
-    int 	i=0,j=0;					// Loop counter.
-    bool	success=true;				// Return value.
-    std::vector<MDLabel>   	labels;		// Columns labels.
-    std::vector<MDObject*> 	mdValues;	// Vector to store values.
-
-    // Set vector size.
-    labels.resize(row._size);
-
-    // Get labels.
-    j=0;
-    for (i=0; i<row._size; ++i)
-    {
-        const MDLabel &label = row.order[i];
-
-        if (row.containsLabel(label))
-        {
-        	addLabel( label);
-        	labels[j] = label;
-        	j++;
-        }
-    }
-    labels.resize(j);
-
-    // Prepare statement (mdValues is not used).
-    if (!myMDSql->initializeInsert( &labels, mdValues))
-    {
-    	std::cout << "initAddRow: error executing myMDSql->initializeInsert" << std::endl;
-		success = false;
-    }
-
-    return(success);
-}
-
-
-bool MetaData::execAddRow(const MDRow &row)
-{
-    int 	i=0,j=0;					// Loop counter.
-    bool	success=true;				// Return value.
-    std::vector<MDObject*> 	mdValues;	// Vector to store values.
-
-    // Set values vector size.
-    mdValues.resize(row._size);
-
-    // Get values to insert.
-    j=0;
-    for (i=0; i<row._size; ++i)
-    {
-        const MDLabel &label = row.order[i];
-
-        if (row.containsLabel(label))
-        {
-        	addLabel( label);
-        	mdValues[j] = row.getObject( label);
-        	j++;
-        }
-    }
-    mdValues.resize(j);
-
-	// Execute statement.
-	if (!myMDSql->setObjectValues( -1, mdValues))
-	{
-		std::cout << "execAddRow: error executing myMDSql->setObjectValues" << std::endl;
-		success = false;
-	}
-
-    return(success);
 }
 
 size_t MetaData::addRow(const MDRow &row)
@@ -515,25 +277,6 @@ size_t MetaData::addRow(const MDRow &row)
     SET_ROW_VALUES(row);
 
     return id;
-}
-
-
-bool MetaData::addRow2(const MDRow &row)
-{
-	bool	success=true;				// Return value.
-
-	// Initialize INSERT.
-	success = initAddRow( row);
-	if (success)
-	{
-		// Execute INSERT.
-		success = execAddRow( row);
-
-		// Finalize INSERT.
-		myMDSql->finalizePreparedStmt();
-	}
-
-	return(success);
 }
 
 MetaData::MetaData()
@@ -1012,10 +755,8 @@ void MetaData::_writeRows(std::ostream &os) const
 	size_t i=0;				// Loop counter.
 	size_t length=0;		// Loop upper bound.
 
-	bool success=true;
-
 	// Prepare statement.
-	this->initGetRow( true);
+	myMDSql->initializeGetObjectsValuesStatement( activeLabels);
 
 	// Metadata objects loop.
     FOR_ALL_OBJECTS_IN_METADATA(*this)
@@ -1023,8 +764,7 @@ void MetaData::_writeRows(std::ostream &os) const
         std::vector<MDObject> mdValues;
 
         // Get metadata values.
-        this->bindValue( __iter.objId);
-    	myMDSql->getObjectsValues( activeLabels, &mdValues);
+    	myMDSql->getObjectsValues( __iter.objId, activeLabels, &mdValues);
 
     	// Build metadata line.
     	length = activeLabels.size();
@@ -1193,7 +933,7 @@ void MetaData::_parseObjects(std::istream &is, std::vector<MDObject*> & columnVa
 	}
 
 	// Insert elements in DB.
-	myMDSql->setObjectValues( -1, columnValues, desiredLabels);
+	myMDSql->setObjectValues( columnValues, desiredLabels, firstTime);
 }
 
 
@@ -1348,36 +1088,32 @@ void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValu
     memcpy(buffer, block.loop, n);
     char *iter = buffer, *end = iter + n, * newline = NULL;
     _parsedLines = 0; //Check how many lines the md have
-
-    if (myMDSql->initializeInsert( desiredLabels, columnValues))
+    while (iter < end) //while there are data lines
     {
-		while (iter < end) //while there are data lines
-		{
-			//Assing \n position and check if NULL at the same time
-			if (!(newline = END_OF_LINE()))
-				newline = end;
-			line.assign(iter, newline - iter);
-			trim(line);
+        //Assing \n position and check if NULL at the same time
+        if (!(newline = END_OF_LINE()))
+            newline = end;
+        line.assign(iter, newline - iter);
+        trim(line);
 
-			if (!line.empty() && line[0] != '#')
-			{
-				//_maxRows would be > 0 if we only want to read some
-				// rows from the md for performance reasons...
-				// anyway the number of lines will be counted in _parsedLines
-				if (_maxRows == 0 || _parsedLines < _maxRows)
-				{
-					std::stringstream ss(line);
-					_parseObjects( ss, columnValues, desiredLabels, firstTime);
-					firstTime=false;
-				}
-				_parsedLines++;
-			}
-			iter = newline + 1; //go to next line
-		}
-
-		// Finalize statement.
-		myMDSql->finalizePreparedStmt();
+        if (!line.empty() && line[0] != '#')
+        {
+            //_maxRows would be > 0 if we only want to read some
+            // rows from the md for performance reasons...
+            // anyway the number of lines will be counted in _parsedLines
+            if (_maxRows == 0 || _parsedLines < _maxRows)
+            {
+            	std::stringstream ss(line);
+            	_parseObjects( ss, columnValues, desiredLabels, firstTime);
+            	firstTime=false;
+            }
+            _parsedLines++;
+        }
+        iter = newline + 1; //go to next line
     }
+
+    // Finalize statement.
+    myMDSql->finalizePreparedStmt();
 
     delete[] buffer;
 }
@@ -1555,6 +1291,7 @@ void MetaData::readStar(const FileName &filename,
 {
     //First try to open the file as a metadata
     size_t id;
+
     FileName inFile = filename.removeBlockName();
 
     if (!(isMetadataFile = inFile.isMetaData()))//if not a metadata, try to read as image or stack
@@ -2446,50 +2183,6 @@ bool MDIterator::moveNext()
 bool MDIterator::hasNext()
 {
     return (objects != NULL && objIndex < size);
-}
-
-
-/** Constructor */
-MDRowIterator::MDRowIterator(MetaData &md)
-{
-	// Initialize SELECT statement.
-	md.initGetRow( false);
-
-	// Get first row.
-	this->rowReturned = md.execGetRow( this->currentRow);
-
-	// If not even one row returned then finalize SQL statement.
-	if (!this->hasNext())
-	{
-		// Finalize statement.
-		md.finalizeGetRow();
-	}
-}
-
-MDRow *MDRowIterator::getRow(void)
-{
-	return(&this->currentRow);
-}
-
-bool MDRowIterator::moveNext(MetaData &md)
-{
-	// Get first row.
-	this->rowReturned = md.execGetRow( this->currentRow);
-
-	// If no more rows then finalize SQL statement.
-	if (!this->hasNext())
-	{
-		// Finalize statement.
-		md.finalizeGetRow();
-	}
-
-	return this->rowReturned;
-}
-
-/** Function to check if a row has been retrieved */
-bool MDRowIterator::hasNext()
-{
-	return this->rowReturned;
 }
 
 //////////// Generators implementations

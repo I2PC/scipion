@@ -35,7 +35,7 @@ from protocol_volume_strain import XmippProtVolumeStrain
 
 class XmippVolumeStrainViewer(XmippViewer):
     """ Visualize the output of protocol volume strain """
-    _label = 'viewer volume strain'
+    _label = 'viewer split volume'
     _targets = [XmippProtVolumeStrain]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     

@@ -55,9 +55,8 @@ int				is_Any_Point_Imaginary( struct Graph_T *graph, int nodeIndex);
 int				number_Imaginary_Points( struct Graph_T *graph, int nodeIndex);
 
 // I/O interface.
-void print_Node(struct Node_T *node);
-void print_Graph(struct Graph_T *graph);
-void print_Graph_Statistics( char *fileName, struct Graph_T *graph);
+void            print_Node(struct Node_T *node);
+void            print_Graph(struct Graph_T *graph);
 
 
 #endif

@@ -251,7 +251,7 @@ void build_Voronoi_Area( struct Voronoi_T *voronoi, struct DCEL_T *dcel, int poi
 					turn = check_Turn( &dcel->vertex[dcel->edges[edgeID-1].origin_Vertex-1].vertex,
 									   &dcel->vertex[dcel->edges[dcel->edges[edgeID-1].twin_Edge-1].origin_Vertex-1].vertex,
 									   &centre);
-					if (turn == RIGHT_TURN)
+					if (turn == RIGHT)
 					{
 #ifdef DEBUG_BUILD_VORONOI_AREA
 						printf("Turn RIGHT\n");
@@ -348,7 +348,7 @@ void build_Voronoi_Area( struct Voronoi_T *voronoi, struct DCEL_T *dcel, int poi
 					turn = check_Turn( &dcel->vertex[dcel->edges[edgeID-1].origin_Vertex-1].vertex,
 									   &dcel->vertex[dcel->edges[dcel->edges[edgeID-1].twin_Edge-1].origin_Vertex-1].vertex,
 									   &centre);
-					if (turn == RIGHT_TURN)
+					if (turn == RIGHT)
 					{
 #ifdef DEBUG_BUILD_VORONOI_AREA
 						printf("Turn RIGHT 2\n");
@@ -431,7 +431,7 @@ void build_Voronoi_Area( struct Voronoi_T *voronoi, struct DCEL_T *dcel, int poi
 			turn = check_Turn( &dcel->vertex[dcel->edges[edgeID-1].origin_Vertex-1].vertex,
 							   &dcel->vertex[dcel->edges[dcel->edges[edgeID-1].twin_Edge-1].origin_Vertex-1].vertex,
 							   &centre);
-			if (turn == RIGHT_TURN)
+			if (turn == RIGHT)
 			{
 #ifdef DEBUG_BUILD_VORONOI_AREA
 				printf("Turn RIGHT\n");
@@ -655,7 +655,7 @@ int	 inner_To_Voronoi_Area( struct Voronoi_T *voronoi, int index,
 			// Check edge turn between current edge and input point.
 			if (check_Turn( &voronoi->dcel.vertex[origin].vertex,
 							&voronoi->dcel.vertex[dest].vertex,
-							q) == RIGHT_TURN)
+							q) == RIGHT)
 			{
 				inner = FALSE;
 			}

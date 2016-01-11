@@ -269,10 +269,66 @@ size_t MDSql::size(void)
     return execSingleIntStmt(ss);
 }
 
-bool MDSql::setObjectValues( size_t id, const std::vector<MDObject*> columnValues, const std::vector<MDLabel> *desiredLabels)
+bool MDSql::setObjectValues(const std::vector<MDObject*> & columnValues, const std::vector<MDLabel> *desiredLabels, bool firstTime)
 {
     bool r = true;			// Return value.
     int i=0, j=0;			// Loop indexes.
+
+    if (firstTime)
+    {
+    	// Clear preparedStream.
+    	this->preparedStream.str(std::string());
+
+    	// Initialize SQL sentence.
+    	this->preparedStream << "INSERT INTO " << tableName(tableId);
+
+    	// Add columns.
+    	this->preparedStream << " (";
+
+    	// If desired labels is null then add all columns.
+    	if (desiredLabels==NULL)
+    	{
+    		this->preparedStream << MDL::label2StrSql(columnValues[0]->label);
+    		for (i=1; i<columnValues.size() ;i++)
+    		{
+    			this->preparedStream << "," << MDL::label2StrSql(columnValues[i]->label);
+    		}
+    	}
+    	// Add only desired columns.
+    	else
+    	{
+    		this->preparedStream << MDL::label2StrSql((*desiredLabels)[0]);
+    		for (i=1; i<desiredLabels->size() ;i++)
+    		{
+    			this->preparedStream << "," << MDL::label2StrSql((*desiredLabels)[i]);
+    		}
+    	}
+    	this->preparedStream << ")";
+
+    	// Add ? symbols.
+    	this->preparedStream << " VALUES (?";
+
+    	// If desired labels is null then add all columns.
+    	if (desiredLabels==NULL)
+    	{
+    		for (i=1; i<columnValues.size() ;i++)
+    		{
+    			this->preparedStream << ",?";
+    		}
+    	}
+    	// Add only desired columns.
+    	else
+    	{
+    		for (i=1; i<desiredLabels->size() ;i++)
+    		{
+    			this->preparedStream << ",?";
+    		}
+    	}
+    	this->preparedStream << ");";
+
+    	// Prepare statement.
+    	rc = sqlite3_prepare_v2(db, this->preparedStream.str().c_str(), -1, &this->preparedStmt, &zLeftover);
+    }
 
     // Add values.
     if (desiredLabels==NULL)
@@ -297,12 +353,6 @@ bool MDSql::setObjectValues( size_t id, const std::vector<MDObject*> columnValue
 				}
 			}
 		}
-    }
-
-    // id != -1 means there is a WHERE clause in the query sentence and id must be added.
-    if (id != -1)
-    {
-    	sqlite3_bind_int( this->preparedStmt, i+1, id);
     }
 
     // Execute statement.
@@ -390,18 +440,17 @@ bool MDSql::setObjectValue(const int objId, const MDObject &value)
     return r;
 }
 
-bool MDSql::initializeSelect( bool addWhereObjId, std::vector<MDLabel> labels)
+bool MDSql::initializeGetObjectsValuesStatement(std::vector<MDLabel> labels)
 {
 	int 	i=0;					// Loop counter.
-	bool	createdOK=true;		// Return value.
-	std::stringstream ss;		// Sentence string.
-
-	// Initialize SELECT sentence.
-	ss << "SELECT ";
+	bool	initialized=true;		// Return value.
 
 	// Add columns names.
 	if (labels.size() > 0)
 	{
+		std::stringstream ss;		// Sentence string.
+		ss << "SELECT ";
+
 		// Add columns names.
 		ss << MDL::label2StrSql(labels[0]);
 		for (i=1; i<labels.size() ;i++)
@@ -411,144 +460,34 @@ bool MDSql::initializeSelect( bool addWhereObjId, std::vector<MDLabel> labels)
 				ss << "," << MDL::label2StrSql(labels[i]);
 			}
 		}
-	}
-	// Select all columns.
-	else
-	{
-		ss << " * ";
-	}
-
-	// Add table.
-	ss << " FROM " << tableName(tableId);
-
-	// Check if add WHERE clause to select by id.
-	if (addWhereObjId)
-	{
-		ss << " WHERE objID=?";
-	}
-
-	rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &this->preparedStmt, &zLeftover);
-	if (rc != SQLITE_OK)
-	{
-		createdOK = false;
-		printf( "could not prepare statement: %s\n", sqlite3_errmsg(db) );
-		this->preparedStmt = NULL;
-	}
-
-	return(createdOK);
-}
-
-bool MDSql::initializeInsert(const std::vector<MDLabel> *labels, const std::vector<MDObject*> &values)
-{
-	int 	i=0;				// Loop counter.
-	int		length=0;			// # labels.
-	bool	createdOK=true;		// Return value.
-
-	// Clear preparedStream.
-	this->preparedStream.str(std::string());
-
-	// Initialize SQL sentence.
-	this->preparedStream << "INSERT INTO " << tableName(tableId);
-
-	// Add columns.
-	this->preparedStream << " (";
-
-	// Execute branch if "labels" size is not zero.
-	if (labels != NULL)
-	{
-		length = labels->size();
-		this->preparedStream << MDL::label2StrSql((*labels)[0]);
-		for (i=1; i<length ;i++)
-		{
-			this->preparedStream << "," << MDL::label2StrSql((*labels)[i]);
-		}
-	}
-	// Execute branch if "values" size is not zero.
-	else if ((length = values.size()) > 0)
-	{
-		this->preparedStream << MDL::label2StrSql((*values[0]).label);
-		for (i=1; i<length ;i++)
-		{
-			this->preparedStream << "," << MDL::label2StrSql((*values[i]).label);
-		}
-	}
-
-	// Add one '?' character for each label.
-	this->preparedStream << ") VALUES (?";
-	for (i=1; i<length ;i++)
-	{
-		this->preparedStream << ",?";
-	}
-	this->preparedStream << ");";
-
-	// Prepare statement.
-	//std::cout << this->preparedStream.str().c_str() << std::endl;
-	rc = sqlite3_prepare_v2(db, this->preparedStream.str().c_str(), -1, &this->preparedStmt, &zLeftover);
-	if (rc != SQLITE_OK)
-	{
-		printf( "initializeInsert: could not prepare statement: %s\n", sqlite3_errmsg(db) );
-		this->preparedStmt = NULL;
-		createdOK = false;
-	}
-
-	return(createdOK);
-}
-
-bool MDSql::initializeUpdate( std::vector<MDLabel> labels)
-{
-	int 	i=0;				// Loop counter.
-	int		length=0;			// # labels.
-	bool	createdOK=true;		// Return value.
-
-	// Get # labels.
-	length = labels.size();
-
-	// Check there are labels.
-	if (length > 0)
-	{
-		// Clear preparedStream.
-		this->preparedStream.str(std::string());
-
-		// Initialize SQL sentence.
-		this->preparedStream << "UPDATE " << tableName(tableId) << " SET ";
-
-		// Add labels.
-		this->preparedStream << MDL::label2StrSql(labels[0]) << "=?";
-		for (i=1; i<length ;i++)
-		{
-			this->preparedStream << ", " << MDL::label2StrSql(labels[i]) << "=?";
-		}
-
-		// Insert where clause.
-		this->preparedStream << " WHERE objID=?;";
-
-		// Prepare statement.
-		rc = sqlite3_prepare_v2(db, this->preparedStream.str().c_str(), -1, &this->preparedStmt, &zLeftover);
+		ss << " FROM " << tableName(tableId) << " WHERE objID=?";
+		rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &this->preparedStmt, &zLeftover);
 		if (rc != SQLITE_OK)
 		{
-			printf( "initializeUpdate: could not prepare statement: %s\n", sqlite3_errmsg(db) );
+			initialized = false;
+			printf( "could not prepare statement: %s\n", sqlite3_errmsg(db) );
 			this->preparedStmt = NULL;
-			createdOK = false;
 		}
 	}
 	else
 	{
 		this->preparedStmt = NULL;
-		createdOK = false;
 	}
 
-	return(createdOK);
+	return(initialized);
 }
 
-
-bool MDSql::getObjectsValues( std::vector<MDLabel> labels, std::vector<MDObject> *values)
+bool MDSql::getObjectsValues(const size_t objId, std::vector<MDLabel> labels, std::vector<MDObject> *values)
 {
 	bool ret=true;				// Return value.
 	int i=0;					// Loop counter.
 
+	// Bind object id.
+	rc = sqlite3_bind_int(this->preparedStmt, 1, objId);
+
 	// Execute statement.
 	rc = sqlite3_step(this->preparedStmt);
-	if (rc == SQLITE_ROW)
+	while (rc == SQLITE_ROW)
 	{
 		for (i=0; i<labels.size() ;i++)
 		{
@@ -559,12 +498,22 @@ bool MDSql::getObjectsValues( std::vector<MDLabel> labels, std::vector<MDObject>
 				(*values).push_back(value);
 			}
 		}
+
+		// Next row.
+		rc = sqlite3_step(this->preparedStmt);
 	}
-	// If no row retrieved then return false.
-	else
+
+	// Check error in last sqlite3_step call.
+	if (rc != SQLITE_DONE)
 	{
+		// Error executing SQL sentence.
 		ret = false;
+		std::cout << "sqlite3_step returned " << rc << std::endl;
 	}
+
+	// Reset statement and bindings.
+	sqlite3_clear_bindings(this->preparedStmt);
+	sqlite3_reset(this->preparedStmt);
 
 	return(ret);
 }
@@ -925,7 +874,6 @@ void MDSql::setOperate(MetaData *mdPtrOut, const std::vector<MDLabel> &columns, 
     bool execStmt = true;
     int size;
     std::string sep = " ";
-    std::vector<MDLabel> * labelVector;
 
     switch (operation)
     {
@@ -958,10 +906,19 @@ void MDSql::setOperate(MetaData *mdPtrOut, const std::vector<MDLabel> &columns, 
         ss << ";";
         break;
     case DISTINCT:
+    case REMOVE_DUPLICATE:
         //Create string with columns list
         size = mdPtrOut->activeLabels.size();
         sep = ' ';
-        labelVector = &(mdPtrOut->activeLabels);
+        std::vector<MDLabel> * labelVector;
+        if (operation == REMOVE_DUPLICATE)
+        {
+            labelVector = &(myMd->activeLabels);
+        }
+        else if (operation == DISTINCT)
+        {
+            labelVector = &(mdPtrOut->activeLabels);
+        }
         for (int i = 0; i < size; i++)
         {
             ss2 << sep << MDL::label2StrSql( labelVector->at(i));
@@ -972,22 +929,6 @@ void MDSql::setOperate(MetaData *mdPtrOut, const std::vector<MDLabel> &columns, 
         << " SELECT DISTINCT " << ss2.str()
         << " FROM " << tableName(tableId)
         << ";";
-        break;
-    case REMOVE_DUPLICATE:
-        //Create string with columns list
-        size = mdPtrOut->activeLabels.size();
-        sep = ' ';
-        labelVector = &(mdPtrOut->activeLabels);
-        for (int i = 0; i < size; i++)
-        {
-            ss2 << sep << MDL::label2StrSql( labelVector->at(i));
-            sep = ", ";
-        }
-        ss << "INSERT INTO " << tableName(mdPtrOut->myMDSql->tableId)
-        << " (ObjId," << ss2.str() << ")"
-        << " SELECT M.* FROM (SELECT " << MDL::label2StrSql(columns[0]) << ", MIN(ObjId) AS first "
-        << " FROM " << tableName(tableId) << " GROUP BY " << MDL::label2StrSql(columns[0])
-        << " ) foo JOIN " << tableName(tableId) << " M ON foo.first = M.ObjId;";
         break;
     case INTERSECTION:
     case SUBSTRACTION:
@@ -1380,7 +1321,7 @@ void MDSql::sqlEnd()
 {
     sqlCommitTrans();
     sqlite3_close(db);
-    //std::cerr << "Database sucessfully closed." <<std::endl;
+    //std::cerr << "Database successfully closed." <<std::endl;
 }
 
 bool MDSql::sqlBeginTrans()
@@ -1505,24 +1446,6 @@ std::string MDSql::tableName(const int tableId) const
     return ss.str();
 }
 
-bool MDSql::bindStatement( size_t id)
-{
-	bool success=true;		// Return value.
-
-	// Clear current statement.
-	sqlite3_clear_bindings(this->preparedStmt);
-	sqlite3_reset(this->preparedStmt);
-
-	// Bind object id.
-	rc = sqlite3_bind_int(this->preparedStmt, 1, id);
-	if (rc != SQLITE_OK)
-	{
-		success = false;
-	}
-
-	return(success);
-}
-
 int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn)
 {
     //First reset the statement
@@ -1560,6 +1483,7 @@ int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &val
 
 void MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut)
 {
+    std::stringstream ss;
     switch (valueOut.type)
     {
     case LABEL_BOOL: //bools are int in sqlite3
@@ -1575,21 +1499,15 @@ void MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &value
         valueOut.data.doubleValue = sqlite3_column_double(stmt, position);
         break;
     case LABEL_STRING:
-    {
-        std::stringstream ss;
         ss << sqlite3_column_text(stmt, position);
         valueOut.data.stringValue->assign(ss.str());
 
         break;
-    }
     case LABEL_VECTOR_DOUBLE:
     case LABEL_VECTOR_SIZET:
-    {
-        std::stringstream ss;
         ss << sqlite3_column_text(stmt, position);
         valueOut.fromStream(ss);
         break;
-    }
     default:
         REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to extract a value from this type");
     }

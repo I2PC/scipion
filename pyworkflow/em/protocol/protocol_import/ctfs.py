@@ -45,7 +45,6 @@ class ProtImportCTF(ProtImportFiles):
     IMPORT_FROM_AUTO = 0
     IMPORT_FROM_XMIPP3 = 1
     IMPORT_FROM_GRIGORIEFF = 2
-    IMPORT_FROM_GCTF = 3
 
     #--------------------------- DEFINE param functions --------------------------------------------
 
@@ -61,7 +60,7 @@ class ProtImportCTF(ProtImportFiles):
         from which the import can be done.
         (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
-        return ['auto', 'xmipp', 'grigorieff', 'gctf']
+        return ['auto', 'xmipp','grigorieff']
 
     def _getDefaultChoice(self):
         return  self.IMPORT_FROM_AUTO
@@ -92,9 +91,6 @@ class ProtImportCTF(ProtImportFiles):
         elif importFrom == self.IMPORT_FROM_GRIGORIEFF:
             from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportCTF
             return GrigorieffLabImportCTF(self)
-        elif importFrom == self.IMPORT_FROM_GCTF:
-            from pyworkflow.em.packages.gctf.dataimport import GctfImportCTF
-            return GctfImportCTF(self)
         else:
             return None
         

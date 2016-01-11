@@ -1064,9 +1064,9 @@ int     is_Interior_To_Node(struct DCEL_T *dcel, struct Graph_T *graph, struct P
 #endif
 
     // Check if there is not a right turn.
-    if (!(return_Turn( dcel, p, id1, id2) == RIGHT_TURN) &&
-        !(return_Turn( dcel, p, id2, id3) == RIGHT_TURN) &&
-        !(return_Turn( dcel, p, id3, id1) == RIGHT_TURN))
+    if (!(return_Turn( dcel, p, id1, id2) == RIGHT) &&
+        !(return_Turn( dcel, p, id2, id3) == RIGHT) &&
+        !(return_Turn( dcel, p, id3, id1) == RIGHT))
     {
         // Point is interior.
         is_Interior = TRUE;
@@ -1119,7 +1119,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
             // Check if point is over line from source_Index point to P-2.
         	else if (higher_Point( p, &dcel->vertex[source_ID-1].vertex, &lexicographic_Higher))
             {
-                turn = RIGHT_TURN;
+                turn = RIGHT;
             }
 			else
 			{
@@ -1136,7 +1136,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
             }
 			else
 			{
-				turn = RIGHT_TURN;
+				turn = RIGHT;
 			}
         }
     }
@@ -1152,7 +1152,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
             // Check if point is over line from P-1 point to dest_Index point.
         	else if (higher_Point( p, &dcel->vertex[dest_ID-1].vertex, &lexicographic_Higher))
             {
-				turn = RIGHT_TURN;
+				turn = RIGHT;
             }
 			else
 			{
@@ -1171,7 +1171,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
 				}
 				else
 				{
-					turn = RIGHT_TURN;
+					turn = RIGHT;
 				}
             }
 			else
@@ -1801,7 +1801,7 @@ void	check_Edge( struct DCEL_T *dcel, struct Graph_T *graph, int edge_ID)
 					else
 					{
 						// If turn RIGHT then flip edge.
-						if (check_Turn( p, q, common1) == RIGHT_TURN)
+						if (check_Turn( p, q, common1) == RIGHT)
 						{
 							flip_Edges = TRUE;
 						}
@@ -1825,7 +1825,7 @@ void	check_Edge( struct DCEL_T *dcel, struct Graph_T *graph, int edge_ID)
 					else
 					{
 						// If turn RIGHT then flip edge.
-						if (check_Turn( p, q, common1) == RIGHT_TURN)
+						if (check_Turn( p, q, common1) == RIGHT)
 						{
 							flip_Edges = TRUE;
 						}
