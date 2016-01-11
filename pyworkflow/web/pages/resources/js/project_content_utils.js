@@ -472,7 +472,7 @@ function updateTabs(id) {
 	 * Fill the content of the summary tab for a protocol run selected (Data /
 	 * Summary / Methods / Status)
 	 */
-	var URL = getSubDomainURL() + '/protocol_info/?protocolId=' + id
+	var URL = getSubDomainURL() + '/protocol_info/?protocolId=' + id + projectToGETParams()
 	$.ajax({
 		type : "GET",
 		url : URL,
@@ -665,13 +665,13 @@ function updateButtons(id, mode) {
 	
 			// Action Edit Button
 			$("a#editTool").attr('href',
-					'javascript:popup("/form/?protocolId=' + id + '")');
+					'javascript:popup("/form/?protocolId=' + id + projectToGETParams() + '")');
 			$("span#editTool").show();
 	
 			// Action Copy Button
 			$("a#copyTool").attr(
 					'href',
-					'javascript:popup("/form/?protocolId=' + id + '&action=copy'
+					'javascript:popup("/form/?protocolId=' + id + projectToGETParams() + '&action=copy'
 							+ '")');
 			$("span#copyTool").show();
 	
@@ -847,7 +847,7 @@ function updateGraphView(status) {
 	 * closed the project last time will be available directly, in the another
 	 * case, will be inactive.
 	 */
-	var URL = getSubDomainURL() + "/update_graph_view/?status=" + status
+	var URL = getSubDomainURL() + "/update_graph_view/?status=" + status + projectToGETParams()
 	$.ajax({
 		type : "GET",
 		url : URL,
@@ -856,7 +856,7 @@ function updateGraphView(status) {
 }
 
 function editObject(objId) {
-	var URL = getSubDomainURL() + '/get_attributes/?objId=' + objId
+	var URL = getSubDomainURL() + '/get_attributes/?objId=' + objId + projectToGETParams()
 	$.ajax({
 		type : "GET",
 		url : URL,
@@ -872,7 +872,7 @@ function editObject(objId) {
 }
 
 function downloadOutput(objId) {
-	var URL = getSubDomainURL() + '/download_output/?objId=' + objId
+	var URL = getSubDomainURL() + '/download_output/?objId=' + objId + projectToGETParams()
 	$.ajax({
 		type : "GET",
 		url : URL,
@@ -913,7 +913,7 @@ function deleteProtocol(elm) {
 	 * Method to execute a delete for a protocol
 	 */
 	var id = elm.attr('value');
-	var URL = getSubDomainURL() + "/delete_protocol/?id=" + id
+	var URL = getSubDomainURL() + "/delete_protocol/?id=" + id + projectToGETParams()
 	$.ajax({
 		type : "GET",
 		url : URL,
@@ -939,7 +939,7 @@ function copyProtocol(id) {
 	/*
 	 * Method to copy protocol.
 	 */
-	var URL = getSubDomainURL() + "/copy_protocol/?id=" + id
+	var URL = getSubDomainURL() + "/copy_protocol/?id=" + id + projectToGETParams()
 	$.ajax({
 		type : "GET",
 		url : URL,
@@ -979,7 +979,7 @@ function stopProtocol(elm) {
 	 * Method to stop the run for a protocol
 	 */
 	var protId = elm.attr('value');
-	var URL = getSubDomainURL() + "/stop_protocol/?protocolId=" + protId
+	var URL = getSubDomainURL() + "/stop_protocol/?protocolId=" + protId + projectToGETParams()
 	$.ajax({
 		type : "GET",
 		url : URL
@@ -991,14 +991,14 @@ function changeTreeView() {
 	 * Method to update the protocol tree to run in the web left side.
 	 */
 	protIndex = $('#viewsTree').val();
-	var URL = getSubDomainURL() + '/update_prot_tree/?index=' + protIndex
+	var URL = getSubDomainURL() + '/update_prot_tree/?index=' + protIndex + projectToGETParams()
 
 	$.ajax({
 		type : "GET",
 		url : URL,
 		dataType : "text",
 		success : function() {
-			var URL2 = getSubDomainURL() + '/tree_prot_view/'
+			var URL2 = getSubDomainURL() + '/tree_prot_view/?' + projectToGETParams()
 			$.ajax({
 				type : "GET",
 				url : URL2,
@@ -1025,6 +1025,9 @@ function refreshRuns(mode) {
 	}
 
 	var URL = getSubDomainURL() + '/run_table_graph/'
+
+    // Add projectName and serviceName to the url
+    URL = URL + '?' + projectToGETParams()
 
 	$(function() {
 		$.ajax({
@@ -1073,7 +1076,7 @@ function refreshRuns(mode) {
 	if (mode) {
 		var updatetimer = setTimeout(function() {
 			refreshRuns(1);
-		}, 3000);
+		}, 10 * 1000);
 	}
 }
 
@@ -1116,9 +1119,6 @@ function openSearchProtocolPopup(search)
 			});
 		}
 	});
-	    
-		
-	
 }
 
 

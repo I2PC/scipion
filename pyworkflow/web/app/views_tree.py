@@ -27,18 +27,20 @@
 from pyworkflow.web.pages import settings as django_settings
 import pyworkflow.em as em
 
-#===============================================================================
-# PROTOCOL TREE
-#===============================================================================
 
-def loadProtTree(project):
+# ===============================================================================
+# PROTOCOL TREE
+# ===============================================================================
+
+def loadProtTree(project, serviceName=None):
     protCfg = project.getCurrentProtocolView()
     root = TreeItem('root', 'root', '', '')
     populateProtTree(root, protCfg)
-#    return root
-    
-    html = convertProtTree(root)
+    #    return root
+
+    html = convertProtTree(root, project.getShortName(), serviceName)
     return html
+
 
 class TreeItem():
     def __init__(self, name, tag, icon, openItem, protClassName=None, protClass=None):
@@ -52,11 +54,11 @@ class TreeItem():
         self.protClass = protClassName
         self.protRealClass = name
         self.childs = []
-        
-        
-def populateProtTree(tree, obj):    
+
+
+def populateProtTree(tree, obj):
     emProtocolsDict = em.getProtocols()
-    
+
     for sub in obj:
         text = sub.text.get()
         value = sub.value.get(text)
@@ -79,79 +81,81 @@ def populateProtTree(tree, obj):
             populateProtTree(item, sub)
 
 
-def convertProtTree(tree):
+def convertProtTree(tree, projectName, serviceName):
     sections = tree.childs
     html = ''
     for section in sections:
         if section.tag == 'section':
-            html += '<li><span class="section">'+ section.name +'</span><ul>'        
-            html += convertProtTree(section)
+            html += '<li><span class="section">' + section.name + '</span><ul>'
+            html += convertProtTree(section, projectName, serviceName)
             html += '</ul></li>'
         else:
-            html += getProtChildrens(section)
+            html += getProtChildrens(section, projectName, serviceName)
     return html
-        
-        
-def getProtChildrens(tree):
+
+
+def getProtChildrens(tree, projectName, serviceName):
     html = ''
-        
+    context = '&p=' + projectName
+    if serviceName is not None: context = context + '&s=' + serviceName
+
     if tree.tag == 'protocol':
         html += '<li><span class="protocol">'
-        if tree.icon != None:
-            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/'+ tree.icon +'"/>'
-        function = 'javascript:popup("/form/?protocolClass='+ tree.protClass +'")'
-        html += ' <a href=' + function + '>'+ tree.name +'</a>'
+        if tree.icon is not None:
+            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/' + tree.icon + '"/>'
+        function = 'javascript:popup("/form/?protocolClass=' + tree.protClass + context + '")'
+        html += ' <a href=' + function + '>' + tree.name + '</a>'
         html += '</span></li>'
-    
+
     elif tree.tag == 'protocol_class':
         html += '<li><span class="protocol_class">'
-        if tree.icon != None:
-            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/'+ tree.icon +'"/>'
-        function = 'javascript:popup("/form/?protocolClass='+ tree.protRealClass +'")'
-        html += ' <a href=' + function + '>'+ tree.name +'</a>'
+        if tree.icon is not None:
+            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/' + tree.icon + '"/>'
+        function = 'javascript:popup("/form/?protocolClass=' + tree.protRealClass + context + '")'
+        html += ' <a href=' + function + '>' + tree.name + '</a>'
         html += '</span></li>'
-    
+
     elif tree.tag == 'protocol_base':
         openItem = ""
-        if tree.openItem != True:
+        if tree.openItem is True:
             openItem = "closed"
-        html += '<li class="'+ openItem +'"><span class="protocol_base">'
-        if tree.icon != None:
-            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/' + tree.icon +'"/>'
+        html += '<li class="' + openItem + '"><span class="protocol_base">'
+        if tree.icon is not None:
+            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/' + tree.icon + '"/>'
         html += tree.name + '</span>'
-    
+
         html += '<ul>'
         childrens = tree.childs
         for child in childrens:
-            html += getProtChildrens(child)
+            html += getProtChildrens(child, projectName, serviceName)
         html += '</ul>'
-    
+
     elif tree.tag == 'url':
         html += '<li><span class="protocol">'
-        if tree.icon != None:
-            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/'+ tree.icon +'"/>'
-        function = 'javascript:popup("'+ tree.protClass +'")'
-        html += ' <a href=' + function + '>'+ tree.name +'</a>'
+        if tree.icon is not None:
+            html += '<img src="' + django_settings.ABSOLUTE_URL + '/resources/' + tree.icon + '"/>'
+        function = 'javascript:popup("' + tree.protClass + '?' + context + '")'
+        html += ' <a href=' + function + '>' + tree.name + '</a>'
         html += '</span></li>'
-    
-    
+
     return html
 
-#===============================================================================
+
+# ===============================================================================
 # OBJECT TREE
-#===============================================================================
+# ===============================================================================
 
 def getGraphClassesNode(project):
     from pyworkflow.utils.graph import Graph
     classesGraph = Graph()
-    
+
     # Method to create class nodes
     def createClassNode(classObj):
         """ Add the object class to hierarchy and 
         any needed subclass. """
         className = classObj.__name__
         classNode = classesGraph.getNode(className)
-        
+
         if not classNode:
             classNode = classesGraph.createNode(className)
             if className != 'EMObject' and classObj.__bases__:
@@ -164,7 +168,7 @@ def getGraphClassesNode(project):
                 parent.addChild(classNode)
             classNode.count = 0
         return classNode
-    
+
     g = project.getSourceGraph()
 
     for node in g.getNodes():
@@ -173,45 +177,47 @@ def getGraphClassesNode(project):
             obj = project.mapper.selectById(id)
             classNode = createClassNode(obj.getClass())
             classNode.count += 1
-    
+
     return classesGraph
-    
+
+
 def populateObjTree(tree, elements):
     for node in elements:
         if node.getName() != "ROOT":
-#            print "HERE->", node.getName()
-#            print "CHILDS: ", [i.getName() for i in node.getChilds()]
+            #            print "HERE->", node.getName()
+            #            print "CHILDS: ", [i.getName() for i in node.getChilds()]
             item = ObjItem(node.getName(), node.count)
             tree.childs.append(item)
             if len(node.getChilds()) > 0:
                 populateObjTree(item, node.getChilds())
-         
+
+
 class ObjItem():
     def __init__(self, name, count=None):
         self.name = name
         self.count = count
         self.openItem = True
         self.childs = []
-        
+
 
 def convertObjTree(tree):
     sections = tree.childs
     for section in sections:
         html = getChildrens(section)
     return html
-        
-        
+
+
 def getChildrens(tree):
     hasChilds = False
-    
+
     html = '<span>'
     if len(tree.childs) > 0:
         html += tree.name
         hasChilds = True
     else:
-        html = '<strong>'+tree.name +' ('+str(tree.count)+')</strong>'
+        html = '<strong>' + tree.name + ' (' + str(tree.count) + ')</strong>'
     html += '</span>'
-        
+
     if hasChilds:
         html += '<ul>'
         childrens = tree.childs
@@ -220,6 +226,5 @@ def getChildrens(tree):
             html += getChildrens(child)
             html += '</li>'
         html += '</ul>'
-    
-    return html
 
+    return html

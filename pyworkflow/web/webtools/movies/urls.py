@@ -15,5 +15,5 @@ urls = [
     url(r'^mov_form/$', 'app.views_webtools.movies_form'),
     url(r'^m_content/$', 'app.views_webtools.movies_content'),
     url(r'^upload_movies/', 'app.views_webtools.upload_movies'),
-    
+
 ]

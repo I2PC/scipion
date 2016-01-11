@@ -155,7 +155,7 @@
 			  	{% if expertLevel == 0 %} checked {% endif %}/>{{msg.LABEL_EXPERT_NORMAL}}
 			  	&nbsp;
 			  	<input type="radio" id="" name={{msg.VAR_EXPERT}} onChange="javascript:evalElements();" value="1"
-			  	{% if expertLevel == 1 %} checked {% endif %}/>{{msg.LABEL_EXPERT_ADVANCE}}
+			  	{% if expertLevel == 1 %} checked {% endif %}/><scpan class="advance">{{msg.LABEL_EXPERT_ADVANCE}}</span>
 			  
 			</td>
 		</tr>

@@ -760,20 +760,40 @@ class Project(object):
     def getProtocol(self, protId):
         protocol = self.mapper.selectById(protId)
         
+        return self._setupProtocolObject(protocol)
+
+    def _setupProtocolObject(self, protocol):
+        """
+        Parameters
+        ----------
+        protocol: an instance of a protocol
+
+        Returns
+        -------
+        the same instance but with addition configurations: the mapper,....
+        """
+
         if not isinstance(protocol, pwprot.Protocol):
-            raise Exception('>>> ERROR: Invalid protocol id: %d' % protId)
-        
+            raise Exception('>>> ERROR: Invalid protocol. Object with id: %d is not a protocol.' % protocol.getObjId())
+
         self._setProtocolMapper(protocol)
-        
+
         return protocol
-    
+
+
     def getProtocolsByClass(self, className):
         return self.mapper.selectByClass(className)
             
     def getObject(self, objId):
         """ Retrieve an object from the db given its id. """
-        return self.mapper.selectById(objId)
-        
+
+        obj = self.mapper.selectById(objId)
+
+        # If the object is a protocol, we should use the project.getProtocol
+        if isinstance(obj, pwprot.Protocol):
+            obj = self._setupProtocolObject(obj)
+
+        return obj
     def _setHostConfig(self, protocol):
         """ Set the appropriate host config to the protocol
         give its value of 'hostname'

@@ -61,12 +61,12 @@ function createProjectForm(title, msg) {
 
 function createProject(elm) {
 	var projName = elm.val();
-	var URL = getSubDomainURL() + "/create_project/?projectName=" + projName
+	var URL = getSubDomainURL() + "/create_project/?p=" + projName
 	$.ajax({
 		type : "GET",
 		url : URL,
 		success : function() {
-			var URL2 = getSubDomainURL() + "/project_content/?projectName="+projName
+			var URL2 = getSubDomainURL() + "/project_content/?p="+projName
 			window.location.href = URL2;
 		}
 	});
@@ -85,7 +85,7 @@ function deleteProjectForm(projName, title, dialog) {
 
 function deleteProject(elm) {
 	var projName = elm.attr('value');
-	var URL = getSubDomainURL() + "/delete_project/?projectName=" + projName
+	var URL = getSubDomainURL() + "/delete_project/?p=" + projName
 	$.ajax({
 		type : "GET",
 		url : URL,

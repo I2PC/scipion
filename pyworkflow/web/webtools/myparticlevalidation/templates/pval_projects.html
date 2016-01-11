@@ -28,7 +28,7 @@
 -->
 <html lang='es'>
 <head>
-<title>Scipion - My Resolution Map</title>
+<title>Scipion - My Particle Validation</title>
 <meta charset='utf-8'>
 <link rel="icon" type="image/png" href="{{favicon}}" />
 
@@ -124,7 +124,7 @@ div#steps{
 <script type="text/javascript" src="{{utils}}"></script>
 <script type="text/javascript" src="{{config}}"></script>
 <script src="{{project_utils_js}}" type="text/javascript"></script>
-<script src="{{myresmap_utils}}" type="text/javascript"></script>
+<script src="{{mypval_utils}}" type="text/javascript"></script>
 </head>
 <body>
 	<div id="bodyStyle">
@@ -147,11 +147,15 @@ div#steps{
             <div id="headerLine"></div>
         </header>
 		<div id="box">
-			<h1>Resmap Online </h1>
+			<h1>Particle validation</h1>
             <br /> 
-			<h3 style="text-align:justify;">This page allows you to execute ResMap (<a href="http://resmap.sourceforge.net/"  style="color:firebrick;" target="_blank">http://resmap.sourceforge.net</a>)
-			from the web. ResMap is an easy to use software package for computing the local resolution of 3D density maps 
-			studied in structural biology, primarily electron cryo-microscopy (cryo-EM).
+			<h3 style="text-align:justify;">This page allows you to validate particles online. The generation of a phantom reconstruction from aligned noise
+				is here presented as a baseline to assess the validity of a reconstruction from micrograph images of presumably identical particles.
+				This is both a sanity check for the microscopist at an early stage in a project, as well as for reconstructions already deposited
+				in the EMDB. So, based on the results, with the reconstruction of aligned gaussian noise, the validity of the reconstruction from the
+				micrograph images can be assessed. Practically, if the resolution of the reconstruction based on the images is not considerably
+				different from the one based on the aligned gaussian noise (for less number of particles), the images may not produce a valid
+				reconstruction (<a href="http://dx.doi.org/10.3934/biophy.2015.1.21" target="_blank"><strong>J. Bernard Heymann, 2015</strong></a>).
 			<br />
 			</h3>
 			

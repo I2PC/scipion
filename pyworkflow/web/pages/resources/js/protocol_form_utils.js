@@ -159,7 +159,7 @@ $(document).ready(function() {
 				} else {
 					// No errors in the process to save
 					protId = json.success;
-					infoPopup('Success', "The protocol was saved successfully", 1, 'window.opener.popup(\'/form/?protocolId='+protId+'\')');
+					infoPopup('Success', "The protocol was saved successfully", 1, 'window.opener.popup(\'/form/?protocolId=' + protId + projectToGETParams() +'\')');
 				}
 			},"json");
 
@@ -580,7 +580,10 @@ function browseObjects(paramName, type_param, value_param, pointerCondition, max
 				                      
     		break;
     }
-	
+
+//    In any case add the context (projectName and serviceName)
+	url_param = url_param + projectToGETParams()
+
 //	console.log("URL:", url_param)
 	
 	 var URL = getSubDomainURL() + url_param

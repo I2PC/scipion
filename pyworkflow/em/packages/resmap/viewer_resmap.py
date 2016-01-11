@@ -50,7 +50,7 @@ class ResMapViewer(ProtocolViewer):
     Please find the manual at http://resmap.sourceforge.net 
     """
            
-    _environments = [DESKTOP_TKINTER]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [ProtResMap]
     _label = 'viewer resmap'
     
@@ -96,20 +96,20 @@ class ResMapViewer(ProtocolViewer):
 
         
         
-class ResMapViewerWeb(ResMapViewer):
-    """
-    Same viewer for ResMap web, but using saved images of the plots.
-    """
-           
-    _environments = [WEB_DJANGO]
-    
-    def _showVolumeSlices(self, param=None):
-        return [ImageView(self.protocol._getExtraPath('volume1.map.png', abs=True))]
-        
-    def _showResMapSlices(self, param=None):
-        return [ImageView(self.protocol._getExtraPath('volume1_resmap.map.png', abs=True))]
-    
-    def _plotHistogram(self, param=None):
-        return [ImageView(self.protocol._getExtraPath('histogram.png', abs=True))]
-    
-        
+# class ResMapViewerWeb(ResMapViewer):
+#     """
+#     Same viewer for ResMap web, but using saved images of the plots.
+#     """
+#
+#     _environments = [WEB_DJANGO]
+#
+#     def _showVolumeSlices(self, param=None):
+#         return [ImageView(self.protocol._getExtraPath('volume1.map.png', abs=True))]
+#
+#     def _showResMapSlices(self, param=None):
+#         return [ImageView(self.protocol._getExtraPath('volume1_resmap.map.png', abs=True))]
+#
+#     def _plotHistogram(self, param=None):
+#         return [ImageView(self.protocol._getExtraPath('histogram.png', abs=True))]
+#
+#

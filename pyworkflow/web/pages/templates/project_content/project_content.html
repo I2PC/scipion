@@ -36,6 +36,9 @@
 <script src={{project_content_utils}} type="text/javascript"></script>
 <script src={{graph_utils}} type="text/javascript"></script>
 <script type="text/javascript">
+
+	{% include "project_context.html" %}
+
 	jQuery(function($) {
 		// Initialize tabs.
 		$("#tabs").tabs();

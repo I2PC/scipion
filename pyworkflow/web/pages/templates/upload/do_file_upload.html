@@ -2,6 +2,8 @@
 	<form id="uploadForm" action="{{abs_url}}/doUpload/" method="post" enctype="multipart/form-data">
 	{% csrf_token %}
 		<input type="hidden" id="project_folder" name="project_folder" value="{{project_folder}}"/>
+		<input type="hidden" name="p" value="{{projectName}}"/>
+		<input type="hidden" name="s" value="{{s}}"/>
 		<p>
 <!-- 			<strong>{{relative_path}}</strong> -->
 		</p>

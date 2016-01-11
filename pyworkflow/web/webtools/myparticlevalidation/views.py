@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# * Authors:    Pablo Conesa (pconesa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,13 +23,14 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-
-from os.path import exists, join, basename
+import os
+from os.path import exists, join, basename, dirname
 
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 
 import pyworkflow.utils as pwutils
+from pyworkflow.em.packages.xmipp3.protocol_validate_overfitting import XmippProtValidateOverfitting
 from pyworkflow.tests.tests import DataSet
 from pyworkflow.utils.utils import prettyDelta
 from pyworkflow.web.app.views_base import base_grid
@@ -39,28 +40,32 @@ from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getReso
     loadProtocolConf, CTX_PROJECT_PATH, CTX_PROJECT_NAME, PROJECT_NAME
 from pyworkflow.web.pages import settings as django_settings
 
-MYRESMAP_SERVICE = 'myresmap'
+MYPVAL_SERVICE = 'mypval'
+MYPVAL_FORM_URL = 'p_form'
 
 
-def resmap_projects(request):
+def particlevalidation_projects(request):
     if CTX_PROJECT_NAME in request.session: request.session[CTX_PROJECT_NAME] = ""
     if CTX_PROJECT_PATH in request.session: request.session[CTX_PROJECT_PATH] = ""
 
-    myresmap_utils = join(django_settings.STATIC_URL, "js/", "myresmap_utils.js")
+    mypval_utils = join(django_settings.STATIC_URL, "js/", "mypval_utils.js")
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
                'scipion_mail': getResourceIcon('scipion_mail'),
-               'myresmap_utils': myresmap_utils,
+               'mypval_utils': mypval_utils,
                'hiddenTreeProt': True,
                }
 
     context = base_grid(request, context)
-    return render_to_response('resmap_projects.html', context)
+    return render_to_response('pval_projects.html', context)
 
 
 def writeCustomMenu(customMenu):
     if not exists(customMenu):
+        # Make the parent path if it doesn't exists
+        pwutils.makePath(dirname(customMenu))
+
         f = open(customMenu, 'w+')
         f.write('''
 [PROTOCOLS]
@@ -68,19 +73,19 @@ def writeCustomMenu(customMenu):
 Local_Resolution = [
     {"tag": "section", "text": "2. Import your data", "children": [
         {"tag": "protocol", "value": "ProtImportVolumes", "text": "import volumes", "icon": "bookmark.png"},
-        {"tag": "protocol", "value": "ProtImportMask", "text": "import mask", "icon": "bookmark.png"}]},
-    {"tag": "section", "text": "3. Analysis with ResMap", "children": [
-        {"tag": "protocol", "value": "XmippProtCreateMask3D", "text": "xmipp3 - create 3D mask"},
-        {"tag": "protocol", "value": "ProtResMap", "text": "resmap - local resolution"}
-        ]}]
-        ''')
+        {"tag": "protocol", "value": "ProtImportParticles", "text": "import particles", "icon": "bookmark.png"}]
+    },
+    {"tag": "section", "text": "3. Validation", "children": [
+        {"tag": "protocol", "value": "XmippProtValidateOverfitting", "text": "xmipp3 - validate overfitting"}]
+    }]
+    ''')
         f.close()
 
 
-def create_resmap_project(request):
+def create_particlevalidation_project(request):
     if request.is_ajax():
-        import os
         from pyworkflow.em.protocol import ProtImportVolumes
+        from pyworkflow.em.protocol import ProtImportParticles
         from pyworkflow.em.packages.resmap.protocol_resmap import ProtResMap
 
         # Create a new project
@@ -89,7 +94,7 @@ def create_resmap_project(request):
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
 
-        manager = getServiceManager(MYRESMAP_SERVICE)
+        manager = getServiceManager(MYPVAL_SERVICE)
         writeCustomMenu(manager.protocols)
         project = manager.createProject(projectName, runsView=1,
                                         hostsConf=manager.hosts,
@@ -102,72 +107,108 @@ def create_resmap_project(request):
 
         projectPath = manager.getProjectPath(projectName)
 
-        # 1. Import maps
+        # If we need to import test data...
         if testDataKey:
+
+            # Get test data attributes
             attr = getAttrTestFile(testDataKey)
-            source = attr['file']
+
+            # 1. Import volumes
+            source = attr['volume']
             dest = os.path.join(projectPath, 'Uploads', basename(source))
             pwutils.createLink(source, dest)
 
             label_import = "import volumes (" + testDataKey + ")"
-            protImport = project.newProtocol(ProtImportVolumes, objLabel=label_import)
+            protImportVol = project.newProtocol(ProtImportVolumes, objLabel=label_import)
 
-            protImport.filesPath.set(dest)
-            protImport.samplingRate.set(attr['samplingRate'])
+            protImportVol.filesPath.set(dest)
+            protImportVol.samplingRate.set(attr['samplingRate'])
+            project.launchProtocol(protImportVol, wait=True, chdir=False)
 
-            project.launchProtocol(protImport, wait=True, chdir=False)
+            # 2. Import particles
+            source = attr['particles']
+            dest = os.path.join(projectPath, 'Uploads', basename(source))
+            pwutils.createLink(source, dest)
+
+            label_import = "import particles (" + testDataKey + ")"
+            protImportParticles = project.newProtocol(ProtImportParticles, objLabel=label_import)
+
+            protImportParticles.filesPath.set(dest)
+
+            # Set import particle attributes
+            protImportParticles.voltage.set(attr["microscopeVoltage"])
+            protImportParticles.sphericalAberration.set(attr["sphericalAberration"])
+            protImportParticles.amplitudeContrast.set(attr["amplitudeContrast"])
+            protImportParticles.magnification.set(attr["magnificationRate"])
+            protImportParticles.samplingRate.set(attr["particlesSamplingRate"])
+
+            project.launchProtocol(protImportParticles, wait=True, chdir=False)
+
         else:
-            protImport = project.newProtocol(ProtImportVolumes, objLabel='import volumes')
-            project.saveProtocol(protImport)
 
-        # 2. ResMap 
-        protResMap = project.newProtocol(ProtResMap)
-        protResMap.setObjLabel('resmap - local resolution')
-        protResMap.inputVolume.set(protImport)
-        protResMap.inputVolume.setExtended('outputVolume')
-        loadProtocolConf(protResMap)
-        project.saveProtocol(protResMap)
+            # Empty import volumes protocol
+            protImportVol = project.newProtocol(ProtImportVolumes, objLabel='import volumes')
+            project.saveProtocol(protImportVol)
+
+            # Empty import particles protocol
+            protImportParticles = project.newProtocol(ProtImportParticles, objLabel='import particles')
+            project.saveProtocol(protImportParticles)
+
+
+
+
+        # 3. Validation
+        protValidation = project.newProtocol(XmippProtValidateOverfitting)
+        protValidation.setObjLabel('xmipp3 - validate overfitting')
+
+        # Input volumes
+        protValidation.input3DReference.set(protImportVol)
+        protValidation.input3DReference.setExtended('outputVolume')
+
+        # Input particles
+        protValidation.inputParticles.set(protImportParticles)
+        protValidation.inputParticles.setExtended('outputParticles')
+
+        # Load additional configuration
+        loadProtocolConf(protValidation)
+        project.saveProtocol(protValidation)
 
     return HttpResponse(mimetype='application/javascript')
 
 
 def getAttrTestFile(key):
-    resmap = DataSet.getDataSet('resmap')
+    pval = DataSet.getDataSet('pval')
 
-    if key == "fcv":
-        attr = {"file": resmap.getFile("fcv"),
-                "samplingRate": 2.33,
-                }
-
-    if key == "mito_ribosome":
-        attr = {"file": resmap.getFile("mito_ribo"),
-                "samplingRate": 1.34,
-                }
-
-    if key == "t20s_proteasome":
-        attr = {"file": resmap.getFile("t20s"),
-                "samplingRate": 0.98,
+    if key == "pval":
+        attr = {"volume": pval.getFile("pval_vol"),
+                "samplingRate": 3.54,
+                "particles": pval.getFile("pval_part"),
+                "microscopeVoltage": 300,
+                "sphericalAberration": 2,
+                "amplitudeContrast": 0.1,
+                "magnificationRate": 50000,
+                "particlesSamplingRate": 3.54
                 }
 
     return attr
 
 
-def resmap_form(request):
+def particlevalidation_form(request):
     from django.shortcuts import render_to_response
     context = contextForm(request)
     context.update({'path_mode': 'upload',
-                    'formUrl': 'my_form',
+                    'formUrl': MYPVAL_FORM_URL,
                     'showHost': False,
                     'showParallel': True})
     return render_to_response('form/form.html', context)
 
 
-def resmap_content(request):
+def particlevalidation_content(request):
     projectName = request.GET.get('p', None)
-    path_files = django_settings.ABSOLUTE_URL + '/resources_myresmap/img/'
+    path_files = django_settings.ABSOLUTE_URL + '/resources_mypval/img/'
 
     # Get info about when the project was created
-    manager = getServiceManager(MYRESMAP_SERVICE)
+    manager = getServiceManager(MYPVAL_SERVICE)
     project = manager.loadProject(projectName,
                                   protocolsConf=manager.protocols,
                                   hostsConf=manager.hosts,
@@ -178,14 +219,12 @@ def resmap_content(request):
 
     daysLeft = prettyDelta(project.getLeftTime())
 
-    context = contentContext(request, project, serviceName=MYRESMAP_SERVICE)
-    context.update({'importVolumes': path_files + 'importVolumes.png',
-                    'useResMap': path_files + 'useResMap.png',
-                    'protResMap': path_files + 'protResMap.png',
-                    'analyzeResults': path_files + 'analyzeResults.png',
-                    'formUrl': 'r_form',
+    context = contentContext(request, project, serviceName=MYPVAL_SERVICE)
+
+    # Resources for the help - guide, to be done.
+    context.update({'formUrl': MYPVAL_FORM_URL,
                     'mode': 'service',
                     'daysLeft': daysLeft
                     })
 
-    return render_to_response('resmap_content.html', context)
+    return render_to_response('pval_content.html', context)

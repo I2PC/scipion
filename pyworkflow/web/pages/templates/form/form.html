@@ -37,10 +37,12 @@
 	<script src={{utils}} type="text/javascript"></script>
 	<script src={{config}} type="text/javascript"></script>
 	<script src={{protocol_form_utils}} type="text/javascript"></script>
-	<script src="{{jquery_ui}} "type="text/javascript"></script>
-	<script src="{{jquery_browser}} "type="text/javascript"></script>
-	<script>
-	
+	<script src="{{jquery_ui}}" type="text/javascript"></script>
+	<script src="{{jquery_browser}}" type="text/javascript"></script>
+	<script type="text/javascript">
+
+	{% include "project_context.html" %}
+
 	function putMode(mode){
 		$(".multipleSelect option").prop('selected',true);
 		$("#protocolForm").attr('data-mode', mode);
@@ -121,15 +123,17 @@
 		</div>
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
-			<input type="hidden" id="protocolClass" name="protocolClass" value="{{protocol.getClassName}}"/>
+			<input type="hidden" name="s" value="{{s}}"/>
+			<input type="hidden" name="p" value="{{projectName}}"/>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
+			<input type="hidden" id="protocolClass" name="protocolClass" value="{{protocol.getClassName}}"/>
 			<input type="hidden" name="protRunIdViewer" value="{{protRunIdViewer}}"/>
 			<input type="hidden" id="wizClassName" name="wizClassName" value=""/>
 			<input type="hidden" id="viewerParam" name="viewerParam" value="None"/>
 			<input type="hidden" id="label" name="label" value="{{protocol.getObjLabel}}"/>
 			<input type="hidden" id="paramProt" name="paramProt" value="{{paramProt}}"/>
 			<input type="hidden" id="formUrl" value="{{formUrl}}"/>
-			
+
 			{% include "form/header_form.html" %}
 			
 			{% include "form/content_form.html" %}

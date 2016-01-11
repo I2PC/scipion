@@ -26,7 +26,7 @@
 
 import os
 import json
-from views_util import loadProject, loadProtocolProject, parseText
+from views_util import loadProject, loadProtocolProject, parseText, SERVICE_NAME, getVarFromRequest, CTX_PROJECT_NAME
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 
@@ -179,25 +179,26 @@ def contextForm(request):
                     param.htmlCondParams = ','.join(param._conditionParams)   
                                      
             else:
-                #OTHER PARAM
+                # OTHER PARAM
                 param = PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar)
     
-    context = {'projectName':project.getName(),
+    context = {SERVICE_NAME: getVarFromRequest(request, SERVICE_NAME),
+               CTX_PROJECT_NAME: project.getShortName(),
+               'protocol': protocol,
                'package_logo': logoPath,
-               'protocol':protocol,
-               'protRunIdViewer':protRunIdViewer,
-               'definition':protocol._definition,
-               'visualize':visualize,
-               'paramProt':paramProt,
+               'protRunIdViewer': protRunIdViewer,
+               'definition': protocol._definition,
+               'visualize': visualize,
+               'paramProt': paramProt,
                'favicon': getResourceIcon('favicon'),
-               'comment':getResourceIcon('edit_toolbar'),
+               'comment': getResourceIcon('edit_toolbar'),
                'jquery_ui_css': getResourceCss('jquery_ui'),
                'wizard': getResourceIcon('wizard'),
                'protocol_form_utils': getResourceJs('protocol_form_utils'),
                'hosts': hosts,
                'comment': parseText(protocol.getObjComment()),
                'showHost': True,
-               'showParallel': True,
+               'showParallel': True
                }
     
     # Update the context dictionary with the special params
@@ -384,7 +385,6 @@ def save_protocol(request):
 # Method to delete a protocol #
 def delete_protocol(request):
     if request.is_ajax():
-        projectName = request.session['projectName']
         project = loadProject(request)
         list_id = request.GET.get('id', None).split(",")
         
@@ -406,7 +406,6 @@ def delete_protocol(request):
 # Method to copy a protocol #
 def copy_protocol(request):
     if request.is_ajax():
-        projectName = request.session['projectName']
         project = loadProject(request)
         list_id = request.GET.get('id', None).split(",")
         
@@ -429,7 +428,6 @@ def copy_protocol(request):
 # Method to stop a protocol #
 def stop_protocol(request):
     if request.is_ajax():
-        projectName = request.session['projectName']
         project = loadProject(request)
         protId = request.GET.get('protocolId', None)
         protocol = project.getProtocol(int(protId))

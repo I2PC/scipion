@@ -2,6 +2,8 @@
 
 <!-- <div id="asideMainContainer"> -->
 	<form id="showjForm" action="{{abs_url}}/showj/" method="post"> {% csrf_token %}
+		<input type="hidden" name="p" value="{{projectName}}">
+		<input type="hidden" name="s" value="{{s}}">
 		<div id="modeContainer" class="sectionMenu">
 			
 			<!-- TABLE -->
