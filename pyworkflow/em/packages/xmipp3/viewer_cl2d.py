@@ -53,8 +53,8 @@ class XmippCL2DViewer(ProtocolViewer):
     _targets = [XmippProtCL2D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
-    def __init__(self, **args):
-        ProtocolViewer.__init__(self, **args)
+    def __init__(self, **kwargs):
+        ProtocolViewer.__init__(self, **kwargs)
 
     def _defineParams(self, form):
         form.addSection(label='Visualization')
@@ -103,7 +103,6 @@ class XmippCL2DViewer(ProtocolViewer):
             fnSubset = "_stable_core" 
         return fnSubset
 
-        
     def _viewInfo(self, fn):
         """ Display the info block in the metadata for a level convergence. """
         return DataView('info@' + fn)
