@@ -116,10 +116,10 @@ TEST_F( MetadataTest, AddRow)
     MDRow row;
     row.setValue(MDL_X, 1.);
     row.setValue(MDL_Y, 2.);
-    md.addRow2(row);
+    md.addRow(row);
     row.setValue(MDL_X, 3.);
     row.setValue(MDL_Y, 4.);
-    md.addRow2(row);
+    md.addRow(row);
 
     EXPECT_EQ(md, mDsource);
 }
@@ -143,11 +143,11 @@ TEST_F( MetadataTest, Aggregate1)
     row.setValue(MDL_ORDER, (size_t)1);
     row.setValue(MDL_Y, 2.);
     row.setValue(MDL_DEFGROUP, 2);
-    md.addRow2(row);
+    md.addRow(row);
     row.setValue(MDL_ORDER, (size_t)1);
     row.setValue(MDL_Y, 4.);
     row.setValue(MDL_DEFGROUP, 23);
-    md.addRow2(row);
+    md.addRow(row);
 
     mdOut.aggregate(md, AGGR_COUNT, MDL_ORDER, MDL_ORDER, MDL_COUNT);
     mdOut.getValue(MDL_COUNT,count,mdOut.firstObject());
@@ -185,13 +185,13 @@ TEST_F( MetadataTest, Aggregate2)
     MDRow row;
     row.setValue(MDL_ORDER, (size_t)1);
     row.setValue(MDL_Y, 2.);
-    md.addRow2(row);
+    md.addRow(row);
     row.setValue(MDL_ORDER, (size_t)1);
     row.setValue(MDL_Y, 4.);
-    md.addRow2(row);
+    md.addRow(row);
     row.setValue(MDL_ORDER, (size_t)2);
     row.setValue(MDL_Y, 2.);
-    md.addRow2(row);
+    md.addRow(row);
 
     const AggregateOperation MyaggregateOperations[] =
         {
@@ -220,14 +220,14 @@ TEST_F( MetadataTest, Aggregate2)
     row.setValue(MDL_MIN, 2.);
     row.setValue(MDL_MAX, 4.);
     row.setValue(MDL_AVG, 3.);
-    md.addRow2(row);
+    md.addRow(row);
     row.setValue(MDL_ORDER, (size_t)2);
     row.setValue(MDL_COUNT, (size_t)1);
     row.setValue(MDL_SUM, 2.);
     row.setValue(MDL_MIN, 2.);
     row.setValue(MDL_MAX, 2.);
     row.setValue(MDL_AVG, 2.);
-    md.addRow2(row);
+    md.addRow(row);
 
 
     EXPECT_EQ(mdOut,md);
@@ -242,15 +242,15 @@ TEST_F( MetadataTest, AggregateGroupBy)
     row.setValue(MDL_ORDER, (size_t)1);
     row.setValue(MDL_DEFGROUP, 2);
     row.setValue(MDL_Y, 2.);
-    md.addRow2(row);
+    md.addRow(row);
     row.setValue(MDL_ORDER, (size_t)1);
     row.setValue(MDL_DEFGROUP, 2);
     row.setValue(MDL_Y, 4.);
-    md.addRow2(row);
+    md.addRow(row);
     row.setValue(MDL_ORDER, (size_t)2);
     row.setValue(MDL_DEFGROUP, 2);
     row.setValue(MDL_Y, 2.);
-    md.addRow2(row);
+    md.addRow(row);
 
     const MDLabel myGroupByLabels[] =
         {
@@ -264,11 +264,11 @@ TEST_F( MetadataTest, AggregateGroupBy)
     row.setValue(MDL_ORDER, (size_t)1);
     row.setValue(MDL_DEFGROUP, 2);
     row.setValue(MDL_COUNT, (size_t)2);
-    md.addRow2(row);
+    md.addRow(row);
     row.setValue(MDL_ORDER, (size_t)2);
     row.setValue(MDL_DEFGROUP, 2);
     row.setValue(MDL_COUNT, (size_t)1);
-    md.addRow2(row);
+    md.addRow(row);
 
     EXPECT_EQ(mdOut,md);
 }
@@ -395,15 +395,15 @@ TEST_F( MetadataTest,multiWriteSqlite)
     row.setValue(MDL_ORDER, (size_t)1);
     row.setValue(MDL_DEFGROUP, 2);
     row.setValue(MDL_Y, 2.);
-    md.addRow2(row);
+    md.addRow(row);
     row.setValue(MDL_ORDER, (size_t)1);
     row.setValue(MDL_DEFGROUP, 2);
     row.setValue(MDL_Y, 4.);
-    md.addRow2(row);
+    md.addRow(row);
     row.setValue(MDL_ORDER, (size_t)2);
     row.setValue(MDL_DEFGROUP, 2);
     row.setValue(MDL_Y, 2.);
-    md.addRow2(row);
+    md.addRow(row);
 
     FileName fileNameA = FileName();
     XMIPP_TRY
@@ -1208,10 +1208,10 @@ TEST_F( MetadataTest, WriteIntermediateBlock)
     MDRow row;
     row.setValue(MDL_X, 11.);
     row.setValue(MDL_Y, 22.);
-    auxMetadata.addRow2(row);
+    auxMetadata.addRow(row);
     row.setValue(MDL_X, 33.);
     row.setValue(MDL_Y, 44.);
-    auxMetadata.addRow2(row);
+    auxMetadata.addRow(row);
     auxMetadata.setValue(MDL_X,111.,auxMetadata.firstObject());
 
     //temporal file for modified metadata
@@ -1476,8 +1476,7 @@ TEST_F( MetadataTest, getValueDefault)
 
     MDRow  rowIn;
     psi2=0;
-    ///////////////////////////////// CHANGES JNC auxMD1.getRow(rowIn, id);
-    auxMD1.getRow2(rowIn, id);
+    auxMD1.getRow(rowIn, id);
     rowIn.getValueOrDefault(MDL_ANGLE_PSI,psi2,3.);
     EXPECT_EQ(psi,psi2);
 
@@ -1495,8 +1494,7 @@ TEST_F( MetadataTest, getValueAbort)
     std::cerr << "TEST COMMENT: You should get the error  Cannot find label: order_" <<std::endl;
     EXPECT_THROW(auxMD1.getValueOrAbort(MDL_ORDER, rot, id), XmippError);
     MDRow  rowIn;
-    ///////////////////////////////// CHANGES JNC auxMD1.getRow(rowIn, id);
-    auxMD1.getRow2(rowIn, id);
+    auxMD1.getRow(rowIn, id);
     std::cerr << "TEST COMMENT: You should get the error  Cannot find label: anglePsi" <<std::endl;
     EXPECT_THROW(rowGetValueOrAbort(rowIn,MDL_ANGLE_PSI,rot), XmippError);
     XMIPP_CATCH
@@ -1722,55 +1720,6 @@ TEST_F( MetadataTest, copyImages)
     }
     out.deleteFile();
     XMIPP_CATCH
-}
-
-TEST_F( MetadataTest, updateRow)
-{
-    ASSERT_EQ(mDsource,mDsource);
-    ASSERT_FALSE(mDsource==mDanotherSource);
-    //attribute order should not be important
-    MetaData auxMetadata ;
-    id1 = auxMetadata.addObject();
-    auxMetadata.setValue(MDL_Y,0.,id);
-    auxMetadata.setValue(MDL_X,0.,id);
-    id2 = auxMetadata.addObject();
-    auxMetadata.setValue(MDL_Y,0.,id);
-    auxMetadata.setValue(MDL_X,0.,id);
-    ASSERT_FALSE(auxMetadata==mDsource);
-
-    MDRow row;
-    row.setValue(MDL_X, 1.);
-    row.setValue(MDL_Y, 2.);
-    auxMetadata.setRow2( row, id1);
-    row.setValue(MDL_X, 3.);
-    row.setValue(MDL_Y, 4.);
-    auxMetadata.setRow2( row, id2);
-    ASSERT_EQ(auxMetadata,mDsource);
-
-    //Test form double with a given precission.
-/*    auxMetadata.clear();
-    auxMetadata.setPrecission(2);
-    id = auxMetadata.addObject();
-    auxMetadata.setValue(MDL_Y,2.001,id);
-    auxMetadata.setValue(MDL_X,1.,id);
-    id = auxMetadata.addObject();
-    auxMetadata.setValue(MDL_Y,4.,id);
-    auxMetadata.setValue(MDL_X,3.,id);
-    ASSERT_TRUE(auxMetadata==mDsource);
-    auxMetadata.setPrecission(4);
-    ASSERT_FALSE(auxMetadata==mDsource);
-
-    auxMetadata.setValue(MDL_Y,2.,id);
-    auxMetadata.setValue(MDL_X,1.,id);
-    id = auxMetadata.addObject();
-    auxMetadata.setValue(MDL_Y,4.,id);
-    auxMetadata.setValue(MDL_X,3.,id);
-
-    MDRow row;
-    row.setValue(MDL_X, 1.);
-    row.setValue(MDL_Y, 2.);
-    md.addRow2(row);
-    */
 }
 
 GTEST_API_ int main(int argc, char **argv)

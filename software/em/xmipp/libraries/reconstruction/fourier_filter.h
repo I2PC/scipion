@@ -92,13 +92,10 @@ public:
 #define FSCPROFILE   16
 #define BINARYFILE   17
 #define ASTIGMATISMPROFILE 18
-#define CTFINV       19
-#define CTFPOSINV    20
 
     /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, CTFPOS,
        WEDGE, CONE, GAUSSIAN, FROM_FILE, REALGAUSSIAN, BFACTOR, SPARSIFY,
-       STOPLOWBANDX, STOPLOWBANDY, FSCPROFILE, BINARYFILE, ASTIGMATISMPROFILE,
-       CTFINV, CTFPOSINV */
+       STOPLOWBANDX, STOPLOWBANDY, FSCPROFILE, BINARYFILE, ASTIGMATISMPROFILE */
     int FilterBand;
 
     /** Cut frequency for Low and High pass filters, first freq for bandpass.
@@ -126,14 +123,14 @@ public:
     /** CTF parameters. */
     CTFDescription ctf;
     
-    /** Minimum CTF for inversion */
-    double minCTF;
-
     /** FSC file */
     FileName fnFSC;
 
     /** Binary file with the filter */
     FileName fnFilter;
+
+    /** Correct phase before applying CTF */
+    bool do_correct_phase;
 
     /** Flag to generate 3D mask */
     bool do_generate_3dmask;

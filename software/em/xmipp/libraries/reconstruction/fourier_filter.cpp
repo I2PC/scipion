@@ -39,6 +39,7 @@ void FourierFilter::init()
     raised_w = 0;
     ctf.clear();
     ctf.enable_CTFnoise = false;
+    do_correct_phase = false;
     do_generate_3dmask = false;
     sampling_rate = -1.;
 }
@@ -71,8 +72,6 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("            ctf <ctfile>                     : Provide a .ctfparam file");
     program->addParamsLine("            ctfpos <ctfile>                  : Provide a .ctfparam file");
     program->addParamsLine("                                             : The CTF phase will be corrected before applying");
-    program->addParamsLine("            ctfinv <ctfile> <minCTF=0.05>    : Apply the inverse of the CTF. Below the minCTF, the image is not corrected");
-    program->addParamsLine("            ctfposinv <ctfile> <minCTF=0.05> : Apply the inverse of the abs(CTF). Below the minCTF, the image is not corrected");
     program->addParamsLine("            bfactor <B>                      : Exponential filter (positive values for decay) ");
     program->addParamsLine("               requires --sampling;                                                         ");
     program->addParamsLine("            fsc <metadata>                   : Filter with the FSC profile contained in the metadata");
@@ -182,40 +181,26 @@ void FourierFilter::readParams(XmippProgram *program)
         FilterShape = REALGAUSSIAN;
         FilterBand = LOWPASS;
     }
-    else if (filter_type == "ctf" || filter_type == "ctfpos" || filter_type == "ctfinv" || filter_type == "ctfposinv")
+    else if (filter_type == "ctf")
     {
-    	FileName fnCTF;
-    	if (filter_type == "ctf")
-    	{
-    		FilterShape = FilterBand = CTF;
-    		fnCTF=program->getParam("--fourier", "ctf");
-    	}
-    	else if (filter_type == "ctfpos")
-    	{
-            FilterShape = FilterBand = CTFPOS;
-    		fnCTF=program->getParam("--fourier", "ctfpos");
-    	}
-    	else if (filter_type == "ctfinv")
-    	{
-            FilterShape = FilterBand = CTFINV;
-    		fnCTF=program->getParam("--fourier", "ctfinv");
-        	minCTF = program->getDoubleParam("--fourier", "ctfinv", 1);
-    	}
-    	else if (filter_type == "ctfposinv")
-    	{
-            FilterShape = FilterBand = CTFPOSINV;
-    		fnCTF=program->getParam("--fourier", "ctfposinv");
-        	minCTF = program->getDoubleParam("--fourier", "ctfposinv", 1);
-    	}
+        FilterShape = FilterBand = CTF;
         ctf.enable_CTFnoise = false;
-        ctf.read(fnCTF);
+        ctf.read( program->getParam("--fourier", "ctf") );
         if (sampling_rate > 0.)
         {
-            std::cerr << "CTF was obtained at sampling rate: " << ctf.Tm << std::endl;
+            std::cerr << "CTF was optaned at sampling rate: " << ctf.Tm << std::endl;
             std::cerr << "Image sampling rate is: " << sampling_rate << std::endl;
             ctf.Tm=sampling_rate;
         }
         ctf.produceSideInfo();
+    }
+    else if (filter_type == "ctfpos")
+    {
+        FilterShape = FilterBand = CTFPOS;
+        ctf.enable_CTFnoise = false;
+        ctf.read( program->getParam("--fourier", "ctfpos") );
+        ctf.produceSideInfo();
+        do_correct_phase = true;
     }
     else if (filter_type == "bfactor")
     {
@@ -281,12 +266,6 @@ void FourierFilter::show()
         case CTFPOS:
             std::cout << "CTFPOS\n";
             break;
-        case CTFINV:
-            std::cout << "CTFINV minCTF= " << minCTF << "\n";
-            break;
-        case CTFPOSINV:
-            std::cout << "CTFPOSINV minCTF= " << minCTF << "\n";
-            break;
         case BFACTOR:
             std::cout << "Bfactor "<< w1 << std::endl
                       << "Sampling rate " << sampling_rate << std::endl;
@@ -330,12 +309,6 @@ void FourierFilter::show()
             break;
         case CTFPOS:
             std::cout << "CTFPOS\n" << ctf;
-            break;
-        case CTFINV:
-            std::cout << "CTFINV\n" << ctf;
-            break;
-        case CTFPOSINV:
-            std::cout << "CTFPOSINV\n" << ctf;
             break;
         }
         if (maskFn != "")
@@ -482,27 +455,7 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
         break;
     case CTFPOS:
         ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
-        return fabs(ctf.getValueAt());
-        break;
-    case CTFINV:
-    	{
-			ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
-			double ctfval=ctf.getValueAt();
-			if (fabs(ctfval)<=minCTF)
-				return 0.0;
-			else
-				return 1.0/ctfval;
-    	}
-        break;
-    case CTFPOSINV:
-    	{
-			ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
-			double ctfval=fabs(ctf.getValueAt());
-			if (ctfval<=minCTF)
-				return 0.0;
-			else
-				return 1.0/ctfval;
-    	}
+        return ABS(ctf.getValueAt());
         break;
     case BFACTOR:
         {

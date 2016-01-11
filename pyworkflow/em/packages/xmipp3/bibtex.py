@@ -497,36 +497,6 @@ author = "Marabini et al.",
 keywords = "Contrast transfer function"
 }
 
-@article{B.Heymann2015,
-title = {Validation of 3D of 3DEM Reconstructions: The phantom in the noise},
-journal = {AIMS Biophys},
-volume = {2},
-number = {1},
-pages = {21-35},
-year = {2015},
-note = "",
-issn = "",
-doi = {10.3934/biophy.2015.1.21},
-url = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4440490/},
-author = "B. Heymann",
-keywords = ""
-}
-
-@article{C.O.S.Sorzano2015,
-title = "StructMap:... ",
-journal = "",
-volume = "",
-number = "",
-pages = "",
-year = "",
-note = "submitted",
-issn = "",
-doi = "",
-url = "",
-author = "C.O.S.Sorzano et al.",
-keywords = ""
-}
-
 @article{Sorzano2015b,
   title                    = "Cryo-EM and the elucidation of new macromolecular structures: Random Conical Tilt revisited.",
   author                   = "Sorzano, C O S. and Alcorlo, M. and de la Rosa-Trevin, J. M. and Melero, R. and Foche, I. and Zaldivar-Peraza, A. and del Cano, L. and Vargas, J. and Abrishami, V. and Oton, J. and Marabini, R. and Carazo, J. M.",

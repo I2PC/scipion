@@ -89,7 +89,6 @@ struct Point_T       *get_Vertex_Point( struct DCEL_T *dcel, int index);
 
 // Edges interface.
 int 	get_Number_Edges( struct DCEL_T *dcel);
-int 	get_Number_Real_Edges( struct DCEL_T *dcel);
 int 	insertEdge( struct DCEL_T *dcel, int origin, int twin, int prev, int next, int face);
 int	    update_Edge( struct DCEL_T *dcel, int origin, int twin, int prev, int next, int face, int index);
 int		are_Twins( struct DCEL_T *dcel, struct Dcel_Edge_T *edge1, struct Dcel_Edge_T *edge2);
@@ -106,29 +105,20 @@ int     get_Number_Real_Faces(struct DCEL_T *dcel);
 int 	insertFace( struct DCEL_T *dcel, int edge_ID);
 int		update_Face(struct DCEL_T *dcel, int edge_ID, int index);
 struct Dcel_Face_T *get_Face( struct DCEL_T *dcel, int index);
-int     get_Face_Vertex( struct DCEL_T *dcel, int face_ID, struct Dcel_Vertex_T *v1,
-									struct Dcel_Vertex_T *v2, struct Dcel_Vertex_T *v3);
+int     get_Face_Vertex( struct DCEL_T *dcel, int face_ID, struct Dcel_Vertex_T *v1, struct Dcel_Vertex_T *v2, struct Dcel_Vertex_T *v3);
 int     is_Interior_To_Face( struct DCEL_T *dcel, struct Point_T *p, int   face_ID);
 int     is_Negative_Any_Vertex( struct DCEL_T *dcel, int edge_Index);
 
 // Points interface.
 void    shake_Dcel( struct DCEL_T *dcel);
-void    get_Extreme_Point( struct DCEL_T *dcel, int (*f)(struct Point_T *, struct Point_T *),
-																				struct Point_T *p);
+void    get_Extreme_Point( struct DCEL_T *dcel, int (*f)(struct Point_T *, struct Point_T *), struct Point_T *p);
 
 // I/O DCEL interface.
 int 	read_DCEL( struct DCEL_T *dcel, char *fileName);
-int     read_Points_Flat_File( struct DCEL_T *dcel, const char *fileName);
-int		write_DCEL( struct DCEL_T *dcel, int type, const char *fileName);
+int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName);
+int		write_DCEL( struct DCEL_T *dcel, int type, char *fileName);
 void	print_DCEL( struct DCEL_T *dcel);
 int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel);
-void	generate_Random_Points_DCEL( int nPoints, struct DCEL_T *dcel, TYPE maxX, TYPE maxY);
-void	generate_Cluster_Points_DCEL( int nPoints, struct DCEL_T *dcel,
-							int nClusters, int radius, TYPE maxX, TYPE maxY);
-
-#define DCEL_STATISTICS
-#ifdef DCEL_STATISTICS
-void 	print_Dcel_Statistics( char *fileName, struct DCEL_T *dcel);
-#endif
+void	generate_Points_DCEL( int nPoints, struct DCEL_T *dcel, TYPE maxX, double maxY);
 
 #endif
