@@ -154,8 +154,12 @@ class XmippCL2DViewer(ProtocolViewer):
     def _getClassesSqlite(self, blockName, fn):
         """ Read the classes from Xmipp metadata and write as sqlite file. """
         fnSqlite = fn + '.sqlite'
-        
-        if not os.path.exists(fnSqlite):
+
+        # Generate the sqlite file from classes xmd if either
+        # 1) Sqlite files has not been generated or
+        # 2) Xmd file is newer than sqlite (using modification time)
+        if (not os.path.exists(fnSqlite) or
+            os.path.getmtime(fn) < os.path.getmtime(fnSqlite)):
             classesSet = SetOfClasses2D(filename=fnSqlite)
             classesSet.setImages(self._getInputParticles())
             readSetOfClasses(classesSet, fn, blockName)
