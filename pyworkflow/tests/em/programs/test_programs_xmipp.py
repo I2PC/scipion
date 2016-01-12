@@ -1322,7 +1322,10 @@ class MicrographAutomaticPicking(XmippProgramTest):
         return 'xmipp_micrograph_automatic_picking'
 
     def test_case1(self):
-        self.runCase("input/ParticlePicking/BPV_1386.mrc --particleSize 100 --model input/ParticlePicking/model --outputRoot tmpLink/xmipp_micrograph_automatic_picking/automatically_selected --mode autoselect --fast",
+        self.runCase("input/ParticlePicking/BPV_1386.mrc --particleSize 100 "
+                     "--model input/ParticlePicking/model "
+                     "--outputRoot tmpLink/xmipp_micrograph_automatic_picking_01/automatically_selected "
+                     "--mode autoselect --fast",
                 outputs=["automatically_selected.pos"])
 
 

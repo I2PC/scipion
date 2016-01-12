@@ -208,14 +208,13 @@ class ProtMovieAlignment(ProtProcessMovies):
                 alignedMovie.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'_aligned', 'mrcs')))
             ####>>>This is wrong. Save an xmipp metadata
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
-            #alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
             alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
             
-            if (alMethod == AL_OPTICAL or 
+            '''if (alMethod == AL_OPTICAL or
                 alMethod == AL_DOSEFGPUOPTICAL or 
                 alMethod == AL_CROSSCORRELATIONOPTICAL):
-                movieCreatePlot(alignedMovie, True)
+                movieCreatePlot(alignedMovie, True)'''
             
             if self.doSaveMovie:
                 movieSet.append(alignedMovie)
@@ -232,9 +231,10 @@ class ProtMovieAlignment(ProtProcessMovies):
                 alMethod == AL_DOSEFGPUOPTICAL or 
                 alMethod == AL_CROSSCORRELATIONOPTICAL):
 
-                #mic.plotPolar = em.Image()
+                mic.alignMetaData = String(self._getExtraPath(metadataName))
+                mic.plotCart = self._getExtraPath(plotCartName)
+                movieCreatePlot(mic, True)
                 mic.plotCart = em.Image()
-                #mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
                 mic.plotCart.setFileName(self._getExtraPath(plotCartName))
             #if alMethod != AL_DOSEFGPU and alMethod != AL_CROSSCORRELATION:
             mic.psdCorr = em.Image()
@@ -389,7 +389,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                 lastFrame = 0
             elif alMethod == AL_CROSSCORRELATIONOPTICAL:
                 program = 'xmipp_movie_optical_alignment_cpu'
-                command = '-i %(movieName)s --globalShifts %(metadataNameInterMediate)s ' % locals()
+                command = '-i %(corrMovieName)s ' % locals()
             else:
                 command = '-i %(movieName)s%(movieSuffix)s ' % locals()
                 if self.doGPU:
@@ -529,20 +529,20 @@ class ProtMovieAlignment(ProtProcessMovies):
 
         return summary
 
-def createPlots(plotType, protocol, movieId):
+def createPlots(plotType, protocol, micId):
+    print "output Micrographs to create Plot %s" % protocol.outputMicrographs
+    mic = protocol.outputMicrographs[micId]
+    return movieCreatePlot(mic, False).show()
 
-    movie = protocol.outputMovies[movieId]
-    return movieCreatePlot(movie, False)
-
-def movieCreatePlot(movie, saveFig):
+def movieCreatePlot(mic, saveFig):
 
     import xmipp
     meanX = []
     meanY = []
     figureSize = (8, 6)
 
-    alignedMovie = movie.alignMetaData
-    md = xmipp.MetaData(alignedMovie)
+    #alignedMovie = mic.alignMetaData
+    md = xmipp.MetaData(mic.alignMetaData)
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
 
@@ -565,7 +565,7 @@ def movieCreatePlot(movie, saveFig):
         ax.text(preX-0.02, preY+0.01, str(objId+1))
     ax.plot(np.asarray(meanX), np.asarray(meanY))
     if saveFig:
-        plotter.savefig(movie.plotCart)
+        plotter.savefig(mic.plotCart)
     return plotter
 
 

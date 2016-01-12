@@ -103,6 +103,9 @@ class TestIgbmcBase(BaseTest):
         protGP = ProtGemPicker(objLabel='Gempicker with a single circular mask (klh)',
                                refsHaveInvertedContrast=True,
                                thresholdLow=0.2,
+                               thresholdHigh=0.9,
+                               boxSize=100,
+                               boxDist=10,
                                maskType=MASK_CIRCULAR,
                                useGPU=False)                
         protGP.inputMicrographs.set(cls.protImportMics.outputMicrographs)
@@ -119,6 +122,9 @@ class TestIgbmcBase(BaseTest):
         protGP = ProtGemPicker(objLabel='Gempicker with a individual masks (klh)',
                                refsHaveInvertedContrast=True,
                                thresholdLow=0.2,
+                               thresholdHigh=0.9,
+                               boxSize=100,
+                               boxDist=10,
                                maskType=MASK_OBJECT,
                                inputMasks=masks,
                                useGPU=False)                
