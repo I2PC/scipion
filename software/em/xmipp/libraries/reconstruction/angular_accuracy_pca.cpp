@@ -98,6 +98,7 @@ void ProgAngularAccuracyPCA::run()
 	synchronize();
 	gatherResults();
 
+    MultidimArray<double> valuesProj;
 	if (rank == 0)
 	{
 		mdPartial.write(fnOut);
@@ -109,7 +110,6 @@ void ProgAngularAccuracyPCA::run()
 void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 {
 	size_t numIter = 200;
-
 	pca.clear();
 	size_t imgno;
 	Image<double> img;
@@ -169,13 +169,11 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		pca.addVector(temp);
 		imgno++;
 
-#define DEBUG
 		#ifdef DEBUG
 		{
 			{
 				size_t val;
 				SF.getValue(MDL_ITEM_ID,val,__iter.objId);
-				if (val==41)
 				{
 					std::cout << E << std::endl;
 					std::cout << (angle*180)/3.14159 << std::endl;
@@ -237,7 +235,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		{
 			size_t val;
 			SF.getValue(MDL_ITEM_ID,val,__iter.objId);
-			if (val==41)
+			if (val==151)
 			{
 				std::cout << E << std::endl;
 				std::cout << (angle*180)/3.14159 << std::endl;
@@ -261,10 +259,19 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 
 	pca.subtractAvg();
 	pca.projectOnPCABasis(proj);
+
+	std::vector< MultidimArray<float> > recons(SF.size());
+	for(int n=0; n<SF.size(); n++)
+		recons[n] = MultidimArray<float>(newXdim*newYdim);
+
+	pca.reconsFromPCA(proj,recons);
 	pca.evaluateZScore(numPCAs,numIter, false);
 
-	double varReconstructed, varReconstructedProj, ratioSignalRepresented;
 	imgno = 0;
+	Image<float> imgRes;
+	double R2_Proj,R2_Exp;
+	R2_Proj=0;
+	R2_Exp=0;
 
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
@@ -276,49 +283,52 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 			continue;
 		}
 
-		varReconstructed = 0;
-		varReconstructedProj = 0;
-		for(int i=0; i<numPCAs;i++)
+		//Projected Image
+		SF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+		SF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+		SF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+		SF.getValue(MDL_FLIP,mirror,__iter.objId);
+
+		if (mirror)
 		{
-			varReconstructed += (MAT_ELEM(proj,i,imgno)-MAT_ELEM(projRef,i,imgno))*(MAT_ELEM(proj,i,imgno)-MAT_ELEM(projRef,i,imgno));
-			varReconstructedProj += MAT_ELEM(projRef,i,imgno)*MAT_ELEM(projRef,i,imgno);
+			double newrot;
+			double newtilt;
+			double newpsi;
+			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
+			rot = newrot;
+			tilt = newtilt;
+			psi = newpsi;
 		}
 
-		ratioSignalRepresented = 1-varReconstructed/varReconstructedProj;
-		if (ratioSignalRepresented < 0)
-			ratioSignalRepresented = 0;
+		projectVolume(phantomVol(), P, Ydim, Xdim, rot, tilt, psi);
+		Euler_angles2matrix(rot, tilt, psi, E, false);
+		double angle = atan2(MAT_ELEM(E,0,1),MAT_ELEM(E,0,0));
+		selfRotate(LINEAR, P(),-(angle*180)/3.14159 , WRAP);
+		typeCast(P(), temp);
+		selfScaleToSize(LINEAR,temp,newXdim,newYdim,1);
+		temp.resize(newXdim*newYdim);
+		temp.statisticsAdjust(0,1);
+		temp.setXmippOrigin();
 
-		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL,ratioSignalRepresented,__iter.objId);
-		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,imgno)/3.),__iter.objId);
-		imgno++;
+		//Reconstructed Image
+		recons[imgno].statisticsAdjust(0,1);
+		recons[imgno].resize(newYdim*newXdim);
+		recons[imgno].setXmippOrigin();
 
+		imgRes() = temp - (recons[imgno]);//-temp;
+		R2_Proj = imgRes().computeStddev();
+		R2_Proj = 1 -R2_Proj*R2_Proj;
 
-	}
-
-	//varImg.clear();
-
-/*
-	size_t idx = 0;
-	imgno=1;
-	Image<float> res;
-	FOR_ALL_OBJECTS_IN_METADATA(SF)
-	{
-		int enabled;
-		SF.getValue(MDL_ENABLED,enabled,__iter.objId);
-
-		if ( (enabled==-1)  )
-		{
-			imgno++;
-			continue;
-		}
+		if (R2_Proj < 0)
+			R2_Proj = 0;
 
 		ApplyGeoParams params;
 		params.only_apply_shifts = true;
 		img.readApplyGeo(SF,__iter.objId,params);
+		Matrix2D<double> E;
 		SF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
 		SF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
 		SF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
-		SF.getValue(MDL_IMAGE,image,__iter.objId);
 
 		if (mirror)
 		{
@@ -332,98 +342,73 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		}
 
 		Euler_angles2matrix(rot, tilt, psi, E, false);
-		double angle = atan2(MAT_ELEM(E,0,1),MAT_ELEM(E,0,0));
+		angle = atan2(MAT_ELEM(E,0,1),MAT_ELEM(E,0,0));
 		selfRotate(LINEAR, img(),-(angle*180)/3.14159 , WRAP);
 		typeCast(img(), temp);
 		selfScaleToSize(LINEAR,temp,newXdim,newYdim,1);
 		temp.resize(newXdim*newYdim);
+		temp.statisticsAdjust(0,1);
+		temp.setXmippOrigin();
 
-		res() = v[idx]-temp;
-		res().resize(newXdim,newYdim);
-		double stdRes=(res().computeStddev());
-		double stdTemp=temp.computeStddev();
-		double R2 = 1-(stdRes/stdTemp)*((stdRes/stdTemp));
+		imgRes() = temp - (recons[imgno]);
+		R2_Exp = imgRes().computeStddev();
+		R2_Exp = 1 -R2_Exp*R2_Exp;
 
-		if (R2 < 0)
-			R2 = 0;
+		if (R2_Exp < 0)
+			R2_Exp = 0;
 
-		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL,R2,__iter.objId);
-		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,idx)/3.),__iter.objId);
-
+		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,R2_Proj,__iter.objId);
+		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,R2_Exp,__iter.objId);
+		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,imgno)/3.),__iter.objId);
 
 
 #ifdef DEBUG
-{
-	*temp = v[idx];
-	temp->resize(newXdim,newYdim);
-	res()= (*temp);
-	std::cout << E << std::endl;
-	std::cout << (angle*180)/3.14159 << std::endl;
-	std::cout << rot << " " << tilt << " " << psi << std::endl;
-	SF.getValue(MDL_IMAGE,f,__iter.objId);
-	std::cout << f << std::endl;
-	res.write("kk_exp.tif");
-	img.write("kk_proj.tif");
-	std::cout <<R2 <<std::endl;
-	char c;
-	std::getchar();
-}
+		{
+			Image<float> imgRecons;
+			SF.getValue(MDL_IMAGE,f,__iter.objId);
+
+			img().statisticsAdjust(0,1);
+			img.write("kk_exp.tif");
+
+			if ( imgno == 0)
+			{
+				for(int n=0; n<SF.size(); n++)
+					recons[n] = MultidimArray<float>(newXdim*newYdim);
+
+				pca.reconsFromPCA(proj,recons);
+			}
+
+			recons[imgno].statisticsAdjust(0,1);
+			imgRecons()=recons[imgno];
+			imgRecons().resize(newYdim,newXdim);
+			imgRecons.write("kk_reconstructed.tif");
+
+			std::cout <<  std::endl;
+
+			for(int i=0; i<numPCAs;i++)
+			{
+				std::cout << "proj " << MAT_ELEM(proj,i,imgno)/normProj <<  "   " <<  "projRef " <<  MAT_ELEM(projRef,i,imgno)/normProjRef << std::endl;
+
+			}
+
+			std::cout <<  std::endl;
+			std::cout << " ratioSignalRepresented : " << ratioSignalRepresented << std::endl;
+			char c;
+			std::getchar();
+
+			//recons[imgno].clear();
+		}
+
 #endif
 
-		if (fnTempResiduals!="")
-		{
-			FileName fnResidual;
-			fnResidual.compose(imgno,fnTempResiduals);
-			SF.setValue(MDL_IMAGE_RESIDUAL,fnResidual,__iter.objId);
-			res.write(fnResidual);
-		}
-
-		if (fnTempReconstructed !="")
-		{
-			res() = v[idx];
-			res().resize(newXdim,newYdim);
-			selfRotate(LINEAR, res(),(angle*180)/3.14159 , WRAP);
-			FileName fnReconstruted;
-			fnReconstruted.compose(imgno,fnTempReconstructed);
-			SF.setValue(MDL_IMAGE_REF,fnReconstruted,__iter.objId);
-			res.write(fnReconstruted);
-		}
-
-		res.clear();
-		temp.clear();
-		idx++;
 		imgno++;
+
 	}
-	
 
-#ifdef DEBUG
-
-	std::cout << proj << std::endl;
-
-	Image<float> tt;
-	Image<double> tt2;
-	pca.v[0].resize(newXdim,newYdim);
-
-	tt() = v[0];
-	tt.write("kk_phan.tif");
-
-	tt2() = pca.PCAbasis[0];
-	tt2().resize(newXdim,newYdim);
-	tt2.write("kk_pca0.tif");
-
-	tt2() = pca.PCAbasis[1];
-	tt2().resize(newXdim,newYdim);
-	tt2.write("kk_pca1.tif");
-
-
-#endif
-
-
-
-	v.clear();
-
-	*/
+	recons.clear();
 	img.clear();
+	temp.clear();
+	imgRes.clear();
 	pca.clear();
 
 }

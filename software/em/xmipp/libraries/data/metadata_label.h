@@ -355,7 +355,8 @@ enum MDLabel
     MDL_SAMPLINGRATE_Z, ///< sampling rate in A/pixel (double)
 
     MDL_SCALE, ///< scaling factor for an image or volume (double)
-    MDL_SCORE_BY_PCA_RESIDUAL,
+    MDL_SCORE_BY_PCA_RESIDUAL_PROJ,
+    MDL_SCORE_BY_PCA_RESIDUAL_EXP,
     MDL_SCORE_BY_ALIGNABILITY, ///< score by alignability (double)
     MDL_SCORE_BY_ALIGNABILITY_EXP, ///< score by alignability experimental particles (double)
     MDL_SCORE_BY_ALIGNABILITY_REF, ///< score by alignability references (double)
@@ -1705,7 +1706,8 @@ private:
         MDL::addLabelAlias(MDL_SAMPLINGRATE_Z, "sampling_rateZ"); //3.0
 
         MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale");
-        MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL, LABEL_DOUBLE, "scoreByPcaResidual");
+        MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL_PROJ, LABEL_DOUBLE, "scoreByPcaResidualProj");
+        MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL_EXP, LABEL_DOUBLE, "scoreByPcaResidualExp");
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY, LABEL_DOUBLE, "scoreByAlignability");
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_EXP, LABEL_DOUBLE, "scoreByAlignabilityExp");
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_REF, LABEL_DOUBLE, "scoreByAlignabilityRef");
