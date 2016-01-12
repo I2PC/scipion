@@ -42,7 +42,6 @@ from protocol_alignment_assign import ProtAlignmentAssign
 from protocol_batch import *
 from protocol_classes_consensus import ProtClassesConsensus, ViewerClassesConsensus
 from protocol_extract_coordinates import ProtExtractCoords
-from protocol_create_volume_set import ProtCreateVolumeSet
 
 from parallel import ProtTestParallel
 
