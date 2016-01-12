@@ -496,7 +496,7 @@ section .imageTitle{
 }
 
 #secondTableConfiguration{
-	float:right;
+	display:inline;
 }
 
 /* FIX FOR DATABLE ARROW BUTTON FIT IN ONE LINE */

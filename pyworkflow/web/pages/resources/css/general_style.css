@@ -370,119 +370,53 @@ table#data tr:nth-child(even) {
 
 
 /* BUTTONS */
+.button2 {
 
-/* BUTTON GREY*/
-
-.buttonGrey {
     display: inline-block;
     text-align: center;
     vertical-align: middle;
     padding: 7px 19px;
-    border: 0px solid #727272;
+    border: 0px;
     border-radius: 3px;
-    background: #992828;
-    background: -webkit-gradient(linear, left top, left bottom, from(#f0f0f0), to(#c2c2c2));
-    background: -moz-linear-gradient(top, #f0f0f0, #c2c2c2);
-    background: linear-gradient(to bottom, #f0f0f0, #c2c2c2);
-    -webkit-box-shadow: #c4c4c4 0px 0px 0px 0px;
-    -moz-box-shadow: #c4c4c4 0px 0px 0px 0px;
-    box-shadow: #c4c4c4 0px 0px 0px 0px;
-    text-shadow: #ffffff 1px 1px 1px;
+
     font: normal normal normal 16px arial;
-    color: #383838;
     text-decoration: none;
 }
-.buttonGrey:hover,
-.buttonGrey:focus, .buttonGreyHovered {
-    border: 0px solid #a3a3a3;
-    background: #992828;
-    background: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#e9e9e9));
-    background: -moz-linear-gradient(top, #ffffff, #e9e9e9);
-    background: linear-gradient(to bottom, #ffffff, #e9e9e9);
-    color: #383838;
-    text-decoration: none;
+
+.button2:hover,
+.button2:focus {
+    opacity: 0.8
 }
-.buttonGrey:active {
-    background: #982727;
-    background: -webkit-gradient(linear, left top, left bottom, from(#909090), to(#c2c2c2));
-    background: -moz-linear-gradient(top, #909090, #c2c2c2);
-    background: linear-gradient(to bottom, #909090, #c2c2c2);
+.button2:active {
+    opacity: 0.8
 }
 
-/* BUTTON DARK GREY*/
-
-.buttonDarkGrey {
-    display: inline-block;
-    text-align: center;
-    vertical-align: middle;
-    padding: 7px 19px;
-/*     border: 0px solid #727272; */
-    border-radius: 3px;
-/*     background: #992828; */
-    background: -webkit-gradient(linear, left top, left bottom, from(#c2c2c2), to(#6E6E6E));
-    background: -moz-linear-gradient(top, #c2c2c2, #6E6E6E);
-    background: linear-gradient(to bottom, #c2c2c2, #6E6E6E);
-/*     -webkit-box-shadow: #c4c4c4 0px 0px 0px 0px; */
-/*     -moz-box-shadow: #c4c4c4 0px 0px 0px 0px; */
-/*     box-shadow: #c4c4c4 0px 0px 0px 0px; */
-/*     text-shadow: #ffffff 1px 1px 1px; */
-/*     font: normal normal normal 16px arial; */
-/*     color: #383838; */
-/*     text-decoration: none; */
-}
-.buttonDarkGrey:hover,
-.buttonDarkGrey:focus, .buttonDarkGreyHovered {
-    border: 0px solid #a3a3a3;
-/*     background: #992828; */
-    background: -webkit-gradient(linear, left top, left bottom, from(#e9e9e9), to(#6E6E6E));
-    background: -moz-linear-gradient(top, #e9e9e9, #6E6E6E);
-    background: linear-gradient(to bottom, #e9e9e9, #6E6E6E);
-/*     color: #383838; */
-    text-decoration: none; 
-}
-.buttonDarkGrey:active {
-    background: #982727;
-    background: -webkit-gradient(linear, left top, left bottom, from(#909090), to(#c2c2c2));
-    background: -moz-linear-gradient(top, #909090, #c2c2c2);
-    background: linear-gradient(to bottom, #909090, #c2c2c2);
+.primary {
+    color: firebrick
 }
 
-/* BUTTON RED*/
+.primary_inv {
+    color: white;
+    background: firebrick;
+}
 
-.buttonRed {
-    display: inline-block;
-    text-align: center;
-    vertical-align: middle;
-    padding: 7px 19px;
-    border: 0px solid #802a2a;
-    border-radius: 3px;
-    background: #992828;
-    background: -webkit-gradient(linear, left top, left bottom, from(#f04e4e), to(#802a2a));
-    background: -moz-linear-gradient(top, #f04e4e, #802a2a);
-    background: linear-gradient(to bottom, #f04e4e, #802a2a);
-    -webkit-box-shadow: #ff5e5e 0px 0px 0px 0px;
-    -moz-box-shadow: #ff5e5e 0px 0px 0px 0px;
-    box-shadow: #ff5e5e 0px 0px 0px 0px;
-    text-shadow: #4b1919 1px 1px 1px;
-    font: normal normal normal 16px arial;
-    color: #ffffff;
-    text-decoration: none;
+.validation {
+    color: goldenRod;
 }
-.buttonRed:hover,
-.buttonRed:focus {
-    border: 0px solid #963131;
-    background: #992828;
-    background: -webkit-gradient(linear, left top, left bottom, from(#ff5e5e), to(#9a3232));
-    background: -moz-linear-gradient(top, #ff5e5e, #9a3232);
-    background: linear-gradient(to bottom, #ff5e5e, #9a3232);
-    color: #ffffff;
-    text-decoration: none;
+
+.validation_inv {
+    color: white;
+    background: goldenRod;
 }
-.buttonRed:active {
-    background: #982727;
-    background: -webkit-gradient(linear, left top, left bottom, from(#802a2a), to(#802a2a));
-    background: -moz-linear-gradient(top, #802a2a, #802a2a);
-    background: linear-gradient(to bottom, #802a2a, #802a2a);
+
+.secondary {
+    color: #F2F2F2;
+
+}
+
+.secondary_inv {
+    color: black;
+    background: #F2F2F2;
 }
 
 
@@ -522,10 +456,3 @@ span #externalTool{
 span #externalTool:hover{
 	color:Firebrick;
 }
-
-
-
-
-
-
-

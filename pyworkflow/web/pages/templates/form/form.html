@@ -139,14 +139,14 @@
 			{% include "form/content_form.html" %}
 			
 			<div class="boxBottom">
-				<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>{{msg.LABEL_BUTTON_CLOSE}}</a>
+				<a href="javascript:window.close()" class="btn button2 secondary_inv"><i class="fa fa-times"></i>{{msg.LABEL_BUTTON_CLOSE}}</a>
 				{% if visualize == 0 %}
-				<a href="javascript:putMode('save');" class="btn buttonGrey"><i class="fa fa-save"></i>{{msg.LABEL_BUTTON_SAVE}}</a>
-				<a href="javascript:putMode('execute');" class="btn buttonRed"><i class="fa fa-cogs"></i>{{msg.LABEL_BUTTON_EXEC}}</a>
+				<a href="javascript:putMode('save');" class="btn button2 secondary_inv"><i class="fa fa-save"></i>{{msg.LABEL_BUTTON_SAVE}}</a>
+				<a href="javascript:putMode('execute');" class="btn button2 primary_inv"><i class="fa fa-cogs"></i>{{msg.LABEL_BUTTON_EXEC}}</a>
 				{% elif visualize == 1 %}
 <!-- 				<a href="javascript:putMode('viewer');" class="btn buttonDarkGrey"><i class="fa fa-eye"></i>{{msg.LABEL_BUTTON_VIS}}</a> -->
 				{% elif visualize == 2 %}
-				<a href="javascript:returnProtocol();" class="btn buttonGrey"><i class="fa fa-save"></i>{{msg.LABEL_BUTTON_RETURN}}</a>
+				<a href="javascript:returnProtocol();" class="btn button2 secondary_inv"><i class="fa fa-save"></i>{{msg.LABEL_BUTTON_RETURN}}</a>
 				{% endif %}							
 			</div>
 		</form>
