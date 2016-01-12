@@ -41,7 +41,7 @@ class ProgAngularAccuracyPCA: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnPhantom, fnNeighbours, fnResiduals, fnReconstructed, fnOut;
+    FileName fnPhantom, fnNeighbours, fnOut;
 
     Image<double> phantomVol;
 
@@ -65,7 +65,7 @@ public:
 
     void run();
 
-    void obtainPCAs(MetaData &SF, String fnTempResiduals, String fnTempReconstructed, size_t numPCAs);
+    void obtainPCAs(MetaData &SF, size_t numPCAs);
 
 public:
 
