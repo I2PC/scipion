@@ -470,9 +470,8 @@ if([cg-option].eq.1) then
 elseif([cg-option].eq.2) then
     vm
     echo "Centering average by rotating 180 degrees and aligning"
-    
     ; center by rotating by 180 degrees and self-alignment
-    @center1(-xshift-cg],[yshift-cg])
+    @center1([xshift-cg],[yshift-cg])
     [depth_dir]{***[next-depth]}/[intermed_avg][one]
     [pair_dir]/[centered_avg][one]
 else
