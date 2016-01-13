@@ -1365,39 +1365,39 @@ class PhantomProject(XmippProgramTest):
 
 class MlAlign2d(XmippProgramTest):
     _owner = COSS
+    _outputs = ["ml2d_extra/iter001/iter_classes.stk", "ml2d_extra/iter001/iter_images.xmd"]
+
     @classmethod
     def getProgram(cls):
         return 'xmipp_ml_align2d'
 
+    # Redefine runCase to add default outputs
+    def runCase(self, *args, **kwargs):
+        kwargs['outputs'] = self._outputs
+        kwargs['random'] = True
+
+        XmippProgramTest.runCase(self, *args, **kwargs)
+
     def test_case1(self):
-        self.runCase("-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d_ --fast --mirror",
-                postruns=["xmipp_metadata_utilities -i class000001_images@%o/ml2d_extra/iter001/iter_classes.xmd  -o %o/ml2d_extra/iter001/tmpClass.xmd" ],
-                outputs=["ml2d_extra/iter001/iter_classes.stk",
-                         "ml2d_extra/iter001/tmpClass.xmd",# remove randomseed
-                         "ml2d_extra/iter001/iter_images.xmd"])
+        self.runCase("-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d_ --fast --mirror --random_seed 100")
+
     def test_case2(self):
-        self.runCase("-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/ml2d_",
-                postruns=["xmipp_metadata_utilities -i class000001_images@%o/ml2d_extra/iter001/iter_classes.xmd  -o %o/ml2d_extra/iter001/tmpClass.xmd" ],
-                outputs=["ml2d_extra/iter001/iter_classes.stk",
-                         "ml2d_extra/iter001/tmpClass.xmd",# remove randomseed
-                         "ml2d_extra/iter001/iter_images.xmd"])
-    def test_case4(self):
-        self.runCase("-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/ml2d_ --thr 2",
-                postruns=["xmipp_metadata_utilities -i class000001_images@%o/ml2d_extra/iter001/iter_classes.xmd  -o %o/ml2d_extra/iter001/tmpClass.xmd" ],
-                outputs=[#"ml2d_extra/iter001/iter_classes.stk", random
-                         "ml2d_extra/iter001/tmpClass.xmd",# remove randomseed
-                         ])
+        self.runCase("-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/ml2d_ --random_seed 100")
+
+    def test_case3(self):
+        self.runCase("-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/ml2d_ --thr 2 --random_seed 100")
 
 
-#class MlAlign2dMpi(MlAlign2d):
-#    _owner = DISCONTINUED
-#    @classmethod
-#    def getProgram(cls):
-#        return 'xmipp_mpi_ml_align2d'
-#
-#    def test_case5(self):
-#        self.runCase("-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d_ --fast --mirror",random=True,
-#                outputs=["ml2d_images.xmd","ml2d_classes.stk","ml2d_classes.xmd"])
+class MlAlign2dMpi(MlAlign2d):
+   _owner = DISCONTINUED
+   #_outputs = ["ml2d_images.xmd","ml2d_classes.stk", "ml2d_classes.xmd"]
+
+   @classmethod
+   def getProgram(cls):
+       return 'xmipp_mpi_ml_align2d'
+
+   def test_case4(self):
+       self.runCase("-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d_ --fast --mirror")
 
 
 class MlfAlign2d(XmippProgramTest):
