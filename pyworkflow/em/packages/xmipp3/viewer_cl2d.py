@@ -28,6 +28,7 @@ from pyworkflow.em.packages.xmipp3.convert import readSetOfClasses
 This module implement the wrappers aroung Xmipp CL2D protocol
 visualization program.
 """
+import pyworkflow.utils as pwutils
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from protocol_cl2d import XmippProtCL2D
@@ -158,12 +159,16 @@ class XmippCL2DViewer(ProtocolViewer):
         # Generate the sqlite file from classes xmd if either
         # 1) Sqlite files has not been generated or
         # 2) Xmd file is newer than sqlite (using modification time)
-        if (not os.path.exists(fnSqlite) or
-            os.path.getmtime(fn) > os.path.getmtime(fnSqlite)):
+        if os.path.exists(fnSqlite):
+            if os.path.getmtime(fn) > os.path.getmtime(fnSqlite):
+                pwutils.cleanPath(fnSqlite) # Clean to load from scratch
+
+        if not os.path.exists(fnSqlite):
             classesSet = SetOfClasses2D(filename=fnSqlite)
             classesSet.setImages(self._getInputParticles())
             readSetOfClasses(classesSet, fn, blockName)
             classesSet.write()
+            
         return fnSqlite
     
     def _viewClasses(self, blockName, fn):
