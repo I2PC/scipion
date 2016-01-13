@@ -973,13 +973,19 @@ def savePlot(request, plot):
 # ERROR PAGE
 # ===============================================================================
 
-def error(request):
+def handle404error(request):
     from views_base import base_grid
     context = {"logoScipionNormal": getResourceIcon("logo_scipion_normal"),
                "logoErrorPage": getResourceIcon("error_page"),
+               "abs_url": django_settings.ABSOLUTE_URL + "/"
                }
     context = base_grid(request, context)
     return render_to_response('error.html', context)
+
+def handle500error(request):
+
+    # So far use the same error page.
+    return handle404error(request);
 
 
 def loadProtocolConf(protocol):

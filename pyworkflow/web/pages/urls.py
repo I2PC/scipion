@@ -120,11 +120,9 @@ toolModules = getModules(WS_ROOT)
 
 for tm in toolModules.values():
     mainUrls += tm.urls
-    
- 
 
-# handler404 = "app.views_util.error"
-# handler500 = "app.views_util.error"
+handler404 = "app.views_util.handle404error"
+handler500 = "app.views_util.handle500error"
 
 urlpatterns = patterns(*mainUrls)
 
