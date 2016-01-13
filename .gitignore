@@ -74,3 +74,8 @@ gmon.out
 /config.log
 /Debug
 /bin/
+
+# WEB stuff
+downloads.sqlite
+/static
+

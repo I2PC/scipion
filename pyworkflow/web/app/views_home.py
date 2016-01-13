@@ -112,7 +112,7 @@ def doDownload(request):
 
         return response
     else:
-        jsonStr = json.dumps({'errors' : parseText(errors)}, ensure_ascii=False)
+        jsonStr = json.dumps({'errors': parseText(errors)}, ensure_ascii=False)
     
         return HttpResponse(jsonStr, mimetype='application/javascript')   
 
