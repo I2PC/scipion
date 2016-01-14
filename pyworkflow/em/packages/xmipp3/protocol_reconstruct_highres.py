@@ -161,7 +161,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='Optimize shifts within a limit')
         form.addParam('contMaxShiftVariation', FloatParam, label="Max. shift variation", default=2, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                                  help="Percentage of the image size")
-        form.addParam('contScale', BooleanParam, label="Optimize scale?", default=True, condition='alignmentMethod==1',
+        form.addParam('contScale', BooleanParam, label="Optimize scale?", default=False, condition='alignmentMethod==1',
                       help='Optimize scale within a limit')
         form.addParam('contMaxScale', FloatParam, label="Max. scale variation", default=0.02, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED)
         form.addParam('contAngles', BooleanParam, label="Optimize angles?", default=True, condition='alignmentMethod==1',
@@ -172,24 +172,24 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addParam('contMaxGrayScale', FloatParam, label="Max. gray scale variation", default=5, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED)
         form.addParam('contMaxGrayShift', FloatParam, label="Max. gray shift variation", default=5, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                                  help='As a factor of the image standard deviation')
-        form.addParam('contDefocus', BooleanParam, label="Optimize defocus?", condition='alignmentMethod==1', default=True)
+        form.addParam('contDefocus', BooleanParam, label="Optimize defocus?", condition='alignmentMethod==1', default=False)
         form.addParam('contMaxDefocus', FloatParam, label="Max. defocus variation", default=200, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                                  help="In Angstroms")
         form.addParam('contPadding', IntParam, label="Fourier padding factor", default=2, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                       help='The volume is zero padded by this factor to produce projections')
         
         form.addSection(label='Weights')
-        form.addParam('weightSSNR', BooleanParam, label="Weight by SSNR?", default=True,
+        form.addParam('weightSSNR', BooleanParam, label="Weight by SSNR?", default=False,
                       help='Weight input images by SSNR')
         form.addParam('weightContinuous', BooleanParam, label="Weight by Continuous cost?", default=True, condition='alignmentMethod==1',
                       help='Weight input images by angular assignment cost')
-        form.addParam('weightJumper', BooleanParam, label="Weight by angular stability?", default=True,
+        form.addParam('weightJumper', BooleanParam, label="Weight by angular stability?", default=False,
                       help='Weight input images by angular stability between iterations')
         form.addParam('weightCC', BooleanParam, label="Weight by CC percentile?", default=True,
                       help='Weight input images by their fitness (cross correlation) percentile in their defocus group')
         form.addParam('weightCCmin', FloatParam, label="Minimum CC weight", default=0.1, expertLevel=LEVEL_ADVANCED,
                       help='Weights are between this value and 1')
-        form.addParam('minCTF', FloatParam, label="Minimum CTF value", default=0.1, expertLevel=LEVEL_ADVANCED,
+        form.addParam('minCTF', FloatParam, label="Minimum CTF value", default=0.03, expertLevel=LEVEL_ADVANCED,
                       help='A Fourier coefficient is not considered if its CTF is below this value. Note that setting a too low value for this parameter amplifies noise.')
         
         form.addSection(label='Post-processing')
