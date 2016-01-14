@@ -160,7 +160,7 @@ class XmippCL2DViewer(ProtocolViewer):
         # 1) Sqlite files has not been generated or
         # 2) Xmd file is newer than sqlite (using modification time)
         if os.path.exists(fnSqlite):
-            if os.path.getmtime(fn) > os.path.getmtime(fnSqlite):
+            if os.path.getmtime(fn) > os.path.getmtime(fnSqlite)-10:
                 pwutils.cleanPath(fnSqlite) # Clean to load from scratch
 
         if not os.path.exists(fnSqlite):
