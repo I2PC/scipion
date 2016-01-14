@@ -154,7 +154,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                   expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
         form.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition='alignmentMethod==0 and globalMethod==1', 
 	              expertLevel=LEVEL_ADVANCED, help="In pixels")
-        form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=2, condition='alignmentMethod==0 and globalMethod==0',
+        form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=2, condition='alignmentMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="Significant alignment is allowed to replicate each image up to this number of times")
 
         form.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True, condition='alignmentMethod==1',
@@ -181,7 +181,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addSection(label='Weights')
         form.addParam('weightSSNR', BooleanParam, label="Weight by SSNR?", default=False,
                       help='Weight input images by SSNR')
-        form.addParam('weightContinuous', BooleanParam, label="Weight by Continuous cost?", default=True, condition='alignmentMethod==1',
+        form.addParam('weightContinuous', BooleanParam, label="Weight by Continuous cost?", default=False, condition='alignmentMethod==1',
                       help='Weight input images by angular assignment cost')
         form.addParam('weightJumper', BooleanParam, label="Weight by angular stability?", default=False,
                       help='Weight input images by angular stability between iterations')
@@ -693,8 +693,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                 #cleanPath(join(fnDirSignificant,"angles_iter001_00.xmd"))
                                 cleanPath(join(fnDirSignificant,"images_significant_iter001_00.xmd"))
                             else:
-                                args='-i %s -o %s --ref %s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --append --pad 2.0'%\
-                                     (fnGroup,join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset)),fnGalleryGroup,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get())
+                                args='-i %s -o %s --ref %s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --append --pad 2.0 --number_orientations %d'%\
+                                     (fnGroup,join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset)),fnGalleryGroup,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get(),
+                                      self.numberOfReplicates.get())
                                 if ctfPresent:
                                     args+=" --ctf %d@%s"%(j,fnCTFs)
                                 if self.numberOfMpi>1:
@@ -715,7 +716,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnAngles=fnOut+".xmd"
                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights 1 particleId 0.5 --check_mirrors --set 0"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut+"_weights.xmd"),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s -o %s'%(fnAnglesA,fnOut+"_weights.xmd",fnOut+".xmd"),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAnglesA,fnOut+"_weights.xmd"),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAnglesB,fnOut+"_weights.xmd"),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --set union_all %s -o %s'%(fnAnglesA,fnAnglesB,fnOut+".xmd"),numberOfMpi=1)
                 cleanPath(fnOut+"_weights.xmd")
                 
     def adaptShifts(self, fnSource, TsSource, fnDest, TsDest):
