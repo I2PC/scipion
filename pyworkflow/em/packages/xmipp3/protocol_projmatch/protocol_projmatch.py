@@ -375,6 +375,7 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         return self._lastIter.get()
     
     def _fillParticlesFromIter(self, partSet, iteration):
+        print("_fillParticlesFromIter")
         import pyworkflow.em.metadata as md
         
         imgSet = self.inputParticles.get()
