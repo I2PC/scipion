@@ -569,7 +569,7 @@ void ProgCtfGroup::writeOutputToDisc()
             MDL_DEFGROUP,MDL_COUNT, MDL_SUM,  MDL_MIN,          MDL_MAX,          MDL_AVG
         };
     std::vector<MDLabel> resultLabels(MyresultLabels,MyresultLabels+6);
-    sortedCtfMD.write("/tmp/sortedCtfMD")
+    sortedCtfMD.write("/tmp/sortedCtfMD");
     ctfInfo.aggregate(sortedCtfMD,aggregateOperations,operateLabels,resultLabels);
     ctfInfo.setComment("N. of micrographs, N. of particles, min defocus, max defocus and avg defocus");
     ctfInfo.write("groups@"+fn_root+"Info.xmd");
