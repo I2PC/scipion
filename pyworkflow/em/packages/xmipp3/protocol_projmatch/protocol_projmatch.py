@@ -381,6 +381,9 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         imgFn = "all_exp_images@" + self._getFileName('docfileInputAnglesIters', iter=iteration, ref=1)
         partSet.copyInfo(imgSet)
         partSet.setAlignmentProj()
+        ####################################################################################
+        imgSet.write("/tmp/kk.sqlite")
+        print("imgSet",imgSet)
         partSet.copyItems(imgSet,
                             updateItemCallback=self._createItemMatrix,
                             itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))

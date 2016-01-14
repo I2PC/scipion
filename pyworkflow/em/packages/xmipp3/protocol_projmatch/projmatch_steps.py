@@ -718,7 +718,7 @@ def runCreateOutputStep(self):
         
         #create set of images
         imgSetOut = self._createSetOfParticles("_iter_%03d" %lastIter)
-        self._fillParticlesFromIter(imgSetOut, lastIter)
+        self._fillParticlesFromIter(imgSetOut, lastIter)#############################################
         
         self._defineOutputs(outputParticles=imgSetOut)
         self._defineSourceRelation(self.inputParticles, imgSetOut)
