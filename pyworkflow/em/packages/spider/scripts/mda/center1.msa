@@ -1,5 +1,7 @@
 (x21,x22)
 
+[one] = 1 ; dummy variable
+
 fr
 [input]?file to be centered?
 fr
