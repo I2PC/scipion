@@ -51,11 +51,11 @@ from viewer_ml2d import XmippML2DViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
 from viewer_normalize_strain import XmippNormalizeStrainViewer
 from viewer_resolution3d import XmippResolution3DViewer
+from viewer_split_volume import XmippViewerSplitVolume
+#from viewer_structure_mapping import XmippProtStructureMappingViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
 from viewer_validate_overfitting import XmippValidateOverfittingViewer
-from viewer_split_volume import XmippViewerSplitVolume
 from viewer_volume_strain import XmippVolumeStrainViewer
-from viewer_reconstruct_highres import XmippReconstructHighResViewer
 
 #from viewer_reconstruct_significant import XmippReconstructSignificantViewer
 # TODO(coss): add viewer_reconstruct_significant.py pretty please
@@ -100,11 +100,13 @@ from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_split_volume import XmippProtSplitvolume
+#from protocol_structure_mapping import XmippProtStructureMapping 
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_validate_overfitting import XmippProtValidateOverfitting
 from protocol_validate_tilt import XmippProtValidateTilt
 from protocol_volume_strain import XmippProtVolumeStrain
-
+from protocol_write_testC import XmippProtWriteTestC
+from protocol_write_testP import XmippProtWriteTestP
 # Wizards
 from wizard import *
 

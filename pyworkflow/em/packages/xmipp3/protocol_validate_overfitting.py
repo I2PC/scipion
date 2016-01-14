@@ -43,7 +43,7 @@ from plotter import XmippPlotter
 class XmippProtValidateOverfitting(ProtReconstruct3D):
     """    
     Check how the FSC changes with the number of projections used for 3D reconstruction. This method
-    has been proposed by B. Heymann at ***
+    has been proposed by B. Heymann "Validation of 3D EM Reconstructions", 2015
     """
     _label = 'validate overfitting'
     
@@ -54,18 +54,18 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',pointerCondition='hasAlignmentProj',
                       label="Input particles",  
                       help='Select the input images from the project.')     
-        form.addParam('symmetryGroup', StringParam, default='c1',
-                      label="Symmetry group", 
-                      help='See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
-                           'for a description of the symmetry format accepted by Xmipp')
         form.addParam('input3DReference', PointerParam,
                  pointerClass='Volume,SetOfVolumes',
                  label='Initial 3D reference volume', 
                  help='Input 3D reference reconstruction to alignment gaussian nise.') 
+        form.addParam('symmetryGroup', StringParam, default='c1',
+                      label="Symmetry group", 
+                      help='See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
+                           'for a description of the symmetry format accepted by Xmipp')
         form.addParam('numberOfParticles', NumericListParam, default="100 200 500 1000 2000 5000", expertLevel=LEVEL_ADVANCED,
                       label="Number of particles") 
         form.addParam('numberOfIterations', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
-                      label="Number of times the randomization is performed.") 
+                      label="Number of times the randomization is performed") 
         form.addParam('maxRes', FloatParam, default = 0.5, expertLevel=LEVEL_ADVANCED,
                       label="Maximum resolution (dig.freq)",  
                       help='Nyquist is 0.5') 

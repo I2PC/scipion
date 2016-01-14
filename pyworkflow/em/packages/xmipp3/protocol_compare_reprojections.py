@@ -136,7 +136,9 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         outputSet = self._createSetOfParticles()
         imgSet = self.inputSet.get()
         imgFn = self._getExtraPath("anglesCont.xmd")
-        if not isinstance(imgSet, SetOfClasses2D):
+        if isinstance(imgSet, SetOfClasses2D):
+            outputSet.copyInfo(imgSet.getImages())
+        else:
             outputSet.copyInfo(imgSet)
         outputSet.setAlignmentProj()
         outputSet.copyItems(imgSet,
