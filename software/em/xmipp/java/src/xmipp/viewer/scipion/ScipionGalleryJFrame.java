@@ -366,7 +366,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                 @Override
                 public void run() {
-                    new ScipionGalleryJFrame(new ScipionGalleryData(ScipionGalleryJFrame.this, data.parameters, (ScipionMetaData)md));
+                    new ScipionGalleryJFrame(new ScipionGalleryData(ScipionGalleryJFrame.this, ((ScipionParams)data.parameters).getScipionParams(), (ScipionMetaData)md));
                 }
             });
             

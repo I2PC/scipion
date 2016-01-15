@@ -33,7 +33,7 @@ from pyworkflow.gui.dialog import askYesNo
 from pyworkflow.em.protocol import ProtParticlePicking
 
 import eman2
-from pyworkflow.em.packages.eman2.data import loadJson
+from pyworkflow.em.packages.eman2.convert import loadJson
 from convert import readSetOfCoordinates
 
 
