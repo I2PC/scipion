@@ -221,7 +221,8 @@ class XmippProtCL2D(ProtClassify2D):
             self.runJob("xmipp_image_sort", params, numberOfMpi=nproc)
             mdFnOut = fnRoot + ".xmd"
             md = xmipp.MetaData(mdFnOut)
-            md.addItemId()
+            for objId in md:
+                md.setValue(xmipp.MDL_ITEM_ID,long(md.getValue(xmipp.MDL_REF,objId)),objId)
             md.write("classes_sorted@" + mdFn, xmipp.MD_APPEND)
 
     def evaluateClassesStep(self, subset=''):
@@ -248,7 +249,7 @@ class XmippProtCL2D(ProtClassify2D):
         lastMdFn = levelMdFiles[-1]
         inputParticles = self.inputParticles.get()
         classes2DSet = self._createSetOfClasses2D(inputParticles, subset)
-        readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
+        readSetOfClasses2D(classes2DSet, lastMdFn, 'classes')
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
         self._defineSourceRelation(self.inputParticles, classes2DSet)
