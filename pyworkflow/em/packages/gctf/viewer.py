@@ -131,11 +131,8 @@ def createCtfPlot(ctfSet, ctfId):
     plot_title = "CTF Fitting"
     a = xplotter.createSubPlot(plot_title, 'Resolution (Angstroms)', 'CTF', yformat=False)
     a.invert_xaxis()
-<<<<<<< HEAD
     for i in range(1, 4):
         _plotCurve(a, i, fn)
-=======
->>>>>>> parent of a18f69e... reverting master changes not in v1.0, now master should be the stable branch for releases only
     xplotter.showLegend(['simulated CTF',
                          'equiphase avg.',
                          'cross correlation'])
