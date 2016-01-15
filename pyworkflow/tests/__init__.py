@@ -38,6 +38,17 @@ except ImportError:
     from unittest import _WritelnDecorator # Python <2.6
 
     
+DataSet(name='igbmc_gempicker', folder='igbmc_gempicker', 
+        files={
+               'allMics': 'micrographs/*.mrc',
+               'mic1': 'micrographs/KLH_Dataset_I_Test_0001.mrc',
+               'mic2': 'micrographs/KLH_Dataset_I_Test_0002.mrc',
+               'mask1': 'masks/mask_sideview.tif',
+               'mask2': 'masks/mask_topview.tif',
+               'templates': 'templates/*.mrc'
+               })
+
+
 DataSet(name='xmipp_tutorial', folder='xmipp_tutorial', 
         files={
                'aligned_particles': 'gold/aligned_particles.sqlite',

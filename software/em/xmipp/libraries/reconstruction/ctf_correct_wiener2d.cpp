@@ -104,6 +104,7 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 
 	Mwien.resize(paddim,paddim);
 
+	//NO entiendo esto:
 	ctf.Tm = sampling_rate;
 	//ctf.Tm /= pad;
 
@@ -120,6 +121,7 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 
 	if (correct_envelope)
 		ctf.generateCTF(paddim, paddim, ctfComplex);
+
 	else
 		ctf.generateCTFWithoutDamping(paddim, paddim, ctfComplex);
 
@@ -131,13 +133,12 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 			dAij(ctfIm, i, j) = dAij(ctfComplex, i, j).real();
 	}
 
-//#define DEBUG
 #ifdef DEBUG
 	{
 		Image<double> save;
 		save()=ctfIm;
-		save.write("PPPctf2.spi");
-		//exit(1);
+		save.write("ctf2.spi");
+		exit(1);
 		//std::cout << "Press any key\n";
 		//char c;
 		//std::cin >> c;
@@ -196,7 +197,6 @@ else
 
 }
 
-//#define DEBUG
 void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 
@@ -208,19 +208,16 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
 	Ydim = YSIZE(img());
 	Xdim = YSIZE(img());
 	int paddim = Ydim*pad;
+	MultidimArray<std::complex<double> > Faux;
 
-	generateWienerFilter(Mwien,ctf);
+	 generateWienerFilter(Mwien,ctf);
 
 #ifdef DEBUG
 
 {
-	std::cout << ctf << std::endl;
-
 	Image<double> save;
-	save()=Mwien;
-	save.write("PPPMwien.spi");
-	std::cout << "Press any key"<< std::endl;
-	char c; std::cin >> c;
+	save()=img;
+	save.write("img.spi");
 }
 #endif
 #undef DEBUG
@@ -233,13 +230,13 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
         img().selfWindow(x0, x0, xF, xF);
     }
 
-    transformer.FourierTransform(img(), Faux);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
+    FourierTransform(img(), Faux);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mwien)
     {
         dAij(Faux,i,j) *= dAij(Mwien,i,j);
     }
 
-    transformer.inverseFourierTransform(Faux, img());
+    InverseFourierTransform(Faux, img());
     if (paddim > Xdim)
     {
         // de-pad real-space image
@@ -262,3 +259,9 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
 #undef DEBUG
 
 }
+
+
+
+
+
+

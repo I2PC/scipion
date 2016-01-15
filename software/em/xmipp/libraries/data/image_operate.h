@@ -46,9 +46,6 @@ typedef void ImageBinaryOperator(Image<double> &op1, const Image<double> &op2);
    the result will be left in op */
 typedef void ImageUnaryOperator(Image<double> &op);
 
-/** Substitute op by its radial average */
-void radialAvg(Image<double> &op);
-
 /** Operate program */
 class ProgOperate: public XmippMetadataProgram
 {

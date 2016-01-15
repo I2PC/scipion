@@ -234,14 +234,10 @@ double ObjFunc_nma_alignment_vol::eval(Vector X, int *nerror) {
 		retval=1-correlationIndex(global_nma_vol_prog->V(),global_nma_vol_prog->Vdeformed(),&global_nma_vol_prog->mask);
 	else
 		retval=1-correlationIndex(global_nma_vol_prog->V(),global_nma_vol_prog->Vdeformed());
-	//global_nma_vol_prog->V().printStats();
-	//global_nma_vol_prog->Vdeformed().printStats();
-	//std::cout << correlationIndex(global_nma_vol_prog->V(),global_nma_vol_prog->Vdeformed()) << std::endl;
 
 	runSystem("rm", formatString("-rf %s* &", randStr));
 
 	global_nma_vol_prog->updateBestFit(retval, dim);
-	//std::cout << global_nma_vol_prog->trial << " -> " << retval << std::endl;
 	return retval;
 }
 
