@@ -258,7 +258,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
                     @Override
                     public void run() {
-                        new GalleryJFrame(md, data.parameters);
+                        new GalleryJFrame(md, new Params());
                     }
                 });
                 
@@ -950,6 +950,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					data.removeSelection(gallery.getSelection());
 				else
 					data.removeDisabled();
+				gallery.clearSelection();
 				reloadMd();
 			}
 		}
