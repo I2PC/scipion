@@ -30,7 +30,7 @@ import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 from pyworkflow.em.packages.resmap import ProtResMap
-from pyworkflow.em.protocol import ProtImportVolumes
+from pyworkflow.em.protocol import ProtImportVolumes, ProtImportMask
 
 
 class TestResMapBase(BaseTest):
@@ -51,6 +51,16 @@ class TestResMapBase(BaseTest):
                                         )
         cls.launchProtocol(cls.protImport)
         return cls.protImport
+    
+    @classmethod
+    def runImportMask(cls, pattern, samplingRate):
+        """ Run an Import volumes protocol. """
+        cls.protImport = cls.newProtocol(ProtImportMask,
+                                         maskPath=pattern,
+                                         samplingRate=samplingRate
+                                        )
+        cls.launchProtocol(cls.protImport)
+        return cls.protImport
 
 
 class TestResMap(TestResMapBase):
@@ -61,6 +71,7 @@ class TestResMap(TestResMapBase):
         cls.protImportVol  = cls.runImportVolumes(cls.map3D, 3.54)
         cls.protImportHalf1  = cls.runImportVolumes(cls.half1, 3.54)
         cls.protImportHalf2  = cls.runImportVolumes(cls.half2, 3.54)
+        cls.protImportMask  = cls.runImportMask(cls.mask, 3.54)
 
     def testResmap1(self):
         resMap = self.newProtocol(ProtResMap,
@@ -72,44 +83,51 @@ class TestResMap(TestResMapBase):
                                     maxRes = 20
                                     )
         self.launchProtocol(resMap)
-        
-        print "Assert is missing: testResMap"
+        self.assertTrue(exists(resMap._getExtraPath("histogram.png")), "resmap (no split and no mask) has failed")
 
-#     def testResmap2(self):
-#         resMap = self.newProtocol(ProtResMap,
-#                                     inputVolume = self.protImportVol.outputVolume,
-#                                     prewhitenAng = 23.77,
-#                                     prewhitenRamp = 1,
-#                                     stepRes = 0.5,
-#                                     minRes = 7.5,
-#                                     maxRes = 20
-#                                     )
-#         self.launchProtocol(resMap)
-#         print "Assert is missing: testResMap"
-# 
-#     def testResmap3(self):
-#         resMap = self.newProtocol(ProtResMap,
-#                                     inputVolume = self.protImportVol.outputVolume,
-#                                     prewhitenAng = 23.77,
-#                                     prewhitenRamp = 1,
-#                                     stepRes = 0.5,
-#                                     minRes = 7.5,
-#                                     maxRes = 20
-#                                     )
-#         self.launchProtocol(resMap)
-#         print "Assert is missing: testResMap"
-# 
-#     def testResmap4(self):
-#         resMap = self.newProtocol(ProtResMap,
-#                                     inputVolume = self.protImportVol.outputVolume,
-#                                     prewhitenAng = 23.77,
-#                                     prewhitenRamp = 1,
-#                                     stepRes = 0.5,
-#                                     minRes = 7.5,
-#                                     maxRes = 20
-#                                     )
-#         self.launchProtocol(resMap)
-#         print "Assert is missing: testResMap"
+    def testResmap2(self):
+        resMap = self.newProtocol(ProtResMap,
+                                    inputVolume = self.protImportHalf1.outputVolume,
+                                    useSplitVolume=True,
+                                    splitVolume = self.protImportHalf2.outputVolume,
+                                    prewhitenAng = 23.77,
+                                    prewhitenRamp = 1,
+                                    stepRes = 0.5,
+                                    minRes = 7.5,
+                                    maxRes = 20
+                                    )
+        self.launchProtocol(resMap)
+        self.assertTrue(exists(resMap._getExtraPath("histogram.png")), "resmap (split and no mask) has failed")
+
+    def testResmap3(self):
+        resMap = self.newProtocol(ProtResMap,
+                                    inputVolume = self.protImportVol.outputVolume,
+                                    applyMask = True,
+                                    maskVolume = self.protImportMask.outputMask,
+                                    prewhitenAng = 23.77,
+                                    prewhitenRamp = 1,
+                                    stepRes = 0.5,
+                                    minRes = 7.5,
+                                    maxRes = 20
+                                    )
+        self.launchProtocol(resMap)
+        self.assertTrue(exists(resMap._getExtraPath("histogram.png")), "resmap (no split and no mask) has failed")
+
+    def testResmap4(self):
+        resMap = self.newProtocol(ProtResMap,
+                                    inputVolume = self.protImportHalf1.outputVolume,
+                                    useSplitVolume=True,
+                                    splitVolume = self.protImportHalf2.outputVolume,
+                                    applyMask = True,
+                                    maskVolume = self.protImportMask.outputMask,
+                                    prewhitenAng = 23.77,
+                                    prewhitenRamp = 1,
+                                    stepRes = 0.5,
+                                    minRes = 7.5,
+                                    maxRes = 20
+                                    )
+        self.launchProtocol(resMap)
+        self.assertTrue(exists(resMap._getExtraPath("histogram.png")), "resmap (split and no mask) has failed")
 
 
 if __name__ == "__main__":
