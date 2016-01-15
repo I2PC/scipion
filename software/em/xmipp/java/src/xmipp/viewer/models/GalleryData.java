@@ -261,19 +261,23 @@ public class GalleryData {
         
         useGeo = wrap = false;
         displayLabels = null;
-        mode = Mode.GALLERY_MD;
+
+        if (mode == null)
+            mode = Mode.GALLERY_MD;
         this.renderImages = true;
         displaycis = new HashMap<String, ColumnInfo>();
         this.inverty = parameters.inverty;
+
         if(parameters.getBlock() == null)
             parameters.setBlock(selectedBlock);//Identifies parameters with first block loaded
-        if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
-            {
-                mode = Mode.TABLE_MD;
-            }
+
+        if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
+            mode = Mode.TABLE_MD;
+        else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_GALLERY))
+            mode = Mode.GALLERY_MD;
+
         if(parameters.getBlock().equals(selectedBlock))
         {
-        
             setRenderLabels(parameters.renderLabels);
             setRenderLabel(parameters.getRenderLabel());
             setVisibleLabels(parameters.visibleLabels);
@@ -659,7 +663,6 @@ public class GalleryData {
      * @return
      */
     public ImageGalleryTableModel createModel(boolean[] selection) {
-    	
         try {
             switch (mode) {
                 case GALLERY_VOL:
@@ -1206,7 +1209,6 @@ public class GalleryData {
      * Delete from metadata selected items
      */
     public void removeSelection(boolean[] selection) throws Exception {
-
         for (int i = 0; i < selection.length; i++) {
             if (selection[i]) {
                 md.removeObject(ids[i]);
