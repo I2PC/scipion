@@ -254,21 +254,19 @@ class TestSignificant(tests.BaseTest):
     
     def _runSignificant(self, inputSet, args):
         myargs = dict(args)
-        nVols = myargs['Nvolumes']
-        
         prot1 = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
-            objLabel='significant d7 vol=%d' % nVols, 
+            objLabel='significant d7', 
             **myargs
             )
         #prot1.inputClasses.set(inputSet)
         self.launchProtocol(prot1)
         
-        output = prot1.outputVolume if nVols == 1 else prot1.outputVolumes
+        output = prot1.outputVolume
         
         myargs['thereisRefVolume'] = True
          
         prot2 = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
-            objLabel='significant d7 vol=%d (with ref)' % nVols, 
+            objLabel='significant d7 (with ref)', 
             **myargs
             )
         #prot2.inputClasses.set(inputSet)
@@ -291,13 +289,8 @@ class TestSignificant(tests.BaseTest):
                 'iter': 3,
                 'numberOfMpi': cpus,
                 'inputSet': protImport.outputAverages,
-                'Nvolumes': 1,
                 'alpha0':98.0
                 }
         # Run significant with one volume
-        self._runSignificant(protImport.outputAverages, args)
-        
-        # Run same as before but with 2 volumes
-        args['Nvolumes'] = 2
         self._runSignificant(protImport.outputAverages, args)
         

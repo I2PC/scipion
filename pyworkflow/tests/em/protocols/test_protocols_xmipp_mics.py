@@ -195,7 +195,21 @@ class TestXmippPreprocessMicrographs(TestXmippBase):
         protPreprocess.inputMicrographs.set(self.protImport.outputMicrographs)
         self.proj.launchProtocol(protPreprocess, wait=True)
         self.assertIsNotNone(protPreprocess.outputMicrographs, "SetOfMicrographs has not been preprocessed.")
-        
+    
+    def testInvertNormalize(self):
+        # test invert and normalize a set of micrographs
+        protInvNorm = XmippProtPreprocessMicrographs(doInvert=True, doNormalize=True)
+        protInvNorm.inputMicrographs.set(self.protImport.outputMicrographs)
+        self.proj.launchProtocol(protInvNorm, wait=True)
+        self.assertIsNotNone(protInvNorm.outputMicrographs, "SetOfMicrographs has not been preprocessed.")
+    
+    def testSmooth(self):
+        # test smooth a set of micrographs
+        protSmooth = XmippProtPreprocessMicrographs(doSmooth=True, sigmaConvolution=3)
+        protSmooth.inputMicrographs.set(self.protImport.outputMicrographs)
+        self.proj.launchProtocol(protSmooth, wait=True)
+        self.assertIsNotNone(protSmooth.outputMicrographs, "SetOfMicrographs has not been preprocessed.")
+
 
 class TestXmippCTFEstimation(TestXmippBase):
     """This class check if the protocol to determine the CTF in Xmipp works properly."""

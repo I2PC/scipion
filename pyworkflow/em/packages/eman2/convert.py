@@ -41,7 +41,7 @@ from os.path import join, exists
 import pyworkflow as pw
 import pyworkflow.em as em
 from pyworkflow.em.data import Coordinate
-from pyworkflow.em.packages.eman2 import getEmanCommand, loadJson, getEnviron
+from pyworkflow.em.packages.eman2 import getEmanCommand, getEnviron
 from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt, cleanPath
 
 
@@ -51,6 +51,20 @@ from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt, cle
 #                xmipp.LABEL_INT: int,
 #                xmipp.LABEL_BOOL: bool              
 #                }
+
+#     @static
+def loadJson(jsonFn):
+    """ This function loads the Json dictionary into memory """
+    jsonFile = open(jsonFn)
+    jsonDict = json.load(jsonFile)
+    jsonFile.close()
+    return jsonDict
+
+ 
+def writeJson(jsonDict, jsonFn):
+    """ This function write a Json dictionary """
+    with open(jsonFn, 'w') as outfile:
+        json.dump(jsonDict, outfile)
 
 
 def objectToRow(obj, row, attrDict):
