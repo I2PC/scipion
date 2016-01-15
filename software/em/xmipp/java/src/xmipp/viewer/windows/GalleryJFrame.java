@@ -950,6 +950,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					data.removeSelection(gallery.getSelection());
 				else
 					data.removeDisabled();
+				gallery.clearSelection();
 				reloadMd();
 			}
 		}
