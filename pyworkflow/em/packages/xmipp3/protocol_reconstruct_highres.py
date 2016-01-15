@@ -31,11 +31,12 @@ from glob import glob
 import math
 
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam, EnumParam
+from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam, EnumParam, NumericListParam
 from pyworkflow.utils.path import cleanPath, makePath, copyFile, moveFile, createLink
 from pyworkflow.em.protocol import ProtRefine3D
 from pyworkflow.em.data import SetOfVolumes, Volume
 from pyworkflow.em.metadata.utils import getFirstRow, getSize
+from pyworkflow.utils.utils import getFloatListFromValues
 from convert import writeSetOfParticles
 from os.path import join, exists, split
 from pyworkflow.em.packages.xmipp3.convert import createItemMatrix, setXmippAttributes
@@ -108,7 +109,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
                         'If no symmetry is present, give c1')
-        form.addParam('numberOfIterations', IntParam, default=3, label='Number of iterations')
+        form.addParam('numberOfIterations', IntParam, default=6, label='Number of iterations')
         form.addParam("saveSpace", BooleanParam, default=True, label="Remove intermediary files")
         
         form.addSection(label='Next Reference')
@@ -148,7 +149,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90, expertLevel=LEVEL_ADVANCED)
         form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Global','Local'], default=self.GLOBAL_ALIGNMENT)
 
-        form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Projection Matching'], default=self.GLOBAL_SIGNIFICANT, condition='alignmentMethod==0',
+        form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Projection Matching'], default=self.GLOBAL_PROJMATCH, condition='alignmentMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="Significant is more accurate but slower.")
         form.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition='alignmentMethod==0 and globalMethod==1',
                   expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
@@ -189,7 +190,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='Weight input images by their fitness (cross correlation) percentile in their defocus group')
         form.addParam('weightCCmin', FloatParam, label="Minimum CC weight", default=0.1, expertLevel=LEVEL_ADVANCED,
                       help='Weights are between this value and 1')
-        form.addParam('minCTF', FloatParam, label="Minimum CTF value", default=0.03, expertLevel=LEVEL_ADVANCED,
+        form.addParam('minCTF', NumericListParam, label="Minimum CTF value", default='0.1 0.08 0.06 0.05 0.04 0.03', expertLevel=LEVEL_ADVANCED,
                       help='A Fourier coefficient is not considered if its CTF is below this value. Note that setting a too low value for this parameter amplifies noise.')
         
         form.addSection(label='Post-processing')
@@ -236,15 +237,15 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             else:
                 self._insertFunctionStep('convertInputStep', self.inputParticles.getObjId())
             self._insertFunctionStep('copyBasicInformation')
-            firstIteration=self.getNumberOfPreviousIterations()+1
+            self.firstIteration=self.getNumberOfPreviousIterations()+1
         else:
             self._insertFunctionStep('convertInputStep', self.inputParticles.getObjId())
             if self.weightSSNR:
                 self._insertFunctionStep('doWeightSSNR')
             self._insertFunctionStep('doIteration000', self.inputVolumes.getObjId())
-            firstIteration=1
+            self.firstIteration=1
         self.TsOrig=self.inputParticles.get().getSamplingRate()
-        for self.iteration in range(firstIteration,firstIteration+self.numberOfIterations.get()):
+        for self.iteration in range(self.firstIteration,self.firstIteration+self.numberOfIterations.get()):
             self.insertIteration(self.iteration)
         self._insertFunctionStep("createOutput")
     
@@ -984,6 +985,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def reconstruct(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
         TsCurrent=self.readInfoField(fnDirCurrent,"sampling",xmipp.MDL_SAMPLINGRATE)
+        minCTF = getFloatListFromValues(self.minCTF.get(),self.numberOfIterations.get())
         for i in range(1,3):
             fnAngles=join(fnDirCurrent,"angles%02d.xmd"%i)
             fnVol=join(fnDirCurrent,"volume%02d.vol"%i)
@@ -992,7 +994,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 args="-i %s -o %s --sym %s --weight --thr %d"%(fnAngles,fnVol,self.symmetryGroup,self.numberOfThreads.get())
                 row=getFirstRow(fnAngles)
                 if row.containsLabel(xmipp.MDL_CTF_DEFOCUSU) or row.containsLabel(xmipp.MDL_CTF_MODEL):
-                    args+=" --useCTF --sampling %f --minCTF %f"%(TsCurrent,self.minCTF.get())
+                    args+=" --useCTF --sampling %f --minCTF %f"%(TsCurrent,minCTF[iteration-self.firstIteration])
                     if self.inputParticles.get().isPhaseFlipped():
                         args+=" --phaseFlipped"
                 self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get()+1)
