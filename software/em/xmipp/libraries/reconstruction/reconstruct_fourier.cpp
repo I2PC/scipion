@@ -162,6 +162,18 @@ void ProgRecFourier::run()
     for ( int nt = 0 ; nt < numThreads ; nt ++ )
         pthread_join(*(th_ids+nt), NULL);
     barrier_destroy( &barrier );
+
+    // Deallocate resources.
+    if ( statusArray != NULL)
+    {
+        free(statusArray);
+    }
+    for (int nt=0; nt<numThreads ;nt++)
+    {
+    	delete(th_args[nt].selFile);
+    }
+    free(th_ids);
+    free(th_args);
 }
 
 
