@@ -23,7 +23,7 @@ html, body, #mainContainer {
 	min-height: 100%; 
 	}
 /* .layout-outer {padding-bottom: 110px;} */
-	
+
 /* body > #mainContainer { height: auto; min-height: 100%; } */
 /* section, aside { height: auto; min-height: 100%;} */
 a{
@@ -181,7 +181,9 @@ footer{
  	position: relative;
  	z-index: 10;
  	height: 110px;
- 	
+ 	text-align: center;
+ 	font-size: 0.8em;
+ 	margin-top: 20px;
  	/* This shoulb be uncommented if we want the footer to be displayed initially*/ 
  	/* margin-top: -110px;  */
 }
@@ -228,9 +230,8 @@ footer .footerLink{
 	color: firebrick;
 }
 footer .logo{
-	max-height:40px;
+	max-height:30px;
 }
-
 
 
 .project_name {

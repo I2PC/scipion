@@ -39,7 +39,9 @@
     <!-- Bootstrap core CSS -->
     <link href="{{css_root}}/bootstrap.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="{{css_root}}/general_style.css" type="text/css" />
     <link href="{{css_root}}/jumbotron.css" rel="stylesheet">
+
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -50,25 +52,8 @@
   </head>
 
   <body>
- 
-    <nav class="navbar navbar-fixed-top mynav">
-      <div class="container ">              
-          <a href="#">
-			  <img class="headerImage"  src="{{abs_url}}/resources/scipion_logo_normal.png">
-		  </a>          
-		  <div  class="logoLine">
-					<a href="http://i2pc.cnb.csic.es/LoadHome.htm"> 
-						<img class="scipionLogo" src="{{abs_url}}/resources/logo_i2pc_with_title.png" height="40px"/> </a>
-					<a href="http://www.structuralbiology.eu/"> 
-						<img class="scipionLogo" src="{{abs_url}}/resources/logoInstruct.png"  height="40px"/> </a>
-					<a href="http://www.cnb.csic.es/"> 
-						<img class="scipionLogo" src="{{abs_url}}/resources/logo_cnb_without_title.gif" height="30px" /> </a>
-				</div>
-      </div>
-      
-      <div class="headerLine"></div>
-    </nav> 
-   
+
+    {% include "_navigation.html" %}
     <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="jumbotron backimage">
       <div class="container mainHead">
@@ -76,7 +61,7 @@
         <p>Scipion is an image processing framework to obtain 3D models<br>
            of macromolecular complexes using Electron Microscopy. 
         </p>
-        <p><a class="btn btn-danger btn-lg" href="javascript:goWithSubDomainURL('/download_form/')" role="button">
+        <p><a class="btn btn-lg button2 primary_inv" href="javascript:goWithSubDomainURL('/download_form/')" role="button">
 			<span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;&nbsp;Download&nbsp;&nbsp;</a>
 		</p>
       </div>
@@ -92,7 +77,7 @@
           and some introductory tutorials. Learn how to extend Scipion with new
           protocols, its API or description of our development tools.
           </p>
-          <p><a class="btn btn-default" href="http://scipion.cnb.csic.es/docs/" role="button">Go to Documentation &raquo;</a></p>
+          <p><a class="btn btn-default button2 primary_inv" href="http://scipion.cnb.csic.es/docs/" role="button">Go to Documentation &raquo;</a></p>
         </div>
         <div class="col-md-4">
           <h3><a href="javascript:goWithSubDomainURL('/services/')" ><span class="glyphicon glyphicon-cloud" aria-hidden="true"></span> Web Tools</a></h3>
@@ -101,7 +86,7 @@
           Current web-tools include initial volume estimation, movie alignment and 
           local resolution (ResMap).
           </p>
-          <p><a class="btn btn-default" href="javascript:goWithSubDomainURL('/services/')" role="button">Go to Web Tools &raquo;</a></p>
+          <p><a class="btn btn-default button2 primary_inv" href="javascript:goWithSubDomainURL('/services/')" role="button">Go to Web Tools &raquo;</a></p>
        </div>
         <div class="col-md-4">
           <h3><a href="https://github.com/biocompwebs/scipion/wiki/News-and-events"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span> News and Events</a></h3>
@@ -109,17 +94,14 @@
           release plan. Don't miss the next Scipion workshop or any related event. Don't hesitate to contact
           us for any feeback or if you want to organize a workshop at your institution.
           </p>
-          <p><a class="btn btn-default" href="http://github.com/biocompwebs/scipion/wiki/News-and-events" role="button">Go to News and Events&raquo;</a></p>
+          <p><a class="btn btn-default button2 primary_inv" href="http://github.com/biocompwebs/scipion/wiki/News-and-events" role="button">Go to News and Events&raquo;</a></p>
         </div>
       </div>
 
       <hr>
 
       <footer>
-		  <div class="footerLink">
-        <a href="http://www.gnu.org/copyleft/gpl.html" > © 2015 · Scipion
-				is licensed under the GNU General Public License </a>
-		</div>
+        {% include "_footer.html" %}
       </footer>
     </div> <!-- /container -->
 
