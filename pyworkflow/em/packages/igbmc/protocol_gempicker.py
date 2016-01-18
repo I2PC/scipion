@@ -205,7 +205,7 @@ class ProtGemPicker(em.ProtParticlePicking):
         args += ' --mode=%d' % mode
         
         if self.useGPU:
-            nThreads = 0
+            nThreads = self.numberOfThreads.get()
             nGPUs = self.numberOfGPUs.get()
         else:
             nThreads = self.numberOfThreads.get()
