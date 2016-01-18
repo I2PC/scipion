@@ -142,7 +142,9 @@ class XmippProtCL2D(ProtClassify2D):
         # Convert input images if necessary
         self.imgsFn = self._getExtraPath('images.xmd')
         self.initialClassesFn = self._getExtraPath('initialClasses.xmd')
-        self._insertFunctionStep('convertInputStep')
+        self._insertFunctionStep('convertInputStep', 
+                                 self.inputParticles.get().getObjId(), 
+                                 self.initialClasses.get().getObjId())
 
         # Prepare arguments to call program: xmipp_classify_CL2D
         self._params = {'imgsFn': self.imgsFn,
@@ -201,7 +203,7 @@ class XmippProtCL2D(ProtClassify2D):
         self._insertFunctionStep('createOutputStep', subset)
 
     #--------------------------- STEPS functions --------------------------------------------
-    def convertInputStep(self):
+    def convertInputStep(self, particlesId, classesId):
         writeSetOfParticles(self.inputParticles.get(),self.imgsFn,alignType=em.ALIGN_NONE)
         if not self.randomInitialization:
             if isinstance(self.initialClasses.get(), SetOfClasses2D):
