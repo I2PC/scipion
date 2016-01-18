@@ -29,15 +29,14 @@ $(document).ready(function() {
 	* Overray the post simple method in the protocol form template. 
 	* Depend a variable of the protocol form 
 	*/
-	$("#downloadForm").submit(function() {
+	$("#downloadForm").submit(function(e) {
 		
 		fullName = $("input[name=fullName]").val()
 		organization = $("input[name=organization]").val()
 		email = $("input[name=email]").val()
 		country = $("select[name=country]").val()
-		version = $("select[name=version]").val()
-		platform = $("select[name=platform]").val()
-		
+        file= $("input[name=file]:checked").val()
+
 		errors = ""
 		if (fullName.length == 0)
 			errors += "Please fill in the Full Name field.<br />"
@@ -47,15 +46,13 @@ $(document).ready(function() {
 			errors += "Please fill in the Email field.<br />"
 		if (country.length == 0)
 			errors += "Please fill in the Country field.<br />"
-		if (version.length == 0)
-			errors += "Please fill in the Version field.<br />"
-		if (platform.length == 0)
-			errors += "Please fill in the Platform field.<br />"
+		if (file === undefined || file.length == 0)
+			errors += "Please choose the file version to download.<br />"
         if (errors.length > 0) {
         		// Show errors in the validation
         		errorPopup('Errors found', errors);
         		// Important. Stop the normal POST
-        		return false
+        		return e.preventDefault();
         } 
         else
         {

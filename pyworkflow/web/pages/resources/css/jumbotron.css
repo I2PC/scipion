@@ -50,7 +50,7 @@ body {
 	}
 	.logoLine {
 		float: none;
-		display: flex;
+		display: block;
 	}
 	.mainHead {
 		margin-top: 15px;

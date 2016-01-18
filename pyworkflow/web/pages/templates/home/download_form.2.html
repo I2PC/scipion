@@ -1,0 +1,72 @@
+{% extends "layouts/100.html" %}
+
+{% block title %}Scipion Download{% endblock %}
+
+{% block css %}
+    {{ block.super }}
+	<link href="{{messi_css}}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+	<script type="text/javascript" src="{{messi_js}}"></script>
+	<script type="text/javascript" src="{{utils}}"></script>
+    <script type="text/javascript" src="{{download_utils}}"></script>
+	<script type="text/javascript" src="{{config}}"></script>
+{% endblock %}
+
+{% block main_col %}
+	<div id="box" class="well well-lg">
+		<h1 class="primary">Scipion Download</h1>
+		<h3>Please fill in the required fields</h3>
+		<P>We don't share this information. It is used mainly to justify our funding.</P>
+
+		<form role="form" id="downloadForm" action="{{abs_url}}/doDownload/" method="POST">{% csrf_token %}
+			<div class="form-group">
+				<label for="fullName">Full name:</label>
+				<input type="text" class="form-control" id="fullName" name="fullName">
+			</div>
+
+			<div class="form-group">
+				<label for="organization">Organization:</label>
+				<input type="text" class="form-control" id="organization" name="organization">
+			</div>
+			<div class="form-group">
+				<label for="email">Email:</label>
+				<input type="text" class="form-control" id="email" name="email">
+			</div>
+			<div class="btn-group" data-toggle="buttons">
+
+				<button class="btn btn-default">
+					<input type="radio" name="mailoption" value=0>Subscribe me to users' mail list
+				</button>
+
+				<button class="btn btn-default active">
+					<input type="radio" name="mailoption" value=1 checked="">Don't subscribe me
+				</button>
+			</div>
+
+			<div class="form-group">
+				<label for="country">Country:</label>
+				{% include "_countries.html"%}
+			</div>
+
+			<!-- Load buttons from downloadables object-->
+			<div data-toggle="buttons">
+			{% for version, files in downloadables.iteritems %}
+				<div class="form-group">
+					<label>{{version}}</label>
+					<div class="btn-group">
+						{% for file in files %}
+						<button class="btn btn-default">
+							<input type="radio" name="file" value="{{version}}~{{file.name}}~{{file.file}}">{{file.name}}
+						</button>
+						{% endfor %}
+					</div>
+				</div>
+			{% endfor %}
+			</div>
+			<button type="submit" class="button2 primary_inv btn btn-default pull-right">Download</button>
+		</form>
+	</div>
+{% endblock %}
