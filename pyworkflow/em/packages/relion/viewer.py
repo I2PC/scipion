@@ -671,14 +671,9 @@ Examples:
             yield rot, tilt
     
     def _getVolumePrefixes(self):
-        prefixes = self.protocol.PREFIXES
-        halves = getattr(self, 'showHalves', None)
-        if halves == 3:
-            prefixes = ['final',
-                        'final_half1_',
-                        'final_half2_']
-        else:
-            prefixes = self._getPrefixes()
+        prefixes = self._getPrefixes()
+        if prefixes[0] == 'final':
+            prefixes += ['final_half1_', 'final_half2_']
         return prefixes
 
     def _getVolumeNames(self):
