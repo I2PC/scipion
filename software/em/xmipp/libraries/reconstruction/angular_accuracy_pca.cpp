@@ -317,10 +317,10 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 
 		imgRes() = temp - (recons[imgno]);//-temp;
 		R2_Proj = imgRes().computeStddev();
-		R2_Proj = 1 -R2_Proj*R2_Proj;
+		R2_Proj = R2_Proj*R2_Proj;
 
-		if (R2_Proj < 0)
-			R2_Proj = 0;
+//		if (R2_Proj < 0)
+//			R2_Proj = 0;
 
 		ApplyGeoParams params;
 		params.only_apply_shifts = true;
@@ -352,13 +352,13 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 
 		imgRes() = temp - (recons[imgno]);
 		R2_Exp = imgRes().computeStddev();
-		R2_Exp = 1 -R2_Exp*R2_Exp;
+		R2_Exp = R2_Exp*R2_Exp;
 
-		if (R2_Exp < 0)
-			R2_Exp = 0;
+//		if (R2_Exp < 0)
+//			R2_Exp = 0;
 
-		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,R2_Proj,__iter.objId);
-		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,R2_Exp,__iter.objId);
+		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,exp(-R2_Proj),__iter.objId);
+		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,exp(-R2_Exp),__iter.objId);
 		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,imgno)/3.),__iter.objId);
 
 
