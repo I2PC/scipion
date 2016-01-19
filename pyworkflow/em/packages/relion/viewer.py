@@ -660,9 +660,7 @@ Examples:
             elif halves == 1:
                 prefixes = ['half2_']
             elif halves == 3:
-                prefixes = ['final',
-                            'final_half1_',
-                            'final_half2_']
+                prefixes = ['final']
         return prefixes
     
     def _iterAngles(self, mdOut):
@@ -672,9 +670,20 @@ Examples:
             tilt = mdOut.getValue(md.RLN_ORIENT_TILT, objId)
             yield rot, tilt
     
+    def _getVolumePrefixes(self):
+        prefixes = self.protocol.PREFIXES
+        halves = getattr(self, 'showHalves', None)
+        if halves == 3:
+            prefixes = ['final',
+                        'final_half1_',
+                        'final_half2_']
+        else:
+            prefixes = self._getPrefixes()
+        return prefixes
+
     def _getVolumeNames(self):
         vols = []
-        prefixes = self._getPrefixes()
+        prefixes = self._getVolumePrefixes()
         for it in self._iterations:
             for ref3d in self._refsList:
                 for prefix in prefixes:
