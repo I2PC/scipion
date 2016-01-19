@@ -1,5 +1,5 @@
 <div class="box">
-	<form id="uploadForm" action="{{abs_url}}/doUpload/" method="post" enctype="multipart/form-data">
+	<form id="uploadForm" action="{{abs_url}}doUpload/" method="post" enctype="multipart/form-data">
 	{% csrf_token %}
 		<input type="hidden" id="project_folder" name="project_folder" value="{{project_folder}}"/>
 		<input type="hidden" name="p" value="{{projectName}}"/>
@@ -10,7 +10,7 @@
 		<table class="section">
 			<tr>
 				<td id="inputName" class="normal">
-					<img src="{{abs_url}}/resources/{{icon.ACTION_BROWSE}}">&nbsp;
+					<img src="{{abs_url}}resources/{{icon.ACTION_BROWSE}}">&nbsp;
 					<strong>{{form.docfile.label_tag}}</strong>
 				</td>
 				<td colspan="3">

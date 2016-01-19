@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from views_util import getResourceCss, getResourceIcon, getResourceJs, getProjectPathFromRequest, PROJECT_NAME, \
-    getVarFromRequest, SERVICE_NAME, CTX_PROJECT_NAME
+    getVarFromRequest, SERVICE_NAME, CTX_PROJECT_NAME, getAbsoluteURL
 from pyworkflow.web.pages import settings as django_settings
 import os
 
@@ -40,7 +40,7 @@ def VARS_base(request, context):
 
     context_base = {
         # ABSOLUTE PATH URL CONFIG
-        'abs_url': django_settings.ABSOLUTE_URL,
+        'abs_url': getAbsoluteURL(),
         'config': getResourceJs('config'),
         'js_root': getResourceJs(),
         'css_root': getResourceCss(),

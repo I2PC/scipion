@@ -123,6 +123,9 @@ div#steps{
 <script type="text/javascript" src="{{messi_js}}"></script>
 <script type="text/javascript" src="{{utils}}"></script>
 <script type="text/javascript" src="{{config}}"></script>
+<script>
+	{% include '_scipion_context.html' %}
+</script>
 <script src="{{project_utils_js}}" type="text/javascript"></script>
 <script src="{{mypval_utils}}" type="text/javascript"></script>
 </head>
@@ -131,16 +134,16 @@ div#steps{
 		<header data-layout='{"type": "border", "hgap": 1, "vgap": 1}'
 			class="north">
 			<div id="headerMainContainer">
-				<a href="{{abs_url}}/" id="headerLogoContainer">
+				<a href="{{abs_url}}" id="headerLogoContainer">
 					<img class="logo" src="{{logo_scipion}}" alt="Scipion logo">
 				</a> <span class="projectHeader">My Resolution Map </span>
 				<div style="float: right;">
 					<a href="http://i2pc.cnb.csic.es/LoadHome.htm"> <img
-						src="{{abs_url}}/resources/logo_i2pc_with_title.png" style="height: 3.2em;" />
+						src="{{abs_url}}resources/logo_i2pc_with_title.png" style="height: 3.2em;" />
 					</a> <a href="http://www.structuralbiology.eu/"> <img
-						src="{{abs_url}}/resources/logoInstruct.png" style="height: 3.2em;" />
+						src="{{abs_url}}resources/logoInstruct.png" style="height: 3.2em;" />
 					</a> <a href="http://www.cnb.csic.es/"> <img
-						src="{{abs_url}}/resources/logo_cnb_without_title.gif" style="height: 3.2em;" />
+						src="{{abs_url}}resources/logo_cnb_without_title.gif" style="height: 3.2em;" />
 					</a>
 				</div>
             </div>

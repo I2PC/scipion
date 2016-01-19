@@ -25,8 +25,9 @@
 # **************************************************************************
 import urlparse
 from os.path import exists, join, basename
-from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager, \
-    loadProtocolConf, SERVICE_NAME, getVarFromRequest, PROJECT_NAME, CTX_PROJECT_PATH, CTX_PROJECT_NAME
+from pyworkflow.web.app.views_util import (getResourceCss, getResourceJs, getResourceIcon, getServiceManager,
+                                           loadProtocolConf, SERVICE_NAME, getVarFromRequest, PROJECT_NAME,
+                                           CTX_PROJECT_PATH, CTX_PROJECT_NAME, getResource, getAbsoluteURL)
 from pyworkflow.web.app.views_base import base_grid, base_flex, base_form
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
@@ -47,7 +48,7 @@ def service_movies(request):
     if CTX_PROJECT_NAME in request.session: request.session[CTX_PROJECT_NAME] = ""
     if CTX_PROJECT_PATH in request.session: request.session[CTX_PROJECT_PATH] = ""
 
-    movies_utils = join(django_settings.STATIC_URL, "js/", "movies_utils.js")
+    movies_utils = getResource("js/movies_utils.js")
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
@@ -174,7 +175,7 @@ def getAttrTestFile(key):
 
 def movies_content(request):
     projectName = request.GET.get('p', None)
-    path_files = django_settings.ABSOLUTE_URL + '/resources_movies/img/'
+    path_files = getAbsoluteURL('resources_movies/img/')
     command = getSyncCommand(request)
 
     manager = getServiceManager(MOVIES_SERVICE)

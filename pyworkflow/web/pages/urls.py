@@ -1,3 +1,4 @@
+# urls_subsite.py
 import os, sys
 import pyworkflow as pw
 from django.conf.urls import patterns, include, url
@@ -16,19 +17,19 @@ mainUrls = ['',
     # To serve different static files
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
-    
+
     url(r'^admin/', include(admin.site.urls)),
     # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
-    
+
     # If no path given, load the projects view
 #     url(r'^$', 'app.views_project.projects'),
     url(r'^$', 'app.views_home.home'),
     url(r'^services/', 'app.views_project.webservice_projects'),
-    
+
     #PROJECT (CONTENT, RUNTABLE AND GRAPH)
     url(r'^projects/', 'app.views_project.projects'),
     url(r'^create_project/$', 'app.views_project.create_project'),
-    
+
     # url(r'^check_project_id/$', 'app.views_project.check_project_id'),
     url(r'^delete_project/$', 'app.views_project.delete_project'),
     url(r'^project_content/$', 'app.views_project.project_content'),
@@ -40,17 +41,17 @@ mainUrls = ['',
     url(r'^update_graph_view/$', 'app.views_project.update_graph_view'),
     url(r'^update_prot_tree/$', 'app.views_project.update_prot_tree'),
     url(r'^save_selection/$', 'app.views_project.save_selection'),
-    
+
     #GRAPH (RUN & DATA)
     url(r'^project_graph/$', 'app.views_graph.project_graph'),
     url(r'^object_graph/$', 'app.views_graph.object_graph'),
     url(r'^elements_graph/', 'app.views_graph.elements_graph'),
-    
+
     #DATA (CONTENT)
     url(r'^data_content/$', 'app.views_data.data_content'),
     url(r'^object_info/$', 'app.views_data.object_info'),
     url(r'^object_tree/$', 'app.views_data.object_tree'),
-    
+
     #UTILS
     url(r'^error/', 'app.views_util.error'), # Launch error page
     url(r'^render_column/', 'app.views_util.render_column'), # Load images dynamically
@@ -82,19 +83,19 @@ mainUrls = ['',
     url(r'^get_image_filter_spider/$', 'app.wizards.spider_wizard.get_image_filter_spider'),
     url(r'^run_custom_mask_spider/$', 'app.wizards.spider_wizard.run_custom_mask_spider'),
     url(r'^get_resmap_plot/$', 'app.wizards.resmap_wizard.get_resmap_plot'),
-    
+
     #VIEWERS
     url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),
     url(r'^viewer_element/$', 'app.em_viewer.viewer_element'),
     url(r'^file_viewer/$', 'app.views_util.file_viewer'),
     url(r'^get_log/$', 'app.views_util.get_log'),
-    
-    #SHOWJ 
+
+    #SHOWJ
     url(r'^showj/$', 'app.views_showj.showj'), #Load showj web
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),
     url(r'^jsmol/$', 'app.views_showj.jsmol'),
     url(r'^get_chimera_html/$', 'app.views_showj.get_chimera_html'),
-    
+
     #BROWSER & UPLOAD FILES
     url(r'^upload/', 'app.views_management.upload', name='upload'),
     url(r'^doUpload/', 'app.views_management.doUpload'),
@@ -103,11 +104,11 @@ mainUrls = ['',
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     url(r'^get_file/$', 'app.views_util.get_file'),
     url(r'^get_image_dim/$', 'app.views_util.get_image_dim'),
-    
+
     #TESTING
 #    url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
 
-    
+
     url(r'^home/', 'app.views_home.home'),
     url(r'^download_form/', 'app.views_home.download_form'),
     url(r'^doDownload/', 'app.views_home.doDownload'),

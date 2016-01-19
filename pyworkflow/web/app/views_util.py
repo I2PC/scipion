@@ -173,26 +173,43 @@ SERVICE_MANAGERS = {}
 
 
 def getResourceIcon(icon):
-    return os.path.join(django_settings.MEDIA_URL, iconDict[icon])
+    return getMedia(iconDict[icon])
 
 
 def getResourceLogo(logo):
-    return os.path.join(django_settings.MEDIA_URL, logo)
+    return getMedia(logo)
+
+
+def getMedia(resource):
+    return os.path.join('/' + django_settings.MEDIA_URL, resource)
 
 
 def getResourceCss(css=None):
-    if css:
-        return os.path.join(django_settings.STATIC_URL, "css/", cssDict[css])
 
-    return os.path.join(django_settings.STATIC_URL, "css/")
+    cssFile = ''
+
+    if css is not None:
+        cssFile = cssDict[css]
+
+    return getResource(os.path.join("css/", cssFile))
 
 
 def getResourceJs(js=None):
-    if js:
-        return os.path.join(django_settings.STATIC_URL, "js/", jsDict[js])
 
-    return os.path.join(django_settings.STATIC_URL, "js/")
+    jsFile = ''
 
+    if js is not None:
+        jsFile = jsDict[js]
+
+    return getResource(os.path.join("js/", jsFile))
+
+
+def getResource(resource=None):
+
+    if resource is None:
+        resource = ''
+
+    return "/" + os.path.join(django_settings.STATIC_URL, resource)
 
 def getVarFromRequest(request, varName):
     value = None
@@ -954,7 +971,7 @@ def getImageUrl(filename):
     abs_url = django_settings.ABSOLUTE_URL
     url_plot = "/"
     if len(abs_url) != 0:
-        url_plot = django_settings.ABSOLUTE_URL + "/"
+        url_plot = getAbsoluteURL()
     url_plot = url_plot + "get_image_path/?image=" + filename
     return url_plot
 
@@ -969,6 +986,13 @@ def savePlot(request, plot):
     return getImageUrl(fn)
 
 
+def getAbsoluteURL(additionalPath=None):
+
+    if additionalPath is None:
+        additionalPath = ''
+
+    return '/' + django_settings.ABSOLUTE_URL + additionalPath
+
 # ===============================================================================
 # ERROR PAGE
 # ===============================================================================
@@ -977,7 +1001,7 @@ def handle404error(request):
     from views_base import base_grid
     context = {"logoScipionNormal": getResourceIcon("logo_scipion_normal"),
                "logoErrorPage": getResourceIcon("error_page"),
-               "abs_url": django_settings.ABSOLUTE_URL + "/"
+               "abs_url": getAbsoluteURL()
                }
     context = base_grid(request, context)
     return render_to_response('error.html', context)

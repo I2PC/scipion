@@ -27,7 +27,8 @@
 from os.path import exists, join, basename
 from pyworkflow.web.app.views_util import (getResourceCss, getResourceJs, getResourceIcon,
                                            getServiceManager, getImageFullPath, loadProtocolConf, SERVICE_NAME,
-                                           CTX_PROJECT_PATH, CTX_PROJECT_NAME, PROJECT_NAME, getVarFromRequest)
+                                           CTX_PROJECT_PATH, CTX_PROJECT_NAME, PROJECT_NAME, getVarFromRequest,
+                                           getResource, getAbsoluteURL)
 from pyworkflow.web.app.views_base import base_grid
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
@@ -52,7 +53,7 @@ def service_projects(request):
     if CTX_PROJECT_NAME in request.session: request.session[CTX_PROJECT_NAME] = ""
     if CTX_PROJECT_PATH in request.session: request.session[CTX_PROJECT_PATH] = ""
 
-    myfirstmap_utils = join(django_settings.STATIC_URL, "js/", "myfirstmap_utils.js")
+    myfirstmap_utils = getResource("js/myfirstmap_utils.js")
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
@@ -208,7 +209,7 @@ def myfirstmap_form(request):
 def service_content(request):
 
     projectName = request.GET.get('p', None)
-    path_files = django_settings.ABSOLUTE_URL + '/resources_myfirstmap/img/'
+    path_files = getAbsoluteURL('resources_myfirstmap/img/')
     
     # Get info about when the project was created
     manager = getServiceManager(MYFIRSTMAP_SERVICE)
