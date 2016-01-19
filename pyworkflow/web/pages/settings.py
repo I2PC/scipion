@@ -41,7 +41,7 @@ ALLOWED_HOSTS = ['*']
 # ALLOWED_HOSTS = ['localhost']
 
 SITE_URL = WEB_CONF['SITE_URL']
-# Subdomain where Scipion is hosted or working
+# Subdomain where Scipion is hosted or working, can't start with a slash: m/
 ABSOLUTE_URL = WEB_CONF['ABSOLUTE_URL']
 # ABSOLUTE_URL = '/examples'
 
@@ -50,6 +50,7 @@ ABSOLUTE_URL = WEB_CONF['ABSOLUTE_URL']
 #         (r'www\.example2\.com/$', 'http://www.example.com/example2/'),
 #         (r'asimov.cnb.csic.es/$', 'http://asimov.cnb.csic.es/%s/$' % ABSOLUTE_URL),
 #     )
+
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -82,7 +83,7 @@ MEDIA_ROOT = os.path.join(pw.HOME, 'resources')
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://example.com/media/", "http://media.example.com/"
-MEDIA_URL = ABSOLUTE_URL + '/resources/'
+MEDIA_URL = ABSOLUTE_URL + 'resources/'
 
 # Temporary folder where store the files after do a upload
 FILE_UPLOAD_TEMP_DIR = MEDIA_ROOT
@@ -95,7 +96,7 @@ STATIC_ROOT = 'static'
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
-STATIC_URL = ABSOLUTE_URL + '/static/'
+STATIC_URL = ABSOLUTE_URL + 'static/'
 
 # Additional locations of static files
 WS_ROOT = os.path.join(pw.HOME, 'web', 'webtools')
@@ -157,7 +158,7 @@ SESSION_ENGINE = (
     'django.contrib.sessions.backends.cache'
 )
    
-ROOT_URLCONF = 'pages.urls'
+ROOT_URLCONF = 'pages.prefix_urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'pages.wsgi.application'

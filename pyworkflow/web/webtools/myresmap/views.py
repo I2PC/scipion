@@ -35,8 +35,9 @@ from pyworkflow.utils.utils import prettyDelta
 from pyworkflow.web.app.views_base import base_grid
 from pyworkflow.web.app.views_project import contentContext
 from pyworkflow.web.app.views_protocol import contextForm
-from pyworkflow.web.app.views_util import getResourceCss, getResourceJs, getResourceIcon, getServiceManager, \
-    loadProtocolConf, CTX_PROJECT_PATH, CTX_PROJECT_NAME, PROJECT_NAME
+from pyworkflow.web.app.views_util import (getResourceCss, getResourceJs, getResourceIcon, getServiceManager,
+                                           loadProtocolConf, CTX_PROJECT_PATH, CTX_PROJECT_NAME, PROJECT_NAME,
+                                           getResource, getAbsoluteURL)
 from pyworkflow.web.pages import settings as django_settings
 
 MYRESMAP_SERVICE = 'myresmap'
@@ -46,7 +47,7 @@ def resmap_projects(request):
     if CTX_PROJECT_NAME in request.session: request.session[CTX_PROJECT_NAME] = ""
     if CTX_PROJECT_PATH in request.session: request.session[CTX_PROJECT_PATH] = ""
 
-    myresmap_utils = join(django_settings.STATIC_URL, "js/", "myresmap_utils.js")
+    myresmap_utils = getResource("js/myresmap_utils.js")
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
@@ -164,7 +165,7 @@ def resmap_form(request):
 
 def resmap_content(request):
     projectName = request.GET.get('p', None)
-    path_files = django_settings.ABSOLUTE_URL + '/resources_myresmap/img/'
+    path_files = getAbsoluteURL('resources_myresmap/img/')
 
     # Get info about when the project was created
     manager = getServiceManager(MYRESMAP_SERVICE)

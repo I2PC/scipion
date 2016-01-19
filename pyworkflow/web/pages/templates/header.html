@@ -3,7 +3,7 @@
 		
 		{% block header_title %}
 			{% block header_backlink %}
-				<a href="{{abs_url}}/" id="headerLogoContainer">
+				<a href="{{abs_url}}" id="headerLogoContainer">
 			{% endblock %}
 					<img class="logo" src="{{logo_scipion}}" alt="Scipion logo">
 				</a>
@@ -14,13 +14,13 @@
 			{% if projectName != None and projectName != ''%}
 				{% block infotitle %}{% endblock %}
 				{% block header_menu %}
-				<a href="{{abs_url}}/projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">
+				<a href="{{abs_url}}projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">
 				<i class="fa fa-home"></i> {{msg.VIEW_PROJECTS}}</a>
 				&nbsp;
-				<a href="{{abs_url}}/project_content/?&p={{projectName}}&s={{s}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">
+				<a href="{{abs_url}}project_content/?&p={{projectName}}&s={{s}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">
 				<i class="fa fa-cog"></i> {{msg.VIEW_PROTOCOLS}}</a>
 				&nbsp;
-				<a href="{{abs_url}}/data_content/?&p={{projectName}}&s={{s}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">
+				<a href="{{abs_url}}data_content/?&p={{projectName}}&s={{s}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">
 				<i class="fa fa-hdd-o"></i> {{msg.VIEW_DATA}}</a>
 				&nbsp;
 				<a href='javascript:popup("/upload/?&p={{projectName}}&s={{s}}")' class="headerLink">

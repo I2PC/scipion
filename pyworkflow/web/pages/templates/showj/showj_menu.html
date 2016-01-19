@@ -1,7 +1,7 @@
 <script type="text/javascript" src="{{showj_menu_utils}}" ></script>
 
 <!-- <div id="asideMainContainer"> -->
-	<form id="showjForm" action="{{abs_url}}/showj/" method="post"> {% csrf_token %}
+	<form id="showjForm" action="{{abs_url}}showj/" method="post"> {% csrf_token %}
 		<input type="hidden" name="p" value="{{projectName}}">
 		<input type="hidden" name="s" value="{{s}}">
 		<div id="modeContainer" class="sectionMenu">
@@ -83,34 +83,34 @@
 				{{ form.zoom }}
 				
 				<div id="arrowContainer" class="arrowSectionMenu">
-					<img src="{{abs_url}}/resources/showj/arrowUp.png" class="arrowImage">
-					<img src="{{abs_url}}/resources/showj/arrowDown.png" class="arrowImage">
+					<img src="{{abs_url}}resources/showj/arrowUp.png" class="arrowImage">
+					<img src="{{abs_url}}resources/showj/arrowDown.png" class="arrowImage">
 				</div>
 			</div>
 		{% endif %}
 		
 		{% if not form.goto.is_hidden %}
 			<div id="gotoContainer" class="sectionMenu">
-				<img src="{{abs_url}}/resources/showj/goto.png" class="menuIcon">
+				<img src="{{abs_url}}resources/showj/goto.png" class="menuIcon">
 				{{ form.goto }}
 				
 				<div id="arrowContainer" class="arrowSectionMenu">
-					<img src="{{abs_url}}/resources/showj/arrowUp.png" class="arrowImage">
-					<img src="{{abs_url}}/resources/showj/arrowDown.png" class="arrowImage">
+					<img src="{{abs_url}}resources/showj/arrowUp.png" class="arrowImage">
+					<img src="{{abs_url}}resources/showj/arrowDown.png" class="arrowImage">
 				</div>
 			</div>
 		{% endif %}
 		
 		{% if not form.zoom.is_hidden or not form.goto.is_hidden %}
 			<div class="sectionMenu">
-				<img src="{{abs_url}}/resources/showj/separator.png" class="menuIcon">
+				<img src="{{abs_url}}resources/showj/separator.png" class="menuIcon">
 			</div>
 		{% endif %}	
 		
 		{% if form.mode.value == 'gallery' %}
 		<div id="colRowContainer" class="sectionMenu" title="Modify the number of cols and rows">
 			<button id="colRowMode"> 
-				<img src="{{abs_url}}/resources/showj/colRowMode{{form.colRowMode.value}}.png" id="colRowModeImage" />
+				<img src="{{abs_url}}resources/showj/colRowMode{{form.colRowMode.value}}.png" id="colRowModeImage" />
 			</button>
 			
 			<div class="subSectionMenu" id="colsSubSectionMenu">
@@ -118,8 +118,8 @@
 				{{ form.cols }}
 				
 				<div id="arrowContainer" class="arrowSectionMenu">
-					<img src="{{abs_url}}/resources/showj/arrowUp.png" class="arrowImage">
-					<img src="{{abs_url}}/resources/showj/arrowDown.png" class="arrowImage">
+					<img src="{{abs_url}}resources/showj/arrowUp.png" class="arrowImage">
+					<img src="{{abs_url}}resources/showj/arrowDown.png" class="arrowImage">
 				</div>
 			</div>
 			<div class="subSectionMenu" id="rowsSubSectionMenu">
@@ -127,14 +127,14 @@
 				{{ form.rows }}
 				
 				<div id="arrowContainer" class="arrowSectionMenu">
-					<img src="{{abs_url}}/resources/showj/arrowUp.png" class="arrowImage">
-					<img src="{{abs_url}}/resources/showj/arrowDown.png" class="arrowImage">
+					<img src="{{abs_url}}resources/showj/arrowUp.png" class="arrowImage">
+					<img src="{{abs_url}}resources/showj/arrowDown.png" class="arrowImage">
 				</div>
 			</div>
 		</div>
 		
 		<div class="sectionMenu">
-			<img src="{{abs_url}}/resources/showj/separator.png" class="menuIcon">
+			<img src="{{abs_url}}resources/showj/separator.png" class="menuIcon">
 		</div>
 		{% endif %}
 	
@@ -174,7 +174,7 @@
 	
 		{% if form.blockComboBox.value != '' or form.labelsToRenderComboBox.value != '' or form.volumesToRenderComboBox.value != '' or not form.resliceComboBox.is_hidden %}	
 			<div class="sectionMenu">
-				<img src="{{abs_url}}/resources/showj/separator.png" class="menuIcon">
+				<img src="{{abs_url}}resources/showj/separator.png" class="menuIcon">
 			</div>
 		{% endif %}
 		

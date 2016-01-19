@@ -28,7 +28,7 @@
 import os
 import json
 from django.shortcuts import render_to_response
-from pyworkflow.web.app.views_util import parseText
+from pyworkflow.web.app.views_util import parseText, getResource
 from pyworkflow.web.app.views_base import base_grid
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest
 from django.core.context_processors import csrf
@@ -54,7 +54,7 @@ def download_form(request):
     downloadables = loadDownloadables()
 
     context = {
-        "download_utils": django_settings.STATIC_URL + "js/download_utils.js",
+        "download_utils": getResource("js/download_utils.js"),
         "downloadables": downloadables
     }
     context = base_grid(request, context)
