@@ -51,6 +51,7 @@ class ProtResMap(ProtAnalysis3D):
     def __init__(self, **kwargs):
         ProtAnalysis3D.__init__(self, **kwargs)
         self.histogramData = String()
+        self.plotData = String() # store some values for later plot
              
     #--------------------------- DEFINE param functions --------------------------------------------   
     
@@ -105,7 +106,6 @@ class ProtResMap(ProtAnalysis3D):
                                  self.stepRes.get(),
                                  self.prewhitenAng.get(),
                                  self.prewhitenRamp.get())
-        self._insertFunctionStep('savePlotsStep')
 
     #--------------------------- STEPS functions --------------------------------------------       
     
@@ -119,30 +119,34 @@ class ProtResMap(ProtAnalysis3D):
         ih.convert(volLocation1, self._getPath('volume1.map'))
         if volLocation2 is not None:
             ih.convert(volLocation2, self._getPath('volume2.map')) 
-            
 
     def estimateResolutionStep(self, pValue, minRes, maxRes, stepRes, ang, rampWeight):
         """ Call ResMap.py with the appropriate parameters. """
         results = self.runResmap(self._getPath())
-        
+
         from cPickle import dumps
         self.histogramData.set(dumps(results['resHisto']))
-        self._store(self.histogramData)
-        
-    def savePlotsStep(self):
-        """ Store png images of the plots to be used
-        from web. 
-        """
+        plotDict = {'minRes': results['minRes'],
+                    'maxRes': results['maxRes'],
+                    'orig_n': results['orig_n']}
+        self.plotData.set(dumps(plotDict))
+        self._store(self.histogramData, self.plotData)
+
+        self.savePlots(results)
+
+    def savePlots(self, results=None):
+        """ Store png images of the plots to be used as images, """
         # Add resmap libraries to the path
         sys.path.append(os.environ['RESMAP_HOME'])
         # This is needed right now because we are having
         # some memory problem with matplotlib plots right now in web
         Plotter.setBackend('Agg')
         self._plotVolumeSlices().savefig(self._getExtraPath('volume1.map.png'))
-        self._plotResMapSlices().savefig(self._getExtraPath('volume1_resmap.map.png'))
+        plot = self._plotResMapSlices()
+        plot.savefig(self._getExtraPath('volume1_resmap.map.png'))
         self._plotHistogram().savefig(self._getExtraPath('histogram.png'))
-        
-    #--------------------------- INFO functions -------------------------------------------- 
+
+    #--------------------------- INFO functions --------------------------------------------
     
     def _summary(self):
         summary = []
@@ -208,8 +212,8 @@ class ProtResMap(ProtAnalysis3D):
             
         results = ResMap_algorithm(**args)  
         self._leaveDir()
-        
-        return results   
+
+        return results
     
     #--------- Functions related to Plotting
     
@@ -226,11 +230,14 @@ class ProtResMap(ProtAnalysis3D):
         return Plotter(figure=fig)
         
     def _plotResMapSlices(self):
+        from cPickle import loads
+        plotDict = loads(self.plotData.get())
+        #if data is None:
+            #data = self._getVolumeMatrix('volume1_resmap_masked.map')
+        data = self._getVolumeMatrix('volume1_resmap.map')
         from ResMap_visualization import plotResMapVolume
         
-        fig = plotResMapVolume(self._getVolumeMatrix('volume1_resmap.map'),
-                                  minRes=self.minRes.get(),
-                                  maxRes=self.maxRes.get())
+        fig = plotResMapVolume(data, plotDict['minRes'], plotDict['maxRes'])
         return Plotter(figure=fig)
              
     def _plotHistogram(self):
