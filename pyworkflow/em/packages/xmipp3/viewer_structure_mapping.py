@@ -31,7 +31,6 @@ from protocol_structure_mapping import XmippProtStructureMapping
 import pylab
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn import manifold
 from mpl_toolkits.mplot3d import proj3d
 import pyworkflow.protocol.params as params
 

@@ -40,7 +40,7 @@ from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import XmippPro
 import xmipp
 from pyworkflow.em.packages.xmipp3.nma.protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
 from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume
-from sklearn import manifold
+
 
 class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABase, XmippProtAlignVolume):
     """ 
@@ -180,6 +180,8 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
             fh.write("\n")
             fh.close()
             nVoli += 1                     
+        
+        from sklearn import manifold
                
         for i in range(1, 4):
                
@@ -233,6 +235,15 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 errors.append('Invalid input, pointer: %s' % pointer.getObjValue())
                 errors.append('              extended: %s' % pointer.getExtended())
                 
+        import imp
+        try:
+            imp.find_module('manifold')
+            found = True
+        except ImportError:
+            found = False
+        if not found:
+            errors.append('**<You need to install sklearn library>**')    
+        
         return errors 
        
     def _summary(self):
