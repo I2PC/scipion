@@ -78,4 +78,4 @@ gmon.out
 # WEB stuff
 downloads.sqlite
 /static
-
+/pyworkflow/web/pages/resources/install
