@@ -55,7 +55,6 @@ from viewer_split_volume import XmippViewerSplitVolume
 from viewer_structure_mapping import XmippProtStructureMappingViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
 from viewer_split_volume import XmippViewerSplitVolume
-from viewer_structure_mapping import XmippProtStructureMappingViewer
 from viewer_validate_overfitting import XmippValidateOverfittingViewer
 from viewer_volume_strain import XmippVolumeStrainViewer
 
