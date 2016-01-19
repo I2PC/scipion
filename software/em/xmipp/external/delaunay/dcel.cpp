@@ -5,6 +5,7 @@
 #ifdef LOGGING
 #include "log.h"
 #endif
+#include <math.h>
 #include "point.h"
 #include "sorting.h"
 #include <stdlib.h>
@@ -66,7 +67,7 @@ int 	initialize_DCEL( struct DCEL_T *dcel, int nPoints, int nEdges, int nFaces)
 	return(ret);
 }
 
-
+//#define DEBUG_READ_DCEL
 int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 {
     int     ret=SUCCESS;    // Return value.
@@ -96,18 +97,29 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 		// Read number of vertex.
 		ret = fscanf( fd, "%d", &nVertex);
 
+#ifdef DEBUG_READ_DCEL
+		printf("# vertex %d\n", nVertex);
+#endif
 		// Read vertex.
 		for (i=0; i<nVertex; i++)
 		{
 			// Read x and y coordinates and edge id.
+#ifdef FLOAT_TYPE
+			ret = fscanf( fd, "%f", &vertex.vertex.x);
+			ret = fscanf( fd, "%f", &vertex.vertex.y);
+#else
 			ret = fscanf( fd, "%lf", &vertex.vertex.x);
 			ret = fscanf( fd, "%lf", &vertex.vertex.y);
+#endif
 			ret = fscanf( fd, "%d", &vertex.origin_Edge);
 		}
 
 		// Read number of edges.
 		ret = fscanf( fd, "%d", &nEdges);
 
+#ifdef DEBUG_READ_DCEL
+		printf("# edges %d\n", nEdges);
+#endif
 		// Read edges.
 		for (i=0; i<nEdges; i++)
 		{
@@ -122,8 +134,13 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 		// Read number of faces.
 		ret = fscanf( fd, "%d", &nFaces);
 
+#ifdef DEBUG_READ_DCEL
+		printf("# faces %d\n", nFaces);
+#endif
+
 		// Move to first position of the file.
-		fseek( fd, 0, SEEK_SET);
+		fclose( fd);
+		fd = fopen( fileName, "r");
 
 		initialize_DCEL( dcel, nVertex, nEdges, nFaces);
 
@@ -134,9 +151,18 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 		for (i=0; i<nVertex; i++)
 		{
 			// Read x and y coordinates and edge id.
+#ifdef FLOAT_TYPE
+			ret = fscanf( fd, "%f", &vertex.vertex.x);
+			ret = fscanf( fd, "%f", &vertex.vertex.y);
+#else
 			ret = fscanf( fd, "%lf", &vertex.vertex.x);
 			ret = fscanf( fd, "%lf", &vertex.vertex.y);
+#endif
 			ret = fscanf( fd, "%d", &vertex.origin_Edge);
+
+#ifdef DEBUG_READ_DCEL
+			printf("Vertex read (%f,%f) origin edge %d\n", vertex.vertex.x, vertex.vertex.y, vertex.origin_Edge);
+#endif
 
 			// Insert vertex.
 			insertVertex( dcel, vertex);
@@ -172,7 +198,7 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 			insertFace( dcel, face.edge);
 		}
 
-#ifdef DEBUG
+#ifdef DEBUG_READ_DCEL
 		printf("Read dcel with:\n%d vertex\n%d edges\n%d faces\n",
 												dcel->nVertex,
 												dcel->nEdges,
@@ -186,7 +212,7 @@ int 	read_DCEL( struct DCEL_T *dcel, char *fileName)
 }
 
 //#define DEBUG_READ_FLAT_FILE
-int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName)
+int     read_Points_Flat_File( struct DCEL_T *dcel, const char *fileName)
 {
     int     ret=SUCCESS;        // Return value.
     int     number_Points=0;    // Number of points of set.
@@ -248,7 +274,7 @@ int     read_Points_Flat_File( struct DCEL_T *dcel, char *fileName)
 }
 
 
-int		write_DCEL( struct DCEL_T *dcel, int	type, char *fileName)
+int		write_DCEL( struct DCEL_T *dcel, int	type, const char *fileName)
 {
 	int		i=0;			// Loop counter.
 	int		ret=SUCCESS;	// Return value.
@@ -891,6 +917,34 @@ int 	get_Number_Edges( struct DCEL_T *dcel)
 {
     // Return number of edges.
     return(dcel->nEdges);
+}
+
+/***************************************************************************
+* Name: get_Number_Real_Edges
+* IN:		dcel		DCEL data
+* OUT:		N/A
+* IN/OUT:	N/A
+* RETURN:	# readl edges in DCEL
+* Description: Returns # real edges in DCEL. Real edges has no imaginary
+* 				vertex as origin nor destination.
+***************************************************************************/
+int 	get_Number_Real_Edges( struct DCEL_T *dcel)
+{
+	int		i=0;				// Loop counter.
+	int		nEdges=0;			// Return value.
+
+	// Check all edges.
+	for (i=0; i<get_Number_Edges(dcel) ;i++)
+	{
+		// Check origin and destination has no imaginary vertex.
+		if ((dcel->edges[i].origin_Vertex >= 0) &&
+			(dcel->edges[dcel->edges[i].twin_Edge-1].origin_Vertex >= 0))
+		{
+			nEdges++;
+		}
+	}
+
+	return(nEdges);
 }
 
 
@@ -1706,8 +1760,19 @@ int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
 	return(ret);
 }
 
-void	generate_Points_DCEL( int nPoints, struct DCEL_T *dcel,
-												TYPE maxX, double maxY)
+
+//#define DEBUG_GENERATE_RANDOM
+/***************************************************************************
+* Name: 	generate_Random_Points_DCEL
+* IN:		nPoints					# points to generate.
+* 			maxX					max X coordinate
+* 			maxY					max Y coordinate
+* OUT:		N/A
+* IN/OUT:	dcel					structure to store points set.
+* RETURN:	N/A
+* Description: generate a set of "nPoints" points and store it in "dcel".
+***************************************************************************/
+void	generate_Random_Points_DCEL( int nPoints, struct DCEL_T *dcel, TYPE maxX, TYPE maxY)
 {
 	int		i=0;						// Loop counter.
 	struct	Dcel_Vertex_T	point;		// Temporary point.
@@ -1715,7 +1780,7 @@ void	generate_Points_DCEL( int nPoints, struct DCEL_T *dcel,
 
 	// Initialize bottom most.
 	bottom_Most.vertex.x = maxX;
-	bottom_Most.vertex.y = MAX_Y_COORD;
+	bottom_Most.vertex.y = maxY;
 
 	// Generate random set of points.
 	// Create seed.
@@ -1754,6 +1819,168 @@ void	generate_Points_DCEL( int nPoints, struct DCEL_T *dcel,
         }
     }
 }
+
+
+//#define DEBUG_GENERATE_CLUSTER
+/***************************************************************************
+* Name: 	generate_Cluster_Points_DCEL
+* IN:		nPoints					# points to generate
+* 			nClusters				# clusters to generate
+* 			radius					cluster radius.
+* 			maxX					max X coordinate
+* 			maxY					max Y coordinate
+* OUT:		N/A
+* IN/OUT:	dcel					structure to store points set.
+* RETURN:	N/A
+* Description: 	generate a set of "nPoints" points grouped in "nClusters"
+* 				clusters.
+***************************************************************************/
+void	generate_Cluster_Points_DCEL( int nPoints, struct DCEL_T *dcel,
+							int nClusters, int radius, TYPE maxX, TYPE maxY)
+{
+	int		i=0, j=0;				// Loop counters.
+	int		nElementsCluster=0;		// # points per cluster.
+	struct	Dcel_Vertex_T	seed;	// Cluster seed point.
+	struct	Dcel_Vertex_T	point;	// Temporary point.
+
+#ifdef DEBUG_GENERATE_CLUSTER
+	printf("Generating %d points in %d clusters with radius %d\n", nPoints, nClusters, radius);
+#endif
+
+	// Create seed.
+	srand48((int) time(NULL));
+
+	// Get # elements per cluster.
+	nElementsCluster = nPoints / nClusters;
+
+	// Generate clusters centers.
+	for (i=0; i<nClusters ;i++)
+	{
+		// Generate new point.
+		seed.vertex.x = (drand48() * maxX);
+		seed.vertex.y = (drand48() * maxY);
+
+        // Insert new point.
+		seed.origin_Edge = -1;
+        insertVertex( dcel, seed);
+
+#ifdef DEBUG_GENERATE_CLUSTER
+        printf("Generating %d cluster with seed (%f, %f)\n", i+1, seed.vertex.x, seed.vertex.y);
+#endif
+
+        // Add points center in current seed.
+        for (j=0; j<nElementsCluster-1 ;j++)
+        {
+    		// Generate new point.
+        	if (drand48() > 0.5)
+        	{
+        		point.vertex.x = seed.vertex.x + (drand48() * radius);
+        	}
+        	else
+        	{
+        		point.vertex.x = seed.vertex.x - (drand48() * radius);
+        	}
+        	if (drand48() > 0.5)
+        	{
+        		point.vertex.y = seed.vertex.y + (drand48() * radius);
+        	}
+        	else
+        	{
+        		point.vertex.y = seed.vertex.y - (drand48() * radius);
+        	}
+    		while (distance( &point.vertex, &seed.vertex) > (float) radius)
+    		{
+        		// Generate new point.
+            	if (drand48() > 0.5)
+            	{
+            		point.vertex.x = seed.vertex.x + (drand48() * radius);
+            	}
+            	else
+            	{
+            		point.vertex.x = seed.vertex.x - (drand48() * radius);
+            	}
+            	if (drand48() > 0.5)
+            	{
+            		point.vertex.y = seed.vertex.y + (drand48() * radius);
+            	}
+            	else
+            	{
+            		point.vertex.y = seed.vertex.y - (drand48() * radius);
+            	}
+    		}
+
+    		// Correct points out of bounds.
+    		if (point.vertex.x < 0.0)
+    		{
+    			point.vertex.x = -point.vertex.x;
+    		}
+    		else if (point.vertex.x > maxX)
+    		{
+    			point.vertex.x = point.vertex.x - radius;
+    		}
+    		if (point.vertex.y < 0.0)
+    		{
+    			point.vertex.y = -point.vertex.y;
+    		}
+    		else if (point.vertex.y > maxY)
+    		{
+    			point.vertex.y = point.vertex.y - radius;
+    		}
+
+            // Insert new point.
+            point.origin_Edge = -1;
+            insertVertex( dcel, point);
+
+#ifdef DEBUG_GENERATE_CLUSTER
+            printf("Generated %d point (%f, %f)\n", j+1, point.vertex.x, point.vertex.y);
+#endif
+        }
+	}
+
+	// Add elements randomly until nPoints reached.
+	for (i=dcel->nVertex; i<nPoints ;i++)
+	{
+		// Generate new point.
+		point.vertex.x = (drand48() * maxX);
+		point.vertex.y = (drand48() * maxY);
+
+        // Insert new point.
+        point.origin_Edge = -1;
+        insertVertex( dcel, point);
+	}
+
+	// Clutter set of points.
+	clutter( dcel);
+}
+
+
+/***************************************************************************
+* Name: 	generate_Cluster_Points_DCEL
+* IN:		fileName				output file.
+* 			dcel					DCEL structure data.
+* OUT:		N/A
+* IN/OUT:	N/A
+* RETURN:	N/A
+* Description: writes DCEL statistics data to an output file.
+***************************************************************************/
+void 	print_Dcel_Statistics( char *fileName, struct DCEL_T *dcel)
+{
+	FILE 	*fd=NULL;		// File descriptor.
+
+	// Open input file.
+	if ((fd = fopen( fileName, "w")) == NULL)
+	{
+		printf("Error opening output file: %s\n", fileName);
+	}
+	else
+	{
+		fprintf( fd, "%d\n", dcel->nVertex);
+		fprintf( fd, "%d\n", dcel->nVertex);
+		fprintf( fd, "%d\n", get_Number_Real_Faces( dcel));
+	}
+}
+
+
 
 void	shake_Points_DCEL( struct DCEL_T *dcel)
 {

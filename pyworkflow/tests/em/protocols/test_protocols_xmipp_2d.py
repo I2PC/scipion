@@ -764,7 +764,6 @@ class TestXmippKerdensom(TestXmippBase):
         self.launchProtocol(xmippProtKerdensom)
         self.assertIsNotNone(xmippProtKerdensom.outputClasses, "There was a problem with Kerdensom")
 
-
 class TestXmippCompareReprojections(TestXmippBase):
     """This class check if the protocol compare reprojections in Xmipp works properly."""
     @classmethod

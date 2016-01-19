@@ -322,9 +322,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         if(setType.equals("SetOfVolumes") || setType.equals("SetOfClasses3D"))
         {
 
+            // It will be null when invoked as a stand alone viewer.
         	if (cmdbutton != null){
         		cmdbutton.setVisible(data.isTableMode());
-        		createvolbt.setVisible(!data.isTableMode());
+            	createvolbt.setVisible(!data.isTableMode());
         	}
         }
     }
@@ -365,7 +366,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                 @Override
                 public void run() {
-                    new ScipionGalleryJFrame(new ScipionGalleryData(ScipionGalleryJFrame.this, data.parameters, (ScipionMetaData)md));
+                    new ScipionGalleryJFrame(new ScipionGalleryData(ScipionGalleryJFrame.this, ((ScipionParams)data.parameters).getScipionParams(), (ScipionMetaData)md));
                 }
             });
             

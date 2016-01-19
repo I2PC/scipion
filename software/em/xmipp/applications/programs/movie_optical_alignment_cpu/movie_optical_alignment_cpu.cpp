@@ -450,6 +450,7 @@ public:
 
                 d_avgcurr.upload(avgcurr8);
                 d_preimg.upload(preimg8);
+
                 if (cnt==2)
                     d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
                 else
@@ -463,6 +464,7 @@ public:
                     d_calc.flags=cv::OPTFLOW_USE_INITIAL_FLOW;
                     d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
                 }
+
                 d_flowx.download(planes[0]);
                 d_flowy.download(planes[1]);
                 d_avgcurr.release();

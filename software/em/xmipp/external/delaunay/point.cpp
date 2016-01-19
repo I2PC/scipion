@@ -6,7 +6,7 @@
 /*****************************************************************************
  * Defines section
  ****************************************************************************/
-#define 	COLLINEAR_THRESHOLD		1.0
+#define 	COLLINEAR_THRESHOLD		0.0
 
 /*****************************************************************************
 * Private functions declaration
@@ -96,7 +96,7 @@ enum Turn_T		check_Turn(struct Point_T *p1, struct Point_T *p2, struct Point_T *
 #ifdef DEBUG_CHECK_TURN
 		printf("RIGHT\n");
 #endif
-		turn = RIGHT;
+		turn = RIGHT_TURN;
 	}
 	// If area is close to zero then points are collinear.
 	else
@@ -268,8 +268,9 @@ TYPE signed_Area(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3)
 {
 	TYPE	area=0.0;			// Return value.
 
-	area = (- p2->x*p1->y + p3->x*p1->y + p1->x*p2->y -
-			p3->x*p2->y - p1->x*p3->y +	p2->x*p3->y);
+	area = (- (double) p2->x*p1->y + (double) p3->x*p1->y + (double) p1->x*p2->y -
+			(double) p3->x*p2->y - (double) p1->x*p3->y + (double) p2->x*p3->y);
 
 	return(area);
 }
+
