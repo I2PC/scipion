@@ -730,7 +730,7 @@ void MDSql::aggregateMd(MetaData *mdPtrOut,
     ss << " FROM " << tableName(tableId);
     ss << " GROUP BY " << aggregateStr;
     ss << " ORDER BY " << aggregateStr << ";";
-    std::cerr << "ss " << ss.str() <<std::endl;
+    //std::cerr << "ss " << ss.str() <<std::endl;
     execSingleStmt(ss);
 }
 
