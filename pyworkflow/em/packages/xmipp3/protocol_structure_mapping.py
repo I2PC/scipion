@@ -237,7 +237,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,XmippProtNMABa
                 
         import imp
         try:
-            imp.find_module('manifold')
+            imp.find_module('sklearn')
             found = True
         except ImportError:
             found = False
