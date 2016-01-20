@@ -34,7 +34,7 @@ import numpy as np
 
 
 from pyworkflow.object import String
-from pyworkflow.protocol.params import PointerParam, BooleanParam, FloatParam
+import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.gui.plotter import Plotter
@@ -60,36 +60,42 @@ class ProtResMap(ProtAnalysis3D):
     
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputVolume', PointerParam, pointerClass='Volume',  
+        form.addParam('inputVolume', params.PointerParam, pointerClass='Volume',
                       label="Input volume", important=True,
                       help='Select the input volume.')
-        form.addParam('useSplitVolume', BooleanParam, default=False,
+        form.addParam('useSplitVolume', params.BooleanParam, default=False,
                       label="Use split volume?", 
                       help='Use to split volumes for gold-standard FSC.')                
-        form.addParam('splitVolume', PointerParam, label="Split volume", important=True, 
+        form.addParam('splitVolume', params.PointerParam, label="Split volume", important=True,
                       pointerClass='Volume', condition="useSplitVolume",
                       help='Select the second split volume.')  
-        form.addParam('applyMask', BooleanParam, default=False,
+        form.addParam('applyMask', params.BooleanParam, default=False,
                       label="Mask input volume?", 
                       help='If set to <No> ResMap will automatically compute a mask.')                
-        form.addParam('maskVolume', PointerParam, label="Mask volume",  
+        form.addParam('maskVolume', params.PointerParam, label="Mask volume",
                       pointerClass='VolumeMask', condition="applyMask",
                       help='Select a volume to apply as a mask.')
-        
+
+        form.addParam('whiteningLabel', params.LabelParam, important=True,
+                      label="It is strongly recommended to use the "
+                            "pre-whitening wizard.")
         line = form.addLine('Pre-whitening')
-        line.addParam('prewhitenAng', FloatParam, default=0, label="Angstroms")
-        line.addParam('prewhitenRamp', FloatParam, default=0, label='Ramp')                      
+        line.addParam('prewhitenAng', params.FloatParam, default=10,
+                      label="Angstroms")
+        line.addParam('prewhitenRamp', params.FloatParam, default=1,
+                      label='Ramp')
         
         group = form.addGroup('Extra parameters')
         #form.addSection(label='Optional')
-        group.addParam('stepRes', FloatParam, default=1,
+        group.addParam('stepRes', params.FloatParam, default=1,
                       label='Step size (Ang):',
                       help='in Angstroms (min 0.25, default 1.0)')
         line = group.addLine('Resolution Range (A)', 
-                            help='Default: algorithm will start a just above 2*voxelSize')
-        line.addParam('minRes', FloatParam, default=0, label='Min')
-        line.addParam('maxRes', FloatParam, default=0, label='Max')
-        group.addParam('pVal', FloatParam, default=0.05,
+                            help='Default (0): algorithm will start a just above '
+                                 '2*voxelSize until 4*voxelSize.')
+        line.addParam('minRes', params.FloatParam, default=0, label='Min')
+        line.addParam('maxRes', params.FloatParam, default=0, label='Max')
+        group.addParam('pVal', params.FloatParam, default=0.05,
                       label='Confidence level:',
                       help='usually between [0.01, 0.05]')   
                      
