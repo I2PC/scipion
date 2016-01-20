@@ -104,7 +104,7 @@ void ProgAngularAccuracyPCA::run()
 
 	if (rank == 0)
 	{
-		double pcaResidualProj,pcaResidualExp,Zscore,temp,qResidualProj,qResidualExp,qZscore;
+		double pcaResidualProj,pcaResidualExp,Zscore,temp,tempProj,tempExp,tempZ,qResidualProj,qResidualExp,qZscore;
 
 		qResidualProj = 0;
 		qResidualExp = 0;
@@ -116,8 +116,6 @@ void ProgAngularAccuracyPCA::run()
 		MDSort.sort(mdPartial,MDL_ITEM_ID,true,-1,0);
 		MDSort.getValue(MDL_ITEM_ID,maxIdx,MDSort.lastObject());
 
-		std::cout << " maxIdx : " << maxIdx << std::endl;
-
 		MDRow row;
 
 		for (size_t i=0; i<=maxIdx;i++)
@@ -128,25 +126,27 @@ void ProgAngularAccuracyPCA::run()
 			if ( (tempMd.size() <= 0))
 				continue;
 
-			pcaResidualProj = 0;
-			pcaResidualExp = 0;
-			Zscore = 0;
+			pcaResidualProj = 1e3;
+			pcaResidualExp = 1e3;
+			Zscore = 1e3;
 
 			tempMd.getRow(row,tempMd.firstObject());
+
 			FOR_ALL_OBJECTS_IN_METADATA(tempMd)
 			{
 				tempMd.getValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,temp,__iter.objId);
-				pcaResidualProj +=temp;
+				if (temp < pcaResidualProj)
+					pcaResidualProj=temp;
+
 				tempMd.getValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,temp,__iter.objId);
-				pcaResidualExp +=temp;
+				if (temp < pcaResidualExp)
+					pcaResidualExp=temp;
+
 				tempMd.getValue(MDL_SCORE_BY_ZSCORE,temp,__iter.objId);
-				Zscore += temp;
+				if (temp < Zscore)
+					Zscore=temp;
 
 			}
-
-			pcaResidualProj /= tempMd.size();
-			pcaResidualExp /= tempMd.size();
-			Zscore /= tempMd.size();
 
 			qResidualProj += pcaResidualProj;
 			qResidualExp  += pcaResidualExp;
