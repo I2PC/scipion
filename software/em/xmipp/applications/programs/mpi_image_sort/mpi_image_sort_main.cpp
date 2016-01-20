@@ -157,7 +157,8 @@ public:
                 {
                     row.getValue(MDL_IMAGE,fnImg);
                     lastImage.read(fnImg);
-                    centerImage(lastImage(),aux,aux2);
+                    if (center)
+                    	centerImage(lastImage(),aux,aux2);
                     if (rank==0)
                         lastImage.write(fnStack,0,true,WRITE_APPEND);
                     fnImageStack.compose(1,fnStack);
@@ -208,7 +209,8 @@ public:
             I.read(fnImg);
             I().setXmippOrigin();
             double corr=alignImagesConsideringMirrors(lastImage(),I(),M,aux,aux2,aux3,&mask);
-            centerImage(I(),aux2,aux3);
+            if (center)
+            	centerImage(I(),aux2,aux3);
             if (corr>bestCorr)
             {
                 bestCorr=corr;
