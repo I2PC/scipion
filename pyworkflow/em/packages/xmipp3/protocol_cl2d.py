@@ -144,7 +144,7 @@ class XmippProtCL2D(ProtClassify2D):
         self.initialClassesFn = self._getExtraPath('initialClasses.xmd')
         self._insertFunctionStep('convertInputStep', 
                                  self.inputParticles.get().getObjId(), 
-                                 self.initialClasses.get().getObjId())
+                                 self.initialClasses.get().getObjId() if self.initialClasses.get() else None)
 
         # Prepare arguments to call program: xmipp_classify_CL2D
         self._params = {'imgsFn': self.imgsFn,
