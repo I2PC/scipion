@@ -125,6 +125,9 @@ void ProgAngularAccuracyPCA::run()
 			expression = formatString("imageIndex == %lu",i);
 			tempMd.importObjects(MDOut, MDExpression(expression));
 
+			if ( (tempMd.size()==0))
+				continue;
+
 			pcaResidualProj = 0;
 			pcaResidualExp = 0;
 			Zscore = 0;
