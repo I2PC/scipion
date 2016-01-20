@@ -37,8 +37,12 @@ void ProgAngularAccuracyPCA::readParams()
 	fnPhantom = getParam("-i");
 	fnNeighbours = getParam("--i2");
     fnOut = getParam("-o");
+	fnOutQ = fnOut.getDir()+"/validationAlignabilityAccuracy.xmd";
     newXdim = getIntParam("--dim");
     newYdim = newXdim;
+
+	std::cout <<  newXdim << std::endl;
+
 }
 
 void ProgAngularAccuracyPCA::defineParams()
@@ -98,10 +102,73 @@ void ProgAngularAccuracyPCA::run()
 	synchronize();
 	gatherResults();
 
-    MultidimArray<double> valuesProj;
 	if (rank == 0)
 	{
-		mdPartial.write(fnOut);
+		double pcaResidualProj,pcaResidualExp,Zscore,temp,qResidualProj,qResidualExp,qZscore;
+
+		qResidualProj = 0;
+		qResidualExp = 0;
+		qZscore = 0;
+
+		String expression;
+		size_t maxIdx;
+		MetaData MDSort, tempMd,MDOut, MDOutQ;
+		MDSort.sort(mdPartial,MDL_ITEM_ID,true,-1,0);
+		MDSort.getValue(MDL_ITEM_ID,maxIdx,MDSort.lastObject());
+
+		std::cout << " maxIdx : " << maxIdx << std::endl;
+
+		MDRow row;
+
+		for (size_t i=0; i<=maxIdx;i++)
+		{
+			expression = formatString("imageIndex == %lu",i);
+			tempMd.importObjects(MDOut, MDExpression(expression));
+
+			pcaResidualProj = 0;
+			pcaResidualExp = 0;
+			Zscore = 0;
+
+			tempMd.getRow(row,tempMd.firstObject());
+			FOR_ALL_OBJECTS_IN_METADATA(tempMd)
+			{
+				tempMd.getValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,temp,__iter.objId);
+				pcaResidualProj +=temp;
+				tempMd.getValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,temp,__iter.objId);
+				pcaResidualExp +=temp;
+				tempMd.getValue(MDL_SCORE_BY_ZSCORE,temp,__iter.objId);
+				Zscore += temp;
+
+			}
+
+			pcaResidualProj /= tempMd.size();
+			pcaResidualExp /= tempMd.size();
+			Zscore /= tempMd.size();
+
+			qResidualProj += pcaResidualProj;
+			qResidualExp  += pcaResidualExp;
+			qZscore       += Zscore;
+
+			row.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,pcaResidualProj);
+			row.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,pcaResidualExp);
+			row.setValue(MDL_SCORE_BY_ZSCORE,Zscore);
+			MDOut.addRow(row);
+			row.clear();
+		}
+
+		MDOut.write(fnOut);
+
+		qResidualProj /= MDOut.size();
+		qResidualExp /= MDOut.size();
+		qZscore /= MDOut.size();
+
+	    row.setValue(MDL_IMAGE,fnPhantom);
+	    row.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,qResidualProj);
+	    row.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,qResidualExp);
+	    row.setValue(MDL_SCORE_BY_ZSCORE,qZscore);
+
+	    MDOutQ.addRow(row);
+	    MDOutQ.write(fnOutQ);
 		progress_bar(blocks.size());
 	}
 

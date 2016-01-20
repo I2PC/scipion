@@ -41,7 +41,7 @@ class ProgAngularAccuracyPCA: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnPhantom, fnNeighbours, fnOut;
+    FileName fnPhantom, fnNeighbours, fnOut, fnOutQ;
 
     Image<double> phantomVol;
 
