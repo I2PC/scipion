@@ -1708,7 +1708,7 @@ void ProgClassifyCL2D::defineParams()
 	addParamsLine("   [--dontNormalizeImages]   : By default, input images are normalized to have 0 mean and standard deviation 1");
 	addParamsLine("   [--dontMirrorImages]      : By default, input images are studied unmirrored and mirrored");
 	addParamsLine("   [--useThresholdMask <t>]  : Use a mask to compare images. Remove pixels whose value is smaller or equal t");
-	addParamsLine("   [--dontAlign]             : Do not align images");
+	addParamsLine("   [--dontAlign]             : Do not center the class representatives");
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --nref 256 --oroot class --odir CL2Dresults --iter 10");
 }
 
