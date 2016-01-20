@@ -142,8 +142,6 @@ void MultireferenceAligneability::run()
 
 		rank = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
 
-		std::cout << " sum_noise : " <<  sum_noise <<   " sum_w_exp  : " <<  sum_w_exp  <<   " sum_w_proj  : " <<  sum_w_proj  << " error_mirror_exp  : " <<  error_mirror_exp << std::endl;
-
 		if (rank>1)
 			rank=1;
 		else if (rank < 0)
