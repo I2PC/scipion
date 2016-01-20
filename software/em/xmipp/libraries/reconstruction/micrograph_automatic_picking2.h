@@ -179,7 +179,7 @@ public:
     				   MultidimArray< std::complex< double > > &polar);
 
     /// Calculate the correlation of different polar channels
-    void polarCorrelation(MultidimArray< std::complex< double > > fourierPolarStack,
+    void polarCorrelation(const MultidimArray< std::complex< double > > &fourierPolarStack,
                           MultidimArray<double> &IpolarCorr);
 
     /// Convolve the micrograph with the different templates

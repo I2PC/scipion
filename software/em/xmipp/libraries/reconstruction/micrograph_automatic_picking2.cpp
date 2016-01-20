@@ -935,7 +935,7 @@ void AutoParticlePicking2::add2Dataset(const MetaData &removedParticlesMD)
  *of the mIpolarCorr (Stack)
  */
 void correlationBetweenPolarChannels(int n1,int n2,int nF,
-                                     MultidimArray< std::complex< double > > &fourierPolarStack,
+                                     const MultidimArray< std::complex< double > > &fourierPolarStack,
                                      MultidimArray<double> &mIpolarCorr,
                                      CorrelationAux &aux)
 {
@@ -1001,7 +1001,7 @@ bool isLocalMaxima(MultidimArray<double> &inputArray, int x, int y)
         return false;
 }
 
-void AutoParticlePicking2::polarCorrelation(MultidimArray< std::complex< double > > fourierPolarStack,
+void AutoParticlePicking2::polarCorrelation(const MultidimArray< std::complex< double > > &fourierPolarStack,
         MultidimArray<double> &IpolarCorr)
 {
     int nF = NSIZE(fourierPolarStack);
