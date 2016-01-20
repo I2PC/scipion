@@ -283,20 +283,19 @@ class ProtResMap(ProtAnalysis3D):
         volPath = self._getPath(volName)
         return MRC_Data(volPath, 'ccp4').matrix
     
-    def _plotVolumeSlices(self):
+    def _plotVolumeSlices(self, **kwargs):
         from ResMap_visualization import plotOriginalVolume
-        
-        fig = plotOriginalVolume(self._getVolumeMatrix('volume1.map'))
+        fig = plotOriginalVolume(self._getVolumeMatrix('volume1.map'), **kwargs)
         return Plotter(figure=fig)
         
-    def _plotResMapSlices(self, data=None):
+    def _plotResMapSlices(self, data=None, **kwargs):
+        from ResMap_visualization import plotResMapVolume
         plotDict = loads(self.plotData.get())
         if data is None:
             data = self._getVolumeMatrix('volume1_resmap.map')
             data  = np.ma.masked_where(data > plotDict['currentRes'], data, copy=True)
-        from ResMap_visualization import plotResMapVolume
-
-        fig = plotResMapVolume(data, **plotDict)
+        kwargs.update(plotDict)
+        fig = plotResMapVolume(data, **kwargs)
         return Plotter(figure=fig)
              
     def _plotHistogram(self):
