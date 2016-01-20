@@ -128,7 +128,9 @@ class ProtResMap(ProtAnalysis3D):
         self.histogramData.set(dumps(results['resHisto']))
         plotDict = {'minRes': results['minRes'],
                     'maxRes': results['maxRes'],
-                    'orig_n': results['orig_n']}
+                    'orig_n': results['orig_n'],
+                    'n': results['n']
+                    }
         self.plotData.set(dumps(plotDict))
         self._store(self.histogramData, self.plotData)
 
@@ -237,7 +239,7 @@ class ProtResMap(ProtAnalysis3D):
         data = self._getVolumeMatrix('volume1_resmap.map')
         from ResMap_visualization import plotResMapVolume
         
-        fig = plotResMapVolume(data, plotDict['minRes'], plotDict['maxRes'])
+        fig = plotResMapVolume(data, **plotDict)
         return Plotter(figure=fig)
              
     def _plotHistogram(self):
