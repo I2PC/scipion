@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:    Laura del Cano (ldelcano@cnb.csic.es)
+# * Authors:    Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -87,45 +87,45 @@ class TestResMap(TestResMapBase):
 
     def testResmap2(self):
         resMap = self.newProtocol(ProtResMap,
-                                    inputVolume = self.protImportHalf1.outputVolume,
-                                    useSplitVolume=True,
-                                    splitVolume = self.protImportHalf2.outputVolume,
-                                    prewhitenAng = 23.77,
-                                    prewhitenRamp = 1,
-                                    stepRes = 0.5,
-                                    minRes = 7.5,
-                                    maxRes = 20
-                                    )
+                                  useSplitVolume=True,
+                                  volumeHalf1 = self.protImportHalf1.outputVolume,
+                                  volumeHalf2 = self.protImportHalf2.outputVolume,
+                                  prewhitenAng = 23.77,
+                                  prewhitenRamp = 1,
+                                  stepRes = 0.5,
+                                  minRes = 7.5,
+                                  maxRes = 20
+                                  )
         self.launchProtocol(resMap)
         self.assertTrue(exists(resMap._getExtraPath("histogram.png")), "resmap (split and no mask) has failed")
 
     def testResmap3(self):
         resMap = self.newProtocol(ProtResMap,
-                                    inputVolume = self.protImportVol.outputVolume,
-                                    applyMask = True,
-                                    maskVolume = self.protImportMask.outputMask,
-                                    prewhitenAng = 23.77,
-                                    prewhitenRamp = 1,
-                                    stepRes = 0.5,
-                                    minRes = 7.5,
-                                    maxRes = 20
-                                    )
+                                  inputVolume = self.protImportVol.outputVolume,
+                                  applyMask = True,
+                                  maskVolume = self.protImportMask.outputMask,
+                                  prewhitenAng = 23.77,
+                                  prewhitenRamp = 1,
+                                  stepRes = 0.5,
+                                  minRes = 7.5,
+                                  maxRes = 20
+                                  )
         self.launchProtocol(resMap)
         self.assertTrue(exists(resMap._getExtraPath("histogram.png")), "resmap (no split and no mask) has failed")
 
     def testResmap4(self):
         resMap = self.newProtocol(ProtResMap,
-                                    inputVolume = self.protImportHalf1.outputVolume,
-                                    useSplitVolume=True,
-                                    splitVolume = self.protImportHalf2.outputVolume,
-                                    applyMask = True,
-                                    maskVolume = self.protImportMask.outputMask,
-                                    prewhitenAng = 23.77,
-                                    prewhitenRamp = 1,
-                                    stepRes = 0.5,
-                                    minRes = 7.5,
-                                    maxRes = 20
-                                    )
+                                  useSplitVolume=True,
+                                  volumeHalf1 = self.protImportHalf1.outputVolume,
+                                  volumeHalf2 = self.protImportHalf2.outputVolume,
+                                  applyMask = True,
+                                  maskVolume = self.protImportMask.outputMask,
+                                  prewhitenAng = 23.77,
+                                  prewhitenRamp = 1,
+                                  stepRes = 0.5,
+                                  minRes = 7.5,
+                                  maxRes = 20
+                                  )
         self.launchProtocol(resMap)
         self.assertTrue(exists(resMap._getExtraPath("histogram.png")), "resmap (split and no mask) has failed")
 

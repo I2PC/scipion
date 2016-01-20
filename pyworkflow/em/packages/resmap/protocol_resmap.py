@@ -50,6 +50,18 @@ class ProtResMap(ProtAnalysis3D):
     Please find the manual at http://resmap.sourceforge.net 
     """
     _label = 'local resolution'
+
+    INPUT_HELP = """ Input volume(s) for ResMap.
+    Required volume properties:
+        1. The particle must be centered in the volume.
+        2. The background must not been masked out.
+    Desired volume properties:
+        1. The volume has not been filtered in any way (low-pass filtering, etc.)
+        2. The volume has a realistic noise spectrum.
+           This is sometimes obtained by so-called amplitude correction.
+           While a similar effect is often obtained by B-factor sharpening,
+           please make sure that the spectrum does not blow up near Nyquist.
+    """
     
     def __init__(self, **kwargs):
         ProtAnalysis3D.__init__(self, **kwargs)
@@ -60,18 +72,34 @@ class ProtResMap(ProtAnalysis3D):
     
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputVolume', params.PointerParam, pointerClass='Volume',
-                      label="Input volume", important=True,
-                      help='Select the input volume.')
         form.addParam('useSplitVolume', params.BooleanParam, default=False,
-                      label="Use split volume?", 
-                      help='Use to split volumes for gold-standard FSC.')                
-        form.addParam('splitVolume', params.PointerParam, label="Split volume", important=True,
+                      label="Use half volumes?",
+                      help='Use to split volumes for gold-standard FSC.')
+        form.addParam('inputVolume', params.PointerParam,
+                      pointerClass='Volume', condition="not useSplitVolume",
+                      label="Input volume", important=True,
+                      help=self.INPUT_HELP)
+        form.addParam('volumeHalf1', params.PointerParam,
+                      label="Volume half 1", important=True,
                       pointerClass='Volume', condition="useSplitVolume",
-                      help='Select the second split volume.')  
+                      help=self.INPUT_HELP)
+        form.addParam('volumeHalf2', params.PointerParam,
+                      pointerClass='Volume', condition="useSplitVolume",
+                      label="Volume half 2", important=True,
+                      help=self.INPUT_HELP)
+
         form.addParam('applyMask', params.BooleanParam, default=False,
-                      label="Mask input volume?", 
-                      help='If set to <No> ResMap will automatically compute a mask.')                
+                      label="Mask input volume?",
+                      help="It is not necessary to provide ResMap with a mask "
+                           "volume. The algorithm will attempt to estimate a "
+                           "mask volume by low-pass filtering the input volume "
+                           "and thresholding it using a heuristic procedure.\n"
+                           "If the automated procedure does not work well for "
+                           "your particle, you may provide a mask volume that "
+                           "matches the input volume in size and format. "
+                           "The mask volume should be a binary volume with zero "
+                           "(0) denoting the background/solvent and some positive"
+                           "value (0+) enveloping the particle.")
         form.addParam('maskVolume', params.PointerParam, label="Mask volume",
                       pointerClass='VolumeMask', condition="applyMask",
                       help='Select a volume to apply as a mask.')
@@ -91,23 +119,35 @@ class ProtResMap(ProtAnalysis3D):
                       label='Step size (Ang):',
                       help='in Angstroms (min 0.25, default 1.0)')
         line = group.addLine('Resolution Range (A)', 
-                            help='Default (0): algorithm will start a just above '
-                                 '2*voxelSize until 4*voxelSize.')
+                            help="Default (0): algorithm will start a just above\n"
+                                 "             2*voxelSize until 4*voxelSize.   \n"
+                                 "These fields are provided to accelerate computation "
+                                 "if you are only interested in analyzing a specific "
+                                 "resolution range. It is usually a good idea to provide "
+                                 "a maximum resolution value to save time. Another way to "
+                                 "save computation is to provide a larger step size.")
         line.addParam('minRes', params.FloatParam, default=0, label='Min')
         line.addParam('maxRes', params.FloatParam, default=0, label='Max')
         group.addParam('pVal', params.FloatParam, default=0.05,
                       label='Confidence level:',
-                      help='usually between [0.01, 0.05]')   
+                      help="P-value, usually between [0.01, 0.05].\n\n"
+                           "This is the p-value of the statistical hypothesis test "
+                           "on which ResMap is based on. It is customarily set to  "
+                           "0.05 although you are welcome to reduce it (e.g. 0.01) "
+                           "if you would like to obtain a more conservative result. "
+                           "Empirically, ResMap results are not much affected by the p-value.")
                      
     #--------------------------- INSERT steps functions --------------------------------------------  
     
     def _insertAllSteps(self):
         # Insert processing steps
-        inputs = [self.inputVolume.get().getLocation()]
         if self.useSplitVolume:
-            inputs.append(self.splitVolume.get().getLocation())
+            inputs = [self.volumeHalf1, self.volumeHalf2]
+        else:
+            inputs = [self.inputVolume]
+        locations = [i.get().getLocation() for i in inputs]
             
-        self._insertFunctionStep('convertInputStep', *inputs)
+        self._insertFunctionStep('convertInputStep', *locations)
         self._insertFunctionStep('estimateResolutionStep', 
                                  self.pVal.get(), 
                                  self.minRes.get(), 
@@ -165,6 +205,14 @@ class ProtResMap(ProtAnalysis3D):
     
     def _validate(self):
         errors = []
+
+        if self.useSplitVolume:
+            half1 = self.volumeHalf1.get()
+            half2 = self.volumeHalf2.get()
+            if half1.getSamplingRate() != half2.getSamplingRate():
+                errors.append('The selected half volumes have not the same pixel size.')
+            if half1.getXDim() != half2.getXDim():
+                errors.append('The selected half volumes have not the same dimensions.')
                 
         return errors
     
@@ -198,8 +246,7 @@ class ProtResMap(ProtAnalysis3D):
             prewhitenArgs['newElbowAngstrom'] = self.prewhitenAng.get()
             prewhitenArgs['newRampWeight'] = self.prewhitenRamp.get()
             
-        args = {'vxSize': self.inputVolume.get().getSamplingRate(),
-                'pValue': self.pVal.get(),
+        args = {'pValue': self.pVal.get(),
                 'minRes': self.minRes.get(), 
                 'maxRes': self.maxRes.get(),
                 'stepRes': self.stepRes.get(),
@@ -211,13 +258,15 @@ class ProtResMap(ProtAnalysis3D):
         if self.useSplitVolume:
             # Read the second splitted volume
             data2 = MRC_Data(volumes[1],'ccp4')
-            args.update({'inputFileName1': 'volume1.map',
+            args.update({'vxSize': self.volumeHalf1.get().getSamplingRate(),
+                         'inputFileName1': 'volume1.map',
                          'inputFileName2': 'volume2.map',
                          'data1': data1,
                          'data2': data2,
                          })
         else:
-            args.update({'inputFileName': 'volume1.map',
+            args.update({'vxSize': self.inputVolume.get().getSamplingRate(),
+                         'inputFileName': 'volume1.map',
                          'data': data1,
                          })   
             
