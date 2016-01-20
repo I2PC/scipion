@@ -23,18 +23,13 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.viewer import ImageView
-"""
-Visualization of the ResMap outputs.
-"""
 
 import os
 import sys
 
 from pyworkflow.protocol.params import LabelParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import ChimeraView
-from pyworkflow.gui.plotter import Plotter
+from pyworkflow.em.viewer import ImageView, ChimeraView
 from protocol_resmap import ProtResMap
 
 
