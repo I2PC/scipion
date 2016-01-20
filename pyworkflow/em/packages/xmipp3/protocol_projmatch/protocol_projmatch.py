@@ -375,12 +375,14 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         return self._lastIter.get()
     
     def _fillParticlesFromIter(self, partSet, iteration):
+        print("_fillParticlesFromIter")
         import pyworkflow.em.metadata as md
         
         imgSet = self.inputParticles.get()
         imgFn = "all_exp_images@" + self._getFileName('docfileInputAnglesIters', iter=iteration, ref=1)
         partSet.copyInfo(imgSet)
         partSet.setAlignmentProj()
+        
         partSet.copyItems(imgSet,
                             updateItemCallback=self._createItemMatrix,
                             itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
