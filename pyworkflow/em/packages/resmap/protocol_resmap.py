@@ -29,6 +29,9 @@ Protocol wrapper around the ResMap tool for local resolutio
 
 import os
 import sys
+from cPickle import loads, dumps
+import numpy as np
+
 
 from pyworkflow.object import String
 from pyworkflow.protocol.params import PointerParam, BooleanParam, FloatParam
@@ -124,12 +127,12 @@ class ProtResMap(ProtAnalysis3D):
         """ Call ResMap.py with the appropriate parameters. """
         results = self.runResmap(self._getPath())
 
-        from cPickle import dumps
         self.histogramData.set(dumps(results['resHisto']))
         plotDict = {'minRes': results['minRes'],
                     'maxRes': results['maxRes'],
                     'orig_n': results['orig_n'],
-                    'n': results['n']
+                    'n': results['n'],
+                    'currentRes': results['currentRes']
                     }
         self.plotData.set(dumps(plotDict))
         self._store(self.histogramData, self.plotData)
@@ -144,7 +147,7 @@ class ProtResMap(ProtAnalysis3D):
         # some memory problem with matplotlib plots right now in web
         Plotter.setBackend('Agg')
         self._plotVolumeSlices().savefig(self._getExtraPath('volume1.map.png'))
-        plot = self._plotResMapSlices()
+        plot = self._plotResMapSlices(results['resTOTALma'])
         plot.savefig(self._getExtraPath('volume1_resmap.map.png'))
         self._plotHistogram().savefig(self._getExtraPath('histogram.png'))
 
@@ -231,20 +234,18 @@ class ProtResMap(ProtAnalysis3D):
         fig = plotOriginalVolume(self._getVolumeMatrix('volume1.map'))
         return Plotter(figure=fig)
         
-    def _plotResMapSlices(self):
-        from cPickle import loads
+    def _plotResMapSlices(self, data=None):
         plotDict = loads(self.plotData.get())
-        #if data is None:
-            #data = self._getVolumeMatrix('volume1_resmap_masked.map')
-        data = self._getVolumeMatrix('volume1_resmap.map')
+        if data is None:
+            data = self._getVolumeMatrix('volume1_resmap.map')
+            data  = np.ma.masked_where(data > plotDict['currentRes'], data, copy=True)
         from ResMap_visualization import plotResMapVolume
-        
+
         fig = plotResMapVolume(data, **plotDict)
         return Plotter(figure=fig)
              
     def _plotHistogram(self):
         from ResMap_visualization import plotResolutionHistogram
-        from cPickle import loads
         histogramData = loads(self.histogramData.get())
         fig = plotResolutionHistogram(histogramData)
         return Plotter(figure=fig)    
