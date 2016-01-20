@@ -122,10 +122,10 @@ void ProgAngularAccuracyPCA::run()
 
 		for (size_t i=0; i<=maxIdx;i++)
 		{
-			expression = formatString("imageIndex == %lu",i);
+			expression = formatString("itemId == %lu",i);
 			tempMd.importObjects(MDOut, MDExpression(expression));
 
-			if ( (tempMd.size()==0))
+			if ( (tempMd.size() <= 0))
 				continue;
 
 			pcaResidualProj = 0;
