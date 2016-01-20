@@ -56,12 +56,12 @@ class ResMapViewer(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         group = form.addGroup('2D Plots')
-        group.addParam('doShowVolumeSlices', LabelParam, default=True,
+        group.addParam('doShowVolumeSlices', LabelParam,
                       label="Show volume slices?")
-        group.addParam('doShowResMapSlices', LabelParam, default=True,
+        group.addParam('doShowResMapSlices', LabelParam,
                       label="Show ResMap slices?")               
         group.addParam('doShowResHistogram', LabelParam,
-                      label="Show resolution histogram?", default=True)
+                      label="Show resolution histogram?")
         
         form.addParam('doShowChimera', LabelParam,
                       label="Show Chimera animation?", default=True)
