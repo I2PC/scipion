@@ -12,7 +12,7 @@ def usage(error):
     print """
     ERROR: %s
 
-    Usage: scripts/tar.py LABEL
+    Usage: scripts/tar.py TARNAME
         TARNAME: the name of the tarfile that will be generated from
         the scipion folder. For example: scipion_v1.0.0_20150115.tgz
     """ % error
