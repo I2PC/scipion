@@ -377,6 +377,9 @@ class Image(EMObject):
             x, y, z, n = ImageHandler().getDimensions(self)
             return x, y, z
         return None
+
+    def getXDim(self):
+        return self.getDim()[0] if self.getDim() is not None else 0
     
     def getIndex(self):
         return self._index.get()

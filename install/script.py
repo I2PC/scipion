@@ -427,7 +427,7 @@ env.addPackage('relion-1.3',
                default=False)
 
 env.addPackage('resmap',
-               tar='resmap-1.1.5-scipion.tgz',
+               tar='resmap-1.1.5-s2.tgz',
                deps=['scipy'],
                default=False)
 
