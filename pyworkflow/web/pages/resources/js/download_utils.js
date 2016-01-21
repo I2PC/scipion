@@ -56,13 +56,14 @@ $(document).ready(function() {
         } 
         else
         {
-			var action = "/doDownload/";
-			var URL = getSubDomainURL() + action
-			
-			var serialize_form = $(this).serialize();
-			
-			$.post(URL, serialize_form, function(json) {
-			}, "json");
+//            Do the submit
+//			var action = "/startdownload/";
+//			var URL = getSubDomainURL() + action
+//
+//			var serialize_form = $(this).serialize();
+//
+//			$.post(URL, serialize_form, function(json) {
+//			}, "json");
         }	
 		
 	});

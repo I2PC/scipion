@@ -53,7 +53,6 @@ mainUrls = ['',
     url(r'^object_tree/$', 'app.views_data.object_tree'),
 
     #UTILS
-    url(r'^error/', 'app.views_util.error'), # Launch error page
     url(r'^render_column/', 'app.views_util.render_column'), # Load images dynamically
     url(r'^get_image_plot/', 'app.views_util.get_image_plot'), # Load plots images dynamically
     url(r'^get_image_path/', 'app.views_util.get_image_path'), # Load images dynamically
@@ -99,7 +98,6 @@ mainUrls = ['',
     #BROWSER & UPLOAD FILES
     url(r'^upload/', 'app.views_management.upload', name='upload'),
     url(r'^doUpload/', 'app.views_management.doUpload'),
-    url(r'^upload_service/', 'app.views_management.upload_service'),
     url(r'^getPath/', 'app.views_management.getPath'),
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     url(r'^get_file/$', 'app.views_util.get_file'),
@@ -111,7 +109,8 @@ mainUrls = ['',
 
     url(r'^home/', 'app.views_home.home'),
     url(r'^download_form/', 'app.views_home.download_form'),
-    url(r'^doDownload/', 'app.views_home.doDownload'),
+    url(r'^startdownload/', 'app.views_home.startDownload'),
+    url(r'^download/', 'app.views_home.doDownload'),
 
 ]
 

@@ -21,7 +21,7 @@
 		<h3>Please fill in the required fields</h3>
 		<P>We don't share this information. It is used mainly to justify our funding.</P>
 
-		<form role="form" id="downloadForm" action="{{abs_url}}doDownload/" method="POST">{% csrf_token %}
+		<form role="form" id="downloadForm" action="{{abs_url}}startdownload/" method="POST">{% csrf_token %}
 			<div class="form-group">
 				<label for="fullName">Full name:</label>
 				<input type="text" class="form-control" id="fullName" name="fullName">

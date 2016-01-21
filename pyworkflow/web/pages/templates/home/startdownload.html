@@ -1,0 +1,22 @@
+{% extends "layouts/100.html" %}
+
+{% block title %}Scipion Download{% endblock %}
+
+{% block css %}
+    {{ block.super }}
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+	<script type="text/javascript" src="{{config}}"></script>
+{% endblock %}
+
+{% block main_col %}
+	<div>
+		<h1 class="primary">Scipion download</h1>
+		<P>The download of {{fileToDownload}} will start now. If it doesn't, click on this <a href="{{abs_url}}download">link</a></P>
+	</div>
+	<script type="text/javascript">
+		 window.location='{{abs_url}}download';
+	</script>
+{% endblock %}

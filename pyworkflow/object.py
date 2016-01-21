@@ -626,7 +626,11 @@ class Integer(Scalar):
 class String(Scalar):
     """String object"""
     def _convertValue(self, value):
-        return str(value)
+
+        if isinstance(value, unicode):
+            return value
+        else:
+            return str(value)
     
     def empty(self):
         """ Return true if None or len == 0 """

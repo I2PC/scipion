@@ -27,7 +27,7 @@
 
 import os
 import json
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, redirect
 from pyworkflow.web.app.views_util import parseText, getResource
 from pyworkflow.web.app.views_base import base_grid
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest
@@ -39,6 +39,8 @@ import mimetypes
 
 import pyworkflow as pw
 from pyworkflow.config import DownloadRecord
+
+FILE_TO_DOWNLOAD = 'fileToDownload'
 
 DB_PATH_DOWNLOAD = os.path.join(pw.HOME, 'web', 'home', "download_statistics.db")
 DOWNLOADABLES_FILE = 'file'
@@ -88,7 +90,7 @@ def getInstallPath(fileName=''):
     return os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'web', 'pages', 'resources', 'install', fileName)
 
 
-def doDownload(request):
+def startDownload(request):
     fullName = request.POST.get('fullName')
     organization = request.POST.get('organization')
     email = request.POST.get('email')
@@ -97,6 +99,10 @@ def doDownload(request):
     bundle = request.POST.get('file')
 
     errors = ""
+
+    # If full name is None it's a direct access..
+    if fullName is None:
+        return redirect('app.views_home.download_form')
 
     if not len(fullName) > 0:
         errors += "Please fill in the fullName field.\n"
@@ -139,6 +145,35 @@ def doDownload(request):
         if not os.path.exists(path):
             return HttpResponseNotFound('Path not found: %s' % path)
 
+        request.session[FILE_TO_DOWNLOAD] = fileName
+
+        context = {
+            "fileToDownload": fileName
+        }
+        context = base_grid(request, context)
+        context.update(csrf(request))
+
+
+        return render_to_response('home/startdownload.html', context)
+
+    else:
+        jsonStr = json.dumps({'errors': parseText(errors)}, ensure_ascii=False)
+
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+
+
+def doDownload(request):
+
+    # Return a response with the scipion download file
+    if FILE_TO_DOWNLOAD in request.session:
+
+        fileToDownload = request.session[FILE_TO_DOWNLOAD]
+
+        path = getInstallPath(fileToDownload)
+
+        if not os.path.exists(path):
+            return HttpResponseNotFound('Path not found: %s' % path)
+
         response = HttpResponse(FileWrapper(open(path)),
                                 content_type=mimetypes.guess_type(path)[0])
         response['Content-Length'] = os.path.getsize(path)
@@ -146,6 +181,5 @@ def doDownload(request):
 
         return response
     else:
-        jsonStr = json.dumps({'errors': parseText(errors)}, ensure_ascii=False)
 
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+        return redirect('app.views_home.download_form')
