@@ -104,7 +104,7 @@ void ProgAngularAccuracyPCA::run()
 
 	if (rank == 0)
 	{
-		double pcaResidualProj,pcaResidualExp,Zscore,temp,tempProj,tempExp,tempZ,qResidualProj,qResidualExp,qZscore;
+		double pcaResidualProj,pcaResidualExp,Zscore,temp,qResidualProj,qResidualExp,qZscore;
 
 		qResidualProj = 0;
 		qResidualExp = 0;
@@ -174,7 +174,6 @@ void ProgAngularAccuracyPCA::run()
 	    MDOutQ.write(fnOutQ);
 		progress_bar(blocks.size());
 	}
-
 }
 
 void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
