@@ -96,7 +96,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         deps = [] # store volumes steps id to use as dependencies for last step
         commonParams    = self._getCommonParams()
         commonParamsRef = self._getCommonParamsRef()
-        
+        '''
         sym = self.symmetryGroup.get()
         for i, vol in enumerate(self._iterInputVols()):
             
@@ -148,7 +148,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
            
             
             deps.append(pmAngAccId)
-            
+'''            
         self._insertFunctionStep('createOutputStep', 
                                  prerequisites=deps)
         
@@ -283,20 +283,47 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         self.runJob('xmipp_angular_accuracy_pca', params,numberOfMpi=nproc,numberOfThreads=nT)
         
     def createOutputStep(self):
-##                
-        outputVols = self._createSetOfVolumes()
-        imgSet = self.inputParticles.get()
 ##        
-##        for i, vol in enumerate(self._iterInputVols()):
-##        
-##            volume = vol.clone()               
-##            volDir = self._getVolDir(i+1)
-##            volPrefix = 'vol%03d_' % (i+1)
-##            validationMd = self._getExtraPath(volPrefix + 'validation.xmd')
-##            moveFile(join(volDir, 'validation.xmd'), 
-##                     validationMd)
-##            clusterMd = self._getExtraPath(volPrefix + 'clusteringTendency.xmd')
-##            moveFile(join(volDir, 'clusteringTendency.xmd'), clusterMd)
+        for i, vol in enumerate(self._iterInputVols()):        
+        
+            volDir = self._getVolDir(i+1)
+            volume = vol.clone()
+            volPrefix = 'vol%03d_' % (i+1)
+            
+            m1_pruned = md.MetaData()
+            m2_pruned = md.MetaData()
+            mdJoin_pruned = md.MetaData()            
+            m1_pruned.read(volDir+'/pruned_particles_alignability_precision.xmd')
+            m2_pruned.read(volDir+'/pruned_particles_alignability_accuracy.xmd')            
+            m1_pruned.joinNatural(m2_pruned, mdJoin_pruned)            
+            mdJoin_pruned.write(volDir+'pruned_particles_alignability.xmd')
+            
+            prunedMd = self._getExtraPath(volPrefix + 'pruned_particles_alignability.xmd')
+            moveFile(join(volDir, 'pruned_particles_alignability.xmd'), 
+                     prunedMd)
+
+            m1_volScore = md.MetaData()
+            m2_volScore = md.MetaData()
+            mdJoin_volScore = md.MetaData()            
+            m1_volScore.read(volDir+'/validationAlignabilityPrecision.xmd')
+            m2_volScore.read(volDir+'/validationAlignabilityAccuracy.xmd')            
+            m1_volScore.joinNatural(m2_volScore, mdJoin_volScore)
+            mdJoin_volScore.write(volDir+'validation_alignability.xmd')
+            
+            validationMd = self._getExtraPath(volPrefix + 'validation_alignability.xmd')
+            moveFile(join(volDir, 'validation_alignability.xmd'), 
+                     validationMd)
+            
+                
+
+
+
+            outputVols = self._createSetOfVolumes()
+            imgSet = self.inputParticles.get()
+            
+            
+            
+            
 ##            
 ##            outImgSet = self._createSetOfParticles(volPrefix)
 ##            
