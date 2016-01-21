@@ -342,6 +342,13 @@ cythongsl = env.addModule(
     deps=[cython])
 # TODO: add checks for dependencies: GSL
 
+sklearn = env.addModule(
+    'sklearn',
+    tar='scikit-learn-0.17.tar.gz',
+    default=False,
+    deps=[scipy, numpy, cython])
+
+
 
 #  ************************************************************************
 #  *                                                                      *
