@@ -96,7 +96,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         deps = [] # store volumes steps id to use as dependencies for last step
         commonParams    = self._getCommonParams()
         commonParamsRef = self._getCommonParamsRef()
-        '''
+
         sym = self.symmetryGroup.get()
         for i, vol in enumerate(self._iterInputVols()):
             
@@ -148,7 +148,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
            
             
             deps.append(pmAngAccId)
-'''            
+          
         self._insertFunctionStep('createOutputStep', 
                                  prerequisites=deps)
         
