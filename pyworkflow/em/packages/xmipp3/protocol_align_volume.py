@@ -153,7 +153,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         
     #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
-        # Iterate throught all input volumes and align them 
+        # Iterate through all input volumes and align them 
         # againt the reference volume
         refFn = getImageLocation(self.inputReference.get())
         maskArgs = self._getMaskArgs()

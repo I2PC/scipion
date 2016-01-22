@@ -3498,7 +3498,7 @@ double cov2(/* Real    */ ae_vector* x,
      * Calculate mean.
      *
      *
-     * Additonally we calculate SameX and SameY -
+     * Additionally we calculate SameX and SameY -
      * flag variables which are set to True when
      * all X[] (or Y[]) contain exactly same value.
      *
@@ -3598,7 +3598,7 @@ double pearsoncorr2(/* Real    */ ae_vector* x,
      * Calculate mean.
      *
      *
-     * Additonally we calculate SameX and SameY -
+     * Additionally we calculate SameX and SameY -
      * flag variables which are set to True when
      * all X[] (or Y[]) contain exactly same value.
      *

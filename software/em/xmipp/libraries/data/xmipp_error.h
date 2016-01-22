@@ -107,7 +107,7 @@
  *      ERR_IO_
  *      ERR_MEM_
  *      ERR_IMG_
- * - Finally an abreviation for the error msg.
+ * - Finally an abbreviation for the error msg.
  * All error codes have a default string message
  * that can be obtained with XmippError::getDefaultMessage(ErrorType)
  */
@@ -201,7 +201,7 @@ enum ErrorType
 };
 
 
-/** MACROs that proccess XMIPP exceptions
+/** MACROs that process XMIPP exceptions
  */
 #define XMIPP_TRY try{
 

@@ -217,7 +217,7 @@ public:
      */
     virtual void run();
     /** function to exit the program
-     * can be usefull redefined for mpi programs
+     * can be useful redefined for mpi programs
      */
     virtual void quit(int exit_code = 0) const;
     /** Call the run function inside a try/catch block

@@ -30,10 +30,12 @@ This sub-package contains wrapper around Projection Outliers Xmipp program
 from math import floor
 from os.path import exists
 
-from pyworkflow.protocol.params import IntParam, PointerParam
-from pyworkflow.utils.path import cleanPath, createLink
-from pyworkflow.em.protocol import ProtAnalysis2D
-from pyworkflow.em.data import SetOfClasses2D, Image
+from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
+from pyworkflow.utils.path import cleanPath
+from pyworkflow.em.protocol import ProtAnalysis3D
+from pyworkflow.em.data import SetOfClasses2D, Image, SetOfAverages,\
+    SetOfParticles
 from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLocation
 import pyworkflow.em.metadata as md
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
@@ -42,7 +44,7 @@ import xmipp
 from xmipp3 import ProjMatcher
 
         
-class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
+class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
     """Compares a set of classes or averages with the corresponding projections of a reference volume.
     The set of images must have a 3D angular assignment and the protocol computes the residues
     (the difference between the experimental images and the reprojections). The zscore of the mean
@@ -50,50 +52,57 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
     The protocol also analyze the covariance matrix of the residual and computes the logarithm of
     its determinant [Cherian2013]. The extremes of this score (called zScoreResCov), that is
     values particularly low or high, may indicate outliers."""
-    _label = 'projection outliers'
+    _label = 'compare reprojections'
     
     def __init__(self, **args):
-        ProtAnalysis2D.__init__(self, **args)
+        ProtAnalysis3D.__init__(self, **args)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputSet', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfParticles', pointerCondition='hasAlignmentProj')
+                      pointerClass='SetOfClasses2D, SetOfAverages, SetOfParticles')
         form.addParam('inputVolume', PointerParam, label="Volume to compare images to", important=True,
                       pointerClass='Volume',
                       help='Volume to be used for class comparison')
-        form.addParam('residualSize', IntParam, label="Size of the residuals to analyze", expertLevel=LEVEL_ADVANCED, default=64,
-                      help='The input volume and the input images will be resized to this size before analyzing the residuals.')
-        form.addParallelSection(threads=0, mpi=1)
+        form.addParam('useAssignment', BooleanParam, default=True,
+                      label='Use input angular assignment (if available)')
+        form.addParam('symmetryGroup', StringParam, default="c1",
+                      label='Symmetry group', 
+                      help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
+                        'If no symmetry is present, give c1')
+        form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
+                      label='Angular sampling rate',
+                      help='In degrees.'
+                      ' This sampling defines how fine the projection gallery from the volume is explored.')
+        form.addParallelSection(threads=0, mpi=8)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep("convertStep")
-        self._insertFunctionStep("produceResiduals")
+        # Convert input images if necessary
+        self.imgsFn = self._getExtraPath('input_imgs.xmd')
+        vol = self.inputVolume.get()
+        
+        self._insertFunctionStep("convertStep", self.imgsFn)
+        imgSet = self.inputSet.get()
+        if not self.useAssignment or isinstance(imgSet, SetOfClasses2D) or isinstance(imgSet, SetOfAverages) or (isinstance(imgSet, SetOfParticles) and not imgSet.hasAlignmentProj()):
+            anglesFn = self._getExtraPath('angles.xmd')
+            self._insertFunctionStep("projMatchStep", self.inputVolume.get().getFileName(), self.angularSampling.get(), self.symmetryGroup.get(), self.imgsFn,
+                                     anglesFn, self.inputVolume.get().getDim()[0])
+        else:
+            anglesFn=self.imgsFn
+        self._insertFunctionStep("produceResiduals", vol.getFileName(), anglesFn, vol.getSamplingRate())
         self._insertFunctionStep("evaluateResiduals")
         self._insertFunctionStep("createOutputStep")
 
     #--------------------------- STEPS functions ---------------------------------------------------
-    def convertStep(self):
-        from convert import writeSetOfParticles
-        fnImgs = self._getExtraPath('images.xmd')
-        writeSetOfParticles(self.inputSet.get(), fnImgs)
-        
-        currentDim=self._getDimensions()
-        if currentDim!=self.residualSize.get():
-            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d --save_metadata_stack %s"%(fnImgs,self._getExtraPath("images.stk"),self.residualSize.get(),fnImgs))
-#             scaleFactor=float(self.residualSize.get())/currentDim
-#             self.runJob("xmipp_metadata_utilities",'-i %s --operate modify_values "shiftX=shiftX*%f"'%(fnImgs,scaleFactor),numberOfMpi=1)
-#             self.runJob("xmipp_metadata_utilities",'-i %s --operate modify_values "shiftY=shiftY*%f"'%(fnImgs,scaleFactor),numberOfMpi=1)
-        
-        fnVol=self.inputVolume.get().getFileName()
-        if self.inputVolume.get().getDim()[0]!=self.residualSize.get() or fnVol.endswith('.mrc'):
-            if fnVol.endswith(".mrc"):
-                fnVol+=":mrc"
-            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"%(fnVol,self._getExtraPath("volume.vol"),self.residualSize.get()))
+    def convertStep(self, imgsFn):
+        from convert import writeSetOfClasses2D, writeSetOfParticles
+        imgSet = self.inputSet.get()
+        if isinstance(imgSet, SetOfClasses2D):
+            writeSetOfClasses2D(imgSet, self.imgsFn, writeParticles=False)
         else:
-            createLink(fnVol,self._getExtraPath("volume.vol"))
+            writeSetOfParticles(imgSet, self.imgsFn)
     
     def produceResiduals(self):
         anglesOutFn=self._getExtraPath("anglesCont.stk")
@@ -127,7 +136,10 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         outputSet = self._createSetOfParticles()
         imgSet = self.inputSet.get()
         imgFn = self._getExtraPath("anglesCont.xmd")
-        outputSet.copyInfo(imgSet)
+        if isinstance(imgSet, SetOfClasses2D):
+            outputSet.copyInfo(imgSet.getImages())
+        else:
+            outputSet.copyInfo(imgSet)
         outputSet.setAlignmentProj()
         outputSet.copyItems(imgSet,
                             updateItemCallback=self._processRow,

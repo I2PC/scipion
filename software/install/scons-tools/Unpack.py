@@ -207,7 +207,7 @@ def __emitter( target, source, env ) :
     except Exception, e :
         raise SCons.Errors.StopError( "%s" % (e) )
 
-    # the line removes duplicated names - we need this line, otherwise a cyclic dependency error will occured,
+    # the line removes duplicated names - we need this line, otherwise a cyclic dependency error will occurred,
     # because the list process can create redundant data (an archive file can not store redundant content in a filepath)
     target = [i.strip() for i in list(set(target))]
     if not target :
@@ -402,7 +402,7 @@ def generate( env ) :
             toolset["EXTRACTOR"]["GZIP"]["EXTRACTFLAGS"]   = "-df"
 
     else :
-        raise SCons.Errors.StopError("Unpack tool detection on this platform [%s] unkown" % (env["PLATFORM"]))
+        raise SCons.Errors.StopError("Unpack tool detection on this platform [%s] unknown" % (env["PLATFORM"]))
 
     # the target_factory must be a "Entry", because the target list can be files and dirs, so we can not specified the targetfactory explicite
     env.Replace(UNPACK = toolset)

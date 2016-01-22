@@ -168,7 +168,7 @@ double spatial_Bspline03_proj(
         double alpha_y = (YY(v) + y_sign - YY(r)) / YY(ur);
         double alpha_z = (ZZ(v) + z_sign - ZZ(r)) / ZZ(ur);
 
-        // Which dimension will ray move next step into?, it isn't neccesary to be only
+        // Which dimension will ray move next step into?, it isn't necessary to be only
         // one.
         double diffx = ABS(alpha - alpha_x);
         double diffy = ABS(alpha - alpha_y);

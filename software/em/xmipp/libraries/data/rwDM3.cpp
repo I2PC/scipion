@@ -445,7 +445,7 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
     DM3head * header = new DM3head;
     int dummy;
 
-    // Check Machine endianess
+    // Check Machine endianness
     bool isLE = IsLittleEndian();
 
     xmippFREAD(&header->fileVersion, sizeof(int), 1, fimg, isLE);

@@ -1331,7 +1331,7 @@ class SetOfClasses(EMSet):
     
     def _setItemMapperPath(self, classItem):
         """ Set the mapper path of this class according to the mapper
-        path of the SetOfClasses and also the prefix acording to class id
+        path of the SetOfClasses and also the prefix according to class id
         """
         classPrefix = 'Class%03d' % classItem.getObjId()
         classItem._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))

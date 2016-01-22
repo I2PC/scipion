@@ -183,7 +183,7 @@ void * threadPrepareImages(void * args)
 				meanInside+=A2D_ELEM(mI,i,j);
 			meanInside /= NInsideMask;
 
-            // Substract the mean inside the circle
+            // Subtract the mean inside the circle
             FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
             if (!A2D_ELEM(mask,i,j))
                 A2D_ELEM(mI,i,j)-=meanInside;

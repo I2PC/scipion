@@ -103,7 +103,9 @@ class ProgramTest(unittest.TestCase):
                 command.run(timeout=self._timeout)
                 pipe = ">>"
                 
-    def runCase(self, args, mpi=0, changeDir=False, preruns=None, postruns=None, outputs=None, random=False):
+    def runCase(self, args, mpi=0, changeDir=False, 
+                preruns=None, postruns=None, validate=None,
+                outputs=None, random=False):
         # Retrieve the correct case number from the test name id
         # We asumme here that 'test_caseXXX' should be in the name
         caseId = unittest.TestCase.id(self)
@@ -154,6 +156,9 @@ class ProgramTest(unittest.TestCase):
             
         if outputs:
             self._checkOutputs(outputs,random)
+            
+        if validate:
+            validate()
             
         os.chdir(cwd)
         

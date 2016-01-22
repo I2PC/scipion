@@ -24,6 +24,7 @@ Protocols SPA = [
         {"tag": "protocol", "value": "XmippProtPreprocessMicrographs", "text": "default"},
         {"tag": "protocol_group", "text": "CTF estimation", "openItem": "False", "children": [
             {"tag": "protocol", "value": "ProtCTFFind",   "text": "default"},
+            {"tag": "protocol", "value": "ProtGctf",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtCTFMicrographs",   "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "ProtCTFAssign",           "text": "default"},
@@ -89,8 +90,7 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtML2D", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtKerdensom", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtRotSpectra", "text": "default"},
-                {"tag": "protocol", "value": "ProtClassesConsensus", "text": "default"},
-                {"tag": "protocol", "value": "XmippProtScreenClasses", "text": "default"}
+                {"tag": "protocol", "value": "ProtClassesConsensus", "text": "default"}
             ]}]}
     ]},
     {"tag": "section", "text": "3D", "children": [
@@ -138,6 +138,8 @@ Protocols SPA = [
             {"tag": "protocol", "value": "ProtResMap",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtResolution3D",  "text": "default"},
             {"tag": "protocol", "value": "XmippProtValidateNonTilt",    "text": "default"},
+            {"tag": "protocol", "value": "XmippProtValidateOverfitting",    "text": "default"},
+            {"tag": "protocol", "value": "XmippProtCompareReprojections", "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtConvertToPseudoAtoms", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "default"},

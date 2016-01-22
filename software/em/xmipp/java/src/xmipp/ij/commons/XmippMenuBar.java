@@ -322,7 +322,7 @@ public class XmippMenuBar extends MenuBar
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				XmippWindowUtil.openURI("http://scipion.cnb.csic.es/bin/view/TWiki/ShowJ");
+				XmippWindowUtil.openURI("https://github.com/biocompwebs/scipion/wiki/ShowJ");
 			}
 		});
 		helpmn.add(onlinemi);

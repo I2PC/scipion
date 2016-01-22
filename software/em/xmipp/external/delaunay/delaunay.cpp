@@ -168,7 +168,7 @@ int		insert_Point( struct Delaunay_T *delaunay, double x, double y)
 * IN:		createVoronoi	determines if Voronoi areas must be computed.
 * OUT:		N/A
 * IN/OUT:	delaunay		delaunay data
-* RETURN:	SUCESS if Voronoi computed. FAILURE i.o.c.
+* RETURN:	SUCCESS if Voronoi computed. FAILURE i.o.c.
 * Description: 	Computes the Delaunay triangulation using points stored in
 * 				the DCEL field of the "delaunay" data. If "createVoronoi"
 * 				TRUE, then it also computes the Voronoi area of the

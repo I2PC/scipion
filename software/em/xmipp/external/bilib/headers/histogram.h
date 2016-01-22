@@ -3,7 +3,7 @@
 //@{
 /*--------------------------------------------------------------------------*/
 /** Build histogram.
-    Computation of the frequencies of occurence of data values.
+    Computation of the frequencies of occurrence of data values.
     VolumeSource is a (float)volume of size (Nx x Ny x Nz).
     Value[] is a (float)array of length previously determined by
     HistogramGetSize. The returned content of Value[] is sorted in strict

@@ -42,7 +42,7 @@ class XmippProtML2D(ProtClassify2D):
     Perform (multi-reference) 2D-alignment using 
     a maximum-likelihood ( *ML* ) target function.
     
-    Initial refereces can be generated from random subsets of the experimental 
+    Initial references can be generated from random subsets of the experimental 
     images or can be provided by the user (this can introduce bias). The output 
     of the protocol consists of the refined 2D classes (weighted averages over 
     all experimental images). The experimental images are not altered at all.    

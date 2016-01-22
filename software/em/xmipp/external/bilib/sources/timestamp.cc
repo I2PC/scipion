@@ -181,7 +181,7 @@ extern int		GetElapsedTime
 	*SystemTimeDifference = NewTimeStamp.SecondsSinceProcessBirth
 		- OldTimeStamp.SecondsSinceProcessBirth;
 	if (*SystemTimeDifference < 0.0) {
-		WRITE_ERROR(GetElapsedTime, "Wrap-around of the system clock occured")
+		WRITE_ERROR(GetElapsedTime, "Wrap-around of the system clock occurred")
 /**/	DEBUG_WRITE_LEAVING(GetElapsedTime, "Done")
 		return(Status);
 	}

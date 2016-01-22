@@ -78,7 +78,7 @@ public:
     void writeOutputFiles(const ModelML2D &model, OutputType outputType = OUT_FINAL);
     /// After normal ML2D expectation, data must be collected from nodes
     void expectation();
-    /// Redefine endIteration for some syncronization
+    /// Redefine endIteration for some synchronization
     void endIteration();
     //Just for debugging
     void printModel(const String &msg, const ModelML2D & model);
@@ -136,7 +136,7 @@ public:
     void writeOutputFiles(const ModelML2D &model, OutputType outputType = OUT_FINAL);
     /// After normal ML2D expectation, data must be collected from nodes
     void expectation();
-    /// Redefine endIteration for some syncronization
+    /// Redefine endIteration for some synchronization
     void endIteration();
 }
 ;//end of class MpiProgMLF2D

@@ -47,8 +47,10 @@ class EMProtocol(Protocol):
     """ Base class to all EM protocols.
     It will contains some common functionalities. 
     """
-    def __init__(self, **args):
-        Protocol.__init__(self, **args)
+    _base = True
+    
+    def __init__(self, **kwargs):
+        Protocol.__init__(self, **kwargs)
         
     def __createSet(self, SetClass, template, suffix):
         """ Create a set and set the filename using the suffix. 
@@ -102,14 +104,13 @@ class EMProtocol(Protocol):
     
     def _createSetOfCTF(self, suffix=''):
         return self.__createSet(SetOfCTF, 'ctfs%s.sqlite', suffix)
-
-
+    
     def _createSetOfNormalModes(self, suffix=''):
         return self.__createSet(SetOfNormalModes, 'modes%s.sqlite', suffix)
     
     def _createSetOfMovies(self, suffix=''):
         return self.__createSet(SetOfMovies, 'movies%s.sqlite', suffix)
-
+    
     def _createSetOfAngles(self, suffix=''):
         return self.__createSet(SetOfAngles, 'tiltpairs_angles%s.sqlite', suffix)
        
@@ -148,4 +149,10 @@ class EMProtocol(Protocol):
             
     def __str__(self):
         return self.getObjLabel()
+    
+    def allowsDelete(self, obj):
+        if isinstance(obj, SetOfCoordinates):
+            return True
+        return False
+        
     

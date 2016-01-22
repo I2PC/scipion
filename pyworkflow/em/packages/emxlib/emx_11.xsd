@@ -166,7 +166,7 @@
 	  <xsd:element name="X" type="samplingType" maxOccurs="1" minOccurs="1"/>
 	  <xsd:element name="Y" type="samplingType" maxOccurs="1" minOccurs="1"/>
 	</xsd:all>
-    <!-- <xsd:assert test="(@defocuU gt @defocusV)"/> This is xml 1.1, eventualy we will u-->
+    <!-- <xsd:assert test="(@defocuU gt @defocusV)"/> This is xml 1.1, eventually we will u-->
 
 	</xsd:complexType>
     </xsd:element>

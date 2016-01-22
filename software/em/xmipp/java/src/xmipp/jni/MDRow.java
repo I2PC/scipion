@@ -67,7 +67,7 @@ public class MDRow {
 	public native String getValueString(int label);
 	
 
-	// set functions conection with MDRow class in C++
+	// set functions connection with MDRow class in C++
 	public boolean setEnabled(boolean value) {
 		return setValueInt(MDLabel.MDL_ENABLED, value ? 1 : -1);
 	}

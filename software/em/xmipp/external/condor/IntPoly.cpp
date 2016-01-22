@@ -553,12 +553,12 @@ int InterPolynomial::findAGoodPointToReplace(int excludeFromT,
 {
     //not tested
 
-    // excludeFromT is set to k if not sucess from optim and we want
+    // excludeFromT is set to k if not success from optim and we want
     //        to be sure that we keep the best point
     // excludeFromT is set to -1 if we can replace the point x_k by
     //        pointToAdd(=x_k+d) because of the success of optim.
     
-    // choosen t: the index of the point inside the newtonPoints
+    // chosen t: the index of the point inside the newtonPoints
     //            which will be replaced.
 
     Vector *xx=NewtonPoints;
@@ -887,7 +887,7 @@ void InterPolynomial::copyFrom(InterPolynomial m)
     }
     Polynomial::copyFrom(m);
 	M=m.M;
-//    nPtsUsed=m.nPtsUsed; // not usefull because dim and degree already agree.
+//    nPtsUsed=m.nPtsUsed; // not useful because dim and degree already agree.
     nUpdateOfM=m.nUpdateOfM;
 // ValuesF        
 

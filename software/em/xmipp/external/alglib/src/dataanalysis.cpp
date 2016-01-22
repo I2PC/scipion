@@ -49,7 +49,7 @@ INPUT PARAMETERS:
     N       -   array size
 
 OUTPUT PARAMETERS:
-    Info    -   completetion code:
+    Info    -   completion code:
                 * -3, all values of A[] are same (partition is impossible)
                 * -2, one of C[] is incorrect (<0, >1)
                 * -1, incorrect pararemets were passed (N<=0).
@@ -6788,8 +6788,8 @@ You  may  add  one  or several tracks to the MCPD solver. In case you have
 several tracks, they won't overwrite each other. For example,  if you pass
 two tracks, A1-A2-A3 (system at t=A+1, t=A+2 and t=A+3) and B1-B2-B3, then
 solver will try to model transitions from t=A+1 to t=A+2, t=A+2 to  t=A+3,
-t=B+1 to t=B+2, t=B+2 to t=B+3. But it WONT mix these two tracks - i.e. it
-wont try to model transition from t=A+3 to t=B+1.
+t=B+1 to t=B+2, t=B+2 to t=B+3. But it WON'T mix these two tracks - i.e. it
+won't try to model transition from t=A+3 to t=B+1.
 
 INPUT PARAMETERS:
     S       -   solver
@@ -6836,8 +6836,8 @@ You  may  add  one  or several tracks to the MCPD solver. In case you have
 several tracks, they won't overwrite each other. For example,  if you pass
 two tracks, A1-A2-A3 (system at t=A+1, t=A+2 and t=A+3) and B1-B2-B3, then
 solver will try to model transitions from t=A+1 to t=A+2, t=A+2 to  t=A+3,
-t=B+1 to t=B+2, t=B+2 to t=B+3. But it WONT mix these two tracks - i.e. it
-wont try to model transition from t=A+3 to t=B+1.
+t=B+1 to t=B+2, t=B+2 to t=B+3. But it WON'T mix these two tracks - i.e. it
+won't try to model transition from t=A+3 to t=B+1.
 
 INPUT PARAMETERS:
     S       -   solver
@@ -10486,7 +10486,7 @@ INPUT PARAMETERS:
     N       -   array size
 
 OUTPUT PARAMETERS:
-    Info    -   completetion code:
+    Info    -   completion code:
                 * -3, all values of A[] are same (partition is impossible)
                 * -2, one of C[] is incorrect (<0, >1)
                 * -1, incorrect pararemets were passed (N<=0).
@@ -11394,7 +11394,7 @@ void dsoptimalsplitk(/* Real    */ ae_vector* a,
          * General case: 2 or more intervals
          *
          * NOTE: we initialize both JL and JR (left and right bounds),
-         *       altough algorithm needs only JL.
+         *       although algorithm needs only JL.
          */
         ae_vector_set_length(thresholds, koptimal-1+1, _state);
         *ni = koptimal+1;
@@ -15316,7 +15316,7 @@ static void dforest_dfsplitc(/* Real    */ ae_vector* x,
              * can be no C which lies strictly between A and B (for example,
              * there is no floating point number which is
              * greater than 1 and less than 1+eps). In such situations
-             * we choose right side as theshold (remember that
+             * we choose right side as threshold (remember that
              * points which lie on threshold falls to the right side).
              */
             if( nless<ngreater )
@@ -15463,7 +15463,7 @@ static void dforest_dfsplitr(/* Real    */ ae_vector* x,
              * can be no C which lies strictly between A and B (for example,
              * there is no floating point number which is
              * greater than 1 and less than 1+eps). In such situations
-             * we choose right side as theshold (remember that
+             * we choose right side as threshold (remember that
              * points which lie on threshold falls to the right side).
              */
             if( nless<ngreater )
@@ -18875,7 +18875,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     RA      -   array of real numbers which stores network,
                 array[0..RLen-1]
-    RLen    -   RA lenght
+    RLen    -   RA length
 
   -- ALGLIB --
      Copyright 29.03.2008 by Bochkanov Sergey
@@ -25053,11 +25053,11 @@ static void mlpbase_mlphessianbatchinternal(multilayerperceptron* network,
                 
                 /*
                  * For a softmax + squared error we have expression
-                 * far beyond human imagination so we dont even try
+                 * far beyond human imagination so we don't even try
                  * to comment on it. Just enjoy the code...
                  *
                  * P.S. That's why "natural error" is called "natural" -
-                 * compact beatiful expressions, fast code....
+                 * compact beautiful expressions, fast code....
                  */
                 mx = network->neurons.ptr.p_double[ntotal-nout];
                 for(i=0; i<=nout-1; i++)
@@ -28492,8 +28492,8 @@ You  may  add  one  or several tracks to the MCPD solver. In case you have
 several tracks, they won't overwrite each other. For example,  if you pass
 two tracks, A1-A2-A3 (system at t=A+1, t=A+2 and t=A+3) and B1-B2-B3, then
 solver will try to model transitions from t=A+1 to t=A+2, t=A+2 to  t=A+3,
-t=B+1 to t=B+2, t=B+2 to t=B+3. But it WONT mix these two tracks - i.e. it
-wont try to model transition from t=A+3 to t=B+1.
+t=B+1 to t=B+2, t=B+2 to t=B+3. But it WON'T mix these two tracks - i.e. it
+won't try to model transition from t=A+3 to t=B+1.
 
 INPUT PARAMETERS:
     S       -   solver

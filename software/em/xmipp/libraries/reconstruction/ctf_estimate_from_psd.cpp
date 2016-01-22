@@ -1144,7 +1144,7 @@ double CTF_fitness(double *p, void *)
                 //        (x-bg)      x-bg
                 //    -------------=-------
                 //    (bg+env^2-bg)  env^2
-                // If we substract two of this scaled values
+                // If we subtract two of this scaled values
                 //    x-bg      y-bg       x-y
                 //   ------- - ------- = -------
                 //    env^2     env^2     env^2

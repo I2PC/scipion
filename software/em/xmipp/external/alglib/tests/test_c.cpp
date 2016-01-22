@@ -6386,7 +6386,7 @@ ae_bool testbasestat(ae_bool silent, ae_state *_state)
      * column, 1 - zero column, 2 - nonzero column with value whose
      * binary representation contains many non-zero bits. Using such
      * type of constant column we are able to ensure than even in the
-     * presense of roundoff error functions correctly detect constant
+     * presence of roundoff error functions correctly detect constant
      * columns.
      */
     for(n=0; n<=10; n++)
@@ -9312,7 +9312,7 @@ static ae_bool testclusteringunit_advancedahctests(ae_state *_state)
      * * for each merge we check that it merges points
      *   from same cluster;
      *
-     * Additonally, we call ErrorsInMerges(). See function comments 
+     * Additionally, we call ErrorsInMerges(). See function comments 
      * for more information about specific tests performed. This function
      * allows us to check that clusters are built exactly as specified by
      * definition of the clustering algorithm.
@@ -39908,7 +39908,7 @@ static void testminbleicunit_testother(ae_bool* err, ae_state *_state)
          * * function is EFFECTIVELY unconstrained; it has formal constraints,
          *   but they are inactive at the solution; we try different variants
          *   in order to explore different control paths of the optimizer:
-         *   0) absense of constraints
+         *   0) absence of constraints
          *   1) bound constraints -100000<=x[i]<=100000
          *   2) one linear constraint 0*x=0
          *   3) combination of (1) and (2)
@@ -57680,7 +57680,7 @@ ae_bool bleictests(ae_state *_state)
      *     min b'*x  s.t. x[i] in [-1,+1]
      *
      * It means that QP solver can be used as linear programming solver
-     * (altough performance of such solver is worse than that of specialized
+     * (although performance of such solver is worse than that of specialized
      * LP solver).
      *
      * NOTE: we perform this test twice - first time without explicitly setting
@@ -58079,7 +58079,7 @@ static ae_bool testminqpunit_ecqptest(ae_state *_state)
              * * b2 is iteratively updated using augmented Lagrangian update
              * 
              * NOTE: we may need many outer iterations to converge to the optimal values
-             *       of Lagrange multipliers. Convergence is slowed down by the presense
+             *       of Lagrange multipliers. Convergence is slowed down by the presence
              *       of boundary constraints, whose activation/deactivation slows down
              *       process.
              */
@@ -74666,7 +74666,7 @@ static ae_bool testlincgunit_krylovsubspacetest(ae_bool silent,
         }
         
         /*
-         * Solve system, record intermediate points for futher analysis.
+         * Solve system, record intermediate points for further analysis.
          * NOTE: we set update frequency of R to 2 in order to test that R is updated correctly
          */
         lincgcreate(n, &s, _state);

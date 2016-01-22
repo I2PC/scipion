@@ -39,7 +39,7 @@ ProgMPIRecFourier::ProgMPIRecFourier(int argc, char *argv[])
 }
 
 /* constructor providing an MpiNode
- * this is usefull for using this programs from others
+ * this is useful for using this programs from others
  */
 ProgMPIRecFourier::ProgMPIRecFourier(MpiNode * node)
 {

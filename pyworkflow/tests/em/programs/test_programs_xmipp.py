@@ -22,12 +22,13 @@
 # ***************************************************************************/
 
 
+import math
 import os
-from base import ProgramTest
 
 import pyworkflow.utils as pwutils
 import pyworkflow.em.packages.xmipp3 as xmipp3
 from pyworkflow.tests import DataSet
+from base import ProgramTest
 
 VAHID = "vahid"
 RM = 'rmarabini'
@@ -889,8 +890,21 @@ class TomoDetectMissingWedge(XmippProgramTest):
 
     def test_case1(self):
         self.runCase("-i input/smallTomogram.vol",
+                validate=self.validate_case1, random=True,
                 outputs=["stdout.txt"])
-
+    
+    def validate_case1(self):
+        stdout = os.path.join(self.outputDir,"stdout.txt")
+        f = open(stdout)
+        plane1 = None
+        plane2 = None
+        for line in f:
+            if 'Plane1: ' in line:
+                plane1 = map(float, line.split()[1:])
+            if 'Plane2: ' in line:
+                plane2 = map(float, line.split()[1:])
+        self.assertAlmostEqual(abs(plane1[1]), 67.0539, delta=1)
+        self.assertAlmostEqual(abs(plane2[1]), 56.7034, delta=1)
 
 class TomoExtractSubvolume(XmippProgramTest):
     _owner = RM
@@ -1239,15 +1253,15 @@ class VolumeToWeb(XmippProgramTest):
                 outputs=["imgOut.jpg"])
 
 
-class XrayImport(XmippProgramTest):
-    _owner = JOTON
-    @classmethod
-    def getProgram(cls):
-        return 'xmipp_xray_import'
-
-    def test_case1(self):
-        self.runCase("--input input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30",
-                outputs=["stack_darkfield.xmp","stack_flatfield_avg.xmp","stack_Flatfields_darkfield.xmp"])
+# class XrayImport(XmippProgramTest):
+#     _owner = JOTON
+#     @classmethod
+#     def getProgram(cls):
+#         return 'xmipp_xray_import'
+# 
+#     def test_case1(self):
+#         self.runCase("--input input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30",
+#                 outputs=["stack_darkfield.xmp","stack_flatfield_avg.xmp","stack_Flatfields_darkfield.xmp"])
 
 
 class XrayProject(XmippProgramTest):
@@ -1308,7 +1322,10 @@ class MicrographAutomaticPicking(XmippProgramTest):
         return 'xmipp_micrograph_automatic_picking'
 
     def test_case1(self):
-        self.runCase("input/ParticlePicking/BPV_1386.mrc --particleSize 100 --model input/ParticlePicking/model --outputRoot tmpLink/xmipp_micrograph_automatic_picking/automatically_selected --mode autoselect --fast",
+        self.runCase("input/ParticlePicking/BPV_1386.mrc --particleSize 100 "
+                     "--model input/ParticlePicking/model "
+                     "--outputRoot tmpLink/xmipp_micrograph_automatic_picking_01/automatically_selected "
+                     "--mode autoselect --fast",
                 outputs=["automatically_selected.pos"])
 
 
@@ -1348,39 +1365,39 @@ class PhantomProject(XmippProgramTest):
 
 class MlAlign2d(XmippProgramTest):
     _owner = COSS
+    _outputs = ["ml2d_extra/iter001/iter_classes.stk", "ml2d_extra/iter001/iter_images.xmd"]
+
     @classmethod
     def getProgram(cls):
         return 'xmipp_ml_align2d'
 
+    # Redefine runCase to add default outputs
+    def runCase(self, *args, **kwargs):
+        kwargs['outputs'] = self._outputs
+        kwargs['random'] = True
+
+        XmippProgramTest.runCase(self, *args, **kwargs)
+
     def test_case1(self):
-        self.runCase("-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d_ --fast --mirror",
-                postruns=["xmipp_metadata_utilities -i class000001_images@%o/ml2d_extra/iter001/iter_classes.xmd  -o %o/ml2d_extra/iter001/tmpClass.xmd" ],
-                outputs=["ml2d_extra/iter001/iter_classes.stk",
-                         "ml2d_extra/iter001/tmpClass.xmd",# remove randomseed
-                         "ml2d_extra/iter001/iter_images.xmd"])
+        self.runCase("-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d_ --fast --mirror --random_seed 100")
+
     def test_case2(self):
-        self.runCase("-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/ml2d_",
-                postruns=["xmipp_metadata_utilities -i class000001_images@%o/ml2d_extra/iter001/iter_classes.xmd  -o %o/ml2d_extra/iter001/tmpClass.xmd" ],
-                outputs=["ml2d_extra/iter001/iter_classes.stk",
-                         "ml2d_extra/iter001/tmpClass.xmd",# remove randomseed
-                         "ml2d_extra/iter001/iter_images.xmd"])
-    def test_case4(self):
-        self.runCase("-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/ml2d_ --thr 2",
-                postruns=["xmipp_metadata_utilities -i class000001_images@%o/ml2d_extra/iter001/iter_classes.xmd  -o %o/ml2d_extra/iter001/tmpClass.xmd" ],
-                outputs=[#"ml2d_extra/iter001/iter_classes.stk", random
-                         "ml2d_extra/iter001/tmpClass.xmd",# remove randomseed
-                         ])
+        self.runCase("-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/ml2d_ --random_seed 100")
+
+    def test_case3(self):
+        self.runCase("-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/ml2d_ --thr 2 --random_seed 100")
 
 
-#class MlAlign2dMpi(MlAlign2d):
-#    _owner = DISCONTINUED
-#    @classmethod
-#    def getProgram(cls):
-#        return 'xmipp_mpi_ml_align2d'
-#
-#    def test_case5(self):
-#        self.runCase("-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d_ --fast --mirror",random=True,
-#                outputs=["ml2d_images.xmd","ml2d_classes.stk","ml2d_classes.xmd"])
+class MlAlign2dMpi(MlAlign2d):
+   _owner = DISCONTINUED
+   #_outputs = ["ml2d_images.xmd","ml2d_classes.stk", "ml2d_classes.xmd"]
+
+   @classmethod
+   def getProgram(cls):
+       return 'xmipp_mpi_ml_align2d'
+
+   def test_case4(self):
+       self.runCase("-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d_ --fast --mirror")
 
 
 class MlfAlign2d(XmippProgramTest):

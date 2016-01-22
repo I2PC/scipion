@@ -253,7 +253,7 @@ public class ImageGeneric {
     //Check if two images have same values to some accuracy
     public native boolean equal(ImageGeneric img, double accuracy) throws Exception;
 
-    //substract two imageGeneric. calling image minuend
+    //subtract two imageGeneric. calling image minuend
     public native void subtract(ImageGeneric imgSubtrahend, ImageGeneric imgResult) throws Exception;
 
     //Smooth image generic by color dithering

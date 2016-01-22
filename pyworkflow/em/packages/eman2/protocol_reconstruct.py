@@ -119,7 +119,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
                     
         line = form.addLine('Dimensions Volume: ', expertLevel=LEVEL_ADVANCED,
                             help='Defines the dimensions (x,y,z) or (x,x,x) of the '
-                                 'reconstructed volume. If ommitted, implied value based '
+                                 'reconstructed volume. If omitted, implied value based '
                                  'on padded 2D images is used. ')
         line.addParam('dimVolX', IntParam, default=0, label='X')
         line.addParam('dimVolY', IntParam, default=0, label='Y')            
@@ -127,7 +127,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
 
         line = form.addLine('Dimensions to Write Volume: ', expertLevel=LEVEL_ADVANCED,
                             help='Defines the dimensions (x,y,z) or (x,x,x) of the final '
-                                 'volume written to disk, if ommitted, size will be '
+                                 'volume written to disk, if omitted, size will be '
                                  'based on unpadded input size. ')
         line.addParam('dimWriteVolX', IntParam, default=0, label='X')
         line.addParam('dimWriteVolY', IntParam, default=0, label='Y')            

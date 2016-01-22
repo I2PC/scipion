@@ -102,7 +102,7 @@ class XmippProtocol():
         """ Insert the convertInputToXmipp if the inputName attribute
         is not an instance of xmippClass.
         It will return the result filename, if the 
-        convertion is needed, this will be input resultFn.
+        conversion is needed, this will be input resultFn.
         If not, it will be inputAttr.getFileName()
         """
         inputAttr = getattr(self, inputName)
@@ -112,10 +112,10 @@ class XmippProtocol():
         return inputAttr.getFileName()
          
     def convertInputToXmipp(self, inputName, xmippClass, resultFn):
-        """ This step can be used whenever a convertion is needed.
+        """ This step can be used whenever a conversion is needed.
         It will receive the inputName and get this attribute from self,
         invoke the convert function and check the result files if
-        convertion was done (otherwise the input was already in Xmipp format).
+        conversion was done (otherwise the input was already in Xmipp format).
         """
         inputAttr = getattr(self, inputName)
         inputXmipp = xmippClass.convert(inputAttr, resultFn)
@@ -126,7 +126,7 @@ class XmippProtocol():
          
     def getConvertedInput(self, inputName):
         """ Retrieve the converted input, it can be the case that
-        it is the same as input, when not convertion was done. 
+        it is the same as input, when not conversion was done. 
         """
         return getattr(self, inputName + 'Xmipp', getattr(self, inputName))
         
@@ -289,7 +289,7 @@ class XmippSet():
         """ Create new set, base on a Metadata.
         itemClass: Class that represent the items.
         A method .getFileName should be available to store the md.
-        Items contained in XmippSet are suposed to inherit from XmippMdRow.
+        Items contained in XmippSet are supposed to inherit from XmippMdRow.
         """
         self._itemClass = itemClass 
         #self._fileName = fileName      
@@ -687,7 +687,7 @@ class ScriptIJBase(XmippScript):
     def defineParams(self):
         self.addParamsLine('  --input <...>            : Input files to show');
         self.addParamsLine('         alias -i;');
-        self.addParamsLine('  [--memory <mem="2g">]    : Memory ammount for JVM');
+        self.addParamsLine('  [--memory <mem="2g">]    : Memory amount for JVM');
         self.addParamsLine('         alias -m;');
         self.defineOtherParams()
     

@@ -314,7 +314,7 @@ public:
      * at them, either ignored if they are already present, or marked with a
      * comment if the corresponding image name is present in both files but
      * with different labels (active, discarded), in this case the image
-     * remains active but a comment in the preceeding line informs you of the
+     * remains active but a comment in the preceding line informs you of the
      * situation.
      *
      * @code
@@ -836,7 +836,7 @@ public:
      * only in SF2. There are comments enough to know where things start and
      * finish, and what the numbers are at the beginning. If a file is active
      * in a file and discarded in the other, then it is said to match and it is
-     * kept as active, a preceeding comment warns of this situation.
+     * kept as active, a preceding comment warns of this situation.
      *
      * if mode<0, output file will contain all information
      * if mode=0, output will be selfile with overlapping images

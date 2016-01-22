@@ -147,6 +147,7 @@ try:
     LD_LIBRARY_PATH = os.pathsep.join(
         [join(SCIPION_SOFTWARE, 'lib'),
          BUILD['MPI_LIBDIR'],
+         BUILD['CUDA'],
          os.environ.get('LD_LIBRARY_PATH', '')]
     )
     PYTHONPATH = os.pathsep.join(
@@ -355,7 +356,7 @@ Arguments:
   --show        just show what would be done, without actually installing
   --no-opencv   do not install opencv (big) or anything that depends on it
   --no-scipy    do not install scipy or anything that depends on it
-  --no-xmipp    use this option only after a successfull compilation of Xmipp
+  --no-xmipp    use this option only after a successful compilation of Xmipp
                 to save some time when installing other packages 
 """ % ' '.join(sys.argv[:2]))
         else:

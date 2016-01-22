@@ -39,15 +39,15 @@
 /// @defgroup Filters Filters
 /// @ingroup DataLibrary
 
-/** Substract background
+/** Subtract background
  * @ingroup Filters
  *
  * The background is computed as the plane which best fits all density values,
- * then this plane is substracted from the image.
+ * then this plane is subtracted from the image.
  */
 void substractBackgroundPlane(MultidimArray<double> &I);
 
-/** Substract background
+/** Subtract background
  * @ingroup Filters
  *
  * The background is computed as a rolling ball operation with a ball
@@ -289,21 +289,28 @@ template <typename T>
 double fastCorrelation(const MultidimArray< T >& x,
                        const MultidimArray< T >& y)
 {
-    double retval = 0; // returned value
+    double retval = 0; 						// Returned value
+    double *refX, *refY;					// Pointer to vectors.
     size_t nmax=4*(MULTIDIM_SIZE(x)/4);
+
+    // Get reference to first elements in vectors.
+    refX = &DIRECT_MULTIDIM_ELEM(x, 0);
+    refY = &DIRECT_MULTIDIM_ELEM(y, 0);
+
     // loop unrolling
     for (size_t n=0; n<nmax; n+=4)
     {
-        size_t n_1=n+1;
-        size_t n_2=n+2;
-        size_t n_3=n+3;
-        retval += DIRECT_MULTIDIM_ELEM(x, n)   * DIRECT_MULTIDIM_ELEM(y, n)+
-                  DIRECT_MULTIDIM_ELEM(x, n_1) * DIRECT_MULTIDIM_ELEM(y, n_1)+
-                  DIRECT_MULTIDIM_ELEM(x, n_2) * DIRECT_MULTIDIM_ELEM(y, n_2)+
-                  DIRECT_MULTIDIM_ELEM(x, n_3) * DIRECT_MULTIDIM_ELEM(y, n_3);
+    	retval += (*refX++)*(*refY++);
+    	retval += (*refX++)*(*refY++);
+    	retval += (*refX++)*(*refY++);
+    	retval += (*refX++)*(*refY++);
     }
+
     for (size_t n=nmax; n<MULTIDIM_SIZE(x); ++n)
+    {
         retval += DIRECT_MULTIDIM_ELEM(x, n)   * DIRECT_MULTIDIM_ELEM(y, n);
+    }
+
     return retval / MULTIDIM_SIZE(x);
 }
 
@@ -715,7 +722,7 @@ double euclidianDistance(const MultidimArray< T >& x,
  * in the common positions.
  * P(x), P(y) are 1D-histograms of the values of matrix x and y.
  * P(x,y)     is the 2D-histogram, i.e. the count of times that a certain
- *            combination of values in matrices x and y has ocurred.
+ *            combination of values in matrices x and y has occurred.
  * The sum runs over all histogram bins.
  *
  * The histograms are calculated using the number of bins nx and ny. If no

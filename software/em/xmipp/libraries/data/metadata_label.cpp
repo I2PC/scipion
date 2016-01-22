@@ -82,7 +82,7 @@ void MDL::addExtraAliases()
           if (label != MDL_UNDEFINED)
               addLabelAlias(label, pair[1], replace);
           else
-              REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Invalid label name: %s found in enviroment var XMIPP_EXTRA_ALIASES", pair[0].c_str()));
+              REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Invalid label name: %s found in environment var XMIPP_EXTRA_ALIASES", pair[0].c_str()));
       }
   }
 }//close function addLabel
@@ -333,7 +333,7 @@ inline void MDObject::labelTypeCheck(MDLabelType checkingType) const
 }
 
 //Just a simple constructor with the label
-//dont do any type checking as have not value yet
+//don't do any type checking as have not value yet
 MDObject::MDObject(MDLabel label)
 {
     this->label = label;
@@ -798,7 +798,7 @@ bool MDRow::getValue(MDObject &object) const
     return true;
 }
 
-/** Usefull macro for copy values */
+/** Useful macro for copy values */
 /** Set value */
 void MDRow::setValue(const MDObject &object)
 {

@@ -29,9 +29,8 @@ This module contains the protocol to obtain a refined 3D reconstruction from a s
 import os
 from pyworkflow.utils import copyFile
 import pyworkflow.em as em
-from data import Volume
+from pyworkflow.em.data import Volume
 from pyworkflow.em.packages.grigoriefflab.grigoriefflab import FREALIGNMP_PATH, RSAMPLE_PATH, CALC_OCC_PATH
-# from constants import *
 from protocol_frealign_base import ProtFrealignBase
 
 

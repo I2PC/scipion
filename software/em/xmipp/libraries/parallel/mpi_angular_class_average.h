@@ -191,7 +191,7 @@ public:
          */
     void initFileNames();
 
-    /** Get file and stack dimentions, and number of 3d references and number of defocus groups.
+    /** Get file and stack dimensions, and number of 3d references and number of defocus groups.
          */
     void initDimentions();
 

@@ -23,7 +23,7 @@
 
 function Gr=mirt3D_grid2nodes(ddx, ddy, ddz, F, okno, mg, ng, kg)
 
-% greate the 3D matrices wich includes
+% greate the 3D matrices which includes
 % the gradient of the similarity measure at
 % each of the B-spline control points
 grx=zeros(mg,ng,kg);
@@ -42,7 +42,7 @@ for i=1:mg-3,
         in3=(k-1)*okno+1:k*okno;
         
         % extract the voxel-wise gradient (in x direction) of the similarity measure
-        % that correspond to the given 4x4x4 patch of B-spline cotrol
+        % that correspond to the given 4x4x4 patch of B-spline control
         % points. 
         tmp=ddx(in1,in2,in3);
         

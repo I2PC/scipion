@@ -83,7 +83,7 @@ public:
 
 /** Class wrapping around the pthreads condition.
  * This class will provide a more object oriented implementation
- * of a condition variable to achieve syncronization between threads.
+ * of a condition variable to achieve synchronization between threads.
  */
 class Condition
 {
@@ -178,7 +178,7 @@ public:
 
     /** Request to wait in this meet point.
      * For each thread calling this function the execution will
-     * be paused untill all threads arrive this point.
+     * be paused until all threads arrive this point.
      */
     void wait();
 
@@ -229,7 +229,7 @@ void * _threadMain(void * data);
 
 /** Class for manage a group of threads performing one or several tasks.
  * This class is very useful when we have some function that can be executed
- * in parrallel by threads. The threads are created in the contructor of the object
+ * in parallel by threads. The threads are created in the contructor of the object
  * and released in destructor. This way threads can execute different
  * functions at diffent moments and exit at the end of manager life. Also, the
  * wait() function allow in the main thread to wait until all threads have
@@ -275,7 +275,7 @@ public:
      * type ThreadFunction, i.e., return void * and only
      * one argument of type ThreadArgument.
      * The call of this function will block the main thread
-     * until all workers finish their job, if you dont want to block
+     * until all workers finish their job, if you don't want to block
      * use runAsync instead, and later can call wait for waiting
      * until threads are done.
      * @code
@@ -341,7 +341,7 @@ private:
 public:
     int thread_id; ///< The thread id
     int threads;   ///< Number of threads
-    void * workClass; ///< The class in wich threads will be working
+    void * workClass; ///< The class in which threads will be working
     void * data; // Pointer to void *
 
     ThreadArgument();
@@ -355,8 +355,8 @@ public:
 /** This class distributes dynamically N tasks between parallel workers.
  * @ingroup ParallelLibrary
  * This class is a generalization of a common task in a parallel
- * environment of dynamically distribute N tasks between workers(threads or mpi proccess).
- * Each worker will ask for a group of tasks, proccess it and ask for more tasks
+ * environment of dynamically distribute N tasks between workers(threads or mpi process).
+ * Each worker will ask for a group of tasks, process it and ask for more tasks
  * until there is not more task to process.
  *
  * This class is abstract and only serves as base for

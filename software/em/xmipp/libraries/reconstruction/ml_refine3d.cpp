@@ -78,7 +78,7 @@ ProgMLRefine3D::~ProgMLRefine3D()
 // Usage ===================================================================
 void ProgMLRefine3D::defineParams()
 {
-    addUsageLine("Separate structurally heterogenous data sets into homogeneous classes by a");
+    addUsageLine("Separate structurally heterogeneous data sets into homogeneous classes by a");
     addUsageLine("multi-reference 3D-angular refinement using a maximum-likelihood(ML) target function.");
     //Add some params from 2D
     //Setting some flags for the params definitions
@@ -664,7 +664,7 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram(FileName &input, FileName &
     }
     else if (recons_type == RECONS_ART)//use of wlsArt
     {
-        //REPORT_ERROR(ERR_NOT_IMPLEMENTED,"not implemented reconstruction throught wlsArt");
+        //REPORT_ERROR(ERR_NOT_IMPLEMENTED,"not implemented reconstruction through wlsArt");
         program = new ProgReconsART();
         FileName fn_tmp(arguments);
         arguments += " --WLS";

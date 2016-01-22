@@ -69,7 +69,7 @@ template<class T> std::vector<T> operator+(const T& a, const std::vector<T>& v)
 }
 
 /**
- *    Substract a scalar "a" to a vector "v"
+ *    Subtract a scalar "a" to a vector "v"
  *    returns a vector
  *    example: r = v-a
  */
@@ -81,7 +81,7 @@ template<class T> std::vector<T> operator-(const std::vector<T>& v, const T& a)
 }
 
 /**
- *    Substract a vector "v" to a scalar "a"
+ *    Subtract a vector "v" to a scalar "a"
  *    returns a vector
  *    example: r = a-v
  */

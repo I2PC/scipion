@@ -992,7 +992,7 @@ void ProgramDef::read(int argc, const char ** argv, bool reportErrors)
     //We assume that all options start with -
     if (argc > 1 && argv[1][0] != '-')
     {
-        //Asume if the first is missing, treat as -i
+        //Assume if the first is missing, treat as -i
         if ((param = findParam("-i")) == NULL) //-i is not allowed, report error
             REPORT_ERROR(ERR_ARG_INCORRECT, "Parameters should start with a -");
         else
@@ -1001,7 +1001,7 @@ void ProgramDef::read(int argc, const char ** argv, bool reportErrors)
             if (param->independent)
                 singleOption = true;
         }
-        //Asume if the first is missing, treat as -i
+        //Assume if the first is missing, treat as -i
     }
 
     //Read command line params and arguments

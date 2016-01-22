@@ -699,7 +699,7 @@ class TestSetConvert(BaseTest):
         #self.assertEqual(mdIn, mdOut)
         
     def test_micrographsToMd(self):
-        """ Test the convertion of a SetOfMicrographs to Xmipp metadata. """
+        """ Test the conversion of a SetOfMicrographs to Xmipp metadata. """
         micSet = SetOfMicrographs(filename=self.getOutputPath("micrographs.sqlite"))
         n = 3
         ctfs = [CTFModel(defocusU=10000, defocusV=15000, defocusAngle=15),
@@ -739,7 +739,7 @@ class TestSetConvert(BaseTest):
         self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
         
     def test_alignedParticlesToMd(self):
-        """ Test the convertion of a SetOfParticles to Xmipp metadata. """
+        """ Test the conversion of a SetOfParticles to Xmipp metadata. """
         fn = self.dataset.getFile('aligned_particles')
         print "Converting sqlite: %s" % fn
         imgSet = SetOfParticles(filename=fn) 
@@ -761,7 +761,7 @@ class TestSetConvert(BaseTest):
 
         
     def test_particlesToMd(self):
-        """ Test the convertion of a SetOfParticles to Xmipp metadata. """
+        """ Test the conversion of a SetOfParticles to Xmipp metadata. """
         imgSet = SetOfParticles(filename=self.getOutputPath("particles.sqlite"))
         n = 10
         fn = self.particles
@@ -798,7 +798,7 @@ class TestSetConvert(BaseTest):
         
                 
     def test_CTF(self):
-        """ Test the convertion of a SetOfParticles to Xmipp metadata. """
+        """ Test the conversion of a SetOfParticles to Xmipp metadata. """
         mdCtf = xmipp.MetaData(self.dataset.getFile('ctfGold'))
         objId = mdCtf.firstObject()
         rowCtf = rowFromMd(mdCtf, objId)

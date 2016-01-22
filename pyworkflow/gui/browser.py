@@ -357,7 +357,7 @@ class FileTreeProvider(TreeProvider):
     
     @classmethod
     def registerFileHandler(cls, fileHandler, *extensions):
-        """ Register a FileHandler for a given file extention. 
+        """ Register a FileHandler for a given file extension. 
         Params:
             fileHandler: the FileHandler that will take care of extensions.
             *extensions: the extensions list that will be associated to this FileHandler.
@@ -394,7 +394,7 @@ class FileTreeProvider(TreeProvider):
         fileHandler = self.getFileHandler(obj)
         actions = fileHandler.getFileActions(obj)
         # Always allow the option to open as text
-        # specially usefull for unknown formats
+        # specially useful for unknown formats
         fn = obj.getPath()
         actions.append(("Open external Editor", 
                         lambda: openTextFileEditor(fn), Icon.ACTION_REFERENCES))

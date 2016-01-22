@@ -20,7 +20,7 @@
 %   Output_images(:,:,:,3) = interp3(Input_image3,XI,YI,ZI,'linear',NaN);
 %   Output_images(:,:,:,4) = interp3(Input_image4,XI,YI,ZI,'linear',NaN);
 % 
-%  This is especially usefull fpr vector valued 3D images, RGB images, to interpolate the whole 3D video at the same coordinates
+%  This is especially useful fpr vector valued 3D images, RGB images, to interpolate the whole 3D video at the same coordinates
 %  or to interpolate image and its gradients at the same time (in image registration).
 %  The speed gain is also from the precomputation of nearest points for interpolation, which are the same for all images in a stack.
 %

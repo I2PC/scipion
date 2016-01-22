@@ -89,7 +89,7 @@ public:
 
 /** Assign pose parameters for 1 image.
     The weight must be an image of the size of the input image
-    with the apropriate weighting in frequency (normally a gaussian).
+    with the appropriate weighting in frequency (normally a gaussian).
     The pose parameters at the input must have the initial guess
     of the pose. At the output they contain the parameters estimated
     by CST Spline Assignment. The maximum number of iterations

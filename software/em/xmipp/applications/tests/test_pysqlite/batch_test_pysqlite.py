@@ -62,7 +62,7 @@ class TestPySqlite(unittest.TestCase):
     def setUp(self):
         """This function performs all the setup stuff.      
         """
-        # Asume 'xmipp' and 'testXmipp' are at the same level
+        # Assume 'xmipp' and 'testXmipp' are at the same level
         os.environ['PROTOCOL_SCRIPT'] = sys.argv[0]
         #uncomment next 5 lines to store database in disk
         #curdir = os.path.dirname(getXmippPath())

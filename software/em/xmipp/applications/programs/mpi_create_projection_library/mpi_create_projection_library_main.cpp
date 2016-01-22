@@ -216,7 +216,7 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
             for (int i=0;i<numberOfJobs;)
             {
                 //collect data if available
-                //be aware that mpi_Probe will block the program untill a message is received
+                //be aware that mpi_Probe will block the program until a message is received
                 MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 // worker is free
                 if (status.MPI_TAG == TAG_FREEWORKER)

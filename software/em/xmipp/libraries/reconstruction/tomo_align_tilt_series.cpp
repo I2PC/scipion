@@ -803,10 +803,10 @@ void ProgTomographAlignment::produceSideInfo()
                 // Reject outliers
                 reject_outliers(Ifiltered,0.5);
 
-                // Substract background plane
+                // Subtract background plane
                 substractBackgroundPlane(Ifiltered);
 
-                // Substract the background (rolling ball)
+                // Subtract the background (rolling ball)
                 substractBackgroundRollingBall(Ifiltered,
                                                XSIZE(Ifiltered)/10);
 
@@ -2776,7 +2776,7 @@ void Alignment::updateModel()
     {
         A.initZeros();
         b.initZeros();
-        // Compute the part correponding to Vj
+        // Compute the part corresponding to Vj
         int iimax=prm->Vsetj[j].size();
         for (int ii=0; ii<iimax; ii++)
         {

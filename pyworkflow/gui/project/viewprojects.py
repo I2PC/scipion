@@ -80,12 +80,16 @@ class ProjectsView(tk.Frame):
         parent.columnconfigure(0, weight=1)
         colors = ['white', '#EAEBFF']
         for i, p in enumerate(self.manager.listProjects()):
-            project = self.manager.loadProject(p.getName(), chdir=False)
-            # Add creation time to project info
-            p.cTime = project.getCreationTime()
-            frame = self.createProjectLabel(parent, p, color=colors[i%2])
-            frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
-            r += 1
+            try:
+                project = self.manager.loadProject(p.getName(), chdir=False)
+                # Add creation time to project info
+                p.cTime = project.getCreationTime()
+                frame = self.createProjectLabel(parent, p, color=colors[i%2])
+                frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
+                r += 1
+            except Exception, ex:
+                print "ERROR loading project: %s" % p.getName()
+                print ex
         text.window_create(tk.INSERT, window=parent)
         text.bindWidget(parent)
         text.setReadOnly(True)

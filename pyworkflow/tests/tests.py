@@ -43,7 +43,7 @@ class DataSet:
     @classmethod
     def getDataSet(cls, name):
         """
-        This method is called everytime the dataset want to be retreived
+        This method is called every time the dataset want to be retreived
         """
         assert name in cls._datasetDict, "Dataset: %s dataset doesn't exist." % name
         folder = cls._datasetDict[name].folder
@@ -93,7 +93,7 @@ class BaseTest(unittest.TestCase):
         
     @classmethod
     def newProtocol(cls, protocolClass, **kwargs):
-        """ Create new protocols instances throught the project
+        """ Create new protocols instances through the project
         and return a newly created protocol of the given class
         """
         # Try to continue from previous execution

@@ -77,7 +77,6 @@ void ProgSortByStatistics::defineParams()
 void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool trained)
 {
     //#define DEBUG
-    pcaAnalyzer[5];
     PCAMahalanobisAnalyzer tempPcaAnalyzer0;
     PCAMahalanobisAnalyzer tempPcaAnalyzer1;
     PCAMahalanobisAnalyzer tempPcaAnalyzer2;
@@ -321,8 +320,6 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
             progress_bar(imgno);
     }
 
-
-
     tempPcaAnalyzer0.evaluateZScore(2,20,trained);
     tempPcaAnalyzer1.evaluateZScore(2,20,trained);
     tempPcaAnalyzer2.evaluateZScore(2,20,trained);
@@ -339,8 +336,6 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
 
 void ProgSortByStatistics::processInputPrepare(MetaData &SF)
 {
-
-    pcaAnalyzer[1];
     PCAMahalanobisAnalyzer tempPcaAnalyzer;
     tempPcaAnalyzer.clear();
 
@@ -517,6 +512,7 @@ void ProgSortByStatistics::run()
             zScore = 0;
         }
     }
+    pcaAnalyzer.clear();
 
     // Produce output .....................................................
     MetaData SFout;

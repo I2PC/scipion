@@ -604,12 +604,12 @@ void gkqlegendretbl(const ae_int_t n, real_1d_array &x, real_1d_array &wkronrod,
 
 /*************************************************************************
 Integration report:
-* TerminationType = completetion code:
+* TerminationType = completion code:
     * -5    non-convergence of Gauss-Kronrod nodes
             calculation subroutine.
     * -1    incorrect parameters were specified
     *  1    OK
-* Rep.NFEV countains number of function calculations
+* Rep.NFEV contains number of function calculations
 * Rep.NIntervals contains number of intervals [a,b]
   was partitioned into.
 *************************************************************************/

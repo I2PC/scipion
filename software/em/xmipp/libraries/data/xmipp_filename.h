@@ -439,7 +439,7 @@ public:
 
     /** Add extension at the end.
      *
-     * The "." is added. If teh input extension is "" then the same name is
+     * The "." is added. If the input extension is "" then the same name is
      * returned, with nothing added.
      *
      * @code
@@ -530,14 +530,14 @@ public:
 
     /** Is this file a MetaData file?
      * Returns true if the get_file_format extension == "sel", "doc" or "xmd"
-     * Otherwise, the file is opened and checked for the occurence of "XMIPP_3 *" in its first line
+     * Otherwise, the file is opened and checked for the occurrence of "XMIPP_3 *" in its first line
      */
     bool isMetaData(bool failIfNotExists=true) const;
 
     /** True if it is a Star 1 file. */
     bool isStar1(bool failIfNotExists) const;
 
-    /** Replace a the first ocurrence of substring 'subOld' by 'subNew'
+    /** Replace a the first occurrence of substring 'subOld' by 'subNew'
      * If 'subOld' not present, not changes are done.
      * The search is done from left to right
      *
@@ -553,7 +553,7 @@ public:
      * */
     FileName replaceSubstring(const String& subOld, const String& subNew) const;
 
-    /** Replace all occurrances of a character by another character */
+    /** Replace all occurrences of a character by another character */
     FileName replaceCharacter(char oldChar, char newChar) const;
 
     /** Substitute last extension by a new one
@@ -591,7 +591,7 @@ public:
      */
     void copyFile(const FileName & target) const;
 
-    // This funtion is in funcs, cannot be here because need metadata_generic and metadata_generic
+    // This function is in funcs, cannot be here because need metadata_generic and metadata_generic
     // need filename
     //    /* Copy one image
     //     *

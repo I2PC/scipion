@@ -26,13 +26,6 @@
 #include "basic_pca.h"
 #include "matrix2d.h"
 
-/* Destructor ------------------------------------------------------------- */
-PCAMahalanobisAnalyzer::~PCAMahalanobisAnalyzer()
-{
-	for (size_t i=0; i<PCAbasis.size(); ++i)
-		delete &PCAbasis[i];
-}
-
 /* Subtract average ------------------------------------------------------- */
 void PCAMahalanobisAnalyzer::subtractAvg()
 {
@@ -178,21 +171,19 @@ void PCAMahalanobisAnalyzer::reconsFromPCA(const Matrix2D<double> &CtY, std::vec
 void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
 {
     // Take the first vectors for the PCA basis
-    MultidimArray<double> *vPCA =NULL;
+    MultidimArray<double> vPCA;
     NPCA=XMIPP_MIN(NPCA,v.size());
     std::vector<size_t> used;
     PCAbasis.clear();
     for (size_t n=0; n<NPCA; n++)
     {
-    	vPCA = new MultidimArray<double>;
     	size_t nRandom;
     	do {
     		nRandom=(size_t)round((v.size()-1)*rnd_unif(0,1));
     	} while (std::find(used.begin(),used.end(),nRandom)!=used.end());
-        typeCast(v[nRandom],*vPCA);
-        PCAbasis.push_back(*vPCA);
+        typeCast(v[nRandom],vPCA);
+        PCAbasis.push_back(vPCA);
         used.push_back(nRandom);
-
     }
 
     size_t N=v.size();

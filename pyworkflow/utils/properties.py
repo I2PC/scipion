@@ -246,10 +246,10 @@ It is used by a few programs like Ctffind or Frealign."""
     
     
     TITLE_LAUNCHED = 'Success'
-    LABEL_LAUNCHED = 'The protocol was launched successfuly.'
+    LABEL_LAUNCHED = 'The protocol was launched successfully.'
     LABEL_FOUND_ERROR = 'Errors found'
     TITLE_SAVED_FORM = 'Success'
-    LABEL_SAVED_FORM = 'The protocol was saved successfuly.'
+    LABEL_SAVED_FORM = 'The protocol was saved successfully.'
     TITLE_DELETE_FORM = 'Confirm DELETE'
     TITLE_RESTART_FORM = 'Confirm RESTART'
     LABEL_DELETE_FORM = """

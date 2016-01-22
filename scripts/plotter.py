@@ -98,7 +98,7 @@ def main():
                         action='store_true',
                         help='Report disk usage write seg (do not think is working)')
     #TODO: I have remove the repaint ability in plotter since it make imposible to maximize the plot
-    # and it is not very usefull. If you want to recover it uncomment all the lines starting with #! 
+    # and it is not very useful. If you want to recover it uncomment all the lines starting with #! 
     #and comment the lines ending with #!  
     #!parser.add_argument('--sleepSec', action="store", type=int, default=20, help="record each these seconds")
     

@@ -212,7 +212,7 @@ public:
     double average_scale;
     /** Number of (2D/3D) references to be generated */
     int factor_nref;
-    /** Number of references per class, usefull for 3D */
+    /** Number of references per class, useful for 3D */
     int refs_per_class;
     /** Store convergence */
     std::vector<double> conv;

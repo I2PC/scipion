@@ -74,7 +74,7 @@ class FormElement(OrderedObject):
     
     def config(self, **kwargs):
         """ Configure the object and set attributes
-        comming in the keyword-arguments, the 
+        coming in the keyword-arguments, the 
         same as in the __init__
         """
         for key in self.ATTRIBUTES:
@@ -108,6 +108,12 @@ class Param(FormElement):
         for val in self.validators:
             errors += val(value)
         return errors
+    
+    def getDefault(self):
+        return self.default.get()
+    
+    def setDefault(self, newDefault):
+        self.default.set(newDefault)
     
     
 class ElementGroup(FormElement):
@@ -306,7 +312,7 @@ class Form(object):
         self.addParam('runMode', EnumParam, choices=['resume', 'restart'],
                       label="Run mode", display=EnumParam.DISPLAY_COMBO, default=0,
                       help='The <resume> mode will try to start the execution'
-                           'from the last sucessfully finished step if possible.'
+                           'from the last successfully finished step if possible.'
                            'On the contrary, <restart> will delete all previous results'
                            'of this particular run and start from the beginning. This option'
                            'should be used carefully.'

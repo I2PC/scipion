@@ -820,12 +820,14 @@ void mnbrak(double *ax, double *bx, double *cx,
                 *bx = u;
                 *fa = (*fb);
                 *fb = fu;
+                free_Tvector(xt, 1, ncom);
                 return;
             }
             else if (fu > *fb)
             {
                 *cx = u;
                 *fc = fu;
+                free_Tvector(xt, 1, ncom);
                 return;
             }
             u = (*cx) + GOLD * (*cx - *bx);
@@ -1169,7 +1171,7 @@ void _nnls_g1(double a, double b, double *cterm, double *sterm, double *sig)
  *  Construction and/or application of a single Householder transformation:
  *           Q = I + U*(U**T)/B
  *
- *  Function returns 0 if succesful, or >0 in case of erroneous parameters.
+ *  Function returns 0 if successful, or >0 in case of erroneous parameters.
  *
  */
 int _nnls_h12(
@@ -1279,7 +1281,7 @@ int _nnls_h12(
  *  that solves the least squares problem
  *      A * X = B   , subject to X>=0
  *
- *  Function returns 0 if succesful, 1, if iteration count exceeded 3*N,
+ *  Function returns 0 if successful, 1, if iteration count exceeded 3*N,
  *  or 2 in case of invalid problem dimensions or memory allocation error.
  *
  *  Instead of pointers for working space, NULL can be given to let this
@@ -4643,7 +4645,7 @@ void    *cd;
 *                    (this option is imposed during phase 1)
 *          iprint=1: a final printout at a local solution
 *          iprint=2: a brief printout at the end of each iteration
-*          iprint=3: detailed infomation is printed out at the end
+*          iprint=3: detailed information is printed out at the end
 *                    of each iteration (for debugging purposes)
 *          For iprint=2 or 3, the information may be printed at
 *          iterations that are multiples of 10, instead of every
@@ -9237,8 +9239,8 @@ int m, n;
 
     temp = make_dv(m * n);
 
-    for (i = 1; i <= n; i++)     /* loop thru columns */
-        for (j = 1; j <= m; j++)  /* loop thru row     */
+    for (i = 1; i <= n; i++)     /* loop through columns */
+        for (j = 1; j <= m; j++)  /* loop through row     */
             temp[(m*(i-1)+j)] = a[j][i];
 
     return temp;

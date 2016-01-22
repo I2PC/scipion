@@ -2,7 +2,7 @@
 
 $errmsg       = ''; // error message
 $sname        = ''; // sender's name
-$email        = ''; // sender's email addres
+$email        = ''; // sender's email address
 $organization = ''; //
 $mailoption   = ''; // mailoption
 $workshop   = ''; // workshop to be registered in

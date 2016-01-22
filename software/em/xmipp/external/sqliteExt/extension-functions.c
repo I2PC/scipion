@@ -753,7 +753,7 @@ static void properFunc(sqlite3_context *context, int argc, sqlite3_value **argv)
 }
 
 /*
-** given an input string (s) and an integer (n) adds spaces at the begining of  s
+** given an input string (s) and an integer (n) adds spaces at the beginning of  s
 ** until it has a length of n characters.
 ** When s has a length >=n it's a NOP
 ** padl(NULL) = NULL
@@ -861,7 +861,7 @@ static void padrFunc(sqlite3_context *context, int argc, sqlite3_value **argv){
 
 /*
 ** given an input string (s) and an integer (n) appends spaces at the end of  s
-** and adds spaces at the begining of s until it has a length of n characters.
+** and adds spaces at the beginning of s until it has a length of n characters.
 ** Tries to add has many characters at the left as at the right.
 ** When s has a length >=n it's a NOP
 ** padl(NULL) = NULL
@@ -973,10 +973,10 @@ static void strfilterFunc(sqlite3_context *context, int argc, sqlite3_value **ar
 }
 
 /*
-** Given a string z1, retutns the (0 based) index of it's first occurence
+** Given a string z1, retutns the (0 based) index of it's first occurrence
 ** in z2 after the first s characters.
 ** Returns -1 when there isn't a match.
-** updates p to point to the character where the match occured.
+** updates p to point to the character where the match occurred.
 ** This is an auxiliary function.
 */
 static int _substr(const char* z1, const char* z2, int s, const char** p){
@@ -1022,7 +1022,7 @@ static int _substr(const char* z1, const char* z2, int s, const char** p){
 
 /*
 ** given 2 input strings (s1,s2) and an integer (n) searches from the nth character
-** for the string s1. Returns the position where the match occured.
+** for the string s1. Returns the position where the match occurred.
 ** Characters are counted from 1.
 ** 0 is returned when no match occurs.
 */
@@ -1147,7 +1147,7 @@ static void rightFunc(sqlite3_context *context, int argc, sqlite3_value **argv){
 
 #ifndef HAVE_TRIM
 /*
-** removes the whitespaces at the begining of a string.
+** removes the whitespaces at the beginning of a string.
 */
 const char* ltrim(const char* s){
   while( *s==' ' )
@@ -1167,7 +1167,7 @@ void rtrim(char* s){
 }
 
 /*
-**  Removes the whitespace at the begining of a string
+**  Removes the whitespace at the beginning of a string
 */
 static void ltrimFunc(sqlite3_context *context, int argc, sqlite3_value **argv){
   const char *z;
@@ -1204,7 +1204,7 @@ static void rtrimFunc(sqlite3_context *context, int argc, sqlite3_value **argv){
 }
 
 /*
-**  Removes the whitespace at the begining and end of a string
+**  Removes the whitespace at the beginning and end of a string
 */
 static void trimFunc(sqlite3_context *context, int argc, sqlite3_value **argv){
   const char *z;

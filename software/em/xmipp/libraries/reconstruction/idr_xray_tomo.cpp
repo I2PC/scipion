@@ -368,7 +368,7 @@ ProgReconsBase * ProgIDRXrayTomo::createReconsProgram(const FileName &input, con
     }
     else if (reconsMethod == RECONS_ART)//use of Art
     {
-        //REPORT_ERROR(ERR_NOT_IMPLEMENTED,"not implemented reconstruction throught wlsArt");
+        //REPORT_ERROR(ERR_NOT_IMPLEMENTED,"not implemented reconstruction through wlsArt");
         program = new ProgReconsART();
         FileName fn_tmp(arguments);
         //        arguments += " --WLS";

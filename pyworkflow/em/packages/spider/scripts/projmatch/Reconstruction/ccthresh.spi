@@ -8,9 +8,9 @@
 ; PURPOSE: Given a threshold for the % of files in each group that should be
 ;           eliminated, determines the corresponding threshold for the cross 
 ;          correlation value and stores threshold in a doc file. 
-;          Applies the theshold to the coreelation values from the aligned particles 
+;          Applies the threshold to the coreelation values from the aligned particles 
 ;          and creates partilcel selection files listing particles with 
-;          correlation values above the theshold. Also makes a listing of rejected
+;          correlation values above the threshold. Also makes a listing of rejected
 ;          particles sorted by correlation value.
 ;
 ; NOTE:     Particle totals are approximate due to binning of data in histograms.

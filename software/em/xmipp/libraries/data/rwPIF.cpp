@@ -34,7 +34,7 @@ int  ImageBase::readPIF(size_t select_img)
         REPORT_ERROR(ERR_IO_NOREAD, formatString("rwPIF: cannot read Spider main header from file %s"
                      ". Error message: %s", filename.c_str() ,strerror(errno)));
 
-    // Check Machine endianess
+    // Check Machine endianness
     bool isLE = IsLittleEndian();
 
     // Determine byte order and swap bytes if from different-endian machine

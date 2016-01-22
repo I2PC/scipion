@@ -165,7 +165,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                       help="""
 -bft       150               BFactor in pix^2.
 -pbx       96                Box dimension for searching CC peak.
--fod       2                 Number of frame offset for frame comparision.
+-fod       2                 Number of frame offset for frame comparison.
 -nps       0                 Radius of noise peak.
 -sub       0                 1: Save as sub-area corrected sum. 0: Not.
 -srs       0                 1: Save uncorrected sum. 0: Not.
@@ -203,17 +203,19 @@ class ProtMovieAlignment(ProtProcessMovies):
             psdCorrName = self._getNameExt(movie.getFileName(),'_aligned_corrected', 'psd')
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
+            
             if self.run:
                 alignedMovie.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'_aligned', 'mrcs')))
             ####>>>This is wrong. Save an xmipp metadata
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
-            #alignedMovie.plotPolar = self._getExtraPath(plotPolarName)
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
             alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
-            if alMethod == AL_OPTICAL or \
-               alMethod == AL_DOSEFGPUOPTICAL or \
-               alMethod == AL_CROSSCORRELATIONOPTICAL:
-               movieCreatePlot(alignedMovie, True)
+            
+            '''if (alMethod == AL_OPTICAL or
+                alMethod == AL_DOSEFGPUOPTICAL or 
+                alMethod == AL_CROSSCORRELATIONOPTICAL):
+                movieCreatePlot(alignedMovie, True)'''
+            
             if self.doSaveMovie:
                 movieSet.append(alignedMovie)
 
@@ -221,14 +223,18 @@ class ProtMovieAlignment(ProtProcessMovies):
             # All micrograph are copied to the 'extra' folder after each step
             mic.setFileName(self._getExtraPath(micName))
 
-            mic.setMicName(micName)
-            if alMethod == AL_OPTICAL or \
-               alMethod == AL_DOSEFGPUOPTICAL or \
-               alMethod == AL_CROSSCORRELATIONOPTICAL:
+# The micName of a micrograph MUST be the same as the original movie
+#             mic.setMicName(micName)
+            mic.setMicName(movie.getMicName())
+            
+            if (alMethod == AL_OPTICAL or 
+                alMethod == AL_DOSEFGPUOPTICAL or 
+                alMethod == AL_CROSSCORRELATIONOPTICAL):
 
-                #mic.plotPolar = em.Image()
+                mic.alignMetaData = String(self._getExtraPath(metadataName))
+                mic.plotCart = self._getExtraPath(plotCartName)
+                movieCreatePlot(mic, True)
                 mic.plotCart = em.Image()
-                #mic.plotPolar.setFileName(self._getExtraPath(plotPolarName))
                 mic.plotCart.setFileName(self._getExtraPath(plotCartName))
             #if alMethod != AL_DOSEFGPU and alMethod != AL_CROSSCORRELATION:
             mic.psdCorr = em.Image()
@@ -283,7 +289,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
         alMethod = self.alignMethod.get()
-        doSaveMovie = self.doSaveMovie.get()
+        doSaveMovie = False
         
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
@@ -296,7 +302,6 @@ class ProtMovieAlignment(ProtProcessMovies):
         if alMethod == AL_AVERAGE:
             command = '-i %(movieName)s%(movieSuffix)s -o %(micName)s' % locals()
             command += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
-            doSaveMovie = False
 
             if self.inputMovies.get().getDark():
                 command += " --dark "+self.inputMovies.get().getDark()
@@ -310,7 +315,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                 print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
 
         # For DosefGPU Execution (and combination with optical flow)
-        elif alMethod == AL_DOSEFGPU or alMethod == AL_DOSEFGPUOPTICAL:
+        if alMethod == AL_DOSEFGPU or alMethod == AL_DOSEFGPUOPTICAL:
             logFile = self._getLogFile(movieId)
             #gainFile = self.inputMovies.get().getGain()
             args = {'-crx': self.cropOffsetX.get(),
@@ -339,7 +344,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             except:
                 print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
         
-        elif alMethod == AL_CROSSCORRELATION or alMethod == AL_CROSSCORRELATIONOPTICAL: #not dosefgpu
+        if alMethod == AL_CROSSCORRELATION or alMethod == AL_CROSSCORRELATIONOPTICAL: #not dosefgpu
             program = 'xmipp_movie_alignment_correlation'
             corrMovieName = self._getCorrMovieName(movieId)
             command  = '-i %s%s ' % (movieName, movieSuffix)
@@ -385,40 +390,37 @@ class ProtMovieAlignment(ProtProcessMovies):
             elif alMethod == AL_CROSSCORRELATIONOPTICAL:
                 program = 'xmipp_movie_optical_alignment_cpu'
                 command = '-i %(corrMovieName)s ' % locals()
-                # Set to Zero for Optical Flow (output movie of dosefgpu)
-                firstFrame = 0
-                lastFrame = 0
-                if doSaveMovie:
-                    command += '--ssc '
             else:
- 		if self.doGPU:
-		   program = 'xmipp_movie_optical_alignment_gpu'
-            	else:
-                   program = 'xmipp_movie_optical_alignment_cpu'
                 command = '-i %(movieName)s%(movieSuffix)s ' % locals()
-                if doSaveMovie:
-                    command += '--ssc '
-
+                if self.doGPU:
+                    program = 'xmipp_movie_optical_alignment_gpu'
+                    command += '--gpu %d ' % gpuId
+                else:
+                    program = 'xmipp_movie_optical_alignment_cpu'
+            # Set to Zero for Optical Flow (output movie of dosefgpu)
+            firstFrame = 0
+            lastFrame = 0
+            if doSaveMovie:
+                command += '--ssc '
             command += '-o %(micName)s --winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
             command += '--nst %d --ned %d ' % (firstFrame, lastFrame)
-            if self.doGPU:
-                command += '--gpu %d ' % gpuId
             if self.inputMovies.get().getDark() and not grayCorrected:
                 command += " --dark "+self.inputMovies.get().getDark()
                 grayCorrected=True
             if self.inputMovies.get().getGain() and not grayCorrected:
                 command += " --gain "+self.inputMovies.get().getGain()
                 grayCorrected=True
+            if doSaveMovie:
+                command += '--ssc '
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
                 print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
-            if alMethod == AL_OPTICAL \
-                    or alMethod == AL_DOSEFGPUOPTICAL or\
-                    alMethod == AL_CROSSCORRELATIONOPTICAL:
-                moveFile(join(movieFolder, metadataName), self._getExtraPath())
+            moveFile(join(movieFolder, metadataName), self._getExtraPath())
+
         # Compute half-half PSD
         ih = em.ImageHandler()
+        print join(movieFolder, '%(movieName)s' % locals())
         avg = ih.computeAverage(join(movieFolder, movieName))
         avg.write(join(movieFolder, 'uncorrectedmic.mrc'))
         command = '--micrograph uncorrectedmic.mrc --oroot uncorrectedpsd --dont_estimate_ctf --pieceDim 400 --overlap 0.7'
@@ -431,10 +433,11 @@ class ProtMovieAlignment(ProtProcessMovies):
         correctedPSD.read(join(movieFolder, 'correctedpsd.psd'))
         unCorrectedPSD.read(join(movieFolder, 'uncorrectedpsd.psd'))
         x, y, z, n = correctedPSD.getDimensions()
-        for  i in range(1,y):
+        for i in range(1,y):
             for j in range(1,x//2):
                 unCorrectedPSD.setPixel(i, j, correctedPSD.getPixel(i,j))
         unCorrectedPSD.write(join(movieFolder, psdCorrName))
+
         # Move output micrograph and related information to 'extra' folder
         moveFile(join(movieFolder, micName), self._getExtraPath())
         if doSaveMovie:
@@ -448,7 +451,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             # Copy metadatafile otherwise it will be deleted
             #TODO: create a proper scipion object
             moveFile(join(movieFolder, metadataNameInterMediate), self._getExtraPath())
-            moveFile(join(movieFolder, corrMovieName), self._getExtraPath())
+            #moveFile(join(movieFolder, corrMovieName), self._getExtraPath())
         moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
 
 
@@ -526,20 +529,20 @@ class ProtMovieAlignment(ProtProcessMovies):
 
         return summary
 
-def createPlots(plotType, protocol, movieId):
+def createPlots(plotType, protocol, micId):
+    print "output Micrographs to create Plot %s" % protocol.outputMicrographs
+    mic = protocol.outputMicrographs[micId]
+    return movieCreatePlot(mic, False).show()
 
-    movie = protocol.outputMovies[movieId]
-    return movieCreatePlot(movie, False)
-
-def movieCreatePlot(movie, saveFig):
+def movieCreatePlot(mic, saveFig):
 
     import xmipp
     meanX = []
     meanY = []
     figureSize = (8, 6)
 
-    alignedMovie = movie.alignMetaData
-    md = xmipp.MetaData(alignedMovie)
+    #alignedMovie = mic.alignMetaData
+    md = xmipp.MetaData(mic.alignMetaData)
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
 
@@ -562,7 +565,7 @@ def movieCreatePlot(movie, saveFig):
         ax.text(preX-0.02, preY+0.01, str(objId+1))
     ax.plot(np.asarray(meanX), np.asarray(meanY))
     if saveFig:
-        plotter.savefig(movie.plotCart)
+        plotter.savefig(mic.plotCart)
     return plotter
 
 

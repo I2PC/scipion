@@ -5984,11 +5984,11 @@ void alglib::ae_vector_wrapper::assign(const alglib::ae_vector_wrapper &rhs)
         // Assignment to proxy object
         //
         if( rhs.p_vec==NULL )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes dont match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes do not match)");
         if( rhs.p_vec->datatype!=p_vec->datatype )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (types dont match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (types do not match)");
         if( rhs.p_vec->cnt!=p_vec->cnt )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes dont match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes do not match)");
         memcpy(p_vec->ptr.p_ptr, rhs.p_vec->ptr.p_ptr, p_vec->cnt*alglib_impl::ae_sizeof(p_vec->datatype));
     }
 }
@@ -6394,13 +6394,13 @@ void alglib::ae_matrix_wrapper::assign(const alglib::ae_matrix_wrapper &rhs)
         //
         ae_int_t i;
         if( rhs.p_mat==NULL )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes dont match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes do not match)");
         if( rhs.p_mat->datatype!=p_mat->datatype )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (types dont match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (types do not match)");
         if( rhs.p_mat->rows!=p_mat->rows )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes dont match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes do not match)");
         if( rhs.p_mat->cols!=p_mat->cols )
-            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes dont match)");
+            throw alglib::ap_error("ALGLIB: incorrect assignment to array (sizes do not match)");
         for(i=0; i<p_mat->rows; i++)
             memcpy(p_mat->ptr.pp_void[i], rhs.p_mat->ptr.pp_void[i], p_mat->cols*alglib_impl::ae_sizeof(p_mat->datatype));
     }
@@ -8137,7 +8137,7 @@ void _ialglib_rmv_sse2(ae_int_t m, ae_int_t n, const double *a, const double *x,
      * - nhead 1x1 blocks (used to align the rest, either 0 or 1)
      * - nb8 1x8 blocks, aligned to 16-byte boundary
      * - nb2 1x2 blocks, aligned to 16-byte boundary
-     * - ntail 1x1 blocks, aligned too (altough we don't rely on it)
+     * - ntail 1x1 blocks, aligned too (although we don't rely on it)
      *
      */
     n2 = n/2;    

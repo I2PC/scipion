@@ -730,7 +730,7 @@ double rnd_log(double a, double b);
  * These functions are used to make time measures of the algorithms. If you know
  * the total amount of work to do then some estimation can be done about how
  * much time is left before finishing. The time functions are very machine
- * dependent, we've tried to accomodate the compilation for several machines,
+ * dependent, we've tried to accommodate the compilation for several machines,
  * but if still programs do not work, you may configure Xmipp to avoid these
  * time measurements, functions are then substituted by null functions doing
  * nothing.
@@ -881,7 +881,7 @@ void annotate_time(TimeStamp* time);
 #if !defined _NO_TIME && !defined __MINGW32__
 /** Accumulate time
  *
- * Initially dest_time should be set to orig time. Then you acumulate succesive
+ * Initially dest_time should be set to orig time. Then you acumulate successive
  * times calling this function (Destination time=destination_time + (now -
  * original time)) and finally the elapsed time is the dest time minus the first
  * one (the one which initiliazed the dest time.

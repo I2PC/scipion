@@ -168,7 +168,7 @@ void ObjectiveFunction::printStats(char cc)
     printf("\n\nProblem Name: %s\n",name);
     printf("Dimension of the search space: %i\n",dim());
     printf("best (lowest) value found: %e\n", valueBest+objectiveConst);
-    printf("Number of funtion Evaluation: %i (%i)\n",nfe,nfe2);
+    printf("Number of function Evaluation: %i (%i)\n",nfe,nfe2);
     if (xOptimal.sz())
     {
         printf("Lnfty distance to the optimum: %e\n", xBest.LnftyDistance(xOptimal));

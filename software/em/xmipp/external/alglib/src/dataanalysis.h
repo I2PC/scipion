@@ -1022,7 +1022,7 @@ INPUT PARAMETERS:
     N       -   array size
 
 OUTPUT PARAMETERS:
-    Info    -   completetion code:
+    Info    -   completion code:
                 * -3, all values of A[] are same (partition is impossible)
                 * -2, one of C[] is incorrect (<0, >1)
                 * -1, incorrect pararemets were passed (N<=0).
@@ -4532,8 +4532,8 @@ You  may  add  one  or several tracks to the MCPD solver. In case you have
 several tracks, they won't overwrite each other. For example,  if you pass
 two tracks, A1-A2-A3 (system at t=A+1, t=A+2 and t=A+3) and B1-B2-B3, then
 solver will try to model transitions from t=A+1 to t=A+2, t=A+2 to  t=A+3,
-t=B+1 to t=B+2, t=B+2 to t=B+3. But it WONT mix these two tracks - i.e. it
-wont try to model transition from t=A+3 to t=B+1.
+t=B+1 to t=B+2, t=B+2 to t=B+3. But it WON'T mix these two tracks - i.e. it
+won't try to model transition from t=A+3 to t=B+1.
 
 INPUT PARAMETERS:
     S       -   solver

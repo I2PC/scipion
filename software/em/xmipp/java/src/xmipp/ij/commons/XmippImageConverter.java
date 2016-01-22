@@ -118,7 +118,7 @@ public class XmippImageConverter {
 	}
 
 	/**
-	 * In this function is suposed the the ImageGeneric is read only the header
+	 * In this function is supposed the the ImageGeneric is read only the header
 	 * and the data will be read from disk
 	 */
 	public static ImagePlus readToImagePlus(ImageGeneric image, int width,

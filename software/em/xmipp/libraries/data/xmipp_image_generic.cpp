@@ -389,7 +389,7 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId,
     return image->readApplyGeo(name, md, objId, params);
 }
 
-/** Apply geometry in refering metadata to the image */
+/** Apply geometry in referring metadata to the image */
 void ImageGeneric::applyGeo(const MetaData &md, size_t objId,
                             const ApplyGeoParams &params)
 {

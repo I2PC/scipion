@@ -1331,7 +1331,7 @@ void DocFile::merge(DocFile& DF, int mode, int sumcol)
                 }
             case(DOCMERGE_ERROR):
                             std::cerr<<"image name = "<<fn_img;
-                REPORT_ERROR(ERR_DOCFILE,"Image occured in two docfiles to be merged");
+                REPORT_ERROR(ERR_DOCFILE,"Image occurred in two docfiles to be merged");
             }
         }
         else

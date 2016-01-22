@@ -863,7 +863,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 #ifdef NEVER_DEFINED
     // In principle this limitation has been substituted by a direct
     // specification of the output volume size, and should no longer
-    // be valid. However it is a beatiful piece of code to be removed
+    // be valid. However it is a beautiful piece of code to be removed
     // already
     if (limit != 0 && XX(size) != limit)
     {

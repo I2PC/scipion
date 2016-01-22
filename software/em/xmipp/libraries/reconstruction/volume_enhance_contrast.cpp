@@ -396,7 +396,7 @@ void ProgVolumeEnhanceContrast::enhance(MultidimArray<double> &vol)
                       FINISHINGZ(vol_f), FINISHINGY(vol_f)-2,FINISHINGX(vol_f)-2 );
     }
 
-    //6.-Re-Scale (now we put the original values diferent from [0-255])
+    //6.-Re-Scale (now we put the original values different from [0-255])
     double x_s,x_ns;
     FOR_ALL_ELEMENTS_IN_ARRAY3D(vol_f)
     {

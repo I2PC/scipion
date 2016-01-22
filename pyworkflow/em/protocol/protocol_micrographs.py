@@ -230,7 +230,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                     mic = ctfModel.getMicrograph()
                     # Update the CTF models that where recalculated
                     # and append later to the set
-                    # we dont want to copy the id here since it is already correct
+                    # we don't want to copy the id here since it is already correct
                     ctfModel.copy(self._createNewCtfModel(mic), copyId=False)
                     ctfModel.setEnabled(True)
                 ctfSet.append(ctfModel)

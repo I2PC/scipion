@@ -53,19 +53,19 @@ extern float	ConvertDoubleToFloat
 /**/	"About to convert a (double)argument to a (float)")
 
 	if ((double)FLT_MAX < Argument) {
-		WRITE_WARNING(ConvertDoubleToFloat, "Positive saturation occured")
+		WRITE_WARNING(ConvertDoubleToFloat, "Positive saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertDoubleToFloat, "Done")
 		return(FLT_MAX);
 	}
 	else if (Argument < (double)(-FLT_MAX)) {
-		WRITE_WARNING(ConvertDoubleToFloat, "Negative saturation occured")
+		WRITE_WARNING(ConvertDoubleToFloat, "Negative saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertDoubleToFloat, "Done")
 		return(-FLT_MAX);
 	}
 	else {
 #ifdef DEBUG
 /**/	if ((fabs(Argument) < (double)FLT_MIN) && (Argument != 0.0)) {
-/**/		WRITE_WARNING(ConvertDoubleToFloat, "Underflow occured")
+/**/		WRITE_WARNING(ConvertDoubleToFloat, "Underflow occurred")
 /**/	}
 #endif
 /**/	DEBUG_WRITE_LEAVING(ConvertDoubleToFloat, "Done")
@@ -90,12 +90,12 @@ extern int		ConvertDoubleToInt
 /**/	"About to round a (double)argument to an (int)")
 
 	if ((double)INT_MAX < Argument) {
-		WRITE_WARNING(ConvertDoubleToInt, "Positive saturation occured")
+		WRITE_WARNING(ConvertDoubleToInt, "Positive saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertDoubleToInt, "Done")
 		return(INT_MAX);
 	}
 	else if (Argument < (double)INT_MIN) {
-		WRITE_WARNING(ConvertDoubleToInt, "Negative saturation occured")
+		WRITE_WARNING(ConvertDoubleToInt, "Negative saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertDoubleToInt, "Done")
 		return(INT_MIN);
 	}
@@ -125,12 +125,12 @@ extern long		ConvertDoubleToLong
 /**/	"About to round a (double)argument to a (long)")
 
 	if ((double)LONG_MAX < Argument) {
-		WRITE_WARNING(ConvertDoubleToLong, "Positive saturation occured")
+		WRITE_WARNING(ConvertDoubleToLong, "Positive saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertDoubleToLong, "Done")
 		return(LONG_MAX);
 	}
 	else if (Argument < (double)LONG_MIN) {
-		WRITE_WARNING(ConvertDoubleToLong, "Negative saturation occured")
+		WRITE_WARNING(ConvertDoubleToLong, "Negative saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertDoubleToLong, "Done")
 		return(LONG_MIN);
 	}
@@ -160,12 +160,12 @@ extern short	ConvertDoubleToShort
 /**/	"About to round a (double)argument to a (short)")
 
 	if ((double)SHRT_MAX < Argument) {
-		WRITE_WARNING(ConvertDoubleToShort, "Positive saturation occured")
+		WRITE_WARNING(ConvertDoubleToShort, "Positive saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertDoubleToShort, "Done")
 		return((short)SHRT_MAX);
 	}
 	else if (Argument < (double)SHRT_MIN) {
-		WRITE_WARNING(ConvertDoubleToShort, "Negative saturation occured")
+		WRITE_WARNING(ConvertDoubleToShort, "Negative saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertDoubleToShort, "Done")
 		return((short)SHRT_MIN);
 	}
@@ -195,12 +195,12 @@ extern int		ConvertFloatToInt
 /**/	"About to round a (float)argument to an (int)")
 
 	if ((double)INT_MAX < (double)Argument) {
-		WRITE_WARNING(ConvertFloatToInt, "Positive saturation occured")
+		WRITE_WARNING(ConvertFloatToInt, "Positive saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertFloatToInt, "Done")
 		return(INT_MAX);
 	}
 	else if ((double)Argument < (double)INT_MIN) {
-		WRITE_WARNING(ConvertFloatToInt, "Negative saturation occured")
+		WRITE_WARNING(ConvertFloatToInt, "Negative saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertFloatToInt, "Done")
 		return(INT_MIN);
 	}
@@ -230,12 +230,12 @@ extern long		ConvertFloatToLong
 /**/	"About to round a (float)argument to a (long)")
 
 	if ((double)LONG_MAX < (double)Argument) {
-		WRITE_WARNING(ConvertFloatToLong, "Positive saturation occured")
+		WRITE_WARNING(ConvertFloatToLong, "Positive saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertFloatToLong, "Done")
 		return(LONG_MAX);
 	}
 	else if ((double)Argument < (double)LONG_MIN) {
-		WRITE_WARNING(ConvertFloatToLong, "Negative saturation occured")
+		WRITE_WARNING(ConvertFloatToLong, "Negative saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertFloatToLong, "Done")
 		return(LONG_MIN);
 	}
@@ -265,12 +265,12 @@ extern short	ConvertFloatToShort
 /**/	"About to round a (float)argument to a (short)")
 
 	if ((float)SHRT_MAX < Argument) {
-		WRITE_WARNING(ConvertFloatToShort, "Positive saturation occured")
+		WRITE_WARNING(ConvertFloatToShort, "Positive saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertFloatToShort, "Done")
 		return((short)SHRT_MAX);
 	}
 	else if (Argument < (float)SHRT_MIN) {
-		WRITE_WARNING(ConvertFloatToShort, "Negative saturation occured")
+		WRITE_WARNING(ConvertFloatToShort, "Negative saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertFloatToShort, "Done")
 		return((short)SHRT_MIN);
 	}
@@ -298,12 +298,12 @@ extern short	ConvertIntToShort
 /**/	"About to convert an (int)argument to a (short)")
 
 	if (SHRT_MAX < Argument) {
-		WRITE_WARNING(ConvertIntToShort, "Positive saturation occured")
+		WRITE_WARNING(ConvertIntToShort, "Positive saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertIntToShort, "Done")
 		return((short)SHRT_MAX);
 	}
 	else if (Argument < SHRT_MIN) {
-		WRITE_WARNING(ConvertIntToShort, "Negative saturation occured")
+		WRITE_WARNING(ConvertIntToShort, "Negative saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertIntToShort, "Done")
 		return((short)SHRT_MIN);
 	}
@@ -328,12 +328,12 @@ extern int		ConvertLongToInt
 /**/	"About to convert a (long)argument to an (int)")
 
 	if ((long)INT_MAX < Argument) {
-		WRITE_WARNING(ConvertLongToInt, "Positive saturation occured")
+		WRITE_WARNING(ConvertLongToInt, "Positive saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertLongToInt, "Done")
 		return(INT_MAX);
 	}
 	else if (Argument < (long)INT_MIN) {
-		WRITE_WARNING(ConvertLongToInt, "Negative saturation occured")
+		WRITE_WARNING(ConvertLongToInt, "Negative saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertLongToInt, "Done")
 		return(INT_MIN);
 	}
@@ -358,12 +358,12 @@ extern short	ConvertLongToShort
 /**/	"About to convert a (long)argument to a (short)")
 
 	if ((long)SHRT_MAX < Argument) {
-		WRITE_WARNING(ConvertLongToShort, "Positive saturation occured")
+		WRITE_WARNING(ConvertLongToShort, "Positive saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertLongToShort, "Done")
 		return((short)SHRT_MAX);
 	}
 	else if (Argument < (long)SHRT_MIN) {
-		WRITE_WARNING(ConvertLongToShort, "Negative saturation occured")
+		WRITE_WARNING(ConvertLongToShort, "Negative saturation occurred")
 /**/	DEBUG_WRITE_LEAVING(ConvertLongToShort, "Done")
 		return((short)SHRT_MIN);
 	}

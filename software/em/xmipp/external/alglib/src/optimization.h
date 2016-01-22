@@ -941,7 +941,7 @@ public:
 Optimization report, filled by MinLMResults() function
 
 FIELDS:
-* TerminationType, completetion code:
+* TerminationType, completion code:
     * -7    derivative correctness check failed;
             see Rep.WrongNum, Rep.WrongI, Rep.WrongJ for
             more information.
@@ -1446,7 +1446,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     X       -   array[0..N-1], solution
     Rep     -   optimization report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     * -7    gradient verification failed.
                             See MinCGSetGradientCheck() for more information.
                     *  1    relative function improvement is no more than
@@ -1459,7 +1459,7 @@ OUTPUT PARAMETERS:
                             we return best X found so far
                     *  8    terminated by user
                 * Rep.IterationsCount contains iterations count
-                * NFEV countains number of function calculations
+                * NFEV contains number of function calculations
 
   -- ALGLIB --
      Copyright 20.04.2009 by Bochkanov Sergey
@@ -2460,7 +2460,7 @@ INPUT PARAMETERS:
 OUTPUT PARAMETERS:
     X       -   array[0..N-1], solution
     Rep     -   optimization report:
-                * Rep.TerminationType completetion code:
+                * Rep.TerminationType completion code:
                     * -7    gradient verification failed.
                             See MinLBFGSSetGradientCheck() for more information.
                     * -2    rounding errors prevent further improvement.
@@ -2474,7 +2474,7 @@ OUTPUT PARAMETERS:
                     *  7    stopping conditions are too stringent,
                             further improvement is impossible
                 * Rep.IterationsCount contains iterations count
-                * NFEV countains number of function calculations
+                * NFEV contains number of function calculations
 
   -- ALGLIB --
      Copyright 02.04.2010 by Bochkanov Sergey

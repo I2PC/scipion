@@ -148,7 +148,7 @@ void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T);
 /** Matrix (3x3) by vector (3x1) (a=M*b)
  *
  * You must "load" the temporary variables, and create the result vector with
- * the appropiate size. You can reuse the vector b to store the results (that
+ * the appropriate size. You can reuse the vector b to store the results (that
  * is, M3x3_BY_V3x1(b, M, b);, is allowed).
  *
  * @code
@@ -176,7 +176,7 @@ void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T);
 /** Matrix (3x3) by Matrix (3x3) (A=B*C)
  *
  * You must "load" the temporary variables, and create the result vector with
- * the appropiate size. You can reuse any of the multiplicands to store the
+ * the appropriate size. You can reuse any of the multiplicands to store the
  * results (that is, M3x3_BY_M3x3(A, A, B);, is allowed).
  */
 #define M3x3_BY_M3x3(A, B, C) { \
@@ -202,7 +202,7 @@ void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T);
 /** Matrix (2x2) by vector (2x1) (a=M*b)
  *
  * You must "load" the temporary variables, and create the result vector with
- * the appropiate size. You can reuse the vector b to store the results (that
+ * the appropriate size. You can reuse the vector b to store the results (that
  * is, M2x2_BY_V2x1(b, M, b);, is allowed).
  *
  * @code
@@ -242,7 +242,7 @@ void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T);
 
 /** Matrix (3x3) by constant (M2=M1*k)
  *
- * You must create the result matrix with the appropiate size. You can reuse the
+ * You must create the result matrix with the appropriate size. You can reuse the
  * matrix M1 to store the results (that is, M2x2_BY_CT(M, M, k);, is allowed).
  */
 #define M3x3_BY_CT(M2, M1, k) { \
@@ -257,7 +257,7 @@ void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T);
         dMn(M2, 8) = dMn(M1, 8) * k; }
 /** Matrix (4x4) by constant (M2=M1*k)
  *
- * You must create the result matrix with the appropiate size. You can reuse the
+ * You must create the result matrix with the appropriate size. You can reuse the
  * matrix M1 to store the results (that is, M2x2_BY_CT(M, M, k);, is allowed).
  */
 #define M4x4_BY_CT(M2, M1, k) { \
@@ -1028,7 +1028,7 @@ public:
         return result;
     }
 
-    /** Matrix substraction
+    /** Matrix subtraction
      *
      * @code
      * A -= B;
@@ -1374,7 +1374,7 @@ public:
 
     /** Get row
      *
-     * This function returns a row vector corresponding to the choosen
+     * This function returns a row vector corresponding to the chosen
      * row inside the nth 2D matrix, the numbering of the rows is also
      * logical not physical.
      *
@@ -1404,7 +1404,7 @@ public:
     /** Get Column
      *
      * This function returns a column vector corresponding to the
-     * choosen column.
+     * chosen column.
      *
      * @code
      * std::vector< double > v;
@@ -1432,7 +1432,7 @@ public:
 
     /** Set Row
      *
-     * This function sets a row vector corresponding to the choosen row in the 2D Matrix
+     * This function sets a row vector corresponding to the chosen row in the 2D Matrix
      *
      * @code
      * m.setRow(-2, m.row(1)); // Copies row 1 in row -2
@@ -1458,7 +1458,7 @@ public:
 
     /** Set Column
      *
-     * This function sets a column vector corresponding to the choosen column
+     * This function sets a column vector corresponding to the chosen column
      * inside matrix.
      *
      * @code

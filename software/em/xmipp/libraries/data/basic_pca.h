@@ -80,9 +80,6 @@ public:
     // Matrix for the Eigen values
     Matrix1D<double> w;
 public:
-    /// Destructor
-    ~PCAMahalanobisAnalyzer();
-
     /// Clear
     inline void clear()
     {

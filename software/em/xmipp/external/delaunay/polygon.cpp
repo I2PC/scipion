@@ -247,7 +247,7 @@ int    compute_Segment( struct Point_T *p, struct Point_T *q, struct Segment_T *
 {
 	int		ret=SUCCESS;		// Return value.
 
-    // Avoid divison by 0.
+    // Avoid division by 0.
     if ((q->x - p->x) != 0)
     {
         // Compute slope.

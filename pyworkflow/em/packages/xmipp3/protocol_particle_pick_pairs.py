@@ -64,7 +64,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
               
     #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
-        """The Particle Picking proccess is realized for a pair of set of micrographs"""
+        """The Particle Picking process is realized for a pair of set of micrographs"""
         
         self.micsFn = self._getPath('input_micrographs.xmd')
         # Convert input into xmipp Metadata format

@@ -267,7 +267,7 @@ enum MDLabel
     MDL_MODELFRAC, ///< Model fraction (alpha_k) for a Maximum Likelihood model
     MDL_NEIGHBORS, ///< Vector of indexes to points some "neighbors"
     MDL_NEIGHBOR, ///< Particular neighbor (pointed myNEIGHBORS)
-    MDL_NEIGHBORHOOD_RADIUS, ///< Radius of the neigborhood (radians)
+    MDL_NEIGHBORHOOD_RADIUS, ///< Radius of the neighborhood (radians)
     MDL_NMA, ///< Normal mode displacements (vector double)
     MDL_NMA_COLLECTIVITY, ///< NMA Collectivity of a given mode
     MDL_NMA_ATOMSHIFT, ///< NMA Atom shift in Angstroms
@@ -1018,7 +1018,7 @@ public:
     /** Assign operator */
     MDObject & operator = (const MDObject &obj);
     //Just a simple constructor with the label
-    //dont do any type checking as have not value yet
+    //don't do any type checking as have not value yet
     MDObject(MDLabel label);
     ///Constructors for each Label supported type
     ///these constructor will do the labels type checking

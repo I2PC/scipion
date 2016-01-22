@@ -154,7 +154,7 @@ void ImageBase::mapFile2Write(size_t Xdim, size_t Ydim, size_t Zdim, const FileN
 
 /** General read function
  */
-/** Macros for dont type */
+/** Macros for don't type */
 #define GET_ROW()               MDRow row; md.getRow(row, objId)
 
 #define READ_AND_RETURN()        ImageFHandler* hFile = openFile(name);\
@@ -220,14 +220,14 @@ void ImageBase::write(const FileName &name, size_t select_img, bool isStack,
         else
         {
             if (_swapWrite > 0)
-                REPORT_ERROR(ERR_ARG_INCORRECT, "Cannot swap endianess on writing if file is already mapped.");
+                REPORT_ERROR(ERR_ARG_INCORRECT, "Cannot swap endianness on writing if file is already mapped.");
             munmapFile();
             if (hasTempFile && std::rename(tempFilename.c_str(), fname.c_str()) != 0)
                 REPORT_ERROR(ERR_IO, formatString("Error renaming file '%s' to '%s'.", tempFilename.c_str(), fname.c_str()));
             return;
         }
     }
-    // Swap the endianess of the image file when writing
+    // Swap the endianness of the image file when writing
     swapWrite = _swapWrite;
 
     /* If the filename is in stack we will suppose you want to write this,

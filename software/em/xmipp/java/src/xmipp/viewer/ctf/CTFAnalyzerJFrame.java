@@ -553,7 +553,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 				
 				boolean saved = export(file.getAbsolutePath());
 				if (saved)
-					XmippDialog.showInfo(this, "File saved sucesfully.");
+					XmippDialog.showInfo(this, "File saved successfully.");
 			}
 		}
 

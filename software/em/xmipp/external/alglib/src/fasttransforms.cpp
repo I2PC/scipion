@@ -222,7 +222,7 @@ OUTPUT PARAMETERS
 
 NOTE:
     F[] satisfies symmetry property F[k] = conj(F[N-k]),  so just one half
-of  array  is  usually needed. But for convinience subroutine returns full
+of  array  is  usually needed. But for convenience subroutine returns full
 complex array (with frequencies above N/2), so its result may be  used  by
 other FFT-related subroutines.
 
@@ -261,7 +261,7 @@ OUTPUT PARAMETERS
 
 NOTE:
     F[] satisfies symmetry property F[k] = conj(F[N-k]),  so just one half
-of  array  is  usually needed. But for convinience subroutine returns full
+of  array  is  usually needed. But for convenience subroutine returns full
 complex array (with frequencies above N/2), so its result may be  used  by
 other FFT-related subroutines.
 
@@ -747,7 +747,7 @@ INPUT PARAMETERS
                 signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - complex function to be transformed,
-                pattern to search withing signal
+                pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS
@@ -797,7 +797,7 @@ INPUT PARAMETERS
                 periodic signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - complex function to be transformed,
-                non-periodic pattern to search withing signal
+                non-periodic pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS
@@ -842,7 +842,7 @@ INPUT PARAMETERS
                 signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - real function to be transformed,
-                pattern to search withing signal
+                pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS
@@ -892,7 +892,7 @@ INPUT PARAMETERS
                 periodic signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - real function to be transformed,
-                non-periodic pattern to search withing signal
+                non-periodic pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS
@@ -1152,7 +1152,7 @@ OUTPUT PARAMETERS
 
 NOTE:
     F[] satisfies symmetry property F[k] = conj(F[N-k]),  so just one half
-of  array  is  usually needed. But for convinience subroutine returns full
+of  array  is  usually needed. But for convenience subroutine returns full
 complex array (with frequencies above N/2), so its result may be  used  by
 other FFT-related subroutines.
 
@@ -3147,7 +3147,7 @@ INPUT PARAMETERS
                 signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - complex function to be transformed,
-                pattern to search withing signal
+                pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS
@@ -3215,7 +3215,7 @@ INPUT PARAMETERS
                 periodic signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - complex function to be transformed,
-                non-periodic pattern to search withing signal
+                non-periodic pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS
@@ -3309,7 +3309,7 @@ INPUT PARAMETERS
                 signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - real function to be transformed,
-                pattern to search withing signal
+                pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS
@@ -3377,7 +3377,7 @@ INPUT PARAMETERS
                 periodic signal containing pattern
     N       -   problem size
     Pattern -   array[0..M-1] - real function to be transformed,
-                non-periodic pattern to search withing signal
+                non-periodic pattern to search within signal
     M       -   problem size
 
 OUTPUT PARAMETERS

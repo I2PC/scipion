@@ -6,8 +6,8 @@ function a = mirt_dctn(a)
 %
 %   This function works much faster than Matlab standard
 %   dct (for 1D case) or dct2 (for 2D case), and also allows the ND input.
-%   The function takes advantage of 1) FFT 2) fast permutation through indicies
-%   3) persistent precomputation (coefficients and indicies are precomputed during 
+%   The function takes advantage of 1) FFT 2) fast permutation through indices
+%   3) persistent precomputation (coefficients and indices are precomputed during 
 %   the first run).  
 %
 %   This transform can be inverted using MIRT_IDCTN.
@@ -39,7 +39,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Check if the variable size has changed and we need to
-%%% precompute weights and indicies
+%%% precompute weights and indices
 
 precompute=0;
 if  ~exist('siz','var'),
@@ -54,7 +54,7 @@ end
     
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Precompute weights and indicies
+%%% Precompute weights and indices
 if precompute,
     siz=size(a);
     ndim=ndims(a);

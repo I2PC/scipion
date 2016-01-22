@@ -10,7 +10,7 @@ import javax.swing.Icon;
  *  The CompoundIcon will paint two, or more, Icons as a single Icon. The
  *  Icons are painted in the order in which they are added.
  *
- *  The Icons are layed out on the specified axis:
+ *  The Icons are laid out on the specified axis:
  * <ul>
  * <li>X-Axis (horizontally)
  * <li>Y-Axis (vertically)
@@ -44,7 +44,7 @@ public class CompoundIcon implements Icon
 
 	/**
 	 *  Convenience contructor for creating a CompoundIcon where the
-	 *  icons are layed out on on the X-AXIS, the gap is 0 and the
+	 *  icons are laid out on on the X-AXIS, the gap is 0 and the
 	 *  X/Y alignments will default to CENTER.
 	 *
 	 *  @param icons  the Icons to be painted as part of the CompoundIcon

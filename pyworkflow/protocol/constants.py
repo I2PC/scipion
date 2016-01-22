@@ -54,7 +54,7 @@ MODE_CHOICES = ('Continue', 'Restart')#, 'Continue')
 
 # Steps execution mode
 STEPS_SERIAL = 0      # Execute steps serially, some of the steps can be mpi programs
-STEPS_PARALLEL = 1    # Execute steps in parallel, throught threads or mpi
+STEPS_PARALLEL = 1    # Execute steps in parallel, through threads or mpi
 
 
 # Level of expertise for the input parameters, mainly used in the protocol form
