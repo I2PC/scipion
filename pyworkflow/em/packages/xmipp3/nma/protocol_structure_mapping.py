@@ -258,7 +258,8 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
         except ImportError:
             found = False
         if not found:
-            errors.append('**<You need to install sklearn library>**')   
+            errors.append("**<You need to install sklearn library>**\n"
+                          "use following script to fix this: scipion install sklearn")   
         
         return errors 
            
