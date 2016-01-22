@@ -196,7 +196,38 @@ def loadWebConf():
             protocols[protName] = json.loads(cp.get('WEB_PROTOCOLS', protName)) 
     
     return webConf
-    
+
+def loadEmailConf():
+    """ Load configuration parameters to be used for emailing.
+    By default read from: scipion.conf
+    """
+    # Read menus from users' config file.
+    cp = ConfigParser()
+    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    emailConf = OrderedDict()
+
+    confFile = os.environ['SCIPION_CONFIG']
+
+    assert cp.read(confFile) != [], 'Missing file %s' % confFile
+
+    # Set options from EMAIL main section
+    def setm(option, default):
+        if cp.has_option('EMAIL', option):
+            emailConf[option] = cp.get('EMAIL', option)
+        else:
+            emailConf[option] = default
+
+    setm('EMAIL_HOST', 'localhost')
+    setm('EMAIL_PORT', '25')
+    setm('EMAIL_HOST_USER', 'smtpuser')
+    setm('EMAIL_HOST_PASSWORD', 'smtppassword')
+    setm('EMAIL_USE_TLS', False)
+
+    setm('EMAIL_FOR_SUBSCRIPTION', 'scipion-users-join@lists.sourceforge.net')
+
+    return emailConf
+
+
 
 class ProjectSettings(pwobj.OrderedObject):
     """ Store settings related to a project. """

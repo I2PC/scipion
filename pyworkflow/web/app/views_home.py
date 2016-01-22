@@ -35,6 +35,7 @@ from django.core.context_processors import csrf
 from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.mapper.sqlite import SqliteFlatMapper
 from django.core.servers.basehttp import FileWrapper
+from pyworkflow.web.app.email import validateEmail, subscribeToUsersList
 import mimetypes
 
 import pyworkflow as pw
@@ -108,7 +109,7 @@ def startDownload(request):
         errors += "Please fill in the fullName field.\n"
     if not len(organization) > 0:
         errors += "Please fill in the Organization field.\n"
-    if not len(email) > 0:
+    if not len(email) > 0 and validateEmail(email):
         errors += "Please fill in the Email field.\n"
     # if not len(mailoption) > 0:
     #         errors += "Please choose one into the Country field.\n"
@@ -139,6 +140,9 @@ def startDownload(request):
         mapper.commit()
         mapper.close()
 
+        # If the user want's to be subscribed
+        if mailoption == '0': subscribeToUsersList(email)
+
         # Return a response with the scipion download file
         path = getInstallPath(fileName)
 
@@ -157,9 +161,7 @@ def startDownload(request):
         return render_to_response('home/startdownload.html', context)
 
     else:
-        jsonStr = json.dumps({'errors': parseText(errors)}, ensure_ascii=False)
-
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+        redirect(download_form)
 
 
 def doDownload(request):

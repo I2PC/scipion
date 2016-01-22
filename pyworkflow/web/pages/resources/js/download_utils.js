@@ -44,6 +44,8 @@ $(document).ready(function() {
 			errors += "Please fill in the Organization field.<br />"
 		if (email.length == 0)
 			errors += "Please fill in the Email field.<br />"
+	    if (!validateEmail(email))
+	        errors += "The email doesn't look like an email.<br/>"
 		if (country.length == 0)
 			errors += "Please fill in the Country field.<br />"
 		if (file === undefined || file.length == 0)
@@ -53,18 +55,12 @@ $(document).ready(function() {
         		errorPopup('Errors found', errors);
         		// Important. Stop the normal POST
         		return e.preventDefault();
-        } 
-        else
-        {
-//            Do the submit
-//			var action = "/startdownload/";
-//			var URL = getSubDomainURL() + action
-//
-//			var serialize_form = $(this).serialize();
-//
-//			$.post(URL, serialize_form, function(json) {
-//			}, "json");
-        }	
+        }
 		
 	});
-});	
+});
+
+function validateEmail(email) {
+    var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
+}
