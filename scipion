@@ -216,8 +216,7 @@ def runApp(app, args='', chdir=True):
 def printVersion():
     """ Print Scipion version """
     # Print the version and some more info
-    sys.stdout.write('\nScipion %s (%s)\n\n' % (__version__, __releasedate__))
-    
+    sys.stdout.write('\nScipion %s (%s) %s\n\n' % (__version__, __releasedate__, __nickname__))
 
 
 #
