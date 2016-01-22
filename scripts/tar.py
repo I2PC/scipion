@@ -50,7 +50,7 @@ os.chdir(dirname(SCIPION_HOME))
 
 cmdStr = """ tar czf scipion_%(version)s_%(date)s_%(label)s.tgz \\
 --exclude=.git --exclude='*.o' --exclude='*.os' --exclude='*pyc' \\
---exclude='*.mrc' --exclude='*.stk' --exclude='*.gz' \\
+--exclude='*.mrc' --exclude='*.stk' --exclude='*.gz' --exclude='*.tgz' \\
 --exclude=software/tmp --exclude='*.scons*' scipion
 """
 
