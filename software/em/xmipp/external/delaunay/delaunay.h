@@ -53,5 +53,7 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p,
 												int source_ID,
 												int dest_ID);
 
+void print_Delaunay_Statistics( char *fileName);
+
 #endif
 

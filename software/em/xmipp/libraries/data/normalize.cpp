@@ -254,50 +254,86 @@ void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_
     DIRECT_MULTIDIM_ELEM(I,n)=(DIRECT_MULTIDIM_ELEM(I,n)-avgbg)*K;
 }
 
-void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> &bg_mask)
+void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> *bg_mask)
 {
+    int Npoints=0;				// # points in mask.
+    double pA, pB, pC;			// Least squares coefficients.
+
     // Only 2D ramps implemented
     I.checkDimension(2);
 
-    int Npoints=(int)bg_mask.sum();
-    if (Npoints<=1)
-        return;
-    FitPoint *allpoints=new FitPoint[Npoints];
+    // Check if mask is NULL.
+    if (bg_mask == NULL)
+    {
+    	Npoints = I.xdim*I.ydim;
+    }
+    // Check if mask is not full of 0's.
+    else
+    {
+    	Npoints=(int)bg_mask->sum();
+    }
 
     // Fit a least squares plane through the background pixels
     I.setXmippOrigin();
-    bg_mask.setXmippOrigin();
-    int idx=0;
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
+    if (bg_mask == NULL)
     {
-        if (A2D_ELEM(bg_mask, i, j))
-        {
-        	FitPoint &p=allpoints[idx++];
-            p.x = j;
-            p.y = i;
-            p.z = A2D_ELEM(I, i, j);
-            p.w = 1.;
-        }
+    	least_squares_plane_fit_All_Points(I, pA, pB, pC);
     }
+    else
+    {
+        int idx=0;
+    	bg_mask->setXmippOrigin();
+        FitPoint *allpoints=new FitPoint[Npoints];
 
-    double pA, pB, pC;
-    least_squares_plane_fit(allpoints, Npoints, pA, pB, pC);
-    delete [] allpoints;
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
+        {
+            if (A2D_ELEM( *bg_mask, i, j))
+            {
+            	FitPoint &p=allpoints[idx++];
+                p.x = j;
+                p.y = i;
+                p.z = A2D_ELEM(I, i, j);
+                p.w = 1.;
+            }
+        }
+
+    	least_squares_plane_fit(allpoints, Npoints, pA, pB, pC);
+    	delete [] allpoints;
+    }
 
     // Subtract the plane from the image and compute stddev within mask
     double sum1 = 0;
     double sum2 = 0;
-    for (int i=STARTINGY(I); i<=FINISHINGY(I); i++)
+    if (bg_mask == NULL)
     {
-        double aux=pB * i + pC;
-        for (int j=STARTINGX(I); j<=FINISHINGX(I); j++)
+        double *ref;
+        for (int i=STARTINGY(I); i<=FINISHINGY(I); i++)
         {
-            A2D_ELEM(I, i, j) -= pA * j + aux;
-            if (A2D_ELEM(bg_mask, i, j))
+            double aux=pB * i + pC;
+            ref = &A2D_ELEM(I, i, STARTINGX(I));
+            for (int j=STARTINGX(I); j<=FINISHINGX(I); j++)
             {
-                double aux=A2D_ELEM(I,i,j);
-                sum1 += aux;
-                sum2 += aux*aux;
+                (*ref) -= pA * j + aux;
+                sum1 += (*ref);
+                sum2 += (*ref)*(*ref);
+                ref++;
+            }
+        }
+    }
+    else
+    {
+        for (int i=STARTINGY(I); i<=FINISHINGY(I); i++)
+        {
+            double aux=pB * i + pC;
+            for (int j=STARTINGX(I); j<=FINISHINGX(I); j++)
+            {
+                A2D_ELEM(I, i, j) -= pA * j + aux;
+                if (A2D_ELEM( *bg_mask, i, j))
+                {
+                    double aux=A2D_ELEM(I,i,j);
+                    sum1 += aux;
+                    sum2 += aux*aux;
+                }
             }
         }
     }
@@ -305,7 +341,9 @@ void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> &bg_mask)
     double avgbg  = sum1 / Npoints;
     double stddevbg = sqrt(fabs(sum2 / Npoints - avgbg * avgbg) * Npoints / (Npoints - 1));
     if (stddevbg>1e-6)
+    {
         I *= 1.0/stddevbg;
+    }
 }
 
 void normalize_remove_neighbours(MultidimArray<double> &I,
@@ -774,7 +812,7 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
         normalize_NewXmipp2(img, bg_mask);
         break;
     case RAMP:
-        normalize_ramp(img, bg_mask);
+        normalize_ramp(img, &bg_mask);
         break;
     case NEIGHBOUR:
         normalize_remove_neighbours(img, bg_mask, thresh_neigh);

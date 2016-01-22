@@ -8,18 +8,22 @@
 #include <string.h>
 
 
+/*****************************************************************************
+* Variables declaration
+*****************************************************************************/
+struct Graph_Statistics_T graphStatistics;	// Statistics data.
 
-/**************************************************************************
+/*****************************************************************************
 * Public function bodies
-**************************************************************************/
-/***************************************************************************
+*****************************************************************************/
+/*****************************************************************************
 * Name: initialize_Graph
 * IN:		size			# nodes to allocate
 * OUT:		graph			graph data
 * IN/OUT:	N/A
 * RETURN:	SUCCESS if graph allocated. FAILURE i.o.c
 * Description: 	allocates structures to store "size" nodes.
-***************************************************************************/
+*****************************************************************************/
 int  initialize_Graph(struct Graph_T *graph, int  size)
 {
     int     ret=SUCCESS;        // Return value.
@@ -571,46 +575,36 @@ void print_Graph(struct Graph_T *graph)
 //#define DEBUG_PRINT_NODE_STATISTICS
 /***************************************************************************
 * Name: print_Node_Statistics
-* IN:		node			pointer to node.
-* 			depth 			current node depth
-* 			nLeaves			# leaves up from root.
-* 			nSplitted		# triangles splitted from root.
-* 			nTriangles		# triangles from root.
+* IN:		graph			graph data
+* 			nodeIndex		node index
+* 			currDepth 		current node depth
+* 			statistics		statistics data
 * OUT:		N/A
 * IN/OUT	N/A
 * RETURN:	N/A
-* Description: print graph information from root to this node. If this node
-* 				is a leaf then stops. If it is an internal node then
-* 				updates data and check children nodes.
+* Description: If this node is a leaf then stops. If it is an internal node then
+* 				updates data and check children nodes using recursion
 ***************************************************************************/
-void print_Node_Statistics( FILE *fd, struct Graph_T *graph, int nodeIndex, int currDepth, int *nLeaves, int *nSplitted, int *nTriangles)
+void print_Node_Statistics( struct Graph_T *graph, int nodeIndex, int currDepth, struct Graph_Statistics_T *statistics)
 {
 	int		i=0;				// Loop counter.
-	static 	int first=true;
 
 	// Check if node is a leaf.
 	if (graph->nodes[nodeIndex].nChildren == 0)
 	{
-		// Increase # leaves.
-		(*nLeaves)++;
-
-		// Print branch depth.
-		if (first)
+		// Check if node already checked.
+		if (!statistics->nodeChecked[nodeIndex])
 		{
-#ifdef DEBUG_PRINT_NODE_STATISTICS
-			printf("First Leaf\n");
-#endif
-			fprintf( fd, "%d", currDepth);
-		}
-		else
-		{
-#ifdef DEBUG_PRINT_NODE_STATISTICS
-			printf("Node is a Leaf\n");
-#endif
-			fprintf( fd, ",%d", currDepth);
-		}
+			// Increase # leaves and update depth vector.
+			statistics->nLeaves++;
+			statistics->depths[currDepth]++;
 
-		first = false;
+			// Update max depth.
+			if (currDepth > statistics->max)
+			{
+				statistics->max = currDepth;
+			}
+		}
 	}
 	else
 	{
@@ -625,12 +619,10 @@ void print_Node_Statistics( FILE *fd, struct Graph_T *graph, int nodeIndex, int 
 		// Check if node was splitted.
 		if (graph->nodes[nodeIndex].nChildren == 2)
 		{
-			(*nSplitted)++;
-		}
-		// Check if node is a regular triangle.
-		else
-		{
-			(*nTriangles) = (*nTriangles) + 3;
+			if (!statistics->nodeChecked[graph->nodes[nodeIndex].children_Index[i]])
+			{
+				statistics->nSplitted = statistics->nSplitted + 2;
+			}
 		}
 
 		// Call recursively children nodes.
@@ -639,15 +631,18 @@ void print_Node_Statistics( FILE *fd, struct Graph_T *graph, int nodeIndex, int 
 #ifdef DEBUG_PRINT_NODE_STATISTICS
 			printf("Child %d with id %d\n", i, graph->nodes[nodeIndex].children_Index[i]);
 #endif
-			print_Node_Statistics( fd, graph, graph->nodes[nodeIndex].children_Index[i], currDepth + 1, nLeaves, nSplitted, nTriangles);
+			print_Node_Statistics( graph, graph->nodes[nodeIndex].children_Index[i], currDepth + 1, statistics);
 		}
 	}
+
+	statistics->nodeChecked[nodeIndex] = true;
 }
 
 
 /***************************************************************************
 * Name: print_Graph_Statistics
-* IN:		graph			pointer to graph.
+* IN:		fileName		output file name.
+* 			graph			pointer to graph.
 * OUT:		N/A
 * IN/OUT	N/A
 * RETURN:	N/A
@@ -656,34 +651,83 @@ void print_Node_Statistics( FILE *fd, struct Graph_T *graph, int nodeIndex, int 
 ***************************************************************************/
 void print_Graph_Statistics( char *fileName, struct Graph_T *graph)
 {
-	int	nLeaves=0;		// # leaves in graph.
-	int	nSplitted=0;	// # triangles splitted in graph.
-	int	nTriangles=1;	// # regular triangles in graph.
-	FILE 	*fd=NULL;	// File descriptor.
+	long long int	i=0;							// Loop counter.
+	FILE 			*fd=NULL;						// File descriptor.
+	long long int	memory=0;						// Amount of memory required.
+	long long int	sum=0;
 
-	// Open input file.
+	// Open output file.
 	if ((fd = fopen( fileName, "w")) == NULL)
 	{
-		printf("Error opening output file: %s\n", fileName);
+		printf("Function print_Graph_Statistics.\nError opening output file: %s\n", fileName);
 	}
 	else
 	{
-		// Open bracket.
-		fprintf( fd, "Branches depth: [");
+		// Initialize array of depths.
+		if (((graphStatistics.depths = (long long int *) calloc( graph->nElements, sizeof(long long int))) != NULL) &&
+			((graphStatistics.nodeChecked = (bool *) calloc( graph->nElements, sizeof(bool))) != NULL))
+		{
+			// Initialize data.
+			graphStatistics.nLeaves = 0;
+			graphStatistics.nSplitted = 0;
+			graphStatistics.max = 0;
+			memset( graphStatistics.nodeChecked, false, sizeof(bool)*graph->nElements);
 
-		// Call function to print node.
-		print_Node_Statistics( fd, graph, 0, 1, &nLeaves, &nSplitted, &nTriangles);
+			// Call function to print node.
+			print_Node_Statistics( graph, 0, 0, &graphStatistics);
 
-		// Close bracket.
-		fprintf( fd, "]\n");
+			// Print number of nodes.
+			fprintf( fd, "# nodes: %d\n", graph->nElements);
 
-		// Print # leaves.
-		fprintf( fd,"# leaves: %d\n", nLeaves);
+			// Open bracket.
+			fprintf( fd, "a <- c(");
 
-		// Print # splitted triangles.
-		fprintf( fd,"# splitted triangles: %d\n", nSplitted);
+			// Print # nodes with i-depth.
+			fprintf( fd,"%llu", graphStatistics.depths[0]);
+			sum = graphStatistics.depths[0];
+			for (i=1; i<graphStatistics.max+1 ;i++)
+			{
+				fprintf( fd,",%llu", graphStatistics.depths[i]);
+				sum = sum + graphStatistics.depths[i];
+			}
 
-		// Print # triangles.
-		fprintf( fd,"# regular triangles: %d\n", nTriangles);
+			// Close bracket.
+			fprintf( fd, ")\n");
+
+			// Print # leaves.
+			fprintf( fd,"# leaves nodes: %llu\n", graphStatistics.nLeaves);
+			if (sum != graphStatistics.nLeaves)
+			{
+				printf("Sum %llu and nLeaves %llu are different\n", sum, graphStatistics.nLeaves);
+			}
+
+			// Print # splitted nodes.
+			fprintf( fd,"# nodes with 2 children: %llu\n", graphStatistics.nSplitted);
+
+			// Print # internal nodes with 3 children.
+			fprintf( fd,"# nodes with 3 children: %llu\n", graph->nElements - graphStatistics.nLeaves - graphStatistics.nSplitted);
+
+			// Print max depth.
+			fprintf( fd,"Max depth: %llu\n", graphStatistics.max);
+
+			// Print triangles where points are located.
+#ifdef GRAPH_STATISTICS
+			for (i=0; i<3 ;i++)
+			{
+				fprintf( fd,"Points located in triangle %llu: %llu\n", i+1, graphStatistics.trianglesFound[i]);
+			}
+#endif
+
+			// Print memory use.
+			memory = sizeof(int) + sizeof(int) + sizeof(struct Node_T)*graph->size + sizeof(int)*graph->size;
+			fprintf( fd,"Memory required:\n\t\t%f KB\n\t\t%f MB\n", memory / SIZE_OF_KB, memory / (SIZE_OF_KB*SIZE_OF_KB));
+
+			free(graphStatistics.depths);
+			free(graphStatistics.nodeChecked);
+			//print_Graph(graph);
+		}
+
+		// Close file descriptor.
+		fclose(fd);
 	}
 }
