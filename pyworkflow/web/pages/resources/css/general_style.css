@@ -28,7 +28,7 @@ html, body, #mainContainer {
 /* section, aside { height: auto; min-height: 100%;} */
 a{
 	color:#000000;
-	text-decoration:none;
+	text-decoration: underline;
 	border:none;
 }
 img{

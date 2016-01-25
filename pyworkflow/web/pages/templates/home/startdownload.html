@@ -14,8 +14,14 @@
 {% block main_col %}
 	<div>
 		<h1 class="primary">Scipion download</h1>
-		<P>The download of {{fileToDownload}} will start now. If it doesn't, click on this <a href="{{abs_url}}download">link</a></P>
+		<P>The download of {{fileToDownload}} will start now. If it doesn't, click on this <a class="lead" href="{{abs_url}}download">link</a></P>
 	</div>
+
+	<div>
+		<h2 class="primary">How to install</h2>
+		<P>For further information about installing Scipion, please go to our <a class="lead" href="https://github.com/I2PC/scipion/wiki/How-to-Install">How to install page</a></P>
+	</div>
+
 	<script type="text/javascript">
 		 window.location='{{abs_url}}download';
 	</script>
