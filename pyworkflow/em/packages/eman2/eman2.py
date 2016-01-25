@@ -67,7 +67,7 @@ def validateVersion(errors):
         errors.append("We couldn't detect EMAN version. ")
         errors.append("Please, check the EMAN2DIR value in the configuration file:\n")
         errors.append("~/.config/scipion/scipion.conf \n")
-        errors.append("The path should contains either '2.11' or '2.12' "
+        errors.append("The path should contains either '2.11' or '2.12' ")
         errors.append("to properly detect the version.")
 
 
