@@ -57,6 +57,20 @@ def getVersion():
         return ''
 
 
+def validateVersion(errors):
+    """ Validate if eman version is set properly according
+     to installed version and the one set in the config file.
+     Params:
+        errors: a list that will be used to add the error message.
+    """
+    if not getVersion():
+        errors.append("We couldn't detect EMAN version. ")
+        errors.append("Please, check the EMAN2DIR value in the configuration file:\n")
+        errors.append("~/.config/scipion/scipion.conf \n")
+        errors.append("The path should contains either '2.11' or '2.12' "
+        errors.append("to properly detect the version.")
+
+
 def getEmanProgram(program):
     if not 'EMAN_PYTHON' in os.environ:
         os.environ['EMAN_PYTHON'] = os.path.join(os.environ['EMAN2DIR'], 'Python/bin/python')

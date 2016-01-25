@@ -23,7 +23,6 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.eman2.convert import createEmanProcess
 """
 This sub-package contains wrapper around EMAN initialmodel program
 """
@@ -33,7 +32,8 @@ import re
 from os.path import exists
 from glob import glob
 import pyworkflow.em as em
-from pyworkflow.em.packages.eman2.eman2 import getEmanProgram, getVersion
+from pyworkflow.em.packages.eman2.eman2 import getEmanProgram, validateVersion
+from pyworkflow.em.packages.eman2.convert import createEmanProcess
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, EnumParam,
                                         StringParam, BooleanParam)
 from pyworkflow.utils.path import cleanPattern, makePath, createLink
@@ -301,21 +301,17 @@ at each refinement step. The resolution you specify is a target, not the filter 
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
-        if not getVersion():
-            errors.append("We couldn't detect EMAN version. ")
-            errors.append("Please, check your configuration file and change EMAN2DIR.")
-            errors.append("The path should contains either '2.11' or '2.12' ")
-            errors.append("to properly detect the version.")
+        validateVersion(errors)
 
         samplingRate = self._getInputParticles().getSamplingRate()
         if self.resol.get() < 2*samplingRate:
-            errors.append("Target resolution is smaller than 2*samplingRate value. This is impossible.")
+            errors.append("\nTarget resolution is smaller than 2*samplingRate value. This is impossible.")
         
         if not self.doContinue:
             partSizeX, _, _ = self._getInputParticles().getDim()
             volSizeX, _, _ = self.input3DReference.get().getDim()
             if partSizeX != volSizeX:
-                errors.append('Volume and particles dimensions must be equal!!!')
+                errors.append('\nVolume and particles dimensions must be equal!!!')
 
         return errors
     
@@ -323,10 +319,6 @@ at each refinement step. The resolution you specify is a target, not the filter 
         summary = []
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")
-        else:
-            pass
-#             summary.append("Input Images: %s" % self.inputSet.get().getNameId())
-#             summary.append("Output volume: %s" % self.outputVolume.get())
         return summary
     
     #--------------------------- UTILS functions --------------------------------------------
