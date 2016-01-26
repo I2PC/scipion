@@ -39,9 +39,16 @@ if len(sys.argv) != 2:
 
 
 version, date = _parseVersionDate()
-args = {'label': sys.argv[1],
+label = sys.argv[1]
+if label == 'source':
+    excludeTgz = ''
+else:
+    excludeTgz = "--exclude='*.tgz'"
+
+args = {'label': label,
         'version': version,
-        'date': date
+        'date': date,
+        'excludeTgz': excludeTgz
         }
 
 # We will generate the tar from the same level of scipion git folder
@@ -50,8 +57,8 @@ os.chdir(dirname(SCIPION_HOME))
 
 cmdStr = """ tar czf scipion_%(version)s_%(date)s_%(label)s.tgz \\
 --exclude=.git --exclude='*.o' --exclude='*.os' --exclude='*pyc' \\
---exclude='*.mrc' --exclude='*.stk' --exclude='*.gz' --exclude='*.tgz' \\
---exclude=software/tmp --exclude='*.scons*' scipion
+--exclude='*.mrc' --exclude='*.stk' --exclude='*.gz' %(excludeTgz)s \\
+--exclude='software/tmp/*' --exclude='*.scons*' scipion
 """
 
 cmd = cmdStr % args

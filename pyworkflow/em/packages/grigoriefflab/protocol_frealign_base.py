@@ -713,21 +713,27 @@ class ProtFrealignBase(EMProtocol):
     def _validate(self):
         errors = []
         imgSet = self._getInputParticles()
+        partSizeX = imgSet.getXDim()
 
+        # TODO: Use more general validation with self.validatePackageVersion
+        # fucntion, this requires to add packages functions:
+        #  - getSupportedVersions
+        #  - getVersion
         if not exists(FREALIGN_PATH):
             errors.append('Missing ' + FREALIGN_PATH)
 
-        partSizeX, _, _ = imgSet.getDim()
         if not self.doContinue:
-            volSizeX, _, _ = self.input3DReference.get().getDim()
-            if partSizeX != volSizeX:
-                errors.append('Volume and particles dimensions must be equal!!!')
+            self._validateDim(imgSet, self.input3DReference.get(),
+                              'Input particles', 'Reference volume')
 
         halfX = partSizeX % 2
+
         if halfX != 0:
             errors.append('Particle dimensions must be even!!!')
+
         if not imgSet.hasAlignmentProj() and self.useInitialAngles.get():
             errors.append("Particles has not initial angles !!!")
+
         if imgSet.isPhaseFlipped():
             errors.append("Your particles are phase flipped. Please, choose "
                           "a set of particles without phase-contrast correction "
