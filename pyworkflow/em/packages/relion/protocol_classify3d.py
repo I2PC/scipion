@@ -101,11 +101,8 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
-        partSizeX, _, _ = self._getInputParticles().getDim()
-        volSizeX, _, _ = self.referenceVolume.get().getDim()
-        if partSizeX != volSizeX:
-            errors.append('Volume and particles dimensions must be equal!!!')
-
+        self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
+                          'Input particles', 'Reference volume')
         return errors
     
     def _validateContinue(self):
