@@ -142,6 +142,12 @@ void MultireferenceAligneability::run()
 
 		rank = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
 
+		if (sum_w_proj > sum_w_exp)
+			rank = 0;
+
+		if (sum_w_exp > sum_noise)
+			rank = 0;
+
 		if (rank>1)
 			rank=1;
 		else if (rank < 0)
