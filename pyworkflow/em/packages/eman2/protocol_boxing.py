@@ -109,7 +109,7 @@ class EmanProtBoxing(ProtParticlePicking):
     #--------------------------- INFO functions ---------------------------------------------------
     def _validate(self):
         errors = []
-        eman2.validateVersion(errors)
+        eman2.validateVersion(self, errors)
         return errors
 
     def _warnings(self):

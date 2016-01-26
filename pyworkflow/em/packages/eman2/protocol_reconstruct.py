@@ -230,7 +230,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
-        validateVersion(errors)
+        validateVersion(self, errors)
 
         if self.reconstructionMethod.get() > RECON_FOURIER:
             errors.append("\nNot implemented yet! Please, choise either back_prjection or fourier method.")
