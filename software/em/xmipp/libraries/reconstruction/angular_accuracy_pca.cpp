@@ -193,13 +193,15 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		newXdim = Ydim;
 	}
 
-	Matrix2D<double> proj, projRef;
+	Matrix2D<double> proj; //projRef;
 	imgno = 0;
 	Projection P;
 	FileName image;
 	MultidimArray<float> temp;
+	//MultidimArray<double> avg;
 	Matrix2D<double> E;
 
+/*
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
 		int enabled;
@@ -226,13 +228,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 			psi = newpsi;
 		}
 
-/*
-		double tempRot = 5*((rand() % 100)/99.-0.5);
-		double tempTil = 5*((rand() % 100)/99.-0.5);
-
-		rot = rot +  tempRot;
-		tilt = tilt +  tempTil;
-*/
 		projectVolume(phantomVol(), P, Ydim, Xdim, rot, tilt, psi);
 
 		Euler_angles2matrix(rot, tilt, psi, E, false);
@@ -262,12 +257,15 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 			}
 		}
 		#endif
+
 	}
 
 	pca.subtractAvg();
+	avg = pca.avg;
 	pca.learnPCABasis(numPCAs,numIter);
 	pca.projectOnPCABasis(projRef);
 	pca.v.clear();
+*/
 
 	imgno = 0;
 	FileName f;
@@ -287,6 +285,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		//ApplyGeoParams params;
 		//params.only_apply_shifts = true;
 		//img.readApplyGeo(SF,__iter.objId,params);
+
 		SF.getValue(MDL_IMAGE,f,__iter.objId);
 		img.read(f);
 		Matrix2D<double> E;
@@ -336,6 +335,12 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 	}
 
 	pca.subtractAvg();
+//	pca.avg = avg;
+
+//
+	pca.learnPCABasis(numPCAs,numIter);
+//
+
 	pca.projectOnPCABasis(proj);
 
 	std::vector< MultidimArray<float> > recons(SF.size());
@@ -347,13 +352,11 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 
 	imgno = 0;
 	Image<float> imgRes;
-	double R2_Proj1,R2_Exp1,R2_Proj2,R2_Exp2;
-	R2_Proj1=0;
-	R2_Exp1=0;
-	R2_Proj2=0;
-	R2_Exp2=0;
+	double R2_Proj,R2_Exp;
+	R2_Proj=0;
+	R2_Exp=0;
 
-	std::vector< MultidimArray<float> > reconsProj(SF.size());
+	//std::vector< MultidimArray<float> > reconsProj(SF.size());
 
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
@@ -398,15 +401,8 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		recons[imgno].setXmippOrigin();
 
 		imgRes() = temp - (recons[imgno]);
-		R2_Proj1 = imgRes().computeStddev();
-		R2_Proj1 = R2_Proj1*R2_Proj1;
-
-		imgRes() = temp + (recons[imgno]);
-		R2_Proj2 = imgRes().computeStddev();
-		R2_Proj2 = R2_Proj2*R2_Proj2;
-
-		if(R2_Proj1 > R2_Proj2)
-			R2_Proj1 = R2_Proj2;
+		R2_Proj = imgRes().computeStddev();
+		R2_Proj = R2_Proj*R2_Proj;
 
 		ApplyGeoParams params;
 		//params.only_apply_shifts = true;
@@ -440,22 +436,16 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		temp.setXmippOrigin();
 
 		imgRes() = temp - (recons[imgno]);
-		R2_Exp1 = imgRes().computeStddev();
-		R2_Exp1 = R2_Exp1*R2_Exp1;
+		R2_Exp = imgRes().computeStddev();
+		R2_Exp = R2_Exp*R2_Exp;
 
-		imgRes() = temp + (recons[imgno]);
-		R2_Exp2 = imgRes().computeStddev();
-		R2_Exp2 = R2_Exp2*R2_Exp2;
-		if(R2_Exp1 > R2_Exp2)
-			R2_Exp1 = R2_Exp2;
-
-		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,exp(-R2_Proj1),__iter.objId);
-		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,exp(-R2_Exp1),__iter.objId);
+		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,exp(-R2_Proj),__iter.objId);
+		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,exp(-R2_Exp),__iter.objId);
 		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,imgno)/3.),__iter.objId);
-
 #ifdef DEBUG
 		{
-			Image<float> imgRecons;
+			Image<float>  imgRecons;
+			Image<double> imgAvg;
 			SF.getValue(MDL_IMAGE,f,__iter.objId);
 
 			img.write("kk_exp0.tif");
@@ -464,6 +454,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 			imgRecons().resize(newYdim,newXdim);
 			imgRecons.write("kk_exp.tif");
 
+			/*
 			if ( imgno == 0)
 			{
 				for(int n=0; n<SF.size(); n++)
@@ -473,25 +464,32 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 				}
 
 				pca.reconsFromPCA(proj,recons);
-				pca.reconsFromPCA(projRef,reconsProj);
+				pca.reconsFromPCA(proj,reconsProj);
+				//pca.reconsFromPCA(projRef,reconsProj);
 			}
-
+			*/
 
 			//recons[imgno].statisticsAdjust(0,1);
 			imgRecons()=recons[imgno];
 			imgRecons().resize(newYdim,newXdim);
 			imgRecons.write("kk_reconstructed.tif");
 
-			//reconsProj[imgno].statisticsAdjust(0,1);
-			imgRecons()=reconsProj[imgno];
-			imgRecons().resize(newYdim,newXdim);
-			imgRecons.write("kk_reconstructedProj.tif");
+			imgAvg()=pca.avg;
+			imgAvg().resize(newYdim,newXdim);
+			imgAvg.write("kk_average.tif");
 
-			std::cout <<  exp(-R2_Proj1) << " " << exp(-R2_Exp1) << std::endl;
+			//reconsProj[imgno].statisticsAdjust(0,1);
+			//imgRecons()=reconsProj[imgno]-pca.avg;
+			//imgRecons().resize(newYdim,newXdim);
+			//imgRecons.write("kk_reconstructedProj.tif");
+
+
+			std::cout <<  exp(-R2_Proj) << " " << exp(-R2_Exp) << std::endl;
 
 			for(int i=0; i<numPCAs;i++)
 			{
-				std::cout << "proj " << MAT_ELEM(proj,i,imgno) <<  "   " <<  "projRef " <<  MAT_ELEM(projRef,i,imgno) << std::endl;
+				//std::cout << "proj " << MAT_ELEM(proj,i,imgno) <<  "   " <<  "projRef " <<  MAT_ELEM(projRef,i,imgno) << std::endl;
+				std::cout << "proj " << MAT_ELEM(proj,i,imgno) <<  "   " <<  "projRef " <<  MAT_ELEM(proj,i,imgno) << std::endl;
 
 			}
 
