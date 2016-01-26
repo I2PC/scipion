@@ -606,14 +606,7 @@ class ProtRelionBase(EMProtocol):
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
-
-        if not getVersion():
-            errors.append("We couldn't detect RELION version. ")
-            errors.append("Please, check the RELION_HOME value in the configuration file:\n")
-            errors.append("~/.config/scipion/scipion.conf \n")
-            errors.append("The path should contains either '1.3' or '1.4' "
-                          "to properly detect the version.")
-            errors.append("After fixed, you NEED TO RESTART THE PROJECT WINDOW")
+        self.validatePackageVersion('RELION_HOME', errors)
 
         if self.doContinue:
             continueProtocol = self.continueRun.get()
