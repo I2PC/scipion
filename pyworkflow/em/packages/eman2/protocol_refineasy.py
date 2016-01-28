@@ -303,13 +303,15 @@ at each refinement step. The resolution you specify is a target, not the filter 
         errors = []
         validateVersion(self, errors)
 
-        samplingRate = self._getInputParticles().getSamplingRate()
-        if self.resol.get() < 2*samplingRate:
+        particles = self._getInputParticles()
+        samplingRate = particles.getSamplingRate()
+
+        if self.resol <  2 * samplingRate:
             errors.append("\nTarget resolution is smaller than 2*samplingRate value. This is impossible.")
         
         if not self.doContinue:
-            self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
-                          'Input particles', 'Reference volume')
+            self._validateDim(particles, self.input3DReference.get(), errors,
+                              'Input particles', 'Reference volume')
 
         return errors
     

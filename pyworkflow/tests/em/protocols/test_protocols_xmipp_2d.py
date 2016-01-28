@@ -852,7 +852,10 @@ class TestXmippBreakSym(TestXmippBase):
         protBreakSym.inputParticles.set(protImport.outputParticles)
         self.launchProtocol(protBreakSym)
         os.chdir(protBreakSym._getPath())
-        os.system("scipion xmipp_angular_distance --ang1 images.xmd --ang2 input_particles.xmd --sym i2 --oroot kk")
+        from pyworkflow.utils import runJob
+        runJob(None, 'xmipp_angular_distance',
+               "--ang1 images.xmd --ang2 input_particles.xmd --sym i2 --oroot kk",
+               env=getEnviron())
         mdRober = md.MetaData("kk_vec_diff_hist.txt")
         objId = mdRober.firstObject()
         count = mdRober.getValue(md.MDL_COUNT, objId)

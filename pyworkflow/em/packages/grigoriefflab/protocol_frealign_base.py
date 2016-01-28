@@ -723,7 +723,7 @@ class ProtFrealignBase(EMProtocol):
             errors.append('Missing ' + FREALIGN_PATH)
 
         if not self.doContinue:
-            self._validateDim(imgSet, self.input3DReference.get(),
+            self._validateDim(imgSet, self.input3DReference.get(), errors,
                               'Input particles', 'Reference volume')
 
         halfX = partSizeX % 2

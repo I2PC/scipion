@@ -220,7 +220,7 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             errors.append("The number of MPI processes has to be larger than 1")
         
         self._validateDim(self.inputParticles.get(), self.input3DReferences.get(),
-                          'Input particles', 'Reference volume')
+                          errors, 'Input particles', 'Reference volume')
 
         return errors
     

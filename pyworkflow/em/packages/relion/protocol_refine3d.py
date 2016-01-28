@@ -118,7 +118,7 @@ leads to objective and high-quality results.
         """
         errors = []
         self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
-                          'Input particles', 'Reference volume')
+                          errors, 'Input particles', 'Reference volume')
         return errors
     
     def _validateContinue(self):
