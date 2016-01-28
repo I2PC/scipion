@@ -102,7 +102,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         """
         errors = []
         self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
-                          'Input particles', 'Reference volume')
+                          errors, 'Input particles', 'Reference volume')
         return errors
     
     def _validateContinue(self):
