@@ -56,6 +56,15 @@ FourierTransformer::FourierTransformer(int _normSign)
     normSign = _normSign;
 }
 
+FourierTransformer::FourierTransformer(const FourierTransformer& fTransform)
+{
+    REPORT_ERROR(ERR_UNCLASSIFIED,"Fourier transformers should not be copied");
+}
+
+FourierTransformer & FourierTransformer::operator= (const FourierTransformer & other)
+{
+    REPORT_ERROR(ERR_UNCLASSIFIED,"Fourier transformers should not be copied");
+}
 void FourierTransformer::init()
 {
     fReal=NULL;

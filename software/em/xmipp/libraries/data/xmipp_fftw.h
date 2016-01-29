@@ -89,8 +89,15 @@ public:
     /** Default constructor */
     FourierTransformer();
 
-    /* Constructor setting the sign of normalization application*/
+    /** Copy constructor */
+    FourierTransformer(const FourierTransformer& fTransform);
+
+    /** Constructor setting the sign of normalization application*/
     FourierTransformer(int _normSign);
+
+    /** Assignment operator */
+    FourierTransformer & operator= (const FourierTransformer & other);
+
     /** Destructor */
     ~FourierTransformer();
 
@@ -211,6 +218,7 @@ public:
         memcpy(MULTIDIM_ARRAY(V),MULTIDIM_ARRAY(fFourier),
                MULTIDIM_SIZE(fFourier)*2*sizeof(double));
     }
+
 
     /** Return a complete Fourier transform (two halves).
     */
