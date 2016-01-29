@@ -442,8 +442,14 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,exp(-R2_Proj),__iter.objId);
 		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,exp(-R2_Exp),__iter.objId);
 		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,imgno)),__iter.objId);
-#ifdef DEBUG
+
+#define DEBUG
+		#ifdef DEBUG
 		{
+			size_t val;
+			SF.getValue(MDL_ITEM_ID,val,__iter.objId);
+			if (val==22132)
+			{
 			Image<float>  imgRecons;
 			Image<double> imgAvg;
 			SF.getValue(MDL_IMAGE,f,__iter.objId);
@@ -453,21 +459,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 			imgRecons() = temp;
 			imgRecons().resize(newYdim,newXdim);
 			imgRecons.write("kk_exp.tif");
-
-			/*
-			if ( imgno == 0)
-			{
-				for(int n=0; n<SF.size(); n++)
-				{
-					recons[n] = MultidimArray<float>(newXdim*newYdim);
-					reconsProj[n] = MultidimArray<float>(newXdim*newYdim);
-				}
-
-				pca.reconsFromPCA(proj,recons);
-				pca.reconsFromPCA(proj,reconsProj);
-				//pca.reconsFromPCA(projRef,reconsProj);
-			}
-			*/
 
 			//recons[imgno].statisticsAdjust(0,1);
 			imgRecons()=recons[imgno];
@@ -495,6 +486,8 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 
 			char c;
 			std::getchar();
+
+			}
 
 		}
 
