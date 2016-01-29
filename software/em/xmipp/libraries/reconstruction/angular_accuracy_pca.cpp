@@ -469,6 +469,28 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 			imgAvg().resize(newYdim,newXdim);
 			imgAvg.write("kk_average.tif");
 
+			//Projected Image
+			SF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+			SF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+			SF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+			SF.getValue(MDL_FLIP,mirror,__iter.objId);
+
+			if (mirror)
+			{
+				double newrot;
+				double newtilt;
+				double newpsi;
+				Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
+				rot = newrot;
+				tilt = newtilt;
+				psi = newpsi;
+			}
+
+			projectVolume(phantomVol(), P, Ydim, Xdim, rot, tilt, psi);
+			Euler_angles2matrix(rot, tilt, psi, E, false);
+			double angle = atan2(MAT_ELEM(E,0,1),MAT_ELEM(E,0,0));
+			selfRotate(LINEAR, P(),-(angle*180)/3.14159 , WRAP);
+			P.write("kk_proj.tif");
 			//reconsProj[imgno].statisticsAdjust(0,1);
 			//imgRecons()=reconsProj[imgno]-pca.avg;
 			//imgRecons().resize(newYdim,newXdim);
