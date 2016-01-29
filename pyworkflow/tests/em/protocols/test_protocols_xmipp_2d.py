@@ -500,6 +500,7 @@ class TestXmippCropResizeWAngles(TestXmippBase):
         
         inP = prot1.outputParticles  # short notation
         newSize = 30
+        factor = (inP.getDim()[0] / float(newSize))
         outP = self.launch(doResize=True, resizeOption=xrh.RESIZE_DIMENSIONS,
                            resizeDim=newSize,inputParticles=inP,
                            doWindow=True, windowOperation=xrh.WINDOW_OP_CROP)
@@ -507,16 +508,26 @@ class TestXmippCropResizeWAngles(TestXmippBase):
         self.assertEqual(newSize, outP.getDim()[0],
                          "Output particles dimension should be equal to %d" % newSize)
         self.assertAlmostEqual(outP.getSamplingRate(),
-                               inP.getSamplingRate() * (inP.getDim()[0] / float(newSize)))
+                               inP.getSamplingRate() * factor)
 
         # All other attributes remain the same. For the set:
-        self.assertTrue(outP.equalAttributes(
-            inP, ignore=['_mapperPath', '_samplingRate', '_firstDim'], verbose=True))
-        # And for its individual particles too:
+        ignoreList = ['_mapperPath', '_samplingRate', '_firstDim']
+        self.assertTrue(outP.equalAttributes(inP, ignore=ignoreList, verbose=True))
+
+        # Check the scale factor is correctly applied to coordinates and
+        # transform matrix
         for inPart, outPart in izip(inP, outP):
             coordIn = inPart.getCoordinate().getX()
             coordOut = outPart.getCoordinate().getX()
-            self.assertEqual(coordIn, coordOut*2,"Fatal!!! The coordinates are not apropiate corrected!")
+            self.assertAlmostEqual(coordIn, coordOut*factor, delta=2)
+
+            tIn = inPart.getTransform()
+            tOut = outPart.getTransform()
+            tOut.scaleShifts2D(factor)
+            mIn = tIn.getMatrix()
+            mOut = tOut.getMatrix()
+            self.assertTrue(np.allclose(mIn, mOut),
+                            msg='Matrices not equal: %s, %s' % (mIn, mOut))
 
 
 class TestXmippFilterParticles(TestXmippBase):
