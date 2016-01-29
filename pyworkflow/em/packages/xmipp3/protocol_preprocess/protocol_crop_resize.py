@@ -247,12 +247,12 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
                 coord.setX(coord.getX() / factor)
                 coord.setY(coord.getY() / factor)
                 item.setCoordinate(coord)
-                
+            
             item.setSamplingRate(self.samplingRate)
-                
+            
             
             if self.inputHasAlign:
-                item.getTransform().scaleShifts2D(1./self.factor)
+                item.getTransform().scaleShifts2D(self.factor)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
