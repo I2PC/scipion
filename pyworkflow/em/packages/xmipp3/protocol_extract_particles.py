@@ -425,8 +425,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=imgSet)
         self._defineSourceRelation(self.inputCoordinates, imgSet)
-        #TODO: pass CTF relation from input micrographs to imgSet
-    
+        self._defineSourceRelation(self.ctfRelations.get(), imgSet)
+
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         validateMsgs = []
