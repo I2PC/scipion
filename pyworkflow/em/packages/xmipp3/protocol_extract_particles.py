@@ -425,7 +425,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=imgSet)
         self._defineSourceRelation(self.inputCoordinates, imgSet)
-        self._defineSourceRelation(self.ctfRelations.get(), imgSet)
+        if self.ctfRelations.hasValue():
+            self._defineSourceRelation(self.ctfRelations.get(), imgSet)
 
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
