@@ -1,250 +1,106 @@
-<!DOCTYPE html>
-<!-- 
-# **************************************************************************
-# *
-# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
-# *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
-# *
-# * This program is free software; you can redistribute it and/or modify
-# * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
-# * (at your option) any later version.
-# *
-# * This program is distributed in the hope that it will be useful,
-# * but WITHOUT ANY WARRANTY; without even the implied warranty of
-# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# * GNU General Public License for more details.
-# *
-# * You should have received a copy of the GNU General Public License
-# * along with this program; if not, write to the Free Software
-# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-# * 02111-1307  USA
-# *
-# *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jose.gutierrez@cnb.csic.es'
-# *
-# **************************************************************************
--->
-<html lang='es'>
-<head>
-<!-- <title>Scipion Tools Services</title> -->
-<meta charset='utf-8'>
-<link rel="icon" type="image/png" href="{{favicon}}" />
+{% extends "layouts/100.html" %}
 
-<!-- CSS -->
-<link href="{{general_css}}" rel="stylesheet" type="text/css">
-<link href="{{messi_css}}" rel="stylesheet" type="text/css" />
-<link href="{{font_awesome}}" rel="stylesheet" type="text/css">
-<link href="{{projects_css}}" rel="stylesheet" type="text/css">
+{% block title %}Scipion Web Tools{% endblock %}
 
-<style type="text/css">
-div#bodyStyle {
-	margin-left: auto;
-	margin-right: auto;
-	margin-top: 0.5em;
-	width: 65%;
-	padding: 2em;
-	border-radius: 7px;
-}
+{% block css %}
+    {{ block.super }}
+	<link href="{{messi_css}}" rel="stylesheet" type="text/css" />
+{% endblock %}
 
-header {
-	height: 7em;
-}
+{% block js %}
+    {{ block.super }}
+	<script type="text/javascript" src="{{messi_js}}"></script>
+	<script type="text/javascript" src="{{utils}}"></script>
+	<script type="text/javascript" src="{{config}}"></script>
+{% endblock %}
 
-div#box {
-	padding: 2.2em;
-	margin-left: auto;
-	margin-right: auto;
-	height: auto;
-	width: 80%;
-	background-color: #E8E8E8;
-	border-radius: 5px;
-	text-align: center;
-	margin-top: 1em ;
-	margin-bottom: 1em ;
-}
+{% block main_col %}
 
-div#minibox {
-	width:90%;
-	padding: 1em; 
-	background-color: white;
-	border: 1px solid black;
-	border-radius: 5px;
-	display: inline-table;
-	margin: 1em ;
-}
-
-
-h1 {
-	font-size: 57px;
-}
-
-h1, h2, h3 {
-	padding: 5px;
-	font-weight: 500;
-	line-height: 1.1;
-}
-
-img.ico{
-    background-color:white;
-}
-
-div#steps{
-	text-align:left;
-/* 	float:left;  */
-	width:100%;
-}
-
-#buttons{
- 	float:right;
-/* 	width:auto; */
-}
-
-#textbtn{
-/* 	float:left; */
-	width:60%;
-}
-
-#lineOpt{
-	width:100%; 
-	display: flex;
-/* 	text-align: left; */
-}
-
-.btn{
-	width:12em;
-}
-
-</style>
-
-<!-- JS -->
-<script type="text/javascript" src="{{jquery}}"></script>
-<script type="text/javascript" src="{{messi_js}}"></script>
-<script type="text/javascript" src="{{utils}}"></script>
-<script type="text/javascript" src="{{config}}"></script>
-<script src="{{project_utils_js}}" type="text/javascript"></script>
-<script src="{{myfirstmap_utils}}" type="text/javascript"></script>
-</head>
-<body>
-	<div id="bodyStyle">
-		<header data-layout='{"type": "border", "hgap": 1, "vgap": 1}'
-			class="north">
-			<div id="headerMainContainer">
-				<a href="{{abs_url}}" id="headerLogoContainer">
-					<img class="logo" src="{{logo_scipion}}" alt="Scipion logo">
-				</a> 
-				<div style="float: right;">
-					<a href="http://i2pc.cnb.csic.es/LoadHome.htm"> <img
-						src="{{abs_url}}resources/logo_i2pc_with_title.png" style="height: 3.2em;" />
-					</a> <a href="http://www.structuralbiology.eu/"> <img
-						src="{{abs_url}}resources/logoInstruct.png" style="height: 3.2em;" />
-					</a> <a href="http://www.cnb.csic.es/"> <img
-						src="{{abs_url}}resources/logo_cnb_without_title.gif" style="height: 3.2em;" />
-					</a>
-				</div>
-            </div>
-            <div id="headerLine"></div>
-        </header>
-		<div id="box">
-			<h1>Scipion Web Tools </h1>
-            <br />
-		    <div id="minibox">
+	<div id="box">
+		<h1>Scipion Web Tools - <a href="http://www.west-life.eu/" target="_blank">
+			<img style="height: 45px" src="http://about.west-life.eu/images/west-lifewhite.png"/></a>
+		</h1>
+		<br />
+		<div id="minibox">
+			<div id="steps">
 				<h2>Single particle analysis tools</h2>
-		    	<br />
-		    	<div id="lineOpt">
-				    <h3 id="textbtn">
-			    		Create your initial volume
-				    </h3>
-				    <span id="buttons">
-						<!-- CREATE NEW PROJECT -->
-						<a href="{{abs_url}}myfirstmap">
-							<button class="btn button2 primary_inv" type="button">
-								My first map
-							</button>
-						</a>
-					</span>
-				</div>
-				<br />
+			</div>
+			<br/>
 
-				<div id="lineOpt">
-			    	<h3 id="textbtn">
-					    	Align your movies
-		    		</h3>
-			    	<span id="buttons">
-				    	<!-- TEST DATA -->
-						<a href="{{abs_url}}mymovies">
-							<button class="btn button2 primary_inv" type="button">
-								My movie alignment
-							</button>
-						</a>
-					</span>
-				</div>
-				<br />
-				<div id="lineOpt">
-			    	<h3 id="textbtn">
-				    	Analyze your maps
-			    	</h3>
-			    	<span id="buttons">
-						<!-- EXAMPLE PROJECT -->
-						<a href="{{abs_url}}myresmap">
-							<button class="btn button2 primary_inv" type="button">
-								My resolution map
-							</button>
-						</a>
-					</span>
-				</div>
-				<br />
+			<div id="lineOpt">
+				<P>
+					Create your initial volume
+				</P>
+				<span id="buttons">
+					<a href="{{abs_url}}myfirstmap"><button type="button" class="btn btn_wide button2 primary_inv">My first map</button></a>
+				</span>
+			</div>
+			<br/>
 
-				<!-- Quality section commented until further development -->
-				<!--<h2>Quality check and validation tools</h2>-->
-				<!--<br />-->
-				<!--<div id="lineOpt">-->
-			    	<!--<h3 id="textbtn">-->
-				    	<!--Explore protein interactions-->
-			    	<!--</h3>-->
-			    	<!--<span id="buttons">-->
-						<!--&lt;!&ndash; EXAMPLE PROJECT &ndash;&gt;-->
-						<!--<a href="http://3diana.cnb.csic.es/3DIANA/home.html">-->
-							<!--<img src="http://3diana.cnb.csic.es/DIMERO/IMG/3diana_logo.png" style="height:35px;margin-bottom:15px"/>-->
-						<!--</a>-->
-					<!--</span>-->
-				<!--</div>-->
-				<!--<div id="lineOpt">-->
-			    	<!--<h3 id="textbtn">-->
-				    	<!--Validate your particles-->
-			    	<!--</h3>-->
-			    	<!--<span id="buttons">-->
-						<!--&lt;!&ndash; EXAMPLE PROJECT &ndash;&gt;-->
-						<!--<a href="{{abs_url}}mypval">-->
-							<!--<button class="btn button2 validation_inv" type="button">-->
-								<!--My particle validation-->
-							<!--</button>-->
-						<!--</a>-->
-					<!--</span>-->
-				<!--</div>-->
-				<!--<br />-->
-				<!--<div id="lineOpt">-->
-			    	<!--<h3 id="textbtn">-->
-				    	<!--Calculate you quality map score-->
-			    	<!--</h3>-->
-			    	<!--<span id="buttons">-->
-						<!--&lt;!&ndash; EXAMPLE PROJECT &ndash;&gt;-->
-						<!--<a href="{{abs_url}}myscoring">-->
-							<!--<button class="btn button2 validation_inv" type="button">-->
-								<!--My map scoring-->
-							<!--</button>-->
-						<!--</a>-->
-					<!--</span>-->
-				<!--</div>-->
-				<!--<br />-->
-		    </div>
-		</div>
-		<div style="text-align:center; font-size: 0.8em;">
-			<a href="http://www.gnu.org/copyleft/gpl.html"> ©
-				2015 · Scipion is licensed under the GNU General Public License
-			</a>
+			<div id="lineOpt">
+				<P>
+					Align your movies
+				</P>
+				<span id="buttons">
+					<a href="{{abs_url}}mymovies"><button type="button" class="btn btn_wide button2 primary_inv">My movie alignment</button></a>
+				</span>
+			</div>
+			<br/>
+
+			<div id="lineOpt">
+				<P>
+					Analyze your maps
+				</P>
+				<span id="buttons">
+					<a href="{{abs_url}}myresmap"><button type="button" class="btn btn_wide button2 primary_inv">My resolution map</button></a>
+				</span>
+			</div>
+			<br/>
+
+
+			<!-- Quality section commented until further development -->
+			<!--<h2>Quality check and validation tools</h2>-->
+			<!--<br />-->
+			<!--<div id="lineOpt">-->
+				<!--<h3 id="textbtn">-->
+					<!--Explore protein interactions-->
+				<!--</h3>-->
+				<!--<span id="buttons">-->
+					<!--&lt;!&ndash; EXAMPLE PROJECT &ndash;&gt;-->
+					<!--<a href="http://3diana.cnb.csic.es/3DIANA/home.html">-->
+						<!--<img src="http://3diana.cnb.csic.es/DIMERO/IMG/3diana_logo.png" style="height:35px;margin-bottom:15px"/>-->
+					<!--</a>-->
+				<!--</span>-->
+			<!--</div>-->
+			<!--<div id="lineOpt">-->
+				<!--<h3 id="textbtn">-->
+					<!--Validate your particles-->
+				<!--</h3>-->
+				<!--<span id="buttons">-->
+					<!--&lt;!&ndash; EXAMPLE PROJECT &ndash;&gt;-->
+					<!--<a href="{{abs_url}}mypval">-->
+						<!--<button class="btn button2 validation_inv" type="button">-->
+							<!--My particle validation-->
+						<!--</button>-->
+					<!--</a>-->
+				<!--</span>-->
+			<!--</div>-->
+			<!--<br />-->
+			<!--<div id="lineOpt">-->
+				<!--<h3 id="textbtn">-->
+					<!--Calculate you quality map score-->
+				<!--</h3>-->
+				<!--<span id="buttons">-->
+					<!--&lt;!&ndash; EXAMPLE PROJECT &ndash;&gt;-->
+					<!--<a href="{{abs_url}}myscoring">-->
+						<!--<button class="btn button2 validation_inv" type="button">-->
+							<!--My map scoring-->
+						<!--</button>-->
+					<!--</a>-->
+				<!--</span>-->
+			<!--</div>-->
+			<!--<br />-->
 		</div>
 	</div>
-</body>
-</html>
+
+{% endblock %}

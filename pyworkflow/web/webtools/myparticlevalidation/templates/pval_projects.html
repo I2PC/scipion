@@ -1,225 +1,83 @@
-<!DOCTYPE html>
-<!-- 
-# **************************************************************************
-# *
-# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
-# *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
-# *
-# * This program is free software; you can redistribute it and/or modify
-# * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
-# * (at your option) any later version.
-# *
-# * This program is distributed in the hope that it will be useful,
-# * but WITHOUT ANY WARRANTY; without even the implied warranty of
-# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# * GNU General Public License for more details.
-# *
-# * You should have received a copy of the GNU General Public License
-# * along with this program; if not, write to the Free Software
-# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-# * 02111-1307  USA
-# *
-# *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jose.gutierrez@cnb.csic.es'
-# *
-# **************************************************************************
--->
-<html lang='es'>
-<head>
-<title>Scipion - My Particle Validation</title>
-<meta charset='utf-8'>
-<link rel="icon" type="image/png" href="{{favicon}}" />
+{% extends "layouts/100.html" %}
 
-<!-- CSS -->
-<link href="{{general_css}}" rel="stylesheet" type="text/css">
-<link href="{{messi_css}}" rel="stylesheet" type="text/css" />
-<link href="{{font_awesome}}" rel="stylesheet" type="text/css">
-<link href="{{projects_css}}" rel="stylesheet" type="text/css">
+{% block title %}Scipion - My Particle Validation{% endblock %}
 
-<style type="text/css">
-div#bodyStyle {
-	margin-left: auto;
-	margin-right: auto;
-	margin-top: 0.5em;
-	width: 65%;
-	padding: 2em;
-	border-radius: 7px;
-}
+{% block css %}
+    {{ block.super }}
+	<link href="{{messi_css}}" rel="stylesheet" type="text/css" />
 
-header {
-	height: 7em;
-}
+{% endblock %}
 
-div#box {
-	padding: 2.2em;
-	margin-left: auto;
-	margin-right: auto;
-	height: auto;
-	width: 80%;
-	background-color: #E8E8E8;
-	border-radius: 5px;
-	text-align: center;
-	margin-top: 1em ;
-	margin-bottom: 1em ;
-}
+{% block js %}
+    {{ block.super }}
+	<script type="text/javascript" src="{{messi_js}}"></script>
+	<script type="text/javascript" src="{{utils}}"></script>
+	<script type="text/javascript" src="{{config}}"></script>
+	<script type="text/javascript" src="{{project_utils_js}}" ></script>
+	<script type="text/javascript" src="{{mypval_utils}}"></script>
 
-div#minibox {
-	width:90%;
-	padding: 1em; 
-	background-color: white;
-	border: 1px solid black;
-	border-radius: 5px;
-	display: inline-table;
-	margin: 1em ;
-}
+{% endblock %}
 
+{% block main_col %}
 
-h1 {
-	font-size: 57px;
-}
-
-h1, h2, h3 {
-	padding: 5px;
-	font-weight: 500;
-	line-height: 1.1;
-}
-
-img.ico{
-    background-color:white;
-}
-
-div#steps{
-	text-align:left;
-/* 	float:left;  */
-	width:100%;
-}
-
-#buttons{
- 	float:right;
-/* 	width:auto; */
-}
-
-#textbtn{
-/* 	float:left; */
-	width:60%;
-}
-
-#lineOpt{
-	width:100%; 
-	display: flex;
-/* 	text-align: left; */
-}
-
-.btn{
-	width:10em;
-}
-
-</style>
-
-<!-- JS -->
-<script type="text/javascript" src="{{jquery}}"></script>
-<script type="text/javascript" src="{{messi_js}}"></script>
-<script type="text/javascript" src="{{utils}}"></script>
-<script type="text/javascript" src="{{config}}"></script>
-<script>
-	{% include '_scipion_context.html' %}
-</script>
-<script src="{{project_utils_js}}" type="text/javascript"></script>
-<script src="{{mypval_utils}}" type="text/javascript"></script>
-</head>
-<body>
-	<div id="bodyStyle">
-		<header data-layout='{"type": "border", "hgap": 1, "vgap": 1}'
-			class="north">
-			<div id="headerMainContainer">
-				<a href="{{abs_url}}" id="headerLogoContainer">
-					<img class="logo" src="{{logo_scipion}}" alt="Scipion logo">
-				</a> <span class="projectHeader">My Resolution Map </span>
-				<div style="float: right;">
-					<a href="http://i2pc.cnb.csic.es/LoadHome.htm"> <img
-						src="{{abs_url}}resources/logo_i2pc_with_title.png" style="height: 3.2em;" />
-					</a> <a href="http://www.structuralbiology.eu/"> <img
-						src="{{abs_url}}resources/logoInstruct.png" style="height: 3.2em;" />
-					</a> <a href="http://www.cnb.csic.es/"> <img
-						src="{{abs_url}}resources/logo_cnb_without_title.gif" style="height: 3.2em;" />
-					</a>
-				</div>
-            </div>
-            <div id="headerLine"></div>
-        </header>
-		<div id="box">
-			<h1>Particle validation</h1>
-            <br /> 
-			<h3 style="text-align:justify;">This page allows you to validate particles online. The generation of a phantom reconstruction from aligned noise
-				is here presented as a baseline to assess the validity of a reconstruction from micrograph images of presumably identical particles.
-				This is both a sanity check for the microscopist at an early stage in a project, as well as for reconstructions already deposited
-				in the EMDB. So, based on the results, with the reconstruction of aligned gaussian noise, the validity of the reconstruction from the
-				micrograph images can be assessed. Practically, if the resolution of the reconstruction based on the images is not considerably
-				different from the one based on the aligned gaussian noise (for less number of particles), the images may not produce a valid
-				reconstruction (<a href="http://dx.doi.org/10.3934/biophy.2015.1.21" target="_blank"><strong>J. Bernard Heymann, 2015</strong></a>).
+	<div id="box">
+		<h1>Particle validation</h1>
+		<br />
+		<h4 style="text-align:justify;">
+			This page allows you to validate particles online. The generation of a phantom reconstruction from aligned noise
+			is here presented as a baseline to assess the validity of a reconstruction from micrograph images of presumably identical particles.
+			This is both a sanity check for the microscopist at an early stage in a project, as well as for reconstructions already deposited
+			in the EMDB. So, based on the results, with the reconstruction of aligned gaussian noise, the validity of the reconstruction from the
+			micrograph images can be assessed. Practically, if the resolution of the reconstruction based on the images is not considerably
+			different from the one based on the aligned gaussian noise (for less number of particles), the images may not produce a valid
+			reconstruction (<a href="http://dx.doi.org/10.3934/biophy.2015.1.21" target="_blank"><strong>J. Bernard Heymann, 2015</strong></a>).
 			<br />
-			</h3>
-			
-		    <div id="minibox">
-		    	<div id="steps">
-			    	<h2>
-			    		<strong>
-				    		Choose your project
-			    		</strong>
-		    		</h2>
-		    	</div>
-		    	<br />
-		    	<div id="lineOpt">
-				    <h3 id="textbtn">
-			    		Create an empty project
-				    </h3>
-				    <span id="buttons">	
-						<!-- CREATE NEW PROJECT --> 
-						<a href="javascript:serviceProjForm();">
-							<button class="btn button2 primary_inv" type="button">
-								Create
-							</button>
-						</a>
-					</span>
-				</div>
-				<br />
-				<div id="lineOpt">
-			    	<h3 id="textbtn">
-					    	Create a project with Test data 
-		    		</h3>
-			    	<span id="buttons">
-				    	<!-- TEST DATA -->
-						<a href="javascript:serviceTestDataForm();">
-							<button class="btn button2 primary_inv" type="button">
-								Test data
-							</button>
-						</a>
-					</span>
-				</div>
-				<br />
-				<div id="lineOpt">	
-			    	<h3 id="textbtn">	
-				    	Explore project with Test data (read-only)
-			    	</h3>
-			    	<span id="buttons">	
-						<!-- EXAMPLE PROJECT -->
-						<a href="javascript:goExampleForm();">
-							<button class="btn button2 primary_inv" type="button">
-								Explore
-							</button>
-						</a>
-					</span>
-				</div>
-		    </div>
-		    
-		</div>
-		<div style="text-align:center; font-size: 0.8em;">
-			<a href="http://www.gnu.org/copyleft/gpl.html"> ©
-				2015 · Scipion is licensed under the GNU General Public License
-			</a>
+		</h4>
+
+		<div id="minibox">
+			<div id="steps">
+				<h2>
+					<strong>
+						Choose your project
+					</strong>
+				</h2>
+			</div>
+			<br />
+			<div id="lineOpt">
+				<p>Create an empty project</p>
+				<span id="buttons">
+					<!-- CREATE NEW PROJECT -->
+					<a href="javascript:serviceProjForm();">
+						<button class="btn btn_wide button2 primary_inv" type="button">
+							Create
+						</button>
+					</a>
+				</span>
+			</div>
+			<br />
+			<div id="lineOpt">
+				<p>Create a project with Test data</p>
+				<span id="buttons">
+					<!-- TEST DATA -->
+					<a href="javascript:serviceTestDataForm();">
+						<button class="btn btn_wide button2 primary_inv" type="button">
+							Test data
+						</button>
+					</a>
+				</span>
+			</div>
+			<br />
+			<div id="lineOpt">
+				<p>Explore project with Test data (read-only)</p>
+				<span id="buttons">
+					<!-- EXAMPLE PROJECT -->
+					<a href="javascript:goExampleForm();">
+						<button class="btn btn_wide button2 primary_inv" type="button">
+							Explore
+						</button>
+					</a>
+				</span>
+			</div>
 		</div>
 	</div>
-</body>
-</html>
+{% endblock %}

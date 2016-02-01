@@ -392,6 +392,13 @@ table#data tr:nth-child(even) {
     opacity: 0.8
 }
 
+/* Fixed size buttons */
+.btn_wide{
+	min-width:12em;
+}
+
+/* COLORS */
+
 .primary {
     color: firebrick
 }
@@ -456,4 +463,40 @@ span #externalTool{
 
 span #externalTool:hover{
 	color:Firebrick;
+}
+
+/* FOR The webtools entry pages */
+div#box {
+    padding: 2.2em;
+    margin-left: auto;
+    margin-right: auto;
+    height: auto;
+    background-color: #E8E8E8;
+    border-radius: 5px;
+    text-align: center;
+    margin-top: 1em ;
+    margin-bottom: 1em ;
+}
+
+div#minibox {
+    width:90%;
+    padding: 1em;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 5px;
+    display: inline-table;
+    margin: 1em ;
+}
+
+div#steps{
+    text-align:left;
+    width:100%;
+}
+div#lineOpt {
+    display:flex
+}
+
+#lineOpt p {
+    width:60%;
+    font-size: large;
 }
