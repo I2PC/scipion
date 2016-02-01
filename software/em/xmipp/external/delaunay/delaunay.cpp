@@ -21,19 +21,29 @@
 #define MAX_NEIGHBORS		50
 #define EXTERNAL_FACE       0
 
+/**************************************************************************
+* Data types definition
+**************************************************************************/
+struct Delaunay_Statistics_T
+{
+	long long int	nFlipped;
+	long long int	nEdges;
+};
+
 
 /*****************************************************************************
 * Variables declaration
 *****************************************************************************/
-struct Node_T 	root_Node;
-struct Graph_T  graph;
+struct Node_T 					root_Node;
+struct Graph_T  				graph;
+struct Delaunay_Statistics_T 	delaunay_Stat;
 
 /*****************************************************************************
 * Private functions declaration
 *****************************************************************************/
 void 		insert_First_Node( struct Delaunay_T *delaunay);
 int         is_Strictly_Interior_To_Node(struct DCEL_T *dcel, struct Graph_T *graph, struct Point_T *p, int node_Index);
-void		analyze_Face( struct Delaunay_T *delaunay, int point_Index);
+bool		analyze_Face( struct Delaunay_T *delaunay, int point_Index);
 void    	split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index, int node_Index, int nTriangles);
 double  	modified_Signed_Area( struct DCEL_T *dcel, struct  Node_T *node);
 int     	select_Colinear_Edge( struct DCEL_T *dcel, int point_Index, int edge_ID);
@@ -112,7 +122,6 @@ void	delete_Delaunay( struct Delaunay_T *delaunay)
 {
 	// Deallocate DCEL.
 	finalize_DCEL(delaunay->dcel);
-	free(delaunay->dcel);
 
 	// Deallocate Delaunay.
 	finalize_Delaunay(delaunay);
@@ -269,6 +278,7 @@ void 	finalize_Delaunay(struct Delaunay_T *delaunay)
 }
 
 
+//#define DEBUG_INCREMENTAL_DELAUNAY
 /***************************************************************************
 * Name: incremental_Delaunay
 * IN:		N/A
@@ -281,9 +291,14 @@ void 	finalize_Delaunay(struct Delaunay_T *delaunay)
 void	incremental_Delaunay(struct Delaunay_T *delaunay)
 {
     int     point_Index=0;                  // Points loop counter.
-#ifdef DEBUG
-//    char    filename[20];                   // Debug filename.
+
+#ifdef GRAPH_STATISTICS
+    // Initialize graph statistics (first 2 points are located in first triangle).
+    graphStatistics.trianglesFound[0] = 2;
+    graphStatistics.trianglesFound[1] = 0;
+    graphStatistics.trianglesFound[2] = 0;
 #endif
+    delaunay->dcel->incremental = true;
 
     // Set highest point at first position of the DCEL vertex array.
     set_Highest_First( delaunay->dcel, &lexicographic_Higher);
@@ -305,11 +320,6 @@ void	incremental_Delaunay(struct Delaunay_T *delaunay)
     // Insert first internal face and external face.
     insertFace( delaunay->dcel, 4);
     insertFace( delaunay->dcel, 1);
-
-#ifdef DEBUG
-    print_Graph(graph);
-    print_DCEL( dcel);
-#endif
 
     // Loop all other points.
     for (point_Index=1; point_Index<delaunay->dcel->nVertex ; point_Index++)
@@ -344,10 +354,15 @@ void 	build_Delaunay_From_Triangulation(struct DCEL_T *dcel)
 	char	filename[20];
 	int		step=0;
 #endif
+#ifdef STAR_STATISTICS
+	delaunay_Stat.nFlipped = 0;
+	delaunay_Stat.nEdges = dcel->nEdges;
+#endif
 
 	// Initialize variables.
 	i=0;
 	nPending = dcel->nEdges;
+	dcel->incremental = false;
 
 	// Analyze all edges.
 	while (nPending > 0)
@@ -382,6 +397,9 @@ void 	build_Delaunay_From_Triangulation(struct DCEL_T *dcel)
 				// Check if neighbor point is in circle.
 				if (in_Circle( &triangle[0], &triangle[1], &triangle[2], &vertex->vertex))
 				{
+#ifdef STAR_STATISTICS
+					delaunay_Stat.nFlipped++;
+#endif
 #ifdef DEBUG_DCEL
 					printf("Edge %d wrong. Pending %d. \n", i+1, nPending);
 					scanf( "%c", &prueba);
@@ -999,7 +1017,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 									q->x = delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.x;
 									q->y = delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.y;
 									found = TRUE;
-								//	printf("Found point (%lf,%lf) equal to (%lf,%lf)\n", q->x, q->y, p->x, p->y);
+									//printf("Found point (%lf,%lf) equal to (%lf,%lf)\n", q->x, q->y, p->x, p->y);
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 									printf("Index point %d. Distance %lf\n", delaunay->graph.nodes[child_Index].points_Index[i], (*lowest_Distance));
 #endif
@@ -1203,13 +1221,13 @@ enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, 
 }
 
 //#define DEBUG_ANALYZE_FACE
-void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
+bool analyze_Face( struct Delaunay_T *delaunay, int point_Index)
 {
     int     i=0;                            // Loop counter.
     int     node_Index=0;                   // Index of current node analyzed.
-    int		found=FALSE;					// Loop control flag.
-	int		finished=FALSE;					// Loop control flag.
-    struct  Dcel_Vertex_T   *point=NULL;   // Pointer to points in DCEL.
+    bool	found=false;					// Loop control flag and return value.
+	bool	finished=false;					// Loop control flag.
+    struct  Dcel_Vertex_T   *point=NULL;   	// Pointer to points in DCEL.
 
     // Get new point to insert.
     point = get_Vertex( delaunay->dcel, point_Index);
@@ -1258,13 +1276,18 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
             while ((!found) && (i < delaunay->graph.nodes[node_Index].nChildren))
             {
 #ifdef DEBUG_ANALYZE_FACE
-            	printf("Trying %d-child node %d in node %d.\n", i, child_Index, node_Index);
+            	printf("Trying %d-child in node %d.\n", i, node_Index);
 #endif
 
                 // Check if point is interior to i-child node.
                 if (is_Interior_To_Node( delaunay->dcel, &delaunay->graph, &point->vertex,
                 						delaunay->graph.nodes[node_Index].children_Index[i]))
                 {
+#ifdef GRAPH_STATISTICS
+                	// Update triangle where point is located.
+                	graphStatistics.trianglesFound[i]++;
+#endif
+
                     // Search in next children node.
                     node_Index = delaunay->graph.nodes[node_Index].children_Index[i];
 
@@ -1272,24 +1295,28 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
                     found = TRUE;
 
 #ifdef DEBUG_ANALYZE_FACE
-                    printf("Interior to node %d. Fetch node data.\n", child_Index);
+                    printf("Interior to node %d. Fetch node data.\n", node_Index);
 #endif
                 }
                 // Next child.
                 else
                 {
                     i++;
+
+                    // Check if all children checked.
                     if (i == delaunay->graph.nodes[node_Index].nChildren)
                     {
-#ifdef DEBUG_ANALYZE_FACE
-                        printf("Point is not interior to any node.\n");
-                        exit(0);
-#endif
+                    	// Force exit function.
+                    	finished = FALSE;
+                    	i = delaunay->graph.nodes[node_Index].nChildren;
+                        printf("CRITICAL ERROR: point (%lf,%lf) is not interior to any node.\n", point->vertex.x, point->vertex.y);
                     }
                 }
             }
         }
     }
+
+	return(found);
 }
 
 //#define DEBUG_SPLIT_TRIANGLE
@@ -1373,7 +1400,6 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 		new_Node[2].points_Index[2] = get_Edge_Origin_Vertex( dcel, prev_Edge_ID - 1);
         new_Node[2].face_ID = new_Face_ID + 1;
         area[2] = modified_Signed_Area( dcel, &new_Node[2]);
-
         if (area[0] > area[1])
         {
             // 2nd, 0th, 1st.
@@ -1572,9 +1598,9 @@ double   modified_Signed_Area( struct DCEL_T *dcel, struct  Node_T *node)
     else
     {
         // Compute area.
-        area = signed_Area( &dcel->vertex[node->points_Index[0]].vertex,
-                            &dcel->vertex[node->points_Index[1]].vertex,
-                            &dcel->vertex[node->points_Index[2]].vertex);
+        area = signed_Area( &dcel->vertex[node->points_Index[0]-1].vertex,
+                            &dcel->vertex[node->points_Index[1]-1].vertex,
+                            &dcel->vertex[node->points_Index[2]-1].vertex);
     }
 
     return(area);
@@ -1865,3 +1891,32 @@ void	check_Edge( struct DCEL_T *dcel, struct Graph_T *graph, int edge_ID)
 		flip_Edges_Dcel( dcel, graph, edge_ID);
 	}
 }
+
+
+/***************************************************************************
+* Name: 	print_Graph_Statistics
+* IN:		fileName		output file name.
+* OUT:		N/A
+* IN/OUT	N/A
+* RETURN:	N/A
+* Description: print number of flipped edges
+***************************************************************************/
+void print_Delaunay_Statistics( char *fileName)
+{
+	FILE 			*fd=NULL;						// File descriptor.
+
+	// Open output file.
+	if ((fd = fopen( fileName, "w")) == NULL)
+	{
+		printf("Function print_Graph_Statistics.\nError opening output file: %s\n", fileName);
+	}
+	else
+	{
+		// Print # flipped edges.
+		fprintf( fd,"Flipped %llu of %llu\n", delaunay_Stat.nFlipped, delaunay_Stat.nEdges/2);
+
+		// Close file.
+		fclose(fd);
+	}
+}
+

@@ -247,9 +247,11 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
 
     //Generate a Matrix for true PCA and compute the average C'*data
     Matrix2D<double> data;
+    double *refData;
     MultidimArray<double> average;
     data.initZeros(NPCA,v.size());
     average.initZeros(NPCA);
+    refData = &MAT_ELEM(data,0,0);
     for (size_t ii=0;ii<NPCA;ii++)
     {
         MultidimArray<double> &C=PCAbasis[ii];
@@ -257,8 +259,8 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
         {
             MultidimArray<float> &D=v[jj];
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(C)
-            MAT_ELEM(data,ii,jj)+=DIRECT_A1D_ELEM(C,i)*DIRECT_A1D_ELEM(D,i);
-            DIRECT_A1D_ELEM(average,ii)+=MAT_ELEM(data,ii,jj);
+            (*refData) += DIRECT_A1D_ELEM(C,i)*DIRECT_A1D_ELEM(D,i);
+            DIRECT_A1D_ELEM(average,ii)+=(*refData)++;
         }
     }
     average/=v.size();

@@ -30,12 +30,17 @@
 #include <pthread.h>
 
 static pthread_mutex_t fftw_plan_mutex = PTHREAD_MUTEX_INITIALIZER;
+bool	planCreated=false;
+int		nInstances=0;
 
 // Constructors and destructors --------------------------------------------
 FourierTransformer::FourierTransformer()
 {
     init();
     nthreads=1;
+    pthread_mutex_lock(&fftw_plan_mutex);
+    nInstances++;
+    pthread_mutex_unlock(&fftw_plan_mutex);
     threadsSetOn=false;
     normSign = FFTW_FORWARD;
 }
@@ -43,11 +48,23 @@ FourierTransformer::FourierTransformer()
 FourierTransformer::FourierTransformer(int _normSign)
 {
     init();
+    pthread_mutex_lock(&fftw_plan_mutex);
+    nInstances++;
+    pthread_mutex_unlock(&fftw_plan_mutex);
     nthreads=1;
     threadsSetOn=false;
     normSign = _normSign;
 }
 
+FourierTransformer::FourierTransformer(const FourierTransformer& fTransform)
+{
+    REPORT_ERROR(ERR_UNCLASSIFIED,"Fourier transformers should not be copied");
+}
+
+FourierTransformer & FourierTransformer::operator= (const FourierTransformer & other)
+{
+    REPORT_ERROR(ERR_UNCLASSIFIED,"Fourier transformers should not be copied");
+}
 void FourierTransformer::init()
 {
     fReal=NULL;
@@ -68,12 +85,29 @@ void FourierTransformer::clear()
     if (fPlanBackward!=NULL)
         fftw_destroy_plan(fPlanBackward);
     pthread_mutex_unlock(&fftw_plan_mutex);
+
     init();
 }
 
 FourierTransformer::~FourierTransformer()
 {
     clear();
+
+    pthread_mutex_lock(&fftw_plan_mutex);
+    nInstances--;
+
+    // Check if a plan was already created.
+    if (planCreated)
+    {
+    	// Check if this is last instance of a FFT.
+        if (nInstances == 0)
+        {
+        	destroyThreads();
+        	planCreated = false;
+        	cleanup();
+        }
+    }
+    pthread_mutex_unlock(&fftw_plan_mutex);
 }
 
 // Initialization ----------------------------------------------------------
@@ -141,6 +175,7 @@ void FourierTransformer::setReal(MultidimArray<double> &input)
         if (fPlanForward == NULL || fPlanBackward == NULL)
             REPORT_ERROR(ERR_PLANS_NOCREATE, "FFTW plans cannot be created");
         dataPtr=MULTIDIM_ARRAY(*fReal);
+        planCreated = true;
         pthread_mutex_unlock(&fftw_plan_mutex);
     }
 }

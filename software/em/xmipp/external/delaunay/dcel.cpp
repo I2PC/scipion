@@ -235,10 +235,10 @@ int     read_Points_Flat_File( struct DCEL_T *dcel, const char *fileName)
 	    if (fscanf( fd, "%d", &number_Points) != 1)
 	    {
 #ifdef LOGGING
-			sprintf( log_Text, "Error reading number of points from file: ../data/points_input.txt.\n");
+			sprintf( log_Text, "Error %d reading number of points from file: %s.", errno, fileName);
 			write_Log( log_Text);
 #endif
-            printf("Error reading number of points from file: ../data/points_input.txt.");
+            printf("Error %d reading number of points from file: %s.", errno, fileName);
 			ret = FAILURE;
 	    }
 	    else
@@ -273,8 +273,8 @@ int     read_Points_Flat_File( struct DCEL_T *dcel, const char *fileName)
 	return(ret);
 }
 
-
-int		write_DCEL( struct DCEL_T *dcel, int	type, const char *fileName)
+//#define DEBUG_WRITE_DCEL
+int		write_DCEL( struct DCEL_T *dcel, int type, const char *fileName)
 {
 	int		i=0;			// Loop counter.
 	int		ret=SUCCESS;	// Return value.
@@ -288,13 +288,17 @@ int		write_DCEL( struct DCEL_T *dcel, int	type, const char *fileName)
 		sprintf( log_Text, "Error %d opening input file: %s\n", errno, fileName);
 		write_Log( log_Text);
 #endif
-	    printf("Error %d opening input file: %s\n", errno, fileName);
+	    printf("Error %d opening output file: %s\n", errno, fileName);
 		ret = FAILURE;
 	}
 	else
 	{
 		if (type == DCEL_TYPE)
 		{
+#ifdef DEBUG_WRITE_DCEL
+			printf("Writing DCEL data to %s file\n", fileName);
+#endif
+
 			// Write number of vertex.
 			fprintf( fd, "%d\n", dcel->nVertex);
 
@@ -333,6 +337,9 @@ int		write_DCEL( struct DCEL_T *dcel, int	type, const char *fileName)
 		}
 		else
 		{
+#ifdef DEBUG_WRITE_DCEL
+			printf("Writing only points to %s file\n", fileName);
+#endif
 			// Write number of vertex.
 			fprintf( fd, "%d ", dcel->nVertex);
 
@@ -944,7 +951,7 @@ int 	get_Number_Real_Edges( struct DCEL_T *dcel)
 		}
 	}
 
-	return(nEdges);
+	return(nEdges / 2);
 }
 
 
@@ -1518,7 +1525,6 @@ int   get_Face_Vertex( struct DCEL_T *dcel, int face_ID, struct Dcel_Vertex_T *v
 int     get_Number_Real_Faces(struct DCEL_T *dcel)
 {
 	int		i=0;					// Loop counter.
-	int		index=0;				// Edge index.
 	struct Dcel_Face_T  *face=NULL;	// Current face.
 	int		nFaces=0;				// Return value.
 
@@ -1527,10 +1533,9 @@ int     get_Number_Real_Faces(struct DCEL_T *dcel)
 	{
 		// Get i-face.
 		face = get_Face( dcel, i);
-		index = face->edge-1;
 
 		// Check if it is a real face.
-		if (index >= 0)
+		if (face->imaginaryFace == VALID)
 		{
 			nFaces++;
 		}
@@ -1687,6 +1692,112 @@ void  get_Extreme_Point( struct DCEL_T *dcel, int (*f)(struct Point_T *, struct 
 	}
 }
 
+//#define DEBUG_GET_CONVEX_HULL
+/***************************************************************************
+* Name: get_Convex_Hull
+* IN:		dcel			dcel data
+* OUT:		points			vector where convex hull points are returned
+* IN/OUT:	lenght			contains vector length as input and contains
+* 							convex hull length as output.
+* RETURN:	true if convex hull built. false i.o.c.
+* Description: returns in "points" the set of points of the convex hull of
+* 				the "dcel" and returns in "length" the number of points.
+***************************************************************************/
+bool get_Convex_Hull( struct DCEL_T *dcel, int *length, int *points)
+{
+	int		nPoints=0;			// # points in convex hull.
+	bool	finished=false;		// Loop control flag.
+	bool	built=false;		// Return value.
+	int		firstIndex=0;		// First index in convex hull.
+	int		edgeIndex=0;		// Current index.
+
+	// Check if vector has been allocated.
+	if (((*length) > 0) && (dcel->nFaces > 0))
+	{
+#ifdef DEBUG_GET_CONVEX_HULL
+		printf("Initial point %d\n", dcel->edges[0].origin_Vertex);
+#endif
+		// Insert initial point.
+		points[nPoints] = dcel->edges[0].origin_Vertex;
+		nPoints++;
+
+		// Get edge departing from 0 point.
+		edgeIndex = dcel->vertex[0].origin_Edge - 1;
+
+		// Get edge departing from 0 to MINUS_2.
+		finished = FALSE;
+		while (!finished)
+		{
+			if ((dcel->edges[edgeIndex].origin_Vertex == 1) &&
+				(dcel->edges[dcel->edges[edgeIndex].twin_Edge-1].origin_Vertex == P_MINUS_2))
+			{
+				finished = TRUE;
+#ifdef DEBUG_GET_CONVEX_HULL
+				printf("Found first edge %d. O %d D %d\n", edgeIndex,
+						dcel->edges[edgeIndex].origin_Vertex,
+						dcel->edges[dcel->edges[edgeIndex].twin_Edge-1].origin_Vertex);
+#endif
+			}
+			else
+			{
+				// Get next edge departing from 0 point.
+				edgeIndex = dcel->edges[dcel->edges[edgeIndex].previous_Edge-1].twin_Edge - 1;
+			}
+		}
+
+		// Get next edge as it is the first edge in the convex hull.
+		edgeIndex = dcel->edges[edgeIndex].previous_Edge-1;
+		firstIndex = edgeIndex;
+
+		// Get all convex hull points.
+		//while ((!built) && (nPoints < (*length)))
+		while (!built)
+		{
+			// Insert next point.
+			if (nPoints < (*length))
+			{
+				points[nPoints] = dcel->edges[edgeIndex].origin_Vertex;
+				nPoints++;
+			}
+#ifdef DEBUG_GET_CONVEX_HULL
+			printf("Next point %d\n", dcel->edges[edgeIndex].origin_Vertex);
+#endif
+
+			// Get next edge.
+			edgeIndex = dcel->edges[edgeIndex].previous_Edge-1;
+			edgeIndex = dcel->edges[edgeIndex].twin_Edge-1;
+			edgeIndex = dcel->edges[edgeIndex].previous_Edge-1;
+
+			// If point is imaginary then skip edge.
+			if (dcel->edges[edgeIndex].origin_Vertex < 0)
+			{
+				edgeIndex = dcel->edges[edgeIndex].twin_Edge-1;
+				edgeIndex = dcel->edges[edgeIndex].previous_Edge-1;
+			}
+
+			// Check if first edge reached.
+			if (edgeIndex == firstIndex)
+			{
+				// End loop and update vector length.
+				if (nPoints < (*length))
+				{
+					built = true;
+				}
+				(*length) = nPoints - 1;
+#ifdef DEBUG_GET_CONVEX_HULL
+				printf("Finished\n");
+#endif
+			}
+		}
+	}
+	else
+	{
+		built = false;
+	}
+
+	return(built);
+}
+
 //#define DEBUG_READ_POINTS_DCEL
 int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
 {
@@ -1703,6 +1814,9 @@ int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
 	i=0;
     while ((i<nPoints) && (ret==SUCCESS))
 	{
+#ifdef DEBUG_READ_POINTS_DCEL
+    	printf("Reading point %d\n", i+1);
+#endif
 		// Read point.
 		if (fscanf( fd, "%f", &point.vertex.x) != 1)
 		{
@@ -1953,9 +2067,9 @@ void	generate_Cluster_Points_DCEL( int nPoints, struct DCEL_T *dcel,
 	clutter( dcel);
 }
 
-
+//#define DEBUG_PRINT_DCEL_STATISTICS
 /***************************************************************************
-* Name: 	generate_Cluster_Points_DCEL
+* Name: 	print_Dcel_Statistics
 * IN:		fileName				output file.
 * 			dcel					DCEL structure data.
 * OUT:		N/A
@@ -1965,18 +2079,64 @@ void	generate_Cluster_Points_DCEL( int nPoints, struct DCEL_T *dcel,
 ***************************************************************************/
 void 	print_Dcel_Statistics( char *fileName, struct DCEL_T *dcel)
 {
-	FILE 	*fd=NULL;		// File descriptor.
+	FILE 	*fd=NULL;				// File descriptor.
+	int		length=0;				// Convex hull length.
+	int		*convex_Hull_Set=NULL;	// Set of points in the convex hull.
+	bool	error=false;
+	long long int		memory=0;	// Amount of memory use.
 
-	// Open input file.
-	if ((fd = fopen( fileName, "w")) == NULL)
+	if (dcel->nFaces > 0)
 	{
-		printf("Error opening output file: %s\n", fileName);
+#ifdef DEBUG_PRINT_DCEL_STATISTICS
+		printf("DCEL has %d faces\n", dcel->nFaces);
+#endif
+		// Open input file.
+		if ((fd = fopen( fileName, "w")) == NULL)
+		{
+			printf("Error opening output file: %s\n", fileName);
+		}
+		else
+		{
+			fprintf( fd, "# vertex %d\n", dcel->nVertex);
+			fprintf( fd, "# edges %d\n", get_Number_Real_Edges( dcel));
+			fprintf( fd, "# faces %d\n", get_Number_Real_Faces( dcel));
+
+			if (dcel->incremental)
+			{
+				// Allocate vector.
+				length = dcel->nEdges / CONVEX_HULL_LEN_FACTOR;
+				if ((convex_Hull_Set = (int *) calloc( length, sizeof(int))) != NULL)
+				{
+					// Get convex hull.
+					error = false;
+					while ((!get_Convex_Hull( dcel, &length, convex_Hull_Set)) && (!error))
+					{
+						// If error then resize vector.
+						free(convex_Hull_Set);
+						length = length*2;
+						if ((convex_Hull_Set = (int *) calloc( length, sizeof(int))) == NULL)
+						{
+							error = true;
+						}
+					}
+				}
+
+				fprintf( fd, "Convex length %d\n", length);
+				free(convex_Hull_Set);
+			}
+
+			// Print memory use.
+			memory = sizeof(int) + sizeof(int) + sizeof(struct Dcel_Vertex_T)*dcel->sizeVertex;
+			memory += sizeof(int) + sizeof(int) + sizeof(struct Dcel_Edge_T)*dcel->sizeEdges + sizeof(int)*dcel->sizeEdges;
+			memory += sizeof(int) + sizeof(int) + sizeof(struct Dcel_Face_T)*dcel->sizeFaces;
+			fprintf( fd,"Memory required:\n\t\t%f KB\n\t\t%f MB\n", memory / SIZE_OF_KB, memory / (SIZE_OF_KB*SIZE_OF_KB));
+
+			fclose(fd);
+		}
 	}
 	else
 	{
-		fprintf( fd, "%d\n", dcel->nVertex);
-		fprintf( fd, "%d\n", dcel->nVertex);
-		fprintf( fd, "%d\n", get_Number_Real_Faces( dcel));
+		printf("DCEL has no triangles\n");
 	}
 }
 

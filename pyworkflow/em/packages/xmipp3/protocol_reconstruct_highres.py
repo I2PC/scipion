@@ -110,18 +110,18 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
                         'If no symmetry is present, give c1')
         form.addParam('numberOfIterations', IntParam, default=6, label='Number of iterations')
-        form.addParam("saveSpace", BooleanParam, default=True, label="Remove intermediary files")
+        form.addParam("saveSpace", BooleanParam, default=True, label="Remove intermediate files", expertLevel=LEVEL_ADVANCED)
         
         form.addSection(label='Next Reference')
-        form.addParam('nextResolutionCriterion',FloatParam, label="FSC criterion", default=0.143, 
-                      help='The resolution of the reconstruction is defined as the inverse of the frequency at which '\
-                      'the FSC drops below this value. Typical values are 0.143 and 0.5')
-        form.addParam('nextLowPass', BooleanParam, label="Low pass filter?", default=True,
+        form.addParam('nextLowPass', BooleanParam, label="Low pass filter?", default=True, 
                       help='Apply a low pass filter to the previous iteration whose maximum frequency is '\
                            'the current resolution(A) + resolutionOffset(A). If resolutionOffset>0, then fewer information' \
                            'is used (meant to avoid overfitting). If resolutionOffset<0, then more information is allowed '\
                            '(meant for a greedy convergence).')
-        form.addParam('nextResolutionOffset', FloatParam, label="Resolution offset (A)", default=2, condition='nextLowPass')
+        form.addParam('nextResolutionCriterion',FloatParam, label="FSC criterion", default=0.143, expertLevel=LEVEL_ADVANCED,
+                      help='The resolution of the reconstruction is defined as the inverse of the frequency at which '\
+                      'the FSC drops below this value. Typical values are 0.143 and 0.5')
+        form.addParam('nextResolutionOffset', FloatParam, label="Resolution offset (A)", default=2, expertLevel=LEVEL_ADVANCED, condition='nextLowPass')
         form.addParam('nextSpherical', BooleanParam, label="Spherical mask?", default=True,
                       help='Apply a spherical mask of the size of the particle')
         form.addParam('nextPositivity', BooleanParam, label="Positivity?", default=True,
@@ -196,7 +196,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addSection(label='Post-processing')
         form.addParam('postAdHocMask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True,
                       help='The mask values must be between 0 (remove these pixels) and 1 (let them pass). Smooth masks are recommended.')
-        groupSymmetry = form.addGroup('Symmetry')
+        groupSymmetry = form.addGroup('Symmetry', expertLevel=LEVEL_ADVANCED)
         groupSymmetry.addParam('postSymmetryWithinMask', BooleanParam, label="Symmetrize volume within mask?", default=False)
         groupSymmetry.addParam('postSymmetryWithinMaskType', StringParam, label="Mask symmetry", default="i1", condition="postSymmetryWithinMask",
                            help='If See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
