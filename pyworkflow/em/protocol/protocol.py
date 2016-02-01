@@ -140,12 +140,18 @@ class EMProtocol(Protocol):
             errors: an error list where to append the error if not same dimensions
             label1, label2: labels for input objects used for the error message.
         """
-        d1 = obj1.getDim()
-        d2 = obj2.getDim()
-        if d1 != d2:
-            msg = '%s and %s have not the same dimensions, \n' % (label1, label2)
-            msg += 'which are %d and %d, respectively' % (d1, d2)
-            errors.append(msg)
+        if obj1 is not None and obj2 is not None:
+            d1 = obj1.getXDim()
+            d2 = obj2.getXDim()
+
+            if d1 is None:
+                errors.append("Can not get dimensions from %s." % label1)
+            elif d2 is None:
+                errors.append("Can not get dimensions from %s." % label2)
+            elif d1 != d2:
+                msg = '%s and %s have not the same dimensions, \n' % (label1, label2)
+                msg += 'which are %d and %d, respectively' % (d1, d2)
+                errors.append(msg)
             
     def __str__(self):
         return self.getObjLabel()

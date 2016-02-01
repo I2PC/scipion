@@ -1,8 +1,10 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -204,12 +206,8 @@ class ProtGemPicker(em.ProtParticlePicking):
     def runGemPickerStep(self, mode, args):
         args += ' --mode=%d' % mode
         
-        if self.useGPU:
-            nThreads = 0
-            nGPUs = self.numberOfGPUs.get()
-        else:
-            nThreads = self.numberOfThreads.get()
-            nGPUs = 0
+        nGPUs = self.numberOfGPUs.get() if self.useGPU else 0
+        nThreads = self.numberOfThreads.get()
         
         args += ' --nGPU=%d' % nGPUs
         args += ' --nCPU=%d' % nThreads
