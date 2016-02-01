@@ -262,3 +262,10 @@ DataSet(name='SymVirus', folder='SymVirus',
 
 DataSet(name='xmipp_programs', folder='xmipp_programs', files={}
        )
+               
+DataSet(name='resmap',  folder='resmap',
+        files={'betagal': 'betaGal.mrc',
+               'betagal_half1': 'betaGal_half01.mrc',
+               'betagal_half2': 'betaGal_half02.mrc',
+               'betagal_mask': 'betaGal_mask.mrc',
+               })

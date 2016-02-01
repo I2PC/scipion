@@ -579,6 +579,7 @@ class ProtRelionBase(EMProtocol):
                                     postprocessImageRow=self._postprocessImageRow)
                 mdMovies = md.MetaData(self._getFileName('movie_particles'))
                 mdParts = md.MetaData(self._getFileName('input_star'))
+
                 if getVersion() == "1.4":
                     mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
                 else:
@@ -605,11 +606,8 @@ class ProtRelionBase(EMProtocol):
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
-        if not getVersion():
-            errors.append("We couldn't detect Relion version. ")
-            errors.append("Please, check your configuration file and change RELION_HOME.")
-            errors.append("The path should contains either '1.3' or '1.4' ")
-            errors.append("to properly detect the version.")
+        self.validatePackageVersion('RELION_HOME', errors)
+
         if self.doContinue:
             continueProtocol = self.continueRun.get()
             if (continueProtocol is not None and
