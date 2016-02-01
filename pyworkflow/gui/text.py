@@ -38,7 +38,7 @@ import gui
 from widgets import Scrollable, IconButton
 from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2,
                               parseHyperText, renderLine, renderTextFile, colorName,
-                              which, envVarOn)
+                              which, envVarOn, expandPattern)
 from pyworkflow.utils.properties import Message, Color, Icon
 
 
@@ -56,7 +56,8 @@ elif os.name == 'posix':  # linux systems and so on
         return None
 
     x_open = find_prog('xdg-open', 'gnome-open', 'kde-open', 'gvfs-open')
-    editor = find_prog('pluma', 'gedit', 'kate', 'emacs', 'nedit', 'mousepad')
+    editor = find_prog('pluma', 'gedit', 'kwrite', 'geany', 'kate',
+                       'emacs', 'nedit', 'mousepad')
 
     def _open_cmd(path):
         # If it is an url, open with browser.
@@ -194,7 +195,7 @@ class Text(tk.Text, Scrollable):
         
     def onRightClick(self, e):
         try:
-            self.selection = self.selection_get()
+            self.selection = self.selection_get().strip()
             self.menu.post(e.x_root, e.y_root)    
         except tk.TclError, e:
             pass
@@ -209,6 +210,8 @@ class Text(tk.Text, Scrollable):
 
     def openPath(self, path):
         "Try to open the selected path"
+        path = expandPattern(path)
+
         # If the path is a dir, open it with   scipion browser dir <path>
         if os.path.isdir(path):
             dpath = (path if os.path.isabs(path)
@@ -226,8 +229,13 @@ class Text(tk.Text, Scrollable):
             path = os.path.join(dirname, fname)
 
         if os.path.exists(path):
-            from pyworkflow.em.viewer import DataView
-            DataView(path).show()
+            import xmipp
+            fn = xmipp.FileName(path)
+            if fn.isImage() or fn.isMetaData():
+                from pyworkflow.em.viewer import DataView
+                DataView(path).show()
+            else:
+                _open_cmd(path)
         else:
             # This is probably one special reference, like sci-open:... that
             # can be interpreted with our handlers.
