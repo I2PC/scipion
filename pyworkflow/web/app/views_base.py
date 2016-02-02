@@ -44,6 +44,7 @@ def VARS_base(request, context):
         'config': getResourceJs('config'),
         'js_root': getResourceJs(),
         'css_root': getResourceCss(),
+        'analytics': django_settings.ANALYTICS_SCRIPT,
 
         # OTHER
         'msg': messages,

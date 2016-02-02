@@ -43,6 +43,9 @@ ALLOWED_HOSTS = ['*']
 SITE_URL = WEB_CONF['SITE_URL']
 # Subdomain where Scipion is hosted or working, can't start with a slash: m/
 ABSOLUTE_URL = WEB_CONF['ABSOLUTE_URL']
+# Populate analytics script into DJANGO settings from .conf file.
+ANALYTICS_SCRIPT = WEB_CONF['ANALYTICS_SCRIPT']
+
 # ABSOLUTE_URL = '/examples'
 
 # URL_REDIRECTS = (
