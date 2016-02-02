@@ -518,6 +518,9 @@ class Particle(Image):
         
     def getCoordinate(self):
         return self._coordinate
+
+    def scaleCoordinate(self, factor):
+        self.getCoordinate().scale(factor)
     
     def getMicId(self):
         """ Return the micrograph id if the coordinate is not None.
@@ -1039,7 +1042,13 @@ class Coordinate(EMObject):
         self._y.set(y)
         
     def shiftY(self, shiftY):
-        self._y.sum(shiftY)    
+        self._y.sum(shiftY)
+
+    def scale(self, factor):
+        """ Scale both x and y coordinates by a given factor.
+        """
+        self._x.multiply(factor)
+        self._y.multiply(factor)
     
     def getPosition(self):
         """ Return the position of the coordinate as a (x, y) tuple.
@@ -1233,10 +1242,11 @@ class Transform(EMObject):
         m *= factor
         m[3, 3] = 1.
         
-    def scaleShifts2D(self, factor):
+    def scaleShifts(self, factor):
         m = self.getMatrix()
         m[0, 3] *= factor
         m[1, 3] *= factor
+        m[2, 3] *= factor
 
 
 class Class2D(SetOfParticles):

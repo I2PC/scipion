@@ -351,7 +351,7 @@ class TestTransform(BaseTest):
         self.assertAlmostEqual(m[2, 3], 3)
         self.assertAlmostEqual(m[3, 3], 1)
 
-    def test_scaleShifts2D(self):
+    def test_scaleShifts(self):
         """ Check Scale 2D shifts in transformation class
         """
         t = Transform()
@@ -360,7 +360,7 @@ class TestTransform(BaseTest):
         m[1, 3] = 4
         m[2, 3] = 6
         m[3, 3] = 5
-        t.scaleShifts2D(0.5)
+        t.scaleShifts(0.5)
 
         self.assertAlmostEqual(m[0, 3], 1)
         self.assertAlmostEqual(m[1, 3], 2)
