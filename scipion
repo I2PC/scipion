@@ -293,7 +293,7 @@ def main():
             if option == 'django':
                 args = 'runserver 0.0.0.0:8000'
             elif option == 'gunicorn':
-                args = 'run_gunicorn -b 0.0.0.0:%s' % sys.argv[3]
+                args = 'run_gunicorn -b %s:%s' % (sys.argv[3],sys.argv[4])
         else:
             args = option
             sys.stdout.write("\nPassing %s straight to manage.py in %s mode.\n" % (args, MODE_WEBSERVER))
