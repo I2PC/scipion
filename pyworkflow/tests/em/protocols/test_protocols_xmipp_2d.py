@@ -523,7 +523,7 @@ class TestXmippCropResizeWAngles(TestXmippBase):
 
             tIn = inPart.getTransform()
             tOut = outPart.getTransform()
-            tOut.scaleShifts2D(factor)
+            tOut.scaleShifts(factor)
             mIn = tIn.getMatrix()
             mOut = tOut.getMatrix()
             self.assertTrue(np.allclose(mIn, mOut),
