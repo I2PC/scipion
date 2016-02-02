@@ -364,7 +364,7 @@ class TestTransform(BaseTest):
 
         self.assertAlmostEqual(m[0, 3], 1)
         self.assertAlmostEqual(m[1, 3], 2)
-        self.assertAlmostEqual(m[2, 3], 6)
+        self.assertAlmostEqual(m[2, 3], 3)
         self.assertAlmostEqual(m[3, 3], 5)
 
     def test_clone(self):
