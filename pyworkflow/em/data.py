@@ -377,6 +377,9 @@ class Image(EMObject):
             x, y, z, n = ImageHandler().getDimensions(self)
             return x, y, z
         return None
+
+    def getXDim(self):
+        return self.getDim()[0] if self.getDim() is not None else 0
     
     def getIndex(self):
         return self._index.get()
@@ -441,15 +444,6 @@ class Image(EMObject):
         self._ctfModel = newCTF
         
     def hasAcquisition(self):
-#<<<<<<< HEAD
-#        # This doesn't work
-#        #TODO: ASK  jose miguel. the commented line does not work ROB
-#        #return self._acquisition is not None
-#        try:
-#            return self._acquisition.getVoltage() is not None
-#        except:
-#            return False
-#=======
         return (self._acquisition is not None and
                 self._acquisition.getVoltage() is not None and
                 self._acquisition.getMagnification() is not None

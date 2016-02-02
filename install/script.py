@@ -392,19 +392,6 @@ env.addPackage('frealign',
                tar='frealign_v9.07.tgz',
                default=False)
 
-libSuffix = env.getLibSuffix()
-
-env.addPackage('pytom',
-               tar='pytom-0.963beta-scipion.tgz',
-               commands=[('./scipion_installer', 
-                          ['pytomc/libs/libtomc/libs/libtomc.%s' % libSuffix] + 
-                          ['pytomc/swigModules/_pytom_%s.%s' % (s, libSuffix) 
-                           for s in ['mpi', 'freqweight', 'volume', 'fftplan', 'numpy']])],
-               deps=[boost, fftw3, fftw3f, nfft3,
-                     swig, lxml, numpy, scipy,
-                     matplotlib, mpi4py, pillow],
-               default=False)
-
 env.addPackage('relion-1.4',
                tar='relion-1.4.tgz',
                commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
@@ -427,7 +414,7 @@ env.addPackage('relion-1.3',
                default=False)
 
 env.addPackage('resmap',
-               tar='resmap-1.1.5-scipion.tgz',
+               tar='resmap-1.1.5-s2.tgz',
                deps=['scipy'],
                default=False)
 

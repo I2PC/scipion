@@ -193,8 +193,11 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         return summary message for NORMAL EXECUTION. 
         """
         validateMsgs = []
+        self.validatePackageVersion('RELION_HOME', validateMsgs)
+
         if self.doScale and self.scaleSize.get() % 2 != 0: 
             validateMsgs += ["Only re-scaling to even-sized images is allowed in RELION."]
+
         if self.doWindow and self.windowSize.get() % 2 != 0:
             validateMsgs += ["Only re-windowing to even-sized images is allowed in RELION."]
 

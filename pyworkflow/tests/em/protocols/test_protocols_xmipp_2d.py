@@ -466,6 +466,68 @@ class TestXmippCropResizeParticles(TestXmippBase):
         # And for its individual particles too:
         self.assertTrue(outP.equalItemAttributes(
             inP, ignore=['_filename', '_index', '_samplingRate'], verbose=True))
+        
+
+class TestXmippCropResizeWAngles(TestXmippBase):
+    """Check protocol crop/resize particles from Xmipp."""
+    @classmethod
+    def setUpClass(cls):
+        print "\n", greenStr(" Crop/Resize Set Up - Collect data ".center(75, '-'))
+        setupTestProject(cls)
+        TestXmippBase.setData('relion_tutorial')
+    
+    def launch(self, **kwargs):
+        "Launch XmippProtCropResizeParticles and return output particles."
+        print magentaStr("\n==> Crop/Resize input params: %s" % kwargs)
+        prot = self.newProtocol(XmippProtCropResizeParticles, **kwargs)
+#         prot.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(prot)
+        self.assertTrue(
+            hasattr(prot, "outputParticles") and prot.outputParticles is not None,
+            "There was a problem applying resize/crop to the particles")
+        return prot.outputParticles  # for more tests
+
+    def test_CropResizeWAngles(self):
+        print "Import Set of particles with angles"
+        prot1 = self.newProtocol(ProtImportParticles,
+                                 objLabel='from scipion (to-reconstruct)',
+                                 importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                 sqliteFile=self.dataset.getFile('import/case2/particles.sqlite'),
+                                 magnification=10000,
+                                 samplingRate=7.08
+                                 )
+        self.launchProtocol(prot1)
+        
+        inP = prot1.outputParticles  # short notation
+        newSize = 30
+        factor = (inP.getDim()[0] / float(newSize))
+        outP = self.launch(doResize=True, resizeOption=xrh.RESIZE_DIMENSIONS,
+                           resizeDim=newSize,inputParticles=inP,
+                           doWindow=True, windowOperation=xrh.WINDOW_OP_CROP)
+
+        self.assertEqual(newSize, outP.getDim()[0],
+                         "Output particles dimension should be equal to %d" % newSize)
+        self.assertAlmostEqual(outP.getSamplingRate(),
+                               inP.getSamplingRate() * factor)
+
+        # All other attributes remain the same. For the set:
+        ignoreList = ['_mapperPath', '_samplingRate', '_firstDim']
+        self.assertTrue(outP.equalAttributes(inP, ignore=ignoreList, verbose=True))
+
+        # Check the scale factor is correctly applied to coordinates and
+        # transform matrix
+        for inPart, outPart in izip(inP, outP):
+            coordIn = inPart.getCoordinate().getX()
+            coordOut = outPart.getCoordinate().getX()
+            self.assertAlmostEqual(coordIn, coordOut*factor, delta=2)
+
+            tIn = inPart.getTransform()
+            tOut = outPart.getTransform()
+            tOut.scaleShifts2D(factor)
+            mIn = tIn.getMatrix()
+            mOut = tOut.getMatrix()
+            self.assertTrue(np.allclose(mIn, mOut),
+                            msg='Matrices not equal: %s, %s' % (mIn, mOut))
 
 
 class TestXmippFilterParticles(TestXmippBase):
@@ -765,36 +827,6 @@ class TestXmippKerdensom(TestXmippBase):
         self.assertIsNotNone(xmippProtKerdensom.outputClasses, "There was a problem with Kerdensom")
 
 
-class TestXmippProjectionOutliers(TestXmippBase):
-    """This class check if the protocol projection outliers in Xmipp works properly."""
-    @classmethod
-    def setUpClass(cls):
-        setupTestProject(cls)
-        TestXmippBase.setData('mda')
-        cls.protImportPart = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.protImportAvgs = cls.runImportAverages(cls.particlesFn, 3.5)
-        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
-        cls.runClassify = cls.runClassify(cls.protImportPart.outputParticles)
-    
-    def test_ProjectionOutliersAverages(self):
-        print "Run ProjOutliers particles"
-        protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
-                                   symmetryGroup="c6", numberOfMpi=5)
-        protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
-        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
-        self.launchProtocol(protProjOutl)
-        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Projection Outliers")
-    
-#     def test_ProjectionOutliersClasses2D(self):
-#         print "Run ProjOutliers for classes2D"
-#         protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
-#                                    symmetryGroup="c6", numberOfMpi=5)
-#         protProjOutl.inputSet.set(self.runClassify.outputClasses)
-#         protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
-#         self.launchProtocol(protProjOutl)      
-#         self.assertIsNotNone(protProjOutl.outputClasses, "There was a problem with Projection Outliers")
-
-
 class TestXmippCompareReprojections(TestXmippBase):
     """This class check if the protocol compare reprojections in Xmipp works properly."""
     @classmethod
@@ -843,35 +875,6 @@ class TestXmippCompareReprojections(TestXmippBase):
         self.launchProtocol(prot)
         self.assertIsNotNone(prot.outputParticles, "There was a problem with Compare Reprojections from projections with angles")
 
-class TestXmippScreenClasses(TestXmippBase):
-    """This class check if the protocol screen classes in Xmipp works properly."""
-    @classmethod
-    def setUpClass(cls):
-        setupTestProject(cls)
-        TestXmippBase.setData('mda')
-        cls.protImportPart = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.protImportAvgs = cls.runImportAverages(cls.particlesFn, 3.5)
-        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
-        cls.runClassify = cls.runClassify(cls.protImportPart.outputParticles)
-    
-    def test_ScreenClassesAverages(self):
-        print "Run ScreenClasses particles"
-        protProjOutl = self.newProtocol(XmippProtScreenClasses, 
-                                   symmetryGroup="c6", numberOfMpi=5)
-        protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
-        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
-        self.launchProtocol(protProjOutl)      
-        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Screen Classes")
-    
-    def test_ScreenClasses2D(self):
-        print "Run ScreenClasses for classes2D"
-        protProjOutl = self.newProtocol(XmippProtScreenClasses, 
-                                   symmetryGroup="c6", numberOfMpi=5)
-        protProjOutl.inputSet.set(self.runClassify.outputClasses)
-        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
-        self.launchProtocol(protProjOutl)      
-        self.assertIsNotNone(protProjOutl.outputClasses, "There was a problem with Screen Classes")
-
 
 class TestXmippBreakSym(TestXmippBase):
     @classmethod
@@ -911,7 +914,10 @@ class TestXmippBreakSym(TestXmippBase):
         protBreakSym.inputParticles.set(protImport.outputParticles)
         self.launchProtocol(protBreakSym)
         os.chdir(protBreakSym._getPath())
-        os.system("scipion xmipp_angular_distance --ang1 images.xmd --ang2 input_particles.xmd --sym i2 --oroot kk")
+        from pyworkflow.utils import runJob
+        runJob(None, 'xmipp_angular_distance',
+               "--ang1 images.xmd --ang2 input_particles.xmd --sym i2 --oroot kk",
+               env=getEnviron())
         mdRober = md.MetaData("kk_vec_diff_hist.txt")
         objId = mdRober.firstObject()
         count = mdRober.getValue(md.MDL_COUNT, objId)
