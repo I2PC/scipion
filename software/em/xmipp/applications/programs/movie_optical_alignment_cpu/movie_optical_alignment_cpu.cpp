@@ -239,7 +239,7 @@ public:
             movieStack.readMapped(movieFile,i);
             movieStack().getImage(frameImage);
             if (i==begin)
-                avgImg.initZeros(XSIZE(frameImage), YSIZE(frameImage));
+                avgImg.initZeros(YSIZE(frameImage), XSIZE(frameImage));
             if (darkImageCorr)
                 frameImage-=darkImage;
             if (gainImageCorr)

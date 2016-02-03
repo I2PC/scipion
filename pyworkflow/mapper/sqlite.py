@@ -607,7 +607,7 @@ class SqliteFlatMapper(Mapper):
         rows = self.db.getClassRows()
         attrClasses = {}
         self._objBuildList = []
-        
+
         for r in rows:
             label = r['label_property']
 
@@ -625,7 +625,7 @@ class SqliteFlatMapper(Mapper):
                 for a in attrParts:
                     attrJoin += a
                     attr = getattr(o, a, None)
-                    if not attr:
+                    if attr is None:
                         className = attrClasses[attrJoin]
                         self._objBuildList.append((className, attrJoin.split('.')))
                         attr = self._buildObject(className)
@@ -935,7 +935,6 @@ class SqliteFlatDb(SqliteDb):
         self.executeCommand(self.SELECT_CLASS)
 
         for classRow in self._iterResults():
-            print "classRow['label_property']", classRow['label_property']
             if classRow['label_property'] == SELF:
                 return classRow['class_name']
         raise Exception("Row '%s' was not found in Classes table. " % SELF)
@@ -991,8 +990,6 @@ class SqliteFlatDb(SqliteDb):
 
         cmd = self.selectCmd(whereStr,
                              orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
-        #import sys
-        #print >> sys.stderr, "command", cmd
         self.executeCommand(cmd)
         return self._results(iterate)
 
