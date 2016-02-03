@@ -25,6 +25,7 @@
 
 #include "angular_accuracy_pca.h"
 #include <math.h>
+#include"data/transformations.h"
 
 ProgAngularAccuracyPCA::ProgAngularAccuracyPCA()
 {
@@ -104,7 +105,7 @@ void ProgAngularAccuracyPCA::run()
 
 	if (rank == 0)
 	{
-		double pcaResidualProj,pcaResidualExp,Zscore,temp,qResidualProj,qResidualExp,qZscore;
+		double pcaResidualProj,pcaResidualExp,pcaResidual,Zscore,temp,qResidualProj,qResidualExp,qZscore;
 
 		qResidualProj = 0;
 		qResidualExp = 0;
@@ -128,6 +129,7 @@ void ProgAngularAccuracyPCA::run()
 
 			pcaResidualProj = 1e3;
 			pcaResidualExp = 1e3;
+			pcaResidual = 1e3;
 			Zscore = 1e3;
 
 			tempMd.getRow(row,tempMd.firstObject());
@@ -142,10 +144,13 @@ void ProgAngularAccuracyPCA::run()
 				if (temp < pcaResidualExp)
 					pcaResidualExp=temp;
 
+				tempMd.getValue(MDL_SCORE_BY_PCA_RESIDUAL,temp,__iter.objId);
+				if (temp < pcaResidual)
+					pcaResidual=temp;
+
 				tempMd.getValue(MDL_SCORE_BY_ZSCORE,temp,__iter.objId);
 				if (temp < Zscore)
 					Zscore=temp;
-
 			}
 
 			qResidualProj += pcaResidualProj;
@@ -154,6 +159,7 @@ void ProgAngularAccuracyPCA::run()
 
 			row.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,pcaResidualProj);
 			row.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,pcaResidualExp);
+			row.setValue(MDL_SCORE_BY_PCA_RESIDUAL,pcaResidual);
 			row.setValue(MDL_SCORE_BY_ZSCORE,Zscore);
 			MDOut.addRow(row);
 			row.clear();
@@ -183,6 +189,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 	size_t imgno;
 	Image<double> img;
 	double rot, tilt, psi;
+	double shiftX, shiftY;
 	bool mirror;
 	size_t  Xdim, Ydim, Zdim, Ndim;
 	phantomVol().getDimensions(Xdim,Ydim,Zdim,Ndim);
@@ -198,10 +205,11 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 	Projection P;
 	FileName image;
 	MultidimArray<float> temp;
-	//MultidimArray<double> avg;
-	Matrix2D<double> E;
+	MultidimArray<double> avg;
+	Matrix2D<double> E, Trans(3,3);
+	Matrix1D<double> opt_offsets(2);
 
-/*
+
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
 		int enabled;
@@ -259,22 +267,21 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		#endif
 
 	}
-
 	pca.subtractAvg();
 	avg = pca.avg;
 	pca.learnPCABasis(numPCAs,numIter);
-	pca.projectOnPCABasis(projRef);
+	//pca.projectOnPCABasis(projRef);
 	pca.v.clear();
-*/
 
 	imgno = 0;
 	FileName f;
 
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
-
 		int enabled;
 		SF.getValue(MDL_ENABLED,enabled,__iter.objId);
+		SF.getValue(MDL_SHIFT_X,shiftX,__iter.objId);
+		SF.getValue(MDL_SHIFT_Y,shiftY,__iter.objId);
 
 		if ( (enabled==-1)  )
 		{
@@ -282,13 +289,21 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 			continue;
 		}
 
+
+//Currently there is a bug in Scipion. Change this line
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
+		shiftX = shiftX/39.;
+		shiftY = shiftY/39.;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		//geo2TransformationMatrix(input, Trans);
 		//ApplyGeoParams params;
 		//params.only_apply_shifts = true;
 		//img.readApplyGeo(SF,__iter.objId,params);
 
 		SF.getValue(MDL_IMAGE,f,__iter.objId);
 		img.read(f);
-		Matrix2D<double> E;
+
 		SF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
 		SF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
 		SF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
@@ -306,22 +321,28 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 
 		Euler_angles2matrix(rot, tilt, psi, E, false);
 		double angle = atan2(MAT_ELEM(E,0,1),MAT_ELEM(E,0,0));
-		selfRotate(LINEAR, img(),-(angle*180)/3.14159 , WRAP);
+		angle=-(angle*180)/3.14159;
+		rotation2DMatrix(angle, Trans, true);
+	    dMij(Trans, 0, 2) = shiftX;
+	    dMij(Trans, 1, 2) = shiftY;
+
+	    selfApplyGeometry(BSPLINE3, img(), Trans, IS_NOT_INV, WRAP);
 
 #ifdef DEBUG
 		{
+			std::cout <<  MAT_ELEM(Trans,0,0) << " " << MAT_ELEM(Trans,0,1) << " " << MAT_ELEM(Trans,0,2) << " " << MAT_ELEM(Trans,1,0) << " " <<  MAT_ELEM(Trans,1,1) << " " << MAT_ELEM(Trans,1,2) << " " << MAT_ELEM(Trans,2,0) << " " << MAT_ELEM(Trans,2,1) << " " << MAT_ELEM(Trans,2,2) << " " << std::endl;
+			std::cout <<  MAT_ELEM(E,0,0) << " " << MAT_ELEM(E,0,1) << " " << MAT_ELEM(E,0,2) << " " << MAT_ELEM(E,1,0) << " " <<  MAT_ELEM(E,1,1) << " " << MAT_ELEM(E,1,2) << " " << MAT_ELEM(E,2,0) << " " << MAT_ELEM(E,2,1) << " " << MAT_ELEM(E,2,2) << " " << std::endl;
 			size_t val;
 			SF.getValue(MDL_ITEM_ID,val,__iter.objId);
-			if (val==151)
+			if (true)
 			{
-				std::cout << E << std::endl;
-				std::cout << (angle*180)/3.14159 << std::endl;
-				std::cout << rot << " " << tilt << " " << psi << std::endl;
-				char c;
-				std::getchar();
 				SF.getValue(MDL_IMAGE,f,__iter.objId);
 				std::cout << f << std::endl;
 				img.write("kk_exp.tif");
+
+				char c;
+				std::getchar();
+
 			}
 		}
 #endif
@@ -335,12 +356,8 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 	}
 
 	pca.subtractAvg();
-//	pca.avg = avg;
-
-//
-	pca.learnPCABasis(numPCAs,numIter);
-//
-
+	pca.avg = avg;
+	//pca.learnPCABasis(numPCAs,numIter);
 	pca.projectOnPCABasis(proj);
 
 	std::vector< MultidimArray<float> > recons(SF.size());
@@ -356,7 +373,21 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 	R2_Proj=0;
 	R2_Exp=0;
 
-	//std::vector< MultidimArray<float> > reconsProj(SF.size());
+	MultidimArray <int> ROI;
+    ROI.resizeNoCopy(newYdim,newXdim);
+    ROI.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
+    {
+        double temp = std::sqrt(i*i+j*j);
+        if ( temp < (newXdim/2))
+            A2D_ELEM(ROI,i,j)= 1;
+        else
+            A2D_ELEM(ROI,i,j)= 0;
+    }
+
+    ROI.resize(newYdim*newXdim);
+    ROI.setXmippOrigin();
+
 
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
@@ -388,7 +419,8 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		projectVolume(phantomVol(), P, Ydim, Xdim, rot, tilt, psi);
 		Euler_angles2matrix(rot, tilt, psi, E, false);
 		double angle = atan2(MAT_ELEM(E,0,1),MAT_ELEM(E,0,0));
-		selfRotate(LINEAR, P(),-(angle*180)/3.14159 , WRAP);
+		angle = -(angle*180)/3.14159;
+		selfRotate(LINEAR, P(),angle , WRAP);
 		typeCast(P(), temp);
 		selfScaleToSize(LINEAR,temp,newXdim,newYdim,1);
 		temp.resize(newXdim*newYdim);
@@ -400,68 +432,72 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		recons[imgno].resize(newYdim*newXdim);
 		recons[imgno].setXmippOrigin();
 
-		imgRes() = temp - (recons[imgno]);
-		R2_Proj = imgRes().computeStddev();
-		R2_Proj = R2_Proj*R2_Proj;
+		//imgRes() = (temp - (recons[imgno]))*ROI;
+		//R2_Proj = imgRes().computeStddev();
+		//R2_Proj = R2_Proj*R2_Proj;
+		R2_Proj = correlationIndex(temp,recons[imgno],&ROI);
 
-		ApplyGeoParams params;
+		//ApplyGeoParams params;
 		//params.only_apply_shifts = true;
 		//img.readApplyGeo(SF,__iter.objId,params);
+
+		SF.getValue(MDL_SHIFT_X,shiftX,__iter.objId);
+		SF.getValue(MDL_SHIFT_Y,shiftY,__iter.objId);
+
+		//Currently there is a bug in Scipion. Change this line
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
+		shiftX = shiftX/39.;
+		shiftY = shiftY/39.;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		//geo2TransformationMatrix(input, Trans);
+		//ApplyGeoParams params;
+		//params.only_apply_shifts = true;
+		//img.readApplyGeo(SF,__iter.objId,params);
+
 		SF.getValue(MDL_IMAGE,f,__iter.objId);
 		img.read(f);
 
-		Matrix2D<double> E;
-		SF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
-		SF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
-		SF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+		rotation2DMatrix(angle, Trans, true);
+		dMij(Trans, 0, 2) = shiftX;
+		dMij(Trans, 1, 2) = shiftY;
+		selfApplyGeometry(BSPLINE3, img(), Trans, IS_NOT_INV, WRAP);
 
-		if (mirror)
-		{
-			double newrot;
-			double newtilt;
-			double newpsi;
-			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
-			rot = newrot;
-			tilt = newtilt;
-			psi = newpsi;
-		}
-
-		Euler_angles2matrix(rot, tilt, psi, E, false);
-		angle = atan2(MAT_ELEM(E,0,1),MAT_ELEM(E,0,0));
-		selfRotate(LINEAR, img(),-(angle*180)/3.14159 , WRAP);
 		typeCast(img(), temp);
 		selfScaleToSize(LINEAR,temp,newXdim,newYdim,1);
 		temp.resize(newXdim*newYdim);
 		temp.statisticsAdjust(0,1);
 		temp.setXmippOrigin();
 
-		imgRes() = temp - (recons[imgno]);
-		R2_Exp = imgRes().computeStddev();
-		R2_Exp = R2_Exp*R2_Exp;
+		//imgRes() = (temp - (recons[imgno]))*ROI;
+		//R2_Exp = imgRes().computeStddev();
+		//R2_Exp = R2_Exp*R2_Exp;
+		R2_Exp = correlationIndex(temp,recons[imgno],&ROI);
 
-		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,exp(-R2_Proj),__iter.objId);
-		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,exp(-R2_Exp),__iter.objId);
+		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,R2_Proj,__iter.objId);
+		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,R2_Exp,__iter.objId);
+		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL,R2_Proj*R2_Exp,__iter.objId);
+		//SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,exp(-R2_Proj),__iter.objId);
+		//SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,exp(-R2_Exp),__iter.objId);
 		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,imgno)),__iter.objId);
 
-#define DEBUG
 		#ifdef DEBUG
 		{
 			size_t val;
 			SF.getValue(MDL_ITEM_ID,val,__iter.objId);
-			if (val==22132)
+			if (true)
 			{
 			Image<float>  imgRecons;
 			Image<double> imgAvg;
 			SF.getValue(MDL_IMAGE,f,__iter.objId);
 
 			img.write("kk_exp0.tif");
-
-			imgRecons() = temp;
+			apply_binary_mask(ROI,temp,imgRecons());
 			imgRecons().resize(newYdim,newXdim);
 			imgRecons.write("kk_exp.tif");
 
-			//recons[imgno].statisticsAdjust(0,1);
-			imgRecons()=recons[imgno];
+			recons[imgno].statisticsAdjust(0,1);
+			apply_binary_mask(ROI,recons[imgno],imgRecons());
 			imgRecons().resize(newYdim,newXdim);
 			imgRecons.write("kk_reconstructed.tif");
 
@@ -491,17 +527,12 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 			double angle = atan2(MAT_ELEM(E,0,1),MAT_ELEM(E,0,0));
 			selfRotate(LINEAR, P(),-(angle*180)/3.14159 , WRAP);
 			P.write("kk_proj.tif");
-			//reconsProj[imgno].statisticsAdjust(0,1);
-			//imgRecons()=reconsProj[imgno]-pca.avg;
-			//imgRecons().resize(newYdim,newXdim);
-			//imgRecons.write("kk_reconstructedProj.tif");
 
-
-			std::cout <<  exp(-R2_Proj) << " " << exp(-R2_Exp) << std::endl;
+			//std::cout <<  exp(-R2_Proj) << " " << exp(-R2_Exp) << std::endl;
+			std::cout <<  R2_Proj << " " << R2_Exp <<  " " << R2_Proj*R2_Exp << std::endl;
 
 			for(int i=0; i<numPCAs;i++)
 			{
-				//std::cout << "proj " << MAT_ELEM(proj,i,imgno) <<  "   " <<  "projRef " <<  MAT_ELEM(projRef,i,imgno) << std::endl;
 				std::cout << "proj " << MAT_ELEM(proj,i,imgno) <<  "   " <<  "projRef " <<  MAT_ELEM(proj,i,imgno) << std::endl;
 
 			}

@@ -30,6 +30,7 @@
 #include <math.h>
 #include <data/basic_pca.h>
 #include <data/projection.h>
+#include <data/filters.h>
 
 
 /**@defgroup Assign accuracy to angular assignment by pca
