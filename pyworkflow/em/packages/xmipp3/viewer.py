@@ -302,12 +302,13 @@ class XmippViewer(Viewer):
                 self._views.append(xplotter)
     
         elif issubclass(cls, XmippProtRotSpectra):
-            self._visualize(obj.outputClasses, viewParams={#'mode': 'rotspectra', 
-                                                           'columns': obj.SomXdim.get(),
-                                                           RENDER: 'average._filename spectraPlot._filename',
-                                                           VISIBLE:  'enabled id _size average._filename spectraPlot._filename',
-                                                           'labels': '_size',
-                                                           SORT_BY: 'id'})
+            self._visualize(obj.outputClasses,
+                            viewParams={'columns': obj.SomXdim.get(),
+                                        RENDER: ' spectraPlot._filename average._filename',
+                                        ZOOM: 30,
+                                        VISIBLE:  'enabled id _size average._filename spectraPlot._filename',
+                                        'labels': 'id _size',
+                                        SORT_BY: 'id'})
         
         elif issubclass(cls, XmippProtKerdensom):
             self._visualize(obj.outputClasses, viewParams={'columns': obj.SomXdim.get(),
@@ -321,9 +322,9 @@ class XmippViewer(Viewer):
                 labels = 'id enabled _size _representative._filename _xmipp_imageRef _xmipp_image _xmipp_imageResidual _xmipp_maxCC _xmipp_cost'
                 labelRender = "_representative._filename _xmipp_imageRef _xmipp_image _xmipp_imageResidual"
                 self._visualize(fn, viewParams={ORDER: labels, 
-                                                          VISIBLE: labels, 
-                                                          SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender,
-                                                          MODE: MODE_MD})
+                                                VISIBLE: labels,
+                                                SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender,
+                                                MODE: MODE_MD})
             else:
                 fn = obj.outputAverages.getFileName()
                 labels = 'id enabled _filename _xmipp_imageRef _xmipp_image1 _xmipp_maxCC'
@@ -374,15 +375,17 @@ class XmippViewer(Viewer):
             labels = plotLabels + ' _filename '
             objCommands = "'%s'" % (OBJCMD_MOVIE_ALIGNCARTESIAN)
             
-            self._views.append(ObjectView(self._project, obj.strId(), outputMics.getFileName(), viewParams={MODE: MODE_MD,
-                                                      ORDER: labels, VISIBLE: labels, RENDER: plotLabels, 'zoom': 50,
+            self._views.append(ObjectView(self._project, self.protocol.strId(), outputMics.getFileName(),
+                                          viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels,
+                                                      RENDER: plotLabels, ZOOM: 50,
                                                       OBJCMDS: objCommands}))
         
         elif issubclass(cls, XmippProtValidateNonTilt):
             outputVols = obj.outputVolumes
             labels = 'id enabled comment _filename weight'
-            self._views.append(ObjectView(self._project, outputVols.strId(), outputVols.getFileName(), viewParams={MODE: MODE_MD,
-                                                      VISIBLE:labels, ORDER: labels, SORT_BY: 'weight desc', RENDER: '_filename'}))
+            self._views.append(ObjectView(self._project, outputVols.strId(), outputVols.getFileName(),
+                                          viewParams={MODE: MODE_MD, VISIBLE:labels, ORDER: labels,
+                                                      SORT_BY: 'weight desc', RENDER: '_filename'}))
 
         elif issubclass(cls, XmippProtExtractParticlesPairs):
             self._visualize(obj.outputParticlesTiltPair)

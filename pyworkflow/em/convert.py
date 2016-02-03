@@ -134,16 +134,12 @@ class ImageHandler(object):
             fn = location[1]
             ext = getExt(fn).lower()
             
-#             print "Extension %s" % ext
-            
             if ext == '.png' or ext == '.jpg':
-#                 print "Reading with PIL"
                 im = PIL.Image.open(fn)
                 x, y = im.size # (width,height) tuple
                 return x, y, 1, 1
             
             else:
-#                 print "Reading with Xmipp"
                 self._img.read(location, xmipp.HEADER)
                 x, y, z, n = self._img.getDimensions()
                 return x, y, z, n

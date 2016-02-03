@@ -488,6 +488,7 @@ def particleToRow(part, partRow, **kwargs):
         partRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(part.getMicId()))
         partRow.setValue(xmipp.MDL_MICROGRAPH, str(part.getMicId()))
 
+
 def rowToClass(classRow, classItem):
     """ Method base to create a class2D, class3D or classVol from
     a row of a metadata
@@ -497,7 +498,8 @@ def rowToClass(classRow, classItem):
     if classRow.containsLabel(xmipp.MDL_IMAGE):
         index, filename = xmippToLocation(classRow.getValue(xmipp.MDL_IMAGE))
         img = classItem.REP_TYPE()
-        classItem.setObjId(classRow.getObjId())
+        # class id should be set previously from MDL_REF
+#         classItem.setObjId(classRow.getObjId())
 #         img.copyObjId(classItem)
         img.setLocation(index, filename)
         img.setSamplingRate(classItem.getSamplingRate())
@@ -981,12 +983,11 @@ def __readSetOfClasses(classBaseSet, readSetFunc,
     
     for objId in classesMd:
         classItem = classesSet.ITEM_TYPE()
-        classItem.setObjId(objId)
         classRow = rowFromMd(classesMd, objId)
+        # class id should be set in rowToClass function using MDL_REF
         classItem = rowToClass(classRow, classItem)
-        # FIXME: the following is only valid for SetOfParticles
+
         classBaseSet.copyInfo(classItem, classesSet.getImages())
-        #classItem.copyInfo(classesSet.getImages())
         
         if preprocessClass:
             preprocessClass(classItem, classRow)
