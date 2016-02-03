@@ -295,7 +295,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
             mdJoin_pruned = md.MetaData()            
             m1_pruned.read(volDir+'/pruned_particles_alignability_precision.xmd')
             m2_pruned.read(volDir+'/pruned_particles_alignability_accuracy.xmd')                
-	        mdJoin_pruned = m1_pruned
+            mdJoin_pruned = m1_pruned
             mdJoin_pruned.merge(m2_pruned)
             mdJoin_pruned.write(volDir+'/pruned_particles_alignability.xmd')
             
@@ -440,9 +440,9 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
     
     def _setWeight(self, item, row):  
         item._xmipp_scoreAlignabilityPrecision    = Float(row.getValue(md.MDL_SCORE_BY_ALIGNABILITY))
-	    item._xmipp_scoreAlignabilityAccuracyProj = Float(row.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL_PROJ))
-	    item._xmipp_scoreAlignabilityAccuracyExp = Float(row.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL_EXP))
+        item._xmipp_scoreAlignabilityAccuracyProj = Float(row.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL_PROJ))
+        item._xmipp_scoreAlignabilityAccuracyExp = Float(row.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL_EXP))
         item._xmipp_scoreAlignabilityAccuracy = Float(row.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL))
-	    item._xmipp_scoreZscore = Float(row.getValue(md.MDL_SCORE_BY_ZSCORE))
+        item._xmipp_scoreZscore = Float(row.getValue(md.MDL_SCORE_BY_ZSCORE))
         item._xmipp_scoreMirror = Float(row.getValue(md.MDL_SCORE_BY_MIRROR))	
-        item._xmipp_weight = Float(float(item._xmipp_scoreZscore)*float(item._xmipp_scoreAlignabilityAccuracy)*float(item._xmipp_scoreAlignabilityPrecision))
+        item._xmipp_weight = Float( float(item._xmipp_scoreZscore)*float(item._xmipp_scoreAlignabilityAccuracy)*float(item._xmipp_scoreAlignabilityPrecision))
