@@ -127,29 +127,29 @@ void ProgAngularAccuracyPCA::run()
 			if ( (tempMd.size() <= 0))
 				continue;
 
-			pcaResidualProj = 1e3;
-			pcaResidualExp = 1e3;
-			pcaResidual = 1e3;
-			Zscore = 1e3;
+			pcaResidualProj = -1e3;
+			pcaResidualExp = -1e3;
+			pcaResidual = -1e3;
+			Zscore = -1e3;
 
 			tempMd.getRow(row,tempMd.firstObject());
 
 			FOR_ALL_OBJECTS_IN_METADATA(tempMd)
 			{
 				tempMd.getValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,temp,__iter.objId);
-				if (temp < pcaResidualProj)
+				if (temp > pcaResidualProj)
 					pcaResidualProj=temp;
 
 				tempMd.getValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,temp,__iter.objId);
-				if (temp < pcaResidualExp)
+				if (temp > pcaResidualExp)
 					pcaResidualExp=temp;
 
 				tempMd.getValue(MDL_SCORE_BY_PCA_RESIDUAL,temp,__iter.objId);
-				if (temp < pcaResidual)
+				if (temp > pcaResidual)
 					pcaResidual=temp;
 
 				tempMd.getValue(MDL_SCORE_BY_ZSCORE,temp,__iter.objId);
-				if (temp < Zscore)
+				if (temp > Zscore)
 					Zscore=temp;
 			}
 
