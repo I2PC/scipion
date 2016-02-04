@@ -60,10 +60,7 @@ class XmippProtWriteTestP(ProtProcessParticles):
        self._insertFunctionStep('testWriteValidate',  prerequisites=pre)
 
     def createReferenceStep(self):
-        #change directory
-        #cwd=self._getExtraPath()
-        #os.chdir(cwd)
-	    img = Image()
+        img = Image()
         img.setDataType(DT_FLOAT)
         img.resize(self.xDim.get(), self.yDim.get())
         img.initConstant(1.)
