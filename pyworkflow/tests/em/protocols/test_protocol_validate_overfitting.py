@@ -1,5 +1,5 @@
 # ***************************************************************************
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Mohsen Kazemi (mkazemi@cnb.csic.es)
 # *
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -91,8 +91,8 @@ class TestValidateOverfitting(BaseTest):
                                 numberOfMpi=1, numberOfThreads=4)
         protValidateOverfitting.inputParticles.set(protImportPars.outputParticles)
         protValidateOverfitting.input3DReference.set(protImportVols.outputVolume)
-        protValidateOverfitting.symmetryGroup.set('c1')
         protValidateOverfitting.numberOfParticles.set("10 20 50")
         protValidateOverfitting.numberOfIterations.set(3)
+        protValidateOverfitting.symmetryGroup.set('c1')
         
         self.launchProtocol(protValidateOverfitting)

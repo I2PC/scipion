@@ -31,7 +31,6 @@ from protocol_structure_mapping import XmippProtStructureMapping
 import pylab
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn import manifold
 from mpl_toolkits.mplot3d import proj3d
 import pyworkflow.protocol.params as params
 
@@ -72,6 +71,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
         # 1 Dimension
         data1 = []
         fnCoordinate1 = open(fnOutput1, "r")
+        
         for line in fnCoordinate1:
             fields = line.split()
             rowdata = map(float, fields)
@@ -79,6 +79,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
         
         data1N = [[0 for i in range(1)] for i in volList]
         count = 0
+        
         for i in volList:
             data1N[count][0] = data1[count]
             count += 1
@@ -87,6 +88,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
         # 2 Dimensions      
         data2 = []
         fnCoordinate2 = open(fnOutput2, "r")
+        
         for line in fnCoordinate2:
             fields = line.split()
             rowdata = map(float, fields)
@@ -95,6 +97,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
         count = 0
         data2N = [[0 for i in range(2)] for i in volList]
         nVolj = 1
+        
         for j in range(2):
             nVoli = 1
             for i in volList:
@@ -107,6 +110,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
         # 3 Dimensions    
         data3 = []
         fnCoordinate3 = open(fnOutput3, "r")
+        
         for line in fnCoordinate3:
             fields = line.split()
             rowdata = map(float, fields)
@@ -116,6 +120,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
         count = 0
         data3N = [[0 for i in range(3)] for i in volList]
         nVolj = 1
+        
         for j in range(3):
             nVoli = 1
             for i in volList:
@@ -127,6 +132,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
                         
         count = 0
         labels = []
+        
         for voli in volList:
             labels.append("%s"%voli.getObjLabel())
             count += 1
@@ -161,8 +167,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
                             xy = (x, y), xytext = (-8, 8),
                             textcoords = 'offset points', ha = 'right', va = 'bottom',fontsize=9,
                             bbox = dict(boxstyle = 'round,pad=0.3', fc = 'yellow', alpha = 0.3))
-                            #arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
-            
+                                        
             plt.grid(True)
             plt.show()
                
@@ -177,19 +182,25 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
             ax.set_zlabel('Dimension 3', fontsize=11)
             ax.text2D(0.05, 0.95, "StructMap", transform=ax.transAxes)
                         
-            tX, tY, _ = proj3d.proj_transform(data3N[:, 0], data3N[:, 1], data3N[:, 2], ax.get_proj())
+            tX, tY, _ = proj3d.proj_transform(data3N[:, 0], data3N[:, 1],
+                                               data3N[:, 2], ax.get_proj())
             Labels = []
+            
             for i in range(len(data3N[:, 0])):
                 text = labels[i]
                 label = ax.annotate(text,
                                     xycoords='data',
                                     xy = (tX[i], tY[i]), xytext = (-8, 8),
-                                    textcoords = 'offset points', ha = 'right', va = 'bottom', fontsize=9,
-                                    bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5))
+                                    textcoords = 'offset points', ha = 'right',
+                                     va = 'bottom', fontsize=9,
+                                    bbox = dict(boxstyle = 'round,pad=0.5',
+                                                 fc = 'yellow', alpha = 0.5))
                                     
                 Labels.append(label)
             def update_position(e):
-                x2, y2, _ = proj3d.proj_transform(data3N[:, 0], data3N[:, 1], data3N[:, 2], ax.get_proj())
+                x2, y2, _ = proj3d.proj_transform(data3N[:, 0], data3N[:, 1],
+                                                  data3N[:, 2], ax.get_proj())
+                
                 for i in range(len(data3N[:, 0])):
                     label = Labels[i]
                     label.xy = x2[i],y2[i]
