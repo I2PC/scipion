@@ -75,8 +75,8 @@ class XmippProtWriteTestP(ProtProcessParticles):
         nproc = self.numberOfMpi.get()
         #nT=self.numberOfThreads.get()
 
-        self.runJob('xmipp_image_operate',
-                    params, numberOfMpi=nproc,cwd=self._getExtraPath())
+        self.runJob('xmipp_image_operate', params, numberOfMpi=1,
+                    cwd=self._getExtraPath())
 
     def testWriteValidate(self):
         img = Image()
