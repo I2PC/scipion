@@ -70,7 +70,7 @@ class ProtAlignmentAssign(ProtAlign2D):
         # If alignment is found for this particle set the alignment info on the output particle, if not do not write that item
         if alignedParticle is not None:
             alignment = alignedParticle.getTransform()
-            alignment.scaleShifts2D(scale)
+            alignment.scaleShifts(scale)
             item.setTransform(alignment)
         else:
             item._appendItem = False
