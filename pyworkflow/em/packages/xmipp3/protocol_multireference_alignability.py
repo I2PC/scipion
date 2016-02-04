@@ -444,4 +444,4 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         item._xmipp_scoreAlignabilityAccuracy = Float(row.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL))
         item._xmipp_scoreZscore = Float(row.getValue(md.MDL_SCORE_BY_ZSCORE))
         item._xmipp_scoreMirror = Float(row.getValue(md.MDL_SCORE_BY_MIRROR))	
-        item._xmipp_weight = Float( float(item._xmipp_scoreZscore)*float(item._xmipp_scoreAlignabilityAccuracy)*float(item._xmipp_scoreAlignabilityPrecision)*float(item._xmipp_scoreMirror))
+        item._xmipp_weight = Float( float(item._xmipp_scoreZscore)*float(item._xmipp_scoreAlignabilityAccuracy)*float(item._xmipp_scoreAlignabilityPrecision))
