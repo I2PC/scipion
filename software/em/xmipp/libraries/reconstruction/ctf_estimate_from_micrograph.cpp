@@ -193,9 +193,6 @@ void ProgCTFEstimateFromMicrograph::PSD_piece_by_averaging(
 
     MultidimArray<std::complex<double> > Periodogram;
     MultidimArray<double> small_psd;
-    MultidimArray<int> pieceMask;
-    pieceMask.resizeNoCopy(piece);
-    pieceMask.initConstant(1);
 
     // Attenuate borders to avoid discontinuities
     MultidimArray<double> pieceSmoother;
@@ -213,7 +210,7 @@ void ProgCTFEstimateFromMicrograph::PSD_piece_by_averaging(
                 for (j = 0, jb = j0; j < small_Xdim; j++, jb++)
                     DIRECT_A2D_ELEM(small_piece, i, j)=
                         DIRECT_A2D_ELEM(piece, ib, jb);
-            normalize_ramp(piece, pieceMask);
+            normalize_ramp(piece);
             piece *= pieceSmoother;
 
 #ifdef DEBUG
@@ -283,7 +280,7 @@ void ProgCTFEstimateFromMicrograph::run()
     MDIterator iterPosFile(posFile);
 
     // Open the micrograph --------------------------------------------------
-    ImageGeneric M_in;
+    Image<double> M_in;
     size_t Ndim, Zdim, Ydim , Xdim; // Micrograph dimensions
 
     //ImageInfo imgInfo;
@@ -324,9 +321,6 @@ void ProgCTFEstimateFromMicrograph::run()
     MultidimArray<int> PCAmask;
     MultidimArray<float> PCAv;
     double pieceDim2 = pieceDim * pieceDim;
-    MultidimArray<int> pieceMask;
-    pieceMask.resizeNoCopy(piece);
-    pieceMask.initConstant(1);
 
     //Multidimensional data variables to store the defocus obtained locally for plane fitting
     MultidimArray<double> defocusPlanefittingU(div_NumberX-2*skipBorders, div_NumberY-2*skipBorders);
@@ -363,6 +357,7 @@ void ProgCTFEstimateFromMicrograph::run()
 	{
         M_in.read(fn_micrograph,DATA,nIm);
         std::cout << "Micrograph number: " << nIm << std::endl;
+
         while (N <= div_Number)
         {
         	bool skip = false;
@@ -406,10 +401,11 @@ void ProgCTFEstimateFromMicrograph::run()
         	if (!skip)
         	{
         		// Extract micrograph piece ..........................................
-        		M_in().window(piece, 0, 0, piecei, piecej, 0, 0, piecei + YSIZE(piece) - 1,
-        				piecej + XSIZE(piece) - 1);
+//        		M_in().window(piece, 0, 0, piecei, piecej, 0, 0, piecei + YSIZE(piece) - 1,
+//        				piecej + XSIZE(piece) - 1);
+        		window2D( M_in(), piece, piecei, piecej, piecei + YSIZE(piece) - 1, piecej + XSIZE(piece) - 1);
         		piece.statisticsAdjust(0, 1);
-        		normalize_ramp(piece, pieceMask);
+        		normalize_ramp(piece);
         		piece *= pieceSmoother;
 
         		// Estimate the power spectrum .......................................
@@ -795,7 +791,7 @@ void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
                 for (size_t l = 0; l < XSIZE(piece); l++)
                     DIRECT_A2D_ELEM(piece, k, l)= mI(i+k, j+l);
             piece.statisticsAdjust(0, 1);
-            normalize_ramp(piece, pieceMask);
+            normalize_ramp(piece, &pieceMask);
             piece *= pieceSmoother;
 
             // Estimate the power spectrum .......................................

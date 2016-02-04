@@ -9,12 +9,14 @@
 /**************************************************************************
 * Defines
 **************************************************************************/
-#define     EXTERNAL_FACE       0
+#define     EXTERNAL_FACE       	0
 
-#define 	POINTS_TYPE		    1
-#define 	DCEL_TYPE		    2
+#define 	POINTS_TYPE		    	1
+#define 	DCEL_TYPE		    	2
 
-#define     NO_UPDATE           -1
+#define     NO_UPDATE           	-1
+
+#define 	CONVEX_HULL_LEN_FACTOR 	1
 
 /**************************************************************************
 * Data types definition
@@ -47,6 +49,8 @@ struct	Dcel_Face_T
 
 struct DCEL_T
 {
+	bool					incremental;
+
 	// Vertex data.
 	int 					nVertex;
 	int						sizeVertex;
@@ -115,6 +119,9 @@ int     is_Negative_Any_Vertex( struct DCEL_T *dcel, int edge_Index);
 void    shake_Dcel( struct DCEL_T *dcel);
 void    get_Extreme_Point( struct DCEL_T *dcel, int (*f)(struct Point_T *, struct Point_T *),
 																				struct Point_T *p);
+
+// Figures interface.
+bool	get_Convex_Hull( struct DCEL_T *dcel, int *length, int *edges);
 
 // I/O DCEL interface.
 int 	read_DCEL( struct DCEL_T *dcel, char *fileName);
