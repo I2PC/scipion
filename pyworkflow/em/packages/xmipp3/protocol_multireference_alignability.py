@@ -282,7 +282,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
                     
         self.runJob('xmipp_angular_accuracy_pca', params,numberOfMpi=nproc,numberOfThreads=nT)
         
-    def createOutputStep(self):
+    def createOutputStep(self, i=1):
         
         for i, vol in enumerate(self._iterInputVols()):        
         
@@ -327,25 +327,24 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
                                 updateItemCallback=self._setWeight,
                                 itemDataIterator=md.iterRows(mdJoin_pruned, sortByLabel=md.MDL_ITEM_ID))
                         
-            mdValidatoin = md.MetaData(validationMd)
-	    
+            mdValidatoin = md.getFirstRow(validationMd)	    
 	   
-            weight = mdValidatoin.getValue(md.MDL_WEIGHT_PRECISION_ALIGNABILITY, mdValidatoin.firstObject())	    
+            weight = mdValidatoin.getValue(md.MDL_WEIGHT_PRECISION_ALIGNABILITY)	    
             volume.weightAlignabilityPrecision  = Float(weight)
 	    
-            weight = mdValidatoin.getValue(md.MDL_WEIGHT_PRECISION_MIRROR, mdValidatoin.firstObject())	    
+            weight = mdValidatoin.getValue(md.MDL_WEIGHT_PRECISION_MIRROR)	    
             volume.weightMirror  = Float(weight)
 	    
-    	    weight = mdValidatoin.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL_PROJ, mdValidatoin.firstObject())	    
+    	    weight = mdValidatoin.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL_PROJ)	    
             volume.AlignabilityPCAProj  = Float(weight)
 
-    	    weight = mdValidatoin.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL_EXP, mdValidatoin.firstObject())	    
+    	    weight = mdValidatoin.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL_EXP)	    
             volume.AlignabilityPCAExp  = Float(weight)
 
-            weight = mdValidatoin.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL, mdValidatoin.firstObject())        
+            weight = mdValidatoin.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL)        
             volume.AlignabilityPCA  = Float(weight)
             
-    	    weight = mdValidatoin.getValue(md.MDL_SCORE_BY_ZSCORE, mdValidatoin.firstObject())	    
+    	    weight = mdValidatoin.getValue(md.MDL_SCORE_BY_ZSCORE)	    
             volume.ZScore  = Float(weight)
             	    
             volume.clusterMd = String(mdJoin_pruned)
