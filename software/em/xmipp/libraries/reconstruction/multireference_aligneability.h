@@ -41,7 +41,7 @@ class MultireferenceAligneability: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery;
+    FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery, fnParticles;
     bool donNotUseWeights;
     double significance_noise;
 
@@ -70,6 +70,9 @@ private:
     void calc_sumw(const size_t num, double & sumw);
 
     void calc_sumw2(const size_t num, double & sumw, const MetaData & mdGallery);
+
+    void obtainAngularAccuracy(const MetaData & tempMd, const MDRow & row, double & accuracy);
+
 
 };
 

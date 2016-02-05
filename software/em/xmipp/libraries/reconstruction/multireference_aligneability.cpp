@@ -38,7 +38,8 @@
 
 void MultireferenceAligneability::readParams()
 {
-    fnInit = getParam("--volume");
+	fnParticles = getParam("-i");
+	fnInit = getParam("--volume");
     fin = getParam("--angles_file");
     finRef = getParam("--angles_file_ref");
     fnGallery = getParam("--gallery");
@@ -52,10 +53,11 @@ void MultireferenceAligneability::defineParams()
 {
     //usage
     addUsageLine("This function takes a volume and a set of projections with orientations. The volume is projected into the set of projection directions defining the "
-    		"the reference projections. Thus, using the projections and references, the calculus of H0k, Hk and Pk is carried out");
+    		"the reference projections. Thus, using the projections and references, calculation of the particle alignment precision and accuracy is carried out");
+    addParamsLine("  [ -i <md_file> ] : Input metadata with images and their angles to be validated against the volume");
     addParamsLine("  [--volume <md_file=\"\">]    : Input volume to be validated");
-    addParamsLine("  [--angles_file <file=\".\">]     : Input metadata with projections and orientations");
-    addParamsLine("  [--angles_file_ref <file=\".\">] : Input reference metadata with projections and orientations obtained projecting the volume at the projection orientations ");
+    addParamsLine("  [--angles_file <file=\".\">]     : Input metadata with particle projections at several orientations from (usually) Significant");
+    addParamsLine("  [--angles_file_ref <file=\".\">] : Input reference metadata with projections and orientations obtained projecting the volume at the several orientations from (usually) Significant");
     addParamsLine("  [--gallery <file=\".\">]		  : Reference Gallery of projections ");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections"); //TODO the input will be two doc files one from the exp and the other from refs
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
@@ -70,7 +72,7 @@ void MultireferenceAligneability::run()
     randomize_random_generator();
 
     MetaData mdOutCL, mdOutQ;
-	MetaData mdExp, mdExpSort, mdProj, mdGallery;
+	MetaData mdExp, mdExpSort, mdProj, mdGallery, mdInputParticles;
 	size_t maxNImg;
 	FileName fnOutCL, fnOutQ, fnOutM;
 	fnOutCL = fnDir+"/pruned_particles_alignability_precision.xmd";
@@ -86,6 +88,7 @@ void MultireferenceAligneability::run()
     //double area_of_sphere_no_symmetry = 4.*PI;
     //double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
 
+	mdInputParticles.read(fnParticles);
 	mdProj.read(finRef);
 	mdExp.read(fin);
 	mdGallery.read(fnGallery);
@@ -95,10 +98,11 @@ void MultireferenceAligneability::run()
 	mdExpSort.getValue(MDL_IMAGE_IDX,maxNImg,sz);
 
 	String expression;
-	MDRow row;
+	MDRow row,rowInput;
 
-	double validationAlignability, validationMirror;
-	validationAlignability = 0;
+	double validationAlignabilityPrecision, validationAlignabilityAccuracy, validationMirror;
+	validationAlignabilityPrecision = 0;
+	validationAlignabilityAccuracy = 0;
 	validationMirror = 0;
 	init_progress_bar(maxNImg);
 
@@ -125,6 +129,7 @@ void MultireferenceAligneability::run()
 	calc_sumw2(numProjs, sum_noise, mdGallery);
 
 	double rank = 0.;
+	double accuracy = 0.;
 	char hold;
 	FileName imagePath;
 	for (size_t i=0; i<=maxNImg;i++)
@@ -132,6 +137,7 @@ void MultireferenceAligneability::run()
 		expression = formatString("imageIndex == %lu",i);
 		tempMdExp.importObjects(mdExp, MDExpression(expression));
 		tempMdProj.importObjects(mdProj, MDExpression(expression));
+		mdInputParticles.getRow(rowInput,i+1);
 
 		if ( (tempMdExp.size()==0) || (tempMdProj.size()==0))
 			continue;
@@ -140,6 +146,7 @@ void MultireferenceAligneability::run()
 		calc_sumu(tempMdExp, sum_w_exp, error_mirror_exp);
 		calc_sumu(tempMdProj, sum_w_proj, error_mirror_proj);
 
+		obtainAngularAccuracy(tempMdExp, rowInput, accuracy);
 		rank = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
 
 		if (sum_w_proj > sum_w_exp)
@@ -153,12 +160,14 @@ void MultireferenceAligneability::run()
 		else if (rank < 0)
 			rank = 0;
 
-		validationAlignability += (rank>0.5);
+		validationAlignabilityPrecision += (rank>0.5);
+		validationAlignabilityAccuracy += accuracy;
 		validationMirror += (error_mirror_exp);
 		tempMdExp.getValue(MDL_IMAGE,imagePath,1);
 		row.setValue(MDL_IMAGE,imagePath);
 		row.setValue(MDL_IMAGE_IDX,i);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY,rank);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION,rank);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY,accuracy);
 		row.setValue(MDL_SCORE_BY_MIRROR, error_mirror_exp);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_EXP,sum_w_exp);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_REF,sum_w_proj);
@@ -173,12 +182,14 @@ void MultireferenceAligneability::run()
 	}
 
 	mdOutCL.write(fnOutCL);
-	validationAlignability /= (maxNImg+1);
+	validationAlignabilityPrecision /= (maxNImg+1);
+	validationAlignabilityAccuracy /= (maxNImg+1);
 	validationMirror /= (maxNImg+1);
 
 	row.clear();
     row.setValue(MDL_IMAGE,fnInit);
-    row.setValue(MDL_WEIGHT_PRECISION_ALIGNABILITY,validationAlignability);
+    row.setValue(MDL_WEIGHT_PRECISION_ALIGNABILITY,validationAlignabilityPrecision);
+    row.setValue(MDL_WEIGHT_ACCURACY_ALIGNABILITY,validationAlignabilityAccuracy);
     row.setValue(MDL_WEIGHT_PRECISION_MIRROR,validationMirror);
     mdOutQ.addRow(row);
     mdOutQ.write(fnOutQ);
@@ -498,5 +509,105 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
 
 }
 
+void MultireferenceAligneability::obtainAngularAccuracy(const MetaData & tempMd, const MDRow & row, double & accuracy)
+{
+	double rot, tilt, psi, w;
+	double rotRef, tiltRef, psiRef, wRef;
+    bool mirror;
+	double x, y, z;
+	double xRef, yRef, zRef;
+	double sumOfW;
+	double norm;
+
+	//First for the reference:
+    row.getValue(MDL_ANGLE_ROT,rotRef);
+    row.getValue(MDL_ANGLE_TILT,tiltRef);
+    row.getValue(MDL_ANGLE_PSI,psiRef);
+    row.getValue(MDL_MAXCC,wRef);
+    row.getValue(MDL_FLIP,mirror);
+
+	if (mirror)
+	{
+		double newrot;
+		double newtilt;
+		double newpsi;
+		Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
+		rotRef = newrot;
+		tiltRef = newtilt;
+		psiRef = newpsi;
+	}
+
+    xRef = sin(tiltRef*PI/180.)*cos(rotRef*PI/180.);
+    yRef = sin(tiltRef*PI/180.)*sin(rotRef*PI/180.);
+    zRef = (cos(tiltRef*PI/180.));
+
+#ifdef DEBUG
+
+
+    std::cout << tiltRef << " " << rotRef << " " << std::endl;
+    std::cout << xRef << " " << yRef << " " << zRef << std::endl;
+    std::cout  << " " << std::endl;
+
+#endif
+    //Now for all the aligments done by significant
+	accuracy = 0;
+	x = 0;
+	y = 0;
+	z = 0;
+	sumOfW = 0;
+    FOR_ALL_OBJECTS_IN_METADATA(tempMd)
+    {
+        tempMd.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+        tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+        tempMd.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+        tempMd.getValue(MDL_MAXCC,w,__iter.objId);
+        tempMd.getValue(MDL_FLIP,mirror,__iter.objId);
+
+		if (mirror)
+		{
+			double newrot;
+			double newtilt;
+			double newpsi;
+			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
+			rot = newrot;
+			tilt = newtilt;
+			psi = newpsi;
+		}
+
+        x += (sin(tilt*PI/180.)*cos(rot*PI/180.))*w;
+        y += (sin(tilt*PI/180.)*sin(rot*PI/180.))*w;
+        z += (cos(tilt*PI/180.))*w;
+        sumOfW += w;
+
+#ifdef DEBUG
+        std::cout << tilt << " " << rot << " " << std::endl;
+        std::cout << x << " " << y << " " << z << std::endl;
+        std::cout << w <<  std::endl;
+
+#endif
+
+
+    }
+
+    x /= (sumOfW);
+    y /= (sumOfW);
+    z /= (sumOfW);
+    norm = sqrt(x*x+y*y+z*z);
+    x /= (norm);
+    y /= (norm);
+    z /= (norm);
+
+    accuracy = std::abs(std::acos(x*xRef+y*yRef+z*zRef));
+
+#ifdef DEBUG
+
+    std::cout << " " << std::endl;
+    std::cout << x << " " << y << " " << z << std::endl;
+    std::cout << accuracy << std::endl;
+    std::cout << "-----------" << std::endl;
+
+#endif
+
+}
 
 

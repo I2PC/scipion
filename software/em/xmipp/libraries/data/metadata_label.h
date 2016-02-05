@@ -359,6 +359,8 @@ enum MDLabel
     MDL_SCORE_BY_PCA_RESIDUAL_EXP,
     MDL_SCORE_BY_PCA_RESIDUAL,
     MDL_SCORE_BY_ALIGNABILITY, ///< score by alignability (double)
+    MDL_SCORE_BY_ALIGNABILITY_PRECISION, ///< score by alignability (double)
+    MDL_SCORE_BY_ALIGNABILITY_ACCURACY, ///< score by alignability (double)
     MDL_SCORE_BY_ALIGNABILITY_EXP, ///< score by alignability experimental particles (double)
     MDL_SCORE_BY_ALIGNABILITY_REF, ///< score by alignability references (double)
     MDL_SCORE_BY_ALIGNABILITY_NOISE, ///< score by alignability noise (double)
@@ -404,6 +406,7 @@ enum MDLabel
     MDL_WEIGHT_SIGNIFICANT, ///< Weight due to Angular significance
     MDL_WEIGHT_SSNR, ///< Weight due to SSNR
     MDL_WEIGHT_PRECISION_ALIGNABILITY, ///< Weight due to Alignability Precision
+    MDL_WEIGHT_ACCURACY_ALIGNABILITY, ///< Weight due to Alignability Accuracy
     MDL_WEIGHT_PRECISION_MIRROR, ///< Weight due to Mirror Precision
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
     MDL_X, ///< X component (double)
@@ -1711,6 +1714,8 @@ private:
         MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL_EXP, LABEL_DOUBLE, "scoreByPcaResidualExp");
         MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL, LABEL_DOUBLE, "scoreByPcaResidual");
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY, LABEL_DOUBLE, "scoreByAlignability");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_PRECISION, LABEL_DOUBLE, "scoreByAlignabilityPrecision");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, LABEL_DOUBLE, "scoreByAlignabilityAccuracy");
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_EXP, LABEL_DOUBLE, "scoreByAlignabilityExp");
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_REF, LABEL_DOUBLE, "scoreByAlignabilityRef");
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_NOISE, LABEL_DOUBLE, "scoreByAlignabilityNoise");
@@ -1766,6 +1771,7 @@ private:
         MDL::addLabel(MDL_WEIGHT_SSNR, LABEL_DOUBLE, "weightSSNR");
 
         MDL::addLabel(MDL_WEIGHT_PRECISION_ALIGNABILITY, LABEL_DOUBLE, "weightPrecisionAlignability");
+        MDL::addLabel(MDL_WEIGHT_ACCURACY_ALIGNABILITY, LABEL_DOUBLE, "weightAccuracyAlignability");
         MDL::addLabel(MDL_WEIGHT_PRECISION_MIRROR, LABEL_DOUBLE, "weightPrecisionMirror");
 
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
