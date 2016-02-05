@@ -4,9 +4,12 @@ from django.views.generic.base import RedirectView
 
 
 urlpatterns = [
-    # ... snip ...
+    # To publish in a subpath
     url('^' + django_settings.ABSOLUTE_URL, include('pages.urls')),
-    # url('^.*', RedirectView.as_view(url=django_settings.ABSOLUTE_URL + 'home/')), This creates an infinite redirections
+    url(r'^favicon\.ico$', RedirectView.as_view(url=django_settings.STATIC_URL + 'favicon.ico')),
+
+    # Anything not starting with the absolute url goes to home:
+    url('^(?!' + django_settings.ABSOLUTE_URL + ')', RedirectView.as_view(url='/' + django_settings.ABSOLUTE_URL + 'home/'))
 ]
 
 patterns(urlpatterns)
