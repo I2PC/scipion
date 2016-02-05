@@ -91,6 +91,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
 
     def _insertAllSteps(self):   
              
+	print 'holaaaa'
         convertId = self._insertFunctionStep('convertInputStep', 
                                              self.inputParticles.get().getObjId())
         deps = [] # store volumes steps id to use as dependencies for last step
@@ -132,7 +133,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
             
             
             pmStepId2 = self._insertFunctionStep('projectionLibraryStep',                                                    
-                                                volName, volDir,10,
+                                                volName, volDir,self.angDist.get(),
                                                 prerequisites=[volStepId])
 
             
@@ -282,7 +283,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
                     
         self.runJob('xmipp_angular_accuracy_pca', params,numberOfMpi=nproc,numberOfThreads=nT)
         
-    def createOutputStep(self, i=1):
+    def createOutputStep(self):
         
         for i, vol in enumerate(self._iterInputVols()):        
         
