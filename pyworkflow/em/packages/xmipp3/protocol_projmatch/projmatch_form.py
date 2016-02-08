@@ -190,7 +190,7 @@ def _defineProjectionMatchingParams(self, form):
     *Note:* if there are more values than iterations the extra value are ignored
     """)
     
-    form.addParam('maxChangeInAngles', NumericListParam, default='1000 10 4 2', 
+    form.addParam('maxChangeInAngles', NumericListParam, default='1000 10 6 4', 
                   label='Angular search range (deg)',
                   help=""" Maximum change in rot & tilt  (in +/- degrees)
     You may specify this option for each iteration. 
