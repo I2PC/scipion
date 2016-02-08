@@ -289,16 +289,16 @@ class ProtResMap(ProtAnalysis3D):
         
     def _plotResMapSlices(self, data=None, **kwargs):
         from ResMap_visualization import plotResMapVolume
-        plotDict = loads(str(self.plotData.get()))
+        plotDict = p.loads(str(self.plotData.get()))
         if data is None:
             data = self._getVolumeMatrix('volume1_resmap.map')
-            data  = np.ma.masked_where(data > plotDict['currentRes'], data, copy=True)
+            data = np.ma.masked_where(data > plotDict['currentRes'], data, copy=True)
         kwargs.update(plotDict)
         fig = plotResMapVolume(data, **kwargs)
         return Plotter(figure=fig)
 
     def _plotHistogram(self):
         from ResMap_visualization import plotResolutionHistogram
-        histogramData = loads(str(self.histogramData.get()))
+        histogramData = p.loads(str(self.histogramData.get()))
         fig = plotResolutionHistogram(histogramData)
         return Plotter(figure=fig)
