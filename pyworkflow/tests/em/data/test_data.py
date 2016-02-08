@@ -16,6 +16,7 @@ import pyworkflow.em.packages.eman2.convert as e2convert
 from pyworkflow.em.protocol import EMProtocol
 
 import pyworkflow.em.metadata as md
+from pyworkflow.em.convert import ImageHandler
 
 
 
@@ -34,7 +35,28 @@ class TestImage(unittest.TestCase):
 
         # Check that setFileName-getFileName is working properly        
         self.assertEqual(fn, mic.getFileName())
-        
+
+
+class TestImageHandler(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+
+    def testExistLocation(self):
+        volFn = self.dataset.getFile('volumes/volume_1_iter_002.mrc')
+
+        ih = ImageHandler()
+        # Test the volume filename exists
+        self.assertTrue(ih.existsLocation(volFn))
+        # Test missing filename
+        self.assertFalse(ih.existsLocation(volFn.replace('.mrc', '_fake.mrc')))
+        # Test the :mrc is append when used as volume
+        newFn = ih.getVolFileName(volFn)
+        self.assertEqual(newFn, volFn + ":mrc")
+        # Test that the new filename still exists even with the :mrc suffix
+        self.assertTrue(ih.existsLocation(newFn))
+
         
 class TestSetOfMicrographs(BaseTest):
     
