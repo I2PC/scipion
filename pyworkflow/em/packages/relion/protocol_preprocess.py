@@ -174,7 +174,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
             newSampling = oldSampling * scaleFactor
             imgSet.setSamplingRate(newSampling)
 
-        invFactor = 1 / scaleFactor
+            invFactor = 1 / scaleFactor
 
         for i, img in enumerate(inputSet):
             img.setLocation(i+1, self._getPath('particles.mrcs'))
