@@ -52,9 +52,9 @@ public:
 
     PCAMahalanobisAnalyzer pca;
 
-	size_t newXdim;
+	int newXdim;
 
-	size_t newYdim;
+	int newYdim;
 
 
 

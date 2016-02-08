@@ -41,7 +41,7 @@ class MultireferenceAligneability: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery, fnParticles;
+    FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery, fnParticles, fnParticlesRef;
     bool donNotUseWeights;
     double significance_noise;
 

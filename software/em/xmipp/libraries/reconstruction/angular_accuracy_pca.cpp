@@ -52,7 +52,7 @@ void ProgAngularAccuracyPCA::defineParams()
     addParamsLine("  [ -i <volume_file> ]      	: Voxel volume");
     addParamsLine("  [--i2 <md_file=\"\">]    	: Metadata file with neighbour projections");
     addParamsLine("  [ -o <md_file=\"\">]    	: Metadata file with obtained weights");
-    addParamsLine("  [--dim <d=64>]             : Scale images to this size if they are larger.");
+    addParamsLine("  [--dim <d=-1>]             : Scale images to this size if they are larger.");
     addParamsLine("                             : Set to -1 for no rescaling");
 }
 
@@ -209,7 +209,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 	Matrix2D<double> E, Trans(3,3);
 	Matrix1D<double> opt_offsets(2);
 
-
+/*
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
 		int enabled;
@@ -273,6 +273,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 	//pca.projectOnPCABasis(projRef);
 	pca.v.clear();
 
+*/
 	imgno = 0;
 	FileName f;
 
@@ -288,13 +289,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 			imgno++;
 			continue;
 		}
-
-
-//Currently there is a bug in Scipion. Change this line
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
-		shiftX = shiftX/39.;
-		shiftY = shiftY/39.;
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		//geo2TransformationMatrix(input, Trans);
 		//ApplyGeoParams params;
@@ -356,8 +350,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 	}
 
 	pca.subtractAvg();
-	pca.avg = avg;
-	//pca.learnPCABasis(numPCAs,numIter);
+	pca.learnPCABasis(numPCAs,numIter);
 	pca.projectOnPCABasis(proj);
 
 	std::vector< MultidimArray<float> > recons(SF.size());
@@ -387,7 +380,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 
     ROI.resize(newYdim*newXdim);
     ROI.setXmippOrigin();
-
 
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
@@ -443,12 +435,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 
 		SF.getValue(MDL_SHIFT_X,shiftX,__iter.objId);
 		SF.getValue(MDL_SHIFT_Y,shiftY,__iter.objId);
-
-		//Currently there is a bug in Scipion. Change this line
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
-		shiftX = shiftX/39.;
-		shiftY = shiftY/39.;
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		//geo2TransformationMatrix(input, Trans);
 		//ApplyGeoParams params;

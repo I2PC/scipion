@@ -91,7 +91,6 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
 
     def _insertAllSteps(self):   
              
-	print 'holaaaa'
         convertId = self._insertFunctionStep('convertInputStep', 
                                              self.inputParticles.get().getObjId())
         deps = [] # store volumes steps id to use as dependencies for last step
@@ -240,10 +239,15 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         
     def angularPrecisionStep(self, volName,volDir,sym):
         makePath(volDir)  
+        inputFile = self._getPath('input_particles.xmd') 
+        inputFileRef = self._getPath('reference_particles.xmd')
         aFile = self._getExtraPath('exp_particles.xmd')
         aFileRef =self._getExtraPath('ref_particles.xmd')
         aFileGallery =(volDir+'/gallery.doc')
-        params = '  --volume %s' % volName  
+
+        params = '  -i %s'  % inputFile
+        params += ' -i2 %s' % inputFileRef  
+        params += '  --volume %s' % volName  
         params += '  --angles_file %s' % aFile
         params += '  --angles_file_ref %s' % aFileRef
         params += '  --gallery %s' % aFileGallery
