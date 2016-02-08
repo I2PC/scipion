@@ -86,7 +86,74 @@ class ProtMovieAlignment(ProtProcessMovies):
         group.addParam('groupSize', IntParam, default=1,
                       label="Group Size", help="The number of frames in each group at the last step")
         group.addParam('doSaveMovie', BooleanParam, default=False,
-                      label="Save movies", help="Save aligned movies")
+                      label="Save movie", expertLevel=LEVEL_ADVANCED,
+                      help="Save Aligned movie")
+
+        #---------------------------------- DosefGPU Params--------------------------------
+        # GROUP DOSEFGPU PARAMETERS
+        group = form.addGroup('DosefGPU/Croscorrelation parameters',condition="alignMethod==%d "
+                                                              "or alignMethod==%d"
+                                                              "or alignMethod==%d"
+                                                              "or alignMethod==%d" %
+                                                              (AL_DOSEFGPU,\
+                                                               AL_DOSEFGPUOPTICAL,\
+                                                               AL_CROSSCORRELATION,\
+                                                               AL_CROSSCORRELATIONOPTICAL)
+                              )
+        
+        line = group.addLine('Used in final sum',
+                             help='First and last frames used in alignment.\n'
+                                  'The first frame in the stack is *0*.' )
+        line.addParam('sumFrame0', IntParam, default=0, label='First')
+        line.addParam('sumFrameN', IntParam, default=0, label='Last',
+                      help='If *0*, use maximum value')
+        
+        line = group.addLine('Crop offsets (px)')
+        line.addParam('cropOffsetX', IntParam, default=0, label='X')
+        line.addParam('cropOffsetY', IntParam, default=0, label='Y')
+        
+        line = group.addLine('Crop dimensions (px)',
+                      help='How many pixels to crop from offset\n'
+                           'If equal to 0, use maximum size.')
+        line.addParam('cropDimX', IntParam, default=0, label='X')
+        line.addParam('cropDimY', IntParam, default=0, label='Y')
+
+        group.addParam('binFactor', IntParam, default=1,condition="alignMethod==%d "
+                                                              "or alignMethod==%d" %
+                                                                  (AL_DOSEFGPU,\
+                                                                   AL_DOSEFGPUOPTICAL\
+                       ),
+                       label='Binning factor',
+                       help='1x or 2x. Bin stack before processing.')
+
+        group.addParam('filterFactor', FloatParam, default=4,condition="alignMethod==%d "
+                                                              "or alignMethod==%d" %
+                                                                  (AL_CROSSCORRELATION,\
+                                                                   AL_CROSSCORRELATIONOPTICAL\
+                       ),
+                       label='Filter at (A)',
+                       help='Maximum frequency for a low pass filter')
+
+
+        group.addParam('extraParams', StringParam, default='',
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Additional parameters',
+                      help="""
+-bft       150               BFactor in pix^2.
+-pbx       96                Box dimension for searching CC peak.
+-fod       2                 Number of frame offset for frame comparison.
+-nps       0                 Radius of noise peak.
+-sub       0                 1: Save as sub-area corrected sum. 0: Not.
+-srs       0                 1: Save uncorrected sum. 0: Not.
+-ssc       0                 1: Save aligned stack. 0: Not.
+-scc       0                 1: Save CC Map. 0: Not.
+-slg       1                 1: Save Log. 0: Not.
+-atm       1                 1: Align to middle frame. 0: Not.
+-dsp       1                 1: Save quick results. 0: Not.
+-fsc       0                 1: Calculate and log FSC. 0: Not.
+                      """)
+        form.addParallelSection(threads=1, mpi=1)
+
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def createOutputStep(self):
@@ -283,20 +350,3 @@ def movieCreatePlot(mic, saveFig):
     return plotter
 
 
-
-#class ProtMovieAlignmentWeb(ProtMovieAlignment):
-#    """ Aligns a set of volumes using cross correlation.
-#    Based on Xmipp protocol for aligning volumes, but
-#    the parameters are restricted for ease of use.
-#    """
-#    _label = 'movie alignment web'
-#    
-#    def _defineParams(self, form):
-#        ProtMovieAlignment._defineParams(self, form)
-#        
-#        gpuParamsGroup = form.getParam('GPU')
-#        gpuParamsGroup.config(condition='False')
-#        
-#    def getOutputFiles(self):
-#        # Redefine the default method to avoid download of movie files
-#        return self.outputMicrographs.getFiles()
