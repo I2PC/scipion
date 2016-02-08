@@ -306,7 +306,7 @@ def __downloadPdb(pdbId, pdbGz, log):
     
     if success:
         # Download  file
-        _fileIn = "%s/%s%s%s" % (pdborgDirectory, prefix, pdbId, suffix) 
+        _fileIn = "%s/%s%s%s" % (pdborgDirectory, prefix, pdbId.lower(), suffix) 
         _fileOut = pdbGz
         try:
             ftp.retrbinary("RETR %s" % _fileIn, open(_fileOut, "wb").write)
