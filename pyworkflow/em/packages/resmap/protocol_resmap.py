@@ -29,7 +29,7 @@ Protocol wrapper around the ResMap tool for local resolutio
 
 import os
 import sys
-from cPickle import loads, dumps
+import cPickle as p
 import numpy as np
 
 
@@ -172,14 +172,14 @@ class ProtResMap(ProtAnalysis3D):
         """ Call ResMap.py with the appropriate parameters. """
         results = self.runResmap(self._getPath())
 
-        self.histogramData.set(dumps(results['resHisto']))
+        self.histogramData.set(p.dumps(results['resHisto']))
         plotDict = {'minRes': results['minRes'],
                     'maxRes': results['maxRes'],
                     'orig_n': results['orig_n'],
                     'n': results['n'],
                     'currentRes': results['currentRes']
                     }
-        self.plotData.set(dumps(plotDict))
+        self.plotData.set(p.dumps(plotDict))
         self._store(self.histogramData, self.plotData)
 
         self.savePlots(results)
