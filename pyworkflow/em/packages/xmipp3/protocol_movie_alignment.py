@@ -33,127 +33,68 @@ import sys
 from os.path import join
 import numpy as np
 
-from pyworkflow.object import String, Integer
-from pyworkflow.protocol.params import IntParam, FloatParam, StringParam, BooleanParam, LEVEL_ADVANCED, LEVEL_ADVANCED, EnumParam
+from pyworkflow.object import String
+import pyworkflow.protocol.params as params
 from pyworkflow.utils.path import moveFile
 import pyworkflow.em as em
-from pyworkflow.em.protocol import ProtProcessMovies
 from pyworkflow.gui.plotter import Plotter
 
 
 
-class ProtMovieAlignment(ProtProcessMovies):
+class ProtMovieAlignment(em.ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
     _label = 'optical alignment'
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
-        ProtProcessMovies._defineParams(self, form)
+        em.ProtProcessMovies._defineParams(self, form)
 
         # Alignment parameters
         group = form.addGroup('Alignment parameters')
         line = group.addLine('Skip frames for alignment',
                             help='Skip frames for alignment.\n'
                                   'The first frame in the stack is *0*.' )
-        line.addParam('alignFrame0', IntParam, default=0, label='Begin')
-        line.addParam('alignFrameN', IntParam, default=0, label='End',
+        line.addParam('alignFrame0', params.IntParam, default=0, label='Begin')
+        line.addParam('alignFrameN', params.IntParam, default=0, label='End',
                       help='The number of frames to cut from the front and end')
 
         line = group.addLine('Crop offsets (px)')
-        line.addParam('cropOffsetX', IntParam, default=0, label='X')
-        line.addParam('cropOffsetY', IntParam, default=0, label='Y')
+        line.addParam('cropOffsetX', params.IntParam, default=0, label='X')
+        line.addParam('cropOffsetY', params.IntParam, default=0, label='Y')
 
         line = group.addLine('Crop dimensions (px)',
                              help='How many pixels to crop from offset\n'
                                   'If equal to 0, use maximum size.')
-        line.addParam('cropDimX', IntParam, default=0, label='X')
-        line.addParam('cropDimY', IntParam, default=0, label='Y')
+        line.addParam('cropDimX', params.IntParam, default=0, label='X')
+        line.addParam('cropDimY', params.IntParam, default=0, label='Y')
 
         # GROUP GPU PARAMETERS
         group = form.addGroup('GPU')
-        group.addParam('doGPU', BooleanParam, default=False,
-                      label="Use GPU (vs CPU)",
-                      help="Set to true if you want the GPU implementation of Optical Flow")
-        group.addParam('GPUCore', IntParam, default=0, expertLevel=LEVEL_ADVANCED,
-                      label="Choose GPU core",
-                      help="GPU may have several cores. Set it to zero if you do not know what we are talking about. First core index is 0, second 1 and so on.")
+        group.addParam('doGPU', params.BooleanParam, default=False,
+                       label="Use GPU (vs CPU)",
+                       help="Set to true if you want the GPU implementation of "
+                           "Optical Flow")
+        group.addParam('GPUCore', params.IntParam, default=0,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       label="Choose GPU core",
+                       help="GPU may have several cores. Set it to zero if you "
+                            "do not know what we are talking about. First core "
+                            "index is 0, second 1 and so on.")
         
         # GROUP OPTICAL FLOW PARAMETERS
-        group = form.addGroup('Additional Parameters', expertLevel=LEVEL_ADVANCED)
-        group.addParam('winSize', IntParam, default=150,
-                      label="Window size", help="Window size (shifts are assumed to be constant within this window).")
-        group.addParam('groupSize', IntParam, default=1,
-                      label="Group Size", help="The number of frames in each group at the last step")
-        group.addParam('doSaveMovie', BooleanParam, default=False,
-                      label="Save movie", expertLevel=LEVEL_ADVANCED,
-                      help="Save Aligned movie")
-
-        #---------------------------------- DosefGPU Params--------------------------------
-        # GROUP DOSEFGPU PARAMETERS
-        group = form.addGroup('DosefGPU/Croscorrelation parameters',condition="alignMethod==%d "
-                                                              "or alignMethod==%d"
-                                                              "or alignMethod==%d"
-                                                              "or alignMethod==%d" %
-                                                              (AL_DOSEFGPU,\
-                                                               AL_DOSEFGPUOPTICAL,\
-                                                               AL_CROSSCORRELATION,\
-                                                               AL_CROSSCORRELATIONOPTICAL)
-                              )
-        
-        line = group.addLine('Used in final sum',
-                             help='First and last frames used in alignment.\n'
-                                  'The first frame in the stack is *0*.' )
-        line.addParam('sumFrame0', IntParam, default=0, label='First')
-        line.addParam('sumFrameN', IntParam, default=0, label='Last',
-                      help='If *0*, use maximum value')
-        
-        line = group.addLine('Crop offsets (px)')
-        line.addParam('cropOffsetX', IntParam, default=0, label='X')
-        line.addParam('cropOffsetY', IntParam, default=0, label='Y')
-        
-        line = group.addLine('Crop dimensions (px)',
-                      help='How many pixels to crop from offset\n'
-                           'If equal to 0, use maximum size.')
-        line.addParam('cropDimX', IntParam, default=0, label='X')
-        line.addParam('cropDimY', IntParam, default=0, label='Y')
-
-        group.addParam('binFactor', IntParam, default=1,condition="alignMethod==%d "
-                                                              "or alignMethod==%d" %
-                                                                  (AL_DOSEFGPU,\
-                                                                   AL_DOSEFGPUOPTICAL\
-                       ),
-                       label='Binning factor',
-                       help='1x or 2x. Bin stack before processing.')
-
-        group.addParam('filterFactor', FloatParam, default=4,condition="alignMethod==%d "
-                                                              "or alignMethod==%d" %
-                                                                  (AL_CROSSCORRELATION,\
-                                                                   AL_CROSSCORRELATIONOPTICAL\
-                       ),
-                       label='Filter at (A)',
-                       help='Maximum frequency for a low pass filter')
-
-
-        group.addParam('extraParams', StringParam, default='',
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Additional parameters',
-                      help="""
--bft       150               BFactor in pix^2.
--pbx       96                Box dimension for searching CC peak.
--fod       2                 Number of frame offset for frame comparison.
--nps       0                 Radius of noise peak.
--sub       0                 1: Save as sub-area corrected sum. 0: Not.
--srs       0                 1: Save uncorrected sum. 0: Not.
--ssc       0                 1: Save aligned stack. 0: Not.
--scc       0                 1: Save CC Map. 0: Not.
--slg       1                 1: Save Log. 0: Not.
--atm       1                 1: Align to middle frame. 0: Not.
--dsp       1                 1: Save quick results. 0: Not.
--fsc       0                 1: Calculate and log FSC. 0: Not.
-                      """)
-        form.addParallelSection(threads=1, mpi=1)
-
+        group = form.addGroup('Additional Parameters',
+                              expertLevel=params.LEVEL_ADVANCED)
+        group.addParam('winSize', params.IntParam, default=150,
+                       label="Window size",
+                       help="Window size (shifts are assumed to be constant "
+                            "within this window).")
+        group.addParam('groupSize', params.IntParam, default=1,
+                       label="Group Size",
+                       help="The number of frames in each group at the last step")
+        group.addParam('doSaveMovie', params.BooleanParam, default=False,
+                       label="Save movies",
+                       help="Save aligned movies")
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def createOutputStep(self):
@@ -171,8 +112,6 @@ class ProtMovieAlignment(ProtProcessMovies):
             plotCartName = self._getNameExt(movie.getFileName(), '_plot_cart', 'png')
             psdCorrName = self._getNameExt(movie.getFileName(),'_aligned_corrected', 'psd')
             alignedMovie = movie.clone()
-            #if self.run:
-                #alignedMovie.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'_aligned', 'mrcs')))
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
             alignedMovie.plotCart = self._getExtraPath(plotCartName)
             alignedMovie.psdCorr = self._getExtraPath(psdCorrName)
@@ -240,8 +179,10 @@ class ProtMovieAlignment(ProtProcessMovies):
             program = 'xmipp_movie_optical_alignment_cpu'
         if doSaveMovie:
             command += '--ssc '
-        command += '--crx %d --cry %d --cdx %d --cdy %d' % (self.cropOffsetX, self.cropOffsetY,
-                                                            self.cropDimX, self.cropDimY)
+        command += '--crx %d --cry %d --cdx %d --cdy %d' % (self.cropOffsetX,
+                                                            self.cropOffsetY,
+                                                            self.cropDimX,
+                                                            self.cropDimY)
         try:
             self.runJob(program, command, cwd=movieFolder)
         except:
@@ -256,10 +197,13 @@ class ProtMovieAlignment(ProtProcessMovies):
         print join(movieFolder, '%(movieName)s' % locals())
         avg = ih.computeAverage(join(movieFolder, movieName))
         avg.write(join(movieFolder, 'uncorrectedmic.mrc'))
-        command = '--micrograph uncorrectedmic.mrc --oroot uncorrectedpsd --dont_estimate_ctf --pieceDim 400 --overlap 0.7'
+        command = '--micrograph uncorrectedmic.mrc --oroot uncorrectedpsd ' \
+                  '--dont_estimate_ctf --pieceDim 400 --overlap 0.7'
         program = 'xmipp_ctf_estimate_from_micrograph'
         self.runJob(program, command, cwd=movieFolder)
-        command = '--micrograph %(micName)s --oroot correctedpsd --dont_estimate_ctf --pieceDim 400 --overlap 0.7' % locals()
+
+        command = '--micrograph %(micName)s --oroot correctedpsd ' \
+                  '--dont_estimate_ctf --pieceDim 400 --overlap 0.7' % locals()
         self.runJob(program, command, cwd=movieFolder)
         correctedPSD = em.ImageHandler().createImage()
         unCorrectedPSD = em.ImageHandler().createImage()
@@ -305,7 +249,8 @@ class ProtMovieAlignment(ProtProcessMovies):
         summary = []
         if self.inputMovies.get():
             summary.append('Number of input movies: *%d*' % self.inputMovies.get().getSize())
-        summary.append('The number of frames to cut from the front: *%d* to *%s* (first frame is 0)' % (firstFrame, 'Last Frame'))
+        summary.append('The number of frames to cut from the front: '
+                       '*%d* to *%s* (first frame is 0)' % (firstFrame, 'Last Frame'))
 
         return summary
 
