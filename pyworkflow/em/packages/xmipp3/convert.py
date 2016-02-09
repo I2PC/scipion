@@ -589,11 +589,9 @@ def writeSetOfVolumes(volSet, filename, blockName='Volumes', **kwargs):
 def mdToCTFModel(md, mic):    
     ctfRow = rowFromMd(md, md.firstObject())
     ctfObj = rowToCtfModel(ctfRow)
-    if md.containsLabel(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY):
-        ctfObj._xmipp_ctfCritNonAstigmaticValidty = Float(ctfRow.getValue(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY))
-    if md.containsLabel(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY):
-        ctfObj._xmipp_ctfCritCtfMargin = Float(ctfRow.getValue(xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO))
-    # the ctf id is set to micId when calling setMicrograph
+    setXmippAttributes(ctfObj, ctfRow,
+                       xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY,
+                       xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO)
     ctfObj.setMicrograph(mic)
     
     return ctfObj
