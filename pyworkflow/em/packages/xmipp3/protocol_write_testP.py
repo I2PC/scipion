@@ -31,6 +31,7 @@ from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow.protocol.params import IntParam
 
+
 class XmippProtWriteTestP(ProtProcessParticles):
     """    
     using mpi write data to a large file (python level)
@@ -51,33 +52,41 @@ class XmippProtWriteTestP(ProtProcessParticles):
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-       stepId = self._insertFunctionStep('testWriteStep', self.nframes.get())
+       stepId = self._insertFunctionStep('createReferenceStep')
        pre=[]
        for counter in range(self.nframes.get(),0,-1):
-            id = self._insertFunctionStep('testWriteStep', counter, prerequisites=[stepId] )
-            pre.append(id)
-       stepId = self._insertFunctionStep('testWriteValidate',  prerequisites=pre)
-       #check step...
+            wid = self._insertFunctionStep('testWriteStep', counter, prerequisites=[stepId] )
+            pre.append(wid)
+       self._insertFunctionStep('testWriteValidate',  prerequisites=pre)
+
+    def createReferenceStep(self):
+        img = Image()
+        img.setDataType(DT_FLOAT)
+        img.resize(self.xDim.get(), self.yDim.get())
+        img.initConstant(1.)
+        img.write(self._getExtraPath("reference.mrc"))
+        img.write('%d@%s' % (self.nframes, self._getExtraPath('kk.mrcs')))
 
     def testWriteStep(self, counter):
-        #change directory
-        #cwd=self._getExtraPath()
-        #os.chdir(cwd)
-	img = Image()
-	img.setDataType(DT_FLOAT)
-	img.resize(self.xDim.get(), self.yDim.get())
-	img.initConstant(counter)
-	img.write("%d@%s"%(counter,os.path.join(self._getExtraPath(),"kk.mrcs")))
+        params =  ' -i reference.mrc '
+        params += ' -o %d@kk.mrcs' %counter
+        params += ' --mult %d' % counter
+        #change to directory
+        nproc = self.numberOfMpi.get()
+        #nT=self.numberOfThreads.get()
+
+        self.runJob('xmipp_image_operate', params, numberOfMpi=1,
+                    cwd=self._getExtraPath())
 
     def testWriteValidate(self):
-	img = Image()
+        img = Image()
         for counter in range(self.nframes.get(),0,-1):
-	    img.read("%d@%s"%(counter,os.path.join(self._getExtraPath(),"kk.mrcs")))
+            img.read("%d@%s"%(counter,os.path.join(self._getExtraPath(),"kk.mrcs")))
             mean, dev, min, max = img.computeStats()
             if (min == max) and (min == counter) and (dev == 0):
-                print("frame %d ok"%counter)
+                print("frame %d ok" % counter)
             else:
-                print("frame %d no OK mean dev, min max"%counter, mean,dev,min,max)
+                print("frame %d no OK mean dev, min max" % counter, mean,dev,min,max)
                 break
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
