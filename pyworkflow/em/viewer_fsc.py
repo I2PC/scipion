@@ -40,7 +40,7 @@ class FscViewer(Viewer):
 
     def _visualize(self, obj, **kwargs):
         x, y = obj.getData()
-        plotter = EmPlotter(x=1, y=1, windowTitle='FSC')
+        plotter = EmPlotter(x=1, y=1, windowTitle='FSC', figure='active')
         a = plotter.createSubPlot("FSC", "frequency (1/A)", "fsc")
         a.set_ylim([-0.1, 1.1])
         a.plot([0, x[-1]],
