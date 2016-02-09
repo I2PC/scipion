@@ -255,7 +255,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 			bool flip;
 			transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,anglePsi);
 			if (useForValidation)
-				flip = 0;
+				flip = false;
 
 			if (maxShift<0 || (maxShift>0 && fabs(shiftX)<maxShift && fabs(shiftY)<maxShift))
 			{
@@ -310,7 +310,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 						double imed=DIRECT_A1D_ELEM(imgimed,idx);
 						transformationMatrix2Parameters2D(allM[nVolume*Ndirs+nDir],flip,scale,shiftX,shiftY,anglePsi);
 						if (useForValidation)
-							flip = 0;
+							flip = false;
 
 						if (maxShift>0)
 							if (fabs(shiftX)>maxShift || fabs(shiftY)>maxShift)
