@@ -56,16 +56,17 @@ class XmippMultipleFSCsViewer(XmippViewer):
             fnFSC = self.protocol._getExtraPath("volume_%02d.fsc"%i)
             if os.path.exists(fnFSC):
                 self._plotFSC(a, fnFSC)
-                legends.append('Volume %d' % i)
+                label =  vol.get().getObjLabel()
+                if label == "":
+                    label = 'Volume %d' % i
+                legends.append(label)
                 xplotter.showLegend(legends)
             i+=1
         a.plot([self.minInv, self.maxInv],[0.143, 0.143], color='black', linestyle='--')
         a.plot([self.minInv, self.maxInv],[0.5, 0.5], color='black', linestyle='--')
         a.grid(True)
         
-        views = []
-        views.append(xplotter)
-        return views
+        self._views.append(xplotter)
 
     def _plotFSC(self, a, fnFSC):
         from xmipp import MetaData, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC
