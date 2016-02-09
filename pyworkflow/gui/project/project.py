@@ -272,6 +272,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
         confMenu.addSubMenu('General', 'general')
         confMenu.addSubMenu('Hosts', 'hosts')
         confMenu.addSubMenu('Protocols', 'protocols')
+        confMenu.addSubMenu('User', 'user')
 
         helpMenu = menu.addSubMenu('Help')
         helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
@@ -303,7 +304,6 @@ class ProjectManagerWindow(ProjectBaseWindow):
 
     def onGeneral(self):
         # Config -> General
-        _open_cmd('%s/.config/scipion/scipion.conf' % os.environ['HOME'])
         _open_cmd('%s/config/scipion.conf' % os.environ['SCIPION_HOME'])
 
     def onHosts(self):
@@ -318,11 +318,13 @@ class ProjectManagerWindow(ProjectBaseWindow):
         if os.path.exists('%s/.config/scipion/protocols.conf' % os.environ['HOME']):
             _open_cmd('%s/.config/scipion/protocols.conf' % os.environ['HOME'])
 
+    def onUser(self):
+        # Config -> User
+        _open_cmd('%s/.config/scipion/scipion.conf' % os.environ['HOME'])
 
 
 class ProjectTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
-
 
 
 class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
