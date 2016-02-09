@@ -89,6 +89,8 @@ class XmippProtResolution3D(ProtAnalysis3D):
                        md.MDL_RESOLUTION_FREQ,
                        md.MDL_RESOLUTION_FRC)
         self._defineOutputs(outputFSC=fsc)
+        self._defineSourceRelation(self.referenceVolume,fsc)
+        self._defineSourceRelation(self.inputVolume,fsc)
 
     #--------------------------- STEPS steps functions --------------------------------------------
     def calculateFscStep(self):
