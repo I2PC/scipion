@@ -1,9 +1,6 @@
 # **************************************************************************
 # *
 # * Authors:  Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es), May 2013
-# *           Slavica Jonic                (jonic@impmc.upmc.fr)
-# * Ported to Scipion:
-# *           J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es), Nov 2014
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -27,12 +24,16 @@
 # *
 # **************************************************************************
 
+import os
+
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.viewer import DataView, ChimeraView
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 from plotter import XmippPlotter
 
 from protocol_multiple_fscs import XmippProtMultipleFSCs
+
+
 
 class XmippMultipleFSCsViewer(XmippViewer):
     """ Visualize the output of protocol multiple fscs """
@@ -46,29 +47,24 @@ class XmippMultipleFSCsViewer(XmippViewer):
     def _visualize(self, obj, **args):
         from matplotlib.ticker import FuncFormatter
         self._plotFormatter = FuncFormatter(self._formatFreq) 
-
-        import os
         xplotter = XmippPlotter(windowTitle="FSC")
         a = xplotter.createSubPlot("FSC", "Frequency (1/A)", "FSC")
         legends = []
-        i = 0
-        for vol in self.protocol.inputVolumes:
-            fnFSC = self.protocol._getExtraPath("volume_%02d.fsc"%i)
+        for i, vol in enumerate(self.protocol.inputVolumes):
+            index = i + 1
+            fnFSC = self.protocol._getExtraPath("volume_%02d.fsc" % index)
             if os.path.exists(fnFSC):
-                self._plotFSC(a, fnFSC)
-                label =  vol.get().getObjLabel()
-                if label == "":
-                    label = 'Volume %d' % i
-                legends.append(label)
-                xplotter.showLegend(legends)
-            i+=1
+                label =  vol.get().getObjLabel() or 'Volume %d' % index
+                self._plotFSC(a, fnFSC, label)
         a.plot([self.minInv, self.maxInv],[0.143, 0.143], color='black', linestyle='--')
         a.plot([self.minInv, self.maxInv],[0.5, 0.5], color='black', linestyle='--')
         a.grid(True)
-        
+        #xplotter.legend()
+        a.legend()
+
         self._views.append(xplotter)
 
-    def _plotFSC(self, a, fnFSC):
+    def _plotFSC(self, a, fnFSC, label):
         from xmipp import MetaData, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC
         md = MetaData(fnFSC)
         resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, f) for f in md]
@@ -76,7 +72,7 @@ class XmippMultipleFSCsViewer(XmippViewer):
         self.maxFrc = max(frc)
         self.minInv = min(resolution_inv)
         self.maxInv = max(resolution_inv)
-        a.plot(resolution_inv, frc)
+        a.plot(resolution_inv, frc, label=label)
         a.xaxis.set_major_formatter(self._plotFormatter)
         a.set_ylim([-0.1, 1.1])
 
