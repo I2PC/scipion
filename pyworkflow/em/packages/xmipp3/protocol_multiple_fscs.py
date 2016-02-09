@@ -23,9 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippProtMultipleFSCs protocol
-"""
+
 from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, BooleanParam
@@ -33,9 +31,12 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 import os
 
+
+
 class XmippProtMultipleFSCs(ProtAnalysis3D):
     """
-    Normalize the local strain and rotations amongst several runs
+    Compute the FSCs between a reference volume and a set of input volumes.
+    A mask can be provided and the volumes are aligned by default.
     """
     _label = 'multiple fscs'
     
@@ -44,31 +45,36 @@ class XmippProtMultipleFSCs(ProtAnalysis3D):
         self.stepsExecutionMode = STEPS_PARALLEL
 
     def _defineParams(self, form):
-        form.addSection(label='Input')
         form.addParam('referenceVolume', PointerParam, label="Reference volume",
                       pointerClass='Volume',
                       help='The rest of volumes will be compared to this one')
-        form.addParam('inputVolumes', MultiPointerParam, label="Volumes to compare",
-                      pointerClass='Volume',
-                      help='Collection of volumes to compare to the reference volume')
-        form.addParam('mask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True,
-                      help='A mask may be provided and it is applied before comparing the different volumes')
-        form.addParam('doAlign', BooleanParam, label="Align volumes", default=True,
-                      help="Align volumes to reference before comparing. A local alignment is performed so the initial "
-                      "orientation of the volumes should be relatively similar")
+        form.addSection(label='Input')
+        form.addParam('inputVolumes', MultiPointerParam, pointerClass='Volume',
+                      label="Volumes to compare",
+                      help='Set of volumes to compare to the reference volume')
+        form.addParam('mask', PointerParam, pointerClass='VolumeMask', allowsNull=True,
+                      label="Mask",
+                      help='A mask may be provided and it is applied before '
+                           'comparing the different volumes')
+        form.addParam('doAlign', BooleanParam, default=True,
+                      label="Align volumes?",
+                      help="Align volumes to reference before comparing. A local "
+                           "alignment is performed so the initial orientation "
+                           "of the volumes should be relatively similar")
         form.addParallelSection(threads=8, mpi=1)
 
 #--------------------------- INSERT steps functions --------------------------------------------  
                                 
     def _insertAllSteps(self):
-        stepId = self._insertFunctionStep('prepareReference',self.referenceVolume.get().getObjId())
+        stepId = self._insertFunctionStep('prepareReferenceStep',
+                                          self.referenceVolume.get().getObjId())
         i = 0
         for vol in self.inputVolumes:
             fnVol = getImageLocation(vol.get())
-            self._insertFunctionStep('compareVolume',fnVol, i, prerequisites=[stepId])
+            self._insertFunctionStep('compareVolumeStep',fnVol, i, prerequisites=[stepId])
             i+=1
 
-    def prepareReference(self,volId):
+    def prepareReferenceStep(self,volId):
         if self.mask.hasValue():
             img=ImageHandler()
             fnMask = self._getExtraPath("mask.vol")
@@ -82,7 +88,7 @@ class XmippProtMultipleFSCs(ProtAnalysis3D):
             img.convert(self.referenceVolume.get(), fnRef)
             self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnRef, fnMask))
     
-    def compareVolume(self,fnVol,i):
+    def compareVolumeStep(self,fnVol,i):
         img=ImageHandler()
         referenceXdim = self.referenceVolume.get().getDim()[0]
         fnRef = self._getExtraPath("reference.vol")
