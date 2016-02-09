@@ -15,6 +15,7 @@ from pyworkflow.em.packages.xmipp3.convert import *
 import pyworkflow.em.packages.eman2.convert as e2convert
 from pyworkflow.em.protocol import EMProtocol
 import pyworkflow.em.metadata as md
+from pyworkflow.em.convert import ImageHandler
 
 
 
@@ -65,6 +66,27 @@ class TestImage(unittest.TestCase):
         self.assertEqual(fn, mic.getFileName())
 
 
+class TestImageHandler(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+
+    def testExistLocation(self):
+        volFn = self.dataset.getFile('volumes/volume_1_iter_002.mrc')
+
+        ih = ImageHandler()
+        # Test the volume filename exists
+        self.assertTrue(ih.existsLocation(volFn))
+        # Test missing filename
+        self.assertFalse(ih.existsLocation(volFn.replace('.mrc', '_fake.mrc')))
+        # Test the :mrc is append when used as volume
+        newFn = ih.getVolFileName(volFn)
+        self.assertEqual(newFn, volFn + ":mrc")
+        # Test that the new filename still exists even with the :mrc suffix
+        self.assertTrue(ih.existsLocation(newFn))
+
+        
 class TestSetOfMicrographs(BaseTest):
     
     @classmethod
@@ -380,7 +402,7 @@ class TestTransform(BaseTest):
         self.assertAlmostEqual(m[2, 3], 3)
         self.assertAlmostEqual(m[3, 3], 1)
 
-    def test_scaleShifts2D(self):
+    def test_scaleShifts(self):
         """ Check Scale 2D shifts in transformation class
         """
         t = Transform()
@@ -389,11 +411,11 @@ class TestTransform(BaseTest):
         m[1, 3] = 4
         m[2, 3] = 6
         m[3, 3] = 5
-        t.scaleShifts2D(0.5)
+        t.scaleShifts(0.5)
 
         self.assertAlmostEqual(m[0, 3], 1)
         self.assertAlmostEqual(m[1, 3], 2)
-        self.assertAlmostEqual(m[2, 3], 6)
+        self.assertAlmostEqual(m[2, 3], 3)
         self.assertAlmostEqual(m[3, 3], 5)
 
     def test_clone(self):

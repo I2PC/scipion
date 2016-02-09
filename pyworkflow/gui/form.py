@@ -1249,7 +1249,8 @@ class FormWindow(Window):
         allowThreads = self.protocol.allowThreads # short notation
         allowMpi = self.protocol.allowMpi # short notation
         numberOfMpi = self.protocol.numberOfMpi.get() 
-        numberOfThreads = self.protocol.numberOfThreads.get() 
+        numberOfThreads = self.protocol.numberOfThreads.get()
+        mode = self.protocol.stepsExecutionMode
         
         if allowThreads or allowMpi:
             self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True, sticky='ne', row=r, pady=0)
@@ -1257,9 +1258,17 @@ class FormWindow(Window):
             r2 = 0
             c2 = 0
             sticky = 'ne'
-            if self.protocol.stepsExecutionMode == params.STEPS_PARALLEL:
+
+            # FIXME: JMRT (2015-02-08) We are having problems with MPI and
+            # FIXME:    protocols parallelized with steps, for now use only threads
+            if mode == params.STEPS_PARALLEL:
+                mode = None
+                allowMpi = False
+                allowThread = True
+
+            if mode == params.STEPS_PARALLEL:
                 self.procTypeVar = tk.StringVar()
-                
+
                 if allowThreads and allowMpi:
                     if numberOfMpi > 1:
                         procs = numberOfMpi

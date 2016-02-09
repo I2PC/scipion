@@ -204,7 +204,7 @@ class XmippProtImageOperateVolumes(ProtOperateVolumes,
     #--------------------------- STEPS functions ---------------------------------------------------
     def operationStep(self, args):
        if self._isSingleInput():
-            args += " -o %s" % self.outputStk
+            args += " -o %s" % ImageHandler().getVolFileName(self.outputStk)
        else:
             args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
 
@@ -230,7 +230,7 @@ class XmippProtImageOperateVolumes(ProtOperateVolumes,
             if not self.isValue.get():
                 checkDimension = True
         if checkDimension:
-            #TODO ROB: this should be getDimensions even dor single objects
+            #TODO ROB: this should be getDimensions even for single objects
             #Do the same with 2D?
             # but I cannot make it work
             if isinstance(self.inputVolumes2.get(), Volume)\
