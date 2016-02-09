@@ -33,6 +33,8 @@
 #include <data/metadata.h>
 #include <string.h>
 #include <data/mask.h>
+#include <data/symmetries.h>
+
 
 
 class MultireferenceAligneability: public XmippProgram
@@ -44,8 +46,7 @@ public:
     FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery, fnParticles, fnParticlesRef;
     bool donNotUseWeights;
     double significance_noise;
-
-    //fsig, fnInit;
+    SymList SL;
 
 private:
     size_t Xdim,Ydim,Zdim,Ndim;
