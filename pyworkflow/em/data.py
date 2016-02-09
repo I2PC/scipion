@@ -306,8 +306,8 @@ class SetOfDefocusGroups():
 
 class FSC(EMObject):
     """Store a Fourier Shell Correlation"""
-    def __init__(self):
-        EMObject.__init__(self)
+    def __init__(self, **kwargs):
+        EMObject.__init__(self, **kwargs)
         self._x = CsvList(pType=float)
         self._y = CsvList(pType=float)
 
