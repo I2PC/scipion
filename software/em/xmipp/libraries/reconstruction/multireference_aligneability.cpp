@@ -218,6 +218,7 @@ void MultireferenceAligneability::run()
     row.setValue(MDL_IMAGE,fnInit);
     row.setValue(MDL_WEIGHT_PRECISION_ALIGNABILITY,validationAlignabilityPrecision);
     row.setValue(MDL_WEIGHT_ACCURACY_ALIGNABILITY,validationAlignabilityAccuracy);
+
   //  row.setValue(MDL_WEIGHT_PRECISION_MIRROR,validationMirror);
     mdOutQ.addRow(row);
     mdOutQ.write(fnOutQ);

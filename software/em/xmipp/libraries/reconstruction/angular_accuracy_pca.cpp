@@ -197,7 +197,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 	if (  (newXdim == -1) )
 	{
 		newXdim = Xdim;
-		newXdim = Ydim;
+		newYdim = Ydim;
 	}
 
 	Matrix2D<double> proj; //projRef;
