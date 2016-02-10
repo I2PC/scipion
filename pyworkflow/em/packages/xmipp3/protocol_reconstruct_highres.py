@@ -454,6 +454,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
                 self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
             self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVolAvg,fnMask),numberOfMpi=1)
+            cleanPath(fnMask)
 
         # A little bit of statistics (accepted and rejected particles, number of directions, ...)
         if iteration>0:
@@ -1068,11 +1069,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
     def cleanDirectory(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
-
-        if self.postAdHocMask.hasValue():
-            fnMask=join(fnDirCurrent,"mask.vol")
-            cleanPath(fnMask)
-
         if self.saveSpace:
             fnGlobal=join(fnDirCurrent,"globalAssignment")
             fnLocal=join(fnDirCurrent,"localAssignment")
