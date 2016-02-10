@@ -448,6 +448,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%(fnVolAvg,resolution,TsCurrent),numberOfMpi=1)
         self.runJob('xmipp_image_header','-i %s --sampling_rate %f'%(fnVolAvg,TsCurrent),numberOfMpi=1)
         
+        if self.postAdHocMask.hasValue():
+            fnMask=join(fnDirCurrent,"mask.vol")
+            self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVolAvg,fnMask),numberOfMpi=1)
+
         # A little bit of statistics (accepted and rejected particles, number of directions, ...)
         if iteration>0:
             from xmipp import AGGR_MAX
@@ -1022,7 +1026,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnMask=join(fnDirCurrent,"mask.vol")
                 self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
                 self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVol,fnMask),numberOfMpi=1)
-                cleanPath(fnMask)
 
             if self.postSymmetryWithinMask:
                 if self.postMaskSymmetry!="c1":
@@ -1062,6 +1065,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
     def cleanDirectory(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
+
+        if self.postAdHocMask.hasValue():
+            fnMask=join(fnDirCurrent,"mask.vol")
+            cleanPath(fnMask)
+
         if self.saveSpace:
             fnGlobal=join(fnDirCurrent,"globalAssignment")
             fnLocal=join(fnDirCurrent,"localAssignment")
