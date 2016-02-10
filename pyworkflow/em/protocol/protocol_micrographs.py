@@ -242,9 +242,9 @@ class ProtCTFMicrographs(ProtMicrographs):
                 raise Exception("No created dir: %s " % micDir)
             copyTree(prevDir, micDir)
     
-    def _createNewCtfModel(self, mic):
+    def _createCtfModel(self, mic):
         """ This should be implemented in subclasses
-        in order to create a CTF model 
+        in order to create a CTF model from program results.
         """
         pass
     
@@ -257,35 +257,30 @@ class ProtCTFMicrographs(ProtMicrographs):
         """
         if self.recalculate:
             ctfSet = self._createSetOfCTF("_recalculated")
-            defocusList = []
-            if self.continueRun.get() is not None:
-                oldCtfSet = getattr(self.continueRun.get(), 'outputCTF')
-            else:
-                oldCtfSet = getattr(self, 'outputCTF')
-            micSet = oldCtfSet.getMicrographs()
+            prot = self.continueRun.get() or self
+            micSet = prot.outputCTF.getMicrographs()
             # README: We suppose this is reading the ctf selection (with enabled/disabled)
             # to only consider the enabled ones in the final SetOfCTF
-            
+
             #TODO: maybe we can remove the need of the extra text file
             # with the recalculate parameters
+            newCount = 0
             for ctfModel in self.recalculateSet:
                 if ctfModel.isEnabled() and ctfModel.getObjComment():
                     mic = ctfModel.getMicrograph()
                     # Update the CTF models that where recalculated
                     # and append later to the set
                     # we don't want to copy the id here since it is already correct
-                    ctfModel.copy(self._createNewCtfModel(mic), copyId=False)
+                    newCtf = self._createCtfModel(mic, updateSampling=False)
+                    ctfModel.copy(newCtf, copyId=False)
                     ctfModel.setEnabled(True)
+                    newCount += 1
                 ctfSet.append(ctfModel)
-                # save the values of defocus for each micrograph in a list
-                defocusList.append(ctfModel.getDefocusU())
-                defocusList.append(ctfModel.getDefocusV())
             ctfSet.setMicrographs(micSet)
             self._defineOutputs(outputCTF=ctfSet)
             self._defineCtfRelation(micSet, ctfSet)
-    
-            self._defocusMaxMin(defocusList)
-            self._ctfCounter(defocusList)
+            self._computeDefocusRange(ctfSet)
+            self.summaryVar.set("CTF Re-estimation of %d micrographs" % newCount)
         else:
             self._createOutputStep()
         
@@ -391,16 +386,33 @@ class ProtCTFMicrographs(ProtMicrographs):
         After this method self._program and self._args should be set. 
         """
         pass
-    
+
+    def _computeDefocusRange(self, ctfSet):
+        """ Compute the minimum and maximu defoucs in a set of CTFs.
+        The protocol methodsVar will be updated with new values.
+
+        Params:
+            ctfSet: the set of CTFs to compute min and max
+        """
+        defocusList = []
+
+        for ctf in ctfSet:
+            defocusList.append(ctf.getDefocusU())
+            defocusList.append(ctf.getDefocusV())
+
+        minD = min(defocusList) / 10000.
+        maxD = max(defocusList) / 10000.
+
+        self.methodsVar.set("The range of micrograph's experimental defocus was"
+                            " %(minimum)0.3f - %(maximum)0.3f microns. " % (minD, maxD))
+
+        self._store(self.methodsVar)
+
     def _defocusMaxMin(self, defocusList):
         """ This function return the minimum and maximum of the defocus
         of a SetOfMicrographs.
         """
-        minimum = float(min(defocusList))/10000
-        maximum = float(max(defocusList))/10000
-        msg = "The range of micrograph's experimental defocus was %(minimum)0.3f - %(maximum)0.3f microns. " % locals()
-
-        self.methodsVar.set(msg)
+        raise Exception("DEPRECATED")
 
 
 class ProtPreprocessMicrographs(ProtMicrographs):

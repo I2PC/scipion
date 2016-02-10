@@ -66,13 +66,16 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         # Create micrograph dir 
         pwutils.makePath(micDir)
         downFactor = self.ctfDownFactor.get()
-        
+        scannedPixelSize = self.inputMicrographs.get().getScannedPixelSize()
         micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'mrc'))
+
         if downFactor != 1:
             #Replace extension by 'mrc' cause there are some formats that cannot be written (such as dm3)
             import pyworkflow.em.packages.xmipp3 as xmipp3
-            self.runJob("xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor), env=xmipp3.getEnviron())
-            self._params['scannedPixelSize'] = self.inputMicrographs.get().getScannedPixelSize() * downFactor
+            args = "-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor)
+            self.runJob("xmipp_transform_downsample",
+                        args, env=xmipp3.getEnviron())
+            self._params['scannedPixelSize'] =  scannedPixelSize * downFactor
         else:
             micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, "mrc"))
             em.ImageHandler().convert(micFn, micFnMrc, em.DT_FLOAT)
@@ -86,6 +89,11 @@ class ProtCTFFind(em.ProtCTFMicrographs):
             self.runJob(self._program, self._args % self._params)
         except Exception, ex:
             print >> sys.stderr, "ctffind has failed with micrograph %s" % micFnMrc
+
+        # Let's notify that this micrograph have been processed
+        # just creating an empty file at the end (after success or failure)
+        open(os.path.join(micDir, 'done.txt'), 'w')
+        # Let's clean the temporary mrc micrographs
         pwutils.cleanPath(micFnMrc)
     
     def _restimateCTF(self, ctfId):
@@ -117,42 +125,36 @@ class ProtCTFFind(em.ProtCTFMicrographs):
             print >> sys.stderr, "ctffind has failed with micrograph %s" % micFnMrc
         pwutils.cleanPattern(micFnMrc)
     
-    def _createNewCtfModel(self, mic):
+    def _createCtfModel(self, mic, updateSampling=True):
+        #  When downsample option is used, we need to update the
+        # sampling rate of the micrograph associeted with the CTF
+        # since it could be downsampled
+        if updateSampling:
+            newSampling = mic.getSamplingRate() * self.ctfDownFactor.get()
+            mic.setSamplingRate(newSampling)
+
         micDir = self._getMicrographDir(mic)
         out = self._getCtfOutPath(micDir)
         psdFile = self._getPsdPath(micDir)
-        ctfModel2 = em.CTFModel()
-        
-        if not self.useCftfind4:
-            readCtfModel(ctfModel2, out)
-        else:
-            readCtfModel(ctfModel2, out, True)
-        
-        ctfModel2.setPsdFile(psdFile)
-        ctfModel2.setMicrograph(mic)
-        return ctfModel2
-    
+
+        ctfModel = em.CTFModel()
+        readCtfModel(ctfModel, out, ctf4=self.useCftfind4.get())
+        ctfModel.setPsdFile(psdFile)
+        ctfModel.setMicrograph(mic)
+
+        return ctfModel
+
     def _createOutputStep(self):
         ctfSet = self._createSetOfCTF()
         ctfSet.setMicrographs(self.inputMics)
         defocusList = []
         
         for _, micDir, mic in self._iterMicrographs():
-            samplingRate = mic.getSamplingRate() * self.ctfDownFactor.get()
-            mic.setSamplingRate(samplingRate)
-            psdFile = self._getPsdPath(micDir)
-            out = self._getCtfOutPath(micDir)
-            
-            ctfModel = em.CTFModel()
-            readCtfModel(ctfModel, out, ctf4=self.useCftfind4.get())
-            ctfModel.setPsdFile(psdFile)
-            ctfModel.setMicrograph(mic)
-            
-            defocusList.append(ctfModel.getDefocusU())
-            defocusList.append(ctfModel.getDefocusV())
+            ctfModel = self._createCtfModel(mic)
             ctfSet.append(ctfModel)
         
-        self._defocusMaxMin(defocusList)
+        #self._defocusMaxMin(defocusList)
+        self._computeDefocusRange(ctfSet)
         self._defineOutputs(outputCTF=ctfSet)
         self._defineCtfRelation(self.inputMics, ctfSet)
         

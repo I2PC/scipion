@@ -422,7 +422,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         cleanPath(fnRejected)
         return retval
     
-    def _createNewCtfModel(self, mic):
+    def _createCtfModel(self, mic):
         micDir = self._getMicrographDir(mic)
         ctfparam = self._getFileName('ctfparam', micDir=micDir)
         ctfModel2 = readCTFModel(ctfparam, mic)
