@@ -361,8 +361,10 @@ enum MDLabel
     MDL_SCORE_BY_ALIGNABILITY, ///< score by alignability (double)
     MDL_SCORE_BY_ALIGNABILITY_PRECISION, ///< score by alignability (double)
     MDL_SCORE_BY_ALIGNABILITY_ACCURACY, ///< score by alignability (double)
-    MDL_SCORE_BY_ALIGNABILITY_EXP, ///< score by alignability experimental particles (double)
-    MDL_SCORE_BY_ALIGNABILITY_REF, ///< score by alignability references (double)
+    MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP, ///< score by alignability experimental particles (double)
+    MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF, ///< score by alignability references (double)
+    MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP, ///< score by alignability experimental particles (double)
+    MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF, ///< score by alignability references (double)
     MDL_SCORE_BY_ALIGNABILITY_NOISE, ///< score by alignability noise (double)
     MDL_SCORE_BY_MIRROR, ///< score by mirror (double)
     MDL_SCORE_BY_ZSCORE,
@@ -1716,8 +1718,11 @@ private:
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY, LABEL_DOUBLE, "scoreByAlignability");
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_PRECISION, LABEL_DOUBLE, "scoreByAlignabilityPrecision");
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, LABEL_DOUBLE, "scoreByAlignabilityAccuracy");
-        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_EXP, LABEL_DOUBLE, "scoreByAlignabilityExp");
-        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_REF, LABEL_DOUBLE, "scoreByAlignabilityRef");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP, LABEL_DOUBLE, "scoreByAlignabilityPrecisionExp");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF, LABEL_DOUBLE, "scoreByAlignabilityPrecisionRef");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP, LABEL_DOUBLE, "scoreByAlignabilityAccuracyExp");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF, LABEL_DOUBLE, "scoreByAlignabilityAccuracyRef");
+
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_NOISE, LABEL_DOUBLE, "scoreByAlignabilityNoise");
         MDL::addLabel(MDL_SCORE_BY_MIRROR, LABEL_DOUBLE, "scoreByMirror");
         MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");

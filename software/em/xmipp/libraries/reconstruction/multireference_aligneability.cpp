@@ -193,9 +193,11 @@ void MultireferenceAligneability::run()
 		row.setValue(MDL_IMAGE_IDX,i);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION, rank);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAcc);
-		row.setValue(MDL_SCORE_BY_MIRROR, error_mirror_exp);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY_EXP,sum_w_exp);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY_REF,sum_w_proj);
+//		row.setValue(MDL_SCORE_BY_MIRROR, error_mirror_exp);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP,sum_w_exp);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF,sum_w_proj);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP,sum_w_exp);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF,sum_w_proj);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_NOISE,sum_noise);
 
 		mdOutCL.addRow(row);
@@ -215,7 +217,7 @@ void MultireferenceAligneability::run()
     row.setValue(MDL_IMAGE,fnInit);
     row.setValue(MDL_WEIGHT_PRECISION_ALIGNABILITY,validationAlignabilityPrecision);
     row.setValue(MDL_WEIGHT_ACCURACY_ALIGNABILITY,validationAlignabilityAccuracy);
-    row.setValue(MDL_WEIGHT_PRECISION_MIRROR,validationMirror);
+  //  row.setValue(MDL_WEIGHT_PRECISION_MIRROR,validationMirror);
     mdOutQ.addRow(row);
     mdOutQ.write(fnOutQ);
 }
@@ -245,7 +247,7 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
 {
     double a;
     double rotRef,tiltRef,psiRef, wRef;
-    double rot,tilt,psi, w;
+    double rot,tilt,psi;
     double x,y,z;
     double xx,yy,zz;
     double w2;
@@ -264,7 +266,7 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         tempMd.getValue(MDL_ANGLE_ROT,rotRef,__iter.objId);
         tempMd.getValue(MDL_ANGLE_TILT,tiltRef,__iter.objId);
         tempMd.getValue(MDL_ANGLE_PSI,psiRef,__iter.objId);
-        tempMd.getValue(MDL_MAXCC,w,__iter.objId);
+        tempMd.getValue(MDL_MAXCC,wRef,__iter.objId);
         tempMd.getValue(MDL_FLIP,mirror,__iter.objId);
 
 /*
@@ -338,18 +340,22 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
 */
 
         	if (donNotUseWeights)
+        	{
         		W += a;
+        		sumW += 1;
+        	}
+
         	else
-        		W += a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
+        	{
+        		W += a*(wRef*w2);
+        		sumW += (wRef*w2);
+        	}
 
         }
 
-    	//std::cout << " -----------"  << std::endl;
-        //sumW +=  W;
-
     }
 
-    sum_W = (W / ((tempMd.size()-1)*(tempMd.size()-1)));
+    sum_W = (W / sumW);
 
 #ifdef DEBUG
 {
