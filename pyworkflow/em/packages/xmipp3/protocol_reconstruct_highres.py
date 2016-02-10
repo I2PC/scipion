@@ -450,6 +450,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         
         if self.postAdHocMask.hasValue():
             fnMask=join(fnDirCurrent,"mask.vol")
+            if not exists(fnMask):
+                volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
+                self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
             self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVolAvg,fnMask),numberOfMpi=1)
 
         # A little bit of statistics (accepted and rejected particles, number of directions, ...)
