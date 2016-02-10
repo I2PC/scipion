@@ -47,7 +47,7 @@ void MultireferenceAligneability::readParams()
     fnSym = getParam("--sym");
     fnDir = getParam("--odir");
     donNotUseWeights= checkParam("--dontUseWeights");
-    significance_noise = getDoubleParam("--significance_noise");
+    check_mirror = checkParam("--check_mirrors");
 }
 
 void MultireferenceAligneability::defineParams()
@@ -63,7 +63,7 @@ void MultireferenceAligneability::defineParams()
     addParamsLine("  [--gallery <file=\".\">]		  : Reference Gallery of projections ");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections"); //TODO the input will be two doc files one from the exp and the other from refs
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
-    addParamsLine("  [--significance_noise<float=0.95>] : Significane of the alignment with respect the noise");
+    addParamsLine("  [--check_mirrors : Correct for mirrors in the alignment precision and accuracy estimation. In this case the precision of the projection axis without direction is computed");
     addParamsLine("  [--dontUseWeights]           : Do not use the particle weigths in the clusterability calculation ");
 
 }
@@ -320,8 +320,7 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
 #undef DEBUG
 
 			a = SL.computeDistance(rotRef, tiltRef, psiRef,
-									   rot, tilt, psi, true,
-									   true, false);
+								   rot, tilt, psi, check_mirror,true, false);
 
 /*
         	double norm1 = sqrt(x*x+y*y+z*z);
@@ -530,7 +529,7 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
                 	a += temp;
 
 */
-    			a += SL.computeDistance(rotArray[nS1],tiltArray[nS1],psiArray[nS1],rotArray[nS2],tiltArray[nS2],psiArray[nS2], true,true, false);
+    			a += SL.computeDistance(rotArray[nS1],tiltArray[nS1],psiArray[nS1],rotArray[nS2],tiltArray[nS2],psiArray[nS2], check_mirror,true, false);
                 //std::cout << xRanArray[nS1] << " " << yRanArray[nS1] <<  " " <<  zRanArray[nS1] << std::endl;
                	//std::cout << xRanArray[nS2] << " " << yRanArray[nS2] <<  " " <<  zRanArray[nS2] << std::endl;
             }
@@ -638,8 +637,7 @@ void MultireferenceAligneability::obtainAngularAccuracy(const MetaData & tempMd,
 */
         sumOfW += w;
         tempAccuracy = SL.computeDistance(rotRef, tiltRef, psiRef,
-        		                   rot, tilt, psi, true,
-        		                   true, false);
+        		                   rot, tilt, psi, check_mirror,true, false);
     	tempAccuracy *= (w);
     	accuracy += tempAccuracy;
 /*

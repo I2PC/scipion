@@ -45,7 +45,7 @@ public:
     /** Filenames */
     FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery, fnParticles, fnParticlesRef;
     bool donNotUseWeights;
-    double significance_noise;
+    bool check_mirror;
     SymList SL;
 
 private:
