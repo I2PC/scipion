@@ -27,26 +27,58 @@
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, Viewer
 from plotter import EmPlotter
 from data import FSC
-
+from matplotlib.ticker import FuncFormatter
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
+from pyworkflow.em.protocol import ProtCreateFSC
 
 class FscViewer(Viewer):
-    """ Viewer to plot a FSC object. """
+    """ Viewer for plot a FSC object. """
     _targets = [FSC]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 
     def __init__(self, **kwargs):
         Viewer.__init__(self, **kwargs)
         self.threshold = kwargs.get('threshold', 0.143)
+        self.legend=""
 
-    def _visualize(self, obj, **kwargs):
+    def _formatFreq(self, value, pos):
+        """ Format function for Matplotlib formatter. """
+        inv = 999.
+        if value:
+            inv = 1/value
+        return "1/%0.2f" % inv
+
+    def _visualize(self, obj, figure=None, **kwargs):
+        def createFSCObject(event):
+            project = self.getProject()
+            prot = project.newProtocol(ProtCreateFSC)
+            prot.setObjLabel("kk")#label)
+            prot.setInputObj(self.obj)#protocol may be not finished
+            prot.setParrentObject(self.obj)#protocol may be not finished
+            #prot.inputObj.set(self.protocol)#protocol may be not finished
+
+            project.launchProtocol(prot)
+            #prot.inputObject.set(self.obj)
+
+        self.obj = obj
         x, y = obj.getData()
-        plotter = EmPlotter(x=1, y=1, windowTitle='FSC', figure='active')
+        plotter = EmPlotter(x=1, y=1, windowTitle='FSC', figure=figure)
         a = plotter.createSubPlot("FSC", "frequency (1/A)", "fsc")
         a.set_ylim([-0.1, 1.1])
         a.plot([0, x[-1]],
                [self.threshold, self.threshold],
-               'b--', label=obj.getObjLabel())
-        a.legend()
-        plotter.plotData(x, y, '-')
+               'k--')
+        a.grid(True)
+        _plotFormatter = FuncFormatter(self._formatFreq)
+        a.xaxis.set_major_formatter(_plotFormatter)
 
+        plotter.plotData(x, y, '-',label=kwargs.get('label', "no label"))
+        a.legend()
+        #####
+        axcreateFSC = plt.axes([0.75, 0.01, 0.2, 0.050])
+        bcreateFSC = Button(axcreateFSC, 'Create Fsc')
+        bcreateFSC.on_clicked(createFSCObject)
+        plt.show()
+        ####
         return [plotter]
