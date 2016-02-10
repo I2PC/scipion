@@ -297,7 +297,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 
 		SF.getValue(MDL_IMAGE,f,__iter.objId);
 		img.read(f);
-
 		SF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
 		SF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
 		SF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
@@ -463,8 +462,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,R2_Proj,__iter.objId);
 		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,R2_Exp,__iter.objId);
 		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL,R2_Proj*R2_Exp,__iter.objId);
-		//SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,exp(-R2_Proj),__iter.objId);
-		//SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_EXP,exp(-R2_Exp),__iter.objId);
 		SF.setValue(MDL_SCORE_BY_ZSCORE, exp(-A1D_ELEM(pca.Zscore,imgno)),__iter.objId);
 
 		#ifdef DEBUG
@@ -533,7 +530,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 #endif
 
 		imgno++;
-
 	}
 
 	recons.clear();
