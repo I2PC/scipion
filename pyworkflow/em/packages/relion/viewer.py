@@ -64,6 +64,7 @@ FSC_RANDOMIZED = 3
 FSC_ALL = 4
 
 
+
 class RelionPlotter(EmPlotter):
     ''' Class to create several plots with Xmipp utilities'''
     def __init__(self, x=1, y=1, mainTitle="", **kwargs):
@@ -538,43 +539,38 @@ Examples:
         prefixes = self._getPrefixes()        
         nrefs = len(self._refsList)
         n = nrefs * len(prefixes)
-        gridsize = self._getGridSize(n)
+        #gridsize = self._getGridSize(n)
         
         md.activateMathExtensions()
         
-        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1],
-                                 windowTitle='Resolution FSC',
-                                 figure=self._getFigure())
-
+        xplotter = em.FscViewer(project=self.protocol.getProject(),threshold=threshold)
         for prefix in prefixes:
-            for ref3d in self._refsList:
+            for ref3d in self._refsList:#ROB: I believe len(_refsList)==1
                 plot_title = prefix + 'class %s' % ref3d
-                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'FSC',
-                                           yformat=False)
                 blockName = 'model_class_%d@' % ref3d
                 for it in self._iterations:
                     model_star = self._getModelStar(prefix, it)
-                    print "modelStar: ", model_star
                     if exists(model_star):
-                        self._plotFSC(a, blockName + model_star, 'iter %d' % it)
-                xplotter.legend()
-                if threshold < self.maxFrc:
-                    a.plot([self.minInv, self.maxInv],[threshold, threshold],
-                           color='black', linestyle='--')
-                a.grid(True)
-        
+                        #fnFSC=\
+                        blockName + model_star
+                        fsc = self._plotFSC(None, blockName + model_star, 'iter %d' % it)
+                        xplotter._visualize(fsc, figure=self._getFigure(),label=('iter %d' % it))
+                import matplotlib.pyplot as plt
+                plt.show()
+
         return [xplotter]
     
     def _plotFSC(self, a, model_star, label):
         mdStar = md.MetaData(model_star)
         resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
         frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
-        self.maxFrc = max(frc)
-        self.minInv = min(resolution_inv)
-        self.maxInv = max(resolution_inv)
-        a.plot(resolution_inv, frc, label=label)
-        a.xaxis.set_major_formatter(self._plotFormatter)
-        a.set_ylim([-0.1, 1.1])
+
+        fsc = em.data.FSC(objLabel=label)
+        fsc.setData(resolution_inv,frc)
+
+        return fsc
+
+
     
 #===============================================================================
 # Utils Functions
@@ -844,7 +840,8 @@ class PostprocessViewer(ProtocolViewer):
         if threshold < self.maxfsc:
             a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
         a.grid(True)
-        
+
+
         return [xplotter]
     
     def _plotFSC(self, a, model, label):
