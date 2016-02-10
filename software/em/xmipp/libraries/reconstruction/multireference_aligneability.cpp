@@ -47,6 +47,7 @@ void MultireferenceAligneability::readParams()
     fnSym = getParam("--sym");
     fnDir = getParam("--odir");
     donNotUseWeights= checkParam("--dontUseWeights");
+    check_mirror = false;
     check_mirror = checkParam("--check_mirrors");
 }
 
@@ -63,7 +64,7 @@ void MultireferenceAligneability::defineParams()
     addParamsLine("  [--gallery <file=\".\">]		  : Reference Gallery of projections ");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections"); //TODO the input will be two doc files one from the exp and the other from refs
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
-    addParamsLine("  [--check_mirrors : Correct for mirrors in the alignment precision and accuracy estimation. In this case the precision of the projection axis without direction is computed");
+    addParamsLine("  [--check_mirrors] 			  : Correct for mirrors in the alignment precision and accuracy estimation. In this case the precision of the projection axis without direction is computed");
     addParamsLine("  [--dontUseWeights]           : Do not use the particle weigths in the clusterability calculation ");
 
 }
