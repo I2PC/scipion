@@ -1,0 +1,17 @@
+{% extends 'header.html' %}
+
+{% block header_backlink %}
+	<a href="{{abs_url}}" id="headerLogoContainer">
+{% endblock %}
+
+{% block infotitle %}
+	{% if daysLeft == 'None' %}
+		endless
+	{% else %}
+		[ {{daysLeft}} left ]&nbsp;
+	{% endif %}
+{% endblock %}
+
+{% block header_menu %}
+	<a href="{{abs_url}}services/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}"><i class="fa fa-home"></i> Web tools home</a>
+{% endblock %}

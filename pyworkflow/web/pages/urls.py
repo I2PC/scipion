@@ -25,6 +25,7 @@ mainUrls = ['',
 #     url(r'^$', 'app.views_project.projects'),
     url(r'^$', 'app.views_home.home'),
     url(r'^services/', 'app.views_project.webservice_projects'),
+    url(r'^intro/', 'app.views_project.webservice_projects'),
 
     #PROJECT (CONTENT, RUNTABLE AND GRAPH)
     url(r'^projects/', 'app.views_project.projects'),
