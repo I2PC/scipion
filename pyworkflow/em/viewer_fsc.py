@@ -30,6 +30,7 @@ from data import FSC
 from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
+from matplotlib.text import Text
 from pyworkflow.em.protocol import ProtCreateFSC
 from pyworkflow.utils.properties import Icon, Color
 
@@ -79,7 +80,13 @@ class FscViewer(Viewer):
         a.legend()
         #####
         axcreateFSC = plt.axes([0.75, 0.02, 0.2, 0.050])
-        bcreateFSC = Button(axcreateFSC, 'Create Fsc',
+        #Button does not allow to defoine text color so
+        #I write it directly
+        axcreateFSC.text(0.5, 0.5, 'create FSC',
+                             verticalalignment='center',
+                             horizontalalignment='center',
+                             transform=axcreateFSC.transAxes,color='white')
+        bcreateFSC = Button(axcreateFSC, '',#leave label empty
                             color=Color.RED_COLOR,
                             hovercolor='maroon')
         bcreateFSC.on_clicked(createFSCObject)
