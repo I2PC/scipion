@@ -31,6 +31,7 @@ from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 from pyworkflow.em.protocol import ProtCreateFSC
+from pyworkflow.utils.properties import Icon, Color
 
 class FscViewer(Viewer):
     """ Viewer for plot a FSC object. """
@@ -49,16 +50,16 @@ class FscViewer(Viewer):
             inv = 1/value
         return "1/%0.2f" % inv
 
-    def _visualize(self, obj, figure=None, **kwargs):
+    def _visualize(self, obj, figure='active', **kwargs):
         def createFSCObject(event):
-            project = self.getProject()
-            prot = project.newProtocol(ProtCreateFSC)
-            prot.setObjLabel("kk")#label)
-            prot.setInputObj(self.obj)#protocol may be not finished
-            prot.setParrentObject(self.obj)#protocol may be not finished
+
+            prot = self.project.newProtocol(ProtCreateFSC)
+            prot.setObjLabel('FSC-%s'%self.label)#label)
+            prot.setInputObj(self.protocol)#protocol may be not finished
+            #prot.setParentObject(self.obj)#protocol may be not finished
             #prot.inputObj.set(self.protocol)#protocol may be not finished
 
-            project.launchProtocol(prot)
+            self.project.launchProtocol(prot)
             #prot.inputObject.set(self.obj)
 
         self.obj = obj
@@ -72,12 +73,15 @@ class FscViewer(Viewer):
         a.grid(True)
         _plotFormatter = FuncFormatter(self._formatFreq)
         a.xaxis.set_major_formatter(_plotFormatter)
-
-        plotter.plotData(x, y, '-',label=kwargs.get('label', "no label"))
+        self.project = self.getProject()
+        self.label = kwargs.get('label', self.protocol.getRunName())
+        plotter.plotData(x, y, '-',label=self.label)
         a.legend()
         #####
-        axcreateFSC = plt.axes([0.75, 0.01, 0.2, 0.050])
-        bcreateFSC = Button(axcreateFSC, 'Create Fsc')
+        axcreateFSC = plt.axes([0.75, 0.02, 0.2, 0.050])
+        bcreateFSC = Button(axcreateFSC, 'Create Fsc',
+                            color=Color.RED_COLOR,
+                            hovercolor='maroon')
         bcreateFSC.on_clicked(createFSCObject)
         plt.show()
         ####
