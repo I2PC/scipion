@@ -161,29 +161,32 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     
     def createOutputStep(self):
         inputSet = self.inputParticles.get()
-        
+
         if isinstance(inputSet, em.SetOfAverages):
             imgSet = self._createSetOfAverages()
         else:
             imgSet = self._createSetOfParticles()
-            
+
         imgSet.copyInfo(inputSet)
         if self.doScale:
             oldSampling = inputSet.getSamplingRate()
             scaleFactor = self._getScaleFactor(inputSet)
             newSampling = oldSampling * scaleFactor
             imgSet.setSamplingRate(newSampling)
-        
+
+            invFactor = 1 / scaleFactor
+
         for i, img in enumerate(inputSet):
             img.setLocation(i+1, self._getPath('particles.mrcs'))
-            if self.doScale and inputSet.hasAlignment():
-                a = img.getTransform()
-                m = a.getMatrix()
-                # Check if for scale we only need to scale shifts
-                m[0, 3] *= 1/scaleFactor
-                m[1, 3] *= 1/scaleFactor
+
+            if self.doScale:
+                if img.hasCoordinate():
+                    img.scaleCoordinate(invFactor)
+                if inputSet.hasAlignment():
+                    img.getTransform().scaleShifts(invFactor)
+
             imgSet.append(img)
-        
+
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(inputSet, imgSet)
 
@@ -193,8 +196,11 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         return summary message for NORMAL EXECUTION. 
         """
         validateMsgs = []
+        self.validatePackageVersion('RELION_HOME', validateMsgs)
+
         if self.doScale and self.scaleSize.get() % 2 != 0: 
             validateMsgs += ["Only re-scaling to even-sized images is allowed in RELION."]
+
         if self.doWindow and self.windowSize.get() % 2 != 0:
             validateMsgs += ["Only re-windowing to even-sized images is allowed in RELION."]
 

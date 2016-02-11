@@ -231,11 +231,12 @@ class Tester():
                                   t.getToc(), result, logFile)
 
     def runTests(self, tests):
+        self.testCount = 0
+
         if self.log:
             self.testsDir = join(os.environ['SCIPION_USER_DATA'], 'Tests', self.log)
             pwutils.cleanPath(self.testsDir)
             pwutils.makePath(self.testsDir)
-            self.testCount = 0
             self.testLog = join(self.testsDir, 'tests.html')
             self.testTimer = pwutils.Timer()
             self.testTimer.tic()
@@ -260,11 +261,12 @@ class Tester():
     
     </body>
     </html>""")
-            
-            f.close()        
+
+            f.close()
         self._visitTests(tests, self._runNewItem)
-        
-        print "\n\nOpen results in your browser: \nfile:///%s" % self.testLog
+
+        if self.log:
+            print "\n\nOpen results in your browser: \nfile:///%s" % self.testLog
         
     def runSingleTest(self, tests):
         result = GTestResult()

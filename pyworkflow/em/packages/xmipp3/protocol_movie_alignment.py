@@ -156,7 +156,7 @@ class ProtMovieAlignment(ProtProcessMovies):
                                                                    AL_CROSSCORRELATIONOPTICAL\
                        ),
                        label='Filter at (A)',
-                       help='1x or 2x. Bin stack before processing.')
+                       help='Maximum frequency for a low pass filter')
 
 
         group.addParam('extraParams', StringParam, default='',
