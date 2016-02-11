@@ -543,7 +543,8 @@ Examples:
         
         md.activateMathExtensions()
         
-        xplotter = em.FscViewer(project=self.protocol.getProject(),threshold=threshold)
+        xplotter = em.FscViewer(project=self.protocol.getProject(),
+                                threshold=threshold, protocol=self.protocol)
         for prefix in prefixes:
             for ref3d in self._refsList:#ROB: I believe len(_refsList)==1
                 plot_title = prefix + 'class %s' % ref3d
