@@ -469,19 +469,10 @@ class ProtCreateFSC(BatchProtocol):
 
     def _defineParams(self, form):
         pass
-        #form.addHidden('inputObj', PointerParam, pointerClass='EMObject')
-        #form.addHidden('maskFile', StringParam)
-
-    def _insertAllSteps(self):
-        self._insertFunctionStep('createFscStep')
+        form.addHidden('inputObj', PointerParam, pointerClass='EMObject')
 
     def setInputObj(self, obj):
-        self.inputObj = obj
-
-    def createFscStep(self):
-        fsc = FSC()
-        self._defineOutputs(outputFSC=fsc)
-        ###self._defineSourceRelation(vol, self.outputFSC) How to link with previous
+        self.inputObj.set(obj)
 
     def _summary(self):
         summary = []
