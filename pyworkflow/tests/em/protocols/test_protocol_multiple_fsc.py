@@ -83,7 +83,8 @@ class TestMultipleFSCs(TestMultipleFSCsBase):
 
     def _runFSC(self, useMask):
         prot = self.newProtocol(XmippProtMultipleFSCs,
-                                referenceVolume=self.protImportHalf1.outputVolume)
+                                referenceVolume=self.protImportVol.outputVolume)
+        prot.inputVolumes.append(self.protImportHalf1.outputVolume)
         prot.inputVolumes.append(self.protImportHalf2.outputVolume)
 
         if useMask:
