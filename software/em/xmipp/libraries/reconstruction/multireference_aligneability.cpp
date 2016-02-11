@@ -77,11 +77,9 @@ void MultireferenceAligneability::run()
     MetaData mdOutCL, mdOutQ;
 	MetaData mdExp, mdExpSort, mdProj, mdGallery, mdInputParticles, mdInputParticlesRef;
 	size_t maxNImg;
-	FileName fnOutCL, fnOutQ, fnOutM;
-	fnOutCL = fnDir+"/pruned_particles_alignability_precision.xmd";
-	fnOutM = fnDir+"/validationMirrorPrecision.xmd";
-	fnOutQ = fnDir+"/validationAlignabilityPrecision.xmd";
-
+	FileName fnOutCL, fnOutQ;
+	fnOutCL = fnDir+"/pruned_particles_alignability.xmd";
+	fnOutQ = fnDir+"/validationAlignability.xmd";
 
     int symmetry, sym_order;
     SL.readSymmetryFile(fnSym.c_str());
@@ -133,9 +131,12 @@ void MultireferenceAligneability::run()
 
 	double rank = 0.;
 	double rankAcc = 0.;
+	double rankMirror = 0.;
 
 	double accuracy = 0.;
 	double accuracyRef = 0.;
+	double accuracyMirror = 0.;
+	double accuracyMirrorRef = 0.;
 
 	char hold;
 	FileName imagePath;
@@ -155,8 +156,8 @@ void MultireferenceAligneability::run()
 		calc_sumu(tempMdExp, sum_w_exp, error_mirror_exp);
 		calc_sumu(tempMdProj, sum_w_proj, error_mirror_proj);
 
-		obtainAngularAccuracy(tempMdExp, rowInput, accuracy);
-		obtainAngularAccuracy(tempMdProj, rowInputRef, accuracyRef);
+		obtainAngularAccuracy(tempMdExp, rowInput, accuracy, accuracyMirror);
+		obtainAngularAccuracy(tempMdProj, rowInputRef, accuracyRef, accuracyMirrorRef);
 
 #ifdef DEBUG
 
@@ -172,7 +173,7 @@ void MultireferenceAligneability::run()
 
 		rank = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
 		rankAcc = 1/(accuracyRef-sum_noise)*(accuracy-sum_noise);
-
+		rankMirror = 1/(accuracyMirrorRef-sum_noise)*(accuracyMirror-sum_noise);
 /*
 		if (sum_w_proj > sum_w_exp)
 			rank = 0;
@@ -188,13 +189,14 @@ void MultireferenceAligneability::run()
 
 		validationAlignabilityPrecision += (rank>0.5);
 		validationAlignabilityAccuracy += (rankAcc > 0.5);
-		validationMirror += (error_mirror_exp);
+		validationMirror += (rankMirror> 0.5);
+
 		tempMdExp.getValue(MDL_IMAGE,imagePath,1);
 		row.setValue(MDL_IMAGE,imagePath);
 		row.setValue(MDL_IMAGE_IDX,i);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION, rank);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAcc);
-//		row.setValue(MDL_SCORE_BY_MIRROR, error_mirror_exp);
+		row.setValue(MDL_SCORE_BY_MIRROR, rankMirror);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP,sum_w_exp);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF,sum_w_proj);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP,sum_w_exp);
@@ -218,8 +220,8 @@ void MultireferenceAligneability::run()
     row.setValue(MDL_IMAGE,fnInit);
     row.setValue(MDL_WEIGHT_PRECISION_ALIGNABILITY,validationAlignabilityPrecision);
     row.setValue(MDL_WEIGHT_ACCURACY_ALIGNABILITY,validationAlignabilityAccuracy);
+    row.setValue(MDL_WEIGHT_PRECISION_MIRROR,validationMirror);
 
-  //  row.setValue(MDL_WEIGHT_PRECISION_MIRROR,validationMirror);
     mdOutQ.addRow(row);
     mdOutQ.write(fnOutQ);
 }
@@ -250,13 +252,9 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
     double a;
     double rotRef,tiltRef,psiRef, wRef;
     double rot,tilt,psi;
-    double x,y,z;
-    double xx,yy,zz;
     double w2;
-    double tempW;
     double W;
     double sumW;
-    bool mirror;
 
     W = 0;
     sumW = 0;
@@ -269,48 +267,14 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         tempMd.getValue(MDL_ANGLE_TILT,tiltRef,__iter.objId);
         tempMd.getValue(MDL_ANGLE_PSI,psiRef,__iter.objId);
         tempMd.getValue(MDL_MAXCC,wRef,__iter.objId);
-        tempMd.getValue(MDL_FLIP,mirror,__iter.objId);
 
-/*
-		if (mirror)
-		{
-			double newrot;
-			double newtilt;
-			double newpsi;
-			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
-			rot = newrot;
-			tilt = newtilt;
-			psi = newpsi;
-		}
-
-        x = sin(tilt*PI/180.)*cos(rot*PI/180.);
-        y = sin(tilt*PI/180.)*sin(rot*PI/180.);
-        z = (cos(tilt*PI/180.));
-*/
         _FOR_ALL_OBJECTS_IN_METADATA2(tempMd)
         {
         	tempMd.getValue(MDL_ANGLE_ROT,rot,__iter2.objId);
         	tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter2.objId);
             tempMd.getValue(MDL_ANGLE_PSI,psi,__iter2.objId);
-            tempMd.getValue(MDL_FLIP,mirror,__iter2.objId);
         	tempMd.getValue(MDL_MAXCC,w2,__iter2.objId);
 
-/*
-    		if (mirror)
-    		{
-    			double newrot;
-    			double newtilt;
-    			double newpsi;
-    			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
-    			rot = newrot;
-    			tilt = newtilt;
-    			psi = newpsi;
-    		}
-
-        	xx = sin(tilt*PI/180.)*cos(rot*PI/180.);
-        	yy = sin(tilt*PI/180.)*sin(rot*PI/180.);
-        	zz = (cos(tilt*PI/180.));
-*/
 
 #ifdef DEBUG
 {
@@ -324,22 +288,6 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
 			a = SL.computeDistance(rotRef, tiltRef, psiRef,
 								   rot, tilt, psi, check_mirror,true, false);
 
-/*
-        	double norm1 = sqrt(x*x+y*y+z*z);
-        	double norm2 = sqrt(xx*xx+yy*yy+zz*zz);
-        	a = std::abs((std::acos( (x*xx+y*yy+z*zz)/(norm1*norm2))));
-        	if (a > PI/2)
-        	{
-        		a = std::abs(PI-a);
-        		if (__iter2.objId == 1)
-        			mirrorProb += 1;
-        	}
-
-        	//std::cout << " a : " << a << std::endl;
-        	if ( isnan(a) )
-        		a = 0;
-*/
-
         	if (donNotUseWeights)
         	{
         		W += a;
@@ -351,9 +299,7 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
         		W += a*(wRef*w2);
         		sumW += (wRef*w2);
         	}
-
         }
-
     }
 
     sum_W = (W / sumW);
@@ -367,19 +313,6 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
 #endif
 #undef DEBUG
 
-/*
-    mirrorProb /= (tempMd.size()-1);
-    if (mirrorProb > 0.5)
-    	mirrorProb = 1-2*(1-mirrorProb);
-    else
-    	mirrorProb = 1-2*(mirrorProb);
-*/
-
-
-	//std::cout << " sum_W : " << sum_W << std::endl;
-	//std::cout << " mirrorProb : " << mirrorProb << std::endl;
-	//std::cout << " -----------"  << std::endl;
-	//std::cout << " -----------"  << std::endl;
 }
 
 void MultireferenceAligneability::calc_sumw(const size_t num, double & sumw)
@@ -478,25 +411,6 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
         	mdGallery.getValue(MDL_ANGLE_TILT,tilt,indx);
         	mdGallery.getValue(MDL_ANGLE_PSI,psi,indx);
 
-/*
-        	//mirror =  ((std::rand())/RAND_MAX >= 0.5);
-        	mirror = 0; //the mirror is estimated as a different quality curve.
-
-    		if (mirror)
-    		{
-    			double newrot;
-    			double newtilt;
-    			double newpsi;
-    			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
-    			rot = newrot;
-    			tilt = newtilt;
-    			psi = newpsi;
-    		}
-
-            xRan = sin(tilt*PI/180.)*cos(rot*PI/180.);
-            yRan = sin(tilt*PI/180.)*sin(rot*PI/180.);
-            zRan = (cos(tilt*PI/180.));
-*/
             rotArray[currentIndx]  = rot;
             tiltArray[currentIndx] = tilt;
             psiArray[currentIndx]  = psi;
@@ -512,7 +426,7 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
 		}
 
 		char c;
-		//std::getchar();
+		std::getchar();
 }
 #endif
 #undef DEBUG
@@ -522,19 +436,7 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
         for (size_t nS1=0; nS1<num; nS1++)
         {
             for (size_t nS2=0; nS2<num; nS2++)
-            {
-/*
-            	double mod1 = std::sqrt(xRanArray[nS1]*xRanArray[nS1]+yRanArray[nS1]*yRanArray[nS1]+zRanArray[nS1]*zRanArray[nS1]);
-            	double mod2 = std::sqrt(xRanArray[nS2]*xRanArray[nS2]+yRanArray[nS2]*yRanArray[nS2]+zRanArray[nS2]*zRanArray[nS2]);
-            	temp = std::abs(std::acos( (xRanArray[nS1]*xRanArray[nS2]+yRanArray[nS1]*yRanArray[nS2]+zRanArray[nS1]*zRanArray[nS2])/(mod1*mod2)));
-                if ( not isnan(temp))
-                	a += temp;
-
-*/
     			a += SL.computeDistance(rotArray[nS1],tiltArray[nS1],psiArray[nS1],rotArray[nS2],tiltArray[nS2],psiArray[nS2], check_mirror,true, false);
-                //std::cout << xRanArray[nS1] << " " << yRanArray[nS1] <<  " " <<  zRanArray[nS1] << std::endl;
-               	//std::cout << xRanArray[nS2] << " " << yRanArray[nS2] <<  " " <<  zRanArray[nS2] << std::endl;
-            }
 
         }
 
@@ -557,17 +459,14 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
 
 }
 
-void MultireferenceAligneability::obtainAngularAccuracy(const MetaData & tempMd, const MDRow & row, double & accuracy)
+void MultireferenceAligneability::obtainAngularAccuracy(const MetaData & tempMd, const MDRow & row, double & accuracy, double & accuracyMirror)
 {
 	double rot, tilt, psi, w;
+	double rotAux, tiltAux, psiAux;
 	double rotRef, tiltRef, psiRef, wRef;
-    bool mirror;
-	double x, y, z;
-	double xRef, yRef, zRef;
+    bool mirror;;
 	double sumOfW;
-	double norm;
-	double normRef;
-	double tempAccuracy;
+	double tempAccuracy, tempAccuracyMirror;
 
 
 	//First for the reference:
@@ -576,41 +475,12 @@ void MultireferenceAligneability::obtainAngularAccuracy(const MetaData & tempMd,
     row.getValue(MDL_ANGLE_PSI,psiRef);
     row.getValue(MDL_MAXCC,wRef);
     row.getValue(MDL_FLIP,mirror);
-	accuracy = 0;
+
+    accuracyMirror = 0;
+    accuracy = 0;
 	tempAccuracy = 0;
+	tempAccuracyMirror = 0;
 	sumOfW = 0;
-
-/*
-	if (mirror)
-	{
-		double newrot;
-		double newtilt;
-		double newpsi;
-		Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
-		rotRef = newrot;
-		tiltRef = newtilt;
-		psiRef = newpsi;
-	}
-
-    xRef = sin(tiltRef*PI/180.)*cos(rotRef*PI/180.);
-    yRef = sin(tiltRef*PI/180.)*sin(rotRef*PI/180.);
-    zRef = (cos(tiltRef*PI/180.));
-    normRef = sqrt(xRef*xRef+yRef*yRef+zRef*zRef);
-
-#ifdef DEBUG
-
-
-    std::cout << tiltRef << " " << rotRef << " " << std::endl;
-    std::cout << xRef << " " << yRef << " " << zRef << std::endl;
-    std::cout  << " " << std::endl;
-
-#endif
-    //Now for all the aligments done by significant
-
-	x = 0;
-	y = 0;
-	z = 0;
-*/
 
     FOR_ALL_OBJECTS_IN_METADATA(tempMd)
     {
@@ -620,35 +490,28 @@ void MultireferenceAligneability::obtainAngularAccuracy(const MetaData & tempMd,
         tempMd.getValue(MDL_MAXCC,w,__iter.objId);
         tempMd.getValue(MDL_FLIP,mirror,__iter.objId);
 
-/*
-		if (mirror)
-		{
-			double newrot;
-			double newtilt;
-			double newpsi;
-			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
-			rot = newrot;
-			tilt = newtilt;
-			psi = newpsi;
-		}
+        rotAux = rot;
+        tiltAux = tilt;
+        psiAux = psi;
 
-        x += (sin(tilt*PI/180.)*cos(rot*PI/180.));
-        y += (sin(tilt*PI/180.)*sin(rot*PI/180.));
-        z += (cos(tilt*PI/180.));
-        norm = sqrt(x*x+y*y+z*z);
-*/
         sumOfW += w;
         tempAccuracy = SL.computeDistance(rotRef, tiltRef, psiRef,
-        		                   rot, tilt, psi, check_mirror,true, false);
-    	tempAccuracy *= (w);
-    	accuracy += tempAccuracy;
-/*
-        tempAccuracy = std::abs(std::acos( (x*xRef+y*yRef+z*zRef)/(norm*normRef)));
-    	if (tempAccuracy > PI/2)
-    		tempAccuracy = std::abs(PI-tempAccuracy);
+        		                   rotAux, tiltAux, psiAux, false,true, false);
+
+        tempAccuracyMirror = SL.computeDistance(rotRef, tiltRef, psiRef,
+        		                   rot, tilt, psi, true,true, false);
+
+       	accuracyMirror += std::abs(tempAccuracy-tempAccuracyMirror)*w;
+    	accuracy += tempAccuracy*w;
 
 
-*/
+#ifdef DEBUG
+        std::cout << " tempAccuracy : " << " " << tempAccuracy << " " << std::endl;
+        std::cout << " tempAccuracyMirror: " << tempAccuracyMirror  <<  std::endl;
+
+#endif
+#undef DEBUG
+
 
 #ifdef DEBUG
         std::cout << tilt << " " << rot << " " << std::endl;
@@ -656,10 +519,20 @@ void MultireferenceAligneability::obtainAngularAccuracy(const MetaData & tempMd,
 
 #endif
 
-
     }
 
     accuracy /= (sumOfW);
+    accuracyMirror /= (sumOfW);
+
+#ifdef DEBUG
+        std::cout << " accuracy : " << " " << accuracy << " " << std::endl;
+        std::cout << " accuracyMirror: " << accuracyMirror  <<  std::endl;
+        std::cout << "-------------"  <<  std::endl;
+
+
+#endif
+#undef DEBUG
+
 
 #ifdef DEBUG
 

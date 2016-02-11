@@ -76,11 +76,11 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                       label="Number of Orientations for particle",  
                       help='Parameter to define the number of most similar volume \n' 
                       '    projected images for each projection image')
-
+'''
         form.addParam('angDist', FloatParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label="Maximum angular neighbourhood distance (degrees)",  
                       help='Parameter to define the maximum angular neighbourhood distance to determine close particles ')
-           
+'''           
         form.addParam('doNotUseWeights', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Do not use the weights",
                       help='Do not use the weights in the clustering calculation')
@@ -89,8 +89,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
 
     #--------------------------- INSERT steps functions --------------------------------------------
 
-    def _insertAllSteps(self):   
-             
+    def _insertAllSteps(self):                
         convertId = self._insertFunctionStep('convertInputStep', 
                                              self.inputParticles.get().getObjId())
         deps = [] # store volumes steps id to use as dependencies for last step
@@ -125,12 +124,12 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                                                  prerequisites=[phanProjStepId])
 
 
-            volStepId = self._insertFunctionStep('angularPrecisionStep', 
+            volStepId = self._insertFunctionStep('alignabilityStep', 
                                                  volName, volDir,
                                                  sym,
                                                  prerequisites=[sigStepId2])
             
-            
+'''            
             pmStepId2 = self._insertFunctionStep('projectionLibraryStep',                                                    
                                                 volName, volDir,self.angDist.get(),
                                                 prerequisites=[volStepId])
@@ -143,11 +142,9 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
 
             pmAngAccId = self._insertFunctionStep('angularAccuracyStep',                                                    
                                                 volName, volDir,i,
-                                                prerequisites=[pmNeigDirId])
-            
-           
-            
-            deps.append(pmAngAccId)
+                                                prerequisites=[pmNeigDirId])                  
+'''          
+            deps.append(volStepId)
           
         self._insertFunctionStep('createOutputStep', 
                                  prerequisites=deps)
@@ -237,7 +234,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
                     params, numberOfMpi=nproc,numberOfThreads=nT)
         copyfile(volDir+'/angles_iter001_00.xmd', self._getExtraPath(anglesPath))
         
-    def angularPrecisionStep(self, volName,volDir,sym):
+    def alignabilityStep(self, volName,volDir,sym):
         makePath(volDir)  
         inputFile = self._getPath('input_particles.xmd') 
         inputFileRef = self._getPath('reference_particles.xmd')
@@ -294,7 +291,42 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
             volDir = self._getVolDir(i+1)
             volume = vol.clone()
             volPrefix = 'vol%03d_' % (i+1)
+
+            m_pruned = md.MetaData()
+            m_pruned.read(volDir+'/pruned_particles_alignability.xmd')
+            prunedMd = self._getExtraPath(volPrefix + 'pruned_particles_alignability.xmd')
+            moveFile(join(volDir, 'pruned_particles_alignability.xmd'), prunedMd)
+            m_volScore = md.MetaData()
+            m_volScore.read(volDir+'/validationAlignability.xmd')
+            validationMd = self._getExtraPath(volPrefix + 'validation_alignability.xmd')
+            moveFile(join(volDir, 'validation_alignability.xmd'), validationMd)
             
+            outputVols = self._createSetOfVolumes()
+            imgSet = self.inputParticles.get()                  
+
+            outImgSet = self._createSetOfParticles(volPrefix)            
+            outImgSet.copyInfo(imgSet)
+
+            outImgSet.copyItems(imgSet,
+                                updateItemCallback=self._setWeight,
+                                itemDataIterator=md.iterRows(mdJoin_pruned, sortByLabel=md.MDL_ITEM_ID))
+                        
+            mdValidatoin = md.getFirstRow(validationMd)        
+       
+            weight = mdValidatoin.getValue(md.MDL_WEIGHT_PRECISION_ALIGNABILITY)        
+            volume.weightAlignabilityPrecision  = Float(weight)
+        
+            weight = mdValidatoin.getValue(md.MDL_WEIGHT_ACCURACY_ALIGNABILITY)        
+            volume.weightAlignabilityAccuracy  = Float(weight)
+                    
+            weight = mdValidatoin.getValue(md.MDL_WEIGHT_PRECISION_MIRROR)        
+            volume.weightMirror  = Float(weight)
+                    
+            volume.cleanObjId() # clean objects id to assign new ones inside the set            
+            outputVols.append(volume)
+            self._defineOutputs(outputParticles=outImgSet)
+
+            '''            
             m1_pruned = md.MetaData()
             m2_pruned = md.MetaData()
             mdJoin_pruned = md.MetaData()            
@@ -305,8 +337,8 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
             mdJoin_pruned.write(volDir+'/pruned_particles_alignability.xmd')
             
             prunedMd = self._getExtraPath(volPrefix + 'pruned_particles_alignability.xmd')
-            moveFile(join(volDir, 'pruned_particles_alignability.xmd'), 
-                     prunedMd)
+            moveFile(join(volDir, 'pruned_particles_alignability.xmd'), prunedMd)
+
 
             m1_volScore = md.MetaData()
             m2_volScore = md.MetaData()
@@ -356,10 +388,11 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
             volume.cleanObjId() # clean objects id to assign new ones inside the set            
             outputVols.append(volume)
             self._defineOutputs(outputParticles=outImgSet)
+            
+            '''
         
         outputVols.setSamplingRate(volume.getSamplingRate())
         self._defineOutputs(outputVolumes=outputVols)
-        #self._defineTransformRelation(self.inputVolumes.get(), volume)
         
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
@@ -445,5 +478,5 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
     def _setWeight(self, item, row):  
         item._xmipp_scoreAlignabilityPrecision    = Float(row.getValue(md.MDL_SCORE_BY_ALIGNABILITY_PRECISION))
         item._xmipp_scoreAlignabilityAccuracy = Float(row.getValue(md.MDL_SCORE_BY_ALIGNABILITY_ACCURACY))
-        item._xmipp_scoreZscore = Float(row.getValue(md.MDL_SCORE_BY_ZSCORE))
-        item._xmipp_weight = Float( float(item._xmipp_scoreZscore)*float(item._xmipp_scoreAlignabilityAccuracy)*float(item._xmipp_scoreAlignabilityPrecision))
+        item._xmipp_scoreMirror = Float(row.getValue(md.MDL_SCORE_BY_MIRROR))
+        item._xmipp_weight = Float( float(item._xmipp_scoreMirror)*float(item._xmipp_scoreAlignabilityAccuracy)*float(item._xmipp_scoreAlignabilityPrecision))

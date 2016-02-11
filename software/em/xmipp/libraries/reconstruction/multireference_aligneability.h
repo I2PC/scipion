@@ -72,7 +72,7 @@ private:
 
     void calc_sumw2(const size_t num, double & sumw, const MetaData & mdGallery);
 
-    void obtainAngularAccuracy(const MetaData & tempMd, const MDRow & row, double & accuracy);
+    void obtainAngularAccuracy(const MetaData & tempMd, const MDRow & row, double & accuracy,double & accuracyMirror);
 
 
 };
