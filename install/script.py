@@ -467,8 +467,8 @@ env.addPackage('gEMpicker_v1.1',
                tar='gEMpicker_v1.1.tgz',
                default=False)
 
-env.addPackage('Gctf_v0.38',
-               tar='Gctf_v0.38.tgz',
+env.addPackage('Gctf_v0.50',
+               tar='Gctf_v0.50.tgz',
                default=False)
 
 env.execute()
