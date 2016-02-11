@@ -76,11 +76,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                       label="Number of Orientations for particle",  
                       help='Parameter to define the number of most similar volume \n' 
                       '    projected images for each projection image')
-'''
-        form.addParam('angDist', FloatParam, default=10, expertLevel=LEVEL_ADVANCED,
-                      label="Maximum angular neighbourhood distance (degrees)",  
-                      help='Parameter to define the maximum angular neighbourhood distance to determine close particles ')
-'''           
+        
         form.addParam('doNotUseWeights', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Do not use the weights",
                       help='Do not use the weights in the clustering calculation')
@@ -129,21 +125,6 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                                                  sym,
                                                  prerequisites=[sigStepId2])
             
-'''            
-            pmStepId2 = self._insertFunctionStep('projectionLibraryStep',                                                    
-                                                volName, volDir,self.angDist.get(),
-                                                prerequisites=[volStepId])
-
-            
-            pmNeigDirId = self._insertFunctionStep('neighbourhoodDirectionStep',                                                    
-                                                volName, volDir,sym,
-                                                prerequisites=[pmStepId2])
-            
-
-            pmAngAccId = self._insertFunctionStep('angularAccuracyStep',                                                    
-                                                volName, volDir,i,
-                                                prerequisites=[pmNeigDirId])                  
-'''          
             deps.append(volStepId)
           
         self._insertFunctionStep('createOutputStep', 
