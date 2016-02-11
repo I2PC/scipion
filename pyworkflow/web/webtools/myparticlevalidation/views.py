@@ -212,9 +212,6 @@ def particlevalidation_content(request):
                                   hostsConf=manager.hosts,
                                   chdir=False)
 
-    project.getSettings().setLifeTime(336)  # 14 days * 24 hours
-    project.saveSettings()
-
     daysLeft = prettyDelta(project.getLeftTime())
 
     context = contentContext(request, project, serviceName=MYPVAL_SERVICE)

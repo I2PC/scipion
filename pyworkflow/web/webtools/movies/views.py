@@ -42,6 +42,7 @@ from pyworkflow.utils.utils import prettyDelta
 from django.contrib.sites.models import Site
 
 MOVIES_SERVICE = 'movies'
+MOVIES_SERVICE_URL = 'mymovies'
 
 
 def service_movies(request):
