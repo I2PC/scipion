@@ -80,7 +80,7 @@ class FscViewer(Viewer):
         a.legend()
         #####
         axcreateFSC = plt.axes([0.75, 0.02, 0.2, 0.050])
-        #Button does not allow to defoine text color so
+        #Button does not allow to define text color so
         #I write it directly
         axcreateFSC.text(0.5, 0.5, 'create FSC',
                              verticalalignment='center',
