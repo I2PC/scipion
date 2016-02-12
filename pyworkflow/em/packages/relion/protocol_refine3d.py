@@ -27,7 +27,7 @@
 This module contains the protocol for 3d refinement with Relion.
 """
 import pyworkflow.em.metadata as md
-from pyworkflow.em.data import Volume
+from pyworkflow.em.data import(Volume,FSC)
 from pyworkflow.em.protocol import ProtRefine3D
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
@@ -108,6 +108,18 @@ leads to objective and high-quality results.
             self._defineSourceRelation(self.inputParticles, vol)
             self._defineOutputs(outputParticles=outImgSet)
             self._defineTransformRelation(self.inputParticles, outImgSet)
+
+            fsc = FSC(objLabel=self.getRunName())
+            blockName = 'model_class_%d@'%1
+            fn = blockName + self._getExtraPath("relion_model.star")
+            mData = md.MetaData(fn)
+            fsc.loadFromMd(mData,
+                       md.RLN_RESOLUTION,
+                       md.RLN_MLMODEL_FSC_HALVES_REF)
+            self._defineOutputs(outputFSC=fsc)
+            self._defineSourceRelation(vol,fsc)
+
+
         else:
             pass
     

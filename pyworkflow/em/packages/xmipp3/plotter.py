@@ -74,5 +74,5 @@ class XmippPlotter(EmPlotter):
         """
         from xmipp import MetaData
         md = MetaData(mdFilename)
-        self.plotMd(md, mdLabelX, mdLabelY, color='g',**args)
+        self.plotMd(md, mdLabelX, mdLabelY, color=color,**args)
       
