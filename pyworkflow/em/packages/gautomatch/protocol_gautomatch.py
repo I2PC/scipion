@@ -188,12 +188,8 @@ class ProtGautomatch(em.ProtParticlePicking):
                 
         # We will always convert the templates to mrcs stack
         inputRefs = self.inputReferences.get()
-        
-        for ref in inputRefs:
-            inpRef = ref.getFileName() 
-	    outRef = self._getTmpPath('references.mrcs')
-            ih.convertStack(inpRef, outRef)
-            
+        inputRefs.writeStack(self._getTmpPath('references.mrcs'))
+
     def runGautomatchStep(self, args):
         self.runJob(self._getProgram(), args)
 
