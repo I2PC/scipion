@@ -113,12 +113,14 @@ def getEnviron():
 
 def getVersion():
     path = os.environ['RELION_HOME']
-    if '1.4' in path:
-        return '1.4'
-    elif '1.3' in path:
-        return '1.3'
-    else:
-        return ''
+    for v in getSupportedVersions():
+        if v in path:
+            return v
+    return ''
+
+
+def getSupportedVersions():
+    return ['1.3', '1.4']
 
 
 def locationToRelion(index, filename):

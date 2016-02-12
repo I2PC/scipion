@@ -185,7 +185,9 @@ class ProtRelionReconstruct(ProtReconstruct3D):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        errors = []
+        self.validatePackageVersion('RELION_HOME', errors)
+        return errors
     
     def _summary(self):
         """ Should be overriden in subclasses to 

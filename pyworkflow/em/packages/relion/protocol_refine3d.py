@@ -117,18 +117,8 @@ leads to objective and high-quality results.
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
-        particlesDim = self._getInputParticles().getDim()
-        volumeDim = self.referenceVolume.get().getDim()
-        
-        if particlesDim is None:
-            errors.append('Can not get dimensions from input particles!!!')
-            
-        elif volumeDim is None:
-            errors.append('Can not get dimensions from reference volume!!!')
-            
-        elif particlesDim[0] != volumeDim[0]:
-            errors.append('Volume and particles dimensions must be equal!!!')
-
+        self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
+                          errors, 'Input particles', 'Reference volume')
         return errors
     
     def _validateContinue(self):

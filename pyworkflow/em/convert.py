@@ -75,7 +75,7 @@ class ImageHandler(object):
         
         return outLocation
     
-    def _existsLocation(self, location):
+    def existsLocation(self, location):
         """ Return True if a given location exists. 
         Location have the same meaning than in _convertToLocation.
         """
@@ -93,7 +93,7 @@ class ImageHandler(object):
         if ':' in fn:
             fn = fn.split(':')[0]
 
-        return fn
+        return os.path.exists(fn)
         
     def convert(self, inputObj, outputObj, dataType=None):
         """ Convert from one image to another.
@@ -128,22 +128,18 @@ class ImageHandler(object):
             n is the number of elements if stack.
         """
         
-        if self._existsLocation(locationObj):
+        if self.existsLocation(locationObj):
             
             location = self._convertToLocation(locationObj)
             fn = location[1]
             ext = getExt(fn).lower()
             
-#             print "Extension %s" % ext
-            
             if ext == '.png' or ext == '.jpg':
-#                 print "Reading with PIL"
                 im = PIL.Image.open(fn)
                 x, y = im.size # (width,height) tuple
                 return x, y, 1, 1
             
             else:
-#                 print "Reading with Xmipp"
                 self._img.read(location, xmipp.HEADER)
                 x, y, z, n = self._img.getDimensions()
                 return x, y, z, n
@@ -263,6 +259,23 @@ class ImageHandler(object):
         is implemented in the xmipp binding."""
         return xmipp.FileName(imgFn).isImage()
 
+    @classmethod
+    def getVolFileName(cls, location):
+        if isinstance(location, tuple):
+            fn = location[1]
+        elif isinstance(location, basestring):
+            fn = location
+        elif hasattr(location, 'getLocation'): #this include Image and subclasses
+            # In this case inputLoc should be a subclass of Image
+            fn = location.getLocation()[1]
+        else:
+            raise Exception('Can not match object %s to (index, location)' % type(location))
+
+        if fn.endswith('.mrc') or fn.endswith('.map'):
+            fn += ':mrc'
+
+        return fn
+
 
 def downloadPdb(pdbId, pdbFile, log=None):
     pdbGz = pdbFile + ".gz"
@@ -293,7 +306,7 @@ def __downloadPdb(pdbId, pdbGz, log):
     
     if success:
         # Download  file
-        _fileIn = "%s/%s%s%s" % (pdborgDirectory, prefix, pdbId, suffix) 
+        _fileIn = "%s/%s%s%s" % (pdborgDirectory, prefix, pdbId.lower(), suffix) 
         _fileOut = pdbGz
         try:
             ftp.retrbinary("RETR %s" % _fileIn, open(_fileOut, "wb").write)
