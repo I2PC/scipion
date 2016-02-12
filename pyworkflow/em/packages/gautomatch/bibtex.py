@@ -30,7 +30,7 @@ Bibtex string file for Gautomatch package.
 
 _bibtexStr = """
 
-@Article{Zhang2016,
+@Article{Zhang2016b,
   Title      = {},
   Author     = {Zhang K.},
   Journal    = {unpublished},
