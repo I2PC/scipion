@@ -22,9 +22,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains the protocol for CTF estimation with Unblur3
-"""
 
 import os
 import sys
@@ -34,17 +31,16 @@ from pyworkflow.em import ImageHandler, DT_FLOAT, Micrograph
 from pyworkflow.protocol.params import  (IntParam,
                                          BooleanParam, FloatParam,
                                          LEVEL_ADVANCED)
-#from pyworkflow.utils.properties import Message
 from grigoriefflab import UNBLUR_PATH
 from pyworkflow.utils.path import createLink, relpath, removeBaseExt
 
 
 class ProtUnblur(ProtProcessMovies):
-    """Unblur is used to align the frames of movies recorded
+    """ Unblur is used to align the frames of movies recorded
     on an electron microscope to reduce image blurring due
-    to beam-induced motion. It reads stacks of movies that
-    are stored in MRC/CCP4 format."""
-    _label = 'Unblur'
+    to beam-induced motion.
+    """
+    _label = 'unblur'
 
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
@@ -157,6 +153,7 @@ class ProtUnblur(ProtProcessMovies):
             return removeBaseExt(removeBaseExt(movieName)) + postFix + '.' + ext
         else:
             return removeBaseExt(movieName) + postFix + '.' + ext
+
     def _processMovie(self, movieId, movieName, movieFolder):
         """call program here"""
         # if not mrc convert format to mrc

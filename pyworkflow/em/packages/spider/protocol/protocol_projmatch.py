@@ -24,8 +24,6 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-"""
 
 from os.path import join
 
@@ -41,9 +39,8 @@ from protocol_base import SpiderProtocol
 
 
 
-                               
 class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
-    """Iterative reference-based refinement of particles orientations,
+    """ Iterative reference-based refinement of particles orientations,
     based on the Spider AP SHC and AP REF programs.
     
     Iterative refinement improves the accuracy in the determination of orientations.
