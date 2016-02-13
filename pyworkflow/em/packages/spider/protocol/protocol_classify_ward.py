@@ -29,7 +29,10 @@ from protocol_classify_base import SpiderProtClassifyCluster
       
 
 class SpiderProtClassifyWard(SpiderProtClassifyCluster):
-    """ Ward's method, using 'CL HC' 
+    """ Finds clusters of images/elements in factor space
+    (or a selected subspace) by using Diday’s method of moving centers,
+    and applies hierarchical ascendant classification (HAC).
+    Uses the Spider CL HC program
     """
     _label = 'classify ward'
     

@@ -42,7 +42,7 @@ import os
 
 class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
 
-    """Xmipp protocol to pick particles in a set of micrographs 
+    """ Picks particles in a set of untilted-tilted pairs of micrographs using Xmipp,
     either manually or using supervised picking support  """
     _label = 'tilt pairs particle picking'
     

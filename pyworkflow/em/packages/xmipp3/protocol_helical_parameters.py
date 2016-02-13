@@ -23,11 +23,11 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
-import pyworkflow
 """
-This sub-package contains protocols for performing subtomogram averaging.
+This sub-package contains the XmippProtHelicalParameters protocol
 """
 
+import pyworkflow
 import pyworkflow.object as pwobj
 from pyworkflow.em import *  
 from xmipp import MetaData, MDL_ANGLE_ROT, MDL_SHIFT_Z

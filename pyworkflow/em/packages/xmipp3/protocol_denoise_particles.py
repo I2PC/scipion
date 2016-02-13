@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package contains wrapper around Screen Particles Xmipp program
+This sub-package contains XmippProtDenoiseParticles protocol
 """
 
 import pyworkflow.em.metadata as md

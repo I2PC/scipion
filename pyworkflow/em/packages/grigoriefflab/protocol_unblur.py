@@ -43,11 +43,7 @@ class ProtUnblur(ProtProcessMovies):
     """Unblur is used to align the frames of movies recorded
     on an electron microscope to reduce image blurring due
     to beam-induced motion. It reads stacks of movies that
-    are stored in MRC/CCP4 format. Unblur generates frame
-    sums that can be used in subsequent image processing
-    steps and optionally applies an exposure-dependent
-    filter to maximize the signal at all resolutions
-    in the frame averages."""
+    are stored in MRC/CCP4 format."""
     _label = 'Unblur'
 
     def _defineParams(self, form):

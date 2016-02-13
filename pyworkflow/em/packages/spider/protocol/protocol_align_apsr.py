@@ -35,7 +35,7 @@ from protocol_align_base import SpiderProtAlign
       
 class SpiderProtAlignAPSR(SpiderProtAlign):
     """ 
-    Reference-free alignment shift and rotational alignment of an image series. 
+    Reference-free alignment (both translational and rotational) of an image series.
     Uses Spider AP SR command.
     
     See detailed description at [[http://spider.wadsworth.org/spider_doc/spider/docs/man/apsr.html][SPIDER's AP SR online manual]]

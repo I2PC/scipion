@@ -40,14 +40,10 @@ from pyworkflow.utils.path import createLink, relpath, removeBaseExt
 
 
 class ProtSummovie(ProtProcessMovies):
-    """Summovie is used to align the frames of movies recorded
-    on an electron microscope to reduce image blurring due
-    to beam-induced motion. It reads stacks of movies that
-    are stored in MRC/CCP4 format. Summovie generates frame
-    sums that can be used in subsequent image processing
-    steps and optionally applies an exposure-dependent
-    filter to maximize the signal at all resolutions
-    in the frame averages."""
+    """Summovie generates frame sums that can be used
+    in subsequent image processing steps and optionally
+    applies an exposure-dependent filter to maximize
+    the signal at all resolutions in the frame averages."""
     _label = 'Summovie'
 
     def _defineParams(self, form):

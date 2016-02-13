@@ -39,7 +39,7 @@ from pyworkflow.em.constants import RELATION_CTF
 
 
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
-    """Protocol to estimate CTF on a set of micrographs using Xmipp 3.1"""
+    """Protocol to estimate CTF on a set of micrographs using Xmipp"""
     _label = 'ctf estimation'
     
     _criterion="ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "\
