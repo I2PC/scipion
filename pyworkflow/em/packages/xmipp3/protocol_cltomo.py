@@ -23,9 +23,6 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains protocols for performing subtomogram averaging.
-"""
 
 from pyworkflow.em import *  
 from constants import *
@@ -35,7 +32,7 @@ from xmipp3 import getEnviron
 
 
 class XmippProtCLTomo(ProtClassify3D):
-    """ Averages a set of subtomograms taking into account the missing edge """
+    """ Averages a set of subtomograms taking into account the missing edge. """
     _label = 'cltomo'
     
     #--------------------------- DEFINE param functions --------------------------------------------

@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains projection matching related utilities.
+This sub-package contains projection matching related utilities.
 """
 
 from protocol_projmatch import XmippProtProjMatch

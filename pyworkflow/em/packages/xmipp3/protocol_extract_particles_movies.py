@@ -26,9 +26,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippProtExtractParticles protocol
-"""
+
 import os
 
 import pyworkflow.em.metadata as md

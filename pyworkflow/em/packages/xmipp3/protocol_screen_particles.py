@@ -25,9 +25,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around Screen Particles Xmipp program
-"""
 
 import pyworkflow.em.metadata as md
 from pyworkflow.object import String
