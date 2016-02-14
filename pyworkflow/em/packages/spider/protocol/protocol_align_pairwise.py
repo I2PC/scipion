@@ -24,9 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains protocol for particles filters operations
-"""
 
 import pyworkflow.utils as pwutils
 from pyworkflow.em import IntParam

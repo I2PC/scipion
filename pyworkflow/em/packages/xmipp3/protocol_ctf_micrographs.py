@@ -25,9 +25,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippCtfMicrographs protocol
-"""
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md

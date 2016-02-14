@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package will contains projection matching related utilities.
-"""
 
 from protocol_nma import XmippProtNMA
 from protocol_nma_alignment import XmippProtAlignmentNMA

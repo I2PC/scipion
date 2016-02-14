@@ -23,10 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains data and protocol classes
-wrapping Cryoem
-"""
+
 import os
 
 from pyworkflow.utils import Environ

@@ -24,9 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains protocol for particles filters operations
-"""
 
 from pyworkflow.utils.path import getLastFile
 from protocol_align_base import SpiderProtAlign

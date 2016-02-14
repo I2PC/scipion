@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around angular_break_symmetry Xmipp program
-"""
 
 from pyworkflow.object import String
 from pyworkflow.protocol.params import StringParam
@@ -35,7 +32,9 @@ import pyworkflow.em.metadata as md
 
  
 class XmippProtAngBreakSymmetry(ProtProcessParticles):
-    """ Classify particles according their similarity to the others in order to detect outliers. """
+    """ Classify particles according their similarity to the others
+    in order to detect outliers.
+    """
     _label = 'break symmetry'
 
     #--------------------------- DEFINE param functions --------------------------------------------
