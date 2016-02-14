@@ -27,9 +27,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippProtExtractParticles protocol
-"""
 
 from glob import glob
 from os.path import exists, basename
