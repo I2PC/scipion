@@ -42,11 +42,11 @@ from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
 
 class XmippProtMultiRefAlignability(ProtAnalysis3D):
     """    
-    Reconstruct a volume using Xmipp_reconstruct_fourier from a given set of particles.
-    The alignment parameters will be converted to a Xmipp xmd file
-    and used as direction projections to reconstruct.
+    Performs soft alignment validation of a set of particles confronting them
+    against a given 3DEM map. This protocol produces particle alignment
+    precision and accuracy parameters.
     """
-    _label = 'multireference_aligneability'
+    _label = 'multireference aligneability'
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
