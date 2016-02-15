@@ -32,8 +32,12 @@ import pyworkflow.em.metadata as md
 
  
 class XmippProtAngBreakSymmetry(ProtProcessParticles):
-    """ Classify particles according their similarity to the others
-    in order to detect outliers.
+    """
+    Given an input set of particles with angular assignment, find an
+    equivalent angular assignment for a given symmetry.
+
+    Be aware that input symmetry values follows Xmipp conventions as described in:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry
     """
     _label = 'break symmetry'
 
