@@ -23,9 +23,6 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around Prime algorithm in Simple
-"""
 
 import os
 from glob import glob

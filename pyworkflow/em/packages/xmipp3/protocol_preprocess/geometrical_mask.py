@@ -24,9 +24,6 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains protocols for creating masks.
-"""
 
 from pyworkflow.protocol.params import IntParam, EnumParam, FloatParam, BooleanParam
 from ..constants import *

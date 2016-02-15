@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp specific protocols
+This sub-package contains Xmipp specific protocols
 """
 
 from bibtex import _bibtex # Load bibtex dict with references
@@ -79,7 +79,8 @@ from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D
 from protocol_movie_alignment import ProtMovieAlignment
-from protocol_multireference_alignability import XmippProtMultiRefAlignability
+# FIXME: uncomment the following line when protocol ready for release
+#from protocol_multireference_alignability import XmippProtMultiRefAlignability
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_particle_pick_consensus import XmippProtConsensusPicking
 from protocol_particle_pick import XmippProtParticlePicking 

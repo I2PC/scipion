@@ -23,9 +23,6 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around reconstruct_significant Xmipp program
-"""
 
 from pyworkflow.utils import Timer
 from pyworkflow.em import *  
