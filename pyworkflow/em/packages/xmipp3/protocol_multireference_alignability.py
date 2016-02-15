@@ -290,7 +290,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
 
             outImgSet.copyItems(imgSet,
                                 updateItemCallback=self._setWeight,
-                                itemDataIterator=md.iterRows(mdJoin_pruned, sortByLabel=md.MDL_ITEM_ID))
+                                itemDataIterator=md.iterRows(prunedMd, sortByLabel=md.MDL_ITEM_ID))
                         
             mdValidatoin = md.getFirstRow(validationMd)        
        
