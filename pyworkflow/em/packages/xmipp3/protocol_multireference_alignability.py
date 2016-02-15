@@ -280,7 +280,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
             m_volScore = md.MetaData()
             m_volScore.read(volDir+'/validationAlignability.xmd')
             validationMd = self._getExtraPath(volPrefix + 'validation_alignability.xmd')
-            moveFile(join(volDir, 'validation_alignability.xmd'), validationMd)
+            moveFile(join(volDir, 'validationAlignability.xmd'), validationMd)
             
             outputVols = self._createSetOfVolumes()
             imgSet = self.inputParticles.get()                  
