@@ -42,11 +42,11 @@ from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
 
 class XmippProtMultiRefAlignability(ProtAnalysis3D):
     """    
-    Reconstruct a volume using Xmipp_reconstruct_fourier from a given set of particles.
-    The alignment parameters will be converted to a Xmipp xmd file
-    and used as direction projections to reconstruct.
+    Performs soft alignment validation of a set of particles confronting them
+    against a given 3DEM map. This protocol produces particle alignment
+    precision and accuracy parameters.
     """
-    _label = 'multireference_aligneability'
+    _label = 'multireference aligneability'
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
@@ -59,8 +59,9 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                       label="Input volumes",  
                       help='Select the input volumes.')     
                 
-        form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
+        form.addParam('inputParticles', PointerParam,
                       pointerClass='SetOfParticles', pointerCondition='hasAlignment',
+                      label="Input particles", important=True,
                       help='Select the input projection images.')
             
         form.addParam('symmetryGroup', StringParam, default='c1',
@@ -80,7 +81,6 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         form.addParam('phaseFlipped', BooleanParam, default=False,
                       label="Is the data already phase flipped?",
                       help='In case the data has been already phase flipped select True')
-        
 
         form.addParam('doNotUseWeights', BooleanParam, default=False,
                       label="Do not use the weights",
@@ -91,14 +91,13 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):   
-             
-        convertId = self._insertFunctionStep('convertInputStep', 
+        convertId = self._insertFunctionStep('convertInputStep',
                                              self.inputParticles.get().getObjId())
         deps = [] # store volumes steps id to use as dependencies for last step
         commonParams    = self._getCommonParams()
         commonParamsRef = self._getCommonParamsRef()
-        
         sym = self.symmetryGroup.get()
+
         for i, vol in enumerate(self._iterInputVols()):
             volName = getImageLocation(vol)
             volDir = self._getVolDir(i+1)
@@ -113,13 +112,11 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                                                  volName, 
                                                  prerequisites=[convertId])
 
-
             sigStepId = self._insertFunctionStep('significantStep', 
                                                  volName, volDir,
                                                  'ref_particles.xmd',
                                                  commonParamsRef, 
                                                  prerequisites=[phanProjStepId])
-
 
             volStepId = self._insertFunctionStep('validationStep', 
                                                  volName, volDir,
@@ -198,13 +195,16 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
         self.runJob('xmipp_transform_mask', 
                     param, numberOfMpi=1,numberOfThreads=1)
                 
-    
     def numberOfProjections(self,sym,angularSampling):
         #http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/HowManyReferenceProjections
-        dict = {0.5: 165016, 1.0: 41258, 1.5: 18338, 2.0: 10318, 2.5: 6600, 3.0: 4586, 3.5: 3367,4.0: 2586, 4.5: 2042, 5.0: 1652, 5.5: 1367, 6.0: 1148, 6.5: 977, 7.0: 843, 7.5: 732, 8.0: 643, 8.5: 569, 9.0: 510, 9.5: 460, 10.0: 412, 11.0: 340, 12.0: 288, 13.0: 245, 14.0: 211, 15.0: 184};
+        dict = {0.5: 165016, 1.0: 41258, 1.5: 18338, 2.0: 10318, 2.5: 6600,
+                3.0: 4586, 3.5: 3367,4.0: 2586, 4.5: 2042, 5.0: 1652, 5.5: 1367,
+                6.0: 1148, 6.5: 977, 7.0: 843, 7.5: 732, 8.0: 643, 8.5: 569,
+                9.0: 510, 9.5: 460, 10.0: 412, 11.0: 340, 12.0: 288, 13.0: 245,
+                14.0: 211, 15.0: 184
+                }
     
     def significantStep(self, volName, volDir, anglesPath, params):
-
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get() 
         makePath(volDir)  
@@ -225,10 +225,11 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
         params += ' --odir %s' % volDir
         params += ' --sym %s' % sym
         
-        if (self.doNotUseWeights.get()) :
+        if self.doNotUseWeights:
             params += ' --dontUseWeights'
             
-        self.runJob('xmipp_multireference_aligneability', params,numberOfMpi=1,numberOfThreads=1)
+        self.runJob('xmipp_multireference_aligneability',
+                    params, numberOfMpi=1, numberOfThreads=1)
         
     def createOutputStep(self):
         outputVols = self._createSetOfVolumes()
@@ -249,7 +250,8 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
 
             outImgSet.copyItems(imgSet,
                                 updateItemCallback=self._setWeight,
-                                itemDataIterator=md.iterRows(clusterMd, sortByLabel=md.MDL_ITEM_ID))
+                                itemDataIterator=md.iterRows(clusterMd,
+                                                             sortByLabel=md.MDL_ITEM_ID))
                         
             mdValidatoin = md.MetaData(validationMd)
             weight = mdValidatoin.getValue(md.MDL_WEIGHT, mdValidatoin.firstObject())
@@ -272,24 +274,20 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
         if self.inputParticles.get() and not self.inputParticles.hasValue():
             validateMsgs.append('Please provide input particles.')            
         return validateMsgs
-        
-    
+
     def _summary(self):
-        summary = []
-
-        summary.append("Input particles:  %s" % self.inputParticles.get().getNameId())
-
+        summary = ["Input particles:  %s" % self.inputParticles.get().getNameId()]
         summary.append("-----------------")
+
         if self.inputVolumes.get():
             for i, vol in enumerate(self._iterInputVols()):
                 summary.append("Input volume(s)_%d: [%s]" % (i+1,vol))
-
         summary.append("-----------------")
+
         if  (not hasattr(self,'outputVolumes')):
             summary.append("Output volumes not ready yet.")
         else:
             for i, vol in enumerate(self._iterInputVols()):
-                            
                 VolPrefix = 'vol%03d_' % (i+1)
                 mdVal = md.MetaData(self._getExtraPath(VolPrefix+'validation.xmd'))                
                 weight = mdVal.getValue(md.MDL_WEIGHT, mdVal.firstObject())
@@ -301,7 +299,10 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles,self.phaseFlipped.get()))
     def _methods(self):
         messages = []
         if (hasattr(self,'outputVolumes')):
-            messages.append('The quality parameter(s) has been obtained using the approach [Vargas2014a] with angular sampling of %f and number of orientations of %f' % (self.angularSampling.get(), self.numOrientations.get()))
+            messages.append('The quality parameter(s) has been obtained using '
+                            'the approach [Vargas2014a] with angular sampling '
+                            'of %f and number of orientations of %f' % (self.angularSampling.get(),
+                                                                        self.numOrientations.get()))
         return messages
     
     def _citations(self):

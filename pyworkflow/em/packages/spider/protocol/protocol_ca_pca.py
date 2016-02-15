@@ -23,10 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains protocol for 
-Correspondence Analysis or Principal Component Analysis
-"""
 
 from os.path import join
 

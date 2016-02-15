@@ -51,7 +51,7 @@ AL_CROSSCORRELATION = 4
 AL_CROSSCORRELATIONOPTICAL = 5
 
 class ProtMovieAlignment(ProtProcessMovies):
-    """ Aligns movies, from direct detectors cameras, into micrographs.
+    """ Aligns movies from direct detectors cameras and sums them into micrographs.
     """
     _label = 'movie alignment'
 

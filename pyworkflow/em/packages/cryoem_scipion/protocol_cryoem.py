@@ -23,9 +23,6 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around cryoem algorithm
-"""
 
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import pyworkflow.protocol.params as params

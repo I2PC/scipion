@@ -23,20 +23,17 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.constants import ALIGN_2D
-"""
-This sub-package contains the XmippRCT protocol
-"""
 
 from os.path import exists
 
 import xmipp
 from pyworkflow.object import String
 from pyworkflow.protocol.constants import  LEVEL_ADVANCED
-from pyworkflow.protocol.params import (PointerParam, IntParam, StringParam, 
+from pyworkflow.protocol.params import (PointerParam, IntParam, StringParam,
                                         BooleanParam, FloatParam, STEPS_PARALLEL)
 from pyworkflow.em.protocol import ProtInitialVolume
 from pyworkflow.em.data import Volume, SetOfParticles
+from pyworkflow.em.constants import ALIGN_2D
 
 from convert import getImageLocation, alignmentToRow
 from xmipp3 import XmippMdRow
