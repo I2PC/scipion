@@ -616,7 +616,10 @@ Examples:
             if self.showClasses3D == CLASSES_ALL:
                 self._refsList = range(1, self.protocol.numberOfClasses.get()+1)
             else:
-                self._refsList = self._getListFromRangeString(self.class3DSelection.get())
+                if self.class3DSelection.get() is not None:
+	            self._refsList = self._getListFromRangeString(self.class3DSelection.get())
+                else:
+	            raise Exception("Please provide iteration selection.")
         self.protocol._initialize() # Load filename templates
         self.firstIter = self.protocol._firstIter()
         self.lastIter = self.protocol._lastIter()
@@ -625,8 +628,10 @@ Examples:
         if self.viewIter.get() == ITER_LAST or halves == 3:
             self._iterations = [self.lastIter]
         else:
-            self._iterations = self._getListFromRangeString(self.iterSelection.get())
-        
+            if self.iterSelection.get() is not None:
+	        self._iterations = self._getListFromRangeString(self.iterSelection.get())
+            else:
+	        raise Exception("Please provide iteration selection.")
         from matplotlib.ticker import FuncFormatter
         self._plotFormatter = FuncFormatter(self._formatFreq) 
         
@@ -1244,7 +1249,10 @@ Examples:
             # know how many frames has a SetOfMovieParticles.
             self._frames = range(1, self.protocol._lastFrame())
         elif halves < 3:
-            self._frames = self._getListFromRangeString(self.frameSelection.get())
+            if self.frameSelection.get() is not None:
+                self._frames = self._getListFromRangeString(self.frameSelection.get())
+	    else:
+	        raise Exception("Please provide iteration selection.")
         else:
             self._frames = [1]
             
