@@ -114,7 +114,7 @@ class ProtMotionCorr(ProtProcessMovies):
         form.addParallelSection(threads=0, mpi=0)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _processMovie(self, movieId, movieName, movieFolder):
+    def _processMovie(self, movieId, movieName, movieFolder, movieAlignment):
         movieSet = self.inputMovies.get()
         self._getFinalFrame(movieSet, movieId)
         
@@ -260,13 +260,15 @@ class ProtMotionCorr(ProtProcessMovies):
             
             alignment = em.MovieAlignment(first=self.alignFrame0.get()+1, 
                                           last=totFrames+1,
-                                          shifts=[0, 0]*diff)
+                                          shifts=[(0, 0)]*diff)
         else:
             alignment = parseMovieAlignment(os.path.join(movieFolder, 
                                                          self._getLogFile(movieId)))
         alignment.setRoi([self.cropOffsetX.get(), self.cropOffsetY.get(),
                           self.cropDimX.get(), self.cropDimY.get()])
-        alignment.setScale(self.binFactor.get())
+
+        #FIXME: Scale the shift accordinly when using binFactor of 2x.
+        #alignment.setScale(self.binFactor.get())
         
         alignedMovie.setAlignment(alignment)
         movieSet.append(alignedMovie)

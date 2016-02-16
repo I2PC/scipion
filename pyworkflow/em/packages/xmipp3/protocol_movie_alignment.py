@@ -106,7 +106,7 @@ class ProtMovieAlignment(em.ProtProcessMovies):
         if self.doSaveMovie:
             movieSet = self._createSetOfMovies()
             movieSet.copyInfo(inputMovies)
-        for movie in self.inputMovies.get():
+        for movie in inputMovies:
             micName = self._getNameExt(movie.getFileName(),'_aligned', 'mrc')
             metadataName = self._getNameExt(movie.getFileName(), '_aligned', 'xmd')
             plotCartName = self._getNameExt(movie.getFileName(), '_plot_cart', 'png')
@@ -138,16 +138,13 @@ class ProtMovieAlignment(em.ProtProcessMovies):
             self._defineOutputs(outputMovies=movieSet)
 
     #--------------------------- UTILS functions ---------------------------------------------------
-    #TODO: In methods calling 2 protocols we should:
-    #      1) work with the original movie and not the resampled one
-    #      2) output metadata with shifts should be given over
-    #         orignal movie not intermediate one
-    def _processMovie(self, movieId, movieName, movieFolder):
+    def _processMovie(self, movieId, movieName, movieFolder, movieAlignment):
         """ Process the movie actions, remember to:
         1) Generate all output files inside movieFolder (usually with cwd in runJob)
         2) Copy the important result files after processing (movieFolder will be deleted!!!)
         """
 
+        movieSet = self.inputMovies.get()
         # Read the parameters
         #micName = self._getMicName(movieId)
         micName = self._getNameExt(movieName, '_aligned', 'mrc')
@@ -156,6 +153,14 @@ class ProtMovieAlignment(em.ProtProcessMovies):
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
+
+        # Check if we have global shifts
+        if movieAlignment is not None:
+            #firstFrame, lastFrame = movieAlignment.getRange()
+            #regionInterest = movieAlignment.getRoi()
+            shiftListX, shiftListY= movieAlignment.getShifts()
+            for shiftX, shiftY in shiftListX, shiftListY:
+                print shiftX, shiftY
 
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
