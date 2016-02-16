@@ -42,7 +42,10 @@ class FscViewer(Viewer):
     def __init__(self, **kwargs):
         Viewer.__init__(self, **kwargs)
         self.threshold = kwargs.get('threshold', 0.143)
-        self.legend=""
+        self.legend = ""
+        self.plotter = EmPlotter(x=1, y=1, windowTitle='FSC',
+                                 figure=kwargs.get('figure', 'active'))
+        self._lastSubPlot = None
 
     def _formatFreq(self, value, pos):
         """ Format function for Matplotlib formatter. """
@@ -51,11 +54,19 @@ class FscViewer(Viewer):
             inv = 1/value
         return "1/%0.2f" % inv
 
-    def _visualize(self, obj, figure='active', **kwargs):
+    def show(self):
+        self.plotter.show()
+
+    def _visualize(self, obj, **kwargs):
+        self.plotFsc(obj, **kwargs)
+
+        return [self.plotter]
+
+    def plotFsc(self, obj, **kwargs):
         def createFSCObject(event):
 
-            prot = self.project.newProtocol(ProtCreateFSC)
-            prot.setObjLabel('FSC-%s'%self.label)#label)
+            prot = self.getProject().newProtocol(ProtCreateFSC)
+            prot.setObjLabel('FSC-%s' % self.label)#label)
             prot.setInputObj(self.protocol)#protocol may be not finished
             #prot.setParentObject(self.obj)#protocol may be not finished
             #prot.inputObj.set(self.protocol)#protocol may be not finished
@@ -65,31 +76,28 @@ class FscViewer(Viewer):
 
         self.obj = obj
         x, y = obj.getData()
-        plotter = EmPlotter(x=1, y=1, windowTitle='FSC', figure=figure)
-        a = plotter.createSubPlot("FSC", "frequency (1/A)", "fsc")
-        a.set_ylim([-0.1, 1.1])
-        a.plot([0, x[-1]],
-               [self.threshold, self.threshold],
-               'k--')
-        a.grid(True)
-        _plotFormatter = FuncFormatter(self._formatFreq)
-        a.xaxis.set_major_formatter(_plotFormatter)
-        self.project = self.getProject()
-        self.label = kwargs.get('label', self.protocol.getRunName())
-        plotter.plotData(x, y, '-',label=self.label)
-        a.legend()
-        #####
-        axcreateFSC = plt.axes([0.75, 0.02, 0.2, 0.050])
-        #Button does not allow to define text color so
-        #I write it directly
-        axcreateFSC.text(0.5, 0.5, 'create FSC',
+
+        if self._lastSubPlot is None:
+            a = self.plotter.createSubPlot("FSC", "frequency (1/A)", "fsc")
+            a.set_ylim([-0.1, 1.1])
+            a.plot([0, x[-1]],
+                   [self.threshold, self.threshold],
+                   'k--')
+            a.grid(True)
+            a.xaxis.set_major_formatter(FuncFormatter(self._formatFreq))
+            axcreateFSC = plt.axes([0.75, 0.02, 0.2, 0.050])
+            #Button does not allow to define text color so
+            #I write it directly
+            axcreateFSC.text(0.5, 0.5, 'create FSC',
                              verticalalignment='center',
                              horizontalalignment='center',
                              transform=axcreateFSC.transAxes,color='white')
-        bcreateFSC = Button(axcreateFSC, '',#leave label empty
-                            color=Color.RED_COLOR,
-                            hovercolor='maroon')
-        bcreateFSC.on_clicked(createFSCObject)
-        plt.show()
-        ####
-        return [plotter]
+            bcreateFSC = Button(axcreateFSC, '',#leave label empty
+                                color=Color.RED_COLOR,
+                                hovercolor='maroon')
+            bcreateFSC.on_clicked(createFSCObject)
+            self._lastSubPlot = a
+
+        self.label = kwargs.get('label', self.protocol.getRunName())
+        self.plotter.plotData(x, y, '-',label=self.label)
+        self.plotter.legend()
