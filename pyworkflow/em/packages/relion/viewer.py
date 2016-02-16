@@ -535,6 +535,8 @@ Examples:
 # plotFSC            
 #===============================================================================
     def _showFSC(self, paramName=None):
+        #self._iterations = self._getListFromRangeString(self.iterSelection.get())
+        print("_showFSC_self._iterations",self._iterations)
         threshold = self.resolutionThresholdFSC.get()
         prefixes = self._getPrefixes()        
         nrefs = len(self._refsList)
@@ -543,23 +545,26 @@ Examples:
         
         md.activateMathExtensions()
         
-        xplotter = em.FscViewer(project=self.protocol.getProject(),
-                                threshold=threshold, protocol=self.protocol)
+        fscViewer = em.FscViewer(project=self.protocol.getProject(),
+                                 threshold=threshold,
+                                 protocol=self.protocol,
+                                 figure=self._getFigure())
         for prefix in prefixes:
             for ref3d in self._refsList:#ROB: I believe len(_refsList)==1
-                plot_title = prefix + 'class %s' % ref3d
+                #plot_title = prefix + 'class %s' % ref3d
                 blockName = 'model_class_%d@' % ref3d
                 for it in self._iterations:
                     model_star = self._getModelStar(prefix, it)
+
                     if exists(model_star):
                         #fnFSC=\
                         blockName + model_star
                         fsc = self._plotFSC(None, blockName + model_star, 'iter %d' % it)
-                        xplotter._visualize(fsc, figure=self._getFigure(),label=('iter %d' % it))
-                import matplotlib.pyplot as plt
-                plt.show()
+                        fscViewer.plotFsc(fsc, label=('iter %d' % it))
+        import matplotlib.pyplot as plt
+        #plt.show()
 
-        return [xplotter]
+        return [fscViewer]
     
     def _plotFSC(self, a, model_star, label):
         mdStar = md.MetaData(model_star)
@@ -631,7 +636,7 @@ Examples:
             self._iterations = [self.lastIter]
         else:
             self._iterations = self._getListFromRangeString(self.iterSelection.get())
-        
+        print("load_self._iterations",self._iterations)
         from matplotlib.ticker import FuncFormatter
         self._plotFormatter = FuncFormatter(self._formatFreq) 
         
@@ -823,6 +828,7 @@ class PostprocessViewer(ProtocolViewer):
 #===============================================================================
     def _showFSC(self, paramName=None):
         threshold = self.resolutionThresholdFSC.get()
+
         n = 1
         gridsize = [1, 1]
         
