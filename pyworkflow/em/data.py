@@ -1577,17 +1577,18 @@ class MovieAlignment(EMObject):
     """ Store the alignment between the different Movie frames.
     Also store the first and last frames used for alignment.
     """
-    def __init__(self, first=-1, last=-1, shifts=None, **kwargs):
+    def __init__(self, first=-1, last=-1, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._first = Integer(first)
         self._last = Integer(last)
-        self._shifts = CsvList(pType=float)
-        self._shifts.set(shifts or [])
+        self._xshifts = CsvList(pType=float)
+        self._yshifts = CsvList(pType=float)
+        self._xshifts.set(kwargs.get('xshifts', []))
+        self._yshifts.set(kwargs.get('yshifts', []))
         # This list contain the coordinate where you begin the crop (x, y), the width and height of the frames.
-        # The order is: x,y, width and height. For whidth and height, 0 means the entire frame.
+        # The order is: x,y, width and height. For width and height, 0 means the entire frame.
         self._roi = CsvList(pType=int) 
-        self._scale = Float(1)
-        
+
     def getRange(self):
         """ Return the first and last frames used for alignment.
         The first frame in a movie stack is 0.
@@ -1598,8 +1599,8 @@ class MovieAlignment(EMObject):
         """ Return the list of alignment between one frame
         to another, from first to last frame used.
         """
-        return self._shifts
-    
+        return self._xshifts, self._yshifts
+
     def setRoi(self, roiList):
         self._roi.set(roiList)
     
@@ -1608,12 +1609,6 @@ class MovieAlignment(EMObject):
         """
         return self._roi
     
-    def getScale(self):
-        return self._scale.get()
-    
-    def setScale(self, value):
-        self._scale.set(value)
-
 
 class SetOfMovies(SetOfMicrographsBase):
     """ Represents a set of Movies. """
@@ -1683,4 +1678,3 @@ class SetOfMovieParticles(SetOfParticles):
     when the particles have been extracted from a set of movies.
     """
     ITEM_TYPE = MovieParticle
-    
