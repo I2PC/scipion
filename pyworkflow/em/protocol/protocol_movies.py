@@ -191,9 +191,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             else:
                 newMovieName = movieName
             
-            if newMovieName.endswith('.em'):
-                newMovieName += ":ems"
-
             if (self.CONVERT_TO_MRC and not (newMovieName.endswith("mrc") or
                                              newMovieName.endswith("mrcs"))):
                 inputMovieFn = os.path.join(movieFolder, newMovieName)

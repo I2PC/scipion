@@ -264,8 +264,20 @@ def fixVolumeFileName(image):
         if fn.endswith('.mrc') or fn.endswith('.map'):
             fn += ':mrc'
         
-    return fn   
-    
+    return fn
+
+def getMovieFileName(movie):
+    """ Add the :mrcs or :ems extensions to movie files to be
+    recognized by Xmipp as proper stack files.
+    """
+    fn = movie.getFileName()
+    if fn.endswith('.mrc'):
+        fn += ':mrcs'
+    elif fn.endswith('.em'):
+        fn += ':ems'
+
+    return fn
+
 def getImageLocation(image):
     xmippFn = locationToXmipp(image.getIndex(),
                               fixVolumeFileName(image))
