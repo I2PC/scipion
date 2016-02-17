@@ -121,12 +121,6 @@ class ProtAlignMovies(ProtProcessMovies):
 
     #--------------------------- UTILS functions ----------------------------
 
-    def _getNumberOfFrames(self, movieSet, movieId=None):
-        movie = movieSet[movieId] if movieId else movieSet.getFirstItem()
-        _, _, z, n = ImageHandler().getDimensions(movie)
-
-        return max(z, n)
-
     def _getFrameRange(self, n, prefix):
         """
         Params:

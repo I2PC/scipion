@@ -34,9 +34,10 @@ from os.path import join, basename, exists
 
 from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
 from pyworkflow.protocol.constants import STEPS_PARALLEL, STATUS_NEW
-from pyworkflow.utils.path import createLink, removeBaseExt, makePath, cleanPath
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import SetOfMovies, Movie, MovieAlignment
+from pyworkflow.em.convert import ImageHandler
 
 from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
@@ -51,7 +52,10 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     This base class will iterate through the movies (extract them if compressed)
     and call a _processMovie method for each one.
     """
-    
+    # Redefine this in subclasses if want to convert the movies to mrc
+    # the value should be either 'mrc' or 'mrcs'
+    CONVERT_TO_MRC = None
+
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
@@ -166,9 +170,12 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieFn = movie.getFileName()
         movieName = basename(movieFn)
 
+        # Clean old finished files
+        pwutils.cleanPath(self._getMovieDone(movie))
+
         if self._filterMovie(movie):
-            makePath(movieFolder)
-            createLink(movieFn, join(movieFolder, movieName))
+            pwutils.makePath(movieFolder)
+            pwutils.createLink(movieFn, join(movieFolder, movieName))
 
             if movieName.endswith('bz2'):
                 newMovieName = movieName.replace('.bz2', '')
@@ -186,6 +193,16 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             if newMovieName.endswith('.em'):
                 newMovieName += ":ems"
 
+            if (self.CONVERT_TO_MRC and not (newMovieName.endswith("mrc") or
+                                             newMovieName.endswith("mrcs"))):
+                inputMovieFn = os.path.join(movieFolder, newMovieName)
+                newMovieName = pwutils.replaceExt(newMovieName,
+                                                  self.CONVERT_TO_MRC)
+                outputMovieFn = os.path.join(movieFolder, newMovieName)
+                self.info("Converting movie '%s' -> '%s'" % (inputMovieFn,
+                                                             outputMovieFn))
+                ImageHandler().convertStack(inputMovieFn, outputMovieFn)
+
             movie.setFileName(os.path.join(movieFolder, newMovieName))
             self.info("Processing movie: %s" % movie.getFileName())
 
@@ -198,14 +215,20 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             else:
                 self.info('Clean movie data DISABLED. '
                           'Movie folder will remain in disk!!!')
+
+        # Mark this movie as finished
+        open(self._getMovieDone(movie), 'w').close()
         
     #--------------------------- UTILS functions ----------------------------
-    def _getMovieFolder(self, movie):
+    def _getOutputMovieFolder(self, movie):
         """ Create a Movie folder where to work with it. """
         return self._getTmpPath('movie_%06d' % movie.getObjId())
 
     def _getMovieName(self, movie, ext='.mrc'):
         return self._getExtraPath('movie_%06d%s' % (movie.getObjId(), ext))
+
+    def _getMovieDone(self, movie):
+        return self._getTmpPath('DONE_movie_%06d.TXT' % movie.getObjId())
 
     #--------------------------- OVERRIDE functions --------------------------
     def _filterMovie(self, movie):
@@ -230,15 +253,15 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             # removeBaseExt function only eliminate the last extension,
             # but if files are compressed, we need to eliminate two extensions:
             # bz2 and its own image extension (e.g: mrcs, em, etc)
-            return removeBaseExt(removeBaseExt(movieName)) + postFix + '.' + ext
+            return pwutils.removeBaseExt(pwutils.removeBaseExt(movieName)) + postFix + '.' + ext
         else:
-            return removeBaseExt(movieName) + postFix + '.' + ext
+            return pwutils.removeBaseExt(movieName) + postFix + '.' + ext
     
     def _getPlotName(self, movieName, plotType):
         if plotType == PLOT_CART:
-            return removeBaseExt(movieName) + '_plot_cart.png'
+            return pwutils.removeBaseExt(movieName) + '_plot_cart.png'
         else:
-            return removeBaseExt(movieName) + '_plot_polar.png'
+            return pwutils.removeBaseExt(movieName) + '_plot_polar.png'
 
     def _getCorrMovieName(self, movieId, ext='.mrcs'):
         return 'movie_%06d%s' % (movieId, ext)
