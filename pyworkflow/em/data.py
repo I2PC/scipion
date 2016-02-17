@@ -1547,8 +1547,8 @@ class SetOfNormalModes(EMSet):
 class Movie(Micrograph):
     """ Represent a set of frames of micrographs.
     """
-    def __init__(self, filename=None, **kwargs):
-        Micrograph.__init__(self, filename=filename, **kwargs)
+    def __init__(self, location=None, **kwargs):
+        Micrograph.__init__(self, location, **kwargs)
         self._alignment = None
 
     def isCompressed(self):
