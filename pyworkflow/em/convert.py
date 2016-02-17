@@ -75,19 +75,26 @@ class ImageHandler(object):
         
         return outLocation
     
-    def existsLocation(self, location):
+    def existsLocation(self, locationObj):
         """ Return True if a given location exists. 
         Location have the same meaning than in _convertToLocation.
         """
-        if isinstance(location, tuple):
-            fn = location[1]
-        elif isinstance(location, basestring):
-            fn = location
-        elif hasattr(location, 'getLocation'): #this include Image and subclasses
+        if locationObj is None:
+            fn = None
+        elif isinstance(locationObj, tuple):
+            fn = locationObj[1]
+        elif isinstance(locationObj, basestring):
+            fn = locationObj
+        elif hasattr(locationObj, 'getLocation'): #this include Image and subclasses
             # In this case inputLoc should be a subclass of Image
-            fn = location.getLocation()[1]
+            fn = locationObj.getLocation()[1]
         else:
-            raise Exception('Can not match object %s to (index, location)' % type(location))
+            raise Exception('Can not match object %s to '
+                            '(index, location)' % type(locationObj))
+
+        # If either the location is None or location
+        if fn is None:
+            return False
 
         # Remove filename format specification such as :mrc, :mrcs or :ems
         if ':' in fn:
@@ -115,8 +122,9 @@ class ImageHandler(object):
         """
         #get input dim
         (x,y,z,n) = xmipp.getImageSize(inputFn)
+        n = max(z, n)
         #Create empty output stack for efficiency
-        xmipp.createEmptyFile(outputFn,x,y,z,n)
+        xmipp.createEmptyFile(outputFn,x,y,1,n)
         # handle image formats
         for i in range(1, n+1):
             self.convert((i, inputFn), (i, outputFn))
