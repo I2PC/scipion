@@ -41,6 +41,10 @@ class XmippProtMovieCorr(ProtAlignMovies):
     """
     Wrapper protocol to Xmipp Movie Alignment by cross-correlation
     """
+    OUTSIDE_WRAP = 0
+    OUTSIDE_AVG = 1
+    OUTSIDE_VALUE = 2
+    
     _label = 'correlation alignment'
 
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -51,7 +55,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
         form.addParam('splineOrder', params.IntParam, default=3,
                       expertLevel=cons.LEVEL_ADVANCED,
                       label='B-spline order',
-                      help="1 for linear interpolation (faster but lower quality) "
+                      help="1 for linear interpolation (faster but lower quality), "
                            "3 for cubic interpolation (slower but more accurate).")
 
         form.addParam('maxFreq', params.FloatParam, default=4,
@@ -67,6 +71,17 @@ class XmippProtMovieCorr(ProtAlignMovies):
                       help='Maximum allowed distance (in pixels) that each frame '
                            'can be shifted with respect to the next.')
         
+        form.addParam('outsideMode', params.EnumParam, choices=['Wrapping','Average','Value'],
+                      default=self.OUTSIDE_WRAP,
+                      expertLevel=cons.LEVEL_ADVANCED,
+                      label="How to fill borders",
+                      help='How to fill the borders when shifting the frames')
+        form.addParam('outsideValue', params.FloatParam, default=0.0,
+                       expertLevel=cons.LEVEL_ADVANCED,
+                       condition="outsideMode==2",
+                       label='Fill value',
+                       help="Fixed value for filling borders")
+
         form.addParallelSection(threads=1, mpi=1)
     
     #--------------------------- STEPS functions ---------------------------------------------------
@@ -89,6 +104,12 @@ class XmippProtMovieCorr(ProtAlignMovies):
             args += '--cropULCorner %d %d ' % (self.cropOffsetX, self.cropOffsetY)
             args += '--cropDRCorner %d %d ' % (self.cropOffsetX.get() + self.cropDimX.get() -1,
                                                   self.cropOffsetY.get() + self.cropDimY.get() -1)
+        if self.outsideMode == self.OUTSIDE_WRAP:
+            args += "--outside wrap"
+        elif self.outsideMode == self.OUTSIDE_AVG:
+            args += "--outside avg"
+        elif self.outsideMode == self.OUTSIDE_AVG:
+            args += "--outside value %f" % self.outsideValue
         
         args += ' --frameRange %d %d ' % (a0-1, aN-1)
         args += ' --frameRangeSum %d %d ' % (s0-1, sN-1)
@@ -108,16 +129,6 @@ class XmippProtMovieCorr(ProtAlignMovies):
 
         self.runJob('xmipp_movie_alignment_correlation', args, numberOfMpi=1)
         
-    #--------------------------- INFO functions --------------------------------------------
-
-    def _summary(self):
-        summary = []
-        return summary
-    
-    def _validate(self):
-        errors = []
-        return errors
-    
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getShiftsFile(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
