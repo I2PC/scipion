@@ -31,12 +31,13 @@ Protocol wrapper around the MotionCorr for movie alignment
 
 import os, sys
 
-import pyworkflow.em as em
 import pyworkflow.utils.path as putils
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
-from pyworkflow.em.protocol import ProtProcessMovies
 
+from pyworkflow.em.data import MovieAlignment
+from pyworkflow.em.protocol import ProtProcessMovies
+from pyworkflow.em.convert import ImageHandler
 
 
 class ProtAlignMovies(ProtProcessMovies):
@@ -67,7 +68,7 @@ class ProtAlignMovies(ProtProcessMovies):
                                   'from beginning and/or from the end of each movie.')
         line.addParam('sumFrame0', params.IntParam, default=0, label='beginning')
         line.addParam('sumFrameN', params.IntParam, default=0, label='end')
-        group.addParam('binFactor', params.IntParam, default=1,
+        group.addParam('binFactor', params.FloatParam, default=1.,
                        label='Binning factor',
                        help='1x or 2x. Bin stack before processing.')
         
@@ -89,15 +90,12 @@ class ProtAlignMovies(ProtProcessMovies):
                       help="Save Aligned movie")
 
 
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions ----------------------------
 
+    #FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
         inputMovies = self.inputMovies.get()
-
-        if self.doSaveMovie:
-            suffix = "_aligned"
-        else:
-            suffix = "_original"
+        suffix = '_aligned' if self.doSaveMovie else '_original'
         movieSet = self._createSetOfMovies(suffix)
         movieSet.copyInfo(inputMovies)
         newSampling = inputMovies.getSamplingRate() * self.binFactor.get()
@@ -121,11 +119,11 @@ class ProtAlignMovies(ProtProcessMovies):
             self._defineSourceRelation(self.inputMovies, micSet)
     
 
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions ----------------------------
 
     def _getNumberOfFrames(self, movieSet, movieId=None):
         movie = movieSet[movieId] if movieId else movieSet.getFirstItem()
-        _, _, z, n = em.ImageHandler().getDimensions(movie)
+        _, _, z, n = ImageHandler().getDimensions(movie)
 
         return max(z, n)
 
@@ -144,8 +142,8 @@ class ProtAlignMovies(ProtProcessMovies):
     def _createOutputMovie(self, movie, movieSet, micSet=None):
         movieId = movie.getObjId()
         movieFolder = self._getExtraMovieFolder(movieId)
-        movieName = os.path.join(movieFolder, self._getMovieName(movie))
-        micFn = os.path.join(movieFolder, self._getMicName(movie))
+        movieName = os.path.join(movieFolder, self._getOutputMovieName(movie))
+        micFn = os.path.join(movieFolder, self._getOutputMicName(movie))
         
         # Parse the alignment parameters and store the log files
         alignedMovie = movie.clone()
@@ -161,7 +159,7 @@ class ProtAlignMovies(ProtProcessMovies):
         else:
             xshifts, yshifts = self._getMovieShifts(movie)
 
-        alignment = em.MovieAlignment(first=first, last=last,
+        alignment = MovieAlignment(first=first, last=last,
                                       xshifts=xshifts, yshifts=yshifts)
 
         alignment.setRoi([self.cropOffsetX.get(), self.cropOffsetY.get(),
@@ -177,13 +175,13 @@ class ProtAlignMovies(ProtProcessMovies):
             micSet.append(mic)
 
 
-    #------------- Hook functions that need to be implemented in subclasses ------
+    #---------- Hook functions that need to be implemented in subclasses ------
 
-    def _getMovieName(self, movie):
+    def _getOutputMovieName(self, movie):
         """ Returns the name of the output movie (relative to micFolder) """
         pass
 
-    def _getMicName(self, movie):
+    def _getOutputMicName(self, movie):
         """ Returns the name of the output micrograph (relative to micFolder) """
         pass
 
