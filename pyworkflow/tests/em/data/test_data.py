@@ -40,10 +40,12 @@ class TestImage(unittest.TestCase):
         mic2 = Micrograph(fn)
         self.assertEqual(fn, mic2.getFileName())
 
-        volStk = 'all_volumes.stk'
+        volStk = '/data/current/volumes/all_volumes.stk'
         vol1 = Volume((1, volStk))
         self.assertEqual(1, vol1.getIndex())
         self.assertEqual(volStk, vol1.getFileName())
+
+        self.assertEqual('all_volumes.stk', vol1.getBaseName())
 
 
 class TestImageHandler(unittest.TestCase):
