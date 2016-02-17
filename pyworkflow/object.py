@@ -92,8 +92,11 @@ class Object(object):
         """
         attrList = attrName.split('.')
         obj = self
-        for attrName in attrList:
-            obj = getattr(obj, attrName)
+        for partName in attrList:
+            obj = getattr(obj, partName)
+            if obj is None:
+                raise Exception("Object.setAttributeValue: obj is None! attrName: "
+                                "%s, part: %s" % (attrName, partName))
         obj.set(value)
         
     def getAttributes(self):
