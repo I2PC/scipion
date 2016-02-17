@@ -32,69 +32,37 @@ Protocol wrapper around the MotionCorr for movie alignment
 import os, sys
 
 import pyworkflow.em as em
-import pyworkflow.utils.path as putils
+import pyworkflow.utils.path as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
-from pyworkflow.em.protocol import ProtProcessMovies
+from pyworkflow.em.protocol import ProtAlignMovies
 
 from convert import parseMovieAlignment
 
 
-class ProtMotionCorr(ProtProcessMovies):
+class ProtMotionCorr(ProtAlignMovies):
     """
     Wrapper protocol to Dose Fractionation Tool: Flat fielding and Drift correction
     Wrote by Xueming Li @ Yifan Cheng Lab, UCSF   
     """
-    
+
     _label = 'motioncorr alignment'
-    
+    CONVERT_TO_MRC = 'mrc'
+
     #--------------------------- DEFINE param functions --------------------------------------------
-    def _defineParams(self, form):
-        ProtProcessMovies._defineParams(self, form)
-        
+    def _defineAlignmentParams(self, form):
         form.addParam('gpuMsg', params.LabelParam, default=True,
                       label='WARNING! You need to have installed CUDA'
                             ' libraries and a nvidia GPU')
-        
-        group = form.addGroup('Alignment')
-        line = group.addLine('Remove frames to ALIGN from',
-                            help='How many frames remove'
-                                 ' from movie alignment.')
-        line.addParam('alignFrame0', params.IntParam, default=0, label='beginning')
-        line.addParam('alignFrameN', params.IntParam, default=0, label='end')
-        line = group.addLine('Remove frames to SUM from',
-                             help='How many frames you want remove to sum\n'
-                                  'from beginning and/or from the end of each movie.')
-        line.addParam('sumFrame0', params.IntParam, default=0, label='beginning')
-        line.addParam('sumFrameN', params.IntParam, default=0, label='end')
-        group.addParam('binFactor', params.IntParam, default=1,
-                       label='Binning factor',
-                       help='1x or 2x. Bin stack before processing.')
-        
-        line = group.addLine('Crop offsets (px)')
-        line.addParam('cropOffsetX', params.IntParam, default=0, label='X')
-        line.addParam('cropOffsetY', params.IntParam, default=0, label='Y')
-        
-        line = group.addLine('Crop dimensions (px)',
-                             help='How many pixels to crop from offset\n'
-                                  'If equal to 0, use maximum size.')
-        line.addParam('cropDimX', params.IntParam, default=0, label='X')
-        line.addParam('cropDimY', params.IntParam, default=0, label='Y')
-        
-        form.addParam('doSaveAveMic', params.BooleanParam, default=True,
-                      label="Save aligned micrograph", expertLevel=cons.LEVEL_ADVANCED)
-        
-        form.addParam('doSaveMovie', params.BooleanParam, default=False,
-                      label="Save movie", expertLevel=cons.LEVEL_ADVANCED,
-                      help="Save Aligned movie")
-        
+
+        ProtAlignMovies._defineAlignmentParams(self, form)
+
         group = form.addGroup('GPU', expertLevel=cons.LEVEL_ADVANCED)
-        
         group.addParam('GPUCore', params.IntParam, default=0,
-                      label="Choose GPU core",
-                      help="GPU may have several cores. Set it to zero"
-                           " if you do not know what we are talking about."
-                           " First core index is 0, second 1 and so on.")
+                       label="Choose GPU core",
+                       help="GPU may have several cores. Set it to zero"
+                            " if you do not know what we are talking about."
+                            " First core index is 0, second 1 and so on.")
         group.addParam('extraParams', params.StringParam, default='',
                        label='Additional parameters',
                        help="""
@@ -110,175 +78,85 @@ class ProtMotionCorr(ProtProcessMovies):
 -dsp       1                 1: Save quick results. 0: Not.
 -fsc       0                 1: Calculate and log FSC. 0: Not.
                             """)
-        
+
         form.addParallelSection(threads=0, mpi=0)
-    
+
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _processMovie(self, movieId, movieName, movieFolder, movieAlignment):
-        movieSet = self.inputMovies.get()
-        self._getFinalFrame(movieSet, movieId)
-        
-        if not (movieName.endswith("mrc") or movieName.endswith("mrcs")):
-            movieEm = os.path.join(movieFolder, movieName)
-            movieMrc = os.path.join(movieFolder, self._getNameExt(movieName, '', 'mrc'))
-            ih = em.ImageHandler()
-            ih.convertStack(movieEm, movieMrc)
-            movieName = os.path.basename(movieMrc)
-        
-        micFn = self._getNameExt(movieName, '_aligned', 'mrc')
-        alignedMovieFn = self._getCorrMovieName(movieId)
-        
-        logFile = self._getLogFile(movieId)
+    def _processMovie(self, movie):
+        inputMovies = self.inputMovies.get()
+        movieFolder = self._getOutputMovieFolder(movie)
+        outputMicFn = self._getOutputMicName(movie)
+        outputMovieFn = self._getOutputMovieName(movie)
+
+        # Get the number of frames and the range to be used for alignment and sum
+        numberOfFrames = movie.getNumberOfFrames()
+        a0, aN = self._getFrameRange(numberOfFrames, 'align')
+        s0, sN = self._getFrameRange(numberOfFrames, 'sum')
+
+        logFile = self._getLogFile(movie)
         args = {'-crx': self.cropOffsetX.get(),
                 '-cry': self.cropOffsetY.get(),
                 '-cdx': self.cropDimX.get(),
                 '-cdy': self.cropDimY.get(),
                 '-bin': self.binFactor.get(),
-                '-nst': self.alignFrame0.get(),
-                '-ned': self.frameN,
-                '-nss': self.sumFrame0.get(),
-                '-nes': self.frameNSum,
+                '-nst': a0,
+                '-ned': aN,
+                '-nss': s0,
+                '-nes': sN,
                 '-gpu': self.GPUCore.get(),
                 '-flg': logFile,
                 }
-        
-        command = '%s -fcs %s ' % (movieName, micFn)
+
+        # FIXME: Always produce the average micrograph?
+        command = '%s -fcs %s ' % (movie.getBaseName(), outputMicFn)
         command += ' '.join(['%s %s' % (k, v) for k, v in args.iteritems()])
-        
-        if movieSet.getGain():
-            command += " -fgr " + movieSet.getGain()
-            grayCorrected=True
-        
-        if movieSet.getDark():
-            command += " -fdr " + movieSet.getDark()
-            grayCorrected=True
-        
+
+        if inputMovies.getGain():
+            command += " -fgr " + inputMovies.getGain()
+
+        if inputMovies.getDark():
+            command += " -fdr " + inputMovies.getDark()
+
         if self.doSaveMovie:
-            command += " -fct %s -ssc 1" % alignedMovieFn
+            command += " -fct %s -ssc 1" % outputMovieFn
+
         command += ' ' + self.extraParams.get()
         program = 'dosefgpu_driftcorr'
+
         try:
+            #self.info("Running: %s %s" % (program, command))
             self.runJob(program, command, cwd=movieFolder)
         except:
             print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
-        
-        putils.cleanPattern(os.path.join(movieFolder, movieName))
-        putils.moveTree(self._getTmpPath(), self._getExtraPath())
-    
-    def createOutputStep(self):
-        inputMovies = self.inputMovies.get()
 
-        if self.doSaveMovie:
-            suffix = "_aligned"
-        else:
-            suffix = "_original"
-        movieSet = self._createSetOfMovies(suffix)
-        movieSet.copyInfo(inputMovies)
-        newSampling = inputMovies.getSamplingRate()*self.binFactor.get()
-        movieSet.setSamplingRate(newSampling)
-        
-        if self.doSaveAveMic:
-            micSet = self._createSetOfMicrographs()
-            micSet.copyInfo(inputMovies)
-            micSet.setSamplingRate(newSampling)
-        else:
-            micSet = None
-        
-        for movie in inputMovies:
-            self._createOutputMovie(movie, movieSet, micSet)
-        
-        self._defineOutputs(outputMovies=movieSet)
-        self._defineTransformRelation(self.inputMovies, movieSet)
-        
-        if self.doSaveAveMic:
-            self._defineOutputs(outputMicrographs=micSet)
-            self._defineSourceRelation(self.inputMovies, micSet)
-    
+        # FIXME: Why the following lines?
+        #putils.cleanPattern(os.path.join(movieFolder, movieName))
+        #putils.moveTree(self._getTmpPath(), self._getExtraPath())
+
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
         return summary
-    
+
     def _validate(self):
         errors = []
+        bin = int(self.binFactor.get())
 
-        if max(self.numberOfThreads, self.numberOfMpi) > 1:
-            errors.append("GPU and Parallelization can not be used together")
-
-        if not (self.binFactor == 1 or self.binFactor == 2):
+        if not (bin == 1 or bin == 2):
             errors.append("Binning factor can only be 1 or 2")
-            
+
         return errors
-    
+
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _getLogFile(self, movieId):
-        return 'micrograph_%06d_Log.txt' % movieId
-    
-    def _getFinalFrame(self, movieSet, movieId):
-        if getattr(self, 'frameN', None) is None:
-            movie = movieSet[movieId]
-            movieName = movie.getFileName()
-            
-            ih = em.ImageHandler()
-            _, _, z, n = ih.getDimensions(movieName)
-            self.totalFrames = max(z, n) - 1
-            frameN = self.alignFrameN.get()
-            
-            if frameN == 0:
-                self.frameN = 0
-            else:
-                self.frameN = self.totalFrames - frameN
-    
-            frameNSum = self.sumFrameN.get()
-            if frameNSum == 0:
-                self.frameNSum = 0
-            else:
-                self.frameNSum = self.totalFrames - frameNSum
-    
-    def _getExtraMovieFolder(self, movieId):
-        """ Create a Movie folder where to work with it. """
-        return self._getExtraPath('movie_%06d' % movieId)
-    
-    def _createOutputMovie(self, movie, movieSet, micSet=None):
-        movieId = movie.getObjId()
-        
-        movieFolder = self._getExtraMovieFolder(movieId)
-        movieName = os.path.join(movieFolder, self._getCorrMovieName(movieId))
-        micFn = os.path.join(movieFolder, self._getNameExt(movie.getFileName(),'_aligned', 'mrc'))
-        
-        # Parse the alignment parameters and store the log files
-        alignedMovie = movie.clone()
-        
-        if self.doSaveMovie:
-            alignedMovie.setFileName(movieName)
-            if self.frameN == 0:
-                totFrames = self.totalFrames
-            else:
-                totFrames = self.frameN
-            
-            diff = totFrames - self.alignFrame0.get() + 1
-            
-            alignment = em.MovieAlignment(first=self.alignFrame0.get()+1, 
-                                          last=totFrames+1,
-                                          shifts=[(0, 0)]*diff)
-        else:
-            alignment = parseMovieAlignment(os.path.join(movieFolder, 
-                                                         self._getLogFile(movieId)))
-        alignment.setRoi([self.cropOffsetX.get(), self.cropOffsetY.get(),
-                          self.cropDimX.get(), self.cropDimY.get()])
+    def _getMovieLogFile(self, movie):
+        return 'micrograph_%06d_Log.txt' % movie.getObjId()
 
-        #FIXME: Scale the shift accordinly when using binFactor of 2x.
-        #alignment.setScale(self.binFactor.get())
-        
-        alignedMovie.setAlignment(alignment)
-        movieSet.append(alignedMovie)
-        
-        if self.doSaveAveMic:
-            mic = micSet.ITEM_TYPE()
-            mic.setObjId(movieId)
-            mic.setFileName(micFn)
-            micSet.append(mic)
-
+    def _getMovieShifts(self, movie):
+        """ Returns the x and y shifts for the alignment of this movie.
+         The shifts should refer to the original micrograph without any binning.
+         In case of a bining greater than 1, the shifts should be scaled.
+        """
+        return parseMovieAlignment(self._getMovieLogFile(movie))
 
 
 

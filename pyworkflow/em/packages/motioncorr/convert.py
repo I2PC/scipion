@@ -63,6 +63,4 @@ def parseMovieAlignment(logFile):
             xshifts.append(float(parts[-2]))
             yshifts.append(float(parts[-1]))
     f.close()
-    #FIXME Check why we put the reference as the last frame
-    return MovieAlignment(first=first+1, last=first+len(xshifts)/2,
-                          xshifts=xshifts, yshifts=yshifts)
+    return xshifts, yshifts
