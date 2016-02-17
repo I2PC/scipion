@@ -531,7 +531,7 @@ void ProgMovieAlignmentCorrelation::run()
     if (bestIref>=0)
     {
     	MetaData mdIref;
-    	mdIref.setValue(MDL_REF,bestIref,mdIref.addObject());
+    	mdIref.setValue(MDL_REF,nfirst+bestIref,mdIref.addObject());
     	mdIref.write((FileName)"referenceFrame@"+fnOut,MD_APPEND);
     }
 }
