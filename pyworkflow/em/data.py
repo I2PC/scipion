@@ -370,18 +370,15 @@ class Image(EMObject):
 
     def getDimensions(self):
         """getDimensions is redundant here but not in setOfVolumes
-         create it makes easier to crete protocols for both images
+         create it makes easier to create protocols for both images
          and sets of images
         """
         self.getDim()
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
-        fn = self.getFileName()
-        if fn is not None and os.path.exists(fn.replace(':mrc', '')):
-            x, y, z, n = ImageHandler().getDimensions(self)
-            return x, y, z
-        return None
+        x, y, z, n = ImageHandler().getDimensions(self)
+        return None if x is None else (x, y, z)
 
     def getXDim(self):
         return self.getDim()[0] if self.getDim() is not None else 0
@@ -428,6 +425,9 @@ class Image(EMObject):
             
         self.setIndex(index)
         self.setFileName(filename)
+
+    def getBaseName(self):
+        return os.path.basename(self.getFileName())
         
     def copyInfo(self, other):
         """ Copy basic information """
@@ -1557,12 +1557,17 @@ class Movie(Micrograph):
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
         Consider compressed Movie files"""
+        return None if self.isCompressed() else Micrograph.getDim(self)
+
+    def getNumberOfFrames(self):
+        """ Return the number of frames of this movie
+        """
         if not self.isCompressed():
-            fn = self.getFileName()
-            if fn is not None and os.path.exists(fn.replace(':mrc', '')):
-                return ImageHandler().getDimensions(self)
+            x, y, z, n = ImageHandler().getDimensions(self)
+            if x is not None:
+                return max(z, n) # Protect against evil mrc files
         return None
-    
+
     def hasAlignment(self):
         return self._alignment is not None
     
