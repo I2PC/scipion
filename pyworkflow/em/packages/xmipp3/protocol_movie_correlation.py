@@ -26,7 +26,7 @@
 # *
 # **************************************************************************
 """
-Protocol wrapper around the MotionCorr for movie alignment
+Protocol wrapper around the xmipp correlation alignment for movie alignment
 """
 
 import sys
@@ -36,85 +36,26 @@ import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.protocol import ProtProcessMovies
 
-from convert import parseMovieAlignment
+# from convert import parseMovieAlignment
 
-
-# Alignment methods enum
-AL_MOTIONCORR = 0
-AL_CROSSCORRELATION = 1
-
-
-class ProtMotionCorr(ProtProcessMovies):
+class ProtMovieCorr(ProtProcessMovies):
     """
-    Wrapper protocol to Dose Fractionation Tool: Flat fielding and Drift correction
-    Wrote by Xueming Li @ Yifan Cheng Lab, UCSF   
+    Wrapper protocol to Xmipp Movie Alignment by cross-correlation
     """
     
-    _label = 'motioncorr alignment'
-             
+    _label = 'xmipp movie alignment'
+
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
         
-        group = form.addGroup('Common parameters')
-        line = group.addLine('How many frames remove to align',
-                            help='How many frames remove'
-                                 ' from movie alignment.')
-        line.addParam('alignFrame0', params.IntParam, default=0, label='from first')
-        line.addParam('alignFrameN', params.IntParam, default=0, label='to final')
+        # Specific parameters
+        form.addParam('splineOrder', params.IntParam, default=3, expertLevel=cons.LEVEL_ADVANCED,
+                      label='B-spline order',
+                      help="1 for linear interpolation (faster but lower quality), 3 for cubic interpolation (slower but more accurate).")
         
-        line = group.addLine('Crop offsets (px)')
-        line.addParam('cropOffsetX', params.IntParam, default=0, label='X')
-        line.addParam('cropOffsetY', params.IntParam, default=0, label='Y')
         
-        line = group.addLine('Crop dimensions (px)',
-                      help='How many pixels to crop from offset\n'
-                           'If equal to 0, use maximum size.')
-        line.addParam('cropDimX', params.IntParam, default=0, label='X')
-        line.addParam('cropDimY', params.IntParam, default=0, label='Y')
-                
-        form.addParam('doGPU', params.BooleanParam, default=False,
-                      label="Use GPU (vs CPU)",
-                      help="Set to true if you want the GPU implementation of Motioncorr")
-        
-        # GROUP GPU PARAMETERS
-        group = form.addGroup('GPU', condition="doGPU")
-        line = group.addLine('How many frames remove to sum',
-                             condition="doGPU",
-                             help='How many frames you want remove to sum\n'
-                                  'from beginning and/or to the end of each movie.')
-        line.addParam('sumFrame0', params.IntParam, default=0, label='from first')
-        line.addParam('sumFrameN', params.IntParam, default=0, label='to final')
-
-        group.addParam('GPUCore', params.IntParam, default=0, expertLevel=cons.LEVEL_ADVANCED,
-                      label="Choose GPU core",
-                      condition="doGPU",
-                      help="GPU may have several cores. Set it to zero"
-                           " if you do not know what we are talking about."
-                           " First core index is 0, second 1 and so on.")
-        group.addParam('binFactor', params.IntParam, default=1,
-                       condition="doGPU", label='Binning factor',
-                       help='1x or 2x. Bin stack before processing.')
-        group.addParam('extraParams', params.StringParam, default='',
-                       expertLevel=cons.LEVEL_ADVANCED, condition="doGPU",
-                       label='Additional parameters',
-                       help="""
--bft       150               BFactor in pix^2.
--pbx       96                Box dimension for searching CC peak.
--fod       2                 Number of frame offset for frame comparison.
--nps       0                 Radius of noise peak.
--sub       0                 1: Save as sub-area corrected sum. 0: Not.
--srs       0                 1: Save uncorrected sum. 0: Not.
--scc       0                 1: Save CC Map. 0: Not.
--slg       1                 1: Save Log. 0: Not.
--atm       1                 1: Align to middle frame. 0: Not.
--dsp       1                 1: Save quick results. 0: Not.
--fsc       0                 1: Calculate and log FSC. 0: Not.
-                            """)
-        
-        # GROUP CPU PARAMETERS
-        group = form.addGroup('CPU', condition="not doGPU")
-        group.addParam('filterFactor', params.FloatParam, default=4,
+        form.addParam('filterFactor', params.FloatParam, default=4,
                        condition="not doGPU", label='Filter at (A)',
                        help="For the calculation of the shifts with Xmipp, micrographs are "
                             "filtered (and downsized accordingly) to this resolution. "
@@ -124,12 +65,6 @@ class ProtMotionCorr(ProtProcessMovies):
                       label="Maximum shift (pixels)", condition="not doGPU",
                       help='Maximum allowed distance (in pixels) that each frame can be shifted'
                            'with respect to the next.')
-        form.addParam('doSaveAveMic', params.BooleanParam, default=True,
-                      label="Save aligned micrograph", expertLevel=cons.LEVEL_ADVANCED)
-        
-        form.addParam('doSaveMovie', params.BooleanParam, default=False,
-                      label="Save movie", expertLevel=cons.LEVEL_ADVANCED,
-                      help="Save Aligned movie")
         
         form.addParallelSection(threads=1, mpi=1)
     
@@ -139,140 +74,35 @@ class ProtMotionCorr(ProtProcessMovies):
         micFn = self._getNameExt(movieName, '_aligned', 'mrc')
         alignedMovieFn = self._getCorrMovieName(movieId)
         
-        if self.doGPU:
-            logFile = self._getLogFile(movieId)
-            args = {'-crx': self.cropOffsetX.get(),
-                    '-cry': self.cropOffsetY.get(),
-                    '-cdx': self.cropDimX.get(),
-                    '-cdy': self.cropDimY.get(),
-                    '-bin': self.binFactor.get(),
-                    '-nst': self.alignFrame0.get(),
-                    '-ned': self._getFinalFrame(movieName),
-                    '-nss': self.sumFrame0.get(),
-                    '-nes': self._getFinalFrame(movieName, "sum"),
-                    '-gpu': self.GPUCore.get(),
-                    '-flg': logFile,
-                    }
-            
-            command = '%s -fcs %s ' % (movieName, micFn)
-            command += ' '.join(['%s %s' % (k, v) for k, v in args.iteritems()])
-            
-            if movieSet.getGain():
-                command += " -fgr " + movieSet.getGain()
-                grayCorrected=True
-            
-            if movieSet.getDark():
-                command += " -fdr " + movieSet.getDark()
-                grayCorrected=True
-            
-            if self.doSaveMovie:
-                command += " -fct %s -ssc 1" (alignedMovieFn)
-
-            command += ' ' + self.extraParams.get()
-            
+        mdCorrelation = self._getNameExt(movieName, '_alignedCorrelation.xmd')
+        mdName = self._getNameExt(movieName, '_aligned', 'xmd')
+        
+        # Some movie have .mrc or .mrcs format but it is recognized as a volume
+        if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
+            movieSuffix = ':mrcs'
         else:
-            from pyworkflow.em.packages.xmipp3 import getEnviron
-            environ = getEnviron()
-            
-            program = 'xmipp_movie_alignment_correlation'
-            
-            mdCorrelation = self._getNameExt(movieName, '_alignedCorrelation.xmd')
-            mdName = self._getNameExt(movieName, '_aligned', 'xmd')
-            
-            # Some movie have .mrc or .mrcs format but it is recognized as a volume
-            if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
-                movieSuffix = ':mrcs'
-            else:
-                movieSuffix = ''
-            
-            command  = '-i %s%s ' % (movieName, movieSuffix)
-            command += '-o %s ' % mdCorrelation
-            command += '--sampling %f ' % self.samplingRate
-            command += '--max_freq %f ' % self.maxFreq
-            command += '--cropULCorner %d %d ' % (self.cropOffsetX.get(), self.cropOffsetY.get())
-            command += '--cropDRCorner %d %d ' % (self.cropOffsetX.get() + self.cropDimX.get() -1
-                                                 ,self.cropOffsetY.get() + self.cropDimY.get() -1)
-            
-            command += ' --frameRange %d %d '%(firstFrame, self._getFinalFrame(movieName))
-            command += ' --max_shift %d ' % self.maxShift
-            if self.doSaveAveMic:
-                command += ' --oavg %s' % micName
-            if self.doSaveMovie:
-                command += ' --oaligned %s' % alignedMovieFn
-            if self.inputMovies.get().getDark():
-                command += ' --dark ' + self.inputMovies.get().getDark()
-                grayCorrected=True
-            if self.inputMovies.get().getGain():
-                command += ' --gain ' + self.inputMovies.get().getGain()
-                grayCorrected=True
+            movieSuffix = ''
         
-        try:
-            self.runJob('dosefgpu_driftcorr', command, cwd=movieFolder, env=environ)
-        except:
-            print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
-
-
+        command  = '-i %s%s ' % (movieName, movieSuffix)
+        command += '-o %s ' % mdCorrelation
+        command += '--sampling %f ' % self.samplingRate
+        command += '--max_freq %f ' % self.maxFreq
+        command += '--cropULCorner %d %d ' % (self.cropOffsetX.get(), self.cropOffsetY.get())
+        command += '--cropDRCorner %d %d ' % (self.cropOffsetX.get() + self.cropDimX.get() -1
+                                             ,self.cropOffsetY.get() + self.cropDimY.get() -1)
         
-        
-        
-        
-        
-#         inputName = movieName
-#         micName = self._getMicName(movieId)
-#         logFile = self._getLogFile(movieId)
-#         gainFile = self.inputMovies.get().getGain()
-#         gpuId = self.gpuId.get()
-# 
-# # TODO Check better way to handle gain correction
-# #         if gainFile is not None:
-# #             # Apply the gain correction to flat the raw movie
-# #             correctedName = movieName.replace('.mrc', '_corrected.mrc')
-# #             
-# #             self.runJob('dosefgpu_flat', 
-# #                         '%(inputName)s %(correctedName)s %(gainFile)s %(gpuId)s' % locals(),
-# #                         cwd=movieFolder)
-# #            
-# #            inputName = correctedName
-#         
-#         args = {'-crx': self.cropOffsetX.get(),
-#                 '-cry': self.cropOffsetY.get(),
-#                 '-cdx': self.cropDimX.get(),
-#                 '-cdy': self.cropDimY.get(),
-#                 '-bin': self.binFactor.get(),
-#                 '-nst': self.alignFrame0.get(),
-#                 '-ned': self.alignFrameN.get(),
-#                 '-nss': self.sumFrame0.get(),
-#                 '-nes': self.sumFrameN.get(),
-#                 '-gpu': gpuId,
-#                 '-flg': logFile,
-#                 }
-#         
-#         #TODO: check the gain can be handle in dosefgpu_driftcoor program
-#         #if gainFile is not None:
-#         #    args['-fgr'] = gainFile
-#         
-#         command = '%(inputName)s -fcs %(micName)s ' % locals()
-#         command += ' '.join(['%s %s' % (k, v) for k, v in args.iteritems()])
-#         command += ' ' + self.extraParams.get()
-# 
-#         self.runJob('dosefgpu_driftcorr', command, cwd=movieFolder)
-#         # Move the micrograph and alignment text file
-#         # before clean of movie folder
-#         moveFile(join(movieFolder, micName), self._getExtraPath())
-#         moveFile(join(movieFolder, logFile), self._getExtraPath())        
-
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        command += ' --frameRange %d %d '%(self.alignFrame0.get(), self._getFinalFrame(movieName,"align"))
+        command += ' --frameRangeSum %d %d '%(self.sumFrame0.get(), self._getFinalFrame(movieName,"sum"))
+        command += ' --max_shift %d ' % self.maxShift
+        if self.doSaveAveMic:
+            command += ' --oavg %s' % micName
+        if self.doSaveMovie:
+            command += ' --oaligned %s' % alignedMovieFn
+        if self.inputMovies.get().getDark():
+            command += ' --dark ' + self.inputMovies.get().getDark()
+        if self.inputMovies.get().getGain():
+            command += ' --gain ' + self.inputMovies.get().getGain()
+        self.runJob('xmipp_movie_alignment_correlation',command, numberOfMpi=1)
         
         
     def createOutputStep(self):
@@ -296,7 +126,7 @@ class ProtMotionCorr(ProtProcessMovies):
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
             logFile = self._getExtraPath(self._getLogFile(movieId))
-            alignment = parseMovieAlignment(logFile)
+#             alignment = parseMovieAlignment(logFile)
             alignedMovie.setAlignment(alignment)
             movieSet.append(alignedMovie)
             
@@ -320,7 +150,7 @@ class ProtMotionCorr(ProtProcessMovies):
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getLogFile(self, movieId):
-        return 'micrograph_%06d_Log.txt' % movieId
+        return 'micrograph_%06d_log.txt' % movieId
     
     def _getFinalFrame(self, movieName, met="align"):
         ih = em.ImageHandler()
