@@ -28,6 +28,11 @@
 #include <data/xmipp_fftw.h>
 #include <data/filters.h>
 
+
+#define OUTSIDE_WRAP 0
+#define OUTSIDE_AVG 1
+#define OUTSIDE_VALUE 2
+
 // Read arguments ==========================================================
 void ProgMovieAlignmentCorrelation::readParams()
 {
@@ -53,6 +58,17 @@ void ProgMovieAlignmentCorrelation::readParams()
     bin = getDoubleParam("--bin");
     BsplineOrder = getIntParam("--Bspline");
     show();
+
+    String outside=getParam("--outside");
+    if (outside=="wrap")
+    	outsideMode = OUTSIDE_WRAP;
+    else if (outside=="avg")
+    	outsideMode = OUTSIDE_AVG;
+    else if (outside=="value")
+    {
+    	outsideMode = OUTSIDE_VALUE;
+    	outsideValue = getDoubleParam("--outside",1);
+    }
 }
 
 // Show ====================================================================
@@ -107,6 +123,11 @@ void ProgMovieAlignmentCorrelation::defineParams()
     addParamsLine("  [--gain <fn=\"\">]           : Gain correction image");
     addParamsLine("  [--useInputShifts]           : Do not calculate shifts and use the ones in the input file");
     addParamsLine("  [--Bspline <order=3>]        : B-spline order for the final interpolation (1 or 3)");
+    addParamsLine("  [--outside <mode=wrap> <v=0>]: How to deal with borders (wrap, substitute by avg, or substitute by value)");
+    addParamsLine("      where <mode>");
+    addParamsLine("             wrap              : Wrap the image to deal with borders");
+    addParamsLine("             avg               : Fill borders with the average of the frame");
+    addParamsLine("             value             : Fill borders with a specific value v");
     addExampleLine("A typical example",false);
     addExampleLine("xmipp_movie_alignment_correlation -i movie.xmd --oaligned alignedMovie.stk --oavg alignedMicrograph.mrc");
     addSeeAlsoLine("xmipp_movie_optical_alignment_cpu");
@@ -169,7 +190,7 @@ void ProgMovieAlignmentCorrelation::run()
         nlastSum=movie.size();
 
 	FileName fnFrame;
-	Image<double> frame, cropedFrame, reducedFrame, shiftedFrame, averageMicrograph, dark, gain;
+	Image<double> frame, croppedFrame, reducedFrame, shiftedFrame, averageMicrograph, dark, gain;
     Matrix1D<double> shift(2);
     if (!useInputShifts)
     {
@@ -251,20 +272,19 @@ void ProgMovieAlignmentCorrelation::run()
 			{
 				movie.getValue(MDL_IMAGE,fnFrame,__iter.objId);
 				if (yDRcorner==-1)
-					cropedFrame.read(fnFrame);
+					croppedFrame.read(fnFrame);
 				else
 				{
 					frame.read(fnFrame);
-					frame().window(cropedFrame(), yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+					frame().window(croppedFrame(), yLTcorner, xLTcorner, yDRcorner, xDRcorner);
 				}
 				if (XSIZE(dark())>0)
-					cropedFrame()-=dark();
+					croppedFrame()-=dark();
 				if (XSIZE(gain())>0)
-					cropedFrame()*=gain();
+					croppedFrame()*=gain();
 
 				// Reduce the size of the input frame
-				//scaleToSizeFourier(1,newYdim,newXdim,frame(),reducedFrame());
-				scaleToSizeFourier(1,newYdim,newXdim,cropedFrame(),reducedFrame());
+				scaleToSizeFourier(1,newYdim,newXdim,croppedFrame(),reducedFrame());
 
 				// Now do the Fourier transform and filter
 				MultidimArray< std::complex<double> > *reducedFrameFourier=new MultidimArray< std::complex<double> >;
@@ -301,7 +321,7 @@ void ProgMovieAlignmentCorrelation::run()
 		// Free useless memory
 		filter.clear();
 		reducedFrame.clear();
-		cropedFrame.clear();
+		croppedFrame.clear();
 		frame.clear();
 
 		// Now compute all shifts
@@ -450,7 +470,7 @@ void ProgMovieAlignmentCorrelation::run()
     }
 
     // Apply shifts and compute average
-    int n=0;
+	int n=0;
     int j=0;
 	size_t N=0;
     FOR_ALL_OBJECTS_IN_METADATA(movie)
@@ -458,25 +478,34 @@ void ProgMovieAlignmentCorrelation::run()
         if (n>=nfirstSum && n<=nlastSum)
         {
             movie.getValue(MDL_IMAGE,fnFrame,__iter.objId);
-            if (yDRcorner==-1)
-                cropedFrame.read(fnFrame);
-            else
-            {
-                frame.read(fnFrame);
-                frame().window(cropedFrame(), yLTcorner, xLTcorner, yDRcorner, xDRcorner);
-            }
-            if (XSIZE(dark())>0)
-            	cropedFrame()-=dark();
-            if (XSIZE(gain())>0)
-            	cropedFrame()*=gain();
-
             movie.getValue(MDL_SHIFT_X,XX(shift),__iter.objId);
             movie.getValue(MDL_SHIFT_Y,YY(shift),__iter.objId);
-
             std::cout << fnFrame << " shiftX=" << XX(shift) << " shiftY=" << YY(shift) << std::endl;
+
+            frame.read(fnFrame);
+            if (XSIZE(dark())>0)
+            	croppedFrame()-=dark();
+            if (XSIZE(gain())>0)
+            	croppedFrame()*=gain();
+            if (yDRcorner!=-1)
+                frame().window(croppedFrame(), yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+            else
+            	croppedFrame()=frame();
+            if (bin>0)
+            {
+            	scaleToSizeFourier(1,floor(YSIZE(croppedFrame())/bin),floor(XSIZE(croppedFrame())/bin),croppedFrame(),reducedFrame());
+            	shift/=bin;
+            	croppedFrame()=reducedFrame();
+            }
+
             if (fnAligned!="" || fnAvg!="")
             {
-                translate(BsplineOrder,shiftedFrame(),cropedFrame(),shift,WRAP);
+            	if (outsideMode == OUTSIDE_WRAP)
+            		translate(BsplineOrder,shiftedFrame(),croppedFrame(),shift,WRAP);
+            	else if (outsideMode == OUTSIDE_VALUE)
+            		translate(BsplineOrder,shiftedFrame(),croppedFrame(),shift,DONT_WRAP, outsideValue);
+            	else
+            		translate(BsplineOrder,shiftedFrame(),croppedFrame(),shift,DONT_WRAP, croppedFrame().computeAvg());
                 if (fnAligned!="")
                     shiftedFrame.write(fnAligned,j+1,true,WRITE_REPLACE);
                 if (fnAvg!="")

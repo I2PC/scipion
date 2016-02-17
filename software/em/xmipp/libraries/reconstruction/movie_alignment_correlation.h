@@ -31,6 +31,7 @@
 /**@defgroup MovieAlignmentCorrelation Movie alignment by correlation
    @ingroup ReconsLibrary */
 //@{
+
 /** Movie alignment correlation Parameters. */
 class ProgMovieAlignmentCorrelation: public XmippProgram
 {
@@ -63,6 +64,10 @@ public:
     double bin;
     /** Bspline order */
     int BsplineOrder;
+    /** Outside mode */
+    int outsideMode;
+    /** Outside value */
+    double outsideValue;
 
     /*****************************/
     /** crop corner **/
