@@ -133,17 +133,17 @@ class ProtAlignMovies(ProtProcessMovies):
 
     def _createOutputMovie(self, movie, movieSet, micSet=None):
         movieId = movie.getObjId()
-        movieFolder = self._getOutputMovieFolder(movie)
-        movieName = os.path.join(movieFolder, self._getOutputMovieName(movie))
-        micFn = os.path.join(movieFolder, self._getOutputMicName(movie))
-        
+
         # Parse the alignment parameters and store the log files
         alignedMovie = movie.clone()
         n = 10000
         first, last = self._getFrameRange(n, 'align')
 
         if self.doSaveMovie:
-            alignedMovie.setFileName(movieName)
+            # The subclass protocol is responsible of generating the output
+            # movie file in the extra path with the required name
+            extraMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
+            alignedMovie.setFileName(extraMovieFn)
             # When the output movies are saved, the shifts
             # will be set to zero since they are aligned
             xshifts = [0] * (last - first + 1)
@@ -163,23 +163,29 @@ class ProtAlignMovies(ProtProcessMovies):
         if self.doSaveAveMic:
             mic = micSet.ITEM_TYPE()
             mic.setObjId(movieId)
-            mic.setFileName(micFn)
+            # The subclass protocol is responsible of generating the output
+            # micrograph file in the extra path with the required name
+            extraMicFn = self._getExtraPath(self._getOutputMicName(movie))
+            mic.setFileName(extraMicFn)
             micSet.append(mic)
 
 
     #---------- Hook functions that need to be implemented in subclasses ------
 
+    def _getMovieRoot(self, movie):
+        return pwutils.removeBaseExt(movie.getFileName())
+
     def _getOutputMovieName(self, movie):
         """ Returns the name of the output movie.
         (relative to micFolder)
         """
-        return 'movie_%06d.mrcs' % movie.getObjId()
+        return self._getMovieRoot(movie) + '_aligned_movie.mrcs'
 
     def _getOutputMicName(self, movie):
         """ Returns the name of the output micrograph
         (relative to micFolder)
         """
-        return pwutils.removeBaseExt(movie.getFileName()) + '_aligned.mrc'
+        return self._getMovieRoot(movie) + '_aligned_mic.mrc'
 
     def _getMovieShifts(self, movie):
         """ Returns the x and y shifts for the alignment of this movie.
