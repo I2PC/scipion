@@ -43,11 +43,15 @@ void ProgMovieAlignmentCorrelation::readParams()
     fnAvg = getParam("--oavg");
     nfirst = getIntParam("--frameRange",0);
     nlast = getIntParam("--frameRange",1);
+    nfirstSum = getIntParam("--frameRangeSum",0);
+    nlastSum = getIntParam("--frameRangeSum",1);
     xLTcorner= getIntParam("--cropULCorner",0);
     yLTcorner= getIntParam("--cropULCorner",1);
     xDRcorner = getIntParam("--cropDRCorner",0);
     yDRcorner = getIntParam("--cropDRCorner",1);
     useInputShifts = checkParam("--useInputShifts");
+    bin = getDoubleParam("--bin");
+    BsplineOrder = getIntParam("--Bspline");
     show();
 }
 
@@ -67,10 +71,13 @@ void ProgMovieAlignmentCorrelation::show()
     << "Solver iterations:   " << solverIterations   << std::endl
     << "Aligned movie:       " << fnAligned          << std::endl
     << "Aligned micrograph:  " << fnAvg              << std::endl
-    << "Frame range:         " << nfirst << " " << nlast << std::endl
+    << "Frame range alignment: " << nfirst << " " << nlast << std::endl
+    << "Frame range sum:       " << nfirstSum << " " << nlastSum << std::endl
     << "Crop corners  " << "(" << xLTcorner << ", " << yLTcorner << ") "
-    << "(" << xDRcorner << ", " << yDRcorner << ") "
+    << "(" << xDRcorner << ", " << yDRcorner << ") " << std::endl
 	<< "Use input shifts:    " << useInputShifts     << std::endl
+	<< "Binning factor:      " << bin                << std::endl
+	<< "Bspline:             " << BsplineOrder       << std::endl
     ;
 }
 
@@ -79,20 +86,27 @@ void ProgMovieAlignmentCorrelation::defineParams()
 {
     addUsageLine("Align a set of frames by cross-correlation of the frames");
     addParamsLine("   -i <metadata>               : Metadata with the list of frames to align");
-    addParamsLine("  [-o <fn=\"OUT.xmd\">]               : Metadata with the shifts of each frame.");
+    addParamsLine("  [-o <fn=\"out.xmd\">]        : Metadata with the shifts of each frame.");
     addParamsLine("                               : If no filename is given, the input is rewritten");
+    addParamsLine("  [--bin <s=-1>]               : Binning factor, it may be any floating number");
+    addParamsLine("                               :+Binning in Fourier is the first operation, so that");
+    addParamsLine("                               :+crop parameters are referred to the binned images");
+    addParamsLine("                               :+By default, -1, the binning is automatically calculated ");
+    addParamsLine("                               :+as a function of max_freq.");
     addParamsLine("  [--max_shift <s=-1>]         : Maximum shift allowed in pixels");
     addParamsLine("  [--max_freq <s=4>]           : Maximum resolution to align (in Angstroms)");
     addParamsLine("  [--sampling <Ts=1>]          : Sampling rate (A/pixel)");
     addParamsLine("  [--solverIterations <N=2>]   : Number of robust least squares iterations");
     addParamsLine("  [--oaligned <fn=\"\">]       : Give the name of a stack if you want to generate an aligned movie");
     addParamsLine("  [--oavg <fn=\"\">]           : Give the name of a micrograph to generate an aligned micrograph");
-    addParamsLine("  [--frameRange <n0=-1> <nF=-1>]  : First and last frame to process, frame numbers start at 0");
+    addParamsLine("  [--frameRange <n0=-1> <nF=-1>]  : First and last frame to align, frame numbers start at 0");
+    addParamsLine("  [--frameRangeSum <n0=-1> <nF=-1>]  : First and last frame to sum, frame numbers start at 0");
     addParamsLine("  [--cropULCorner <x=0> <y=0>]    : crop up left corner (unit=px, index starts at 0)");
     addParamsLine("  [--cropDRCorner <x=-1> <y=-1>]    : crop down right corner (unit=px, index starts at 0), -1 -> no crop");
     addParamsLine("  [--dark <fn=\"\">]           : Dark correction image");
     addParamsLine("  [--gain <fn=\"\">]           : Gain correction image");
     addParamsLine("  [--useInputShifts]           : Do not calculate shifts and use the ones in the input file");
+    addParamsLine("  [--Bspline <order=3>]        : B-spline order for the final interpolation (1 or 3)");
     addExampleLine("A typical example",false);
     addExampleLine("xmipp_movie_alignment_correlation -i movie.xmd --oaligned alignedMovie.stk --oavg alignedMicrograph.mrc");
     addSeeAlsoLine("xmipp_movie_optical_alignment_cpu");
@@ -149,27 +163,44 @@ void ProgMovieAlignmentCorrelation::run()
         nfirst=0;
     if (nlast<0)
         nlast=movie.size();
+    if (nfirstSum<0)
+        nfirstSum=0;
+    if (nlastSum<0)
+        nlastSum=movie.size();
 
 	FileName fnFrame;
 	Image<double> frame, cropedFrame, reducedFrame, shiftedFrame, averageMicrograph, dark, gain;
     Matrix1D<double> shift(2);
     if (!useInputShifts)
     {
-		// Determine target size of the images
-		const double targetOccupancy=0.9; // Set to 1 if you want fmax maps onto 1/(2*newTs)
-		newTs=targetOccupancy*maxFreq/2;
-		if (newTs<Ts)
-			newTs=Ts;
-		getImageSize(movie,Xdim, Ydim, Zdim, Ndim);
+    	double sizeFactor=1.0;
+		double targetOccupancy=1.0; // Set to 1 if you want fmax maps onto 1/(2*newTs)
+    	if (bin<0)
+    	{
+    		targetOccupancy=0.9; // Set to 1 if you want fmax maps onto 1/(2*newTs)
+			// Determine target size of the images
+			newTs=targetOccupancy*maxFreq/2;
+			if (newTs<Ts)
+				newTs=Ts;
+			sizeFactor=Ts/newTs;
+			std::cout << "Estimated binning factor = " << 1/sizeFactor << std::endl;
+    	}
+    	else
+    	{
+    		newTs = bin*Ts;
+    		sizeFactor=1.0/bin;
+    		targetOccupancy=2*newTs/maxFreq;
+    	}
+
+		getImageSize(movie, Xdim, Ydim, Zdim, Ndim);
 		if (yDRcorner!=-1)
 		{
 			Xdim = xDRcorner - xLTcorner +1 ;
 			Ydim = yDRcorner - yLTcorner +1 ;
 		}
-
 		if (Zdim!=1)
 			REPORT_ERROR(ERR_ARG_INCORRECT,"This program is meant to align 2D frames, not 3D");
-		double sizeFactor=Ts/newTs;
+
 		newXdim=int(Xdim*sizeFactor);
 		newYdim=int(Ydim*sizeFactor);
 
@@ -211,9 +242,11 @@ void ProgMovieAlignmentCorrelation::run()
 			if (isinf(avg) || isnan(avg))
 				REPORT_ERROR(ERR_ARG_INCORRECT,"The input gain image is incorrect, its inverse produces infinite or nan");
 		}
+
+		MultidimArray<double> filter;
+		bool firstImage=true;
 		FOR_ALL_OBJECTS_IN_METADATA(movie)
 		{
-
 			if (n>=nfirst && n<=nlast)
 			{
 				movie.getValue(MDL_IMAGE,fnFrame,__iter.objId);
@@ -236,15 +269,24 @@ void ProgMovieAlignmentCorrelation::run()
 				// Now do the Fourier transform and filter
 				MultidimArray< std::complex<double> > *reducedFrameFourier=new MultidimArray< std::complex<double> >;
 				transformer.FourierTransform(reducedFrame(),*reducedFrameFourier,true);
-				FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*reducedFrameFourier)
+				if (firstImage)
 				{
-					FFT_IDX2DIGFREQ(i,newYdim,YY(w));
-					FFT_IDX2DIGFREQ(j,newXdim,XX(w));
-					double wabs=w.module();
-					if (wabs>targetOccupancy)
-						A2D_ELEM(*reducedFrameFourier,i,j)=zero;
-					else
-						A2D_ELEM(*reducedFrameFourier,i,j)*=lpf.interpolatedElement1D(wabs*newXdim);
+					filter.initZeros(*reducedFrameFourier);
+					FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*reducedFrameFourier)
+					{
+						FFT_IDX2DIGFREQ(i,newYdim,YY(w));
+						FFT_IDX2DIGFREQ(j,newXdim,XX(w));
+						double wabs=w.module();
+						if (wabs<=targetOccupancy)
+							A2D_ELEM(filter,i,j)=lpf.interpolatedElement1D(wabs*newXdim);
+					}
+					firstImage = false;
+				}
+				for (size_t nn=0; nn<filter.nzyxdim; ++nn)
+				{
+					double wlpf=DIRECT_MULTIDIM_ELEM(filter,nn);
+					if (wlpf!=0)
+						DIRECT_MULTIDIM_ELEM(*reducedFrameFourier,nn) *= wlpf;
 				}
 
 				frameFourier.push_back(reducedFrameFourier);
@@ -257,6 +299,7 @@ void ProgMovieAlignmentCorrelation::run()
 			progress_bar(movie.size());
 
 		// Free useless memory
+		filter.clear();
 		reducedFrame.clear();
 		cropedFrame.clear();
 		frame.clear();
@@ -406,13 +449,13 @@ void ProgMovieAlignmentCorrelation::run()
     	}
     }
 
-    // Compute shifts
+    // Apply shifts and compute average
     int n=0;
     int j=0;
 	size_t N=0;
     FOR_ALL_OBJECTS_IN_METADATA(movie)
     {
-        if (n>=nfirst && n<=nlast)
+        if (n>=nfirstSum && n<=nlastSum)
         {
             movie.getValue(MDL_IMAGE,fnFrame,__iter.objId);
             if (yDRcorner==-1)
@@ -433,7 +476,7 @@ void ProgMovieAlignmentCorrelation::run()
             std::cout << fnFrame << " shiftX=" << XX(shift) << " shiftY=" << YY(shift) << std::endl;
             if (fnAligned!="" || fnAvg!="")
             {
-                translate(BSPLINE3,shiftedFrame(),cropedFrame(),shift,WRAP);
+                translate(BsplineOrder,shiftedFrame(),cropedFrame(),shift,WRAP);
                 if (fnAligned!="")
                     shiftedFrame.write(fnAligned,j+1,true,WRITE_REPLACE);
                 if (fnAvg!="")
@@ -455,7 +498,5 @@ void ProgMovieAlignmentCorrelation::run()
         averageMicrograph()/=N;
         averageMicrograph.write(fnAvg);
     }
-    if (fnOut=="")
-        std::cerr << "DEBUG_ROB: HORROR: This cannot happen " << std::endl;
     movie.write(fnOut);
 }

@@ -55,8 +55,15 @@ public:
     FileName fnOut;
     /** First and last frame*/
     int nfirst, nlast;
+    /** First and last frame*/
+    int nfirstSum, nlastSum;
     /** Do not calculate and use the input shifts */
     bool useInputShifts;
+    /** Binning factor */
+    double bin;
+    /** Bspline order */
+    int BsplineOrder;
+
     /*****************************/
     /** crop corner **/
     /*****************************/
