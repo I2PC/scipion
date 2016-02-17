@@ -69,11 +69,11 @@ class ProtCTFFind(em.ProtCTFMicrographs):
               help='Lower bound of the search for additional phase shift. '
 		   'Phase shift is of scattered electrons relative to unscattered electrons. In radians.',
               expertLevel=params.LEVEL_ADVANCED)
-        group.addParam('maxPhaseShift', params.FloatParam, default=0.1,
+        group.addParam('maxPhaseShift', params.FloatParam, default=3.15,
               label="Maximum phase shift (rad)", condition='findPhaseShift',
               help='Upper bound of the search for additional phase shift. '
 		   'Phase shift is of scattered electrons relative to unscattered electrons. In radians. '
-		   'Please use values between 0.10 and 3.15',
+		   'Please use value between 0.10 and 3.15',
               expertLevel=params.LEVEL_ADVANCED)
         group.addParam('stepPhaseShift', params.FloatParam, default=0.2,
               label="Phase shift search step (rad)", condition='findPhaseShift',
