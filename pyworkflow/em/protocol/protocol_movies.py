@@ -142,12 +142,12 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         # is not executed in parallel, here we get the params
         # to pass to the actual step that is gone to be executed later on
         movieStepId = self._insertFunctionStep('processMovieStep',
-                                               movie.getObjId(), movie.getFileName(),
+                                               movie.getObjId(), movie.getFileName(), movie.getAlignment(),
                                                prerequisites=[])
         return movieStepId
 
     #--------------------------- STEPS functions ---------------------------------------------------
-    def processMovieStep(self, movieId, movieFn, *args):
+    def processMovieStep(self, movieId, movieFn, movieAlignment, *args):
         movieFolder = self._getMovieFolder(movieId)
         movieName = basename(movieFn)
         #export SCIPION_DEBUG=1 # passwd=a
@@ -176,8 +176,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             if movieMrc.endswith('.em'):
                 movieMrc = movieMrc + ":ems"
 
-            self._processMovie(movieId, movieMrc, movieFolder, *args)
-            
+            self._processMovie(movieId, movieMrc, movieFolder, movieAlignment, *args)
+
             if self.cleanMovieData:
                 print "erasing.....movieFolder: ", movieFolder
                 os.system('rm -rf %s' % movieFolder)

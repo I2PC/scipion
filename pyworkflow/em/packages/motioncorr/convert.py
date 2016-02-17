@@ -50,8 +50,9 @@ def parseMovieAlignment(logFile):
     """
     f = open(logFile)
     first = None
-    shifts = []
-    
+    xshifts = []
+    yshifts = []
+
     for line in f:
         l = line.strip()
         if 'Add Frame #' in l:
@@ -59,9 +60,9 @@ def parseMovieAlignment(logFile):
             if first is None: # read the first frame number
                 first = int(parts[2][1:]) # take the id from #000 format
             # take the id from the last two colums of the line
-            shifts.append(float(parts[-2]))
-            shifts.append(float(parts[-1]))
-            
+            xshifts.append(float(parts[-2]))
+            yshifts.append(float(parts[-1]))
     f.close()
-    
-    return MovieAlignment(first=first+1, last=first+len(shifts)/2, shifts=shifts)
+    #FIXME Check why we put the reference as the last frame
+    return MovieAlignment(first=first+1, last=first+len(xshifts)/2,
+                          xshifts=xshifts, yshifts=yshifts)
