@@ -36,7 +36,7 @@ from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCE
 from pyworkflow.protocol.constants import STEPS_PARALLEL, STATUS_NEW
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.data import SetOfMovies, Movie, MovieAlignment
+from pyworkflow.em.data import SetOfMovies, Movie, MovieAlignment, Acquisition
 from pyworkflow.em.convert import ImageHandler
 
 from protocol_micrographs import ProtPreprocessMicrographs
@@ -160,13 +160,14 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     #--------------------------- STEPS functions -----------------------------
     def processMovieStep(self, movieDict, hasAlignment):
         movie = Movie()
+        movie.setAcquisition(Acquisition())
 
         if hasAlignment:
             movie.setAlignment(MovieAlignment())
 
         movie.setAttributesFromDict(movieDict, setBasic=True)
 
-        movieFolder = self._getMovieFolder(movie)
+        movieFolder = self._getOutputMovieFolder(movie)
         movieFn = movie.getFileName()
         movieName = basename(movieFn)
 
@@ -209,7 +210,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             self._processMovie(movie)
 
             if self.cleanMovieData:
-                self.info("Erasing.....movieFolder: ", movieFolder)
+                self.info("Erasing.....movieFolder: %s" % movieFolder)
                 os.system('rm -rf %s' % movieFolder)
                 # cleanPath(movieFolder)
             else:

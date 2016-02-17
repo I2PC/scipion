@@ -29,15 +29,13 @@
 Protocol wrapper around the MotionCorr for movie alignment
 """
 
-import os, sys
+import os
 
-import pyworkflow.utils.path as putils
+import pyworkflow.utils.path as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
-
 from pyworkflow.em.data import MovieAlignment
 from pyworkflow.em.protocol import ProtProcessMovies
-from pyworkflow.em.convert import ImageHandler
 
 
 class ProtAlignMovies(ProtProcessMovies):
@@ -135,7 +133,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
     def _createOutputMovie(self, movie, movieSet, micSet=None):
         movieId = movie.getObjId()
-        movieFolder = self._getExtraMovieFolder(movieId)
+        movieFolder = self._getOutputMovieFolder(movie)
         movieName = os.path.join(movieFolder, self._getOutputMovieName(movie))
         micFn = os.path.join(movieFolder, self._getOutputMicName(movie))
         
@@ -172,12 +170,16 @@ class ProtAlignMovies(ProtProcessMovies):
     #---------- Hook functions that need to be implemented in subclasses ------
 
     def _getOutputMovieName(self, movie):
-        """ Returns the name of the output movie (relative to micFolder) """
-        pass
+        """ Returns the name of the output movie.
+        (relative to micFolder)
+        """
+        return 'movie_%06d.mrcs' % movie.getObjId()
 
     def _getOutputMicName(self, movie):
-        """ Returns the name of the output micrograph (relative to micFolder) """
-        pass
+        """ Returns the name of the output micrograph
+        (relative to micFolder)
+        """
+        return pwutils.removeBaseExt(movie.getFileName()) + '_aligned.mrc'
 
     def _getMovieShifts(self, movie):
         """ Returns the x and y shifts for the alignment of this movie.
