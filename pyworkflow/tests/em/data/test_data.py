@@ -36,6 +36,15 @@ class TestImage(unittest.TestCase):
         # Check that setFileName-getFileName is working properly        
         self.assertEqual(fn, mic.getFileName())
 
+        # Check the location is accepted from constructor
+        mic2 = Micrograph(fn)
+        self.assertEqual(fn, mic2.getFileName())
+
+        volStk = 'all_volumes.stk'
+        vol1 = Volume((1, volStk))
+        self.assertEqual(1, vol1.getIndex())
+        self.assertEqual(volStk, vol1.getFileName())
+
 
 class TestImageHandler(unittest.TestCase):
     @classmethod
