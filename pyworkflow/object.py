@@ -316,15 +316,43 @@ class Object(object):
                 if not isinstance(v, Scalar):
                     v.__getObjDict(kPrefix, objDict, includeClass)
             
-    def getObjDict(self, includeClass=False):
+    def getObjDict(self, includeClass=False, includeBasic=False):
         """ Return all attributes and values in a dictionary.
         Nested attributes will be separated with a dot in the dict key.
+        Params:
+            includeClass: if True, the values will be a tuple (ClassName, value)
+                otherwise only the values of the attributes
+            includeBasic: if True include the id, label and comment.
+                object.id: objId
+                object.label: objLabel
+                object.comment: objComment
         """
         d = OrderedDict()
+
         if includeClass:
             d['self'] = (self.getClassName(),)
+
+        if includeBasic:
+            d['object.id'] = self.getObjId()
+            d['object.label'] = self.getObjLabel()
+            d['object.comment'] = self.getObjComment()
+
         self.__getObjDict('', d, includeClass)
+
         return d
+
+    def setAttributesFromDict(self, attrDict, setBasic=True):
+        """ Set object attributes from the dict obtained from getObjDict.
+         WARNING: this function is yet experimental and not fully tested.
+        """
+        if setBasic:
+            self.setObjId(attrDict.get('object.id', None))
+            self.setObjLabel(attrDict.get('object.label', ''))
+            self.setObjComment(attrDict.get('object.comment', ''))
+
+        for attrName, value in attrDict.iteritems():
+            if not attrName.startswith('object.'):
+                self.setAttributeValue(attrName, value)
             
     def __getMappedDict(self, prefix, objDict):
         if prefix:
