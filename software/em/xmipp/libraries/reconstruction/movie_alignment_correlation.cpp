@@ -159,6 +159,7 @@ void ProgMovieAlignmentCorrelation::run()
 {
     MetaData movie;
     size_t Xdim, Ydim, Zdim, Ndim;
+	int bestIref=-1;
 
     //if input is an stack create a metadata.
     if (fnMovie.isMetaData())
@@ -410,7 +411,6 @@ void ProgMovieAlignmentCorrelation::run()
 
 		// Choose reference image as the minimax of shifts
 		double worstShiftEver=1e38;
-		int bestIref=-1;
 		for (int iref=0; iref<N; ++iref)
 		{
 			double worstShift=-1;
@@ -527,5 +527,11 @@ void ProgMovieAlignmentCorrelation::run()
         averageMicrograph()/=N;
         averageMicrograph.write(fnAvg);
     }
-    movie.write(fnOut);
+    movie.write((FileName)"frameShifts@"+fnOut);
+    if (bestIref>=0)
+    {
+    	MetaData mdIref;
+    	mdIref.setValue(MDL_REF,bestIref,mdIref.addObject());
+    	mdIref.write((FileName)"referenceFrame@"+fnOut,MD_APPEND);
+    }
 }
