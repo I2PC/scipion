@@ -29,150 +29,107 @@
 Protocol wrapper around the xmipp correlation alignment for movie alignment
 """
 
-import sys
-
-import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
-from pyworkflow.em.protocol import ProtProcessMovies
+from pyworkflow.em.protocol import ProtAlignMovies
+import pyworkflow.em.metadata as md
+from convert import getMovieFileName
 
-# from convert import parseMovieAlignment
 
-class ProtMovieCorr(ProtProcessMovies):
+
+class XmippProtMovieCorr(ProtAlignMovies):
     """
     Wrapper protocol to Xmipp Movie Alignment by cross-correlation
     """
-    
-    _label = 'xmipp movie alignment'
+    _label = 'correlation alignment'
 
     #--------------------------- DEFINE param functions --------------------------------------------
-    def _defineParams(self, form):
-        ProtProcessMovies._defineParams(self, form)
-        
-        # Specific parameters
-        form.addParam('splineOrder', params.IntParam, default=3, expertLevel=cons.LEVEL_ADVANCED,
+
+    def _defineAlignmentParams(self, form):
+        ProtAlignMovies._defineAlignmentParams(self, form)
+
+        form.addParam('splineOrder', params.IntParam, default=3,
+                      expertLevel=cons.LEVEL_ADVANCED,
                       label='B-spline order',
-                      help="1 for linear interpolation (faster but lower quality), 3 for cubic interpolation (slower but more accurate).")
-        
-        
-        form.addParam('filterFactor', params.FloatParam, default=4,
-                       condition="not doGPU", label='Filter at (A)',
+                      help="1 for linear interpolation (faster but lower quality) "
+                           "3 for cubic interpolation (slower but more accurate).")
+
+        form.addParam('maxFreq', params.FloatParam, default=4,
+                       label='Filter at (A)',
                        help="For the calculation of the shifts with Xmipp, micrographs are "
                             "filtered (and downsized accordingly) to this resolution. "
                             "Then shifts are calculated, and they are applied to the "
                             "original frames without any filtering and downsampling.")
-        form.addParam('maxShift', params.IntParam, default=30, expertLevel=cons.LEVEL_ADVANCED,
-                      label="Maximum shift (pixels)", condition="not doGPU",
-                      help='Maximum allowed distance (in pixels) that each frame can be shifted'
-                           'with respect to the next.')
+
+        form.addParam('maxShift', params.IntParam, default=30,
+                      expertLevel=cons.LEVEL_ADVANCED,
+                      label="Maximum shift (pixels)",
+                      help='Maximum allowed distance (in pixels) that each frame '
+                           'can be shifted with respect to the next.')
         
         form.addParallelSection(threads=1, mpi=1)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _processMovie(self, movieId, movieName, movieFolder):
-        movieSet = self.inputMovies.get()
-        micFn = self._getNameExt(movieName, '_aligned', 'mrc')
-        alignedMovieFn = self._getCorrMovieName(movieId)
+
+    def _processMovie(self, movie):
+        inputMd = getMovieFileName(movie)
+        x, y, n = movie.getDim()
+        a0, aN = self._getFrameRange(n, 'align')
+        s0, sN = self._getFrameRange(n, 'sum')
+
+        args  = '-i %s ' % inputMd
+        args += '-o %s ' % self._getShiftsFile(movie)
+        args += '--sampling %f ' % movie.getSamplingRate()
+        args += '--max_freq %f ' % self.maxFreq
+
+        if self.binFactor > 1:
+            args += '--bin %f ' % self.binFactor
+        # Assume that if you provide one cropDim, you provide all
+        if self.cropDimX.get():
+            args += '--cropULCorner %d %d ' % (self.cropOffsetX, self.cropOffsetY)
+            args += '--cropDRCorner %d %d ' % (self.cropOffsetX.get() + self.cropDimX.get() -1,
+                                                  self.cropOffsetY.get() + self.cropDimY.get() -1)
         
-        mdCorrelation = self._getNameExt(movieName, '_alignedCorrelation.xmd')
-        mdName = self._getNameExt(movieName, '_aligned', 'xmd')
-        
-        # Some movie have .mrc or .mrcs format but it is recognized as a volume
-        if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
-            movieSuffix = ':mrcs'
-        else:
-            movieSuffix = ''
-        
-        command  = '-i %s%s ' % (movieName, movieSuffix)
-        command += '-o %s ' % mdCorrelation
-        command += '--sampling %f ' % self.samplingRate
-        command += '--max_freq %f ' % self.maxFreq
-        command += '--cropULCorner %d %d ' % (self.cropOffsetX.get(), self.cropOffsetY.get())
-        command += '--cropDRCorner %d %d ' % (self.cropOffsetX.get() + self.cropDimX.get() -1
-                                             ,self.cropOffsetY.get() + self.cropDimY.get() -1)
-        
-        command += ' --frameRange %d %d '%(self.alignFrame0.get(), self._getFinalFrame(movieName,"align"))
-        command += ' --frameRangeSum %d %d '%(self.sumFrame0.get(), self._getFinalFrame(movieName,"sum"))
-        command += ' --max_shift %d ' % self.maxShift
+        args += ' --frameRange %d %d ' % (a0-1, aN-1)
+        args += ' --frameRangeSum %d %d ' % (s0-1, sN-1)
+        args += ' --max_shift %d ' % self.maxShift
+
         if self.doSaveAveMic:
-            command += ' --oavg %s' % micName
+            args += ' --oavg %s' % self._getExtraPath(self._getOutputMicName(movie))
+
         if self.doSaveMovie:
-            command += ' --oaligned %s' % alignedMovieFn
+            args += ' --oaligned %s' % self._getExtraPath(self._getOutputMovieName(movie))
+
         if self.inputMovies.get().getDark():
-            command += ' --dark ' + self.inputMovies.get().getDark()
+            args += ' --dark ' + self.inputMovies.get().getDark()
+
         if self.inputMovies.get().getGain():
-            command += ' --gain ' + self.inputMovies.get().getGain()
-        self.runJob('xmipp_movie_alignment_correlation',command, numberOfMpi=1)
+            args += ' --gain ' + self.inputMovies.get().getGain()
+
+        self.runJob('xmipp_movie_alignment_correlation', args, numberOfMpi=1)
         
-        
-    def createOutputStep(self):
-        inputMovies = self.inputMovies.get()
-        micSet = self._createSetOfMicrographs()
-        micSet.copyInfo(inputMovies)
-        # Also create a Set of Movies with the alignment parameters
-        movieSet = self._createSetOfMovies()
-        movieSet.copyInfo(inputMovies)
-        
-        for movie in inputMovies:
-            movieId = movie.getObjId()
-            micName = self._getMicName(movieId)
-            movieFolder = self._getMovieFolder(movieId)
-          
-            mic = micSet.ITEM_TYPE()
-            mic.setObjId(movieId)
-            mic.setFileName(self._getExtraPath(micName))
-            micSet.append(mic)
-            
-            # Parse the alignment parameters and store the log files
-            alignedMovie = movie.clone()
-            logFile = self._getExtraPath(self._getLogFile(movieId))
-#             alignment = parseMovieAlignment(logFile)
-            alignedMovie.setAlignment(alignment)
-            movieSet.append(alignedMovie)
-            
-        self._defineOutputs(outputMicrographs=micSet)
-        self._defineTransformRelation(inputMovies, micSet)
-        
-        self._defineOutputs(outputMovies=movieSet)
-        self._defineTransformRelation(inputMovies, movieSet)
-    
     #--------------------------- INFO functions --------------------------------------------
+
     def _summary(self):
         summary = []
         return summary
     
     def _validate(self):
         errors = []
-        if max(self.numberOfThreads, self.numberOfMpi) > 1 and self.doGPU:
-            errors.append("GPU and Parallelization can not be used together")
-            
         return errors
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _getLogFile(self, movieId):
-        return 'micrograph_%06d_log.txt' % movieId
-    
-    def _getFinalFrame(self, movieName, met="align"):
-        ih = em.ImageHandler()
-        _, _, z, n = ih.getDimensions(movieName)
-        totalFrames = max(z, n) - 1
-        if met == "align":
-            frameN = self.alignFrameN.get()
-        else:
-            frameN = self.sumFrameN.get()
-        
-        if frameN == 0:
-            return 0
-        else:
-            return totalFrames - frameN
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-            
+    def _getShiftsFile(self, movie):
+        return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
+
+    def _getMovieShifts(self, movie):
+        """ Returns the x and y shifts for the alignment of this movie.
+         The shifts should refer to the original micrograph without any binning.
+         In case of a bining greater than 1, the shifts should be scaled.
+        """
+        shiftsMd = md.MetaData(self._getShiftsFile(movie))
+        shiftsMd.removeDisabled()
+
+        return (shiftsMd.getColumnValues(md.MDL_SHIFT_X),
+                shiftsMd.getColumnValues(md.MDL_SHIFT_Y))
+
