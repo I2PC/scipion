@@ -42,8 +42,8 @@ import numpy as np
 
 class EMObject(OrderedObject):
     """Base object for all EM classes"""
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args)
+    def __init__(self, **kwargs):
+        OrderedObject.__init__(self, **kwargs)
         
     def __str__(self):
         return self.getClassName()
@@ -55,14 +55,14 @@ class EMObject(OrderedObject):
 
 class Acquisition(EMObject):
     """Acquisition information"""
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        self._magnification = Float(args.get('magnification', None)) 
+    def __init__(self, **kwargs):
+        EMObject.__init__(self, **kwargs)
+        self._magnification = Float(kwargs.get('magnification', None))
         # Microscope voltage in kV
-        self._voltage = Float(args.get('voltage', None))
+        self._voltage = Float(kwargs.get('voltage', None))
         # Spherical aberration in mm
-        self._sphericalAberration = Float(args.get('sphericalAberration', None)) 
-        self._amplitudeContrast = Float(args.get('amplitudeContrast', None))
+        self._sphericalAberration = Float(kwargs.get('sphericalAberration', None))
+        self._amplitudeContrast = Float(kwargs.get('amplitudeContrast', None))
         
     def copyInfo(self, other):
         self.copyAttributes(other, '_magnification', '_voltage', '_sphericalAberration', '_amplitudeContrast')
@@ -96,7 +96,6 @@ class Acquisition(EMObject):
                                                                      self._voltage.get(),
                                                                      self._sphericalAberration.get(),
                                                                      self._amplitudeContrast.get())
-
 
     
 class CTFModel(EMObject):
@@ -337,8 +336,12 @@ class ImageDim(CsvList):
     
 class Image(EMObject):
     """Represents an EM Image object"""
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
+    def __init__(self, location=None, **kwargs):
+        """
+         Params:
+        :param location: Could be a valid location: (index, filename) or  filename
+        """
+        EMObject.__init__(self, **kwargs)
         # Image location is composed by an index and a filename
         self._index = Integer(0)
         self._filename = String()
@@ -349,6 +352,8 @@ class Image(EMObject):
         # this matrix can be used for 2D/3D alignment or
         # to represent projection directions
         self._transform = None
+        if location:
+            self.setLocation(location)
 
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
@@ -415,7 +420,7 @@ class Image(EMObject):
         if t == tuple:
             index, filename = first
         elif t == int or t == long:
-            index , filename = first, args[1]
+            index, filename = first, args[1]
         elif t == str or t == unicode:
             index, filename = NO_INDEX, first
         else:
@@ -481,8 +486,8 @@ class Image(EMObject):
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
-    def __init__(self, **args):
-        Image.__init__(self, **args)
+    def __init__(self, location=None, **kwargs):
+        Image.__init__(self, location, **kwargs)
         self._micName = String()
     
     def setMicName(self, micName):
@@ -502,8 +507,8 @@ class Micrograph(Image):
 
 class Particle(Image):
     """ Represents an EM Particle object """
-    def __init__(self, **args):
-        Image.__init__(self, **args)
+    def __init__(self, location=None, **kwargs):
+        Image.__init__(self, location, **kwargs)
         # This may be redundant, but make the Particle
         # object more indenpent for tracking coordinates
         self._coordinate = None
@@ -556,8 +561,8 @@ class Mask(Particle):
 
 class Volume(Image):
     """ Represents an EM Volume object """
-    def __init__(self, **args):
-        Image.__init__(self, **args)
+    def __init__(self, location=None, **kwargs):
+        Image.__init__(self, location, **kwargs)
         self._classId = Integer()
 
     def getDim(self):
@@ -591,8 +596,8 @@ class VolumeMask(Volume):
 
 class EMFile(EMObject):
     """ Class to link usually to text files. """
-    def __init__(self, filename=None, **args):
-        EMObject.__init__(self, **args)
+    def __init__(self, filename=None, **kwargs):
+        EMObject.__init__(self, **kwargs)
         self._filename = String(filename)
         
     def getFileName(self):
@@ -606,8 +611,8 @@ class EMFile(EMObject):
     
 class PdbFile(EMFile):
     """Represents an PDB file. """
-    def __init__(self, filename=None, pseudoatoms=False, **args):
-        EMFile.__init__(self, filename, **args)
+    def __init__(self, filename=None, pseudoatoms=False, **kwargs):
+        EMFile.__init__(self, filename, **kwargs)
         self._pseudoatoms = Boolean(pseudoatoms)
         
     def getPseudoAtoms(self):
@@ -674,10 +679,10 @@ class SetOfImages(EMSet):
     """ Represents a set of Images """
     ITEM_TYPE = Image
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
         self._samplingRate = Float()
-        self._hasCtf = Boolean(args.get('ctf', False))
+        self._hasCtf = Boolean(kwargs.get('ctf', False))
         self._alignment = String(ALIGN_NONE)
         self._isPhaseFlipped = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
@@ -879,8 +884,8 @@ class SetOfMicrographsBase(SetOfImages):
     but avoid to select Movies when Micrographs are required. 
     """
     
-    def __init__(self, **args):
-        SetOfImages.__init__(self, **args)
+    def __init__(self, **kwargs):
+        SetOfImages.__init__(self, **kwargs)
         self._scannedPixelSize = Float()
     
     def copyInfo(self, other):
@@ -925,8 +930,8 @@ class SetOfParticles(SetOfImages):
     ITEM_TYPE = Particle
     REP_TYPE = Particle
     
-    def __init__(self, **args):
-        SetOfImages.__init__(self, **args)
+    def __init__(self, **kwargs):
+        SetOfImages.__init__(self, **kwargs)
         self._coordsPointer = Pointer()
         
     def hasCoordinates(self):
@@ -954,8 +959,8 @@ class SetOfParticles(SetOfImages):
 class SetOfAverages(SetOfParticles):
     """Represents a set of Averages.
     It is a SetOfParticles but it is useful to differentiate outputs."""
-    def __init__(self, **args):
-        SetOfParticles.__init__(self, **args)
+    def __init__(self, **kwargs):
+        SetOfParticles.__init__(self, **kwargs)
 
 
 class SetOfVolumes(SetOfImages):
@@ -963,16 +968,16 @@ class SetOfVolumes(SetOfImages):
     ITEM_TYPE = Volume
     REP_TYPE = Volume
     
-    def __init__(self, **args):
-        SetOfImages.__init__(self, **args)
+    def __init__(self, **kwargs):
+        SetOfImages.__init__(self, **kwargs)
 
 
 class SetOfCTF(EMSet):
     """ Contains a set of CTF models estimated for a set of images."""
     ITEM_TYPE = CTFModel
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
         self._micrographsPointer = Pointer()
         
     def getMicrographs(self):
@@ -990,11 +995,11 @@ class SetOfDefocusGroup(EMSet):
     """
     ITEM_TYPE = DefocusGroup
         
-    def __init__(self, **args):
-        EMSet.__init__(self, **args) 
-        self._minSet=False
-        self._maxSet=False
-        self._avgSet=False
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
+        self._minSet = False
+        self._maxSet = False
+        self._avgSet = False
         
     def getMinSet(self):
         return self._minSet.get()
@@ -1106,8 +1111,8 @@ class SetOfCoordinates(EMSet):
     """
     ITEM_TYPE = Coordinate
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
         self._micrographsPointer = Pointer()
         self._boxSize = Integer()
 
@@ -1179,8 +1184,8 @@ class SetOfCoordinates(EMSet):
     
 
 class Matrix(Scalar):
-    def __init__(self, **args):
-        Scalar.__init__(self, **args)
+    def __init__(self, **kwargs):
+        Scalar.__init__(self, **kwargs)
         self._matrix = np.eye(4)
         
     def _convertValue(self, value):
@@ -1222,8 +1227,8 @@ class Transform(EMObject):
     and mirroring.
     """
 
-    def __init__(self, matrix=None, **args):
-        EMObject.__init__(self, **args)
+    def __init__(self, matrix=None, **kwargs):
+        EMObject.__init__(self, **kwargs)
         self._matrix = Matrix()
         if matrix is not None:
             self.setMatrix(matrix)
