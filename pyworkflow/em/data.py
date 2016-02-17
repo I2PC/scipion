@@ -1557,7 +1557,11 @@ class Movie(Micrograph):
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
         Consider compressed Movie files"""
-        return None if self.isCompressed() else Micrograph.getDim(self)
+        if not self.isCompressed():
+            x, y, z, n = ImageHandler().getDimensions(self)
+            if x is not None:
+                return x, y, max(z, n)
+        return None
 
     def getNumberOfFrames(self):
         """ Return the number of frames of this movie
@@ -1660,7 +1664,7 @@ class SetOfMovies(SetOfMicrographsBase):
                     import traceback
                     traceback.print_exc()
         dimStr = str(self._firstDim)
-        s = "%s (%d items, %d frames, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), self._firstFrameNum, dimStr, sampling)
+        s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), dimStr, sampling)
         return s
     
     
