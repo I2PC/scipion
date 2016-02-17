@@ -33,7 +33,7 @@ from pyworkflow.em.packages.motioncorr import ProtMotionCorr
 
 # Some utility functions to import movies that are used
 # in several tests.
-class TestMotioncorrBase(BaseTest):
+class TestMotioncorrAlingMovies(BaseTest):
     @classmethod
     def setData(cls):
         cls.ds = DataSet.getDataSet('movies')
@@ -61,12 +61,10 @@ class TestMotioncorrBase(BaseTest):
         cls.launchProtocol(protImport)
         return protImport
     
-
-class TestMotioncorrAlingMovies(TestMotioncorrBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        TestMotioncorrBase.setData()
+        cls.setData()
         cls.protImport1 = cls.runImportMovies(cls.ds.getFile('qbeta/qbeta.mrc'),
                                               magnification=50000)
         cls.protImport2 = cls.runImportMovies(cls.ds.getFile('cct/cct_1.em'),
