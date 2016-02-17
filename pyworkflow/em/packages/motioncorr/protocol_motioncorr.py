@@ -79,6 +79,7 @@ class ProtMotionCorr(ProtAlignMovies):
 -fsc       0                 1: Calculate and log FSC. 0: Not.
                             """)
 
+        # Since only runs in GPU, does not allow neither threads or mpi
         form.addParallelSection(threads=0, mpi=0)
 
     #--------------------------- STEPS functions ---------------------------------------------------
@@ -108,24 +109,24 @@ class ProtMotionCorr(ProtAlignMovies):
                 }
 
         # FIXME: Always produce the average micrograph?
-        command = '%s -fcs %s ' % (movie.getBaseName(), outputMicFn)
-        command += ' '.join(['%s %s' % (k, v) for k, v in args.iteritems()])
+        args = '%s -fcs %s ' % (movie.getBaseName(), outputMicFn)
+        args += ' '.join(['%s %s' % (k, v) for k, v in args.iteritems()])
 
         if inputMovies.getGain():
-            command += " -fgr " + inputMovies.getGain()
+            args += " -fgr " + inputMovies.getGain()
 
         if inputMovies.getDark():
-            command += " -fdr " + inputMovies.getDark()
+            args += " -fdr " + inputMovies.getDark()
 
         if self.doSaveMovie:
-            command += " -fct %s -ssc 1" % outputMovieFn
+            args += " -fct %s -ssc 1" % outputMovieFn
 
-        command += ' ' + self.extraParams.get()
+        args += ' ' + self.extraParams.get()
         program = 'dosefgpu_driftcorr'
 
         try:
             #self.info("Running: %s %s" % (program, command))
-            self.runJob(program, command, cwd=movieFolder)
+            self.runJob(program, args, cwd=movieFolder)
         except:
             print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
 
