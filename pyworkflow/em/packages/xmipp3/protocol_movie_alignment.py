@@ -32,7 +32,7 @@ In this module are protocol base classes related to EM Micrographs
 import sys
 from os.path import join
 import numpy as np
-
+import xmipp
 from pyworkflow.object import String
 import pyworkflow.protocol.params as params
 from pyworkflow.utils.path import moveFile
@@ -149,6 +149,7 @@ class ProtMovieAlignment(em.ProtProcessMovies):
         #micName = self._getMicName(movieId)
         micName = self._getNameExt(movieName, '_aligned', 'mrc')
         metadataName = self._getNameExt(movieName, '_aligned', 'xmd')
+        fnGlobalShifts = self._getNameExt(movieName, '_shifts', 'xmd')
         psdCorrName = self._getNameExt(movieName,'_aligned_corrected', 'psd')
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
@@ -158,9 +159,14 @@ class ProtMovieAlignment(em.ProtProcessMovies):
         if movieAlignment is not None:
             #firstFrame, lastFrame = movieAlignment.getRange()
             #regionInterest = movieAlignment.getRoi()
-            shiftListX, shiftListY= movieAlignment.getShifts()
-            for shiftX, shiftY in shiftListX, shiftListY:
-                print shiftX, shiftY
+            shiftListX, shiftListY = movieAlignment.getShifts()
+            globalShiftsMD = xmipp.MetaData()
+            for shiftX, shiftY in zip(shiftListX, shiftListY):
+                objId = globalShiftsMD.addObject()
+                globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, shiftX, objId)
+                globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, shiftY, objId)
+            globalShiftsMD.write(join(movieFolder, fnGlobalShifts))
+            moveFile(join(movieFolder, fnGlobalShifts), self._getExtraPath())
 
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
@@ -177,6 +183,18 @@ class ProtMovieAlignment(em.ProtProcessMovies):
         doSaveMovie = self.doSaveMovie.get()
         groupSize = self.groupSize.get()
         command += '--winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
+        # Check if we have global shifts
+        if movieAlignment is not None:
+            #firstFrame, lastFrame = movieAlignment.getRange()
+            #regionInterest = movieAlignment.getRoi()
+            shiftListX, shiftListY = movieAlignment.getShifts()
+            globalShiftsMD = xmipp.MetaData()
+            for shiftX, shiftY in zip(shiftListX, shiftListY):
+                objId = globalShiftsMD.addObject()
+                globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, shiftX, objId)
+                globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, shiftY, objId)
+            globalShiftsMD.write(join(movieFolder, fnGlobalShifts))
+            command += '--globalShifts %(fnGlobalShifts)s ' % locals()
         if self.doGPU:
             program = 'xmipp_movie_optical_alignment_gpu'
             command += '--gpu %d ' % gpuId

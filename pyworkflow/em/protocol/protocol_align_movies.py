@@ -93,26 +93,38 @@ class ProtAlignMovies(ProtProcessMovies):
     #FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
         inputMovies = self.inputMovies.get()
-        suffix = '_aligned' if self.doSaveMovie else '_original'
-        movieSet = self._createSetOfMovies(suffix)
-        movieSet.copyInfo(inputMovies)
+        micSet = None
+        movieSet = None
         newSampling = inputMovies.getSamplingRate() * self.binFactor.get()
-        movieSet.setSamplingRate(newSampling)
-        
+
+        if self._doGenerateOutputMovies():
+            suffix = '_aligned' if self.doSaveMovie else '_original'
+            movieSet = self._createSetOfMovies(suffix)
+            movieSet.copyInfo(inputMovies)
+            movieSet.setSamplingRate(newSampling)
+
+            for movie in inputMovies:
+                newMovie = self._createOutputMovie(movie)
+                movieSet.append(newMovie)
+
+            self._defineOutputs(outputMovies=movieSet)
+            self._defineTransformRelation(self.inputMovies, movieSet)
+
         if self.doSaveAveMic:
             micSet = self._createSetOfMicrographs()
             micSet.copyInfo(inputMovies)
             micSet.setSamplingRate(newSampling)
-        else:
-            micSet = None
-        
-        for movie in inputMovies:
-            self._createOutputMovie(movie, movieSet, micSet)
-        
-        self._defineOutputs(outputMovies=movieSet)
-        self._defineTransformRelation(self.inputMovies, movieSet)
-        
-        if self.doSaveAveMic:
+
+            for movie in inputMovies:
+                mic = micSet.ITEM_TYPE()
+                mic.copyObjId(movie)
+                # The subclass protocol is responsible of generating the output
+                # micrograph file in the extra path with the required name
+                extraMicFn = self._getExtraPath(self._getOutputMicName(movie))
+                mic.setFileName(extraMicFn)
+                self._preprocessOutputMicrograph(mic)
+                micSet.append(mic)
+
             self._defineOutputs(outputMicrographs=micSet)
             self._defineSourceRelation(self.inputMovies, micSet)
     
@@ -144,7 +156,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         return (first, last)
 
-    def _createOutputMovie(self, movie, movieSet, micSet=None):
+    def _createOutputMovie(self, movie):
         movieId = movie.getObjId()
 
         # Parse the alignment parameters and store the log files
@@ -171,17 +183,8 @@ class ProtAlignMovies(ProtProcessMovies):
                           self.cropDimX.get(), self.cropDimY.get()])
 
         alignedMovie.setAlignment(alignment)
-        movieSet.append(alignedMovie)
-        
-        if self.doSaveAveMic:
-            mic = micSet.ITEM_TYPE()
-            mic.setObjId(movieId)
-            # The subclass protocol is responsible of generating the output
-            # micrograph file in the extra path with the required name
-            extraMicFn = self._getExtraPath(self._getOutputMicName(movie))
-            mic.setFileName(extraMicFn)
-            micSet.append(mic)
 
+        return alignedMovie
 
     #---------- Hook functions that need to be implemented in subclasses ------
 
@@ -203,11 +206,22 @@ class ProtAlignMovies(ProtProcessMovies):
     def _getMovieShifts(self, movie):
         """ Returns the x and y shifts for the alignment of this movie.
          The shifts should refer to the original micrograph without any binning.
-         In case of a bining greater than 1, the shifts should be scaled.
+         In case of a binning greater than 1, the shifts should be scaled.
         """
         return [], []
 
+    def _doGenerateOutputMovies(self):
+        """ Returns True if an output set of movies will be generated.
+        The most common case is to always generate output movies,
+        either with alignment only or the binary aligned movie files.
+        Subclasses can override this function to change this behavior.
+        """
+        return True
 
-
+    def _preprocessOutputMicrograph(self, mic, movie):
+        """ Hook function that will be call before adding the micrograph
+        to the output set of micrographs.
+        """
+        pass
 
 
