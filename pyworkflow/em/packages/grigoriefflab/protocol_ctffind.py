@@ -79,6 +79,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
               label="Phase shift search step (rad)", condition='findPhaseShift',
               help='Step size for phase shift search (radians)',
               expertLevel=params.LEVEL_ADVANCED)
+>>>>>>> bd5d7be9eae221ce1449ba751f6c726a06b3142a
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
@@ -204,7 +205,11 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         return errors
     
     def _citations(self):
-        return ['Mindell2003']
+        if not self.useCftfind4:
+            return ['Mindell2003']
+        else:
+            return ['Rohou2015']
+
 
     def _methods(self):
         if self.inputMicrographs.get() is None:
