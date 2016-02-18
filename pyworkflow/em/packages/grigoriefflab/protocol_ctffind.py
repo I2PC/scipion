@@ -54,11 +54,12 @@ class ProtCTFFind(em.ProtCTFMicrographs):
               label="Use ctffind4 to estimate the CTF?",
               help='If is true, the protocol will use ctffind4 instead of ctffind3')
         form.addParam('astigmatism', params.FloatParam, default=100.0,
-              label='Expected (tolerated) astigmatism', expertLevel=params.LEVEL_ADVANCED,
-              condition='useCftfind4', )
+              label='Expected (tolerated) astigmatism (A)', expertLevel=params.LEVEL_ADVANCED,
+              condition='useCftfind4', help="positive values activate astigmatism restrain",)
+
         form.addParam('findPhaseShift', params.BooleanParam, default=False,
               label="Find additional phase shift?", condition='useCftfind4',
-              expertLevel=params.LEVEL_ADVANCED,)
+              expertLevel=params.LEVEL_ADVANCED,help="search for additional phase shift introduced by a phase plate")
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
@@ -173,7 +174,11 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         return errors
     
     def _citations(self):
-        return ['Mindell2003']
+        if not self.useCftfind4:
+            return ['Mindell2003']
+        else:
+            return ['Rohou2015']
+
 
     def _methods(self):
         if self.inputMicrographs.get() is None:
